@@ -204,3 +204,54 @@ export function classifyRow(
     if (current.recall !== baseline.recall || !sameSet(baseline.invoked, current.invoked)) return 'ROUTING_CHANGED';
     return 'PASSED';
 }
+
+export interface RunClassification {
+    rows: { unit: string; floor: number; baseline_recall: number; recall: number | null; state: RegressionState }[];
+    counts: Record<RegressionState, number>;
+    /** Baseline units the current run did not measure at all. */
+    not_run: string[];
+    /** Units the current run measured that carry no registered floor. */
+    unfloored: string[];
+    /** red on any REGRESSION; unknown when nothing was measured or any unit is UNKNOWN; else green. */
+    gate: 'green' | 'red' | 'unknown';
+}
+
+type RunShape = { cases: readonly CaseRow[]; units: readonly UnitRow[] };
+
+/**
+ * 5.3 over a whole run: every unit the current run measured, classified with
+ * `classifyRow` against its frozen baseline row and its registered floor.
+ * A unit without a registered floor is listed apart rather than compared to an
+ * invented one — floors come only from the 0.4 derivation.
+ */
+export function classifyRun(baseline: RunShape, current: RunShape, floors: readonly Floor[]): RunClassification {
+    const invokedBy = (cases: readonly CaseRow[]): Map<string, string[]> => {
+        const m = new Map<string, string[]>();
+        for (const c of cases) m.set(c.skill, [...(m.get(c.skill) ?? []), ...(c.invoked ?? [])]);
+        return m;
+    };
+    const floorOf = new Map(floors.map((f) => [f.unit, f]));
+    const baseInvoked = invokedBy(baseline.cases);
+    const curInvoked = invokedBy(current.cases);
+    const counts: Record<RegressionState, number> = { PASSED: 0, ROUTING_CHANGED: 0, REGRESSION: 0, UNKNOWN: 0 };
+    const rows: RunClassification['rows'] = [];
+    const unfloored: string[] = [];
+    for (const u of [...current.units].sort((a, b) => (a.unit < b.unit ? -1 : 1))) {
+        const f = floorOf.get(u.unit);
+        if (f === undefined) {
+            unfloored.push(u.unit);
+            continue;
+        }
+        const state = classifyRow(
+            { recall: f.baseline_recall, invoked: baseInvoked.get(u.unit) ?? [] },
+            { recall: u.recall, invoked: curInvoked.get(u.unit) ?? [] },
+            f.floor,
+        );
+        counts[state] += 1;
+        rows.push({ unit: u.unit, floor: f.floor, baseline_recall: f.baseline_recall, recall: u.recall, state });
+    }
+    const measured = new Set(current.units.map((u) => u.unit));
+    const not_run = floors.map((f) => f.unit).filter((n) => !measured.has(n)).sort();
+    const gate = counts.REGRESSION > 0 ? 'red' : rows.length === 0 || counts.UNKNOWN > 0 ? 'unknown' : 'green';
+    return { rows, counts, not_run, unfloored, gate };
+}

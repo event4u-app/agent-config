@@ -14,6 +14,7 @@ import {
     PROTOCOL_VERSION,
     RPC_METHOD_NOT_FOUND,
     RPC_INVALID_PARAMS,
+    INLINE_BODY_CHAR_CAP,
 } from './dispatch.js';
 import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
 import type { ContentTree, ContentEntry } from './content.js';
@@ -248,5 +249,45 @@ describe('suggest_skill_for_task — the row a model chooses from', () => {
         // The tool definition is standing cost in every session; the row payload
         // is paid only when it is called. The cap is on the first.
         expect(liteToolsTokenCost()).toBeLessThanOrEqual(LITE_TOOLS_TOKEN_CAP);
+    });
+});
+
+// road-to-routing-assurance-live-floors 4.4: the MCP path named the skill but
+// never called read_skill. On a UNIQUE top hit the answer can carry the body so
+// no second call is needed — default-off until the 4.2 parity gate passes on it.
+describe('suggest_skill_for_task — inline top body (4.4, default-off)', () => {
+    const long = 'x'.repeat(INLINE_BODY_CHAR_CAP + 50);
+    const T: ContentTree = {
+        uris: Object.fromEntries(
+            [
+                entry({ name: 'merge-conflicts', kind: 'skill', description: 'Resolve merge conflicts in git.', body: 'MERGE BODY' }),
+                entry({ name: 'git-workflow', kind: 'skill', description: 'Branching strategy.', body: 'GIT BODY' }),
+                entry({ name: 'twin-a', kind: 'skill', description: 'Lint markdown tables.', body: long }),
+                entry({ name: 'twin-b', kind: 'skill', description: 'Lint markdown tables.', body: 'B' }),
+                entry({ name: 'huge', kind: 'skill', description: 'Render huge sparkline glyphs.', body: long }),
+            ].map((e) => [e.uri, e]),
+        ),
+    };
+    const call = (args: Record<string, unknown>, inlineTopBody?: boolean): Record<string, unknown> =>
+        (ok(dispatch(T, ID, req('tools/call', { name: 'suggest_skill_for_task', arguments: args }), inlineTopBody === undefined ? {} : { inlineTopBody })).result as {
+            structuredContent: Record<string, unknown>;
+        }).structuredContent;
+
+    it('off by default: no body field at all', () => {
+        expect(call({ task: 'resolve merge conflicts' })).not.toHaveProperty('top_body');
+    });
+
+    it('on: a unique top hit carries its body and id', () => {
+        expect(call({ task: 'resolve merge conflicts' }, true).top_body).toEqual({ skill: 'merge-conflicts', body: 'MERGE BODY', truncated: false });
+    });
+
+    it('on: a tied top score carries no body — the choice stays with the caller', () => {
+        expect(call({ task: 'lint markdown tables' }, true)).not.toHaveProperty('top_body');
+    });
+
+    it('on: the body is bounded and says so', () => {
+        const tb = call({ task: 'render huge sparkline glyphs' }, true).top_body as { body: string; truncated: boolean };
+        expect(tb.body.length).toBe(INLINE_BODY_CHAR_CAP);
+        expect(tb.truncated).toBe(true);
     });
 });

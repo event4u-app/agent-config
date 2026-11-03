@@ -1,0 +1,959 @@
+{
+  "schema": "routing-regression/v1",
+  "baseline": "agents/evidence/metrics/routing-baseline-20261027.json",
+  "baseline_sha256": "510d1a2a54dc4c6d7022199861c762e2b9dd5e79bdc4fb83a69507f92c5aefcd",
+  "current": "agents/evidence/metrics/routing-canary-20261103.json",
+  "current_commit": "f9054d0f10",
+  "current_model": "claude-opus-5-5",
+  "rows": [
+    {
+      "unit": "accessibility-auditor",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "adr-create",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "adversarial-review",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 1,
+      "state": "ROUTING_CHANGED"
+    },
+    {
+      "unit": "agent-security-review",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "agents-md-thin-root",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "ai-council",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "alerting-doctrine",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "analysis-autonomous-mode",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "api-design",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "api-endpoint",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "api-testing",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "architecture-review-lens",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "authz-review",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "blade-ui",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "brand",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "brand-identity",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "brand-to-tokens",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "bug-analyzer",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "canvas-design",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "code-intelligence",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "code-refactoring",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "command-routing",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "competitive-moat-analysis",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "competitive-positioning",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "composer-packages",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "condense-memory",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "content-funnel-design",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "contract-review",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "conventional-commits-writing",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "dashboard-design",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "database",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "decision-record",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "deep-reading-analyst",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "dependency-upgrade",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "description-assist",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "design-intelligence",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "design-review",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "design-system-capture",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "design-tokens",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "design-variations",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "dpa-review",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "eloquent",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "evaluate-llm-feature",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "existing-ui-audit",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "ROUTING_CHANGED"
+    },
+    {
+      "unit": "fe-design",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "feature-planning",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "flux",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "forensics-report",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "form-handler",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "frontend-render-security",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "gated-reach",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "git-workflow",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "gtm-launch",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "history-design",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "iconography",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "image-analyser",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "image-creator",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "image-generation",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "image-provider-routing",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "incident-commander",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "jira-integration",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "js-library-packaging",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "judge-artifact-completeness",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "judge-bug-hunter",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "ROUTING_CHANGED"
+    },
+    {
+      "unit": "judge-injection-defense",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "judge-spec-compliance",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "judge-synthesis",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "judge-test-coverage",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "laravel-migration",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "launch-readiness",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "legal-practice-profile",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "license-compliance-borrow-check",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "logo-generation",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "market-entry-analysis",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "markitdown",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "mcp-builder",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "merge-conflicts",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "messaging-architecture",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "monorepo-workspace",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "motion-choreographer",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "operational-readiness",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "overbuild-review-lens",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "pdf-tools",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "persona-improvement",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "php-coder",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "playbook-authoring",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "playwright-testing",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "po-discovery",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "positioning-strategy",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "prediction-pool-optimizer",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "project-analysis-core",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "project-analysis-hypothesis-driven",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "prompt-engineering-image",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "prompt-validator",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "quality-tools",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "react-native-setup",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "react-shadcn-ui",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "readme-writing",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "readme-writing-package",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "reasoning-orchestrator",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "receiving-code-review",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "repomix-packer",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "review-routing",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "roadmap-management",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "roadmap-writing",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "schema-review",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "screenshot-hygiene",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "security",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "security-audit",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "security-maturity-assessment",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "server-hardening",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "skill-improvement-pipeline",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "skill-reviewer",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "skill-writing",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "spreadsheet-authoring",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "storybook-workshop",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "subagent-orchestration",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "svg-authoring",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "tailwind-engineer",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "test-case-discovery",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "test-driven-development",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "test-performance",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "testing-anti-patterns",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "threat-modeling",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "type-design",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "ui-apply-generic",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "universal-project-analysis",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "upstream-contribute",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "using-git-worktrees",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "verify-repair-loop",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "voice-and-tone-design",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    },
+    {
+      "unit": "wireframe",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 0,
+      "state": "REGRESSION"
+    },
+    {
+      "unit": "workspace-link",
+      "floor": 0,
+      "baseline_recall": 0,
+      "recall": 0,
+      "state": "PASSED"
+    },
+    {
+      "unit": "worktree-lifecycle",
+      "floor": 0.9,
+      "baseline_recall": 1,
+      "recall": 1,
+      "state": "PASSED"
+    }
+  ],
+  "counts": {
+    "PASSED": 122,
+    "ROUTING_CHANGED": 3,
+    "REGRESSION": 9,
+    "UNKNOWN": 0
+  },
+  "not_run": [
+    "code-review"
+  ],
+  "unfloored": [],
+  "gate": "red"
+}

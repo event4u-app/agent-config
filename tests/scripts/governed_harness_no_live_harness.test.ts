@@ -252,8 +252,11 @@ describe('5.2 — the live-floors park is intact', () => {
             expect(body).toContain('2/2');
             return;
         }
-        // OQ-15, 2026-10-26: only an owner decision recorded in the file may move it.
-        const unparked = path.join(REPO, 'agents', 'roadmaps', 'road-to-routing-assurance-live-floors.md');
+        // OQ-15, 2026-10-26: only an owner decision recorded in the file may move
+        // it — and it stays recorded once the un-parked roadmap is archived.
+        const active = path.join(REPO, 'agents', 'roadmaps', 'road-to-routing-assurance-live-floors.md');
+        const archived = path.join(REPO, 'agents', 'roadmaps', 'archive', 'road-to-routing-assurance-live-floors.md');
+        const unparked = existsSync(active) ? active : archived;
         expect(existsSync(unparked)).toBe(true);
         expect(readFileSync(unparked, 'utf-8')).toContain('Owner decision, 2026-10-26 (OQ-15)');
     });
