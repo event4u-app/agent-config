@@ -16,7 +16,7 @@ estate_growth_exempt: "+1 later_roadmaps: receiver of the carried step 1.4 of ro
 
 ## Goal
 
-Floor source tags, once payload allows.
+Floor source tags.
 
 ## What was built and taken back
 
