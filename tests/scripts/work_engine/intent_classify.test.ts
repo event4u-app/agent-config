@@ -89,6 +89,25 @@ describe('intent/classify — TS-side unit checks', () => {
     });
 });
 
+describe('intent/classify — a game is a build', () => {
+    it.each([
+        'build a full samurai game with missions',
+        'create a 3d action game',
+        'build me a game',
+        'scaffold the puzzle game',
+        'implement a new platformer game',
+    ])('"%s" routes as a full-stack build', (prompt) => {
+        expect(classify_intent(prompt)).toBe(INTENT_MIXED);
+    });
+
+    it.each(['add a log level', 'set the scene for the import', 'game theory of the auction', 'add a plugin hook'])(
+        '"%s" does not',
+        (prompt) => {
+            expect(classify_intent(prompt)).not.toBe(INTENT_MIXED);
+        },
+    );
+});
+
 // road-to-design-inputs-and-pages-read-as-they-are 3.2.
 describe('intent/classify — plural and German symptom nouns', () => {
     it.each([

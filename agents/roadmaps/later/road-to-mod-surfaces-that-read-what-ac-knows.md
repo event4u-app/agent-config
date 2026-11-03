@@ -24,6 +24,17 @@ depends:
 > because the owner asked, in the source transcript, why the five proposed AC mods
 > were dropped; the answer there was that only the packaging was dropped. This file
 > is where their content lives.
+>
+> **Arrivals:** 2 — latest `inbox-2026-11-r` (2026-11-03): an earlier-dated plan on
+> the same subject (drafted 2026-10-18) re-raised the reach matrix, the user
+> `prependPlugins` probe, the trace sensor, the holder and the dispatch-capture
+> second count — all already here (3.1–3.3). Two points it adds, unscheduled: a
+> carrier-independent counter in the module's own store (outside ADR-302's call
+> surface — owner), and the Parkplatz surfaces `config.set` deny as a second
+> carrier, `attribution.text`, `tool.describe` / `skill.prompt` delivery and
+> `agent.spawn` routing. The entry condition's first half is met (the read-only
+> module shipped and archived); only the WIP slot holds it. Earlier:
+> `inbox-2026-10-av` (2026-10-25).
 
 ## Goal
 

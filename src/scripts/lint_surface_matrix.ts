@@ -29,7 +29,22 @@ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..')
 export const MATRIX_PATH = path.join(REPO_ROOT, 'src', 'config', 'surface-matrix.yml');
 
 const SURFACE_VALUES = new Set(['projection', 'plugin', 'bundles', 'export-only']);
-const HOOKS_VALUES = new Set(['managed-settings-block', 'settings-hooks-opt-in', 'plugin', 'none']);
+const HOOKS_VALUES = new Set(['ac-owned-settings-block', 'settings-hooks-opt-in', 'plugin', 'none']);
+/**
+ * Renamed 2026-11-03: "managed settings" is the host's term for the
+ * organisation layer — the only final one — and the package's own block in the
+ * user's settings.json is not that. The old value is refused with the new one named.
+ */
+const RENAMED_HOOKS_VALUES: Readonly<Record<string, string>> = { 'managed-settings-block': 'ac-owned-settings-block' };
+
+/** Why `value` is not a legal `hooks:` value, or null when it is. */
+export function hooksValueError(value: unknown): string | null {
+    if (typeof value === 'string' && HOOKS_VALUES.has(value)) return null;
+    const renamed = RENAMED_HOOKS_VALUES[String(value)];
+    return renamed !== undefined
+        ? `\`${String(value)}\` was renamed to \`${renamed}\` (the host's "managed settings" is the organisation layer, not this block)`
+        : `\`${String(value)}\` not in {${[...HOOKS_VALUES].join(', ')}}`;
+}
 
 type JsonObject = Record<string, unknown>;
 
@@ -113,8 +128,9 @@ export function main(): number {
         if (!SURFACE_VALUES.has(entry.surface)) {
             errors.push(`${where}.surface \`${String(entry.surface)}\` not in {${[...SURFACE_VALUES].join(', ')}}`);
         }
-        if (!HOOKS_VALUES.has(entry.hooks)) {
-            errors.push(`${where}.hooks \`${String(entry.hooks)}\` not in {${[...HOOKS_VALUES].join(', ')}}`);
+        const hooksError = hooksValueError(entry.hooks);
+        if (hooksError !== null) {
+            errors.push(`${where}.hooks ${hooksError}`);
         }
         const expectedPath = USER_SCOPE_PATHS[id];
         if (expectedPath && entry.scope_path !== expectedPath) {

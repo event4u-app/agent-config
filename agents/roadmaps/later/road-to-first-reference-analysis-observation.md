@@ -60,7 +60,7 @@ estate_growth_exempt: "Claimed 2026-09-08 for the park, replacing the creation-t
 ## Goal
 
 Spend exactly one of the two remaining observation slots of the pre-registered
-claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:575`) on a valid,
+claim `reference-loop-upgrade-value` (`docs/CLAIMS.md` § `claim: reference-loop-upgrade-value`). Spend it on a valid,
 atomic upgraded-plus-shadow analysis pair, and write the outcome into the claim
 row honestly. Done when: both arms have run against one pinned reference at one
 pinned revision under the frozen protocol below, and the claim row records
@@ -608,7 +608,7 @@ correction below. The blocker `fetch-is-owner-reserved` records the act itself.
       (`docs/CLAIMS.md:491-492`), because dating a partial observation would read as
       verification. Closes with 1.4.
       **RE-CONFIRMED 2026-09-08, and deliberately left untouched.** Verified at
-      this commit rather than recalled: `docs/CLAIMS.md:575` is the
+      this commit rather than recalled: `docs/CLAIMS.md` § `claim: reference-loop-upgrade-value` is the
       `reference-loop-upgrade-value` header, `:491` reads `- status: unbacked`
       and `:492` reads `- last_verified:` with nothing after the colon. Both
       council seats confirmed this is the state that matches what the run

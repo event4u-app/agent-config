@@ -75,7 +75,7 @@ One install gives the agent you already use a set of skills, agent rules and sla
 ## What it costs
 
 - **More tokens.** On Claude Haiku the default setting cost 3.3× a run with no rules on the tasks that test checking discipline and about 1.7× over the full 30-task corpus; loading everything cost 11.7×. Measured on Claude Haiku only. <!-- claim:essential-tier-cost-factor -->
-- **Blocking on Claude Code only.** Elsewhere the rules are instructions: they cut violations but do not remove them. <!-- claim:conformance-advisory-vs-blocking -->
+- **Blocking on Claude Code only and only while its hooks run.** A host setting can switch them off and a user-installed mod can lift a refusal; `agent-config doctor neighbours` lists installed mods. Elsewhere the rules are instructions: they cut violations but do not remove them. <!-- claim:conformance-advisory-vs-blocking -->
 - **Network.** By default nothing leaves your machine except the daily update check against the npm registry and a daily question to GitHub, through your own `gh` login, whether a pull request you pushed has merged. The update check is off in CI, without a terminal or with `AGENT_CONFIG_NO_UPDATE_CHECK=1`. Telemetry is off. The second-opinion feature is off until you set it up; then it sends work to other AI providers with your own API keys, which bill you. [What leaves your machine →](https://event4u-app.github.io/agent-config/trust/network/)
 - **Your machine.** Node 22.6 or newer. Standing cost of the always-on rules per tool: [table](docs/contracts/rule-router.md).
 - **Your way out.** `agent-config uninstall --global` removes only its own entries and leaves other tools' config untouched. <!-- claim:surgical-uninstall -->
