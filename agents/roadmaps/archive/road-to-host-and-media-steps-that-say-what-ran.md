@@ -10,9 +10,9 @@ relates:
   - slug: later/road-to-mod-surfaces-that-read-what-ac-knows
     relation: disjoint
     note: "Owns the mod sensor, holder and live arm probes; nothing here measures load order."
-  - slug: later/road-to-video-claims-with-a-date
+  - slug: later/road-to-a-witness-for-made-and-found-media
     relation: extends
-    note: "The media remainder of the same round that needs a schema bump or a new command."
+    note: "Took the media remainder of the same round as 2.5 and 2.6 (video verify, dated model limits)."
 ---
 # Road to host and media steps that say what ran
 

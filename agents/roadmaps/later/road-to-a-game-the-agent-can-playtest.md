@@ -26,10 +26,9 @@ depends:
 
 ## Goal
 
-When an agent builds a game, "done" means a captured playtest the run actually
-read, edits inside stateful creative apps are guarded and checkpointed, assets
-carry their licence, and the work is planned as a vertical slice before content
-breadth. Constraint from the source: the name of the owner's planned game
+Playtests prove a game done. Edits inside stateful
+creative apps are guarded and checkpointed, assets carry their licence, and the
+work is planned as a vertical slice before content breadth. Constraint from the source: the name of the owner's planned game
 appears in no artefact.
 
 ## Phase 1 — Evidence for a game
