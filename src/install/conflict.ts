@@ -10,9 +10,8 @@
  *               (Phase B3). Headless callers translate `surface` to `skip`
  *               unless `policy.force` is true.
  *
- * JSON-aware deep-merge stays: callers that detect a `.json` target with
- * matching `knownPointers` route through {@link mergeJsonContent} instead
- * of byte-equality.
+ * Host settings files are merged by `hostConfigMerge.ts`, which refuses
+ * JSONC, unparseable and duplicate-key input instead of collapsing it to `{}`.
  */
 
 import { existsSync } from 'node:fs';
@@ -122,38 +121,6 @@ export function deepMerge(base: JsonObject, overlay: JsonObject): JsonObject {
         }
     }
     return out;
-}
-
-/**
- * Merge `overlay` into `existing` and return the canonical 4-space JSON.
- *
- * Format matches `write_json_file` in the Python installer (4-space indent,
- * trailing newline, no ASCII-escape) so the apply layer can compare bytes
- * to detect idempotent merges and skip the write.
- */
-export function mergeJsonContent(existing: JsonObject, overlay: JsonObject): string {
-    const merged = deepMerge(existing, overlay);
-    return `${JSON.stringify(merged, null, 4)}\n`;
-}
-
-/**
- * Parse JSON bytes leniently — invalid / non-object payloads collapse to `{}`.
- *
- * Matches `read_json_file` in the legacy script: corrupt JSON is treated
- * as an empty doc rather than a hard failure, so the merge step always
- * produces a well-formed output even when an upstream tool wrote a
- * truncated config.
- */
-export function parseJsonLenient(content: string): JsonObject {
-    try {
-        const parsed = JSON.parse(content) as unknown;
-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            return parsed as JsonObject;
-        }
-    } catch {
-        /* fall through — treat as empty */
-    }
-    return {};
 }
 
 /** Heuristic for routing a {@link FileEntry} through JSON merge. */
