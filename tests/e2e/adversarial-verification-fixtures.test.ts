@@ -208,6 +208,41 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
         expect(body).not.toMatch(/DO NOT ITERATE BEYOND/);
     });
 
+    it('no text outside the ladder maps a failure count to a question — paraphrases included', () => {
+        // The literal check above sees one file and two spellings. The defect it
+        // missed was a paraphrase in a neighbouring rule and two skills
+        // (road-to-a-strike-the-session-keeps F2/F6), so this scans every
+        // surface an agent reads for a retry budget.
+        const COUNT_TO_ASK = [
+            /ask for a different approach/i,
+            /new hypothesis, ask\b/i,
+            /Can't proceed → ask the user/i,
+            /Surface the question to the user\. Do not attempt fix #4/i,
+            /Discuss with the user before attempting more fixes/i,
+            /3\+ failures = architectural problem\. Stop and discuss/i,
+        ];
+        const walk = (rel: string): string[] =>
+            fs.readdirSync(path.join(REPO, rel), { withFileTypes: true }).flatMap((e) => {
+                const child = path.join(rel, e.name);
+                if (e.isDirectory()) return walk(child);
+                return e.name.endsWith('.md') ? [child] : [];
+            });
+        const surfaces = ['src/rules', 'src/skills', 'src/agent-src/contexts'].flatMap(walk);
+        expect(surfaces.length).toBeGreaterThan(100);
+        const hits = surfaces.flatMap((f) => {
+            const body = fs.readFileSync(path.join(REPO, f), 'utf8').replace(/\s+/g, ' ');
+            return COUNT_TO_ASK.filter((re) => re.test(body)).map((re) => `${f}: ${re.source}`);
+        });
+        expect(hits).toEqual([]);
+    });
+
+    it('every surface keeping its own retry number is registered in the ladder', () => {
+        const ladder = read('src/agent-src/contexts/execution/fix-loop-ladder.md');
+        for (const own of ['verify-repair-loop', 'subagent-steering', 'SELF_FIX_CEILING']) {
+            expect(ladder).toContain(own);
+        }
+    });
+
     it('the mechanics file carries all five bound outcomes, owner-ask third', () => {
         const body = flat(MECHANICS);
         expect(body).toMatch(/new epoch/);

@@ -7,8 +7,8 @@
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
  * Maintains a deterministic state file the rule body cites for the
- * freshness threshold and the 3-failure stop. The agent's job shrinks from
- * "remember counters" to "read this file before responding".
+ * freshness threshold. It counts tool calls only: the rule's failed-strategy
+ * and tool-loop clauses are model-carried, and the rule header says so.
  *
  * Output: `agents/state/context-hygiene.json`
  *   {

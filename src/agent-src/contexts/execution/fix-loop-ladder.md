@@ -55,6 +55,22 @@ and its own remedy (fix the tool's shape). It is not a band of this ladder, and
 crossing it does not advance the attempt count — it spends the whole bound for
 that target at once, which is a different statement.
 
+## Surfaces that keep their own number — the register
+
+A retry number anywhere else is either this ladder or listed here with why it is
+not. A number in neither place is a paraphrase posing as a second ladder, and
+`tests/e2e/adversarial-verification-fixtures.test.ts` scans rules, skills and
+contexts for the count→ask form such a paraphrase usually takes.
+
+| Surface | Number | Why it is its own |
+|---|---|---|
+| [`verify-repair-loop`](../../../src/skills/verify-repair-loop/SKILL.md) `max_attempts` | 3 | bounds one scored repair loop over test feedback; a run that exhausts it is ONE attempt of this ladder |
+| [`subagent-steering`](subagent-steering.md) `MAX_ATTEMPTS_PER_TARGET` | 3 | the orchestrator's per-target halt on a subagent type's returns; it stops a delegation, never a strategy |
+| work engine `SELF_FIX_CEILING` (`templates/scripts/work_engine/directives/backend/_self_fix.ts`) | 3 | the engine's in-lane self-fix on an identical verdict signature, before the lane reports back |
+
+None of the three maps its number to a question to the user, and a new entry may
+not either.
+
 ## Read the red before diagnosing it, with the narrowest probe
 
 An attempt that begins from a guess about the failure is not a band-1 attempt; it

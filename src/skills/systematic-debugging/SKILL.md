@@ -162,7 +162,11 @@ If you have tried **three** fixes and the bug is still present:
 * Re-read phases 1–3 — something about the root cause is wrong.
 * Ask explicitly: is this bug in the code, or in the architecture /
   design that keeps producing this class of bug?
-* Surface the question to the user. Do not attempt fix #4 silently.
+* Move to band 2 of the fix-loop ladder
+  ([`autonomous-execution`](../../rules/autonomous-execution.md) § Validation-loop
+  budget): fix #4 is a different strategy, not a smaller edit. Band 3 escalates
+  independently. A count is never a reason to ask the user; record the
+  architecture question in the run's notes, where the escalation reads it.
 
 ## Debug micro-loop — one test, one fix, one re-run
 
