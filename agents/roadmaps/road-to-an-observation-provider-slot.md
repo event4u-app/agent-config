@@ -37,13 +37,13 @@ empty verifier and on an authority outside its enum
 - [ ] **0.1 Resolvable evidence.** `evaluateLedger(rows, ctx: {evidenceIds})`
       with `ctx` required; a row is `invalid` on an unknown evidence id, an
       authority outside the enum, or `verified` with an empty verifier.
-      verify: `npx vitest run tests/scripts/reconstruction_ledger.test.ts` -> 0,
+      verify: `npx vitest run tests/scripts/reconstruction_ledger.test.ts` -> 0 and
       the fabricated-id case yields `invalid` with three errors, and removing
       each check turns exactly one case red.
 - [ ] **0.2 A ledger CLI.** `reconstruction_ledger --check <file>`: exit 0
       closed, 1 open/unknown, 2 invalid or usage; the reference door invokes it
       from a code fence.
-      verify: `npx vitest run tests/scripts/reconstruction_ledger_cli.test.ts` -> 0,
+      verify: `npx vitest run tests/scripts/reconstruction_ledger_cli.test.ts` -> 0 and
       one case per exit code.
 - [ ] **0.3 Step 2.1 speaks the ledger's states.** Rewrite 2.1 as "verdict
       `unknown` → `closed`" — the row status `unknown` does not exist

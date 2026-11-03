@@ -70,7 +70,7 @@ as a dependency — use zod v4's native export.
 ## Phase 2 — Checks that say what they rest on
 
 - [ ] **2.1 `basis: {level, ref, checked_at}` on all 13 checks.**
-      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0,
+      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0 and
       and the test fails on a check without `basis`.
 - [ ] **2.2 Crawler register.** `src/config/crawler-register.json` (token,
       operator, purpose, `affects_search_inclusion`, source URL, `checked_at`,
@@ -88,7 +88,7 @@ as a dependency — use zod v4's native export.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 asserting each
       error path.
 - [ ] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported.
-      verify: `limit: 100000` returns ≤ 20 rows; lite tools stay under
+      verify: a call with limit 100000 returns ≤ 20 rows; lite tools stay under
       `LITE_TOOLS_TOKEN_CAP`.
 - [ ] **3.3 `outputSchema` from one zod schema**, kept open.
       verify: every `structuredContent` validates against the shipped schema;

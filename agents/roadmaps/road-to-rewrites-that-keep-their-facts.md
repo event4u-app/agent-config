@@ -95,7 +95,7 @@ stops counting ranges.
       verify: 5/5 mutations caught; benign reorder gives 0 findings.
 - [ ] **2.2 False-alarm fixes:** locale-normalize numbers; drop German
       sentence-initial and imperative capitalised pairs from names.
-      verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0, `de/02` gives
+      verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0 and `de/02` gives
       0 name findings, and
       0 findings on a sentence-reordered copy of each clean-corpus file.
 - [ ] **2.3 Word ↔ digit stays literal** unless the council reopens the earlier
@@ -105,7 +105,7 @@ stops counting ranges.
 
 - [ ] **3.1 Fixture 4 "fact preservation"** in
       `src/skills/humanizer/references/fixtures.md` plus an eval case.
-      verify: `task lint-skills` -> 0.
+      verify: `task lint-skills` -> 0 holds.
 - [ ] **3.2 Fact conservation as a free third bench metric**, per split, no
       judge call.
       verify: the objective-only run prints `fact_added_pairs` per split.
@@ -137,7 +137,7 @@ stops counting ranges.
 - [ ] **6.1 Rendering-layer hiding and a data-injection class** in
       `untrusted-input-spotlighting.md` (background-colour text, tiny font,
       off-page, hidden layers, DOCX `w:vanish`).
-      verify: `task check-refs` -> 0 and `task lint-skills` -> 0.
+      verify: `task check-refs` -> 0 and `task lint-skills` -> 0 holds.
 
 ## Phase 7 — Hiring side
 
@@ -152,7 +152,7 @@ stops counting ranges.
 - [ ] **8.1 Four inflation classes** (widened verb, supplied number, smoothed
       status, absorbed achievement) as checklists in `release-comms` and
       `roadmap-writing`.
-      verify: `task lint-skills` -> 0.
+      verify: `task lint-skills` -> 0 holds.
 - [ ] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
       (own PR, 24 h soak).
 

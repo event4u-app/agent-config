@@ -177,7 +177,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
 - [ ] **1.1 `mcp:render` through the merge path.** Route `cmd_render` through
       `mergeHostConfigFile` with a merger that replaces only the keys it renders
       under `mcpServers`; `cmd_check` compares only those keys.
-      verify: `npx vitest run tests/scripts/mcp_render.test.ts` -> 0, with a
+      verify: `npx vitest run tests/scripts/mcp_render.test.ts` -> 0 and with a
       fixture keeping a foreign server and a comment, a JSONC file reported as
       skipped, and a `.agent-config.bak` written — each seen red first.
 - [ ] **1.2 Duplicate keys in every merged container.** `hostConfigMerge.ts`
@@ -188,9 +188,9 @@ rewriting archived `status: ready` (decided 2026-09-04,
       verify: a temp-dir settings file gets a `.bak` and is re-read.
 - [ ] **1.4 Delete the dead lenient parser.** Remove `parseJsonLenient`,
       `mergeJsonContent` and their test block.
-      verify: `grep -rn "parseJsonLenient\|mergeJsonContent" src tests` -> 0.
+      verify: `grep -rn "parseJsonLenient\|mergeJsonContent" src tests` -> 0 holds.
 - [ ] **1.5 `--transfer` in the reference door's argument-hint.**
-      verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/.
+      verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/ holds.
 
 ## Phase 2 — An entry is something that is invoked
 
@@ -214,7 +214,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
       verify: unreached count after 2.1 equals the labelled count.
 - [ ] **2.4 One lens name.** Align "Overbuild & sequencing" at
       `reference/command.md:368,378,504`.
-      verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/.
+      verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/ holds.
 
 ## Not in this roadmap
 
