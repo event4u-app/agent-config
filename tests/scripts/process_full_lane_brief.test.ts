@@ -101,3 +101,31 @@ describe('process-full scope-delta row agrees with the execution contract (ADR-2
         expect(row('process-phase')[4]).toMatch(/^When `execution\.mode: autonomous/);
     });
 });
+
+describe('process-full says one thing about who grants the run (inbox-2026-11-v Phase 1)', () => {
+    const flat = text.replace(/\s+/g, ' ');
+
+    it('its scope delta does not ask for an acceptance the invocation already gave', () => {
+        expect(flat).not.toMatch(/ONE acceptance activates/);
+        expect(section(text, '## Scope delta').replace(/\s+/g, ' ')).toMatch(
+            /the invocation is the confirmation/i,
+        );
+    });
+
+    it('names the process-phase rules it inherits instead of inheriting all of them', () => {
+        const rules = section(text, '## Rules').replace(/\s+/g, ' ');
+        expect(rules).not.toMatch(/All other rules from .{0,80}apply unchanged/);
+        expect(rules).toMatch(/dashboard sync/i);
+        expect(rules).toMatch(/council/i);
+        expect(rules).toMatch(/decline = silence/i);
+    });
+
+    it('records the environment at run start without stopping on it', () => {
+        const delivery = fs.readFileSync(
+            path.resolve(__dirname, '../../src/agent-src/contexts/execution/process-full-delivery.md'),
+            'utf8',
+        );
+        expect(delivery).toMatch(/hooks:status/);
+        expect(delivery).toMatch(/routing:doctor/);
+    });
+});

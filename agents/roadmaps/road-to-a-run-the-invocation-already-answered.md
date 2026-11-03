@@ -44,23 +44,23 @@ rests on attributable data.
 
 ## Phase 1 — The run surfaces say one thing
 
-- [ ] **1.1 process-full's scope delta says the invocation is the grant.**
+- [x] **1.1 process-full's scope delta says the invocation is the grant.**
       `process-full/command.md:49-58` still says "ONE acceptance activates all run
       grants", while `roadmap-execution-contract.md:26-35` (ADR-237) says the
       invocation is the confirmation. Reword the bullet and pin it in a test.
       verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, seen red before the rewording.
-- [ ] **1.2 process-full names the rules it inherits.** Replace "All other rules
+- [x] **1.2 process-full names the rules it inherits.** Replace "All other rules
       from process-phase § Rules apply unchanged" (`:286-287`) with the three
       rules that do apply: dashboard sync, a silent council, decline = silence.
       process-phase's "no commit without permission" and "halt on true ambiguity"
       no longer arrive by inheritance.
       verify: same test asserts the inherited list and the absence of the blanket clause.
-- [ ] **1.3 The consumer doc stops describing a screen process-full does not show.**
+- [x] **1.3 The consumer doc stops describing a screen process-full does not show.**
       `docs/customization.md:380-392` says "the contract screen is still shown once"
       and names an "N=3 validation budget". Correct it to ADR-237 and
       `execution.fix_loop_max`.
       verify: `grep -n 'N=3\|still shown once either way' docs/customization.md` -> no match.
-- [ ] **1.4 A start-of-run environment line.** At start, process-full records
+- [x] **1.4 A start-of-run environment line.** At start, process-full records
       `agent-config hooks:status` and `routing:doctor` in the run's PR body. A
       missing hook or flag is reported there and never stops the run.
       verify: the same test asserts the preflight line in `process-full-delivery.md`.

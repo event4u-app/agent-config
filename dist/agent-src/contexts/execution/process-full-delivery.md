@@ -146,6 +146,14 @@ budget may have been too small and raising it is a legitimate response;
 
 `blocked-preflight` no longer exists. A run always starts.
 
+**The environment is recorded at start, never gated on.** Before the first edit,
+the run captures `agent-config hooks:status` (which concerns are bound on this
+host) and `agent-config routing:doctor` (host capabilities and their
+provenance). It carries one line from each into the PR body. A missing hook, an
+unset host flag or an absent free route is reported there, so a measurement
+that never recorded can be told apart from a measurement that recorded nothing.
+None of these findings stops the run.
+
 **What counts as externally impossible** — the whole list:
 
 - a required credential does not exist and the agent cannot create it;

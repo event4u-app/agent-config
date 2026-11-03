@@ -46,16 +46,14 @@ with the **scope delta below**.
 
 ## Scope delta
 
-- **Execution mode:** read `execution.mode` from frontmatter. Under
-  `autonomous` / `phase-checkpoints` the loop's § 3 pre-scan derives
-  the run-start **execution contract**
-  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md));
-  ONE acceptance activates all run grants (feature branch, chunked
-  commits, push to that branch only, PR-open, batched artifact
-  drafting, council auto-enable) — no further asks until a safety
-  floor. `mode: autonomous` is the flagship pairing for this wrapper:
-  full working set + contract = uninterrupted run to the defined end
-  state.
+- **Execution mode:** the loop's § 3 pre-scan derives the run-start
+  **execution contract**
+  ([`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md)),
+  and under this wrapper the invocation is the confirmation (ADR-237): every
+  run grant (feature branch, chunked commits, push to that branch only,
+  PR-open, batched artifact drafting, council auto-enable) is active from the
+  invocation on, whatever `execution.mode` says or omits. There is no
+  acceptance round and no further ask until a safety floor.
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.
@@ -283,8 +281,11 @@ NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
 - **No `Class: 3` on an agent-executable action.** Capability before role
   (ADR-237 § 2). A blocker labelled human-only that the agent could have run is
   a defect in the roadmap, and the run fixes the label rather than obeying it.
-- All other rules from
-  [`process-phase § Rules`](process-phase.md#rules) apply unchanged.
+- **Inherited from [`process-phase § Rules`](process-phase.md#rules), and only
+  these:** every checkbox edit gets a dashboard sync in the same reply, council
+  consultations run silently, and decline = silence. That file's commit
+  permission and its "halt on true ambiguity" do not apply here: the invocation
+  is the grant, and only the five halt conditions above stop the run.
 
 ## See also
 
