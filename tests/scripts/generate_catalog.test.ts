@@ -73,12 +73,25 @@ describe('renderers', () => {
         ['alpha', 'Use when alpha.'],
         ['beta', 'Use when beta.'],
     ];
-    it('render_llms_txt has the index header + one line per skill', () => {
+    it('render_llms_txt follows the llms.txt format: H1, blockquote, a ## Skills section, one link per skill', () => {
         const out = render_llms_txt(skills);
-        expect(out.startsWith('# agent-config — Skill Index')).toBe(true);
-        expect(out).toContain('alpha: Use when alpha.');
-        expect(out).toContain('beta: Use when beta.');
+        const lines = out.split('\n');
+        expect(lines[0]).toBe('# agent-config — Skill Index');
+        // The summary blockquote is the first non-blank line after the H1.
+        expect(lines.slice(1).find((l) => l.trim() !== '')).toMatch(/^> \S/);
+        expect(lines.filter((l) => /^# /.test(l))).toHaveLength(1);
+        const section = lines.indexOf('## Skills');
+        expect(section).toBeGreaterThan(0);
+        const links = lines.slice(section + 1).filter((l) => l.startsWith('- ['));
+        expect(links).toEqual([
+            '- [alpha](dist/agent-src/skills/alpha/SKILL.md): Use when alpha.',
+            '- [beta](dist/agent-src/skills/beta/SKILL.md): Use when beta.',
+        ]);
         expect(out.endsWith('\n')).toBe(true);
+    });
+
+    it('render_llms_txt makes no visibility or ranking claim', () => {
+        expect(render_llms_txt(skills)).not.toMatch(/\b(rank|ranking|visibility|SEO|cited by)\b/i);
     });
     it('render_catalog_md has the count + a markdown row per skill', () => {
         const out = render_catalog_md(skills);

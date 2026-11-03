@@ -36,7 +36,12 @@
       "tier": "critical",
       "why": "The defect class with ZERO coverage in the estate (G0: `robots` 0 files, `noindex` 0 files) and the highest cost: the site ships, works, looks correct, and is invisible to search. Nothing in the tree looks for it today.",
       "remediation": "Remove the `noindex` meta tag and the blanket `Disallow: /` from the production build; keep them behind the staging environment's own config rather than in shared source.",
-      "verification": "`curl -sI <prod-url> | grep -i x-robots-tag` returns nothing, `curl -s <prod-url>/robots.txt` carries no blanket disallow, and the rendered HTML has no `noindex` meta."
+      "verification": "`curl -sI <prod-url> | grep -i x-robots-tag` returns nothing, `curl -s <prod-url>/robots.txt` carries no blanket disallow, and the rendered HTML has no `noindex` meta.",
+      "basis": {
+        "level": "official",
+        "ref": "https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag (noindex, none) and https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers (Googlebot and Google-Extended tokens); crawler purposes per src/config/crawler-register.json",
+        "checked_at": "2026-11-03"
+      }
     },
     {
       "id": "https-enforcement",
@@ -50,7 +55,12 @@
       "tier": "critical",
       "why": "A mixed-content asset silently breaks the padlock and, on a form page, ships a credential over plaintext. Browsers block some of it and load the rest, so the page LOOKS fine while the guarantee is gone -- which is why this is critical rather than high.",
       "remediation": "Serve every asset over https:// or protocol-relative paths, and redirect http:// at the edge. Never hard-code an http:// origin you control.",
-      "verification": "`curl -sI http://<prod-host>/` returns a 301/308 to https, and the browser console shows no mixed-content warning on the heaviest page."
+      "verification": "`curl -sI http://<prod-host>/` returns a 301/308 to https, and the browser console shows no mixed-content warning on the heaviest page.",
+      "basis": {
+        "level": "official",
+        "ref": "https://www.w3.org/TR/mixed-content/ — browsers upgrade insecure images, audio and video and block other insecure subresources (Candidate Recommendation Draft, 2023-02-23)",
+        "checked_at": "2026-11-03"
+      }
     },
     {
       "id": "custom-error-route",
@@ -64,7 +74,12 @@
       "tier": "high",
       "why": "A framework default error page leaks stack shape and loses the visitor. `404` matches 19 files in the estate, all HTTP-status tables -- none is a launch check.",
       "remediation": "Add the framework's custom 404 route and give it a link back into the site.",
-      "verification": "`curl -s -o /dev/null -w '%{http_code}' <prod-url>/<random-path>` returns 404 and the body is the custom page, not the framework default."
+      "verification": "`curl -s -o /dev/null -w '%{http_code}' <prod-url>/<random-path>` returns 404 and the body is the custom page, not the framework default.",
+      "basis": {
+        "level": "heuristic",
+        "ref": "Practice judgement: a framework default error page shows stack shape and loses the visitor. Estate evidence in `why`: `404` matches 19 files, none a launch check.",
+        "checked_at": "2026-08-25"
+      }
     },
     {
       "id": "per-route-metadata",
@@ -77,7 +92,12 @@
       "tier": "high",
       "why": "`meta description` matches 0 files. Excluded for `saas-app` and `internal-tool` on purpose: an authenticated app's routes are not indexed, so per-route descriptions are work with no consumer.",
       "remediation": "Add title and description to each route's metadata export; a shared default is a fallback, not a per-route value.",
-      "verification": "Fetch each route in the sitemap and assert a non-empty, non-duplicated title and description."
+      "verification": "Fetch each route in the sitemap and assert a non-empty, non-duplicated title and description.",
+      "basis": {
+        "level": "heuristic",
+        "ref": "Practice judgement: a shared or missing title and description on public routes. Estate evidence in `why`: `meta description` matches 0 files.",
+        "checked_at": "2026-08-25"
+      }
     },
     {
       "id": "image-alternative-text",
@@ -92,7 +112,12 @@
       "tier": "high",
       "why": "The one check that applies to every type, including internal tools -- an internal user with a screen reader is still a user. `alt text` matches 7 files, all accessibility prose rather than a launch check.",
       "remediation": "Add `alt` to content images; decorative images take `alt=\"\"` explicitly rather than being left without the attribute.",
-      "verification": "Parse the rendered HTML and assert every `<img>` has an `alt` attribute, empty or not."
+      "verification": "Parse the rendered HTML and assert every `<img>` has an `alt` attribute, empty or not.",
+      "basis": {
+        "level": "official",
+        "ref": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html — SC 1.1.1; null alt on decorative images is sufficient technique H67",
+        "checked_at": "2026-11-03"
+      }
     },
     {
       "id": "document-head-basics",
@@ -107,7 +132,12 @@
       "tier": "high",
       "why": "A missing `lang` makes a screen reader guess the pronunciation of the whole page; a missing viewport makes a phone render a desktop layout at 320px. Both are one line, both are invisible on the developer's machine, and both are the kind of default a framework template silently drops when a page is hand-written.",
       "remediation": "`<html lang=\"..\">`, `<meta charset=\"utf-8\">` and `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">` in the shared layout, not per page.",
-      "verification": "View source on two unrelated routes and confirm all three are present on both -- one route proves the layout, two prove it is the layout and not a copy."
+      "verification": "View source on two unrelated routes and confirm all three are present on both -- one route proves the layout, two prove it is the layout and not a copy.",
+      "basis": {
+        "level": "heuristic",
+        "ref": "Practice judgement: lang, charset and viewport are one line each and invisible on the developer machine; no standards page is cited for this row.",
+        "checked_at": "2026-08-25"
+      }
     },
     {
       "id": "canonical-and-sitemap-coherence",
@@ -120,7 +150,12 @@
       "tier": "medium",
       "why": "Three sources that can disagree silently: a sitemap listing a route whose canonical points elsewhere, or a robots disallow on a route the sitemap advertises. Note `canonical` matches 115 files in this estate in a completely different sense (\"the canonical rule\"), so its count is NOT coverage evidence.",
       "remediation": "Make the canonical the same URL the sitemap lists; remove sitemap entries that robots.txt disallows.",
-      "verification": "For each sitemap URL, fetch it and assert the canonical equals the sitemap entry and robots.txt does not disallow it."
+      "verification": "For each sitemap URL, fetch it and assert the canonical equals the sitemap entry and robots.txt does not disallow it.",
+      "basis": {
+        "level": "official",
+        "ref": "https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls — use absolute canonical URLs, do not give one page different canonicals or a sitemap URL that disagrees",
+        "checked_at": "2026-11-03"
+      }
     },
     {
       "id": "required-legal-pages",
@@ -133,7 +168,12 @@
       "tier": "situational",
       "why": "SITUATIONAL because the requirement is jurisdictional, not universal: a German commercial site needs an Impressum, a US one does not. The skill reports what is missing for the declared region and does not assert a legal conclusion -- that is the domain-safety-disclaimer boundary, not this file's.",
       "remediation": "Add the pages the declared region requires and link them from the footer of every page.",
-      "verification": "Assert each declared-required page returns 200 and is reachable from the home page in one click."
+      "verification": "Assert each declared-required page returns 200 and is reachable from the home page in one click.",
+      "basis": {
+        "level": "official",
+        "ref": "The DE escalation row's `authority` in this file: DDG § 5 (https://www.gesetze-im-internet.de/ddg/) and DSGVO Art. 13 (https://eur-lex.europa.eu/eli/reg/2016/679/oj); provenance, never counsel",
+        "checked_at": "2026-09-03"
+      }
     },
     {
       "id": "analytics-and-consent-wiring",
@@ -146,7 +186,12 @@
       "tier": "situational",
       "why": "Also jurisdictional, and the failure is asymmetric: analytics that never fires costs data, analytics that fires before consent costs a regulatory exposure.",
       "remediation": "Gate the analytics snippet behind the consent state; do not load it on first paint.",
-      "verification": "Load the page with consent declined and assert no request to the analytics origin."
+      "verification": "Load the page with consent declined and assert no request to the analytics origin.",
+      "basis": {
+        "level": "heuristic",
+        "ref": "Practice judgement: a measurement tag ordered before its consent gate; jurisdictional, and this row cites no statute.",
+        "checked_at": "2026-08-25"
+      }
     },
     {
       "id": "third-party-load-in-markup",
@@ -160,7 +205,12 @@
       "tier": "situational",
       "why": "SITUATIONAL because whether a first-paint request to a font, map, video or analytics provider needs the visitor's consent first is jurisdictional. The row states the load as a fact -- which origin, from which line -- and resolves the provider through the dated register src/config/third-party-origins.json; an origin missing from the register is reported undecided, never green.",
       "remediation": "Self-host fonts and scripts, or put the embed behind a click-to-load placeholder that requests the provider only after an interaction. A `preconnect` to the provider opens a connection on its own and goes too.",
-      "verification": "Rebuild and re-run this check: the line is gone, and `--render` records no request to the origin on first paint."
+      "verification": "Rebuild and re-run this check: the line is gone, and `--render` records no request to the origin on first paint.",
+      "basis": {
+        "level": "estate",
+        "ref": "src/config/third-party-origins.json evidence rows and the frozen ground truth tests/fixtures/third-party-load/ground-truth.json",
+        "checked_at": "2026-11-02"
+      }
     },
     {
       "id": "superseded-statute-in-legal-page",
@@ -173,7 +223,12 @@
       "tier": "situational",
       "why": "SITUATIONAL because an imprint is jurisdictional. A model writing legal-page boilerplate reproduces the provision it saw most, which for a German imprint is the one replaced in May 2024; the supersession rows in this file carry the replacement, its effective date and the date they must be re-read by.",
       "remediation": "Replace the citation with the provision the finding names, after checking the current text at the finding's authority.",
-      "verification": "Re-run this check: the imprint line no longer matches any supersession row."
+      "verification": "Re-run this check: the imprint line no longer matches any supersession row.",
+      "basis": {
+        "level": "official",
+        "ref": "The `supersessions` rows of this file, each with its own `authority` (tmg-5-to-ddg-5: https://www.gesetze-im-internet.de/ddg/)",
+        "checked_at": "2026-11-02"
+      }
     },
     {
       "id": "placeholder-in-legal-page",
@@ -186,7 +241,12 @@
       "tier": "situational",
       "why": "SITUATIONAL because the legal pages themselves are. A bracketed slot such as `[Firmenname]` is a value nobody supplied; a numeric bracket is a footnote and is left alone.",
       "remediation": "Fill every bracketed slot with the owner's real value, or remove the line.",
-      "verification": "Re-run this check: no bracketed word token remains in a located legal page."
+      "verification": "Re-run this check: no bracketed word token remains in a located legal page.",
+      "basis": {
+        "level": "heuristic",
+        "ref": "Practice judgement: a bracketed word slot is a value nobody supplied; numeric brackets are footnotes and left alone.",
+        "checked_at": "2026-11-02"
+      }
     },
     {
       "id": "privacy-page-provider-coverage",
@@ -199,7 +259,49 @@
       "tier": "situational",
       "why": "SITUATIONAL because the privacy page is jurisdictional. The checkable half of a privacy notice is that every provider the page actually loads is named; this row compares the providers `third-party-load-in-markup` found loading with the located privacy page's text, and says nothing about the rest of the notice.",
       "remediation": "Name each listed provider in the privacy page, or stop loading it.",
-      "verification": "Re-run this check: every provider found loading appears by one of its register names on the privacy page."
+      "verification": "Re-run this check: every provider found loading appears by one of its register names on the privacy page.",
+      "basis": {
+        "level": "estate",
+        "ref": "src/config/third-party-origins.json privacy_tokens and the frozen ground truth tests/fixtures/third-party-load/ground-truth.json",
+        "checked_at": "2026-11-02"
+      }
+    },
+    {
+      "id": "snippet-eligibility",
+      "title": "An indexable page forbids its own search snippet (`nosnippet` / `max-snippet:0`)",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "docs"
+      ],
+      "tier": "high",
+      "why": "A page that is indexed but carries `nosnippet` or `max-snippet:0` is shown without a text snippet, and Google's guidance for its generative search features requires a page to be indexed and snippet-eligible. A leftover snippet block costs the listing its description while every presence check stays green.",
+      "remediation": "Remove `nosnippet` and `max-snippet:0` from the robots meta (or the crawler-named meta) of pages meant to appear in search; keep them only on pages whose text must not be quoted, and say so in the source.",
+      "verification": "The rendered HTML of each public page carries no robots or googlebot meta with `nosnippet` or `max-snippet:0`, and `curl -sI <url> | grep -i x-robots-tag` shows neither directive.",
+      "basis": {
+        "level": "official",
+        "ref": "https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag — nosnippet, and max-snippet:0 as its equivalent",
+        "checked_at": "2026-11-03"
+      }
+    },
+    {
+      "id": "structured-data-parses",
+      "title": "A JSON-LD block does not parse",
+      "applies_to": [
+        "local-business",
+        "marketing-site",
+        "saas-app",
+        "docs"
+      ],
+      "tier": "medium",
+      "why": "A `<script type=\"application/ld+json\">` block that is not valid JSON is ignored whole by every consumer, so the structured data the page claims to carry is not there. Only parsing is checked; which types a page declares, and how many, is not scored.",
+      "remediation": "Fix the JSON in the block (a trailing comma, an unescaped quote or a template placeholder are the usual causes) or remove the block; validate it with `JSON.parse` in the build.",
+      "verification": "Every `application/ld+json` block on the built pages parses with `JSON.parse`, and Google's Rich Results Test reads the page without a parse error.",
+      "basis": {
+        "level": "official",
+        "ref": "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data — JSON-LD in a script tag is the recommended format; a block that is not JSON is not JSON-LD",
+        "checked_at": "2026-11-03"
+      }
     }
   ],
   "not_in_scope": {

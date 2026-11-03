@@ -14,7 +14,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { STATUTE_RE, legalRowViolations, legalRowsOf } from '../../src/scripts/check_web_launch_readiness';
+import { BASIS_LEVELS, STATUTE_RE, basisViolations, legalRowViolations, legalRowsOf } from '../../src/scripts/check_web_launch_readiness';
 
 const REPO = path.resolve(__dirname, '..', '..');
 const REL = 'src/config/web-launch-readiness.json';
@@ -202,5 +202,33 @@ describe('the header says what reads this file (road-to-a-page-that-says-what-it
         expect(doc._comment).not.toMatch(/Nothing reads/i);
         expect(doc._comment).toMatch(/loadConfig\(\)/);
         expect(doc._comment).toMatch(/production-validator/);
+    });
+});
+
+describe('every check says what it rests on — basis {level, ref, checked_at}', () => {
+    const ok = { id: 'x', basis: { level: 'official', ref: 'https://example.com/spec#section', checked_at: '2026-11-03' } };
+
+    it('the level vocabulary is closed', () => {
+        expect([...BASIS_LEVELS]).toEqual(['official', 'heuristic', 'estate']);
+    });
+
+    it('the shipped config has a valid basis on every check', () => {
+        expect(cfg.checks.length).toBeGreaterThan(0);
+        expect(basisViolations(cfg.checks as never)).toEqual([]);
+    });
+
+    it('fails on a check without basis', () => {
+        expect(basisViolations([{ id: 'x' }] as never)).toEqual(['check "x": no `basis` — a check says what its verdict rests on']);
+    });
+
+    it('fails on an unknown level, an empty ref, or an undated basis', () => {
+        expect(basisViolations([{ ...ok, basis: { ...ok.basis, level: 'vibes' } }] as never).join()).toMatch(/level/);
+        expect(basisViolations([{ ...ok, basis: { ...ok.basis, ref: ' ' } }] as never).join()).toMatch(/ref/);
+        expect(basisViolations([{ ...ok, basis: { ...ok.basis, checked_at: 'last year' } }] as never).join()).toMatch(/checked_at/);
+        expect(basisViolations([ok] as never)).toEqual([]);
+    });
+
+    it('an official basis cites a URL — an official claim nobody can open is not official', () => {
+        expect(basisViolations([{ ...ok, basis: { ...ok.basis, ref: 'the Google docs' } }] as never).join()).toMatch(/URL/);
     });
 });

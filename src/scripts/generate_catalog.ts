@@ -109,19 +109,24 @@ export function collect_skills(): Array<[string, string]> {
     return skills;
 }
 
+/**
+ * `llms.txt` in the llmstxt.org shape: one H1, a blockquote summary, then a
+ * `## Skills` section with one link per skill. It states what the package
+ * holds and where; it makes no claim about how anything ranks or is found.
+ */
 export function render_llms_txt(skills: Array<[string, string]>): string {
     const lines = [
         '# agent-config — Skill Index',
         '',
-        'Machine-readable index of all skills in this package. Each line:',
-        '  <skill-name>: <one-line description>',
+        '> A governed suite of skills, rules and commands for AI coding tools. Each link below is one skill\'s SKILL.md, followed by the skill\'s own description.',
         '',
-        'Source: dist/agent-src/skills/<name>/SKILL.md',
-        'Catalog: docs/skills-catalog.md',
+        'Human-readable catalog: docs/skills-catalog.md',
+        '',
+        '## Skills',
         '',
     ];
     for (const [name, desc] of skills) {
-        lines.push(`${name}: ${desc}`);
+        lines.push(`- [${name}](dist/agent-src/skills/${name}/SKILL.md): ${desc}`);
     }
     lines.push('');
     return lines.join('\n');
