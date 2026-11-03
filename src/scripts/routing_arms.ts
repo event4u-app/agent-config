@@ -15,7 +15,8 @@
  * Usage:
  *   routing_arms --pressure --baseline ART.json --catalogue DIR --n N --seed S --out DIR
  *   routing_arms --twins --baseline ART.json --catalogue DIR --twins-file TWINS.json --per-unit K --out DIR
- *   routing_arms --mcp --baseline ART.json --catalogue DIR --server-command CMD [--server-arg A]... --out DIR
+ *   routing_arms --mcp --baseline ART.json --catalogue DIR --server-command CMD [--server-arg A]... [--inline-top-body] --out DIR
+ *   routing_arms --regrade-inline --aggregate AGG.json --plan PLAN.json --out AGG.json
  *   routing_arms --merge --plan PLAN.json --results DIR --out AGGREGATE.json
  *   routing_arms --report --baseline ART.json --arm NAME=ART.json... --out REPORT.json
  */
@@ -27,6 +28,7 @@ import { fileURLToPath } from 'node:url';
 
 import { MCP_PARITY_EPSILON, catalogueSubset, injectTwin, parityVerdict, type ParityVerdict, type PressureSize } from './_lib/catalogue_pressure.js';
 import { sha256, type CaseVerdict, type UnitRow } from './_lib/routing_baseline.js';
+import { INLINE_TOP_BODY_ENV } from '../shared/mcpInlineTopBody.js';
 import {
     catalogueHash,
     compileQueries,
@@ -212,14 +214,15 @@ export function buildMcpArm(opts: {
     serverCommand: string;
     serverArgs: readonly string[];
     outRoot: string;
+    /** 4.4: serve the unique top hit's body inline (sets the server's env switch). */
+    inlineTopBody?: boolean;
 }): ArmPlan {
     assertSameCatalogue(opts.catalogueRoot, opts.art);
     refuseTrackedOutput(opts.outRoot);
-    manifest(opts.outRoot, 'mcp delivery arm');
-    fs.writeFileSync(
-        path.join(opts.outRoot, '.mcp.json'),
-        JSON.stringify({ mcpServers: { [ARM_SERVER]: { command: opts.serverCommand, args: opts.serverArgs } } }, null, 2) + '\n',
-    );
+    manifest(opts.outRoot, opts.inlineTopBody === true ? 'mcp delivery arm, inline top body' : 'mcp delivery arm');
+    const server: Record<string, unknown> = { command: opts.serverCommand, args: opts.serverArgs };
+    if (opts.inlineTopBody === true) server['env'] = { [INLINE_TOP_BODY_ENV]: '1' };
+    fs.writeFileSync(path.join(opts.outRoot, '.mcp.json'), JSON.stringify({ mcpServers: { [ARM_SERVER]: server } }, null, 2) + '\n');
     const picked = baselineQueries(opts.art, opts.skillsRoot);
     compileQueries(
         picked.map((p) => p.q),
@@ -229,7 +232,7 @@ export function buildMcpArm(opts: {
     );
     const plan: ArmPlan = {
         schema: 'routing-baseline-plan/v1',
-        arm: 'mcp',
+        arm: opts.inlineTopBody === true ? 'mcp-inline' : 'mcp',
         plugin: ARM_PLUGIN,
         units: picked.length,
         per_unit: 1,
@@ -238,6 +241,84 @@ export function buildMcpArm(opts: {
     };
     fs.writeFileSync(path.join(opts.outRoot, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
     return plan;
+}
+
+/**
+ * 4.4 — did this run receive `unit`'s body inline from `suggest_skill_for_task`?
+ * The host's `tool_used` grader tests a call's INPUT, and on the inline path the
+ * body arrives in a call's RESULT, so the arm is re-graded from the trace: the
+ * result of a suggest call (matched by `tool_use_id`) must carry
+ * `top_body.skill === unit`. A body the model was handed counts as delivered
+ * exactly as a `read_skill(unit)` call does.
+ */
+export function inlineDelivered(jsonl: string, unit: string): boolean {
+    const suggestIds = new Set<string>();
+    const results: { id: string; content: unknown }[] = [];
+    for (const line of jsonl.split('\n')) {
+        if (line.trim() === '') continue;
+        let o: { message?: { content?: unknown } };
+        try {
+            o = JSON.parse(line) as typeof o;
+        } catch {
+            continue;
+        }
+        const content = o.message?.content;
+        if (!Array.isArray(content)) continue;
+        for (const c of content as { type?: unknown; id?: unknown; name?: unknown; tool_use_id?: unknown; content?: unknown }[]) {
+            if (c.type === 'tool_use' && c.name === MCP_SUGGEST_TOOL && typeof c.id === 'string') suggestIds.add(c.id);
+            if (c.type === 'tool_result' && typeof c.tool_use_id === 'string') results.push({ id: c.tool_use_id, content: c.content });
+        }
+    }
+    for (const r of results) {
+        if (suggestIds.has(r.id) && topBodySkills(r.content).includes(unit)) return true;
+    }
+    return false;
+}
+
+/** `top_body.skill` of every JSON payload inside a tool result, parsed rather than pattern-matched. */
+function topBodySkills(content: unknown): string[] {
+    const texts =
+        typeof content === 'string'
+            ? [content]
+            : Array.isArray(content)
+              ? (content as { type?: unknown; text?: unknown }[]).flatMap((p) => (p.type === 'text' && typeof p.text === 'string' ? [p.text] : []))
+              : [];
+    const out: string[] = [];
+    for (const t of texts) {
+        try {
+            const skill = (JSON.parse(t) as { top_body?: { skill?: unknown } }).top_body?.skill;
+            if (typeof skill === 'string') out.push(skill);
+        } catch {
+            continue;
+        }
+    }
+    return out;
+}
+
+/**
+ * Flip a run to passed when its trace shows the unit's body delivered inline.
+ * Never flips a pass to a fail and never touches an errored run — an
+ * infrastructure failure stays UNKNOWN.
+ */
+export function regradeInline(
+    aggregate: { cases?: { name?: string; arms?: { with?: { passed?: unknown; error?: unknown; tracePath?: unknown }[] } }[] },
+    unitOf: (caseName: string) => string | undefined,
+    readTrace: (p: string) => string | null,
+): number {
+    let flipped = 0;
+    for (const c of aggregate.cases ?? []) {
+        const unit = unitOf(c.name ?? '');
+        if (unit === undefined) continue;
+        for (const run of c.arms?.with ?? []) {
+            if (run.passed === true || (run.error !== null && run.error !== undefined) || typeof run.tracePath !== 'string') continue;
+            const t = readTrace(run.tracePath);
+            if (t !== null && inlineDelivered(t, unit)) {
+                run.passed = true;
+                flipped += 1;
+            }
+        }
+    }
+    return flipped;
 }
 
 /**
@@ -401,7 +482,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             const a = need(argv, ['baseline', 'catalogue', 'server-command', 'out']);
             if (a === null) return 2;
             const serverArgs = argv.flatMap((v, i) => (v === '--server-arg' && i + 1 < argv.length ? [argv[i + 1] as string] : []));
-            const plan = buildMcpArm({ art: readArt(a['baseline'] as string), skillsRoot, catalogueRoot: a['catalogue'] as string, serverCommand: a['server-command'] as string, serverArgs, outRoot: a['out'] as string });
+            const plan = buildMcpArm({ art: readArt(a['baseline'] as string), skillsRoot, catalogueRoot: a['catalogue'] as string, serverCommand: a['server-command'] as string, serverArgs, outRoot: a['out'] as string, inlineTopBody: argv.includes('--inline-top-body') });
             process.stdout.write(`routing_arms: ${String(plan.rows.length)} mcp case(s) -> ${a['out'] as string}\n`);
             return 0;
         }
@@ -412,6 +493,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             const { aggregate, missing } = mergeAggregates(plan, a['results'] as string);
             fs.writeFileSync(a['out'] as string, JSON.stringify(aggregate, null, 2) + '\n');
             process.stdout.write(`routing_arms: merged ${String((aggregate['cases'] as unknown[]).length)} case(s), ${String(missing.length)} missing -> ${a['out'] as string}\n`);
+            return 0;
+        }
+        if (argv.includes('--regrade-inline')) {
+            const a = need(argv, ['aggregate', 'plan', 'out']);
+            if (a === null) return 2;
+            const plan = JSON.parse(fs.readFileSync(a['plan'] as string, 'utf8')) as ArmPlan;
+            const unitOf = new Map(plan.rows.map((r) => [r.case, r.skill]));
+            const agg = JSON.parse(fs.readFileSync(a['aggregate'] as string, 'utf8')) as Parameters<typeof regradeInline>[0];
+            const flipped = regradeInline(agg, (n) => unitOf.get(n), (p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null));
+            fs.writeFileSync(a['out'] as string, JSON.stringify(agg, null, 2) + '\n');
+            process.stdout.write(`routing_arms: ${String(flipped)} run(s) re-graded as delivered inline -> ${a['out'] as string}\n`);
             return 0;
         }
         if (argv.includes('--report')) {

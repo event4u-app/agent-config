@@ -16,7 +16,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-memory-each-worker-is-handed | active | ready | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
 | road-to-a-noted-that-is-a-write | active | ready | When the agent says "noted" or "from now on", a write to a carrier the next session reads has happened … |
 | road-to-an-observation-provider-slot | active | ready | `/analyze:reference --transfer=rebuild\|adapt` can take evidence from a runtime, browser or binary observation tool the consumer has configured — a reverse-engineering … |
-| road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
+| road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
