@@ -38,32 +38,32 @@ extracting it.
 ## Phase 1 — A grid the planner reads
 
 - [x] 1.1 Optional `allowed_durations` key in the capability manifests; `gemini-veo.json`
-  carries `[4,6,8]` marked as assumed. verify: `npx vitest run tests/scripts/ai_video_model_capabilities_schema.test.ts`.
+  carries `[4,6,8]` marked as assumed. verify: `npx vitest run tests/scripts/ai_video_model_capabilities_schema.test.ts` -> 0
 - [x] 1.2 `song-to-script` keeps scene lengths on `allowed_durations` when present;
   `motion-choreographer` states its provider grammar is undated.
-  verify: `grep -n allowed_durations src/skills/song-to-script/SKILL.md`.
+  verify: `grep -n allowed_durations src/skills/song-to-script/SKILL.md` -> /allowed_durations/
 
 ## Phase 2 — Say where the refusal stops
 
 - [x] 2.1 Red first: the enforceable `claude` deny-plan consent text names the mod limit.
-  verify: `npx vitest run tests/install/no_go_deny_rows.test.ts`.
+  verify: `npx vitest run tests/install/no_go_deny_rows.test.ts` -> 0
 - [x] 2.2 `enforcement-by-host.md` host-switch note, a consent-screen line in Class D,
-  README scope qualifier. verify: `grep -n 'Host switches' docs/enforcement-by-host.md`.
+  README scope qualifier. verify: `grep -n 'Host switches' docs/enforcement-by-host.md` -> /## Host switches/
 - [x] 2.3 Rename `managed-settings-block` → `ac-owned-settings-block`; the lint refuses the old
-  value with a hint. verify: `npx vitest run tests/scripts/lint_surface_matrix_hooks_value.test.ts`.
+  value with a hint. verify: `npx vitest run tests/scripts/lint_surface_matrix_hooks_value.test.ts` -> 0
 
 ## Phase 3 — Third-party agent assets through the same intake
 
 - [x] 3.1 `supply-chain-intake/references/agent-asset-intake.md`: pin, read every file before
-  activation, scripts raise the class, re-review on update. verify: skill linter on the skill.
+  activation, scripts raise the class, re-review on update. verify: `task lint-skills` -> 0
 - [x] 3.2 `archive_precheck.ts`: reads a ZIP central directory without extracting; refuses
   traversal, symlinks, nested archives, ZIP64, encrypted entries, oversize/ratio bombs; names
-  executables. verify: `npx vitest run tests/scripts/archive_precheck.test.ts`.
+  executables. verify: `npx vitest run tests/scripts/archive_precheck.test.ts` -> 0
 
 ## Phase 4 — Close
 
 - [x] 4.1 Projections regenerated; touched tests and typecheck green.
-  verify: `npm run -s typecheck` and `bash src/scripts/condense.sh --changed`.
+  verify: `npm run -s typecheck` -> 0
 
 ## Decisions
 

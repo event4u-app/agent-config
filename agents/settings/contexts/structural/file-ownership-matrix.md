@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **645**
-- Edges (incl. self-WRITE): **2464**
+- Files indexed: **646**
+- Edges (incl. self-WRITE): **2469**
 
 ## READ_ONLY edges
 
@@ -1702,6 +1702,9 @@
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md` | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/rules/context-hygiene.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
@@ -1800,6 +1803,7 @@
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/docker/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/svg-authoring/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-repair-loop/SKILL.md` | `.agent-src.uncondensed/contexts/execution/toolchain-resolver.md` | `body_link` | 1 |
@@ -1839,5 +1843,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 408 |
+| `skill` | 409 |
 
