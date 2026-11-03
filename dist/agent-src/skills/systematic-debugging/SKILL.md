@@ -158,15 +158,10 @@ to Phase 2, treat the failure as new evidence.
 
 If you have tried **three** fixes and the bug is still present:
 
-* Stop attempting fixes.
-* Re-read phases 1–3 — something about the root cause is wrong.
+* Stop; re-read phases 1–3 — the root cause is wrong.
 * Ask explicitly: is this bug in the code, or in the architecture /
   design that keeps producing this class of bug?
-* Move to band 2 of the fix-loop ladder
-  ([`autonomous-execution`](../../rules/autonomous-execution.md) § Validation-loop
-  budget): fix #4 is a different strategy, not a smaller edit. Band 3 escalates
-  independently. A count is never a reason to ask the user; record the
-  architecture question in the run's notes, where the escalation reads it.
+* Fix #4 is a new strategy, not a smaller edit (fix-loop ladder).
 
 ## Debug micro-loop — one test, one fix, one re-run
 
