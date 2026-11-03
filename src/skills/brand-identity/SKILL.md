@@ -64,6 +64,7 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 ```
 
    Capture mark style, form language, and vector requirement. Note: any mark that the consumer may need in editable form MUST be specified as editable vector (SVG/AI), not raster.
+   When the brief keeps an existing logo, record the logo direction as **keep** with the asset's path, leave the asset unchanged, and propose no new mark style or form language for it — the colour, type and imagery directions are derived to work with the kept mark.
 
 5. **Derive imagery direction** from archetype and sector context: subject matter, mood, composition style, colour treatment, and what to avoid.
 

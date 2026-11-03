@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,6 +19,8 @@ import {
     tokenisePath,
     vectorVerdict,
     parseElements,
+    main,
+    scanAsset,
 } from '../../src/scripts/lint_svg_asset.js';
 import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
 import { parseDocument } from '../../src/scripts/_lib/svg_dom.js';
@@ -78,12 +81,21 @@ const manifest = JSON.parse(
 
 const read = (rel: string): string => fs.readFileSync(path.join(FIXTURES, rel), 'utf-8');
 
-function scan(rel: string, delivery: DeliveryMode): Finding[] {
+function scan(rel: string, delivery: DeliveryMode, assetClass?: 'mark'): Finding[] {
     const content = read(rel);
+    if (assetClass) return scanAsset(content, rel, { delivery, assetClass }) as Finding[];
     return /\.svg$/i.test(rel)
         ? scanSvg(content, rel, { delivery })
         : scanHostHtml(content, rel, { delivery });
 }
+
+/**
+ * A `mark/…` taxonomy id is read only under `--class mark` (svg-mark PREREG),
+ * so its rows and controls are scanned with that class and every other row is
+ * scanned exactly as before.
+ */
+const classFor = (taxonomy: readonly string[]): 'mark' | undefined =>
+    taxonomy.some((t) => t.startsWith('mark/')) ? 'mark' : undefined;
 
 /** Pre-registered taxonomy id → the rule this linter actually emits. */
 const TAXONOMY_TO_RULE: Record<string, string> = {
@@ -106,6 +118,10 @@ const TAXONOMY_TO_RULE: Record<string, string> = {
     'motion/no-reduced-motion-branch': 'svg-motion-no-reduced-motion',
     'motion/smil-css-only-branch': 'svg-motion-smil-css-only',
     'motion/d-morph-command-mismatch': 'svg-motion-d-morph-mismatch',
+    'mark/live-text': 'svg-mark-live-text',
+    'mark/near-miss-angle': 'svg-mark-near-miss-angle',
+    'mark/tiny-detail': 'svg-mark-tiny-detail',
+    'mark/colour-count': 'svg-mark-colour-count',
 };
 
 /**
@@ -144,7 +160,8 @@ describe('every-static-row-found-and-twins-clean', () => {
             const expected = TAXONOMY_TO_RULE[row.rule];
             expect(expected, `no mapping for pre-registered rule ${row.rule}`).toBeDefined();
 
-            const planted = scan(row.file, row.delivery).map((f) => f.rule);
+            const cls = classFor([row.rule]);
+            const planted = scan(row.file, row.delivery, cls).map((f) => f.rule);
             if (!planted.includes(expected as string)) {
                 unanswered.push(`${row.id}: expected ${expected}, got [${[...new Set(planted)].join(', ')}]`);
             }
@@ -152,7 +169,7 @@ describe('every-static-row-found-and-twins-clean', () => {
             // Zero findings on the twin — not merely "not this rule". A twin
             // that reds for a second reason is a fixture defect, and the target
             // table pre-registered zero.
-            const twin = [...new Set(scan(row.twin, row.delivery).map((f) => f.rule))];
+            const twin = [...new Set(scan(row.twin, row.delivery, cls).map((f) => f.rule))];
             if (twin.length) dirtyTwins.push(`${row.id}: twin reports [${twin.join(', ')}]`);
         }
 
@@ -162,7 +179,9 @@ describe('every-static-row-found-and-twins-clean', () => {
 
     it('controls stay silent — the two reproduced false positives (R9, R12)', () => {
         for (const control of manifest.controls) {
-            const rules = new Set(scan(control.file, 'inline').map((f) => f.rule));
+            const rules = new Set(
+                scan(control.file, 'inline', classFor(control.must_not_report)).map((f) => f.rule),
+            );
             const mapped = control.must_not_report
                 .map((t) => TAXONOMY_TO_RULE[t])
                 .filter((r): r is string => Boolean(r));
@@ -1027,5 +1046,161 @@ describe('what the third 16.5.0 review found', () => {
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>' +
             '<!-- svg-asset-disable svg-a11y-generic-id --><rect id="icon" width="8" height="8"/></svg>\n';
         expect(scanSvg(generic, 'g.svg').map((f) => f.rule)).not.toContain('svg-a11y-generic-id');
+    });
+});
+
+/**
+ * Steps 1.1–1.3 of `road-to-a-mark-that-survives-16px`, against the readings
+ * `internal/bench/corpora/svg-mark-PREREG.md` registered before the rules.
+ */
+describe('a mark that survives 16 px', () => {
+    // The lane's reproduction: live text, a 1.23° stroke, 2–3 unit dots and six
+    // colours on a 480 canvas. It read clean (exit 0) before this family.
+    const PROBE =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img" aria-label="Acme">\n' +
+        '  <rect x="0" y="0" width="480" height="480" fill="#1d4ed8"/>\n' +
+        '  <circle cx="240" cy="240" r="120" fill="#ffffff"/>\n' +
+        '  <path d="M100 100 L380 106" stroke="#f59e0b" stroke-width="2"/>\n' +
+        '  <circle cx="400" cy="80" r="3" fill="#10b981"/>\n' +
+        '  <circle cx="60" cy="400" r="2" fill="#ef4444"/>\n' +
+        '  <text x="240" y="440" font-family="Inter" font-size="40" fill="#111827" text-anchor="middle">ACME</text>\n' +
+        '</svg>\n';
+
+    const tmpFile = (name: string, body: string): string => {
+        const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'svg-mark-'));
+        const file = path.join(dir, name);
+        fs.writeFileSync(file, body);
+        return file;
+    };
+
+    /** Run the CLI and capture what it printed, without touching the real streams. */
+    const run = (args: string[]): { code: number; out: string } => {
+        let out = '';
+        const write = process.stdout.write.bind(process.stdout);
+        const writeErr = process.stderr.write.bind(process.stderr);
+        process.stdout.write = ((chunk: string | Uint8Array) => {
+            out += String(chunk);
+            return true;
+        }) as typeof process.stdout.write;
+        process.stderr.write = (() => true) as typeof process.stderr.write;
+        try {
+            return { code: main(args), out };
+        } finally {
+            process.stdout.write = write;
+            process.stderr.write = writeErr;
+        }
+    };
+
+    it('the lane probe goes from exit 0 to exit 2 under --class mark', () => {
+        const file = tmpFile('probe.svg', PROBE);
+        expect(run(['--file', file]).code).toBe(0);
+        const { code, out } = run(['--class', 'mark', '--json', '--file', file]);
+        expect(code).toBe(2);
+        const rules = new Set((JSON.parse(out) as Finding[]).map((f) => f.rule));
+        for (const rule of [
+            'svg-mark-live-text',
+            'svg-mark-near-miss-angle',
+            'svg-mark-tiny-detail',
+            'svg-mark-colour-count',
+        ]) {
+            expect(rules, rule).toContain(rule);
+        }
+    });
+
+    it('grades live text as an error and the geometry readings as warnings', () => {
+        const findings = scanAsset(PROBE, 'probe.svg', { assetClass: 'mark' });
+        const sev = (rule: string): string[] => findings.filter((f) => f.rule === rule).map((f) => f.severity);
+        expect(sev('svg-mark-live-text')).toEqual(['error']);
+        expect(sev('svg-mark-near-miss-angle')).toEqual(['warning']);
+        // Both dots — 6 and 4 units against a 10-unit bound.
+        expect(sev('svg-mark-tiny-detail')).toEqual(['warning', 'warning']);
+        expect(sev('svg-mark-colour-count')).toEqual(['report']);
+    });
+
+    it('the colour count is in --json and never changes the exit code', () => {
+        const rel = 'tests/design-artifacts/fixtures/svg-assets/assets/mark-colour-count.svg';
+        const { code, out } = run(['--class', 'mark', '--json', '--file', rel]);
+        const findings = JSON.parse(out) as Finding[];
+        expect(findings.map((f) => f.rule)).toEqual(['svg-mark-colour-count']);
+        expect(findings[0]?.severity).toBe('report');
+        expect(code).toBe(0);
+        // And in the human output too — reported, still exit 0.
+        const human = run(['--class', 'mark', '--file', rel]);
+        expect(human.code).toBe(0);
+        expect(human.out).toContain('svg-mark-colour-count');
+    });
+
+    it('the overshoot control is silent only because it is declared', () => {
+        const rel = 'assets/mark-optical-overshoot.svg';
+        const declared = read(rel);
+        expect(scanAsset(declared, rel, { assetClass: 'mark' })).toEqual([]);
+        // Sensitivity: the same geometry without the declaration is a near miss.
+        const undeclared = declared.replace(' data-optical="overshoot"/>', '/>');
+        expect(undeclared).not.toBe(declared);
+        expect(scanAsset(undeclared, rel, { assetClass: 'mark' }).map((f) => f.rule)).toEqual([
+            'svg-mark-near-miss-angle',
+        ]);
+    });
+
+    it('reads angles at the edges of the window and short segments as the PREREG says', () => {
+        const mark = (d: string): string[] =>
+            scanAsset(
+                `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img"><title>t</title>` +
+                    `<path d="${d}" stroke="#000" stroke-width="20"/></svg>`,
+                'm.svg',
+                { assetClass: 'mark' },
+            ).map((f) => f.rule);
+        const at = (deg: number, len = 300): string => {
+            const r = (deg * Math.PI) / 180;
+            return `M100 100 L${(100 + len * Math.cos(r)).toFixed(4)} ${(100 + len * Math.sin(r)).toFixed(4)}`;
+        };
+        expect(mark(at(0))).toEqual([]);
+        expect(mark(at(0.2))).toEqual([]);
+        expect(mark(at(1))).toEqual(['svg-mark-near-miss-angle']);
+        expect(mark(at(46.5))).toEqual(['svg-mark-near-miss-angle']);
+        expect(mark(at(88))).toEqual(['svg-mark-near-miss-angle']);
+        expect(mark(at(178))).toEqual(['svg-mark-near-miss-angle']);
+        expect(mark(at(50))).toEqual([]);
+        expect(mark(at(75))).toEqual([]);
+        // Under 4 % of the canvas (19.2 units) an angle cannot show at 16 px.
+        expect(mark(at(1, 15))).toEqual([]);
+        // Relative commands are walked, not read as absolute pairs.
+        expect(mark('m100 100 l280 6')).toEqual(['svg-mark-near-miss-angle']);
+        expect(mark('M100 100 h280 v6')).toEqual([]);
+    });
+
+    it('skips non-rendered containers and transformed elements', () => {
+        const findings = scanAsset(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img"><title>t</title>' +
+                '<defs><circle id="dot" cx="10" cy="10" r="2"/></defs>' +
+                '<circle cx="10" cy="10" r="2" transform="scale(10)" fill="#000"/>' +
+                '<use href="#dot" transform="scale(10)"/></svg>',
+            'm.svg',
+            { assetClass: 'mark' },
+        );
+        expect(findings.filter((f) => f.rule.startsWith('svg-mark-'))).toEqual([]);
+    });
+
+    it('without --class, or with a non-mark class, the corpus reads byte-identically', () => {
+        const dir = 'tests/design-artifacts/fixtures/svg-assets';
+        const plain = run(['--dir', dir]);
+        expect(plain.out).not.toContain('svg-mark-');
+        expect(run(['--dir', dir, '--class', 'icon'])).toEqual(plain);
+        const plainJson = run(['--dir', dir, '--json']);
+        expect(run(['--dir', dir, '--json', '--class', 'illustration'])).toEqual(plainJson);
+    });
+
+    it('an unknown --class is a broken invocation, not a clean run', () => {
+        expect(run(['--class', 'logo', '--file', 'tests/design-artifacts/fixtures/svg-assets/assets/mark-one-colour.svg']).code).toBe(1);
+    });
+
+    it('the held-out real marks read zero mark findings (PREREG kill criterion)', () => {
+        const REAL = path.resolve(FIXTURES, '..', 'svg-real');
+        for (const name of ['authored-mark.svg', 'conversion-reference-mark.svg']) {
+            const findings = scanAsset(fs.readFileSync(path.join(REAL, name), 'utf-8'), name, {
+                assetClass: 'mark',
+            }).filter((f) => f.rule.startsWith('svg-mark-') && f.severity !== 'report');
+            expect(findings, name).toEqual([]);
+        }
     });
 });

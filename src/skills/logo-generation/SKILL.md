@@ -45,11 +45,18 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    color, fit to the brief), the top three fixes in priority order, and an
    equity note — what the current mark has earned that a fix must not throw
    away. Stop there.
-1b. **Diverge before converging** — propose at least three concepts of
+1b. **Idea before form, then diverge** — before drawing anything, list what
+   only this client owns (a place, a craft, a founder story, a product
+   behaviour — the subject inventory), and write each candidate idea as one
+   sentence of the form "X becomes Y" (the subject → the form it takes). Then
+   run the **competitor-swap test**: put the nearest competitor's name into
+   the sentence; if it still works, the idea belongs to the category, not to
+   the client. Flag a generic mark (an initial in a rounded square, a spark, a
+   swoosh, a globe) as generic in the output — flagged, not forbidden; the
+   user may still choose it. Then propose at least three concepts of
    **different mark types** (e.g. wordmark, lettermark, pictorial, abstract,
-   emblem), each with a one-line idea that says what it means, not how it
-   looks. Three takes on one idea are one concept. The user picks before any
-   concept is refined.
+   emblem), each with its "X becomes Y" line. Three takes on one idea are one
+   concept. The user picks before any concept is refined.
 2. **Choose the path** — raster concept (text-in-mark → Ideogram for legible type)
    vs. **true vector** (a vector-native provider for editable marks, or a
    hand-authored one for simple geometric marks — authored under
@@ -73,6 +80,12 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    counting `<path>` elements: a raster embedded beside one dummy path passes
    that count and is not a vector, and a mark built from `rect`/`circle` fails
    it and is one. See [`svg-authoring`](../svg-authoring/SKILL.md).
+   **The mark lint** — run `lint_svg_asset --class mark --file <mark.svg>`
+   beside the render witness. It fails (exit 2) on live `<text>` in the master
+   (outline it), on a straight edge 0.3–3° off a reference angle (level it, or
+   declare `data-optical="overshoot"` on the element when the overshoot is
+   intended), and on a part under 1/48 of the viewBox (it vanishes at 16 px).
+   The colour count it prints is a report, never a gate.
    **The legibility witness** — every vector candidate is rendered with
    `agent-config ui:render <mark.svg> --profile asset --class mark`, which
    captures it at 16 and 32 px and at 1×/2×, on light and dark. Legibility is
@@ -91,12 +104,20 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
 7. **Export kit (after confirmation)** —
    `npx tsx node_modules/@event4u/agent-config/src/scripts/logo_export_kit.ts <mark.svg> --name "<Name>" --out <dir>`
    writes the SVG, PNG at 1× and 2×, the favicon set with `site.webmanifest`,
-   and light and dark lockups — the same bytes every run from the same input.
+   and light and dark lockups — the same bytes every run from the same input —
+   plus `mark.svg.provenance.json`, the origin sidecar the media
+   [transparency policy](../../../agents/settings/policies/media/transparency.md)
+   requires: pass `--backend` and `--model` for a provider-made mark (a
+   hand-authored one is `none`), `--licence`, and `--commercial yes|no|verify`
+   (default `verify` — never claim commercial use you have not checked), and
+   pin `--date` when the kit must be byte-identical across days.
 
 ## Output format
 
-0. **Concepts** (generation) — three or more, of different mark types, one-line
-   idea each; or, in critique mode, the scorecard, top-3 fixes and equity note.
+0. **Concepts** (generation) — the subject inventory, then three or more
+   concepts of different mark types, each with its "X becomes Y" line, its
+   competitor-swap result, and a `generic` flag where it applies; or, in
+   critique mode, the scorecard, top-3 fixes and equity note.
 1. **Chosen path** — raster concept or true vector, with rationale.
 2. **Prompt or SVG** — the prompt string ready to copy (raster/vector provider), or
    the authored SVG markup (LLM-authored geometric mark path).
@@ -136,4 +157,5 @@ PNG as the final logo file.
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
 - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the brief into provider-specific prompt grammar.
 - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before generating brand marks or likenesses.
+- [Media transparency policy](../../../agents/settings/policies/media/transparency.md) — the provenance fields the export kit's sidecar carries.
 - `type-design` — "make this a font": the rest of the alphabet in a wordmark's lettering. Named, not linked — it ships in another pack.
