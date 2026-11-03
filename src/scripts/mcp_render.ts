@@ -26,6 +26,11 @@
  * `servers` to keep our internal schema stable if a downstream format ever
  * diverges.
  *
+ * Each target is MERGED, not replaced (`mergeHostConfigFile`): only the
+ * servers `mcp.json` names are written under `mcpServers`, a foreign server or
+ * top-level key survives, a JSONC / unparseable / duplicate-key target is
+ * refused with a named status and exit 1, and an overwrite leaves a backup.
+ *
  * Failure mode: unresolved `${env:VAR}` placeholders are collected first,
  * then reported together and a non-zero exit is raised. No target file is
  * written when any placeholder is missing.
@@ -36,6 +41,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { isPlainObject, jsonEqual } from './_lib/json_merge.js';
+import { manualSnippet, mergeHostConfigFile, parseHostConfig } from '../install/hostConfigMerge.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -239,10 +247,42 @@ function _dumpString(s: string): string {
     return out + '"';
 }
 
-export function write_target(p: string, content: Record<string, unknown>): void {
-    fs.mkdirSync(path.dirname(p), { recursive: true });
-    const serialized = _pyJsonDumpsSorted(content) + '\n';
-    fs.writeFileSync(p, serialized, 'utf-8');
+function _servers(data: Record<string, unknown>): Record<string, unknown> {
+    const servers = data['mcpServers'];
+    return isPlainObject(servers) ? servers : {};
+}
+
+/**
+ * Replace only the servers this renderer owns. A target is a file the user
+ * also edits — a server they added by hand, a top-level key another tool wrote
+ * — so everything outside `rendered.mcpServers` survives the render.
+ */
+export function merge_rendered(
+    existing: Record<string, unknown>,
+    rendered: Record<string, unknown>,
+): Record<string, unknown> {
+    return { ...existing, mcpServers: { ..._servers(existing), ..._servers(rendered) } };
+}
+
+/**
+ * Write one target through the shared host-config merge: foreign entries are
+ * kept, a JSONC / unparseable / ambiguous file is refused with a named status,
+ * and an overwrite leaves `<file>.agent-config.bak`.
+ */
+export function write_target(p: string, content: Record<string, unknown>) {
+    return mergeHostConfigFile(p, content, merge_rendered, {
+        write: (file, text) => fs.writeFileSync(file, text, 'utf-8'),
+        serialize: (data) => _pyJsonDumpsSorted(data) + '\n',
+    });
+}
+
+/** Every rendered server is present in `p` with the rendered value. Foreign keys are not compared. */
+export function target_matches(p: string, rendered: Record<string, unknown>): boolean {
+    if (!fs.existsSync(p)) return false;
+    const parsed = parseHostConfig(fs.readFileSync(p, 'utf-8'));
+    if (parsed.kind === 'invalid') return false;
+    const actual = _servers(parsed.data);
+    return Object.entries(_servers(rendered)).every(([name, value]) => name in actual && jsonEqual(actual[name], value));
 }
 
 export function collect_targets(
@@ -281,11 +321,20 @@ function cmd_render(args: ParsedArgs): number {
         return 1;
     }
     const targets = collect_targets(projectRoot, args.claudeDesktop);
+    let refused = 0;
     for (const [name, p] of Object.entries(targets)) {
-        write_target(p, rendered);
-        process.stdout.write(`✅  ${_ljust(name, 16)} → ${p}\n`);
+        const outcome = write_target(p, rendered);
+        if (outcome.status.startsWith('skipped-')) {
+            refused += 1;
+            process.stderr.write(
+                `❌  ${_ljust(name, 16)} → ${p}: ${outcome.status} (${outcome.detail ?? ''}) — ` +
+                    `file left untouched; add by hand:\n${manualSnippet(rendered)}\n`,
+            );
+            continue;
+        }
+        process.stdout.write(`✅  ${_ljust(name, 16)} → ${p} (${outcome.status})\n`);
     }
-    return 0;
+    return refused > 0 ? 1 : 0;
 }
 
 function cmd_check(args: ParsedArgs): number {
@@ -296,12 +345,10 @@ function cmd_check(args: ParsedArgs): number {
         process.stderr.write(format_missing_report(missing) + '\n');
         return 1;
     }
-    const serialized = _pyJsonDumpsSorted(rendered) + '\n';
     const targets = collect_targets(projectRoot, args.claudeDesktop);
     const diffs: Array<[string, string]> = [];
     for (const [name, p] of Object.entries(targets)) {
-        const actual = fs.existsSync(p) ? fs.readFileSync(p, 'utf-8') : '';
-        if (actual !== serialized) {
+        if (!target_matches(p, rendered)) {
             diffs.push([name, p]);
         }
     }
@@ -312,7 +359,7 @@ function cmd_check(args: ParsedArgs): number {
         }
         return 1;
     }
-    process.stdout.write('✅  All MCP targets match source.\n');
+    process.stdout.write('✅  All MCP targets carry the rendered servers (foreign entries not compared).\n');
     return _report_mcp_json(projectRoot);
 }
 

@@ -122,14 +122,23 @@ substituted inline and the root key renamed to `mcpServers`.
 - **Unresolved `${env:VAR}`** — exit 1, grouped report listing every missing
   variable and every path in the config where it is used. **No target file
   is written**, not even a partial one. Set the variable(s) and re-run.
+- **Target is commented (JSONC), unparseable, or repeats a key the render
+  would write** — exit 1, the target is left byte-for-byte untouched and the
+  report names the status (`skipped-jsonc`, `skipped-invalid`,
+  `skipped-duplicate-key`) plus the snippet to add by hand.
 - **`task mcp:check` disagrees with on-disk targets** — exit 1; run
-  `task mcp:render` to regenerate.
+  `task mcp:render` to regenerate. The check compares only the servers
+  `mcp.json` renders; servers you added to a target by hand are not compared.
 
 ## What this is not
 
-The renderer is one-way: `mcp.json` → tool configs. It does not read or diff
-pre-existing tool configs. Remove stale entries from your source file and
-re-render.
+The renderer is one-way: `mcp.json` → tool configs. It merges into an existing
+target rather than replacing it: only the servers named in `mcp.json` are
+written under `mcpServers`, every other server and top-level key in the target
+survives, and an overwrite leaves `<target>.agent-config.bak` (written once, so
+it keeps the pre-agent-config original). Because foreign entries survive,
+removing a server from `mcp.json` does not remove it from the targets — delete
+it from the target by hand.
 
 Keychain backends (`security`, `secret-tool`, Bitwarden CLI) are **out of
 scope**. The environment is the only secret surface. Pipe from whatever

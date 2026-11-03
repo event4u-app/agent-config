@@ -15,7 +15,8 @@
  * in the block adds an entry for that step. A false positive is exempted per
  * step, never globally: a line of its own in the block starting
  * `reach exempt: <reason>`, the reason at least {@link MIN_EXEMPT_REASON}
- * characters. Enforcing since 3.3, after report
+ * characters; a reason that names prose, a door or a command as the caller
+ * carries the invoking `file:line` (or the calling `src/**.ts` module). Enforcing since 3.3, after report
  * mode shipped in 17.1.0 through 17.4.0; without `--enforce` it only reports.
  *
  * Usage:
@@ -133,6 +134,26 @@ export const MIN_EXEMPT_REASON = 12;
  * step blocks are list continuations, and an unclosed fence runs to the end.
  */
 export function reachExemption(block: string): string | undefined {
+    return rawReachExemption(block)?.replace(/`[^`]*`/g, '').trim();
+}
+
+/** Words that say the call happens in prose — a door, a command body, markdown. */
+const PROSE_CITATION = /\b(?:prose|doors?|commands?|markdown)\b/i;
+/** A `path:line` citation, or a named TypeScript caller (`src/**.ts`). */
+const CALL_CITATION = /[A-Za-z0-9_./-]+\.[A-Za-z]+:\d+|\bsrc\/[A-Za-z0-9_/.-]+\.ts\b/;
+
+/**
+ * An exemption that says its caller is prose — a door, a command — must say
+ * WHERE: the `file:line` of the invoking command, or the TypeScript module that
+ * calls it. "Driven by the doors" with no location is the claim the gate cannot
+ * check, and it is the one an unwired module hides behind.
+ */
+export function exemptionCitesItsCall(reason: string): boolean {
+    return !PROSE_CITATION.test(reason) || CALL_CITATION.test(reason);
+}
+
+/** The exemption line's reason as written, backticks kept. */
+function rawReachExemption(block: string): string | undefined {
     let fence: { char: string; len: number } | null = null;
     for (const line of block.split('\n')) {
         const mark = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
@@ -148,7 +169,7 @@ export function reachExemption(block: string): string | undefined {
             continue;
         }
         const m = /^[ \t]*reach exempt:[ \t]*(.*)$/i.exec(line);
-        if (m !== null) return (m[1] as string).replace(/`[^`]*`/g, '').trim();
+        if (m !== null) return (m[1] as string).trim();
     }
     return undefined;
 }
@@ -161,8 +182,17 @@ export function checkStep(tree: ReachTree, reach: Reach, file: string, step: str
     }
     const exempt = reachExemption(block);
     if (exempt !== undefined) {
-        if (exempt.length >= MIN_EXEMPT_REASON) return null;
-        return { file, step, reason: `\`reach exempt:\` needs a reason of at least ${MIN_EXEMPT_REASON} characters` };
+        if (exempt.length < MIN_EXEMPT_REASON) {
+            return { file, step, reason: `\`reach exempt:\` needs a reason of at least ${MIN_EXEMPT_REASON} characters` };
+        }
+        if (!exemptionCitesItsCall(rawReachExemption(block) ?? '')) {
+            return {
+                file,
+                step,
+                reason: '`reach exempt:` cites prose, a door or a command as the caller but names no invoking `file:line`',
+            };
+        }
+        return null;
     }
     const { subjects, tests, entries } = namedPaths(tree, block);
     const r = entries.length ? productionReach(tree, entries) : reach;

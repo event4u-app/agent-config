@@ -174,27 +174,33 @@ rewriting archived `status: ready` (decided 2026-09-04,
 
 ## Phase 1 — Host-config writers keep what they did not write
 
-- [ ] **1.1 `mcp:render` through `mergeHostConfigFile`.** Route `cmd_render` through
+- [x] **1.1 `mcp:render` through `mergeHostConfigFile`.** Route `cmd_render` through <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_render.ts -->
       `mergeHostConfigFile` with a merger that replaces only the keys it renders
       under `mcpServers`; `cmd_check` compares only those keys.
       verify: `npx vitest run tests/scripts/mcp_render.test.ts` -> 0 and with a
       fixture keeping a foreign server and a comment, a JSONC file reported as
       skipped, and a `.agent-config.bak` written — each seen red first.
-- [ ] **1.2 Duplicate keys in every merged container.** `hostConfigMerge.ts`
+      Done: `src/scripts/mcp_render.ts` writes each target through `mergeHostConfigFile` (`merge_rendered` replaces only rendered `mcpServers` keys; a skipped target exits 1 with the manual snippet), `--check` compares only rendered servers (`target_matches`); `docs/mcp.md` updated. `npx vitest run tests/scripts/mcp_render.test.ts` -> 0, 16 tests, the 3 new ones seen red first.
+- [x] **1.2 Duplicate keys in every merged container.** `hostConfigMerge.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/hostConfigMerge.ts -->
       checks duplicates in each container `mergeHostConfigFile` touches.
       verify: a nested duplicate fixture returns `skipped-duplicate-key`.
-- [ ] **1.3 Backup and readback on the three install writes**
+      Done: `src/install/hostConfigMerge.ts` refuses a duplicate at any key path `incoming` reaches (`touchedKeyPaths`); nested-duplicate fixture in `tests/install/host-config-merge.test.ts` red then green, untouched-container case stays `updated`.
+- [x] **1.3 Backup and readback on the three install writes** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/hostConfigMerge.ts -->
       (`install.ts:930`, `:1970`, the `--force` overwrite at `:1261`).
       verify: a temp-dir settings file gets a `.bak` and is re-read.
-- [ ] **1.4 Delete the dead lenient parser.** Remove `parseJsonLenient`,
+      Done: new `writeHostConfig` in `src/install/hostConfigMerge.ts` (once-only `.agent-config.bak`, readback, restore on mismatch); `write_json_file` in `src/scripts/install.ts` — the only writer of the three sites — routes through it and callers stop on a refused write. Tests in `tests/install/host-config-merge.test.ts` and `tests/scripts/install_rule_layer_gate.test.ts` red then green.
+- [x] **1.4 Delete the dead lenient parser.** Remove `parseJsonLenient`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/conflict.ts -->
       `mergeJsonContent` and their test block.
       verify: `grep -rn "parseJsonLenient\|mergeJsonContent" src tests` -> 0 holds.
-- [ ] **1.5 `--transfer` in the reference door's argument-hint.**
+      Done: both functions and their test block removed from `src/install/conflict.ts` / `tests/install/conflict.test.ts`; the grep returns 0 lines (exit 1, no match).
+      reach exempt: a pure deletion; the unreached symbols the gate reads (`resolveFileConflict`, `expandBatchChoice`, `CONFLICT_BATCH_THRESHOLD`) are pre-existing tests of untouched code, none added or changed by this step
+- [x] **1.5 `--transfer` in the reference door's argument-hint.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/ holds.
+      Done: `--transfer=learn|adapt|rebuild|integrate` added to the argument-hint; dist count is 3.
 
 ## Phase 2 — An entry is something that is invoked
 
-- [ ] **2.1 Entries from invocations, not mentions.** In `productionEntries`, a
+- [x] **2.1 Entries from invocations, not mentions.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/production-entries.json --> In `productionEntries`, a
       `.md` mention is an entry only when the target has a main guard or the
       mention is a command line (`./scripts-run`, `node`, `tsx`); add
       `src/agent-src/contexts/**/*.md` as an entry source. The gate judges new
@@ -202,23 +208,28 @@ rewriting archived `status: ready` (decided 2026-09-04,
       `report_production_reach` digest.
       verify: fixture tests — prose mention of a `_lib` module is no entry, an
       invoked CLI is, the context-invoked `analysis_validate` is.
-- [ ] **2.2 A prose exemption names its call.** A `reach exempt:` reason citing
+      Done: `productionEntries` in `src/scripts/_lib/production_reach.ts` takes a `.md` mention only when `hasMainGuard` holds or the mention follows `./scripts-run` / `node` / `tsx`; `src/config/production-entries.json` adds `src/agent-src/contexts/**/*.md`. Seven fixture tests in `tests/scripts/check_step_production_reach.test.ts` (3 red first), existing ones green, `--self-test` green. `report_production_reach` before: `732 entries · 1615 modules · 13322 reached symbols · digest a02e7069acb216f6`; after the entry rule: `715 entries · 1615 modules · 13342 reached symbols · digest 6e5f64a4b98bb7b1`; after also fixing `usedExports` to read a `...name` spread as a use (it was dropped as a member access, which left `productionEntries` itself unreached): `715 entries · 1615 modules · 13494 reached symbols · digest 801b5dfdaed455b5`.
+- [x] **2.2 A prose exemption names its call.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_step_production_reach.ts --> A `reach exempt:` reason citing
       prose, a door or a command must carry the `file:line` of the invoking
       command.
       verify: `npx vitest run tests/scripts/check_step_production_reach.test.ts` -> 0
       with a prose-citing exemption fixture red and a `file:line`-citing one green.
       Corpus reading only, not an oracle: the two ADR-288 lines read red and
       `archive/road-to-a-verdict-that-shows-its-frame.md:83` stays green.
-- [ ] **2.3 Unreached engine modules get a disposition.** Each module 2.1 leaves
+      Done: `exemptionCitesItsCall` in `src/scripts/check_step_production_reach.ts` — a reason naming prose, a door, a command or markdown must carry a `file:line` or the calling `src/**.ts` module; `checkStep` reds it otherwise. `npx vitest run tests/scripts/check_step_production_reach.test.ts` -> 0 (21 tests; the red fixture seen red first). Corpus reading over all 51 `reach exempt:` lines: exactly the two ADR-288 lines red, `:83` green.
+- [x] **2.3 Unreached engine modules get a disposition.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_production_reach.ts --> Each module 2.1 leaves
       unreached is labelled in its door (D3) as "reference spec, model-carried" (precedent:
       `src/domains/analysis-workbench/analyze/inbox/command.md`).
       Decided (D3): label by default; wire a CLI only where the door already
       runs that stage.
       verify: `./scripts-run src/scripts/report_production_reach` -> 0 and its
       unreached analysis modules equal the labelled set.
-- [ ] **2.4 One lens name.** Align "Overbuild & sequencing" at
+      Done: `report_production_reach --unreached <glob>` (`src/scripts/report_production_reach.ts`) lists unreached modules with the door labelling each and exits 1 on an unlabelled unreached module or a labelled reached one; eight modules labelled under "Engine modules the model carries" in the and-optimize (4), pr (3) and inbox (1) doors. `reconstruction_ledger` needed no label: observation-slot 0.2 wired its CLI, the stage the reference door already runs (D3). `./scripts-run src/scripts/report_production_reach --unreached 'src/scripts/analysis_*.ts'` -> 0, `unreached 8 · labelled 8`; `tests/scripts/report_production_reach.test.ts` 3 tests, red first.
+      production entry: `src/scripts/report_production_reach.ts`
+- [x] **2.4 One lens name.** Align "Overbuild & sequencing" at <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `reference/command.md:368,378,504`.
       verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/ holds.
+      Done: loop 3 renamed from "Convergence" to "Overbuild & sequencing" at the table row and both delta-block headings, the row now asking the engine's smallest-rung and order question too; the grep prints 3.
 
 ## Not in this roadmap
 

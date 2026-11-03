@@ -137,4 +137,59 @@ describe('the merge module', () => {
         expect(outcome.status).toBe('skipped-readback-mismatch');
         expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
     });
+
+    it('writeHostConfig backs up an existing file once and re-reads it', async () => {
+        const { writeHostConfig } = await import('../../src/install/hostConfigMerge.js');
+        const original = '{\n    "a": 1\n}\n';
+        fs.writeFileSync(settings, original);
+        expect(writeHostConfig(settings, { a: 2 }).status).toBe('updated');
+        expect(writeHostConfig(settings, { a: 3 }).status).toBe('updated');
+        expect(fs.readFileSync(`${settings}.agent-config.bak`, 'utf-8')).toBe(original);
+        expect(JSON.parse(fs.readFileSync(settings, 'utf-8'))).toEqual({ a: 3 });
+    });
+
+    it('writeHostConfig restores the original bytes on a readback mismatch', async () => {
+        const { writeHostConfig } = await import('../../src/install/hostConfigMerge.js');
+        const original = '{\n    "a": 1\n}\n';
+        fs.writeFileSync(settings, original);
+        const outcome = writeHostConfig(settings, { a: 2 }, {
+            write: (p, content) => fs.writeFileSync(p, content.replace('2', '9')),
+        });
+        expect(outcome.status).toBe('skipped-readback-mismatch');
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+    });
+
+    it('writeHostConfig creates a missing file without a backup', async () => {
+        const { writeHostConfig } = await import('../../src/install/hostConfigMerge.js');
+        fs.rmSync(settings, { force: true });
+        expect(writeHostConfig(settings, { a: 1 }).status).toBe('created');
+        expect(fs.existsSync(`${settings}.agent-config.bak`)).toBe(false);
+    });
+
+    it('refuses a duplicated key inside a nested container the merge touches', async () => {
+        const { mergeHostConfigFile } = await import('../../src/install/hostConfigMerge.js');
+        const original =
+            '{\n    "mcpServers": {\n        "agent-config": { "command": "a" },\n' +
+            '        "agent-config": { "command": "b" }\n    }\n}\n';
+        fs.writeFileSync(settings, original);
+        const incoming = { mcpServers: { 'agent-config': { command: 'c' } } };
+        const outcome = mergeHostConfigFile(settings, incoming, (existing, inc) => ({ ...existing, ...inc }));
+        expect(outcome.status).toBe('skipped-duplicate-key');
+        expect(outcome.detail).toContain('mcpServers.agent-config');
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+    });
+
+    it('does not refuse a nested duplicate in a container the merge never touches', async () => {
+        const { mergeHostConfigFile } = await import('../../src/install/hostConfigMerge.js');
+        fs.writeFileSync(
+            settings,
+            '{\n    "mcpServers": {\n        "theirs": { "a": 1, "a": 2 }\n    }\n}\n',
+        );
+        const incoming = { mcpServers: { 'agent-config': { command: 'c' } } };
+        const outcome = mergeHostConfigFile(settings, incoming, (existing, inc) => ({
+            ...existing,
+            mcpServers: { ...(existing['mcpServers'] as object), ...inc['mcpServers'] as object },
+        }));
+        expect(outcome.status).toBe('updated');
+    });
 });

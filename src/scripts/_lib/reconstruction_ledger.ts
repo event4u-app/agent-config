@@ -6,8 +6,13 @@
  * when every required case carries evidence and its verifier is not analyst
  * inference; `visible-only` never counts, because a screen proves the screen,
  * not the behavior behind it. No rows is `unknown`, never `closed`.
+ *
+ * The ledger can say no: an evidence id the run never recorded, an authority
+ * outside the enum, or a `verified` row whose verifier is blank makes the row —
+ * and so the ledger — `invalid`. That is why the recorded evidence ids are a
+ * required argument: without them any string would close a row.
  */
-import type { EvidenceAuthority } from '../analysis_ledger.js';
+import { EVIDENCE_AUTHORITIES, type EvidenceAuthority } from '../analysis_ledger.js';
 
 export const EQUIVALENCE_TIERS = ['inspired-by', 'ux', 'behavior', 'protocol', 'byte'] as const;
 export type EquivalenceTier = (typeof EQUIVALENCE_TIERS)[number];
@@ -59,10 +64,28 @@ export function validateObligation(o: Obligation): string[] {
     return errors;
 }
 
-export function evaluateLedger(rows: readonly Obligation[]): LedgerVerdict {
+/** What the run recorded, so a row's evidence ids can be resolved. */
+export interface LedgerContext {
+    evidenceIds: ReadonlySet<string>;
+}
+
+/** Errors only the run's own records can see: ids that resolve, an authority in the enum, a named verifier. */
+export function resolveObligation(o: Obligation, ctx: LedgerContext): string[] {
+    const errors: string[] = [];
+    const unknown = [...new Set(Object.values(o.evidence).flat())].filter((id) => !ctx.evidenceIds.has(id));
+    if (unknown.length > 0) errors.push(`${o.id}: unknown evidence id ${unknown.join(', ')}`);
+    if (!(EVIDENCE_AUTHORITIES as readonly string[]).includes(o.verifier_authority)) {
+        errors.push(`${o.id}: unknown verifier_authority ${String(o.verifier_authority)}`);
+    }
+    if (o.status === 'verified' && (o.verifier ?? '').trim() === '') errors.push(`${o.id}: verified with an empty verifier`);
+    return errors;
+}
+
+export function evaluateLedger(rows: readonly Obligation[], ctx: LedgerContext): LedgerVerdict {
     if (rows.length === 0) return { state: 'unknown', verified: 0, counted: 0, parity: null, errors: [] };
-    const errors = rows.flatMap(validateObligation);
-    const verified = rows.filter((o) => o.status === 'verified' && canVerify(o)).length;
+    const perRow = rows.map((o) => [...validateObligation(o), ...resolveObligation(o, ctx)]);
+    const errors = perRow.flat();
+    const verified = rows.filter((o, i) => o.status === 'verified' && canVerify(o) && (perRow[i] as string[]).length === 0).length;
     const counted = rows.filter((o) => o.status !== 'waived').length;
     const parity = counted === 0 ? null : verified / counted;
     let state: LedgerVerdict['state'];

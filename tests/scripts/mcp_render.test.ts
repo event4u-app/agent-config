@@ -199,6 +199,78 @@ describe('mcp_render — ported pytest suite', () => {
     });
 });
 
+describe('mcp_render — keeps what it did not write', () => {
+    function setup(): { tmp: string; source: string; target: string } {
+        const tmp = mkTmp();
+        process.env['GH_TOKEN'] = 'ghp_xxx';
+        process.env['JIRA_TOKEN'] = 'jira_yyy';
+        const source = _writeSource(tmp);
+        _claudeDesktop.target = path.join(tmp, 'unused.json');
+        const target = path.join(tmp, '.cursor', 'mcp.json');
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        return { tmp, source, target };
+    }
+
+    function quiet<T>(fn: () => T): { result: T; out: string } {
+        let out = '';
+        const o = process.stdout.write.bind(process.stdout);
+        const e = process.stderr.write.bind(process.stderr);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (process.stdout as any).write = (c: string) => ((out += String(c)), true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (process.stderr as any).write = (c: string) => ((out += String(c)), true);
+        try {
+            return { result: fn(), out };
+        } finally {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (process.stdout as any).write = o;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (process.stderr as any).write = e;
+        }
+    }
+
+    it('keeps a foreign server and writes a backup of the original bytes', () => {
+        const { tmp, source, target } = setup();
+        const original = '{\n  "mcpServers": {\n    "theirs": { "command": "their-cmd" }\n  },\n  "other": 1\n}\n';
+        fs.writeFileSync(target, original);
+        const { result } = quiet(() => main(['--source', source, '--project-root', tmp]));
+        expect(result).toBe(0);
+        const after = JSON.parse(fs.readFileSync(target, 'utf-8')) as Record<string, Record<string, unknown>>;
+        expect(after['mcpServers']!['theirs']).toEqual({ command: 'their-cmd' });
+        expect(after['other']).toBe(1);
+        const golden = JSON.parse(fs.readFileSync(path.join(FIXTURES, 'golden.json'), 'utf-8')) as Record<
+            string,
+            Record<string, unknown>
+        >;
+        for (const [k, v] of Object.entries(golden['mcpServers']!)) expect(after['mcpServers']![k]).toEqual(v);
+        expect(fs.readFileSync(`${target}.agent-config.bak`, 'utf-8')).toBe(original);
+        expect(quiet(() => main(['--source', source, '--project-root', tmp, '--check'])).result).toBe(0);
+    });
+
+    it('reports a commented (JSONC) target as skipped, leaves it byte-for-byte, exits non-zero', () => {
+        const { tmp, source, target } = setup();
+        const original = '{\n  // my servers\n  "mcpServers": {\n    "theirs": { "command": "x" }\n  }\n}\n';
+        fs.writeFileSync(target, original);
+        const { result, out } = quiet(() => main(['--source', source, '--project-root', tmp]));
+        expect(result).toBe(1);
+        expect(out).toContain('skipped-jsonc');
+        expect(fs.readFileSync(target, 'utf-8')).toBe(original);
+        expect(fs.existsSync(`${target}.agent-config.bak`)).toBe(false);
+    });
+
+    it('check compares only the rendered keys', () => {
+        const { tmp, source, target } = setup();
+        expect(quiet(() => main(['--source', source, '--project-root', tmp])).result).toBe(0);
+        const data = JSON.parse(fs.readFileSync(target, 'utf-8')) as Record<string, Record<string, unknown>>;
+        data['mcpServers']!['theirs'] = { command: 'y' };
+        fs.writeFileSync(target, JSON.stringify(data, null, 2));
+        expect(quiet(() => main(['--source', source, '--project-root', tmp, '--check'])).result).toBe(0);
+        delete data['mcpServers']!['github'];
+        fs.writeFileSync(target, JSON.stringify(data, null, 2));
+        expect(quiet(() => main(['--source', source, '--project-root', tmp, '--check'])).result).toBe(1);
+    });
+});
+
 // Local json.dumps(indent=2, sort_keys=True) for the expected-output assert.
 function _pyDumpSorted(obj: unknown, depth = 0): string {
     const pad = '  '.repeat(depth);
