@@ -23,8 +23,14 @@
  * `docs/contracts/provider-lifecycle.md` says in its own words that CI does not
  * perform.
  *
- * Exit codes: 0 all policies linked and lifecycle tags agree, 1 one or more
- * orphan policies or a lifecycle disagreement, 2 dead scope.
+ * THIRD PASS: the reverse
+ * direction. See {@link render_end_findings} — every command that emits a
+ * deliverable medium is listed in both policy trigger lists and calls the
+ * finish step.
+ *
+ * Exit codes: 0 all policies linked, lifecycle tags agree and every render end
+ * is listed and finished, 1 one or more orphan policies, a lifecycle
+ * disagreement or a render-end finding, 2 dead scope.
  */
 
 import * as fs from 'node:fs';
@@ -287,6 +293,150 @@ export function adapter_lifecycle_findings(
     return findings;
 }
 
+// Render ends — the reverse direction.
+// The first pass asks whether each policy is reachable from somewhere. It never
+// asked the reverse: whether each command that EMITS a deliverable medium is
+// named by the policies that govern it and actually runs the carrier step. That
+// gap is how four of five video commands and every image command shipped with
+// no provenance while the policies called the disclosure non-removable.
+//
+// A render end is classified by what the command body DOES, never by its name:
+//   - video: it writes the `final.mp4` render end;
+//   - image: an `/image:*` command that generates through the adapter layer
+//     (`scripts/ai-video/adapters/`). `/image:verify` and `/image:analyse` read
+//     a medium and emit none, so they are not render ends.
+// Intermediates (`/video:scene` clips, the `/video:storyboard` contact sheet)
+// are not render ends; the policies say an intermediate that leaves for an
+// audience goes through finish first.
+//
+// A trigger counts only inside the policy's `## Triggers` section and only as an
+// explicit `/cluster:sub` id — a mention elsewhere in the file, or a `/cluster:*`
+// wildcard, is not a listing.
+
+/** Clusters whose commands can emit a medium. */
+const MEDIA_CLUSTERS: ReadonlySet<string> = new Set(['video', 'image', 'audio']);
+const COMMAND_ROOT = path.join(REPO, 'src', 'domains');
+const RENDER_END_POLICIES: readonly string[] = [
+    path.join(POLICY_DIR, 'disclosure.md'),
+    path.join(POLICY_DIR, 'transparency.md'),
+];
+const FINISH_CALL = 'embed-provenance.sh finish';
+
+export type RenderMedium = 'video' | 'image';
+
+export interface RenderEnd {
+    file: string;
+    id: string;
+    medium: RenderMedium;
+}
+
+function _frontmatterField(text: string, key: string): string | null {
+    const fm = /^---\n([\s\S]*?)\n---/.exec(text);
+    if (fm === null) {
+        return null;
+    }
+    const m = new RegExp(`^${key}:\\s*([A-Za-z0-9_-]+)\\s*$`, 'm').exec(fm[1] as string);
+    return m === null ? null : (m[1] as string);
+}
+
+function _rglobCommands(root: string): string[] {
+    const out: string[] = [];
+    const walk = (current: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(current, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const entry of entries) {
+            const full = path.join(current, entry.name);
+            if (entry.isDirectory()) {
+                walk(full);
+            } else if (entry.isFile() && entry.name === 'command.md') {
+                out.push(full);
+            }
+        }
+    };
+    walk(root);
+    return out.sort();
+}
+
+/** Classify one command body; `null` = not a render end. */
+export function classify_render_end(cluster: string, body: string): RenderMedium | null {
+    if (/\bfinal\.mp4\b/.test(body)) {
+        return 'video';
+    }
+    if (cluster === 'image' && body.includes('scripts/ai-video/adapters/')) {
+        return 'image';
+    }
+    return null;
+}
+
+/** Every command under `root` that emits a deliverable medium, sorted by id. */
+export function collect_render_end_commands(root: string = COMMAND_ROOT): RenderEnd[] {
+    const ends: RenderEnd[] = [];
+    for (const file of _rglobCommands(root)) {
+        const text = fs.readFileSync(file, 'utf-8');
+        const cluster = _frontmatterField(text, 'cluster');
+        const sub = _frontmatterField(text, 'sub');
+        // A cluster head (no `sub`) routes; it does not render.
+        if (cluster === null || sub === null || !MEDIA_CLUSTERS.has(cluster)) {
+            continue;
+        }
+        const medium = classify_render_end(cluster, text);
+        if (medium !== null) {
+            ends.push({ file, id: `/${cluster}:${sub}`, medium });
+        }
+    }
+    return ends.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** Explicit `/cluster:sub` ids inside a policy's `## Triggers` section. */
+export function trigger_ids(policyText: string): Set<string> {
+    const ids = new Set<string>();
+    const start = /^## Triggers[ \t]*$/m.exec(policyText);
+    if (start === null) {
+        return ids;
+    }
+    const rest = policyText.slice(start.index + start[0].length);
+    const next = /^## /m.exec(rest);
+    const section = next === null ? rest : rest.slice(0, next.index);
+    for (const m of section.matchAll(/\/([a-z][a-z-]*):([a-z][a-z-]*)\b/g)) {
+        ids.add(`/${m[1] as string}:${m[2] as string}`);
+    }
+    return ids;
+}
+
+/** Findings for render ends not listed in a policy or never finished. `[]` = holds. */
+export function render_end_findings(
+    commandRoot: string = COMMAND_ROOT,
+    policies: readonly string[] = RENDER_END_POLICIES,
+): string[] {
+    const findings: string[] = [];
+    const lists = policies.map((p) => {
+        let text = '';
+        try {
+            text = fs.readFileSync(p, 'utf-8');
+        } catch {
+            findings.push(`${path.basename(p)} is unreadable — its trigger list cannot be checked`);
+        }
+        return { name: path.basename(p), ids: trigger_ids(text) };
+    });
+    for (const end of collect_render_end_commands(commandRoot)) {
+        for (const list of lists) {
+            if (!list.ids.has(end.id)) {
+                findings.push(
+                    `${end.id} emits a deliverable (${end.medium}) but is not in the ## Triggers list of ${list.name}`,
+                );
+            }
+        }
+        if (!fs.readFileSync(end.file, 'utf-8').includes(FINISH_CALL)) {
+            findings.push(`${end.id} emits a deliverable (${end.medium}) but never calls \`${FINISH_CALL}\``);
+        }
+    }
+    return findings;
+}
+
 /** Adapter count, for the dead-scope assertion. */
 export function count_adapters(adapterDir: string = ADAPTER_DIR): number {
     try {
@@ -323,6 +473,14 @@ function main(): number {
             scanned: count_adapters(),
             units: 'ai-video adapter(s)',
             roots: [_relToPosix(ADAPTER_DIR, REPO)],
+        });
+        // Zero render ends means the command root or the classifier moved,
+        // not that every render end is finished.
+        assertScanned({
+            gate: 'lint_media_policy_linkage',
+            scanned: collect_render_end_commands().length,
+            units: 'media render-end command(s)',
+            roots: [_relToPosix(COMMAND_ROOT, REPO)],
         });
     } catch (exc) {
         if (!(exc instanceof DeadScopeError)) {
@@ -361,6 +519,11 @@ function main(): number {
         return 1;
     }
 
+    const renderEnds = render_end_findings();
+    for (const f of renderEnds) {
+        emit(`❌  RENDER-END  ${f}`);
+    }
+
     if (lifecycle.length > 0) {
         process.stderr.write(
             `\nadapter-lifecycle-parity: ${lifecycle.length} disagreement(s) ` +
@@ -374,6 +537,18 @@ function main(): number {
         return 1;
     }
 
+    if (renderEnds.length > 0) {
+        process.stderr.write(
+            `\nmedia-render-ends: ${renderEnds.length} finding(s) — every command that ` +
+                `emits a deliverable medium must be in the ## Triggers list of disclosure.md ` +
+                `and transparency.md and call \`${FINISH_CALL}\`.\n`,
+        );
+        for (const f of renderEnds) {
+            process.stderr.write(`  - ${f}\n`);
+        }
+        return 1;
+    }
+
     emit(
         `media-policy-linkage: ${policies.length} policy file(s) — all ` +
             `linked (${scanFiles.length} file(s) scanned for referrers).`,
@@ -381,6 +556,10 @@ function main(): number {
     emit(
         `adapter-lifecycle-parity: ${count_adapters()} adapter(s) — every ` +
             `\`# Lifecycle:\` header agrees with its <provider> entry.`,
+    );
+    emit(
+        `media-render-ends: ${collect_render_end_commands().length} render end(s) — each is ` +
+            `listed in both trigger lists and calls the finish step.`,
     );
     return 0;
 }

@@ -40,12 +40,33 @@ Run the [`image-creator`](../../skills/image-creator/SKILL.md) skill. Args:
    asymmetry block + negative block + engine settings.
 4. **Generate** through the existing adapter layer (`scripts/ai-video/adapters/`)
    only on explicit confirmation. **Verify** the output with `/image:verify`.
+5. **Finish** every generated still (png/jpg) per
+   [`transparency`](../../../agents/settings/policies/media/transparency.md)
+   and [`disclosure`](../../../agents/settings/policies/media/disclosure.md):
+
+   ```bash
+   jq -n --arg p "<abs-path-to-image>" --arg prov "<image-provider>" \
+     --arg m "<model>" --arg h "<sha256-of-REDACTED-prompt>" \
+     '{artifact_path:$p, provider:$prov, model:$m, prompt_sha256:$h,
+       assertion:"ai_generated"}' \
+     | scripts/ai-video/lib/embed-provenance.sh finish
+   ```
+
+   For a still the carriers are the sidecar `<image>.provenance.json`
+   (with the sha256 of the final bytes) and C2PA when the operator has
+   `c2patool` + signing; there are no container tags, and `visible` is
+   reported `not-applied (rule pending)`. An edit of an existing image
+   uses `assertion:"ai_edited"`. Any later crop, resize or re-encode means
+   a re-finish.
 
 ## Output
 
 1. Generation prompt — anchors · positive · asymmetry · negative · engine settings.
 2. Provider + tier line (the audit entry).
 3. The `/image:verify` call to run on the result.
+4. The finish carriers — each carrier's status, `artifact_sha256`,
+   `provenance_path`; where `disclosure.md` requires a non-removable
+   disclosure, it is stated as open while `visible` is not applied.
 
 ## Rules
 

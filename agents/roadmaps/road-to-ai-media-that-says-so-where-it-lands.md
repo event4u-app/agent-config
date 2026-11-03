@@ -41,45 +41,45 @@ loop may take lower detectability as an objective.
 
 ## Phase 0 — Red first
 
-- [ ] **0.1 `tests/scripts/ai_video_provenance.test.ts`.** Ports the deleted
+- [x] **0.1 `tests/scripts/ai_video_provenance.test.ts`.** Ports the deleted
       suite and adds rows: strip removes the comment; `ai_generated` key absent
       after mux; edited wording; `digitalSourceType` for edited input; sidecar
       lacks the artifact hash. The c2patool row skips with a stated reason when
       the tool is absent.
       verify: each row red at the pin for its named reason.
-- [ ] **0.2 Reverse-direction fixture for `lint_media_policy_linkage.ts`**
+- [x] **0.2 Reverse-direction fixture for `lint_media_policy_linkage.ts`**
       (command emits a deliverable medium → listed in both policy trigger lists).
       verify: red at the pin.
 
 ## Phase 1 — One labelling model in the policies
 
-- [ ] **1.1 Four carriers** in `agents/settings/policies/media/disclosure.md` and
+- [x] **1.1 Four carriers** in `agents/settings/policies/media/disclosure.md` and
       `transparency.md`: `visible`, `embedded`, `sidecar`, `platform-field`;
       "non-removable" applies to `visible` only.
-- [ ] **1.2 One vocabulary table** `generated`/`modified` ↔
+- [x] **1.2 One vocabulary table** `generated`/`modified` ↔
       `ai_generated`/`ai_edited` ↔ `trainedAlgorithmicMedia` /
       `compositeWithTrainedAlgorithmicMedia`, shared by label, sidecar and C2PA.
-- [ ] **1.3 Two principles as policy text:** provenance and disclosure are
+- [x] **1.3 Two principles as policy text:** provenance and disclosure are
       reported, never removed, on production and analysis side; no quality,
       polish or optimisation loop takes detectability as an objective (mirrors
       the text-side rule in `humanizer`).
-- [ ] **1.4 Trigger lists rebuilt from the tree**; `/image:*` no longer
+- [x] **1.4 Trigger lists rebuilt from the tree**; `/image:*` no longer
       "future"; the README cites the `.ts` lint.
       verify (1.1–1.4): `lint_media_policy_linkage` green; grep for each table.
-- [ ] **1.5 Second lint direction** in `src/scripts/lint_media_policy_linkage.ts`.
+- [x] **1.5 Second lint direction** in `src/scripts/lint_media_policy_linkage.ts`.
       verify: 0.2 green after Phase 2.
 
 ## Phase 2 — One finish step for every render end
 
-- [ ] **2.1 `embed-provenance.sh finish`**: container tags → sidecar with the
+- [x] **2.1 `embed-provenance.sh finish`**: container tags → sidecar with the
       sha256 of the final bytes → C2PA last. A visible-label slot is reserved and
       reported `not-applied (rule pending)` until the owner's burn-in rule lands.
-- [ ] **2.2 Only keys that survive the muxer** (or `-movflags
+- [x] **2.2 Only keys that survive the muxer** (or `-movflags
       use_metadata_tags`); the comment wording follows the assertion.
-- [ ] **2.3 `digitalSourceType` follows the assertion.**
-- [ ] **2.4 Wire `finish`** into `from-script`, `stitch`, `from-song` (replacing
+- [x] **2.3 `digitalSourceType` follows the assertion.**
+- [x] **2.4 Wire `finish`** into `from-script`, `stitch`, `from-song` (replacing
       its step 9.4) and `/image:create` (sidecar for png/jpg).
-- [ ] **2.5 Re-cut means re-finish**; `transparency.md` states that an external
+- [x] **2.5 Re-cut means re-finish**; `transparency.md` states that an external
       re-encode loses embedded carriers and the signature.
       verify (2.1–2.5): 0.1 green; sidecar hash equals the final file; 0.2 green.
 
@@ -104,6 +104,6 @@ loop may take lower detectability as an objective.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `ai_video_provenance.test.ts` is green and covers strip, muxer drop, wording and hash.
-- [ ] AC-2 — Every deliverable-emitting media command is in both trigger lists and calls `finish`.
-- [ ] AC-3 — Both policies state the two principles and the carrier table.
+- [x] AC-1 — `ai_video_provenance.test.ts` is green and covers strip, muxer drop, wording and hash.
+- [x] AC-2 — Every deliverable-emitting media command is in both trigger lists and calls `finish`.
+- [x] AC-3 — Both policies state the two principles and the carrier table.

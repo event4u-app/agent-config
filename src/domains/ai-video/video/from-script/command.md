@@ -178,13 +178,40 @@ scripts/ai-video/stitch.sh <project>/manifest.json <project>/final.mp4
 Fail loud on missing clips; offer `--skip-scene <id>` or `--continue`
 per the stitcher contract.
 
+### 8b. Finish — provenance carriers on the render end
+
+`final.mp4` is a deliverable, so it runs the finish step per
+[`transparency`](../../../agents/settings/policies/media/transparency.md)
+and [`disclosure`](../../../agents/settings/policies/media/disclosure.md)
+before the report. In preview mode it runs on the fixture cut too, so the
+report shape is the same:
+
+```bash
+jq -n --arg p "<project>/final.mp4" --arg prov "<video-provider>" \
+  --arg m "<video-model>" --arg h "<sha256-of-REDACTED-prompt>" \
+  '{artifact_path:$p, provider:$prov, model:$m, prompt_sha256:$h,
+    assertion:"ai_generated"}' \
+  | scripts/ai-video/lib/embed-provenance.sh finish
+```
+
+`finish` writes, in order: `visible` (reserved — reported
+`not-applied (rule pending)`), container tags, the sidecar
+`final.mp4.provenance.json` with the sha256 of the final bytes, and C2PA
+last when the operator has `c2patool` + signing configured. A re-stitch
+or any re-cut of `final.mp4` means a re-finish.
+
 ### 9. Report
 
 First line: the resolved **mode** (`mode: commit` or `mode: preview
 (default — no spend; pass --mode commit to render live)`). Then:
 project slug, final MP4 path, scenes rendered, scenes skipped, actual
 cost (commit) or summed modeled `cost_estimate` labeled *modeled*
-(preview). No commit. No push.
+(preview), and the **finish carriers** from Step 8b — each carrier's
+status, `artifact_sha256`, `provenance_path`; where `disclosure.md`
+requires a non-removable disclosure, it is stated as open while
+`visible` is `not-applied (rule pending)`, never as met; and the note
+that an external re-encode loses the embedded carriers and the C2PA
+signature. No commit. No push.
 
 ## Rules
 
