@@ -129,7 +129,13 @@ it disabled, and with definition-only families:
   one raw `<input>` in a list molecule of the component library, used as a
   compact position field, is counted false as the worst case. False: at most
   4 of 1,703 legitimate writes, **0.23 %**. Conditions 1, 2 and 4 still hold
-  on this reading.
+  on this reading. Condition 3 rests on its conservative bound, one avoided
+  rework round, which the two real writes here still meet; the benefit side
+  stays the owner's estimate.
+- Round 16: a re-export (`export { Select } from '…'`, or an imported name
+  exported again) was counted as a definition. An export list now names a
+  definition only for a name declared in that file. Both replays were rerun
+  and are identical.
 
 ## What this does not establish
 
@@ -146,6 +152,9 @@ it disabled, and with definition-only families:
 - **The reverse trigger is a manual control, not code.** A false positive
   needs a human reading, so no automated evaluator can apply the threshold.
   How it runs is stated below.
+- **The reverse trigger measures noise and inactivity, not savings.** Real
+  findings in a window show the failure still occurs; they do not show that
+  an advisory avoided a review round. The 30-minute figure stays an estimate.
 - **The live recorder cannot prove its own coverage.** A row is written only
   after the role map is computed, and a failure in the check is swallowed so
   the hook event survives. The report catches a missing file, an empty window
