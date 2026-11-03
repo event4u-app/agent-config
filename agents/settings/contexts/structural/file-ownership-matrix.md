@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **645**
-- Edges (incl. self-WRITE): **2465**
+- Edges (incl. self-WRITE): **2464**
 
 ## READ_ONLY edges
 
@@ -1702,7 +1702,6 @@
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/references/control-section.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/rules/context-hygiene.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncondensed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |

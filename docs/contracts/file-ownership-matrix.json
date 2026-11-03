@@ -20008,13 +20008,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
       "target": ".agent-src.uncondensed/rules/context-hygiene.md",
       "type": "READ_ONLY",
       "via": "body_link",
