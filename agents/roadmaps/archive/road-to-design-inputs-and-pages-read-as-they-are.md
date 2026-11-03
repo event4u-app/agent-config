@@ -161,11 +161,29 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No fixture in `tests/fixtures/dtcg-2025-10/` ends with exit 0 and empty CSS, and no emitted name or value contains `{`, `}`, `$` or `[object`.
-- [ ] AC-2 — The WCAG claim test checks 2.1 ∪ 2.2 and is green; no AC text recommends completing a function on `pointerdown`.
-- [ ] AC-3 — `eval_ui_triviality` shows `symptom_ui`, `adjective_review` and `backend` PASS together.
-- [ ] AC-4 — No URL-target render or interact run can send a non-GET request or leave the origin.
-- [ ] AC-5 — `consistency-sibling-gap` writes shadow rows and never affects an exit code.
+- [x] AC-1 — No fixture in `tests/fixtures/dtcg-2025-10/` ends with exit 0 and empty CSS, and no emitted name or value contains `{`, `}`, `$` or `[object`.
+- [x] AC-2 — The WCAG claim test checks 2.1 ∪ 2.2 and is green; no AC text recommends completing a function on `pointerdown`.
+- [x] AC-3 — `eval_ui_triviality` shows `symptom_ui`, `adjective_review` and `backend` PASS together.
+- [x] AC-4 — No URL-target render or interact run can send a non-GET request or leave the origin.
+- [x] AC-5 — `consistency-sibling-gap` writes shadow rows and never affects an exit code.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| 3.3 applies review-first only when the adjective is the whole goal (owner decision E2, default) | Review-first for any adjective, including inside a concrete task | A concrete object or build verb already names the change; halting it would block scoped work | The owner answers E2 differently |
+| `site`/`shop`/`store`/`app`/`dashboard` count as a UI surface only beside a quality adjective | Add them to `_UI_NOUNS` | Bare `site` is a data-layer word (corpus uit-060); the adjective branch is the only place it is unambiguous | A corpus probe shows a backend prompt reaching the adjective branch |
+| The layerless flatten also feeds `--format tailwind`; the zero-variable error is CSS-only | Emptiness error on both formats | A Tailwind map with no colour token is legitimate output; a stylesheet with no variable from a file with tokens is not | A consumer reports a layerless file whose Tailwind output is empty unexpectedly |
+| URL targets block every off-origin request, assets included | Allow cross-origin GET for static asset types | The step requires same origin; an asset request can still carry a tracking write. Blocked URLs are listed in `network.blocked` | Renders of live sites need CDN fonts/images to be comparable — then an explicit opt-in flag, never the default |
+| The frozen probe observations were re-captured live to carry the four new properties | Compare the live capture only on the keys the frozen record carries | Projecting away the new keys would stop the live layer checking them; the re-capture changed nothing else | — |
+| A shadow row's `rule` is optional; absent reads as raw-control + sibling-metrics | Rewrite old rows, or a required field | Old rows on disk stay readable without migration | The shadow file gains a third rule |
+| `design_lock --json` writes the front-matter notice to stderr | One stdout line in both modes | `--json` stdout must stay one JSON document | — |
+| The ui-triviality regression test covered only the pre-existing corpus between 3.1 and 3.3, then all five bars | Commit 3.1 with a red test | 3.1's verify requires the test file green while the new bars are pre-registered to MISS | — |
+
+## Owner decisions left open
+
+- **E1** — may a URL review run against production at all? Today it is allowed, with the 4.3 guard. Default if unanswered: allowed with the guard, and the report's first line says it ran against production (that line is not implemented here).
+- **P09 / override** — reopen the archived "no pixel comparison" lock for image-only handovers? Needs the council first, then the owner, because it moves a recorded floor.
 
 ## Non-goals
 

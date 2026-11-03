@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-review_by: 2026-09-25
+review_by: 2027-01-31
 ---
 
 # Stub: road to the frontend-power detector promotions
@@ -13,6 +13,8 @@ review_by: 2026-09-25
 > Risk 6 of the parent roadmap, by name. Framework of record:
 > [`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md).
 > Outcome state on the parent: **transferred**.
+>
+> **Arrivals:** 1 — `inbox-2026-11-n` lane E (2026-11-03): the reference-free render step below.
 
 ## The criteria, verbatim from the parent
 
@@ -243,3 +245,20 @@ blocker, § What E4.4 lost, and the three probe readings all stand unchanged. Th
 producer is still a maintainer running the promotion protocol against
 `internal/bench/corpora/design-slop-clean/`, one rule per epoch, and residue 1
 adds one ordering constraint inside that protocol rather than a new blocker.
+
+## Arrival from the 2026-11-03 inbox run
+
+- [ ] **E3.4 Three reference-free render candidates.** hidden-at-rest text,
+      broken image, script error on load; each measured on rendered rows only,
+      own analysis, under the same M1 = 0 promotion gate as E3.3. `review_by`
+      moves to 2027-01-31 because the render primitive landed and the corpus
+      independence did not.
+      verify: `grep -c '\*\*E3.4 ' agents/roadmaps/stubs/road-to-frontend-power-detector-promotions.md` -> 1.
+
+Residue 1 above is partly discharged by
+`road-to-design-inputs-and-pages-read-as-they-are` step 4.2: `ui:render` now
+captures `margin-*`, `gap`, `row-gap`, `column-gap`, `display` and
+`flex-direction`, and states `styles_sampled`/`styles_total` per capture.
+Padding is still not captured, so `edge-flush-cards` keeps its ordering
+constraint.
+
