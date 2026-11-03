@@ -4,7 +4,7 @@ status: later
 tree_pin: 81788b6e63
 review_by: 2027-01-31
 entry_condition:
-  what: "a first engine project (Godot, Unity or Unreal) is committed in a repository this package is installed into, and the owner has answered the engine and estate blockers below"
+  what: "a first engine project (Godot, Unity or Unreal) is committed in a repository this package is installed into (engine and pack blockers answered 2026-11-03, D4/D5)"
   when: "after road-to-toolchains-the-gate-can-see archives"
   who: owner
 execution:
@@ -46,8 +46,9 @@ witness; `src/skills/verify-completion-evidence/SKILL.md:120` has no runtime row
       the SVG witness ladder; a capture counts only when a reader cites
       anchors from it.
       verify: the ladder table lands in `verify-completion-evidence` with one fixture per rung
-- [ ] **1.3 Playtest capture and read.** Godot Movie Maker
-      (`--write-movie --fixed-fps --quit-after`) as the first adapter, read
+- [ ] **1.3 Playtest capture and read.** One capture adapter per engine,
+      chosen for the engine the project already uses (D4); Godot Movie Maker
+      (`--write-movie --fixed-fps --quit-after`) is the first adapter built, read
       through the `media:bundle` contact sheets; headless CI reports
       `unverified`, never a pass.
       verify: a fixture capture yields a contact sheet and an anchor-citing read
@@ -95,19 +96,17 @@ Evidence (executed): `src/agent-src/templates/scripts/work_engine/intent/classif
 
 ### blocker: game-engine-choice
 
-- **Status:** open — raised 2026-11-03.
+- **Status:** resolved 2026-11-03 by the owner — see D4.
 - **Owner:** owner — which engine the owner's own game uses is a product fact no tree evidence settles. The draft says Godot-first from an owner steer that is not in the transcript; one external plan says Unreal-first.
-- **Blocks:** 1.3, 3.4.
-- **What to do:** name the engine; recommended Godot (text scenes diff in git, Movie Maker capture is offline).
-- **Resolved when:** the answer is recorded here.
+- **Blocks:** nothing now; was 1.3, 3.4.
+- **Answer:** no engine is fixed. The agent reads which engine the project uses, what the user already knows and what is current at the time, and follows that — as with languages and frameworks. Godot is the recommendation only when the user has no preference.
 
 ### blocker: game-pack-id-and-skills
 
-- **Status:** open — raised 2026-11-03.
+- **Status:** resolved 2026-11-03 by the owner — see D5.
 - **Owner:** owner — a new pack id amends a closed public vocabulary, and `skill_count` has no growth allowance; the analogous skill-growth question is already pending in `later/road-to-stacks-beyond-php.md`.
 - **Blocks:** shipping 1.3 and 3.x as a pack; the steps themselves can land as sections on existing skills.
-- **What to do:** answer together with the pending skill-growth question: pack-only `gamedev` with up to three skills, or sections on existing skills.
-- **Resolved when:** the answer is recorded here.
+- **Answer:** yes — a pack-only `gamedev` capability pack with up to three skills, registered in `src/config/discovery/packs.yml` like the package's other packs, with the ADR-013 amendment in the same PR.
 
 ## Decisions
 
@@ -115,4 +114,6 @@ Evidence (executed): `src/agent-src/templates/scripts/work_engine/intent/classif
 |---|---|---|---|
 | D1 | No kernel edit: the stateful-app Hard Floor row lives in the pack rule, not in `non-destructive-by-default` | own analysis — a kernel amendment is owner-reserved and nothing here needs it | the pack never ships and the row has no carrier |
 | D2 | Unreal and Unity get detector and runner rows only; no engine skills before a consumer | source draft K3, re-checked | a consumer commits an Unreal or Unity project |
+| D4 | No engine is fixed: detect the project's engine and the user's skills, follow what is current; recommend Godot only when the user has no preference | owner, 2026-11-03 | never as a default lock — revisit the fallback recommendation when the engine landscape shifts |
+| D5 | Game skills ship as the internal capability pack `gamedev` (≤ 3 skills, pack-only) | owner, 2026-11-03 | the skill-growth answer in `later/road-to-stacks-beyond-php.md` sets a lower cap |
 | D3 | Dropped items of the external plans (session lease, fault injection, governed-vs-ungoverned benchmark, remote runner, LFS locks) are not taken: none is a verified defect | own analysis | a playtest run shows one of them as the failure |
