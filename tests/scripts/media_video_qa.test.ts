@@ -122,6 +122,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(r.checks['format']).toBe('ran');
     });
 
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
     it.skipIf(!has('deshake'))('reads a pan as camera motion and a still camera as static', () => {
         const pan = measure(fixtures['pan']!);
         expect(pan.camera_motion?.verdict).toBe('moving');
@@ -131,6 +132,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(still.checks['camera_motion']).toBe('ran');
     });
 
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
     it.skipIf(!has('scdet') || !has('signalstats'))('names a luma jump with no cut, and not the brightness change at a real cut', () => {
         const luma = measure(fixtures['luma']!);
         expect(luma.cuts).toEqual([]);
@@ -141,6 +143,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(cut.luma_jumps).toEqual([]);
     });
 
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
     it.skipIf(!has('freezedetect'))('finds a held tail as one freeze and none on a pan', () => {
         const frozen = measure(fixtures['freeze']!);
         expect(frozen.freezes).toHaveLength(1);
@@ -149,6 +152,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(measure(fixtures['pan']!).freezes).toEqual([]);
     });
 
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
     it.skipIf(!has('freezedetect') || !has('ssim'))('finds a region frozen while the frame around it moves', () => {
         const r = measure(fixtures['roi']!, ['--roi', '8,8,48,36', '--roi', '200,60,48,36']);
         expect(r.freezes).toEqual([]);
@@ -162,6 +166,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(moving?.ssim_min ?? 1).toBeLessThan(frozen?.ssim_min ?? 0);
     });
 
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
     it.skipIf(!has('tmedian') || !has('blend') || !has('deshake'))('names a swapped background patch on a static shot, and nothing for a walking block', () => {
         const swap = measure(fixtures['swap']!, ['--grid', '8x6']);
         expect(swap.background?.changed_cells.length).toBeGreaterThan(0);
@@ -173,6 +178,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(measure(fixtures['pan']!).checks['background']).toMatch(/^skipped: camera moving/);
     });
 
+    // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
     it.skipIf(!has('ssim') || !has('blend'))('compares the seam between two clips: continuous holds, a swapped background breaks', () => {
         const cont = measure(fixtures['a']!, ['--seam', fixtures['b-cont']!]);
         const swap = measure(fixtures['a']!, ['--seam', fixtures['b-swap']!]);
