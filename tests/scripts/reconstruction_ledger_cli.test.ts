@@ -84,4 +84,19 @@ describe('reconstruction_ledger --check', () => {
         expect(main(['--check', ledgerFile('{ not json')])).toBe(2);
         expect(main(['--check', ledgerFile({ evidence_ids: [], obligations: {} })])).toBe(2);
     });
+
+    it('exits 2 with a message, never a stack trace, on a malformed row', () => {
+        const noEvidence = { id: 'a', status: 'open', tier: 'ux', verifier_authority: 'maintainer' };
+        expect(main(['--check', ledgerFile({ evidence_ids: ['e1'], obligations: [noEvidence] })])).toBe(2);
+        expect(output).toContain('a: `evidence` must be an object');
+
+        output = '';
+        const noCases = row({ required_cases: undefined });
+        expect(main(['--check', ledgerFile({ evidence_ids: ['E1', 'E2'], obligations: [noCases] })])).toBe(2);
+        expect(output).toContain('o1: `required_cases` must be a list of strings');
+
+        output = '';
+        expect(main(['--check', ledgerFile({ evidence_ids: ['E1'], obligations: [null] })])).toBe(2);
+        expect(output).toContain('row 0: not an object');
+    });
 });
