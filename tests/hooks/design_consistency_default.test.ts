@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { dirtyPrimitives } from '../../src/scripts/_lib/design_consistency_pass.js';
-import { consistencyFor } from '../../src/scripts/hooks/design_pass_hook.js';
+import { consistencyFor, writtenPath } from '../../src/scripts/hooks/design_pass_hook.js';
 import {
     consistencySpecifier,
     CONSISTENCY_CHUNK,
@@ -225,6 +225,24 @@ describe('the stamp of uncommitted primitives', () => {
         const after = dirtyPrimitives(dir);
         expect(after).not.toEqual(clean);
         expect(after).toEqual(['components/ui/select.tsx:']);
+    });
+});
+
+describe('the written path stays inside the project', () => {
+    const root = path.join(os.tmpdir(), 'wp-root');
+    const write = (file_path: string) => writtenPath(root, { tool_input: { file_path } });
+
+    it('a path inside the root comes back relative, from either form', () => {
+        expect(write('src/components/Form.tsx')).toBe('src/components/Form.tsx');
+        expect(write('./src/components/Form.tsx')).toBe('src/components/Form.tsx');
+        expect(write(path.join(root, 'src', 'components', 'Form.tsx'))).toBe('src/components/Form.tsx');
+    });
+
+    it('a path outside the root is no target, relative or absolute', () => {
+        expect(write('../other-project/Form.tsx')).toBeNull();
+        expect(write('src/../../other-project/Form.tsx')).toBeNull();
+        expect(write(path.join(path.dirname(root), 'other-project', 'Form.tsx'))).toBeNull();
+        expect(write('.')).toBeNull();
     });
 });
 

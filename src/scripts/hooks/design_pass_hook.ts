@@ -622,8 +622,8 @@ export function targetPath(payload: unknown): string | null {
 /** The written path relative to the project root; null when absent or outside it. */
 export function writtenPath(root: string, payload: unknown): string | null {
     const t = targetPath(payload);
-    if (!t || !path.isAbsolute(t)) return t;
-    const rel = path.relative(root, t).split(path.sep).join('/');
+    if (!t) return null;
+    const rel = path.relative(root, path.resolve(root, t)).split(path.sep).join('/');
     return rel === '' || rel.startsWith('../') || path.isAbsolute(rel) ? null : rel;
 }
 
