@@ -289,7 +289,6 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         listKey: 'twins',
         tier: 'object',
         keyFields: ['name'],
-        newInThisChange: true,
         what: 'skill/command same-name twins present when the twin gate landed, each closed by an owner decision',
     },
 ];
