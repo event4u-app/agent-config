@@ -140,7 +140,11 @@ describe('an entry is something that is invoked (ledger-that-can-say-no 2.1)', (
 });
 
 describe('check_step_production_reach', () => {
-    const tree = treeOf(BASE);
+    const tree = treeOf({
+        ...BASE,
+        'src/domains/a/command.md': '# a\n',
+        'src/scripts/analysis_validate.ts': 'export const v = 1;\n',
+    });
     const reach = productionReach(tree);
 
     it('reds a tick whose test takes an unreached symbol from its subject', () => {
@@ -179,9 +183,29 @@ describe('check_step_production_reach', () => {
             'the analysis ledger is driven by the analysis doors through command prose (ADR-288), with no TypeScript caller — appendLoop, nextLoop and ledgerSummary were already unreached before this step.';
         const verdict =
             'isMediaAnchor is consumed by src/scripts/analysis_validate.ts, which the analysis commands run by path from markdown; the production-entry config does not read command bodies, so that edge is invisible here.';
-        expect(exemptionCitesItsCall(adr288)).toBe(false);
-        expect(exemptionCitesItsCall(verdict)).toBe(true);
-        expect(exemptionCitesItsCall('a maintainer bench, never shipped')).toBe(true);
+        expect(exemptionCitesItsCall(adr288, tree)).toBe(false);
+        expect(exemptionCitesItsCall(verdict, tree)).toBe(true);
+        expect(exemptionCitesItsCall('a maintainer bench, never shipped', tree)).toBe(true);
+    });
+
+    it('takes only a citation of a real command, door or script file other than the step\'s own subject (2.2)', () => {
+        const door = 'driven by the analysis doors through command prose';
+        // Any `x.y:N` token used to pass: a version, a JSON line, a file the tree does not have.
+        expect(exemptionCitesItsCall(`${door}, see v1.2:3`, tree)).toBe(false);
+        expect(exemptionCitesItsCall(`${door}, see package.json:4`, tree)).toBe(false);
+        expect(exemptionCitesItsCall(`${door}, invoked at src/domains/nope/command.md:9`, tree)).toBe(false);
+        // Any `src/**.ts` path used to pass, the step's own subject included.
+        expect(exemptionCitesItsCall(`${door}, as src/lib.ts says`, tree, ['src/lib.ts'])).toBe(false);
+        expect(exemptionCitesItsCall(`${door}, as src/lib.ts:3 says`, tree, ['src/lib.ts'])).toBe(false);
+        // A real door line, or a real TypeScript caller that is not the subject, still passes.
+        expect(exemptionCitesItsCall(`${door}, invoked at src/domains/a/command.md:90`, tree)).toBe(true);
+        expect(exemptionCitesItsCall(`${door}, called by src/scripts/tool.ts`, tree, ['src/lib.ts'])).toBe(true);
+    });
+
+    it('reds an exemption whose only citation is the step\'s own subject', () => {
+        const block =
+            '- [x] **1.5 x** `src/lib.ts`\n  reach exempt: driven by the door; see src/lib.ts:1 for the code\n  verify: `tests/lib.test.ts`';
+        expect(checkStep(tree, reach, 'r.md', '1.5', block)?.reason).toContain('file:line');
     });
 
     it('maps a named test to its own subject module', () => {
