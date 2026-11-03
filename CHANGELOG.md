@@ -45,9 +45,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `clamped_from`, and both tools publish an open `outputSchema`. A kernel
   discovery stub's `not_implemented` envelope is returned as a tool error too.
 * **mcp:render:** keeps MCP servers and comments it did not write, writes a
-  `.agent-config.bak` before changing a host config, and refuses a file with a
-  duplicate key at any depth. A server you remove from `mcp.json` is no longer
-  deleted from the targets.
+  `.agent-config.bak` before changing a host config (refreshed on every changing
+  write, and ignored by the managed `.gitignore` block), and refuses a file with
+  a duplicate key at any depth when it would rewrite it. A server you remove
+  from `mcp.json` is no longer deleted from the targets.
 * **web-launch gate:** attribute order, quote style and case no longer change a
   verdict; a robots.txt block aimed only at AI-training crawlers is no longer
   reported as a critical staging leftover; every canonical is checked; two new

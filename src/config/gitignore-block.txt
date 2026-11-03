@@ -49,6 +49,11 @@
 # migration can be rolled back. Local-only — never commit.
 .legacy-pre-global-only/
 
+# Agent config — host-config backups. Written next to a host settings file
+# (`.cursor/mcp.json`, `.vscode/settings.json`, …) before agent-config rewrites
+# it; they hold the previous bytes, resolved MCP tokens included. Never commit.
+*.agent-config.bak
+
 # Agent config — CLI wrapper (auto-generated on every install)
 /agent-config
 

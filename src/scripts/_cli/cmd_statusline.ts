@@ -154,7 +154,11 @@ function writeSettings(file: string, settings: Record<string, unknown>): void {
     write_atomic(file, `${JSON.stringify(settings, null, 2)}\n`);
 }
 
-/** Same name and once-only rule as `hostConfigMerge.ts`, so the backup keeps the pre-agent-config original. */
+/**
+ * Same name as `hostConfigMerge.ts`, but once-only: this is the user-global
+ * `settings.json` outside any repository, so keeping the pre-agent-config
+ * original cannot leak into a commit.
+ */
 const SETTINGS_BACKUP_SUFFIX = '.agent-config.bak';
 
 function backupSettings(file: string): void {

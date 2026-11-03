@@ -258,6 +258,31 @@ describe('mcp_render — keeps what it did not write', () => {
         expect(fs.existsSync(`${target}.agent-config.bak`)).toBe(false);
     });
 
+    it('refuses a duplicate key in a foreign server it never writes, leaving the target byte-for-byte', () => {
+        const { tmp, source, target } = setup();
+        const original =
+            '{\n  "mcpServers": {\n    "theirs": { "command": "a", "command": "b" }\n  },\n  "other": 1\n}\n';
+        fs.writeFileSync(target, original);
+        const { result, out } = quiet(() => main(['--source', source, '--project-root', tmp]));
+        expect(result).toBe(1);
+        expect(out).toContain('skipped-duplicate-key');
+        expect(out).toContain('mcpServers.theirs.command');
+        expect(fs.readFileSync(target, 'utf-8')).toBe(original);
+        expect(fs.existsSync(`${target}.agent-config.bak`)).toBe(false);
+    });
+
+    it('refreshes the backup on a later changing write, so it never keeps a rotated-out token', () => {
+        const { tmp, source, target } = setup();
+        fs.writeFileSync(target, '{\n  "mcpServers": {\n    "github": { "env": { "GITHUB_TOKEN": "old-token" } }\n  }\n}\n');
+        expect(quiet(() => main(['--source', source, '--project-root', tmp])).result).toBe(0);
+        process.env['GH_TOKEN'] = 'ghp_rotated';
+        const beforeSecond = fs.readFileSync(target, 'utf-8');
+        expect(quiet(() => main(['--source', source, '--project-root', tmp])).result).toBe(0);
+        const backup = fs.readFileSync(`${target}.agent-config.bak`, 'utf-8');
+        expect(backup).toBe(beforeSecond);
+        expect(backup).not.toContain('old-token');
+    });
+
     it('check compares only the rendered keys', () => {
         const { tmp, source, target } = setup();
         expect(quiet(() => main(['--source', source, '--project-root', tmp])).result).toBe(0);
