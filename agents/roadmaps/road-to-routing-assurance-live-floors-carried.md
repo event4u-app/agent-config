@@ -89,6 +89,15 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
 - **Resolved when:** a protocol file carrying (i)–(iii) of 2.1 is committed by
   such a session before its first arm case runs.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A rule tuned to the gate | implementation | The tie diagnosis is known, so the next uniqueness rule can be picked to pass the parity gate rather than to deliver the right body | The rule, the wrong-body treatment and a fresh native arm are pre-registered by a session that did not author the mechanism, before its arm runs (`b-inline-arm-independence`) | Phase 2 — the suggest-without-read gap (carried 4.4) |
+| 2 | Noise read as a regression | implementation | One run per unit makes every recall 0 or 1; a skill edited on a single-run miss is edited against noise | Every unit in Phase 1 is measured at three runs before and after any edit; 1.2 separates host from catalogue first | Phase 1 — five units the canary left unresolved |
+| 3 | A skill edit that steals from a neighbour | product | Restoring one unit's routing criterion can take it from the skill that now wins the prompt | 1.3 allows the other outcome explicitly — a recorded reason the prompt now belongs to the competing skill — and classifies the five on today's catalogue, not the frozen one | Phase 1 — five units the canary left unresolved |
+
 ## Acceptance Criteria
 
 - [ ] AC-1 — No unit of the five stays REGRESSION at three runs without a
