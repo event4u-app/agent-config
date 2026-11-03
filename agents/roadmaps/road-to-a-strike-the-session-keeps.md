@@ -41,38 +41,38 @@ Already fixed at the pin (not planned): the stale `N=3` reference in
 
 ## Phase 1 — One ladder, one wording
 
-- [ ] **1.1 `context-hygiene` follows the ladder.** The 3-Failure Rule becomes a
+- [x] **1.1 `context-hygiene` follows the ladder.** The 3-Failure Rule becomes a
       pointer to the ladder in `autonomous-execution` (three failed strategies →
       new epoch: state dump, fresh context; a count is never a reason to ask).
       Failure identity and the hard-blocker classes stay — hard blockers are the
       one place a surface to the user is right, and they are not a count.
       verify: `grep -cE 'ask for a different approach|new hypothesis, ask|Can.t proceed → ask the user' src/rules/context-hygiene.md` → `0`.
-- [ ] **1.2 The rule says what the hook carries.** Hook header drops "the
+- [x] **1.2 The rule says what the hook carries.** Hook header drops "the
       3-failure stop"; the rule's enforcement header says the hook carries the
       call counter and freshness milestones, and the 3-failure / tool-loop
       clauses are model-carried.
       verify: a test reads the state fields the rule header names and finds each in `_empty_state()`.
-- [ ] **1.3 Skills keep their method, lose the count→ask.**
+- [x] **1.3 Skills keep their method, lose the count→ask.**
       `systematic-debugging` (`:165`) and `bug-analyzer` (`:139-140`, `:266`)
       point at band 2 / band 3 of the ladder instead of "discuss with the user".
       verify: `grep -nE 'Surface the question to the user|Discuss with the user before attempting more fixes|Stop and discuss' src/skills/systematic-debugging/SKILL.md src/skills/bug-analyzer/SKILL.md` → no output.
-- [ ] **1.4 `bug-analyzer` ships no project's root causes.** The "in this
+- [x] **1.4 `bug-analyzer` ships no project's root causes.** The "in this
       project" list becomes generic categories plus the existing `retrieve`
       step as the source of project-specific causes.
       verify: `grep -c 'in this project' src/skills/bug-analyzer/SKILL.md` → `0`.
-- [ ] **1.5 Own-number register.** `fix-loop-ladder.md` lists every surface
+- [x] **1.5 Own-number register.** `fix-loop-ladder.md` lists every surface
       that keeps its own retry number (`verify-repair-loop` 3,
       `subagent_steering` 2-consecutive stop, work-engine `SELF_FIX_CEILING` 3)
       with one line on why, so a paraphrase cannot pass as a second ladder.
       verify: each named surface links back to `fix-loop-ladder`.
-- [ ] **1.6 The guard sees paraphrases.** The ladder test scans `src/rules`,
+- [x] **1.6 The guard sees paraphrases.** The ladder test scans `src/rules`,
       `src/skills` and `src/agent-src/contexts` for count→ask phrasings, not
       only the literal in one file; red before 1.1-1.3, green after.
       verify: `npx vitest run tests/e2e/adversarial-verification-fixtures.test.ts` → 0.
 
 ## Phase 2 — A discarded red is not green
 
-- [ ] **2.0 Discard never counts as pass.** `canVerify` consults the same
+- [x] **2.0 Discard never counts as pass.** `canVerify` consults the same
       segment predicate the transcript path uses (export it; no second list).
       verify: fixtures `tsc --noEmit || true`, `tsc --noEmit; true`,
       `eslint . || :` (exit 0, error output) are not `PASS_EVIDENCE_OK`;
