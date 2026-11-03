@@ -97,11 +97,11 @@ source-tag vocabulary into the skills that were meant to carry it.
 
 ## Phase 3 — Two small reachability fixes
 
-- [ ] **3.1 Dead freshness-gate link.** `src/agent-src/contexts/authority/scope-mechanics.md:121`:
+- [x] **3.1 Dead freshness-gate link.** `src/agent-src/contexts/authority/scope-mechanics.md:121`:
       `../../commands/create-pr.md` → `../../commands/pr/create.md` (target
       `dist/agent-src/commands/pr/create.md` holds Step 1b).
       verify: `grep -c "commands/create-pr.md" src/agent-src/contexts/authority/scope-mechanics.md` prints 0 and `test -f dist/agent-src/commands/pr/create.md`.
-- [ ] **3.2 A foreign repo's AI-contribution policy in the existing confirmation.** One paragraph
+- [x] **3.2 A foreign repo's AI-contribution policy in the existing confirmation.** One paragraph
       in `src/domains/git/pr/create/command.md` § 1 Check prerequisites: when the target repo is not
       the user's (fork PR, foreign issue or comment), read its `AGENTS.md`, `CONTRIBUTING*` and
       `AI_POLICY*`, quote the AI-relevant lines inside the existing Hard-Floor confirmation; if they

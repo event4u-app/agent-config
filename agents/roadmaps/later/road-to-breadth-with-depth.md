@@ -474,6 +474,7 @@ K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC 
 > footage seeking shipped in `archive/road-to-a-timeline-the-witness-can-seek.md`.
 > Each item below joins the 5.3 roadmap as a step or carries a recorded kill
 > when that roadmap is written (same rule as 5.3a).
+> **Arrivals:** 1 — `inbox-2026-11-n` lane F (2026-11-03): step V12a.
 
 **5.3 stage 1–2, talking-head edit**
 
@@ -495,6 +496,7 @@ K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC 
 - [ ] **V10** ffmpeg capability gate for `/video:*`: tool absent → `skipped(capability)`, never pass.
 - [ ] **V11** Adapter inputs: multi-reference image/video/audio, a "keep X, change only Y" edit mode, motion transfer — each gated on a smoke trace.
 - [ ] **V12** Licence `{id, territory_excluded[], checked_at}` on every manifest entry; an entry without it fails `lint_adapter_tier`.
+- [ ] **V12a** The two Hunyuan entries (`src/scripts/ai-video/lib/model-capabilities/replicate.json` `tencent/hunyuan-video`, `fal.json` `fal-ai/hunyuan-video`) are `verified: true` with `license: null` at `b234d08480`; fill the licence from its text with a dated source before any `territory_excluded` value is written — never from memory (`inbox-2026-11-n` lane F).
 - [ ] **V13** Cost per *accepted* second as the quote basis next to the modelled estimate (owner decision on display).
 - [ ] **V14** Retry cap per shot inside calibration/stitch: a shot that fails twice stops with one ask.
 - [ ] **V15** Media ingest gate for user-supplied references (type allowlist, bounded probe, re-encode, metadata/EXIF strip, hash) — security-sensitive, threat-model first.
