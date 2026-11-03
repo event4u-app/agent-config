@@ -210,8 +210,8 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
 
     it('no text outside the ladder maps a failure count to a question — paraphrases included', () => {
         // The literal check above sees one file and two spellings. The defect it
-        // missed was a paraphrase in a neighbouring rule and two skills
-        // (road-to-a-strike-the-session-keeps F2/F6), so this scans every
+        // missed was a paraphrase in a neighbouring rule and two skills, so
+        // this scans every
         // surface an agent reads for a retry budget.
         const COUNT_TO_ASK = [
             /ask for a different approach/i,

@@ -75,6 +75,7 @@ import {
   type QualityRun,
 } from "./_lib/touched_file_quality.js";
 import { runnerOf } from "./_lib/verification_evidence.js";
+import { observeStrike } from "./_lib/strike_ledger_io.js";
 import { resolve_toolchain } from "../agent-src/templates/scripts/work_engine/stack/runner.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
@@ -1077,6 +1078,21 @@ export function run(
     if (line !== null) {
       process.stderr.write(`${line}\n`);
     }
+  }
+
+  // The strike ledger, SHADOW.
+  // It reads the run this hook just recorded (one capture, two readers) and
+  // keeps a streak per target that survives the turn reset above. Its own file,
+  // its own lock, and a failure there never touches this hook's exit code.
+  if (event === "post_tool_use") {
+    const pl = envelope["payload"];
+    const [tool, cmd] = _extract_command(
+      typeof pl === "object" && pl !== null && !Array.isArray(pl) ? (pl as StateDict) : {},
+    );
+    observeStrike(consumer_root, envelope, state, {
+      isEdit: tool !== null && EDIT_TOOLS.has(tool),
+      recorded: cmd !== null && cmd !== "" && mightBeVerification(cmd),
+    });
   }
 
   if (verbose) {

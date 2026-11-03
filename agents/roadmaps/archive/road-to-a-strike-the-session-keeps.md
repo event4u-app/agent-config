@@ -80,12 +80,12 @@ Already fixed at the pin (not planned): the stale `N=3` reference in
 
 ## Phase 3 — The counter, in shadow
 
-- [ ] **3.1 Failure signature.** `failureSignature(run)`: runner + failing
+- [x] **3.1 Failure signature.** `failureSignature(run)`: runner + failing
       summary counts + first error line, normalised (durations, timestamps,
       hex addresses, temp paths, line numbers out), hashed.
       verify: same red with a different duration → same signature; a
       different failing test → a different one.
-- [ ] **3.2 Strike ledger.** `agents/state/strike-ledger.json`, written beside
+- [x] **3.2 Strike ledger.** `agents/state/strike-ledger.json`, written beside
       the run record from the same capture (one capture, two readers): per
       target `{sig, streak, verdict: SAME|NEW|FIXED|FLAKY, edits_between,
       last_at, platform}` keyed by agent and target. Hashes and counts only —
@@ -94,7 +94,7 @@ Already fixed at the pin (not planned): the stale `N=3` reference in
       verify: red→red with an edit between → `SAME`, streak 2; red→green →
       `FIXED`, streak 0; red/green/red without an edit → `FLAKY`, no strike;
       a second session within 7 days inherits the streak.
-- [ ] **3.3 Shadow posture.** Nothing reaches the model; the ledger is read by
+- [x] **3.3 Shadow posture.** Nothing reaches the model; the ledger is read by
       tests and by the stubs below. The rule text says so.
       verify: no emission path references the ledger outside tests and its writer.
 

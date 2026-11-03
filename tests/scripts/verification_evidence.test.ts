@@ -412,7 +412,7 @@ describe('readRunEvidence — placement in the turn, step 1.3', () => {
 });
 
 describe('classifyRun — a failure the shell discarded is never pass-evidence', () => {
-    // road-to-a-strike-the-session-keeps 2.0. The transcript path already
+    // The transcript path already
     // refuses these (`isVerificationCommand` honours `failureIsDiscarded`); the
     // record path re-split the line and lost the separator, so exit 0 from
     // `tsc || true` read as a pass. Each fixture carries real error output.

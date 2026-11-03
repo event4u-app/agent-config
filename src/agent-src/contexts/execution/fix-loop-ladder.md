@@ -71,6 +71,18 @@ contexts for the count→ask form such a paraphrase usually takes.
 None of the three maps its number to a question to the user, and a new entry may
 not either.
 
+## The counter — strike ledger, in shadow
+
+The verification recorder (`before_complete_hook`) feeds a strike ledger at
+`agents/state/strike-ledger.json` (`src/scripts/_lib/strike_ledger.ts`): per
+agent and target, the streak of red runs on one failure signature, with an edit
+before each, and a verdict `NEW` · `SAME` · `FIXED` · `FLAKY`. It survives the
+turn reset and a new session for 7 days, and holds hashes and counts only.
+
+It is **shadow**: nothing reads it to the model yet, so the bands above are
+still counted by the agent. Whether and how it speaks at a band boundary is a
+separate decision, taken on what the shadow window measured.
+
 ## Read the red before diagnosing it, with the narrowest probe
 
 An attempt that begins from a guess about the failure is not a band-1 attempt; it
