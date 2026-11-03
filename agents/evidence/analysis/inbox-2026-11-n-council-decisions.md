@@ -35,7 +35,7 @@ evidence exists**, and two items are owner-reserved because they spend money.
 | C2 gate on a bare agent `gh pr merge` | **scope-ready** as a current-head check contract | invariant justified without incident data | — |
 | C5 `max_parallel` sets host workflow cap | **defer**; resource scope and precedence unclear | speculative equivalence | — |
 | T2 SHA pins in consumer templates | **scope-ready** as an inventory plus a pin/update proposal; not flipped here | threat model suffices to justify, inventory first | — |
-| D1 URL review against production | **not permitted** until permitted interactions and mutation boundaries are defined | clicks are not read-only by default | a written interaction allow-list exists |
+| D1 URL review against production | **not recommended** until permitted interactions are written down; the mutation boundary now exists (lane E step 4.3: a URL render refuses non-GET and cross-origin requests and lists them under `network.blocked`) | clicks are not read-only by default | a written interaction allow-list exists |
 | D2, D3 review-first scope, pixel lock for image-only handovers | **defer**; examples and the archived rationale first | speculative / record not retrieved | — |
 | F1 production shadow | **keep, tagged `origin`** (as shipped) | removal needs data-destination and retention review | that review lands |
 | F3, F4, F5 origin-derived class, cap semantics, live flip | **defer**; caps are enforced upper limits, not floors; measure before any flip | measurement and permission to operate are separate gates | a measured run meets stated thresholds |
