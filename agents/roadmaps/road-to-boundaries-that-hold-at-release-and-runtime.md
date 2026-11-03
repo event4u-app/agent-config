@@ -67,7 +67,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       `_relative_to` refused it one step later; the same prefix defect in `_relative_to`
       (`rel.startsWith('..')`) instead refused a contained `..cache` root — that case and
       `a/../../<root>-evil/x` were red at the pin. `_relative_to` takes the segment check too.
-- [ ] **1.4 Carriage return is not a hidden-instruction signal.** In
+- [x] **1.4 Carriage return is not a hidden-instruction signal.** In
       `src/scripts/_lib/retrieval_sanitize.ts`, `scan_invisible_findings` no longer reports
       U+000D as `control-char`; every other C0/C1 control still reports. Tests in
       `tests/scripts/retrieval_sanitize.test.ts`: CRLF text and `10%\r20%` → no finding;
