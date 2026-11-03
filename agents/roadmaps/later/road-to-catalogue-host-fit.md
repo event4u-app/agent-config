@@ -244,7 +244,7 @@ This phase unblocks everything else in the file, and it is repo work.
       establish whether the bare threshold actually moves with the entry count.
       `verify:` a scoped install's projected entry count is recorded against the
       smallest recorded limit for that host.
-- [x] **2.2** Deterministic tie-break for what stays: skills referenced by deployed
+- [x] **2.2** Deterministic tie-break for what stays: skills referenced by deployed <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/host_listing_model.ts -->
       rules' `routes_to:`, then pack membership, then usage evidence — and **never
       alphabetical**, which is the order the degenerate-short-prompt scorer already
       showed to be an accident amplifier.

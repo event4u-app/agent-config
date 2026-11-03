@@ -49,7 +49,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       verify: `npx vitest run tests/scripts/tests_workflow_result_aggregate.test.ts` — runs the
       step's script with `RESULTS="skipped skipped"` (summary says nothing ran, exit 0) and
       `RESULTS="success skipped"` (no line, exit 0) and `RESULTS="failure"` (exit 1).
-- [x] **1.3 The pre-cut gate reads a conclusion of the run it started.** Rewrite the loop at <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.3 The pre-cut gate reads a conclusion of the run it started.** Rewrite the loop at <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/cloud-release.yml -->
       `docs/release-runbook.md:127-136`: record the dispatch time and `origin/main` SHA, select the
       run by `event=workflow_dispatch`, `headSha` and `createdAt >=` dispatch time, wait with
       `gh run watch`, then require `gh run view "$id" --json conclusion --jq .conclusion` to equal
@@ -107,7 +107,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       gains a pin.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts` with a new case that accepts
       `xhigh` and rejects `ultra`.
-- [x] **3.4 The payload-capture stub stops listing an answered question.** Add one dated line to <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.4 The payload-capture stub stops listing an answered question.** Add one dated line to <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/cloud-release.yml -->
       `agents/roadmaps/stubs/road-to-subagent-payload-capture.md` row "Phase 0 Step 4": the
       assertion that `agent_id`/`agent_type` reach tool events inside a subagent is observed at
       `agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md:351` (n=1, host 2.1.304);
