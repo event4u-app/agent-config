@@ -24,7 +24,7 @@ entry_condition:
 
 ## Goal
 
-17.0.0 is cut only when the three `fail_closed` hook guards
+17.0.0 is cut only when the three `fail_closed` hook guards hold. That is: they
 (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`)
 refuse what they claim on every install shape, the window an `upgrade` opens is
 proven closed, the admin-token workflow is fenced to `main` by a rule a branch

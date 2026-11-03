@@ -72,7 +72,7 @@ pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 
 Every rubric category **in the declared manifest** of
 `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or
-`max-boundary` under the six-dimension definition frozen in
+`max-boundary`. It does so under the six-dimension definition frozen in
 `road-to-score-contract.md` — with no existing 10
 regressed, no aggregate averaging, and no mechanism shipped only to satisfy a
 rubric row. The v1 "doctrine caps" are withdrawn: a pre-registered **measured

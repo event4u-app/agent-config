@@ -102,7 +102,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-experience-loop-owner-decisions | later | — | Road to the experience loop's two owner-reserved decisions |
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
-| road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid, atomic upgraded-plus-shadow … |
+| road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`). |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
 | road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
@@ -110,7 +110,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |
 | road-to-guided-journeys | later | later | Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C) |
 | road-to-harvest-second-sweep-proposals | later | later | Second-Sweep surfaced proposals (parked) |
-| road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
+| road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards hold. |
 | road-to-host-catalogue-contract | later | later | State, from a measurement rather than from this package's model of a host, what projection rule satisfies both: total payload … |
 | road-to-host-claims-the-tree-contradicts-carried | later | later | Every step road-to-host-claims-the-tree-contradicts deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-host-inputs-the-installer-honours | later | later | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
@@ -164,7 +164,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
-| road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary` under the six-dimension definition frozen in … |
+| road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary`. |
 | road-to-the-question-only-the-owner-can-answer-carried | later | later | Every step road-to-the-question-only-the-owner-can-answer deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-thin-flip-under-anchor-scoring | later | later | Road to a Thin Flip Under Anchor-Scoring |
 | road-to-token-economy-cache-followup | later | later | Close the census-gated remainder of the parent: idempotency gates on the measured top repeat-slot concerns, plus the data-halves of the … |
