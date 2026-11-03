@@ -197,15 +197,18 @@ stops counting ranges.
 ## Blockers
 
 ### blocker: owner-instrument-change
-Owner: user. Changing the corpus and judge prompt behind the backed claim
-`humanizer-tell-reduction`, and a judged rerun, is a pre-registered-instrument
-change plus spend. Question: repair the 17 after-files as a new epoch and narrow
-the claim — yes / no?
+- **Status:** resolved here by carry — still open, moved with step 3.4, to `later/road-to-rewrites-that-keep-their-facts-carried.md` on 2026-11-03
+- **Owner:** user
+- **Blocks:** step 3.4 only
+- **What to do:** see the carried roadmap.
+- **Resolved when:** the carried blocker resolves.
 
 ### blocker: kernel-edit-own-pr
-Owner: user. `ask-when-uncertain` is a kernel rule; its edits ship in their own
-PR with a 24 h soak (`scope-control` § Kernel-rule edits).
-
+- **Status:** resolved here by carry — still open, moved with step 8.2, to `later/road-to-rewrites-that-keep-their-facts-carried.md` on 2026-11-03
+- **Owner:** user
+- **Blocks:** step 8.2 only
+- **What to do:** see the carried roadmap.
+- **Resolved when:** the carried blocker resolves.
 
 ## Risk Register
 

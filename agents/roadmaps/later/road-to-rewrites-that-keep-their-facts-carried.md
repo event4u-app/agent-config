@@ -42,14 +42,24 @@ left to read as finished.
 ## Blockers
 
 ### blocker: owner-instrument-change
-Owner: user. Changing the corpus and judge prompt behind the backed claim
-`humanizer-tell-reduction`, and a judged rerun, is a pre-registered-instrument
-change plus spend. Question: repair the 17 after-files as a new epoch and narrow
-the claim — yes / no?
+- **Status:** open — raised 2026-11-03
+- **Owner:** user
+- **Blocks:** step 1.1 only
+- **Question:** repair the 17 after-files of `tests/fixtures/ai-tells/` as a new epoch, drop "same content" from the judge prompt and narrow `humanizer-tell-reduction` to what is measured — yes / no? It changes the instrument behind a backed, pre-registered claim, and a judged rerun is billable.
+- **Recommendation:** (a) yes — the corpus already fails the skill's own fact check (16 of 20 pairs), so the claim currently rests on an instrument that rewards supplied facts.
+- **If you do nothing:** the claim stays broader than its instrument; `check_claims` keeps listing it under the stale-`last_verified` baseline on every run.
+- **What to do:** (a) yes — land the corpus epoch under `tests/fixtures/ai-tells/`, drop "same content" from `src/scripts/bench_humanizer_eval.ts`, narrow the row in `docs/CLAIMS.md`, then run `./scripts-run src/scripts/bench_humanizer_eval --judge --confirm-spend`; (b) no — mark step 1.1 `[-]` with the answer quoted.
+- **Resolved when:** the owner answers; on no, step 1.1 becomes `[-]` with the answer quoted.
 
 ### blocker: kernel-edit-own-pr
-Owner: user. `ask-when-uncertain` is a kernel rule; its edits ship in their own
-PR with a 24 h soak (`scope-control` § Kernel-rule edits).
+- **Status:** open — raised 2026-11-03
+- **Owner:** user
+- **Blocks:** step 2.1 only
+- **Question:** none — `ask-when-uncertain` is a kernel rule, and its edits ship in their own PR with a 24 h soak (`scope-control` § Kernel-rule edits).
+- **Recommendation:** (a) open the PR — the clause closes the prose-fact gap the witness can only detect after the fact.
+- **If you do nothing:** facts about people, outcomes or status keep falling under "state the assumption, proceed" in `src/rules/ask-when-uncertain.md`.
+- **What to do:** (a) open a separate PR editing `src/rules/ask-when-uncertain.md` with the step 2.1 clause, merge after the 24 h soak; (b) decline — mark step 2.1 `[-]` with the answer quoted.
+- **Resolved when:** that PR merges after its soak.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: archive-sweep/auto-carry -->

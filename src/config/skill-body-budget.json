@@ -124,10 +124,10 @@
         "grafana": 6477,
         "gtm-launch": 9094,
         "guideline-writing": 7015,
-        "hiring-loop-design": 12107,
+        "hiring-loop-design": 12668,
         "history-design": 4758,
         "html-deck": 8113,
-        "humanizer": 15909,
+        "humanizer": 16158,
         "iconography": 8205,
         "image-analyser": 6133,
         "image-creator": 5784,
@@ -255,7 +255,7 @@
         "recursive-verification": 9376,
         "refine-prompt": 13050,
         "refine-ticket": 17500,
-        "release-comms": 8198,
+        "release-comms": 8271,
         "repomix-packer": 5427,
         "requesting-code-review": 7845,
         "retention-loops": 8227,
@@ -263,7 +263,7 @@
         "rice-prioritization": 5214,
         "risk-officer": 5321,
         "roadmap-management": 8374,
-        "roadmap-writing": 21385,
+        "roadmap-writing": 21568,
         "root-cause-frameworks": 5754,
         "rtk-output-filtering": 8665,
         "rule-refactor": 5370,
@@ -1229,6 +1229,30 @@
             "old": 10451,
             "new": 10675,
             "reason": "One evidence row for a game, scene or native runtime: the engine test run or a capture plus a cited reading (road-to-a-game-the-agent-can-playtest 3.1)."
+        },
+        {
+            "skill": "hiring-loop-design",
+            "old": 12107,
+            "new": 12668,
+            "reason": "Pointer to references/ai-screening.md (AI-assisted screening routing, untrusted CVs, name-swap bias probe); the section itself lives in the reference (road-to-rewrites-that-keep-their-facts 7.1)."
+        },
+        {
+            "skill": "humanizer",
+            "old": 15909,
+            "new": 16158,
+            "reason": "Step 6 names the four new fact-witness classes and points at Fixture 4 and the eval (road-to-rewrites-that-keep-their-facts 2.1, 3.1)."
+        },
+        {
+            "skill": "release-comms",
+            "old": 8198,
+            "new": 8271,
+            "reason": "One Step 4 line pointing at references/inflation-checks.md (road-to-rewrites-that-keep-their-facts 8.1)."
+        },
+        {
+            "skill": "roadmap-writing",
+            "old": 21385,
+            "new": 21568,
+            "reason": "One Do-NOT line pointing at references/inflation-checklist.md for Done notes (road-to-rewrites-that-keep-their-facts 8.1)."
         }
     ]
 }

@@ -1,0 +1,17 @@
+{
+  "skill": "hiring-loop-design",
+  "last_eval": "2026-11-03",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers designing or auditing an engineering interview loop, including a model in the screening step (EN + DE). Should-not-trigger covers the near-miss neighbours: comp bands (comp-banding), new-hire onboarding (onboarding-program), performance feedback (perf-feedback-craft), org structure (org-design), and writing a CV.",
+  "queries": [
+    {"q": "design our interview loop for senior backend engineers", "trigger": true},
+    {"q": "audit our hiring bar, too many false positives", "trigger": true},
+    {"q": "take-home or live coding for this role?", "trigger": true},
+    {"q": "can we use an LLM to screen the CVs for this position?", "trigger": true},
+    {"q": "wie sollten wir unseren Bewerbungsprozess für Entwickler aufbauen", "trigger": true},
+    {"q": "set salary bands for our engineering levels", "trigger": false, "note": "comp-banding"},
+    {"q": "plan the first 30 days for a new hire", "trigger": false, "note": "onboarding-program"},
+    {"q": "help me write a difficult performance review", "trigger": false, "note": "perf-feedback-craft"},
+    {"q": "should we split the platform team into two squads", "trigger": false, "note": "org-design"},
+    {"q": "rewrite my CV so it gets past applicant tracking systems", "trigger": false, "note": "a candidate-side CV rewrite, not loop design (career pack not adopted)"}
+  ]
+}
