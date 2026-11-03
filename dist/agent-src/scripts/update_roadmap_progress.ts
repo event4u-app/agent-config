@@ -1182,8 +1182,11 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null, roadmap_root
                     lines.push(`  - **If you do nothing:** ${b.ifNothing}`);
                 }
                 lines.push('  - **What to do:**');
+                // A step routinely names the file it asks someone to write, and the
+                // roadmap's own ref-ignore is stripped when quoted — same reasoning
+                // as the parked-roadmap rows above.
                 for (const step of b.todo) {
-                    lines.push(`    ${step}`);
+                    lines.push(`    ${step} <!-- ref-ignore -->`);
                 }
                 lines.push(`  - **Resolved when:** ${b.resolvedWhen}`);
             }
