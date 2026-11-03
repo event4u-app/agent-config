@@ -1,4 +1,4 @@
-<!-- evidence-type: council-question -->
+<!-- evidence-type: analysis -->
 
 subject: 2774a5557ba7998d65735110eccbaba58cce44286cda49b1cf8b31bccc6464eb
 
