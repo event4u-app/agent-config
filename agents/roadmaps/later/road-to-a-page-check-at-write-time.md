@@ -7,7 +7,7 @@ review_by: 2027-01-31
 estate_growth_exempt: "+1 later_roadmaps: carried out of road-to-a-page-that-says-what-it-loads (step 4.2) in the same change, with its blocker, because the ratification council refused the hook-bundle budget raise the step needs (2026-11-02). Carry is the preserving disposition; nothing is dropped."
 estate_offset_exempt: "Carried, not new work. Owner search at af5ab4dc22 (grep -rlF for design_pass_hook, web_launch_rows, writeTimeFindings over agents/roadmaps/*.md, later, stubs) found no roadmap owning a write-time web-launch carrier."
 entry_condition:
-  what: "blocker hook-bundle-budget-for-web-launch resolved"
+  what: "step 2.1 (lazy-loaded data-src) is pulled"
   when: "when an active roadmap closes and this is pulled"
   who: owner
 ---
@@ -27,18 +27,33 @@ turn. The function exists (`writeTimeFindings` in
 
 ## Phase 1 — The carrier
 
-- [ ] **1.1 Wire `writeTimeFindings` into `design_pass_hook`'s post_tool_use pass**
+- [x] **1.1 Wire `writeTimeFindings` into `design_pass_hook`'s post_tool_use pass** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       for `.html`/`.css` writes, advisory P2, exit 0, with the rows in a
       conditional chunk so the dispatch bundle carries only the call site.
       Blocked by `hook-bundle-budget-for-web-launch`.
       verify: `npx vitest run tests/hooks/design_pass_web_launch.test.ts` -> 0
       with a planted page surfacing its line and a safe twin surfacing nothing,
       and `./scripts-run src/scripts/check_hook_bundle_composition` -> 0.
+      Done on `feat/web-launch-write-time`; ratification record
+      `agents/evidence/ratifications/web-launch-write-time-20261102.md`
+      (round 14, split, owner decision recorded there).
+
+## Phase 2 — Carried from ratification round 14
+
+- [ ] **2.1 Decide whether a lazy-loaded `data-src` is a first-paint load.**
+      Rows 2.1 read `src` only, on purpose: a click-to-load iframe carrying only
+      `data-src` is not a load (`tests/scripts/web_launch_linear.test.ts`).
+      Round 14's refusing seat raised that lazy-load libraries fetch `data-src`
+      on viewport entry, without a click, so a page with no consent marker can
+      load a provider unreported. Pre-existing on main; not introduced by 1.1.
+      verify: a page with `<img data-src>` of a registered provider and a lazy
+      loader, no gate marker, yields an undecided or a finding; the
+      click-to-load twin with a gate marker does not.
 
 ## Blockers
 
 ### blocker: hook-bundle-budget-for-web-launch
-- **Status:** open — raised 2026-11-02
+- **Status:** resolved — 2026-11-03: the carrier fits the existing ceiling (1,577,188 / 1,578,600 B) and the chunk row carries a ratification record
 - **Class:** 2 — a governed threshold: the dispatch-bundle ceiling in `src/config/hook-bundle-budget.json` is on the ratification watched set
 - **Owner:** owner
 - **Blocks:** step 1.1
@@ -58,4 +73,4 @@ turn. The function exists (`writeTimeFindings` in
 
 ## Acceptance Criteria
 
-- [ ] A planted page surfaces at write time; a safe twin does not; the bundle gate is green.
+- [x] A planted page surfaces at write time; a safe twin does not; the bundle gate is green.

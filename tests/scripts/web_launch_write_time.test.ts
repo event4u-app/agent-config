@@ -38,6 +38,20 @@ describe('writeTimeFindings', () => {
         }
     });
 
+    it('a canonical naming a registered provider does not make that provider the site itself', () => {
+        const page = (canonical: string) =>
+            `<html><head>\n<link rel="canonical" href="https://${canonical}/">\n` +
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter">\n</head><body></body></html>\n';
+        for (const host of ['fonts.googleapis.com', 'FONTS.GOOGLEAPIS.COM']) {
+            expect(writeTimeFindings('index.html', page(host), register, table).map((h) => [h.check, h.line]), host).toEqual([
+                ['third-party-load-in-markup', 3],
+            ]);
+        }
+        // The site's own host still suppresses its absolute self-references.
+        const own = '<html><head>\n<link rel="canonical" href="https://example.com/">\n<script src="https://example.com/app.js"></script>\n</head></html>\n';
+        expect(writeTimeFindings('index.html', own, register, table)).toEqual([]);
+    });
+
     it('a non-markup file is never read', () => {
         expect(scan('app/layout.tsx', 'decoys/app/layout.tsx')).toEqual([]);
     });
