@@ -101,6 +101,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid, atomic upgraded-plus-shadow … |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
+| road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
 | road-to-governed-evidence-production | later | later | The four evidence obligations the governed-harness programme could not discharge are owned here, whole and unweakened, and each is either … |
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |
 | road-to-guided-journeys | later | later | Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C) |
@@ -186,6 +187,8 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
+| road-to-a-stall-the-replay-measures | stubs | — | a stall the replay measures |
+| road-to-a-strike-that-speaks | stubs | — | a strike that speaks |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
 | road-to-adapter-traces-before-the-window | stubs | — | road to adapter traces before the window |
