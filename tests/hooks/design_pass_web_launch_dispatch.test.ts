@@ -42,7 +42,7 @@ function dispatchWrite(ws: string, rel: string): string {
 
 const webLaunchLines = (ctx: string): string[] => ctx.split('\n').filter((l) => l.includes('[P2 web-launch]'));
 
-describe.runIf(fs.existsSync(BUNDLE))('a written page reaches the agent through the bundled dispatcher', () => {
+describe('a written page reaches the agent through the bundled dispatcher', () => {
     it('a page loading Google Fonts surfaces both loads, with file and line', () => {
         const ws = workspaceWith('site/index.html', 'planted/index.html');
         const lines = webLaunchLines(dispatchWrite(ws, 'site/index.html'));
