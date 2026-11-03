@@ -111,14 +111,33 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
 | 3 | The reaper deletes a user's own skill named mcp | implementation | A same-name skill the user wrote must survive | 1.5 asserts the foreign directory survives; 2.3 only reports | Phase 1 — Give `/mcp` and `/code-review` back |
 | 4 | Second-hand docs names are wrong | implementation | A name reserved without being a built-in only withholds a package name | No package artefact uses any added name at the pin; the fixture states its witness and date | Phase 2 — Keep it from coming back |
 
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | owner | owner | The new names are `mcp-tool-use` and `code-review-lens` (OD-1). Options: the proposed names / other names | owner demand "we must rename it", round `inbox-2026-11-n`; neither name collides with a package or reserved name at `b234d08480` | the owner names other ones |
+| D2 | reversible-technical | agent | The rename moves `mcp` out of the trigger-corpus seal and `code-review-lens` into it; recorded, not avoided. Options: record it / pick names whose hash keeps each partition | the partition is name-derived with no discretion, and D1 fixes the names; `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` § Re-pin 2026-11-03 states what the seal loses | a proposer evaluation runs against the holdout |
+| D3 | reversible-technical | agent | The twin gate also fails on a baseline line whose twin is gone. Options: fail on growth only / fail on growth and stale lines | a stale line is headroom the next twin could take silently | a twin closes and the stale-line failure blocks an unrelated change |
+| D4 | reversible-technical | agent | The doctor check registers through the install-reach runners. Options: inline in `cmd_doctor.ts` / a runner entry in `_lib/install_reach_checks.ts` | `cmd_doctor.ts` is over the source-size ceiling and the ratchet refuses net growth | `cmd_doctor.ts` falls under its ceiling |
+| D5 | reversible-technical | agent | Eight skill-body ceilings are raised with a reason each, and `mcp-tool-use`'s description is tightened so the per-spawn payload stays at its base. Options: raise / shorten each body | the growth is the longer names only; `check_preamble_payload_budget` refuses any net growth | a body ceiling review lowers them |
+| D6 | reversible-technical | agent | `code-review` stays in the settings description as the host's own bundled skill and is listed as a host built-in in `settings_slash_names_resolve.test.ts`. Options: list it / drop it from the description | `/code-review --comment` is the host skill the description means | the host drops `/code-review` |
+
+The residue that needs a host or an owner (per-host reserved sets, the eight
+withheld orchestrators, the eight twins, three catalogue-named skills, owner
+decisions OD-2 to OD-5 and OD-7) is carried by
+`agents/roadmaps/stubs/road-to-a-name-no-host-already-owns-later.md`.
+
 ## Acceptance Criteria
 
-- [ ] AC-1 — No package skill or command ships under a name in the reserved set;
-      the lint has no frontmatter escape.
-- [ ] AC-2 — An existing install that had `skills/mcp/` loses it on update; a
-      foreign one is kept and reported.
-- [ ] AC-3 — A new skill/command twin fails CI; the eight existing ones are named
-      and cannot grow.
+- [x] AC-1 — No package skill or command ships under a name in the reserved set;
+      the lint has no frontmatter escape. Skills: none, the lint rejects any
+      (1.3). Commands: the eight flat orchestrators on reserved names are withheld
+      from every Claude-facing projection, unchanged; renaming them is OD-3 in the
+      stub above.
+- [x] AC-2 — An existing install that had `skills/mcp/` loses it on update; a
+      foreign one is kept and reported (1.5, 2.3).
+- [x] AC-3 — A new skill/command twin fails CI; the eight existing ones are named
+      and cannot grow (2.2).
 
 ## Non-goals
 

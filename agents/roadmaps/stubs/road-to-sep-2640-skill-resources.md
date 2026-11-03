@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: SEP-2640 (`skill://` resources) — a quarterly date carrier
 
-> **Arrivals:** 5 (at least) — latest `inbox-2026-09-ab` (2026-09-29); earlier: `inbox-2026-09-k` (2026-09-05), agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md, agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md, agents/roadmaps/archive/road-to-routing-assurance.md.
+> **Arrivals:** 6 (at least) — latest `inbox-2026-11-n` (2026-11-03): three tree findings below; earlier: `inbox-2026-09-ab` (2026-09-29), `inbox-2026-09-k` (2026-09-05), agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md, agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md, agents/roadmaps/archive/road-to-routing-assurance.md.
 
 > **Stub — not active work, and not deferred work either.** A **date carrier**,
 > like [`road-to-adr-134-expiry.md`](road-to-adr-134-expiry.md): there is no step
@@ -34,6 +34,8 @@ review_by: 2026-12-24
 | 2026-06-18 | pending | AAIF Skills-over-MCP working-group post (as recorded by the parent roadmap) |
 | 2026-08-23 | **open — NOT merged** | `modelcontextprotocol/modelcontextprotocol` PR **#2640** "SEP-2640: Skills Extension", `state: open`, last updated `2026-08-23T02:00:42Z`. Read via `gh api search/issues`, not from memory. |
 
+| 2026-11-03 | not re-checked | Round `inbox-2026-11-n` ran offline; the status was not read, so the 2026-08-23 row stands. |
+
 Next check due: **2026-11-23**.
 
 Reproduce the check in one command:
@@ -57,6 +59,24 @@ server serves the same content through `prompts/` and `resources/`
 (`src/cli/mcp/dispatch.ts`), plus `suggest_skill_for_task` and `read_skill` since
 Phase 1.1. Renaming that surface to `skill://` for a pending spec would be an
 unmeasured change to a working one — which is what the criterion itself says.
+
+## Tree findings that ride with the promotion (inbox-2026-11-n)
+
+Verified at `b234d08480`, read-only. They do not change the promotion
+criterion; they are what the lite server would need for a client to verify a
+skill once it is promoted.
+
+1. **Supporting files are unreachable over MCP.** `src/cli/mcp/content.ts:194-198`
+   loads `SKILL.md` only (`src/cli/mcp/dispatch.ts:320-327`), so a skill's
+   checklists and references cannot be fetched through `resources/read`.
+2. **One protocol version, hard-coded three times, and a field it does not
+   define.** `2025-03-26` sits at `src/cli/mcp/dispatch.ts:40`,
+   `internal/workers/mcp/src/handlers.ts:115` and
+   `src/scripts/consumer_matrix.ts:224`; the lite server sends
+   `structuredContent` under it (`src/cli/mcp/dispatch.ts:243`). Wanted: one
+   version table and a test that every field sent exists in the negotiated
+   version.
+3. **No `skills/list` / `skills/get`.** 0 hits in `src/cli/mcp/`.
 
 ## Promotion criterion
 
