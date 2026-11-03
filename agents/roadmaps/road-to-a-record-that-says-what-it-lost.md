@@ -69,7 +69,7 @@ finding disposition names a command but not the outcome it must produce
       Each expectation follows the finding's claim (a fix that removed a string
       expects 1), never the observed exit alone.
       verify: `./scripts-run src/scripts/check_finding_dispositions --release 16.3.0` -> 0
-- [ ] **2.2 The gate counts the oracle share, without refusing.** In
+- [x] **2.2 The gate counts the oracle share, without refusing.** In
       `src/scripts/check_finding_dispositions.ts` add exported
       `hasExpectation(verifiedBy)` built on `VERIFY_ARROW_SOURCE` from
       `src/agent-src/scripts/verify_clause.ts:85` (no second arrow parser), and
