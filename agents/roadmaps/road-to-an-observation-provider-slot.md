@@ -43,7 +43,8 @@ empty verifier and on an authority outside its enum
 - [ ] **0.2 A ledger CLI.** `reconstruction_ledger --check <file>`: exit 0
       closed, 1 open/unknown, 2 invalid or usage; the reference door invokes it
       from a code fence.
-      verify: a CLI test for each exit code.
+      verify: `npx vitest run tests/scripts/reconstruction_ledger_cli.test.ts` -> 0,
+      one case per exit code.
 - [ ] **0.3 Step 2.1 speaks the ledger's states.** Rewrite 2.1 as "verdict
       `unknown` → `closed`" — the row status `unknown` does not exist
       (`reconstruction_ledger.ts:15`).

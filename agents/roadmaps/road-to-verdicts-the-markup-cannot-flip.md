@@ -3,6 +3,7 @@ complexity: standard
 status: ready
 tree_pin: f9054d0f10
 review_by: 2026-12-15
+relates: []   # scanned: 1259 roadmap file(s), 0 sibling hits
 estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for check_web_launch_readiness, NOINDEX_RE, BLANKET_DISALLOW_RE, isError, suggest_skill_for_task over agents/roadmaps/*.md, later, stubs) found no roadmap owning gate correctness or the lite MCP error shape; the SEO recipes land on later/road-to-breadth-with-depth 5.6."
 ---
 # Road to verdicts the markup cannot flip
@@ -69,7 +70,8 @@ as a dependency — use zod v4's native export.
 ## Phase 2 — Checks that say what they rest on
 
 - [ ] **2.1 `basis: {level, ref, checked_at}` on all 13 checks.**
-      verify: `web_launch_readiness_config.test.ts` fails without it.
+      verify: `npx vitest run tests/scripts/web_launch_readiness_config.test.ts` -> 0,
+      and the test fails on a check without `basis`.
 - [ ] **2.2 Crawler register.** `src/config/crawler-register.json` (token,
       operator, purpose, `affects_search_inclusion`, source URL, `checked_at`,
       `review_by`); a lapsed row reads `unknown`; 1.3 and 1.5 read it.
@@ -83,7 +85,8 @@ as a dependency — use zod v4's native export.
 
 - [ ] **3.1 Lite `isError: true`** for `error`, `not_found`, `no_catalogue`;
       `structuredContent.status` unchanged; CHANGELOG behaviour note.
-      verify: `dispatch.test.ts` asserts each error path.
+      verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 asserting each
+      error path.
 - [ ] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported.
       verify: `limit: 100000` returns ≤ 20 rows; lite tools stay under
       `LITE_TOOLS_TOKEN_CAP`.
@@ -93,7 +96,8 @@ as a dependency — use zod v4's native export.
       taken here).
 - [ ] **3.4 Kernel stubs answer `isError: true`**, envelope unchanged; amend
       `docs/contracts/mcp-tool-stub-envelope.md`.
-      verify: the stub case in `tests/scripts/mcp_server_serve.test.ts`.
+      verify: `npx vitest run tests/scripts/mcp_server_serve.test.ts` -> 0 with the
+      stub case asserting `isError`.
 
 ## Phase 4 — `llms.txt` in its own format
 

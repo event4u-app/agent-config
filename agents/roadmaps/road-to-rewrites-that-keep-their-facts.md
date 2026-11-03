@@ -3,6 +3,49 @@ complexity: standard
 status: ready
 tree_pin: f9054d0f10
 review_by: 2026-12-15
+relates:
+  - slug: road-to-tells-a-near-miss-can-refute
+    relation: extends
+    note: "Archived: shipped fact_diff (5.3); this completes its classes and false-alarm fixes."
+  - slug: road-to-a-tree-that-keeps-its-neighbours
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-checks-that-name-their-catch
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-checks-that-name-their-catch-carried
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-edges-that-earn-their-target
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-figures-that-name-their-denominator
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-findings-that-show-their-exhibits
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-forecasts-that-know-their-sources
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-inbox-harvest-residuals
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-neighbours-that-pull-their-weight
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-neighbours-that-pull-their-weight-carried
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-records-that-match-their-code
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-touched-files-that-pass-their-own-tools
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-touched-files-that-pass-their-own-tools-carried
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
 estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for fact_diff, bench_humanizer_eval, humanizer-tell-reduction, dashCount, hiring-loop-design over agents/roadmaps/*.md, later, stubs) found no owner; the prior owner road-to-tells-a-near-miss-can-refute is archived with no follow-up for these."
 ---
 # Road to rewrites that keep their facts
@@ -52,7 +95,8 @@ stops counting ranges.
       verify: 5/5 mutations caught; benign reorder gives 0 findings.
 - [ ] **2.2 False-alarm fixes:** locale-normalize numbers; drop German
       sentence-initial and imperative capitalised pairs from names.
-      verify: `de/02` gives 0 name findings; `fact_diff.test.ts` stays green;
+      verify: `npx vitest run tests/scripts/fact_diff.test.ts` -> 0, `de/02` gives
+      0 name findings, and
       0 findings on a sentence-reordered copy of each clean-corpus file.
 - [ ] **2.3 Word ↔ digit stays literal** unless the council reopens the earlier
       "literal on purpose" decision; recorded either way.
@@ -61,7 +105,7 @@ stops counting ranges.
 
 - [ ] **3.1 Fixture 4 "fact preservation"** in
       `src/skills/humanizer/references/fixtures.md` plus an eval case.
-      verify: `lint-skills` green.
+      verify: `task lint-skills` -> 0.
 - [ ] **3.2 Fact conservation as a free third bench metric**, per split, no
       judge call.
       verify: the objective-only run prints `fact_added_pairs` per split.
@@ -85,14 +129,15 @@ stops counting ranges.
 - [ ] **5.1 Humanizer data manifest** in the `refresh_cadence` format so
       `check_corpus_staleness` covers it; `evidence_tier` and `suppressible`
       per family with a schema test.
-      verify: `check_corpus_staleness` lists the manifest; schema test green.
+      verify: `./scripts-run src/scripts/check_corpus_staleness` -> /humanizer/ and
+      the schema test passes.
 
 ## Phase 6 — Document-level hiding
 
 - [ ] **6.1 Rendering-layer hiding and a data-injection class** in
       `untrusted-input-spotlighting.md` (background-colour text, tiny font,
       off-page, hidden layers, DOCX `w:vanish`).
-      verify: `check-refs` and `lint-skills` green.
+      verify: `task check-refs` -> 0 and `task lint-skills` -> 0.
 
 ## Phase 7 — Hiring side
 
@@ -107,7 +152,7 @@ stops counting ranges.
 - [ ] **8.1 Four inflation classes** (widened verb, supplied number, smoothed
       status, absorbed achievement) as checklists in `release-comms` and
       `roadmap-writing`.
-      verify: `lint-skills` green.
+      verify: `task lint-skills` -> 0.
 - [ ] **8.2 Prose-fact clause in `ask-when-uncertain`** — a kernel-rule edit
       (own PR, 24 h soak).
 

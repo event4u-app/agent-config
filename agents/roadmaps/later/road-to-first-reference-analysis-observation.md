@@ -54,7 +54,8 @@ estate_growth_exempt: "Claimed 2026-09-08 for the park, replacing the creation-t
       pre-registered 180-day window, moves no criterion.
       verify: `./scripts-run src/scripts/check_claims` -> 0 and the row carries it.
 - [ ] **A.2 Door step 8 offers `reject` and `deferred`** for mechanism rows.
-      verify: `lint_harvest_provenance` accepts a reject row with a reason.
+      verify: `./scripts-run src/scripts/lint_harvest_provenance` -> 0 with a reject
+      row carrying a reason.
 
 ## Goal
 

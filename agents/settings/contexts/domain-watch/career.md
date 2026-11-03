@@ -25,7 +25,7 @@ and application sending is an irreversible external action.
 ## What was adopted instead
 
 The generic half: a rewrite that keeps its facts
-(`agents/roadmaps/road-to-rewrites-that-keep-their-facts.md`). CVs serve only
+(roadmap slug `road-to-rewrites-that-keep-their-facts`). CVs serve only
 as a **synthetic** stress corpus for the fact witness — never real candidate
 data.
 

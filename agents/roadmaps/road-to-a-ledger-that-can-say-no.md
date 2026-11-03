@@ -3,6 +3,136 @@ complexity: standard
 status: ready
 tree_pin: f9054d0f10
 review_by: 2026-12-15
+relates:
+  - slug: road-to-host-configs-that-survive-the-install
+    relation: extends
+    note: "Archived: secured install.ts writes; this carries the same guarantee to mcp:render and the nested-duplicate case."
+  - slug: road-to-an-observation-provider-slot
+    relation: depends
+    note: "The ledger half of this round lands there as Phase 0."
+  - slug: road-to-a-ui-coverage-ledger-that-can-fail
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-blocker-that-cannot-hide-in-the-archive
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-claim-that-is-not-a-key
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-clean-that-says-what-it-checked
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-conformance-check-that-can-fail
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-content-scanner-on-a-slot-that-can-refuse
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-distribution-ledger-that-is-true
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-ledger-that-closes-the-loop
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-loss-that-can-be-appealed
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-page-that-says-what-it-loads
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-probe-that-cannot-report-a-false-green
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-proposal-that-can-be-adopted
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-record-that-says-what-it-lost
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-release-record-that-says-what-it-reviewed
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-release-record-that-says-what-it-reviewed-carried
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-release-that-says-whether-it-needs-you
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-verify-clause-that-can-fail
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-a-visibility-sync-that-can-write
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-adr-number-uniqueness
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-ai-media-that-says-so-where-it-lands
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-catalogue-host-fit
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-gates-that-can-fail
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-host-and-media-steps-that-say-what-ran
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-inbox-harvest-2026-08-c-release-head-truth
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-inbox-harvest-2026-08-d-context-ledger
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-inbox-harvest-2026-08-d-scheduled-deprecation
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-records-that-say-what-is-true
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-release-notes-that-say-what-shipped
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-rule-laws-that-can-stand
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-rules-that-say-when-they-reject
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-scan-that-fails-closed
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-session-closeout-gated
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-signals-that-mean-what-they-say
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-skill-ecosystem-executable-payloads
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-skill-ecosystem-gate-integrity
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-standing-payload-truth
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-the-check-that-cannot-see
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-the-ledger-ratchet-that-drifted
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-touched-file-quality-that-says-when-it-did-not-look
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-unknowns-that-say-so
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
+  - slug: road-to-workflows-that-cannot-exfiltrate
+    relation: disjoint
+    note: "Title-word match only; subject differs (checked 2026-11-03)."
 estate_offset_exempt: "Operator-directed in the invocation (2026-11-03: analyse the round, then process its roadmaps with /roadmap:process-full and merge); archived in the same PR when its open work closes, so the active count at merge is unchanged. Owner search at f9054d0f10 (grep -rlF for mcp_render, mergeHostConfigFile, productionEntries, reach exempt over agents/roadmaps/*.md, later, stubs) found no roadmap owning the host-config writers or the reach gate's entry rule; the ledger half lands on road-to-an-observation-provider-slot instead."
 ---
 # Road to a ledger that can say no
@@ -60,7 +190,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
       `mergeJsonContent` and their test block.
       verify: `grep -rn "parseJsonLenient\|mergeJsonContent" src tests` -> 0.
 - [ ] **1.5 `--transfer` in the reference door's argument-hint.**
-      verify: grep finds it at `reference/command.md:11` and in `dist/`.
+      verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/.
 
 ## Phase 2 — An entry is something that is invoked
 
@@ -84,7 +214,7 @@ rewriting archived `status: ready` (decided 2026-09-04,
       verify: unreached count after 2.1 equals the labelled count.
 - [ ] **2.4 One lens name.** Align "Overbuild & sequencing" at
       `reference/command.md:368,378,504`.
-      verify: grep shows one spelling.
+      verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/.
 
 ## Not in this roadmap
 
