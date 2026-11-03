@@ -2,12 +2,12 @@
 proposed_by: claude-opus-5-5
 implemented_by: claude-opus-5-5
 reviewed_by: ai-council
-subject: f1a153cc181f04a710f16d7d0e7b053e4a3d308a931b1cb59767038246598548
+subject: 3846af2b354e00f4b09a67b875eead8e0d848646883c2110c28218445061b49a
 providers: [anthropic, openai]
 verdict: refused
 seats:
-  anthropic: ratified
-  openai: refused
+  anthropic: refused
+  openai: ratified
 effective_after: merge
 ---
 
@@ -15,422 +15,203 @@ effective_after: merge
 
 # Modification review
 
-Web-launch rows 2.1/2.2 at write time through design_pass_hook via a conditional chunk (ceiling 14,000 B), and a dispatch-ceiling raise 1,567,400 -> 1,568,700.
+Web-launch rows 2.1/2.2 at write time through design_pass_hook via a conditional chunk (ceiling 14,000 B); ownHosts never counts a registered provider's host as the site itself.
 
-Verdict `refused`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/web-launch-write-time-ratification-r12-20261103.question.md`, committed at `310122e91e615045a5fe8ae9af340d135ec1b631` and naming this record's subject.
+Verdict `refused`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/web-launch-write-time-ratification-r14-20261103.question.md`, committed at `2d129f6f6ed7cda49892d42fa3a63c539795a189` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
 ## Each seat, verbatim
 
-### anthropic — `ratified`
+### anthropic — `refused`
 
 ````text
-# Independent Ratification Review – Round 2
+## Analysis of Round 1 Reviewer A
 
-## Agreement and Disagreement with Round 1 Reviewers
+### 1. Points I Agree With
 
-### Agreement with Reviewer A
+I **agree** with Reviewer A on:
 
-I agree with several of Reviewer A's technical observations:
+- **Point 1 (ownHosts fix)**: The register-exclusion logic in `ownHosts()` is the core correctness fix from round 13's dealbreaker (a).
+- **Point 2 (removal of MINIFIED bypass)**: Correct that the 400-character threshold created a padding bypass; its removal tightens the boundary.
+- **Point 3 (test coverage)**: The test additions are extensive and cover the stated edge cases.
+- **Point 5 (undoability)**: Reverting would require commit access and would target this specific changeset.
 
-1. **Quadratic complexity concern** (lines 89-117 of `tagsOf` in `web_launch_third_party.ts`): The `indexOf('>')` search from each tag start is indeed O(M × N) worst-case. However, I must examine whether this is truly exploitable in practice.
+### 2. Points I Disagree With
 
-2. **No timeout bound**: Confirmed – the scan runs to completion with no circuit breaker.
+I **disagree** with Reviewer A on:
 
-3. **Comprehensive test coverage**: The test additions are thorough, including pathological inputs.
+- **Point 4 ("no direct bypass")**: There IS a remaining bypass — see my new point 3 below. The diff leaves `data-src` attributes unread, so a `<script data-src="https://evil.example/">` goes unreported. The test file even calls this out: `"a click-to-load iframe carrying only data-src is not a load"`. This is **not** a no-bypass situation; it's a deliberate scope boundary that the diff treats as "not a load" but an attacker can weaponize.
 
-4. **Clean separation**: The two fixes were correctly split to #2812.
+- **Point 7 ("no smaller change")**: A smaller change WOULD do. The diff adds **three** new files (`web_launch_rows.ts`, `web_launch_rows_loader.ts`, and a chunk budget entry) plus modifies `design_pass_hook.ts` and `web_launch_third_party.ts`. The stated goal is "write-time findings for .html/.css files." A smaller change would inline the two rows into `design_pass_hook.ts` directly rather than creating a lazy-loaded chunk. The chunk architecture buys **nothing** for correctness; it only shifts bytes from the dispatch bundle into a conditional load. The derivation note even admits `"the register, the supersession table and the row code cost the shared dispatch bundle nothing"` — so why the indirection?
 
-### Disagreement with Reviewer A
+- **Point 9 ("untrusted content cannot steer")**: Overstated. Untrusted content CAN steer: (a) a page with `data-src` attributes bypasses detection; (b) a page with unclosed tags triggers the `unread` degraded pass but does NOT fail the pass — it still returns `EXIT_ALLOW`. The diff reports but does not block. This is steering risk: an attacker writes a page with unclosed tags to avoid findings, and the pass goes through.
 
-**On the quadratic scan being a dealbreaker:**
+### 3. New Points Not Raised in Round 1
 
-Examining the actual code (lines 127-148 of `web_launch_third_party.ts`):
+#### 3.1 The `data-src` Blind Spot (Shipping Risk)
 
-```typescript
-const found = [...text.matchAll(TAG_START_RE)];
-const out: Tag[] = [];
-let gt = -2;
-found.forEach((m, k) => {
-    const at = m.index ?? 0;
-    if (gt !== -1 && gt < at) gt = text.indexOf('>', at);
-    const next = found[k + 1]?.index ?? Number.POSITIVE_INFINITY;
-    // ...
-});
+The diff reads `src` attributes but NOT `data-src`. The test openly states:
+```
+it('a click-to-load iframe carrying only data-src is not a load', () => {
 ```
 
-The `gt` variable is **persistent across iterations** and only searches forward when `gt < at`. This means:
-- First tag: searches from position `at` to find `>`
-- Second tag: if its `at` is beyond the previous `gt`, searches from the new `at`; otherwise reuses cached `gt`
-- The comment "all the searches together read the text once" is accurate
+This is a **deliberate scope boundary**, but it's also a **correctness gap**. Modern lazy-load libraries (lazysizes, lozad, vanilla-lazyload) use `data-src` as the standard attribute name. A page carrying:
+```html
+<script data-src="https://malicious.example/tracker.js"></script>
+```
+goes unreported. The diff's `TAG_START_RE` looks for `src=` in the tag, but `data-src` is not `src`. This is a padding bypass via attribute renaming.
 
-**Actual complexity**: O(M + N), not O(M × N). Each character position is visited at most twice: once by `matchAll`, once by the advancing `indexOf` cursor. The test "sparse unclosed tags in a megabyte file" with timing validation confirms linear behavior.
+**Reviewer fatigue factor**: A tired reviewer sees the extensive test coverage and assumes the diff is comprehensive. It is not.
 
-Reviewer A's analysis missed the `gt` persistence pattern. The code is **not quadratic**.
+#### 3.2 The Chunk Indirection Is Unjustified (Shipping Risk: Complexity)
 
-### Agreement with Reviewer B
+The diff adds a lazy-loaded chunk for two rows that total 13,287 bytes. The justification in `hook-bundle-budget.json` is:
+> "the register, the supersession table and the row code cost the shared dispatch bundle nothing."
 
-Reviewer B correctly identifies:
-1. The authority expansion (wider checking scope)
-2. No test weakening
-3. The advisory-only nature (P2, doesn't block)
+But if it costs nothing, **why the chunk?** The diff introduces:
+- A new chunk file (`web_launch_rows.chunk.cjs`)
+- A loader (`web_launch_rows_loader.ts`)
+- A fallback path (degraded pass when chunk missing)
+- Test complexity (bundled vs. unbundled, chunk-present vs. chunk-absent)
 
-### Disagreement with Reviewer B
+The **smallest change** would inline `scanWebLaunch` into `design_pass_hook.ts`. The chunk architecture is speculative abstraction: it anticipates future rows that don't exist. This violates "smallest-change still wins over OO advocacy."
 
-**Insufficient depth on credential leakage** (Reviewer A's point, Reviewer B silent): Line 274 of `web_launch_third_party.ts`:
+**Object-oriented shape concern**: The diff wraps 13KB of data + logic in a loader pattern typically justified by >100KB or runtime-conditional needs. Neither applies here. The OO shape is **not** justified by complexity it removes.
 
+#### 3.3 The `unread` Undecided Is Reported but Not Blocked
+
+The diff adds an `unread` category for unclosed tags. A page with unclosed tags:
+1. Gets reported as degraded: `"3 loadable tags never close before the next tag"`
+2. Still returns `EXIT_ALLOW`
+
+This is **not** a safety boundary tightening. The pass does NOT fail; it only warns. An attacker can write a page with unclosed tags to suppress findings (the scan stops at the unclosed tag) and the pass still exits allow.
+
+The round-5 ratification test even shows:
 ```typescript
-text: `${l.how} loads \`${l.url.host}\` (${row.provider}, ${row.category}) on first paint...`
+it('a loadable tag with no closer at all is reported once per file, with its count', () => {
 ```
 
-Findings include `url.host` only, not the full URL with path/query. Line 51 shows `url` is typed `URL`, and line 113 constructs it via `absolute(raw)`. A URL like `https://fonts.googleapis.com/css?key=SECRET` surfaces only `fonts.googleapis.com` in findings. **No credential leakage** from URL query params or fragments.
+But "reported" ≠ "blocked." The diff conflates **observability** with **enforcement**. A degraded pass is still a pass.
 
-However, **superseded statute findings** (line 347) include `text.slice(0, 60)` of the visible page text. If a legal page contains "Contact: admin@SECRET-DOMAIN.com per §123", the email appears in the finding. This is a **minor info leak**, not credentials per se, but contact details from legal pages could be sensitive in pre-publication drafts.
+#### 3.4 The `visibleText` Rewrite Is Quadratic-Avoidance Theater
 
-**Scope**: Write-time only, so only affects agent-written files in the current session. The standalone checker would surface the same findings later anyway. **Acceptable risk** for an advisory pass.
+The diff replaces a regex-based `visibleText` with a manual parser, justified as:
+> "Not regex-based on purpose: `<[^>]+>` and a lazy script matcher are quadratic on a page of unclosed `<`"
 
-## New Points Not Raised in Round 1
-
-### 1. The `withDegradation` concatenation (lines 633-636 of `design_pass_hook.ts`)
-
+But the **replacement is also quadratic** on a page of unclosed `<script>` or `<style>`. The new code does:
 ```typescript
-export function withDegradation(result: PassResult, reason: string): PassResult {
-    const prior = result.degradation_reason;
-    return { ...result, verification: 'degraded', degradation_reason: prior ? `${prior}; ${reason}` : reason };
-}
+const end = block === null ? html.indexOf('>', lt) : lower.indexOf(`</${block[1] ?? ''}`, lt);
 ```
 
-Reviewer A noted no deduplication, but missed the **bounded context**: degradation appends only when:
-1. SVG rules unavailable (once per pass)
-2. Web-launch chunk missing (once per pass, not per file – line 691 checks `webLaunchGaps.length > 0` and appends all gaps in one call)
+If a page has an unclosed `<script>` at position 0, `lower.indexOf('</script', lt)` returns -1, and the loop breaks. But if a page has **1000 unclosed `<script>` tags**, the loop runs 1000 `indexOf` calls, each scanning from `lt` to EOF. That's O(n²) on `<script><script><script>...`.
 
-**Maximum degradations per pass**: 2. The `; ` separator is appropriate. No unbounded concatenation issue.
-
-### 2. Chunk loading is cached (Reviewer A's open question)
-
-Line 11 of `web_launch_rows_loader.ts`:
+The diff's own test admits the unclosed case:
 ```typescript
-import { isBundled, loadChunkExport } from './svg_rules_loader.js';
+it('visibleText drops an unclosed script to the end, linearly', () => {
 ```
 
-The `loadChunkExport` function (not shown in diff but referenced) uses `require()`, which Node.js caches by module specifier. The chunk loads **once per process**, not per file. Reviewer A's "10 files = 10 loads" concern is unfounded.
-
-### 3. The WEB_LAUNCH_RE correctness (line 629)
-
+But "drops to the end" means the function exits early — it does NOT prove linearity on 1000 unclosed tags. The test should be:
 ```typescript
-export const WEB_LAUNCH_RE = /\.(html?|css)$/i;
+const page = '<script>'.repeat(1000) + 'visible';
+expect(visibleText(page)).toBe('visible'); // does this finish in <100ms?
 ```
 
-Matches `.html`, `.htm`, `.HTML`, `.CSS`. The corresponding scan code:
-- Line 463: `if (!/\.(html?|css)$/i.test(rel)) return [];` (same pattern)
-- Lines 77-78: `isPage` is `/\.html?$/i`, `isCss` is `/\.css$/i` (subset)
+**Reviewer fatigue**: The diff's narrative says "linear" and provides a passing test. A tired reviewer trusts it. The actual complexity is not proven.
 
-**Consistency confirmed**. However, `.htm` files are scanned at write time but the checker's `isPage` would also catch them, so no gap.
+#### 3.5 The `tagsOf` Line-Numbering Binary Search Is Overkill
 
-### 4. The PLACEHOLDER_RE bounded lookahead (line 363, test coverage in round-9 ratification)
-
+The diff adds a binary-search-based `lineAt()` function to map byte offsets to line numbers:
 ```typescript
-const PLACEHOLDER_RE = /\[(?=[^\]\d]{0,40}[A-Za-zÄÖÜäöüß])[^\]\d]{2,40}\]|\blorem\s+ipsum\b/i;
-```
-
-The lookahead `(?=...)` is zero-width and bounded at 40 chars. The test "a line of open brackets with no letter finishes within one hook event" validates this isn't ReDoS-vulnerable. The change from unbounded (removed in round 9) to bounded is already landed and tested. **No new risk here**.
-
-### 5. The visibleText implementation (lines 318-338)
-
-Reviewer A questioned reinventing an HTML parser. Examining the code:
-
-```typescript
-export function visibleText(html: string): string {
-    const lower = html.toLowerCase();
-    let out = '';
-    let i = 0;
-    while (i < html.length) {
-        const lt = html.indexOf('<', i);
-        if (lt < 0) { out += html.slice(i); break; }
-        out += `${html.slice(i, lt)} `;
-        const block = /^<(script|style)\b/.exec(lower.slice(lt, lt + 8));
-        const end = block === null ? html.indexOf('>', lt) : lower.indexOf(`</${block[1] ?? ''}`, lt);
-        if (end < 0) break;
-        const close = block === null ? end : html.indexOf('>', end);
-        if (close < 0) break;
-        i = close + 1;
+const lineAt = (pos: number): number => {
+    let lo = 0;
+    let hi = starts.length - 1;
+    while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if ((starts[mid] ?? 0) <= pos) lo = mid;
+        else hi = mid - 1;
     }
-    return out.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-}
+    return lo + 1;
+};
 ```
 
-This is **not** a full HTML parser – it's a minimal tag stripper. The regex `/^<(script|style)\b/` is anchored and matches only at one position (8-char slice). The `indexOf` calls are linear. **Complexity: O(N)** with small constants. For a 14KB chunk budget, pulling in a parser library (parse5 is ~100KB) is unjustifiable. The custom implementation is appropriate.
-
-**Edge case**: An unclosed `<script>` swallows the rest of the file (line 337: `if (close < 0) break;`). This is **correct behavior** for extracting visible text – an unclosed script block means everything after it is script content, not visible. The superseded-statute check would miss text after the unclosed tag, but that's an authoring error, not a scanner bug.
-
-### 6. Missing: what happens if the chunk build fails?
-
-The diff shows the chunk entry added to `HOOK_CHUNKS` (lines 92-96 of `hook_chunks.mjs`), but doesn't show error handling if `esbuild` fails to build it. The gate measures the chunk size, so a failed build would red the gate. **Acceptable**: the CI gate catches this before merge.
-
-### 7. The 483-byte margin (line 163 of `hook-bundle-budget.json`)
-
-```json
-"why_it_could_not_be_avoided": "... The new ceiling is the reading plus 483 bytes, the same margin as the neighbouring raises, so an esbuild symbol rename does not red the gate."
+This is **speculative optimization**. A simpler approach:
+```typescript
+let line = 1;
+for (let i = 0; i < pos; i++) if (text[i] === '\n') line++;
+return line;
 ```
 
-Checking neighboring raises:
-- Line 86: 1,550,500 for 1,550,014 measured (486-byte margin)
-- Line 105: 1,554,000 for 1,553,509 measured (491-byte margin)
-- Line 125: 1,562,000 for 1,561,506 measured (494-byte margin)
+The binary search saves O(n) per tag, but the tag extraction already scans the full text with `matchAll(TAG_START_RE)`, which is O(n). The line-number lookup is paid per tag, not per character, so the savings are O(t) where t = tag count. For a 10MB file with 1000 tags, the simple approach is 10M × 1000 = 10B character comparisons; the binary search is 1000 × log(lines). But the `matchAll` already paid 10M, so the line-number lookup is not the bottleneck.
 
-**Consistent doctrine**. The 483-byte margin is in the same range. esbuild symbol renames (e.g., `longFunctionName` → `a`) can swing bundle size by ±500 bytes on minor version bumps. This margin is justified.
+**OO shape**: The diff adds a closure inside `tagsOf` for a one-time use. The binary search is not reused. This is premature optimization masquerading as good engineering.
+
+#### 3.6 Security: No Input Size Cap Despite "No Size Cap" Claim
+
+The diff's design note says:
+> "No size cap: the scan is linear, and any cap is a padding bypass."
+
+But the scan is **not proven linear** (see 3.4 above), and the absence of a size cap is a **DoS risk**. A malicious agent can write a 100MB HTML file with 1M unclosed `<script>` tags. The `tagsOf` function will:
+1. Build a `starts` array of 1M+ entries (one per line)
+2. Run `matchAll(TAG_START_RE)` over 100MB
+3. Call `lineAt()` 1M times
+
+Even if each step is O(n), the **constant factors** can cause the hook to time out or consume excessive memory. The diff provides no defense.
+
+The round-3 test shows:
+> "a page padded past 4,000,000 characters, before or after its loads, still surfaces both"
+
+But 4MB is not 100MB. The test does not bound the upper limit. A production hook should have a **fail-safe**: if the file is >10MB, degrade the pass immediately without scanning. The diff omits this.
 
 ---
 
-## Answers to the Nine Questions
-
-### 1. What behaviour changes?
-
-**Primary**: `design_pass_hook` runs web-launch rows 2.1 and 2.2 on `.html`/`.css` writes, returning findings as P2 in `additionalContext`. The pass still exits `EXIT_ALLOW`.
-
-**Downstream**:
-- Agents receive web-launch findings immediately at write time, not later at checker invocation
-- A bundled install without the chunk degrades the pass (once per missing chunk, not per file)
-- Unbundled (source) installs skip the scan (loader returns `null`)
-
-**Unstated**: The chunk is Node.js `require()`-cached, so it loads once per process, not per file.
-
-### 2. Authority/safety boundary changes?
-
-**Wider**: The design pass now enforces web-launch compliance (third-party loads, superseded statutes) at write time. This shifts the gate **earlier** in the workflow.
-
-**Direction**: Enforcement moves from post-commit (standalone checker) to write-time (hook). This is a **tightening**, not a loosening – the agent gets feedback sooner.
-
-**Scope**: Advisory only (P2), so doesn't block writes. The authority expansion is **the agent's visibility into compliance issues**, not the system's rejection authority.
-
-### 3. Does it weaken anything that judges it?
-
-**Tests**: No skips, xfails, or deletions. Added tests are comprehensive (44 new `it()` blocks).
-
-**Gates**: The bundle budget raise is recorded per the gate's own requirement (line 156-165). The chunk ceiling is justified (5.4% margin for rebuild jitter).
-
-**Thresholds**: No lowering. The size cap was removed per round-10 ratification (padding-bypass reasoning), not to fit broken code.
-
-**Assertions**: The test "no size lets a load go unreported: a page padded past 4,000,000 characters" is a **strengthening** – it asserts the scan works on large files, and would red if a cap were re-added.
-
-**Verdict**: No weakening.
-
-### 4. Other bypass paths?
-
-**Unbundled installs**: Skip the scan (loader returns `null`). Rationale: tested directly via `scanWebLaunch`, but a production unbundled install would have no write-time enforcement.
-
-**Non-matching extensions**: `.php` serving HTML, `.js` injecting loads – not scanned. The check is extension-based, but the checker has the same gap (it operates on built output, which also uses extensions).
-
-**Post-write mutation**: A clean file approved by the pass could be mutated by a post-commit hook. The pass has no visibility into that, but neither does any write-time check.
-
-**Chunk deletion**: A bundled install can `rm` the chunk, degrading every subsequent `.html`/`.css` write. The degradation is **visible** (`additionalContext` includes the reason), so not a silent bypass.
-
-**Verdict**: The unbundled-install gap is a **documented design choice** (tested via direct import), not an oversight. The other gaps are inherent to write-time checks.
-
-### 5. Undo path?
-
-**By repository owner**: Revert commit f1a153cc (authority: commit access to `main`).
-
-**By user**: Delete the chunk file (degrades but doesn't break), or disable the design pass via `.agent-settings.yml` (if that setting exists; not shown in diff).
-
-**By agent**: Cannot modify installed files in normal operation.
-
-**Kill-switch**: File deletion. No runtime flag provided, but degradation is a soft kill-switch (findings stop, degradation message appears).
-
-### 6. Falsifying observations and omitted criteria?
-
-**Claimed benefit**: Surfaces web-launch issues at write time so the agent fixes them before commit.
-
-**Falsifying observations**:
-1. Agents ignore P2 findings (the findings are write-only noise)
-2. High false-positive rate (e.g., legitimate self-hosted fonts flagged)
-3. Performance regression on typical files (>100ms per write)
-
-**Omitted rollback criteria**:
-- **No per-file timeout**: A pathological file could stall the pass, but the O(M+N) complexity (not quadratic, per my analysis) makes this unlikely. A 10MB file with 100K tags is ~10M+100K operations, <200ms. Acceptable.
-- **No per-session metric**: If 100 writes in one session each take 50ms, that's 5 seconds cumulative. No telemetry to detect this regression.
-- **No false-positive tracking**: No metric for "finding surfaced, agent ignored it" vs. "finding surfaced, agent fixed it."
-
-**Verdict**: The omitted criteria are observability gaps, not safety gaps. A false-positive spike would be visible in agent behavior (e.g., repeated degradations, no fixes landed), but not in metrics.
-
-### 7. Smaller change alternatives?
-
-**Alternative 1**: Scan only on explicit flag (e.g., `--web-launch`). **Rejected**: The round-10 ratification reasoning is that this is **always** relevant for `.html`/`.css` writes – no false-positive risk (the rows are curated, not heuristic).
-
-**Alternative 2**: Batch per turn (collect writes, scan once at turn end). **Rejected**: Line attribution would require tracking all writes, complicating the hook. Per-file is simpler.
-
-**Alternative 3**: Reinstate size cap with degradation. **Rejected per round-10**: A cap is a padding bypass (pad to 999KB, add load at 1.1MB, load goes unreported). The O(M+N) scan removes the bypass.
-
-**What the larger change buys**: No bypass via padding, immediate per-file feedback with exact line numbers.
-
-**Verdict**: The no-cap choice is justified by the closed bypass and linear complexity. No smaller change delivers the same benefit.
-
-### 8. Standing instruction weight?
-
-**Dispatch bundle**: +934 bytes (0.06% of 1.568MB) – negligible.
-
-**Chunk**: 13,287 bytes, loaded once per process (Node.js `require()` cache), only for `.html`/`.css` writes.
-
-**Per-write cost**:
-- Chunk load (if not cached): ~1-5ms (once)
-- Scan: 41ms per 1M chars (measured), so 10KB = 0.4ms, 100KB = 4ms
-- Regex compilation: `supersededStatute` compiles `table.length` regexes once per call (lines 342-343 compile a closure over the table). For 1 row in the table (as shown in the diff), this is negligible.
-
-**Session cost**: 10 files at 100KB each = 10 × 4ms = 40ms cumulative, plus 1-5ms chunk load. **Acceptable**.
-
-**Instruction weight**: Agents receive P2 findings in `additionalContext`. If the agent is prompted to address P2, this adds task load. The test diff shows findings are **actionable** (file, line, specific issue), not vague. An agent can `git diff` and fix the exact line.
-
-**Verdict**: Minimal dispatch weight, bounded per-write cost, actionable findings. The weight is justified.
-
-### 9. Untrusted content steering?
-
-**Content sources**:
-1. Agent-written files (agent controls content)
-2. Existing files modified by agent (scan reads pre-existing + new content)
-
-**Exploit vectors**:
-
-1. **Regex DoS**: All patterns are linear or bounded (I verified each).
-2. **Tag-scan complexity**: O(M+N), not quadratic (per my analysis). A 1MB file with 100K tags is ~200ms, not minutes.
-3. **Memory**: `tagsOf` builds an array of `Tag` objects. A 1MB file with 1M one-char tags (`<a<a<a...`) allocates ~1M objects at ~100 bytes each = 100MB. **Bounded by file size** (a 1MB file fits in memory, so do its tags).
-4. **Credential leakage**: URL findings include only `url.host`, not query params. Superseded-statute findings include 60 chars of visible text, which could contain contact emails from legal pages. **Minor info leak**, but the standalone checker would surface the same text anyway.
-
-**Bounds**:
-- File size: unbounded (no cap per round-10), but the scan is O(file size)
-- Tag count: unbounded, but O(tag count)
-- Complexity: O(M+N), so a 10MB file with 1M tags is ~20M operations, <400ms (per diff's stated measurement)
-
-**Realistic exploit**: An agent writes a 100MB minified HTML file. The scan takes ~4 seconds (100 × 41ms). The pass is blocked for 4 seconds. **Acceptable** – the agent wrote it; it's not external input. If 4 seconds is unacceptable, the operator can delete the chunk, degrading the pass.
-
-**Verdict**: No untrusted-content steering. The agent controls the files, so any pathological input is self-inflicted. The O(M+N) complexity bounds the cost.
-
----
-
-## Cross-Cutting Concerns
+## Final Critique
 
 ### Correctness
-
-**Off-by-one**: Line numbers are 1-based, matching hook conventions. The `tagsOf` binary search is correct (verified by edge-case tests in round 9).
-
-**Null safety**: All `attr()` returns are `?? ''`-guarded. Loader returns are null-checked.
-
-**Type drift**: `scanWebLaunch` signature matches `WebLaunchScan` type. No drift.
+- **MAJOR**: The `data-src` blind spot lets lazy-loaded third-party scripts go unreported.
+- **MAJOR**: The `visibleText` rewrite is not proven linear on pathological input (1000 unclosed `<script>` tags).
+- **MINOR**: The `tagsOf` binary search is overkill and not justified by its cost savings.
 
 ### Security
-
-**Injection**: No shell commands or SQL. Safe.
-
-**Secrets**: Minor info leak (legal-page text excerpts), but bounded and equivalent to what the checker surfaces.
-
-**Deserialization**: `require(specifier)` where `specifier` is a trusted path (derived from `import.meta.url`). Safe.
-
-### Test Coverage
-
-**Branch coverage**: 44 new `it()` blocks covering normal, edge, and pathological cases. The quadratic-complexity concern (Reviewer A) is covered by "sparse unclosed tags in a megabyte file" with timing validation.
-
-**Uncovered**: No test for a file with embedded credentials in a URL (but I verified by code inspection that only `url.host` is surfaced, so no leak).
+- **MAJOR**: No input size cap despite DoS risk on 100MB+ files with dense tags.
+- **MINOR**: Unclosed tags degrade the pass but do not block; an attacker can suppress findings by leaving tags unclosed.
 
 ### Shipping Risk
+- **MAJOR**: The chunk indirection is unjustified complexity. The diff should inline the two rows into `design_pass_hook.ts`.
+- **MINOR**: The `unread` category conflates observability with enforcement; a degraded pass is still a pass.
 
-**Blast radius**: Advisory pass only, exits `EXIT_ALLOW`. Low correctness risk. Performance risk is bounded (O(M+N), measured at 41ms/1M chars).
+### Test Coverage
+- **MINOR**: The "linear on pathological input" tests do not prove linearity on 1000 unclosed tags or 100MB files.
 
-**Mixed concerns**: Single feature, clean separation (fixes split to #2812).
-
-**Reviewer fatigue**: The `tagsOf` implementation is subtle (binary search + tag parsing), but the round-9 edge-case tests validate it. A tired reviewer might miss the `gt` persistence pattern and assume quadratic, as Reviewer A did. **Mitigated by tests**.
-
-### Reuse & OO Shape
-
-**Reinvented parser**: `visibleText` is a minimal tag stripper, not a full parser. For a 14KB chunk budget, this is justified. A library parser would exceed the budget.
-
-**OO shape**: Functional, appropriate for the task.
+### Reviewer Fatigue
+- **MAJOR**: The diff's narrative ("linear," "no bypass") and extensive tests create false confidence. The `data-src` gap and `visibleText` complexity are not tested.
 
 ---
 
-## Summary Judgment
+**STANCE: refused | CONFIDENCE: high | DEALBREAKER: yes**
 
-### Strengths
-
-1. **Linear complexity** (O(M+N), not quadratic) – Reviewer A's dealbreaker concern is incorrect
-2. **Comprehensive test coverage** including pathological inputs
-3. **Clean separation** (fixes split, single-concern PR)
-4. **Justified no-cap choice** (closes padding bypass, bounded by linear scan)
-5. **No test/gate weakening**
-
-### Weaknesses
-
-1. **No per-file timeout** – a 100MB file takes ~4 seconds, blocking the pass. Mitigated: agent-written files, operator can delete chunk.
-2. **Minor info leak** – legal-page text excerpts in findings (60 chars). Acceptable: equivalent to checker output.
-3. **No observability** – no metric for "finding ignored" vs. "finding fixed." This is a product gap, not a correctness gap.
-4. **Unbundled installs skip the scan** – documented design choice, tested via direct import. Not a bypass.
-
-### Highest-Leverage Change Before Merge
-
-**Add a per-file timeout** (e.g., 5 seconds) in the chunk's `scanWebLaunch` wrapper:
-
-```typescript
-export function scanWebLaunch(rel: string, content: string): Finding[] {
-    const start = Date.now();
-    const findings = writeTimeFindings(rel, content, origins as OriginRow[], supersessions as Supersession[]);
-    if (Date.now() - start > 5000) {
-        return [{ file: rel, severity: 'P2', catalogId: 'web-launch', rule: 'scan-timeout', line: 1, 
-                  message: `scan exceeded 5s (file size: ${content.length} chars); web-launch checks skipped` }];
-    }
-    return findings.map(/* existing map */);
-}
-```
-
-This bounds the worst case (100MB file, ~4s) and surfaces it as a finding, not a silent hang. Cost: ~10 lines, fits in the 713-byte chunk margin.
-
-**Why this over other changes**: A timeout is a **safety net** for the unbounded scan, at minimal cost. The scan is linear and fast in practice, but a timeout makes the "fast" claim **verifiable** rather than assumed.
-
----
-
-## Verdict
-
-The change is **correct**, **well-tested**, and **justified**. Reviewer A's quadratic-complexity dealbreaker is based on a misread of the `tagsOf` loop (missed the `gt` persistence). The actual complexity is O(M+N), validated by tests. The unbounded scan is a conscious design choice (closes padding bypass), bounded by linear complexity. The minor info leak (legal-page text) is acceptable for an advisory pass. The weaknesses (no timeout, no observability) are product gaps, not correctness gaps.
-
-The change **expands authority** (earlier web-launch enforcement) in a controlled way (advisory, degraded without chunk, linear scan). The expansion is **ratified by design** (round-10 reasoning on bypass closure) and **implemented correctly** (tests red with a cap restored).
-
-**Recommendation**: Ratify with the timeout addition as a post-merge hardening (not a blocker, but a safety improvement).
-
-STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
+**Highest-leverage change before merge**: Remove the chunk indirection and inline `scanWebLaunch` into `design_pass_hook.ts`. Add a 10MB input size cap with immediate degraded-pass exit. Fix the `data-src` blind spot by extending `TAG_START_RE` to match `data-src` attributes. Prove `visibleText` linearity with a test on 1000 unclosed `<script>` tags.
 ````
 
-### openai — `refused`
+### openai — `ratified`
 
 ```text
-1. **Behaviour Changes**: I agree with Reviewer A that the behaviour change primarily involves `design_pass_hook` adding checks for web-launch readiness of `.html`/`.css` files by running web-launch rows at write time. This functionality results in findings being surfaced as P2 advisories without preventing the operation's completion, and missing chunks leading to degraded passes. An important observation by Reviewer A is the cumulative effect on degradation messages and the potential performance implications with unbounded scans.
+1. **Reviewer A—Agreement**: I agree with the characterization of the behavior change, especially regarding how the `ownHosts()` exclusion of registered third-party hosts prevents misclassification (Reviewer A, point 1). The refinement to check longer lines makes third-party host detection stricter and more accurate (Reviewer A, point 2). The tests seem to support the high standard discussed by the reviewer (Reviewer A, point 3). The undo process for changes is accurately described (Reviewer A, point 5), and the concern for additional computational weight is minimal compared to the correctness and robustness gained (Reviewer A, point 8).
 
-2. **Authority or Safety Boundary**: I agree with the notion from Reviewer A regarding boundary changes. The authority indeed expands by enforcing compliance checks earlier in the development lifecycle, reinforcing the boundary by converting potential non-compliance into actionable findings at an earlier stage.
+2. **Reviewer A—Disagreement**: I disagree with the lack of a rollback strategy mentioned (Reviewer A, point 6). While no explicit rollback criterion is mentioned, observability in terms of regression test failures would suffice as an indicator. The summation of "no smaller change" also appears somewhat dismissive; it may have been possible to break the change further, separating logic for parsing versus identifying loads, but it would likely not have been as effective in delivering a comprehensive solution (Reviewer A, point 7).
 
-3. **Test Coverage and Strengths**: Both reviewers note the comprehensive test coverage, and I agree. Reviewer A goes further by detailing the absence of weakened test assertions or gate thresholds, reinforcing the robustness of this change.
+3. **New Points/Refinements**:
+   - The diff modifies how HTML content is parsed by traversing the text to determine tags and attributes. However, an edge case not specifically discussed is the reaction to malformed HTML where tags might start but not finish properly even more broadly due to malformed input.
+   - Regarding security, although no injections appear from the given changes, future extensibility could be impacted by not considering potential malformed content leading to false positives or negatives.
+   - Clarification on specific host scenarios and potential bypasses related to DNS prefetch tags as undecided rather than concrete findings might benefit from more precise documentation or expanded test cases.
 
-4. **Bypass Paths**: Reviewer A highlights a significant bypass path where non-bundled installs don't perform the scan. This path, combined with the capability for agents to alter files post-write or remove chunks, leaves potential vulnerabilities that could be exploited to bypass controls, which I consider a key oversight.
-
-5. **Undoing the Change**: Both reviewers concur on the ability to revert the change via standard repository maintenance methods, which seems straightforward and well-documented.
-
-6. **Falsification and Rollback**: Reviewer A provided a thorough account of potential issues with the claimed benefits, such as agents ignoring P2 advisories or possible performance degradation without a timeout mechanism. These points are crucial for evaluating the change's impact and efficiency.
-
-7. **Smaller Change Possibility**: Reviewer A provides thought-provoking alternatives to this change, such as scanning only on explicit request, batching scans, or reinstating a file-size cap. These alternatives could reduce potential performance and operational overhead without undermining the feature's intent.
-
-8. **Stand Instruction Weight**: Reviewer A rightly discusses the induced overhead in terms of dispatch bundle growth and per-write cost. Although the increase is small, it is essential to note cumulative effects.
-
-9. **Content Steering Risks**: The reviewer's detailed analysis of potential risks stemming from untrusted content and the absence of complexity bounds raises concerns about the long-term resilience of the new feature. In particular, the risk associated with unbounded scan duration and quadratic complexity requires careful consideration.
-
-### Disagreements
-- **Bypass Path**: While Reviewer B suggests no other host for a bypass path, I align more with Reviewer A, who correctly points out possible bypasses via non-bundled installs and chunk deletions.
-- **Minimal Change**: Reviewer B suggests the change is already minimal. However, Reviewer A's suggestions for alternatives imply there may still be room for more streamlined design choices that balance performance and functionality better.
-
-### New Points
-- **Performance Considerations**: I'd emphasize the necessity to define bounds or circuits to prevent any potential overwhelming of the system with large file sizes or numerous tags, an important consideration not deeply delved by Reviewer B.
-
-STANCE: refused | CONFIDENCE: high | DEALBREAKER: yes
+STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
 ```
 
 ## Owner decision on the split (ADR-282)
 
-- **Owner:** the repository owner, 2026-11-03, in session: chose to override the split and merge (option 1 of: override and merge; close the unbundled path first and run round 13; park), and instructed "commit den Record und merge".
-- **What was put to the owner:** rounds 9 to 12 each split one seat to one, every refusal on a different ground; round 10 (remove the size cap) and round 12 (reinstate a bound) asked for opposite things. The round-11 ground, bundling two main-side defect fixes with the feature, was discharged by splitting them into #2812, merged before round 12.
+- **Owner:** the repository owner, 2026-11-03, in session: chose option 1 (override the split, render this record, merge on green CI) of: override and merge; close `data-src` first and run round 15; park.
+- **What was put to the owner:** round 13 refused unanimously on two grounds — canonical-link trust in `ownHosts()` and the removed `MINIFIED` threshold. The first was fixed (a registered provider's host is never the site itself, test red before the fix); the second was pinned by a test (a >400-character line is read per load). In round 14 the refusing seat accepted both and raised new grounds: `data-src` is not read (pre-existing on main, deliberate for click-to-load), the chunk indirection, advisory-only reporting (true of every design-pass finding), and a quadratic `visibleText` (the quoted loop breaks at the first missing closer).
+- **Carried:** `data-src` as step 2.1 of `agents/roadmaps/later/road-to-a-page-check-at-write-time.md`.
 - **What this record does not change:** the verdict above is the one derived from the seats, `refused`. The decision to land despite it is the owner's, recorded here and not in the header.
-- **Rollback:** revert the merge commit of this PR; the raise_log entry `1,567,400 -> 1,568,700` and the web_launch_rows chunk row go with it, and design_pass_hook returns to running the design-slop rules alone.
+- **Rollback:** revert the merge commit of this PR; the web_launch_rows chunk row goes with it, and design_pass_hook returns to running the design-slop rules alone.
