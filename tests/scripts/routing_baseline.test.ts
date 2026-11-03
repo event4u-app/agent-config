@@ -231,6 +231,19 @@ describe('classifyRun — 5.3 wired: a whole run against the frozen baseline', (
         expect(main(['--classify', write('ok.json', 1), '--baseline', b, '--floors', f, '--out', out])).toBe(0);
         fs.writeFileSync(f, JSON.stringify({ baseline_sha256: 'other', floors }));
         expect(main(['--classify', write('ok.json', 1), '--baseline', b, '--floors', f, '--out', out])).toBe(2);
+        fs.writeFileSync(f, JSON.stringify({ floors }));
+        expect(main(['--classify', write('ok.json', 1), '--baseline', b, '--floors', f, '--out', out])).toBe(2);
+    });
+
+    it('--classify exits 3 when the run measured nothing — an empty canary never exits like a pass', () => {
+        const dir = tmp();
+        const b = path.join(dir, 'b.json');
+        const f = path.join(dir, 'f.json');
+        const cur = path.join(dir, 'empty.json');
+        fs.writeFileSync(b, JSON.stringify(baseline));
+        fs.writeFileSync(f, JSON.stringify({ baseline_sha256: sha256(fs.readFileSync(b, 'utf8')), floors }));
+        fs.writeFileSync(cur, JSON.stringify({ cases: [], units: [] }));
+        expect(main(['--classify', cur, '--baseline', b, '--floors', f, '--out', path.join(dir, 'r.json')])).toBe(3);
     });
 
     it('an all-UNKNOWN run is never green', () => {

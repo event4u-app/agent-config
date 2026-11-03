@@ -253,7 +253,7 @@ export function buildMcpArm(opts: {
  */
 export function inlineDelivered(jsonl: string, unit: string): boolean {
     const suggestIds = new Set<string>();
-    const results: { id: string; text: string }[] = [];
+    const results: { id: string; content: unknown }[] = [];
     for (const line of jsonl.split('\n')) {
         if (line.trim() === '') continue;
         let o: { message?: { content?: unknown } };
@@ -266,15 +266,33 @@ export function inlineDelivered(jsonl: string, unit: string): boolean {
         if (!Array.isArray(content)) continue;
         for (const c of content as { type?: unknown; id?: unknown; name?: unknown; tool_use_id?: unknown; content?: unknown }[]) {
             if (c.type === 'tool_use' && c.name === MCP_SUGGEST_TOOL && typeof c.id === 'string') suggestIds.add(c.id);
-            if (c.type === 'tool_result' && typeof c.tool_use_id === 'string') results.push({ id: c.tool_use_id, text: JSON.stringify(c.content) });
+            if (c.type === 'tool_result' && typeof c.tool_use_id === 'string') results.push({ id: c.tool_use_id, content: c.content });
         }
     }
     for (const r of results) {
-        if (!suggestIds.has(r.id)) continue;
-        const m = /top_body\\*"\s*:\s*\{\s*\\*"skill\\*"\s*:\s*\\*"([^"\\]+)/.exec(r.text);
-        if (m !== null && m[1] === unit) return true;
+        if (suggestIds.has(r.id) && topBodySkills(r.content).includes(unit)) return true;
     }
     return false;
+}
+
+/** `top_body.skill` of every JSON payload inside a tool result, parsed rather than pattern-matched. */
+function topBodySkills(content: unknown): string[] {
+    const texts =
+        typeof content === 'string'
+            ? [content]
+            : Array.isArray(content)
+              ? (content as { type?: unknown; text?: unknown }[]).flatMap((p) => (p.type === 'text' && typeof p.text === 'string' ? [p.text] : []))
+              : [];
+    const out: string[] = [];
+    for (const t of texts) {
+        try {
+            const skill = (JSON.parse(t) as { top_body?: { skill?: unknown } }).top_body?.skill;
+            if (typeof skill === 'string') out.push(skill);
+        } catch {
+            continue;
+        }
+    }
+    return out;
 }
 
 /**

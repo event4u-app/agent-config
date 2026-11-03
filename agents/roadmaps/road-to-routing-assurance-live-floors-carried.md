@@ -17,13 +17,15 @@ relates:
 > (2) the stable regressions its 5.3 canary found
 > (`agents/evidence/metrics/routing-canary-20261103.md` § Rerun).
 
-## Phase 1 — three units that stopped firing
+## Phase 1 — five units the canary left unresolved
 
 The parent's 5.3 canary classified nine units REGRESSION at one run each; a
 rerun at three runs each cleared four as noise, left two at 2/3
 (`dependency-upgrade`, `wireframe`), and left three at **0/3**: `type-design`,
-`react-shadcn-ui`, `project-analysis-core`. All three fired on the same prompt
-at the 2026-10-27 baseline, and none changed its `description` since.
+`react-shadcn-ui`, `project-analysis-core`. All five fired on the same prompt
+at the 2026-10-27 baseline; the three at 0/3 did not change their `description`
+since. Phase 1 covers all five — the three stable regressions and the two
+undecided ones — so nothing is fixed or dismissed on a single-run number.
 
 - [ ] **1.1 Read the traces.** For each 0/3 run, which skill (if any) the run
       invoked instead, from the kept trace (`invokedFromTrace`).

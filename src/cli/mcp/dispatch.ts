@@ -269,18 +269,6 @@ function tierState(tree: ContentTree): 'unknown' | 'tier-b-only' {
     return tree.tier_a ? 'tier-b-only' : 'unknown';
 }
 
-/**
- * `suggest_skill_for_task`. Mirrors the kernel handler's envelope — `status`,
- * `suggestions[]` of `{skill, score, personas, description}` — so a consumer
- * that learned the shape on one server does not have to relearn it on the
- * other. `tiers` is Phase 3.3's field and reports `unknown` until a tier file
- * is wired in.
- *
- * `description` rides with the row because a NAME is not a choosing criterion:
- * a caller handed five names either guesses or opens five bodies. It is capped
- * at 200 characters per skill by `skill.schema.json`, so the envelope grows by
- * a bounded amount per row and no body is returned at any depth.
- */
 /** Bound on an inlined body, so a unique hit cannot turn the answer into a context payload. */
 export const INLINE_BODY_CHAR_CAP = 6000;
 
@@ -294,6 +282,20 @@ export interface DispatchOptions {
     inlineTopBody?: boolean;
 }
 
+/**
+ * `suggest_skill_for_task`. Mirrors the kernel handler's envelope — `status`,
+ * `suggestions[]` of `{skill, score, personas, description}` — so a consumer
+ * that learned the shape on one server does not have to relearn it on the
+ * other. `tiers` is Phase 3.3's field and reports `unknown` until a tier file
+ * is wired in.
+ *
+ * `description` rides with the row because a NAME is not a choosing criterion:
+ * a caller handed five names either guesses or opens five bodies. It is capped
+ * at 200 characters per skill by `skill.schema.json`, so the envelope grows by
+ * a bounded amount per row. No row carries a body; the one exception is the
+ * opt-in `top_body` field (`DispatchOptions.inlineTopBody`), bounded by
+ * `INLINE_BODY_CHAR_CAP`.
+ */
 function suggestSkillForTask(
     tree: ContentTree,
     params: Record<string, unknown>,

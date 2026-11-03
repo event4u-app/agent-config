@@ -53,7 +53,6 @@ export interface StdioOptions {
     inlineTopBody?: boolean;
 }
 
-
 function isNotification(value: unknown): boolean {
     return typeof value === 'object' && value !== null && !('id' in value);
 }

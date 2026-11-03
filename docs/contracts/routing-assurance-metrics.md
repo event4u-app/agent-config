@@ -149,7 +149,12 @@ registered floor is listed apart, never compared to an invented one:
   --floors docs/contracts/routing-assurance-floors.json --out <report.json>
 ```
 
-Exit 1 on any REGRESSION, 2 when the floors file names a different baseline.
+Exit 1 on any REGRESSION; 3 when the run measured nothing or any unit is
+UNKNOWN, so a broken run never exits like a pass; 2 when the floors file names
+a different baseline or none. A floored unit the run did not measure at all is
+listed under `not_run` and counted in the summary line — it does not gate, so a
+deliberately partial run (a rerun of a few units) stays usable, and the count is
+what a reader checks before calling a full canary green.
 
 ### The floors restated as rates (6.2)
 

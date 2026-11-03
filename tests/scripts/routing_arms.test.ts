@@ -155,6 +155,14 @@ describe('inline top body arm — 4.4', () => {
         expect(inlineDelivered([suggestUse('a1'), suggestResult('zz', 'code-review')].join('\n'), 'code-review')).toBe(false);
     });
 
+    it('inlineDelivered reads the payload structurally — pretty-printed, key order and string content all work', () => {
+        const pretty = JSON.stringify({ status: 'ok', top_body: { truncated: false, body: 'B', skill: 'code-review' } }, null, 2);
+        const asArray = traceLine({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'p1', content: [{ type: 'text', text: pretty }] }] } });
+        const asString = traceLine({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'p1', content: pretty }] } });
+        expect(inlineDelivered([suggestUse('p1'), asArray].join('\n'), 'code-review')).toBe(true);
+        expect(inlineDelivered([suggestUse('p1'), asString].join('\n'), 'code-review')).toBe(true);
+    });
+
     it('regradeInline flips only failed, non-errored runs whose trace shows delivery', () => {
         const dir = tmp();
         const hit = path.join(dir, 'hit.jsonl');
