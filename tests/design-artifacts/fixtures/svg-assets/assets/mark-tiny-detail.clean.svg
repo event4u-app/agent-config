@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PLANTED mark/tiny-detail: a dot of radius 3 on a 480 canvas spans 6 units, under the 10-unit
+     bound (1/48 of the viewBox). At 16 px it is a third of a pixel and disappears. The twin grows
+     the dot to radius 12. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>Tiny-detail mark</title>
+  <rect x="40" y="40" width="400" height="400" rx="80" fill="#1d4ed8"/>
+  <circle cx="240" cy="240" r="120" fill="#f8fafc"/>
+  <circle cx="380" cy="100" r="12" fill="#f8fafc"/>
+</svg>

@@ -50,11 +50,20 @@ each, and each was verified at `main@2bc5715c7` on 2026-10-12.
    comparison that exists sees three identical files and runs in no job.
    Decision D10 of the source roadmap: correct the claim, do not build the
    check.
+   **Discharged 2026-11-03** by `road-to-a-verdict-that-shows-its-frame` 5.1:
+   the skill now says no script compares rendered frames, that the reference
+   frame is held against each scene by a reviewer, and why a pixel threshold
+   is the wrong measure (a pose change moves most pixels while identity
+   holds). Nothing was built, per D10.
 9. `src/skills/prompt-validator/SKILL.md:20-24`, `:153` — "deterministic
    pre-spend gate … contradictions block", with no executable behind it, and
    the skill is not in `/video:from-script`'s `skills:` line
    (`src/domains/ai-video/video/from-script/command.md:11`). Decision D11:
    correct the claim, do not build the gate.
+   **Discharged 2026-11-03** by `road-to-a-verdict-that-shows-its-frame` 5.2:
+   "Deterministic pre-spend gate" is gone; the skill names the agent as the
+   only enforcer, says no script implements the checks, and that
+   `/video:from-script` does not name the skill. Nothing was built, per D11.
 
 ## Class B — instruments documented as live and reached by nothing
 

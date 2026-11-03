@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  6719e4aea704b1a2510d2293ff3fdad07aced9b79be2c96666223f725b7354ad
+SET-SHA256  f2bc73234c6117ce5dbc0f754f096df54f889bfa52d421fd750825a7516cd6c9
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1233,6 +1233,7 @@ open and which this file does not settle.
 | `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
 | `brand-to-tokens` | `b4a6926a805c848bf94ee9b6a037b796c0ac416077d0a5474bafcf63f1ded411` |
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
+| `character-consistency` | `abe2c1d17a1bbe849d64c5fc3a7071ac540111b23f693d3856edf1b55e25c616` |
 | `code-film` | `64e99c81fed1f527a1ae5233bef113cd2daced9dfd42476457502ff454d85ea1` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
@@ -2229,6 +2230,26 @@ guard (**+5.48 pp** against +2.0 pp; was +5.24 pp).
 `delivery-set-measurement-2026-08-31.json`: recall loss **38.58 pp** (was
 38.57 pp), the ceiling stays **BREACHED**; context cost **230.1** tokens against
 the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
+## Growth — 2026-11-03, one new corpus (character-consistency); nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH
+TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS WAS ON DISK.
+```
+
+**What changed.** Round `inbox-2026-11-p` edited the `character-consistency`
+skill body (it no longer claims a pixel check no script performs), which brought
+the skill into `check_routing_coverage`'s touched-skill scope; its corpus was
+written then: six exemplars (one German), four near-misses naming the
+neighbours that should win, one logo counterexample. It leaves the grandfather allowlist in the same change.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `character-consistency` | train | `0xf7` = 247 ≥ 51 | new |
 
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.

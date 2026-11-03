@@ -4,6 +4,10 @@ status: parked
 parent_roadmap: road-to-checks-that-name-their-catch
 owner: maintainer
 review_by: 2027-01-31
+entry_condition:
+  what: "the owner ratifies the one-field gate_ledger addition, or decides the field is not wanted"
+  when: "blocker b-ledger-is-ratification-import closes"
+  who: maintainer
 estate_offset_exempt: "Carried suffix of road-to-checks-that-name-their-catch (archived 2026-11-02), parked under later/; adds no active roadmap. Preserves step 1.1 instead of dropping it."
 relates:
   - slug: archive/road-to-checks-that-name-their-catch

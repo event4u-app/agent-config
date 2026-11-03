@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PLANTED mark/live-text: the master mark carries its name as a live text element. It renders in
+     whatever font the viewer has, so the mark is not the same mark on two machines. The one-edit
+     twin replaces that one line with the outlined letterform as a path. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>Live-text mark</title>
+  <rect x="40" y="40" width="400" height="400" rx="80" fill="#1d4ed8"/>
+  <circle cx="240" cy="200" r="100" fill="#f8fafc"/>
+  <text x="240" y="400" font-family="Inter" font-size="72" fill="#0f172a" text-anchor="middle">ACME</text>
+</svg>

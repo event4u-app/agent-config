@@ -25,8 +25,10 @@ install:
 > ([`video-director`](../video-director/SKILL.md),
 > [`pixar-storyteller`](../pixar-storyteller/SKILL.md),
 > [`motion-choreographer`](../motion-choreographer/SKILL.md)) read
-> this file and never paraphrase. Verified by visual regression
-> (pixel similarity ≥ 95%, Phase 6 Step 3).
+> this file and never paraphrase. The verbatim tokens are the control:
+> **no script compares rendered frames** against the reference frame, and a
+> pixel-similarity threshold would be the wrong measure if one did — a pose,
+> framing or lighting change moves most pixels while the identity holds.
 
 ## When to use
 
@@ -50,7 +52,8 @@ Do NOT use when:
 
 1. Check `agents/reference/ai-video/<project>/characters/` — if a lock already
    exists for this id, **read it, do not redraft**. Edits require an
-   explicit revision note (Phase 6 visual regression must rerun).
+   explicit revision note (and a by-eye re-review of the scenes that used
+   the old version — see Gotcha).
 2. Confirm the character will appear in ≥ 2 scenes; one-shot → skip.
 
 ### Step 1: Draft identity tokens
@@ -126,9 +129,11 @@ Worked example — `creature`:
    showing the character full-face and full-body to
    `agents/reference/ai-video/<project>/characters/<id>.ref.png`.
 2. Update `reference_frame` in the JSON to point at it.
-3. Phase 6 visual regression compares every subsequent scene's
-   character frame against this reference (ImageMagick `compare`
-   ≥ 95% similarity).
+3. The reference frame is what a reviewer holds each later scene
+   against, side by side, by eye. Nothing runs that comparison
+   automatically, and no pixel threshold stands in for it: a ≥ 95 %
+   ImageMagick `compare` would fail on any change of pose and pass a
+   changed prop at the same pose, so it is not a check of identity.
 
 ### Step 3: Validate
 
@@ -166,8 +171,9 @@ Worked example — `creature`:
 - Reference frame is captured *after* the first successful render,
   not before — bootstrap scenes have no reference and only the
   JSON locks them.
-- A revision (`version` bumped) requires Phase 6 visual regression
-  to rerun against every prior scene that used the old version.
+- A revision (`version` bumped) requires every prior scene that used
+  the old version to be reviewed again against the new reference —
+  by a reviewer; nothing reruns it on its own.
 
 ## Do NOT
 
@@ -175,8 +181,8 @@ Worked example — `creature`:
   copy verbatim or break the lock.
 - Do NOT edit a locked JSON in place without bumping `version` and
   adding a CHANGELOG line.
-- Do NOT skip the reference frame after the first render — visual
-  regression has nothing to compare against.
+- Do NOT skip the reference frame after the first render — the
+  side-by-side review has nothing to compare against.
 - Do NOT lock a character that appears in only one scene.
 
 ## Policies

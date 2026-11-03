@@ -71,6 +71,10 @@ adapters — not a second image-gen stack.
 5. **Rights and AI-disclosure governance** — run [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md)
    if the asset depicts a real person or brand mark. Attach the AI-generation disclosure
    footer per `media-governance-routing` before delivering output.
+   A delivered asset also carries machine-readable provenance — provider, model,
+   timestamp, prompt hash and the sha256 of the final bytes, as C2PA where the
+   provider supports it and as a `<asset>.provenance.json` sidecar otherwise — per
+   the media [transparency policy](../../../agents/settings/policies/media/transparency.md). Never strip or rewrite it.
 
 ## Output format
 
@@ -110,3 +114,4 @@ adapters — not a second image-gen stack.
 - [`image-generation`](../image-generation/SKILL.md) — general-purpose image generation end-to-end.
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
 - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before generating real-person likenesses or brand marks.
+- [Media transparency policy](../../../agents/settings/policies/media/transparency.md) — the provenance fields every delivered asset carries.

@@ -33,6 +33,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
 | road-to-a-library-the-agent-can-vouch-for | later | later | In a PHP project that needs DTOs, mapping, accessors or filters, AC writes code against the data-helpers version in the … |
 | road-to-a-map-engine-that-never-writes-through-a-symlink | later | later | Road to a map engine that never writes through a symlink |
+| road-to-a-mark-render-readings | later | later | A mark that only works in colour, on light, or above 64 px is reported by a render reading measured … |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-page-check-at-write-time | later | later | A page the agent just wrote that loads a third party on first paint, or whose imprint cites a superseded … |
@@ -42,7 +43,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-return-that-names-its-price-carried | later | later | The cold-cache notice speaks on resume before the first request, and metered logins see the amount on the status line. |
-| road-to-a-reverified-youtube-channel | later | later | Road to a re-verified youtube channel |
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
@@ -53,11 +53,13 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-witness-for-made-and-found-media | later | later | The same check layer serves media the suite made and media it was handed: an expectations file from blueprint, character … |
 | road-to-ac-deep-capabilities | later | draft | Three deep capabilities are either proven to earn their cost on the default path, or closed with a recorded terminal … |
 | road-to-adversarial-verification-and-long-runs | later | later | Ask the owner stops being the quality and control loop. |
 | road-to-advisory-latency-measured | later | later | The two pre-registered latency claims — time-to-notice and time-to-remediation — carry a status that a measurement set, never a sentence: … |
 | road-to-agent-config-next | later | draft | When this roadmap is resumed, the reader can tell — from measurements that already exist rather than from this document's … |
 | road-to-agent-throughput-recovery | later | later | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
+| road-to-ai-media-labels-on-the-platform | later | later | What the pipeline renders carries the label the target platform and the law actually read, placed where no platform UI … |
 | road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-mcp-start-without-npm | later | later | An MCP start in a session with a staged runtime runs the staged node and a bundled turnkey server directly, … |
