@@ -162,7 +162,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(frozen?.roi).toBe('8,8,48,36');
         // An encoder keyframe can split one freeze in two; what counts is the time covered.
         const frozenFor = (frozen?.freezes ?? []).reduce((sum, f) => sum + f.end - f.start, 0);
-        expect(frozenFor).toBeGreaterThan(0.8 * r.duration);
+        expect(frozenFor, `rois=${JSON.stringify(r.rois)} checks=${JSON.stringify(r.checks)}`).toBeGreaterThan(0.8 * r.duration);
         expect(frozen?.ssim_min).toBeGreaterThan(0.95);
         expect(moving?.freezes).toEqual([]);
         expect(moving?.ssim_min ?? 1).toBeLessThan(frozen?.ssim_min ?? 0);
@@ -170,7 +170,7 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         const noisy = measure(fixtures['roi-noisy']!, ['--roi', '8,8,48,36', '--roi', '200,60,48,36']);
         const [noisyFrozen, noisyMoving] = noisy.rois;
         const noisyFor = (noisyFrozen?.freezes ?? []).reduce((sum, f) => sum + f.end - f.start, 0);
-        expect(noisyFor).toBeGreaterThan(0.8 * noisy.duration);
+        expect(noisyFor, `rois=${JSON.stringify(noisy.rois)}`).toBeGreaterThan(0.8 * noisy.duration);
         expect(noisyMoving?.freezes).toEqual([]);
     });
 

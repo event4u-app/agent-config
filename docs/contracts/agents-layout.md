@@ -83,6 +83,7 @@ Scope column: `pkg` = source repo only · `consumer` = consumer projects only ·
 
 | Directory | Scope | Git policy | Retention | Owner | Purpose |
 |---|---|---|---|---|---|
+| `auto-learnings-1/` | pkg | tracked-durable | until its roadmap closes | maintainer | Owner-directed analysis of 100 sessions' user friction (unwanted questions, manual steps, irritation). Evidence only — its roadmap lives under `roadmaps/` like every roadmap (currently `later/`) |
 | `decisions/` | pkg | tracked-durable | permanent | council + humans | Low-impact council corpus, open questions, per-decision ADRs |
 | `evidence/` | pkg | tracked-durable (see notes) | permanent, **no cold location** (see Evidence temperature below) | tooling + humans | Research, analysis, audits, eval findings, metrics — everything evidential. Sub-dirs: `analysis/`, `audits/`, `architectural-drift/`, `archived-skills/`, `council/`, `eval-findings/`, `eval-corpora/`, `investigations/`, `mcp-sessions/`, `metrics/`, `notes/`, `reports/` |
 | `features/` | pkg | tracked-durable | permanent | maintainer | Feature-flag status docs (long-form complement to `.agent-tools.yml`) |
