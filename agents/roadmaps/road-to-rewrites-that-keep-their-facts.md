@@ -134,12 +134,14 @@ stops counting ranges.
 
 ## Phase 4 — Dashes
 
-- [ ] **4.1 Ranges are not dashes** (digit–digit, years, pages, times, quarters)
+- [x] **4.1 Ranges are not dashes** (digit–digit, years, pages, times, quarters)
       at `detect_ai_tells.ts:385`; epoch line if counts move; DE clean corpus
       gains Gedankenstrich prose.
       verify: `npx vitest run tests/scripts/detect_ai_tells.test.ts` -> 0 with
       "Pages 12–14" counting 0 and "X – Y" counting 1, and
       `npx vitest run tests/scripts/prose_tells_metamorphic.test.ts` -> 0 holds.
+      Done: range dashes excluded; no existing corpus dash count moved; `clean/de/12-gedankenstrich.md` added (counts 2) with the new pin and a dash-epoch note in `prose-tells-epochs.md`; both vitest runs exit 0.
+      production entry: `src/scripts/detect_ai_tells.ts`
 
 ## Phase 5 — Register currency
 
