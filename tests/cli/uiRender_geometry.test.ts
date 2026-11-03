@@ -46,6 +46,7 @@ describe('ui:render page geometry — live', () => {
 
     // road-to-design-inputs-and-pages-read-as-they-are 4.2: the denominator and
     // the gap inputs a sibling-gap reading needs.
+    // skip-reason: tool absent — needs a local Chromium; runs under AGENT_CONFIG_BROWSER_SUITES=1
     it.skipIf(!live)('records sampled/total, marks a truncated capture partial, and captures margin/gap/flex', async () => {
         const cards = Array.from({ length: 1600 }, (_, i) => `<div class="cell" style="margin-top:${i % 3}px">${i}</div>`).join('');
         fs.writeFileSync(
@@ -73,6 +74,7 @@ describe('ui:render page geometry — live', () => {
         for (const k of ['margin-right', 'margin-bottom', 'margin-left']) expect(cell![k]).toBe('0px');
     }, 180_000);
 
+    // skip-reason: tool absent — needs a local Chromium; runs under AGENT_CONFIG_BROWSER_SUITES=1
     it.skipIf(!live)('a capture under the cap is not partial', async () => {
         fs.writeFileSync(path.join(dir, 'small.html'), PAGE);
         const code = await runUiRender({ target: 'small.html', projectRoot: dir, slug: 'small' });

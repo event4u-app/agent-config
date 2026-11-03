@@ -81,6 +81,7 @@ describe('interactWith — live', () => {
 describe('ui:render --interact on a URL target — live, loopback only', () => {
     const live = chromiumAvailable();
 
+    // skip-reason: tool absent — needs a local Chromium; runs under AGENT_CONFIG_BROWSER_SUITES=1
     it.skipIf(!live)('a submitting click is aborted and recorded; an off-origin request is blocked', async () => {
         const writes: string[] = [];
         const server = http.createServer((req, res) => {
