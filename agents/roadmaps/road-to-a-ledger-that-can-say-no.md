@@ -174,23 +174,28 @@ rewriting archived `status: ready` (decided 2026-09-04,
 
 ## Phase 1 — Host-config writers keep what they did not write
 
-- [ ] **1.1 `mcp:render` through `mergeHostConfigFile`.** Route `cmd_render` through
+- [x] **1.1 `mcp:render` through `mergeHostConfigFile`.** Route `cmd_render` through <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_render.ts -->
       `mergeHostConfigFile` with a merger that replaces only the keys it renders
       under `mcpServers`; `cmd_check` compares only those keys.
       verify: `npx vitest run tests/scripts/mcp_render.test.ts` -> 0 and with a
       fixture keeping a foreign server and a comment, a JSONC file reported as
       skipped, and a `.agent-config.bak` written — each seen red first.
-- [ ] **1.2 Duplicate keys in every merged container.** `hostConfigMerge.ts`
+      Done: `src/scripts/mcp_render.ts` writes each target through `mergeHostConfigFile` (`merge_rendered` replaces only rendered `mcpServers` keys; a skipped target exits 1 with the manual snippet), `--check` compares only rendered servers (`target_matches`); `docs/mcp.md` updated. `npx vitest run tests/scripts/mcp_render.test.ts` -> 0, 16 tests, the 3 new ones seen red first.
+- [x] **1.2 Duplicate keys in every merged container.** `hostConfigMerge.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/hostConfigMerge.ts -->
       checks duplicates in each container `mergeHostConfigFile` touches.
       verify: a nested duplicate fixture returns `skipped-duplicate-key`.
-- [ ] **1.3 Backup and readback on the three install writes**
+      Done: `src/install/hostConfigMerge.ts` refuses a duplicate at any key path `incoming` reaches (`touchedKeyPaths`); nested-duplicate fixture in `tests/install/host-config-merge.test.ts` red then green, untouched-container case stays `updated`.
+- [x] **1.3 Backup and readback on the three install writes** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/hostConfigMerge.ts -->
       (`install.ts:930`, `:1970`, the `--force` overwrite at `:1261`).
       verify: a temp-dir settings file gets a `.bak` and is re-read.
-- [ ] **1.4 Delete the dead lenient parser.** Remove `parseJsonLenient`,
+      Done: new `writeHostConfig` in `src/install/hostConfigMerge.ts` (once-only `.agent-config.bak`, readback, restore on mismatch); `write_json_file` in `src/scripts/install.ts` — the only writer of the three sites — routes through it and callers stop on a refused write. Tests in `tests/install/host-config-merge.test.ts` and `tests/scripts/install_rule_layer_gate.test.ts` red then green.
+- [x] **1.4 Delete the dead lenient parser.** Remove `parseJsonLenient`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/conflict.ts -->
       `mergeJsonContent` and their test block.
       verify: `grep -rn "parseJsonLenient\|mergeJsonContent" src tests` -> 0 holds.
-- [ ] **1.5 `--transfer` in the reference door's argument-hint.**
+      Done: both functions and their test block removed from `src/install/conflict.ts` / `tests/install/conflict.test.ts`; the grep returns 0 lines (exit 1, no match).
+- [x] **1.5 `--transfer` in the reference door's argument-hint.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: `grep -c -- --transfer dist/agent-src/commands/analyze/reference.md` -> /[1-9]/ holds.
+      Done: `--transfer=learn|adapt|rebuild|integrate` added to the argument-hint; dist count is 3.
 
 ## Phase 2 — An entry is something that is invoked
 
@@ -216,9 +221,10 @@ rewriting archived `status: ready` (decided 2026-09-04,
       runs that stage.
       verify: `./scripts-run src/scripts/report_production_reach` -> 0 and its
       unreached analysis modules equal the labelled set.
-- [ ] **2.4 One lens name.** Align "Overbuild & sequencing" at
+- [x] **2.4 One lens name.** Align "Overbuild & sequencing" at <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `reference/command.md:368,378,504`.
       verify: `grep -c "Overbuild & sequencing" src/domains/analysis-workbench/analyze/reference/command.md` -> /3/ holds.
+      Done: loop 3 renamed from "Convergence" to "Overbuild & sequencing" at the table row and both delta-block headings, the row now asking the engine's smallest-rung and order question too; the grep prints 3.
 
 ## Not in this roadmap
 

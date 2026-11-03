@@ -8,7 +8,7 @@ cluster: analyze
 replaces: [analyze-repo, analyze:repo, analyze-reference-repo, analyze:reference-repo]
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-argument-hint: "<source>… [--emit-prompts] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
+argument-hint: "<source>… [--emit-prompts] [--transfer=learn|adapt|rebuild|integrate] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
 limits:
   mode_default: plan
   max_iterations: 3
@@ -365,7 +365,7 @@ own lens, and the lens is what makes the loop worth its cost:
 |---|---|---|
 | 1 | **Coverage** | What was missed? What was wrongly marked absent? Which rows rest on a weak anchor — no `file:line`, or one that no longer resolves? |
 | 2 | **Adversary** | Was the *form* copied instead of the principle? Is this only *different* rather than *better*? Does this package already solve it elsewhere? What does it cost in tokens, surface and maintenance? |
-| 3 | **Convergence** | Resolve contradictions between the first two. Fold duplicates. Cut the speculative. Bind every remaining line to evidence on **both** sides. |
+| 3 | **Overbuild & sequencing** | Resolve contradictions between the first two. Fold duplicates. Cut the speculative to the smallest rung that delivers each item, and say in what order the survivors land. Bind every remaining line to evidence on **both** sides. |
 
 Each loop takes as input **both** the previous analysis **and** the previous
 roadmap draft — a finding that changed the analysis but not the roadmap is a
@@ -375,7 +375,7 @@ Each loop appends its own **delta block** to `## Iteration record`, naming its
 lens, with one row per change and a reason per row:
 
 ```markdown
-### Loop {n} — {Coverage | Adversary | Convergence}   ·   revision: {sha}
+### Loop {n} — {Coverage | Adversary | Overbuild & sequencing}   ·   revision: {sha}
 
 | Change | Row | From → To | Reason |
 |---|---|---|---|
@@ -501,7 +501,7 @@ keeps its block and records the zero (§ 5b).
 | Change | Row | From → To | Reason |
 |---|---|---|---|
 
-### Loop 3 — Convergence   ·   revision: {sha}
+### Loop 3 — Overbuild & sequencing   ·   revision: {sha}
 
 | Change | Row | From → To | Reason |
 |---|---|---|---|
