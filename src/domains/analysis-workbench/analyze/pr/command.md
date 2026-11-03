@@ -6,7 +6,7 @@ visibility: internal
 sub: pr
 cluster: analyze
 replaces: []
-skills: [ai-council, code-review, receiving-code-review]
+skills: [ai-council, code-review-lens, receiving-code-review]
 description: Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
 argument-hint: "[<pr-url|number>] [--comment] [--optimize] [--threshold=<0..1>] [--quick]"
 limits:

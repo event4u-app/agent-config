@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: adversarial-review
-description: "Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review."
+description: "Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review-lens."
 personas:
   - critical-challenger
 domain: quality
@@ -128,7 +128,7 @@ clause here suppresses findings on every pull request.
 
 - **feature-planning** — adversarial review after Understanding Lock, before presenting the plan.
 - **bug-analyzer** — review the proposed fix before implementing.
-- **code-review** — self-review before creating a PR.
+- **code-review-lens** — self-review before creating a PR.
 - **laravel-migration** (or framework-native equivalent) — review migration for data safety.
 - **api-design** — review API design for consistency and breaking changes.
 - **security** — review security-sensitive changes for attack surface.

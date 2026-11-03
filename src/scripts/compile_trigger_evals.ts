@@ -167,11 +167,11 @@ export function slug(s: string): string {
 
 /**
  * The regex the host's `tool_used` grader tests against a Skill call's JSON
- * input, e.g. `{"skill":"ac:code-review"}` (plugin-namespaced) or
- * `{"skill":"code-review"}` (user-level).
+ * input, e.g. `{"skill":"ac:code-review-lens"}` (plugin-namespaced) or
+ * `{"skill":"code-review-lens"}` (user-level).
  *
  * The leading `[":]` and the trailing quote anchor the WHOLE name, so
- * `code-review` does not match `requesting-code-review`. Verified on host
+ * `code-review-lens` does not match `requesting-code-review`. Verified on host
  * 2.1.311: the grader is `new RegExp(input_match).test(inputText)`.
  */
 export function skillInputPattern(skill: string): string {

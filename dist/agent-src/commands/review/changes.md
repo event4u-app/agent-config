@@ -3,12 +3,12 @@ model_tier: high
 name: review-changes
 pack: engineering-base
 intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture, spec, overbuild"
-routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-spec-compliance, overbuild-review-lens]
+routes_to: [code-review-lens, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-spec-compliance, overbuild-review-lens]
 replaces: []
 visibility: internal
 sub: changes
 cluster: review
-skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-spec-compliance, overbuild-review-lens, judge-synthesis, git-workflow]
+skills: [code-review-lens, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-spec-compliance, overbuild-review-lens, judge-synthesis, git-workflow]
 description: Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts
 suggestion:
   eligible: false
@@ -418,7 +418,7 @@ runners are resolved per-stack via the
 - [`/do-and-judge`](do-and-judge.md) — implementer + judge loop for a single change
 - [`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) — opt-in test-verdict-gated iterate-to-green loop (step 6 hand-off); judge confirms after the numeric gate
 - [`/judge`](judge.md) — standalone judge, no review-changes dispatch
-- [`code-review`](../../skills/code-review/SKILL.md) — human-oriented review patterns (tone, feedback handling)
+- [`code-review-lens`](../../skills/code-review-lens/SKILL.md) — human-oriented review patterns (tone, feedback handling)
 - [`role-contracts`](../../guidelines/agent-infra/role-contracts.md#reviewer) — Reviewer mode output contract (Summary / Risks / Findings / Required actions / Verdict)
 
 ## References

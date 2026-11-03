@@ -55,6 +55,47 @@ describe('lint_agent_skill_names — behavioural spec', () => {
         expect(mod._spec_violation('Foo')).not.toBeNull();
     });
 
+    // --- _reserved_name_violation: no frontmatter escape ---
+    it('flags a reserved skill name even when it opts out of slash registration', () => {
+        const text = '---\nname: mcp\nuser-invocable: false\ndescription: x\n---\nbody';
+        const v = mod._reserved_name_violation('mcp', text);
+        expect(v).not.toBeNull();
+        expect(v).toContain('`mcp`');
+    });
+
+    it('flags a reserved skill name without any opt-out', () => {
+        expect(mod._reserved_name_violation('code-review', '---\nname: code-review\n---\n')).not.toBeNull();
+    });
+
+    it('passes the renamed skills', () => {
+        expect(mod._reserved_name_violation('mcp-tool-use', '---\nname: mcp-tool-use\n---\n')).toBeNull();
+        expect(
+            mod._reserved_name_violation('code-review-lens', '---\nname: code-review-lens\nuser-invocable: false\n---\n'),
+        ).toBeNull();
+    });
+
+    // --- _twin_violations: skill/command same-name ratchet ---
+    it('flags a skill/command twin that the baseline does not list', () => {
+        const v = mod._twin_violations(['brand', 'fresh-twin', 'solo'], ['brand', 'fresh-twin', 'other'], ['brand']);
+        expect(v).toHaveLength(1);
+        expect(v[0]).toContain('`fresh-twin`');
+    });
+
+    it('flags a baseline twin that no longer exists, so the list can only shrink by deletion', () => {
+        const v = mod._twin_violations(['brand'], ['other'], ['brand']);
+        expect(v).toHaveLength(1);
+        expect(v[0]).toContain('`brand`');
+        expect(v[0]).toContain('delete');
+    });
+
+    it('passes when every twin is listed and every listed twin exists', () => {
+        expect(mod._twin_violations(['brand', 'x'], ['brand', 'y'], ['brand'])).toEqual([]);
+    });
+
+    it('the real repo carries exactly the baselined twins', () => {
+        expect(mod.check_twins()).toEqual([]);
+    });
+
     // --- check helpers run against the real repo without throwing ---
     it('check_commands + check_skills return arrays on the real repo', () => {
         expect(Array.isArray(mod.check_commands())).toBe(true);

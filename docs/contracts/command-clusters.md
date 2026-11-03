@@ -120,9 +120,12 @@ is **withheld from Claude-facing `/name` projections**: the
 `.claude/skills/` command entry is skipped by `condense.ts`, and the
 user-scope installer deploys neither a skill wrapper nor a flat command
 file. Nested `/cluster:sub` commands are unaffected (hyphen/colon-joined
-slugs cannot collide). Skills that keep a reserved name opt out of slash
-registration with `user-invocable: false` (model-invocation only);
-`lint_agent_skill_names.ts` fails CI otherwise. The suite complements
+slugs cannot collide). A skill may not keep a reserved name at all:
+`user-invocable: false` controls who may invoke a skill, not who owns the
+name, so the host still resolves `/name` to the skill (observed 2026-11 for
+`/mcp` and `/code-review`, since renamed `mcp-tool-use` and
+`code-review-lens`). `lint_agent_skill_names.ts` fails CI on any reserved
+skill name, with no frontmatter escape. The suite complements
 the host — it never overlays or degrades a built-in. On such names the
 bare-invocation contract above applies to every tool **except** Claude
 Code, where the built-in owns `/name`.
@@ -198,7 +201,7 @@ top-level command. Sibling variants become a flag, never a second command
 `roadmap-process-step` — and `roadmap` with no scope defaults to processing the
 WHOLE roadmap, because that is why you write one). A new verb still needs an ADR
 per [`ADR-041`](../decisions/ADR-041-controlled-command-verbs.md). A genuine
-skill is `code-review` / `git-workflow` / `testing` — never `council` /
+skill is `code-review-lens` / `git-workflow` / `testing` — never `council` /
 `challenge-me` / `research`.
 
 > The rule that ends "should X be a command?" — a proposed `jira-comment`: not

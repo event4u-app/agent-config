@@ -110,7 +110,7 @@
       "floor": 0
     },
     {
-      "unit": "code-review",
+      "unit": "code-review-lens",
       "baseline_recall": 1,
       "floor": 0.9
     },

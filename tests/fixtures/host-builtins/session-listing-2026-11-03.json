@@ -1,0 +1,15 @@
+{
+  "host": "claude-code",
+  "version": "unpinned (the live session did not report its version)",
+  "read": "2026-11-03, first-hand: the skill listing a Claude Code session showed the model while this repository was being worked on",
+  "scope": "host-shipped skills visible in that listing; not the host's full command list",
+  "names": [
+    "artifact-capabilities",
+    "artifact-design",
+    "artifact-diagramming",
+    "keybindings-help",
+    "plugin-authoring",
+    "update-config",
+    "workflow-authoring"
+  ]
+}

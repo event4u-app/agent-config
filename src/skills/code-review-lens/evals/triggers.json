@@ -1,0 +1,53 @@
+{
+    "skill": "code-review-lens",
+    "last_eval": "2026-11-03",
+    "description": "3 exemplars (1 de) + 3 near-misses + 2 counterexamples. Near-misses are the sharper adversarial ask (adversarial-review), the narrower single-lens authorization review (authz-review) and writing the PR text rather than reviewing the change. Counterexamples guard the 'review' and 'check' vocabulary in unrelated work. Classes declared 2026-11-03 when the corpus moved with the rename from code-review.",
+    "queries": [
+        {
+            "q": "review this code",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "check my changes before I open the PR",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "schau dir bitte meinen Diff an",
+            "trigger": true,
+            "language": "de",
+            "class": "exemplar"
+        },
+        {
+            "q": "be brutal and tear this design apart",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a teardown on explicit request → adversarial-review"
+        },
+        {
+            "q": "is this endpoint's authorization correct?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "one lens, the authorization chain → authz-review"
+        },
+        {
+            "q": "write the PR description for this branch",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring the PR text, not reviewing the change"
+        },
+        {
+            "q": "review the quarterly sales numbers with the finance team",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'review' in the business sense"
+        },
+        {
+            "q": "check whether the staging server has enough disk space",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'check' as an ops task, no code involved"
+        }
+    ]
+}

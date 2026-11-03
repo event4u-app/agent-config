@@ -19,7 +19,7 @@ default_path:          # canonical command sequence
   - fix/quality
   - threat-model
 skills:                # skills the flow composes end-to-end
-  - code-review
+  - code-review-lens
   - adversarial-review
   - quality-tools
   - threat-modeling

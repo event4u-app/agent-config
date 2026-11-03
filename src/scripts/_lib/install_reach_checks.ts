@@ -39,6 +39,7 @@ import { compare_versions } from './version_order.js';
 import type { WiringCheck } from './runtime_wiring_checks.js';
 import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
 import { checkSkillReach } from './skill_reach.js';
+import { checkReservedNameShadows } from '../_cli/doctor_reserved_names.js';
 import { checkCloudReach } from './cloud_reach.js';
 import { isContained } from './session_index_trust.js';
 
@@ -595,6 +596,7 @@ export const REACH_CHECK_IDS = [
     'artifact-location',
     'skill-reach',
     'cloud-reach',
+    'reserved-name-shadows',
 ] as const;
 
 export function reachRunners(opts: {
@@ -609,5 +611,6 @@ export function reachRunners(opts: {
         'artifact-location': () => checkArtifactLocation(opts.projectRoot),
         'skill-reach': () => checkSkillReach(),
         'cloud-reach': () => checkCloudReach(opts.projectRoot),
+        'reserved-name-shadows': () => checkReservedNameShadows({ projectRoot: opts.projectRoot }),
     };
 }

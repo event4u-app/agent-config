@@ -38,7 +38,9 @@ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..')
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
 
 /** Sampled 2026-08-08 as arriving WITH a description. */
-const SAMPLED_DESCRIBED = ['accessibility-auditor', 'context-document', 'mcp'] as const;
+// `mcp` was observed under that name and renamed `mcp-tool-use` on 2026-11-03
+// (road-to-a-name-no-host-already-owns 1.1); the entry follows the skill.
+const SAMPLED_DESCRIBED = ['accessibility-auditor', 'context-document', 'mcp-tool-use'] as const;
 /** Sampled 2026-08-08 as arriving BARE, while having a description on disk. */
 const SAMPLED_BARE = [
     'comp-banding',
@@ -232,7 +234,7 @@ describe('host_listing_model — pinned against the 2026-08-08 observation', () 
     // lists, not dropped, for the reason the 2026-10-11 note gives.
     const AGREE_SURVIVES = ['accessibility-auditor'] as const;
     const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling', 'composer-packages'] as const;
-    const DISAGREE_MODEL_SAYS_BARE = ['context-document', 'mcp'] as const;
+    const DISAGREE_MODEL_SAYS_BARE = ['context-document', 'mcp-tool-use'] as const;
     const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding'] as const;
 
     it('agrees with the observation on exactly five of the eight sampled entries', () => {

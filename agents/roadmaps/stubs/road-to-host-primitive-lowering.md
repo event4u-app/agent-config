@@ -5,7 +5,7 @@ review_by: 2026-12-03
 
 # Stub: road to host-primitive lowering
 
-> **Arrivals:** 2 — latest `inbox-2026-11-a` (2026-11-01): two items below (5, 6). Before it: 1 — `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 3 — latest `inbox-2026-11-n` (2026-11-03): a trust precondition on item 4. Before it: `inbox-2026-11-a` (2026-11-01): two items below (5, 6); `inbox-2026-09-ab` (2026-09-29).
 
 > **Stub — not active work.** Transferred here by the 2026-09-b inbox round from
 > `agents/tmp.old/inbox-2026-09-b/s04/` and `.../s12/`. It is a stub rather than
@@ -69,6 +69,13 @@ refused. What that probe did not test is whether the host refuses only on a
 3. Recorded result either way, dated and pinned to the build: refused with the
    reason shown, or executed. Only a refusal may move the row's `block_exit`
    off `null`; an execution keeps the row `manual-only`.
+
+**Trust precondition** (round `inbox-2026-11-n`, 2026-11-03). The 2026-10-01
+probe ran without controlling hook trust, and neither `host_lowering.yaml` nor
+this stub names trust as an explanation for the null (0 hits for `trust` in
+both at `b234d08480`). The re-probe controls it in three arms: untrusted, a
+one-time bypass in a throwaway home, and the bypass with the structured deny
+above. A null without the trust arm is not entered.
 
 ### 5. `<skills-root>` versus the host's skill-directory variable
 

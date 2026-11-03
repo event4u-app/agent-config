@@ -17,7 +17,7 @@ recipes:
   - title: "Review a change before it ships"
     when: "You have a diff and want a real review, not a rubber-stamp."
     commands: [review/changes, judge, fix/quality]
-    skills: [code-review, adversarial-review]
+    skills: [code-review-lens, adversarial-review]
 
   - title: "Fix a red CI run"
     when: "CI is failing and you want the failure pinpointed and fixed."

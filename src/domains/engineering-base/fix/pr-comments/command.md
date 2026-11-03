@@ -223,7 +223,7 @@ Two guards run before any reply/comment is posted:
    re-raising a point a human reviewer already made three lines away.
 2. **Re-review scoping on reply rounds.** A reply round scopes to the
    **changed lines** of the push it responds to; never raise **new** issues in
-   code the round did not touch (mirrors the `code-review` re-review-scoping
+   code the round did not touch (mirrors the `code-review-lens` re-review-scoping
    rule). A pre-existing issue you notice in untouched code is noted to the
    user, not posted as a fresh blocking comment on someone else's PR.
 

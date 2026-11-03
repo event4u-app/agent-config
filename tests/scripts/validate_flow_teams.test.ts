@@ -17,7 +17,7 @@ afterEach(() => { for (const d of tmp.splice(0)) fs.rmSync(d, { recursive: true,
 
 describe('validate_flow_teams — checkFile', () => {
     it('clean when a real team resolves', () => {
-        const p = write('id: x\nteam:\n  personas: [production-validator, qa]\n  skills: [code-review]\n');
+        const p = write('id: x\nteam:\n  personas: [production-validator, qa]\n  skills: [code-review-lens]\n');
         expect(checkFile(p)).toEqual([]);
     });
 

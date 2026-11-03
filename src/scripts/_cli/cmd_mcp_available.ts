@@ -5,7 +5,7 @@
  * Phase 2.3 of `road-to-capability-answerability`. Three surfaces in this tree
  * answer "which tools do I have" and they disagree: `mcp.json` declares the MCP
  * servers, `TOOL_REGISTRY` is a two-entry constant governing what a skill may
- * put in `allowed_tools`, and the `mcp` skill tabulates a larger set as prose.
+ * put in `allowed_tools`, and the `mcp-tool-use` skill tabulates a larger set as prose.
  * An agent asking the question reads whichever it finds first. This verb prints
  * all three, labelled, in one place — the step's requirement is literally "keep
  * the two apart in the output; conflating them is the current defect".

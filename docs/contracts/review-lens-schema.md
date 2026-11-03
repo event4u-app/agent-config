@@ -21,7 +21,7 @@ DO NOT MERGE ACROSS THE LINE.
 
 - **Entry review skill** — a reviewer the user (or a task) invokes directly. It
   produces a standalone verdict and may itself orchestrate. Examples:
-  `code-review` (also the `/review-changes` consolidator), `adversarial-review`,
+  `code-review-lens` (also the `/review-changes` consolidator), `adversarial-review`,
   `authz-review`, `design-review`, `privacy-review`, `receiving-code-review`,
   `requesting-code-review`, `skill-reviewer`.
 - **Dispatched lens** — a specialized reviewer that runs **only** under an
@@ -41,7 +41,7 @@ DO NOT MERGE ACROSS THE LINE.
 | `constraints` | what it MUST flag and what it must NOT (stay in its lane — a bug lens does not opine on style) |
 | `dispatched_by` | the orchestrator that runs it (`/review-changes`; `/judge` for solo/steps) |
 | `runs` | `independently` — same diff + task context, no cross-talk between lenses |
-| `consolidated_by` | who merges the verdicts (`code-review` for `/review-changes`) |
+| `consolidated_by` | who merges the verdicts (`code-review-lens` for `/review-changes`) |
 | `verdict_shape` | findings list with severity; no merge/ship decision (the human decides) |
 
 ## The dispatch contract (what Phase 3 validates against)
@@ -54,7 +54,7 @@ DO NOT MERGE ACROSS THE LINE.
    built to decompose).
 3. An **entry skill may absorb another entry skill** only when both are
    user-invoked and their scopes genuinely overlap — but never absorb a lens.
-4. The **consolidator** (`code-review`) is load-bearing — it is the entry skill
+4. The **consolidator** (`code-review-lens`) is load-bearing — it is the entry skill
    that both stands alone and merges lens verdicts; it is not a merge candidate.
 
 ## See also
