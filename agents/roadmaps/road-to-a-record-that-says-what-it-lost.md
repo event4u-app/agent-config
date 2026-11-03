@@ -81,7 +81,7 @@ finding disposition names a command but not the outcome it must produce
 
 ## Phase 3 — One confidence vocabulary; reproduction has a column
 
-- [ ] **3.1 `security-audit` and `performance-analysis` adopt the contract
+- [x] **3.1 `security-audit` and `performance-analysis` adopt the contract
       vocabulary.** Replace `Confidence: Low / Medium / High` in
       `src/skills/security-audit/SKILL.md:249` (keep "confirmed only with
       `proof: test`") and `src/skills/performance-analysis/SKILL.md:107`
@@ -90,7 +90,7 @@ finding disposition names a command but not the outcome it must produce
       `docs/contracts/adversarial-review-protocol.md` § confidence instead of
       restating it.
       verify: `grep -rn 'Confidence:\*\* Low / Medium / High' src/skills` -> 1 — exit 1, no matches; then `task lint-skills` -> 0
-- [ ] **3.2 The review-reply triage records the reproduction.** In
+- [x] **3.2 The review-reply triage records the reproduction.** In
       `src/skills/receiving-code-review/SKILL.md` add a "Reproduced by" column to
       the response table (`:96-102`): a `verify:` clause in the expectation
       grammar or `not reproduced`; an accepted blocking comment without an entry
