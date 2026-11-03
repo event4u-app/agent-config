@@ -98,6 +98,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid, atomic upgraded-plus-shadow … |
+| road-to-floor-source-tags-with-payload-room | later | later | Road to source tags in the always-loaded safety floors |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
 | road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
@@ -232,7 +233,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-executable-specification-adapter | stubs | — | road to an executable specification adapter (and the mutation half) |
 | road-to-f4-full-stop-block | stubs | — | road to the F4-full stop-block continuation |
 | road-to-first-reference-analysis-run | stubs | — | road to the first true reference-analysis run |
-| road-to-floor-source-tags-with-payload-room | stubs | — | source tags in the always-loaded safety floors |
 | road-to-fresh-beta-lapses-2026-09 | stubs | — | six beta contracts lapse fresh between 2026-09-10 and 2026-09-15 |
 | road-to-frontend-power-default-flip | stubs | — | road to the frontend-power default flip |
 | road-to-frontend-power-detector-promotions | stubs | — | road to the frontend-power detector promotions |
