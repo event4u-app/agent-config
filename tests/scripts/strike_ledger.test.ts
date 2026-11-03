@@ -62,7 +62,7 @@ describe('failureSignature', () => {
     });
 
     it('differs when the failure count differs', () => {
-        const two = { ...red('adds'), stdout_tail: red('adds').stdout_tail?.replace('1 failed', '2 failed') };
+        const two = { ...red('adds'), stdout_tail: (red('adds').stdout_tail ?? '').replace('1 failed', '2 failed') };
         expect(failureSignature(red('adds'))).not.toBe(failureSignature(two));
     });
 });
