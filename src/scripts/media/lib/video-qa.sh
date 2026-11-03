@@ -249,7 +249,10 @@ for roi in ${rois[@]+"${rois[@]}"}; do
                 END { if (seen) printf "%.4f %d\n", m, f; else print "null null" }')
     fi
     if has freezedetect; then
-        rfz="$(ffmpeg -hide_banner -nostats "${IN[@]}" -i "$file" -an -vf "${crop},freezedetect=n=-60dB:d=0.5" -f null - 2>&1 </dev/null | freeze_list)"
+        # A frozen region of a lossy encode still carries codec noise above -60 dB
+        # (measured: a mpeg4 q:v 8 encode hides it); -40 dB holds the freeze and a
+        # moving region stays clear even at -30 dB.
+        rfz="$(ffmpeg -hide_banner -nostats "${IN[@]}" -i "$file" -an -vf "${crop},freezedetect=n=-40dB:d=0.5" -f null - 2>&1 </dev/null | freeze_list)"
     fi
     roi_json+=("{\"roi\":\"$roi\",\"ssim_min\":$smin,\"ssim_min_frame\":$sframe,\"freezes\":$rfz}")
 done

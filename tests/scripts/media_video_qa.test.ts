@@ -77,7 +77,7 @@ const block = (frame: Uint8Array, x0: number, y0: number, w: number, h: number, 
     return f;
 };
 const brighten = (frame: Uint8Array, by: number): Uint8Array => frame.map((v) => Math.min(255, v + by));
-const save = (name: string, frames: Uint8Array[]): string => encode(frames, path.join(dir, name), { fps: FPS });
+const save = (name: string, frames: Uint8Array[], quality?: number): string => encode(frames, path.join(dir, name), { fps: FPS, quality });
 
 const measure = (file: string, args: readonly string[] = [], env: NodeJS.ProcessEnv = process.env): Reading => {
     const r = spawnSync('bash', [VIDEO_QA, file, ...args], { encoding: 'utf-8', env });
@@ -103,6 +103,8 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         fixtures['freeze'] = save('freeze.mp4', [...Array.from({ length: 10 }, (_, n) => view(field, n * 4)), ...hold(view(field, 36), 2)]);
         // The block in the top-left corner is drawn once and never changes; everything else pans.
         fixtures['roi'] = save('roi.mp4', Array.from({ length: 30 }, (_, n) => block(view(field, n * 3), 8, 8, 48, 36, 200)));
+        // Same clip, coarser quantiser: the frozen region now carries codec noise, as a CI ffmpeg produced.
+        fixtures['roi-noisy'] = save('roi-noisy.mp4', Array.from({ length: 30 }, (_, n) => block(view(field, n * 3), 8, 8, 48, 36, 200)), 8);
         const bg = view(field, 0);
         fixtures['walk'] = save('walk.mp4', Array.from({ length: 40 }, (_, n) => block(bg, 4 + n * 7, 70, 16, 16, 250)));
         fixtures['swap'] = save('swap.mp4', Array.from({ length: 40 }, (_, n) => (n >= 20 ? block(bg, 240, 20, 40, 40, 250) : bg)));
@@ -164,6 +166,12 @@ describe.skipIf(!CAN_RUN)('video-qa.sh', () => {
         expect(frozen?.ssim_min).toBeGreaterThan(0.95);
         expect(moving?.freezes).toEqual([]);
         expect(moving?.ssim_min ?? 1).toBeLessThan(frozen?.ssim_min ?? 0);
+
+        const noisy = measure(fixtures['roi-noisy']!, ['--roi', '8,8,48,36', '--roi', '200,60,48,36']);
+        const [noisyFrozen, noisyMoving] = noisy.rois;
+        const noisyFor = (noisyFrozen?.freezes ?? []).reduce((sum, f) => sum + f.end - f.start, 0);
+        expect(noisyFor).toBeGreaterThan(0.8 * noisy.duration);
+        expect(noisyMoving?.freezes).toEqual([]);
     });
 
     // skip-reason: tool absent — this ffmpeg build lacks the filter; the filter-missing case below asserts it reads as skipped
