@@ -1,1114 +1,1186 @@
 {
-  "owner": "maintainer",
-  "review_by": "2027-04-12",
-  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
-  "ceilings": {
-    "accessibility-auditor": 11064,
-    "activation-design": 8513,
-    "adr-create": 17859,
-    "adversarial-review": 7870,
-    "agent-docs-writing": 18341,
-    "agent-security-review": 6120,
-    "agents-md-thin-root": 13319,
-    "ai-code-blindspots": 14143,
-    "ai-council": 21705,
-    "alerting-doctrine": 8755,
-    "analysis-autonomous-mode": 7380,
-    "analysis-skill-router": 4139,
-    "api-design": 4715,
-    "api-endpoint": 5723,
-    "api-testing": 8378,
-    "architecture-review-lens": 4929,
-    "artisan-commands": 2710,
-    "async-python-patterns": 8203,
-    "authz-review": 19124,
-    "aws-infrastructure": 7441,
-    "blade-ui": 7227,
-    "blameless-post-mortem": 7809,
-    "blast-radius-analyzer": 9668,
-    "brand": 5866,
-    "brand-asset-generation": 6818,
-    "brand-audit": 7123,
-    "brand-identity": 6265,
-    "brand-strategy": 5072,
-    "brand-to-tokens": 5678,
-    "bug-analyzer": 13634,
-    "build-buy-partner": 9814,
-    "canvas-design": 7971,
-    "character-consistency": 9031,
-    "check-refs": 4188,
-    "churn-prevention": 8014,
-    "code-film": 5733,
-    "code-intelligence": 17334,
-    "code-refactoring": 13717,
-    "code-review-lens": 16261,
-    "command-routing": 6040,
-    "command-writing": 14711,
-    "comp-banding": 11846,
-    "competitive-moat-analysis": 10450,
-    "competitive-positioning": 6315,
-    "complexity-first-planning": 6243,
-    "composer-packages": 5874,
-    "condense-memory": 11203,
-    "content-funnel-design": 9057,
-    "context-authoring": 9194,
-    "context-document": 9921,
-    "contract-review": 8685,
-    "contracts-cognition": 10413,
-    "conventional-commits-writing": 20372,
-    "copilot-agents-optimization": 11335,
-    "copilot-config": 8382,
-    "corpus-grounding": 11336,
-    "customer-research": 6731,
-    "dashboard-design": 5850,
-    "data-flow-mapper": 7207,
-    "data-handling-judgment": 11444,
-    "database": 6906,
-    "dcf-modeling": 5032,
-    "deal-qualification-meddic": 8505,
-    "decision-record": 14289,
-    "decision-review": 19391,
-    "deep-reading-analyst": 13546,
-    "defense-in-depth": 6205,
-    "dependency-upgrade": 17216,
-    "description-assist": 7718,
-    "design-intelligence": 11085,
-    "design-review": 20894,
-    "design-system-capture": 14605,
-    "design-tokens": 9024,
-    "design-variations": 6907,
-    "devcontainer": 4553,
-    "developer-like-execution": 11443,
-    "discovery-interview": 6428,
-    "doc-coauthoring": 8778,
-    "docker": 11085,
-    "docx-authoring": 5464,
-    "dpa-review": 9595,
-    "editorial-calendar": 8391,
-    "eloquent": 3439,
-    "emit-tickets": 6947,
-    "error-handling-patterns": 9067,
-    "estimate-ticket": 7960,
-    "evaluate-llm-feature": 8199,
-    "existing-ui-audit": 10076,
-    "existing-ui-audit/references/steps/00-inspect-stack-and-input.md": 307,
-    "existing-ui-audit/references/steps/01-enumerate-components.md": 1442,
-    "existing-ui-audit/references/steps/01b-detect-component-taxonomy.md": 907,
-    "existing-ui-audit/references/steps/02-identify-design-system.md": 780,
-    "existing-ui-audit/references/steps/03-detect-design-tokens.md": 2604,
-    "existing-ui-audit/references/steps/04-detect-shadcn-inventory.md": 904,
-    "existing-ui-audit/references/steps/04b-live-storybook-read.md": 1947,
-    "existing-ui-audit/references/steps/05-list-reusable-patterns.md": 718,
-    "existing-ui-audit/references/steps/06-match-candidates.md": 2847,
-    "existing-ui-audit/references/steps/07-greenfield-branch.md": 1923,
-    "existing-ui-audit/references/steps/08-a11y-baseline.md": 1565,
-    "existing-ui-audit/references/steps/09-validate-and-write.md": 430,
-    "expansion-playbook": 8838,
-    "experiment-loop": 7297,
-    "fe-design": 17366,
-    "feature-planning": 14923,
-    "file-editor": 7026,
-    "finishing-a-development-branch": 9404,
-    "flux": 6022,
-    "forecast-accuracy": 8187,
-    "forecasting": 8626,
-    "forensics-report": 5052,
-    "form-handler": 6533,
-    "founder-idea-interview": 6787,
-    "frontend-render-security": 10106,
-    "fundraising-narrative": 9878,
-    "funnel-analysis": 7203,
-    "gated-reach": 9723,
-    "git-workflow": 20704,
-    "github-ci": 4858,
-    "grafana": 6477,
-    "gtm-launch": 9094,
-    "guideline-writing": 7015,
-    "hiring-loop-design": 12107,
-    "history-design": 4758,
-    "html-deck": 8141,
-    "humanizer": 15909,
-    "iconography": 8205,
-    "image-analyser": 6133,
-    "image-creator": 5784,
-    "image-editing": 5884,
-    "image-generation": 5358,
-    "image-provider-routing": 6569,
-    "incident-commander": 5532,
-    "jira-integration": 5375,
-    "jobs-events": 2756,
-    "js-library-packaging": 9295,
-    "judge-artifact-completeness": 7199,
-    "judge-bug-hunter": 8565,
-    "judge-code-quality": 7986,
-    "judge-injection-defense": 6079,
-    "judge-security-auditor": 8652,
-    "judge-spec-compliance": 7186,
-    "judge-synthesis": 12957,
-    "judge-test-coverage": 7161,
-    "laravel": 11631,
-    "laravel-api-endpoint": 7252,
-    "laravel-dto": 4352,
-    "laravel-horizon": 5036,
-    "laravel-mail": 8604,
-    "laravel-middleware": 5215,
-    "laravel-migration": 8594,
-    "laravel-notifications": 5083,
-    "laravel-pennant": 4985,
-    "laravel-pulse": 4774,
-    "laravel-reverb": 6381,
-    "laravel-scheduling": 5889,
-    "laravel-validation": 3325,
-    "laravel-websocket": 2519,
-    "launch-readiness": 9763,
-    "learning-to-rule-or-skill": 16477,
-    "learning-tutor": 10027,
-    "legal-intake-triage": 7217,
-    "legal-practice-profile": 12921,
-    "license-compliance-audit": 7580,
-    "license-compliance-borrow-check": 7450,
-    "license-compliance-credits": 4270,
-    "lint-skills": 3705,
-    "livewire": 6125,
-    "livewire-architect": 6631,
-    "llm-provider-knowledge": 8465,
-    "logging-monitoring": 12016,
-    "logo-generation": 9567,
-    "market-entry-analysis": 10016,
-    "markitdown": 14443,
-    "mcp-tool-use": 9204,
-    "mcp-builder": 8682,
-    "md-language-check": 5084,
-    "memory-consolidation": 21606,
-    "merge-conflicts": 10878,
-    "messaging-architecture": 8793,
-    "migration-architect": 4575,
-    "mobile-e2e-strategy": 9361,
-    "module-detect-on-the-fly": 8738,
-    "module-management": 8219,
-    "monorepo-workspace": 8228,
-    "motion-choreographer": 8786,
-    "multi-tenancy": 6123,
-    "nda-triage": 6984,
-    "nextjs-patterns": 10113,
-    "okr-tree-modeling": 5111,
-    "onboarding-design": 7983,
-    "onboarding-program": 11559,
-    "one-on-one-cadence": 11349,
-    "openapi": 5286,
-    "operational-readiness": 7853,
-    "org-design": 11076,
-    "overbuild-review-lens": 8269,
-    "override-management": 7232,
-    "pdf-tools": 4468,
-    "perf-feedback-craft": 12516,
-    "performance": 3067,
-    "performance-analysis": 5271,
-    "persona-improvement": 4018,
-    "persona-writing": 5503,
-    "pest-testing": 14368,
-    "php-coder": 4970,
-    "php-debugging": 8164,
-    "php-service": 3115,
-    "pipeline-strategy": 8309,
-    "pixar-storyteller": 5247,
-    "playbook-authoring": 10751,
-    "playwright-architect": 5774,
-    "playwright-testing": 11333,
-    "po-discovery": 5282,
-    "positioning-strategy": 8375,
-    "prediction-pool-optimizer": 16726,
-    "premortem": 7456,
-    "privacy-review": 11249,
-    "project-analysis-core": 5273,
-    "project-analysis-hypothesis-driven": 3824,
-    "project-analysis-laravel": 4121,
-    "project-analysis-nextjs": 3760,
-    "project-analysis-node-express": 3934,
-    "project-analysis-react": 3632,
-    "project-analysis-symfony": 3854,
-    "project-analysis-zend-laminas": 3669,
-    "project-analyzer": 16856,
-    "project-analyzer/references/steps/01-project-overview.md": 304,
-    "project-analyzer/references/steps/02-architecture.md": 299,
-    "project-analyzer/references/steps/03-data-layer.md": 293,
-    "project-analyzer/references/steps/04-business-domains.md": 338,
-    "project-analyzer/references/steps/05-api-surface.md": 310,
-    "project-analyzer/references/steps/06-service-map.md": 258,
-    "project-analyzer/references/steps/07-module-inventory.md": 263,
-    "project-analyzer/references/steps/08-infrastructure-and-testing.md": 251,
-    "project-analyzer/references/steps/09-agent-docs-audit.md": 246,
-    "project-analyzer/references/steps/10-gap-analysis.md": 289,
-    "project-docs": 6263,
-    "prompt-engineering-image": 6147,
-    "prompt-engineering-patterns": 7041,
-    "prompt-optimizer": 12449,
-    "prompt-validator": 7542,
-    "quality-tools": 7516,
-    "react-native-setup": 10016,
-    "react-shadcn-ui": 20594,
-    "readme-reviewer": 9033,
-    "readme-writing": 10939,
-    "readme-writing-package": 13377,
-    "reasoning-orchestrator": 7409,
-    "receiving-code-review": 8492,
-    "recursive-verification": 9376,
-    "refine-prompt": 13050,
-    "refine-ticket": 17500,
-    "release-comms": 8198,
-    "repomix-packer": 5427,
-    "requesting-code-review": 7845,
-    "retention-loops": 8227,
-    "review-routing": 7896,
-    "rice-prioritization": 5214,
-    "risk-officer": 5321,
-    "roadmap-management": 8374,
-    "roadmap-writing": 21385,
-    "root-cause-frameworks": 5754,
-    "rtk-output-filtering": 8665,
-    "rule-refactor": 5370,
-    "rule-writing": 16621,
-    "runway-cognition": 10812,
-    "scenario-modeling": 10059,
-    "scene-expander": 6559,
-    "schema-review": 4232,
-    "screenshot-hygiene": 9081,
-    "script-writing": 9324,
-    "secrets-management": 12029,
-    "security": 6722,
-    "security-audit": 14896,
-    "security-maturity-assessment": 5819,
-    "sentry-integration": 5536,
-    "sequential-thinking": 6376,
-    "server-hardening": 6711,
-    "skill-improvement-pipeline": 10599,
-    "skill-management": 5347,
-    "skill-reviewer": 9286,
-    "skill-writing": 13374,
-    "song-to-script": 14514,
-    "source-discovery": 10395,
-    "spreadsheet-authoring": 5556,
-    "sql-writing": 3715,
-    "stakeholder-tradeoff": 9443,
-    "standards-from-config": 7915,
-    "storybook-workshop": 13536,
-    "subagent-orchestration": 19978,
-    "supply-chain-intake": 11688,
-    "svg-authoring": 17970,
-    "symfony-workflow": 10329,
-    "systematic-debugging": 17121,
-    "tailwind-engineer": 13083,
-    "tech-debt-tracker": 5542,
-    "technical-specification": 7733,
-    "terraform": 8893,
-    "terragrunt": 5842,
-    "test-case-discovery": 12862,
-    "test-driven-development": 16546,
-    "test-performance": 6376,
-    "testing-anti-patterns": 19723,
-    "threat-modeling": 12775,
-    "throughput-vs-morale-tradeoff": 13242,
-    "token-optimizer": 6275,
-    "traefik": 9138,
-    "type-design": 9883,
-    "typography-system": 11967,
-    "ui-apply-generic": 8674,
-    "ui-component-architect": 13328,
-    "unit-economics-modeling": 9297,
-    "universal-project-analysis": 5547,
-    "upstream-contribute": 12143,
-    "using-git-worktrees": 11846,
-    "validate-feature-fit": 4252,
-    "verify-completion-evidence": 10451,
-    "verify-repair-loop": 15727,
-    "video-director": 5818,
-    "vision-articulation": 10198,
-    "voc-extract": 6506,
-    "voice-and-tone-design": 12228,
-    "wireframe": 6196,
-    "workspace-link": 5931,
-    "worktree-lifecycle": 9502
-  },
-  "raised": [
-    {
-      "skill": "agents-md-thin-root",
-      "old": 13263,
-      "new": 13319,
-      "reason": "The four Wrong-vs-right pointer examples moved from blockquotes into fenced blocks: as live links they resolved to nothing in the delivered skill, which the widened link gate now fails. road-to-steps-the-skill-cannot-skip AC-1."
-    },
-    {
-      "skill": "ai-code-blindspots",
-      "old": 12686,
-      "new": 13262,
-      "reason": "Two rg patterns the checklist was missing: a fast hash over a password (any SHA-2, not only md5/sha1) and a raw == on a token, OTP or MAC. road-to-account-lifecycle-threat-rows 1.4."
-    },
-    {
-      "skill": "authz-review",
-      "old": 16983,
-      "new": 17114,
-      "reason": "The ASVS pin moved 4.0.3 V4 -> 5.0.0 V8 and gained one sentence pointing at threat-modeling's References instead of repeating the old numbering. 1.2."
-    },
-    {
-      "skill": "data-flow-mapper",
-      "old": 6980,
-      "new": 7207,
-      "reason": "Same ASVS repin: 4.0.3 V5 -> 5.0.0 V1 + V2, with the chapter split named once rather than in both files. 1.2."
-    },
-    {
-      "skill": "form-handler",
-      "old": 5851,
-      "new": 6533,
-      "reason": "The availability check is qualified rather than called the canonical exception: an on-change check on an account identifier is an enumeration oracle, and the three conditions that make it acceptable are stated. 1.1."
-    },
-    {
-      "skill": "judge-security-auditor",
-      "old": 7714,
-      "new": 8246,
-      "reason": "The information-disclosure row now covers any observable difference between a known and an unknown account, and the cryptography row names a fast hash over a password and a raw compare on a secret. 1.4."
-    },
-    {
-      "skill": "threat-modeling",
-      "old": 11412,
-      "new": 11943,
-      "reason": "ASVS V6 Authentication and NIST SP 800-63B added as the authority the account-flow rows defer to, named as chapters and never as values. 1.2."
-    },
-    {
-      "skill": "skill-improvement-pipeline",
-      "old": 10469,
-      "new": 10599,
-      "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
-    },
-    {
-      "skill": "js-library-packaging",
-      "old": 9191,
-      "new": 9295,
-      "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
-    },
-    {
-      "skill": "react-shadcn-ui",
-      "old": 20098,
-      "new": 20203,
-      "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
-    },
-    {
-      "skill": "storybook-workshop",
-      "old": 13432,
-      "new": 13536,
-      "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
-    },
-    {
-      "skill": "tailwind-engineer",
-      "old": 12922,
-      "new": 13092,
-      "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
-    },
-    {
-      "skill": "ui-apply-generic",
-      "old": 8274,
-      "new": 8283,
-      "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
-    },
-    {
-      "skill": "brand",
-      "old": 5558,
-      "new": 5866,
-      "reason": "A Do-NOT row: the corpus Trademark Risk column rates a naming PATTERN, not the candidate name, so a check that was RUN (registry, date, result) or the words \"not checked\" must leave with the candidate. road-to-sentences-the-tree-can-back 3.3."
-    },
-    {
-      "skill": "database",
-      "old": 5814,
-      "new": 5941,
-      "reason": "The corpus label stopped naming engine versions and points at data/manifest.json instead; it had fallen two majors behind the manifest it ships with. road-to-sentences-the-tree-can-back 3.2."
-    },
-    {
-      "skill": "market-entry-analysis",
-      "old": 9670,
-      "new": 10016,
-      "reason": "A Do-NOT row binding market size, growth, deadline, price and competitor claims to the fresh-lookup sourcing rule /research:deep already states; the skill carried no sourcing obligation at all. road-to-sentences-the-tree-can-back 3.3."
-    },
-    {
-      "skill": "positioning-strategy",
-      "old": 8041,
-      "new": 8376,
-      "reason": "A Sourcing section binding the four anchors to the same rule; the skill carried one incidental mention and no obligation. road-to-sentences-the-tree-can-back 3.3."
-    },
-    {
-      "skill": "react-native-setup",
-      "old": 9682,
-      "new": 10016,
-      "reason": "The Node floor points at the project .nvmrc / engines.node instead of naming a major whose end of life had already passed under a heading calling itself a 2025 baseline, and the untouched Xcode / Android floors are marked as still dating from it. road-to-sentences-the-tree-can-back 3.2."
-    },
-    {
-      "skill": "upstream-contribute",
-      "old": 11501,
-      "new": 12171,
-      "reason": "two independent R2 rounds found this skill promising guarantees the tree does not keep, and the raise buys exactly those corrections. Round 1: a --dry-run documented as printing six things where the CLI prints three, with the agent told to reproduce all six verbatim - a fabricated pre-send check at the one Hard-Floor checkpoint before bytes leave the machine. Round 2: the Iron Law guaranteed that branch name, commit identity, commit message and diff are SCANNED by the release, which scans the record text only and makes no commit at all; the quality gates were numbered after the send they must precede, with the `Do NOT bypass quality gates` line deleted in the same change; and `allowed_tools: [\"Bash(gh:*)\"]` granted exactly the second route the skill forbids. The additions were squeezed twice - 433 bytes over to 114 in round 1, 776 to 556 in round 2 - before each raise. What remains is obligation rather than wording: an unscanned byte a reader believes was scanned is the state this text exists to prevent, and shrinking further deletes the correction instead of tightening it"
-    },
-    {
-      "skill": "test-case-discovery",
-      "old": 12325,
-      "new": 12862,
-      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
-    },
-    {
-      "skill": "security",
-      "old": 5168,
-      "new": 6728,
-      "reason": "An account-flow block under Conventions: the lifecycle traced as one path, the public auth response as an observable contract, constant-time comparison with its length precondition, no fast hash and no invented primitive, fresh re-authentication on an identity change, and a pointer to the corpus rows rather than a restatement of them. No value in it; the numbers stay with the authority the block below already names. 3.2, plus the triggers block from 3.1."
-    },
-    {
-      "skill": "svg-authoring",
-      "old": 17525,
-      "new": 17818,
-      "reason": "The counter rule in § Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
-    },
-    {
-      "skill": "deep-reading-analyst",
-      "old": 13539,
-      "new": 13546,
-      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
-    },
-    {
-      "skill": "project-analysis-core",
-      "old": 5266,
-      "new": 5273,
-      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
-    },
-    {
-      "skill": "project-analysis-hypothesis-driven",
-      "old": 3817,
-      "new": 3824,
-      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
-    },
-    {
-      "skill": "project-analyzer",
-      "old": 18199,
-      "new": 18206,
-      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
-    },
-    {
-      "skill": "repomix-packer",
-      "old": 5410,
-      "new": 5417,
-      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
-    },
-    {
-      "skill": "universal-project-analysis",
-      "old": 5540,
-      "new": 5547,
-      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
-    },
-    {
-      "skill": "skill-writing",
-      "old": 12413,
-      "new": 13374,
-      "reason": "The split canon contradicted itself (\"strongly consider split above 1500 words\" against \"a skill at 1,500 words is ordinary\"); it is now one statement, a split head keeps all five required sections, and one new section defines reference, requires_skills, procedure and chain. road-to-steps-the-skill-cannot-skip 2.1-2.3."
-    },
-    {
-      "skill": "skill-reviewer",
-      "old": 9177,
-      "new": 9286,
-      "reason": "Killer 5 repeated the removed word-count split trigger; it now points at the single split statement in skill-writing. road-to-steps-the-skill-cannot-skip 2.1."
-    },
-    {
-      "skill": "brand-asset-generation",
-      "old": 5813,
-      "new": 6307,
-      "reason": "Step 2 stopped loading a token file by path and now takes colour, type and voice from the resolver's reported sources, labelling corpus fallback. road-to-a-brand-the-tree-can-check 6.2."
-    },
-    {
-      "skill": "brand-audit",
-      "old": 6760,
-      "new": 7123,
-      "reason": "Step 1 reads the brand through `brand:status --json` and the `brand-voice` slot, and states that no valid slot makes a voice observation `undefined`, never `drift`. road-to-a-brand-the-tree-can-check 6.1."
-    },
-    {
-      "skill": "brand-strategy",
-      "old": 4554,
-      "new": 5072,
-      "reason": "The voice section defers to `voice-and-tone-design` and the `brand-voice` slot instead of authoring a competing 3-5-trait list, which was the incompatible shape claim D4 records. road-to-a-brand-the-tree-can-check 4.3."
-    },
-    {
-      "skill": "canvas-design",
-      "old": 7395,
-      "new": 7971,
-      "reason": "A step 0 that reads the brand before the first colour or typeface choice; the skill carried no brand reference at all, which is defect D10. road-to-a-brand-the-tree-can-check 6.2."
-    },
-    {
-      "skill": "content-funnel-design",
-      "old": 8627,
-      "new": 9057,
-      "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
-    },
-    {
-      "skill": "gtm-launch",
-      "old": 8664,
-      "new": 9094,
-      "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
-    },
-    {
-      "skill": "html-deck",
-      "old": 7747,
-      "new": 8141,
-      "reason": "The slide step names the resolver beside the precedence rule it already cited, so the deck's tokens come from a reported source rather than a located file. road-to-a-brand-the-tree-can-check 6.2."
-    },
-    {
-      "skill": "humanizer",
-      "old": 14774,
-      "new": 15187,
-      "reason": "\"Registered brand voice\" in the fixed precedence now names the one file it means, and says the defaults apply when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 4.3 and 6.1."
-    },
-    {
-      "skill": "logo-generation",
-      "old": 5313,
-      "new": 5650,
-      "reason": "Step 3 asks the resolver for palette and type instead of testing for a token layer, and labels brief-derived values corpus-sourced. road-to-a-brand-the-tree-can-check 6.2."
-    },
-    {
-      "skill": "messaging-architecture",
-      "old": 8363,
-      "new": 8793,
-      "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
-    },
-    {
-      "skill": "release-comms",
-      "old": 7789,
-      "new": 8198,
-      "reason": "Gains the spine read it had no voice reference for at all (D4) and states the absent case. road-to-a-brand-the-tree-can-check 6.1."
-    },
-    {
-      "skill": "voice-and-tone-design",
-      "old": 8182,
-      "new": 12228,
-      "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise. The scope declaration's verification_reason is part of this figure: three gates refuse every invocation form a verification_command could take here, so the obligation is stated instead of pinned."
-    },
-    {
-      "skill": "brand-identity",
-      "old": 5849,
-      "new": 5997,
-      "reason": "One See-also line handing a custom type story to the new type-design skill. road-to-type-with-a-witness 4.14."
-    },
-    {
-      "skill": "logo-generation",
-      "old": 5650,
-      "new": 5790,
-      "reason": "One See-also line routing 'make this a font' to type-design, named rather than linked because it ships in another pack. road-to-type-with-a-witness 4.14."
-    },
-    {
-      "skill": "svg-authoring",
-      "old": 17818,
-      "new": 17970,
-      "reason": "One See-also line routing 'the rest of the alphabet' to type-design, which reuses this skill's trace and counter rule. road-to-type-with-a-witness 4.14."
-    },
-    {
-      "skill": "testing-anti-patterns",
-      "old": 18233,
-      "new": 19723,
-      "reason": "Iron Law 8 (test through the entry point), the reviewed text of self-modification step 6.2, landed by the owner's forge act (OQ-7); shrinking it would change what was reviewed."
-    },
-    {
-      "skill": "typography-system",
-      "old": 11344,
-      "new": 11967,
-      "reason": "A Custom source section beside the CSV pairing path: spec path, license and fallback overrides for a family built with type-design, and the T7 stated reason. road-to-type-with-a-witness 4.14."
-    },
-    {
-      "skill": "design-system-capture",
-      "old": 14609,
-      "new": 14880,
-      "reason": "The extraction floor points React stacks at the host's own sync via /design-system:sync plan, and the Lock line names design_lock.ts as its carrier. road-to-a-canvas-the-code-owns 5.3 and 8.2."
-    },
-    {
-      "skill": "humanizer",
-      "old": 15187,
-      "new": 15706,
-      "reason": "Step 5 runs the lexicon and claim pass on the finished draft over stdin and says what an avoid hit, a taboo hit, an unbacked claim and exit 2 each mean. road-to-a-brand-the-tree-can-check 5.4."
-    },
-    {
-      "skill": "playwright-testing",
-      "old": 11165,
-      "new": 11333,
-      "reason": "One taught line under the visual-regression section: baseline updates are shown as a diff and land in a commit of their own, on the pinned Docker renderer. road-to-a-canvas-the-code-owns 7.3."
-    },
-    {
-      "skill": "competitive-positioning",
-      "old": 6300,
-      "new": 6315,
-      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
-    },
-    {
-      "skill": "learning-to-rule-or-skill",
-      "old": 16321,
-      "new": 16325,
-      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
-    },
-    {
-      "skill": "markitdown",
-      "old": 14433,
-      "new": 14443,
-      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
-    },
-    {
-      "skill": "repomix-packer",
-      "old": 5417,
-      "new": 5427,
-      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
-    },
-    {
-      "skill": "composer-packages",
-      "old": 4858,
-      "new": 5874,
-      "reason": "Gains the audit / config.audit / abandoned-package section road-to-advisories-heard-the-same-day step 1.4 requires; the skill had zero lines on advisories (finding A6)."
-    },
-    {
-      "skill": "dependency-upgrade",
-      "old": 13371,
-      "new": 17218,
-      "reason": "Gains the security-fix procedure (route, smallest fix, proof by the reporting source, PR evidence, release draft, follow to deployed) of road-to-security-fixes-carried-to-the-merge and the release-age / agent-config-path step of the post-update audit; the procedure is the skill-side half the council kept in the session (Q5)."
-    },
-    {
-      "skill": "finishing-a-development-branch",
-      "old": 9320,
-      "new": 9409,
-      "reason": "The \"PR opened\" end state now names its scheduled removal and the security end state (road-to-worktrees-that-leave-after-the-merge 3.5, road-to-security-fixes-carried-to-the-merge 3.4), trimmed to two lines."
-    },
-    {
-      "skill": "using-git-worktrees",
-      "old": 11762,
-      "new": 11846,
-      "reason": "Creation gains the one `agent-config worktree:cleanup register` line that lets the merge-time removal reach a tree outside the standard roots (ADR-295)."
-    },
-    {
-      "skill": "project-analyzer",
-      "old": 16777,
-      "new": 16856,
-      "reason": "Phases 3-6 gain a not-applicable path (write not-applicable.md, or a one-line service-map.md, naming why) so a library or CLI can meet the exists exit honestly. It sits in the head's Procedure section because the step files must stay verbatim runs of the pre-split body (procedure_conservation) and every conserved head line is fixed; the cursor sentence was tightened to pay for most of it."
-    },
-    {
-      "skill": "llm-provider-knowledge",
-      "old": 7434,
-      "new": 8465,
-      "reason": "A § Free tiers table (where a free tier's quota, data-use and region terms are read live, plus the never-send-project-data-to-a-training-tier line) so the skill answers 'set up a free LLM API' without copying any model id or limit. road-to-free-hands-a-paid-head-checks 7.1."
-    },
-    {
-      "skill": "code-intelligence",
-      "old": 16492,
-      "new": 16998,
-      "reason": "road-to-a-map-that-draws-itself (ADR-297): step 0 sends an orientation question to agents/map/MAP.md before any graph query, and the MCP table gains rows for graph_map_status and graph_area. Both are the skill's routing surface for the new map; trimming them would hide the tools the roadmap added."
-    },
-    {
-      "skill": "code-intelligence",
-      "old": 16998,
-      "new": 17182,
-      "reason": "road-to-a-graph-that-follows-you (ADR-299): the MCP table gains a row for graph_estate and one line naming the new project parameter on every other graph tool. The ceiling sat 3 bytes above the body, so documenting the tool at all needs a raise; the wording was compressed first, from 262 to 184 bytes."
-    },
-    {
-      "skill": "authz-review",
-      "old": 17109,
-      "new": 19073,
-      "reason": "road-to-a-claim-that-is-not-a-key 4.1: tool calls become entrypoints (subject source in stage 1, a fourth negative test for tools, a tool line in the output) and one section on agent tool calls and path independence for identity writes. Compressed once before the raise, from 20000 bytes."
-    },
-    {
-      "skill": "mcp-builder",
-      "old": 6833,
-      "new": 8628,
-      "reason": "road-to-a-claim-that-is-not-a-key 4.2: authority before ergonomics - names over IDs only inside the caller's scope, per-caller credentials, the required per-tool authority block table and two authority questions in the evaluation set."
-    },
-    {
-      "skill": "evaluate-llm-feature",
-      "old": 6951,
-      "new": 8199,
-      "reason": "road-to-a-claim-that-is-not-a-key 4.3: an identity and authority claim probe class (ownership claim, urgency, staff role, prior verification, another agent's approval), an action-triggered column and the do-not-ship verdict rule."
-    },
-    {
-      "skill": "corpus-grounding",
-      "old": 10655,
-      "new": 11029,
-      "reason": "road-to-a-claim-that-is-not-a-key 2.4: documents the opt-in reasoning.composite_min_score manifest key, so a description matching a second surface class names it in the evidence gap instead of printing none."
-    },
-    {
-      "skill": "security-audit",
-      "old": 9042,
-      "new": 12620,
-      "reason": "road-to-a-finding-that-fails-a-test 1.1–2.3: hunters per surface class, a fresh verifier per candidate, the three states, and the red proof test that confirms a finding — the chain the audit named but never produced."
-    },
-    {
-      "skill": "launch-readiness",
-      "old": 9501,
-      "new": 9661,
-      "reason": "road-to-a-finding-that-fails-a-test 3.3: one checklist line pointing at the security ledger, so a launch reads \"not checked\" rather than silence."
-    },
-    {
-      "skill": "subagent-orchestration",
-      "old": 19741,
-      "new": 19978,
-      "reason": "road-to-a-finding-that-fails-a-test 4.2: the dispatch-role marker that lets the independence hook read a field instead of prose."
-    },
-    {
-      "skill": "security-audit",
-      "old": 12620,
-      "new": 14648,
-      "reason": "road-to-security-answer-that-names-what-it-checked 2.2-2.3/4.4: the casual-question scope block, the needs_validation exit replacing 'drop it', non-HTTP entry points, the upload attack classes, severity anchored to demonstrated impact; the dependency step shrank to a /audit deps pointer."
-    },
-    {
-      "skill": "ai-code-blindspots",
-      "old": 13262,
-      "new": 14143,
-      "reason": "road-to-security-answer-that-names-what-it-checked 4.4: the file-upload surface row and three upload backstop greps (client filename into storage, mimes without extensions, executable sinks)."
-    },
-    {
-      "skill": "corpus-grounding",
-      "old": 10655,
-      "new": 11336,
-      "reason": "road-to-security-answer-that-names-what-it-checked 4.2: documents the opt-in category_floor reasoning key the threat corpus now sets."
-    },
-    {
-      "skill": "supply-chain-intake",
-      "old": 10137,
-      "new": 10527,
-      "reason": "road-to-security-answer-that-names-what-it-checked 4.4: a Dockerfile/system-package file processor is a dependency with an attack surface, checked as a class."
-    },
-    {
-      "skill": "threat-modeling",
-      "old": 11938,
-      "new": 12522,
-      "reason": "road-to-security-answer-that-names-what-it-checked 4.3: cites ASVS 5.0 V5 File Handling and the OWASP upload cheat sheet, and records why the chapter was missed."
-    },
-    {
-      "skill": "blade-ui",
-      "old": 6836,
-      "new": 7227,
-      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
-    },
-    {
-      "skill": "flux",
-      "old": 5632,
-      "new": 6022,
-      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
-    },
-    {
-      "skill": "livewire",
-      "old": 5734,
-      "new": 6125,
-      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
-    },
-    {
-      "skill": "react-shadcn-ui",
-      "old": 20203,
-      "new": 20594,
-      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
-    },
-    {
-      "skill": "ui-apply-generic",
-      "old": 8283,
-      "new": 8674,
-      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
-    },
-    {
-      "skill": "fe-design",
-      "old": 16747,
-      "new": 17366,
-      "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control. Plus the momentum-carried motion class and the gesture-mechanics reference pointer."
-    },
-    {
-      "skill": "design-review",
-      "old": 19912,
-      "new": 20894,
-      "reason": "road-to-a-control-that-matches-its-neighbours 3.x/5.x: the open-state interact line, phase-split prescribe wording, interruptibility hint and the persuade check."
-    },
-    {
-      "skill": "design-tokens",
-      "old": 8812,
-      "new": 9024,
-      "reason": "road-to-a-control-that-matches-its-neighbours: letter-spacing per type step in the starter, the tracking ladder."
-    },
-    {
-      "skill": "humanizer",
-      "old": 15706,
-      "new": 15909,
-      "reason": "road-to-tells-a-near-miss-can-refute 5.3: the factual-integrity step runs the deterministic fact diff instead of a self-report."
-    },
-    {
-      "skill": "logo-generation",
-      "old": 5790,
-      "new": 7831,
-      "reason": "road-to-tells-a-near-miss-can-refute 7.1-7.5: divergence, critique mode, the legibility witness, the shelf test, the stop before the kit and the kit command."
-    },
-    {
-      "skill": "code-intelligence",
-      "old": 17182,
-      "new": 17334,
-      "reason": "road-to-a-map-across-systems-branches-and-time 7.1: one pointer to the systems, provenance, domain and branch verbs, whose detail lives in a reference."
-    },
-    {
-      "skill": "database",
-      "old": 5940,
-      "new": 6906,
-      "reason": "road-to-database-relational-modeling 2.1/2.6: per-environment hosting detection with the managed-service guardrail, and the ownership paragraph routing schema design to references/relational-modeling.md and drops to references/consumer-census.md; the procedures themselves live in those references."
-    },
-    {
-      "skill": "migration-architect",
-      "old": 4207,
-      "new": 4575,
-      "reason": "road-to-database-relational-modeling 5.1: the consumer census becomes a required step that routes to blast-radius-analyzer and database/references/consumer-census.md, plus the route-away line for target-schema design."
-    },
-    {
-      "skill": "multi-tenancy",
-      "old": 5787,
-      "new": 6123,
-      "reason": "road-to-database-relational-modeling 4.8: names both tenancy modes and the composite-key rule and routes shared-schema key integrity to references/shared-schema-integrity.md; the single-database exclusion it replaces contradicted shared-schema tenancy."
-    },
-    {
-      "skill": "schema-review",
-      "old": 3897,
-      "new": 4232,
-      "reason": "road-to-database-relational-modeling 5.1/2.3: the consumer-census step for drops and renames, and the route-away line for schema design."
-    },
-    {
-      "skill": "laravel-migration",
-      "old": 8383,
-      "new": 8594,
-      "reason": "road-to-database-relational-modeling 4.6: one cross-link from the soft-delete paragraph to the engine-specific unique-under-soft-delete forms in php/eloquent.md."
-    },
-    {
-      "skill": "prompt-optimizer",
-      "old": 12077,
-      "new": 12449,
-      "reason": "road-to-a-prompt-that-deepens-not-widens 1.3: a bare role becomes the fourth de-inflation pattern and step 5 names methods and instruments instead of assigning a role."
-    },
-    {
-      "skill": "verify-completion-evidence",
-      "old": 9612,
-      "new": 10451,
-      "reason": "road-to-a-prompt-that-deepens-not-widens 1.1-1.2: the per-task evidence table moves here as the single authority, adding non-code rows and an oracle-class column; verification-mechanics, loaded by a kernel rule, keeps a pointer so the always-rule closure shrinks."
-    },
-    {
-      "skill": "refine-prompt",
-      "old": 13022,
-      "new": 13050,
-      "reason": "Owner answer OQ-26 (2026-10-28): the frontmatter lists the consumer workspaces engineering and product, since the skill already projects to consumers and the maintainer-only claim was false. Frontmatter only; no body line changed."
-    },
-    {
-      "skill": "learning-to-rule-or-skill",
-      "old": 16325,
-      "new": 16477,
-      "reason": "A config / check rung above Rule: a consumer convention that keeps not arriving is proposed as a project config diff, the strongest carrier, before any prose rule. road-to-a-correction-that-is-heard 2.3."
-    },
-    {
-      "skill": "standards-from-config",
-      "old": 7565,
-      "new": 7915,
-      "reason": "Instruction-file prose named as a conflict source next to configs, and a repeated correction that contradicts the config is asked about, never capitulated to. road-to-a-correction-that-is-heard 2.3."
-    },
-    {
-      "skill": "dcf-modeling",
-      "old": 4903,
-      "new": 5032,
-      "reason": "Hand-off line to spreadsheet-authoring for workbook output; dcf-modeling's markdown tables broke that skill's live-formula rule with no pointer. archive/road-to-numbers-a-skill-can-stand-behind 1.9."
-    },
-    {
-      "skill": "laravel-dto",
-      "old": 4066,
-      "new": 4352,
-      "reason": "The example now uses constructor promotion and a gotcha states the rule: the library reads #[Map] only from constructor parameters, so the old property example's mapping was silently ignored. archive/road-to-numbers-a-skill-can-stand-behind 2.1-2.2."
-    },
-    {
-      "skill": "prediction-pool-optimizer",
-      "old": 16448,
-      "new": 16726,
-      "reason": "pool_winsim --holdout-runs: submit only flips a paired sign test confirms on independent runs (unchecked greedy sets regressed on 3 of 10 seeds); plus the seed/runs/method rule. archive/road-to-numbers-a-skill-can-stand-behind 3.1-3.3."
-    },
-    {
-      "skill": "runway-cognition",
-      "old": 10795,
-      "new": 10812,
-      "reason": "The runway example's burn is labelled monthly and its emitted gap is the stated 4.5-7.5 month range instead of a contradicting -5mo. archive/road-to-numbers-a-skill-can-stand-behind 1.4."
-    },
-    {
-      "skill": "security-audit",
-      "old": 14550,
-      "new": 14838,
-      "reason": "road-to-a-clean-that-says-what-it-checked 1.5: a rejected candidate names its closing control, a confirmed one its counterevidence and severity-change condition, and confidence High needs a red test — ledger schema v2."
-    },
-    {
-      "skill": "judge-security-auditor",
-      "old": 8246,
-      "new": 8652,
-      "reason": "road-to-a-clean-that-says-what-it-checked 2.1/3.2: a Coverage block on every verdict (an apply with no row is 'not checked'), and the judge reads and amends an existing threat model instead of re-deriving it."
-    },
-    {
-      "skill": "judge-synthesis",
-      "old": 12885,
-      "new": 12957,
-      "reason": "road-to-a-clean-that-says-what-it-checked 2.2: the security apply line renders its assessed rows and 'clean, with gaps' instead of a bare apply (0)."
-    },
-    {
-      "skill": "security-audit",
-      "old": 14838,
-      "new": 14896,
-      "reason": "road-to-a-clean-that-says-what-it-checked 2.3: on a diff, the callers of a touched guard join the hunters' scope."
-    },
-    {
-      "skill": "authz-review",
-      "old": 19073,
-      "new": 19124,
-      "reason": "road-to-a-clean-that-says-what-it-checked 3.3: dropped a citation of a rule that does not exist in this tree and stated that a negative test against the project's own code is not an offensive step."
-    },
-    {
-      "skill": "threat-modeling",
-      "old": 12522,
-      "new": 12564,
-      "reason": "road-to-a-clean-that-says-what-it-checked 3.3: same correction as authz-review — no dangling rule citation, the negative-test clarification instead."
-    },
-    {
-      "skill": "feature-planning",
-      "old": 14676,
-      "new": 14923,
-      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
-    },
-    {
-      "skill": "launch-readiness",
-      "old": 9661,
-      "new": 9763,
-      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
-    },
-    {
-      "skill": "supply-chain-intake",
-      "old": 10527,
-      "new": 10721,
-      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
-    },
-    {
-      "skill": "threat-modeling",
-      "old": 12564,
-      "new": 12775,
-      "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
-    },
-    {
-      "skill": "code-film",
-      "old": 5507,
-      "new": 5733,
-      "reason": "road-to-a-timeline-the-witness-can-seek 1.1/1.2: one gotcha naming the timelines seek form and footage seeking, so a page on a timeline framework or with embedded video is authored to be seekable."
-    },
-    {
-      "skill": "motion-choreographer",
-      "old": 8214,
-      "new": 8786,
-      "reason": "road-to-a-timeline-the-witness-can-seek 2.3: timed segments, negative locks and the rule that spoken lines stay verbatim in their own language."
-    },
-    {
-      "skill": "supply-chain-intake",
-      "old": 10721,
-      "new": 11688,
-      "reason": "road-to-a-timeline-the-witness-can-seek 3.3: a host plugin / mod intake section — unsandboxed, runs with the user's rights, source read before enable."
-    },
-    {
-      "skill": "emit-tickets",
-      "old": 6454,
-      "new": 6947,
-      "reason": "Section 2 now cuts each ticket as a vertical slice, orders prefactoring tickets first and names expand-contract as the one exception for a wide refactor; the addition was tightened and two duplicated lines (the auto-create repeat, the re-run gotcha) removed, the rest is new procedure."
-    },
-    {
-      "skill": "judge-code-quality",
-      "old": 7722,
-      "new": 7986,
-      "reason": "Five named code smells (shotgun surgery, divergent change, feature envy, primitive obsession, data clumps) added as lead words for the checklist, stated as prompts to look rather than verdicts; tightened to one short paragraph."
-    },
-    {
-      "skill": "systematic-debugging",
-      "old": 17024,
-      "new": 17121,
-      "reason": "Temporary debug lines carry one unique prefix and a final grep for it must return nothing, so no stray debug output survives the investigation; folded into the existing cheapest-tool paragraph."
-    },
-    {
-      "skill": "test-driven-development",
-      "old": 16352,
-      "new": 16546,
-      "reason": "Step 3 names the declared seam a test is written at, and the anti-pattern list gains the horizontal slice (every test for one layer before any behaviour passes); both tightened to one line each."
-    },
-    {
-      "skill": "adversarial-review",
-      "old": 7860,
-      "new": 7870,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "ai-council",
-      "old": 21694,
-      "new": 21705,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "copilot-config",
-      "old": 8377,
-      "new": 8382,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "git-workflow",
-      "old": 20699,
-      "new": 20704,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "github-ci",
-      "old": 4853,
-      "new": 4858,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "judge-bug-hunter",
-      "old": 8560,
-      "new": 8565,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "mcp-builder",
-      "old": 8628,
-      "new": 8682,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-      "skill": "php-coder",
-      "old": 4966,
-      "new": 4970,
-      "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
-    },
-    {
-        "skill": "brand-asset-generation",
-        "old": 6307,
-        "new": 6818,
-        "reason": "Links the media transparency policy and names the provenance sidecar every generated brand asset carries (road-to-a-mark-that-survives-16px 2.2)."
-    },
-    {
-        "skill": "brand-identity",
-        "old": 5997,
-        "new": 6265,
-        "reason": "Step 4 keeps an existing logo unchanged on a keep-logo brief, the case its new behaviour eval exercises (road-to-a-mark-that-survives-16px 2.1)."
-    },
-    {
-        "skill": "character-consistency",
-        "old": 8555,
-        "new": 9031,
-        "reason": "States that no script compares rendered frames and why a pixel threshold is the wrong measure across poses, replacing a claim of a check that never ran (road-to-a-verdict-that-shows-its-frame 5.1)."
-    },
-    {
-        "skill": "image-provider-routing",
-        "old": 6111,
-        "new": 6569,
-        "reason": "Links the media transparency policy so routed generations record provenance (road-to-a-mark-that-survives-16px 2.2)."
-    },
-    {
-        "skill": "logo-generation",
-        "old": 7830,
-        "new": 9567,
-        "reason": "Runs lint_svg_asset --class mark beside the witness and adds the idea-before-form step (subject inventory, X becomes Y, competitor swap) with its rubric (road-to-a-mark-that-survives-16px 1.4, 2.4)."
-    },
-    {
-        "skill": "prompt-validator",
-        "old": 7198,
-        "new": 7542,
-        "reason": "Names the agent as the only enforcer and says the video command does not invoke it, replacing the deterministic-gate claim (road-to-a-verdict-that-shows-its-frame 5.2)."
-    }
-]
+    "owner": "maintainer",
+    "review_by": "2027-04-12",
+    "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
+    "ceilings": {
+        "accessibility-auditor": 13768,
+        "activation-design": 8513,
+        "adr-create": 17859,
+        "adversarial-review": 7870,
+        "agent-docs-writing": 18341,
+        "agent-security-review": 6120,
+        "agents-md-thin-root": 13319,
+        "ai-code-blindspots": 14468,
+        "ai-council": 21705,
+        "alerting-doctrine": 8755,
+        "analysis-autonomous-mode": 7380,
+        "analysis-skill-router": 4139,
+        "api-design": 4715,
+        "api-endpoint": 5723,
+        "api-testing": 8378,
+        "architecture-review-lens": 4929,
+        "artisan-commands": 2710,
+        "async-python-patterns": 8203,
+        "authz-review": 19124,
+        "aws-infrastructure": 7441,
+        "blade-ui": 7227,
+        "blameless-post-mortem": 7809,
+        "blast-radius-analyzer": 9639,
+        "brand": 5866,
+        "brand-asset-generation": 6818,
+        "brand-audit": 7123,
+        "brand-identity": 6265,
+        "brand-strategy": 5072,
+        "brand-to-tokens": 5678,
+        "bug-analyzer": 13629,
+        "build-buy-partner": 9814,
+        "canvas-design": 7971,
+        "character-consistency": 9031,
+        "check-refs": 4188,
+        "churn-prevention": 8014,
+        "code-film": 5733,
+        "code-intelligence": 17289,
+        "code-refactoring": 13713,
+        "code-review-lens": 16137,
+        "command-routing": 6040,
+        "command-writing": 14711,
+        "comp-banding": 11846,
+        "competitive-moat-analysis": 10431,
+        "competitive-positioning": 6315,
+        "complexity-first-planning": 6243,
+        "composer-packages": 5874,
+        "condense-memory": 11203,
+        "content-funnel-design": 9057,
+        "context-authoring": 9194,
+        "context-document": 9915,
+        "contract-review": 8944,
+        "contracts-cognition": 10413,
+        "conventional-commits-writing": 20372,
+        "copilot-agents-optimization": 11335,
+        "copilot-config": 8382,
+        "corpus-grounding": 11336,
+        "customer-research": 6700,
+        "dashboard-design": 5850,
+        "data-flow-mapper": 7207,
+        "data-handling-judgment": 11513,
+        "database": 6906,
+        "dcf-modeling": 5032,
+        "deal-qualification-meddic": 8505,
+        "decision-record": 14289,
+        "decision-review": 19391,
+        "deep-reading-analyst": 13546,
+        "defense-in-depth": 6205,
+        "dependency-upgrade": 17216,
+        "description-assist": 7718,
+        "design-intelligence": 11085,
+        "design-review": 20894,
+        "design-system-capture": 14605,
+        "design-tokens": 9450,
+        "design-variations": 6907,
+        "devcontainer": 4553,
+        "developer-like-execution": 11443,
+        "discovery-interview": 6428,
+        "doc-coauthoring": 8778,
+        "docker": 11085,
+        "docx-authoring": 5464,
+        "dpa-review": 9854,
+        "editorial-calendar": 8391,
+        "eloquent": 3439,
+        "emit-tickets": 6947,
+        "error-handling-patterns": 9067,
+        "estimate-ticket": 7960,
+        "evaluate-llm-feature": 8199,
+        "existing-ui-audit": 10076,
+        "existing-ui-audit/references/steps/00-inspect-stack-and-input.md": 307,
+        "existing-ui-audit/references/steps/01-enumerate-components.md": 1442,
+        "existing-ui-audit/references/steps/01b-detect-component-taxonomy.md": 907,
+        "existing-ui-audit/references/steps/02-identify-design-system.md": 780,
+        "existing-ui-audit/references/steps/03-detect-design-tokens.md": 2604,
+        "existing-ui-audit/references/steps/04-detect-shadcn-inventory.md": 904,
+        "existing-ui-audit/references/steps/04b-live-storybook-read.md": 1947,
+        "existing-ui-audit/references/steps/05-list-reusable-patterns.md": 718,
+        "existing-ui-audit/references/steps/06-match-candidates.md": 2847,
+        "existing-ui-audit/references/steps/07-greenfield-branch.md": 1923,
+        "existing-ui-audit/references/steps/08-a11y-baseline.md": 1565,
+        "existing-ui-audit/references/steps/09-validate-and-write.md": 430,
+        "expansion-playbook": 8838,
+        "experiment-loop": 7297,
+        "fe-design": 17366,
+        "feature-planning": 14923,
+        "file-editor": 7026,
+        "finishing-a-development-branch": 9404,
+        "flux": 6022,
+        "forecast-accuracy": 8187,
+        "forecasting": 8626,
+        "forensics-report": 5052,
+        "form-handler": 6533,
+        "founder-idea-interview": 6768,
+        "frontend-render-security": 9387,
+        "fundraising-narrative": 9878,
+        "funnel-analysis": 7203,
+        "gated-reach": 9723,
+        "git-workflow": 20704,
+        "github-ci": 4886,
+        "grafana": 6477,
+        "gtm-launch": 9094,
+        "guideline-writing": 7015,
+        "hiring-loop-design": 12107,
+        "history-design": 4758,
+        "html-deck": 8113,
+        "humanizer": 15909,
+        "iconography": 8205,
+        "image-analyser": 6133,
+        "image-creator": 5784,
+        "image-editing": 5884,
+        "image-generation": 5358,
+        "image-provider-routing": 6569,
+        "incident-commander": 5532,
+        "jira-integration": 5375,
+        "jobs-events": 2756,
+        "js-library-packaging": 9295,
+        "judge-artifact-completeness": 7199,
+        "judge-bug-hunter": 8565,
+        "judge-code-quality": 7986,
+        "judge-injection-defense": 6079,
+        "judge-security-auditor": 8652,
+        "judge-spec-compliance": 7186,
+        "judge-synthesis": 12957,
+        "judge-test-coverage": 7161,
+        "laravel": 11631,
+        "laravel-api-endpoint": 7252,
+        "laravel-dto": 4352,
+        "laravel-horizon": 5036,
+        "laravel-mail": 8604,
+        "laravel-middleware": 5215,
+        "laravel-migration": 8594,
+        "laravel-notifications": 5083,
+        "laravel-pennant": 4985,
+        "laravel-pulse": 4774,
+        "laravel-reverb": 6381,
+        "laravel-scheduling": 5889,
+        "laravel-validation": 3325,
+        "laravel-websocket": 2519,
+        "launch-readiness": 9752,
+        "learning-to-rule-or-skill": 16477,
+        "learning-tutor": 10027,
+        "legal-intake-triage": 7476,
+        "legal-practice-profile": 12921,
+        "license-compliance-audit": 7580,
+        "license-compliance-borrow-check": 7450,
+        "license-compliance-credits": 4270,
+        "lint-skills": 3705,
+        "livewire": 6125,
+        "livewire-architect": 6631,
+        "llm-provider-knowledge": 8465,
+        "logging-monitoring": 12016,
+        "logo-generation": 9566,
+        "market-entry-analysis": 10016,
+        "markitdown": 14443,
+        "mcp-tool-use": 9039,
+        "mcp-builder": 8682,
+        "md-language-check": 5084,
+        "memory-consolidation": 21606,
+        "merge-conflicts": 10878,
+        "messaging-architecture": 8793,
+        "migration-architect": 4575,
+        "mobile-e2e-strategy": 9361,
+        "module-detect-on-the-fly": 8738,
+        "module-management": 8219,
+        "monorepo-workspace": 8228,
+        "motion-choreographer": 8786,
+        "multi-tenancy": 6123,
+        "nda-triage": 7243,
+        "nextjs-patterns": 10113,
+        "okr-tree-modeling": 5111,
+        "onboarding-design": 7983,
+        "onboarding-program": 11559,
+        "one-on-one-cadence": 11349,
+        "openapi": 5286,
+        "operational-readiness": 7853,
+        "org-design": 11076,
+        "overbuild-review-lens": 8269,
+        "override-management": 7232,
+        "pdf-tools": 4468,
+        "perf-feedback-craft": 12516,
+        "performance": 3067,
+        "performance-analysis": 5408,
+        "persona-improvement": 4018,
+        "persona-writing": 5503,
+        "pest-testing": 14368,
+        "php-coder": 4970,
+        "php-debugging": 8164,
+        "php-service": 3115,
+        "pipeline-strategy": 8309,
+        "pixar-storyteller": 5247,
+        "playbook-authoring": 10751,
+        "playwright-architect": 5774,
+        "playwright-testing": 11333,
+        "po-discovery": 5282,
+        "positioning-strategy": 8375,
+        "prediction-pool-optimizer": 16726,
+        "premortem": 7456,
+        "privacy-review": 11249,
+        "project-analysis-core": 5273,
+        "project-analysis-hypothesis-driven": 3824,
+        "project-analysis-laravel": 4121,
+        "project-analysis-nextjs": 3760,
+        "project-analysis-node-express": 3934,
+        "project-analysis-react": 3632,
+        "project-analysis-symfony": 3854,
+        "project-analysis-zend-laminas": 3669,
+        "project-analyzer": 16856,
+        "project-analyzer/references/steps/01-project-overview.md": 304,
+        "project-analyzer/references/steps/02-architecture.md": 299,
+        "project-analyzer/references/steps/03-data-layer.md": 293,
+        "project-analyzer/references/steps/04-business-domains.md": 338,
+        "project-analyzer/references/steps/05-api-surface.md": 310,
+        "project-analyzer/references/steps/06-service-map.md": 258,
+        "project-analyzer/references/steps/07-module-inventory.md": 263,
+        "project-analyzer/references/steps/08-infrastructure-and-testing.md": 251,
+        "project-analyzer/references/steps/09-agent-docs-audit.md": 246,
+        "project-analyzer/references/steps/10-gap-analysis.md": 289,
+        "project-docs": 6263,
+        "prompt-engineering-image": 6147,
+        "prompt-engineering-patterns": 7041,
+        "prompt-optimizer": 12391,
+        "prompt-validator": 7542,
+        "quality-tools": 7516,
+        "react-native-setup": 10016,
+        "react-shadcn-ui": 20589,
+        "readme-reviewer": 9033,
+        "readme-writing": 10939,
+        "readme-writing-package": 13377,
+        "reasoning-orchestrator": 7409,
+        "receiving-code-review": 9100,
+        "recursive-verification": 9376,
+        "refine-prompt": 13050,
+        "refine-ticket": 17500,
+        "release-comms": 8198,
+        "repomix-packer": 5427,
+        "requesting-code-review": 7845,
+        "retention-loops": 8227,
+        "review-routing": 7830,
+        "rice-prioritization": 5214,
+        "risk-officer": 5321,
+        "roadmap-management": 8374,
+        "roadmap-writing": 21385,
+        "root-cause-frameworks": 5754,
+        "rtk-output-filtering": 8665,
+        "rule-refactor": 5370,
+        "rule-writing": 16621,
+        "runway-cognition": 10812,
+        "scenario-modeling": 10059,
+        "scene-expander": 6559,
+        "schema-review": 4232,
+        "screenshot-hygiene": 9081,
+        "script-writing": 9324,
+        "secrets-management": 12029,
+        "security": 6722,
+        "security-audit": 14984,
+        "security-maturity-assessment": 5819,
+        "sentry-integration": 5511,
+        "sequential-thinking": 6376,
+        "server-hardening": 6711,
+        "skill-improvement-pipeline": 10593,
+        "skill-management": 5347,
+        "skill-reviewer": 9286,
+        "skill-writing": 13374,
+        "song-to-script": 14514,
+        "source-discovery": 10395,
+        "spreadsheet-authoring": 5556,
+        "sql-writing": 3715,
+        "stakeholder-tradeoff": 9443,
+        "standards-from-config": 7915,
+        "storybook-workshop": 13536,
+        "subagent-orchestration": 19978,
+        "supply-chain-intake": 11688,
+        "svg-authoring": 17970,
+        "symfony-workflow": 10329,
+        "systematic-debugging": 17084,
+        "tailwind-engineer": 13083,
+        "tech-debt-tracker": 5542,
+        "technical-specification": 7733,
+        "terraform": 8893,
+        "terragrunt": 5842,
+        "test-case-discovery": 12862,
+        "test-driven-development": 16545,
+        "test-performance": 6376,
+        "testing-anti-patterns": 19700,
+        "threat-modeling": 12775,
+        "throughput-vs-morale-tradeoff": 13242,
+        "token-optimizer": 6275,
+        "traefik": 9138,
+        "type-design": 9883,
+        "typography-system": 11967,
+        "ui-apply-generic": 8674,
+        "ui-component-architect": 13328,
+        "unit-economics-modeling": 9297,
+        "universal-project-analysis": 5547,
+        "upstream-contribute": 12143,
+        "using-git-worktrees": 11846,
+        "validate-feature-fit": 4252,
+        "verify-completion-evidence": 10451,
+        "verify-repair-loop": 15727,
+        "video-director": 5818,
+        "vision-articulation": 10198,
+        "voc-extract": 6506,
+        "voice-and-tone-design": 12228,
+        "wireframe": 6196,
+        "workspace-link": 5931,
+        "worktree-lifecycle": 9502
+    },
+    "raised": [
+        {
+            "skill": "agents-md-thin-root",
+            "old": 13263,
+            "new": 13319,
+            "reason": "The four Wrong-vs-right pointer examples moved from blockquotes into fenced blocks: as live links they resolved to nothing in the delivered skill, which the widened link gate now fails. road-to-steps-the-skill-cannot-skip AC-1."
+        },
+        {
+            "skill": "ai-code-blindspots",
+            "old": 12686,
+            "new": 13262,
+            "reason": "Two rg patterns the checklist was missing: a fast hash over a password (any SHA-2, not only md5/sha1) and a raw == on a token, OTP or MAC. road-to-account-lifecycle-threat-rows 1.4."
+        },
+        {
+            "skill": "authz-review",
+            "old": 16983,
+            "new": 17114,
+            "reason": "The ASVS pin moved 4.0.3 V4 -> 5.0.0 V8 and gained one sentence pointing at threat-modeling's References instead of repeating the old numbering. 1.2."
+        },
+        {
+            "skill": "data-flow-mapper",
+            "old": 6980,
+            "new": 7207,
+            "reason": "Same ASVS repin: 4.0.3 V5 -> 5.0.0 V1 + V2, with the chapter split named once rather than in both files. 1.2."
+        },
+        {
+            "skill": "form-handler",
+            "old": 5851,
+            "new": 6533,
+            "reason": "The availability check is qualified rather than called the canonical exception: an on-change check on an account identifier is an enumeration oracle, and the three conditions that make it acceptable are stated. 1.1."
+        },
+        {
+            "skill": "judge-security-auditor",
+            "old": 7714,
+            "new": 8246,
+            "reason": "The information-disclosure row now covers any observable difference between a known and an unknown account, and the cryptography row names a fast hash over a password and a raw compare on a secret. 1.4."
+        },
+        {
+            "skill": "threat-modeling",
+            "old": 11412,
+            "new": 11943,
+            "reason": "ASVS V6 Authentication and NIST SP 800-63B added as the authority the account-flow rows defer to, named as chapters and never as values. 1.2."
+        },
+        {
+            "skill": "skill-improvement-pipeline",
+            "old": 10469,
+            "new": 10599,
+            "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
+        },
+        {
+            "skill": "js-library-packaging",
+            "old": 9191,
+            "new": 9295,
+            "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
+        },
+        {
+            "skill": "react-shadcn-ui",
+            "old": 20098,
+            "new": 20203,
+            "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
+        },
+        {
+            "skill": "storybook-workshop",
+            "old": 13432,
+            "new": 13536,
+            "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
+        },
+        {
+            "skill": "tailwind-engineer",
+            "old": 12922,
+            "new": 13092,
+            "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
+        },
+        {
+            "skill": "ui-apply-generic",
+            "old": 8274,
+            "new": 8283,
+            "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
+        },
+        {
+            "skill": "brand",
+            "old": 5558,
+            "new": 5866,
+            "reason": "A Do-NOT row: the corpus Trademark Risk column rates a naming PATTERN, not the candidate name, so a check that was RUN (registry, date, result) or the words \"not checked\" must leave with the candidate. road-to-sentences-the-tree-can-back 3.3."
+        },
+        {
+            "skill": "database",
+            "old": 5814,
+            "new": 5941,
+            "reason": "The corpus label stopped naming engine versions and points at data/manifest.json instead; it had fallen two majors behind the manifest it ships with. road-to-sentences-the-tree-can-back 3.2."
+        },
+        {
+            "skill": "market-entry-analysis",
+            "old": 9670,
+            "new": 10016,
+            "reason": "A Do-NOT row binding market size, growth, deadline, price and competitor claims to the fresh-lookup sourcing rule /research:deep already states; the skill carried no sourcing obligation at all. road-to-sentences-the-tree-can-back 3.3."
+        },
+        {
+            "skill": "positioning-strategy",
+            "old": 8041,
+            "new": 8376,
+            "reason": "A Sourcing section binding the four anchors to the same rule; the skill carried one incidental mention and no obligation. road-to-sentences-the-tree-can-back 3.3."
+        },
+        {
+            "skill": "react-native-setup",
+            "old": 9682,
+            "new": 10016,
+            "reason": "The Node floor points at the project .nvmrc / engines.node instead of naming a major whose end of life had already passed under a heading calling itself a 2025 baseline, and the untouched Xcode / Android floors are marked as still dating from it. road-to-sentences-the-tree-can-back 3.2."
+        },
+        {
+            "skill": "upstream-contribute",
+            "old": 11501,
+            "new": 12171,
+            "reason": "two independent R2 rounds found this skill promising guarantees the tree does not keep, and the raise buys exactly those corrections. Round 1: a --dry-run documented as printing six things where the CLI prints three, with the agent told to reproduce all six verbatim - a fabricated pre-send check at the one Hard-Floor checkpoint before bytes leave the machine. Round 2: the Iron Law guaranteed that branch name, commit identity, commit message and diff are SCANNED by the release, which scans the record text only and makes no commit at all; the quality gates were numbered after the send they must precede, with the `Do NOT bypass quality gates` line deleted in the same change; and `allowed_tools: [\"Bash(gh:*)\"]` granted exactly the second route the skill forbids. The additions were squeezed twice - 433 bytes over to 114 in round 1, 776 to 556 in round 2 - before each raise. What remains is obligation rather than wording: an unscanned byte a reader believes was scanned is the state this text exists to prevent, and shrinking further deletes the correction instead of tightening it"
+        },
+        {
+            "skill": "test-case-discovery",
+            "old": 12325,
+            "new": 12862,
+            "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
+        },
+        {
+            "skill": "security",
+            "old": 5168,
+            "new": 6728,
+            "reason": "An account-flow block under Conventions: the lifecycle traced as one path, the public auth response as an observable contract, constant-time comparison with its length precondition, no fast hash and no invented primitive, fresh re-authentication on an identity change, and a pointer to the corpus rows rather than a restatement of them. No value in it; the numbers stay with the authority the block below already names. 3.2, plus the triggers block from 3.1."
+        },
+        {
+            "skill": "svg-authoring",
+            "old": 17525,
+            "new": 17818,
+            "reason": "The counter rule in § Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
+        },
+        {
+            "skill": "deep-reading-analyst",
+            "old": 13539,
+            "new": 13546,
+            "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+        },
+        {
+            "skill": "project-analysis-core",
+            "old": 5266,
+            "new": 5273,
+            "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+        },
+        {
+            "skill": "project-analysis-hypothesis-driven",
+            "old": 3817,
+            "new": 3824,
+            "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+        },
+        {
+            "skill": "project-analyzer",
+            "old": 18199,
+            "new": 18206,
+            "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+        },
+        {
+            "skill": "repomix-packer",
+            "old": 5410,
+            "new": 5417,
+            "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+        },
+        {
+            "skill": "universal-project-analysis",
+            "old": 5540,
+            "new": 5547,
+            "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+        },
+        {
+            "skill": "skill-writing",
+            "old": 12413,
+            "new": 13374,
+            "reason": "The split canon contradicted itself (\"strongly consider split above 1500 words\" against \"a skill at 1,500 words is ordinary\"); it is now one statement, a split head keeps all five required sections, and one new section defines reference, requires_skills, procedure and chain. road-to-steps-the-skill-cannot-skip 2.1-2.3."
+        },
+        {
+            "skill": "skill-reviewer",
+            "old": 9177,
+            "new": 9286,
+            "reason": "Killer 5 repeated the removed word-count split trigger; it now points at the single split statement in skill-writing. road-to-steps-the-skill-cannot-skip 2.1."
+        },
+        {
+            "skill": "brand-asset-generation",
+            "old": 5813,
+            "new": 6307,
+            "reason": "Step 2 stopped loading a token file by path and now takes colour, type and voice from the resolver's reported sources, labelling corpus fallback. road-to-a-brand-the-tree-can-check 6.2."
+        },
+        {
+            "skill": "brand-audit",
+            "old": 6760,
+            "new": 7123,
+            "reason": "Step 1 reads the brand through `brand:status --json` and the `brand-voice` slot, and states that no valid slot makes a voice observation `undefined`, never `drift`. road-to-a-brand-the-tree-can-check 6.1."
+        },
+        {
+            "skill": "brand-strategy",
+            "old": 4554,
+            "new": 5072,
+            "reason": "The voice section defers to `voice-and-tone-design` and the `brand-voice` slot instead of authoring a competing 3-5-trait list, which was the incompatible shape claim D4 records. road-to-a-brand-the-tree-can-check 4.3."
+        },
+        {
+            "skill": "canvas-design",
+            "old": 7395,
+            "new": 7971,
+            "reason": "A step 0 that reads the brand before the first colour or typeface choice; the skill carried no brand reference at all, which is defect D10. road-to-a-brand-the-tree-can-check 6.2."
+        },
+        {
+            "skill": "content-funnel-design",
+            "old": 8627,
+            "new": 9057,
+            "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
+        },
+        {
+            "skill": "gtm-launch",
+            "old": 8664,
+            "new": 9094,
+            "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
+        },
+        {
+            "skill": "html-deck",
+            "old": 7747,
+            "new": 8141,
+            "reason": "The slide step names the resolver beside the precedence rule it already cited, so the deck's tokens come from a reported source rather than a located file. road-to-a-brand-the-tree-can-check 6.2."
+        },
+        {
+            "skill": "humanizer",
+            "old": 14774,
+            "new": 15187,
+            "reason": "\"Registered brand voice\" in the fixed precedence now names the one file it means, and says the defaults apply when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 4.3 and 6.1."
+        },
+        {
+            "skill": "logo-generation",
+            "old": 5313,
+            "new": 5650,
+            "reason": "Step 3 asks the resolver for palette and type instead of testing for a token layer, and labels brief-derived values corpus-sourced. road-to-a-brand-the-tree-can-check 6.2."
+        },
+        {
+            "skill": "messaging-architecture",
+            "old": 8363,
+            "new": 8793,
+            "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
+        },
+        {
+            "skill": "release-comms",
+            "old": 7789,
+            "new": 8198,
+            "reason": "Gains the spine read it had no voice reference for at all (D4) and states the absent case. road-to-a-brand-the-tree-can-check 6.1."
+        },
+        {
+            "skill": "voice-and-tone-design",
+            "old": 8182,
+            "new": 12228,
+            "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise. The scope declaration's verification_reason is part of this figure: three gates refuse every invocation form a verification_command could take here, so the obligation is stated instead of pinned."
+        },
+        {
+            "skill": "brand-identity",
+            "old": 5849,
+            "new": 5997,
+            "reason": "One See-also line handing a custom type story to the new type-design skill. road-to-type-with-a-witness 4.14."
+        },
+        {
+            "skill": "logo-generation",
+            "old": 5650,
+            "new": 5790,
+            "reason": "One See-also line routing 'make this a font' to type-design, named rather than linked because it ships in another pack. road-to-type-with-a-witness 4.14."
+        },
+        {
+            "skill": "svg-authoring",
+            "old": 17818,
+            "new": 17970,
+            "reason": "One See-also line routing 'the rest of the alphabet' to type-design, which reuses this skill's trace and counter rule. road-to-type-with-a-witness 4.14."
+        },
+        {
+            "skill": "testing-anti-patterns",
+            "old": 18233,
+            "new": 19723,
+            "reason": "Iron Law 8 (test through the entry point), the reviewed text of self-modification step 6.2, landed by the owner's forge act (OQ-7); shrinking it would change what was reviewed."
+        },
+        {
+            "skill": "typography-system",
+            "old": 11344,
+            "new": 11967,
+            "reason": "A Custom source section beside the CSV pairing path: spec path, license and fallback overrides for a family built with type-design, and the T7 stated reason. road-to-type-with-a-witness 4.14."
+        },
+        {
+            "skill": "design-system-capture",
+            "old": 14609,
+            "new": 14880,
+            "reason": "The extraction floor points React stacks at the host's own sync via /design-system:sync plan, and the Lock line names design_lock.ts as its carrier. road-to-a-canvas-the-code-owns 5.3 and 8.2."
+        },
+        {
+            "skill": "humanizer",
+            "old": 15187,
+            "new": 15706,
+            "reason": "Step 5 runs the lexicon and claim pass on the finished draft over stdin and says what an avoid hit, a taboo hit, an unbacked claim and exit 2 each mean. road-to-a-brand-the-tree-can-check 5.4."
+        },
+        {
+            "skill": "playwright-testing",
+            "old": 11165,
+            "new": 11333,
+            "reason": "One taught line under the visual-regression section: baseline updates are shown as a diff and land in a commit of their own, on the pinned Docker renderer. road-to-a-canvas-the-code-owns 7.3."
+        },
+        {
+            "skill": "competitive-positioning",
+            "old": 6300,
+            "new": 6315,
+            "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+        },
+        {
+            "skill": "learning-to-rule-or-skill",
+            "old": 16321,
+            "new": 16325,
+            "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+        },
+        {
+            "skill": "markitdown",
+            "old": 14433,
+            "new": 14443,
+            "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+        },
+        {
+            "skill": "repomix-packer",
+            "old": 5417,
+            "new": 5427,
+            "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+        },
+        {
+            "skill": "composer-packages",
+            "old": 4858,
+            "new": 5874,
+            "reason": "Gains the audit / config.audit / abandoned-package section road-to-advisories-heard-the-same-day step 1.4 requires; the skill had zero lines on advisories (finding A6)."
+        },
+        {
+            "skill": "dependency-upgrade",
+            "old": 13371,
+            "new": 17218,
+            "reason": "Gains the security-fix procedure (route, smallest fix, proof by the reporting source, PR evidence, release draft, follow to deployed) of road-to-security-fixes-carried-to-the-merge and the release-age / agent-config-path step of the post-update audit; the procedure is the skill-side half the council kept in the session (Q5)."
+        },
+        {
+            "skill": "finishing-a-development-branch",
+            "old": 9320,
+            "new": 9409,
+            "reason": "The \"PR opened\" end state now names its scheduled removal and the security end state (road-to-worktrees-that-leave-after-the-merge 3.5, road-to-security-fixes-carried-to-the-merge 3.4), trimmed to two lines."
+        },
+        {
+            "skill": "using-git-worktrees",
+            "old": 11762,
+            "new": 11846,
+            "reason": "Creation gains the one `agent-config worktree:cleanup register` line that lets the merge-time removal reach a tree outside the standard roots (ADR-295)."
+        },
+        {
+            "skill": "project-analyzer",
+            "old": 16777,
+            "new": 16856,
+            "reason": "Phases 3-6 gain a not-applicable path (write not-applicable.md, or a one-line service-map.md, naming why) so a library or CLI can meet the exists exit honestly. It sits in the head's Procedure section because the step files must stay verbatim runs of the pre-split body (procedure_conservation) and every conserved head line is fixed; the cursor sentence was tightened to pay for most of it."
+        },
+        {
+            "skill": "llm-provider-knowledge",
+            "old": 7434,
+            "new": 8465,
+            "reason": "A § Free tiers table (where a free tier's quota, data-use and region terms are read live, plus the never-send-project-data-to-a-training-tier line) so the skill answers 'set up a free LLM API' without copying any model id or limit. road-to-free-hands-a-paid-head-checks 7.1."
+        },
+        {
+            "skill": "code-intelligence",
+            "old": 16492,
+            "new": 16998,
+            "reason": "road-to-a-map-that-draws-itself (ADR-297): step 0 sends an orientation question to agents/map/MAP.md before any graph query, and the MCP table gains rows for graph_map_status and graph_area. Both are the skill's routing surface for the new map; trimming them would hide the tools the roadmap added."
+        },
+        {
+            "skill": "code-intelligence",
+            "old": 16998,
+            "new": 17182,
+            "reason": "road-to-a-graph-that-follows-you (ADR-299): the MCP table gains a row for graph_estate and one line naming the new project parameter on every other graph tool. The ceiling sat 3 bytes above the body, so documenting the tool at all needs a raise; the wording was compressed first, from 262 to 184 bytes."
+        },
+        {
+            "skill": "authz-review",
+            "old": 17109,
+            "new": 19073,
+            "reason": "road-to-a-claim-that-is-not-a-key 4.1: tool calls become entrypoints (subject source in stage 1, a fourth negative test for tools, a tool line in the output) and one section on agent tool calls and path independence for identity writes. Compressed once before the raise, from 20000 bytes."
+        },
+        {
+            "skill": "mcp-builder",
+            "old": 6833,
+            "new": 8628,
+            "reason": "road-to-a-claim-that-is-not-a-key 4.2: authority before ergonomics - names over IDs only inside the caller's scope, per-caller credentials, the required per-tool authority block table and two authority questions in the evaluation set."
+        },
+        {
+            "skill": "evaluate-llm-feature",
+            "old": 6951,
+            "new": 8199,
+            "reason": "road-to-a-claim-that-is-not-a-key 4.3: an identity and authority claim probe class (ownership claim, urgency, staff role, prior verification, another agent's approval), an action-triggered column and the do-not-ship verdict rule."
+        },
+        {
+            "skill": "corpus-grounding",
+            "old": 10655,
+            "new": 11029,
+            "reason": "road-to-a-claim-that-is-not-a-key 2.4: documents the opt-in reasoning.composite_min_score manifest key, so a description matching a second surface class names it in the evidence gap instead of printing none."
+        },
+        {
+            "skill": "security-audit",
+            "old": 9042,
+            "new": 12620,
+            "reason": "road-to-a-finding-that-fails-a-test 1.1–2.3: hunters per surface class, a fresh verifier per candidate, the three states, and the red proof test that confirms a finding — the chain the audit named but never produced."
+        },
+        {
+            "skill": "launch-readiness",
+            "old": 9501,
+            "new": 9661,
+            "reason": "road-to-a-finding-that-fails-a-test 3.3: one checklist line pointing at the security ledger, so a launch reads \"not checked\" rather than silence."
+        },
+        {
+            "skill": "subagent-orchestration",
+            "old": 19741,
+            "new": 19978,
+            "reason": "road-to-a-finding-that-fails-a-test 4.2: the dispatch-role marker that lets the independence hook read a field instead of prose."
+        },
+        {
+            "skill": "security-audit",
+            "old": 12620,
+            "new": 14648,
+            "reason": "road-to-security-answer-that-names-what-it-checked 2.2-2.3/4.4: the casual-question scope block, the needs_validation exit replacing 'drop it', non-HTTP entry points, the upload attack classes, severity anchored to demonstrated impact; the dependency step shrank to a /audit deps pointer."
+        },
+        {
+            "skill": "ai-code-blindspots",
+            "old": 13262,
+            "new": 14143,
+            "reason": "road-to-security-answer-that-names-what-it-checked 4.4: the file-upload surface row and three upload backstop greps (client filename into storage, mimes without extensions, executable sinks)."
+        },
+        {
+            "skill": "corpus-grounding",
+            "old": 10655,
+            "new": 11336,
+            "reason": "road-to-security-answer-that-names-what-it-checked 4.2: documents the opt-in category_floor reasoning key the threat corpus now sets."
+        },
+        {
+            "skill": "supply-chain-intake",
+            "old": 10137,
+            "new": 10527,
+            "reason": "road-to-security-answer-that-names-what-it-checked 4.4: a Dockerfile/system-package file processor is a dependency with an attack surface, checked as a class."
+        },
+        {
+            "skill": "threat-modeling",
+            "old": 11938,
+            "new": 12522,
+            "reason": "road-to-security-answer-that-names-what-it-checked 4.3: cites ASVS 5.0 V5 File Handling and the OWASP upload cheat sheet, and records why the chapter was missed."
+        },
+        {
+            "skill": "blade-ui",
+            "old": 6836,
+            "new": 7227,
+            "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+        },
+        {
+            "skill": "flux",
+            "old": 5632,
+            "new": 6022,
+            "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+        },
+        {
+            "skill": "livewire",
+            "old": 5734,
+            "new": 6125,
+            "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+        },
+        {
+            "skill": "react-shadcn-ui",
+            "old": 20203,
+            "new": 20594,
+            "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+        },
+        {
+            "skill": "ui-apply-generic",
+            "old": 8283,
+            "new": 8674,
+            "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control."
+        },
+        {
+            "skill": "fe-design",
+            "old": 16747,
+            "new": 17366,
+            "reason": "road-to-a-control-that-matches-its-neighbours 2.x: one shared 'Control roles' line — reuse the project's primitive for a role before adding a raw control. Plus the momentum-carried motion class and the gesture-mechanics reference pointer."
+        },
+        {
+            "skill": "design-review",
+            "old": 19912,
+            "new": 20894,
+            "reason": "road-to-a-control-that-matches-its-neighbours 3.x/5.x: the open-state interact line, phase-split prescribe wording, interruptibility hint and the persuade check."
+        },
+        {
+            "skill": "design-tokens",
+            "old": 8812,
+            "new": 9024,
+            "reason": "road-to-a-control-that-matches-its-neighbours: letter-spacing per type step in the starter, the tracking ladder."
+        },
+        {
+            "skill": "humanizer",
+            "old": 15706,
+            "new": 15909,
+            "reason": "road-to-tells-a-near-miss-can-refute 5.3: the factual-integrity step runs the deterministic fact diff instead of a self-report."
+        },
+        {
+            "skill": "logo-generation",
+            "old": 5790,
+            "new": 7831,
+            "reason": "road-to-tells-a-near-miss-can-refute 7.1-7.5: divergence, critique mode, the legibility witness, the shelf test, the stop before the kit and the kit command."
+        },
+        {
+            "skill": "code-intelligence",
+            "old": 17182,
+            "new": 17334,
+            "reason": "road-to-a-map-across-systems-branches-and-time 7.1: one pointer to the systems, provenance, domain and branch verbs, whose detail lives in a reference."
+        },
+        {
+            "skill": "database",
+            "old": 5940,
+            "new": 6906,
+            "reason": "road-to-database-relational-modeling 2.1/2.6: per-environment hosting detection with the managed-service guardrail, and the ownership paragraph routing schema design to references/relational-modeling.md and drops to references/consumer-census.md; the procedures themselves live in those references."
+        },
+        {
+            "skill": "migration-architect",
+            "old": 4207,
+            "new": 4575,
+            "reason": "road-to-database-relational-modeling 5.1: the consumer census becomes a required step that routes to blast-radius-analyzer and database/references/consumer-census.md, plus the route-away line for target-schema design."
+        },
+        {
+            "skill": "multi-tenancy",
+            "old": 5787,
+            "new": 6123,
+            "reason": "road-to-database-relational-modeling 4.8: names both tenancy modes and the composite-key rule and routes shared-schema key integrity to references/shared-schema-integrity.md; the single-database exclusion it replaces contradicted shared-schema tenancy."
+        },
+        {
+            "skill": "schema-review",
+            "old": 3897,
+            "new": 4232,
+            "reason": "road-to-database-relational-modeling 5.1/2.3: the consumer-census step for drops and renames, and the route-away line for schema design."
+        },
+        {
+            "skill": "laravel-migration",
+            "old": 8383,
+            "new": 8594,
+            "reason": "road-to-database-relational-modeling 4.6: one cross-link from the soft-delete paragraph to the engine-specific unique-under-soft-delete forms in php/eloquent.md."
+        },
+        {
+            "skill": "prompt-optimizer",
+            "old": 12077,
+            "new": 12449,
+            "reason": "road-to-a-prompt-that-deepens-not-widens 1.3: a bare role becomes the fourth de-inflation pattern and step 5 names methods and instruments instead of assigning a role."
+        },
+        {
+            "skill": "verify-completion-evidence",
+            "old": 9612,
+            "new": 10451,
+            "reason": "road-to-a-prompt-that-deepens-not-widens 1.1-1.2: the per-task evidence table moves here as the single authority, adding non-code rows and an oracle-class column; verification-mechanics, loaded by a kernel rule, keeps a pointer so the always-rule closure shrinks."
+        },
+        {
+            "skill": "refine-prompt",
+            "old": 13022,
+            "new": 13050,
+            "reason": "Owner answer OQ-26 (2026-10-28): the frontmatter lists the consumer workspaces engineering and product, since the skill already projects to consumers and the maintainer-only claim was false. Frontmatter only; no body line changed."
+        },
+        {
+            "skill": "learning-to-rule-or-skill",
+            "old": 16325,
+            "new": 16477,
+            "reason": "A config / check rung above Rule: a consumer convention that keeps not arriving is proposed as a project config diff, the strongest carrier, before any prose rule. road-to-a-correction-that-is-heard 2.3."
+        },
+        {
+            "skill": "standards-from-config",
+            "old": 7565,
+            "new": 7915,
+            "reason": "Instruction-file prose named as a conflict source next to configs, and a repeated correction that contradicts the config is asked about, never capitulated to. road-to-a-correction-that-is-heard 2.3."
+        },
+        {
+            "skill": "dcf-modeling",
+            "old": 4903,
+            "new": 5032,
+            "reason": "Hand-off line to spreadsheet-authoring for workbook output; dcf-modeling's markdown tables broke that skill's live-formula rule with no pointer. archive/road-to-numbers-a-skill-can-stand-behind 1.9."
+        },
+        {
+            "skill": "laravel-dto",
+            "old": 4066,
+            "new": 4352,
+            "reason": "The example now uses constructor promotion and a gotcha states the rule: the library reads #[Map] only from constructor parameters, so the old property example's mapping was silently ignored. archive/road-to-numbers-a-skill-can-stand-behind 2.1-2.2."
+        },
+        {
+            "skill": "prediction-pool-optimizer",
+            "old": 16448,
+            "new": 16726,
+            "reason": "pool_winsim --holdout-runs: submit only flips a paired sign test confirms on independent runs (unchecked greedy sets regressed on 3 of 10 seeds); plus the seed/runs/method rule. archive/road-to-numbers-a-skill-can-stand-behind 3.1-3.3."
+        },
+        {
+            "skill": "runway-cognition",
+            "old": 10795,
+            "new": 10812,
+            "reason": "The runway example's burn is labelled monthly and its emitted gap is the stated 4.5-7.5 month range instead of a contradicting -5mo. archive/road-to-numbers-a-skill-can-stand-behind 1.4."
+        },
+        {
+            "skill": "security-audit",
+            "old": 14550,
+            "new": 14838,
+            "reason": "road-to-a-clean-that-says-what-it-checked 1.5: a rejected candidate names its closing control, a confirmed one its counterevidence and severity-change condition, and confidence High needs a red test — ledger schema v2."
+        },
+        {
+            "skill": "judge-security-auditor",
+            "old": 8246,
+            "new": 8652,
+            "reason": "road-to-a-clean-that-says-what-it-checked 2.1/3.2: a Coverage block on every verdict (an apply with no row is 'not checked'), and the judge reads and amends an existing threat model instead of re-deriving it."
+        },
+        {
+            "skill": "judge-synthesis",
+            "old": 12885,
+            "new": 12957,
+            "reason": "road-to-a-clean-that-says-what-it-checked 2.2: the security apply line renders its assessed rows and 'clean, with gaps' instead of a bare apply (0)."
+        },
+        {
+            "skill": "security-audit",
+            "old": 14838,
+            "new": 14896,
+            "reason": "road-to-a-clean-that-says-what-it-checked 2.3: on a diff, the callers of a touched guard join the hunters' scope."
+        },
+        {
+            "skill": "authz-review",
+            "old": 19073,
+            "new": 19124,
+            "reason": "road-to-a-clean-that-says-what-it-checked 3.3: dropped a citation of a rule that does not exist in this tree and stated that a negative test against the project's own code is not an offensive step."
+        },
+        {
+            "skill": "threat-modeling",
+            "old": 12522,
+            "new": 12564,
+            "reason": "road-to-a-clean-that-says-what-it-checked 3.3: same correction as authz-review — no dangling rule citation, the negative-test clarification instead."
+        },
+        {
+            "skill": "feature-planning",
+            "old": 14676,
+            "new": 14923,
+            "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+        },
+        {
+            "skill": "launch-readiness",
+            "old": 9661,
+            "new": 9763,
+            "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+        },
+        {
+            "skill": "supply-chain-intake",
+            "old": 10527,
+            "new": 10721,
+            "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+        },
+        {
+            "skill": "threat-modeling",
+            "old": 12564,
+            "new": 12775,
+            "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
+        },
+        {
+            "skill": "code-film",
+            "old": 5507,
+            "new": 5733,
+            "reason": "road-to-a-timeline-the-witness-can-seek 1.1/1.2: one gotcha naming the timelines seek form and footage seeking, so a page on a timeline framework or with embedded video is authored to be seekable."
+        },
+        {
+            "skill": "motion-choreographer",
+            "old": 8214,
+            "new": 8786,
+            "reason": "road-to-a-timeline-the-witness-can-seek 2.3: timed segments, negative locks and the rule that spoken lines stay verbatim in their own language."
+        },
+        {
+            "skill": "supply-chain-intake",
+            "old": 10721,
+            "new": 11688,
+            "reason": "road-to-a-timeline-the-witness-can-seek 3.3: a host plugin / mod intake section — unsandboxed, runs with the user's rights, source read before enable."
+        },
+        {
+            "skill": "emit-tickets",
+            "old": 6454,
+            "new": 6947,
+            "reason": "Section 2 now cuts each ticket as a vertical slice, orders prefactoring tickets first and names expand-contract as the one exception for a wide refactor; the addition was tightened and two duplicated lines (the auto-create repeat, the re-run gotcha) removed, the rest is new procedure."
+        },
+        {
+            "skill": "judge-code-quality",
+            "old": 7722,
+            "new": 7986,
+            "reason": "Five named code smells (shotgun surgery, divergent change, feature envy, primitive obsession, data clumps) added as lead words for the checklist, stated as prompts to look rather than verdicts; tightened to one short paragraph."
+        },
+        {
+            "skill": "systematic-debugging",
+            "old": 17024,
+            "new": 17121,
+            "reason": "Temporary debug lines carry one unique prefix and a final grep for it must return nothing, so no stray debug output survives the investigation; folded into the existing cheapest-tool paragraph."
+        },
+        {
+            "skill": "test-driven-development",
+            "old": 16352,
+            "new": 16546,
+            "reason": "Step 3 names the declared seam a test is written at, and the anti-pattern list gains the horizontal slice (every test for one layer before any behaviour passes); both tightened to one line each."
+        },
+        {
+            "skill": "adversarial-review",
+            "old": 7860,
+            "new": 7870,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "ai-council",
+            "old": 21694,
+            "new": 21705,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "copilot-config",
+            "old": 8377,
+            "new": 8382,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "git-workflow",
+            "old": 20699,
+            "new": 20704,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "github-ci",
+            "old": 4853,
+            "new": 4858,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "judge-bug-hunter",
+            "old": 8560,
+            "new": 8565,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "mcp-builder",
+            "old": 8628,
+            "new": 8682,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "php-coder",
+            "old": 4966,
+            "new": 4970,
+            "reason": "Skill references follow the rename of mcp to mcp-tool-use and code-review to code-review-lens (road-to-a-name-no-host-already-owns 1.1/1.2); the growth is the longer names only."
+        },
+        {
+            "skill": "brand-asset-generation",
+            "old": 6307,
+            "new": 6818,
+            "reason": "Links the media transparency policy and names the provenance sidecar every generated brand asset carries (road-to-a-mark-that-survives-16px 2.2)."
+        },
+        {
+            "skill": "brand-identity",
+            "old": 5997,
+            "new": 6265,
+            "reason": "Step 4 keeps an existing logo unchanged on a keep-logo brief, the case its new behaviour eval exercises (road-to-a-mark-that-survives-16px 2.1)."
+        },
+        {
+            "skill": "character-consistency",
+            "old": 8555,
+            "new": 9031,
+            "reason": "States that no script compares rendered frames and why a pixel threshold is the wrong measure across poses, replacing a claim of a check that never ran (road-to-a-verdict-that-shows-its-frame 5.1)."
+        },
+        {
+            "skill": "image-provider-routing",
+            "old": 6111,
+            "new": 6569,
+            "reason": "Links the media transparency policy so routed generations record provenance (road-to-a-mark-that-survives-16px 2.2)."
+        },
+        {
+            "skill": "logo-generation",
+            "old": 7830,
+            "new": 9567,
+            "reason": "Runs lint_svg_asset --class mark beside the witness and adds the idea-before-form step (subject inventory, X becomes Y, competitor swap) with its rubric (road-to-a-mark-that-survives-16px 1.4, 2.4)."
+        },
+        {
+            "skill": "prompt-validator",
+            "old": 7198,
+            "new": 7542,
+            "reason": "Names the agent as the only enforcer and says the video command does not invoke it, replacing the deterministic-gate claim (road-to-a-verdict-that-shows-its-frame 5.2)."
+        },
+        {
+            "skill": "accessibility-auditor",
+            "old": 11064,
+            "new": 13768,
+            "reason": "Carries the twelve WCAG 2.1 A/AA criteria a 2.2 AA claim covers, which the 2.0-and-2.2 table left out (inbox-2026-11-n, road-to-design-inputs-and-pages-read-as-they-are)."
+        },
+        {
+            "skill": "ai-code-blindspots",
+            "old": 14143,
+            "new": 14468,
+            "reason": "Two surface rows added: regex on untrusted input (ReDoS) and shell scripts (pipefail, quoting) (inbox-2026-11-n, road-to-boundaries-that-hold-at-release-and-runtime)."
+        },
+        {
+            "skill": "contract-review",
+            "old": 8685,
+            "new": 8944,
+            "reason": "One line: every cited authority is tagged per the legal source-tag vocabulary (road-to-floors-that-cite-or-route)."
+        },
+        {
+            "skill": "data-handling-judgment",
+            "old": 11444,
+            "new": 11513,
+            "reason": "The billing-dispute retention figure is replaced by the longest applicable floor plus a verify tag, instead of an unsourced number (road-to-floors-that-cite-or-route)."
+        },
+        {
+            "skill": "design-tokens",
+            "old": 9024,
+            "new": 9450,
+            "reason": "States which DTCG 2025.10 value shapes generate reads and that it fails loudly on the rest (road-to-design-inputs-and-pages-read-as-they-are)."
+        },
+        {
+            "skill": "dpa-review",
+            "old": 9595,
+            "new": 9854,
+            "reason": "One line: every cited authority is tagged per the legal source-tag vocabulary (road-to-floors-that-cite-or-route)."
+        },
+        {
+            "skill": "github-ci",
+            "old": 4858,
+            "new": 4886,
+            "reason": "Teaches the workflow security rules project-neutrally: tabulate each workflow's trigger and reach before changing it (road-to-boundaries-that-hold-at-release-and-runtime)."
+        },
+        {
+            "skill": "legal-intake-triage",
+            "old": 7217,
+            "new": 7476,
+            "reason": "One line: every cited authority is tagged per the legal source-tag vocabulary (road-to-floors-that-cite-or-route)."
+        },
+        {
+            "skill": "nda-triage",
+            "old": 6984,
+            "new": 7243,
+            "reason": "One line: every cited authority is tagged per the legal source-tag vocabulary (road-to-floors-that-cite-or-route)."
+        },
+        {
+            "skill": "performance-analysis",
+            "old": 5271,
+            "new": 5408,
+            "reason": "Names the one confidence vocabulary (confirmed | plausible | unverified) the adversarial-review protocol defines (road-to-a-record-that-says-what-it-lost)."
+        },
+        {
+            "skill": "receiving-code-review",
+            "old": 8492,
+            "new": 9100,
+            "reason": "The response table gains a 'Reproduced by' column, so a review reply records how a finding was reproduced (road-to-a-record-that-says-what-it-lost)."
+        },
+        {
+            "skill": "security-audit",
+            "old": 14896,
+            "new": 14984,
+            "reason": "Names the one confidence vocabulary and that `confirmed` needs a test as proof (road-to-a-record-that-says-what-it-lost)."
+        }
+    ]
 }

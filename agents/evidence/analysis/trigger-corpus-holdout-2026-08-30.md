@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  15bf34ced983368bf65b1dab58bea5d51ee3ac9a748d21c66b6e8c6bb56b9b53
+SET-SHA256  2f04643238e8b68627b672e1fb9e1bfa221480a3ccaafdc1743f56303f6abc98
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1069,7 +1069,7 @@ open and which this file does not settle.
 | `merge-conflicts` | `61fbce06e0429a65e76532d51f3bafa3d27341b4c42943cc952cbc4dbc304189` |
 | `multi-tenancy` | `56dde082cfd04972656f1e2d61f639c6de63d64b578fc8c294bfab84114780d3` |
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
-| `performance-analysis` | `bc2a00ef29c9b99ff78b2e9c389d2b0117381cfe18be5ac3ec58c79f21b935b2` |
+| `performance-analysis` | `fca2d7578c5b00dc461852e9c40866e4a081228365c385ba15712842460be65a` |
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
 | `positioning-strategy` | `2b7dee4903969df4f5ed478fc7e98c9b6c80773c3f34fc7e0d7fc6019d208f0b` |
@@ -1250,7 +1250,7 @@ open and which this file does not settle.
 | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
-| `data-handling-judgment` | `4e44150629936ada5246085d913103add0d504d07ae842cb2746a1ac7e80662d` |
+| `data-handling-judgment` | `3721d77992c18f268835aa17b95b0b4d16abc993efc2adbed069180568a171c6` |
 | `database` | `4f066dcd06cd6e60f5fa26ccf95dbbf9f3b48b214100f64f232e30f1d9581e46` |
 | `dcf-modeling` | `6b5154c7bf04e4a0b4822ca9ce8bed1e7f77b570d74dc4688fda437a2b797b97` |
 | `dependency-upgrade` | `1ed820d9d1b49e83332dc456704b5466db1b53f4a1b5be1e632e5e6c6b3e1053` |
@@ -1316,7 +1316,6 @@ open and which this file does not settle.
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
 | `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
 | `persona-improvement` | `510402b135807db3ead05e2e6ab3c315d86caeb55b7bf45b4919d2ba69e56804` |
-| `persona-writing` | `4bf87a708da23dfb31b4bd29f0f7bb96fe1441d61b419ab3bf44d1c975276f5c` |
 | `playwright-testing` | `0496ec7f1219c5e54bd7fcbe364d53c5671872fc0ae44deb7151aa3c170f2b62` |
 | `po-discovery` | `ac9cf914b69004d4d351272fbaf790126ff6dd255263f8020213bded6226b8b5` |
 | `prediction-pool-optimizer` | `5eab312a114476b7fc8dc1ef3846b40d759c0db580c75e14b7abbdc541bc2b7f` |
@@ -2313,32 +2312,30 @@ the 500 target, still **MET**. Neither verdict changes in kind.
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
 
-## Growth — 2026-11-03b, three corpora for skills the round touched; one seals
+## Growth — 2026-11-03b, two corpora for skills the round touched; one seals
 
 ```
-THREE ROWS ARE NEW. ONE SEALS, TWO TRAIN. NO PRE-EXISTING CORPUS FILE WAS
+TWO ROWS ARE NEW. ONE SEALS, ONE TRAINS. NO PRE-EXISTING CORPUS FILE WAS
 EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPORA WERE ON DISK.
 ```
 
-**What changed.** Round `inbox-2026-11-n` corrected one line in each of three
-skill bodies (an unsourced retention figure, the confidence vocabulary, the
-persona tier name), which brought them into `check_routing_coverage`'s
-touched-skill scope. Their corpora were written then, and all three leave the
-grandfather allowlist in the same change.
+**What changed.** Round `inbox-2026-11-n` corrected one line in each of two
+skill bodies (an unsourced retention figure, the confidence vocabulary), which
+brought them into `check_routing_coverage`'s touched-skill scope. Their corpora
+were written then, and both leave the grandfather allowlist in the same change.
 
 | Row | Partition | `sha256(name)[0:2]` | Now |
 |---|---|---|---|
 | `performance-analysis` | holdout | `0x1a` = 26 < 51 | new |
 | `data-handling-judgment` | train | `0x5f` = 95 ≥ 51 | new |
-| `persona-writing` | train | `0xe5` = 229 ≥ 51 | new |
 
 `performance-analysis` seals with content written today, so its row carries no
 earlier exposure. The sealed set moves **45 -> 46**, the train set
-**154 -> 156**, the set **199 -> 202**. `SET-SHA256` moves:
-`838eb6c3…` → `15bf34ce…`.
+**154 -> 155**, the set **199 -> 201**. `SET-SHA256` moves:
+`838eb6c3…` → `2f046432…`.
 
 **Both train-side measurements were re-taken on this tree.**
 `routing-body-signal-verdict.json`: still `harmful` on the false-activation
-guard (**+4.79 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
-recall loss **38.28 pp**, the ceiling stays **BREACHED**; context cost **229.9**
+guard (**+4.82 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
+recall loss **38.22 pp**, the ceiling stays **BREACHED**; context cost **229.9**
 tokens against the 500 target, still **MET**. Neither verdict changes in kind.

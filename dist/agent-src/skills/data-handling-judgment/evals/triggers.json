@@ -22,7 +22,7 @@
             "q": "wie bauen wir einen Ablauf für DSGVO-Auskunfts- und Löschanfragen auf?",
             "trigger": true,
             "class": "exemplar",
-            "note": "de"
+            "language": "de"
         },
         {
             "q": "run a privacy review of the new referral feature before launch",

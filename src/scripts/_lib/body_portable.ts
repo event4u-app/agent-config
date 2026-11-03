@@ -41,12 +41,12 @@ import { INDEXED_TRIGGER_KEYS } from '../../shared/skillRanking.js';
 /**
  * Frontmatter keys `buildEntry` reads and transports whole
  * (`src/cli/mcp/content.ts` — `fm.name`, `fm.description`, `fm.source`,
- * `fm.personas`).
+ * `fm.personas`, `fm.inputs`).
  *
  * Derived from the carrier source, never from the schema: a schema property the
  * carrier does not read is dropped no matter what the schema says about it.
  */
-export const CARRIED_KEYS: readonly string[] = ['name', 'description', 'source', 'personas'];
+export const CARRIED_KEYS: readonly string[] = ['name', 'description', 'source', 'personas', 'inputs'];
 
 /**
  * Keys the carrier reads but truncates, with the sub-keys that actually travel.

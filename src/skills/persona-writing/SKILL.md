@@ -87,7 +87,7 @@ or do not ship it.
 id: <kebab-case-id>
 role: <Human-Readable Role>
 description: "One sentence: what this voice catches that others miss."
-tier: core | specialist
+tier: core | specialty
 mode: developer | product-owner | qa | stakeholder | none
 version: "1.0"
 source: package

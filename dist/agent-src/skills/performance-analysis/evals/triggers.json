@@ -22,7 +22,7 @@
             "q": "mach eine Performance-Analyse der Dashboard-API, die Antwortzeiten sind zu hoch",
             "trigger": true,
             "class": "exemplar",
-            "note": "de"
+            "language": "de"
         },
         {
             "q": "our pest suite takes 12 minutes, speed up the tests",
