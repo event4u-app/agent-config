@@ -66,7 +66,7 @@ export const KNOWN_INTENTS: ReadonlySet<string> = new Set([
  */
 const _UI_NOUNS: ReadonlySet<string> = new Set([
     'ui', 'screen', 'page', 'view', 'form', 'modal', 'dialog',
-    'button', 'card', 'tile',
+    'button', 'card', 'tile', 'animation',
     'header', 'footer', 'nav', 'navigation', 'sidebar', 'menu',
     'dropdown', 'tab', 'panel', 'layout', 'component', 'icon',
     'tooltip', 'toast', 'banner', 'badge', 'avatar', 'label',
@@ -93,6 +93,9 @@ export const UI_I18N: Readonly<
             'seite', 'webseite', 'website', 'formular', 'schaltfläche', 'knopf',
             'auswahlfeld', 'auswahlliste', 'eingabefeld', 'dialog', 'menü',
             'selectbox', 'dropdown', 'oberfläche', 'ansicht', 'layout',
+            // Symptom nouns (road-to-design-inputs-and-pages-read-as-they-are
+            // 3.2): a defect reported by what the user sees names the surface.
+            'karte', 'kachel', 'animation', 'abstand', 'abständ',
         ],
         build: ['füg', 'füge', 'hinzufügen', 'erstell', 'erstelle', 'bau', 'baue', 'ergänz', 'ergänze'],
         trivial: ['änder', 'ändere', 'pass', 'passe', 'tausch', 'tausche', 'setz', 'setze', 'mach', 'mache', 'korrigier', 'korrigiere', 'ersetz', 'ersetze'],
@@ -129,7 +132,11 @@ function _i18n_trivial(text: string): boolean {
         const obj = _stemRe(table.objects, true);
         // German puts the finite verb first ("Ändere die Farbe") or the
         // infinitive last ("die Farbe ändern"); either order, same sentence.
-        for (const sentence of text.split(/[.!?]/)) {
+        for (const raw of text.split(/[.!?]/)) {
+            // English "a/an/the (…) pass" is a noun, not the German verb
+            // `pass` ("pass die Farbe an") — surfaced by plural UI nouns
+            // (corpus uit-030, "an accessibility pass … aria labels").
+            const sentence = raw.replace(/\b(?:a|an|the|another|one)\s+(?:\p{L}+\s+)?pass\b/gu, '');
             if (verb.test(sentence) && obj.test(sentence) && !_stemRe(table.build, false).test(sentence)) {
                 return true;
             }
@@ -308,9 +315,18 @@ export function directive_set_for(intent: string): string {
 
 // --- helpers ----------------------------------------------------------
 
+// `views` and `pages` stay singular-only: plural, they are database words
+// ("SQL views", "the pages table" — corpus uit-077, uit-078).
+const _SINGULAR_ONLY_UI_NOUNS: ReadonlySet<string> = new Set(['view', 'page']);
+
+function _ui_noun_re(word: string): RegExp {
+    const plural = _SINGULAR_ONLY_UI_NOUNS.has(word) ? '' : '(?:s|es)?';
+    return new RegExp(`\\b${reEscape(word)}${plural}\\b`);
+}
+
 function _has_ui_signal(text: string): boolean {
     for (const w of _UI_NOUNS) {
-        if (reSearch(wordBoundary(w), text)) {
+        if (reSearch(_ui_noun_re(w), text)) {
             return true;
         }
     }

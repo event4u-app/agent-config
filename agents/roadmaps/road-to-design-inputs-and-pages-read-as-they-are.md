@@ -99,7 +99,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       gains bars `symptom_ui` (never `backend`) and `adjective_review`
       (always `review_only`). The new bars MISS at this step.
       verify: `npx vitest run tests/scripts/eval_ui_triviality.test.ts` -> 0 and `./scripts-run src/scripts/eval_ui_triviality` prints both new bars
-- [ ] **3.2 Plurals and German symptom nouns.** In
+- [x] **3.2 Plurals and German symptom nouns.** In
       `src/agent-src/templates/scripts/work_engine/intent/classify.ts`: UI-noun
       matching accepts `s|es` plurals except `views`/`pages` (backend sense);
       `animation` joins `_UI_NOUNS`; `karte`, `kachel`, `animation`, `abstand`
