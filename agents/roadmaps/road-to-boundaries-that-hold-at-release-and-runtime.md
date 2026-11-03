@@ -131,11 +131,17 @@ green after the fix, and the release-side rules fail the contract test on regres
       Note (red at the pin): 14 attacks / 7 benign; 10 attacks missed (all prepended-recurrence,
       German, `eval`/`wget`, package-install and `call <url>` rows), 3 benign refused
       ("Always run the tests…", "Always check the changelog…", "Always fetch the latest main…").
-- [ ] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in
+- [x] **3.2 Repair the guard.** Extend `_STANDING_COMMAND_RE` in
       `src/scripts/_lib/user_global_observations.ts` to prepended recurrence, add the
       `retrieval_sanitize` scan (`risk_level !== 'low'`) as a second channel, and stop refusing an
       imperative that has no fetch/exec target. No allowlist entries.
       verify: `npx vitest run tests/lib/standing_commands_fixture.test.ts tests/lib/user_global_observations.test.ts` → 0
+      Note: the guard is now recurrence marker AND fetch/exec target (URL, pipe to shell, `$(`,
+      `curl`/`wget`/`eval`/`… -c`, package install, `npx`, download), plus `_scan` as the second
+      channel. A bare script path and a backtick span are not targets — both refused stored
+      preferences in `user_global_observations_project_attribution.test.ts`; the fixture's
+      `./bootstrap.sh` row became a `bash -c 'curl …'` row and two such preferences joined the
+      benign set.
 - [ ] **3.3 The three project writers call it.** `evaluateCaptureGuards` runs in
       `src/scripts/memory_signal.ts` (and its twin `src/agent-src/templates/scripts/memory_signal.ts`),
       `src/scripts/mine_session.ts` (`commitIntake`) and `src/scripts/retro.ts`
