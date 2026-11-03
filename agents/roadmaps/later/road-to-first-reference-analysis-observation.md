@@ -47,7 +47,7 @@ estate_growth_exempt: "Claimed 2026-09-08 for the park, replacing the creation-t
 ## Goal
 
 Spend exactly one of the two remaining observation slots of the pre-registered
-claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid,
+claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`). Spend it on a valid,
 atomic upgraded-plus-shadow analysis pair, and write the outcome into the claim
 row honestly. Done when: both arms have run against one pinned reference at one
 pinned revision under the frozen protocol below, and the claim row records

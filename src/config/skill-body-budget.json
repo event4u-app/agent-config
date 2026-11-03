@@ -47,7 +47,7 @@
         "comp-banding": 11846,
         "competitive-moat-analysis": 10431,
         "competitive-positioning": 6315,
-        "complexity-first-planning": 6243,
+        "complexity-first-planning": 6431,
         "composer-packages": 5874,
         "condense-memory": 11203,
         "content-funnel-design": 9057,
@@ -187,7 +187,7 @@
         "module-detect-on-the-fly": 8738,
         "module-management": 8219,
         "monorepo-workspace": 8228,
-        "motion-choreographer": 8786,
+        "motion-choreographer": 8937,
         "multi-tenancy": 6123,
         "nda-triage": 7243,
         "nextjs-patterns": 10113,
@@ -285,7 +285,7 @@
         "skill-management": 5347,
         "skill-reviewer": 9286,
         "skill-writing": 13374,
-        "song-to-script": 14713,
+        "song-to-script": 14934,
         "source-discovery": 10395,
         "spreadsheet-authoring": 5556,
         "sql-writing": 3715,
@@ -293,7 +293,7 @@
         "standards-from-config": 7915,
         "storybook-workshop": 13536,
         "subagent-orchestration": 19978,
-        "supply-chain-intake": 12481,
+        "supply-chain-intake": 12809,
         "svg-authoring": 17970,
         "symfony-workflow": 10329,
         "systematic-debugging": 17084,
@@ -319,7 +319,7 @@
         "upstream-contribute": 12143,
         "using-git-worktrees": 11846,
         "validate-feature-fit": 4252,
-        "verify-completion-evidence": 10451,
+        "verify-completion-evidence": 10675,
         "verify-repair-loop": 15727,
         "video-director": 5818,
         "vision-articulation": 10198,
@@ -1199,6 +1199,36 @@
             "old": 14896,
             "new": 14984,
             "reason": "Names the one confidence vocabulary and that `confirmed` needs a test as proof (road-to-a-record-that-says-what-it-lost)."
+        },
+        {
+            "skill": "complexity-first-planning",
+            "old": 6243,
+            "new": 6431,
+            "reason": "One step naming one playable level on the target device as the load-bearing unknown for a game (road-to-a-game-the-agent-can-playtest 3.1)."
+        },
+        {
+            "skill": "motion-choreographer",
+            "old": 8786,
+            "new": 8937,
+            "reason": "States that its provider prompt grammar is undated, so a planner re-checks it against the provider (road-to-limits-the-surfaces-already-state 1.2)."
+        },
+        {
+            "skill": "song-to-script",
+            "old": 14713,
+            "new": 14934,
+            "reason": "Scene lengths stay on a manifest allowed_durations grid, with the split example 30 s to 8+8+8+6 (road-to-limits-the-surfaces-already-state 1.2)."
+        },
+        {
+            "skill": "supply-chain-intake",
+            "old": 12481,
+            "new": 12809,
+            "reason": "Points the archive step at the archive_precheck script and the agent-asset intake reference (road-to-limits-the-surfaces-already-state 3.1, 3.2)."
+        },
+        {
+            "skill": "verify-completion-evidence",
+            "old": 10451,
+            "new": 10675,
+            "reason": "One evidence row for a game, scene or native runtime: the engine test run or a capture plus a cited reading (road-to-a-game-the-agent-can-playtest 3.1)."
         }
     ]
 }

@@ -105,9 +105,12 @@ Every emitted scene satisfies
 `verified: false`, say so in the report — the envelope is
 documented-best-effort, not a smoke-traced fact.
 
-Veo (`gemini-veo`) renders clips of exactly 4, 6 or 8 seconds: plan
-scene durations on that grid, because any other length is clamped at
-submit (the adapter says `requested <n>s -> rendered <m>s`).
+When the manifest entry declares `allowed_durations` (a grid — Veo
+`gemini-veo` renders exactly 4, 6 or 8 seconds), every scene length is a
+member of it: split a long section into grid lengths (30 s on Veo →
+8 + 8 + 8 + 6) and merge or extend a short one onto the nearest grid value.
+Any other length is clamped at submit (the adapter says
+`requested <n>s -> rendered <m>s`), and the clip no longer fits its scene.
 
 ### Step 2: Assign mood + action
 

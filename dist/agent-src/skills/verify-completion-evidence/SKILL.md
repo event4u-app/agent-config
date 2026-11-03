@@ -135,6 +135,7 @@ reading (**self**). Self is never enough on its own.
 | Research or summary | Each claim maps to a fetched primary source, or is marked secondary | external artifact |
 | Rendered artifact (page, SVG, deck) | Rendered and inspected; overflow and alignment checked | tool |
 | Media | Probe output (duration, streams) + key frames inspected | tool |
+| Game / scene / native runtime | The engine's own test run, or a runtime capture plus a cited reading of it; "build/import passed" is `static-only` (status words as in [`svg-authoring`](../svg-authoring/SKILL.md)) | tool |
 
 **Never accept** as proof: "should work", "looks correct", "the logic
 is sound", "compiles" (unless compilation itself is the contract).

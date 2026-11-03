@@ -101,7 +101,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-experience-loop-owner-decisions | later | — | Road to the experience loop's two owner-reserved decisions |
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
-| road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid, atomic upgraded-plus-shadow … |
+| road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`). |
 | road-to-floor-source-tags-with-payload-room | later | later | Floor source tags. |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
@@ -110,7 +110,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |
 | road-to-guided-journeys | later | later | Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C) |
 | road-to-harvest-second-sweep-proposals | later | later | Second-Sweep surfaced proposals (parked) |
-| road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
+| road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards hold. |
 | road-to-host-catalogue-contract | later | later | State, from a measurement rather than from this package's model of a host, what projection rule satisfies both: total payload … |
 | road-to-host-claims-the-tree-contradicts-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-host-inputs-the-installer-honours | later | later | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |

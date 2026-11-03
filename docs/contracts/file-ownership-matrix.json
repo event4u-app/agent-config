@@ -3684,6 +3684,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/svg-authoring/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -20021,6 +20027,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md",
+      "target": ".agent-src.uncondensed/skills/supply-chain-intake/references/agent-asset-intake.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/svg-authoring/SKILL.md",
       "target": ".agent-src.uncondensed/skills/svg-authoring/SKILL.md",
       "type": "WRITE",
@@ -20912,6 +20946,13 @@
     {
       "source": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
       "target": ".agent-src.uncondensed/skills/quality-tools/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/svg-authoring/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

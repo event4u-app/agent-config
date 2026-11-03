@@ -279,4 +279,15 @@ describe('a declined consent leaves the file unchanged', () => {
         expect(plan.rules).toEqual([]);
         expect(renderDenyPlan(plan, 'claude')).toContain('nothing to enforce');
     });
+
+    it('the enforceable consent screen says a user-installed mod can lift a deny row', () => {
+        const text = renderDenyPlan(planDenyRows(NO_GOS, 'claude'), 'claude');
+        expect(text).toMatch(/user-installed Claude Code mod/);
+        expect(text).toMatch(/doctor neighbours/);
+    });
+
+    it('a report-only host is not told about Claude Code mods', () => {
+        const text = renderDenyPlan(planDenyRows(NO_GOS, 'cowork'), 'cowork');
+        expect(text).not.toMatch(/Claude Code mod/);
+    });
 });
