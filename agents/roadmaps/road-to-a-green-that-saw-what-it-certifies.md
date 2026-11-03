@@ -63,7 +63,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       `push` and `pull_request` is byte-identical in effect; inert until a queue exists.
       verify: `npx vitest run tests/scripts/workflow_merge_group_concurrency.test.ts` — parses the
       three workflows and asserts the expression shape for both keys.
-- [ ] **1.5 Inventory of the steps a queue would skip.** New
+- [x] **1.5 Inventory of the steps a queue would skip.** New
       `agents/evidence/analysis/merge-group-pr-only-steps-2026-11.md`: one row per step guarded by
       `github.event_name == 'pull_request'` in `consistency.yml`, `standing-payload-delta.yml` and
       `tests.yml` — step name · invariant · "enforced elsewhere (`file:line`)" or "intentionally
