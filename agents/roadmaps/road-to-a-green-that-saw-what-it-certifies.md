@@ -84,7 +84,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
 
 ## Phase 3 — A subagent return the tree can witness (read-only)
 
-- [ ] **3.1 `subagent_return_report`, counts only.** New `src/scripts/subagent_return_report.ts`
+- [x] **3.1 `subagent_return_report`, counts only.** New `src/scripts/subagent_return_report.ts`
       on `listTranscriptFiles` (`src/scripts/_lib/cc_transcript.ts:257`): per leg, write attempts
       (`Edit`/`Write`/`MultiEdit`/`NotebookEdit`), successful writes (`tool_result.is_error` not
       true), distinct targets (hash set, never printed); joined from the host sidecar
@@ -95,7 +95,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       legs (two edits on one file, one failed write, one leg without sidecar) yields
       `writes_attempted 3`, `writes_ok 2`, `targets 1`, `meta_missing 1`; a test asserts no path,
       no host id and no prose string reaches stdout.
-- [ ] **3.2 Status claim and effort per leg.** In the same script: `status_claim` ∈ {`DONE`,
+- [x] **3.2 Status claim and effort per leg.** In the same script: `status_claim` ∈ {`DONE`,
       `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, `BLOCKED`, `CHECKPOINT`, `none`}, read line-anchored
       from the last assistant text or a final handback message only (a `DONE` inside a Bash input
       is `none`); `effort` from the leg's records, `null` when absent, `mixed` when uneven.
