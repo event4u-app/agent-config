@@ -23,7 +23,9 @@ The round-9 points and what was done with each:
 (6) The raise measurement is not automated. Unchanged: check_hook_bundle_composition rebuilds and measures the bundle in CI on every run and fails above max_bytes. Current reading after the merge and both fixes: 1,563,453 of 1,563,500 bytes; cssBlocks was rewritten more compactly so that (B) did not need a further raise.
 (7) The chunk-margin derivation is post-hoc. Unchanged since round 8, where it was restated as rounding rather than an estimate; the chunk measures 13,287 of 14,000 bytes.
 
-Full diff against origin/main (src and tests):
+Scope of what is shown: the full diff of src at three lines of context, and of tests only every added describe/it line, extracted mechanically (git diff -U0 of tests, added lines matching describe( or it(, unfiltered). The full test diff does not fit the council bundle ceiling of 51,200 bytes; this boundary was set by the repository owner, not by the author. The sensitivity results for the new tests are stated in (1) to (4) above.
+
+Full diff against origin/main (src):
 diff --git a/src/config/hook-bundle-budget.json b/src/config/hook-bundle-budget.json
 index 624c6d74f8..e7b7d54b01 100644
 --- a/src/config/hook-bundle-budget.json
@@ -599,565 +601,72 @@ index 82555f6136..179b98886e 100644
          ...supersededStatute([file], supersessions).map((h) => ({ ...h, check: 'superseded-statute-in-legal-page' as const })),
      ];
  }
-diff --git a/tests/hooks/design_pass.test.ts b/tests/hooks/design_pass.test.ts
-index 5beaeae755..33a5485a53 100644
---- a/tests/hooks/design_pass.test.ts
-+++ b/tests/hooks/design_pass.test.ts
-@@ -28,6 +28,7 @@ import {
-     type Finding,
- } from '../../src/scripts/hooks/design_pass_hook.js';
- import { collectInputs } from '../../src/scripts/_lib/probe_inputs.js';
-+import { unwrap } from '../../src/scripts/hooks/envelope.js';
- import { readDischarged } from '../../src/scripts/_lib/obligations.js';
- 
- const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-@@ -169,6 +170,13 @@ describe('payload extraction tolerates host key variance', () => {
-         expect(targetPath(payload)).toBe(want);
-     });
- 
-+    it('reads the path out of the dispatcher envelope an in-process concern receives', () => {
-+        const envelope = { schema_version: 1, platform: 'claude', event: 'post_tool_use', payload: { tool_input: { file_path: 'e.html' } } };
-+        expect(targetPath(unwrap(JSON.stringify(envelope))[1])).toBe('e.html');
-+        // The envelope itself names no path: reading it unwrapped is the defect this pins.
-+        expect(targetPath(envelope)).toBeNull();
-+    });
-+
-     it('returns null when no path key is present', () => {
-         expect(targetPath({ tool_input: { content: 'x' } })).toBeNull();
-         expect(targetPath(null)).toBeNull();
-diff --git a/tests/hooks/design_pass_web_launch.test.ts b/tests/hooks/design_pass_web_launch.test.ts
-new file mode 100644
-index 0000000000..590cd76237
---- /dev/null
-+++ b/tests/hooks/design_pass_web_launch.test.ts
-@@ -0,0 +1,90 @@
-+// Rows 2.1 and 2.2 of check_web_launch_readiness reach the agent at write time
-+// through design_pass_hook's post_tool_use pass (road-to-a-page-check-at-write-time 1.1).
-+import * as fs from 'node:fs';
-+import * as os from 'node:os';
-+import * as path from 'node:path';
-+import { pathToFileURL } from 'node:url';
-+
-+import { describe, expect, it } from 'vitest';
-+
-+import {
-+    WEB_LAUNCH_MAX_CHARS,
-+    WEB_LAUNCH_RE,
-+    isPassSurface,
-+    withDegradation,
-+    type PassResult,
-+} from '../../src/scripts/hooks/design_pass_hook';
-+import { scanWebLaunch } from '../../src/scripts/hooks/web_launch_rows';
-+import { WEB_LAUNCH_CHUNK, loadWebLaunchScan } from '../../src/scripts/hooks/web_launch_rows_loader';
-+
-+const CORPUS = path.resolve(__dirname, '..', 'fixtures', 'third-party-load');
-+const read = (rel: string): string => fs.readFileSync(path.join(CORPUS, rel), 'utf8');
-+
-+describe('design_pass_hook — web-launch rows at write time', () => {
-+    it('reads exactly the written .html/.css files, and they are pass surfaces', () => {
-+        for (const p of ['site/index.html', 'site/a.htm', 'site/css/site.css']) {
-+            expect(WEB_LAUNCH_RE.test(p), p).toBe(true);
-+            expect(isPassSurface(p), p).toBe(true);
-+        }
-+        expect(WEB_LAUNCH_RE.test('app/layout.tsx')).toBe(false);
-+        expect(WEB_LAUNCH_RE.test('logo.svg')).toBe(false);
-+    });
-+
-+    it('a page loading Google Fonts surfaces the preconnect and the stylesheet, advisory P2', () => {
-+        const f = scanWebLaunch('index.html', read('planted/index.html'));
-+        expect(f.map((x) => [x.rule, x.line])).toEqual([
-+            ['third-party-load-in-markup', 6],
-+            ['third-party-load-in-markup', 7],
-+        ]);
-+        expect(f.every((x) => x.severity === 'P2' && x.file === 'index.html')).toBe(true);
-+    });
-+
-+    it('a stylesheet @import of the provider surfaces its line', () => {
-+        expect(scanWebLaunch('css/site.css', read('planted/css/site.css')).map((x) => x.line)).toEqual([1]);
-+    });
-+
-+    it('an imprint citing the superseded statute surfaces it', () => {
-+        const f = scanWebLaunch('impressum.html', read('planted/impressum.html'));
-+        expect(f.some((x) => x.rule === 'superseded-statute-in-legal-page' && x.line === 6)).toBe(true);
-+    });
-+
-+    it('the safe twins surface nothing', () => {
-+        for (const rel of ['index.html', 'css/site.css', 'kontakt.html', 'ueber-uns.html', 'impressum.html']) {
-+            expect(scanWebLaunch(rel, read(`safe/${rel}`)), rel).toEqual([]);
-+        }
-+    });
-+
-+    it('the input cap is one megabyte of characters', () => {
-+        expect(WEB_LAUNCH_MAX_CHARS).toBe(1_000_000);
-+    });
-+});
-+
-+describe('the loader', () => {
-+    it('unbundled, returns null (the hook then neither scans nor reports a gap)', () => {
-+        expect(loadWebLaunchScan(import.meta.url, false)).toBeNull();
-+    });
-+
-+    it('bundled, reads scanWebLaunch from the chunk beside it, and null when absent', () => {
-+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wl-chunk-'));
-+        try {
-+            const self = pathToFileURL(path.join(dir, 'dispatch.js')).href;
-+            expect(loadWebLaunchScan(self, true)).toBeNull();
-+            fs.writeFileSync(path.join(dir, WEB_LAUNCH_CHUNK), 'exports.scanWebLaunch = () => [{ rule: "x", line: 1 }];');
-+            expect(loadWebLaunchScan(self, true)?.('a.html', '')).toHaveLength(1);
-+        } finally {
-+            fs.rmSync(dir, { recursive: true, force: true });
-+        }
-+    });
-+});
-+
-+describe('withDegradation — an unchecked file is never a clean pass', () => {
-+    const base: PassResult = { slot: 'post_tool_use', findings: [], blocked: [], audit_missing: [], verification: 'verified' };
-+
-+    it('marks the pass degraded with the reason', () => {
-+        expect(withDegradation(base, 'r1')).toMatchObject({ verification: 'degraded', degradation_reason: 'r1' });
-+    });
-+
-+    it('appends to an earlier reason rather than replacing it', () => {
-+        expect(withDegradation(withDegradation(base, 'r1'), 'r2').degradation_reason).toBe('r1; r2');
-+    });
-+});
-diff --git a/tests/hooks/design_pass_web_launch_dispatch.test.ts b/tests/hooks/design_pass_web_launch_dispatch.test.ts
-new file mode 100644
-index 0000000000..8c33c606db
---- /dev/null
-+++ b/tests/hooks/design_pass_web_launch_dispatch.test.ts
-@@ -0,0 +1,80 @@
-+// The web-launch rows through the shipped path: host payload → bundled dispatcher →
-+// in-process design-pass concern → conditional chunk → host emission. The unit tests
-+// call `scanWebLaunch` directly and cannot see the dispatcher's envelope, which is
-+// exactly where the concern once lost the written file path for every write.
-+import { spawnSync } from 'node:child_process';
-+import * as fs from 'node:fs';
-+import * as os from 'node:os';
-+import * as path from 'node:path';
-+
-+import { afterEach, describe, expect, it } from 'vitest';
-+
-+const REPO_ROOT = path.resolve(__dirname, '..', '..');
-+const BUNDLE = path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js');
-+const CORPUS = path.join(REPO_ROOT, 'tests', 'fixtures', 'third-party-load');
-+
-+const tmpDirs: string[] = [];
-+afterEach(() => {
-+    while (tmpDirs.length) fs.rmSync(tmpDirs.pop()!, { recursive: true, force: true });
-+});
-+
-+function workspaceWith(rel: string, fixture: string): string {
-+    const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'wl-dispatch-'));
-+    tmpDirs.push(ws);
-+    fs.writeFileSync(path.join(ws, '.agent-settings.yml'), 'hooks:\n  design_pass:\n    enabled: true\n');
-+    fs.mkdirSync(path.dirname(path.join(ws, rel)), { recursive: true });
-+    fs.copyFileSync(path.join(CORPUS, fixture), path.join(ws, rel));
-+    return ws;
-+}
-+
-+function dispatchWrite(ws: string, rel: string): string {
-+    const r = spawnSync(process.execPath, [BUNDLE, '--platform', 'claude', '--event', 'post_tool_use', '--project-dir', ws], {
-+        encoding: 'utf-8',
-+        cwd: ws,
-+        input: JSON.stringify({ session_id: 'wl-dispatch', tool_name: 'Write', tool_input: { file_path: rel } }),
-+        timeout: 60_000,
-+    });
-+    expect(r.status, r.stderr).toBe(0);
-+    const out = r.stdout.trim();
-+    if (!out) return '';
-+    return String((JSON.parse(out) as { hookSpecificOutput?: { additionalContext?: string } }).hookSpecificOutput?.additionalContext ?? '');
-+}
-+
-+const webLaunchLines = (ctx: string): string[] => ctx.split('\n').filter((l) => l.includes('[P2 web-launch]'));
-+
-+describe.runIf(fs.existsSync(BUNDLE))('a written page reaches the agent through the bundled dispatcher', () => {
-+    it('a page loading Google Fonts surfaces both loads, with file and line', () => {
-+        const ws = workspaceWith('site/index.html', 'planted/index.html');
-+        const lines = webLaunchLines(dispatchWrite(ws, 'site/index.html'));
-+        expect(lines).toHaveLength(2);
-+        expect(lines[0]).toMatch(/site\/index\.html:6 — <link rel="preconnect"> loads `fonts\.gstatic\.com`/);
-+        expect(lines[1]).toMatch(/site\/index\.html:7 — <link rel="stylesheet"> loads `fonts\.googleapis\.com`/);
-+    });
-+
-+    it('a stylesheet @import of the provider surfaces line 1', () => {
-+        const ws = workspaceWith('site/css/site.css', 'planted/css/site.css');
-+        const lines = webLaunchLines(dispatchWrite(ws, 'site/css/site.css'));
-+        expect(lines.map((l) => /site\.css:(\d+)/.exec(l)?.[1])).toEqual(['1']);
-+    });
-+
-+    it('the safe twin surfaces no web-launch row, and the pass did not degrade for it', () => {
-+        const ws = workspaceWith('site/index.html', 'safe/index.html');
-+        const ctx = dispatchWrite(ws, 'site/index.html');
-+        expect(webLaunchLines(ctx)).toEqual([]);
-+        expect(ctx).not.toMatch(/web-launch rows not run/);
-+    });
-+
-+    it('the cap is inclusive: 1,000,000 characters are scanned, 1,000,001 are reported unchecked', () => {
-+        const ws = workspaceWith('site/index.html', 'planted/index.html');
-+        const abs = path.join(ws, 'site/index.html');
-+        const page = fs.readFileSync(abs, 'utf-8');
-+        const padded = (n: number): string => `${page}<!--${'x'.repeat(n - page.length - 7)}-->`;
-+        fs.writeFileSync(abs, padded(1_000_000));
-+        expect(fs.readFileSync(abs, 'utf-8')).toHaveLength(1_000_000);
-+        expect(webLaunchLines(dispatchWrite(ws, 'site/index.html'))).toHaveLength(2);
-+        fs.writeFileSync(abs, padded(1_000_001));
-+        const over = dispatchWrite(ws, 'site/index.html');
-+        expect(webLaunchLines(over)).toEqual([]);
-+        expect(over).toMatch(/web-launch rows not run: site\/index\.html/);
-+    });
-+});
-diff --git a/tests/scripts/design_slop_css_blocks_linear.test.ts b/tests/scripts/design_slop_css_blocks_linear.test.ts
-new file mode 100644
-index 0000000000..62af237db5
---- /dev/null
-+++ b/tests/scripts/design_slop_css_blocks_linear.test.ts
-@@ -0,0 +1,85 @@
-+// cssBlocks feeds nine design-slop rules and runs on every dispatched write of an
-+// .html/.css file. Its first form rescanned the rest of the text from every start
-+// position of a brace-free run, and counted lines from the top for every block:
-+// a 100,000-character minified page took 39 s through the hook.
-+import * as fs from 'node:fs';
-+import * as path from 'node:path';
-+
-+import { describe, expect, it } from 'vitest';
-+
-+import { cssBlocks } from '../../src/scripts/design_slop_rules';
-+
-+const REPO = path.resolve(__dirname, '..', '..');
-+const EVENT_P95_MS: number = (
-+    JSON.parse(fs.readFileSync(path.join(REPO, 'src', 'config', 'hook-latency-budget.json'), 'utf-8')) as {
-+        budgets_ms: { any_hook_event: { p95_ci: number } };
-+    }
-+).budgets_ms.any_hook_event.p95_ci;
-+
-+// The removed implementation, verbatim: the reference the new one must equal.
-+function REMOVED(content: string): Array<{ selector: string; body: string; line: number }> {
-+    const blocks: Array<{ selector: string; body: string; line: number }> = [];
-+    const re = /([^{}]+)\{([^{}]*)\}/g;
-+    content = content.replace(/\/\*[^]*?\*\//g, (c) => c.replace(/./g, ' '));
-+    const lineOf = (index: number): number => (content.slice(0, index).match(/\n/g) ?? []).length + 1;
-+    let m: RegExpExecArray | null;
-+    while ((m = re.exec(content)) !== null) {
-+        const sel = m[1] ?? '';
-+        blocks.push({ selector: sel.trim(), body: m[2] ?? '', line: lineOf(m.index + sel.length - sel.trimStart().length) });
-+    }
-+    return blocks;
-+}
-+
-+const timed = (fn: () => unknown): number => {
-+    const t = performance.now();
-+    fn();
-+    return performance.now() - t;
-+};
-+
-+describe('cssBlocks equals the regex it replaced', () => {
-+    const files = (dir: string): string[] =>
-+        fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-+            const p = path.join(dir, e.name);
-+            return e.isDirectory() ? files(p) : /\.(html?|css)$/i.test(e.name) ? [p] : [];
-+        });
-+
-+    it('on every .html/.css fixture in the tree', () => {
-+        const all = files(path.join(REPO, 'tests', 'fixtures'));
-+        expect(all.length).toBeGreaterThanOrEqual(20);
-+        for (const p of all) {
-+            const text = fs.readFileSync(p, 'utf-8');
-+            expect(cssBlocks(text), path.relative(REPO, p)).toEqual(REMOVED(text));
-+        }
-+    });
-+
-+    it('on 5,000 generated strings over the characters the scan branches on', () => {
-+        let seed = 11;
-+        const next = (): number => (seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31;
-+        const alphabet = ['{', '}', 'a', ' ', '\n', '/', '*', ':', ';', '\r'];
-+        for (let k = 0; k < 5_000; k++) {
-+            const s = Array.from({ length: 1 + Math.floor(next() * 40) }, () => alphabet[Math.floor(next() * alphabet.length)]).join('');
-+            expect(cssBlocks(s), JSON.stringify(s)).toEqual(REMOVED(s));
-+        }
-+    });
-+});
-+
-+describe('cssBlocks is linear on a megabyte', () => {
-+    const N = 1_000_000;
-+    const shapes: Record<string, string> = {
-+        'one brace-free run (a minified page with no CSS)': 'x'.repeat(N),
-+        'a run ending in an opening brace that never closes': `${'x'.repeat(N - 1)}{`,
-+        'many small blocks, one per line': 'a{b}\n'.repeat(N / 5),
-+        'opening braces only': 'a{'.repeat(N / 2),
-+        'comment openers that never close': '/*'.repeat(N / 2),
-+    };
-+    for (const [name, text] of Object.entries(shapes)) {
-+        it(name, () => {
-+            expect(timed(() => cssBlocks(text))).toBeLessThan(EVENT_P95_MS);
-+        });
-+    }
-+
-+    it('and still numbers lines on the megabyte', () => {
-+        const blocks = cssBlocks('a{b}\n'.repeat(N / 5));
-+        expect([blocks.length, blocks[0]?.line, blocks.at(-1)?.line]).toEqual([N / 5, 1, N / 5]);
-+    });
-+});
-diff --git a/tests/scripts/web_launch_linear.test.ts b/tests/scripts/web_launch_linear.test.ts
-new file mode 100644
-index 0000000000..14d1454133
---- /dev/null
-+++ b/tests/scripts/web_launch_linear.test.ts
-@@ -0,0 +1,254 @@
-+// The web-launch rows read agent-written markup, so they must stay linear on
-+// pathological input: a minified single-line page, an unclosed <script>, a page
-+// of '<' or '[' with no closer. Ratification round 2 of the write-time carrier
-+// found quadratic paths here; each case below reproduced one before the fix.
-+import * as fs from 'node:fs';
-+import * as path from 'node:path';
-+
-+import { describe, expect, it } from 'vitest';
-+
-+import { loadConfig } from '../../src/scripts/check_web_launch_readiness';
-+import { classifyLoads, legalPagePlaceholders, loadRegister, tagsOf, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
-+
-+const REPO = path.resolve(__dirname, '..', '..');
-+const register = loadRegister(REPO, '2026-11-02');
-+const table = loadConfig(REPO).supersessions;
-+const N = 200_000;
-+
-+// The hook runs inside one hook event, so a scan of the largest file it reads must
-+// fit that event's p95 ceiling; a quadratic scan of the megabyte cases measured 2,562 ms.
-+const EVENT_P95_MS: number = (
-+    JSON.parse(fs.readFileSync(path.join(REPO, 'src', 'config', 'hook-latency-budget.json'), 'utf8')) as {
-+        budgets_ms: { any_hook_event: { p95_ci: number } };
-+    }
-+).budgets_ms.any_hook_event.p95_ci;
-+
-+const loads = (rel: string, body: string): string[] =>
-+    writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-in-markup').map((h) => `${String(h.line)}`);
-+const unread = (rel: string, body: string): string[] =>
-+    writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-unread').map((h) => `${String(h.line)}`);
-+
-+const timed = (fn: () => unknown): number => {
-+    const t = performance.now();
-+    fn();
-+    return performance.now() - t;
-+};
-+
-+const CASES: Record<string, string> = {
-+    'unclosed script tags on one line': '<script>'.repeat(N / 8),
-+    'opening angle brackets with no closer': '<'.repeat(N),
-+    'link tags with no closer': '<link rel=stylesheet href=x'.repeat(N / 28),
-+    'brackets with no closer': '[Firmenname'.repeat(N / 11),
-+};
-+
-+describe('linear on pathological input', () => {
-+    for (const [name, body] of Object.entries(CASES)) {
-+        it(`${name} (${String(body.length)} chars) finishes fast in an imprint`, () => {
-+            const ms = timed(() => writeTimeFindings('impressum.html', body, register, table));
-+            expect(ms).toBeLessThan(EVENT_P95_MS);
-+        });
-+    }
-+
-+    it('visibleText drops an unclosed script to the end, linearly', () => {
-+        expect(visibleText('<p>a</p><script>x')).toBe('a');
-+        expect(visibleText('<p>a</p><style>p{} b')).toBe('a');
-+        expect(visibleText('<p>a</p><style>p{}</style><p>b</p>')).toBe('a b');
-+        expect(timed(() => visibleText('<script>'.repeat(N / 8)))).toBeLessThan(EVENT_P95_MS);
-+    });
-+
-+    it('a minified page still reports its statute citation', () => {
-+        const page = `<html><body>${'<p>x</p>'.repeat(200)}<p>Angaben gemäß § 5 TMG</p></body></html>`;
-+        expect(writeTimeFindings('impressum.html', page, register, table).some((h) => h.check === 'superseded-statute-in-legal-page')).toBe(true);
-+    });
-+});
-+
-+describe('tags are found whatever the line layout (round-3 ratification)', () => {
-+
-+    it('a <link> wrapped over several lines by a formatter is found, on the line it starts', () => {
-+        const page = '<head>\n  <link\n    rel="stylesheet"\n    href="https://fonts.googleapis.com/css2?family=Inter"\n  />\n</head>';
-+        expect(loads('index.html', page)).toEqual(['2']);
-+    });
-+
-+    it('a minified single-line page still reports its third-party loads', () => {
-+        const page = `<html><head>${'<meta name="x" content="y">'.repeat(40)}<link rel="stylesheet" href="https://fonts.googleapis.com/css2"><iframe src="https://www.youtube.com/embed/x"></iframe></head></html>`;
-+        expect(loads('index.html', page)).toEqual(['1', '1']);
-+    });
-+
-+    it('a canonical link wrapped over lines still marks the host as the site itself', () => {
-+        const page = '<link\n rel="canonical"\n href="https://shop.example/"\n><script src="https://shop.example/app.js"></script>';
-+        const file = { rel: 'index.html', base: 'index.html', text: page, lines: page.split('\n') };
-+        const c = classifyLoads([file], register);
-+        expect([c.findings, c.undecided]).toEqual([[], []]);
-+        // Without the canonical, the same script is an unknown third party.
-+        const bare = '<script src="https://shop.example/app.js"></script>';
-+        expect(classifyLoads([{ ...file, text: bare, lines: [bare] }], register).undecided).toHaveLength(1);
-+    });
-+
-+    it('a click-to-load iframe carrying only data-src is not a load', () => {
-+        const page = '<iframe data-src="https://www.youtube.com/embed/x" title="Video"></iframe>';
-+        expect(loads('ueber-uns.html', page)).toEqual([]);
-+    });
-+
-+    it('an unterminated tag does not hide the next one, and is itself reported as unread', () => {
-+        const page = `<link rel="stylesheet" href="https://fonts.googleapis.com/a" ${'x'.repeat(5_000)}\n<link rel="stylesheet" href="https://fonts.googleapis.com/b">`;
-+        expect(loads('index.html', page)).toEqual(['2']);
-+        expect(unread('index.html', page)).toEqual(['1']);
-+    });
-+});
-+
-+describe('a long tag is read, an unclosed one is never a silent pass (round-5 ratification)', () => {
-+    it('a closed tag padded far past any window is still read', () => {
-+        const page = `<link data-pad="${'x'.repeat(5_000)}" rel="stylesheet" href="https://fonts.googleapis.com/a">`;
-+        expect(loads('index.html', page)).toEqual(['1']);
-+    });
-+
-+    it('an inline base64 image before a load does not hide the load', () => {
-+        const page = `<img src="data:image/png;base64,${'A'.repeat(20_000)}">\n<link rel="stylesheet" href="https://fonts.googleapis.com/a">`;
-+        expect(loads('index.html', page)).toEqual(['2']);
-+        expect(unread('index.html', page)).toEqual([]);
-+    });
-+
-+    it('a loadable tag with no closer at all is reported once per file, with its count', () => {
-+        const page = `<p>a</p>\n<link rel="stylesheet" href="https://fonts.googleapis.com/a"\n<script src="https://x.example/a.js"`;
-+        const hits = writeTimeFindings('index.html', page, register, table).filter((h) => h.check === 'third-party-load-unread');
-+        expect(hits.map((h) => h.line)).toEqual([2]);
-+        expect(hits[0]?.text).toMatch(/2 loadable tags/);
-+    });
-+
-+    it('the checker counts the same file undecided, never clean', () => {
-+        const page = '<link rel="stylesheet" href="https://fonts.googleapis.com/a"';
-+        const c = classifyLoads([{ rel: 'index.html', base: 'index.html', text: page, lines: [page] }], register);
-+        expect(c.findings).toEqual([]);
-+        expect(c.undecided).toHaveLength(1);
-+    });
-+
-+    it('an unclosed tag before a closed one leaves the closed one read', () => {
-+        const page = '<link rel="stylesheet" href="https://fonts.googleapis.com/a"\n<script src="https://www.youtube.com/s.js"></script>';
-+        expect(loads('index.html', page)).toEqual(['2']);
-+        expect(unread('index.html', page)).toEqual(['1']);
-+    });
-+
-+    it('sparse unclosed tags in a megabyte file read the text once, with or without a final closer', () => {
-+        const gap = 'x'.repeat(99_990);
-+        const sparse = Array.from({ length: 10 }, () => `<link href=x${gap}`).join('');
-+        const dense = '<link '.repeat(166_000);
-+        const shapes: [string, number, number][] = [
-+            [sparse, 10, 0],
-+            [`${sparse}>`, 10, 1],
-+            [`<link href=x${'x'.repeat(999_000)}`, 1, 0],
-+            [dense, 166_000, 0],
-+        ];
-+        for (const [body, count, closed] of shapes) {
-+            const tags = tagsOf(body);
-+            expect([tags.length, tags.filter((t) => t.closed).length]).toEqual([count, closed]);
-+            expect(unread('index.html', body)).toEqual(['1']);
-+            expect(timed(() => writeTimeFindings('index.html', body, register, table))).toBeLessThan(EVENT_P95_MS);
-+        }
-+    });
-+
-+    it('a page of unclosed link tags yields one hit, linearly', () => {
-+        const body = '<link rel=stylesheet href=x'.repeat(N / 28);
-+        expect(timed(() => expect(unread('index.html', body)).toHaveLength(1))).toBeLessThan(EVENT_P95_MS);
-+    });
-+});
-+
-+describe('tagsOf line numbers at the edges (round-9 ratification)', () => {
-+    const lines = (text: string): number[] => tagsOf(text).map((t) => t.line);
-+
-+    it('a tag at offset 0 is on line 1', () => {
-+        expect(lines('<link href=x>')).toEqual([1]);
-+    });
-+
-+    it('a tag starting right after the last newline is on the last line, and one at EOF unclosed still counts', () => {
-+        expect(lines('a\nb\n<script src=x></script>')).toEqual([3]);
-+        expect(lines('a\nb\n<img')).toEqual([3]);
-+    });
-+
-+    it('CRLF and lone-LF line endings number the same lines', () => {
-+        const lf = '<p>\n<link href=a>\n\n<script src=b></script>\n<img src=c>';
-+        expect(lines(lf.replace(/\n/g, '\r\n'))).toEqual(lines(lf));
-+        expect(lines(lf)).toEqual([2, 4, 5]);
-+    });
-+
-+    it('every tag of a page with one tag per line lands on its own line, across the binary-search boundaries', () => {
-+        for (const n of [1, 2, 3, 4, 7, 8, 9, 16, 17, 1_000]) {
-+            const page = Array.from({ length: n }, (_, i) => `${' '.repeat(i % 3)}<link href=${String(i)}>`).join('\n');
-+            expect(lines(page), String(n)).toEqual(Array.from({ length: n }, (_, i) => i + 1));
-+        }
-+    });
-+
-+    it('blank lines between tags are counted, not skipped', () => {
-+        expect(lines('\n\n\n<link href=a>\n\n<img src=b>\n')).toEqual([4, 6]);
-+    });
-+});
-+
-+describe('legal-page placeholders: the bounded lookahead (round-9 ratification)', () => {
-+    // The pre-bound form, kept here only as the reference the bound must agree with.
-+    const UNBOUNDED = /\[(?=[^\]\d]*[A-Za-zÄÖÜäöüß])[^\]\d]{2,40}\]|\blorem\s+ipsum\b/i;
-+    const imprint = (text: string) => [{ rel: 'impressum.html', base: 'impressum.html', text, lines: text.split('\n') }];
-+    const tokens = (text: string): string[] => legalPagePlaceholders(imprint(text)).map((h) => /`([^`]*)`/.exec(h.text)?.[1] ?? '');
-+
-+    it('reports a word slot, never a footnote, a one-letter bracket, or a slot longer than 40', () => {
-+        expect(tokens('<p>Inhaber: [Firmenname]</p>')).toEqual(['[Firmenname]']);
-+        expect(tokens('<p>Quelle [1], Anlage [12a]</p>')).toEqual([]);
-+        expect(tokens('<p>[a]</p>')).toEqual([]);
-+        expect(tokens(`<p>[${'x'.repeat(41)}]</p>`)).toEqual([]);
-+        expect(tokens('<p>Lorem ipsum dolor</p>')).toEqual(['Lorem ipsum']);
-+    });
-+
-+    it('agrees with the unbounded form on every line of a generated corpus', () => {
-+        // Deterministic LCG, so a disagreement reproduces.
-+        let seed = 7;
-+        const rnd = (): number => (seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648) / 2_147_483_648;
-+        const alphabet = ['[', ']', ' ', 'a', 'Z', 'ß', '1', '-', '.'];
-+        for (let i = 0; i < 5_000; i++) {
-+            const len = 1 + Math.floor(rnd() * 90);
-+            const line = Array.from({ length: len }, () => alphabet[Math.floor(rnd() * alphabet.length)]).join('');
-+            const page = `<p>${line}</p>`;
-+            const want = UNBOUNDED.exec(visibleText(page))?.[0] ?? null;
-+            const got = tokens(page)[0] ?? null;
-+            expect(got, JSON.stringify(line)).toBe(want);
-+        }
-+    });
-+
-+    it('a line of open brackets with no letter finishes within one hook event', () => {
-+        const line = '[ '.repeat(N / 2);
-+        expect(timed(() => expect(tokens(line)).toEqual([]))).toBeLessThan(EVENT_P95_MS);
-+    });
-+});
-+
-+describe('visibleText agrees with the regex it replaced on well-formed pages (round-9 ratification)', () => {
-+    // The pre-change implementation, kept verbatim as the reference. The two are
-+    // meant to differ only where a <script>/<style> is left unclosed, which the
-+    // round-8 cases above pin; on a page that closes every tag they must agree.
-+    const REMOVED = (html: string): string =>
-+        html
-+            .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
-+            .replace(/<[^>]+>/g, ' ')
-+            .replace(/&nbsp;/g, ' ')
-+            .replace(/\s+/g, ' ')
-+            .trim();
-+    const pages = (dir: string): string[] =>
-+        fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-+            const p = path.join(dir, e.name);
-+            return e.isDirectory() ? pages(p) : /\.html?$/i.test(e.name) ? [p] : [];
-+        });
-+    const all = pages(path.join(REPO, 'tests', 'fixtures'));
-+
-+    it('covers a real corpus, not a handful', () => {
-+        expect(all.length).toBeGreaterThanOrEqual(20);
-+    });
-+
-+    it('produces the same text on every fixture page that closes its script and style blocks', () => {
-+        const wellFormed = all.filter((p) => {
-+            const l = fs.readFileSync(p, 'utf-8').toLowerCase();
-+            const n = (re: RegExp): number => (l.match(re) ?? []).length;
-+            return n(/<script\b/g) === n(/<\/script/g) && n(/<style\b/g) === n(/<\/style/g);
-+        });
-+        expect(wellFormed.length).toBeGreaterThanOrEqual(20);
-+        for (const p of wellFormed) {
-+            const html = fs.readFileSync(p, 'utf-8');
-+            expect(visibleText(html), path.relative(REPO, p)).toBe(REMOVED(html));
-+        }
-+    });
-+});
+
+Added describe/it lines of the test diff, per file:
+== tests/hooks/design_pass.test.ts
+  it('reads the path out of the dispatcher envelope an in-process concern receives', () => {
+== tests/hooks/design_pass_web_launch.test.ts
+  describe('design_pass_hook — web-launch rows at write time', () => {
+  it('reads exactly the written .html/.css files, and they are pass surfaces', () => {
+  it('a page loading Google Fonts surfaces the preconnect and the stylesheet, advisory P2', () => {
+  it('a stylesheet @import of the provider surfaces its line', () => {
+  it('an imprint citing the superseded statute surfaces it', () => {
+  it('the safe twins surface nothing', () => {
+  it('the input cap is one megabyte of characters', () => {
+  describe('the loader', () => {
+  it('unbundled, returns null (the hook then neither scans nor reports a gap)', () => {
+  it('bundled, reads scanWebLaunch from the chunk beside it, and null when absent', () => {
+  describe('withDegradation — an unchecked file is never a clean pass', () => {
+  it('marks the pass degraded with the reason', () => {
+  it('appends to an earlier reason rather than replacing it', () => {
+== tests/hooks/design_pass_web_launch_dispatch.test.ts
+  const webLaunchLines = (ctx: string): string[] => ctx.split('\n').filter((l) => l.includes('[P2 web-launch]'));
+  describe.runIf(fs.existsSync(BUNDLE))('a written page reaches the agent through the bundled dispatcher', () => {
+  it('a page loading Google Fonts surfaces both loads, with file and line', () => {
+  it('a stylesheet @import of the provider surfaces line 1', () => {
+  it('the safe twin surfaces no web-launch row, and the pass did not degrade for it', () => {
+  it('the cap is inclusive: 1,000,000 characters are scanned, 1,000,001 are reported unchecked', () => {
+== tests/scripts/design_slop_css_blocks_linear.test.ts
+  describe('cssBlocks equals the regex it replaced', () => {
+  it('on every .html/.css fixture in the tree', () => {
+  it('on 5,000 generated strings over the characters the scan branches on', () => {
+  describe('cssBlocks is linear on a megabyte', () => {
+  it(name, () => {
+  it('and still numbers lines on the megabyte', () => {
+== tests/scripts/web_launch_linear.test.ts
+  describe('linear on pathological input', () => {
+  it(`${name} (${String(body.length)} chars) finishes fast in an imprint`, () => {
+  it('visibleText drops an unclosed script to the end, linearly', () => {
+  it('a minified page still reports its statute citation', () => {
+  describe('tags are found whatever the line layout (round-3 ratification)', () => {
+  it('a <link> wrapped over several lines by a formatter is found, on the line it starts', () => {
+  it('a minified single-line page still reports its third-party loads', () => {
+  it('a canonical link wrapped over lines still marks the host as the site itself', () => {
+  const file = { rel: 'index.html', base: 'index.html', text: page, lines: page.split('\n') };
+  it('a click-to-load iframe carrying only data-src is not a load', () => {
+  it('an unterminated tag does not hide the next one, and is itself reported as unread', () => {
+  describe('a long tag is read, an unclosed one is never a silent pass (round-5 ratification)', () => {
+  it('a closed tag padded far past any window is still read', () => {
+  it('an inline base64 image before a load does not hide the load', () => {
+  it('a loadable tag with no closer at all is reported once per file, with its count', () => {
+  it('the checker counts the same file undecided, never clean', () => {
+  it('an unclosed tag before a closed one leaves the closed one read', () => {
+  it('sparse unclosed tags in a megabyte file read the text once, with or without a final closer', () => {
+  it('a page of unclosed link tags yields one hit, linearly', () => {
+  describe('tagsOf line numbers at the edges (round-9 ratification)', () => {
+  it('a tag at offset 0 is on line 1', () => {
+  it('a tag starting right after the last newline is on the last line, and one at EOF unclosed still counts', () => {
+  it('CRLF and lone-LF line endings number the same lines', () => {
+  it('every tag of a page with one tag per line lands on its own line, across the binary-search boundaries', () => {
+  it('blank lines between tags are counted, not skipped', () => {
+  describe('legal-page placeholders: the bounded lookahead (round-9 ratification)', () => {
+  const imprint = (text: string) => [{ rel: 'impressum.html', base: 'impressum.html', text, lines: text.split('\n') }];
+  it('reports a word slot, never a footnote, a one-letter bracket, or a slot longer than 40', () => {
+  it('agrees with the unbounded form on every line of a generated corpus', () => {
+  it('a line of open brackets with no letter finishes within one hook event', () => {
+  describe('visibleText agrees with the regex it replaced on well-formed pages (round-9 ratification)', () => {
+  it('covers a real corpus, not a handful', () => {
+  it('produces the same text on every fixture page that closes its script and style blocks', () => {
 
 Answer each of these, one at a time, keyed by number:
 1. What behaviour changes, including what follows from it that the diff does not state?
