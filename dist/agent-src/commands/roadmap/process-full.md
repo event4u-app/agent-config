@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
+argument-hint: "[roadmap] [--all] [--merge] [--worktree] [--late-artifacts auto-research] [--deferred spawn-follow-up-draft]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -54,6 +54,10 @@ with the **scope delta below**.
   PR-open, batched artifact drafting, council auto-enable) is active from the
   invocation on, whatever `execution.mode` says or omits. There is no
   acceptance round and no further ask until a safety floor.
+- **What the invocation can carry:** the run-level policy flags
+  `--late-artifacts` / `--deferred` (contract § 2a/§ 2b), and owner answers
+  given as `O<n> <decision-id>: <answer>` lines. The latter become dated owner
+  rows per contract § 2d, owner answers carried by the invocation.
 - **Working set:** every open step across every phase, in document
   order. Phase-internal annotations like `(deferred)` / `(optional)` /
   "gated on Phase N" do not narrow the working set.

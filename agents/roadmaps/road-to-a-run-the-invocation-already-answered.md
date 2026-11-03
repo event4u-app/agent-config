@@ -78,12 +78,12 @@ rests on attributable data.
 
 ## Phase 3 — The invocation carries answers and policy
 
-- [ ] **3.1 Owner answers in the invocation become dated owner rows.** An
+- [x] **3.1 Owner answers in the invocation become dated owner rows.** An
       invocation line `O<n> <decision-id>: <answer>` is written into the target
       roadmap's Decisions table as `owner (invocation, <date>)`. It is never
       recorded as a council row, and it covers only the decision it names.
       verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` asserts the contract section and the process-full pointer.
-- [ ] **3.2 Run-level policy flags.** `--late-artifacts auto-research` and
+- [x] **3.2 Run-level policy flags.** `--late-artifacts auto-research` and
       `--deferred spawn-follow-up-draft` declare the § 2a / § 2b values under
       process-full. The cap of three is unchanged. The declared value goes into the
       roadmap's Decisions table so that it survives a resumed run.

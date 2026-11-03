@@ -120,6 +120,27 @@ describe('process-full says one thing about who grants the run (inbox-2026-11-v 
         expect(rules).toMatch(/decline = silence/i);
     });
 
+    it('turns owner answers in the invocation into dated owner rows, never council rows', () => {
+        const contract = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(contract).toMatch(/### 2d\. Owner answers carried by the invocation/);
+        expect(contract).toMatch(/`owner \(invocation, <date>\)`/);
+        expect(contract).toMatch(/never a council row/i);
+        expect(flat).toMatch(/2d\. Owner answers carried by the invocation|owner answers carried by the invocation/i);
+    });
+
+    it('lets the invocation declare the run-level policy and keeps it across a resume', () => {
+        expect(text).toMatch(/argument-hint: ".*--late-artifacts auto-research.*"/);
+        expect(text).toMatch(/argument-hint: ".*--deferred spawn-follow-up-draft.*"/);
+        const contract = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(contract).toMatch(/`--late-artifacts auto-research`/);
+        expect(contract).toMatch(/`--deferred spawn-follow-up-draft`/);
+        expect(contract).toMatch(/Decisions table.{0,80}survives a resumed run/i);
+    });
+
     it('records the environment at run start without stopping on it', () => {
         const delivery = fs.readFileSync(
             path.resolve(__dirname, '../../src/agent-src/contexts/execution/process-full-delivery.md'),

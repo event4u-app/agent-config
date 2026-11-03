@@ -158,6 +158,29 @@ preservation test in that rule already splits them the same way:
      decides. Removing the value later removes an option nobody was obliged to
      use; the default stays `wait` either way. -->
 
+**Declared by the invocation under `process-full`.** `process-full` has no
+screen (ADR-237), so neither field above could ever be declared there, and the
+cautious value became inherited rather than chosen. The invocation flags
+`--late-artifacts auto-research` and `--deferred spawn-follow-up-draft` declare
+them instead. The cap of three and the preservation test are unchanged. The run
+writes each declared value into the target roadmap's Decisions table as its
+first act, so the value survives a resumed run rather than living only in the
+session that read the flag. Without a flag, the defaults above still apply.
+Whether `process-full` should change its default is an owner question, recorded
+as O-1 in `road-to-a-run-the-invocation-already-answered`; the 2026-11-03
+council split on it.
+
+### 2d. Owner answers carried by the invocation
+
+An owner may answer a roadmap's open decisions in the invocation itself, one
+per line: `O<n> <decision-id>: <answer>`. Each line becomes a row in the target
+roadmap's Decisions table, resolved by `owner (invocation, <date>)`, with the
+line quoted as its evidence. It is never a council row, because it came from
+the owner, and it settles only the decision it names, never a neighbour by
+analogy. A line naming no existing decision is reported in the PR body and
+otherwise ignored. An answer settles a decision; it never stands in for the
+explicit confirmation a Hard-Floor action needs.
+
 
 **2c. `traceability` — requirement to acceptance to evidence, OPTIONAL** — on that branch, read [`roadmap-execution-contract-branches § 2c. traceability`](roadmap-execution-contract-branches.md#2c-traceability--requirement-to-acceptance-to-evidence-optional).
 
