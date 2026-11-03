@@ -109,6 +109,10 @@ editable true vector.
 | `hosts/img-delivery.html` | clean — 10 file(s) checked, no violations | `true` | n/a | No rule reads delivery mode, so the missing static route passes. |
 | `hosts/smil-only.html` | clean — 10 file(s) checked, no violations | `true` | n/a | **R10, confirmed**: an indefinite inline `<animate>` with no route reads clean. |
 | `hosts/smil-css-only.html` | clean — 10 file(s) checked, no violations | `true` | n/a | **R4 / D8, confirmed**: a CSS-only branch satisfies DQ4 and leaves SMIL running. |
+| `assets/mark-live-text.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | Added 2026-11-03 (svg-mark PREREG). `lint_svg_asset` without `--class` reads clean (exit 0): no rule reads live text in a master mark. |
+| `assets/mark-near-miss-angle.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Added 2026-11-03. Accepted as a true vector and read clean by `lint_svg_asset` while its one straight edge sits 1.23 degrees off level. |
+| `assets/mark-tiny-detail.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | Added 2026-11-03. A 6-unit dot on a 480 canvas reads clean in `lint_svg_asset`; nothing measured detail against the viewBox. |
+| `assets/mark-colour-count.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | Added 2026-11-03. Six paints read clean; the count is reported only under `--class mark`, never gated. |
 
 Controls, same three instruments:
 
@@ -123,6 +127,9 @@ Controls, same three instruments:
 | `assets/degenerate-gradient.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | A gradient whose stops are identical. Renders correctly, costs bytes, and nothing counted it. |
 | `assets/seam-between-shapes.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | A ring abutting a disc leaves a hairline of ground inside the silhouette. An engine reading; nothing read it. |
 | `assets/dark-mark-on-dark.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Legible on white, nearly invisible on the dark capture. Contrast per ground is an engine reading; nothing read it. |
+| `assets/mark-one-colour.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Added 2026-11-03. An intentional one-colour mark; no mark reading may report it. |
+| `assets/mark-optical-overshoot.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Added 2026-11-03. A declared 0.5 degree optical overshoot (`data-optical="overshoot"`); the near-miss reading must stay silent. |
+| `assets/mark-evenodd-hole.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Added 2026-11-03. One evenodd path with a 120-unit counter; the tiny-detail reading must read the hole at its own size. |
 
 ### The four pre-registered expectations, and whether they held
 
@@ -195,10 +202,21 @@ nobody looked, which is a different fact from "nothing was wrong".
 | `accessibility/meaningful-without-name` | static | `meaningful-without-name`, `title-not-a-direct-child` | 0 | — |
 | `geometry/background-bleed-inside-silhouette` | engine | `seam-between-shapes` | 0 | bleed share > 0.002, dark row |
 | `accessibility/low-contrast-on-background` | engine | `dark-mark-on-dark` | 0 | low-contrast share > 0.5 |
+| `mark/live-text` | static | `mark-live-text` | 0 | `--class mark` only; error |
+| `mark/near-miss-angle` | static | `mark-near-miss-angle` | 0 | `--class mark` only; segment ≥ 4 % of canvas, 0.3–3° off 0/15/30/45/60/90; warning |
+| `mark/tiny-detail` | static | `mark-tiny-detail` | 0 | `--class mark` only; extent < 1/48 of the viewBox; warning |
+| `mark/colour-count` | static | `mark-colour-count` | 0 | `--class mark` only; > 3 paints; report-only, never gates |
 
 Three controls bound the whole table: `primitive-only-mark` must never be
 reported by the vector-honesty family, `spinner-intentional-dash` never by a
 dash rule, and `hamburger-24-grid` never by `structure/loose-viewbox`.
+
+The four `mark/…` rows were added on 2026-11-03 under their own
+pre-registration, `internal/bench/corpora/svg-mark-PREREG.md`, written before
+the rules existed. They are read only by `lint_svg_asset --class mark`, and
+three more controls bound them: `mark-one-colour` must never be reported by any
+mark reading, `mark-optical-overshoot` never by `mark/near-miss-angle`, and
+`mark-evenodd-hole` never by `mark/tiny-detail`.
 
 ### Fill-ratio thresholds, per class
 

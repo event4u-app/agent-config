@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CONTROL: one path, two subpaths, fill-rule evenodd. The second subpath is a declared counter
+     (a hole) of 120 units, not a stray speck: the subpath walk must read it at its own size and
+     the tiny-detail reading must stay silent. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>Evenodd-hole mark</title>
+  <path d="M120 120 H360 V360 H120 Z M180 180 H300 V300 H180 Z" fill="#0f172a" fill-rule="evenodd"/>
+</svg>

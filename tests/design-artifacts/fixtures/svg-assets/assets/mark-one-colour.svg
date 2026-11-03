@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CONTROL: an intentional one-colour mark. Several shapes, one paint, every edge axis-aligned or
+     curved, every part larger than 1/48 of the canvas. No mark reading may report it. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>One-colour mark</title>
+  <rect x="60" y="60" width="160" height="160" rx="24" fill="#0f172a"/>
+  <rect x="260" y="60" width="160" height="160" rx="24" fill="#0f172a"/>
+  <circle cx="140" cy="340" r="80" fill="#0f172a"/>
+  <path d="M260 260 H420 V420 H260 Z" fill="#0f172a"/>
+</svg>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PLANTED mark/near-miss-angle: the horizontal bar runs from (100,240) to (380,246), 1.23 degrees
+     off the horizontal over 280 units. Close enough to read as meant-to-be-level, far enough to read
+     as crooked once it is the only straight edge on a 16 px favicon. The twin levels the endpoint. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>Near-miss-angle mark</title>
+  <circle cx="240" cy="240" r="200" fill="#1d4ed8"/>
+  <path d="M100 240 L380 246" stroke="#f8fafc" stroke-width="24" stroke-linecap="round"/>
+</svg>
