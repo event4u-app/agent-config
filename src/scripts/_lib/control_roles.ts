@@ -164,20 +164,49 @@ export function definedComponents(rel: string, text: string): string[] {
     // A single-file component is named by its file.
     const sfc = /(?:^|\/)([A-Z][A-Za-z0-9_]*)\.(?:vue|svelte|astro)$/.exec(rel);
     if (sfc) out.push(sfc[1]!);
-    for (const m of text.matchAll(/export\s+(?:default\s+)?(?:function|const|class)\s+([A-Z][A-Za-z0-9_]*)/g)) {
+    const code = codeOnly(text);
+    for (const m of code.matchAll(/export\s+(?:default\s+)?(?:function|const|class)\s+([A-Z][A-Za-z0-9_]*)/g)) {
         out.push(m[1]!);
     }
-    for (const m of text.matchAll(/export\s+const\s+([A-Z][A-Za-z0-9_]*)\s*=/g)) out.push(m[1]!);
-    // `function Textarea(…) {…}` followed by `export { Textarea }`.
-    // Only a name declared in this file: `export { X } from '…'` and an imported `X` are re-exports.
-    for (const m of text.matchAll(/export\s*\{([^}]*)\}(?!\s*from\b)/g)) {
+    for (const m of code.matchAll(/export\s+const\s+([A-Z][A-Za-z0-9_]*)\s*=/g)) out.push(m[1]!);
+    // `function Textarea(…) {…}` followed by `export { Textarea }`. Only a binding this
+    // module declares at its top level: `export { X } from '…'` and an imported `X` are re-exports.
+    for (const m of code.matchAll(/export\s*\{([^}]*)\}(?!\s*from\b)/g)) {
         for (const part of m[1]!.split(',')) {
             const [local, exported = local] = part.trim().split(/\s+as\s+/).map((x) => x.trim());
-            const declared = new RegExp(`(?:function|class|const|let|var)\\s+${local}\\b`).test(text);
-            if (declared && /^[A-Z][A-Za-z0-9_]*$/.test(exported!)) out.push(exported!);
+            if (!/^[A-Za-z_$][\w$]*$/.test(local!) || !/^[A-Z][A-Za-z0-9_]*$/.test(exported!)) continue;
+            const name = local!.replace(/\$/g, '\\$');
+            const imported = [...code.matchAll(/\bimport\s+([^'"`;]*?)\s+from\s*['"`]/g)].some((c) =>
+                importedBindings(c[1]!).includes(local!),
+            );
+            const topLevel = new RegExp(`^(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?(?:function\\*?|class|const|let|var)\\s+${name}(?![\\w$])`, 'm');
+            if (!imported && topLevel.test(code)) out.push(exported!);
         }
     }
     return [...new Set(out)];
+}
+
+/** The local names an import clause binds: `{ A as B }` binds `B`, not `A`. */
+function importedBindings(clause: string): string[] {
+    const out: string[] = [];
+    const named = /\{([^}]*)\}/.exec(clause);
+    if (named)
+        for (const part of named[1]!.split(',')) {
+            const bound = part.trim().replace(/^type\s+/, '').split(/\s+as\s+/).pop()!.trim();
+            if (bound) out.push(bound);
+        }
+    const rest = clause.replace(/\{[^}]*\}/, '').replace(/^type\s+/, '');
+    for (const m of rest.matchAll(/(?:\*\s+as\s+)?([A-Za-z_$][\w$]*)/g)) out.push(m[1]!);
+    return out;
+}
+
+/** Comments and string contents blanked, so a declaration can only match live code. */
+function codeOnly(text: string): string {
+    const blank = (c: string) => c.replace(/[^\n]/g, ' ');
+    return text
+        .replace(/`(?:\\[^]|[^\\`])*`|'(?:\\.|[^\\'\n])*'|"(?:\\.|[^\\"\n])*"/g, (q) => q[0] + blank(q.slice(1, -1)) + q[0])
+        .replace(/\/\*[^]*?\*\//g, blank)
+        .replace(/\/\/.*$/gm, blank);
 }
 
 export interface BoxMetrics {

@@ -59,6 +59,28 @@ describe('control_roles — where the canonical can be rendered', () => {
         expect(buildArtefact('.', local).control_roles.select).toMatchObject({ canonical: 'Select', families: ['jsx'] });
     });
 
+    it('a declaration in a comment, a string or a nested scope does not make an import local', () => {
+        const uses = ['app/orders.tsx', 'export const A = () => <><Select name="a" /><Select name="b" /></>;\n'] as [string, string];
+        const imported = 'import { Select } from "@vendor/components";\n';
+        for (const body of [
+            `${imported}// const Select was the old implementation\nexport { Select };\n`,
+            `${imported}/* function Select() {} */\nexport { Select };\n`,
+            `${imported}const note = "\\nconst Select = 1";\nexport { Select };\n`,
+            `${imported}function example() {\n  const Select = 1;\n  return Select;\n}\nexport { Select };\n`,
+            '/* export function Select(p) { return <select {...p} />; } */\nexport const note = 1;\n',
+            '// export const Select = () => null;\nexport const note = 1;\n',
+        ]) {
+            const roles = buildArtefact('.', [['src/ui/select.tsx', body], uses]).control_roles;
+            expect(roles.select, body).toMatchObject({ canonical: 'Select', families: [] });
+        }
+        const local = 'const Select = (p) => <select {...p} />;\nexport { Select };\n';
+        expect(buildArtefact('.', [['src/ui/select.tsx', local], uses]).control_roles.select).toMatchObject({ families: ['jsx'] });
+        const aliased = "import { Select as SelectPrimitive } from '@base-ui/react/select';\nfunction Select(p) {\n  return <SelectPrimitive {...p} />;\n}\nexport { Select };\n";
+        expect(buildArtefact('.', [['src/ui/select.tsx', aliased], uses]).control_roles.select).toMatchObject({ families: ['jsx'] });
+        const noSemi ='import React from "react"\nconst Select = (p) => <select {...p} />\nexport { Select }\nexport const all = Array.from([])\n';
+        expect(buildArtefact('.', [['src/ui/select.tsx', noSemi], uses]).control_roles.select).toMatchObject({ families: ['jsx'] });
+    });
+
     it('a single-file component is defined by its file name', () => {
         const roles = buildArtefact('.', [
             ['src/components/Select.vue', '<script setup>\ndefineProps(["modelValue"]);\n</script>\n<template><select><slot /></select></template>\n'],
