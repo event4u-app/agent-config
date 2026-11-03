@@ -11,11 +11,14 @@
  * Run AFTER the projection is generated (CI: the sync-consistency job).
  * Exit 1 on the first malformed artefact, naming it.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { HOST_SURFACES, measureReach } from './_lib/host_projection_reach.js';
@@ -144,7 +147,23 @@ export function runReach(root: string): { failures: string[]; scanned: number } 
  * the live measurement, which reports every surface with its own verdict.
  */
 function reachSelfTest(): number {
-    const tmp = fs.mkdtempSync(path.join(REPO_ROOT, '.host-reach-selftest-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-selftest-'));
+    // A materialised projection — one artefact per host surface — so the accept
+    // case never depends on whether this checkout generated its projections.
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-home-'));
+    fs.mkdirSync(path.join(home, '.claude'));
+    const full = fs.mkdtempSync(path.join(os.tmpdir(), 'host-reach-full-'));
+    for (const s of HOST_SURFACES) {
+        const rel = s.projections[0]!;
+        const abs = path.join(full, rel);
+        if (path.extname(rel) !== '') {
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, '# fixture\n');
+        } else {
+            fs.mkdirSync(abs, { recursive: true });
+            fs.writeFileSync(path.join(abs, 'fixture.md'), '# fixture\n');
+        }
+    }
     const invoke = (dir: string): number =>
         runGateCli(
             REPO_ROOT,
@@ -159,31 +178,57 @@ function reachSelfTest(): number {
             minRejectCases: 1,
             cases: [
                 {
+                    // Presence is read from $HOME, so the case pins a home where
+                    // claude-code IS installed; without it the verdict depended on
+                    // the machine and passed on a CI runner with no host tools.
                     name: 'a root carrying no host projection at all is REFUSED, never passed',
                     expect: 'reject',
-                    run: () => invoke(tmp),
+                    run: () => {
+                        const res = spawnSync(
+                            path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
+                            [path.join(REPO_ROOT, 'src/scripts/check_host_loadability.ts'), '--reach', '--root', tmp],
+                            { cwd: REPO_ROOT, encoding: 'utf-8', env: { ...process.env, HOME: home, USERPROFILE: home, PATH: '' } },
+                        );
+                        return res.status ?? -1;
+                    },
                 },
                 {
-                    name: 'this repository accounts for every host surface',
+                    name: 'an unknown flag is refused, not ignored',
+                    expect: 'refuse',
+                    run: () =>
+                        runGateCli(REPO_ROOT, 'src/scripts/check_host_loadability.ts', ['--definitely-not-a-flag'], REPO_ROOT),
+                },
+                {
+                    name: 'a root carrying one artefact per host surface accounts for every surface',
                     expect: 'accept',
-                    run: () => invoke(REPO_ROOT),
+                    run: () => invoke(full),
                 },
             ],
         });
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
+        fs.rmSync(full, { recursive: true, force: true });
+        fs.rmSync(home, { recursive: true, force: true });
     }
 }
 
 const isMain = process.argv[1] !== undefined
     && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 if (isMain) {
-    const rootIdx = process.argv.indexOf('--root');
-    const root = rootIdx !== -1 ? process.argv[rootIdx + 1] ?? '.' : '.';
-    if (process.argv.includes('--self-test')) {
+    const parsed = parseGateArgs('check_host_loadability', process.argv.slice(2), {
+        root: { type: 'string' },
+        reach: { type: 'boolean' },
+        'self-test': { type: 'boolean' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        process.exit(USAGE_EXIT);
+    }
+    const root = parsed.values.root ?? '.';
+    if (parsed.values['self-test']) {
         process.exit(reachSelfTest());
     }
-    if (process.argv.includes('--reach')) {
+    if (parsed.values.reach) {
         const { failures, scanned } = runReach(root);
         process.stdout.write(`scanned: ${String(scanned)}\n`);
         if (failures.length > 0) {

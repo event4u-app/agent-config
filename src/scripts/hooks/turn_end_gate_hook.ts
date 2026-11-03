@@ -9,31 +9,39 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * FIVE detectors ride on one guard, because building the unsafe part twice
+ * SIX detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
- *   A — promissory closing  (FC-5, 20 measured occurrences)
- *   B — language mismatch   (19 measured occurrences, fresh pin present)
- *   C — unverified edit     (the turn changed a file and ran nothing that could
+ *   A — promissory closing  (`promissory`, FC-5, 20 measured occurrences)
+ *   B — language mismatch   (`language`, 19 measured occurrences, fresh pin
+ *                            present)
+ *   C — unverified edit     (`verification`; the turn changed a file and ran nothing that could
  *                            have checked it — verify-before-complete's gate,
  *                            read off the turn's TOOL CALLS rather than its
  *                            prose, which is why `readTranscriptTail` collects
  *                            them: `_messageText` keeps `type === 'text'` blocks
  *                            only, so tool activity is invisible to A and B.)
- *   D — completion claim    (a claim of done carrying no fresh evidence; landed
+ *   D — completion claim    (`completion`; a claim of done carrying no fresh evidence; landed
  *                            under conformance round 7 § Phase 1.)
- *   E — pending decision    (an earlier reply in the SAME user turn put numbered
+ *   E — pending decision    (`pending-decision`; an earlier reply in the SAME user turn put numbered
  *                            options to the user and the closing reply carries
  *                            none — the turn asked and then dropped the ask.
  *                            Read off `assistantTurnTexts`, which is why that
  *                            field exists: every other detector reads
  *                            `lastAssistant` alone and therefore cannot see a
  *                            question that was asked one reply earlier.)
+ *   F — untested change     (`untested`; the turn changed production code,
+ *                            touched no test, and claimed done —
+ *                            `detectUntestedChange`.)
  *
- * TWO of the five are CONDITIONAL, and saying "unconditional" here would be the
+ * The SVG render obligation (`openSvgObligation`) also runs in that list but
+ * reports under C's id, `verification`, so it is not a seventh detector.
+ *
+ * THREE of the six are CONDITIONAL, and saying "unconditional" here would be the
  * same stale-header defect this block corrects below. A and D are the
- * completion-adjacent pair an open subagent dispatch excuses, so `runDetectors()`
- * runs them only when `dispatchOpen` is false; B, C and E run on every turn-end.
+ * completion-adjacent pair an open subagent dispatch excuses, and F is a
+ * completion claim too, so `runDetectors()` runs those three only when
+ * `dispatchOpen` is false; B, C and E run on every turn-end.
  * That narrowing is deliberate (Phase 3 Step 2, narrowed again by R2 round 2) and
  * is the third allow path, alongside the two re-entrancy layers — see the
  * per-detector list in `runDetectors()`.
@@ -42,7 +50,9 @@
  * below has carried four since round 7. `DETECTOR_IDS` in
  * `_lib/turn_end_refusals.ts` is read off that union rather than off this
  * comment for exactly that reason, and the count is corrected here rather than
- * left as a stale header the next reader has to disbelieve. E made it five.
+ * left as a stale header the next reader has to disbelieve. E made it five, and
+ * F made it six while this line still said five (corrected 2026-10-31); the
+ * header count is now pinned to the union by `turn_end_gate_hook.test.ts`.
  *
  * ## Removal condition
  *

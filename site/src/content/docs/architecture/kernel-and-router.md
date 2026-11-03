@@ -6,9 +6,9 @@ description: The always-on Iron-Law kernel and the capability router that loads 
 Rules split into two layers: a small **kernel** that always loads, and a larger
 set the **router** activates on demand.
 
-## The kernel — 9 Iron-Law rules
+## The kernel — the always-on Iron-Law rules
 
-The kernel is a fixed set of **9 Iron-Law rules** loaded on **every** session,
+The kernel is a fixed set of **Iron-Law rules**, listed below, loaded on **every** session,
 unconditionally, in every profile. They can never be overridden by a skill,
 command, or guideline:
 
@@ -50,8 +50,8 @@ flowchart TD
   walk --> load["Load matched rule bodies<br/>+ routed skills for this turn"]
 ```
 
-There is no runtime profile resolution; matching is pure keyword/phrase/path/
-intent lookup. See
+Matching is pure keyword/phrase/path/intent lookup, with no profile
+resolution at match time. See
 [`rule-router.md`](https://github.com/event4u-app/agent-config/blob/main/docs/contracts/rule-router.md)
 for the full contract, and
 [Configuration → Profiles](/agent-config/configuration/profiles/) for how the

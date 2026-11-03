@@ -13,7 +13,10 @@
 # is documented in agents/reference/ai-video/prompts/motion-choreography.md
 # (Phase 6).
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): live
 # image2video round-trip validated 1/1 — 5.4s h264 1168x768, ~5.3min
 # render, full presigned-upload flow. Contract re-read from the official
 # higgsfield-js SDK after three honest failures exposed wrong ASSUMED

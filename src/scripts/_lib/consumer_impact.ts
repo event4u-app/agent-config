@@ -133,7 +133,28 @@ export function parse_impact_trailers(body: string): ImpactTrailers {
         if (r.invalid !== null) return { ...r, security };
         if (best === null || IMPACT_RANK[r.impact] > IMPACT_RANK[best.impact]) best = r;
     }
-    return best === null ? { ...NO_IMPACT_TRAILERS, security } : { ...best, security };
+    if (best !== null) return { ...best, security };
+    // A paragraph that opens with `Consumer-Impact:` but parsed to no block (its
+    // value wrapped onto an unindented line) was written and lost; say so rather
+    // than read it as absent. A line quoted inside prose stays absent. The impact
+    // stays `none`, as for an absent trailer.
+    if (/(^|\n[ \t]*\n)Consumer-Impact:/.test(unfenced(body))) {
+        return { impact: 'none', recorded: false, invalid: 'a Consumer-Impact: line outside a trailer block (wrapped value?)', security };
+    }
+    return { ...NO_IMPACT_TRAILERS, security };
+}
+
+function unfenced(body: string): string {
+    let fenced = false;
+    return body
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .filter((line) => {
+            if (/^[ \t]*(```|~~~)/.test(line)) fenced = !fenced;
+            else if (!fenced) return true;
+            return false;
+        })
+        .join('\n');
 }
 
 /**
@@ -171,7 +192,21 @@ export const IMPACT_RANK: Readonly<Record<ConsumerImpact, number>> = Object.free
     action: 3,
 });
 
-export function release_impact_entry(commits: readonly ImpactCommit[]): ImpactEntry {
+/** Paths whose change reaches a consumer's install whatever a commit says about it. */
+export const CONSUMER_SURFACE_PATHS: readonly string[] = ['src/scripts/hook_manifest.yaml', 'src/install'];
+
+/** The span `<tag>..HEAD` changed a path in `CONSUMER_SURFACE_PATHS`; `git` returns one command's stdout. */
+export function span_touches_consumer_surface(tag: string | null, git: (args: string[]) => string): boolean {
+    if (!tag) return false;
+    return git(['diff', '--name-only', `${tag}..HEAD`, '--', ...CONSUMER_SURFACE_PATHS]).trim() !== '';
+}
+
+export interface ImpactSpanFacts {
+    /** The span changed a path in `CONSUMER_SURFACE_PATHS`. */
+    readonly consumerSurfaceTouched?: boolean;
+}
+
+export function release_impact_entry(commits: readonly ImpactCommit[], facts: ImpactSpanFacts = {}): ImpactEntry {
     let impact: ConsumerImpact = 'none';
     let security = false;
     for (const c of commits) {
@@ -179,6 +214,13 @@ export function release_impact_entry(commits: readonly ImpactCommit[]): ImpactEn
         const own = c.breaking && !c.trailers.recorded ? 'action' : c.trailers.impact;
         if (IMPACT_RANK[own] > IMPACT_RANK[impact]) impact = own;
         security = security || c.trailers.security;
+    }
+    // A span that changed the hook manifest or the installer and recorded no
+    // trailer at all is not silent by declaration, only by omission: 19.2.0 added
+    // a `stop` binding on seven platforms, carried 0 trailers in 187 commits, and
+    // shipped as `none` (release review 19.2.0, M4). Floor it at `notice`.
+    if (facts.consumerSurfaceTouched === true && !commits.some((c) => c.trailers.recorded) && IMPACT_RANK[impact] < IMPACT_RANK.notice) {
+        impact = 'notice';
     }
     return security ? { impact, security: true } : { impact };
 }
@@ -188,8 +230,9 @@ export function with_release_impact(
     map: ImpactMap,
     version: string,
     commits: readonly ImpactCommit[],
+    facts: ImpactSpanFacts = {},
 ): ImpactMap {
-    const entry = release_impact_entry(commits);
+    const entry = release_impact_entry(commits, facts);
     if (entry.impact === 'none' && !entry.security) return { ...map };
     return { ...map, [version]: entry };
 }
@@ -199,9 +242,10 @@ export function write_impact_map(
     data: Record<string, unknown>,
     version: string,
     commits: readonly ImpactCommit[],
+    facts: ImpactSpanFacts = {},
 ): void {
     const block = (data['agentConfig'] ?? {}) as Record<string, unknown>;
-    const next = with_release_impact((block['impact'] ?? {}) as ImpactMap, version, commits);
+    const next = with_release_impact((block['impact'] ?? {}) as ImpactMap, version, commits, facts);
     if (Object.keys(next).length === 0) return;
     data['agentConfig'] = { ...block, impact: next };
 }

@@ -141,8 +141,8 @@ by O4. Per `docs/guidelines/wing4-handoff.md` § Chain 1.
 Series-A SaaS, $4.2M cash, fiscal-period quarterly.
 
 - Step 0 — `org-stage = series-a`. Band: "to PMF signal + buffer 6–9 months". Target = NRR > 110 % + segment proof + 9-month cycle ≈ 12–15 months.
-- Step 1 — net burn last 3 quarters: $480k / $510k / $560k → accelerating. Burn-multiple: 2.1 → 1.9 → 1.7 → improving despite accel-burn (revenue catching up).
+- Step 1 — monthly net burn, last 3 quarters: $480k / $510k / $560k → accelerating. Burn-multiple: 2.1 → 1.9 → 1.7 → improving despite accel-burn (revenue catching up).
 - Step 2 — at status-quo $560k/mo: 7.5 months runway. Target band 12–15 months. Gap = 4.5–7.5 months below band.
 - Step 3 — verdict = **raise now**. Gap closes into lower-bound; segment-proof demonstrable; burn-multiple direction is the credible story. Cross-cite H7 for pitch.
 - Step 4 — grow (don't cut). Cutting now would kill the burn-multiple-improvement story; the cut math is dilutive vs the raise.
-- Step 5 — emit `runway-frame.md`: `org-stage=series-a, gap=-5mo, fundraise=raise, cut-or-grow=grow, premortem="if raise fails by Q3, structural cut to non-headcount + extend by 4 months"`.
+- Step 5 — emit `runway-frame.md`: `org-stage=series-a, gap=-4.5..-7.5mo, fundraise=raise, cut-or-grow=grow, premortem="if raise fails by Q3, structural cut to non-headcount + extend by 4 months"`.

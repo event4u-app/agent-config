@@ -108,12 +108,21 @@ rather than print success.
 
 ## Finding format — the suppression key is in the message
 
-A finding message carries its own suppression key inline, copy-pasteable:
+A finding message carries, in this order, the offender, the way forward and its
+own suppression key, copy-pasteable:
 
 ```
 ❌  src/skills/example/SKILL.md:42  framework-leakage  /artisan/  …
+    fix: name the procedure, and move the artisan command into the laravel-* carve-out
     suppress: {"file":"src/skills/example/SKILL.md","anchor":"php artisan migrate","reason":"<why>","falsifier":"<command>"}
 ```
+
+The `fix:` line comes before `suppress:` because the agent reading the finding
+acts on the first instruction it can follow; a message that offers only the way
+out trains the way out. Where no mechanical fix exists, the `fix:` line names
+the decision and who holds it. This binds **new** gates; an existing gate gains
+the line when it is next touched, and a ratchet gate passes it through
+`checkRatchet({ …, fix })`.
 
 Friction in the suppression path is what drives a maintainer to disable the gate
 instead of narrowing it. Make the honest narrow easier than the blunt off-switch.

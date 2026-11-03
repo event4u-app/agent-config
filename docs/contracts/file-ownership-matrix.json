@@ -1716,6 +1716,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/code-film/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/code-film/references/film-motion.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/code-intelligence/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2383,6 +2395,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/form-handler/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -3475,6 +3493,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/security-audit/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/security-audit/references/control-section.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -4840,6 +4864,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/fix-loop-ladder.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-steering.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/fix-loop-ladder.md",
@@ -7364,6 +7395,13 @@
     {
       "source": ".agent-src.uncondensed/rules/content-quoting-floor.md",
       "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/rules/context-hygiene.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -11241,6 +11279,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/bug-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/autonomous-execution.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/bug-analyzer/SKILL.md",
       "target": ".agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -11434,6 +11479,48 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-film/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-film/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-film/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/code-film/references/film-motion.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-film/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/corpus-grounding/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-film/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-film/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/svg-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-film/references/film-motion.md",
+      "target": ".agent-src.uncondensed/skills/code-film/references/film-motion.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/code-intelligence/SKILL.md",
@@ -11672,6 +11759,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/code-review/checklists/backend.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/code-review/checklists/database.md",
@@ -12530,6 +12624,13 @@
     {
       "source": ".agent-src.uncondensed/skills/dcf-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/skills/rice-prioritization/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/dcf-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/spreadsheet-authoring/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -14180,6 +14281,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/skills/feature-planning/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/skills/file-editor/SKILL.md",
       "target": ".agent-src.uncondensed/skills/file-editor/SKILL.md",
       "type": "WRITE",
@@ -14367,6 +14475,48 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/finance-safety-floor.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/strategy-safety-floor.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/founder-idea-interview/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/skills/frontend-render-security/SKILL.md",
@@ -17667,13 +17817,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/source-confidentiality.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -18975,6 +19118,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md",
       "target": ".agent-src.uncondensed/skills/agent-security-review/SKILL.md",
       "type": "READ_ONLY",
@@ -19571,6 +19721,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
       "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -19810,6 +19967,13 @@
     {
       "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
       "target": ".agent-src.uncondensed/skills/secrets-management/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/supply-chain-intake/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -20286,6 +20450,13 @@
     {
       "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
       "target": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/security-audit/references/control-section.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

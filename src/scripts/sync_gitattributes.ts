@@ -11,7 +11,8 @@
  * legacy-cleanup machinery and keeps only what this task needs: idempotent
  * append + a `--check` drift probe.
  *
- * Canonical body: `src/agent-src/templates/agents/.gitattributes.fragment`
+ * Canonical body: `src/agent-src/templates/agents/.gitattributes.fragment`,
+ * read at runtime from its shipped projection under `dist/agent-src/`
  * (road-to-reachable-code-memory.md Phase 5) — union-merge attributes for
  * the memory intake JSONL + curated flat/directory YAML layouts.
  *
@@ -24,17 +25,20 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { resolvePackageRoot } from './_lib/package_root.js';
+
 export const SECTION_HEADER = '# --- BEGIN agent-config managed: memory merge attributes ---';
 export const SECTION_FOOTER = '# --- END agent-config managed: memory merge attributes ---';
 export const DEFAULT_GITATTRIBUTES = '.gitattributes';
 
 const _HERE = fileURLToPath(import.meta.url);
-// _HERE === <repo>/src/scripts/sync_gitattributes.ts ; the canonical fragment
-// lives at <repo>/src/agent-src/templates/agents/.gitattributes.fragment —
-// two dirs up from src/scripts, then into src/agent-src/templates/agents.
+// Canonical body lives in src/agent-src/templates/agents/; the shipped copy is
+// its byte-identical projection under dist/agent-src/. Read the shipped copy:
+// src/agent-src/templates/agents/ is not in package.json `files`, so a source
+// path broke `init --project` from an installed package.
 export const DEFAULT_TEMPLATE = path.join(
-    path.dirname(_HERE),
-    '..',
+    resolvePackageRoot(import.meta.url, 2),
+    'dist',
     'agent-src',
     'templates',
     'agents',

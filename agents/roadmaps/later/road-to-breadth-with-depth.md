@@ -21,9 +21,9 @@ relates:
   - slug: road-to-a-release-that-says-whether-it-needs-you
     relation: disjoint
     note: "Also edits src/scripts/release.ts. Step 0.6 adds one preflight check and lands after, or rebased onto, that roadmap's open release.ts change; it does not re-plan its release decision output."
-  - slug: road-to-a-step-that-costs-what-it-changes
+  - slug: archive/road-to-a-step-that-costs-what-it-changes
     relation: disjoint
-    note: "Owns per-step ceremony depth. The supplied plan's workflow-contract and checkpoint items are routed there or declined (D6)."
+    note: "Archived without the workflow-contract and checkpoint items D6 routed there; they are unassigned and carried in stubs/road-to-unassigned-workflow-items (council 2026-11-02)."
   - slug: road-to-agent-throughput-recovery
     relation: disjoint
     note: "Owns throughput and CI wait. The supplied plan's P0 throughput items are owned there (D6)."
@@ -358,6 +358,10 @@ naming and the peer gaps; subsystem-class stages wait on
   follows ADR-280, invokes it as a separate program, is announced, and waits on
   a recorded licence check for any copyleft tool.
   verify: as 5.1.
+- [ ] **5.3a Code-rendered film, stage 2.** Text and sync gates, approvals as
+  digests, grounding ledger, `launch-film`, media-policy delivery to consumers,
+  the sound layer, and a discriminating benchmark — § Code-rendered film below.
+  verify: every item of that section is a step of the 5.3 roadmap or carries a recorded kill.
 - [ ] **5.4 Code intelligence.** Exit criterion: the existing benchmark at or
   above grep's recall. Arrow-function exports, `--root`, a SCIP reader, more
   grammars, impact and ownership queries.
@@ -375,6 +379,136 @@ naming and the peer gaps; subsystem-class stages wait on
   the `projection.mode` enum missing `tiered` (`src/server/schemas/settings.ts:32`)
   — each with its `file:line` and a review trigger.
   verify: both stubs name each defect with its `file:line`.
+
+## Code-rendered film — the follow-on to step 5.3a
+
+> **Source:** `agents/tmp.old/inbox-2026-11-e/` (topics t1, t2, t3).
+> **Arrivals:** 2 — latest `inbox-2026-11-k` (2026-11-02); earlier: `inbox-2026-11-e`.
+
+The code-rendered film track shipped its witness, audio floor and skill in
+`archive/road-to-a-film-built-from-time.md` (`ui:render --profile film`,
+`audio-qa.sh`, `code-film`). What it left is carried here because this roadmap
+owns the video domain (5.3); it wakes with 5.3.
+
+
+Film gates, grounding and sound. A code-rendered film whose text is readable, whose cuts sit on the grid, whose
+approvals are digests, and whose every product claim and on-screen number is
+grounded — plus the governance that has to reach the consumer before any of
+that ships. Parked: each phase needs the film manifest of
+`road-to-a-film-built-from-time` first.
+
+### F1 — Text and sync gates
+
+- [ ] **F1.1** Text sidecar `TEXTS(t)` read when present, else measured through a `fillText`/DOM hook.
+- [ ] **F1.2** Reading-time floor, platform safe zones per format, overlap, clipping; `0/0` checked with text present is a fail.
+- [ ] **F1.3** Cuts against the beat grid (locks ±0.15 s, snaps ±0.10 s); plan vs file duration via `ffprobe`.
+- [ ] **F1.4** Poster: best still frame burned in as frame 0 without changing frame count or sync.
+- [ ] **F1.5** Formats re-laid out, not cropped (16:9, 9:16, 1:1).
+
+### F2 — Audio without an ML install
+
+- [ ] **F2.1** Zero-dependency TS beat tracker with `method` reported and a tempo-change warning.
+- [ ] **F2.2** Probe ladder: precomputed cues → installed analyser → 2.1 → energy segmentation → `unavailable`.
+- [ ] **F2.3** TTS by form and an ASR round trip with language passed through (German is the main case).
+
+### F3 — Approvals, styles, grounding
+
+- [ ] **F3.1** Approvals as digest records; a stale board stops the export.
+- [ ] **F3.2** Style catalogue (`proven | studied | sketch`), three first-party seeds; anti-copy treatment with six declared axes before a demo is read.
+- [ ] **F3.3** `launch-film`: project → 15–25 s film; leak rule (no secrets or personal data; real data swapped for stand-ins).
+- [ ] **F3.4** Grounding mechanised: every on-screen string sourced in the project or declared framing; every number has a `FACTS.md` row.
+
+### F4 — Governance that reaches the consumer
+
+- [ ] **F4.1** Media policies ship to consumers (seeded template or read from `dist/`); absence refuses with the path. Today `agents/settings/` is not in the package `files`.
+- [ ] **F4.2** Policies `asset-licences` (music/SFX/fonts with credit lines) and `titles-and-marks`.
+- [ ] **F4.3** Installed renderers consumed by form, with a licence check that covers commercial thresholds, not only copyleft.
+
+### F5 — A benchmark that discriminates
+
+- [ ] **F5.1** Pre-registered three arms (no package, `code-film`, `code-film` + installed renderer) over tasks that discriminate (tempo change, German voice-over, launch film with trap fixtures); honest null valid; VLM judgement advisory only.
+
+### F6 — The sound layer
+
+Cue sheet, source ladder, measured mix, credits and a listen list; the master
+track and the song are never overwritten. Builds on `audio-qa.sh`.
+
+#### 6a — Stop dropping intent silently
+
+
+- [ ] **F6.1.1** Under `audio: none`, the encoder emits `AUDIO DOWNGRADE` for every ambient layer and SYNC CUE no later stage fills (`motion-choreographer/SKILL.md:131-139`).
+- [ ] **F6.1.2** `stitch.sh` and the from-song master mux append `audio-qa` JSON to the run report; handoff mode records `audio: dropped`. The song stays untouched.
+- [ ] **F6.1.3** Opt-in `--loudness <preset>` two-pass linear `loudnorm` on the final mix only; presets in one table (`youtube`, `social` labelled observed practice, `broadcast`).
+
+#### 6b — The cue sheet
+
+- [ ] **F6.2.1** Schema `cue-sheet.v1`: `{t, kind, role, origin, confidence, …}`, `origin ∈ plan|timeline|beat|picture|operator`; unresolved times are listed, never guessed.
+- [ ] **F6.2.2** Producers in priority order: plan (SYNC CUES, manifest durations) → timeline readers → beat → picture (confidence ≤ 0.5).
+- [ ] **F6.2.3** Beat grid checked against the low band before it becomes cut candidates; a grid landing on nothing is `usable: false`.
+- [ ] **F6.2.4** Density defaults in one table marked *starting default*.
+
+#### 6c — Source ladder
+
+- [ ] **F6.3.1** Audio contract v2: classes `sfx-source` and `sfx-synth`, offline deterministic `dry-run`.
+- [ ] **F6.3.2** Adapters: operator library, an open CC library (anonymous, throttle-aware, licence re-checked on fetch), an operator-installed synthesiser (pinned, wrapped).
+- [ ] **F6.3.3** Licence policy closed to `cc0 | pdm | by`; `credits.json` per output.
+- [ ] **F6.3.4** Ladder order is data; a cue no rung fills stays quiet and is listed.
+
+#### 6d — Mix, critique, proof
+
+- [ ] **F6.4.1** `mix-sfx.sh` writes a stem and a new MP4; never `final.mp4`.
+- [ ] **F6.4.2** Rule `you-cannot-hear` (pack-scoped): measured vs text-matched, plus a listen list of at most five moments.
+- [ ] **F6.4.3** Pre-registered blind A/B over six films; honest null recorded.
+- [ ] **F6.4.4** A sound rung for `analyze:post` (onset density, LUFS, voice/music presence), local only.
+
+#### Sound kill register
+
+K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC weights, EU exclusion) · K3 cloud hearing by default · K4 caption-model scores as QA for sync or loudness · K6 NC/ND/SA licences · K7 overwriting a master.
+
+## Video, voice and creator — arrivals from `inbox-2026-11-k`
+
+> **Source:** `agents/tmp.old/inbox-2026-11-k/` (six topic folders: an owner prompt
+> set on motion video, raw-take editing and interactive training; plans on video
+> editing, a creator studio, an open video-generation engine, a montage pipeline
+> and voice). Verified at `6233ceedef`. The film witness's timeline form and
+> footage seeking shipped in `archive/road-to-a-timeline-the-witness-can-seek.md`.
+> Each item below joins the 5.3 roadmap as a step or carries a recorded kill
+> when that roadmap is written (same rule as 5.3a).
+
+**5.3 stage 1–2, talking-head edit**
+
+- [ ] **V1** Last clean take: on repeated sentences keep the last fluent take; the EDL says which takes were dropped.
+- [ ] **V2** Slip detection before any cut: silence map against word durations; a word whose audio is shorter than its transcript claims is a finding.
+- [ ] **V3** Padding by cut type (sentence end, mid-sentence, breath) with an end tail, recorded as parameters in the EDL — no magic numbers.
+- [ ] **V4** Caption placement by layout (never over the face or the graphic) and contrast behind every cue — extends F1.2.
+- [ ] **V5** Named format presets (16:9, 9:16, 1:1 with size and fps) instead of the 1280×720 fallback — extends F1.5.
+
+**Sync and voice — extends F1.3 and F2.3**
+
+- [ ] **V6** Word-anchor grid: ASR word times become anchors; a named animation event more than 100 ms off its word is a finding.
+- [ ] **V7** Voice-over: a shortlist of three or four voices with free preview links; paid samples only on request; one continuous take; bracketed stage directions stripped before synthesis; tempo correction checked by an ASR round trip; every paid TTS call confirmed like a paid video call.
+- [ ] **V8** Paid-second planner: shot lengths sum to the voice-over length plus at most 1 s; a freeze pad covers the remainder.
+
+**Provider pipeline — 5.3 stage 3**
+
+- [ ] **V9** Still check (ffmpeg `freezedetect`, `max_still_s`) after every image-to-video fetch, and an A/V-offset check (≤ 1 frame) before stitch.
+- [ ] **V10** ffmpeg capability gate for `/video:*`: tool absent → `skipped(capability)`, never pass.
+- [ ] **V11** Adapter inputs: multi-reference image/video/audio, a "keep X, change only Y" edit mode, motion transfer — each gated on a smoke trace.
+- [ ] **V12** Licence `{id, territory_excluded[], checked_at}` on every manifest entry; an entry without it fails `lint_adapter_tier`.
+- [ ] **V13** Cost per *accepted* second as the quote basis next to the modelled estimate (owner decision on display).
+- [ ] **V14** Retry cap per shot inside calibration/stitch: a shot that fails twice stops with one ask.
+- [ ] **V15** Media ingest gate for user-supplied references (type allowlist, bounded probe, re-encode, metadata/EXIF strip, hash) — security-sensitive, threat-model first.
+- [ ] **V16** Media retention: what a production keeps, for how long, and how a consent revocation deletes upstream copies.
+- [ ] **V17** SFX category allowlist next to the licence set — extends F6.3.
+
+**Decided by the AI council** — owner-delegated on 2026-11-02 ("decide all of this without me in the council"); council round of 2026-11-02, two seats (anthropic, openai), quorum 2/2; convergence summarised in each line below.
+
+- [ ] **V18 (was O1)** Lesson mode on `html-deck`, opt-in and text-first: curriculum gate before production, varied interactions, offline packaging, size budget measured on the complete encoded HTML. No paid media in the prototype; validate once with representative media, again with final assets. Revisit-if: lessons keep needing deck exceptions, or the prototype misses offline, accessibility or size.
+- [ ] **V19 (was O2)** Speaker cut-out only through the ADR-280 external-tool boundary: a named tool and version, an input/output contract, no network, temp-file cleanup, a plain-layout fallback when it is absent. Revisit-if: the tool's processing or licence cannot be established — then disable it.
+- **O3 parked** Generated music. An external program does not widen the closed output-licence set. Revisit-if: one provider/output workflow has documented rights accepted under project policy.
+- [ ] **V20 (was O4)** Creator identity and publishing staged separately. Identity is a local profile with export and deletion; a voice asset grants no permission. Publishing keeps per-action confirmation bound to account, destination, final content and action (Hard Floor unchanged). Revisit-if: storage, voice-use or publishing needs exceed that contract.
+- **O5 declined for now** Run-level spend grants and job reattach: a suite with no runtime has no component that could enforce a shared balance, revocation or crash-safe reconciliation. Per-call confirmation and ADR-059 stay. A read-only job-status ledger may be planned on its own. Revisit-if: a named enforcing component passes concurrent-session, crash, retry, revocation and unknown-billing tests.
+- **O6 resolved** D6's destination was archived without the items. The delivery-promise contract and risk-adaptive review are **unassigned** and carried in `stubs/road-to-unassigned-workflow-items`; the reference below is corrected.
 
 ## Blockers
 
@@ -417,7 +551,7 @@ naming and the peer gaps; subsystem-class stages wait on
 | D3 | reversible-technical | evidence | No new settings key. | Owner directive 2026-10-12 (`road-to-a-setup-that-decides-itself`). | — |
 | D4 | reversible-technical | evidence | Prior cuts and measured nulls are re-dispositioned in the register (2.1), not reversed here. | A measured null stays a fact and becomes a depth target. | — |
 | D5 | reversible-technical | evidence | Peer packages are named in no tracked file. | `source-confidentiality`. | — |
-| D6 | reversible-technical | evidence | The supplied plan's workflow contracts, checkpoints, resume and mission board are not planned here. | Owner scoped the run; owned by `road-to-a-step-that-costs-what-it-changes`, `road-to-agent-throughput-recovery`, `road-to-a-cold-start-paid-once`; the board joins 5.5. | — |
+| D6 | reversible-technical | evidence | The supplied plan's workflow contracts, checkpoints, resume and mission board are not planned here. | Owner scoped the run; owned by `road-to-agent-throughput-recovery`, `road-to-a-cold-start-paid-once`; the board joins 5.5. The workflow-contract items routed to `road-to-a-step-that-costs-what-it-changes` found no step there (archived) — unassigned, carried in `stubs/road-to-unassigned-workflow-items` (council 2026-11-02). | — |
 | D7 | reversible-technical | evidence | Its "video skills in core: reject" and "media pack: later" rows are overturned. | D1. | — |
 | D8 | product-owned | owner | Once 3.1's readings exist, the blocking check charges what a default install delivers per host, with a separate ceiling per host; the source reading stays measured and reported, and maintainability is gated by 3.2b. Rejected alternatives: a dual gate keeping a source token cap (option 2), the source gate unchanged (option 3). | Owner, 2026-10-21, after a two-seat AI council round on the same day split 1 (openai) vs 2 (anthropic); both seats' guards are adopted in 3.1-3.2b. ADR-270 is governance-protected, so the choice is owner-reserved. | A registered host cannot be measured deterministically, or a rollback trigger of 3.2 fires twice. |
 | D9 | reversible-technical | evidence | The release hold covers Phases 0-2, 4 and 5 (authoring); stage-1 capability delivery follows after the release. | Owner turn 7 asks for the corrected decisions before the release and "not all of it"; the council found the earlier hold contradicted the Goal. | The owner asks for a stage-1 capability before the release. |

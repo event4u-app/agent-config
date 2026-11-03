@@ -1,0 +1,79 @@
+{
+  "skill": "laravel-dto",
+  "last_eval": "2026-11-01",
+  "description": "8 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings of creating or fixing a DTO in a Laravel project: attribute mapping, SimpleDto/LiteDto, model linkage, DTO from request data. Should-not-trigger covers neighbours: form-request validation, Eloquent queries, API resources, migrations, and an unrelated frontend task.",
+  "queries": [
+    {
+      "q": "create a DTO for the Order model in this Laravel app",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "erstelle ein DTO für die Kunden-Tabelle",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "map these snake_case DB columns onto a DTO with attributes",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "my #[Map] attributes on the DTO are ignored, why?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "should this DTO extend SimpleDto or LiteDto?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "replace this array<string, mixed> parameter with a DTO",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "link the DTO to its Eloquent model",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "DTO aus den Request-Daten bauen und an den Service geben",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "add validation rules to this form request",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "validation → laravel-validation"
+    },
+    {
+      "q": "optimise this Eloquent query with eager loading",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "queries → eloquent"
+    },
+    {
+      "q": "shape this JSON response with an API resource",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "API resources → laravel-api-endpoint"
+    },
+    {
+      "q": "write a migration that adds a column",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "schema → laravel-migration"
+    },
+    {
+      "q": "center this button with Tailwind",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "frontend styling, no data-transfer object"
+    }
+  ]
+}

@@ -5,6 +5,8 @@ status: later
 
 # Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule
 
+> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): rules carry no motivating failure, no retirement condition and no calibrated model (`decision_impact` used by 0 of 122). Same criticism as this file's subject; it does not change the un-park condition.
+
 > A benchmark-backed claim has two ways to go stale, and this package only
 > handles one. It catches regressions when a claim is re-run. It does **not**
 > model the other case: the base host passes the evals **without** the artefact,

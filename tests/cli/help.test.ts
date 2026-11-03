@@ -7,10 +7,11 @@
  *   2. Bash `usage()` in src/scripts/_dispatch.bash — printed on
  *      `agent-config help --tier=1|all`.
  *
- * Both MUST list every command in the REGISTRY (which registry.test.ts
- * in turn locks to the Bash dispatcher's case-block). A command that
- * dispatches but is missing from help is a regression — that is exactly
- * how `upgrade` went missing.
+ * The Bash `usage()` (`help --tier=all`) MUST list every command in the
+ * REGISTRY (which registry.test.ts in turn locks to the Bash dispatcher's
+ * case-block) — that is exactly how `upgrade` once went missing. The
+ * default TS banner is a curated, task-grouped subset and may only name
+ * registered commands.
  */
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -41,14 +42,6 @@ function bashUsageText(): string {
 }
 
 describe('help coverage', () => {
-    it('TS-shell help lists every registered command', () => {
-        const help = buildHelp();
-        const missing = REGISTRY.filter((entry) => !commandLineRe(entry.name).test(help)).map(
-            (entry) => entry.name,
-        );
-        expect(missing, 'commands dispatched but absent from `agent-config help`').toEqual([]);
-    });
-
     it('every registered command carries a non-empty synopsis', () => {
         const missing = REGISTRY.filter(
             (entry) => typeof entry.synopsis !== 'string' || entry.synopsis.trim().length === 0,
@@ -63,13 +56,58 @@ describe('help coverage', () => {
         );
         expect(missing, 'commands dispatched but absent from `help --tier=all`').toEqual([]);
     });
+});
 
-    it('TS-shell help groups native and delegated commands', () => {
-        const help = buildHelp();
-        expect(help).toContain('Native commands (TS shell):');
-        expect(help).toContain('Delegated commands (Bash dispatcher):');
-        // Regression anchor for the original report: `upgrade` was
-        // dispatchable but invisible in `agent-config help`.
-        expect(help).toMatch(commandLineRe('upgrade'));
+// road-to-docs-that-sell 4.1 — the default help is a task-grouped front page,
+// not the full registry dump. The full surface stays one flag away.
+describe('default help (agent-config --help)', () => {
+    const help = buildHelp();
+    const lines = help.split('\n');
+    // Command rows: two-space indent + a lowercase name, below the first heading
+    // (the Usage block above it shows `agent-config <command>`, not a command).
+    const commandRows = lines.slice(lines.indexOf('Get started:')).filter((l) => /^ {2}[a-z]/.test(l));
+
+    it('fits in 60 lines', () => {
+        expect(lines.length).toBeLessThanOrEqual(60);
+    });
+
+    it('groups commands by task, in the order a user meets them', () => {
+        const headings = ['Get started:', 'Daily use:', 'Inspect:', 'Configure:', 'Maintain:'];
+        const at = headings.map((h) => lines.indexOf(h));
+        expect(at.every((i) => i >= 0), `missing heading in:\n${help}`).toBe(true);
+        expect([...at].sort((a, b) => a - b)).toEqual(at);
+    });
+
+    it('lists only commands the CLI actually dispatches', () => {
+        const shown = commandRows.map((l) => l.trim().split(/\s+/)[0] as string);
+        expect(shown.length).toBeGreaterThan(10);
+        const unknown = shown.filter((name) => REGISTRY.every((e) => e.name !== name));
+        expect(unknown).toEqual([]);
+    });
+
+    it('teaches init first and keeps the advanced installers out of it', () => {
+        const first = commandRows[0] ?? '';
+        expect(first.trim().startsWith('init ')).toBe(true);
+        for (const hidden of ['first-run', 'global', 'dispatch:hook', 'ui:serve']) {
+            expect(help, hidden).not.toMatch(commandLineRe(hidden));
+        }
+        for (const shown of ['install', 'setup', 'config', 'refresh']) {
+            expect(help, shown).toMatch(commandLineRe(shown));
+        }
+        // `install` is the same wizard as `init`, never sold as the CI path.
+        expect(lines.find((l) => commandLineRe('install').test(l))).not.toMatch(/CI|non-interactive|script/i);
+    });
+
+    it('carries no ADR numbers or implementation labels', () => {
+        expect(help).not.toMatch(/ADR-\d+/);
+        expect(help).not.toMatch(/TS[ -]shell|Bash dispatcher|delegate/i);
+    });
+
+    it('points to the full command list', () => {
+        expect(help).toContain('agent-config help --tier=all');
+    });
+
+    it('matches the committed snapshot', () => {
+        expect(help).toMatchSnapshot();
     });
 });

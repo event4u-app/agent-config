@@ -64,7 +64,7 @@ quantitative metrics (median time-to-first-value, abandonment rate). It reuses
 the consent + redaction policy above unchanged.
 
 - Protocol: [`_install-friction-runbook.md`](_install-friction-runbook.md).
-- Output: [`docs/install-friction-report.md`](../../docs/install-friction-report.md) — median · abandonment · top-3 friction · Gate-C verdict.
+- Output: [`docs/maintainers/install-friction-report.md`](../../docs/maintainers/install-friction-report.md) — median · abandonment · top-3 friction · Gate-C verdict.
 - Gate-C lock: median TTFV > 60 s **or** abandonment > 20 % → the wedge failed; iterate before finalizing C2.
 
 ## Files in this directory

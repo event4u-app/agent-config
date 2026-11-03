@@ -35,7 +35,7 @@ extendStrings({
         sNbNone: 'nothing – declared directly', sNbUnknown: 'not given', sNbNoReq: 'no own dependencies', sFiltered: function (n) { return n + ' filtered'; },
         sWhy: function (n) { return 'Why installed? · ' + n; }, sWhyT: 'shortest paths first · from requiredBy in the lockfile', sWays: function (n) { return n + (n === 1 ? ' path' : ' paths'); }, sWay: function (i) { return 'Path ' + i; },
         sManifest: 'Manifest', sDeclDirect: 'declared directly', sRequired: 'required', sThis: 'this package', sOnlyOne: 'Only this one path.', sDeclaredHere: 'Declared directly in the manifest.',
-        sAllPathsMissing: 'The map stores the shortest path only; every path (up to 20): code-graph why ',
+        sAllPathsMissing: 'The map stores up to 20 paths; every path: code-graph why ', sAllPaths: 'Every path the lockfile states.',
         sReqBy: function (n) { return 'Required by · ' + n; }, sReqs: function (n) { return 'Requires itself · ' + n; }, sAllHidden: function (n) { return 'All ' + n + ' hidden by the filters on the left.'; }, sNoOther: 'No other package – the project itself declares it.', sNoInfo: 'Not given in the lockfile.', sNoDeps: 'no own dependencies',
         sUse: function (n) { return 'Use in the code · ' + n + ' files'; }, sUseT: 'which functions and types are imported in which file', sWhole: 'whole module / side effect',
         sUseMore: function (n, k) { return '+ ' + n + ' more files – the map stores at most 20, all via code-graph usage ' + k; }, sByArea: 'By folder', sTop: 'Most used', sNi: 'Use without import',
@@ -85,7 +85,7 @@ extendStrings({
         sNbNone: 'nichts – direkt deklariert', sNbUnknown: 'keine Angabe', sNbNoReq: 'keine eigenen Abhängigkeiten', sFiltered: function (n) { return n + ' gefiltert'; },
         sWhy: function (n) { return 'Warum installiert? · ' + n; }, sWhyT: 'kürzeste Wege zuerst · aus requiredBy im Lockfile', sWays: function (n) { return n + (n === 1 ? ' Weg' : ' Wege'); }, sWay: function (i) { return 'Weg ' + i; },
         sManifest: 'Manifest', sDeclDirect: 'direkt deklariert', sRequired: 'benötigt', sThis: 'dieses Paket', sOnlyOne: 'Nur dieser eine Weg.', sDeclaredHere: 'Direkt im Manifest deklariert.',
-        sAllPathsMissing: 'Die Map speichert nur den kürzesten Weg; alle Wege (bis 20): code-graph why ',
+        sAllPathsMissing: 'Die Map speichert bis zu 20 Wege; alle Wege: code-graph why ', sAllPaths: 'Alle Wege, die das Lockfile nennt.',
         sReqBy: function (n) { return 'Benötigt von · ' + n; }, sReqs: function (n) { return 'Benötigt selbst · ' + n; }, sAllHidden: function (n) { return 'Alle ' + n + ' durch die Filter links ausgeblendet.'; }, sNoOther: 'Kein anderes Paket – das Projekt selbst deklariert es.', sNoInfo: 'Keine Angabe im Lockfile.', sNoDeps: 'keine eigenen Abhängigkeiten',
         sUse: function (n) { return 'Nutzung im Code · ' + n + ' Dateien'; }, sUseT: 'welche Funktionen und Typen in welcher Datei importiert werden', sWhole: 'ganzes Modul / Seiteneffekt',
         sUseMore: function (n, k) { return '+ ' + n + ' weitere Dateien – die Map speichert höchstens 20, alle über code-graph usage ' + k; }, sByArea: 'Nach Ordner', sTop: 'Meistgenutzt', sNi: 'Nutzung ohne Import',
@@ -110,6 +110,8 @@ extendStrings({
     }
 });
 
+// mirrors WHY_CHAIN_CAP in map_area_payloads.ts
+var WHY_CAP = 20;
 var SY_FXW = 'tests/fixtures/*';
 var SY_PM = { npm: ['npm', 'npm', 'sy-pm-npm'], composer: ['C', 'Composer', 'sy-pm-composer'] };
 var SY_STV_TONE = { used: ['var(--green)', 'ok'], thru: ['var(--cyan)', 'cyan'], chain: ['var(--line2)', 'dash'], cand: ['var(--amber)', 'warn'], unk: ['var(--violet)', 'violet'], noinst: ['var(--faint)', 'faint'] };
@@ -555,8 +557,12 @@ function syDeps(p, rows, cur, main) {
     if (!L.length) { var eL = el('span', { class: 'sy-nbempty' }, hidBy ? t('sFiltered')(num(hidBy)) : k.direct ? t('sNbNone') : t('sNbUnknown')); eL.style.left = '0'; eL.style.top = (yc - 8) + 'px'; stage.appendChild(eL); }
     if (!R.length) { var eR = el('span', { class: 'sy-nbempty' }, hidReq ? t('sFiltered')(num(hidReq)) : t('sNbNoReq')); eR.style.left = '70%'; eR.style.top = (yc - 8) + 'px'; stage.appendChild(eR); }
     main.appendChild(add(nb, stage));
-    // Why installed: the map carries the shortest path (sibling E.5 brings every chain).
-    var chains = k.direct ? [[]] : [k.path.slice(0, -1)];
+    // Why installed: every chain the payload carries (up to WHY_CHAIN_CAP), shortest first;
+    // a map drawn before `why` existed falls back to the single shortest path.
+    var hopName = function (h) { return h.replace(/ \(.*\)$/, ''); };
+    var whyAll = (k.why || []).map(function (ch) { return ch.map(hopName).slice(0, -1); });
+    var chains = k.direct ? [[]] : whyAll.length ? whyAll : [k.path.slice(0, -1)];
+    var capped = !k.direct && whyAll.length >= WHY_CAP;
     var why = add(el('div', { class: 'sy-box sy-why', id: 'sy-why' }), add(el('div', { class: 'sy-boxh' }), el('b', null, t('sWhy')(t('sWays')(chains.length))), el('span', { class: 'muted' }, t('sWhyT'))));
     chains.forEach(function (ids, i) {
         var rootK = syCache.byLabel[ids.length ? ids[0] : cur.id];
@@ -573,7 +579,7 @@ function syDeps(p, rows, cur, main) {
         });
         why.appendChild(row);
     });
-    why.appendChild(el('span', { class: 'sy-note' }, k.direct ? t('sDeclaredHere') : k.requiredBy.length > 1 ? t('sAllPathsMissing') + cur.name : t('sOnlyOne')));
+    why.appendChild(el('span', { class: 'sy-note' }, k.direct ? t('sDeclaredHere') : capped || (!whyAll.length && k.requiredBy.length > 1) ? t('sAllPathsMissing') + cur.name : chains.length === 1 ? t('sOnlyOne') : t('sAllPaths')));
     main.appendChild(why);
     var two = el('div', { class: 'sy-two' });
     [[t('sReqBy')(num(k.requiredBy.length)), hidBy, 'requiredBy', byV, hidBy ? t('sAllHidden')(num(hidBy)) : k.direct ? t('sNoOther') : t('sNoInfo'), 'sy-reqby'],

@@ -1,0 +1,63 @@
+{
+    "skill": "emit-tickets",
+    "last_eval": "2026-11-02",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored when the vertical-slice cut in section 2 brought this skill into check_routing_coverage's touched-skill scope. Exemplars cover the materialise request in English and German, including the phrasings the description names. Near-misses are the ticket neighbours the skill's own When-to-use table routes elsewhere (refine-ticket, estimate-ticket) plus authoring the roadmap itself (roadmap-writing, named as upstream). Counterexamples guard the word 'ticket' in a support context and a plain to-do list.",
+    "queries": [
+        {
+            "q": "turn this roadmap into tickets",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "materialise tickets for road-to-faster-ci so we can start building",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "emit tickets for this plan, one per step, with blocked_by wired up",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "I want a YAML ticket bundle under agents/tickets for the onboarding roadmap",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "mach Tickets aus der Roadmap für Phase 2",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "split T-004 into two smaller tickets and tighten its acceptance criteria",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an existing ticket being refined or split → refine-ticket, which this skill's When-to-use table names"
+        },
+        {
+            "q": "how many story points is T-007?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "estimating a single ticket → estimate-ticket, also named in the When-to-use table"
+        },
+        {
+            "q": "write a roadmap for moving the build to the new runner",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring the roadmap is the upstream step → roadmap-writing; there is nothing to materialise yet"
+        },
+        {
+            "q": "reply to the customer's support ticket about the failed invoice",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'ticket' homonym — a helpdesk conversation, not a work item"
+        },
+        {
+            "q": "give me a quick to-do list for cleaning up my desk",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a list of tasks with no roadmap and no bundle; guards against triggering on task-listing in general"
+        }
+    ]
+}

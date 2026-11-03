@@ -48,6 +48,7 @@ import {
 import { asOf, localIsoDate } from './_lib/as_of.js';
 import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { WITNESS_MARKER, settleSiteFindings, siteScannedLine, siteWitnessSurfaces } from './_lib/claims_site_sweep.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import {
     assertWatchlistResolves,
@@ -117,6 +118,9 @@ const PUBLISH_SURFACES = [
     '.github/about.yml',
     '.github/topics.yml',
     '.claude-plugin/marketplace.json',
+    // The docs-site pitch: rendered on GitHub Pages to readers who never open the repo.
+    'site/astro.config.mjs',
+    'site/src/content/docs/index.mdx',
 ];
 
 /**
@@ -960,7 +964,12 @@ function main(argv: string[] = process.argv.slice(2)): number {
     //    `unverified` annotation. Unmarkered numbers are exactly how an
     //    "84.8%"-style figure spreads across surfaces with no methodology
     //    (the anti-lesson this check encodes). Fenced code blocks are skipped.
-    for (const rel of WITNESS_SURFACES) {
+    // Site findings are collected apart: they meet the ratchet below rather than
+    // failing outright, because the sweep reaching the site REVEALS figures that
+    // were published before any gate looked (road-to-docs-that-sell 1.4).
+    const siteFindings: Finding[] = [];
+    const siteSurfaces = new Set(siteWitnessSurfaces(REPO));
+    for (const rel of [...WITNESS_SURFACES, ...siteSurfaces]) {
         const abs = path.join(REPO, rel);
         let text: string;
         try {
@@ -977,7 +986,8 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 continue;
             }
             if (inFence) continue;
-            if (!is_quantified_claim(line)) continue;
+            const scanned = siteSurfaces.has(rel) ? siteScannedLine(line) : line;
+            if (!is_quantified_claim(scanned)) continue;
             if (/unverified/i.test(line)) continue;
 
             // A marker on the line is not enough — it must be a marker that can
@@ -986,7 +996,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
             // about having no daemon, and any-marker-exempts-the-line let the
             // unrelated figure ride along on it. A qualitative claim says nothing
             // about a quantity, so only a `kind: quant` entry clears a figure.
-            const markers = [...line.matchAll(/<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g)].map((m) => m[1] as string);
+            const markers = [...line.matchAll(WITNESS_MARKER)].map((m) => m[1] as string);
             const licensed = markers.some((id) => ledger.get(id)?.kind === 'quant');
             if (licensed) continue;
 
@@ -994,13 +1004,14 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 markers.length > 0
                     ? `figure carried only by non-quantitative claim marker(s) [${markers.join(', ')}] — a \`kind: qual\` claim cannot license a number`
                     : 'quantified claim without a claim marker or \'unverified\' annotation';
-            findings.push({
+            (siteSurfaces.has(rel) ? siteFindings : findings).push({
                 id: '(unmarkered)',
                 file: `${rel}:${i + 1}`,
                 reason: `${why} — ${line.trim().slice(0, 70)}`,
             });
         }
     }
+    findings.push(...settleSiteFindings(siteFindings, REPO));
 
     // A published denominator must match the live ledger.
     //
@@ -1229,7 +1240,7 @@ function selfTest(): number {
     // a missing one fails as a module resolution error in EVERY case at once —
     // which reads as the detection having broken rather than the fixture being
     // incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts'];
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));

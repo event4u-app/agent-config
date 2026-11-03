@@ -190,7 +190,7 @@ describe('one parser — nothing may parse the arrow a second time', () => {
         expect(parseExpectation('-> green')).toBeNull();
     });
 
-    it('is the only file under src/scripts that parses a verify arrow', () => {
+    it('is the only file under src/scripts or src/agent-src/scripts that parses a verify arrow', () => {
         // The sweep's first form matched any regex literal pairing an arrow
         // with `\d+`, and fired on `_lib/exec_evidence.ts`. That was a false
         // positive with a real lesson in it: `exec:<cmd> -> <code>` is a
@@ -199,7 +199,7 @@ describe('one parser — nothing may parse the arrow a second time', () => {
         // Reusing the symbol is the point (rule 23 says so); what must not
         // recur is a second reader of the VERIFY clause. So the sweep requires
         // both halves in one file: the `verify:` token and an arrow matcher.
-        const owner = path.join('src', 'scripts', '_lib', 'verify_clause.ts');
+        const owner = path.join('src', 'agent-src', 'scripts', 'verify_clause.ts');
         const offenders: string[] = [];
         const walk = (dir: string): void => {
             for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -217,6 +217,7 @@ describe('one parser — nothing may parse the arrow a second time', () => {
             }
         };
         walk(path.join(REPO_ROOT, 'src', 'scripts'));
+        walk(path.join(REPO_ROOT, 'src', 'agent-src', 'scripts'));
         expect(offenders, `a second verify-arrow parser exists: ${offenders.join(', ')}`).toEqual([]);
     });
 });

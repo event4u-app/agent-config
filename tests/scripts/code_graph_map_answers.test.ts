@@ -333,7 +333,9 @@ describe('the map writer answers on a real tree', () => {
         expect(byPath('src/cli.ts').dead).toBeUndefined();
         expect(m.blastDepth).toBe(3);
         expect(m.analyses.deadBasis).toMatch(/exports unchecked/);
-        expect(m.pin).toMatchObject({ date: '2026-05-01' });
+        // The pin names the commit, so it lives in the manifest and the viewer, never in map.json.
+        expect(m.pin).toBeUndefined();
+        expect(res.model.pin).toMatchObject({ date: '2026-05-01' });
         expect(m.health?.formula).toBe(HEALTH_FORMULA);
         expect(JSON.stringify(doc)).not.toContain('@example.com');
         const mapMd = fs.readFileSync(path.join(res.outDir, 'MAP.md'), 'utf-8');

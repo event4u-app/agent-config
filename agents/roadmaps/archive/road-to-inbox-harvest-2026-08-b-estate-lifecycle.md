@@ -30,7 +30,7 @@ is best-effort: **no review dates, excluded from estate caps**". Per
 surfaced (Phase 1), never planned around silently.
 
 **A second lock the inbox never found, and it decides the flagship item outright.**
-[`docs/governance.md`](../../docs/governance.md) § Skill lifecycle policy (`:44`)
+[`docs/maintainers/governance.md`](../../docs/governance.md) § Skill lifecycle policy (`:44`)
 already declares the states `active · dormant · sunset` (`:46`) and already chose
 the mechanism: `:49-53` "**Dormancy is commit-based, not review-date-based.** A
 solo maintainer does not hand-maintain `last_reviewed:` timestamps (busywork that
@@ -81,7 +81,7 @@ report-only by construction and moves no cap.
 
       > `later/road-to-cost-parity-1-rule-payload-diet.md:3` is `status: later`,
       > parked `:17-30` on 2026-08-10 by council convergence + maintainer pick,
-      > with `:52` "do not relitigate". `docs/governance.md` § Skill lifecycle
+      > with `:52` "do not relitigate". `docs/maintainers/governance.md` § Skill lifecycle
       > policy separately defers a `last_reviewed:` field "until a second
       > maintainer exists". **Does the maintained-estate framing reopen now, or
       > stay parked on its own resume conditions — and does the
@@ -107,7 +107,7 @@ report-only by construction and moves no cap.
       **The second half of the question was not separately answered, and that is
       recorded rather than inferred.** The question put two things: does the
       framing reopen, and does the second-maintainer condition still hold. Only
-      the first was answered. `docs/governance.md` § Skill lifecycle policy is
+      the first was answered. `docs/maintainers/governance.md` § Skill lifecycle policy is
       untouched by this change, so its deferral of `last_reviewed:` "until a
       second maintainer exists" stands exactly as written — an unanswered
       sub-question leaves the existing state where it was, and reading a reopen
@@ -131,7 +131,7 @@ instrument, not a new policy.
       it so.
       <!-- verify: task test -- --filter=build_discovery_manifest -->
 - [x] **2.2 Publish the two-vocabulary finding and the coverage figures.** One
-      paragraph in `docs/governance.md`: `lifecycle:` and skill `status:` are
+      paragraph in `docs/maintainers/governance.md`: `lifecycle:` and skill `status:` are
       distinct fields with distinct enums, 15 of 289 and 66 of 289 declare them,
       and `lifecycle` defaults to `active` (`skill.schema.json:262`) so absent
       reads as active. Reconciling them is a separate decision; this only stops

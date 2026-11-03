@@ -9,6 +9,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { gitVisibleFiles, type GitVisible, visibleDir } from '../../../_lib/git_visible_files.js';
 import { parseCompose } from '../../../_lib/infra_files/compose.js';
 import { isComposeName } from '../../../_lib/infra_files/walk.js';
 import { isDocOrExamplePath, isFixturePath } from '../../scope.js';
@@ -55,7 +56,13 @@ const SKIP_DIRS = new Set([
 const DEFAULT_MAX_BYTES = 1024 * 1024;
 const TEST_PATH = /(?:^|\/)(?:tests?|__tests__|spec|specs)\/|\.(?:test|spec)\.[a-z]+$|_test\.go$|Tests?\.(?:java|cs|php)$/;
 
-function walk(root: string, rel = '', out: string[] = []): string[] {
+/**
+ * Files under `root`, minus what `.gitignore` excludes: build output such as a
+ * gitignored `dist-test/` otherwise reached the map as interface calls whose
+ * source the graph (which honours `.gitignore`) never held.
+ */
+function walk(root: string, rel = '', out: string[] = [], visible: GitVisible | null | undefined = undefined): string[] {
+    const v = visible === undefined ? gitVisibleFiles(root) : visible;
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(path.join(root, rel), { withFileTypes: true });
@@ -65,9 +72,11 @@ function walk(root: string, rel = '', out: string[] = []): string[] {
     for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
         const r = rel ? `${rel}/${e.name}` : e.name;
         if (e.isDirectory()) {
-            if (SKIP_DIRS.has(e.name) || r === 'agents/runtime' || r === 'storage/framework') continue;
-            walk(root, r, out);
-        } else if (e.isFile()) out.push(r);
+            if (SKIP_DIRS.has(e.name) || r === 'agents/runtime' || r === 'agents/map' || r === 'storage/framework') continue;
+            const verdict = v ? visibleDir(v, r) : 'all';
+            if (verdict === 'skip') continue;
+            walk(root, r, out, verdict === 'all' ? null : v);
+        } else if (e.isFile() && (!v || v.files.has(r))) out.push(r);
     }
     return out;
 }

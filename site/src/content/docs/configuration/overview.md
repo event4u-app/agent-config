@@ -1,55 +1,54 @@
 ---
-title: Configuration Overview
-description: The .agent-settings.yml file — its layered merge order, write surfaces, and how it is validated and synced.
+title: The settings file
+description: Agent Config reads one settings file in your home folder and an optional one per project — open them in the browser, read one value with its source or change it from the terminal.
 ---
 
-All configuration lives in **`.agent-settings.yml`**. The canonical, richly
-commented template is
-[`src/config/agent-settings.template.yml`](https://github.com/event4u-app/agent-config/blob/main/src/config/agent-settings.template.yml);
-the installer renders it into your project (or user-global) settings.
+Open your settings in the browser:
+
+```bash
+npx -y @event4u/agent-config config
+```
+
+## Where settings live
+
+- **Your settings** — `~/.event4u/agent-config/settings/.agent-settings.yml`, written by the setup wizard. They apply in every project.
+- **A project's settings** — an optional `.agent-settings.yml` in the repository, for values the whole team should share. Where a project sets a key, it wins for that project.
+
+Some keys are only read from one of the two files. Ask which value is in effect and which file it came from:
+
+```bash
+agent-config settings:get personal.autonomy
+```
+
+The [template](https://github.com/event4u-app/agent-config/blob/main/src/config/agent-settings.template.yml) lists every key with a comment explaining it.
 
 ```yaml
 # .agent-settings.yml (excerpt)
 profile:
   id: developer
-discipline_profile: auto
 personal:
   autonomy: auto
-quality:
-  local_auto_run: false
+cost:
+  enforcement: advisory
 ```
 
-## Layered merge (lowest → highest precedence)
+## Three ways to change a setting
 
-1. Package defaults (the template).
-2. `~/.event4u/agent-config/agent-settings.yml` — user-global, **whitelist-filtered**
-   to six DX keys (`name`, `ide`, `rule_loading_tier`, `personal.bot_icon`,
-   `personal.autonomy`, `telegraph.speak_scope`).
-3. `<repo-root>/.agent-settings.yml`.
-4. Intermediate-directory settings.
-5. `<CWD>/.agent-settings.yml` — deepest wins.
+- **The browser** — `agent-config config` opens the settings page for your user; `agent-config config --project` for the project file. It validates every value before saving and keeps your comments.
+- **The terminal** — `agent-config settings:set <key> <value>` changes one key in your user file. Settings that raise a spend ceiling or switch off a safety check refuse this route on purpose; change those in the browser or by hand.
+- **By hand** — edit the YAML. Nothing checks it until you run `agent-config settings:check`.
 
-**Project-local always beats user-global.**
+## After an upgrade
 
-## Two ways to write it
+```bash
+agent-config settings:sync                   # add keys a new release introduced
+agent-config settings:sync --prune-removed   # also drop keys a release retired
+agent-config settings:check                  # validate the file; changes nothing
+```
 
-- **The GUI** — `agent-config config` (or `settings`) opens a local settings
-  editor (loopback-bound, two-phase commit, comment-preserving merge).
-- **Hand-editing** the YAML directly — skips validation and locking, so prefer
-  the GUI for anything non-trivial.
-
-## Validation & sync
-
-- `agent-config settings:check` — validate against the settings contract (read-only).
-- `agent-config settings:sync` — additively merge new template keys into your file.
-- `agent-config validate` — drift gate suitable for CI.
-
-The schema
-([`src/scripts/schemas/agent-settings.schema.json`](https://github.com/event4u-app/agent-config/blob/main/src/scripts/schemas/agent-settings.schema.json))
-is deliberately permissive (`additionalProperties: true`) and only enum-guards
-the value-bearing keys that historically collided.
+`agent-config upgrade` runs the first one for you.
 
 ## Next
 
-- [Settings Reference](/agent-config/configuration/settings-reference/) — the key groups.
-- [Profiles](/agent-config/configuration/profiles/) — the four profile concepts, disambiguated.
+- [Settings reference](/agent-config/configuration/settings-reference/) — the keys you are most likely to change.
+- [The four profiles](/agent-config/configuration/profiles/) — four settings share the word "profile".

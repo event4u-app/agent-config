@@ -27,7 +27,7 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { manifest_path } from './installed_tools.js';
-import { write_target } from './user_global_paths.js';
+import { event4u_root, write_target } from './user_global_paths.js';
 
 /**
  * Where a RANKED skill came from — a question about AUTHORSHIP.
@@ -48,12 +48,24 @@ export type Compat = 'shadowed' | 'overlapping' | 'unscanned' | 'unclassified';
 /** The authored source tree, relative to a maintainer checkout's root. */
 export const AUTHORED_SKILL_ROOT = path.join('src', 'skills');
 
-/** Where the scan verdicts the ranker reads are written, relative to the root. */
-export const SCAN_CACHE_RELATIVE = path.join('agents', 'reports', 'neighbour-scan.json');
+/**
+ * Per-project neighbour caches, in user-global state rather than the project:
+ * written into `agents/reports/`, a default `doctor` left an untracked,
+ * not-gitignored file in the user's repository that no uninstall removed.
+ */
+export function neighbourStateDir(projectRoot: string): string {
+    let real = path.resolve(projectRoot);
+    try {
+        real = fs.realpathSync(real);
+    } catch {
+        // A project that does not exist yet keys on its resolved path.
+    }
+    return path.join(event4u_root(), 'state', 'neighbours', createHash('sha256').update(real).digest('hex').slice(0, 16));
+}
 
-/** Default scan-cache path for a project root. */
+/** Where the scan verdicts the ranker reads are written for a project root. */
 export function scanCachePath(projectRoot: string): string {
-    return path.join(projectRoot, SCAN_CACHE_RELATIVE);
+    return path.join(neighbourStateDir(projectRoot), 'neighbour-scan.json');
 }
 
 /**

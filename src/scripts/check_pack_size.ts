@@ -28,6 +28,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { parseGateArgs } from './_lib/gate_args.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { runSelfTest } from './_lib/gate_self_test.js';
 import {
@@ -333,7 +334,7 @@ export function payloadFingerprint(entryPath: string, size: number): string {
  */
 const BOUND_PAYLOAD_EXCEPTIONS: readonly BoundPayloadException[] = [
     { fingerprint: '6de9a60d02af4883ab8f09171673a44924ca78ddadd55518f743e95651d3d257', path: 'agents/templates/.ai-council.yml.example', size: 31548, why: 'shipped council config TEMPLATE — a dotfile because the file it is copied to is one. RE-PINNED 2026-10-06, 30,561 -> 31,548 bytes: the exception is path-AND-size-bound by design, so step 3.1 of road-to-a-spend-bound-only-where-one-was-set moving the template cost_budget and debate ceilings to 0 (ADR-279), removing the stale "always asks before invoking" sentence and explaining both invalidated it and the gate refused the entry as unaccounted. The re-pin excepts the SAME path for the SAME reason at its measured new size — it does not widen the class, raise a cap, or except anything the gate was not already carrying. (Previously RE-PINNED 2026-09-07, 29,872 -> 30,561 bytes, for a `disabled_reason` honest-null block on the gemini seat.)' },
-    { fingerprint: 'd36a53951c184db7481139235056e90b53a853714b3a68b31ba1349ecb95ac1d', path: 'agents/templates/.ai-video.xml.example', size: 9209, why: 'shipped video-provider config template — same reason as the council template' },
+    { fingerprint: '72349d6a9c214b6fd281c2d2bb9dd7e7664abd7c8da263f3a5c3b41fa0a8c752', path: 'agents/templates/.ai-video.xml.example', size: 9251, why: 'shipped video-provider config template — same reason as the council template. RE-PINNED 2026-11-02, 9,209 -> 9,251 bytes: seven <lifecycle>stable</lifecycle> tags became experimental when the adapters were demoted before their trace window closed (AI-council decision D1). Same path, same reason, measured new size.' },
     { fingerprint: 'f83229412cf8cceaadd0cb1934140a0c7c8277df43edc590f370572f6df6da98', path: 'dist/agent-src/templates/agents/.gitattributes.fragment', size: 2140, why: 'gitattributes fragment the installer appends to a consumer repo' },
     { fingerprint: 'a4f51dba3a66c0f2c3548e77961271ed4d7b5ec8a6661ea359ff044758f0d921', path: 'src/templates/minimal/.agent-settings.yml', size: 1042, why: 'the minimal-install settings template; the dot is the consumer-side filename' },
     { fingerprint: 'a9cb828c7f3e6ac62d3c55c2fd215779307bf695a065498b1d1e1188210ebea8', path: 'LICENSE', size: 1064, why: 'the licence npm requires in the tarball; extensionless by convention' },
@@ -342,7 +343,7 @@ const BOUND_PAYLOAD_EXCEPTIONS: readonly BoundPayloadException[] = [
     { fingerprint: 'aeffa474df3f805de07cdc9c6960c4918aa8e51e317fa1c30906d2f0267b7a16', path: 'dist/agent-src/templates/hooks/pre-commit-roadmap-progress', size: 3988, why: 'git hook template — same reason' },
     { fingerprint: '914f9c34551c5f4c42a70cd8bb0cd7b73078b0c4e7815b551833a3c64c8476d3', path: 'src/scripts/agent-config', size: 2391, why: 'the CLI entry script; an executable entry point carries no extension by convention' },
     { fingerprint: '0bb1cdd48ac2e9b6a2a56cde25de9fc221d75d42683680284c43118cff796e92', path: 'src/scripts/hooks/shims/php', size: 4439, why: 'shim invoked as the command name `php`; an extension would break the lookup' },
-    { fingerprint: 'a82ebd0d5fc87f655b6c5ff64fa650810daeacd4aa9f3366aabeebe0bb017940', path: 'src/scripts/install', size: 23116, why: 'the installer entry script; same reason as the CLI entry' },
+    { fingerprint: '8fafd555f82ad88d24ddb746ddd4235562d46577cbe930f76d4e5354419c5f5d', path: 'src/scripts/install', size: 24438, why: 'the installer entry script; same reason as the CLI entry. RE-PINNED 2026-11-01, 23,660 -> 24,438 bytes, on the owner\'s approval in session: road-to-docs-that-sell made a bare install default to the user-global scope and pass --offline/--force/--minimal through. Same path, same reason, measured new size.' },
     { fingerprint: '1fb564019de468368e34941dffd5eb8bc994364313e02f476ff354ac0da464d7', path: 'src/templates/minimal/overrides-gitkeep', size: 164, why: 'placeholder that becomes .gitkeep on install; extensionless on purpose' },
 ];
 
@@ -966,7 +967,16 @@ function selfTest(): number {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    if (argv.includes('--self-test')) return selfTest();
+    const parsed = parseGateArgs('check_pack_size', argv, {
+        'self-test': { type: 'boolean' },
+        json: { type: 'boolean' },
+        'pack-json': { type: 'string' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return 2;
+    }
+    if (parsed.values['self-test']) return selfTest();
     let budget: PackSizeBudget;
     let pack: PackResult;
     try {

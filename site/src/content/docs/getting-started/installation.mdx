@@ -1,0 +1,120 @@
+---
+title: Install
+description: Install Agent Config with one command — a browser wizard on a desktop, a non-interactive install for CI and scripts, or a curl fallback when npm cannot resolve.
+---
+
+import { Steps, Tabs, TabItem, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+One command installs Agent Config for every AI coding tool on your machine:
+
+```bash
+npx -y @event4u/agent-config init
+```
+
+## Where it writes
+
+`agent-config init` installs into your home directory — the package under `~/.event4u/agent-config/` and each AI tool's user-level folder such as `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into your repository, which only gets an `agents/overrides/` folder for your own changes plus a few gitignored bookkeeping files and a block each in `.gitignore` and `.gitattributes`; `agent-config init --project` creates just those in a repository and nothing else.
+
+## Pick your path
+
+<Tabs syncKey="install-path">
+  <TabItem label="Desktop wizard">
+    <Steps>
+
+    1. Run the install command in any terminal:
+
+       ```bash
+       npx -y @event4u/agent-config init
+       ```
+
+       On a machine with a display it opens the setup wizard in your browser. The wizard runs on `127.0.0.1` only.
+
+    2. Answer the first question — who you are. It picks a [profile](/agent-config/getting-started/choose-a-profile/): developer, founder, content creator, agency, finance or ops.
+
+    3. Tick the AI tools you use. The wizard shows what it will write for each one before it writes anything.
+
+    4. Click **Finish**, then check the install:
+
+       ```bash
+       npx -y @event4u/agent-config doctor
+       ```
+
+       `doctor` lists anything missing and the command that fixes it, and ends with one line such as `agent-config: installed — 4 optional warning(s)`.
+
+    5. Start a new session in your AI tool so it reads the new files, then run [your first task](/agent-config/getting-started/first-task/).
+
+    </Steps>
+
+    ![The setup wizard in four screens, recorded as a dry run: the recommended setup, choosing capability packs, the review of what will change, and the finish screen with the next commands](/agent-config/media/install/wizard-strip.webp)
+  </TabItem>
+  <TabItem label="Headless / CI">
+    <Steps>
+
+    1. Preview what would be written, without writing anything:
+
+       ```bash
+       npx -y @event4u/agent-config init --dry-run --global --tools=claude-code,cursor
+       ```
+
+    2. Install without the wizard. `--yes` skips every prompt; `--tools` picks the tools (default: all detected):
+
+       ```bash
+       npx -y @event4u/agent-config init --yes --global --tools=claude-code,cursor
+       ```
+
+    3. Check it:
+
+       ```bash
+       npx -y @event4u/agent-config doctor
+       ```
+
+       It exits 0 when the install is in place, warnings included, and 1 when installed files have drifted.
+
+    </Steps>
+
+    The wizard never opens in CI (`CI=1`), without a terminal, over SSH, with `AGENT_CONFIG_NO_UI=1` or when any of `--yes`, `--no-ui`, `--tools`, `--dry-run` is passed. `install` opens the same wizard as `init`; it is not a non-interactive installer.
+
+    Useful flags — run `agent-config init --help` for all of them:
+
+    | Flag | What it does |
+    |---|---|
+    | `--tools <ids>` | Comma-separated tool ids; `--list-tools` prints them |
+    | `--profile <name>` | How much is loaded: `minimal`, `balanced` (default) or `full` — see [Benchmark & cost](/agent-config/trust/benchmark-and-cost/) |
+    | `--user-type <id>` | Install the skill set for one role (`developer`, `founder` …) |
+    | `--offline` | Make no network calls (update check, registry fetches) |
+    | `--validate-only` | Pre-flight checks only: permissions, disk space, conflicts |
+    | `--force` | Overwrite files the install manages |
+  </TabItem>
+  <TabItem label="curl">
+    Reach for this only when npm cannot resolve the package — a lagging or private mirror, a restricted network, a broken cache. It downloads the release from GitHub and runs the bundled installer; it still needs Node.
+
+    ```bash
+    curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
+    ```
+
+    Pass installer flags after `bash -s --`:
+
+    ```bash
+    curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash -s -- --tools=claude-code,cursor --yes
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="One tool, no wizard">
+To try a single tool first, `npx -y @event4u/agent-config init --yes --global --tools=claude-code` installs for Claude Code only. Add more tools later by running `init` again.
+</Aside>
+
+## Not every tool installs the same way
+
+Most tools get their files written straight into their user-level folder. GitHub Copilot installs as a plugin, Claude Desktop needs skill ZIPs uploaded by hand, and Aider, Zed and JetBrains take an export you place yourself. [Which install do I get?](/agent-config/tools/overview/) has the per-tool steps.
+
+## No API keys needed
+
+The skills, rules and workflows need no API key — your AI tool runs the model. Only the optional [second opinion from other AI models](/agent-config/features/second-opinion/) asks for an Anthropic or OpenAI key, and only when you set it up.
+
+## Next
+
+<CardGrid>
+  <LinkCard title="Your first task" href="/agent-config/getting-started/first-task/" description="Run /work on a real change." />
+  <LinkCard title="Requirements" href="/agent-config/getting-started/requirements/" description="Node 22.6 or newer, macOS, Linux or WSL2." />
+</CardGrid>

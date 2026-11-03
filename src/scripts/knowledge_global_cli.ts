@@ -658,6 +658,9 @@ export function main(argv: string[] | null = null): number {
     return _dispatch(args);
 }
 
+/** The sub-commands this CLI accepts; `src/cli/registry.ts` declares the same list. */
+export const KNOWLEDGE_SUBCOMMANDS = ['list', 'show', 'trace', 'forget', 'promote', 'validate', 'lead-check', 'purge'] as const;
+
 function _dispatch(argv: string[]): number {
     // Top-level help.
     if (argv.length === 0) {
@@ -693,7 +696,7 @@ function _dispatch(argv: string[]): number {
             return _wrap(cmd, rest, _parsePurge, cmd_purge);
         default:
             _argparseError(
-                `argument cmd: invalid choice: ${_pyRepr(cmd)} (choose from 'list', 'show', 'trace', 'forget', 'promote', 'validate', 'lead-check', 'purge')`,
+                `argument cmd: invalid choice: ${_pyRepr(cmd)} (choose from ${KNOWLEDGE_SUBCOMMANDS.map((c) => _pyRepr(c)).join(', ')})`,
                 _MAIN_USAGE,
             );
             return 2;

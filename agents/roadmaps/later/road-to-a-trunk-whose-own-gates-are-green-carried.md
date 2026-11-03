@@ -21,7 +21,27 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
-> **Arrivals:** 2 counted — latest `inbox-2026-10-as` (2026-10-25): six gates
+> **Decided 2026-11-02** (AI council, owner-delegated, decision D3): one bounded
+> repair pass. First reproduce and classify each of the nine red gates (defect in
+> the tree · stale evaluation · gate that cannot run where it is wired); then fix
+> defects; any baseline raise or gate redesign is a separate, per-entry decision
+> with its reason — never "make green". Its acceptance criteria include
+> reconciling which gates run remotely and which only locally, and a check that a
+> roadmap decision routing work elsewhere names an active destination
+> (`stubs/road-to-unassigned-workflow-items`). It takes the next free active slot
+> before other `later/` work. Revisit-if: a gate demonstrably guards no invariant,
+> or cannot run where it is assigned — redesign that gate explicitly.
+
+> **Arrivals:** 4 counted — latest `analysis/inbox-2026-11-k` (2026-11-02): the same nine
+> `ci:` steps red on a clean `origin/main` worktree at `6233ceedef` (check-gate-completeness 251 vs
+> 214, lint-roadmap-later-disposition wake-condition 20 vs 17 added), plus check-reach-staleness.
+> Earlier, `analysis/inbox-2026-11-f` (2026-11-02): run singly on a clean
+> `origin/main` worktree at `44d244dbcb`, nine `ci:` steps are red — check-preamble-payload,
+> check-trigger-evals, lint-eval-freshness, lint-rule-enforcement-declaration,
+> lint-roadmap-blockers, check-gate-completeness (249 vs baseline 214), audit-tokens-budget,
+> lint-user-type-axis, lint-projection-fidelity — plus check-reach-staleness (youtube). A
+> hook-bundle overage seen on the way was an artefact of a symlinked `node_modules`
+> in the worktree (esbuild embeds the resolved path), not of main. Before that: `inbox-2026-10-as` (2026-10-25): six gates
 > still red when run singly at `01bb841cbd`, and no workflow runs `task ci`.
 > Steps 2.2–2.4 below do not wait on the legal blocker; any session with a
 > free slot can run them. Earlier: `inbox-2026-10-m` (2026-10-12): a 16.4.0

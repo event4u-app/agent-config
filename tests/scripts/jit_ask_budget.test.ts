@@ -277,15 +277,16 @@ describe('the nickname worked example — Phase 4 step 2', () => {
 
 describe('planSettingsAsks — three B needs, one question', () => {
     const classes = () => buildSettingsClassIndex(parseSettingsClassRows(contractText()));
-    /** The template defaults for the three B keys, per the contract's own cells. */
+    /** The template defaults for every B key, per the contract's own cells. */
     const B_DEFAULTS: Record<string, unknown> = {
         'personal.canary_name': '',
         'personal.open_edited_files': false,
         'memory.learn_on_session_end': false,
+        'security_ops.plan': false,
     };
     const defaultOf = (k: string): unknown => B_DEFAULTS[k];
 
-    it('the fixture is the real B set — three keys, all of them', () => {
+    it('the fixture is the real B set — every key, all of them', () => {
         expect(keysOfClass('B')).toEqual(Object.keys(B_DEFAULTS).sort());
     });
 

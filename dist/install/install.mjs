@@ -7374,7 +7374,7 @@ import * as fs40 from "node:fs";
 import * as os14 from "node:os";
 import * as path39 from "node:path";
 import process4 from "node:process";
-import { fileURLToPath as fileURLToPath8, pathToFileURL as pathToFileURL2 } from "node:url";
+import { fileURLToPath as fileURLToPath6, pathToFileURL as pathToFileURL2 } from "node:url";
 
 // src/scripts/_lib/json_pointers.ts
 import { createHash } from "node:crypto";
@@ -10759,6 +10759,20 @@ function dropGlobalScopeFiles(entries, deployed) {
   return entries;
 }
 
+// src/install/exportHint.ts
+var EXPORT_TARGETS = {
+  copilot: ["copilot-instructions", ".github/copilot-instructions.md"],
+  aider: ["aider", ".aider/agent-config.md"],
+  zed: ["zed", ".zed/agent-config.md"],
+  jetbrains: ["jetbrains", ".jetbrains/agent-config.md"]
+};
+var GLOBAL_HINT_TOOLS = Object.keys(EXPORT_TARGETS);
+function exportHintCommand(tool_id) {
+  const target = EXPORT_TARGETS[tool_id];
+  if (target === void 0) return null;
+  return `agent-config export --tool=${target[0]} --output=${target[1]}`;
+}
+
 // src/install/ownershipLedger.ts
 import * as fs14 from "node:fs";
 import * as path13 from "node:path";
@@ -11075,22 +11089,44 @@ function format_drift_report(entries) {
 }
 
 // src/scripts/_lib/gitignore_block.ts
+import * as fs18 from "node:fs";
+import * as path17 from "node:path";
+
+// src/scripts/_lib/package_root.ts
 import * as fs17 from "node:fs";
 import * as path16 from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
+var PACKAGE_NAME = "@event4u/agent-config";
+var MAX_ASCENT = 16;
+function resolvePackageRoot(fromUrlOrPath, legacyHops = 3) {
+  const start = fromUrlOrPath.startsWith("file:") ? fileURLToPath2(fromUrlOrPath) : fromUrlOrPath;
+  const startDir = path16.dirname(start);
+  let dir = startDir;
+  for (let i = 0; i < MAX_ASCENT; i++) {
+    const manifest = path16.join(dir, "package.json");
+    if (fs17.existsSync(manifest)) {
+      try {
+        const parsed = JSON.parse(fs17.readFileSync(manifest, "utf8"));
+        if (parsed.name === PACKAGE_NAME) {
+          return dir;
+        }
+      } catch {
+      }
+    }
+    const parent = path16.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  return path16.resolve(startDir, ...Array.from({ length: legacyHops }, () => ".."));
+}
+
+// src/scripts/_lib/gitignore_block.ts
 var SECTION_HEADER = "# event4u/agent-config";
 var SECTION_FOOTER = "# event4u/agent-config \u2014 END";
 var DEFAULT_GITIGNORE = ".gitignore";
-var _HERE = fileURLToPath2(import.meta.url);
-var DEFAULT_TEMPLATE = path16.join(
-  path16.dirname(_HERE),
-  "..",
-  "..",
-  "..",
-  "src",
-  "config",
-  "gitignore-block.txt"
-);
+var DEFAULT_TEMPLATE = path17.join(resolvePackageRoot(import.meta.url), "src", "config", "gitignore-block.txt");
 function _strip(ln) {
   return ln.replace(/\n+$/, "").replace(/\s+$/, "");
 }
@@ -11106,7 +11142,7 @@ var TemplateNotFoundError = class extends Error {
 };
 function _isFile(p) {
   try {
-    return fs17.statSync(p).isFile();
+    return fs18.statSync(p).isFile();
   } catch {
     return false;
   }
@@ -11121,7 +11157,7 @@ function load_template(p) {
   if (!_isFile(p)) {
     throw new TemplateNotFoundError(p);
   }
-  const text = fs17.readFileSync(p, "utf-8");
+  const text = fs18.readFileSync(p, "utf-8");
   return _splitlines(text).map(_strip);
 }
 function find_block(lines) {
@@ -11199,7 +11235,7 @@ function format_file(lines) {
   return text.replace(/\n+$/, "") + "\n";
 }
 function write_managed_block(project_root, dry_run) {
-  const target = path16.join(project_root, DEFAULT_GITIGNORE);
+  const target = path17.join(project_root, DEFAULT_GITIGNORE);
   let template;
   try {
     template = load_template(DEFAULT_TEMPLATE);
@@ -11208,14 +11244,14 @@ function write_managed_block(project_root, dry_run) {
   }
   let existing = [];
   if (_isFile(target)) {
-    existing = _splitlines(fs17.readFileSync(target, "utf-8"));
-  } else if (!_isFile(path16.join(project_root, ".git")) && !_isDir(path16.join(project_root, ".git"))) {
+    existing = _splitlines(fs18.readFileSync(target, "utf-8"));
+  } else if (!_isFile(path17.join(project_root, ".git")) && !_isDir(path17.join(project_root, ".git"))) {
     return 0;
   }
   const [lines, added] = sync_block(existing, template);
   if (added.length === 0 || dry_run) return added.length;
   try {
-    fs17.writeFileSync(target, format_file(lines), "utf-8");
+    fs18.writeFileSync(target, format_file(lines), "utf-8");
   } catch {
     return 0;
   }
@@ -11223,23 +11259,23 @@ function write_managed_block(project_root, dry_run) {
 }
 function _isDir(p) {
   try {
-    return fs17.statSync(p).isDirectory();
+    return fs18.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 
 // src/scripts/_lib/skill_catalogue.ts
-import * as fs18 from "node:fs";
-import * as path17 from "node:path";
+import * as fs19 from "node:fs";
+import * as path18 from "node:path";
 var PROJECT_CATALOGUE_ROOTS = ["src/skills", ".claude/skills"];
 var HOST_CATALOGUE_ROOT = ".claude/skills";
 var DEFAULT_CATALOGUE_ROOTS = [
   ...PROJECT_CATALOGUE_ROOTS,
   `~/${HOST_CATALOGUE_ROOT}`
 ];
-var PACKAGE_FALLBACK_CATALOGUE_ROOT = path17.join("dist", "agent-src", "skills");
-var OBSERVATION_LOG = path17.join(
+var PACKAGE_FALLBACK_CATALOGUE_ROOT = path18.join("dist", "agent-src", "skills");
+var OBSERVATION_LOG = path18.join(
   "agents",
   "evidence",
   "metrics",
@@ -11283,9 +11319,9 @@ function descriptionOf(frontmatter) {
   return "";
 }
 function readProjectedCatalogue(root) {
-  const names = fs18.readdirSync(root).filter((n) => fs18.existsSync(path17.join(root, n, "SKILL.md"))).sort();
+  const names = fs19.readdirSync(root).filter((n) => fs19.existsSync(path18.join(root, n, "SKILL.md"))).sort();
   return names.map((name, index) => {
-    const content = fs18.readFileSync(path17.join(root, name, "SKILL.md"), "utf-8");
+    const content = fs19.readFileSync(path18.join(root, name, "SKILL.md"), "utf-8");
     const frontmatter = frontmatterOf(content);
     const description = descriptionOf(frontmatter);
     return {
@@ -11302,12 +11338,12 @@ function truncationModeOf(record) {
   return record.truncation_mode ?? "per-entry";
 }
 function markdownFilesUnder(root) {
-  if (!fs18.existsSync(root)) return [];
+  if (!fs19.existsSync(root)) return [];
   const out = [];
   const walk = (dir) => {
-    for (const entry of fs18.readdirSync(dir, { withFileTypes: true })) {
-      const full = path17.join(dir, entry.name);
-      if (fs18.statSync(full).isDirectory()) walk(full);
+    for (const entry of fs19.readdirSync(dir, { withFileTypes: true })) {
+      const full = path18.join(dir, entry.name);
+      if (fs19.statSync(full).isDirectory()) walk(full);
       else if (entry.name.endsWith(".md")) out.push(full);
     }
   };
@@ -11315,9 +11351,9 @@ function markdownFilesUnder(root) {
   return out;
 }
 function measureCatalogueVolume(host, root) {
-  const skillsRoot = path17.join(root, "skills");
-  const skills = fs18.existsSync(skillsRoot) ? readProjectedCatalogue(skillsRoot) : [];
-  const commandEntries = markdownFilesUnder(path17.join(root, "commands")).length;
+  const skillsRoot = path18.join(root, "skills");
+  const skills = fs19.existsSync(skillsRoot) ? readProjectedCatalogue(skillsRoot) : [];
+  const commandEntries = markdownFilesUnder(path18.join(root, "commands")).length;
   return {
     host,
     root,
@@ -11360,9 +11396,9 @@ function catalogueLimitWarning(volume, limit) {
   return `${volume.host}: deploying ${volume.skillEntries} skills. This host reported dropping ${limit.droppedEntries} entries from the model-visible list when last measured (${limit.observedAt}, at ${limit.projectedSkills} skills) \u2014 that much never reaches the model. Explain: \`agent-config exec capture_skill_catalogue --limits\``;
 }
 function readObservationLog(logPath) {
-  if (!fs18.existsSync(logPath)) return [];
+  if (!fs19.existsSync(logPath)) return [];
   const out = [];
-  for (const line of fs18.readFileSync(logPath, "utf-8").split("\n")) {
+  for (const line of fs19.readFileSync(logPath, "utf-8").split("\n")) {
     const trimmed = line.trim();
     if (trimmed.length === 0) continue;
     try {
@@ -11376,8 +11412,8 @@ function readObservationLog(logPath) {
 
 // src/scripts/_lib/claude_desktop_bundler.ts
 import * as crypto4 from "node:crypto";
-import * as fs19 from "node:fs";
-import * as path18 from "node:path";
+import * as fs20 from "node:fs";
+import * as path19 from "node:path";
 
 // src/scripts/_lib/zip_min.ts
 import * as zlib from "node:zlib";
@@ -11484,7 +11520,7 @@ function _is_excluded(rel_parts) {
 }
 function _is_dir(p) {
   try {
-    return fs19.statSync(p).isDirectory();
+    return fs20.statSync(p).isDirectory();
   } catch {
     return false;
   }
@@ -11496,12 +11532,12 @@ function _compare_rel_parts(a, b) {
 }
 function _walk_skill_files(skill_dir) {
   const out = [];
-  const resolved = fs19.realpathSync(skill_dir);
+  const resolved = fs20.realpathSync(skill_dir);
   const walk = (root, relRoot) => {
     const dirNames = [];
     const fileNames = [];
-    for (const dirent of fs19.readdirSync(root, { withFileTypes: true })) {
-      const full = path18.join(root, dirent.name);
+    for (const dirent of fs20.readdirSync(root, { withFileTypes: true })) {
+      const full = path19.join(root, dirent.name);
       const isDir2 = dirent.isDirectory() || dirent.isSymbolicLink() && _is_dir(full);
       if (isDir2) {
         dirNames.push(dirent.name);
@@ -11514,13 +11550,13 @@ function _walk_skill_files(skill_dir) {
       if (_is_excluded(rel_parts)) {
         continue;
       }
-      out.push([path18.join(root, fname), rel_parts]);
+      out.push([path19.join(root, fname), rel_parts]);
     }
     for (const dname of dirNames) {
       if (_is_excluded([dname])) {
         continue;
       }
-      walk(path18.join(root, dname), [...relRoot, dname]);
+      walk(path19.join(root, dname), [...relRoot, dname]);
     }
   };
   walk(resolved, []);
@@ -11533,53 +11569,53 @@ function _manifest_digest(files) {
     const rel = rel_parts.join("/");
     h.update(Buffer.from(rel, "utf-8"));
     h.update(Buffer.from([0]));
-    h.update(crypto4.createHash("sha256").update(fs19.readFileSync(abs_path)).digest());
+    h.update(crypto4.createHash("sha256").update(fs20.readFileSync(abs_path)).digest());
     h.update(Buffer.from([0]));
   }
   return h.digest("hex");
 }
 function _atomic_write_zip(zip_path, files) {
-  fs19.mkdirSync(path18.dirname(zip_path), { recursive: true });
-  const stem = path18.basename(zip_path, path18.extname(zip_path));
-  const tmp_path = path18.join(
-    path18.dirname(zip_path),
+  fs20.mkdirSync(path19.dirname(zip_path), { recursive: true });
+  const stem = path19.basename(zip_path, path19.extname(zip_path));
+  const tmp_path = path19.join(
+    path19.dirname(zip_path),
     `.${stem}.${crypto4.randomBytes(6).toString("hex")}.zip.tmp`
   );
   try {
     const entries = files.map(([abs_path, rel_parts]) => ({
       name: rel_parts.join("/"),
-      data: fs19.readFileSync(abs_path)
+      data: fs20.readFileSync(abs_path)
     }));
-    fs19.writeFileSync(tmp_path, zip_write_sync(entries));
-    fs19.renameSync(tmp_path, zip_path);
+    fs20.writeFileSync(tmp_path, zip_write_sync(entries));
+    fs20.renameSync(tmp_path, zip_path);
   } finally {
-    if (fs19.existsSync(tmp_path)) {
-      fs19.unlinkSync(tmp_path);
+    if (fs20.existsSync(tmp_path)) {
+      fs20.unlinkSync(tmp_path);
     }
   }
 }
 function _write_if_changed(dest_dir, slug, files, force, written) {
   const digest = _manifest_digest(files);
-  const zip_path = path18.join(dest_dir, `${slug}.zip`);
-  const digest_path = path18.join(dest_dir, `${slug}.sha256`);
-  const recorded = fs19.existsSync(digest_path) ? fs19.readFileSync(digest_path, "utf-8").trim() : "";
-  if (!force && recorded === digest && fs19.existsSync(zip_path)) {
+  const zip_path = path19.join(dest_dir, `${slug}.zip`);
+  const digest_path = path19.join(dest_dir, `${slug}.sha256`);
+  const recorded = fs20.existsSync(digest_path) ? fs20.readFileSync(digest_path, "utf-8").trim() : "";
+  if (!force && recorded === digest && fs20.existsSync(zip_path)) {
     return;
   }
   _atomic_write_zip(zip_path, files);
-  fs19.writeFileSync(digest_path, digest + "\n", "utf-8");
+  fs20.writeFileSync(digest_path, digest + "\n", "utf-8");
   written.push(zip_path);
 }
 function build_skill_bundles(package_root, dest_dir, force = false, curation = null) {
-  const skills_root = path18.join(package_root, "dist/agent-src", "skills");
+  const skills_root = path19.join(package_root, "dist/agent-src", "skills");
   if (!_is_dir(skills_root)) {
     return [];
   }
-  fs19.mkdirSync(dest_dir, { recursive: true });
+  fs20.mkdirSync(dest_dir, { recursive: true });
   const written = [];
-  for (const name of fs19.readdirSync(skills_root).sort()) {
-    const entry = path18.join(skills_root, name);
-    const isSymlink2 = fs19.lstatSync(entry).isSymbolicLink();
+  for (const name of fs20.readdirSync(skills_root).sort()) {
+    const entry = path19.join(skills_root, name);
+    const isSymlink2 = fs20.lstatSync(entry).isSymbolicLink();
     if (!(_is_dir(entry) || isSymlink2)) {
       continue;
     }
@@ -11587,8 +11623,8 @@ function build_skill_bundles(package_root, dest_dir, force = false, curation = n
     if (curation !== null && !curation.includes(skill_name)) {
       continue;
     }
-    const skill_md = path18.join(entry, "SKILL.md");
-    if (!fs19.existsSync(skill_md)) {
+    const skill_md = path19.join(entry, "SKILL.md");
+    if (!fs20.existsSync(skill_md)) {
       continue;
     }
     const files = _walk_skill_files(entry);
@@ -11600,15 +11636,15 @@ function build_skill_bundles(package_root, dest_dir, force = false, curation = n
   return written;
 }
 function _command_slug(source_file, commands_root) {
-  const rel = path18.relative(commands_root, source_file);
-  const noExt = rel.slice(0, rel.length - path18.extname(rel).length);
-  return noExt.split(path18.sep).join("-");
+  const rel = path19.relative(commands_root, source_file);
+  const noExt = rel.slice(0, rel.length - path19.extname(rel).length);
+  return noExt.split(path19.sep).join("-");
 }
 function _iter_command_files(commands_root) {
   const found = [];
   const walk = (dir) => {
-    for (const dirent of fs19.readdirSync(dir, { withFileTypes: true })) {
-      const full = path18.join(dir, dirent.name);
+    for (const dirent of fs20.readdirSync(dir, { withFileTypes: true })) {
+      const full = path19.join(dir, dirent.name);
       if (dirent.isDirectory() || dirent.isSymbolicLink() && _is_dir(full)) {
         walk(full);
       } else if (dirent.name.endsWith(".md")) {
@@ -11618,21 +11654,21 @@ function _iter_command_files(commands_root) {
   };
   walk(commands_root);
   found.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
-  return found.filter((source_file) => path18.basename(source_file) !== "AGENTS.md");
+  return found.filter((source_file) => path19.basename(source_file) !== "AGENTS.md");
 }
 function build_command_bundles(package_root, dest_dir, force = false, curation = null) {
-  const commands_root = path18.join(package_root, "dist/agent-src", "commands");
+  const commands_root = path19.join(package_root, "dist/agent-src", "commands");
   if (!_is_dir(commands_root)) {
     return [];
   }
-  const skills_root = path18.join(package_root, "dist/agent-src", "skills");
+  const skills_root = path19.join(package_root, "dist/agent-src", "skills");
   let skill_names = /* @__PURE__ */ new Set();
   if (_is_dir(skills_root)) {
     skill_names = new Set(
-      fs19.readdirSync(skills_root).filter((name) => _is_dir(path18.join(skills_root, name)))
+      fs20.readdirSync(skills_root).filter((name) => _is_dir(path19.join(skills_root, name)))
     );
   }
-  fs19.mkdirSync(dest_dir, { recursive: true });
+  fs20.mkdirSync(dest_dir, { recursive: true });
   const written = [];
   for (const source_file of _iter_command_files(commands_root)) {
     const slug = _command_slug(source_file, commands_root);
@@ -11642,7 +11678,7 @@ function build_command_bundles(package_root, dest_dir, force = false, curation =
     if (curation !== null && !curation.includes(slug)) {
       continue;
     }
-    const files = [[fs19.realpathSync(source_file), ["SKILL.md"]]];
+    const files = [[fs20.realpathSync(source_file), ["SKILL.md"]]];
     _write_if_changed(dest_dir, slug, files, force, written);
   }
   return written;
@@ -11651,8 +11687,8 @@ function build_command_bundles(package_root, dest_dir, force = false, curation =
 // src/scripts/_lib/claude_settings_hooks.ts
 var YAML4 = __toESM(require_dist(), 1);
 import { spawnSync } from "node:child_process";
-import * as fs20 from "node:fs";
-import * as path19 from "node:path";
+import * as fs21 from "node:fs";
+import * as path20 from "node:path";
 
 // src/install/atomic.ts
 import {
@@ -11660,17 +11696,17 @@ import {
   fsyncSync,
   mkdirSync as mkdirSync7,
   openSync as openSync3,
-  readFileSync as readFileSync18,
+  readFileSync as readFileSync19,
   renameSync as renameSync6,
   unlinkSync as unlinkSync6,
   writeSync
 } from "node:fs";
-import { dirname as dirname9, join as join21 } from "node:path";
+import { dirname as dirname9, join as join22 } from "node:path";
 function atomicWriteFile(target, data, options = {}) {
   const mode = options.mode ?? 420;
   const parent = dirname9(target);
   mkdirSync7(parent, { recursive: true });
-  const tmp = join21(parent, `.tmp.${process.pid}.${randSuffix()}`);
+  const tmp = join22(parent, `.tmp.${process.pid}.${randSuffix()}`);
   let fd = null;
   try {
     fd = openSync3(tmp, "w", mode);
@@ -11697,7 +11733,7 @@ function atomicWriteFile(target, data, options = {}) {
 function atomicAppendLine(target, line) {
   let existing = "";
   try {
-    existing = readFileSync18(target, "utf8");
+    existing = readFileSync19(target, "utf8");
   } catch {
     existing = "";
   }
@@ -11745,7 +11781,7 @@ function _below(have, need) {
   return false;
 }
 function min_host_versions(manifest_path2) {
-  return _gates(_yaml_parse(fs20.readFileSync(manifest_path2, "utf8")) ?? {});
+  return _gates(_yaml_parse(fs21.readFileSync(manifest_path2, "utf8")) ?? {});
 }
 function _gates(manifest) {
   const all = manifest["native_event_min_host_version"] ?? {};
@@ -11754,7 +11790,7 @@ function _gates(manifest) {
   return out;
 }
 function build_claude_hook_matrix(manifest_path2, opts = {}) {
-  const raw = fs20.readFileSync(manifest_path2, "utf8");
+  const raw = fs21.readFileSync(manifest_path2, "utf8");
   const manifest = _yaml_parse(raw) ?? {};
   const have = parse_host_version(opts.hostVersion);
   const gates = _gates(manifest);
@@ -11804,8 +11840,8 @@ function _is_managed_group(group) {
   );
 }
 function _read_settings(settings_path) {
-  if (!fs20.existsSync(settings_path)) return {};
-  const raw = fs20.readFileSync(settings_path, "utf8");
+  if (!fs21.existsSync(settings_path)) return {};
+  const raw = fs21.readFileSync(settings_path, "utf8");
   if (raw.trim() === "") return {};
   let parsed;
   try {
@@ -11820,21 +11856,21 @@ function _read_settings(settings_path) {
 }
 function _with_lock(settings_path, fn) {
   const lockPath = settings_path + ".agent-config.lock";
-  fs20.mkdirSync(path19.dirname(lockPath), { recursive: true });
+  fs21.mkdirSync(path20.dirname(lockPath), { recursive: true });
   let fd;
   try {
-    fd = fs20.openSync(lockPath, "wx");
+    fd = fs21.openSync(lockPath, "wx");
   } catch {
     throw new SettingsLockError(lockPath);
   }
   try {
     return fn();
   } finally {
-    fs20.closeSync(fd);
-    fs20.rmSync(lockPath, { force: true });
+    fs21.closeSync(fd);
+    fs21.rmSync(lockPath, { force: true });
   }
 }
-function ensure_managed_hooks(settings_path, matrix, gated = []) {
+function ensure_managed_hooks(settings_path, matrix, gated = [], timeouts = {}) {
   return _with_lock(settings_path, () => {
     const settings = _read_settings(settings_path);
     const before = JSON.stringify(settings);
@@ -11843,8 +11879,9 @@ function ensure_managed_hooks(settings_path, matrix, gated = []) {
     for (const [native, command] of Object.entries(matrix)) {
       const existing = Array.isArray(hooks[native]) ? hooks[native] : [];
       const user_groups = existing.filter((g) => !_is_managed_group(g));
+      const timeout = timeouts[native];
       const managed_group = {
-        hooks: [{ type: "command", command }]
+        hooks: [timeout === void 0 ? { type: "command", command } : { type: "command", command, timeout }]
       };
       const next = [...user_groups, managed_group];
       if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
@@ -11869,8 +11906,8 @@ function ensure_managed_hooks(settings_path, matrix, gated = []) {
 }
 
 // src/scripts/_lib/skill_listing_overrides.ts
-import * as fs23 from "node:fs";
-import * as path22 from "node:path";
+import * as fs24 from "node:fs";
+import * as path23 from "node:path";
 
 // src/scripts/_lib/host_listing_model.ts
 var CLAUDE_CODE_LISTING_DEFAULTS = {
@@ -11949,13 +11986,13 @@ function modelListingBudget(catalogue, input) {
 
 // src/scripts/_lib/codex_resident_set.ts
 import { createHash as createHash7 } from "node:crypto";
-import * as fs22 from "node:fs";
-import * as path21 from "node:path";
+import * as fs23 from "node:fs";
+import * as path22 from "node:path";
 
 // src/scripts/_lib/codex_skill_finder.ts
 import { createHash as createHash6 } from "node:crypto";
-import * as fs21 from "node:fs";
-import * as path20 from "node:path";
+import * as fs22 from "node:fs";
+import * as path21 from "node:path";
 var FINDER_NAME = "agent-config-skill-finder";
 function finderDescription(count) {
   return `Use when no listed skill fits the task, or the user names a skill not in this list \u2014 ${count} more agent-config skills are installed here but unlisted; this finds and loads one.`;
@@ -12006,32 +12043,32 @@ function sha256(text) {
 }
 function readRecord(file, anchor2) {
   try {
-    const r = JSON.parse(fs21.readFileSync(file, "utf-8"));
-    if (typeof r.sha256 !== "string" || path20.resolve(String(r.anchor)) !== path20.resolve(anchor2)) return null;
+    const r = JSON.parse(fs22.readFileSync(file, "utf-8"));
+    if (typeof r.sha256 !== "string" || path21.resolve(String(r.anchor)) !== path21.resolve(anchor2)) return null;
     return { schema_version: 1, anchor: anchor2, sha256: r.sha256 };
   } catch {
     return null;
   }
 }
 function finderFile(anchor2) {
-  return path20.join(anchor2, "skills", FINDER_NAME, "SKILL.md");
+  return path21.join(anchor2, "skills", FINDER_NAME, "SKILL.md");
 }
 function ours(anchor2, recordFile) {
   const file = finderFile(anchor2);
-  if (!fs21.existsSync(path20.dirname(file))) return true;
+  if (!fs22.existsSync(path21.dirname(file))) return true;
   const rec = readRecord(recordFile, anchor2);
   if (rec === null) return false;
-  if (!fs21.existsSync(file)) return true;
-  return sha256(fs21.readFileSync(file, "utf-8")) === rec.sha256;
+  if (!fs22.existsSync(file)) return true;
+  return sha256(fs22.readFileSync(file, "utf-8")) === rec.sha256;
 }
 function ensureCodexFinder(anchor2, recordFile, targets) {
   if (targets.length === 0) return removeCodexFinder(anchor2, recordFile);
   if (!ours(anchor2, recordFile)) return "foreign";
   const body = renderFinder(targets);
   const file = finderFile(anchor2);
-  if (fs21.existsSync(file) && fs21.readFileSync(file, "utf-8") === body) return "unchanged";
+  if (fs22.existsSync(file) && fs22.readFileSync(file, "utf-8") === body) return "unchanged";
   atomicWriteFile(file, body);
-  fs21.mkdirSync(path20.dirname(recordFile), { recursive: true });
+  fs22.mkdirSync(path21.dirname(recordFile), { recursive: true });
   atomicWriteFile(
     recordFile,
     `${JSON.stringify({ schema_version: 1, anchor: anchor2, sha256: sha256(body) }, null, 2)}
@@ -12041,23 +12078,23 @@ function ensureCodexFinder(anchor2, recordFile, targets) {
 }
 function removeCodexFinder(anchor2, recordFile) {
   const file = finderFile(anchor2);
-  if (!fs21.existsSync(path20.dirname(file))) {
-    fs21.rmSync(recordFile, { force: true });
+  if (!fs22.existsSync(path21.dirname(file))) {
+    fs22.rmSync(recordFile, { force: true });
     return "absent";
   }
   if (!ours(anchor2, recordFile)) return "foreign";
-  fs21.rmSync(file, { force: true });
+  fs22.rmSync(file, { force: true });
   try {
-    if (fs21.readdirSync(path20.dirname(file)).length === 0) fs21.rmdirSync(path20.dirname(file));
+    if (fs22.readdirSync(path21.dirname(file)).length === 0) fs22.rmdirSync(path21.dirname(file));
   } catch {
   }
-  fs21.rmSync(recordFile, { force: true });
+  fs22.rmSync(recordFile, { force: true });
   return "removed";
 }
 
 // src/scripts/_lib/codex_resident_set.ts
 var RECORD_DIRNAME = "codex-resident-set";
-var POLICY_REL = path21.join("agents", "openai.yaml");
+var POLICY_REL = path22.join("agents", "openai.yaml");
 var CODEX_BUDGET_CHARS = 8e3;
 var POLICY_BODY = "policy:\n  allow_implicit_invocation: false\n";
 var ASSUMPTIONS2 = [
@@ -12099,15 +12136,15 @@ function computeCodexResidentSet(catalogue, opts) {
   return { budgetChars, resident, nonResident, listingChars, assumptions: ASSUMPTIONS2 };
 }
 function recordPath(anchor2, env) {
-  const key = createHash7("sha256").update(path21.resolve(anchor2)).digest("hex").slice(0, 16);
-  return path21.join(write_target(RECORD_DIRNAME, { env: env ?? null }), `${key}.json`);
+  const key = createHash7("sha256").update(path22.resolve(anchor2)).digest("hex").slice(0, 16);
+  return path22.join(write_target(RECORD_DIRNAME, { env: env ?? null }), `${key}.json`);
 }
 function finderRecordPath(anchor2, env) {
   return recordPath(anchor2, env).replace(/\.json$/, ".finder.json");
 }
 function codexSkillRoots(home) {
-  return [path21.join(home, ".codex"), path21.join(home, ".agents")].filter(
-    (a) => fs22.existsSync(path21.join(a, "skills"))
+  return [path22.join(home, ".codex"), path22.join(home, ".agents")].filter(
+    (a) => fs23.existsSync(path22.join(a, "skills"))
   );
 }
 function ownedCatalogue(skillsDir, owned) {
@@ -12115,7 +12152,7 @@ function ownedCatalogue(skillsDir, owned) {
   for (const name of owned) {
     let raw;
     try {
-      raw = fs22.readFileSync(path21.join(skillsDir, name, "SKILL.md"), "utf8");
+      raw = fs23.readFileSync(path22.join(skillsDir, name, "SKILL.md"), "utf8");
     } catch {
       continue;
     }
@@ -12129,45 +12166,45 @@ function loadRecord(file, anchor2) {
   const empty = { schema_version: 1, anchor: anchor2, written: [] };
   let data;
   try {
-    data = JSON.parse(fs22.readFileSync(file, "utf-8"));
+    data = JSON.parse(fs23.readFileSync(file, "utf-8"));
   } catch {
     return empty;
   }
   const r = data;
   if (!r || typeof r !== "object" || !Array.isArray(r.written)) return empty;
-  if (path21.resolve(String(r.anchor)) !== path21.resolve(anchor2)) return empty;
+  if (path22.resolve(String(r.anchor)) !== path22.resolve(anchor2)) return empty;
   return { schema_version: 1, anchor: anchor2, written: r.written.filter((x) => typeof x === "string") };
 }
 function saveRecord(file, rec) {
   if (rec.written.length === 0) {
-    fs22.rmSync(file, { force: true });
+    fs23.rmSync(file, { force: true });
     return;
   }
-  fs22.mkdirSync(path21.dirname(file), { recursive: true });
+  fs23.mkdirSync(path22.dirname(file), { recursive: true });
   const sorted = { ...rec, written: [...rec.written].sort() };
   atomicWriteFile(file, `${JSON.stringify(sorted, null, 2)}
 `);
 }
 function dropPolicy(abs) {
-  fs22.rmSync(abs, { force: true });
-  const dir = path21.dirname(abs);
+  fs23.rmSync(abs, { force: true });
+  const dir = path22.dirname(abs);
   try {
-    if (fs22.readdirSync(dir).length === 0) fs22.rmdirSync(dir);
+    if (fs23.readdirSync(dir).length === 0) fs23.rmdirSync(dir);
   } catch {
   }
 }
 function ensureCodexResidentSet(anchor2, recordFile, nonResident) {
-  const skillsDir = path21.join(anchor2, "skills");
+  const skillsDir = path22.join(anchor2, "skills");
   const rec = loadRecord(recordFile, anchor2);
   const result = { changed: false, disabled: [], reenabled: [], skipped_foreign: [] };
   const want = new Set(nonResident);
   const ours2 = new Set(rec.written);
   const next = [];
   for (const rel of rec.written) {
-    const abs = path21.join(anchor2, rel);
-    const name = rel.split(path21.sep)[1] ?? "";
-    if (!fs22.existsSync(abs)) continue;
-    if (fs22.readFileSync(abs, "utf-8") !== POLICY_BODY) continue;
+    const abs = path22.join(anchor2, rel);
+    const name = rel.split(path22.sep)[1] ?? "";
+    if (!fs23.existsSync(abs)) continue;
+    if (fs23.readFileSync(abs, "utf-8") !== POLICY_BODY) continue;
     if (want.has(name)) {
       next.push(rel);
       continue;
@@ -12176,16 +12213,16 @@ function ensureCodexResidentSet(anchor2, recordFile, nonResident) {
     result.reenabled.push(name);
   }
   for (const name of [...want].sort()) {
-    const rel = path21.join("skills", name, POLICY_REL);
+    const rel = path22.join("skills", name, POLICY_REL);
     if (ours2.has(rel) && next.includes(rel)) continue;
-    const dir = path21.join(skillsDir, name);
-    if (!fs22.existsSync(dir)) continue;
-    const abs = path21.join(anchor2, rel);
-    if (fs22.existsSync(abs) && fs22.readFileSync(abs, "utf-8") !== POLICY_BODY) {
+    const dir = path22.join(skillsDir, name);
+    if (!fs23.existsSync(dir)) continue;
+    const abs = path22.join(anchor2, rel);
+    if (fs23.existsSync(abs) && fs23.readFileSync(abs, "utf-8") !== POLICY_BODY) {
       result.skipped_foreign.push(name);
       continue;
     }
-    fs22.mkdirSync(path21.dirname(abs), { recursive: true });
+    fs23.mkdirSync(path22.dirname(abs), { recursive: true });
     atomicWriteFile(abs, POLICY_BODY);
     next.push(rel);
     result.disabled.push(name);
@@ -12204,8 +12241,8 @@ function applyCodexResidentSet(home, report) {
     const firstRootOf = /* @__PURE__ */ new Map();
     const catalogue = [];
     for (const anchor2 of roots) {
-      const skillsDir = path21.join(anchor2, "skills");
-      const owned = fs22.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs22.existsSync(path21.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
+      const skillsDir = path22.join(anchor2, "skills");
+      const owned = fs23.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs23.existsSync(path22.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
       for (const e of ownedCatalogue(skillsDir, owned)) {
         if (firstRootOf.has(e.name)) continue;
         firstRootOf.set(e.name, anchor2);
@@ -12221,15 +12258,15 @@ function applyCodexResidentSet(home, report) {
     const finder = ensureCodexFinder(
       roots[0],
       finderRecordPath(roots[0]),
-      split.nonResident.map((name) => ({ name, skillsDir: path21.join(firstRootOf.get(name), "skills") }))
+      split.nonResident.map((name) => ({ name, skillsDir: path22.join(firstRootOf.get(name), "skills") }))
     );
     const unlistAllowed = finder !== "foreign";
     let disabled = 0;
     let reenabled = 0;
     let foreign = 0;
     for (const anchor2 of roots) {
-      const skillsDir = path21.join(anchor2, "skills");
-      const here = fs22.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs22.existsSync(path21.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
+      const skillsDir = path22.join(anchor2, "skills");
+      const here = fs23.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs23.existsSync(path22.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
       const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor2) : [];
       const res = ensureCodexResidentSet(anchor2, recordPath(anchor2), nonResident);
       disabled += res.disabled.length;
@@ -12254,7 +12291,7 @@ function recordPath2(env) {
 function ownedSkillNames(currentFiles) {
   const out = /* @__PURE__ */ new Set();
   for (const rel of currentFiles) {
-    const m = /^skills\/([^/]+)\/SKILL\.md$/.exec(rel.split(path22.sep).join("/"));
+    const m = /^skills\/([^/]+)\/SKILL\.md$/.exec(rel.split(path23.sep).join("/"));
     if (m) out.add(m[1]);
   }
   return [...out].sort();
@@ -12264,7 +12301,7 @@ function ownedCatalogue2(skillsDir, owned) {
   for (const name of owned) {
     let raw;
     try {
-      raw = fs23.readFileSync(path22.join(skillsDir, name, "SKILL.md"), "utf8");
+      raw = fs24.readFileSync(path23.join(skillsDir, name, "SKILL.md"), "utf8");
     } catch {
       continue;
     }
@@ -12285,23 +12322,23 @@ function loadRecord2(file, settingsPath) {
   const empty = { schema_version: 1, settings_path: settingsPath, created_key: false, entries: {} };
   let data;
   try {
-    data = JSON.parse(fs23.readFileSync(file, "utf-8"));
+    data = JSON.parse(fs24.readFileSync(file, "utf-8"));
   } catch {
     return empty;
   }
   const r = data;
   if (!r || typeof r !== "object" || typeof r.entries !== "object" || r.entries === null) return empty;
-  if (path22.resolve(String(r.settings_path)) !== path22.resolve(settingsPath)) return empty;
+  if (path23.resolve(String(r.settings_path)) !== path23.resolve(settingsPath)) return empty;
   const entries = {};
   for (const [k, v] of Object.entries(r.entries)) if (typeof v === "string") entries[k] = v;
   return { schema_version: 1, settings_path: settingsPath, created_key: r.created_key === true, entries };
 }
 function saveRecord2(file, rec) {
   if (Object.keys(rec.entries).length === 0) {
-    fs23.rmSync(file, { force: true });
+    fs24.rmSync(file, { force: true });
     return;
   }
-  fs23.mkdirSync(path22.dirname(file), { recursive: true });
+  fs24.mkdirSync(path23.dirname(file), { recursive: true });
   atomicWriteFile(file, `${JSON.stringify({ ...rec, entries: sortKeys(rec.entries) }, null, 2)}
 `);
 }
@@ -12366,8 +12403,8 @@ function ensureListingOverrides(settingsPath, recordFile, wanted) {
 function applyListingOverrides(anchor2, report) {
   try {
     const owned = ownedSkillNames(recorded_rel_files("claude-code", anchor2));
-    const wanted = computeOverrides(path22.join(anchor2, "skills"), owned);
-    const res = ensureListingOverrides(path22.join(anchor2, "settings.json"), recordPath2(), wanted);
+    const wanted = computeOverrides(path23.join(anchor2, "skills"), owned);
+    const res = ensureListingOverrides(path23.join(anchor2, "settings.json"), recordPath2(), wanted);
     if (res.changed) {
       report(
         `claude-code: listing override in ~/.claude/settings.json \u2014 ${res.written.length} set name-only, ${res.removed.length} removed`
@@ -12389,8 +12426,8 @@ function applyHostListingPolicies(deployed, home, claudeAnchor, report) {
 
 // src/scripts/hooks/host_lowering.ts
 var import_yaml2 = __toESM(require_dist(), 1);
-import * as fs24 from "node:fs";
-import * as path23 from "node:path";
+import * as fs25 from "node:fs";
+import * as path24 from "node:path";
 import { fileURLToPath as fileURLToPath3 } from "node:url";
 
 // src/scripts/hooks/table_fingerprint.ts
@@ -12402,12 +12439,12 @@ function tableFingerprint(text) {
 
 // src/scripts/hooks/host_lowering.ts
 var _IN_BUNDLE = true;
-var _REPO_ROOT = path23.resolve(
-  path23.dirname(fileURLToPath3(import.meta.url)),
+var _REPO_ROOT = path24.resolve(
+  path24.dirname(fileURLToPath3(import.meta.url)),
   ..._IN_BUNDLE ? ["..", ".."] : ["..", "..", ".."]
 );
-var HOST_LOWERING_PATH = path23.join(_REPO_ROOT, "src", "scripts", "hooks", "host_lowering.yaml");
-var HOST_LOWERING_JSON_PATH = path23.join(_REPO_ROOT, "src", "scripts", "hooks", "host_lowering.json");
+var HOST_LOWERING_PATH = path24.join(_REPO_ROOT, "src", "scripts", "hooks", "host_lowering.yaml");
+var HOST_LOWERING_JSON_PATH = path24.join(_REPO_ROOT, "src", "scripts", "hooks", "host_lowering.json");
 var DEFAULT_SURFACE = "any";
 function _asString(v) {
   if (v === null || v === void 0) return null;
@@ -12479,10 +12516,10 @@ function _structure(raw) {
 var _cache = null;
 function loadHostLowering() {
   if (_cache !== null) return _cache;
-  const text = fs24.readFileSync(HOST_LOWERING_PATH, "utf-8");
+  const text = fs25.readFileSync(HOST_LOWERING_PATH, "utf-8");
   let compiled;
   try {
-    compiled = fs24.readFileSync(HOST_LOWERING_JSON_PATH, "utf-8");
+    compiled = fs25.readFileSync(HOST_LOWERING_JSON_PATH, "utf-8");
   } catch {
     compiled = null;
   }
@@ -12539,36 +12576,6 @@ import { createRequire as createRequire2 } from "node:module";
 import * as fs26 from "node:fs";
 import * as os8 from "node:os";
 import * as path25 from "node:path";
-
-// src/scripts/_lib/package_root.ts
-import * as fs25 from "node:fs";
-import * as path24 from "node:path";
-import { fileURLToPath as fileURLToPath4 } from "node:url";
-var PACKAGE_NAME = "@event4u/agent-config";
-var MAX_ASCENT = 16;
-function resolvePackageRoot(fromUrlOrPath, legacyHops = 3) {
-  const start = fromUrlOrPath.startsWith("file:") ? fileURLToPath4(fromUrlOrPath) : fromUrlOrPath;
-  const startDir = path24.dirname(start);
-  let dir = startDir;
-  for (let i = 0; i < MAX_ASCENT; i++) {
-    const manifest = path24.join(dir, "package.json");
-    if (fs25.existsSync(manifest)) {
-      try {
-        const parsed = JSON.parse(fs25.readFileSync(manifest, "utf8"));
-        if (parsed.name === PACKAGE_NAME) {
-          return dir;
-        }
-      } catch {
-      }
-    }
-    const parent = path24.dirname(dir);
-    if (parent === dir) {
-      break;
-    }
-    dir = parent;
-  }
-  return path24.resolve(startDir, ...Array.from({ length: legacyHops }, () => ".."));
-}
 
 // src/shared/settingsCarveOut.ts
 var SETTINGS_CARVE_OUT = [
@@ -12742,18 +12749,25 @@ function _readDotted(root, dotted) {
   }
   return node2;
 }
+var PRUNE_REMOVED_COMMAND = "agent-config settings:sync --prune-removed";
 function warnRemovedKeys(merged) {
-  for (const [key, reason] of REMOVED_KEYS) {
-    if (_warnedRemovedKeys.has(key)) {
-      continue;
-    }
-    if (_readDotted(merged, key) === void 0) {
+  const fresh = [];
+  for (const [key] of REMOVED_KEYS) {
+    if (_warnedRemovedKeys.has(key) || _readDotted(merged, key) === void 0) {
       continue;
     }
     _warnedRemovedKeys.add(key);
-    process.stderr.write(`${key} was removed (${reason}); ignored.
-`);
+    fresh.push(key);
   }
+  if (fresh.length === 0) {
+    return;
+  }
+  const named = fresh.slice(0, 3).join(", ") + (fresh.length > 3 ? `, +${fresh.length - 3} more` : "");
+  const noun = fresh.length === 1 ? "removed settings key is" : "removed settings keys are";
+  process.stderr.write(
+    `${fresh.length} ${noun} ignored (${named}) \u2014 see why and delete: ${PRUNE_REMOVED_COMMAND} [--dry-run]
+`
+  );
 }
 
 // src/scripts/_lib/agent_settings.ts
@@ -13702,7 +13716,6 @@ import * as os12 from "node:os";
 import * as fs31 from "node:fs";
 import * as os11 from "node:os";
 import * as path30 from "node:path";
-import { fileURLToPath as fileURLToPath5 } from "node:url";
 
 // src/install/globalRuleLayers.ts
 import * as os10 from "node:os";
@@ -13882,13 +13895,7 @@ function readWindows(raw) {
   return out;
 }
 function defaultHostLimitsPath() {
-  return path30.join(
-    path30.dirname(fileURLToPath5(import.meta.url)),
-    "..",
-    "..",
-    "config",
-    "host-instruction-limits.json"
-  );
+  return path30.join(resolvePackageRoot(import.meta.url), "src", "config", "host-instruction-limits.json");
 }
 function loadHostInstructionLimits(file = defaultHostLimitsPath()) {
   const out = /* @__PURE__ */ new Map();
@@ -14057,7 +14064,7 @@ function renderHostLimitRows(rows) {
 import { createHash as createHash10 } from "node:crypto";
 import * as fs33 from "node:fs";
 import * as path32 from "node:path";
-import { fileURLToPath as fileURLToPath6 } from "node:url";
+import { fileURLToPath as fileURLToPath4 } from "node:url";
 
 // src/scripts/_lib/rule_consequence_class.ts
 import * as fs32 from "node:fs";
@@ -14109,8 +14116,8 @@ function triggerlessRuleIds(router) {
 }
 
 // src/scripts/_lib/thin_rules.ts
-var _HERE2 = fileURLToPath6(import.meta.url);
-var REPO_ROOT = path32.resolve(path32.dirname(_HERE2), "..", "..", "..");
+var _HERE = fileURLToPath4(import.meta.url);
+var REPO_ROOT = path32.resolve(path32.dirname(_HERE), "..", "..", "..");
 var RULES_SOURCE = path32.join(REPO_ROOT, "dist/agent-src", "rules");
 var ROUTER = path32.join(REPO_ROOT, "dist", "router.json");
 function _globSortedMd(dir) {
@@ -14915,6 +14922,13 @@ var GLOBAL_DEPLOY_SOURCES = {
     ["dist/agent-src/personas", "personas"]
   ]
 };
+function expandAnchor(anchor2, home) {
+  const h = home ?? homedir15();
+  if (anchor2 === "~") return h;
+  if (anchor2.startsWith("~/")) return join39(h, anchor2.slice(2));
+  if (isAbsolute7(anchor2)) return anchor2;
+  return resolve20(anchor2);
+}
 function dryRunTargetLines(global, tools, projectTarget) {
   if (!global) return `  target:      ${projectTarget}
 `;
@@ -14922,12 +14936,42 @@ function dryRunTargetLines(global, tools, projectTarget) {
   for (const tool of tools) {
     const anchor2 = USER_SCOPE_PATHS[tool];
     if (anchor2 === void 0) continue;
-    out += `      ${tool} \u2192 ${anchor2.startsWith("~/") ? join39(homedir15(), anchor2.slice(2)) : anchor2}
+    const root = expandAnchor(anchor2);
+    out += `      ${tool} \u2192 ${root}
+`;
+    const deploy = GLOBAL_DEPLOY_SOURCES[tool];
+    if (deploy === void 0) {
+      out += "          (bridge files only \u2014 no deployed content)\n";
+      continue;
+    }
+    for (const [, sub] of deploy) out += `          ${sub.length === 0 ? root : `${join39(root, sub)}/`}
 `;
   }
   out += "  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n";
   out += "               host projection + managed hooks \u2014 would run\n";
   return out;
+}
+function dryRunBool(v) {
+  return v ? "true" : "false";
+}
+function dryRunScopeLine(opts, detected, devMode) {
+  let scope;
+  if (opts.scope === "project" || opts.scope === "global" || opts.scope === "prompt") scope = opts.scope;
+  else if (opts.global_install === true || !devMode) scope = "global";
+  else if (opts.scope === "auto") scope = detected[0];
+  else scope = "project";
+  if (scope === "prompt") {
+    return { scope, line: `  scope:       ask (${detected[1] || "forced by --scope=prompt"}) \u2014 pass --global to decide
+` };
+  }
+  if (scope === "project" && !devMode) {
+    return {
+      scope,
+      line: "  scope:       project \u2014 a real run refuses this outside maintainer mode (installs are global-only)\n"
+    };
+  }
+  return { scope, line: `  scope:       ${scope}
+` };
 }
 
 // src/shared/settingsSurface.ts
@@ -21280,7 +21324,7 @@ var settingsSchema = object({
       'Session canary \u2014 the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md.'
     ),
     pr_progress_comments: boolean2().default(false).describe(
-      'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off \u2014 most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that \u2026") are NOT gated by this setting. See rules/no-pr-progress-comments.md.'
+      'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off \u2014 most teammates find them noisy. User-invoked flows (/fix:pr-comments, /pr:create, /code-review, explicit "post a comment that \u2026") are NOT gated by this setting. See rules/no-pr-progress-comments.md.'
     ),
     autonomy: autonomyMode.default("auto").describe(
       'How aggressively the agent suppresses trivial workflow questions ("commit now?", "open PR?"). on = silently pick the sensible default. off = always ask. auto (default) = decide per project, on for solo / off when collaborators are involved. The Hard Floor (prod, deploys, bulk deletes) ignores this setting and always asks.'
@@ -21480,7 +21524,7 @@ var settingsSchema = object({
   }).prefault({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: "on" }),
   verbosity: object({
     offer_council_in_delivery: boolean2().default(false).describe(
-      'Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected.'
+      'Offer "run AI Council on this?" inside delivery commands (/feature:plan, /review:changes, /roadmap:create). Council commands themselves are unaffected.'
     )
   }).prefault({ offer_council_in_delivery: false }),
   code_style: object({
@@ -21514,7 +21558,7 @@ var settingsSchema = object({
       "Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one."
     ),
     max_parallel: number2().int().min(1).max(64).default(3).describe(
-      "Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns. That cap does not bound a resumed worker: on Claude Code 2.1.306 a resume was admitted past a cap of 1, so a resume is neither bounded by the host nor counted by any package code yet. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
+      "Limit on subagents running in parallel during parallel and competitive subagent modes (do-in-parallel, do-competitively) and /judge runs, including /judge bracket. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns. That cap does not bound a resumed worker: on Claude Code 2.1.306 a resume was admitted past a cap of 1, so a resume is neither bounded by the host nor counted by any package code yet. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
     ),
     adversarial_council: _enum(["off", "ask", "on"]).default("off").describe(
       "Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only \u2014 a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed."
@@ -21569,7 +21613,7 @@ var settingsSchema = object({
     }),
     create_pr: object({
       preview_description: boolean2().default(false).describe(
-        "When /create-pr runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate."
+        "When /pr:create runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate."
       ),
       detail_level: _enum(["min", "med", "max"]).default("min").describe(
         "Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier \u2014 the tier governs explanatory depth, never whether a critical callout appears."
@@ -21727,6 +21771,11 @@ var settingsSchema = object({
       "Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised one tier in a runtime scope; off leaves tiers to the other sources. Runs only where egress is query."
     )
   }).prefault({ mode: "notify", egress: "query", kev: "on" }),
+  security_ops: object({
+    plan: boolean2().default(false).describe(
+      'The persisted answer to "plan a security & maintenance section?", offered once when /audit security or feature planning finds a deployed project with no lever inventory (ADR-304). true = the agent drafts the section with feature-planning and the control-section blueprint when the finding appears \u2014 it plans, never builds or throws a lever. false (default) = not planned; the finding stays in the report and the offer is made once while no answer is recorded (written with --source jit-answer). Prose-only reader: nothing can refuse the plan.'
+    )
+  }).prefault({ plan: false }),
   update: object({
     mode: _enum(["off", "notify", "ask", "auto"]).default("notify").describe(
       "What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only \u2014 a repository cannot set how your global install updates itself."
@@ -21899,7 +21948,7 @@ import { spawnSync as spawnSync3 } from "node:child_process";
 import * as fs39 from "node:fs";
 import * as path38 from "node:path";
 import process3 from "node:process";
-import { fileURLToPath as fileURLToPath7, pathToFileURL } from "node:url";
+import { fileURLToPath as fileURLToPath5, pathToFileURL } from "node:url";
 var PACKAGE_NAME_NPM = "@event4u/agent-config";
 var PACKAGE_NAME_COMPOSER = "event4u/agent-config";
 var LEGACY_DIRS = ["vendor", "node_modules"];
@@ -21917,7 +21966,7 @@ var LEGACY_SETTINGS_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var LEGACY_STATE_FILENAME = ".implement-ticket-state.json";
 var LEGACY_STATE_V1_FILENAME = ".work-state.json";
 var LEGACY_AGENT_CONFIG_SHELL = "agent-config";
-var _HERE_DIR = path38.dirname(fileURLToPath7(import.meta.url));
+var _HERE_DIR = path38.dirname(fileURLToPath5(import.meta.url));
 var ArgparseExit = class extends Error {
   code;
   constructor(code) {
@@ -22569,7 +22618,7 @@ function main(argv = null, options = {}) {
   return _apply(project, out, err);
 }
 var _inForeignBundle = !(typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__);
-var _HERE3 = fileURLToPath7(import.meta.url);
+var _HERE2 = fileURLToPath5(import.meta.url);
 function _isCliEntry() {
   if (process3.argv[1] === void 0) {
     return false;
@@ -22584,14 +22633,14 @@ function _isCliEntry() {
     return true;
   }
   try {
-    const here = fs39.realpathSync(fileURLToPath7(import.meta.url));
+    const here = fs39.realpathSync(fileURLToPath5(import.meta.url));
     const argv = fs39.realpathSync(path38.resolve(process3.argv[1]));
     return here === argv;
   } catch {
     return false;
   }
 }
-if (!_inForeignBundle && (_isCliEntry() || process3.argv[1] === _HERE3)) {
+if (!_inForeignBundle && (_isCliEntry() || process3.argv[1] === _HERE2)) {
   try {
     process3.exitCode = main(process3.argv.slice(2));
   } catch (exc) {
@@ -22701,7 +22750,7 @@ function tryParseEntry(line) {
 }
 
 // src/scripts/install.ts
-var _HERE4 = fileURLToPath8(import.meta.url);
+var _HERE3 = fileURLToPath6(import.meta.url);
 var SystemExitError = class extends Error {
   constructor(code) {
     super(`system-exit-${code}`);
@@ -23297,7 +23346,6 @@ function ensure_augment_user_hooks(package_root, force) {
     "~/.augment/settings.json"
   );
 }
-var CLAUDE_PLUGIN_ID = "agent-config@event4u-agent-config";
 var CLAUDE_LEGACY_PLUGIN_IDS = [
   "agent-conf@event4u",
   "agent-config@event4u"
@@ -23319,7 +23367,7 @@ function ensure_claude_bridge(project_root, force) {
   const target = path39.join(project_root, ".claude", "settings.json");
   const healed = _heal_legacy_claude_plugin_ids(target);
   for (const pid of healed) success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
-  const bridge = withHostEnv({ enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } }, project_root, success);
+  const bridge = withHostEnv({}, project_root, success);
   return merge_json_file(target, bridge, force || healed.length > 0, ".claude/settings.json");
 }
 var ensure_mcp_bridge = makeEnsureMcpBridge(merge_json_file);
@@ -24141,6 +24189,7 @@ function _gate_rule_layer_overlap(project_root, layer, dry_run) {
 function _resolve_scope(opts, detected, detect_reason, custom_path) {
   if (opts.scope === "project") return "project";
   if (opts.scope === "global") return "global";
+  if (process4.env["AGENT_CONFIG_DEV_MODE"] !== "1" && !custom_path && (!opts.scope || opts.scope === "auto")) return "global";
   if (opts.scope === "prompt") {
     return _run_scope_prompt(opts, detect_reason || "forced by --scope=prompt", custom_path);
   }
@@ -24151,11 +24200,7 @@ function _resolve_scope(opts, detected, detect_reason, custom_path) {
   }
   if (opts.global_install) return "global";
   if (detected === "prompt") return _run_scope_prompt(opts, detect_reason, custom_path);
-  if (!state.QUIET) {
-    info(
-      `Scope detection: ${detected} (${detect_reason}). Using project default for backward compatibility; pass --scope=auto to honor detection.`
-    );
-  }
+  if (!state.QUIET) info(`Scope detection: ${detected} (${detect_reason}). Maintainer mode: project default; --scope=auto honours detection.`);
   return "project";
 }
 function _run_scope_prompt(opts, reason, custom_path) {
@@ -24308,7 +24353,7 @@ function isRelativeTo(child, parent) {
   return rel === "" || !rel.startsWith("..") && !path39.isAbsolute(rel);
 }
 function _resolve_package_root_for_global() {
-  const here = resolvePath(_HERE4);
+  const here = resolvePath(_HERE3);
   const candidate = path39.dirname(path39.dirname(path39.dirname(here)));
   if (!pathExists(path39.join(candidate, "src", "config", "profiles", "minimal.ini"))) {
     fail(
@@ -24724,7 +24769,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     }
     const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
     if (plan === void 0) {
-      const status = ["copilot", "aider", "zed", "jetbrains"].includes(tool_id) ? "hint" : "unsupported";
+      const status = GLOBAL_HINT_TOOLS.includes(tool_id) ? "hint" : "unsupported";
       results[tool_id] = [0, 0, status, []];
       continue;
     }
@@ -25099,7 +25144,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
         );
       } else if (status === "hint") {
         process4.stdout.write(
-          `      ${tool_id.padEnd(15)} \u2192 no user-scope convention; use \`agent-config export --tool=${tool_id}\`
+          `      ${tool_id.padEnd(15)} \u2192 no user-scope convention; per project: \`${exportHintCommand(tool_id)}\`
 `
         );
       } else {
@@ -25413,7 +25458,7 @@ function _is_tool_enabled(tools, tool_id) {
   return tools.has(tool_id);
 }
 function _minimal_templates_root() {
-  const start = resolvePath(_HERE4);
+  const start = resolvePath(_HERE3);
   const chain = [start];
   let cur = start;
   for (; ; ) {
@@ -25619,7 +25664,7 @@ function _wizard_should_launch(opts) {
   return [true, ""];
 }
 function _wizard_cli_dist(_project_root) {
-  const package_root = path39.dirname(path39.dirname(path39.dirname(resolvePath(_HERE4))));
+  const package_root = path39.dirname(path39.dirname(path39.dirname(resolvePath(_HERE3))));
   const cli = path39.join(package_root, "dist", "cli", "agent-config.js");
   return pathExists(cli) ? cli : null;
 }
@@ -25804,22 +25849,22 @@ function _dry_run_summary(opts) {
     opts.custom_path || opts.project || process4.env["PROJECT_ROOT"] || process4.cwd()
   );
   const [will_launch, why_not] = _wizard_should_launch(opts);
+  const scopePlan = dryRunScopeLine(opts, detect_scope(resolvePath(opts.project || process4.env["PROJECT_ROOT"] || process4.cwd())), process4.env["AGENT_CONFIG_DEV_MODE"] === "1");
   process4.stdout.write("\n");
   process4.stdout.write("[dry-run] Plan summary \u2014 no files written, no subprocesses spawned:\n");
   process4.stdout.write(`  profile:     ${opts.profile}
 `);
   process4.stdout.write(`  user-type:   ${opts.user_type || "(none)"}
 `);
-  process4.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? "global" : "auto")}
-`);
+  process4.stdout.write(scopePlan.line);
   process4.stdout.write(`  tools:       ${opts.tools || "all"}
 `);
-  process4.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === "global", _parse_tools(opts.tools || "all"), target));
-  process4.stdout.write(`  minimal:     ${pyBool(opts.minimal)}
+  process4.stdout.write(dryRunTargetLines(scopePlan.scope === "global", _parse_tools(opts.tools || "all"), target));
+  process4.stdout.write(`  minimal:     ${dryRunBool(opts.minimal)}
 `);
-  process4.stdout.write(`  force:       ${pyBool(opts.force)}
+  process4.stdout.write(`  force:       ${dryRunBool(opts.force)}
 `);
-  process4.stdout.write(`  offline:     ${pyBool(opts.offline)}
+  process4.stdout.write(`  offline:     ${dryRunBool(opts.offline)}
 `);
   if (will_launch) {
     process4.stdout.write("  wizard:      Would auto-launch (pass --no-ui to suppress).\n");
@@ -25854,9 +25899,6 @@ function _dry_run_summary(opts) {
   }
   process4.stdout.write("\n");
   return 0;
-}
-function pyBool(v) {
-  return v ? "True" : "False";
 }
 function _apply_payload_preview(payload, opts) {
   const schema_version = payload["schema_version"] ?? "<missing>";
@@ -25897,7 +25939,7 @@ function _apply_payload_preview(payload, opts) {
   }
   process4.stdout.write(`  target:      ${target}
 `);
-  process4.stdout.write(`  dry_run:     ${pyBool(Boolean(payload["dry_run"] ?? opts.dry_run))}
+  process4.stdout.write(`  dry_run:     ${dryRunBool(Boolean(payload["dry_run"] ?? opts.dry_run))}
 `);
   process4.stdout.write("\n");
   return 0;
@@ -26296,7 +26338,7 @@ function _resolvedArgv1() {
 }
 var _argv1 = _resolvedArgv1();
 var _isCliEntry2 = _argv1 !== void 0 && import.meta.url === pathToFileURL2(_argv1).href;
-if (_isCliEntry2 || _argv1 === _HERE4) {
+if (_isCliEntry2 || _argv1 === _HERE3) {
   try {
     process4.exitCode = main2(process4.argv.slice(2));
   } catch (e) {

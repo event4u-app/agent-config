@@ -50,6 +50,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { SESSION_ID_LEN, derive_session_tag } from './chat_history.js';
+import type { RunTerminalState } from './_lib/outcome_vocabularies.js';
+import { countRoadmap, readCheckpoint, roadmapPath } from './_lib/run_checkpoint.js';
 
 export const DEFAULT_WINDOW = 30;
 
@@ -112,6 +114,76 @@ export interface RunReport {
     relaunches: number;
     /** Decision memos this run wrote instead of contacting the user. */
     memos: number;
+    /**
+     * Open phase steps the run's roadmap carried when the run ended, or `null`
+     * when the run claimed no roadmap or no count could be read.
+     */
+    open_steps_at_end: number | null;
+    /**
+     * Where {@link open_steps_at_end} came from: the run's own checkpoint (the
+     * count at session end), or the roadmap as it stands now — a fallback that
+     * can only over-report `met` (later work closed it), never invent a silent
+     * end.
+     */
+    open_steps_source: 'checkpoint' | 'roadmap' | null;
+    /** See {@link classifyTermination}. `null` when there is nothing to classify. */
+    termination: Termination | null;
+    /**
+     * The member of `RUN_TERMINAL_STATES` the evidence supports, or `null` when
+     * none does. Derived, not read: no production writer persists a per-run
+     * terminal state today (`journal_record_hook` writes the journal's
+     * `terminal_state` column as null on every row), so the only honest source
+     * is the open-step count plus whether the run stopped on a contact.
+     */
+    derived_terminal_state: RunTerminalState | null;
+}
+
+/**
+ * How a roadmap run ended.
+ *
+ *   met           no open phase step remained — the finish line was reached.
+ *   blocked       open work remained and the run's LAST recorded turn was a
+ *                 contact (an ask or a hand-back): it stopped where the user
+ *                 could see it stop.
+ *   unterminated  open work remained and the last turn was neither — the run
+ *                 ended without reaching a terminal state and without saying
+ *                 so. This is the class `/roadmap:process-full`'s finish line
+ *                 exists to make zero, and before this field it was invisible.
+ */
+export type Termination = 'met' | 'blocked' | 'unterminated';
+
+export function classifyTermination(
+    openSteps: number | null,
+    stoppedOnContact: boolean,
+): { termination: Termination | null; derived: RunTerminalState | null } {
+    if (openSteps === null) return { termination: null, derived: null };
+    if (openSteps === 0) return { termination: 'met', derived: 'success' };
+    if (stoppedOnContact) return { termination: 'blocked', derived: 'blocked' };
+    return { termination: 'unterminated', derived: null };
+}
+
+/**
+ * Open phase steps for a run: its checkpoint first, then the roadmap file
+ * (active tree, then `archive/`). Both use the dashboard's checkbox vocabulary
+ * and phase-span rule via `run_checkpoint.countRoadmap`.
+ */
+export function openStepsAtEnd(
+    root: string,
+    runId: string,
+    roadmap: string | null,
+): { open: number | null; source: 'checkpoint' | 'roadmap' | null } {
+    if (roadmap === null) return { open: null, source: null };
+    const cp = readCheckpoint(root, runId);
+    if (cp !== null && cp.roadmap === roadmap) return { open: cp.open_steps, source: 'checkpoint' };
+    const active = roadmapPath(root, roadmap);
+    for (const p of [active, path.join(path.dirname(active), 'archive', `${roadmap}.md`)]) {
+        try {
+            return { open: countRoadmap(fs.readFileSync(p, 'utf8')).open, source: 'roadmap' };
+        } catch {
+            // Try the next location; an unreadable roadmap yields null below.
+        }
+    }
+    return { open: null, source: null };
 }
 
 /**
@@ -132,6 +204,8 @@ export interface Report {
     synthetic_user_turns_excluded: number;
     /** Runs carrying a contact count — the CONTACT axis's own denominator. */
     contact_axis_runs: number;
+    /** Roadmap runs that ended neither complete nor blocked. */
+    unterminated_runs: number;
     /** Runs carrying timing — the WALL-CLOCK axis's own, much smaller, denominator. */
     wall_clock_axis_runs: number;
     /**
@@ -474,9 +548,12 @@ export function buildReport(root: string, windowRequested: number): Report {
 
         const cont = lookupByRunId(continuation, runId) ?? { engage: 0, stall: 0 };
         const inLedger = ledgerRuns.has(runId);
+        const roadmap = rows.find((r) => r.roadmap !== null)?.roadmap ?? null;
+        const steps = openStepsAtEnd(root, runId, roadmap);
+        const ended = classifyTermination(steps.open, inLedger && halts > 0);
         runs.push({
             run_id: runId,
-            roadmap: rows.find((r) => r.roadmap !== null)?.roadmap ?? null,
+            roadmap,
             // `null`, not 0, when this run is absent from the ledger — see
             // the field docs above and falsification criterion (3).
             asks: inLedger ? asks : null,
@@ -497,6 +574,10 @@ export function buildReport(root: string, windowRequested: number): Report {
                 ? 0
                 : (relaunches[rows.find((r) => r.roadmap !== null)?.roadmap as string] ?? 0),
             memos: lookupByRunId(memosByRun, runId) ?? 0,
+            open_steps_at_end: steps.open,
+            open_steps_source: steps.source,
+            termination: ended.termination,
+            derived_terminal_state: ended.derived,
         });
     }
 
@@ -555,6 +636,7 @@ export function buildReport(root: string, windowRequested: number): Report {
         // `r.contacts` is null exactly when the run is absent from
         // `ledgerRuns`, so a second predicate is a second thing to keep true.
         contact_axis_runs: runsWithLedger,
+        unterminated_runs: runs.filter((r) => r.termination === 'unterminated').length,
         wall_clock_axis_runs: runs.filter((r) => r.elapsed_minutes !== null).length,
         user_wait_gaps: allGaps.length,
         power_floor_runs: POWER_FLOOR_RUNS,
@@ -647,6 +729,10 @@ export function renderText(report: Report): string {
     );
     lines.push(`  median relaunches per run: ${fmt(report.median_relaunches_per_run)}`);
     lines.push(`  median memos per run:      ${fmt(report.median_memos_per_run)}`);
+    lines.push(
+        `  unterminated runs:         ${report.unterminated_runs}` +
+            '  ·  open steps left, last turn neither asked nor handed back',
+    );
     // Two axes the roadmap names and this instrument CANNOT report. Stated as
     // no-instrument rather than printed as 0, because a zero here would read
     // as "measured, and it is zero" — the exact confusion between an absent
@@ -678,7 +764,7 @@ export function renderText(report: Report): string {
             `  ${run.run_id}  asks=${run.asks} handbacks=${run.handbacks} halts=${run.halts}` +
                 `  elapsed=${fmt(run.elapsed_minutes)} working=${fmt(run.working_minutes)}` +
                 `  re=${run.reengagements} stall=${run.stall_halts} relaunch=${run.relaunches} memo=${run.memos}` +
-                `  roadmap=${run.roadmap ?? '-'}`,
+                `  roadmap=${run.roadmap ?? '-'} ended=${run.termination ?? '-'}`,
         );
     }
     if (report.window_short) {

@@ -523,7 +523,7 @@ cross-linking improvements.
 - [x] Review docs/architecture.md — system layers, tool matrix (verified current)
 - [x] Review docs/development.md — Taskfile targets documented (verified current)
 - [x] Review docs/customization.md — override examples (verified current)
-- [x] Review docs/quality.md — linting, CI, condensation system (verified current)
+- [x] Review docs/maintainers/quality.md — linting, CI, condensation system (verified current)
 - [x] Add docs/skills-catalog.md (auto-generated via `scripts/generate_catalog.py`)
 - [x] Ensure every docs page has a "← Back to README" link (added to architecture, customization, development, installation, quality; getting-started already has `→ Full documentation`; skills-catalog and github-topics have the link)
 - [x] Cross-links: README links to all 7 docs pages + llms.txt; every doc page links back to README

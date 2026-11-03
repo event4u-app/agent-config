@@ -63,7 +63,7 @@ with the **scope delta below**.
   open (`complete`), or every remaining open step is **externally impossible**
   for the agent (`blocked` — narrowed by ADR-237 § 4 to genuine external
   impossibility), or a halt condition fires (Hard-Floor EXCLUDED-list action,
-  security-sensitive, scope-out-of-roadmap, test/quality red past N=3).
+  security-sensitive, scope-out-of-roadmap, test/quality red past `fix_loop_max`).
 - **Always start.** `blocked-preflight` was **removed by ADR-237**: a run no
   longer refuses because its open steps look human-gated. Repository-local
   prerequisites are remediation work — do them. The § 3c test now asks whether
@@ -171,7 +171,7 @@ stops the run):
 2. **Council-off + genuine ambiguity** (only outside an accepted contract with council available).
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
-5. **Test / quality red** that cannot be cleared within the N=3 budget.
+5. **Test / quality red** past `execution.fix_loop_max`.
 
 **Halt 6, `--all` halts** — read [`process-full-all`](../../contexts/execution/process-full-all.md#full-is-full--halt-detail).
 

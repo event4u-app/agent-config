@@ -315,7 +315,8 @@ export function _failed_checks_report(names: readonly string[]): string {
         lines.push(
             '',
             'Surface equality: the PR body drifted from the CHANGELOG entry. A',
-            'resume run refreshes it from the branch head (release-truth Phase 1);',
+            'resume run refreshes it from the branch head (release-truth Phase 1)',
+            'and reruns this check, which a body edit alone never re-triggers;',
             'never hand-edit the PR body away from the changelog section.',
         );
     }

@@ -1,72 +1,62 @@
 # Kiro Setup
 
-Kiro (Amazon's agentic IDE) auto-discovers `.kiro/steering/*.md`
-as steering documents per project.
+Kiro (Amazon's agentic IDE, <https://kiro.dev>). The installer deploys
+rules, skills and personas to its user-level folder `~/.kiro/`; the skills
+land in Kiro's `steering/` folder rather than a separate `skills/` one.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 ## Prerequisites
 
 - Kiro IDE: <https://kiro.dev>.
-- Node.js ≥ 18 for the install entrypoints.
+- Node.js >= 22.6 (for `npx`).
 
 ## Install
-
-Project scope (default):
 
 ```bash
 npx @event4u/agent-config init --tools=kiro
 ```
 
-Global scope (cross-project, deploys the universal skill bundle to
-`~/.kiro/`):
+## What lands
 
-```bash
-npx @event4u/agent-config init --tools=kiro --global
-```
+Under `~/.kiro/`:
 
-Populates (project):
+- `rules/`    — kernel + routed rules
+- `steering/` — the skills, projected as steering documents
+- `personas/` — review-lens personas
 
-- `.kiro/steering/agent-config.md` — auto-discovered steering marker
-- `AGENTS.md`                      — canonical agent self-orientation
-- `.agent-settings.yml`            — per-project knobs
+Nothing is written into your repository besides `agents/overrides/` and
+the gitignored bookkeeping files.
 
 ## How to use
 
-Kiro ships two top-level workflows; both honor the steering
-documents in `.kiro/steering/`.
-
-- **Spec mode** — plan-first. Kiro produces a spec → task list →
-  implementation under your review. The closest match for the
-  package's `/implement-ticket` flow.
-- **Vibe mode** — free-form chat. Best for exploration, quick
-  edits, and one-off questions.
-- Steering documents load automatically on every Kiro session —
-  no manual action required for either workflow.
-- Slash commands and skills live under `.augment/commands/` and
-  `.augment/skills/`. Kiro does not register them natively —
-  invoke them by name in chat (e.g. *"run the create-pr command"*).
-- When the global skill bundle is installed, Kiro reads it from
-  `~/.kiro/steering/` (the skills are projected into the
-  steering anchor, not a separate `skills/` directory).
+- Kiro ships two workflows: **Spec mode** (plan-first — the closest match
+  for the package's `/implement-ticket` flow) and **Vibe mode** (free-form
+  chat).
+- Slash commands are not registered natively — name the command in chat
+  (e.g. *"run the create-pr command"*).
 
 ## Verification
 
 ```bash
-test -f .kiro/steering/agent-config.md
-test -f AGENTS.md
+ls ~/.kiro/steering/ | head -5
+ls ~/.kiro/rules/ | head -5
 ```
-
-In Kiro: start a new Spec and ask *"What is this repo?"* — the
-answer should cite the AGENTS.md emergency triage block.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
 | Steering not loaded | Restart Kiro after install. |
-| Marker missing | Re-run with `--force`. |
-| Spec mode ignores rules | Both Spec and Vibe read `.kiro/steering/`; check the marker file actually exists at the project root. |
+| `~/.kiro/steering/` missing | Re-run `npx @event4u/agent-config init --tools=kiro`. |
 
 ## Cross-references
 
-- [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

@@ -127,7 +127,7 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
-import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, release_impact_entry, write_impact_map } from './_lib/consumer_impact.js';
+import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, release_impact_entry, span_touches_consumer_surface, write_impact_map } from './_lib/consumer_impact.js';
 import { span_bump } from './_lib/impact_bump.js';
 import { span_surfaces, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
@@ -194,6 +194,7 @@ export {
     _required_contexts_from_rules,
     release_pr_body,
 } from './release_publication.js';
+import { refresh_pr_body_and_surface_check } from './_lib/release_surface_check.js';
 import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
     _MERGE_UPDATE_ROUNDS,
@@ -202,7 +203,6 @@ import {
     _pr_for_branch,
     _pr_merge_state,
     _push_tag,
-    _refresh_pr_body_from_head,
     release_pr_body,
     _release_exists,
     _remote_tag_commit,
@@ -624,10 +624,10 @@ function prepend_changelog(p: string, entry: string): void {
 // ─── file mutations ───────────────────────────────────────────────────────────
 
 /** Update the top-level `version` field; preserve 4-space indentation. */
-function set_package_version(p: string, version: string, commits: readonly Commit[] = []): void {
+function set_package_version(p: string, version: string, commits: readonly Commit[] = [], consumerSurfaceTouched = false): void {
     const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
     data['version'] = version;
-    write_impact_map(data, version, commits);
+    write_impact_map(data, version, commits, { consumerSurfaceTouched });
     fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
 }
 
@@ -926,7 +926,7 @@ function execute(
                 total,
                 'Bump package.json + package-lock.json + marketplace manifests + template pin, prepend CHANGELOG',
             );
-            set_package_version(PACKAGE_JSON, plan.target, plan.commits);
+            set_package_version(PACKAGE_JSON, plan.target, plan.commits, span_touches_consumer_surface(plan.last_tag, (a) => git(a, { capture: true })));
             set_lockfile_version(PACKAGE_LOCK_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
             set_plugin_manifest_versions(plan.target);
@@ -1000,7 +1000,7 @@ function execute(
         // this was the 9.14.0 test-count desync (resume re-rendered from a
         // later HEAD while the changelog kept the branch's entry).
         _step(5, total, `PR already open: ${pr_info!['url']} — refresh body from branch head`);
-        _refresh_pr_body_from_head(branch, plan.target);
+        refresh_pr_body_and_surface_check(branch, plan.target);
     } else {
         _step(5, total, 'Open pull request');
         // Derive the PR body from the CHANGELOG section step 2 just wrote —
@@ -1538,7 +1538,7 @@ function main(argv: readonly string[] | null = null): number {
         measured: measuredSection(REPO_ROOT, prev, today),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });
-    assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits).impact });
+    assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits, { consumerSurfaceTouched: span_touches_consumer_surface(prev, (a) => git(a, { capture: true })) }).impact });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
     // The drift test measures the era AFTER this release's section is

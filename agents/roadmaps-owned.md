@@ -9,36 +9,47 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-fill-the-session-sees-coming | active | ready | The fill state is visible outside the reply too (status line, doctor), and the continuity record no longer depends on … |
 | road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
-| road-to-map-views-from-the-handover | active | ready | Every page of the map viewer matches the twelve-page design handover of this round 1:1 — tokens, shell, Übersicht, a … |
+| road-to-a-memory-each-worker-is-handed | active | ready | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
+| road-to-a-noted-that-is-a-write | active | ready | When the agent says "noted" or "from now on", a write to a carrier the next session reads has happened … |
+| road-to-an-observation-provider-slot | active | ready | `/analyze:reference --transfer=rebuild\|adapt` can take evidence from a runtime, browser or binary observation tool the consumer has configured — a reverse-engineering … |
 | road-to-routing-assurance-live-floors | active | ready | Road to routing assurance — the live-harness floors |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
+| road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
 | road-to-a-challenge-the-bench-has-measured | later | later | The honesty bench measures both directions of each failure (caving and stubbornness, over-criticism and under-criticism), it has run once on … |
 | road-to-a-cold-start-paid-once-carried | later | later | Every step road-to-a-cold-start-paid-once deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-control-that-matches-its-neighbours | later | later | Every UI change — including a one-line follow-up with no command — that adds an interactive control uses the project's … |
 | road-to-a-court-at-the-stops | later | later | The deterministic exhibit check runs automatically at the three moments the tree already stops (plan, roadmap, review); a fresh-subagent prosecutor … |
-| road-to-a-fill-the-session-sees-coming | later | later | The fill state is visible outside the reply too (status line, doctor), and the continuity record no longer depends on … |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
+| road-to-a-lead-the-user-can-reach-carried | later | parked | Road to a lead the user can reach — carried |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
-| road-to-a-memory-each-worker-is-handed | later | later | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
+| road-to-a-library-the-agent-can-vouch-for | later | later | In a PHP project that needs DTOs, mapping, accessors or filters, AC writes code against the data-helpers version in the … |
+| road-to-a-map-engine-that-never-writes-through-a-symlink | later | later | Road to a map engine that never writes through a symlink |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
-| road-to-a-noted-that-is-a-write | later | later | When the agent says "noted" or "from now on", a write to a carrier the next session reads has happened … |
+| road-to-a-page-check-at-write-time | later | later | A page the agent just wrote that loads a third party on first paint, or whose imprint cites a superseded … |
 | road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step road-to-a-prompt-that-deepens-not-widens deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
+| road-to-a-reason-that-is-still-there | later | later | A safety floor reaches every skill it names; a pack's first-win guide claims only what exists; a recorded reason for … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
+| road-to-a-return-that-names-its-price-carried | later | later | The cold-cache notice speaks on resume before the first request, and metered logins see the amount on the status line. |
+| road-to-a-reverified-youtube-channel | later | later | Road to a re-verified youtube channel |
 | road-to-a-review-that-ends | later | later | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
+| road-to-a-sealed-lineage | later | later | Sealed. |
+| road-to-a-session-start-under-the-host-limit | later | later | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step road-to-a-setup-that-decides-itself deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step road-to-a-step-that-costs-what-it-changes deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |
@@ -49,6 +60,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-agent-throughput-recovery | later | later | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
 | road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
+| road-to-an-mcp-start-without-npm | later | later | An MCP start in a session with a staged runtime runs the staged node and a bundled turnkey server directly, … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe-carried | later | later | Every step road-to-an-update-that-installs-itself-only-when-it-is-safe deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-authority-routing-mechanism | later | later | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |
@@ -57,6 +69,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-capability-native-execution | later | later | A domain skill states the semantic capability, evidence and policy constraints it needs. |
 | road-to-carrier-layer-convergence | later | later | Converge the two rule-carrier layers so a session receives each governed rule exactly once, with a defined binding text — … |
 | road-to-catalogue-host-fit | later | later | Road to catalogue host fit — a truncated entry is a skill that cannot route |
+| road-to-checks-that-name-their-catch-carried | later | parked | A ledger gate's report line carries `failed=N`, so a self-test can assert "it found exactly this, and nothing else". |
 | road-to-code-graph-refresh-during-a-session | later | later | The code graph and `agents/map/` stay current for the whole length of an agent session, on every host the suite … |
 | road-to-command-structure-followup | later | later | Follow-up to command-structure optimization — deferred cluster items |
 | road-to-composite-dispatch-topology | later | draft | A delegable task whose slices form a partial order — ordered stages containing parallel groups — can be planned as … |
@@ -77,6 +90,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-deferred-rule-retriever | later | blocked-for-later | Road to deferred-rule retriever — command-invoked Class-A variant of the rejected MCP retrieval server |
 | road-to-delivery-on-hook-hosts | later | later | Every host other than Claude Code is measured for whether hook stdout on `user_prompt_submit` reaches the model's context; hosts where … |
 | road-to-discipline-profile-tiering-followup | later | later | Follow-up to discipline-profile tiering — full-tier disposition |
+| road-to-docs-that-sell | later | later | Truthful docs. |
 | road-to-elicitation-front-door | later | later | When a free-form user turn — one that will never reach a roadmap-execution contract — is plan-shaped and carries deterministic … |
 | road-to-episode-finalizer-and-outcome-attribution-v2 | later | later | Close the observable chain: |
 | road-to-evidence-calibrated-model-orchestration | later | later | For any council-capable task, this package can produce an auditable answer to: why this orchestration shape, why these seats were … |
@@ -85,7 +99,9 @@ and keep the full search — this file only adds candidates to it.
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`) on a valid, atomic upgraded-plus-shadow … |
+| road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
+| road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
 | road-to-governed-evidence-production | later | later | The four evidence obligations the governed-harness programme could not discharge are owned here, whole and unweakened, and each is either … |
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |
 | road-to-guided-journeys | later | later | Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C) |
@@ -106,6 +122,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-mission-catalogue | later | later | Mission catalogue — content + catalogue expansion (mission-mode follow-up) |
 | road-to-mixed-trigger-activation-cost | later | later | Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced |
 | road-to-mod-surfaces-that-read-what-ac-knows | later | later | The one AC module grows surfaces for the state AC already measures, and AC can preview and witness destructive or … |
+| road-to-one-identity-axis | later | later | ADR-010 names `profile.id` as the one answer to "who is the user", and three trees answer it today. |
 | road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step road-to-one-upstream-that-checks-what-leaves deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |
 | road-to-originality-gate-and-contributor-funnel | later | later | Every PR that adds or edits skills runs `lint_originality --changed` as a blocking CI gate, contributors can pre-check locally and … |
@@ -122,17 +139,20 @@ and keep the full search — this file only adds candidates to it.
 | road-to-reach-reddit-session | later | ready | Reach — logged-in `old.reddit` via a human-exported session cookie |
 | road-to-reach-transcribe | later | ready | Reach — audio transcription when no caption track exists |
 | road-to-reach-twitter-login | later | ready | Reach — Twitter beyond a single tweet (timelines, search, threads) |
+| road-to-records-that-match-their-code | later | ready | Record and code agree. |
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
+| road-to-rules-that-say-when-they-reject | later | parked | A rule declared `enforced_by: instruction-only` carries a short Rejected when block — observable conditions a reviewer can cite as `<rule>#R<n>` … |
 | road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
 | road-to-security-guards-that-hold-at-turn-end | later | later | The skill-level fixes are in: a casual security question now gets a scoped answer. |
 | road-to-skill-ecosystem-capability-queue | later | later | Road to the capability queue — everything capability-shaped, waiting on a capacity slot |
 | road-to-skill-ecosystem-executable-payloads | later | later | Road to executable skill payloads — a skill that only describes work cannot be measured doing it |
 | road-to-skill-ecosystem-security-and-conformance | later | later | Road to security and conformance surface — make three unenforced rules detectable |
 | road-to-skill-menu-economy | later | later | The preloaded skills catalog costs no more than the skills a model can actually route to: every skill that is … |
+| road-to-skill-uplift-measured-in-stages | later | later | Answer, for at least one skill, whether invoking it improves the outcome of the task it is for — against … |
 | road-to-skills-that-arrive-when-called-carried | later | later | The owner's answer to whether the fork pilot widens, holds or retires is recorded, and the pilot config says which. |
 | road-to-source-silence-cutover | later | later | Every item the predecessor could not close is closed, and each is here because of a named capability gap rather … |
 | road-to-sparring-critic-spike | later | blocked-for-later | Road to sparring-critic spike — one falsification run decides whether the critic exists |
@@ -156,7 +176,9 @@ and keep the full search — this file only adds candidates to it.
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
 | orchestrator-spawn-injection | stubs | — | orchestrator-side spawn injection |
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
+| road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
+| road-to-a-page-check-on-by-default | stubs | — | road to a page check on by default |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
@@ -164,17 +186,23 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
+| road-to-a-stall-the-replay-measures | stubs | — | a stall the replay measures |
+| road-to-a-strike-that-speaks | stubs | — | a strike that speaks |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
+| road-to-adapter-traces-before-the-window | stubs | — | road to adapter traces before the window |
 | road-to-adopt-and-reset-flags-with-a-specification | stubs | — | `adopt` and `reset` have a routing and no behaviour |
 | road-to-adr-134-expiry | stubs | — | ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it |
 | road-to-adr-number-uniqueness | stubs | — | road to an ADR number that cannot be claimed twice |
 | road-to-agents-layout-memory-quarantine | stubs | — | road to a disposition for `agents/memory-quarantine/` |
+| road-to-an-appeal-jury-wired | stubs | — | an appeal jury wired into the bracket |
 | road-to-artefact-family-registry | stubs | — | a declared artefact-family registry |
 | road-to-assurance-benchmark | stubs | — | Road to an assurance benchmark — stub |
 | road-to-batch-elicitation-kernel-delta | stubs | — | road to the batch-elicitation kernel delta |
 | road-to-bench-gate-capability-non-inferiority | stubs | — | the bench gate requires capability non-inferiority |
 | road-to-blocker-parse-visibility | stubs | — | road to a blocker the parser can actually see |
+| road-to-bracket-live-measurements | stubs | — | live bracket measurements |
+| road-to-bracket-write-scope-hook | stubs | — | a write-scope guard for bracket lines |
 | road-to-bus-factor-external-actions | stubs | — | road to bus-factor external actions |
 | road-to-carrier-transition-vocabulary | stubs | — | road to a transition vocabulary for deferral carriers |
 | road-to-central-policy | stubs | — | Road to Central Policy — STUB |
@@ -238,6 +266,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-org-telemetry-sink | stubs | — | road to the org telemetry sink |
 | road-to-override-efficacy-paired-run | stubs | — | the paired-session efficacy run |
 | road-to-owner-authority-decisions | stubs | — | road to the owner-reserved authority decisions |
+| road-to-owner-reserved-table-as-data | stubs | — | the owner-reserved transition table as data |
 | road-to-pack-gate-fixture-seams | stubs | — | road to fixture seams for the three unprovable pack gates |
 | road-to-per-pack-cost-delta-emitter | stubs | — | road to the per-pack cost-delta emitter |
 | road-to-per-repository-install-verification | stubs | — | road to per-repository install verification |
@@ -245,6 +274,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-permissions-deny-for-unused-foreign-tools | stubs | — | road to suggesting `permissions.deny` for never-used foreign tools |
 | road-to-point-of-action-carrier | stubs | — | road to the point-of-action delegation carrier |
 | road-to-preamble-transfer-debt-221 | stubs | — | 14 decided declarations the preamble ceiling will not admit |
+| road-to-profile-reach-and-account-spikes | stubs | — | road to profile reach and account spikes |
 | road-to-promotion-bridge-size-and-citation-repairs | stubs | — | Road to the promotion-bridge size split and the topology citation repairs |
 | road-to-provider-leakage-bench-execution | stubs | — | road to running the provider-recognition leakage bench |
 | road-to-public-metadata-redaction | stubs | — | Road to public-metadata redaction — stub |
@@ -290,6 +320,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-token-saving-residue | stubs | — | the token-saving residue E7 did not archive |
 | road-to-two-machine-time-determinism | stubs | — | road to two-machine time determinism |
 | road-to-typed-knowledge-graph-memory | stubs | — | road to typed knowledge-graph memory |
+| road-to-unassigned-workflow-items | stubs | — | road to unassigned workflow items |
 | road-to-youtube-channel-exercise | stubs | — | road to exercising the YouTube transcript channel |
 | standing-rule-delivery-observability | stubs | — | `check_standing_rule_delivery` cannot observe a rule-body diet |
 | the-14-21-0-ledger-is-ingestible | stubs | — | nothing runs the ingest step, so the ledger goes missing once per release |

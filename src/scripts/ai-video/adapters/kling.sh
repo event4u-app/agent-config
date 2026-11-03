@@ -7,7 +7,10 @@
 # / ambient at stitch time. Max duration is model-dependent; clip-time
 # clamping happens in motion-choreographer (it tunes the prompt to fit).
 #
-# Lifecycle: stable — promoted 2026-06-10 (maintainer-authorized): live
+# Lifecycle: experimental — demoted 2026-11-02 (AI council, owner-delegated):
+# the 180-day trace window closes 2026-12-07 and no re-capture is funded;
+# a fresh maintainer smoke trace restores `stable`. Was stable since
+# 2026-06-10 (maintainer-authorized): live
 # round-trip validated 1/1 (5.04s h264 720p, video-only as expected,
 # ~$1.40 kling-v2-master 5s std; ~2.3min render). JWT keypair auth
 # reference-verified. Raw trace is local-only operator evidence

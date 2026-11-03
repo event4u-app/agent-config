@@ -53,6 +53,9 @@
  *   is dispatched and `dispatch_hold` says why.
  * - **One sheet.** An owner question whose blocker id `agents/owner-questions.md`
  *   does not cite is listed under `unsheeted`.
+ *
+ * `emergency.orchestration_halt` outranks all four: with the halt armed nothing is
+ * dispatched, and `dispatch_hold` names the switch.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -61,6 +64,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { load_agent_settings } from './_lib/agent_settings.js';
 import { gitEnv } from './_lib/git_env.js';
 import { holder_is_live, read_holders, read_locks } from './_lib/roadmap_slug_lock.js';
 import { freshness, type RoadmapVerdict } from './_lib/roadmap_revalidation.js';
@@ -144,6 +148,8 @@ export interface QueuePolicy {
     sheet?: ReadonlySet<string> | null;
     wipCap?: number;
     sessionCap?: number;
+    /** `emergency.orchestration_halt` is armed: nothing is dispatched. */
+    halted?: boolean;
 }
 
 export interface DrainQueue {
@@ -169,7 +175,14 @@ const FENCE_RE = /^\s*```/;
 const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*([A-Za-z0-9-]+)/i;
 const BLOCKED_BY_RE = /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+(?:#[a-z0-9-]+)?)/i;
 const PROSE_BLOCKER_RE = /\bblocker[ \t]+`([a-z0-9-]+)`/gi;
-const PROSE_HOLD_RE = /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on)\b/i;
+const PROSE_HOLD_RE =
+    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/i;
+// "no longer blocked by", "not owner-reserved": the phrase names a hold that is gone.
+const NEGATED_HOLD_RE = /\b(?:no longer|not|never)[ \t]+(?:blocked (?:by|on)|owner-reserved|on hold|held)\b/gi;
+
+function proseHold(text: string): boolean {
+    return PROSE_HOLD_RE.test(text.replace(NEGATED_HOLD_RE, ''));
+}
 const ACCEPTANCE_HEADING_RE = /^##[ \t]+acceptance criteria\b/i;
 const AC_ITEM_RE = /^\s*-\s\[[ xX~-]\]\s*(?:<!--[\s\S]*?-->\s*)?(?:\*\*)?AC-\d+/;
 const FIELD_RE = (name: string): RegExp =>
@@ -295,7 +308,7 @@ export function screenRoadmap(
         const m = CHECKBOX_RE.exec(line);
         if (m === null) {
             // A blockquote before the first step of a phase speaks for the phase.
-            if (!checkboxSinceHeading && /^\s*>/.test(line) && PROSE_HOLD_RE.test(line)) phaseHeld = true;
+            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line)) phaseHeld = true;
             continue;
         }
         checkboxSinceHeading = true;
@@ -340,7 +353,7 @@ export function screenRoadmap(
                 cls = classOfBlocker(named);
             } else if (isTimeGated(block, today)) {
                 cls = 'time';
-            } else if (namedAll.length === 0 && (phaseHeld || PROSE_HOLD_RE.test(continuation))) {
+            } else if (namedAll.length === 0 && (phaseHeld || proseHold(continuation))) {
                 // A hold that names a blocker which has since resolved is not a hold.
                 cls = 'held';
             } else {
@@ -477,8 +490,11 @@ export function buildQueue(
         claims.live.filter((r) => r.roadmap_slug).map((r) => r.session_id).filter((id) => id !== ownSession),
     );
     const sessionHold = others.size >= sessionCap;
+    const halted = policy.halted === true;
     let dispatch_hold: string | null = null;
-    if (sessionHold && entries.some((e) => e.dispatchable)) {
+    if (halted) {
+        dispatch_hold = 'emergency.orchestration_halt is set';
+    } else if (sessionHold && entries.some((e) => e.dispatchable)) {
         dispatch_hold = `session cap (${String(sessionCap)}): ${String(others.size)} other live session(s)`;
     } else if (!entries.some((e) => e.dispatchable) && entries.some((e) => e.bucket === 'start') && started >= wipCap) {
         dispatch_hold = `WIP cap (${String(wipCap)}): ${String(started)} roadmap(s) started`;
@@ -509,7 +525,7 @@ export function buildQueue(
     return {
         today,
         queue: entries,
-        next: sessionHold ? null : (entries.find((e) => e.dispatchable) ?? null),
+        next: halted || sessionHold ? null : (entries.find((e) => e.dispatchable) ?? null),
         owner_questions,
         council_questions,
         timeboxed,
@@ -714,7 +730,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } catch {
         /* no sheet: nothing to compare against */
     }
-    const q = buildQueue(screenEstate(root, today), readClaims(root), today, session, { sheet });
+    const emergency = (load_agent_settings({ cwd: root }) as Record<string, unknown>)['emergency'];
+    const halted =
+        typeof emergency === 'object' && emergency !== null && (emergency as Record<string, unknown>)['orchestration_halt'] === true;
+    const q = buildQueue(screenEstate(root, today), readClaims(root), today, session, { sheet, halted });
     for (const e of q.queue) {
         const wt = e.resume?.worktree ?? (e.claimed_by === 'a lane of this session' ? e.lane?.worktree : undefined);
         if (wt !== undefined) e.salvage = readSalvage(wt);

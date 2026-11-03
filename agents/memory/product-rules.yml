@@ -1121,7 +1121,7 @@ entries:
       WITHOUT the gate being met — flipped to `[x]` with honest by-decision
       notes. - **B9** (install-friction study) — instruments exist
       (`agents/recruit-sessions/_install-friction-runbook.md` +
-      `docs/install-friction-report.md` template) but the study w'
+      `docs/maintainers/install-friction-report.md` template) but the study w'
   - id: roadmap-later-disposition
     status: active
     confidence: high

@@ -41,13 +41,14 @@ canvas-design: Static visual art — posters, marketing visuals, brand assets, P
 character-consistency: Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
 check-refs: Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 churn-prevention: Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'.
+code-film: Motion film rendered from code, frame-checked.
 code-intelligence: Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'.
 code-refactoring: When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
 code-review: Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 command-routing: Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
 command-writing: Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 comp-banding: Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'.
-competitive-moat-analysis: Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'.
+competitive-moat-analysis: Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play. Triggers on 'who are we competing with', 'what's our moat'.
 competitive-positioning: Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'.
 complexity-first-planning: Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.
 composer-packages: Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'.
@@ -61,11 +62,11 @@ conventional-commits-writing: When writing a commit message, branch name or squa
 copilot-agents-optimization: Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
 copilot-config: Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`).
 corpus-grounding: Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints.
-customer-research: Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'.
+customer-research: Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus. Triggers on 'talk to users', 'why did they cancel', 'before we build X'.
 dashboard-design: Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling.
 data-flow-mapper: Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line.
 data-handling-judgment: Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'.
-database: Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'.
+database: Use when designing schemas and relations, tuning queries or indexes on any SQL engine, or multi-connection patterns — even when the user just says 'this query is slow'.
 dcf-modeling: Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'.
 deal-qualification-meddic: Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'.
 decision-record: Use when choosing between alternatives with trade-offs — X-or-Y decisions or a weighted decision matrix / gewichtete Entscheidungsmatrix ('score my options'); ADR via `adr-create`.
@@ -104,6 +105,7 @@ forecast-accuracy: Use when constructing the forecast call — commit / best-cas
 forecasting: Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'.
 forensics-report: Use when a release review needs machine-derived evidence from git history — hotspot risk and change-coupling analyzers. Triggers on 'hotspot', 'what changes together', 'release forensics'.
 form-handler: Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'.
+founder-idea-interview: Use when a founder's hobbies, ideas or daily problems should become a business roadmap.
 frontend-render-security: Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage
 fundraising-narrative: Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'.
 funnel-analysis: Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven.
@@ -115,7 +117,7 @@ gtm-launch: Use when sequencing a launch — alpha / beta / GA waves, audience-b
 guideline-writing: Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'.
 hiring-loop-design: Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'.
 history-design: Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'.
-html-deck: Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests.
+html-deck: Build a slide presentation as one HTML file — fixed 1920×1080 canvas, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests.
 humanizer: Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'.
 iconography: Resolve an icon request to an Iconify name and emit the stack's embedding. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler.
 image-analyser: Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'.
@@ -176,7 +178,7 @@ mobile-e2e-strategy: Use when picking a mobile E2E framework — Detox / Appium 
 module-detect-on-the-fly: When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference.
 module-management: When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 monorepo-workspace: Use to orient in a monorepo — which package manager, which workspaces, which task runner and its tasks — derived from the repository's own config and the runner's own listing, never guessed.
-motion-choreographer: When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'.
+motion-choreographer: Locked still + blueprint → provider motion prompt: camera, motion, physics, audio sync, for Veo/Kling/Sora. Code film → code-film.
 multi-tenancy: Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
 nda-triage: Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'.
 nextjs-patterns: Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture.
@@ -255,7 +257,7 @@ screenshot-hygiene: Use when creating and embedding a documentation screenshot �
 script-writing: Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'.
 secrets-management: When picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI and Kubernetes — decision framework, provider deep-dives externalized.
 security: Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
-security-audit: Security audit — vulnerability scan, pentest review, attack-surface sweep; explicit request only, not regular feature work. Pre-implementation threat pass → threat-modeling.
+security-audit: Security audit — is my app secure, security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass first → threat-modeling.
 security-maturity-assessment: Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt?'
 sentry-integration: Use when the user shares a Sentry URL, says \"check Sentry\", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 sequential-thinking: Structured step-by-step problem decomposition and iterative analysis; explicit request only, never for regular coding tasks, and at most once per task.
@@ -267,7 +269,7 @@ skill-writing: Use when deciding 'should this be a skill or a rule?', creating/i
 song-to-script: Turn an audio track into a timed `## Scene N` script: song sections → per-scene durations, auto mode adds mood + lip-sync lines. Triggers 'music video', 'from the song', 'cut to the beat'.
 source-discovery: Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields.
 spreadsheet-authoring: Use when building or editing a spreadsheet or model — formulas over hardcoded values, read-back after writes, official-source data, pivot-first charts. Triggers on 'spreadsheet', 'build a model'.
-sql-writing: Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
+sql-writing: Use when writing raw SQL — dialect-aware syntax, parameterization, raw migrations, seeders with `DB::statement`; fires even on a pasted query asking 'why is this slow'.
 stakeholder-tradeoff: Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'.
 standards-from-config: Use when you need this project's coding standards (line length, quotes, import order, naming, commit format) — derive them from the REAL tooling config as a pointer + digest, never a guessed claim.
 storybook-workshop: Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying.

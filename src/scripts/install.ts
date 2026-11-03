@@ -91,6 +91,7 @@ import { manualSnippet, mergeHostConfigFile, parseHostConfig } from '../install/
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
+import { GLOBAL_HINT_TOOLS, exportHintCommand } from '../install/exportHint.js';
 import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -122,7 +123,7 @@ import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
 import { deployClaudeCarrier } from '../install/stagedRuntime.js';
 import { mergeToolsAliases as _merge_tools_aliases } from '../install/toolsArg.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
-import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunTargetLines } from '../install/wizard-plan.js';
+import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunBool, dryRunScopeLine, dryRunTargetLines } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { toJsonSchema7 } from '../shared/zodJsonSchema.js';
@@ -911,7 +912,6 @@ function ensure_augment_user_hooks(package_root: string, force: boolean): Record
     );
 }
 
-const CLAUDE_PLUGIN_ID = 'agent-config@event4u-agent-config';
 const CLAUDE_LEGACY_PLUGIN_IDS: readonly string[] = [
     'agent-conf@event4u',
     'agent-config@event4u',
@@ -935,7 +935,7 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
     const target = path.join(project_root, '.claude', 'settings.json');
     const healed = _heal_legacy_claude_plugin_ids(target);
     for (const pid of healed) success(`.claude/settings.json: removed stale plugin id \`${pid}\``);
-    const bridge = withHostEnv({ enabledPlugins: { [CLAUDE_PLUGIN_ID]: true } }, project_root, success);
+    const bridge = withHostEnv({}, project_root, success);
     return merge_json_file(target, bridge, force || healed.length > 0, '.claude/settings.json');
 }
 
@@ -2066,6 +2066,7 @@ function _resolve_scope(
 ): string {
     if (opts.scope === 'project') return 'project';
     if (opts.scope === 'global') return 'global';
+    if (process.env['AGENT_CONFIG_DEV_MODE'] !== '1' && !custom_path && (!opts.scope || opts.scope === 'auto')) return 'global'; // ADR-020 consumer default
     if (opts.scope === 'prompt') {
         return _run_scope_prompt(opts, detect_reason || 'forced by --scope=prompt', custom_path);
     }
@@ -2078,12 +2079,7 @@ function _resolve_scope(
     if (opts.global_install) return 'global';
 
     if (detected === 'prompt') return _run_scope_prompt(opts, detect_reason, custom_path);
-    if (!state.QUIET) {
-        info(
-            `Scope detection: ${detected} (${detect_reason}). Using project default for ` +
-                'backward compatibility; pass --scope=auto to honor detection.',
-        );
-    }
+    if (!state.QUIET) info(`Scope detection: ${detected} (${detect_reason}). Maintainer mode: project default; --scope=auto honours detection.`);
     return 'project';
 }
 
@@ -2910,9 +2906,7 @@ function _deploy_global_content(
         }
         const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
         if (plan === undefined) {
-            const status = ['copilot', 'aider', 'zed', 'jetbrains'].includes(tool_id)
-                ? 'hint'
-                : 'unsupported';
+            const status = GLOBAL_HINT_TOOLS.includes(tool_id) ? 'hint' : 'unsupported';
             results[tool_id] = [0, 0, status, []];
             continue;
         }
@@ -3424,7 +3418,7 @@ function install_global(
                 );
             } else if (status === 'hint') {
                 process.stdout.write(
-                    `      ${tool_id.padEnd(15)} → no user-scope convention; use \`agent-config export --tool=${tool_id}\`\n`,
+                    `      ${tool_id.padEnd(15)} → no user-scope convention; per project: \`${exportHintCommand(tool_id)}\`\n`,
                 );
             } else {
                 process.stdout.write(
@@ -4299,16 +4293,17 @@ function _dry_run_summary(opts: Options): number {
         opts.custom_path || opts.project || process.env['PROJECT_ROOT'] || process.cwd(),
     );
     const [will_launch, why_not] = _wizard_should_launch(opts);
+    const scopePlan = dryRunScopeLine(opts, detect_scope(resolvePath(opts.project || process.env['PROJECT_ROOT'] || process.cwd())), process.env['AGENT_CONFIG_DEV_MODE'] === '1');
     process.stdout.write('\n');
     process.stdout.write('[dry-run] Plan summary — no files written, no subprocesses spawned:\n');
     process.stdout.write(`  profile:     ${opts.profile}\n`);
     process.stdout.write(`  user-type:   ${opts.user_type || '(none)'}\n`);
-    process.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? 'global' : 'auto')}\n`);
+    process.stdout.write(scopePlan.line);
     process.stdout.write(`  tools:       ${opts.tools || 'all'}\n`);
-    process.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === 'global', _parse_tools(opts.tools || 'all'), target));
-    process.stdout.write(`  minimal:     ${pyBool(opts.minimal)}\n`);
-    process.stdout.write(`  force:       ${pyBool(opts.force)}\n`);
-    process.stdout.write(`  offline:     ${pyBool(opts.offline)}\n`);
+    process.stdout.write(dryRunTargetLines(scopePlan.scope === 'global', _parse_tools(opts.tools || 'all'), target));
+    process.stdout.write(`  minimal:     ${dryRunBool(opts.minimal)}\n`);
+    process.stdout.write(`  force:       ${dryRunBool(opts.force)}\n`);
+    process.stdout.write(`  offline:     ${dryRunBool(opts.offline)}\n`);
     if (will_launch) {
         process.stdout.write('  wizard:      Would auto-launch (pass --no-ui to suppress).\n');
     } else {
@@ -4341,11 +4336,6 @@ function _dry_run_summary(opts: Options): number {
     return 0;
 }
 
-/** Python `str(bool)` → 'True' / 'False'. */
-function pyBool(v: boolean): string {
-    return v ? 'True' : 'False';
-}
-
 function _apply_payload_preview(payload: Record<string, unknown>, opts: Options): number {
     const schema_version = payload['schema_version'] ?? '<missing>';
     const target = resolvePath(
@@ -4376,7 +4366,7 @@ function _apply_payload_preview(payload: Record<string, unknown>, opts: Options)
         return 2;
     }
     process.stdout.write(`  target:      ${target}\n`);
-    process.stdout.write(`  dry_run:     ${pyBool(Boolean(payload['dry_run'] ?? opts.dry_run))}\n`);
+    process.stdout.write(`  dry_run:     ${dryRunBool(Boolean(payload['dry_run'] ?? opts.dry_run))}\n`);
     process.stdout.write('\n');
     return 0;
 }

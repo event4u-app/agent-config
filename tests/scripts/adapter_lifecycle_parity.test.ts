@@ -121,7 +121,12 @@ describe('adapter lifecycle parity', () => {
         );
         expect(contract).toContain('## § 5 — Current tier assignment (generated)');
         expect(contract).toContain('DO NOT EDIT BY HAND');
-        expect(contract).toContain('| `higgsfield` | ai-video | `stable` |');
+        // The row must carry whatever tier the adapter header declares today —
+        // read from the header, so a promotion or demotion moves both together.
+        const header = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'ai-video', 'adapters', 'higgsfield.sh'), 'utf-8');
+        const tier = /^# Lifecycle: (\w+)/m.exec(header)?.[1];
+        expect(tier).toBeDefined();
+        expect(contract).toContain(`| \`higgsfield\` | ai-video | \`${tier ?? ''}\` |`);
         expect(contract).not.toContain('| `higgsfield` | image+video | `experimental` |');
         expect(adapter_lifecycle_findings()).toEqual([]);
     });

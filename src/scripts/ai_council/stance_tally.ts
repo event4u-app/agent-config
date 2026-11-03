@@ -10,6 +10,8 @@
 // Default-off behind `ai_council.stance_tally.enabled`; additive — with the key
 // false the council path is byte-identical to today.
 
+import { isIncompleteStop, type StopClass } from './stop_class.js';
+
 /** Confidence tier from a stance line. */
 export type Confidence = 'high' | 'med' | 'low';
 
@@ -59,6 +61,21 @@ export interface StanceTallyResult {
      * merely computed.
      */
     needs_repair: string[];
+    /**
+     * Members whose answer the provider cut short (`stop_class` truncated /
+     * context_exceeded). Counted in `w_total` like an abstention — they
+     * responded — and back no option however well their stance line parsed: a
+     * fragment is not a vote. OPTIONAL and omitted when empty, so a tally with
+     * no cut-off member keeps its exact pre-D5 shape.
+     */
+    incomplete?: string[];
+}
+
+/** One member's input to the tally. `incomplete` marks a provider-truncated answer. */
+export interface StanceMember {
+    member: string;
+    text: string;
+    incomplete?: boolean;
 }
 
 // Tolerant of whitespace and case; requires the three explicit fields in order.
@@ -143,12 +160,15 @@ export function parse_stance_line(text: string): Omit<StanceLine, 'member'> | nu
  * the leading option's weight ≥ ⅔ × W_total; otherwise a structured split is
  * returned — never a forced winner, never an auto-added round.
  */
-export function tally_stances(
-    members: ReadonlyArray<{ member: string; text: string }>,
-): StanceTallyResult {
+export function tally_stances(members: ReadonlyArray<StanceMember>): StanceTallyResult {
     const parsed: StanceLine[] = [];
     const needs_repair: string[] = [];
-    for (const { member, text } of members) {
+    const incomplete: string[] = [];
+    for (const { member, text, incomplete: cut } of members) {
+        if (cut === true) {
+            incomplete.push(member);
+            continue;
+        }
         const p = parse_stance_line(text);
         if (p === null) {
             needs_repair.push(member);
@@ -173,7 +193,9 @@ export function tally_stances(
     // no option either way, so an unparseable response now behaves exactly like
     // an abstention — the fail-safe direction. Members who never responded are
     // dropped upstream (`!r.error`) and are correctly absent from `members`.
-    const w_total = parsed.length + needs_repair.length; // responded, abstain + unparseable included
+    // A provider-truncated answer is held to the same fail-safe: it responded, so it
+    // raises the bar, and it backs nothing (D5).
+    const w_total = parsed.length + needs_repair.length + incomplete.length;
     const threshold = CONSENSUS_FRACTION * w_total;
     let abstain_count = 0;
 
@@ -211,6 +233,7 @@ export function tally_stances(
         split: consensus === null,
         abstain_count,
         needs_repair,
+        ...(incomplete.length > 0 ? { incomplete } : {}),
     };
 }
 
@@ -228,16 +251,27 @@ export function tally_stances(
  * responses are two chances to disagree, and the attendance event and the
  * handoff envelope both consume this one.
  */
+type TallyResponse = { provider: string; model: string; text: string; error?: string | null; stop_class?: StopClass | undefined };
+
+/** Map a round's responses to tally members: errored ones dropped, cut-off ones marked. */
+export function stanceMembersFrom(responses: ReadonlyArray<TallyResponse>): StanceMember[] {
+    return responses
+        .filter((r) => !r.error)
+        .map((r) => ({
+            member: `${r.provider}:${r.model}`,
+            text: r.text,
+            ...(isIncompleteStop(r.stop_class) ? { incomplete: true } : {}),
+        }));
+}
+
 export function tallyFromResponses(
-    responses: ReadonlyArray<{ provider: string; model: string; text: string; error?: string | null }>,
+    responses: ReadonlyArray<TallyResponse>,
     enabled: boolean,
 ): StanceTallyResult | null {
     if (!enabled) {
         return null;
     }
-    return tally_stances(
-        responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
-    );
+    return tally_stances(stanceMembersFrom(responses));
 }
 
 export function render_vote_tally(result: StanceTallyResult): string {
@@ -263,6 +297,12 @@ export function render_vote_tally(result: StanceTallyResult): string {
             `- unparsed — ${result.needs_repair.length} member(s) responded without a ` +
                 `readable stance (${result.needs_repair.join(', ')}); counted in the ` +
                 'quorum, backing nothing',
+        );
+    }
+    if (result.incomplete !== undefined && result.incomplete.length > 0) {
+        lines.push(
+            `- truncated — ${result.incomplete.length} member(s) were cut off by the provider ` +
+                `(${result.incomplete.join(', ')}); counted in the quorum, backing nothing`,
         );
     }
     lines.push(`Threshold: ⅔ × ${result.w_total} = ${result.threshold.toFixed(2)}`);

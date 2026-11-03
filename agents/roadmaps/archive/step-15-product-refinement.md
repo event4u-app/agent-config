@@ -21,7 +21,7 @@ complexity: structural
 
 This roadmap is **closed via partial-completion + sunset of the remaining P1 / P2 cuts**:
 
-- **Phase 0 + P0 shipped.** Visibility/discovery wins landed (MCP Registry submission package at [`docs/setup/mcp-cloud-registry-listing.md`](../../../docs/setup/mcp-cloud-registry-listing.md), cross-audience README with 6 profile entry-points); profile system (`profile.id` in `.agent-settings.yml`, 6 profiles), `/onboard` wizard flow, and `cost_profile` presets (`minimal` / `balanced` / `research` / `custom`) are live in the consumer install path. Correction (2026-05-16 archive-audit): the original closure prose listed `/explain` as shipped — that command does not exist in `.agent-src.uncondensed/commands/` or `.claude/skills/`; the claim was phantom and is retracted here.
+- **Phase 0 + P0 shipped.** Visibility/discovery wins landed (MCP Registry submission package at [`docs/maintainers/mcp-cloud-registry-listing.md`](../../../docs/maintainers/mcp-cloud-registry-listing.md), cross-audience README with 6 profile entry-points); profile system (`profile.id` in `.agent-settings.yml`, 6 profiles), `/onboard` wizard flow, and `cost_profile` presets (`minimal` / `balanced` / `research` / `custom`) are live in the consumer install path. Correction (2026-05-16 archive-audit): the original closure prose listed `/explain` as shipped — that command does not exist in `.agent-src.uncondensed/commands/` or `.claude/skills/`; the claim was phantom and is retracted here.
 - **P1 + P2 sunset.** Taxonomy / packs / safety / cost governance (P1) and the strategic cuts (P2 domain packs, eval suites, control plane, marketplace, memory CLI) represent multi-month structural work against a measurement baseline that doesn't exist (step-4 sunset). Shipping more spine before measurement justifies the spine is mechanism without a consumer.
 - The shipped surface (profile/wizard/README/MCP-Registry) is the actual `2.19.0 → product` jump. Strategic cuts revive when measured friction surfaces from real installs.
 
@@ -199,7 +199,7 @@ Sourced from review #7. Almost all items are 1-click / 1-PR / 1-edit.
 - [-] **0.4 MCP Registry submission** — **blocked on external action**:
   PR against an external MCP-server registry requires a fork + branch +
   PR on a third-party repo. Template ready at
-  [`docs/setup/mcp-cloud-registry-listing.md`](../../docs/setup/mcp-cloud-registry-listing.md).
+  [`docs/maintainers/mcp-cloud-registry-listing.md`](../../docs/setup/mcp-cloud-registry-listing.md).
   Owner: maintainer.
 - [-] **0.12 Demo asset (stretch)** — **deferred**: GIF / screencast
   requires recording. Stretch item per roadmap; not pass-gate critical.

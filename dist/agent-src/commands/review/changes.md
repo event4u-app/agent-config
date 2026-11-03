@@ -67,11 +67,38 @@ above — so the shape was present and simply not applied to the base:
     against a diff nobody asked about, and the reader has no way to see that the
     scope moved. Name the ref that failed.
 
-- `git diff origin/main..HEAD --stat` — overview of changed files
-- `git diff origin/main..HEAD` — full committed-but-not-pushed diff
-- `git diff --stat` + `git diff` — unstaged changes on top
+Diff committed work against the merge-base, the same base step 1 names for
+`git.update_strategy: rebase` — a two-dot diff against a moved `origin/main`
+would also show every commit the base gained since the branch forked:
 
-If both diffs are empty, **stop** — nothing to review.
+- `git diff origin/main...HEAD --stat` + `git diff origin/main...HEAD` —
+  committed changes since `git merge-base HEAD origin/main` (three-dot form)
+- `git diff --cached --stat` + `git diff --cached` — staged changes
+- `git diff --stat` + `git diff` — unstaged changes on top
+- `git ls-files --others --exclude-standard` — untracked files, **diffed by
+  default** as added files. A new module nobody ran `git add` on yet is part of
+  the change; a review that only listed it judged a diff without it. Ignored
+  files stay out (`--exclude-standard` honours `.gitignore`). A file over the
+  **100 KB** cap, or a binary, is listed with its reason instead of diffed — the
+  report names every listed file, so the gap stays visible. An untracked file
+  that is not ignored is diffed like any other: if it holds a secret, that is a
+  finding in its own right.
+
+```bash
+git ls-files --others --exclude-standard -z |
+  while IFS= read -r -d '' f; do
+    size=$(wc -c < "$f" | tr -d ' ')
+    if [ "$size" -gt 102400 ]; then
+      echo "untracked, not diffed (over the 100 KB cap, $size bytes): $f"
+    elif [ "$size" -gt 0 ] && ! grep -Iq . "$f"; then
+      echo "untracked, not diffed (binary): $f"
+    else
+      git diff --no-index -- /dev/null "$f" || [ $? -eq 1 ]  # 1 = "differs", the normal case
+    fi
+  done
+```
+
+Report "nothing to review" and **stop** only when every source above is empty.
 
 ### 3. Resolve the judge model
 
@@ -214,7 +241,9 @@ implementation context in scope. That is a self-review, and calling it a review 
 defect `road-to-review-independence` exists to close.
 
 So **one further input** is added, and its distinguishing property is a negative one: it
-has **no implementation context**. Not a new mechanism —
+has **no implementation context**. It is therefore dispatched as a named subagent, never
+a fork: a fork inherits the author's conversation, which is exactly the context it must
+not have. Not a new mechanism —
 [`dispatch_r2_reviewer.ts`](../../../../scripts/dispatch_r2_reviewer.ts) already derives
 the scope and persists the prompt it sent:
 
@@ -329,7 +358,9 @@ window back with `./scripts-run src/scripts/review_axis_report`; it reports
   before proceeding
 - If **any** judge returned `revise` → fix 🔴 findings automatically,
   ask before fixing 🟡 findings, report 🟢 as suggestions
-- If all seven returned `apply` → the diff is ready; report and stop
+- If all seven returned `apply` → the diff is ready; report and stop. A
+  security `apply` with a `needs_validation` coverage row reads "clean, with
+  gaps" and names the open row
 
 **Opt-in (never auto-on):** when the `revise` findings are *test-driven*
 (failing checks, not subjective craft) and you want bounded auto-repair

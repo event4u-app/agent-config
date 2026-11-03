@@ -125,3 +125,17 @@ describe('live_args — strict MCP config', () => {
         expect(runner.live_args('x', {})).not.toContain('--strict-mcp-config');
     });
 });
+
+describe('live_args — session persistence', () => {
+    it('adds --no-session-persistence only when asked, before the prompt separator', () => {
+        const args = runner.live_args('x', { no_session_persistence: true });
+        expect(args).toContain('--no-session-persistence');
+        expect(args.indexOf('--no-session-persistence')).toBeLessThan(args.indexOf('--'));
+        expect(runner.live_args('x', {})).not.toContain('--no-session-persistence');
+    });
+
+    it('never disables skills and commands: the package arm would lose what it measures', () => {
+        const args = runner.live_args('x', { no_session_persistence: true, strict_mcp: true, plugin_dir: '/tmp/p' });
+        expect(args).not.toContain('--disable-slash-commands');
+    });
+});

@@ -1,0 +1,15 @@
+---
+// The "how it fits together" visual (ruling 0.1: never the hero).
+import { Image } from 'astro:assets';
+import infoImage from '../assets/info-image.webp';
+---
+
+<figure class="ac-figure">
+  <Image
+    src={infoImage}
+    alt="How Agent Config fits together: slash commands feed code review, security audit, code map, cost report and roadmaps; around them sit rules, memory, skills, a council of other AI models for a second opinion, tests and evidence; the install is one npx command."
+    widths={[640, 960, 1280, 1774]}
+    sizes="(min-width: 72rem) 68rem, 100vw"
+  />
+  <figcaption><slot /></figcaption>
+</figure>

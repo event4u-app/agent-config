@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/flow.schema.json",
   "title": "Flow (src/flows/<id>.yaml)",
-  "$comment": "Validated on load by scripts/lint_flows.py. Schema introduced in road-to-6.1.0 Step 8b (ADR-055). This schema fixes the SHAPE of a flow file; referential integrity (every entry_point / default_path entry resolves to a real command, every skill resolves to a real skill, id == filename stem, id is in the closed flow set) is enforced by the lint, not the schema — the same shape-vs-resolution split pack.schema.json + validate_pack_yaml.py use.",
+  "$comment": "Validated on load by scripts/lint_flows.ts. Schema introduced in road-to-6.1.0 Step 8b (ADR-055). This schema fixes the SHAPE of a flow file; referential integrity (every entry_point / default_path entry resolves to a real command, every skill resolves to a real skill, id == filename stem, id is in the closed flow set) is enforced by the lint, not the schema — the same shape-vs-resolution split pack.schema.json + validate_pack_yaml.py use.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "title", "summary", "entry_points", "default_path", "skills"],
@@ -10,7 +10,7 @@
     "id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
-      "description": "Flow id — lowercase slug, must equal the filename stem. The closed flow set {discovery, implementation, review, delivery} is enforced by lint_flows.py, not this schema (a new flow is a curated governance decision, not a free addition)."
+      "description": "Flow id — lowercase slug, must equal the filename stem. The closed flow set {discovery, implementation, review, delivery} is enforced by lint_flows.ts, not this schema (a new flow is a curated governance decision, not a free addition)."
     },
     "title": {
       "type": "string",

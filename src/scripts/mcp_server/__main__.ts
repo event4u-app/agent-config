@@ -11,6 +11,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { enableCompileCacheFailOpen } from '../_lib/compile_cache.js';
 import { main } from './server.js';
 
 // Mirror `if __name__ == "__main__"`: run only when invoked directly,
@@ -25,6 +26,7 @@ const _invokedDirectly =
     (process.argv[1] !== undefined && path.resolve(process.argv[1]) === path.resolve(_selfPath));
 
 if (_invokedDirectly) {
+    enableCompileCacheFailOpen();
     main();
 }
 

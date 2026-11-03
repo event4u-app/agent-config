@@ -202,8 +202,9 @@ Then read `billable=M` together with the two caps:
 - `M == 0` → no gate. Proceed to Step 4.
 - `M > 0` and a cap is set → no gate. Proceed to Step 4; `on_overrun`
   handles a breach per member.
-- `M > 0` and both caps are `0` → render the table inside a numbered-options
-  block (`1. Run / 2. Cancel`) and wait. `1` proceeds; anything else aborts.
+- `M > 0` and both caps are `0` (the shipped default) → no gate. Render the
+  table as information and proceed to Step 4 — no cap exists, so nothing can
+  breach, and the absence of a bound is not a reason to ask (ADR-279).
 
 ### 4. Run the CLI
 

@@ -16,6 +16,7 @@
  */
 import { globToRegExp } from '../../../_lib/infra_files/pipeline.js';
 import { gitProbe } from '../../../_lib/spawn_env.js';
+import { windowLog } from '../../git_window.js';
 import type { CodeGraph } from '../../types.js';
 import type { LaneOutput, LaneRelation, Witness } from '../lane_fact.js';
 import defaults from './thresholds.json';
@@ -64,7 +65,10 @@ export function parseNameStatusLog(out: string, current: ReadonlySet<string>): C
     for (const rec of out.split(RS)) {
         if (!rec.trim()) continue;
         const [header = '', ...lines] = rec.split('\n');
-        const [sha = '', date = ''] = header.split(US);
+        // The date is the header's last field: `sha US date`, or `sha US author US date` from the shared window.
+        const fields = header.split(US);
+        const sha = fields[0] ?? '';
+        const date = fields.length > 1 ? (fields[fields.length - 1] ?? '') : '';
         if (!sha) continue;
         const touched = new Set<string>();
         let raw = 0;
@@ -108,42 +112,16 @@ export function readHistory(root: string, opts: ReadHistoryOptions = {}): LaneOu
         output.skipped.push({ file: '.git', reason });
         return output;
     };
-    let head: string;
-    try {
-        head = git(root, ['log', '-1', '--format=%cI']).trim();
-    } catch {
-        return skip('not a git repository or no commits');
-    }
-    if (!head) return skip('no commits');
-    try {
-        // A shallow clone holds a commit or two: no coupling would look like "no coupling".
-        if (git(root, ['rev-parse', '--is-shallow-repository']).trim() === 'true') return skip('shallow clone');
-    } catch {
-        return skip('cannot tell whether the clone is shallow');
-    }
-    // Anchored on HEAD's commit date, not the clock, so one commit yields one answer.
-    const since = new Date(new Date(head).getTime() - t.window_days * 86_400_000).toISOString();
+    const window = windowLog(root, t.window_days, opts.git ? { git: (args) => git(root, args) } : {});
+    if ('skip' in window) return skip(window.skip);
+    const log = window.log;
     let current: Set<string>;
-    let log: string;
     try {
         current = new Set(
             git(root, ['-c', 'core.quotePath=false', 'ls-files', '-z', '--', '.'])
                 .split('\0')
                 .filter(Boolean),
         );
-        log = git(root, [
-            '-c',
-            'core.quotePath=false',
-            'log',
-            `--since=${since}`,
-            '--no-merges',
-            '-M',
-            '--relative',
-            '--name-status',
-            `--format=${RS}%H${US}%cs`,
-            '--',
-            '.',
-        ]);
     } catch {
         return skip('git log failed');
     }

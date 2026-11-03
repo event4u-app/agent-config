@@ -124,3 +124,50 @@ export function noProjectInstallLines(projectRoot: string, inventoryPath?: strin
         ['err', '      run `agent-config init` (global install) or `agent-config refresh --project` (global-only consumer)'],
     ];
 }
+
+/** The line a default `doctor` run prints on a machine with nothing installed. */
+export const NOT_INSTALLED_LINE = 'agent-config: not installed — run `agent-config init`';
+
+/**
+ * A default `doctor` run on a machine with no install anywhere — no project
+ * lockfile, no project marker, an empty global deploy ledger — prints one
+ * neutral line and exits 0 (road-to-docs-that-sell 4.4).
+ *
+ * The full check list on that machine was ~80 lines with a red hook-wiring row
+ * for hooks nobody had asked for yet, and producing it wrote a neighbour-scan
+ * cache into the project and started other vendors' CLIs for their versions.
+ * None of that answers the only question a fresh machine has.
+ *
+ * Machine and explicit modes (`--json`, `--ci`, `--strict`, `--check`) keep
+ * their full no-install payload and exit codes: a caller that asked for the
+ * contract gets the contract. Returns `null` when the full run should go on.
+ */
+export function notInstalledShortCircuit(
+    opts: { readonly json: boolean; readonly ci: boolean; readonly strict: boolean; readonly check: string | null },
+    bridgePresent: boolean,
+    inventoryPath?: string | null,
+): number | null {
+    if (opts.json || opts.ci || opts.strict || opts.check !== null) return null;
+    if (bridgePresent || globalInstalledTools(inventoryPath).length > 0) return null;
+    process.stdout.write(`${NOT_INSTALLED_LINE}\n`);
+    return 0;
+}
+
+/**
+ * The closing line of a default `doctor` run on an install, and its exit code.
+ *
+ * Optional warnings never fail it: a default run right after a clean global
+ * install exited 2 with only optional warnings and no summary, which a script
+ * reads as a failed install (newcomer walkthrough 2026-11-01). Drift is still
+ * 1; failed checks are named and left to `--strict`, as before.
+ */
+export function installedOutcome(checks: ReadonlyArray<Record<string, unknown>>, drift: number): number {
+    const count = (status: string): number => checks.filter((c) => c['status'] === status).length;
+    const parts = [
+        drift > 0 ? `${drift} file(s) drifted from the install` : '',
+        count('fail') > 0 ? `${count('fail')} failed check(s) (--strict fails on them)` : '',
+        `${count('warn')} optional warning(s)`,
+    ].filter((p) => p !== '');
+    process.stdout.write(`agent-config: installed — ${parts.join(' · ')}\n`);
+    return drift > 0 ? 1 : 0;
+}

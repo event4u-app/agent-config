@@ -96,6 +96,34 @@ describe('gate_baseline — the ratchet turns one way', () => {
     });
 });
 
+describe('gate_baseline — a failing verdict can say how to fix', () => {
+    const FIX = 'add a `tier:` line to each listed skill';
+
+    it('puts the fix line ahead of the baseline text on a regression', () => {
+        const v = checkRatchet({ gate: 'g', actual: 19, repoRoot: mkRepo({ g: ENTRY }), today: '2026-08-02', fix: FIX });
+        expect(v.message).toContain(`fix: ${FIX}`);
+        expect(v.message.indexOf('fix:')).toBeLessThan(v.message.indexOf(BASELINE_REL));
+    });
+
+    it('puts the fix line on an unbaselined failure too', () => {
+        const v = checkRatchet({ gate: 'g', actual: 2, repoRoot: mkRepo({}), today: '2026-08-02', fix: FIX });
+        expect(v.message).toContain(`fix: ${FIX}`);
+        expect(v.message.indexOf('fix:')).toBeLessThan(v.message.indexOf(BASELINE_REL));
+    });
+
+    it('leaves the message byte-identical when no fix is given', () => {
+        const repo = mkRepo({ g: ENTRY });
+        const without = checkRatchet({ gate: 'g', actual: 19, repoRoot: repo, today: '2026-08-02' });
+        expect(without.message).not.toContain('fix:');
+        expect(without.message.startsWith('g: 19 violation(s) against a baseline of 18')).toBe(true);
+    });
+
+    it('never adds a fix line to a passing verdict', () => {
+        const v = checkRatchet({ gate: 'g', actual: 18, repoRoot: mkRepo({ g: ENTRY }), today: '2026-08-02', fix: FIX });
+        expect(v.message).not.toContain('fix:');
+    });
+});
+
 describe('gate_baseline — expiry is what separates a ratchet from an allowlist', () => {
     const dayAfter = (iso: string, days: number): string =>
         new Date(Date.parse(`${iso}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);

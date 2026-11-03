@@ -1,0 +1,63 @@
+{
+    "skill": "founder-idea-interview",
+    "last_eval": "2026-11-02",
+    "description": "5 exemplars + 4 near-misses + 1 counterexample. Authored with the skill (owner decision OQ-61). Exemplars start from a person, not a product: a hobby, a raw idea, an everyday annoyance, in English and German. Near-misses are the neighbours this skill's When-to-use table routes elsewhere: grilling an existing plan (/challenge-me vision), an internal vision anchor (vision-articulation), an investor pitch for a company with traction (fundraising-narrative), interviewing customers (customer-research). The counterexample guards the word 'interview' in a hiring context.",
+    "queries": [
+        {
+            "q": "I bake sourdough every weekend and friends keep asking to buy it — could this be a business? Interview me and make a plan",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "I have a business idea but no plan yet, ask me questions and turn it into a roadmap",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "every week I lose hours chasing invoices from clients, is there a startup in that? help me figure it out",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "founder interview: start from my hobbies and problems and research the market for me",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Ich habe eine Geschäftsidee, frag mich aus und mach daraus einen Plan mit Markt und Konkurrenz",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "grill me on this feature draft for the export dashboard until it is clear",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an existing plan to sharpen → /challenge-me vision, named in the When-to-use table"
+        },
+        {
+            "q": "write our company vision for the all-hands: where are we going and why now",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "internal vision anchor for an existing company → vision-articulation"
+        },
+        {
+            "q": "tighten the why-now in our Series A pitch, we have 40k MRR",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "investor pitch for a company with traction → fundraising-narrative"
+        },
+        {
+            "q": "draft a JTBD interview guide for talking to users who cancelled",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "interviewing customers, not the founder → customer-research"
+        },
+        {
+            "q": "design a structured interview loop for hiring a senior backend engineer",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'interview' in a hiring sense → hiring-loop-design"
+        }
+    ]
+}

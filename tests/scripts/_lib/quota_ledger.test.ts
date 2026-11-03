@@ -12,6 +12,7 @@ import {
     readQuotaLedger,
     snapshotFromStatusPayload,
 } from '../../../src/scripts/_lib/quota_ledger.js';
+import { snapshotWithCache } from '../../../src/scripts/_lib/prompt_cache_reading.js';
 
 let home: string;
 let env: Record<string, string>;
@@ -47,6 +48,39 @@ describe('snapshotFromStatusPayload', () => {
         expect(JSON.stringify(s)).not.toContain('abc-123');
     });
 
+    it('keeps the prompt-cache subset as numbers and enums only', () => {
+        const s = snapshotWithCache(
+            {
+                ...PAYLOAD,
+                prompt_cache: {
+                    warm: false,
+                    ttl: '1h',
+                    expires_at: '2026-11-01T10:42:00Z',
+                    recache_tokens_if_cold: 182_000,
+                    hit_ratio: 0.93,
+                    last_miss_cause: 'some host text',
+                },
+            },
+            1000,
+        );
+        expect(s?.cache).toEqual({
+            warm: false,
+            ttl: '1h',
+            expires_at: Date.parse('2026-11-01T10:42:00Z'),
+            recache_tokens_if_cold: 182_000,
+        });
+        expect(JSON.stringify(s)).not.toContain('some host text');
+    });
+
+    it('normalises an epoch-second expiry, drops an unknown ttl, and keeps a cache-only payload', () => {
+        const s = snapshotWithCache({ session_id: 'abc-123', prompt_cache: { warm: true, ttl: '10m', expires_at: 1_761_990_000 } }, 1000);
+        expect(s).toEqual({ ts: 1000, session: hashSessionId('abc-123'), cache: { warm: true, expires_at: 1_761_990_000_000 } });
+    });
+
+    it('ignores a prompt_cache object carrying nothing usable', () => {
+        expect(snapshotWithCache({ prompt_cache: { hit_ratio: 0.5 } })).toBeNull();
+    });
+
     it('normalises a millisecond reset to seconds', () => {
         const s = snapshotFromStatusPayload({ rate_limits: { five_hour: { used_percentage: 1, resets_at: 1_761_400_000_000 } } });
         expect(s?.five_hour?.resets_at).toBe(1_761_400_000);
@@ -56,6 +90,18 @@ describe('snapshotFromStatusPayload', () => {
         const s = snapshotFromStatusPayload({ rate_limits: { seven_day: { used_percentage: 5 } } });
         expect(s?.seven_day).toEqual({ pct: 5, resets_at: null });
         expect(s?.five_hour).toBeUndefined();
+    });
+
+    it('drops an implausible percentage and clamps a rounding overshoot to 100', () => {
+        const at = (pct: number) =>
+            snapshotFromStatusPayload({ rate_limits: { five_hour: { used_percentage: pct, resets_at: 1_761_400_000 } } });
+        expect(at(1_761_400_000)).toBeNull();
+        expect(at(101.5)).toBeNull();
+        expect(at(Number.POSITIVE_INFINITY)).toBeNull();
+        expect(at(100.7)?.five_hour?.pct).toBe(100);
+        expect(at(101)?.five_hour?.pct).toBe(100);
+        expect(at(100)?.five_hour?.pct).toBe(100);
+        expect(at(99.4)?.five_hour?.pct).toBe(99.4);
     });
 
     it('returns null when nothing quota-relevant is present', () => {

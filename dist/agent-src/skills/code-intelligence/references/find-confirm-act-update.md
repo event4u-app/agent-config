@@ -43,7 +43,9 @@ tombstone, so a later confirm says `gone` instead of nothing.
 
 Where it lives: `agents/map/` holds the map, `manifest.json` and one folder per
 area (`code/`, `data/`, `interfaces/`, `runtime/`, `delivery/`); only
-`agents/map/.build/` (graph cache, SQLite twin, overlay, lock) is gitignored. A <!-- ref-ignore -->
+`agents/map/.build/` (graph cache, SQLite twin, overlay, lock) and the viewer <!-- ref-ignore -->
+`index.html`, re-rendered from the committed data by `refresh` and `open`, are gitignored —
+by the folder's own `.gitignore`, which those runs write. A
 root without a project home writes to the user-global hub's `map/`. A cache an
 older release left in `agents/runtime/state/` is still read. The
 `check_graph_writers` gate fails any writer outside these two layouts.

@@ -10,7 +10,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { ConsistencyNotice } from '../_lib/design_consistency_pass.js';
-import { chunkExport, isBundled } from './svg_rules_loader.js';
+import { isBundled, loadChunkExport } from './svg_rules_loader.js';
 
 export type ConsistencyPass = (root: string, file: string, content: string) => ConsistencyNotice[];
 
@@ -24,5 +24,11 @@ export function consistencySpecifier(selfUrl: string, bundled: boolean): string 
 }
 
 export function loadConsistencyPass(selfUrl: string = import.meta.url, bundled: boolean = isBundled()): ConsistencyPass | null {
-    return chunkExport<ConsistencyPass>(consistencySpecifier(selfUrl, bundled), 'consistencyPass', selfUrl, bundled);
+    let specifier: string;
+    try {
+        specifier = consistencySpecifier(selfUrl, bundled);
+    } catch {
+        return null;
+    }
+    return loadChunkExport<ConsistencyPass>(selfUrl, specifier, 'consistencyPass', bundled);
 }

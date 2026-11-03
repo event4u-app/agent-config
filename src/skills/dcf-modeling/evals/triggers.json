@@ -1,0 +1,79 @@
+{
+  "skill": "dcf-modeling",
+  "last_eval": "2026-11-01",
+  "description": "8 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings of discounted-cash-flow valuation: WACC, terminal value, FCFF projection, sensitivity grid, counter-modelling a seller's deck. Should-not-trigger covers neighbours: runway, unit economics, series forecasting, workbook formatting alone, and a buy/sell call.",
+  "queries": [
+    {
+      "q": "build a DCF for this SaaS company with a 5-year FCFF projection",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "what is this business worth on a discounted cash flow basis?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "mach mir eine DCF-Bewertung für das Unternehmen",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "compute the WACC and terminal value for this valuation",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "give me a WACC x terminal growth sensitivity grid",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "counter-model this seller deck's valuation",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "what discount rate does the seller's IRR imply?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "Unternehmenswert per Discounted Cash Flow mit Sensitivitätsanalyse",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "how many months of runway do we have at current burn?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "runway → runway-cognition"
+    },
+    {
+      "q": "what is our LTV to CAC ratio?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "unit economics → unit-economics-modeling"
+    },
+    {
+      "q": "forecast next quarter's revenue from the last 8 quarters",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "time-series forecast → forecasting"
+    },
+    {
+      "q": "format this Excel model so the formulas stay live",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "workbook craft → spreadsheet-authoring"
+    },
+    {
+      "q": "translate this contract clause into English",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "unrelated task; no valuation vocabulary"
+    }
+  ]
+}

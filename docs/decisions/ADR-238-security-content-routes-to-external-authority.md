@@ -143,7 +143,7 @@ proposal re-derives the same eleven greps, which is what happened this time.
 
 ## References
 
-- `agents/roadmaps/road-to-consumer-security-guidance.md` — the verified diff,
+- `agents/roadmaps/archive/road-to-consumer-security-guidance.md` — the verified diff,
   the council record, and the execution of this decision.
 - `rule:source-confidentiality` — why the evaluated source is not named here.
 - `rule:code-provenance` — why a rejected finding produces no ledger row.

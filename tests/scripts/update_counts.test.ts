@@ -134,34 +134,33 @@ describe('update_counts — the README sub-note figures, 1.1', () => {
         expect(projected).toBeLessThanOrEqual(uc.count('rules'));
     });
 
-    it('the README entry carries a pattern for each of the four figures', () => {
+    it('the README entry carries a pattern for each of the three figures', () => {
         const readme = uc.TARGETS.find(([rel]) => rel === 'README.md');
         expect(readme).toBeDefined();
         const kinds = (readme as [string, ReadonlyArray<[string, string]>])[1].map(([, kind]) => kind);
-        for (const kind of ['commands_active', 'commands_toplevel', 'rules', 'rules_projected']) {
+        for (const kind of ['commands_active', 'rules', 'rules_projected']) {
             expect(kinds).toContain(kind);
         }
     });
 
     it('a stale sub-note figure is a drift, not a silent pass', () => {
         const stale =
-            '**Commands 205** counts every command file **recursively** (the linked directory ' +
-            'holds 60 at its top level), and **Rules 999** counts the **source** rules while the ' +
-            'linked projection holds 998 — one rule is dormant and is not projected.';
+            '**Commands 205** counts every command file, including the ones in subfolders. ' +
+            '**Rules 999** counts the source rules, while the linked folder holds 998 because one ' +
+            'rule is switched off and not shipped.';
         const readme = uc.TARGETS.find(([rel]) => rel === 'README.md') as [
             string,
             ReadonlyArray<[string, string]>,
         ];
-        const counts = { commands_active: 205, commands_toplevel: 60, rules: 122, rules_projected: 121 };
+        const counts = { commands_active: 205, rules: 122, rules_projected: 121 };
         const [fixed, drifts] = withSilentStderr(() =>
             uc.apply_to_text(stale, readme[1] as Array<[string, string]>, counts),
         );
         expect(drifts.map(([kind]) => kind).sort()).toEqual(['rules', 'rules_projected']);
         expect(fixed).toContain('**Rules 122**');
-        expect(fixed).toContain('projection holds 121');
+        expect(fixed).toContain('linked folder holds 121');
         // The halves that were already right are left exactly as they were.
         expect(fixed).toContain('**Commands 205**');
-        expect(fixed).toContain('holds 60 at its top level');
     });
 });
 

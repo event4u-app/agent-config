@@ -375,7 +375,9 @@ test_cli_wrapper_delegates_to_master() {
     # rather than as a bug. Measured: rc=141 through the pipe with a matching
     # first line plus ~20k filler lines, MATCHED through the herestring.
     # No pipe, no SIGPIPE, no false negative.
-    if grep -q "agent-config — event4u/agent-config CLI" <<<"$out"; then
+    # Either the bash dispatcher's header or the TS CLI's grouped help (e4043251ff) proves the
+    # wrapper reached master; the stub's own exit-127 message matches neither.
+    if grep -qE "agent-config — (event4u/agent-config CLI|governed skills, rules and commands)" <<<"$out"; then
         echo "  ✅  wrapper delegates to master (help reached master)"
         ((PASS++)) || true
     else

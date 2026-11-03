@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**212 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**214 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -98,7 +98,8 @@ _Check it. Self-review, judge, fix/quality, and threat-model a change before it 
 - `fix-ci` — Fetch CI errors from GitHub Actions and fix them
 - `fix-quality` — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - `fix-route` — Classify a vaguely-described problem and dispatch to the right fix sub-command (or name the specialist skil…
-- `judge` — Judge orchestrator — routes to solo, steps, on-diff
+- `judge` — Judge orchestrator — routes to solo, steps, on-diff, bracket
+- `judge-bracket` — Run a resumable bracket of competing solutions whose losses can be appealed — AC sizes it (default 10), the…
 - `judge-on-diff` — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 - `judge-solo` — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - `judge-steps` — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
@@ -136,8 +137,9 @@ _Ship it. Commit in logical chunks, open the PR, answer review comments, and pre
 
 _Deliberately-started features — not daily flow members, never buried as skills._
 
-- `challenge-me` — Challenge-me orchestrator — routes to vision, with-docs, closure
+- `challenge-me` — Challenge-me orchestrator — routes to vision, with-docs, closure, founder
 - `challenge-me-closure` — Close every foreseeable decision in a roadmap before execution — detect the open ones, resolve each at the…
+- `challenge-me-founder` — Founder interview — from hobbies, ideas and everyday problems to a researched roadmap, then prototype, busi…
 - `challenge-me-vision` — Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Mark…
 - `challenge-me-with-docs` — Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-…
 - `council` — Council orchestrator — routes to default, pr, design, optimize, analysis, debate

@@ -105,4 +105,6 @@ Signal panel. **Preset default: `strict`.**
 > with a [scaffold](../src/agent-src/user-types/_template/) for
 > contributing your own.
 
+→ [Role guide](getting-started-by-role.md) (skills, first wins and install path per role) · [Role experiences](role-experiences.md) (one tagline per role)
+
 → [Public catalog](catalog.md) (all rules, skills, commands, guidelines) · [Skills only](skills-catalog.md) · [llms.txt](../llms.txt)

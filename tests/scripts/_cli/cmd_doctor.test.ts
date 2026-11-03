@@ -587,6 +587,9 @@ describe('doctor — team check', () => {
         };
         fs.mkdirSync(t.root, { recursive: true });
         fs.mkdirSync(t.bin, { recursive: true });
+        // A codex home that exists without auth.json is "not logged in"; one
+        // that does not exist at all is a misconfigured CODEX_HOME (own case).
+        fs.mkdirSync(t.codexHome, { recursive: true });
         const prev: Record<string, string | undefined> = {};
         for (const k of TEAM_ENV_KEYS) prev[k] = process.env[k];
         process.env['PATH'] = t.bin;
@@ -732,6 +735,24 @@ describe('doctor — team check', () => {
                 expect(res['status']).toBe('warn');
                 expect(res['message']).toContain('codex auth ❌');
                 expect(res['remedy']).toContain('run `codex login`');
+            },
+        );
+    });
+
+    it('sub-signal (a): CODEX_HOME points at nothing → names the path, no `codex login` advice', () => {
+        withTeamEnv(
+            (t) => {
+                settings(t, ENABLED);
+                fakeCodex(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+                fs.rmSync(t.codexHome, { recursive: true, force: true });
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status']).toBe('warn');
+                expect(res['message']).toContain(`CODEX_HOME points at nothing (${t.codexHome})`);
+                expect(res['remedy']).toContain('fix or unset CODEX_HOME');
+                expect(res['remedy']).not.toContain('codex login');
             },
         );
     });
@@ -1395,6 +1416,23 @@ describe('doctor — detection check', () => {
             expect(c['status']).toBe('ok');
             expect(String(c['message'])).toContain('council not configured');
             expect(String(c['remedy']).length).toBeGreaterThan(0);
+        });
+    });
+
+    it('says GEMINI_CLI_HOME is set and not evaluated, without changing the status', () => {
+        withDetEnv((t) => {
+            const prev = process.env['GEMINI_CLI_HOME'];
+            process.env['GEMINI_CLI_HOME'] = '/somewhere/gemini';
+            try {
+                const c = _check_detection(t.root);
+                expect(c['status']).toBe('ok');
+                expect(String(c['message'])).toContain('GEMINI_CLI_HOME is set (/somewhere/gemini) and not evaluated yet');
+            } finally {
+                if (prev === undefined) delete process.env['GEMINI_CLI_HOME'];
+                else process.env['GEMINI_CLI_HOME'] = prev;
+            }
+            const plain = _check_detection(t.root);
+            expect(String(plain['message'])).not.toContain('GEMINI_CLI_HOME');
         });
     });
 

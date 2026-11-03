@@ -158,6 +158,20 @@ describe('the Systeme page', () => {
         await page.close();
     });
 
+    it('all chains: a package reached two ways shows every chain the payload carries, not only the shortest (AC-3)', async () => {
+        const k = systems.packages.find((x) => !x.direct && x.why.length > 1);
+        expect(k, 'the fixture has no package reached by more than one chain').toBeDefined();
+        const { page, errors } = await open(`#/systems/${encodeURIComponent(`package/${k!.name}@${k!.version}`)}`);
+        await lens(page, 'deps');
+        expect(await page.locator('#sy-why b').first().textContent()).toBe(`Warum installiert? · ${k!.why.length} Wege`);
+        expect(await page.locator('#sy-why .sy-chain').count()).toBe(k!.why.length);
+        const firstHops = await page.locator('#sy-why .sy-chain').evaluateAll((rows) => rows.map((r) => r.querySelectorAll('.sy-hop .mono')[1]?.textContent));
+        expect(firstHops).toEqual(k!.why.map((ch) => ch[0]!.replace(/ \(.*\)$/, '')));
+        expect(await page.locator('#sy-why .sy-note').textContent()).toBe('Alle Wege, die das Lockfile nennt.');
+        expect(errors).toEqual([]);
+        await page.close();
+    });
+
     it('lenses and detail: runtimes per card with disagreement, findings grouped by rule with the proposal, the committed Branches card, the Detail aside', async () => {
         const { page, errors } = await open();
         await lens(page, 'rt');

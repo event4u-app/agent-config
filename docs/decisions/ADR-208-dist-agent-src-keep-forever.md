@@ -88,4 +88,4 @@ remains the shipped, deterministically produced, git-diffable projection root:
 - [ADR-201](ADR-201-remove-md-condensation.md) — the open question + Question-A KEEP verdict.
 - [ADR-051](ADR-051-uncondensed-source-container-relocation.md) — the source-of-truth model KEEP preserves.
 - `src/install/wizard-plan.ts`, `src/scripts/install.ts` — the consumer read path anchoring KEEP.
-- `agents/roadmaps/road-to-renewal-adr-hygiene.md` Phase 2 — the authorizing step.
+- `agents/roadmaps/archive/road-to-renewal-adr-hygiene.md` Phase 2 — the authorizing step.

@@ -91,7 +91,13 @@ TS-shell native (run via the installed `agent-config` binary):
                              pr-body · mitigate · track · notice · gaps · issue-body.
                              Only `refresh` touches the network.
   audit:code <mode>          Security code audit, deterministic half: matrix · validate ·
-                             show. No model, no network.
+                             show · import <sarif>. No model, no network.
+  audit:agents               What this project's AI agents, bots and MCP servers can
+                             do, against the declared inventory. No model, no network.
+  audit:security             Could this project see, contain, fix and recover? Lenses
+                             supply · pipeline · contain · recover. No model, no network.
+  audit:config               A–F security grade of this project's agent config: instruction
+                             files, MCP, hooks, skills. --min-grade A-F fails a CI step.
   media:bundle <url|file>    Evidence bundle for a post or video: frames, labelled
                              contact sheets, transcript rung, unavailable evidence.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
@@ -144,10 +150,10 @@ Tier 1 — power-user (release shape, audit, migration):
                              Hard-floors when lockfile is absent.
                              Flags: --dry-run | --json | --project=<path>
                                     | --all-missing-lock
-  doctor                     Read-only drift report: manifest ↔ filesystem.
-                             Lists missing, modified, and foreign files.
-                             Exits 1 on drift, 2 on missing lockfile.
-                             Flags: --json | --project=<path>
+  doctor                     Health report: install checks and manifest ↔ filesystem
+                             drift (missing, modified, foreign files), with the next fix.
+                             Nothing installed → one line, exit 0. Exits 1 on drift.
+                             Flags: --json | --ci | --check <id> | --project=<path>
   converge                   Consented cleanup of duplicate install surfaces
                              (surface-matrix driven). Never touches
                              user-authored files; persists standing consent
@@ -295,6 +301,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              | --dry-run | --check (exit 2 when a write is
                              required — template drift OR duplicate-key repair;
                              the stderr message names which) | --profile.
+                             --prune-removed deletes keys the package removed (from
+                             every settings file the loader reads, or --path);
+                             add --dry-run to list them with the reason each went.
   settings:migrate           Lift project-local .agent-settings.yml / .agent-user.yml into
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
@@ -406,6 +415,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Usage: analytics show [--window 30d|7d|24h] · analytics prune
   knowledge                  Global knowledge-card store (list|show|trace|forget|promote|
                              validate|lead-check|purge). Usage: knowledge list [--json]
+  knowledge:local            Local ingest store behind /knowledge (ingest|list|forget).
+                             Usage: knowledge:local ingest <path> · knowledge:local list
   proposal:check             Validate a learning/skill/rule proposal markdown
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
   chat-history:hook          Platform hook entry point (read JSON from stdin)
@@ -579,14 +590,16 @@ require_tsx() {
 # than it — see cli_delegate_bundle_is_stale.
 cli_delegate_bundle() {
   local ts_abs="$1"
+  local bundle
   case "$ts_abs" in
-    "$PACKAGE_ROOT/src/scripts/_cli/"*) ;;
-    "$PACKAGE_ROOT/dist/agent-src/scripts/"*) ;;
+    "$PACKAGE_ROOT/src/scripts/_cli/"*|"$PACKAGE_ROOT/dist/agent-src/scripts/"*)
+      bundle="$PACKAGE_ROOT/dist/cli-delegate/$(basename "${ts_abs%.ts}").js" ;;
+    # Its own unsplit bundle (build:code-graph-delegate): `cli` is not a unique
+    # basename, and without it every code-graph verb on a release fell to `npx tsx`.
+    "$PACKAGE_ROOT/src/scripts/code_graph/cli.ts")
+      bundle="$PACKAGE_ROOT/dist/cli-delegate/code_graph/cli.js" ;;
     *) return 0 ;;
   esac
-  local name
-  name="$(basename "${ts_abs%.ts}")"
-  local bundle="$PACKAGE_ROOT/dist/cli-delegate/$name.js"
   if [[ -f "$bundle" ]] && command -v node >/dev/null 2>&1; then
     cli_delegate_bundle_is_stale "$bundle" && return 0
     printf '%s' "$bundle"
@@ -884,6 +897,23 @@ cmd_audit_code() {
   exec_ts "$PACKAGE_ROOT/src/scripts/code_audit.ts" "$@"
 }
 
+# `audit:agents` — the deterministic half of `/audit agents`; read-only.
+cmd_audit_agents() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/agent_actions_detect.ts" "$@"
+}
+
+# `audit:security` — the deterministic half of `/audit security` (ADR-304);
+# read-only, offline, writes nothing.
+cmd_audit_security() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/audit_security.ts" "$@"
+}
+
+# `audit:config` — the deterministic half of `/audit config`; read-only,
+# offline. Advisory exit 0 unless the consumer opts into `--min-grade`.
+cmd_audit_config() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/security_audit_config.ts" "$@"
+}
+
 # `media:bundle <url|file>` — `/analyze:post`'s evidence bundle. A URL is
 # fetched only through a human-installed, pinned yt-dlp.
 cmd_media_bundle() {
@@ -982,9 +1012,17 @@ cmd_work() {
   exec_ts "$engine_root/work_engine/__main__.ts" "$@"
 }
 
+# The CLI and the MCP tool `memory_lookup` answer from one implementation:
+# MCP imports src/scripts/memory_lookup.ts, so the CLI resolves the same file.
+# A copy in the consumer's own scripts/ still wins; .augment/ is a package
+# projection, never a consumer override.
 cmd_memory_lookup() {
   local script
-  script="$(resolve_template_script "memory_lookup.ts")" || return 1
+  if [[ -f "$CONSUMER_ROOT/scripts/memory_lookup.ts" ]]; then
+    script="$CONSUMER_ROOT/scripts/memory_lookup.ts"
+  else
+    script="$(resolve_script "src/scripts/memory_lookup.ts")" || return 1
+  fi
   exec_ts "$script" "$@"
 }
 
@@ -1022,6 +1060,15 @@ cmd_analytics() {
 cmd_knowledge() {
   local script
   script="$(resolve_script "src/scripts/knowledge_global_cli.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
+# `agent-config knowledge:local` — the local ingest store behind /knowledge
+# ingest|list|forget (docs/contracts/local-knowledge-ingestion.md). Its own
+# verb because `knowledge` already owns `list` and `forget` for global cards.
+cmd_knowledge_local() {
+  local script
+  script="$(resolve_script "src/cli/python/knowledge_ingest.ts")" || return 1
   exec_ts "$script" "$@"
 }
 
@@ -1667,6 +1714,9 @@ main() {
     ci:settle)               cmd_ci_settle "$@" ;;
     audit:deps)              cmd_audit_deps "$@" ;;
     audit:code)              cmd_audit_code "$@" ;;
+    audit:agents)            cmd_audit_agents "$@" ;;
+    audit:security)          cmd_audit_security "$@" ;;
+    audit:config)            cmd_audit_config "$@" ;;
     media:bundle)            cmd_media_bundle "$@" ;;
     worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
@@ -1694,6 +1744,7 @@ main() {
     memory:learn)            cmd_memory_learn "$@" ;;
     analytics)               cmd_analytics "$@" ;;
     knowledge)               cmd_knowledge "$@" ;;
+    knowledge:local)         cmd_knowledge_local "$@" ;;
     proposal:check)          cmd_proposal_check "$@" ;;
     refine-ticket:detect)    cmd_refine_ticket_detect "$@" ;;
     chat-history:hook)       cmd_chat_history_hook "$@" ;;
@@ -1765,7 +1816,7 @@ main() {
     --version|-V)            print_version ;;
     *)
       echo "❌  agent-config: unknown command: $cmd" >&2
-      echo "    Run \`./agent-config help\` for the command list." >&2
+      echo "    Run \`agent-config help\` for the command list." >&2
       exit 2
       ;;
   esac

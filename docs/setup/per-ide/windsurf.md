@@ -1,109 +1,64 @@
 # Windsurf Setup
 
-Windsurf reads two rule formats:
+Windsurf (Codeium, <https://codeium.com/windsurf>). The installer deploys
+the rules to Windsurf's user-level folder `~/.codeium/windsurf/` and
+registers its hooks there.
 
-- **Wave-8 (`.windsurf/rules/`)** — per-rule `.md` files with
-  `trigger`, `description`, `globs` frontmatter. Preferred for
-  Windsurf 1.5+.
-- **Legacy (`.windsurfrules`)** — single-file aggregate at the repo
-  root. Older Windsurf builds and the Cascade chat fallback both still
-  read it.
-
-The package ships **both**.
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 ## Prerequisites
 
-- Windsurf 1.0+ (Codeium): <https://codeium.com/windsurf>.
-- Node.js ≥ 18.
+- Windsurf: <https://codeium.com/windsurf>.
+- Node.js >= 22.6 (for `npx`).
 
-## Project install
+## Install
 
 ```bash
 npx @event4u/agent-config init --tools=windsurf
 ```
 
-Populates:
-
-- `.windsurf/rules/*.md`        — modern Wave-8 per-rule files
-- `.windsurf/workflows/*.md`    — slash-command workflows
-- `.windsurfrules`              — legacy single-file aggregate
-- `.agent-settings.yml`         — per-project knobs
-
-Combine with other surfaces:
+Combine with other hosts in one run:
 
 ```bash
 npx @event4u/agent-config init --tools=windsurf,claude-code,cursor
 ```
 
-## Wave-8 frontmatter
+## What lands
 
-Each rule under `.windsurf/rules/` has the Windsurf-shaped header:
+- `~/.codeium/windsurf/rules/` — kernel + routed rules
+- `~/.codeium/windsurf/hooks/` — managed hooks
+- `.windsurf/agent-config.bridge.yml` — gitignored pointer in the
+  repository (the only repo-local file besides `agents/overrides/`)
 
-```md
----
-trigger: always_on
-description: Scope control — no unsolicited architectural changes
-globs:
----
-
-# Scope Control
-...
-```
-
-- `trigger: always_on` ↔ source `type: "always"` (kernel rules).
-- `trigger: model_decision` ↔ Cascade decides per turn (auto rules).
-- `globs:` is intentionally empty in the package's projection — set
-  per-rule in your fork if you want path-scoped triggering.
-
-## Workflows
-
-`.windsurf/workflows/<slug>.md` mirrors `.claude/commands/`. Cluster
-commands flatten to `<cluster>-<name>.md`. Cascade lists all workflow
-files in its workflow palette.
+Skills and commands are not deployed for Windsurf.
 
 ## Cascade integration
 
-Cascade (Windsurf's built-in agent) reads `.windsurf/rules/` and
-`.windsurf/workflows/` automatically. No separate registration step is
-needed once the files are on disk.
-
 When Cascade asks a clarifying question, the package's `user-interaction`
-rule (kernel, `always_on`) applies — Cascade will surface numbered
-options with a single recommendation.
-
-## Workspace vs global precedence
-
-| Layer | Path | Precedence |
-|---|---|---|
-| Workspace | `.windsurf/rules/` + `.windsurf/workflows/` | wins on conflicts |
-| Global | `~/.codeium/windsurf/global_workflows/` | falls back when workspace silent |
-
-Reuse the same `--tools=windsurf` flag for both — `init` writes
-workspace, `global` writes user-level.
+rule applies — Cascade surfaces numbered options with a single
+recommendation.
 
 ## Verification
 
 ```bash
-ls .windsurf/rules/     | head -5      # *.md per-rule files
-ls .windsurf/workflows/ | head -5      # *.md workflow files
-test -f .windsurfrules                 # legacy aggregate exists
+ls ~/.codeium/windsurf/rules/ | head -5
+ls ~/.codeium/windsurf/hooks/
 ```
-
-In Windsurf itself: open Cascade → Workflows panel — listed workflows
-should match `ls .windsurf/workflows/`.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Rules not picked up | Windsurf < 1.0 — upgrade or rely on `.windsurfrules`. |
-| Workflow not in Cascade panel | Reload window after `task generate-tools`. |
-| Global workflows missing | Check `~/.codeium/windsurf/global_workflows/` exists. |
-| Frontmatter parse error | Re-run `./scripts-run src/scripts/condense --generate-tools`. |
+| Rules not picked up | Reload the Windsurf window after install. |
+| `~/.codeium/windsurf/rules/` missing | Re-run `npx @event4u/agent-config init --tools=windsurf`. |
 
 ## Cross-references
 
 - [`docs/installation.md`](../../installation.md) — install matrix index.
-- [`src/templates/windsurf-rule.md.j2`](../../../templates/windsurf-rule.md.j2)
-  — template used by the projection generator.
-- [`AGENTS.md`](../../../AGENTS.md) — package self-orientation.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

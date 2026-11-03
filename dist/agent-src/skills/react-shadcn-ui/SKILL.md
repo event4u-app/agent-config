@@ -221,9 +221,8 @@ this over a registry file.
 
 > **Provenance.** The registry-publishing shape and the deprecated-type list come from an
 > external plugin reference's component-CLI skill, read at a pinned revision. The source is
-> deliberately not named here, per
-> [`source-confidentiality`](../../rules/source-confidentiality.md): a shipped artifact does
-> not carry derivation attribution to a named external project. The identifier and revision
+> deliberately not named here, per this package's source-confidentiality policy: a shipped
+> artifact does not carry derivation attribution to a named external project. The identifier and revision
 > stay with the maintainer-side record.
 
 ## Procedure: render a shadcn/ui component for the design brief

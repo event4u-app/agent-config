@@ -22,7 +22,9 @@
  *   raw records for a scripted screen, and `--branches` adds the second axis to
  *   the JSON (the human output always shows it). Exits 0 with an empty result
  *   when there is no register — its absence is the normal pre-first-session
- *   state, never an error.
+ *   state, never an error. `--json --schema 1` always prints one object,
+ *   `{ schema_version: 1, sessions, … }`; contract in
+ *   `docs/contracts/session-list.md`.
  * - `claim <slug>` — record that THIS SESSION has taken a roadmap. Writes the
  *   bridge file the next heartbeat lifts into the register, keyed on the host
  *   session id where one exists.
@@ -77,10 +79,11 @@ function usage(): number {
     process.stderr.write(
         [
             'usage:',
-            '  agent-config sessions:list [--json] [--branches]',
+            '  agent-config sessions:list [--json [--schema 1]] [--branches]',
             '                                           live sessions, plus unmerged branches',
             '                                           held by other worktrees (--branches adds',
-            '                                           that axis to the JSON form)',
+            '                                           that axis to the JSON form; --schema 1',
+            '                                           always prints one versioned object)',
             '  agent-config sessions:claim <slug> [--paths <a,b,…>]       claim a roadmap for this session',
             '  agent-config sessions:claim <slug> --force   claim it even though a peer holds it',
             '  agent-config sessions:claim <slug> --lane [--worktree P] [--branch B]',
@@ -213,8 +216,48 @@ export function path_overlap_lines(
         );
 }
 
+/** JSON schema versions `sessions:list --schema` accepts. */
+export const SESSION_LIST_SCHEMAS: readonly number[] = [1];
+
+/**
+ * The requested `--schema` value: `undefined` when the flag is absent, the
+ * number when it is a supported one, and a message when it is not. Accepts
+ * `--schema 1` and `--schema=1`.
+ */
+export function parse_schema_flag(argv: readonly string[]): number | undefined | { error: string } {
+    let raw: string | undefined;
+    let seen = false;
+    for (let i = 0; i < argv.length; i++) {
+        const a = argv[i] ?? '';
+        if (a === '--schema') {
+            seen = true;
+            raw = argv[i + 1];
+        } else if (a.startsWith('--schema=')) {
+            seen = true;
+            raw = a.slice('--schema='.length);
+        }
+    }
+    if (!seen) return undefined;
+    const n = raw !== undefined && /^\d+$/.test(raw) ? Number(raw) : NaN;
+    if (!SESSION_LIST_SCHEMAS.includes(n)) {
+        return {
+            error: `sessions:list: unknown --schema ${JSON.stringify(raw ?? '')} — supported: ${SESSION_LIST_SCHEMAS.join(', ')}`,
+        };
+    }
+    return n;
+}
+
 function cmd_list(argv: string[], root: string): number {
     const as_json = argv.includes('--json');
+    const schema = parse_schema_flag(argv);
+    if (typeof schema === 'object') {
+        process.stderr.write(`${schema.error}\n`);
+        return 2;
+    }
+    if (schema !== undefined && !as_json) {
+        process.stderr.write('sessions:list: --schema applies to the JSON form only; add --json\n');
+        return 2;
+    }
     const dir = register_dir(root);
     const records = dir === null ? [] : read_live_records(dir, { prune: true });
     // Two git subprocesses with a 10 s timeout each, so they are not paid on the
@@ -225,6 +268,18 @@ function cmd_list(argv: string[], root: string): number {
         : { rows: [], filtered: false };
     const held = walk.rows;
     const filtered = walk.filtered;
+
+    if (as_json && schema === 1) {
+        // docs/contracts/session-list.md — one object form, with or without
+        // `--branches`, so a consumer never has to sniff array-vs-object.
+        const body: Record<string, unknown> = { schema_version: 1, sessions: records };
+        if (argv.includes('--branches')) {
+            body['other_worktree_branches'] = held;
+            body['unmerged_filter_applied'] = filtered;
+        }
+        process.stdout.write(`${JSON.stringify(body, null, 2)}\n`);
+        return 0;
+    }
 
     if (as_json) {
         // The record array stays the top-level shape it has always been when

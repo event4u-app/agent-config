@@ -4,6 +4,7 @@ import type { QuotaSnapshot } from '../../../src/scripts/_lib/quota_ledger.js';
 import {
     classify,
     describeWindow,
+    exhaustedResetAt,
     planPressure,
     sessionContextFill,
     STALE_AFTER_MS,
@@ -73,6 +74,19 @@ describe('windowPressure', () => {
         expect(w.fill).toBe(10);
     });
 
+    it('a window one second past its reset is no reading, not exhausted', () => {
+        const passed = Math.trunc(NOW / 1000) - 1;
+        const w = windowPressure([snap(4, 99, passed), snap(2, 100, passed), snap(0, 100, passed)], 'five_hour', NOW);
+        expect(w.state).toBe('unknown');
+        expect(w.fill).toBeNull();
+        expect(w.eta_full_ms).toBeNull();
+    });
+
+    it('a window resetting exactly now still reads', () => {
+        const w = windowPressure([snap(0, 100, Math.trunc(NOW / 1000) + 1)], 'five_hour', NOW);
+        expect(w.state).toBe('exhausted');
+    });
+
     it('an empty ledger is unknown', () => {
         expect(windowPressure([], 'seven_day', NOW).state).toBe('unknown');
     });
@@ -99,12 +113,31 @@ describe('planPressure', () => {
     });
 });
 
+describe('exhaustedResetAt', () => {
+    const later = RESET_IN_3H + 3600;
+    it('reads the reset of the freshest snapshot with an exhausted window', () => {
+        expect(exhaustedResetAt([snap(30, 100, later), snap(5, 100), snap(0, 40)])).toBe(RESET_IN_3H);
+    });
+
+    it('takes the later reset when both windows of that snapshot are exhausted', () => {
+        const both = snap(0, 100, RESET_IN_3H, { seven_day: { pct: 100, resets_at: later } });
+        expect(exhaustedResetAt([both])).toBe(later);
+    });
+
+    it('is null with no exhausted window, an unknown reset, or a reset already passed', () => {
+        expect(exhaustedResetAt([snap(0, 99)])).toBeNull();
+        expect(exhaustedResetAt([snap(0, 100, null)])).toBeNull();
+        expect(exhaustedResetAt([snap(0, 100, Math.trunc(NOW / 1000) - 1)])).toBe(Math.trunc(NOW / 1000) - 1);
+        expect(exhaustedResetAt([])).toBeNull();
+    });
+});
+
 describe('sessionContextFill', () => {
-    it('returns this session’s newest fresh fill only', () => {
+    it('returns this session’s newest fill, whatever its age (road-to-a-return-that-names-its-price 1.3)', () => {
         const ledger = [snap(3, 1, RESET_IN_3H, { context_used_pct: 70 }), snap(1, 1, RESET_IN_3H, { session: 'other', context_used_pct: 99 })];
-        expect(sessionContextFill(ledger, 's1', NOW)).toBe(70);
-        expect(sessionContextFill(ledger, 'nobody', NOW)).toBeNull();
-        expect(sessionContextFill(ledger, 's1', NOW + STALE_AFTER_MS + 4 * MIN)).toBeNull();
+        expect(sessionContextFill(ledger, 's1')).toBe(70);
+        expect(sessionContextFill(ledger, 'nobody')).toBeNull();
+        expect(sessionContextFill([...ledger, snap(0, 1, RESET_IN_3H, { context_used_pct: 72 })], 's1')).toBe(72);
     });
 });
 

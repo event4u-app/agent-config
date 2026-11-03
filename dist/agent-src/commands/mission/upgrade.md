@@ -28,7 +28,8 @@ disable-model-invocation: true
 `/mission:upgrade` runs a structured, catalog-driven Laravel major-version upgrade
 through the existing gated `/work` engine. It is **not** a new autonomous runtime:
 
-- Every phase uses the `/work` engine's confidence-band gating, N=3 retry budget,
+- Every phase uses the `/work` engine's confidence-band gating, the `execution.fix_loop_max` retry
+  budget (default 10, with its ladder),
   and persisted `.work-state.json`.
 - Rollback = git. Changes land on a provisional branch (`mission/upgrade-…`);
   revert is `git reset` or `git revert`, never a daemon.
@@ -119,7 +120,8 @@ the catalog entries the engine should address.
 **Candidate phase (opt-in, never auto-on):** the `test` → `verify` step MAY use
 [`verify-repair-loop`](../../skills/verify-repair-loop/SKILL.md) when the upgrade's
 catalog fixes are test-driven — a bounded generate→run→revise→re-run loop gated by
-a numeric threshold (then a judge confirms), reusing the same N=3 cap. Use
+a numeric threshold (then a judge confirms), bounded by that skill's own `max_attempts`, inside the same
+`execution.fix_loop_max` budget. Use
 test/quality verdicts only; the live-app Playwright verdict stays deferred. The
 loop is multi-turn reasoning, not a runtime — it honors
 [`resident-process-governance`](../../docs/contracts/resident-process-governance.md) exactly as
@@ -135,7 +137,7 @@ Handle exit codes per the `/work` contract:
 
 ### 6. Rollback path
 
-If a fix step fails beyond the N=3 budget:
+If a fix step fails beyond the `execution.fix_loop_max` budget:
 
 ```bash
 git revert HEAD        # revert the last mission commit

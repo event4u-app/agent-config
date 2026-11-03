@@ -30,7 +30,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 const SCRIPT_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_claims.ts');
-const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts'].map((n) =>
+const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts'].map((n) =>
     path.join(REPO_ROOT, 'src', 'scripts', '_lib', n),
 );
 
@@ -128,6 +128,24 @@ describe('check_claims — a retired phrasing may not ship (Phase 2)', () => {
         const r = run();
         expect(r.code).toBe(2);
         expect(r.stderr).toContain('.github/about.yml');
+    });
+
+    it.each(['site/src/content/docs/index.mdx', 'site/astro.config.mjs'])(
+        'RED on the docs-site pitch %s — GitHub Pages renders it to readers who never open the repo',
+        (rel) => {
+            write('docs/CLAIMS.md', ledger(`- retires_phrasings: ${HISTORICAL}`));
+            write(rel, `description: Every claim machine-checked, including ${HISTORICAL}.\n`);
+            const r = run();
+            expect(r.code).toBe(2);
+            expect(r.stderr).toContain(rel);
+        },
+    );
+
+    it('does not fire on a docs-site page that is not the pitch', () => {
+        write('docs/CLAIMS.md', ledger(`- retires_phrasings: ${HISTORICAL}`));
+        write('site/src/content/docs/history.md', `We used to claim ${HISTORICAL}, and no longer do.\n`);
+        write('site/src/content/docs/index.mdx', 'description: Skills, rules and commands.\n');
+        expect(run().code).toBe(0);
     });
 
     it('is case-insensitive — capitalising the wording does not clear it', () => {

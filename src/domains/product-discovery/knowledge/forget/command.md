@@ -45,7 +45,7 @@ If the prefix is missing → print the usage line above and stop. Do
 ### 2. Run the implementation
 
 ```bash
-./agent-config knowledge \
+./agent-config knowledge:local \
     forget <ingest-id-prefix>
 ```
 

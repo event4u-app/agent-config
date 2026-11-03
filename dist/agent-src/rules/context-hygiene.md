@@ -25,9 +25,8 @@ obligation_frequency: "per-turn"
 > on Augment + Claude Code (`PostToolUse`). Run `agent-config hooks:status` to
 > see whether that slot is actually bound on the host you are on — this line is
 > a statement about the manifest, not about your install. The hook maintains
-> `agents/state/context-hygiene.json` (tool-call count,
-> freshness milestones at 20/40/60); the prose below is the spec the
-> hook implements and the agent-side fallback.
+> `agents/state/context-hygiene.json` (`tool_calls`, `freshness_threshold`
+> at 20/40/60). The 3-failure and tool-loop clauses are model-carried.
 >
 > **What the slot cannot reach.** The carrier fires per *tool call*; the
 > read-loop law below is per *turn*. A turn that makes no tool call fires it
@@ -52,26 +51,26 @@ topic · branch changed since start · ~24 hours passed.
 
 ## The 3-Failure Rule
 
-Counts **strategies**, not attempts. 3 fail at the same task (code fix,
-test fix, config change, etc.):
+Counts **strategies**; attempts are the fix-loop ladder's
+([`autonomous-execution`](autonomous-execution.md)). 3 fail at the same task → **new epoch**:
 
 1. A 4th strategy is wrong — reassess.
 2. **State dump** — summarize what was tried, what failed, and what you know so far.
-3. **Recommend fresh start** — suggest a fresh session with the state dump as context, or ask for a different approach.
+3. **Fresh context** — a fresh session from the dump; a count is never a reason to ask.
 
 **What counts as a failure:** a change that doesn't fix the problem · a test still failing after the fix · a quality check still erroring · a build/deploy failing after a config change. **Does NOT reset the counter:** unrelated tasks; the user providing new information (course correction).
 
 **Failure identity — same error vs new error.** Failure signature = **same target + same error class** (same failing test + same assertion/exception, same lint rule id, same build error).
 
-- **Same failure signature twice → stop and pivot now.** Don't burn the third attempt on a near-identical retry of a fix that already failed the same way — a repeated identical signature means the hypothesis is wrong, not under-applied. Change strategy (re-read source, new hypothesis, ask).
+- **Same failure signature twice → stop and pivot now.** Don't burn the third attempt on a near-identical retry of a fix that already failed the same way — a repeated identical signature means the hypothesis is wrong, not under-applied. Change strategy (re-read source, new hypothesis).
 - **New error signature each attempt = progress.** Peeling one error to reveal a different one is forward motion; counter continues — learning, not looping.
 
-**Hard-blocker classes — skip retries, go straight to ask/surface.** On the **first** occurrence, do not count toward the 3 — halt and surface: missing credentials / unset secret · permission denied · spend / quota / rate limit reached · external-service 5xx / outage. Retrying a hard-blocker is the canonical wasted attempt; the fix is a decision or external change only the user/environment can make.
+**Hard-blocker classes — skip retries, go straight to surface.** On the **first** occurrence, do not count toward the 3 — halt and surface: missing credentials / unset secret · permission denied · spend / quota / rate limit reached · external-service 5xx / outage. Retrying a hard-blocker is the canonical wasted attempt; the fix is a decision or external change only the user/environment can make.
 
 ## Tool Loop Detection
 
 Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
-**Immediate action:** 1. STOP all tool calls. 2. Do the task directly. 3. Can't proceed → ask the user.
+**Immediate action:** 1. STOP repeating. 2. Do the task directly. 3. Stuck → ladder band 2.
 
 **"Similar parameters" is the load-bearing word — an enumerated set is not a loop.** Walking N *declared, distinct* targets (a downstream-caller sweep per [`downstream-changes`](downstream-changes.md), an override chain, the members of a grep result) is one operation whose parameters differ every call. Counting it as N repetitions makes `downstream-changes`' "find **ALL** callers, tests, imports" unsatisfiable — it cannot be done in two calls. The loop this detects is *repetition without new information*: same target, same parameters, hoping for a different answer. Mirrors the same carve-out in [`token-efficiency`](token-efficiency.md).
 `sequentialthinking` is especially prone to loops: at most **once** per task, NEVER for simple file operations, command execution, or straightforward edits.

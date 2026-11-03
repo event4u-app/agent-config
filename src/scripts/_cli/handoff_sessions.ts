@@ -6,9 +6,9 @@
  *   - `chat-history`     — the cross-host JSONL log (primary; works for
  *     every hook-capable host). Reuses `chat_history.list_sessions()`.
  *   - `claude-transcript` — native Claude Code transcripts under
- *     `~/.claude/projects/<slug>/*.jsonl` (fallback for sessions the log
+ *     `$CLAUDE_CONFIG_DIR/projects/<slug>/*.jsonl` (default `~/.claude`) (fallback for sessions the log
  *     missed; slug = cwd with `/` and `.` mapped to `-`).
- *   - `codex-session`    — `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`
+ *   - `codex-session`    — `$CODEX_HOME/sessions/YYYY/MM/DD/rollout-*.jsonl`
  *     (Codex's ONLY source — a bundle host without hooks never writes
  *     chat-history). Format verified 2026-08-04 against the live store:
  *     line 0 is `{type:'session_meta', payload:{id, timestamp, cwd,
@@ -27,10 +27,10 @@
  */
 
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { projectStoreSlug } from '../_lib/cc_transcript.js';
+import { claudeHome, codexHome } from '../_lib/provider_home.js';
 import { derive_session_tag, list_sessions, read_entries } from '../chat_history.js';
 import {
     eolSessionKey,
@@ -269,7 +269,7 @@ function _scan_claude_transcript(file: string): TranscriptScan {
 }
 
 function _claude_transcript_sessions(opts: ListOptions, cap: number): HandoffSession[] {
-    const root = opts.claudeProjectsRoot ?? path.join(os.homedir(), '.claude', 'projects');
+    const root = opts.claudeProjectsRoot ?? path.join(claudeHome(), 'projects');
     const cwd = opts.cwd ?? process.cwd();
     const projectDir = path.join(root, encode_project_path(cwd));
     let names: string[];
@@ -416,7 +416,7 @@ function _matches_repo(sessionCwd: string, repoCwd: string): boolean {
 }
 
 function _codex_sessions(opts: ListOptions, cap: number): HandoffSession[] {
-    const root = opts.codexSessionsRoot ?? path.join(os.homedir(), '.codex', 'sessions');
+    const root = opts.codexSessionsRoot ?? path.join(codexHome(), 'sessions');
     const cwd = opts.cwd ?? process.cwd();
     const matching: Array<{ file: string; meta: CodexMeta }> = [];
     for (const file of _codex_files(root)) {

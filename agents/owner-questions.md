@@ -8,33 +8,228 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-28 — External observation providers for app and feature reconstruction
+### OQ-54 — Where a logging-route answer lives
 
-- **Context:** inbox round `inbox-2026-10-bj`, your turn: "es geht nicht nur um ac … ich
-  möchte einfach apps oder features aus apps kopieren können … nicht nur rea mechanismen,
-  sondern auch im web/repos". Web and repository research is already in the reference door
-  (ADR-288 D7). Runtime, browser and binary observation (a reverse-engineering MCP, device
-  automation) would install third-party tooling and needs network and a running target.
-  `road-to-transfers-that-close-on-evidence` ships the obligation ledger and the transfer
-  modes without them. <!-- md-language-check: ignore -->
-- **Options:** (a) an optional, opt-in provider slot the reference door uses when the
-  consumer has such a tool configured; (b) document how to feed their output in as
-  evidence, no integration; (c) leave it out.
-- **Recommendation:** (a), opt-in only and never installed by default — it serves your ask
-  without adding a dependency for anyone who does not reconstruct apps.
-- **Blocks:** nothing in the landed roadmap; the runtime/binary half of reconstruction.
+- **Renumbered 2026-11-01** from OQ-36: the id was issued twice; the observation-provider question kept it.
 
-### OQ-29 — May `roadmap_set_step --verify` execute a step's check before flipping it?
+- **Context:** round `inbox-2026-10-bl`, your turn: the agent may ask at the start
+  or on certain errors where logs should go, "und das merken wir uns auch". The
+  answer has to live somewhere: an error-routing rule is about the project, a
+  "tell me on Slack" wish is about you.
+- **Options:** (a) by kind — error routing as a project/team agreement, a
+  notification wish as user-owned data; (b) everything project-scoped; (c)
+  everything user-scoped.
+- **Recommendation:** (a) — it keeps a teammate's checkout correct and your
+  personal wishes out of the repository.
+- **Blocks:** `road-to-a-map-that-knows-what-happened` L.6.
 
-- **Context:** `road-to-work-that-checks-itself` (inbox round `inbox-2026-10-bj`) now
-  lists vacuous checks and records red-before-green as data. Making the step writer run
-  the `verify:` command and refuse the flip on red would make "done" machine-checked, but
-  it executes roadmap-authored commands; `roadmap-process-loop-run.md` currently says the
-  writer executes nothing.
-- **Options:** (a) run only read-only-allowlisted clauses, refuse on red; (b) run them
-  and warn only; (c) keep the writer model-carried.
-- **Recommendation:** (b) for a measured window, then decide (a) on the numbers.
-- **Blocks:** the binding half of `road-to-work-that-checks-itself`.
+### OQ-55 — When the agent asks about a logging route
+
+- **Renumbered 2026-11-01** from OQ-37: the id was issued twice; the `--verify` question kept it.
+
+- **Context:** same round. Asking at every session start is noise; never asking
+  leaves an unrouted error class unrouted.
+- **Options:** (a) on an unrouted error class, and at project start only when the
+  graph leaves the default open; (b) only on errors; (c) only at project start.
+- **Recommendation:** (a).
+- **Blocks:** `road-to-a-map-that-knows-what-happened` L.6.
+
+### OQ-38 — Stage L before Stage D
+
+- **Context:** same round. Readers L.2–L.5 build on the measured base (Stage D,
+  blocked on `b-map-remeasure-spend`). L.1, the sink catalogue, is pure data and
+  runs now. Taking L.2+ earlier is an exception to "base before breadth".
+- **Options:** (a) wait for Stage D, L.1 now; (b) build L.2–L.5 now on the
+  unmeasured base.
+- **Recommendation:** (a).
+- **Blocks:** `road-to-a-map-that-knows-what-happened` L.2–L.5 ordering.
+
+### OQ-39 — Your council instruction on ADR-303 ("graph as truth?")
+
+- **Context:** round `inbox-2026-10-bk`, your turn: "ADR-303 - Sollten wir den
+  Graphen nicht als Index, sondern als Wahrheit behandeln? Im AI-Council
+  entscheiden und anwenden.", later "Denk an meine Frage und Entscheidung vorhin
+  !!!". Your directive of 2026-10-26 says the graph is a source, not the truth;
+  ADR-303 carries `reopen_policy: owner`, and its review trigger fires when you
+  name a **class of facts** to trust without a witness check. The question names
+  none, and a council round is paid, so the run did not start it on a transcript
+  line.
+- **Options:** (a) keep ADR-303 as is — your 2026-10-26 directive answers it;
+  (b) name the class of facts (e.g. lockfile-derived package edges) and the run
+  sends exactly that to the council, which may then recommend a scoped amendment
+  you ratify; (c) send the open question to the council as written.
+- **Recommendation:** (b) if you have a class in mind, else (a) — the trigger
+  needs a named class, and a scoped amendment is reversible where a blanket
+  "truth" is not.
+- **Blocks:** nothing executable.
+
+### OQ-40 — Map invariants on one external repository
+
+- **Context:** round `inbox-2026-10-bk`: the review asks that the map invariants
+  (0 dangling lane edges, per-lane confirm ≥ 0.99, no fixture findings in product
+  views) hold on a representative external repository, not only on this one.
+  `road-to-a-map-that-holds-on-the-real-repo` 2.8 builds this repository only.
+- **Options:** (a) add step 2.9 running the 2.8 job once on one SHA-pinned subject
+  of the graph-that-wins corpus (read, never edited); (b) leave it to the
+  graph-that-wins measurement; (c) decline.
+- **Recommendation:** (a) — it reuses a repository you already chose.
+- **Blocks:** nothing executable today.
+
+### OQ-41 — May the standing bypass merge a change to the ratification mechanism itself
+
+- **Context:** round `inbox-2026-10-bk`: the external review asked this (J-2) and
+  it stayed unanswered. A change to the ratification mechanism merged under the
+  bypass is governance self-amendment, reserved to you.
+- **Options:** (a) no — such a PR waits for a normal review; (b) yes, recorded
+  like every other bypass.
+- **Recommendation:** (a).
+- **Blocks:** nothing executable; it closes a hole in the bypass directive.
+
+### OQ-56 — Which bypass text stands: "an agent never runs `--admin`", or your later "Du mergst selbst"?
+
+- **Context:** round `inbox-2026-11-d`. `owner-directives/2026-10-25-standing-pull-request-bypass.md:26`
+  says "an agent never runs `gh pr merge --admin`", and
+  `docs/contracts/ratification-artifact.md` § Emergency use says an agent "never
+  performs" the bypass. The directive's own addendum quotes you for #2754: "Ok,
+  Du mergst selbst über deinen stehenden PR-Bypass", and the #2754 and #2768
+  records now say the agent executed. No hook refuses `--admin`. Raised by five
+  reviewers of 19.2.0.
+- **Options:** (a) your later words stand — line 26 and the contract read "an
+  agent runs it only on your explicit in-session instruction, and the record
+  quotes that instruction"; (b) line 26 stands — the agent never runs it, you do,
+  and the two records are findings; (c) (b) plus a `pre_tool_use` refusal of
+  `gh pr merge --admin`.
+- **Recommendation:** (a) — it is what you have already done twice, and the
+  quote requirement keeps every execution traceable to your words.
+- **Blocks:** nothing executable; the records stay contradictory until answered.
+
+### OQ-57 — The orphan `legal` user type: define it or drop it?
+
+- **Context:** round `inbox-2026-11-d`. `task ci` is red on
+  `audit_user_type_axis`: five legal-review-prep skills declare
+  `recommended_for_user_types: [legal]` and there is no `user-types/legal.yml`;
+  the baseline of 1 has not moved in 91 days (limit 56). Both fixes change
+  shipped pack behaviour, so the gate's own entry says it is your call.
+- **Options:** (a) author `user-types/legal.yml` (tagline, recommended packs,
+  install hint); (b) drop `legal` from the five skills.
+- **Recommendation:** (a) — the pack exists and is consent-gated; giving it a
+  user type makes the recommendation reachable instead of silent.
+- **Blocks:** a green `task ci` (with the 71 stale trigger evals, which need a
+  real eval run, not a date bump).
+
+### OQ-58 — Do workflows that run a required check need a ratification record to change?
+
+- **Context:** round `inbox-2026-11-d`. `d8882a8fa` removed the payload gate's
+  approval criterion inside an unrelated feature PR (#2766), and the gate's
+  workflow ran in that PR's own version. `.github/workflows/*.yml` and the
+  payload ledger are not ratification-gated paths (`gatedFilesOf`). This round
+  tied grant approval to an owner record that predates the change (records
+  roadmap 3.1), which closes the self-approval; it does not stop a pull request
+  from editing the workflow that judges it.
+- **Options:** (a) add the workflows that run required checks, and the payload
+  ledger, to the ratification-gated paths; (b) leave them ungated and rely on
+  review; (c) gate the workflows only.
+- **Recommendation:** (a) — it is a strengthening, but it widens what every
+  later change must ratify, so it is yours to accept.
+- **Blocks:** nothing executable.
+
+## Not owner questions — waits, or already settled in the tree
+
+- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
+  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
+  2026-10-24, so it looks settled. The agent verifies and closes it.
+- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
+  observation and states itself "not a question".
+- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+
+## Answered
+
+### OQ-61 — Build the founder interview as `/challenge-me founder`?
+
+- **Context:** round `inbox-2026-11-i` (t3), your turns: an interview about
+  hobbies, ideas and daily problems that researches market, competition and
+  willingness to pay instead of asking, deepens with challenge-me, always ends in
+  a roadmap, then asks one at a time about prototype, business plan and deck —
+  "es muss auch nicht immer eine app sein". Not in the tree (no `founder` sub).
+  A new procedure skill raises the ratcheted skill count.
+- **Options:** (a) thin sub-command + one composed skill, medium-neutral
+  prototype ask, asks in the order prototype → business plan → deck;
+  (b) same, order business plan → deck → pilot; (c) not now.
+- **Recommendation:** (a) — the order you named; prototype means pilot, offer
+  or mock-up, not only an app.
+- **Blocks:** the founder interview; nothing else.
+- **Answered 2026-11-02:** "OQ-61: a" — build it as a thin `/challenge-me founder` sub-command plus one composed skill; after the roadmap it asks one at a time in the order prototype → business plan → deck, and "prototype" is medium-neutral (pilot, offer or mock-up, not only an app). Unblocks the founder-interview roadmap; the new skill must clear the new-skill gate and carry its trigger corpus. <!-- md-language-check: ignore -->
+
+### OQ-62 — Which follow-ups of the slicing chain go next?
+
+- **Context:** `archive/road-to-slices-at-agreed-seams` closed the reversible
+  repairs. Four items change a default or a gate and stayed yours: E2 the
+  source gate blocks under `src/` (it now warns on attribution labels); E4
+  `with-docs` writes `GLOSSARY.md` lazily; E5 parallel ticket build on disjoint
+  boundaries, one PR, plan-opt-in; E9 untracked files diffed in review by
+  default (size-capped, `.gitignore`-respecting; today they are listed).
+- **Options:** (a) all four; (b) E2 and E9 only; (c) none for now.
+- **Recommendation:** (b) — both close a false-green; E4/E5 have no measured need yet.
+- **Blocks:** nothing executable.
+- **Answered 2026-11-02:** "OQ-62: b" — E2 and E9 only: the source gate blocks attribution labels under `src/` (today a warning), and `/review:changes` diffs untracked files by default, size-capped and `.gitignore`-respecting. E4 (lazy `GLOSSARY.md`) and E5 (parallel ticket build) stay deferred. Revisit-if: a measured need for E4 or E5 arrives. <!-- md-language-check: ignore -->
+
+### OQ-63 — Which record-of-truth follow-ups go next?
+
+- **Context:** `archive/road-to-records-that-say-what-is-true` fixed the false
+  records. Open and yours (consumer-visible or a new gate): a `promotes:`
+  receipt at archive time; a `<slug>#AC-n` resolver with ratchet
+  (council-reserved; 55 of 123 citing test files resolve unambiguously); the
+  spec judge on the consumer `/work` path; the readiness grader stops passing on
+  `AGENTS.md` presence; a narrower Doc-Impact `.md` glob; structured partial
+  supersession for 18 ADRs; an optional object form for ticket acceptance.
+- **Options:** (a) grader fix + report-only AC resolver first; (b) the
+  `promotes:` receipt warn-first; (c) none for now.
+- **Recommendation:** (a) — the grader currently reports a pass it did not see.
+- **Blocks:** nothing executable.
+- **Answered 2026-11-02:** "OQ-63: a" — first the readiness-grader fix (no pass on `AGENTS.md` presence alone), then a report-only `<slug>#AC-n` resolver (no ratchet yet; the ratchet stays council-reserved). The `promotes:` receipt, the consumer spec judge, the Doc-Impact glob, partial supersession and the ticket-acceptance object form stay deferred. <!-- md-language-check: ignore -->
+
+### OQ-59 — Does the suite get live/dynamic security testing?
+
+- **Context:** round `inbox-2026-11-s`, topic t2. Your ask: learn from an
+  external active-testing tool and let the suite detect, reproduce, fix and
+  verify natively. That loop already exists for static analysis plus the
+  project's own test suite (`/audit code full|retest`). The two supplied drafts
+  then contradict each other on the rest: one plans a native HTTP probe kit, a
+  run-adapter for the external tool, an egress/DNS guard and scheduled dynamic
+  scans; the other kills any native dynamic runtime. Each of those sends traffic
+  at a running system, adds egress or a third-party dependency — reserved to you.
+  Separately: pin the shipped CI templates' actions to commit SHAs (stricter,
+  but every consumer then carries the bump work).
+- **Options:** (a) none — static plus the project's own tests plus SARIF import
+  (`road-to-a-clean-that-says-what-it-checked` Phase 6) stays the boundary;
+  (b) an opt-in run-adapter for an external tool against a declared
+  local/staging target only, scope from a trusted manifest, never production;
+  (c) a native probe kit under the same scope rule.
+- **Recommendation:** (a) now; (b) only after `stubs/road-to-a-security-chain-measured`
+  shows the static chain leaves findings a dynamic pass would catch.
+- **Blocks:** nothing executable.
+- **Answered 2026-11-02:** "OQ-59: a" — option (a): no live or dynamic security testing; static analysis plus the project's own tests plus SARIF import stays the boundary, no traffic at a running system, no new egress or third-party runner. The CI-template SHA pinning stays as shipped (major-version pin `@19`). Revisit-if: `stubs/road-to-a-security-chain-measured` shows the static chain misses findings a dynamic pass would catch — then (b) is the next question. Nothing to apply. <!-- md-language-check: ignore -->
+
+### OQ-60 — How far may the suite go on project containment?
+
+- **Context:** round `inbox-2026-11-s`, topic t1. Your ask: the suite should
+  always recommend and, on request, plan a security & maintenance section with
+  shutdown on newly disclosed vulnerabilities, the app possibly disabling
+  itself, the operator always able to get in.
+  `road-to-a-switch-built-before-it-is-needed` ships the guidance, blueprint,
+  schema and a read-only `/audit security`. Left for you: (1) automatic
+  self-containment in a deployed product (a timer or advisory flips a lever with
+  no human); (2) persisting the "plan it?" answer as a settings key
+  (`security_ops.plan`) so it is asked once per user; (3) making `/audit`
+  suggestable outside the maintainer workspace (`visibility: advanced` today);
+  (4) a shipped CI job running the audit on a schedule by default; (5) a new
+  advisory source host; (6) reading a deployed app's inventory back.
+- **Options per item:** yes / no / later.
+- **Recommendation:** (1) no by default — at most an opt-in "propose, operator
+  confirms" mode, since a false positive takes a product offline; (2) yes;
+  (3) yes; (4) no, offered by `audit:deps gaps`; (5) later; (6) no.
+- **Blocks:** nothing executable; the shipped parts run without any answer.
+- **Answered 2026-11-02:** "OQ-60: wie empfohlen" — the recommendation per item: (1) no automatic self-containment by default, at most an opt-in "propose, operator confirms" mode; (2) yes, persist the plan-it answer as `security_ops.plan`; (3) yes, make `/audit` suggestable outside the maintainer workspace; (4) no shipped scheduled CI job, `audit:deps gaps` keeps offering it; (5) later; (6) no. Applied on `feat/oq-60-containment-follow-up` (ADR-304 amendment, `agents/evidence/owner-directives/2026-11-02-oq-59-60-answers.md`): (1) `automation: propose` in the lever inventory turns a mapped T0 lever into a proposal an operator confirms, every other value refused; (2) class-B key `security_ops.plan`, read by `audit:security`'s contain finding; (3) `/audit` widened to the `engineering` workspace, with `audit:agents` as the CLI verb a consumer can run. <!-- md-language-check: ignore -->
 
 ### OQ-8 — The owner-authority register sits outside this list
 
@@ -50,6 +245,57 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — one list of every owner decision is what this file
   says it is, and lifting rows decides nothing in the owner's name.
 - **Blocks:** nothing executable; the cost is that the decisions are unseen.
+- **Answered 2026-10-30:** you asked that the open questions be settled in the AI council first; it decided 2/2 on (a) — lifting rows decides nothing in your name. Applied here: every open register decision is now its own row, OQ-43 to OQ-53, and each register entry is marked moved.
+
+### OQ-47 — May a run satisfy one-in-one-out with a self-written `estate_offset_exempt`?
+
+- **Context:** lifted from Decision 5 (OQ-8). The party writing the exemption is
+  the party gaining the slot; runs use the key routinely today.
+- **Options:** (a) yes — self-certified exemptions stay legal; (b) no — an
+  offset needs a named counterpart the run did not choose.
+- **Answered 2026-10-30 — already decided by you, found in the tree.** The AI
+  council (anthropic + openai, 2/2, one round, at your request) ruled (b) only
+  *absent* an authorizing record, and said removing an expressly granted
+  exemption power would be yours alone. That record exists: `ADR-287` D4 (your
+  ruling, 2026-10-16) keeps `estate_offset_exempt` unbounded "deliberately,
+  because bounding it was option 3 and option 3 was declined". So the answer is
+  (a), dated 2026-10-16; the row was framed before that ruling. Reopens only
+  through `ADR-287`'s own owner-only trigger.
+
+### OQ-49 — Is ADR-215 § D2's reasoning behind `CAP = 2` your position?
+
+- **Context:** lifted from Decision 8 (OQ-8). The council kept `CAP = 2` on
+  2026-08-26; whether its reasoning is yours was open. The cap binds nothing today.
+- **Answered 2026-10-30 by the AI council** (anthropic + openai, 2/2, one round,
+  at your request): keeping the cap is preservation and council-decidable — it
+  stays. The reasoning is recorded as the council's, with your attribution
+  *unestablished*; both seats agreed nothing operational needs that attribution,
+  so it is not put to you. **Revisit-if:** measured demand or capacity evidence,
+  or you say the reasoning is or is not yours.
+
+### OQ-50 — Does a git-authorization gate return?
+
+- **Context:** lifted from Decision 9 (OQ-8). ADR-255 § 1 refused it for one
+  round; ADR-254 stands. Two ledger items name it as their dependency.
+- **Answered 2026-10-30 by the AI council** (anthropic + openai, 2/2, one round,
+  at your request): not decidable as asked — there is no concrete gate to say
+  yes or no to. Current state stays (ADR-254). Both seats: a typed-transition
+  design within ADR-254's trigger would be a mechanism and could be council-
+  decided; openai added that grant representation, matching and blocking are
+  three separable parts, and the two ledger items may need only the first two.
+  **Revisit-if:** a concrete design exists with bounded failure and rollback
+  behaviour; it comes to you only if it weakens a reserved invariant.
+
+### OQ-51 — Should `personal.autonomy`'s default or its `auto` semantics change?
+
+- **Context:** lifted from Decision 10 (OQ-8). ADR-255 § 2 left both unchanged
+  for one round: `auto` resolves to `off` until a standing directive.
+- **Answered 2026-10-30 by the AI council** (anthropic + openai, 2/2, one round,
+  at your request): (c), keep both. "Changes consumer defaults" is not by itself
+  an owner-reserved transition; nothing measured shows a problem. openai: an
+  agent that asks despite sufficient authorization is an implementation defect,
+  fixable without touching either setting. **Revisit-if:** a concrete proposal
+  names what newly happens without asking, or abandonment/adoption data.
 
 ### OQ-9 — Which tree owns "who is the user", and what "profile" and "pack" mean
 
@@ -72,6 +318,7 @@ and the run that applies it links its PR.
   touching public names; the renames can follow once the ids are single.
 - **Blocks:** nothing executable; settings key `personal.user_type` and the
   profile ids are public surface, so no run changes them unasked.
+- **Answered 2026-10-30:** "analysiere das uns kläre das im ai council" — the council decided 2/2 after a read of the three trees, on none of (a)-(c) as written: `profile.id` in the seed tree (`src/agent-src/profiles`) is the one identity axis; `src/profiles` stays a separate command view, linked by an explicit `default_command_view_id` and never generated from the seed (generation would lose its `label`, `immutable`, ordered `view` and `--expanded`); `personal.user_type` becomes a deprecated input that only orders recommendations, all seven values stay readable and none is mapped by guess; the extra meanings of "profile" and "pack" are renamed later in small pull requests with aliases. Carried in `later/road-to-one-identity-axis`. <!-- md-language-check: ignore -->
 
 ### OQ-10 — Measure per-skill uplift against a no-skill arm
 
@@ -87,6 +334,7 @@ and the run that applies it links its PR.
 - **Recommendation:** (1) — the stub's own recommendation, and the only option
   that answers the question that keeps arriving.
 - **Blocks:** the stub's promotion; nothing active.
+- **Answered 2026-10-30:** "Ja, gestuft messen" — option (1), staged: repair the runner first, pre-register hypothesis and threshold, then one skill against a no-skill arm with repetitions, then three; published either way, and a run that fails is recorded as not measured. Carried in `later/road-to-skill-uplift-measured-in-stages`. <!-- md-language-check: ignore -->
 
 ### OQ-11 — The ADR-138 teardown review opens on 2026-10-28
 
@@ -107,8 +355,24 @@ and the run that applies it links its PR.
 - **Blocks:** nothing executable; the review's outcome can deprecate a
   user-data layer, which is the owner's call
   (`road-to-a-memory-that-names-its-moment` § Decisions E12).
+- **Answered 2026-10-30:** "Begrenzter Testlauf" — the recommendation, (b) scoped as (c): inventory the user data first, then offer mining at a natural moment with consent and opt-out, a fixed end and a minimum sample decided in advance; below that sample, (a) archive-first deprecation follows. Carried in `later/road-to-a-bounded-trial-of-the-user-profile-layer`. <!-- md-language-check: ignore -->
 
-### OQ-28 — May the self-repair loop propose a change to the user's own project?
+### OQ-42 — A preamble grant for the image rights floor
+
+- **Context:** round `inbox-2026-10-bk`. The image rights rule
+  (`image-likeness-and-rights`) is scoped to the `ai-image` pack, so on hosts that
+  ship every skill (claude-code, codex) the six image skills arrive without the
+  rights check they tell the agent to run. Adding `routes_to` for the six skills
+  fixes that and was ratified 2/2 by the council, but costs ~45 tokens in every
+  spawn's preamble, and `main` sits exactly at its zero-growth ceiling.
+- **Options:** (a) grant ~45 tokens in `src/config/preamble-payload-exceptions.json`
+  for this change; (b) name an offset elsewhere; (c) leave the floor pack-scoped.
+- **Recommendation:** (a) — it closes a gap in a rights floor; 45 tokens is the
+  cost of the frontmatter list alone.
+- **Blocks:** `later/road-to-records-that-match-their-code` 1.2.
+- **Answered 2026-10-29:** "OQ-42: a, gib die Tokens frei und setz es um" — option (a). Applied on `feat/oq-42-image-floor-grant`: `routes_to` added, grant `oq-42-image-floor-routes-to` (43 tokens, expires 2027-01-27) recorded; the ledger still needs an independent approving review on that pull request. <!-- md-language-check: ignore -->
+
+### OQ-32 — May the self-repair loop propose a change to the user's own project?
 
 - **Context:** round `inbox-2026-10-bi`. A convention that keeps not arriving
   ("tabs!") can only be fixed in the user's project (`.editorconfig`, a
@@ -121,8 +385,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — the proposal is a diff the user sees and accepts,
   never a silent write.
 - **Blocks:** `later/road-to-a-noted-that-is-a-write` Phase 3.
+- **Answered 2026-10-29:** the owner sent it to the AI council first; it decided 2/2 on (b): the self-repair Iron Law stays unchanged, and a convention that keeps not arriving goes through a separate proposal-only path — a diff the user sees and accepts — outside self-repair. Both seats ruled (a) a governance self-amendment of a recorded law, which the council may not take, while (b) gives the same reviewable diff without widening self-repair's remit. Applied in `later/road-to-a-noted-that-is-a-write` Phase 3.
 
-### OQ-29 — May agent-config read the host's own auto-memory?
+### OQ-33 — May agent-config read the host's own auto-memory?
 
 - **Context:** round `inbox-2026-10-bi`. Claude Code keeps per-project memory
   under `~/.claude/projects/*/memory`; `src/config/source-registry.json` lists it
@@ -133,8 +398,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — read-only, consent asked once, no writes into host
   memory.
 - **Blocks:** nothing executable; a future reader for correction recurrence.
+- **Answered 2026-10-29:** "Ja, es darf lesen, auch ohne zustimmung. AC soll ja so gut wie möglich funktionieren. Aber schreiben darf es da nicht. - und ac bekommt das persönliche ja eh mit, in anderen chats." — read without a consent prompt; never write. The AI council had classed it owner-reserved and recommended (a) with consent. Applied in `later/road-to-a-noted-that-is-a-write` 1.3. <!-- md-language-check: ignore -->
 
-### OQ-30 — Should chat history redact credentials at rest whatever the egress mode?
+### OQ-34 — Should chat history redact credentials at rest whatever the egress mode?
 
 - **Context:** round `inbox-2026-10-bi`. `chat_history` is on by default and
   stores text in plaintext; the placeholder view exists but
@@ -146,8 +412,9 @@ and the run that applies it links its PR.
 - **Recommendation:** (a) — the storage risk exists today without any
   condition.
 - **Blocks:** nothing executable now.
+- **Answered 2026-10-29:** "Es wäre gut, wenn wir diese für eine gewisse zeit woanders speichern und sie dann in regelmäßigen abständen (z.b. nach 7 tagen) gelöscht werden. Ab da ist es dann so gut wie geschwärszt, aber bis dahin arbeitet der agent wie der nutzer es erwartet" — a fourth option: chat history stores placeholders; the original values sit in a separate local, untracked store the agent can resolve, and are purged after 7 days, after which only the placeholders remain. Applied in `later/road-to-a-fill-the-session-sees-coming` 3.1. <!-- md-language-check: ignore -->
 
-### OQ-31 — A memory shared across providers vs. the ADR-249 floor
+### OQ-35 — A memory shared across providers vs. the ADR-249 floor
 
 - **Context:** round `inbox-2026-10-bi`, your demand that subagents, councils
   and unpaid routes share one memory. ADR-249 rules out a cross-session
@@ -158,17 +425,37 @@ and the run that applies it links its PR.
   journal, default off; (c) decline the demand.
 - **Recommendation:** (a) — it serves the demand without a new store.
 - **Blocks:** `later/road-to-a-memory-each-worker-is-handed` Phase 3.
+- **Answered 2026-10-29:** "kostenlose Modell-Routen sollten ja so wenig wie möglich und nur das nötigste wissen. Also da sollten sie keinen übergreifenden speicher haben, sondern der orchestrator sagt ihnen nur das was sie brauchen. eigene oder die frontier modelle, wo die daten sicher sind (zumindest sicherer), die dürfen den gemeinsamen speicher nutzen" — option (a), tiered by model: unpaid routes get only what the orchestrator hands them for the task; own and frontier models may use the shared, curated file-first memory. No reopen of ADR-249: the shared memory is the existing curated store. Applied in `later/road-to-a-memory-each-worker-is-handed` Phase 3. <!-- md-language-check: ignore -->
 
-## Not owner questions — waits, or already settled in the tree
+### OQ-36 — External observation providers for app and feature reconstruction
 
-- `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
-  `Resolved when` asks for both seats answering a real round. Councils ran 2/2 on
-  2026-10-24, so it looks settled. The agent verifies and closes it.
-- `default-flip-of-the-installed-layer` (installed-layer): waits on a host
-  observation and states itself "not a question".
-- `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
+- **Context:** inbox round `inbox-2026-10-bj`, your turn: "es geht nicht nur um ac … ich
+  möchte einfach apps oder features aus apps kopieren können … nicht nur rea mechanismen,
+  sondern auch im web/repos". Web and repository research is already in the reference door
+  (ADR-288 D7). Runtime, browser and binary observation (a reverse-engineering MCP, device
+  automation) would install third-party tooling and needs network and a running target.
+  `road-to-transfers-that-close-on-evidence` ships the obligation ledger and the transfer
+  modes without them. <!-- md-language-check: ignore -->
+- **Options:** (a) an optional, opt-in provider slot the reference door uses when the
+  consumer has such a tool configured; (b) document how to feed their output in as
+  evidence, no integration; (c) leave it out.
+- **Recommendation:** (a), opt-in only and never installed by default — it serves your ask
+  without adding a dependency for anyone who does not reconstruct apps.
+- **Blocks:** nothing in the landed roadmap; the runtime/binary half of reconstruction.
+- **Answered 2026-10-29:** "OQ-28: a" — option (a): an optional, opt-in provider slot the reference door uses when the consumer has such a tool configured; never installed by default. Filed as OQ-28 in #2743, renumbered twice: round `inbox-2026-10-bi` had used OQ-28/29, then renumbered its own to OQ-32 to OQ-35. Planned in `road-to-an-observation-provider-slot`, activated by the owner above the WIP cap (`agents/evidence/owner-directives/2026-10-29-activate-observation-provider-slot.md`). <!-- md-language-check: ignore -->
 
-## Answered
+### OQ-37 — May `roadmap_set_step --verify` execute a step's check before flipping it?
+
+- **Context:** `road-to-work-that-checks-itself` (inbox round `inbox-2026-10-bj`) now
+  lists vacuous checks and records red-before-green as data. Making the step writer run
+  the `verify:` command and refuse the flip on red would make "done" machine-checked, but
+  it executes roadmap-authored commands; `roadmap-process-loop-run.md` currently says the
+  writer executes nothing.
+- **Options:** (a) run only read-only-allowlisted clauses, refuse on red; (b) run them
+  and warn only; (c) keep the writer model-carried.
+- **Recommendation:** (b) for a measured window, then decide (a) on the numbers.
+- **Blocks:** the binding half of `road-to-work-that-checks-itself`.
+- **Answered 2026-10-29:** "OQ-29: b" — option (b): the step writer runs a step's read-only `verify:` clause and warns on red, never refuses; (a) is decided later on the measured numbers. Filed as OQ-29 in #2743, renumbered to OQ-37 for the same collision. Applied as `roadmap:set-step --verify` (`src/agent-src/scripts/roadmap_set_step.ts`, runner `src/agent-src/scripts/verify_run.ts`), called from `roadmap-process-loop-run.md` § 5b. <!-- md-language-check: ignore -->
 
 ### OQ-27 — The prompt optimizer's "Lyra" persona
 
@@ -400,3 +687,118 @@ and the run that applies it links its PR.
 | OQ-6 | 2026-10-25 | How 4.2 narrows the rule load, and its A/B | a — wait for the flip data |
 | OQ-7 self-modification owner act | 2026-10-25 | Land the split-council self-modification work? | 1 — land through the D11 forge bypass; 3.4, 5.2 and 6.2 ride one PR the owner merges with bypass, 4.1 and 4.2 follow in their own change after the writer is on main |
 | OQ-12 self-modification AC-5 | 2026-10-25 | A proposal that passed, or one that landed? | b — amend AC-5: a change that landed through the D11 owner route with its refused record counts; the roadmap closes |
+
+### OQ-43 — Does a single-deliverable delegation pre-clear commit and push for its run?
+
+- **Context:** lifted from Decision 1 of
+  `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` (OQ-8). The
+  one-shot fence in `src/rules/commit-policy.md` interrupts every commit outside
+  a `process-full` run; ADR-237 § 1 pre-clears it only for that run.
+- **Options:** (a) yes — an explicit, this-turn, single-deliverable delegation in
+  a consumer project pre-clears commit/push for that run, inheriting ADR-237's
+  excluded list verbatim (trunk, deploy, prod data, irreversible external);
+  (b) no — the fence stays as written.
+- **Recommendation:** none recorded; it widens agent write authority, so the
+  council reads it before you do.
+- **Council 2026-10-30** (anthropic + openai, 2/2): owner-reserved (governance
+  self-amendment, safety floor); floor preserved meanwhile. Both seats: decide
+  together with OQ-52 — a pre-cleared push still hits the Hard Floor's
+  this-turn confirmation. Recommendation: (b) today.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — keep the floor. OQ-43 (b) and OQ-52 (c): the one-shot fence in `commit-policy` and the Hard Floor's this-turn confirmation for push stay as written. Revisit-if: measured interruptions from the fence, or a concrete bounded run-grant proposal.
+
+### OQ-52 — Should the Hard Floor's push/commit rows narrow, or accept a run-scoped grant?
+
+- **Context:** lifted from Decision 11 (OQ-8). ADR-255 § 3 refused both for one
+  round; the floor still needs a this-turn confirmation.
+- **Options:** (a) narrow the rows; (b) accept a run-scoped grant in place of
+  the this-turn confirmation; (c) keep the floor.
+- **Recommendation:** none recorded; it lowers a safety floor.
+- **Council 2026-10-30** (2/2): owner-reserved (lowers a safety floor); (c)
+  meanwhile. Decide with OQ-43. If friction is ever shown, openai would look at a
+  narrow (b) with scope, expiry, revocation and changed-object handling.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — keep the floor. OQ-43 (b) and OQ-52 (c): the one-shot fence in `commit-policy` and the Hard Floor's this-turn confirmation for push stay as written. Revisit-if: measured interruptions from the fence, or a concrete bounded run-grant proposal.
+
+### OQ-44 — ADR-005 § 1: may a delegation merge judge-ranked candidates into an integration branch?
+
+- **Context:** lifted from Decision 2 (OQ-8). ADR-268 § 3 settled the
+  mission-delivery merge on 2026-09-08 and scoped itself away from competitive
+  runs, so only ADR-005 § 1 is open: a competitive run still ends at a human
+  merge, even into an integration branch.
+- **Options:** (a) yes, integration branches only, trunk stays excluded;
+  (b) no.
+- **Recommendation:** none recorded.
+- **Council 2026-10-30** (2/2): owner-reserved (governance self-amendment);
+  human merge preserved meanwhile. Recommendation: (b) until a real competitive
+  run reaches the rule. openai: a judge ranking does not show that *combining*
+  candidates yields a valid result.
+- **Blocks:** nothing executable; no judge-ranked run has reached the rule.
+- **Answered 2026-10-30 (you, option 1):** "1" — (b), the human merge stays. ADR-005 § 1 stands: a competitive run ends at a human merge, integration branches included. Revisit-if: a real judge-ranked run reaches the rule.
+
+### OQ-45 — May an independently validated evidence grade reduce the authorization burden for a reopen?
+
+- **Context:** lifted from Decision 3 (OQ-8). ADR-268 § 4 settled the
+  self-amendment half; the grade half is untouched. The register's own finding
+  argues against it: the party assigning the grade would gain authority from it.
+  Reopening needs all six preconditions the register lists (published Phase 6
+  measurements, four demonstrated preconditions, your ruling, a named
+  re-enabler, a chosen rollback unit, a drilled suspension mechanism).
+- **Options:** (a) yes, under a pre-registered accuracy threshold and rollback
+  unit; (b) no.
+- **Recommendation:** (b) until the six preconditions exist — none does today.
+- **Council 2026-10-30** (2/2): owner-reserved; (b). anthropic: (a) is wrong
+  even with the preconditions, because it reverses the self-grading finding
+  without answering it; openai: evidence never creates consent, at most it
+  supports a delegation you grant.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — (b), no: an evidence grade never shifts authority. Unconditional — the self-grading objection does not depend on the six preconditions, so meeting them does not reopen this. Reopens only by your explicit ruling.
+
+### OQ-46 — Do the permanence claims in ADR-107 and ADR-108 stand as owner intent?
+
+- **Context:** lifted from Decision 4 (OQ-8). Five lines keep the
+  `permanence-language` ratchet at 5 with zero headroom: ADR-107 `:37` and
+  ADR-108 `:5`, `:12`, `:24`, `:29` (open-source forever, no commercial tier,
+  permanent liability disclaimer). The question is not whether the project stays
+  open-source; it is whether each claim is your intent or a mechanism that should
+  carry a reopen condition. Severable per record.
+- **Options:** per record, (a) owner intent — `authority_basis: owner_intent`,
+  claim intact, lint clear; (b) mechanism — reword to a reopen condition.
+- **Recommendation:** (a) for both — they state what the project is for, and an
+  agent rewording them to clear a lint would change its declared posture.
+- **Council 2026-10-30** (2/2): owner-reserved (purpose, licensing, public
+  liability commitment). Split the five lines rather than answer per record:
+  ADR-108's open-source claim and the liability line are purpose; ADR-107 `:37`
+  repeats ADR-108 and could become a pointer. `authority_basis: owner_intent`
+  does clear the checker (`OWNER_INTENT_ESCAPE` in
+  `lint_provenance_vocabulary.ts`).
+- **Blocks:** nothing until the ratchet entry's 56-day expiry.
+- **Answered 2026-10-30 (you, option 1):** "1" — ADR-108 is owner intent: add `authority_basis: owner_intent`, all four claims stay verbatim. ADR-107 `:37` becomes a plain pointer to ADR-108 instead of repeating "forever". Applied 2026-10-31 (uncommitted): ADR-108 carries `authority_basis: owner_intent`, ADR-107 `:37` points at ADR-108, ratchet 5 -> 2, pinning test updated. Correction to the council reading: the owner escape clears the Decision section only, never the `decision:` slug or `# ` title, so ADR-108's slug and title stayed detected. Follow-up answered the same day (you, option 1): slug is now `open-source-no-commercial-tier`, the title drops "forever", file name unchanged; ratchet 2 -> 0.
+
+### OQ-48 — Is ADR-240 accepted, and does its evidence floor bind retroactively?
+
+- **Context:** lifted from Decision 7 (OQ-8). `ADR-240` is still
+  `status: proposed`, and its own text reserves acceptance to you. Retroactive
+  binding would reclassify every existing ADR at once.
+- **Options:** (a) accept, forward-only; (b) accept, retroactive; (c) leave it
+  proposed.
+- **Recommendation:** none recorded; if accepted, (a) is the cheaper half.
+- **Council 2026-10-30** (2/2): owner-reserved (the record reserves its own
+  acceptance). Recommendation: (a), forward-only. openai: say whether an
+  *amendment* to an old record must meet the floor.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-30 (you, option 1):** "1" — ADR-240 accepted, forward-only: records written after acceptance meet the evidence floor, and an amendment to an existing record must meet it too; unamended older records stay as they are. Applied 2026-10-31 (uncommitted): ADR-240 `status: accepted`, owner-acceptance note in its § Status, `docs/decisions/INDEX.md` regenerated.
+
+### OQ-53 — Rebuild `tool-safety` as consequence-aware and demote the wildcard-grant finding?
+
+- **Context:** lifted from Decision 12 (OQ-8). ADR-255 § 5 kept the floor for
+  one round and took no position on "capability is not risk".
+- **Options:** (a) rebuild the rule and demote the finding in
+  `lint_skill_frontmatter_safety`; (b) keep both.
+- **Recommendation:** none recorded.
+- **Council 2026-10-30** (2/2): demoting the finding is owner-reserved; a
+  consequence-aware rule that is *equivalent or stronger* would be
+  council-decidable. Recommendation: (b), and treat rule redesign and finding
+  demotion as two separate questions.
+- **Blocks:** nothing executable.
+- **Answered 2026-10-31 (you, option 2):** "2" — the wildcard-grant finding stays HIGH. A consequence-aware rebuild of `tool-safety` is allowed and council-decidable, provided it is demonstrably equivalent or stricter; any demotion of the finding stays yours.

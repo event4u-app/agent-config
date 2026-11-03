@@ -39,9 +39,11 @@ function write(root: string, rel: string, content: string): void {
 }
 
 describe('on the real tree', () => {
+    // Two full scans of the real tree: about 5 s locally, 19.7 s on the macOS
+    // runner on main, and over the 30 s default on a slow one.
     it('is stable across two runs', () => {
         expect(JSON.stringify(analyseModuleReach(REPO))).toBe(JSON.stringify(analyseModuleReach(REPO)));
-    });
+    }, 90_000);
 
     it('finds a real corpus of _lib modules', () => {
         expect(listLibModules(REPO).length).toBeGreaterThan(100);

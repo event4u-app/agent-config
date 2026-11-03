@@ -1,0 +1,17 @@
+Tell,Keywords,Why It Reads As Generated,Ban,Alternative,Witness
+Glow on everything,glow bloom neon halo,the effect substitutes for a lighting decision,no outer glow on text or shapes,one light direction and real contrast,review-only
+Template look,template generic preset intro,the frame could belong to any product,no stock intro or preset title card,start from the product's own colours and type,review-only
+Particle burst,particles explosion confetti burst,motion with no source or destination,no burst unless the story has an impact,motion that travels from a source to a destination,review-only
+Dead hold,static still frozen pause,nothing changes and nothing needs reading,no hold longer than the reading time,hold only for reading time at 3 words per second,dead-time
+Crossfade between unrelated frames,crossfade dissolve fade transition,the cut has no idea behind it,no crossfade between unrelated shots,morph or move an element that persists across the cut,review-only
+Bouncy easing,bounce elastic overshoot wobble,the curve draws the eye instead of the subject,no elastic or bounce easing,a closed-form spring with overshoot within 5 %,motion-drift-lint
+Gradient wash,gradient background mesh,colour without a decision,no full-frame gradient backgrounds,flat colour with one held accent,review-only
+Gratuitous 3D,3d spin rotate tilt,depth that carries no information,no 3D rotation without a reason,flat layout unless the object is three-dimensional,review-only
+Stock UI,stock dashboard fake interface,the interface is not the product,no invented dashboards,rebuild the product's real screens,review-only
+Corner labels,label caption corner tag,text placed where nobody reads,no decorative corner labels,text where the eye already is,text-integrity
+Unseeded randomness,random jitter noise flicker,preview and render diverge,no Math.random or wall-clock state,a seeded generator and time t only,determinism
+Strobing,strobe flash flicker blink,flashing can trigger seizures,no more than three flashes per second,slow changes in luminance,flash-floor
+Slideshow with captions,slideshow image caption still card full-frame,pictures with text on them are not motion graphics,no shot that is only a full-frame image with a caption,animate the image as a layer and let type and interface move with it,review-only
+Symbol in place of the thing,icon symbol placeholder abstract circle badge,the viewer has to decode a sign instead of seeing the subject,no icon or lettered circle standing in for a file or an interface,show the real thing: a readable page or the rebuilt interface,review-only
+Reused illustration,repeated same image recurring illustration,every scene looks like the last one,no illustration used in more than one scene,give each scene its own visual idea,review-only
+Linear easing,linear easing constant speed mechanical,constant speed reads as a machine moving pixels,no linear easing on anything that starts or stops,an ease-out or a closed-form spring,motion-drift-lint

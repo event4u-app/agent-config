@@ -88,8 +88,8 @@ behind it, and a metric that stops moving because the measurement broke looks
 exactly like a metric that stops moving because the work is done. The cap is what
 bounds the damage when the primary signal is wrong.
 
-Where the objective is not countable, the cap is the only signal and the N=3
-validation budget in [`autonomous-execution`](../../rules/autonomous-execution.md)
+Where the objective is not countable, the cap is the only signal and the
+`execution.fix_loop_max` validation budget in [`autonomous-execution`](../../rules/autonomous-execution.md)
 applies unchanged.
 
 ## Reporting contract

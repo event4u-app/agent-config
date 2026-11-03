@@ -5,6 +5,11 @@ review_by: 2027-01-11
 
 # Stub: road to skill uplift measured against a no-skill arm
 
+> **Promoted 2026-10-30.** The owner answered option (1), staged (OQ-10 of
+> `agents/owner-questions.md`); the work is carried in
+> [`road-to-skill-uplift-measured-in-stages`](../later/road-to-skill-uplift-measured-in-stages.md).
+> This stub stays as the record of the arrivals and the pilot preconditions.
+
 > **Arrivals:** 6 (at least) — latest `inbox-2026-10-an` (2026-10-25): two plans ask again for a model-running behavioural harness (`run_skill_evals.ts` still throws from `_spawn_subagent` and grades rubrics `pass: null`) and for pressure cases before any rationalization table; the posed question below is unchanged. Before it: `inbox-2026-10-m` (2026-10-12), which adds one
 > fact: an external first-party evaluation of a single skill used a with/without arm and a
 > deterministic failure check (use of a superseded API surface), so skills whose job is to

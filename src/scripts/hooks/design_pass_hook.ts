@@ -92,8 +92,8 @@ import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
-import { readHookStdin } from './hook_stdin.js';
 import { unwrap } from './envelope.js';
+import { readHookStdin } from './hook_stdin.js';
 import { loadConsistencyPass } from './design_consistency_loader.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -656,7 +656,7 @@ export function render(result: PassResult, conformance?: string): string {
 function main(): number {
     // In-process the dispatcher hands an envelope; a direct run hands the host
     // payload. Both carry the write in `payload`, and only the envelope the root.
-    const [envelope, payload] = unwrap(readHookStdin());
+    const [envelope, payload] = unwrap(readHookStdin(), 'claude');
     const ws = envelope['workspace_root'];
     const root = typeof ws === 'string' && ws ? ws : (process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd());
     // The consistency check ships ON (3.8); the rest of the pass ships OFF.

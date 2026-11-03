@@ -21,35 +21,31 @@
  *   confirm <id…> | --from-query <symbol>       re-read the witnesses of facts
  *   pack "<task>" [--diff] [--since <rev>]      a verified context pack
  *   rebuild-diff                                incremental vs cold build
- *   auto-refresh on|off|status [--root P]      opt this project in to the
- *                                               session-start background refresh
+ *   auto-refresh on|off|status [--root P]      background refresh on or off; a local
+ *                                               `build` or `map` turns it on unless `off`
  *   projects list|add|remove|prune             the user-global registry of
  *                                               projects this machine works in
  *                                               (ADR-299, `projects_cli.ts`)
  *   estate where-used|projects-using|          estate questions from the local
  *          advisory-impact                     index alone (`estate_cli.ts`)
  *
- * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
- * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
- * to diff or pipe to `jq`:
+ * `detect --format json` emits a single-line, stable-key-order JSON verdict on
+ * stdout — no timestamps, safe to diff or pipe to `jq`:
  *
  *   { "verdict": "ABSENT" | "STALE" | "FRESH",
  *     "behind_commits": <n> | null,
  *     "source": { "kind": "consumer" | "scip" | "native", "path": "…" } | null,
  *     "sources": [ { "kind": …, "path": "…", "present": true, … }, … ] }
  *
- * `refresh` never blocks on a hung build: it spawns the actual `build` in a
- * CHILD process against a temp `--out` path, under a hard wall-clock
- * `--budget-seconds` (default 60, via SIGKILL). The real cache at `--out` is
- * only ever touched by a same-directory atomic rename of that child's
- * completed temp output — on budget-exceeded, build failure, or the child
- * never producing output, the rename never happens and the OLD cache is left
- * byte-for-byte untouched. The cache itself (default
- * `agents/map/.build/code-graph-v1.json`; for a root without `agents/` or a
- * project install, the hub's `map/<repo id>-<checkout>/.build/`, ADR-299 and
- * ADR-303; a cache an older release left at `agents/runtime/state/` is still
- * read) is local-only and disposable — gitignored, rebuildable from source at
- * any time; never a source of truth.
+ * `refresh` never blocks on a hung build: it spawns the actual `build` in a CHILD process against a
+ * temp `--out` path, under a hard wall-clock `--budget-seconds` (default 60, via SIGKILL). The real
+ * cache at `--out` is only ever touched by a same-directory atomic rename of that child's completed
+ * temp output — on budget-exceeded, build failure, or the child never producing output, the rename
+ * never happens and the OLD cache is left byte-for-byte untouched. The cache itself (default
+ * `agents/map/.build/code-graph-v1.json`; for a root without `agents/` or a project install, the
+ * hub's `map/<repo id>-<checkout>/.build/`, ADR-299 and ADR-303; an older release's cache at
+ * `agents/runtime/state/` is still read) is local-only and disposable — gitignored, rebuildable
+ * from source at any time; never a source of truth.
  *
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
@@ -147,6 +143,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { selectionVerdict, selectRegressionsFromCode, type RegressionSpec } from '../_lib/regression_neighbourhood.js';
 import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
@@ -159,12 +156,16 @@ import {
     graphState,
     pickSource,
 } from './detect.js';
+import { withGitVisibleScopeAsync } from '../_lib/git_visible_files.js';
+import { writeContained } from '../_lib/contained_write.js';
+import { enableByUse } from './auto_refresh.js';
 import { graphHome } from './graph_home.js';
 import { estateMain } from './estate_cli.js';
 import { estateMapMain } from './estate_map.js';
 import { touchHome } from './graph_budget.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, hasMap, mapGeneration, recordOutcome } from './map.js';
+import { ensureViewer } from './map_viewer_file.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
     STALE_LOCK_MS,
@@ -219,13 +220,12 @@ import { mapSection } from './map_sections.js';
 import { scanMain } from './scan.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
+import { CODE_GRAPH_HELP } from './cli_help.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
-
 const _HERE = fileURLToPath(import.meta.url);
-export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
-/** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
- * through it, so a budget-exceeded kill only ever terminates the child. */
+export const REPO_ROOT = resolvePackageRoot(import.meta.url);
+/** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file, so a budget kill only ends the child. */
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DEFAULT_BUDGET_SECONDS = 60;
 
@@ -251,8 +251,10 @@ async function cmdBuild(argv: string[]): Promise<number> {
         return 1;
     }
     const update = argv.includes('--update');
-    const { graph, fileCount, reExtracted, reused, lanes } = await buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') });
-    if (out === buildCacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
+    const { graph, fileCount, reExtracted, reused, lanes } = await withGitVisibleScopeAsync(() => buildFromRepo(root, out, { update, lanes: !argv.includes('--no-lanes') }));
+    const ownCache = out === buildCacheFor(root);
+    if (ownCache) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
+    const consent = ownCache ? enableByUse(root) : '';
     const c = graph.edge_confidence_counts;
     process.stdout.write(
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
@@ -262,6 +264,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
             (lanes ? laneSummaryLines(lanes) : '') +
             (out ? `    cache: ${shown(root, out)}\n` : '') +
+            consent +
             legacyCacheNotice(root),
     );
     if (argv.includes('--check-fixture-findings')) {
@@ -1070,14 +1073,15 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     return 0;
 }
 
-/**
- * `--single-flight` takes the lock the git-hook refresh block takes and exits 0
- * when another refresh holds it. `--map` redraws `agents/map/` afterwards, only
- * when the project already has one and it is older than the cache.
- */
 /** How long a refresh may spend on branch gc. */
 const BRANCH_GC_BUDGET_MS = 2_000;
 
+/**
+ * `--single-flight` takes the lock the git-hook refresh block takes and exits 0
+ * when another refresh holds it. `--map` redraws `agents/map/` when it is older
+ * than the cache; otherwise its local `index.html` is re-rendered from the
+ * committed data when that changed (a pull, a checkout).
+ */
 async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? buildCacheFor(root);
@@ -1137,6 +1141,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
             return mrc;
         }
+        if (out === buildCacheFor(root)) ensureViewer(graphHome(root).mapDir);
         record('refreshed');
         return rc;
     } finally {
@@ -1145,9 +1150,9 @@ async function cmdRefresh(argv: string[]): Promise<number> {
 }
 
 /**
- * `auto-refresh on|off|status` — the explicit, local, per-project opt-in the
- * `code-graph-refresh` session concern requires before it starts anything
- * (ratification round of 2026-10-23: an existing cache is not consent).
+ * `auto-refresh on|off|status` — the local, per-project switch the
+ * `code-graph-refresh` concern reads before it starts anything. `on` is also
+ * what a local `build` or `map` does (`enableByUse`); `off` is sticky.
  */
 function cmdAutoRefresh(argv: string[]): number {
     const root = resolveRoot(argv);
@@ -1165,13 +1170,16 @@ function cmdAutoRefresh(argv: string[]): number {
             return 1;
         }
         const now = path.join(home.buildDir, path.basename(marker));
-        fs.mkdirSync(home.buildDir, { recursive: true });
-        fs.writeFileSync(now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        if (!writeContained(root, now, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`)) {
+            process.stderr.write(`code-graph: refusing to write the opt-in — a path component under ${root} is a symlink or not a directory\n`);
+            return 1;
+        }
         if (now !== marker) fs.rmSync(marker, { force: true });
+        fs.rmSync(home.autoRefreshOffPath, { force: true });
         const cli = usableCli(root);
         process.stdout.write(
-            'auto-refresh on — each agent session start refreshes the graph, and agents/map/ when it exists,\n' +
-                'in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
+            'auto-refresh on — each agent session start and turn end refreshes the graph, at most once per HEAD and 10-minute window,\n' +
+                'and agents/map/ when it exists, in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
                 'The opt-in is per working tree: run it again in each new git worktree.\n' +
                 (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),
         );
@@ -1186,7 +1194,13 @@ function cmdAutoRefresh(argv: string[]): number {
     }
     if (action === 'off') {
         for (const m of new Set([marker, path.join(home.buildDir, path.basename(marker)), path.join(home.legacyDir, path.basename(marker))])) fs.rmSync(m, { force: true });
-        process.stdout.write('auto-refresh off\n');
+        if (home.kind === 'project' && !writeContained(root, home.autoRefreshOffPath, `${JSON.stringify({ disabled_at: new Date().toISOString() })}\n`)) {
+            process.stderr.write(
+                `code-graph: the opt-in is removed, but the opt-out could not be written — a path component under ${root} is a symlink or not a directory — so a later build or map may turn auto-refresh on again\n`,
+            );
+            return 1;
+        }
+        process.stdout.write('auto-refresh off — a later `build` or `map` keeps it off; `auto-refresh on` reverses this\n');
         return 0;
     }
     if (action !== 'status') {
@@ -1195,15 +1209,15 @@ function cmdAutoRefresh(argv: string[]): number {
     }
     const cli = usableCli(root);
     const last = readRefreshRecords(root);
-    const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
+    const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome}${r.slot ? ` on ${r.slot}` : ''} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
     const mapDir = home.mapDir;
     const gen = graphGeneration(cacheFor(root));
     const drawnFrom = mapGeneration(mapDir);
     const mutex = reclaimMutexPath(home.lockPath);
     process.stdout.write(
-        `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
+        `auto-refresh: ${fs.existsSync(home.autoRefreshOffPath) ? 'off (opted out)' : fs.existsSync(marker) ? 'on' : 'off — the next local build or map turns it on'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
-            `last session start: ${line(last['session-start'])}\n` +
+            `last concern run (session start or turn end; at most one launch per HEAD and 10-minute window, so each new commit may launch one): ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
             `map: ${!hasMap(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
@@ -1337,9 +1351,7 @@ async function drawMap(argv: string[]): Promise<number> {
                 ? `    diff ${r.model.diff.rev}: ${r.model.diff.changed.length} changed · ${r.model.diff.impacted.length} linked into them · ${r.model.diff.areas.length} area(s) touched\n`
                 : '') +
             `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n` +
-            (fs.existsSync(graphHome(root).autoRefreshPath)
-                ? ''
-                : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
+            (out ? '' : enableByUse(root)),
     );
     let rc = 0;
     const renderFile = path.join(r.outDir, '.build', 'map-render.json');
@@ -1379,8 +1391,8 @@ async function drawMap(argv: string[]): Promise<number> {
 }
 
 /**
- * `open [--root P] [--out DIR]` — show the map that is already drawn, without
- * redrawing it. Resolves the page exactly where `map` writes it.
+ * `open [--root P] [--out DIR]` — show the map that is already drawn, without redrawing it;
+ * the local page is first re-rendered from the committed data when that changed.
  */
 export async function openMap(
     argv: string[],
@@ -1388,7 +1400,9 @@ export async function openMap(
 ): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out');
-    const page = path.join(out ? path.resolve(out) : graphHome(root).mapDir, 'index.html');
+    const dir = out ? path.resolve(out) : graphHome(root).mapDir;
+    ensureViewer(dir);
+    const page = path.join(dir, 'index.html');
     const relative = path.relative(process.cwd(), page);
     const rel = relative && !relative.startsWith('..') ? relative : page;
     if (!fs.existsSync(page)) {
@@ -1425,6 +1439,7 @@ function cmdOutcome(argv: string[]): number {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
     const sub = argv[0];
     try {
+        if (argv.some((a) => ['--help', '-h'].includes(a)) || ['help'].includes(sub ?? '')) return (process.stdout.write(CODE_GRAPH_HELP), 0); // `<verb> --help` must never run the verb
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
@@ -1458,10 +1473,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'bugs') return bugsMain(argv.slice(1));
         if (sub === 'ask') return askMain(argv.slice(1));
         if (sub === 'scan') return scanMain(argv.slice(1));
-        process.stderr.write(
-            'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|review-risk|why|usage|remove-plan|provenance|branches|branch-diff|on-branches|tests-for|untested|dead|confirm|pack|rebuild-diff|verify|suggest-verb|scope|lint|map|open|outcome|auto-refresh|projects|estate|lineage|bugs|ask|scan> [options]\n',
-        );
+        process.stderr.write(CODE_GRAPH_HELP);
         return 2;
     } catch (e) {
         if (e instanceof UsageError) {
@@ -1474,6 +1486,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 }
 
 const _invokedDirectly = (() => {
+    // Release bundle: its banner sets this flag and hides argv[1] from the inlined CLIs' own guards.
+    if ((globalThis as { __AC_CODE_GRAPH_BUNDLE_DIRECT?: boolean }).__AC_CODE_GRAPH_BUNDLE_DIRECT === true) return true;
     if (process.argv[1] === undefined) return false;
     try {
         return fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(_HERE);

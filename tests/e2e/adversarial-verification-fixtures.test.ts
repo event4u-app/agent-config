@@ -144,6 +144,47 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
         expect(offenders).toEqual(['verify-before-complete.md']);
     });
 
+    it('no run surface outside src/rules still names an N=3 retry bound', () => {
+        // The run commands and execution contexts cite the rule's bound; a copy
+        // that kept "N=3" after the rule moved to `execution.fix_loop_max`
+        // (default 10) tells a run to stop seven attempts early.
+        const roots = [
+            'src/domains/product-basic/roadmap',
+            'src/domains/engineering-base/mission',
+        ];
+        const walk = (rel: string): string[] =>
+            fs.readdirSync(path.join(REPO, rel), { withFileTypes: true }).flatMap((e) => {
+                const child = path.join(rel, e.name);
+                if (e.isDirectory()) return walk(child);
+                return e.name.endsWith('.md') ? [child] : [];
+            });
+        const execDir = 'src/agent-src/contexts/execution';
+        const files = [
+            ...roots.flatMap(walk),
+            ...fs
+                .readdirSync(path.join(REPO, execDir))
+                .filter((f) => f.endsWith('.md'))
+                .map((f) => path.join(execDir, f)),
+        ];
+        // One documented exception: `subagent-steering.md` describes the
+        // subagent spawn budget, which code enforces as
+        // `MAX_ATTEMPTS_PER_TARGET = 3`. The entry is tied to that constant, so
+        // it goes stale — and this test red — the moment the code moves.
+        const steering = fs.readFileSync(
+            path.join(REPO, 'src/scripts/_lib/subagent_steering.ts'),
+            'utf8',
+        );
+        expect(steering).toMatch(/MAX_ATTEMPTS_PER_TARGET = 3;/);
+        const allowed = new Set([path.join(execDir, 'subagent-steering.md')]);
+        const offenders = files
+            .filter((f) => !allowed.has(f))
+            .filter((f) => /\bN\s*=\s*3\b/.test(fs.readFileSync(path.join(REPO, f), 'utf8')));
+        expect(offenders).toEqual([]);
+        expect(flat('src/domains/product-basic/roadmap/process-full/command.md')).toMatch(
+            /execution\.fix_loop_max/,
+        );
+    });
+
     it('the bound is a setting with a default of 10, not a literal 3', () => {
         const body = flat(RULE);
         expect(body).toMatch(/execution\.fix_loop_max/);
@@ -165,6 +206,41 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
         // section were reverted while the new prose was merely appended beside it.
         expect(body).not.toMatch(/ASK USER FOR GUIDANCE/);
         expect(body).not.toMatch(/DO NOT ITERATE BEYOND/);
+    });
+
+    it('no text outside the ladder maps a failure count to a question — paraphrases included', () => {
+        // The literal check above sees one file and two spellings. The defect it
+        // missed was a paraphrase in a neighbouring rule and two skills, so
+        // this scans every
+        // surface an agent reads for a retry budget.
+        const COUNT_TO_ASK = [
+            /ask for a different approach/i,
+            /new hypothesis, ask\b/i,
+            /Can't proceed → ask the user/i,
+            /Surface the question to the user\. Do not attempt fix #4/i,
+            /Discuss with the user before attempting more fixes/i,
+            /3\+ failures = architectural problem\. Stop and discuss/i,
+        ];
+        const walk = (rel: string): string[] =>
+            fs.readdirSync(path.join(REPO, rel), { withFileTypes: true }).flatMap((e) => {
+                const child = path.join(rel, e.name);
+                if (e.isDirectory()) return walk(child);
+                return e.name.endsWith('.md') ? [child] : [];
+            });
+        const surfaces = ['src/rules', 'src/skills', 'src/agent-src/contexts'].flatMap(walk);
+        expect(surfaces.length).toBeGreaterThan(100);
+        const hits = surfaces.flatMap((f) => {
+            const body = fs.readFileSync(path.join(REPO, f), 'utf8').replace(/\s+/g, ' ');
+            return COUNT_TO_ASK.filter((re) => re.test(body)).map((re) => `${f}: ${re.source}`);
+        });
+        expect(hits).toEqual([]);
+    });
+
+    it('every surface keeping its own retry number is registered in the ladder', () => {
+        const ladder = read('src/agent-src/contexts/execution/fix-loop-ladder.md');
+        for (const own of ['verify-repair-loop', 'subagent-steering', 'SELF_FIX_CEILING']) {
+            expect(ladder).toContain(own);
+        }
     });
 
     it('the mechanics file carries all five bound outcomes, owner-ask third', () => {

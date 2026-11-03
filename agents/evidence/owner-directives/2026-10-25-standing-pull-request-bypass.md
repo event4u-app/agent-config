@@ -35,3 +35,14 @@ Measured on 2026-10-25 against the live ruleset: `PASS_WITH_ACCEPTED_RISK`.
 ## Undo
 
 Remove the actor in the ruleset. Bypasses after that are restored per record again.
+
+## Addendum 2026-10-29 — ruleset version 54936982
+
+The ruleset moved to version `54936982` on 2026-10-27; its bypass actor is
+unchanged (`RepositoryRole 5`, `bypass_mode: pull_request`, read from the
+ruleset history on 2026-10-29). The owner used the standing bypass again on
+2026-10-29, for PR #2754, in their own words: "Ok, Du mergst selbst über deinen
+stehenden PR-Bypass. Dafür ist laut deiner Direktive vom 25.10. ein Bypass-Record
+mit nachträglichem Council-Review fällig." <!-- md-language-check: ignore -->
+
+<!-- standing-bypass: ruleset_version=54936982 -->

@@ -75,3 +75,29 @@ describe('process-full finish-first contract', () => {
         expect(section(text, '### Lanes')).toMatch(/At most two lanes run at once/);
     });
 });
+
+describe('process-full scope-delta row agrees with the execution contract (ADR-237)', () => {
+    const EXEC = path.resolve(__dirname, '../../src/agent-src/contexts/execution');
+    const close = fs.readFileSync(path.join(EXEC, 'roadmap-process-loop-close.md'), 'utf8');
+    const contract = fs.readFileSync(path.join(EXEC, 'roadmap-execution-contract.md'), 'utf8');
+    const row = (wrapper: string): string[] =>
+        (close.split('\n').find((l) => l.startsWith(`| \`${wrapper}\` |`)) ?? '')
+            .split('|')
+            .map((c) => c.trim());
+
+    it('the contract still says the process-full invocation IS the confirmation', () => {
+        expect(contract.replace(/\s+/g, ' ')).toMatch(/the invocation IS the confirmation/);
+    });
+
+    it('the process-full row does not gate the contract on execution.mode', () => {
+        const cell = row('process-full')[4] ?? '';
+        expect(cell).not.toBe('');
+        expect(cell).toMatch(/invocation is the confirmation/i);
+        expect(cell).toMatch(/ADR-237/);
+        expect(cell).not.toMatch(/^When `execution\.mode/);
+    });
+
+    it('the process-phase row keeps its execution.mode gate', () => {
+        expect(row('process-phase')[4]).toMatch(/^When `execution\.mode: autonomous/);
+    });
+});

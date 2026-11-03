@@ -17,8 +17,9 @@
  * Every stub entry's description is prefixed with the literal marker
  * `[stub — implemented on demand] ` so a client can tell a discovery
  * placeholder from a real tool without cross-checking `implemented_on`.
- * Every implemented entry additionally carries an `annotations.readOnlyHint`
- * derived from its `side_effect`.
+ * Every implemented entry additionally carries all four MCP hints
+ * (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) from
+ * `tool_annotations`; a tool whose hints cannot be derived fails the build.
  *
  * CLI contract (same `--write` / `--strict` shape as
  * `build_discovery_manifest.ts`):
@@ -39,6 +40,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { type ToolAnnotations, tool_annotations } from './mcp_server/annotations.js';
 import { ALLOWLIST, type ToolSideEffect } from './mcp_server/tools.js';
 import { CATALOG_DESCRIPTION, STUB_TOOLS } from './mcp_server/tool_catalog_source.js';
 
@@ -85,7 +87,7 @@ interface CatalogEntryOut {
     side_effect: ToolSideEffect;
     implemented_on: string[];
     input_schema: Record<string, unknown>;
-    annotations?: { readOnlyHint: boolean };
+    annotations?: ToolAnnotations;
 }
 
 function _packageName(): string {
@@ -118,7 +120,7 @@ export function _buildEntries(): CatalogEntryOut[] {
             side_effect: tool.side_effect,
             implemented_on: ['stdio'],
             input_schema: tool.input_schema,
-            annotations: { readOnlyHint: tool.side_effect === 'ro' },
+            annotations: { ...tool_annotations(tool) },
         });
     }
 

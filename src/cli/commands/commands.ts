@@ -28,8 +28,8 @@
  *     one thing this report must not do — the reduction targets belong to
  *     `road-to-surface-consolidation`, `road-to-solution-minimalism` and
  *     `road-to-tier-removal` (step 3.5).
- *   - The step's original wording pointed at `docs/SKILL_CENSUS.md` and
- *     `docs/artefact-census.md`. Both are DATED point-in-time snapshots,
+ *   - The step's original wording pointed at `docs/maintainers/SKILL_CENSUS.md` and
+ *     `docs/maintainers/artefact-census.md`. Both are DATED point-in-time snapshots,
  *     deliberately outside `check_artefact_count_messaging`'s scope, and
  *     `SKILL_CENSUS` states that no usage evidence backs its Keep/Prune
  *     calls. Rendering them as current would ship the unbacked claim this
@@ -280,7 +280,7 @@ export function renderCandidates(report: CandidatesReport): string {
     lines.push('  src/scripts/utilization_report.ts — local-only, report-only, and');
     lines.push('  deliberately not wired into `task ci`. Below its window floor it emits an');
     lines.push('  honest null and no verdict, so nothing above claims a usage-backed prune.');
-    lines.push('  docs/SKILL_CENSUS.md and docs/artefact-census.md carry point-in-time counts');
+    lines.push('  docs/maintainers/SKILL_CENSUS.md and docs/maintainers/artefact-census.md carry point-in-time counts');
     lines.push("  by design and sit outside check_artefact_count_messaging's scope — do not");
     lines.push('  read their numbers as current.');
     lines.push('');

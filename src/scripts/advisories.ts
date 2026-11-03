@@ -28,6 +28,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { inventoryFingerprint, readInventory, unsupportedLockfiles } from './_lib/advisory_inventory.js';
+import { type Automation, isDeployed, LEVER_INVENTORY, type Lever, readAutomation, readLevers } from './_lib/security_ops.js';
 import {
     type AdvisoriesEgress,
     type AdvisoriesKev,
@@ -451,17 +452,46 @@ export function gapReport(root: string): string[] {
     if (read(root, 'package-lock.json') !== null && workflows !== '' && !/npm ci\b/.test(workflows)) {
         gaps.push('CI never runs `npm ci` — an unpinned install can resolve a version nobody audited');
     }
+    const levers = isDeployed(root) ? readLevers(root) : [];
+    if (levers === null) {
+        gaps.push(`no lever inventory (\`${LEVER_INVENTORY}\`) — when a T0 lands, nothing says which feature or surface to switch off; \`/audit security\` offers to plan one`);
+    } else if (levers === 'invalid') {
+        gaps.push(`the lever inventory is invalid (\`${LEVER_INVENTORY}\`) — no lever is named in a notice until \`/audit security\` reads it clean`);
+    }
     return gaps;
 }
 
-export function issueBody(state: AdvisoryState | null): string {
+/**
+ * The CI issue body. With the project's levers, a finding whose package a lever
+ * names says which one contains it — a proposal for the operator, never an
+ * action (ADR-304, ADR-296).
+ */
+export function issueBody(state: AdvisoryState | null, levers: Lever[] = [], automation: Automation = 'off'): string {
     const t0 = (state?.findings ?? []).filter((f) => f.tier === 'T0');
     if (t0.length === 0) return '';
+    const mapped = (pkg: string): Lever[] => levers.filter((l) => (l.packages ?? []).includes(pkg));
+    const leverOf = (pkg: string): string => {
+        const hit = mapped(pkg);
+        return hit.length === 0 ? '' : ` — contain with lever ${hit.map((l) => `\`${l.id}\` (${l.level})`).join(', ')} until fixed`;
+    };
+    // `propose` (OQ-60 item 1): the mapped levers become unchecked proposals for
+    // their owner. The checkbox is the operator's to tick; nothing here throws.
+    const proposals = automation === 'propose'
+        ? t0.flatMap((f) => mapped(f.package).map((l) => `- [ ] throw \`${l.id}\` (${l.level}) for ${f.package} — owner ${l.owner}, through ${l.release}`))
+        : [];
     return [
         '## Security advisories needing action today',
         '',
-        ...t0.map((f) => `- ${describe(f)}`),
+        ...t0.map((f) => `- ${describe(f)}${leverOf(f.package)}`),
         '',
+        ...(proposals.length === 0 ? [] : [
+            '## Proposed containment — an operator confirms',
+            '',
+            ...proposals,
+            '',
+            'This issue throws nothing. A lever is thrown by its owner, through the release path it declares, after checking that the advisory applies (ADR-304).',
+            '',
+        ]),
         `Checked ${state!.at} by \`agent-config audit:deps refresh\`. Run \`/audit deps fix <id>\` in a session to carry one to a PR.`,
     ].join('\n');
 }
@@ -788,7 +818,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         return 0;
     }
     if (mode === 'issue-body') {
-        process.stdout.write(issueBody(readState(root)));
+        const levers = readLevers(root);
+        process.stdout.write(issueBody(readState(root), Array.isArray(levers) ? levers : [], readAutomation(root)));
         return 0;
     }
     return usage();

@@ -102,3 +102,55 @@ describe('runStatus', () => {
     });
 });
 
+
+const v2 = (): SecurityLedger => {
+    const l = base();
+    l.schema_version = 2;
+    l.findings[0] = { ...l.findings[0]!, counterevidence: 'the route group carries no policy middleware', severity_change: 'falls to low if invoices are tenant-scoped in the repository' };
+    l.findings[2] = { ...l.findings[2]!, control: { path_line: 'database/migrations/x.php:9', quote: "DB::statement('ALTER TABLE x')" } };
+    return l;
+};
+
+describe('schema v2 — how a candidate was closed', () => {
+    it('accepts a well-formed v2 ledger and keeps v1 valid', () => {
+        expect(validateLedger(v2())).toEqual([]);
+        expect(validateLedger(base())).toEqual([]);
+    });
+
+    it('refuses a v2 rejection that names no control', () => {
+        const l = v2();
+        delete l.findings[2]!.control;
+        expect(validateLedger(l)).toContain('findings[2] F3: rejected names the control that closes it (control.path_line + control.quote)');
+    });
+
+    it('refuses a v2 confirmed finding without counterevidence or a severity-change condition', () => {
+        const l = v2();
+        delete l.findings[0]!.counterevidence;
+        delete l.findings[0]!.severity_change;
+        expect(validateLedger(l)).toEqual([
+            'findings[0] F1: confirmed names its counterevidence',
+            'findings[0] F1: confirmed names what would change its severity',
+        ]);
+    });
+
+    it('caps confidence at medium for a static trace, at any version', () => {
+        const l = base();
+        l.findings[0] = { ...l.findings[0]!, proof: 'static-trace', confidence: 'high' };
+        delete l.findings[0]!.proof_test;
+        expect(validateLedger(l)).toContain('findings[0] F1: confidence high needs proof test — a static trace is at most medium');
+        l.findings[0] = { ...l.findings[0]!, confidence: 'medium' };
+        expect(validateLedger(l)).toEqual([]);
+    });
+
+    it('refuses a partial fix_verification', () => {
+        const l = v2();
+        l.findings[0] = { ...l.findings[0]!, fix_verification: { retrace: 'source→sink now passes the policy', proof_green: true } as never };
+        expect(validateLedger(l)).toContain('findings[0] F1: fix_verification needs retrace, bypass_note and proof_green');
+    });
+
+    it('prints the control of a rejected candidate and the counterevidence of a confirmed one', () => {
+        const text = renderLedger(v2());
+        expect(text).toContain('closed by database/migrations/x.php:9');
+        expect(text).toContain('against: the route group carries no policy middleware');
+    });
+});

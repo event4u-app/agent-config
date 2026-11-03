@@ -33,7 +33,7 @@ obligation_frequency: "per-task"
 # Settings-Ask Protocol
 
 A settings question is the one ask where the agent poses the question *and* owns
-where the answer goes. Five keys can produce one, in two mechanisms that look
+where the answer goes. Six keys can produce one, in two mechanisms that look
 identical from outside and differ completely underneath.
 
 ## The Iron Law
@@ -61,7 +61,7 @@ Slot 4 is read from the class, never from taste:
 
 | Class | Slot 4 reads | Writer |
 |---|---|---|
-| **B** (3 keys) | "persisted to your global settings — you will not be asked again" | `agent-config settings:set <key> <value> --source jit-answer` |
+| **B** (4 keys) | "persisted to your global settings — you will not be asked again" | `agent-config settings:set <key> <value> --source jit-answer` |
 | **C** set to `ask` | "not saved; making it permanent is a human edit or the GUI" | none — the agent writes nothing |
 
 **"Not saved" is about persistence, not about how long the answer is honoured.**
@@ -69,12 +69,12 @@ How long it stays cached in working state is the key's own business, and several
 keys state their own scope. Reading the C path as "re-ask every execution" would
 turn a fence against illegal writes into a source of extra questions.
 
-## The five keys
+## The six keys
 
 **Class B — persist once**: `personal.canary_name` ·
-`personal.open_edited_files` · `memory.learn_on_session_end`. Each ships a
-conservative default (`""`, `false`, `false`), so absent is indistinguishable
-from *no* and never from *yes*.
+`personal.open_edited_files` · `memory.learn_on_session_end` ·
+`security_ops.plan`. Each ships a conservative default (`""` or `false`), so
+absent is indistinguishable from *no* and never from *yes*.
 
 **Class C carrying an `ask` value in its own enum** — a runtime question whose
 answer dies with the run: `subagents.adversarial_council`,

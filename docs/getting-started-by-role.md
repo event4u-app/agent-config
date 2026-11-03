@@ -2,11 +2,11 @@
 
 > Pick the entry that matches what you do day-to-day. Each section names the three skills you will reach for first and shows whether MCP (no terminal) or CLI (terminal) is the simpler install path for that role.
 
-`agent-config` ships 301 skills, 122 governed rules, and 212 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
+`agent-config` ships 303 skills, 122 governed rules, and 214 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
 
 > **Taglines at a glance →** [`docs/role-experiences.md`](role-experiences.md) — the one-line pitch per role experience, in one table.
 
-> **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, ready-made setup, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). The wizard writes `.agent-settings.yml`, `.augment/`, and `.claude/` atomically; nothing leaves your disk.
+> **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, ready-made setup, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). It installs into your home directory and writes no skills, rules or commands into your repository — see [Installation](installation.md) for exactly what lands where.
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates.
 
@@ -75,7 +75,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 
 Cross-model review of the real diff (**team mode**, default off) is documented in [Getting Started § Team mode](getting-started.md#team-mode--cross-model-review-default-off).
 
-**Install path:** **CLI.** Run `npx @event4u/agent-config init --tools=claude-code,cursor` in the project root. MCP works too but loses git / file-system tooling that the IDE-integrated path gives you.
+**Install path:** **CLI.** Run `npx @event4u/agent-config init --tools=claude-code,cursor` once on your machine. MCP works too but loses git / file-system tooling that the IDE-integrated path gives you.
 
 ---
 

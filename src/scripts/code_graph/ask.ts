@@ -13,6 +13,8 @@
 import { type AnswerEnvelope, type AnswerFormat, makeEnvelope } from './answer_envelope.js';
 import { suggestVerb } from './intent.js';
 import { sanitizeLabel } from './sanitize.js';
+import type { LaneRunRecord } from './types.js';
+import { laneGaps } from './uncertainty.js';
 
 export type Intent = 'review' | 'tests-for' | 'usage' | 'affected' | 'explain' | 'path' | 'query' | 'provenance' | 'bugs' | 'fix-plan' | 'verify-fix' | 'sessions' | 'knowledge';
 
@@ -91,11 +93,16 @@ export interface AskResult {
     degraded: string[];
 }
 
-export function ask(question: string, sources: readonly AskSource[], scope: Scope, opts: { format?: AnswerFormat; commit?: string | null } = {}): AskResult {
+export function ask(
+    question: string,
+    sources: readonly AskSource[],
+    scope: Scope,
+    opts: { format?: AnswerFormat; commit?: string | null; lanes?: readonly LaneRunRecord[] | undefined } = {},
+): AskResult {
     const intent = routeIntent(question);
     const rows: AskRow[] = [];
     const excluded: Excluded[] = [];
-    const degraded: string[] = [];
+    const degraded: string[] = laneGaps(opts.lanes).map((l) => sanitizeLabel(l, 200));
     for (const s of sources.filter((x) => x.intents.includes(intent))) {
         let got: AskRow[];
         try {

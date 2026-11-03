@@ -105,6 +105,53 @@ upgrades.
 - **Commit the map.** Rejected as a default: it changes on every commit and needed a
   merge driver in the reference tool. Left as a per-project opt-in.
 
+## Amendment 1 (2026-11-01) — areas follow folders, not Louvain communities
+
+**Owner decision, in chat, 2026-11-01** ("1.a und 2.a — also deine vorschläge", <!-- md-language-check: ignore -->
+choosing folder/module boundaries as area identity). The map is now committed in
+consumer projects and refreshed while work happens, and a globally recomputed
+Louvain community moved files between areas — and renumbered area pages
+`a1…aN` — on a one-line change (measured on a 353-file repository: 28 of 28 map
+files changed). A two-provider design council the same day rejected warm-started
+clustering (path-dependent for a deterministic tool) and recommended folder
+boundaries as the primary area identity.
+
+What changes: areas are folders (a folder above 40 files, or a quarter of the
+clustered files if smaller, is split one level deeper, up to six levels; a folder
+holding a single subfolder is followed into it; a flat folder stays whole), each
+test joins the area of the file it links to most, and area ids and page names
+come from the folder (`src/vm` → `src-vm`). The `graphology-communities-louvain`
+row in § Dependency justifications no longer describes a live use, and the
+package was removed from the runtime dependencies the same day, with its four
+transitive packages. Everything else in this ADR stands.
+
+## Amendment 2 (2026-11-01) — the viewer page is local, rendered from the committed data
+
+**Owner decision, in chat, 2026-11-01** (option 1 of three: a local viewer, a
+committed template with split data scripts, or a merge driver). `index.html`
+embeds every committed map file's data (3.2 MB on this repository) and changed on
+every redraw, so it stored the data twice and conflicted between any two branches
+that refreshed the map.
+
+What changes: `agents/map/index.html` is gitignored. A redraw still writes it with
+everything the drawing knew; `code-graph refresh` (which the git hooks and the
+session concern run) and `code-graph open` re-render it from `code/map.json` and
+`manifest.json` alone when those changed — no graph needed — and
+`.build/viewer.json` records the digest it was rendered from. Such a render lacks
+what only a drawing knows (drift since the previous drawing, the working diff's
+impact, the agent's diff pack) until the next redraw. The hub renders a mirrored
+project's page the same way when the project has not rendered one. The cost: a
+repository on a code host carries no viewer; `MAP.md` and the area pages remain
+readable there.
+
+Repositories that already committed the page are migrated by the engine itself,
+not by the root ignore block, which only an update rewrites: every redraw,
+refresh and `open` gives the map folder its own `.gitignore` (`/index.html`,
+`/.build/`, appended to any lines the user keeps there) and removes a tracked
+page from the index with `git rm --cached` — staged, never committed, the file
+kept on disk, and skipped while a merge, rebase, cherry-pick or revert is in
+progress (`map_local.ts`).
+
 ## References
 
 - ADR-124 § 1 — the Class-A row this amends.

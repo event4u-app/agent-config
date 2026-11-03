@@ -20,7 +20,7 @@ validator; the accepted ADR-040 already builds on this record as settled.
 Original status prose retained below as the historical record.
 
 **Proposed** · 2026-05-16 · pending Phase 1 of
-[`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md).
+[`agents/roadmaps/archive/step-15-product-refinement.md`](../../agents/roadmaps/archive/step-15-product-refinement.md).
 Council v3 action #2 (`agents/runtime/council/responses/2026-05-16-step-15-product-refinement-v3.json`): <!-- council-ref-allowed: ADR decision-trace to originating council response -->
 **"Profile / Pack / Preset boundary is undefined; Phase 2 will duplicate
 Phase 1 abstractions"**. Promoted from Phase 2 to Phase 1 prerequisite —
@@ -171,5 +171,5 @@ new axis. ADR-010's orthogonality holds.
 
 - [`agents/settings/contexts/session-host-capability-audit.md`](../../agents/settings/contexts/session-host-capability-audit.md) — host-capability facts that bound the overlay's lifecycle (addendum input).
 - [`docs/contracts/cost-profile-defaults.md`](../contracts/cost-profile-defaults.md) — the existing `rule_loading_tier` contract this ADR explicitly does **not** touch.
-- [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md) — Phase 1 items 1, 4 and Phase 2 item 7.
+- [`agents/roadmaps/archive/step-15-product-refinement.md`](../../agents/roadmaps/archive/step-15-product-refinement.md) — Phase 1 items 1, 4 and Phase 2 item 7.
 - [`agents/runtime/council/responses/2026-05-16-step-15-product-refinement-v3.json`](../../agents/runtime/council/responses/2026-05-16-step-15-product-refinement-v3.json) — Council v3 action #2 (origin). <!-- council-ref-allowed: ADR decision-trace to originating council response -->

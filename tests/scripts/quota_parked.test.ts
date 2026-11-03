@@ -13,7 +13,7 @@ import * as path from 'node:path';
 
 import { classify, digest, render, type Candidate } from '../../src/scripts/run_supervise.js';
 import { iso_now, type SessionRecord } from '../../src/scripts/_lib/session_register.js';
-import { run as runHostRateMarker } from '../../src/scripts/hooks/host_rate_marker_hook.js';
+import { HOST_FAILURE_PARKS, run as runHostRateMarker } from '../../src/scripts/hooks/host_rate_marker_hook.js';
 import {
     QUOTA_PARKED_DIR_REL,
     clearQuotaParked,
@@ -28,8 +28,15 @@ import {
     issueBillingGrant,
 } from '../../src/scripts/_lib/billing_grant.js';
 import { planResume } from '../../src/scripts/_lib/headless_invocation.js';
+import { appendQuotaSnapshot } from '../../src/scripts/_lib/quota_ledger.js';
 
 const dirs: string[] = [];
+
+function emptyHome(): { EVENT4U_CONFIG_HOME: string } {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'quota-parked-home-'));
+    dirs.push(home);
+    return { EVENT4U_CONFIG_HOME: home };
+}
 afterEach(() => {
     while (dirs.length > 0) {
         const d = dirs.pop();
@@ -132,9 +139,33 @@ describe('classify', () => {
         const r = root();
         writeRoadmap(r, 'road-to-x', ['- [ ] one']);
         writeQuotaParked(r, 'sess-1', ['openai'], () => NOW);
-        const c = classify(r, rec(), {}, NOW);
+        const c = classify(r, rec(), {}, NOW, emptyHome());
         expect(c.reason).toContain('Reset time unknown');
         expect(c.reason).not.toMatch(/\d+\s*(min|hour|h)\b/);
+    });
+
+    it('takes the reset time from the quota ledger when the marker carries none', () => {
+        const r = root();
+        const env = emptyHome();
+        writeRoadmap(r, 'road-to-x', ['- [ ] one']);
+        const resetS = Math.trunc(NOW.getTime() / 1000) + 95 * 60;
+        appendQuotaSnapshot({ ts: NOW.getTime() - 60_000, session: 'x', five_hour: { pct: 100, resets_at: resetS } }, env);
+        writeQuotaParked(r, 'sess-1', ['anthropic'], () => NOW, 'host');
+        const d = new Date(resetS * 1000);
+        const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        expect(classify(r, rec(), {}, NOW, env).reason).toContain(`parked until ${hhmm}`);
+    });
+
+    it('says the reset has passed instead of naming a time already behind it', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', ['- [ ] one']);
+        const env = emptyHome();
+        const resetS = Math.trunc(NOW.getTime() / 1000) + 60;
+        appendQuotaSnapshot({ ts: NOW.getTime() - 60_000, session: 'x', five_hour: { pct: 100, resets_at: resetS } }, env);
+        writeQuotaParked(r, 'sess-1', ['anthropic'], () => NOW, 'host');
+        const c = classify(r, rec(), {}, new Date(NOW.getTime() + 2 * 60_000), env);
+        expect(c.reason).toContain('reset has passed');
+        expect(c.reason).not.toContain('parked until');
     });
 
     it('wins over the relaunch cap — the cause, not its consequence', () => {
@@ -322,6 +353,17 @@ describe('host-stop-failure-writes-marker', () => {
             expect(runHostRateMarker(envelope(error), root)).toBe(0);
         }
         expect(runHostRateMarker('not json', root)).toBe(0);
+        expect(findQuotaParked(root, 'sess-host-1')).toBeNull();
+    });
+
+    it('one table decides: only a quota class parks; auth, account, org and unknown classes never do', () => {
+        expect([...HOST_FAILURE_PARKS]).toEqual(['rate_limit']);
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'host-rate-'));
+        dirs.push(root);
+        const nonQuota = ['authentication_failed', 'billing_error', 'oauth_org_not_allowed', 'invalid_request', 'unknown', 'no_such_class', 'toString', '__proto__'];
+        for (const error of nonQuota) {
+            expect(runHostRateMarker(envelope(error), root)).toBe(0);
+        }
         expect(findQuotaParked(root, 'sess-host-1')).toBeNull();
     });
 

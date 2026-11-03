@@ -14,7 +14,7 @@ type: decision
 ## Status
 
 **Accepted** · 2026-06-03. Records the Phase 5 decision gate of
-[`road-to-6.0.0-c-governance-and-evals`](../../agents/roadmaps/road-to-6.0.0-c-governance-and-evals.md)
+[`road-to-6.0.0-c-governance-and-evals`](../../agents/roadmaps/archive/road-to-6.0.0-c-governance-and-evals.md)
 (Step 9). Builds directly on
 [`ADR-040`](ADR-040-execution-model-projection-time-filtering.md)
 (projection-time filtering, not a runtime resolver).

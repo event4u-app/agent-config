@@ -30,7 +30,7 @@ seconds), then reveal the discipline behind it.
 > shipped path and the "done" that was only ever validated against fakes.
 >
 > That one subagent is a slice of a larger governed layer — skills, review
-> personas, rules, commands across 7+ hosts, no runtime. What makes it different
+> personas, rules, commands written into 20 AI coding tools<!-- claim:host-agent-count -->. What makes it different
 > isn't the size; it's that **the marketing is under CI too.** Every claim in the
 > README binds to evidence in a ledger, a generated proof page renders those
 > bindings plus the benchmark runs where the tool changed *nothing*, and a
@@ -49,8 +49,9 @@ seconds), then reveal the discipline behind it.
 
 ## Placeholders to resolve before publishing
 
-- **H1 (decided, B0 · 2026-07-04):** *"Agent Config — every claim machine-checked,
-  including 'zero runtime'."* — adopted from the council's verifiability-as-frame
+- **H1 (decided, B0 · 2026-07-04):** *"Agent Config — every claim machine-checked."*
+  (the original wording ended "including 'zero runtime'"; that phrasing was
+  withdrawn in `docs/CLAIMS.md` on 2026-08-27 and is not used) — adopted from the council's verifiability-as-frame
   option. Use this headline for the post; do not substitute a provisional one.
 - Confirm the raw `curl` URL resolves on `main` at publish time.
 - Link the live proof page once a docs site (Starlight) hosts it, if built.

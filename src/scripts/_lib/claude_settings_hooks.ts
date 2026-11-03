@@ -9,14 +9,16 @@
  *
  * Contract (parity findings: agents/settings/contexts/claude-code-hook-parity.md):
  *
- * - The hook schema is identical between plugin hooks.json and settings.json;
- *   Claude Code fires all sources in parallel and dedupes identical command
- *   strings — so a still-installed plugin never double-fires during the
- *   migration window.
+ * - The hook schema is identical between plugin hooks.json and settings.json,
+ *   and Claude Code fires all sources in parallel. That it dedupes identical
+ *   command strings across the plugin and the settings file is UNVERIFIED: no
+ *   recorded host run shows a still-installed plugin firing once rather than
+ *   twice. Byte-identity is kept so the dedup can apply if the host does it;
+ *   nothing here proves that it does.
  * - Managed entries are identified by the dispatch signature inside the
  *   command string (MANAGED_SIGNATURE). No extra marker field is written —
  *   content-derived identity keeps the entry byte-identical to the plugin's,
- *   which is what makes the dedup guarantee hold.
+ *   which is the precondition for a host-side dedup, not evidence of one.
  * - User-owned entries (anything without the signature) are never touched,
  *   reordered, or removed. Managed entries are replaced in place per event.
  * - Writes are atomic (temp file + rename via atomicWriteFile) and guarded
@@ -210,8 +212,9 @@ export const NO_DISPATCHER_CONTEXT =
 /**
  * The no-dispatcher branch, keyed on CLAUDE_PLUGIN_ROOT — set by the host for
  * a plugin's hooks only (road-to-a-hook-carrier-that-is-never-silent 5.1, D5).
- * The settings carrier runs the byte-same string, which the host's dedupe
- * needs, and stays silent there: that carrier's branch belongs to Phase 3.
+ * The settings carrier runs the byte-same string, which a host-side dedupe
+ * would need (unverified, see the header), and stays silent there: that
+ * carrier's branch belongs to Phase 3.
  * One stderr line per event (exit 0, never blocking); the context line goes to
  * stdout on SessionStart only, so a tool call is never followed by context.
  * Both texts are single-quoted shell literals: no `'`, and no `;` either,
@@ -347,6 +350,7 @@ export function ensure_managed_hooks(
     settings_path: string,
     matrix: ClaudeHookMatrix,
     gated: readonly string[] = [],
+    timeouts: Readonly<Record<string, number>> = {},
 ): EnsureResult {
     return _with_lock(settings_path, () => {
         const settings = _read_settings(settings_path);
@@ -358,8 +362,9 @@ export function ensure_managed_hooks(
         for (const [native, command] of Object.entries(matrix)) {
             const existing = Array.isArray(hooks[native]) ? (hooks[native] as unknown[]) : [];
             const user_groups = existing.filter((g) => !_is_managed_group(g));
+            const timeout = timeouts[native];
             const managed_group: HookGroup = {
-                hooks: [{ type: 'command', command }],
+                hooks: [timeout === undefined ? { type: 'command', command } : { type: 'command', command, timeout }],
             };
             const next = [...user_groups, managed_group];
             if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);

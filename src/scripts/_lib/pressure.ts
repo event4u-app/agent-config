@@ -82,6 +82,9 @@ export function windowPressure(snapshots: readonly QuotaSnapshot[], window: Wind
     const empty = { window, state: 'unknown' as const, fill: null, burn_per_min: null, eta_full_ms: null, resets_at: null };
     if (latest === undefined) return empty;
     const w = latest[window];
+    // Past its reset the window has already refilled; the last fill describes a
+    // window that no longer exists, so it reads as no reading until a fresh snapshot.
+    if (w.resets_at !== null && w.resets_at * 1000 <= now) return { ...empty, resets_at: w.resets_at };
     if (now - latest.ts > STALE_AFTER_MS) return { ...empty, fill: w.pct, resets_at: w.resets_at };
     // Only points from the same window instance: a reset drops the fill to zero
     // and would read as a negative burn.
@@ -117,19 +120,48 @@ export function readPlanPressure(env?: EnvMap | null, now: number = Date.now()):
     return planPressure(readQuotaLedger(env, now), now);
 }
 
-/** The newest context fill this session reported, if it is fresh. */
-export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session: string, now: number): number | null {
+/**
+ * When the freshest exhausted window resets (epoch seconds), or `null`. Both
+ * windows exhausted in one snapshot → the later reset, since work continues only
+ * once both have refilled. A reset already behind `now` is returned as it is:
+ * the caller says "the reset has passed", which is the news a parked run needs.
+ */
+export function exhaustedResetAt(snapshots: readonly QuotaSnapshot[]): number | null {
     for (let i = snapshots.length - 1; i >= 0; i--) {
         const s = snapshots[i];
-        if (s === undefined || s.session !== session || s.context_used_pct === undefined) continue;
-        return now - s.ts <= STALE_AFTER_MS ? s.context_used_pct : null;
+        if (s === undefined) continue;
+        const resets = [s.five_hour, s.seven_day]
+            .filter((w): w is QuotaWindow => w !== undefined && w.pct >= 100)
+            .map((w) => w.resets_at);
+        if (resets.length === 0) continue;
+        const known = resets.filter((r): r is number => r !== null);
+        return known.length === resets.length ? Math.max(...known) : null;
+    }
+    return null;
+}
+
+/**
+ * The newest context fill this session reported, whatever its age: an idle
+ * session's context does not change, and the stale guard that once applied here
+ * silenced the line exactly when a returning user needed it. A compaction since
+ * that reading is NOT detected here, and no caller checks for it either: the
+ * figure is only as fresh as the status line's last snapshot. Whether the host
+ * writes a fresh snapshot between `/compact` and the next prompt is unmeasured
+ * (release review 19.2.0); until it is, a just-compacted session can read its
+ * pre-compaction fill.
+ */
+export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session: string): number | null {
+    for (let i = snapshots.length - 1; i >= 0; i--) {
+        const s = snapshots[i];
+        if (s !== undefined && s.session === session && s.context_used_pct !== undefined) return s.context_used_pct;
     }
     return null;
 }
 
 const WINDOW_LABEL: Record<WindowName, string> = { five_hour: '5h', seven_day: '7d' };
 
-function clock(ms: number): string {
+/** Local `HH:MM` for an epoch-millisecond instant. */
+export function clock(ms: number): string {
     const d = new Date(ms);
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }

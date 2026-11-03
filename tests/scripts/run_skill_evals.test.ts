@@ -109,7 +109,7 @@ describe('run_skill_evals — _grade_assertions (pure)', () => {
 
     it('REPO_ROOT / SKILLS_ROOT resolve consistently', () => {
         // DIVERGENCE from the Python mirror, documented under ADR-200 § 6 in
-        // `docs/migration/divergences/src-scripts-run_skill_evals.md`: the root
+        // `docs/maintainers/migration/divergences/src-scripts-run_skill_evals.md`: the root
         // resolves the LIVE skills tree. Replicating the retired container
         // literal made every subcommand fail in `_skill_dir()` before doing any
         // work, so these assertions had been pinning an unrunnable orchestrator.

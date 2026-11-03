@@ -7,6 +7,8 @@ execution:
 
 # Road to cost parity — 2: the dispatch decision gets session state as a recorded input
 
+> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): a trivial edit written as three numbered lines still dispatches `do-in-steps` (characterization test `trivial-signalled-prompt-still-dispatches`). Two inputs proposed for this file's verdict reading: a record of every split verdict including silent ones, and a deterministic replay of recorded prompts through `classifyPrompt` instead of a 14-day window. Store choice (runtime journal vs audit) is a council call.
+
 > The judgment ladder already reads task shape, size estimate, activation and
 > session lineage — but nothing tells it how full the orchestrator's context
 > is or how many dispatches this session has already paid for. This roadmap

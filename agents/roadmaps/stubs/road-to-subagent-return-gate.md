@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 32 (at least) - latest `inbox-2026-10-am` (2026-10-25): three reviews in that round name the return envelope again as a top blocker; no producer commit landed since. Before it: 31 - latest `inbox-2026-10-m` (2026-10-12): two 16.4.0 release reviews list return-envelope adoption in the real subagent path as a top gap and ask for fresh false-done evidence; no new fact and no new mechanism. The count before it read: 30 (at least) - latest `inbox-2026-10-i` (2026-10-11): an audit proposes the host's team-task completion event as an enforcement point that leaves the ledger's measurement window uncontaminated, gated on the same option-4 question. The count before it read: 29 (at least) - latest `inbox-2026-10-e` (2026-10-06): one release review asks to study `no_envelope`/`foreign_object`/`fail` instead of `no_message`; council D1 (2026-10-06) below already refused that option until `ok` is non-zero, so no new fact. The count before it read: 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
+> **Arrivals:** 35 (at least) - latest `inbox-2026-11-d` (2026-11-01): a 19.1.0 review reads the return envelope at `ok = 0` and the stub's count as the top blocker; no new mechanism. The count before it read 34 (at least) - latest `inbox-2026-11-a` (2026-11-01): a proposal names the producer half council D1 asks for — an optional `returns:` field in `src/scripts/schemas/subagent.schema.json` (today `additionalProperties:false`, no such field) whose projection appends the format block to each shipped definition (`src/subagents/ac-researcher.md:73`, `ac-worker.md:79-80`, `production-validator.md:90-93` request no envelope); measure, never block; recorded as precondition-1 producer work below, not a reopening of option 4. Before it: 33 (at least) - latest `inbox-2026-10-bm` (2026-10-31): an autonomous-execution proposal asks again to bind a gate on the host's subagent stop (claude `subagent_stop` carries only ledger and journal concerns); no producer commit and no new mechanism. Before it: 32 (at least) - latest `inbox-2026-10-am` (2026-10-25): three reviews in that round name the return envelope again as a top blocker; no producer commit landed since. Before it: 31 - latest `inbox-2026-10-m` (2026-10-12): two 16.4.0 release reviews list return-envelope adoption in the real subagent path as a top gap and ask for fresh false-done evidence; no new fact and no new mechanism. The count before it read: 30 (at least) - latest `inbox-2026-10-i` (2026-10-11): an audit proposes the host's team-task completion event as an enforcement point that leaves the ledger's measurement window uncontaminated, gated on the same option-4 question. The count before it read: 29 (at least) - latest `inbox-2026-10-e` (2026-10-06): one release review asks to study `no_envelope`/`foreign_object`/`fail` instead of `no_message`; council D1 (2026-10-06) below already refused that option until `ok` is non-zero, so no new fact. The count before it read: 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
 > (`road-to-leading-every-row` blocker b1) recommends option 4 keyed on `no_envelope` —
 > read that day in a maintainer checkout's ledger: `no_envelope` 24,964, `absent` 4,543,
 > `foreign_object` 54, `fail` 42, `ok` 0, `no_message` 0; `inbox-2026-10-a` (2026-10-01),
@@ -84,6 +84,17 @@ they have nothing to snapshot without it.
 **The verdict split the step also carried did NOT move.** Phase 2 Step 2's
 part (i) — the four-way verdict — landed in the parent on 2026-08-20, and Step 4
 extended it to five on 2026-08-22. Only the *mechanism* is here.
+
+## Producer work toward precondition 1 (arrival 34, 2026-11-01)
+
+Not a gate, and not option 4: the shipped definitions never ask for the
+envelope, so `ok = 0` is partly a request that was never made. Candidate
+producer step, held here until the stub promotes: an optional `returns:` field
+on the subagent schema (`envelope-v1` for ac-worker, `verdict-v1` for
+production-validator, a reader-claims form for ac-researcher), rendered into
+each definition by the projection; the ledger then measures whether `ok`
+moves. Whether three formats or envelope-v1 only is proposal decision E3,
+council-decidable (internal, reversible).
 
 ## Why it is not being built
 

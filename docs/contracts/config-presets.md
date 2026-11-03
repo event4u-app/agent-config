@@ -67,7 +67,7 @@ action #3. Two enforcement surfaces, one decision per call.
 
 The preset loader **refuses to dispatch** any council or MCP call whose
 *estimated* cost exceeds the active preset's per-call ceiling. The
-estimate is read from the model adapter (`council_cli.py estimate` for
+estimate is read from the model adapter (`agent-config council:estimate` for
 council; the MCP tool manifest for MCP). The block is raised **before**
 the network call. There is no override flag — the user must change the
 preset, override `cost.per_call_max_usd` in `.agent-settings.yml`, or
@@ -81,7 +81,7 @@ EXCEED → REFUSE → SURFACE THE CEILING + THE OVERRIDE PATH.
 
 Applies to:
 
-- AI Council consults (`scripts/council_cli.py run`).
+- AI Council consults (`agent-config council:run`).
 - MCP tool calls dispatched through the universal dispatcher
   ([`hook-architecture-v1`](hook-architecture-v1.md)).
 - Any future skill that reads `preset.cost.per_call_max_usd`.

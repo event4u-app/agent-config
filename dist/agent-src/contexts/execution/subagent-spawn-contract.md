@@ -70,7 +70,7 @@ final). On hit the worker returns a `BLOCKED` envelope whose body is the
 partial-result shape from the
 [response contract](subagent-response-contract.md#budget-hit-partial-result):
 what was found (refs), what remains, suggested next rung. The stop-loss
-**composes** with the N=3 validation budget
+**composes** with the `execution.fix_loop_max` validation budget
 ([`autonomous-execution`](../../rules/autonomous-execution.md)) and the
 ADR-109 response contract — it replaces nothing. Live evidence
 (2026-07-28): four lookup-class workers burned 280–327k tokens each on tasks
@@ -163,9 +163,17 @@ they prevent the two classic handoff failures: lossy re-summarization dropping
 the user's requirements, and over-scripted prompts that break on first
 contingency.
 
-- **(a) User constraints verbatim.** Pass the user's
-  constraints/exclusions/preferences into the worker prompt **verbatim** — never
-  a paraphrase (a paraphrase silently drops requirements).
+- **(a) User requirements verbatim — the subagent sees none of the conversation.**
+  A named subagent starts from its dispatch prompt alone; a requirement that
+  exists only in the chat does not exist for it, and a fan-out of N workers
+  misses it N times. So the user's requirements, constraints, exclusions,
+  preferences and the decisions already settled in the conversation go into the
+  `{{user_requirements}}` slot **verbatim** — never a paraphrase (a paraphrase
+  silently drops requirements) — and into **every** role prompt of the dispatch,
+  judges included: a judge validating against a requirement it was never given
+  cannot report it unmet. Nothing to pass → write `none stated`, never omit the
+  slot, so an empty list reads as a fact rather than an oversight. A fork is the
+  one exception — it inherits the conversation — and is never used for a judge.
 - **(b) Describe the goal, don't script the approach.** State the outcome and
   let the worker choose the path; over-scripting breaks on contingencies.
 - **(c) Translate environment paths.** Orchestrator-local paths do not exist in

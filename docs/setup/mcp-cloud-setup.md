@@ -63,7 +63,7 @@ task mcp:cloud:r2-verify     # ✅ if present
 ```
 
 The bucket is named `agent-config-mcp` and configured per
-[`docs/setup/mcp-r2-bootstrap.md`](mcp-r2-bootstrap.md) (private,
+[`docs/maintainers/mcp-r2-bootstrap.md`](../maintainers/mcp-r2-bootstrap.md) (private,
 indefinite retention, Worker reads via binding).
 
 `task mcp:cloud:setup` chains steps 1, 3, and the account-id readout
@@ -178,6 +178,6 @@ setup. Until cutover, the Worker serves on the free
 ## See also
 
 - [`docs/contracts/mcp-cloud-scope.md`](../contracts/mcp-cloud-scope.md) — A0-cloud contract
-- [`docs/setup/mcp-r2-bootstrap.md`](mcp-r2-bootstrap.md) — R2 layout & break-glass
+- [`docs/maintainers/mcp-r2-bootstrap.md`](../maintainers/mcp-r2-bootstrap.md) — R2 layout & break-glass
 - [`docs/setup/mcp-cloud-endpoints.md`](mcp-cloud-endpoints.md) — URL shapes & DNS
 - [`internal/workers/mcp/README.md`](../../internal/workers/mcp/README.md) — Worker source overview

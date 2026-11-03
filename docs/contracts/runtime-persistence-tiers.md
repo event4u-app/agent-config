@@ -36,6 +36,15 @@ DEGRADATION IS REPORTED, NEVER SILENT.
 | **T2** | across sessions | **depends on the path — see below** | `src/scripts/_lib/test_red_state.ts` — `agents/runtime/state/test-results.json` (worktree-local); its SQLite form, `src/scripts/code_graph/sqlite_store.ts`; and `src/scripts/_lib/runtime_journal.ts` — `<git-common-dir>/agent-journal/journal.sqlite` (repo-wide) |
 | **T3** | indefinite, aggregated | cross-repo | **not built, and prohibited as a STORE.** `docs/contracts/resident-process-governance.md` — its **P3** row (cross-session persistent state store) is "PROHIBITED, unchanged". A **supervised** resident process is now permitted (P1, `docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md`); the aggregated store it would own is not |
 
+**T3 has been opened once, by ADR, as the contract requires.**
+`docs/decisions/ADR-299-a-graph-home-beside-the-project-graph.md` (accepted
+2026-10-24, owner and council) opens a user-global project registry and an
+opt-in estate index (`src/scripts/_lib/project_registry.ts`): recorded by use,
+never by crawling, read by no path that leaves the machine, no daemon. It
+stores no cross-session agent state, so P3 of the resident-process contract is
+unchanged. Anything beyond that scope needs its own ADR. (Recorded 2026-10-29 by
+council record correction, `agents/evidence/council/records-that-match-their-code-20261029.responses.md`.)
+
 **T3's row names existing files and no storage path, deliberately.** The files
 it names are the governance contract and the ADR that decide it. That is the
 honest entry: a tier nothing writes into has no path to name, and inventing one

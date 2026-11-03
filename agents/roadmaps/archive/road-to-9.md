@@ -272,7 +272,7 @@ after Phases 1–4. No product renaming, no logo changes — wording only.
       of "runtime" in `README.md` (3) refer to the real dispatcher / shell
       handler or to the absence of runtime dependencies. Occurrences of
       "observability", "feedback", "lifecycle" are **zero** across
-      `README.md`, `docs/architecture.md`, `docs/quality.md`,
+      `README.md`, `docs/architecture.md`, `docs/maintainers/quality.md`,
       `docs/getting-started.md`, `docs/customization.md` (except the
       intentional removal note in `docs/architecture.md:16`).
 - [x] **5.3** Stack-fit table reviewed. Claims are: Laravel (primary),

@@ -22,6 +22,24 @@ describe('check_reply_consistency.check_reply — happy paths', () => {
         expect(crc.check_reply(text)).toEqual([]);
     });
 
+    it('bold label closed before the number', () => {
+        const text = '1. Foo\n2. Bar\n\n**Recommendation:** 1 — Foo, because.\n';
+        expect(crc.check_reply(text)).toEqual([]);
+    });
+
+    it('an option wrapped onto an indented continuation line stays in one block', () => {
+        const text =
+            '1. Foo\n' +
+            '2. Bar — a long option\n' +
+            '   that wraps here\n' +
+            '3. Baz — another\n' +
+            '   wrapped option\n' +
+            '\n' +
+            'Recommendation: 1 — Foo.\n';
+        expect(crc.find_option_blocks(text)).toHaveLength(1);
+        expect(crc.check_reply(text)).toEqual([]);
+    });
+
     it('clean german', () => {
         const text = '> 1. Eins\n> 2. Zwei\n\n**Empfehlung: 2 — Zwei** — weil.\n';
         expect(crc.check_reply(text)).toEqual([]);

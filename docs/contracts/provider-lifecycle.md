@@ -117,6 +117,11 @@ snapshot became a stale *reading* of a correct sentence — which a reader still
 trips over, because a table in a contract is read as the current state whatever
 its preamble says. It is now generated, so it cannot drift again.
 
+On 2026-11-02 the seven were demoted back to `experimental` by an AI-council
+decision the owner delegated: their only traces dated from 2026-06-10, the
+180-day window closed on 2026-12-07, and no re-capture was funded. A fresh
+maintainer smoke trace restores `stable` per § 2; nothing else does.
+
 The evidence column is the reviewer-reachable one:
 `agents/evidence/ai-video/trace-index.json` carries a five-field row per local
 smoke trace (provider · trace_id · captured_at · model · sha256). The raw
@@ -131,14 +136,14 @@ without publishing one request body. `lint_adapter_tier` fails the build when a
 | Adapter | Domain | Tier | Freshest reachable trace |
 |---|---|---|---|
 | `comfyui` | ai-video | `experimental` | — (none in the index) |
-| `fal` | ai-video | `stable` | `2026-06-10T14-59-22Z` (9 row(s)) |
-| `gemini-veo` | ai-video | `stable` | `2026-06-10T20-13-26Z` (18 row(s)) |
-| `higgsfield` | ai-video | `stable` | `2026-06-10T20-39-34Z` (6 row(s)) |
-| `kling` | ai-video | `stable` | `2026-06-10T14-59-22Z` (3 row(s)) |
+| `fal` | ai-video | `experimental` | `2026-06-10T14-59-22Z` (9 row(s)) |
+| `gemini-veo` | ai-video | `experimental` | `2026-06-10T20-13-26Z` (18 row(s)) |
+| `higgsfield` | ai-video | `experimental` | `2026-06-10T20-39-34Z` (6 row(s)) |
+| `kling` | ai-video | `experimental` | `2026-06-10T14-59-22Z` (3 row(s)) |
 | `musetalk` | ai-video | `experimental` | — (none in the index) |
-| `openai-images` | ai-video | `stable` | `2026-06-10T20-39-34Z` (4 row(s)) |
-| `replicate` | ai-video | `stable` | `2026-06-10T14-59-22Z` (15 row(s)) |
-| `sora` | ai-video | `stable` | `2026-06-10T20-39-34Z` (2 row(s)) |
+| `openai-images` | ai-video | `experimental` | `2026-06-10T20-39-34Z` (4 row(s)) |
+| `replicate` | ai-video | `experimental` | `2026-06-10T14-59-22Z` (15 row(s)) |
+| `sora` | ai-video | `experimental` | `2026-06-10T20-39-34Z` (2 row(s)) |
 | `syncso` | ai-video | `experimental` | — (none in the index) |
 | `flux` | ai-image | `experimental` | — (none in the index) |
 | `gemini-image` | ai-image | `experimental` | — (none in the index) |

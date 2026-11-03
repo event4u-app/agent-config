@@ -323,11 +323,6 @@ tasks:
       # .github/workflows/rule-backstops.yml (was fail-open: nothing invoked the flag).
       ./scripts-run src/scripts/check_memory --append-only
 
-  memory:shadow-report:
-    silent: true
-    desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
-    cmd: ./scripts-run src/scripts/check_memory --shadow-report {{.CLI_ARGS}}
-
   memory:pointers:
     silent: true
     desc: "Pointer integrity of curated memory — dead/moved/unparseable citations + anchor coverage (NOT staleness, see cf04)"

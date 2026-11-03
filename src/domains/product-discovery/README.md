@@ -12,6 +12,6 @@ JTBD, interviews, VoC, hypothesis testing.
 ## Skills (4)
 
 - **`activation-design`** — Use when defining or auditing the activation event — aha-moment selection, retention correlation, falsifiable definition. Triggers on 'what is our aha moment', 'redefine activation'.
-- **`customer-research`** — Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'.
+- **`customer-research`** — Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus. Triggers on 'talk to users', 'why did they cancel', 'before we build X'.
 - **`discovery-interview`** — When running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'.
 - **`voc-extract`** — Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'.

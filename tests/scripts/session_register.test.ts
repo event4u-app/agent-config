@@ -32,6 +32,7 @@ import {
     read_live_records,
     register_dir,
     safe_stem,
+    session_profile,
     stop_means_session_end,
     ttl_is_measured,
     ttl_seconds_for,
@@ -1143,7 +1144,9 @@ describe('owned_paths — additive, byte-identical when absent', () => {
 
     it('leaves a record byte-identical to the pre-change fixture when no paths are declared', () => {
         const { main } = make_repo();
-        const built = build_record(main, 'sess-np', 'claude', '2026-08-23T00:00:00Z', new Date(0));
+        // Empty env: the developer shell may carry CLAUDE_CONFIG_DIR, which
+        // would (correctly) add a `profile` field and mask what this pins.
+        const built = build_record(main, 'sess-np', 'claude', '2026-08-23T00:00:00Z', new Date(0), {});
         expect(Object.keys(built)).toEqual(PRE_CHANGE_KEYS);
         expect('owned_paths' in built).toBe(false);
 
@@ -1192,6 +1195,76 @@ describe('owned_paths — additive, byte-identical when absent', () => {
         );
         expect(resolve_claim(main, 'sess-e')?.paths).toBeUndefined();
         expect('owned_paths' in build_record(main, 'sess-e', 'claude', 'x')).toBe(false);
+    });
+});
+
+describe('profile — the account the session runs under', () => {
+    const AS = path.join(os.tmpdir(), 'fake-home', '.agent-switch');
+
+    it('derives an agent-switch profile from a provider env var inside the AS tree', () => {
+        expect(session_profile({ CLAUDE_CONFIG_DIR: path.join(AS, 'claude', 'work', 'config') })).toEqual({
+            provider: 'claude',
+            name: 'work',
+            via: 'agent-switch',
+        });
+        expect(session_profile({ CODEX_HOME: path.join(AS, 'codex', 'private', 'config') })).toEqual({
+            provider: 'codex',
+            name: 'private',
+            via: 'agent-switch',
+        });
+    });
+
+    it('omits the profile when the AS tree does not parse to provider/name — no guessed basename', () => {
+        expect(session_profile({ CLAUDE_CONFIG_DIR: path.join(AS, 'claude') })).toBeNull();
+    });
+
+    it('falls back to the env var basename outside an AS tree, claude before codex', () => {
+        expect(session_profile({ CLAUDE_CONFIG_DIR: '/opt/claude-team/' })).toEqual({
+            provider: 'claude',
+            name: 'claude-team',
+            via: 'env',
+        });
+        expect(session_profile({ CODEX_HOME: '/opt/codex-alt' })).toEqual({
+            provider: 'codex',
+            name: 'codex-alt',
+            via: 'env',
+        });
+        expect(session_profile({ CLAUDE_CONFIG_DIR: '/opt/a', CODEX_HOME: '/opt/b' })?.provider).toBe('claude');
+    });
+
+    it('returns null for an empty or whitespace env', () => {
+        expect(session_profile({})).toBeNull();
+        expect(session_profile({ CLAUDE_CONFIG_DIR: '  ', CODEX_HOME: '' })).toBeNull();
+    });
+
+    it('writes the profile into the record when present, last, without touching other fields', () => {
+        const { main } = make_repo();
+        const without = build_record(main, 'sess-pr', 'claude', '2026-08-23T00:00:00Z', new Date(0), {});
+        const withP = build_record(main, 'sess-pr', 'claude', '2026-08-23T00:00:00Z', new Date(0), {
+            CLAUDE_CONFIG_DIR: path.join(AS, 'claude', 'work', 'config'),
+        });
+        expect('profile' in without).toBe(false);
+        expect(withP.profile).toEqual({ provider: 'claude', name: 'work', via: 'agent-switch' });
+        const { profile: _p, ...rest } = withP;
+        expect(JSON.stringify(rest)).toBe(JSON.stringify(without));
+    });
+
+    it('serialises byte-identically to the pre-change shape when no profile is detectable', () => {
+        const { main } = make_repo();
+        const built = build_record(main, 'sess-pa', 'claude', '2026-08-23T00:00:00Z', new Date(0), {
+            HOME: '/home/someone',
+        });
+        expect(JSON.stringify(built)).toBe(
+            JSON.stringify({
+                session_id: 'sess-pa',
+                platform: 'claude',
+                worktree: main,
+                branch: 'main',
+                roadmap_slug: null,
+                started_at: '2026-08-23T00:00:00Z',
+                last_seen: built.last_seen,
+            }),
+        );
     });
 });
 

@@ -9,6 +9,15 @@ review_by: 2026-12-28
 > `road-to-a-baseline-that-has-to-catch-up`: the zero-cost foundation
 > (bundles, artifact tasks, graders, ladders, entry points) lands there; the
 > run that buys real numbers waits here.
+>
+> **Arrivals:** 2 — latest `inbox-2026-11-d` (2026-11-01): the 19.2.0 review
+> set finds the five showcase claims still `unbacked` (`docs/CLAIMS.md`), backed
+> flat at 63 across 19.0.0 → 19.2.0 while unbacked grows (46 → 51 → 55,
+> re-counted), and asks for "one measured claim per release". Re-verified: the
+> paid tiers refuse without `--max-usd` (`_lib/showcase_plan.ts`), so the run is
+> blocked on the owner's budget, not untriggered; `internal/bench/ui/run.ts` is
+> the port-fidelity scorer, not the showcase runner. Earlier: the 19.1.0 set
+> (same round) named it "the most important open debt".
 
 ## What waits here
 

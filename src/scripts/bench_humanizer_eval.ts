@@ -13,7 +13,7 @@
  *      preference aggregate (the token program's verbosity-bias finding makes
  *      uncontrolled pairs unusable) — they still count for the objective metric.
  *
- * Reports follow docs/benchmarks.md naming:
+ * Reports follow docs/maintainers/benchmarks.md naming:
  *   internal/bench/reports/humanizer-v1.{json,md}          (canonical pointer)
  *   internal/bench/reports/<ISO>-humanizer-v1.{json,md}    (immutable trail)
  *

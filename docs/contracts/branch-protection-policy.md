@@ -53,7 +53,7 @@ tooling pointed at it reads "unprotected" for a protected branch.
 | Allowed merge methods | merge · squash · rebase |
 | Branch must be up to date | **no** (`strict_required_status_checks_policy: false`) — this row read `true` until 2026-09-10, when it was checked against the live ruleset while reasoning about a different question. The table's own "Read it" row is the authority; a hand-written value drifts silently because nothing compares them. |
 | **Required status checks** | **two, since 2026-09-11 — `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`.** Read `exactly one — Sync + Generate Tools Consistency` from 2026-08-02 until then; the second was added by the ruleset edit ADR-276 records. Re-measured 2026-09-13. |
-| Bypass | **none, since 2026-09-10 — `bypass_actors: []`, `current_user_can_bypass: never`.** Re-measured 2026-09-13. Read `repository-admin role, always` until 2026-09-10, when `bypass_actors` was emptied. An `OrganizationAdmin` bypass with `bypass_mode: always` was re-added on 2026-09-11 (version `49393554`) and removed again on 2026-09-12 (version `49500777`), so a record describing that bypass in the present tense describes a one-day state. |
+| Bypass | **`RepositoryRole 5` (repository admin), `bypass_mode: pull_request`, standing since ruleset version `54668684`** by owner directive `agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md`; every use leaves a bypass record and owes its after-the-fact council review. Before that: none from 2026-09-10 — `bypass_actors: []`, `current_user_can_bypass: never`, re-measured 2026-09-13. Read `repository-admin role, always` until 2026-09-10, when `bypass_actors` was emptied. An `OrganizationAdmin` bypass with `bypass_mode: always` was re-added on 2026-09-11 (version `49393554`) and removed again on 2026-09-12 (version `49500777`), so a record describing that bypass in the present tense describes a one-day state. |
 
 Everything else in CI is **advisory at the branch-protection layer**: the
 checks run, a red one is visible on the PR, but only the two required contexts
@@ -68,6 +68,12 @@ that reassurance is the opposite concern, and it is recorded rather than
 implied: with `bypass_actors: []` there is no escape hatch, so a ruleset mistake
 locks the sole maintainer out of the PR path entirely. That is what the recovery
 procedure below is for.
+
+**Corrected 2026-10-29:** since ruleset version `54668684` (owner directive of
+2026-10-25) a repository-admin actor may bypass through a pull request, so the
+lockout described here and in the recovery fence below is the state of
+2026-09-10 to 2026-10-25, kept because the recovery procedure still applies if
+that actor is removed.
 
 ## What actually runs on a feature PR
 

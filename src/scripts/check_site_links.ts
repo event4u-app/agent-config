@@ -6,9 +6,11 @@
  * NOT a link gate. This scans the built `site/dist/**` HTML for internal links
  * (`href` / `src`) and verifies every one resolves to a real file in `dist/` —
  * accounting for the `base` prefix (`/agent-config`), trailing-slash dirs
- * (`…/x/` → `…/x/index.html`), and `#fragment` / `?query` stripping. External
- * (`http(s):`, `mailto:`, `data:`, protocol-relative `//`) links and pure `#`
- * anchors are skipped — this gate owns *internal* integrity only.
+ * (`…/x/` → `…/x/index.html`), and `?query` stripping. Relative hrefs are
+ * resolved against the URL of the page that carries them, and a `#fragment` on
+ * an internal HTML page (same-page `#x` included) must name an `id` / `name` on
+ * that page. External (`http(s):`, `mailto:`, `data:`, protocol-relative `//`)
+ * links are skipped — this gate owns *internal* integrity only.
  *
  * Read-only. Exit 0 clean / 1 on any broken internal link, 2 if the build is
  * missing OR stale (run `cd site && npm run build` first). Staleness matters as much
@@ -56,16 +58,36 @@ function _walkHtml(dir: string): string[] {
 }
 
 const _LINK_RE = /(?:href|src)\s*=\s*"([^"]*)"/gi;
-const _EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#|mailto:|tel:|data:)/i;
+const _EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/|mailto:|tel:|data:)/i;
+const _ID_RE = /\b(?:id|name)\s*=\s*"([^"]*)"/gi;
 
-/** Resolve one internal link to a candidate dist-relative file, or null to skip. */
-export function resolveTarget(link: string, base: string): string | null {
-    let l = link.trim();
-    if (l === '' || _EXTERNAL.test(l)) return null;
+/** The URL path a built file is served at: `a/b/index.html` → `<base>/a/b/`. */
+export function pageUrl(pageRel: string, base: string): string {
+    const rel = pageRel.split(path.sep).join('/');
+    const dir = rel === 'index.html' ? '' : rel.endsWith('/index.html') ? rel.slice(0, -'index.html'.length) : rel;
+    return `${base}/${dir}`;
+}
+
+/**
+ * Resolve one internal link to a candidate dist-relative file, or null to skip.
+ *
+ * A relative href needs the URL of the page carrying it; without `pageRel` it is
+ * skipped, which is how the gate behaved before relative links were checked.
+ */
+export function resolveTarget(link: string, base: string, pageRel?: string): string | null {
+    let l = link.trim().replace(/&amp;/g, '&');
+    if (l === '' || l.startsWith('#') || _EXTERNAL.test(l)) return null;
     // Strip fragment + query.
     l = l.split('#')[0]!.split('?')[0]!;
     if (l === '') return null;
-    if (!l.startsWith('/')) return null; // relative links are rare in Astro output; skip (not internal-root)
+    if (!l.startsWith('/')) {
+        if (pageRel === undefined) return null;
+        try {
+            l = decodeURI(new URL(l, `http://site.invalid${pageUrl(pageRel, base)}`).pathname);
+        } catch {
+            return l; // unparseable — report it as broken rather than skip it
+        }
+    }
     // Strip the base prefix.
     if (base && (l === base || l.startsWith(base + '/'))) {
         l = l.slice(base.length);
@@ -76,9 +98,40 @@ export function resolveTarget(link: string, base: string): string | null {
     return l;
 }
 
+function _fragment(link: string): string | null {
+    const i = link.indexOf('#');
+    if (i === -1) return null;
+    const raw = link.slice(i + 1).replace(/&amp;/g, '&');
+    if (raw === '') return null; // a bare `#` is the page top
+    // `#/route` and `#!route` address a client-side hash router, not an element.
+    if (raw.startsWith('/') || raw.startsWith('!')) return null;
+    try {
+        return decodeURIComponent(raw);
+    } catch {
+        return raw;
+    }
+}
+
+function _ids(html: string): Set<string> {
+    const out = new Set<string>();
+    let m: RegExpExecArray | null;
+    _ID_RE.lastIndex = 0;
+    while ((m = _ID_RE.exec(html)) !== null) out.add(m[1] as string);
+    return out;
+}
+
 export function findBrokenLinks(distDir: string, base: string): Array<{ page: string; link: string }> {
     const broken: Array<{ page: string; link: string }> = [];
-    const seenOk = new Set<string>();
+    const resolved = new Map<string, string | null>();
+    const idCache = new Map<string, Set<string>>();
+    const idsOf = (file: string): Set<string> => {
+        let ids = idCache.get(file);
+        if (ids === undefined) {
+            ids = _ids(fs.readFileSync(file, 'utf-8'));
+            idCache.set(file, ids);
+        }
+        return ids;
+    };
     for (const html of _walkHtml(distDir)) {
         const text = fs.readFileSync(html, 'utf-8');
         const pageRel = path.relative(distDir, html);
@@ -87,19 +140,27 @@ export function findBrokenLinks(distDir: string, base: string): Array<{ page: st
         const linksInPage = new Set<string>();
         while ((m = _LINK_RE.exec(text)) !== null) {
             const raw = m[1] as string;
-            const target = resolveTarget(raw, base);
-            if (target === null) continue;
             if (linksInPage.has(raw)) continue;
             linksInPage.add(raw);
-            const cacheKey = target;
-            if (seenOk.has(cacheKey)) continue;
-            const candidates = [
-                path.join(distDir, target),
-                path.join(distDir, target, 'index.html'), // extensionless dir link
-            ];
-            if (candidates.some((c) => fs.existsSync(c) && fs.statSync(c).isFile())) {
-                seenOk.add(cacheKey);
-            } else {
+            const frag = _EXTERNAL.test(raw.trim()) ? null : _fragment(raw);
+            if (raw.trim().startsWith('#')) {
+                if (frag !== null && !idsOf(html).has(frag)) broken.push({ page: pageRel, link: raw });
+                continue;
+            }
+            const target = resolveTarget(raw, base, pageRel);
+            if (target === null) continue;
+            let file = resolved.get(target);
+            if (file === undefined) {
+                const candidates = [
+                    path.join(distDir, target),
+                    path.join(distDir, target, 'index.html'), // extensionless dir link
+                ];
+                file = candidates.find((c) => fs.existsSync(c) && fs.statSync(c).isFile()) ?? null;
+                resolved.set(target, file);
+            }
+            if (file === null) {
+                broken.push({ page: pageRel, link: raw });
+            } else if (frag !== null && file.endsWith('.html') && !idsOf(file).has(frag)) {
                 broken.push({ page: pageRel, link: raw });
             }
         }

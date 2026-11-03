@@ -185,7 +185,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(runCli(['map', '--root', tmp, '--no-verify', '--no-build']).status).toBe(0);
         const mapJson = path.join(tmp, 'agents', 'map', 'code', 'map.json');
         const cache = path.join(tmp, 'agents', 'map', '.build', 'code-graph-v1.json');
-        const drawn = JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation;
+        const drawn = JSON.parse(fs.readFileSync(path.join(path.dirname(path.dirname(mapJson)), 'manifest.json'), 'utf-8')).generation;
         expect(drawn).toMatch(/^[0-9a-f]{16}$/);
         // A map that LOOKS newer than its cache but was drawn from another graph is redrawn.
         fs.writeFileSync(cache, fs.readFileSync(cache, 'utf-8').replace(/"source_checksum": "[0-9a-f]+"/, '"source_checksum": "0000"'));
@@ -222,7 +222,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         fs.writeFileSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'), '{}\n');
         const r = runCli(['refresh', '--root', tmp, '--map']);
         expect(r.status, r.stderr).toBe(0);
-        expect(JSON.parse(fs.readFileSync(path.join(tmp, 'agents', 'map', 'code', 'map.json'), 'utf-8')).meta.graph_generation).toMatch(/^[0-9a-f]{16}$/);
+        expect(JSON.parse(fs.readFileSync(path.join(tmp, 'agents', 'map', 'manifest.json'), 'utf-8')).generation).toMatch(/^[0-9a-f]{16}$/);
     });
 
     it('--map redraws a map an older release drew at the top of agents/map/, into the current layout', () => {
@@ -298,6 +298,67 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
         expect(fs.existsSync(marker)).toBe(false);
         expect(runCli(['auto-refresh', 'sideways', '--root', tmp]).status).toBe(2);
+    });
+
+    it('a local build turns auto-refresh on, and `off` stays off across later builds', () => {
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        const optOut = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.off.json');
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off — the next local build or map turns it on/);
+        const built = runCli(['build', '--root', tmp], { CI: '' });
+        expect(built.status).toBe(0);
+        expect(built.stdout).toMatch(/auto-refresh on — refreshed at session start/);
+        expect(fs.existsSync(marker)).toBe(true);
+        expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
+        expect(fs.existsSync(optOut)).toBe(true);
+        const again = runCli(['build', '--root', tmp], { CI: '' });
+        expect(again.stdout).not.toMatch(/auto-refresh on/);
+        expect(fs.existsSync(marker)).toBe(false);
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off \(opted out\)/);
+        expect(runCli(['auto-refresh', 'on', '--root', tmp]).status).toBe(0);
+        expect(fs.existsSync(optOut)).toBe(false);
+        expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('a local map turns auto-refresh on too', () => {
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        const r = runCli(['map', '--root', tmp, '--no-verify'], { CI: '' });
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/auto-refresh on — refreshed at session start/);
+        expect(fs.existsSync(marker)).toBe(true);
+    });
+
+    it('a build never writes the opt-in through a symlinked agents/map', () => {
+        const outsideMap = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-outside-map-'));
+        try {
+            fs.symlinkSync(outsideMap, path.join(tmp, 'agents', 'map'));
+            runCli(['build', '--root', tmp, '--out', path.join(tmp, 'cache.json')], { CI: '' });
+            runCli(['auto-refresh', 'on', '--root', tmp], { CI: '' });
+            expect(fs.existsSync(path.join(outsideMap, '.build', 'code-graph-auto-refresh.json'))).toBe(false);
+        } finally {
+            fs.rmSync(outsideMap, { recursive: true, force: true });
+        }
+    });
+
+    it('auto-refresh off fails when the opt-out cannot be persisted', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', '.build'), { recursive: true });
+        // A directory where the opt-out file goes makes the O_NOFOLLOW open fail.
+        fs.mkdirSync(path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.off.json'));
+        const r = runCli(['auto-refresh', 'off', '--root', tmp]);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/opt-out could not be written/);
+    });
+
+    it('a build under CI is not consent', () => {
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        expect(runCli(['build', '--root', tmp], { CI: 'true' }).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
+    });
+
+    it('a build into a foreign --out path is not consent', () => {
+        const marker = path.join(tmp, 'agents', 'map', '.build', 'code-graph-auto-refresh.json');
+        expect(runCli(['build', '--root', tmp, '--out', path.join(tmp, 'elsewhere.json')]).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
     });
 
     it('auto-refresh reads an opt-in an older release wrote, moves it on `on` and removes it on `off`', () => {

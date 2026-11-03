@@ -55,7 +55,7 @@ carries.
 | `src/scripts/check_claims.ts:487` | a comment recording how a `kind: qual` marker once licensed an unrelated figure; not an exemption, but an interaction the retirement must not break |
 | `README.md:3` / `:17` | headline carries the thesis; the body line carries the claim marker |
 | `docs/comparison.yaml:31` | the `claim: "No resident runtime …"` row, `checkable: true`, whose `failure_mode` argues *against* daemons as a competitive position. Path corrected — the source said `src/config/` |
-| `docs/positioning-evidence.md:56`–`:74` | records "zero runtime" as the load-bearing differentiator, and argues it is credible only *because* it is machine-checked. Also states "261 skills", against a measured 299 |
+| `docs/maintainers/positioning-evidence.md:56`–`:74` | records "zero runtime" as the load-bearing differentiator, and argues it is credible only *because* it is machine-checked. Also states "261 skills", against a measured 299 |
 | `subagent-steering.md:107` | verbatim: "A CONFIG PACKAGE RUNS NO DAEMON. THERE IS NO AUTOMATIC COHORT-DISABLE." |
 
 ## The census, composed so it can be reproduced

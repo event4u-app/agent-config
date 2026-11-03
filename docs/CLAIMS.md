@@ -312,6 +312,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: unbacked
 - last_verified: 2026-10-14
 
+### claim: third-party-load-finds-planted
+- claim: A deterministic, offline, read-only extension of the web-launch-readiness checker finds every planted third-party load, superseded statute, legal-page placeholder and unnamed loaded provider in a frozen consumer build, without flagging a safe twin or a decoy.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-11-02 (road-to-a-page-that-says-what-it-loads Phase 1.1), BEFORE any detector code for its four rows exists -- the registering change carries the frozen corpus and this entry and no detector. SEPARATE from `web-launch-readiness-finds-more` on purpose: that claim compares an LLM arm against a bare prompt and needs a ground-truth-blind freezer; this one generates nothing, so it needs no comparator. BASELINE: zero, by construction -- the only third-party-load detection is `ANALYTICS_RE` in `src/scripts/check_web_launch_readiness.ts`, and `required-legal-pages` matches paths, never page text. CORPUS: `tests/fixtures/third-party-load/`, one DE local-business build with eight planted rows (nine entries: the privacy-page row is split per unnamed provider) -- a Google Fonts stylesheet, a CSS `@import` of it, a `preconnect` to its static origin, a Maps iframe, a `youtube-nocookie` iframe, an imprint citing a superseded statute, an imprint carrying template placeholders, a privacy page silent on two loaded providers; six safe twins at the same relative paths; five decoys (prose naming an origin, an anchor, a `dns-prefetch` that must report undecided, a framework font import in source, a footnote marker). Ground truth at `tests/fixtures/third-party-load/ground-truth.json`, frozen before the detector. BARS, fixed here: every planted entry found at its recorded file (and line where recorded); zero findings on any twin or decoy; the `dns-prefetch` line reported undecided. HARD GATE: a flagged twin or decoy fails the claim regardless of recall. FALSIFICATION: (1) a twin or decoy is flagged; (2) a planted entry is missed; (3) the corpus cannot be scored against its ground truth (UNDERPOWERED, not dropped). SCOPE: one build, one region, lexical rows; generalises to no other framework output, no live site, and no legal conclusion -- the rows state loads and citations, never compliance. Backing needs a held-out corpus written without sight of the detector, because the detector's author has read this one.
+- status: unbacked
+- last_verified: 2026-11-02
+
 ### claim: description-gate-catches-regressions
 - claim: A diff-scoped gate on SKILL.md `description` frontmatter catches a description edit that makes a skill less distinguishable from its neighbours, at PR time and within the existing key budget.
 - kind: quant
@@ -463,14 +470,14 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-23
 
 ### claim: skill-count
-- claim: 301 skills.
+- claim: 303 skills.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 212 commands.
+- claim: 214 commands.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -484,7 +491,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: host-agent-count
-- claim: 23 host agents are detected and inventoried; 20 receive a written config surface (18 projection + 1 plugin + 1 bundle target) and 3 are export-only (aider, zed, jetbrains). The count is enforced, not asserted — `knownToolIds()` is pinned at 23 by a test whose assertion literal IS the number, and `src/config/surface-matrix.yml` is held in set-equality with the installer's own user-scope path map by `lint_surface_matrix`, so a host added to one and not the other fails the build. This entry stood `unbacked` while naming its own unblocking condition ("once `surface-matrix.yml` exists, bind the count to that file and flip"); the condition was met and nothing fired, so the shipped figure stayed "7+" — understating real coverage by 3x.
+- claim: 23 host agents are detected and inventoried; 20 receive a written config surface (18 projection + 1 plugin + 1 bundle target) and 3 are export-only (aider, zed, jetbrains). Of the 20, `init` writes the 18 projection hosts itself; the Copilot plugin is a discovery plugin (a read-only MCP server and one install-pointer skill, `.github/plugin/plugin.json`) and the Claude Desktop bundle is uploaded by the user. The count is enforced, not asserted — `knownToolIds()` is pinned at 23 by a test whose assertion literal IS the number, and `src/config/surface-matrix.yml` is held in set-equality with the installer's own user-scope path map by `lint_surface_matrix`, so a host added to one and not the other fails the build. This entry stood `unbacked` while naming its own unblocking condition ("once `surface-matrix.yml` exists, bind the count to that file and flip"); the condition was met and nothing fired, so the shipped figure stayed "7+" — understating real coverage by 3x.
 - kind: quant
 - evidence: exec:vitest run tests/install/toolDetection.test.ts -> 0
 - status: backed
@@ -635,7 +642,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-10-18
 
 ### claim: default-install-context-cost
-- claim: On a host without a listing lever the default for new installs ships 243 of 301 skills (untagged core plus engineering/maintainer packs, plus every skill a surviving artifact declares — ADR-289); claude-code and codex receive every skill and scope by visibility instead (step 4.7 of road-to-a-setup-that-decides-itself). On a host without a lever that is an approximately 19% reduction of the skill-catalog surface (a reduction of 58 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
+- claim: On a host without a listing lever the default for new installs ships 244 of 303 skills (untagged core plus engineering/maintainer packs, plus every skill a surviving artifact declares — ADR-289); claude-code and codex receive every skill and scope by visibility instead (step 4.7 of road-to-a-setup-that-decides-itself). On a host without a lever that is an approximately 19% reduction of the skill-catalog surface (a reduction of 58 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
 - kind: quant
 - evidence: exec:vitest run tests/install/default_install_skill_count_real_install.test.ts -> 0
 - note: Re-pointed 2026-10-18. The previous evidence, `update_counts --check`, proved that the published figure equals the installer's predicate applied to this repository's catalog — a statement about the predicate, which an installer that stopped applying it would leave green. The harness case runs a real global `claude-code` install into a throwaway HOME and holds three numbers equal: the catalog skills that arrived in `~/.claude/skills/`, the predicate's `projected`, and the `N of M` this row publishes. It was observed red with this row's figure changed to 228.
@@ -1526,3 +1533,31 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-10-28 (road-to-a-baseline-that-has-to-catch-up step 0.1), BEFORE any artifact task file, grader or run is committed -- the registering commit carries these entries and no task fixture. TASKS: `art-page-copy-01`, `art-app-copy-01`. PRIMARY GRADERS: `bench-ui` for the page -- the deterministic port-fidelity score of `internal/bench/ui/run.ts` (pixel SSIM, DOM inventory, token recall, interactions; weights pre-registered in its own config, no model in the path) -- and `acceptance+axe` for the app, as defined in claim `showcase-page-form-acceptance`. Both references are written in-repo; no real third-party site is copied (kill K4). METRIC: per arm, the first-shot score of the k runs; then prompts, turns, tokens and priced USD for the arm without agent-config to reach the bar on a pre-written feedback ladder (cap K = 5, censored, never imputed). BAR: the task's `parity_bar`, fixed before any run and never read off the with-arm's output. VERDICT: `pass` / `regression` / `no-change` / `underpowered` per `src/scripts/_lib/paired_verdict.ts`; every outcome is publishable. FALSIFICATION: `no-change` or `regression` on the primary grader is a null or a loss and is published as such. UNDERPOWERED when k cannot reach the paired floor, when the grader cannot separate its planted good and bad references, or when the render is not reproducible on the recorded platform. SCOPE: two fictional references on one host and one model.
 - status: unbacked
 - last_verified: 2026-10-28
+
+### claim: bracket-diversity-source
+- claim: In a `/judge bracket` run, distinct lines after dedupe are compared across three sources — same model without approach angles, same model with angles, and other model families — and angles earn their place only by adding at least 15 percentage points of distinct lines over the angle-free arm.
+- kind: comparative
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live bracket run. METRIC: share of lines surviving near-duplicate dedupe (`debate_gates.is_near_duplicate`, threshold 0.8) per arm, n >= 20 tasks. BAR: angles >= +15 pp over the angle-free arm; other families reported separately. FALSIFICATION: below the bar, angles stay off. Spend-bearing, owner-asked per run.
+- status: unbacked
+- last_verified: 2026-10-31
+
+### claim: appeal-card-live-yield
+- claim: Lines returned by the appeal card win at least one later match against a non-returning line in at least 30 % of cards played in live brackets.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run; the simulated rescue (C2a) is a fixture reading in `agents/evidence/analysis/bracket-appeal-card-simulation-2026-10-31.md` and is NOT this claim. BAR: >= 30 % of cards. FALSIFICATION: below the bar the card stays on (owner directive) and its signals narrow to pick-overruled plus an inconsistent jury.
+- status: unbacked
+- last_verified: 2026-10-31
+
+### claim: bracket-beats-single-judge
+- claim: At equal N, the bracket winner beats the one-shot `do-competitively` winner in a blind both-orders comparison in at least 60 % of tasks.
+- kind: comparative
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run. PROTOCOL: same task, same N, final comparison via `judgeBothOrders`; `inconsistent` counts as not-a-win. BAR: >= 60 %, n >= 20. FALSIFICATION: below the bar the bracket stays opt-in only.
+- status: unbacked
+- last_verified: 2026-10-31
+
+### claim: saturation-stop-savings
+- claim: The saturation stop (two consecutive waves under 20 % new lines) saves at least 25 % of spawns at a winner quality not worse than the full-N run under the bracket-beats-single-judge protocol.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run. BAR: >= 25 % spawns saved, quality non-inferior. FALSIFICATION: below the bar the stop is switched off and N runs to its tier ceiling.
+- status: unbacked
+- last_verified: 2026-10-31

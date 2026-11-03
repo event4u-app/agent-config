@@ -33,7 +33,7 @@
  * overrides it too).
  */
 
-import { isVerificationCommand } from './verification_command.js';
+import { isVerificationCommand, undiscardedSegments } from './verification_command.js';
 
 
 export type InvalidRunReason =
@@ -141,7 +141,9 @@ function leadingExecutable(segment: string): string | null {
  * the selector is consulted, and only the surviving segments may qualify.
  */
 function canVerify(command: string): boolean {
-    for (const segment of command.split(/&&|\|\||[;|\n]/)) {
+    // A segment whose failure the shell discards (`cmd || true`, `cmd; true`)
+    // proves nothing whatever it exited, so only the undiscarded ones qualify.
+    for (const segment of undiscardedSegments(command).flatMap((s) => s.split('\n'))) {
         if (segment.trim() === '') continue;
         const exe = leadingExecutable(segment);
         if (exe !== null && NON_VERIFYING_EXECUTABLES.has(exe)) continue;

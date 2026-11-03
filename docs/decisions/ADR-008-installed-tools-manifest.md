@@ -23,7 +23,7 @@ and the contract doc is the committed surface. Original status prose retained
 below as the historical record.
 
 **Proposed** · 2026-05-12 · pending implementation in Phase 3 of
-[`road-to-global-first-install`](../../agents/roadmaps/road-to-global-first-install.md).
+[`road-to-global-first-install`](../../agents/roadmaps/archive/road-to-global-first-install.md).
 
 Originates from user ask (Matze, 2026-05-12): "Sollten wir auf
 Projektebene festhalten, welche Agents wir initialisiert haben, damit
@@ -165,6 +165,6 @@ for this ADR.
 ## References
 
 - [`ADR-007`](ADR-007-agent-discovery-scopes.md) — global-first install (this ADR depends on it).
-- [`agents/roadmaps/road-to-global-first-install.md`](../../agents/roadmaps/road-to-global-first-install.md) Phase 3.
+- [`agents/roadmaps/archive/road-to-global-first-install.md`](../../agents/roadmaps/archive/road-to-global-first-install.md) Phase 3.
 - [`agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/`](../../agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/) — full council transcripts. <!-- council-ref-allowed: ADR decision trace -->
 - [`docs/guidelines/agent-infra/layered-settings.md`](../guidelines/agent-infra/layered-settings.md) — the existing 4-layer settings precedence; this ADR adds a parallel file outside that hierarchy.

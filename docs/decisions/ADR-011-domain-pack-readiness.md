@@ -41,7 +41,7 @@ The pressure to extract video into a separately-installable
 
 1. The strategic review's `8.9 → 9.6` argument — "make the future
    audio / image / docs / exports domains land cheaply". Cited at
-   `agents/roadmaps/universal-platform-refinement.md` lines 19 and 132.
+   `agents/roadmaps/archive/universal-platform-refinement.md` lines 19 and 132.
 2. PR #176's scope-discipline score (`6.8 / 10`) — the load-bearing
    data point against premature extraction. Cited at line 19, 117.
 3. The predecessor council's explicit rejection of milestone-split

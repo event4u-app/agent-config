@@ -259,7 +259,8 @@ asking for them again is the re-ask
 
 Follow [`/create-pr` § 4d](../../git/pr/create.md): wait for the
 verdict in the background, never end the turn on "CI is running",
-diagnose and fix in the working tree on red, within the N=3 budget per
+diagnose and fix in the working tree on red, within the `execution.fix_loop_max` budget
+(default 10, with its ladder) per
 [`autonomous-execution`](../../rules/autonomous-execution.md).
 
 ```
@@ -332,7 +333,7 @@ THE FIRST PUSH TO THAT BRANCH, AND THE PR. NEVER RE-ASK FOR THEM.
 verify-before-complete ALREADY FORBIDS. SO IS ENDING ON COMMITTED-BUT-UNPUSHED
 WORK WITHOUT NAMING IT.
 STOPPING EARLIER IS LEGAL ONLY AS ONE OF process-full's FIVE NAMED HALTS,
-A HARD-FLOOR TRIGGER, OR AN N=3 EXHAUSTION — AND THE HALT IS NAMED IN THE
+A HARD-FLOOR TRIGGER, OR AN execution.fix_loop_max EXHAUSTION — AND THE HALT IS NAMED IN THE
 REPORT TOGETHER WITH WHAT IS STILL UNPUSHED.
 ```
 

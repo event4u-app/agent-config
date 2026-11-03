@@ -69,9 +69,9 @@ describe('grade_target_readiness — 1.1 detection: presence detected, absence n
         expect(f.get('static-analysis')?.grade).toBe(2);
     });
 
-    it('all thirteen dimensions are always reported, present or not', () => {
+    it('all fourteen dimensions are always reported, present or not', () => {
         for (const root of [full, ciAbsent, python]) {
-            expect(grade(root).dimensions).toHaveLength(13);
+            expect(grade(root).dimensions).toHaveLength(14);
         }
     });
 });
@@ -283,6 +283,51 @@ describe('grade_target_readiness — advanced-testing-signals is observed, never
     });
 });
 
+describe('grade_target_readiness — behaviour-contract grades evidence, not prose presence', () => {
+    // road-to-a-grade-that-saw-the-evidence 1.1 (owner decision OQ-63 a). The
+    // dimension passed on `AGENTS.md` presence alone, so almost every
+    // agent-configured repository graded as having a behaviour contract.
+    const bc = (files: Record<string, string>) =>
+        grade(_target(files)).dimensions.find((d) => d.id === 'behaviour-contract');
+
+    it('a target whose only candidate is AGENTS.md grades 0', () => {
+        const d = bc({ 'package.json': '{"name":"p"}', 'AGENTS.md': '# Agents\n\nBehave.\n' });
+        expect(d?.grade).toBe(0);
+        // The prose file is still a fact about the target — observed, not scored.
+        expect(d?.observations).toContain('prose-contract-file-detected');
+    });
+
+    it('a prose CONTRACT.md alone grades 0 too — prose is not executable', () => {
+        expect(bc({ 'package.json': '{}', 'CONTRACT.md': '# Contract\n' })?.grade).toBe(0);
+    });
+
+    it('an OpenAPI document grades Present, at the root or nested', () => {
+        expect(bc({ 'package.json': '{}', 'openapi.yaml': 'openapi: 3.1.0\n' })?.grade).toBe(1);
+        expect(bc({ 'package.json': '{}', 'api/spec/openapi.json': '{"openapi":"3.1.0"}' })?.grade).toBe(1);
+    });
+
+    it('a Gherkin feature file grades Present', () => {
+        const d = bc({ 'package.json': '{}', 'features/checkout.feature': 'Feature: checkout\n' });
+        expect(d?.grade).toBe(1);
+        expect(d?.evidence).toContain('features/checkout.feature');
+    });
+
+    it('grades Enforced-in-CI only when a blocking CI step runs the specification', () => {
+        const d = bc({
+            'package.json': '{}',
+            'features/checkout.feature': 'Feature: checkout\n',
+            '.github/workflows/ci.yml': 'jobs:\n  a:\n    steps:\n      - run: npx cucumber-js\n',
+        });
+        expect(d?.grade).toBe(2);
+    });
+
+    it('a contract inside a skipped or fixture directory does not count', () => {
+        expect(bc({ 'package.json': '{}', 'node_modules/x/a.feature': 'Feature: x\n' })?.grade).toBe(0);
+        // A contract inside a fixture tree is a test input, not the target's contract.
+        expect(bc({ 'package.json': '{}', 'tests/fixtures/api/openapi.yaml': 'openapi: 3.1.0\n' })?.grade).toBe(0);
+    });
+});
+
 describe('grade_target_readiness — 1.2 no aggregate score, anywhere', () => {
     it('the rendered matrix contains no percentage and no x/100', () => {
         for (const root of [full, ciAbsent, python]) {
@@ -401,9 +446,9 @@ describe('grade_target_readiness — Phase 4 dimensions', () => {
     const ids = (root: string): string[] => grade(root).dimensions.map((d) => d.id);
     const dim = (root: string, id: string) => grade(root).dimensions.find((d) => d.id === id);
 
-    it('the grader emits thirteen dimension ids, and the three new ones are among them', () => {
+    it('the grader emits fourteen dimension ids, and the three Phase 4 ones are among them', () => {
         for (const root of [full, ciAbsent, python]) {
-            expect(ids(root)).toHaveLength(13);
+            expect(ids(root)).toHaveLength(14);
             for (const id of ['operational-recovery', 'mail-authenticity', 'privacy-obligations']) {
                 expect(ids(root), `${root} is missing ${id}`).toContain(id);
             }
@@ -443,6 +488,24 @@ describe('grade_target_readiness — Phase 4 dimensions', () => {
             '.github/workflows/dr.yml': 'jobs:\n  dr:\n    steps:\n      - run: ./scripts/restore-from-backup.sh\n',
         });
         expect(dim(ci, 'operational-recovery')?.grade).toBe(2);
+    });
+
+    it('containment (road-to-a-switch-built-before-it-is-needed 6.4) is a non-knockout: 0 without a lever inventory, 1 valid, 2 audited in CI', () => {
+        const inv = 'schema_version: 1\noperator_path: sso\nbreak_glass: cli\nlevers:\n  - id: off\n    level: L3\n    fail_mode: closed\n    owner: on-call\n    release: control-surface\n';
+        const bare = _target({ Dockerfile: 'FROM node:22\n' });
+        expect(dim(bare, 'containment')?.knockout).toBe(false);
+        expect(dim(bare, 'containment')?.grade).toBe(0);
+        expect(dim(_target({ Dockerfile: 'FROM node:22\n', 'agents/settings/security-ops.yml': inv }), 'containment')?.grade).toBe(1);
+        const invalid = _target({ Dockerfile: 'FROM node:22\n', 'agents/settings/security-ops.yml': inv.replace('    fail_mode: closed\n', '') });
+        expect(dim(invalid, 'containment')?.grade).toBe(0);
+        expect(dim(invalid, 'containment')?.evidence).toMatch(/fail_mode/);
+        const ci = _target({
+            Dockerfile: 'FROM node:22\n',
+            'agents/settings/security-ops.yml': inv,
+            '.github/workflows/sec.yml': 'jobs:\n  s:\n    steps:\n      - run: npx --yes @event4u/agent-config@19 audit:security\n',
+        });
+        expect(dim(ci, 'containment')?.grade).toBe(2);
+        expect(grade(ci).dimensions.filter((d) => d.knockout)).toHaveLength(4);
     });
 
     it('privacy-obligations reads a privacy notice as Present, and 0 when there is none', () => {

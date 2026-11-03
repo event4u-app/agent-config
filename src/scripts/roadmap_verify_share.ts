@@ -54,8 +54,11 @@ import { fileURLToPath } from 'node:url';
 
 import { units } from './closure_scan.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
-import { type Expectation, parseVerifyClause } from './_lib/verify_clause.js';
+import { parseVerifyClause } from './_lib/verify_clause.js';
+import { RUN_ALLOWLIST, type SkipReason, runClause } from '../agent-src/scripts/verify_run.js';
 import { type ClauseClass, classifyClause } from './_lib/verify_pair.js';
+
+export { RUN_ALLOWLIST, argvOf, type SkipReason } from '../agent-src/scripts/verify_run.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _PROG = 'roadmap_verify_share';
@@ -137,12 +140,6 @@ export function report(rootAbs: string, rootLabel: string, recursive: boolean): 
     };
 }
 
-/** Read-only first tokens; nothing else is ever executed. */
-export const RUN_ALLOWLIST: ReadonlySet<string> = new Set(['grep', 'test', 'ls', 'wc']);
-const RUN_TIMEOUT_MS = 5000;
-
-export type SkipReason = 'not-allowlisted' | 'shell-syntax' | 'timeout' | 'spawn-error';
-
 export interface RunHit {
     readonly file: string;
     readonly line: number;
@@ -174,59 +171,6 @@ export interface RunOptions {
     readonly keep?: (abs: string) => boolean;
 }
 
-/**
- * Split a command into argv the way a shell would for quoting only, or `null`
- * when it needs anything else a shell does: an unquoted pipe, redirect, `;`,
- * `&`, variable or glob, or a command substitution outside single quotes.
- */
-export function argvOf(command: string): string[] | null {
-    const out: string[] = [];
-    let cur = '';
-    let has = false;
-    let quote: "'" | '"' | null = null;
-    for (let i = 0; i < command.length; i += 1) {
-        const ch = command[i] as string;
-        if (quote === "'") {
-            if (ch === "'") quote = null;
-            else cur += ch;
-            continue;
-        }
-        if (ch === '`' || (ch === '$' && command[i + 1] === '(')) return null;
-        if (quote === '"') {
-            if (ch === '"') quote = null;
-            else if (ch === '\\' && i + 1 < command.length) cur += command[++i];
-            else if (ch === '$') return null;
-            else cur += ch;
-            continue;
-        }
-        if (ch === "'" || ch === '"') {
-            quote = ch;
-            has = true;
-        } else if (ch === '\\' && i + 1 < command.length) {
-            cur += command[++i];
-            has = true;
-        } else if (/\s/.test(ch)) {
-            if (has) out.push(cur);
-            cur = '';
-            has = false;
-        } else if ('|&;<>$*?(){}'.includes(ch)) {
-            return null;
-        } else {
-            cur += ch;
-            has = true;
-        }
-    }
-    if (quote !== null) return null;
-    if (has) out.push(cur);
-    return out.length === 0 ? null : out;
-}
-
-/** A regex reads stdout without its trailing newline, so `/^0$/` matches `grep -c`'s `0\n`. */
-function meets(expect: Expectation, status: number | null, stdout: string): boolean {
-    if (expect.kind === 'exit') return status === expect.code;
-    return new RegExp(expect.source).test(stdout.replace(/\n+$/, ''));
-}
-
 export function runReport(rootAbs: string, rootLabel: string, opts: RunOptions): RunReport {
     const files = markdownFiles(rootAbs, false).filter((f) => opts.keep?.(f) ?? true);
     assertScanned({ gate: _PROG, scanned: files.length, units: 'roadmap(s)', roots: [rootLabel] });
@@ -241,30 +185,9 @@ export function runReport(rootAbs: string, rootLabel: string, opts: RunOptions):
             if (clause === null || clause.command === null) continue;
             const command = clause.command;
             const at = { file, line: u.line, command };
-            const argv = argvOf(command);
-            if (argv === null) {
-                skipped.push({ ...at, reason: 'shell-syntax' });
-                continue;
-            }
-            if (!RUN_ALLOWLIST.has(argv[0] as string)) {
-                skipped.push({ ...at, reason: 'not-allowlisted' });
-                continue;
-            }
-            const res = spawnSync(argv[0] as string, argv.slice(1), {
-                cwd: opts.cwd,
-                shell: false,
-                input: '',
-                encoding: 'utf-8',
-                timeout: RUN_TIMEOUT_MS,
-                maxBuffer: 4 * 1024 * 1024,
-            });
-            if (res.error !== undefined) {
-                const timedOut = (res.error as NodeJS.ErrnoException).code === 'ETIMEDOUT';
-                skipped.push({ ...at, reason: timedOut ? 'timeout' : 'spawn-error' });
-                continue;
-            }
-            const expect: Expectation = clause.expect ?? { kind: 'exit', code: 0 };
-            if (meets(expect, res.status, res.stdout ?? '')) met.push({ ...at, implied: clause.expect === null, class: classifyClause(command) });
+            const r = runClause({ ...clause, command }, opts.cwd);
+            if (r.outcome === 'skipped') skipped.push({ ...at, reason: r.reason });
+            else if (r.outcome === 'met') met.push({ ...at, implied: r.implied, class: classifyClause(command) });
             else unmet += 1;
         }
     }

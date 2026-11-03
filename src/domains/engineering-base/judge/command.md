@@ -2,13 +2,13 @@
 model_tier: medium
 name: judge
 disable-model-invocation: true
-argument-hint: "[solo|on-diff|steps] [args]"
+argument-hint: "[solo|on-diff|steps|bracket] [args]"
 pack: engineering-base
-intent: "Adversarial-judging dispatcher — solo, on-diff, steps"
-routes_to: [judge-solo, judge-on-diff, judge-steps]
+intent: "Adversarial-judging dispatcher — solo, on-diff, steps, bracket"
+routes_to: [judge-solo, judge-on-diff, judge-steps, judge-bracket]
 replaces: []
 visibility: advanced
-description: Judge orchestrator — routes to solo, steps, on-diff
+description: Judge orchestrator — routes to solo, steps, on-diff, bracket
 cluster: judge
 type: orchestrator
 auto_detect: true
@@ -34,6 +34,7 @@ commands with a single entry point + sub-command dispatch.
 | `/judge solo` | `commands/judge/solo.md` | Standalone verdict on an existing diff — no implementer, no revision loop |
 | `/judge on-diff` | `commands/judge/on-diff.md` | Implementer→judge loop on a single change with a two-revision ceiling |
 | `/judge steps` | `commands/judge/steps.md` | Execute an ordered plan step by step, judge gate between steps |
+| `/judge bracket` | `commands/judge/bracket.md` | Resumable bracket of competing solutions; a lost match can be appealed (≤ 2 cards per line) |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -52,6 +53,7 @@ the `auto_detect` kill-switch, rollback). Detection table:
 | Intent is "fix and re-judge" / iterate **and** a diff exists | `judge/on-diff` | MEDIUM (mutating — confirm interactive, `--yes` in CI) |
 | A diff / range / PR is named, verdict only | `judge/solo` | HIGH |
 | Only an unscoped change present, no iterate intent | `judge/solo` (safe default — read-only) | MEDIUM |
+| User asks for competing solutions / a tournament on one task | `judge/bracket` | MEDIUM (spend-bearing — always shows the plan first) |
 | No target, or signals conflict | — | LOW → menu (interactive) / `ambiguous_routing` (CI) |
 
 `judge/solo` is the read-only safe default; `judge/on-diff` mutates via
@@ -70,6 +72,7 @@ the implementer loop, so it never fires on a bare safe-default fallback.
    > 1. solo — verdict only, no loop
    > 2. on-diff — implementer→judge revision loop
    > 3. steps — judge gate between ordered steps
+   > 4. bracket — competing solutions, appealable losses
 
 ## Rules
 

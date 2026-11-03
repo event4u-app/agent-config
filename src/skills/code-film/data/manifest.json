@@ -1,0 +1,69 @@
+{
+  "owner": "package-maintainer",
+  "refresh_cadence": "quarterly",
+  "upstream": null,
+  "manifest_version": 1,
+  "domain": "code-film",
+  "tier": "conditional-grounding",
+  "data_dir": ".",
+  "retriever": "bm25",
+  "default_domain": "recipe",
+  "domains": {
+    "recipe": {
+      "file": "recipes.csv",
+      "search_cols": [
+        "Recipe",
+        "Category",
+        "Keywords",
+        "Concept"
+      ],
+      "output_cols": [
+        "Recipe",
+        "Category",
+        "Inputs",
+        "Concept",
+        "Bans",
+        "Grid",
+        "Build",
+        "Gotchas",
+        "Review",
+        "Easing",
+        "Overshoot",
+        "Default Format"
+      ],
+      "max_results": 2
+    },
+    "tell": {
+      "file": "tells.csv",
+      "search_cols": [
+        "Tell",
+        "Keywords",
+        "Why It Reads As Generated"
+      ],
+      "output_cols": [
+        "Tell",
+        "Why It Reads As Generated",
+        "Ban",
+        "Alternative",
+        "Witness"
+      ],
+      "max_results": 5
+    },
+    "renderer": {
+      "file": "renderers.csv",
+      "search_cols": [
+        "Renderer",
+        "Keywords",
+        "Best Fit"
+      ],
+      "output_cols": [
+        "Renderer",
+        "License",
+        "Setup Cost",
+        "Best Fit",
+        "Route"
+      ],
+      "max_results": 3
+    }
+  }
+}

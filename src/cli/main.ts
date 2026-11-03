@@ -39,6 +39,7 @@ import { runPacksLs } from './commands/packs.js';
 import { runCommandsLs, runCommandsExplain, looksLikeCommandTarget } from './commands/commands.js';
 import { logger } from './log/logger.js';
 import { buildHelp } from './help.js';
+import { INIT_HELP } from './initHelp.js';
 import { applyConfigRootFromArgv } from './configRoot.js';
 import { buildVersionReadout } from '../shared/capabilities.js';
 
@@ -148,7 +149,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         .option('--json', 'Print the manifest on stdout as well as writing it')
         .option('--project-root <path>', 'Override the project root')
         .option('--slug <name>', 'Override the output directory name')
-        .option('--profile <name>', 'page (default) or asset — a single SVG, per class, light and dark')
+        .option('--profile <name>', 'page (default), asset — a single SVG, per class, light and dark — or film, a page computed from time')
+        .option('--duration <s>', 'Film: length in seconds when the page sets no window.__videoMeta', Number)
+        .option('--fps <n>', 'Film: frames per second when the page sets no window.__videoMeta', Number)
+        .option('--width <px>', 'Film: frame width when the page sets no window.__videoMeta', Number)
+        .option('--height <px>', 'Film: frame height when the page sets no window.__videoMeta', Number)
+        .option('--out <file>', 'Film: encode the captured frames to this MP4 (needs ffmpeg)')
+        .option('--audio <file>', 'Film: mux and measure this audio track')
+        .option('--hold <s>', 'Film: longest unchanged stretch that is not dead time (default 3)', Number)
+        .option('--tiles <n>', 'Film: frames in the contact sheet (default 12)', Number)
         .option('--class <name>', 'Asset class: icon | mark | illustration | diagram | animated')
         .option('--delivery <mode>', 'Delivery mode: inline | document | img | css-bg')
         .option('--thresholds <file>', 'JSON carrying fill_ratio_thresholds / geometry_tolerances')
@@ -177,6 +186,14 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     region?: string;
                     baseline?: string;
                     approve?: boolean;
+                    duration?: number;
+                    fps?: number;
+                    width?: number;
+                    height?: number;
+                    out?: string;
+                    audio?: string;
+                    hold?: number;
+                    tiles?: number;
                 },
             ) => {
                 // Validated, not cast. A cast let `--class Icon` through as an
@@ -202,9 +219,9 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     process.exitCode = 1;
                     return;
                 }
-                if (opts.profile !== undefined && opts.profile !== 'page' && opts.profile !== 'asset') {
+                if (opts.profile !== undefined && !['page', 'asset', 'film'].includes(opts.profile)) {
                     process.stderr.write(
-                        `[ui:render] unknown --profile "${opts.profile}"; expected page or asset\n`,
+                        `[ui:render] unknown --profile "${opts.profile}"; expected page, asset or film\n`,
                     );
                     process.exitCode = 1;
                     return;
@@ -215,6 +232,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     ...(opts.projectRoot === undefined ? {} : { projectRoot: opts.projectRoot }),
                     ...(opts.slug === undefined ? {} : { slug: opts.slug }),
                     ...(opts.profile === 'asset' ? { profile: 'asset' as const } : {}),
+                    ...(opts.profile === 'film' ? { profile: 'film' as const } : {}),
+                    ...(opts.duration === undefined ? {} : { duration: opts.duration }),
+                    ...(opts.fps === undefined ? {} : { fps: opts.fps }),
+                    ...(opts.width === undefined ? {} : { width: opts.width }),
+                    ...(opts.height === undefined ? {} : { height: opts.height }),
+                    ...(opts.out === undefined ? {} : { out: opts.out }),
+                    ...(opts.audio === undefined ? {} : { audio: opts.audio }),
+                    ...(opts.hold === undefined ? {} : { hold: opts.hold }),
+                    ...(opts.tiles === undefined ? {} : { tiles: opts.tiles }),
                     ...(opts.class === undefined ? {} : { assetClass: opts.class as AssetClass }),
                     ...(opts.delivery === undefined ? {} : { delivery: opts.delivery as DeliveryMode }),
                     ...(opts.thresholds === undefined ? {} : { thresholds: opts.thresholds }),
@@ -487,12 +513,14 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     maybePrintFirstRunNotice(head);
 
     if (head === '--help' || head === '-h') {
+        // `--help --tier=1|all` asks for the full surface, same as `help --tier=…`.
+        if (argv.length > 1) return delegateToBash({ args: ['help', ...argv.slice(1)] });
         process.stdout.write(`${buildHelp()}\n`);
         return 0;
     }
     if (head === '--version' || head === '-V') {
         // `--version --json` is the host-facing capability readout: emits
-        // `{ version, capabilities: { configRoot: true } }` so a spawner
+        // `{ version, capabilities: { configRoot: true, sessionList: 1, … } }` so a spawner
         // can detect support before relying on `--config-root`. Plain
         // `--version` keeps printing just the version string.
         if (argv.includes('--json')) {
@@ -524,10 +552,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     // no CLI tool-picker, one installer. Otherwise fall through to the bash CLI
     // install (road-to-single-install-source-of-truth § Phase 4 follow-up).
     // `init --project` initializes the minimal consumer project surface
-    // (bridge marker + overrides + gitignore block) via the `refresh
+    // (overrides + .gitignore and .gitattributes blocks) via the `refresh
     // --project` writer — never the GUI, never the global install
     // (road-to-setup-experience § Phase 1.3).
     if (head === 'init') {
+        // `init --help` documents `init`, not the bash installer it forwards to.
+        if (argv.includes('--help') || argv.includes('-h')) {
+            process.stdout.write(INIT_HELP);
+            return 0;
+        }
         // `--gui` is the explicit opt-in. It overrides the capability probes
         // (TTY, headless) but never `CI` / `AGENT_CONFIG_NO_UI` / a CLI-mode
         // flag — and an explicit request is never discarded silently, so a

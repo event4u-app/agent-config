@@ -48,7 +48,7 @@
  *
  * Exit codes: 0 green · 1 budget/regression exceeded · 2 internal error.
  */
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -209,6 +209,18 @@ export function hooksJsonCommand(event: string): string {
     return cmd;
 }
 
+/**
+ * EPIPE with an exit status is a child that finished without draining stdin —
+ * a fast no-op path racing the parent's write — and its timing is real. Any
+ * other spawn error, or EPIPE with no exit status, is a failed dispatch.
+ */
+export function dispatchFailure(proc: SpawnSyncReturns<string>): string | null {
+    const error = proc.error as NodeJS.ErrnoException | undefined;
+    if (error === undefined) return null;
+    if (error.code === 'EPIPE' && proc.status !== null) return null;
+    return error.message;
+}
+
 export function benchEvent(
     event: string,
     runs: number,
@@ -258,8 +270,9 @@ export function benchEvent(
             timeout: 60000,
         });
         const elapsed = performance.now() - started;
-        if (proc.error) {
-            throw new Error(`dispatch failed on ${event}: ${proc.error.message}`);
+        const failure = dispatchFailure(proc);
+        if (failure !== null) {
+            throw new Error(`dispatch failed on ${event}: ${failure}`);
         }
         durations.push(elapsed);
     }

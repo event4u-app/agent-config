@@ -15,7 +15,7 @@ import {
     recordOutcome,
     swapIn,
 } from '../../src/scripts/code_graph/map.js';
-import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
+import { areaDrift, buildMapModel, folderGroups, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems, ORB_MAX_CONCENTRATION, orbSpread } from '../../src/scripts/code_graph/map_verify.js';
 
 let root: string;
@@ -100,13 +100,28 @@ describe('the map model (Phase 2)', () => {
         expect(areaOf('tests/billing.test.ts')).toBe(areaOf('src/billing/f0.ts'));
     });
 
-    it('caps every area at a quarter of the clustered files', async () => {
-        const { graph } = await buildFromRepo(root, null);
-        const m = buildMapModel(graph);
-        const clustered = m.files.filter((f) => f.area >= 0).length;
-        for (const a of m.areas.filter((x) => x.kind === 'area')) {
-            expect(a.files.length).toBeLessThanOrEqual(Math.max(8, 0.25 * clustered));
-        }
+    it('splits a folder above a quarter of the files one level deeper, and keeps a flat one whole', () => {
+        const paths = [
+            ...Array.from({ length: 12 }, (_, i) => `src/a/f${i}.ts`),
+            ...Array.from({ length: 12 }, (_, i) => `src/b/f${i}.ts`),
+            ...Array.from({ length: 4 }, (_, i) => `lib/g${i}.ts`),
+            ...Array.from({ length: 30 }, (_, i) => `flat/h${i}.ts`),
+        ];
+        const groups = folderGroups(paths.map((_, i) => i), paths, 14);
+        expect(groups.map(([k, g]) => [k, g.length])).toEqual([
+            ['flat', 30],
+            ['lib', 4],
+            ['src/a', 12],
+            ['src/b', 12],
+        ]);
+    });
+
+    it('follows a folder whose files all sit in one subfolder instead of keeping it whole', () => {
+        const paths = [...Array.from({ length: 10 }, (_, i) => `resources/views/a/v${i}.blade.php`), ...Array.from({ length: 10 }, (_, i) => `resources/views/b/v${i}.blade.php`)];
+        expect(folderGroups(paths.map((_, i) => i), paths, 12).map(([k, g]) => [k, g.length])).toEqual([
+            ['resources/views/a', 10],
+            ['resources/views/b', 10],
+        ]);
     });
 
     it('is a pure function: same graph, same bytes', async () => {
@@ -139,6 +154,9 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         }
         const manifest = JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'manifest.json'), 'utf-8'));
         expect(manifest.generation).toBe(r.meta.graph_generation);
+        // The state describes the build's commit, named beside it, never HEAD (map-holds 4.7).
+        expect(manifest.built_at_commit).toBe(r.meta.commit);
+        expect(Object.keys(manifest).indexOf('built_at_commit')).toBeLessThan(Object.keys(manifest).indexOf('state'));
         expect(manifest.areas.code).toMatchObject({ path: 'code/map.json', source: 'code-graph', facts: r.model.files.length });
         expect(manifest.areas.data).toMatchObject({ path: 'data/data.json', freshness: 'empty' });
         expect(Object.keys(manifest.areas)).toEqual(['code', 'data', 'systems', 'interfaces', 'runtime', 'delivery', 'impact', 'agent']);
@@ -408,7 +426,9 @@ describe('the map learns and serves the workflow (Phase 7)', () => {
         const r = await buildMap(root);
         const grew = r.model.drift?.changed.find(([a]) => r.model.areas[a]?.files.some((f) => r.model.files[f]?.path === 'src/billing/f7.ts'));
         expect(grew?.[1]).toBeGreaterThan(0);
-        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'MAP.md'), 'utf-8')).toContain('## Since the last map');
+        // Drift depends on the previous drawing, not on the tree, so the tracked files never carry it.
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'MAP.md'), 'utf-8')).not.toContain('## Since the last map');
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'code', 'map.json'), 'utf-8')).not.toContain('"drift"');
     });
 
     it('detects a split and a merge by file membership', async () => {

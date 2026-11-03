@@ -7,7 +7,7 @@
  * close: attribution has a recognisable FORM, and the form is checkable without
  * knowing the name.
  *
- * Three classes, deliberately narrow (AI council 2026-08-28, blocker
+ * Four classes, deliberately narrow (AI council 2026-08-28, blocker
  * `how-loud-the-slug-heuristic-is`: "the heuristic must be narrowly defined and
  * tested against its likely false positives"):
  *
@@ -20,6 +20,12 @@
  *    allowlisted (own org, GitHub's own reserved paths, documentation
  *    placeholders, and the vendors whose tools this suite integrates or
  *    recommends — naming an integrated tool is explicitly allowed by the rule).
+ * 4. `attribution-label` — a line-leading attribution label (`Inspiration:`,
+ *    `Ported from:`, `Adapted from:`, …) whose value carries a readable
+ *    identifier, judged by the same grammar as `source-header`. Added because a
+ *    `- Inspiration: <owner>/<repo>/skills/<x>/SKILL.md` line shipped under
+ *    `src/` with an owner absent from the deny list, and no class saw it.
+ *    Under `src/` this class blocks with zero tolerance (see `tierFor`).
  *
  * ## What this is NOT — a floor, not a proof
  *
@@ -40,14 +46,16 @@
  * The stated recall limit that follows: **a source named as a bare slug, with
  * no `github.com` URL and no deny-list entry, is not detected.** That is a real
  * hole, it is written down rather than papered over with a wider regex, and the
- * deny set plus the Phase 0 census sweep are what cover it.
+ * deny set plus the Phase 0 census sweep are what cover it. The `attribution-label`
+ * class narrows it only where the slug sits behind an explicit label at the
+ * start of a line; a slug inside running prose stays undetected.
  *
  * Every predicate is pure and takes a bare string, so it answers for a file
  * that does not exist yet (a diff, a plan, a fixture).
  */
 
 /** The classes, in the order they are reported. */
-export const SHAPE_CLASSES = ['source-header', 'tmp-quote', 'repo-slug'] as const;
+export const SHAPE_CLASSES = ['source-header', 'tmp-quote', 'repo-slug', 'attribution-label'] as const;
 export type ShapeClass = (typeof SHAPE_CLASSES)[number];
 
 /** One shape finding on one line. */
@@ -454,6 +462,26 @@ export function legacySourceHeaderHits(line: string): ShapeHit[] {
     return [{ cls: 'source-header', value: value.slice(0, 120) }];
 }
 
+/**
+ * A line-leading attribution label. Anchored at the line start (after an
+ * optional blockquote and list marker) so a label word inside prose — "based
+ * on: the measurement above" mid-sentence — never reaches the identifier test.
+ */
+const ATTRIBUTION_LABEL_RE =
+    /^\s*(?:>\s*)?(?:[-*+]\s+)?\*{0,2}(?:inspiration|inspired by|ported from|adapted from|derived from|borrowed from|based on)\*{0,2}\s*:\*{0,2}\s*(\S.*)$/i;
+
+/**
+ * `attribution-label` hits on one line: the label alone is not a finding, only
+ * a label whose value names something a reader could look up.
+ */
+export function attributionLabelHits(line: string): ShapeHit[] {
+    const m = ATTRIBUTION_LABEL_RE.exec(line);
+    if (!m) return [];
+    const identifier = readableIdentifierIn(m[1] as string);
+    if (identifier === null) return [];
+    return [{ cls: 'attribution-label', value: identifier.slice(0, 120) }];
+}
+
 /** `tmp-quote` hits on one line. */
 export function tmpQuoteHits(line: string): ShapeHit[] {
     const out: ShapeHit[] = [];
@@ -487,7 +515,12 @@ export function repoSlugHits(line: string, allow: SlugAllowlist = DEFAULT_ALLOWL
 
 /** Every shape hit on one line. */
 export function shapeHits(line: string, allow: SlugAllowlist = DEFAULT_ALLOWLIST): ShapeHit[] {
-    return [...sourceHeaderHits(line), ...tmpQuoteHits(line), ...repoSlugHits(line, allow)];
+    return [
+        ...sourceHeaderHits(line),
+        ...tmpQuoteHits(line),
+        ...repoSlugHits(line, allow),
+        ...attributionLabelHits(line),
+    ];
 }
 
 /**
@@ -505,7 +538,22 @@ export function shapePathHits(rel: string, allow: SlugAllowlist = DEFAULT_ALLOWL
  * `how-loud-the-slug-heuristic-is` blocker: block inside `agents/**`, warn
  * everywhere else. Attribution is concentrated in `agents/**`; repository slugs
  * are ordinary content in integration code and docs.
+ *
+ * One exception, owner decision OQ-62 (E2, 2026-11-02): an `attribution-label`
+ * under `src/` blocks. A line-leading `Inspiration:` / `Ported from:` label
+ * with a readable identifier is attribution by construction, not integration
+ * content, and `src/` is what ships. Measured 0 such hits at the flip.
  */
-export function tierFor(rel: string): 'block' | 'warn' {
-    return rel.startsWith('agents/') ? 'block' : 'warn';
+export function tierFor(rel: string, cls?: ShapeClass): 'block' | 'warn' {
+    if (rel.startsWith('agents/')) return 'block';
+    return isZeroTolerance(rel, cls) ? 'block' : 'warn';
+}
+
+/**
+ * A block finding that fails the gate on its own, outside the `agents/**`
+ * ratchet. Folding it into the ratcheted count would let it pass whenever the
+ * pre-existing `agents/**` debt shrinks below the baseline.
+ */
+export function isZeroTolerance(rel: string, cls?: ShapeClass): boolean {
+    return cls === 'attribution-label' && rel.startsWith('src/');
 }

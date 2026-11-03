@@ -112,7 +112,7 @@ describe('the token dimension is independent of the count', () => {
 });
 
 describe('the live corpus', () => {
-    it('reads 301 maintained skills and an exact token total', () => {
+    it('reads 303 maintained skills and an exact token total', () => {
         // Pinned so a later reader can tell movement from a re-derivation. If
         // this fails after a legitimate change, the gate has already said so.
         //
@@ -176,9 +176,18 @@ describe('the live corpus', () => {
         // 11492 -> 11487 on 2026-10-27: `database` and `sql-writing` stop naming
         // MariaDB/MySQL as their only engine and `database` claims schema design
         // (road-to-database-relational-modeling 2.1/2.6). Shrink direction.
+        //
+        // 301 -> 302 on 2026-11-02: `code-film` landed (road-to-a-film-built-from-time);
+        // its catalogue line was paid by shortening `motion-choreographer`'s
+        // description, so the token total holds at 11487.
+        //
+        // 302 -> 303 on 2026-11-02: `founder-idea-interview` landed
+        // (road-to-a-founder-interview-that-ends-in-a-plan, OQ-61); its catalogue
+        // line was paid by shortening three neighbour descriptions, so the token
+        // total moves by one, 11487 -> 11488.
         const e = measureSkillEstate(REPO);
-        expect(e.skill_count).toBe(301);
-        expect(e.skill_description_tokens).toBe(11487);
+        expect(e.skill_count).toBe(303);
+        expect(e.skill_description_tokens).toBe(11488);
         expect(e.deprecated_count).toBe(0);
     });
 

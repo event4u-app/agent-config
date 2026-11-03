@@ -24,8 +24,8 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { EXPECTED_GRAMMAR_ABI, GRAMMAR_WASM, type Lang } from './types.js';
 
 const require = createRequire(import.meta.url);
@@ -89,7 +89,7 @@ const INSTALL_HINT =
  * actually present, and otherwise falls through to the devDependency pack,
  * which is exactly today's behaviour.
  */
-const VENDORED_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'vendor', 'grammars');
+const VENDORED_DIR = path.join(resolvePackageRoot(import.meta.url), 'src', 'vendor', 'grammars');
 
 let _wasmDir: string | null = null;
 /** The devDependency grammar pack — the fallback source, and this repo's own. */

@@ -14,7 +14,7 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { gitProbe } from '../_lib/spawn_env.js';
+import { WINDOW_RS, WINDOW_US, windowLog } from './git_window.js';
 import type { FileRole, MapModel } from './map_model.js';
 import { EXT_LANG } from './types.js';
 
@@ -302,44 +302,23 @@ export interface GitFacts {
 }
 
 /**
- * One `git log` pass over the window ending at HEAD's commit date — anchored on
- * the commit, not the clock, so two builds of one commit write the same bytes.
+ * Churn, owners and last change per file from the history window the history
+ * lane reads too (`git_window.ts`), so two builds of one commit write the same bytes.
  * Author names only: an e-mail is identifying and the page needs no address.
  * Returns null outside a git repository.
  */
 export function readGitHistory(root: string, days = GIT_WINDOW_DAYS): Map<string, GitFacts> | null {
-    const git = (args: string[]): string =>
-        gitProbe(root, [...args], { maxBuffer: 512 * 1024 * 1024 });
-    let head: string;
-    try {
-        head = git(['log', '-1', '--format=%cI']).trim();
-    } catch {
-        return null;
-    }
-    if (!head) return null;
-    // A shallow clone holds a commit or two: churn read from it would look healthy, not unknown.
-    try {
-        if (git(['rev-parse', '--is-shallow-repository']).trim() === 'true') return null;
-    } catch {
-        return null;
-    }
-    const since = new Date(new Date(head).getTime() - days * 86_400_000).toISOString();
-    let out: string;
-    try {
-        // `--relative` makes paths root-relative when root is a package inside a larger repository.
-        // `-M`: a renamed file keeps its history under the name it carries today.
-        out = git(['-c', 'core.quotePath=false', 'log', `--since=${since}`, '--no-merges', '-M', '--relative', '--name-status', '--format=%x1e%aN%x1f%cs', '--', '.']);
-    } catch {
-        return null;
-    }
+    const window = windowLog(root, days);
+    if ('skip' in window) return null;
+    const out = window.log;
     const acc = new Map<string, { churn: number; authors: Map<string, number>; last: string }>();
     // Newest → oldest: an older mention of `old` is the file now called alias(new).
     const alias = new Map<string, string>();
     const canonical = (p: string): string => alias.get(p) ?? p;
-    for (const rec of out.split('\x1e')) {
+    for (const rec of out.split(WINDOW_RS)) {
         if (!rec.trim()) continue;
         const [header, ...files] = rec.split('\n');
-        const [rawAuthor = '', date = ''] = (header ?? '').split('\x1f');
+        const [, rawAuthor = '', date = ''] = (header ?? '').split(WINDOW_US);
         // A name configured as an address is an address: it never reaches the map.
         const author = rawAuthor.includes('@') ? '(name withheld)' : rawAuthor;
         for (const f of files) {

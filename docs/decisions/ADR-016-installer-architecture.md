@@ -17,7 +17,7 @@ review_trigger: >-
 
 **Accepted** · 2026-05-21 · external AI Council pass (`claude-sonnet-4-5`
 + `gpt-4o`, 2 rounds, `design` lens, actual cost $0.13) on
-[`agents/roadmaps/monorepo-phase-3-typescript-installer.md`](../../agents/roadmaps/monorepo-phase-3-typescript-installer.md).
+[`agents/roadmaps/archive/monorepo-phase-3-typescript-installer.md`](../../agents/roadmaps/archive/monorepo-phase-3-typescript-installer.md).
 Council issued **conditional approval** with five blockers; this ADR
 folds each blocker into the design before Phase 3.1 starts.
 
@@ -185,7 +185,7 @@ banners without breaking existing agents.
 
 ## References
 
-- Roadmap: [`agents/roadmaps/monorepo-phase-3-typescript-installer.md`](../../agents/roadmaps/monorepo-phase-3-typescript-installer.md)
+- Roadmap: [`agents/roadmaps/archive/monorepo-phase-3-typescript-installer.md`](../../agents/roadmaps/archive/monorepo-phase-3-typescript-installer.md)
 - Discovery manifest: [ADR-015](ADR-015-discovery-manifest-contract.md)
 - CLI shell precedent: [ADR-012](ADR-012-typescript-cli-shell.md)
 - Council session: [`agents/runtime/council/responses/phase-3-installer-design.json`](../../agents/runtime/council/responses/phase-3-installer-design.json) <!-- council-ref-allowed: ADR decision-trace -->

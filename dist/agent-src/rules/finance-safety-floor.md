@@ -50,7 +50,7 @@ THE AGENT NEVER ISSUES A FINAL "INVEST" / "DON'T INVEST" / "RAISE" / "DON'T RAIS
 SURFACE THE TRADE-OFF. NAME THE RISK. THE HUMAN DECIDES.
 ```
 
-Holds for every finance-pack skill (`runway-cognition`, `dcf-modeling`, `scenario-modeling`, `unit-economics-modeling`, `forecasting`, `fundraising-narrative`, `forecast-accuracy`). Finance output is decision support, never the decision.
+Holds for every finance-pack skill (`runway-cognition`, `dcf-modeling`, `scenario-modeling`, `unit-economics-modeling`, `forecasting`, `forecast-accuracy`). Finance output is decision support, never the decision.
 
 ## Mandatory disclosure footer
 

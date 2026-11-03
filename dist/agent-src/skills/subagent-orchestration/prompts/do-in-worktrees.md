@@ -40,6 +40,11 @@ You are running INSIDE a fresh git worktree at {{worktree_path}} on
 branch {{branch_name}}. Prior step's open files / branch state cannot
 leak into this worktree — that is the whole point.
 
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
+
 STEP TYPED INPUT (from prior step's ## Output): {{typed_input}}
 STEP DESCRIPTION: {{step_description}}
 EXPECTED ## Output (next step's ## Input): {{expected_output_shape}}
@@ -71,6 +76,11 @@ ON COMPLETION, return ONE envelope per schemas/subagent-status.json:
 You are the chain-end judge. The chain produced N typed outputs, one
 per worktree. Validate the final integration PR against the chain's
 goal.
+
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
 
 CHAIN STEPS: {{step_summaries_array}}
 TYPED OUTPUTS: {{outputs_array}}

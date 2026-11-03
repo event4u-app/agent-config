@@ -43,7 +43,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import {
     GLOBAL_RULE_DIRS,
@@ -57,6 +56,7 @@ import {
     load_inventory,
     recorded_absolute_files,
 } from './global_deploy_inventory.js';
+import { resolvePackageRoot } from './package_root.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE } from './user_global_paths.js';
 import { ruleBody, splitFrontmatter } from './rule_law_section.js';
 import { normaliseLayerText } from './installed_layer_normalise.js';
@@ -454,13 +454,10 @@ function readWindows(raw: unknown): HostWindowLimit[] {
 /**
  * Where the limits live, derived from this module rather than from `cwd`.
  *
- * The two `..` hops climb from `src/scripts/_lib` to `src/`, which is where
- * `config/` lives — NOT to the package root, though the comment said so until
- * 2026-10-05. The result is correct and the arithmetic stated for it was not,
- * which is the half a future reader would trust when changing the hops.
- *
- * `fileURLToPath`, NOT `new URL(...).pathname` — the claimed parity with
- * `default_template_path()` was only half true until 2026-10-05. A `pathname`
+ * Resolved through the package marker (`resolvePackageRoot`) rather than `..`
+ * hops: this module also runs bundled into `dist/install/install.mjs`, where the
+ * source-layout hops pointed at a `config/` directory that does not exist.
+ * `fileURLToPath` (inside the resolver), NOT `new URL(...).pathname`, which
  * percent-encodes, so a package under a directory with a space resolved to
  * `/Users/x/My%20Projects/...`, and on Windows it yields a leading-slash drive
  * path. Either way the read fails, `loadHostInstructionLimits` swallows it and
@@ -470,13 +467,7 @@ function readWindows(raw: unknown): HostWindowLimit[] {
  * avoid.
  */
 export function defaultHostLimitsPath(): string {
-    return path.join(
-        path.dirname(fileURLToPath(import.meta.url)),
-        '..',
-        '..',
-        'config',
-        'host-instruction-limits.json',
-    );
+    return path.join(resolvePackageRoot(import.meta.url), 'src', 'config', 'host-instruction-limits.json');
 }
 
 /**

@@ -55,8 +55,8 @@ describe('lint_roadmap_producers — the live tree', () => {
 
     it('finds the declared roadmap producers', () => {
         // The Linear derivation the plan also named does not exist as a command
-        // in this tree, so the producer set is eight, not nine.
-        expect(producers.length).toBe(8);
+        // in this tree; `/challenge-me founder` (OQ-61) joined as the ninth.
+        expect(producers.length).toBe(9);
     });
 
     it('every declared producer ends in closure', () => {

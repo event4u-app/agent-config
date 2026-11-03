@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-29",
+  "measured_at": "2026-11-02",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,14 +11,14 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +4.69 pp breaches the +2.0 pp guard",
+    "reason": "false activation +5.48 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 1.505,
-    "delta_false_activation_pp": 4.687,
-    "p_value": 0.5107,
+    "delta_recall_pp": 1.706,
+    "delta_false_activation_pp": 5.479,
+    "p_value": 0.4396,
     "discordant_positive_pairs": {
-      "gained": 121,
-      "lost": 110
+      "gained": 127,
+      "lost": 114
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 731,
-        "positiveHits": 446,
-        "negatives": 704,
-        "negativeHits": 102
+        "positives": 762,
+        "positiveHits": 468,
+        "negatives": 730,
+        "negativeHits": 103
       },
       "description+body": {
-        "positives": 731,
-        "positiveHits": 457,
-        "negatives": 704,
-        "negativeHits": 135
+        "positives": 762,
+        "positiveHits": 481,
+        "negatives": 730,
+        "negativeHits": 143
       }
     },
     "recall_pp": {
-      "description": 61.012,
-      "description+body": 62.517
+      "description": 61.417,
+      "description+body": 63.123
     },
     "false_activation_pp": {
-      "description": 14.489,
-      "description+body": 19.176
+      "description": 14.11,
+      "description+body": 19.589
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 147,
+    "train_corpora": 152,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1435,
-    "catalogue_size": 301
+    "cases": 1492,
+    "catalogue_size": 303
   }
 }

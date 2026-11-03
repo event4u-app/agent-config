@@ -51,7 +51,7 @@ import * as path from 'node:path';
 import { read_lockfile } from './installed_lock.js';
 
 /**
- * The five detectors, in the order the gate runs them.
+ * The six detectors, in the order the gate runs them.
  *
  * The roadmap's § 0 names three (A promissory, B language, C verification).
  * That was true of the draft and is not true of the tree: detector D

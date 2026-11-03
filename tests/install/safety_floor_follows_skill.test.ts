@@ -47,7 +47,23 @@ describe('a safety floor follows the skills it guards', () => {
     });
 
     it('keeps a consequence rule that guards no skill on its pack', () => {
-        expect(excludedRuleBasenames(RULES, NO_PACKS)).toContain('image-likeness-and-rights.md');
+        const excluded = new Set(excludedRuleBasenames(RULES, NO_PACKS));
+        const unguarded = fs
+            .readdirSync(RULES)
+            .filter((f) => f.endsWith('.md') && typeof meta(f)['consequence_class'] === 'string' && guardedSkills(f).length === 0)
+            .filter((f) => Array.isArray(meta(f)['packs']));
+        expect(unguarded.length).toBeGreaterThan(0);
+        for (const f of unguarded) expect(excluded.has(f), f).toBe(true);
+    });
+
+    it('ships the image floor with no pack active, routed to every skill that names it (OQ-42)', () => {
+        expect(excludedRuleBasenames(RULES, NO_PACKS)).not.toContain('image-likeness-and-rights.md');
+        const naming = fs.readdirSync(SKILLS).filter((d) => {
+            const f = path.join(SKILLS, d, 'SKILL.md');
+            return fs.existsSync(f) && fs.readFileSync(f, 'utf-8').includes('image-likeness-and-rights');
+        });
+        expect(naming.length).toBeGreaterThan(0);
+        expect([...guardedSkills('image-likeness-and-rights.md')].sort()).toEqual(naming.sort());
     });
 
     it('names only skills that exist', () => {

@@ -84,7 +84,8 @@ import * as YAML from 'yaml';
 
 import { _check_overrides } from './doctor_overrides.js';
 import { _is_global_only_consumer } from './doctor_install_mode.js';
-import { classifyOwnership, ledgerModifiedRecords, noProjectInstallLines } from './doctor_ownership_ledger.js';
+import { classifyOwnership, globalInstalledTools, installedOutcome, ledgerModifiedRecords, noProjectInstallLines, notInstalledShortCircuit } from './doctor_ownership_ledger.js';
+import { bridgeDriftNoManifest as _check_bridge_drift_no_manifest, memoryMergeUnion, skippedManifestCheck as _skipped_manifest_check } from './_doctor_hints.js';
 // Forwarded, not re-declared: both names moved to doctor_install_mode.ts and existing
 // importers of cmd_doctor.js keep resolving. `export ... from` rather than an import,
 // because INSTALL_MODE_MARKER_RELATIVE is not referenced here any more and an unused
@@ -92,6 +93,7 @@ import { classifyOwnership, ledgerModifiedRecords, noProjectInstallLines } from 
 export { INSTALL_MODE_MARKER_RELATIVE, _is_global_only_consumer } from './doctor_install_mode.js';
 import * as claude_plugin from '../_lib/claude_plugin.js';
 import * as claude_settings_hooks from '../_lib/claude_settings_hooks.js';
+import { runCloudReachRepair } from '../_lib/cloud_carry.js';
 import * as staged_runtime from '../../install/stagedRuntime.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import * as installed_lock from '../_lib/installed_lock.js';
@@ -105,7 +107,6 @@ import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
 import * as install_reach from '../_lib/install_reach_checks.js';
 import * as runtime_checks from '../_lib/doctor_runtime_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
-import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
     PROJECT_ROOT_ENV,
     ROOT_OVERRIDE_ENV,
@@ -121,11 +122,9 @@ import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_
 import { updateVerdictFor } from './doctor_update_verdict.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
-import {
-    PROVIDER_CLI_META,
-    codexHome,
-    detectEnvironment,
-} from '../_lib/environment_detector.js';
+import { PROVIDER_CLI_META, detectEnvironment } from '../_lib/environment_detector.js';
+import { readCodexAuth } from '../_lib/codex_auth.js';
+import { codexHomeInfo, geminiCliHomeOverride } from '../_lib/provider_home.js';
 import {
     absentCouncilFacts,
     buildDetectionReport,
@@ -139,6 +138,7 @@ import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { rglob as _rglob_raw, scanForeign } from '../_lib/foreign_scan.js';
 import { runCensus, summaryLine } from './cmd_doctor_neighbours.js';
+import { DOCTOR_HELP_BODY } from './_doctor_help.js';
 import {
     LEGACY_ALL,
     excludedRuleBasenames,
@@ -779,9 +779,8 @@ const MANIFEST_REQUIRED_CHECK_IDS: ReadonlySet<string> = new Set([
     'unsupported-combos',
 ]);
 
-
 /** Repair targets that `--repair <id>` accepts. */
-const REPAIR_IDS = ['wizard-state'] as const;
+const REPAIR_IDS = ['wizard-state', 'cloud-reach'] as const;
 
 /** Six gates that govern the MCP `experimental → beta` promotion. */
 const MCP_BETA_GATES: ReadonlyArray<[string, string]> = [
@@ -2058,16 +2057,6 @@ function pyFloat(value: number): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Codex CLI home — `CODEX_HOME` env override (the codex CLI's own
- * convention), else `~/.codex`. Single definition in
- * `_lib/environment_detector.ts` so the detection report and this check probe
- * the same path; aliased here to keep the existing call sites unchanged.
- */
-function _codex_home(): string {
-    return codexHome();
-}
-
-/**
  * Codex binary name for the team check — REUSES the council probe's binary
  * discovery: when a council config exists and declares an enabled `openai`
  * member whose effective mode is `cli` (pinned) OR `auto` (may resolve to
@@ -2094,79 +2083,6 @@ function _team_codex_binary_name(project_root: string): string {
         return member.binary;
     }
     return default_bin;
-}
-
-/**
- * Decode a JWT payload's `exp` claim (epoch seconds) — base64 decode only,
- * NO signature verification, no network. Non-JWT / undecodable → null.
- */
-function _jwt_exp(token: unknown): number | null {
-    if (typeof token !== 'string') return null;
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    try {
-        const payload: unknown = JSON.parse(
-            Buffer.from(parts[1] as string, 'base64url').toString('utf-8'),
-        );
-        if (typeof payload !== 'object' || payload === null) return null;
-        const exp = (payload as Record<string, unknown>)['exp'];
-        return typeof exp === 'number' && Number.isFinite(exp) && exp > 0 ? exp : null;
-    } catch {
-        return null;
-    }
-}
-
-/** Coerce an explicit expiry field to epoch seconds (number or ISO string). */
-function _epoch_seconds(value: unknown): number | null {
-    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-        // Heuristic: values past ~2286 in seconds are epoch milliseconds.
-        return value > 1e12 ? value / 1000 : value;
-    }
-    if (typeof value === 'string' && value.trim() !== '') {
-        const ms = Date.parse(value);
-        return Number.isNaN(ms) ? null : ms / 1000;
-    }
-    return null;
-}
-
-/**
- * Latest locally-derivable expiry (epoch seconds) from a codex `auth.json`,
- * or null when none is derivable. Sources, all offline:
- *
- * - explicit `expires_at` / `expiry` / `exp` fields (top level; numbers in
- *   seconds or ms, or ISO date strings), and
- * - the `exp` claim of JWT tokens under `tokens.{access_token,id_token}`
- *   (or the same keys top-level) — base64 payload decode only, never
- *   signature verification.
- *
- * LATEST wins: the real codex auth.json holds a refresh_token, so an
- * expired id_token sitting next to a live access_token is not an auth
- * failure — WARN only when everything derivable is past.
- */
-function _codex_auth_expiry(auth_path: string): number | null {
-    let data: unknown;
-    try {
-        data = JSON.parse(fs.readFileSync(auth_path, 'utf-8'));
-    } catch {
-        return null;
-    }
-    if (typeof data !== 'object' || data === null) return null;
-    const d = data as Record<string, unknown>;
-    const candidates: number[] = [];
-    for (const key of ['expires_at', 'expiry', 'exp']) {
-        const v = _epoch_seconds(d[key]);
-        if (v !== null) candidates.push(v);
-    }
-    const tokens_raw = d['tokens'];
-    const tokens =
-        typeof tokens_raw === 'object' && tokens_raw !== null && !Array.isArray(tokens_raw)
-            ? (tokens_raw as Record<string, unknown>)
-            : {};
-    for (const key of ['access_token', 'id_token']) {
-        const v = _jwt_exp(tokens[key] ?? d[key]);
-        if (v !== null) candidates.push(v);
-    }
-    return candidates.length > 0 ? Math.max(...candidates) : null;
 }
 
 /** The `ai_team` block from `.agent-settings.yml` — lenient, `{}` when absent. */
@@ -2318,6 +2234,16 @@ function _reset_detection_memo(): void {
  *   member is permitted to run and cannot.
  */
 function _check_detection(project_root: string): Dict {
+    const result = _check_detection_core(project_root);
+    const gemini_override = geminiCliHomeOverride();
+    if (gemini_override === null) return result;
+    return {
+        ...result,
+        message: `${String(result['message'])} · GEMINI_CLI_HOME is set (${gemini_override}) and not evaluated yet — Gemini login is read from ~/.gemini`,
+    };
+}
+
+function _check_detection_core(project_root: string): Dict {
     const report = _detection_report(project_root);
     const detected = report.providers.filter((r) => r.detected);
     const hosts_installed = report.hosts.filter((h) => h.installed).length;
@@ -2397,14 +2323,20 @@ function _check_team(project_root: string): Dict {
 
     // (a, cont.) codex auth — READ-ONLY probe of $CODEX_HOME/auth.json:
     // presence + locally-derivable expiry evidence (no network).
-    const auth_path = path.join(_codex_home(), 'auth.json');
-    const authed = pathExists(auth_path);
+    const codex_home = codexHomeInfo();
+    const auth_path = path.join(codex_home.path, 'auth.json');
+    const verdict = readCodexAuth(auth_path);
+    const authed = verdict.present;
     let auth_str: string;
-    if (!authed) {
+    if (!authed && codex_home.source === 'env' && !pathExists(codex_home.path)) {
+        // A login here would land under a path nothing reads — name the cause.
+        auth_str = `codex auth ❌ — CODEX_HOME points at nothing (${codex_home.path})`;
+        remedies.push(`fix or unset CODEX_HOME: ${codex_home.path} does not exist`);
+    } else if (!authed) {
         auth_str = `codex auth ❌ (${auth_path})`;
         remedies.push('run `codex login`');
     } else {
-        const expiry = _codex_auth_expiry(auth_path);
+        const expiry = verdict.expiresAt;
         if (expiry !== null && expiry * 1000 < Date.now()) {
             auth_str = `codex auth ⚠️ expired (${auth_path})`;
             remedies.push('auth token appears expired — run `codex login`');
@@ -2634,61 +2566,6 @@ function _check_settings_review_pending(): Dict {
     };
 }
 
-/**
- * `memory-merge-union` — read-only warn check (road-to-reachable-code-memory
- * Phase 5). The `merge=union` .gitattributes block lets two branches each
- * appending a NEW memory entry (intake JSONL, or the flat curated
- * `agents/memory/<type>.yml` files) merge cleanly instead of conflicting.
- * Without it, ordinary parallel memory writes on separate branches produce a
- * merge conflict the human has to resolve by hand. Never fails the run —
- * this is advisory, same posture as `offline-readiness`.
- */
-function _check_memory_merge_union(project_root: string): Dict {
-    const remedy =
-        'run: npx tsx src/scripts/sync_gitattributes.ts (or `agent-config refresh --project`)';
-    const target = path.join(project_root, sync_gitattributes.DEFAULT_GITATTRIBUTES);
-    if (!pathExists(target)) {
-        return {
-            id: 'memory-merge-union',
-            status: 'warn',
-            message:
-                'no .gitattributes at project root — memory merge-safety attributes not applied',
-            remedy,
-        };
-    }
-    let text: string;
-    try {
-        text = readText(target);
-    } catch (exc) {
-        return {
-            id: 'memory-merge-union',
-            status: 'warn',
-            message: `unreadable .gitattributes at ${target}: ${osErrorStr(exc)}`,
-            remedy,
-        };
-    }
-    const has_block = text.includes(sync_gitattributes.SECTION_HEADER);
-    const has_intake_union = /agents\/memory\/intake\/\*\.jsonl\s+merge=union/.test(text);
-    if (has_block && has_intake_union) {
-        return {
-            id: 'memory-merge-union',
-            status: 'ok',
-            message:
-                '.gitattributes carries the memory merge-safety block (intake JSONL union-merge present)',
-            remedy: '',
-        };
-    }
-    return {
-        id: 'memory-merge-union',
-        status: 'warn',
-        message: has_block
-            ? '.gitattributes has the managed block but is missing the intake merge=union line'
-            : '.gitattributes is missing the memory merge-safety block — parallel-branch ' +
-              'memory writes can conflict instead of merging',
-        remedy,
-    };
-}
-
 interface JsonDecodeError {
     msg: string;
     lineno: number;
@@ -2828,7 +2705,7 @@ function _run_checks(
         'unsupported-combos': () => _check_unsupported_combos(manifest),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
-        'memory-merge-union': () => _check_memory_merge_union(project_root),
+        'memory-merge-union': () => memoryMergeUnion(project_root),
         'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
     };
     const out: Dict[] = [];
@@ -2841,45 +2718,12 @@ function _run_checks(
     return out;
 }
 
-function _skipped_manifest_check(check_id: string): Dict {
-    return {
-        id: check_id,
-        status: 'skipped',
-        message: 'requires a project lockfile (agents/installed-tools.lock)',
-        remedy:
-            'run `agent-config init` to create a project lockfile, ' +
-            'then re-run this check',
-    };
-}
-
-function _check_bridge_drift_no_manifest(bridge_present: boolean): Dict {
-    if (bridge_present) {
-        return {
-            id: 'bridge-drift',
-            status: 'ok',
-            message:
-                'no project lockfile → distributed-tool drift not ' +
-                'applicable (global-only consumer)',
-            remedy: '',
-        };
-    }
-    return {
-        id: 'bridge-drift',
-        status: 'skipped',
-        message:
-            'no project lockfile and no consumer install marker → drift ' +
-            'check not applicable',
-        remedy:
-            'run `agent-config init` (project install) or ' +
-            '`agent-config refresh --project` (global-only consumer)',
-    };
-}
-
 function _run_checks_no_manifest(
     project_root: string,
     bridge_present: boolean,
     only: string | null = null,
 ): Dict[] {
+    const installed = bridge_present || globalInstalledTools().length > 0;
     const runners: Record<string, CheckRunner> = {
         scope: () => _check_scope(project_root),
         'global-binary': () => _check_global_binary(project_root),
@@ -2898,9 +2742,9 @@ function _run_checks_no_manifest(
         // worth the comment because the duplication is easy to miss.
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
-        'manifest-integrity': () => _skipped_manifest_check('manifest-integrity'),
-        'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
-        'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present),
+        'manifest-integrity': () => _skipped_manifest_check('manifest-integrity', installed),
+        'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness', installed),
+        'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present, installed),
         'mcp-mode': () => _check_mcp_mode(project_root),
         'mcp-beta-readiness': () => _check_mcp_beta_readiness(project_root),
         'offline-readiness': () => _check_offline_readiness(),
@@ -2910,10 +2754,10 @@ function _run_checks_no_manifest(
         'council-cli': () => _check_council_cli(project_root),
         'detection': () => _check_detection(project_root),
         team: () => _check_team(project_root),
-        'unsupported-combos': () => _skipped_manifest_check('unsupported-combos'),
+        'unsupported-combos': () => _skipped_manifest_check('unsupported-combos', installed),
         'wizard-state': _check_wizard_state,
         'settings-review-pending': _check_settings_review_pending,
-        'memory-merge-union': () => _check_memory_merge_union(project_root),
+        'memory-merge-union': () => memoryMergeUnion(project_root),
         'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
     };
     const out: Dict[] = [];
@@ -2976,11 +2820,11 @@ function _run_no_manifest(
     }
     const sx = strictExit(opts, checks, false); // no manifest: keep the 2, never soften to 1
     if (sx !== null) return bridge_present ? sx : 2;
-    if (opts.ci && bridge_present) {
-        // Same fold as the manifest path: check failures and ledger drift are red under --ci.
+    if (opts.ci && bridge_present) {  // same fold as the manifest path: check failures and ledger drift are red under --ci
         return fail_check || modified.length > 0 ? 1 : 0;
     }
-    return bridge_present ? (modified.length > 0 ? 1 : 0) : 2;
+    if (opts.json || opts.ci) return bridge_present ? (modified.length > 0 ? 1 : 0) : 2;
+    return installedOutcome(checks, modified.length); // an install exists: notInstalledShortCircuit ran first
 }
 
 function _emit_json(
@@ -3052,9 +2896,8 @@ interface Options {
 
 const PROG = 'agent-config doctor';
 
-// Verbatim argparse usage block (captured from the .py at COLUMNS=80). The
-// per-flag `--help` BODY is a documented divergence — argparse re-wraps it to
-// terminal width; golden tests assert the `usage:` token + exit code only.
+// Verbatim argparse usage block (captured from the .py at COLUMNS=80); the
+// per-flag `--help` body lives in `_doctor_help.ts`.
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
     STRICT_USAGE +
@@ -3101,7 +2944,7 @@ function _parse(argv: string[]): Options {
     while (i < argv.length) {
         const a = argv[i] as string;
         if (a === '-h' || a === '--help') {
-            process.stdout.write(USAGE);
+            process.stdout.write(USAGE + DOCTOR_HELP_BODY);
             throw new ArgparseExit(0);
         }
         const eq = a.startsWith('--') ? a.indexOf('=') : -1;
@@ -3312,6 +3155,7 @@ function _run_repair(opts: Options): number {
         }
         return 0;
     }
+    if (target === 'cloud-reach') return runCloudReachRepair(_resolve_project_root(opts.project)[0], _package_root(), _current_package_version(), opts.json ? (p) => _jsonDumpsIndentAscii(p, 2) : null);
     eprint(`❌  doctor: unknown repair target ${pyRepr(target)}`);
     return 2;
 }
@@ -3352,7 +3196,7 @@ function main(argv: string[] | null = null): number {
     const manifest = installed_tools.read_manifest(manifest_pth);
     if (manifest === null) {
         const bridge_present = _is_global_only_consumer(project_root);
-        return _run_no_manifest(opts, project_root, origin, bridge_present);
+        return notInstalledShortCircuit(opts, bridge_present) ?? _run_no_manifest(opts, project_root, origin, bridge_present);
     }
 
     const [records, known] = _collect_manifest_entries(project_root, manifest);
@@ -3399,7 +3243,7 @@ function main(argv: string[] | null = null): number {
     }
     const strict = strictExit(opts, checks, drift_present);
     if (strict !== null) return strict;
-    return drift_present ? 1 : 0;
+    return opts.json ? (drift_present ? 1 : 0) : installedOutcome(checks, missing.length + modified.length + foreign.length + tag_drift.length);
 }
 
 // --- CLI entry ---

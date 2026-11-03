@@ -23,6 +23,12 @@ Every prompt cites the status taxonomy in
 ends with the **return-envelope** instruction so the subagent's reply
 validates against that schema.
 
+Every role prompt — implementer and judge alike — carries the
+`{{user_requirements}}` slot: the subagent sees none of the conversation, so
+what the user asked for reaches it only through that slot
+([`subagent-spawn-contract`](../../../contexts/execution/subagent-spawn-contract.md)
+§ Worker-prompt rules (a)).
+
 ### UI-shaped slices carry the design context, or name its absence
 
 A delegated worker's context is whatever the dispatch prompt carries. For a
@@ -99,7 +105,9 @@ Claude Code 2.1.302 a background fork read 99.8 % of its first call from the
 parent's cache and kept the parent's tool pool); elsewhere it is unobserved. Never default to "always fork": that
 option was considered and cut ([`../SKILL.md`](../SKILL.md) § Form gate)
 precisely because the cache-sharing benefit cannot be predicted before the
-fork happens, and background mode can erase it outright.
+fork happens, and background mode can erase it outright. A judge, reviewer or
+validator is never forked, whatever the tool fit: the inherited conversation is
+the author's, and independence is what that slice is for.
 
 ## Loading
 

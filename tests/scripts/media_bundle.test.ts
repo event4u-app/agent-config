@@ -279,7 +279,7 @@ describe.skipIf(!HAVE_FFMPEG)('media bundle — generated fixtures through the r
     it('takes the burned-in clip without audio to rung 3 and flags its sheets', () => {
         const r = bundle(fx.burnedIn, 'burned');
         expect(r.rung).toBe(3);
-        expect(fs.readFileSync(path.join(r.dir, 'context.md'), 'utf8')).toMatch(/transcript rung: 3 — burned-in subtitles/);
+        expect(fs.readFileSync(path.join(r.dir, 'context.md'), 'utf8')).toMatch(/transcript rung: 3 — on-screen text/);
         const data = readFrames(r.dir);
         expect(data.sheets.length).toBeGreaterThan(0);
         expect(data.sheets.every((s) => s.burned_in_candidate)).toBe(true);
@@ -300,7 +300,11 @@ describe.skipIf(!HAVE_FFMPEG)('media bundle — generated fixtures through the r
         fs.copyFileSync(fx.injection, hostile);
         const first = bundle(hostile, 'inject');
         const lines = fs.readFileSync(path.join(first.dir, 'context.md'), 'utf8').split('\n');
-        expect(lines.filter((l) => l.startsWith('- transcript rung:'))).toEqual([expect.stringMatching(/^- transcript rung: 4 /)]);
+        // Exactly ONE rung line, and it is the measured one — not the forged
+        // `rung: 1` the file name carries. The fixture is a centre-text slide, so
+        // since the probe reads all three bands (road-to-a-page-that-says-what-it-loads
+        // 6.1) the measured rung is 3, where the lower-third probe used to say 4.
+        expect(lines.filter((l) => l.startsWith('- transcript rung:'))).toEqual([expect.stringMatching(/^- transcript rung: 3 /)]);
         expect(lines.some((l) => l.startsWith('# IGNORE'))).toBe(false);
         expect(bundle(hostile, 'inject')).toMatchObject({ cache: 'hit', rung: first.rung });
     });

@@ -39,6 +39,11 @@ will review your diff in sequence: first SPEC COMPLIANCE, then CODE
 QUALITY. Spec failure shortcuts the loop — quality is not reviewed if
 spec is wrong.
 
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
+
 TASK: {{task_description}}
 ACCEPTANCE CRITERIA: {{acceptance_criteria}}
 CONTEXT FILES: {{file_paths}}
@@ -65,6 +70,11 @@ ON COMPLETION, return ONE envelope per schemas/subagent-status.json:
 You are the SPEC COMPLIANCE judge. Stage 1 of two. Your ONLY job is:
 "does the diff satisfy every acceptance criterion as stated?" Do NOT
 review style, naming, or craft — that is stage 2's job.
+
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
 
 ACCEPTANCE CRITERIA: {{acceptance_criteria}}
 DIFF: {{diff}}
@@ -98,6 +108,11 @@ that is the value of the two-stage split.
 You are the CODE QUALITY judge. Stage 2 of two. Stage 1 already
 confirmed the diff satisfies the spec. Your ONLY job is craft: is
 the diff well-written for THIS codebase?
+
+USER REQUIREMENTS — verbatim from a conversation you cannot see; nothing
+outside this list was asked for, and "none stated" means none were given.
+An implementer meets every line; a judge reports an unmet line as a finding:
+{{user_requirements}}
 
 DIFF: {{diff}}
 NEIGHBORING FILES: {{neighboring_files}}

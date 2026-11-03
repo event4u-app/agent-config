@@ -10,11 +10,17 @@ on:
     branches: [main]
     paths:
       - "site/**"
-      - "docs/proof.md"
-      - "docs/benchmark.md"
-      - "docs/CLAIMS.md"
-      - "docs/catalog.md"
-      - "docs/media/**"
+      # Everything site/sync-docs.mjs reads (manifest pages, docs/media/**). A
+      # per-page list missed docs/guides/works-with-agent-switch.md; the glob
+      # cannot trail the manifest (road-to-docs-that-sell 1.1).
+      - "docs/**"
+      # The site prebuild also runs site/build-demo-map.mjs, which draws the
+      # demo map with the root code-graph CLI over its fixtures.
+      - "site/docs-manifest.json"
+      - "src/scripts/code_graph/**"
+      - "src/cli/help.ts"
+      - "src/cli/registry.ts"
+      - "tests/fixtures/code-graph/**"
       - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
 
@@ -41,20 +47,23 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '22'
+          # astro's engines floor; see site.yml for why this is a range.
+          node-version: '>=22.23.4 <23'
           cache: 'npm'
       # Enables Pages on first run (build_type: workflow) — the "Pages an" step.
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
         with:
           enablement: true
+      # Root deps provide node_modules/.bin/tsx for ./scripts-run and for
+      # the site prebuild, which runs root scripts — so it precedes the build,
+      # as in site.yml.
+      - name: Install root dependencies (tsx for scripts-run)
+        run: npm ci --no-audit --no-fund --prefer-offline
       - name: Build the Starlight site
         run: |
           cd site
           npm ci --no-audit --no-fund --prefer-offline
           npm run build
-      # Root deps provide node_modules/.bin/tsx for ./scripts-run.
-      - name: Install root dependencies (tsx for scripts-run)
-        run: npm ci --no-audit --no-fund --prefer-offline
       - name: Internal-link check (no dangling links in the built site)
         run: ./scripts-run src/scripts/check_site_links
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0

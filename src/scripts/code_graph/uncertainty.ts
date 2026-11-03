@@ -9,7 +9,7 @@
 import * as path from 'node:path';
 
 import type { GraphState } from './detect.js';
-import { EXT_LANG, type Lang } from './types.js';
+import { EXT_LANG, type Lang, type LaneRunRecord } from './types.js';
 
 export type UncertaintyVerb = 'impact' | 'tests-for';
 
@@ -57,4 +57,18 @@ export function uncertaintySentence(i: UncertaintyInput): string | null {
         if (gap) return clip(`empty, but ${gap}`);
     }
     return null;
+}
+
+/**
+ * One line per lane that threw or declined the tree in this build: its facts
+ * are unknown, never absent, so an answer drawn without them says so instead
+ * of reading as "none".
+ */
+export function laneGaps(lanes: readonly LaneRunRecord[] | undefined): string[] {
+    const out: string[] = [];
+    for (const l of lanes ?? []) {
+        if (l.error !== undefined) out.push(`${l.lane} lane failed (${l.error.slice(0, 80)}) — its facts are unknown, not absent`);
+        else if (l.skipped_reason !== undefined) out.push(`${l.lane} lane skipped (${l.skipped_reason.slice(0, 80)}) — its facts are unknown, not absent`);
+    }
+    return out;
 }

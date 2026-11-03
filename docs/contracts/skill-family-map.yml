@@ -1,8 +1,8 @@
 # skill-family-map.yml — machine-readable governance spine (positioning Phase 2)
 # GENERATED. Base fields only: family / primary_use / activation_scope.
 # overlaps_with + candidate_for_{merge,lens,internal} are Phase-3 discovery
-# conclusions and are intentionally ABSENT here (see docs/governance.md).
-# Regenerate: re-run the documented logic in docs/governance.md.
+# conclusions and are intentionally ABSENT here (see docs/maintainers/governance.md).
+# Regenerate: re-run the documented logic in docs/maintainers/governance.md.
 schema_version: 1
 skills:
   accessibility-auditor:

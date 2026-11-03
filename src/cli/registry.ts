@@ -17,6 +17,8 @@ export interface CommandEntry {
     disposition: Disposition;
     /** One-line synopsis surfaced by `--help`. Optional. */
     synopsis?: string;
+    /** Sub-commands the delegate CLI accepts; `lint_documented_commands` checks documented ones against it. */
+    subcommands?: readonly string[];
 }
 
 export const REGISTRY: readonly CommandEntry[] = [
@@ -39,7 +41,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'settings:set', disposition: 'delegate', synopsis: 'Set one A/B-class setting in the global file; C-class keys are refused.' },
     { name: 'uninstall', disposition: 'delegate', synopsis: 'Remove bridge markers (project) or lockfile entries (global).' },
     { name: 'prune', disposition: 'delegate', synopsis: 'Remove project bridge markers not declared in installed-tools.lock.' },
-    { name: 'doctor', disposition: 'delegate', synopsis: 'Read-only drift report: manifest ↔ filesystem; --anatomy renders the injection anatomy.' },
+    { name: 'doctor', disposition: 'delegate', synopsis: 'Health report: install checks and manifest ↔ filesystem drift, with the next fix; --anatomy renders the injection anatomy.' },
     { name: 'converge', disposition: 'delegate', synopsis: 'Consented cleanup of duplicate install surfaces (surface-matrix driven).' },
     { name: 'conformance', disposition: 'delegate', synopsis: 'Consumer conformance contract: doctor --ci + installed-and-firing checks.' },
     { name: 'conformance:behavior', disposition: 'delegate', synopsis: 'Replay local transcripts through the mechanised conformance checks (report, not gate); --why <id> traces one check.' },
@@ -61,7 +63,10 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'statusline:uninstall', disposition: 'delegate', synopsis: 'Restore the status line the tap replaced.' },
     { name: 'ci:settle', disposition: 'delegate', synopsis: "Wait for a PR's checks to settle; the last output line is the verdict." },
     { name: 'audit:deps', disposition: 'delegate', synopsis: "Security advisories for this project's packages, runtimes and toolchain; only `refresh` touches the network." },
-    { name: 'audit:code', disposition: 'delegate', synopsis: 'Security code audit, deterministic half: the two-account route matrix, ledger validation, the derived report.' },
+    { name: 'audit:code', disposition: 'delegate', synopsis: 'Security code audit, deterministic half: the two-account route matrix, ledger validation, the derived report, a SARIF import.' },
+    { name: 'audit:agents', disposition: 'delegate', synopsis: 'What the AI agents, bots and MCP servers in this project can do, against the declared action inventory.' },
+    { name: 'audit:security', disposition: 'delegate', synopsis: 'Security readiness: supply, pipeline, contain and recover lenses — could this project contain a vulnerability disclosed tomorrow.' },
+    { name: 'audit:config', disposition: 'delegate', synopsis: 'A–F security grade of this project\'s assembled agent config (instruction files, MCP, hooks, skills); --min-grade fails a CI step.' },
     { name: 'media:bundle', disposition: 'delegate', synopsis: 'Turn a public post/video URL or a media file into an evidence bundle: frames, contact sheets, transcript rung.' },
     { name: 'worktree:cleanup', disposition: 'delegate', synopsis: 'Worktree inventory and removal of the proven-merged, clean, unused set; never with force.' },
     { name: 'commands', disposition: 'native', synopsis: 'List/explain the command surface from the discovery manifest (ls / explain subcommands); ls --candidates reports surface-reduction signals.' },
@@ -116,7 +121,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'memory:check-proposal', disposition: 'delegate', synopsis: 'Run the admission gate on a memory proposal.' },
     { name: 'memory:learn', disposition: 'delegate', synopsis: 'Aggregate memory intake signals into the local learning sidecar (read-only; --write to emit, --format status for the one-screen view).' },
     { name: 'analytics', disposition: 'delegate', synopsis: 'Local-only workspace analytics: emit|show|prune|migrate (never leaves the machine).' },
-    { name: 'knowledge', disposition: 'delegate', synopsis: 'Global knowledge-card store: list|show|trace|forget|promote|validate|lead-check|purge.' },
+    { name: 'knowledge', disposition: 'delegate', synopsis: 'Global knowledge-card store: list|show|trace|forget|promote|validate|lead-check|purge.', subcommands: ['list', 'show', 'trace', 'forget', 'promote', 'validate', 'lead-check', 'purge'] },
+    { name: 'knowledge:local', disposition: 'delegate', synopsis: 'Local ingest store behind /knowledge: ingest|list|forget.', subcommands: ['ingest', 'list', 'forget'] },
     { name: 'proposal:check', disposition: 'delegate', synopsis: 'Validate a learning/skill/rule proposal markdown.' },
     { name: 'refine-ticket:detect', disposition: 'delegate', synopsis: 'Run the deterministic refine-ticket detection helper.' },
     { name: 'chat-history:hook', disposition: 'delegate', synopsis: 'Platform hook entry point for chat-history capture (JSON via stdin).' },

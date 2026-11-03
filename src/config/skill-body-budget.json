@@ -21,7 +21,7 @@
     "architecture-review-lens": 4929,
     "artisan-commands": 2710,
     "async-python-patterns": 8203,
-    "authz-review": 19073,
+    "authz-review": 19124,
     "aws-infrastructure": 7441,
     "blade-ui": 7227,
     "blameless-post-mortem": 7809,
@@ -38,6 +38,7 @@
     "character-consistency": 8555,
     "check-refs": 4188,
     "churn-prevention": 8014,
+    "code-film": 5733,
     "code-intelligence": 17334,
     "code-refactoring": 13717,
     "code-review": 16261,
@@ -63,7 +64,7 @@
     "data-flow-mapper": 7207,
     "data-handling-judgment": 11444,
     "database": 6906,
-    "dcf-modeling": 4903,
+    "dcf-modeling": 5032,
     "deal-qualification-meddic": 8505,
     "decision-record": 14289,
     "decision-review": 19391,
@@ -85,7 +86,7 @@
     "dpa-review": 9595,
     "editorial-calendar": 8391,
     "eloquent": 3439,
-    "emit-tickets": 6454,
+    "emit-tickets": 6947,
     "error-handling-patterns": 9067,
     "estimate-ticket": 7960,
     "evaluate-llm-feature": 8199,
@@ -105,7 +106,7 @@
     "expansion-playbook": 8838,
     "experiment-loop": 7297,
     "fe-design": 17366,
-    "feature-planning": 14676,
+    "feature-planning": 14923,
     "file-editor": 7026,
     "finishing-a-development-branch": 9404,
     "flux": 6022,
@@ -113,6 +114,7 @@
     "forecasting": 8626,
     "forensics-report": 5052,
     "form-handler": 6533,
+    "founder-idea-interview": 6787,
     "frontend-render-security": 10106,
     "fundraising-narrative": 9878,
     "funnel-analysis": 7203,
@@ -138,15 +140,15 @@
     "js-library-packaging": 9295,
     "judge-artifact-completeness": 7199,
     "judge-bug-hunter": 8560,
-    "judge-code-quality": 7722,
+    "judge-code-quality": 7986,
     "judge-injection-defense": 6079,
-    "judge-security-auditor": 8246,
+    "judge-security-auditor": 8652,
     "judge-spec-compliance": 7186,
-    "judge-synthesis": 12885,
+    "judge-synthesis": 12957,
     "judge-test-coverage": 7161,
     "laravel": 11631,
     "laravel-api-endpoint": 7252,
-    "laravel-dto": 4066,
+    "laravel-dto": 4352,
     "laravel-horizon": 5036,
     "laravel-mail": 8604,
     "laravel-middleware": 5215,
@@ -158,7 +160,7 @@
     "laravel-scheduling": 5889,
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
-    "launch-readiness": 9661,
+    "launch-readiness": 9763,
     "learning-to-rule-or-skill": 16477,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
@@ -185,7 +187,7 @@
     "module-detect-on-the-fly": 8738,
     "module-management": 8219,
     "monorepo-workspace": 8228,
-    "motion-choreographer": 8214,
+    "motion-choreographer": 8786,
     "multi-tenancy": 6123,
     "nda-triage": 6984,
     "nextjs-patterns": 10113,
@@ -215,7 +217,7 @@
     "playwright-testing": 11333,
     "po-discovery": 5282,
     "positioning-strategy": 8375,
-    "prediction-pool-optimizer": 16448,
+    "prediction-pool-optimizer": 16726,
     "premortem": 7456,
     "privacy-review": 11249,
     "project-analysis-core": 5273,
@@ -266,7 +268,7 @@
     "rtk-output-filtering": 8665,
     "rule-refactor": 5370,
     "rule-writing": 16621,
-    "runway-cognition": 10795,
+    "runway-cognition": 10812,
     "scenario-modeling": 10059,
     "scene-expander": 6559,
     "schema-review": 4232,
@@ -274,7 +276,7 @@
     "script-writing": 9324,
     "secrets-management": 12029,
     "security": 6722,
-    "security-audit": 14550,
+    "security-audit": 14896,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
     "sequential-thinking": 6376,
@@ -291,20 +293,20 @@
     "standards-from-config": 7915,
     "storybook-workshop": 13536,
     "subagent-orchestration": 19978,
-    "supply-chain-intake": 10527,
+    "supply-chain-intake": 11688,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
-    "systematic-debugging": 17024,
+    "systematic-debugging": 17121,
     "tailwind-engineer": 13083,
     "tech-debt-tracker": 5542,
     "technical-specification": 7733,
     "terraform": 8893,
     "terragrunt": 5842,
     "test-case-discovery": 12862,
-    "test-driven-development": 16352,
+    "test-driven-development": 16546,
     "test-performance": 6376,
     "testing-anti-patterns": 19723,
-    "threat-modeling": 12522,
+    "threat-modeling": 12775,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
@@ -897,6 +899,132 @@
       "old": 7565,
       "new": 7915,
       "reason": "Instruction-file prose named as a conflict source next to configs, and a repeated correction that contradicts the config is asked about, never capitulated to. road-to-a-correction-that-is-heard 2.3."
+    },
+    {
+      "skill": "dcf-modeling",
+      "old": 4903,
+      "new": 5032,
+      "reason": "Hand-off line to spreadsheet-authoring for workbook output; dcf-modeling's markdown tables broke that skill's live-formula rule with no pointer. archive/road-to-numbers-a-skill-can-stand-behind 1.9."
+    },
+    {
+      "skill": "laravel-dto",
+      "old": 4066,
+      "new": 4352,
+      "reason": "The example now uses constructor promotion and a gotcha states the rule: the library reads #[Map] only from constructor parameters, so the old property example's mapping was silently ignored. archive/road-to-numbers-a-skill-can-stand-behind 2.1-2.2."
+    },
+    {
+      "skill": "prediction-pool-optimizer",
+      "old": 16448,
+      "new": 16726,
+      "reason": "pool_winsim --holdout-runs: submit only flips a paired sign test confirms on independent runs (unchecked greedy sets regressed on 3 of 10 seeds); plus the seed/runs/method rule. archive/road-to-numbers-a-skill-can-stand-behind 3.1-3.3."
+    },
+    {
+      "skill": "runway-cognition",
+      "old": 10795,
+      "new": 10812,
+      "reason": "The runway example's burn is labelled monthly and its emitted gap is the stated 4.5-7.5 month range instead of a contradicting -5mo. archive/road-to-numbers-a-skill-can-stand-behind 1.4."
+    },
+    {
+      "skill": "security-audit",
+      "old": 14550,
+      "new": 14838,
+      "reason": "road-to-a-clean-that-says-what-it-checked 1.5: a rejected candidate names its closing control, a confirmed one its counterevidence and severity-change condition, and confidence High needs a red test — ledger schema v2."
+    },
+    {
+      "skill": "judge-security-auditor",
+      "old": 8246,
+      "new": 8652,
+      "reason": "road-to-a-clean-that-says-what-it-checked 2.1/3.2: a Coverage block on every verdict (an apply with no row is 'not checked'), and the judge reads and amends an existing threat model instead of re-deriving it."
+    },
+    {
+      "skill": "judge-synthesis",
+      "old": 12885,
+      "new": 12957,
+      "reason": "road-to-a-clean-that-says-what-it-checked 2.2: the security apply line renders its assessed rows and 'clean, with gaps' instead of a bare apply (0)."
+    },
+    {
+      "skill": "security-audit",
+      "old": 14838,
+      "new": 14896,
+      "reason": "road-to-a-clean-that-says-what-it-checked 2.3: on a diff, the callers of a touched guard join the hunters' scope."
+    },
+    {
+      "skill": "authz-review",
+      "old": 19073,
+      "new": 19124,
+      "reason": "road-to-a-clean-that-says-what-it-checked 3.3: dropped a citation of a rule that does not exist in this tree and stated that a negative test against the project's own code is not an offensive step."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 12522,
+      "new": 12564,
+      "reason": "road-to-a-clean-that-says-what-it-checked 3.3: same correction as authz-review — no dangling rule citation, the negative-test clarification instead."
+    },
+    {
+      "skill": "feature-planning",
+      "old": 14676,
+      "new": 14923,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "launch-readiness",
+      "old": 9661,
+      "new": 9763,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "supply-chain-intake",
+      "old": 10527,
+      "new": 10721,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.1/6.3: one pointer to the containment blueprint (security-audit/references/control-section.md, ADR-304), so planning, intake and launch ask which lever switches the new surface off."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 12564,
+      "new": 12775,
+      "reason": "road-to-a-switch-built-before-it-is-needed 6.2: a validation item asking each new entry point of a deployed product for the lever that switches it off (ADR-304)."
+    },
+    {
+      "skill": "code-film",
+      "old": 5507,
+      "new": 5733,
+      "reason": "road-to-a-timeline-the-witness-can-seek 1.1/1.2: one gotcha naming the timelines seek form and footage seeking, so a page on a timeline framework or with embedded video is authored to be seekable."
+    },
+    {
+      "skill": "motion-choreographer",
+      "old": 8214,
+      "new": 8786,
+      "reason": "road-to-a-timeline-the-witness-can-seek 2.3: timed segments, negative locks and the rule that spoken lines stay verbatim in their own language."
+    },
+    {
+      "skill": "supply-chain-intake",
+      "old": 10721,
+      "new": 11688,
+      "reason": "road-to-a-timeline-the-witness-can-seek 3.3: a host plugin / mod intake section \u2014 unsandboxed, runs with the user's rights, source read before enable."
+    },
+    {
+      "skill": "emit-tickets",
+      "old": 6454,
+      "new": 6947,
+      "reason": "Section 2 now cuts each ticket as a vertical slice, orders prefactoring tickets first and names expand-contract as the one exception for a wide refactor; the addition was tightened and two duplicated lines (the auto-create repeat, the re-run gotcha) removed, the rest is new procedure."
+    },
+    {
+      "skill": "judge-code-quality",
+      "old": 7722,
+      "new": 7986,
+      "reason": "Five named code smells (shotgun surgery, divergent change, feature envy, primitive obsession, data clumps) added as lead words for the checklist, stated as prompts to look rather than verdicts; tightened to one short paragraph."
+    },
+    {
+      "skill": "systematic-debugging",
+      "old": 17024,
+      "new": 17121,
+      "reason": "Temporary debug lines carry one unique prefix and a final grep for it must return nothing, so no stray debug output survives the investigation; folded into the existing cheapest-tool paragraph."
+    },
+    {
+      "skill": "test-driven-development",
+      "old": 16352,
+      "new": 16546,
+      "reason": "Step 3 names the declared seam a test is written at, and the anti-pattern list gains the horizontal slice (every test for one layer before any behaviour passes); both tightened to one line each."
     }
   ]
 }

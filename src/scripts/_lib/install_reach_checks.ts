@@ -39,6 +39,7 @@ import { compare_versions } from './version_order.js';
 import type { WiringCheck } from './runtime_wiring_checks.js';
 import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
 import { checkSkillReach } from './skill_reach.js';
+import { checkCloudReach } from './cloud_reach.js';
 
 /**
  * Root agent-instruction files, as a multi-vendor ecosystem convention rather
@@ -592,6 +593,7 @@ export const REACH_CHECK_IDS = [
     'mcp-consent-residual',
     'artifact-location',
     'skill-reach',
+    'cloud-reach',
 ] as const;
 
 export function reachRunners(opts: {
@@ -605,5 +607,6 @@ export function reachRunners(opts: {
         'mcp-consent-residual': () => checkMcpConsentResidual(),
         'artifact-location': () => checkArtifactLocation(opts.projectRoot),
         'skill-reach': () => checkSkillReach(),
+        'cloud-reach': () => checkCloudReach(opts.projectRoot),
     };
 }

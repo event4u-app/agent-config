@@ -166,6 +166,9 @@ describe('screenRoadmap — holds written in prose', () => {
         'Still waits on 2.1\'s verdict.',
         'This step waits on that file producing it.',
         'Put on hold against the tree.',
+        '> note: blocked by bounds/P-3 — reopen once the bound lands.',
+        'Owner-reserved: the default flip is the maintainer\'s call.',
+        'Blocked on the host binary probe.',
     ])('holds a step whose continuation says: %s', (note) => {
         const s = screen('road-to-p', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
         expect(s.steps[0]?.cls).toBe('held');
@@ -176,6 +179,14 @@ describe('screenRoadmap — holds written in prose', () => {
         '- [ ] **4.5 The guard waits on nothing.** It reads the window.',
     ])('never reads a hold from the title line: %s', (step) => {
         expect(screen('road-to-t', roadmap({ done: 1, open: [step] })).steps[0]?.cls).toBe('runnable');
+    });
+
+    it.each([
+        'No longer blocked by the probe; it shipped on 2026-10-30.',
+        'Not owner-reserved after the 2026-10-29 answer.',
+    ])('reads a negated hold as runnable: %s', (note) => {
+        const s = screen('road-to-n', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
+        expect(s.steps[0]?.cls).toBe('runnable');
     });
 
     it('does not read "condition holds" as on hold', () => {
@@ -206,6 +217,23 @@ describe('screenRoadmap — holds written in prose', () => {
             blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
         });
         expect(screen('road-to-r', text).steps[0]?.cls).toBe('runnable');
+    });
+});
+
+describe('buildQueue — emergency halt', () => {
+    const a = screen('road-to-a', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
+    const none: ClaimView = { live: [], dead: [] };
+
+    it('dispatches nothing while the emergency halt is armed, and says why', () => {
+        const q = buildQueue([a], none, TODAY, 's1', { halted: true });
+        expect(q.next).toBeNull();
+        expect(q.dispatch_hold).toBe('emergency.orchestration_halt is set');
+    });
+
+    it('dispatches as before with the halt unset', () => {
+        const q = buildQueue([a], none, TODAY, 's1', { halted: false });
+        expect(q.next?.slug).toBe('road-to-a');
+        expect(q.dispatch_hold).toBeNull();
     });
 });
 

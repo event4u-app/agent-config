@@ -119,7 +119,7 @@ Two spike scripts under `internal/spikes/code-graph/`, throwaway allowed:
   a BLOCKER for any default-on setting; if 0/5, Phase 3 ships opt-in only.**
 
 **Honest-null path:** if S0a lands <2.0× median, publish the spike table under
-`docs/benchmarks.md` as a null exhibit ("code-graph query does not beat
+`docs/maintainers/benchmarks.md` as a null exhibit ("code-graph query does not beat
 disciplined grep at our consumer scale"), archive this roadmap with Phases 1–2
 demoted to "interop courtesy only" (detection + freshness warning, no nudge),
 and stop. No spin, no "directionally positive".

@@ -10,9 +10,9 @@ type SettingsDict = Record<string, unknown>;
 
 /**
  * Settings keys this package has DELETED. A leftover value from an older
- * install is ignored — never applied by any reader — and surfaced with ONE
- * deprecation line per key per process run (stderr; the exit code never
- * changes).
+ * install is ignored — never applied by any reader — and surfaced in ONE
+ * summary line per process run that names the cleanup command (stderr; the
+ * exit code never changes).
  *
  * The map carries a per-key REASON rather than one shared sentence, because
  * the list now spans more than one deletion doctrine and a single blanket
@@ -190,20 +190,38 @@ function _readDotted(root: SettingsDict, dotted: string): unknown {
     return node;
 }
 
+/** The command the notice names: lists each key with its reason, then deletes it. */
+export const PRUNE_REMOVED_COMMAND = 'agent-config settings:sync --prune-removed';
+
 /**
- * Warn once per process, on stderr, for every {@link REMOVED_KEYS} entry still
- * present in a resolved settings tree. Never throws, never changes what the
- * caller does with `merged` — a pure notification side effect.
+ * ONE stderr line for every {@link REMOVED_KEYS} entry still present in a
+ * resolved settings tree and not yet reported in this process. Never throws,
+ * never changes what the caller does with `merged` — a pure notification.
+ *
+ * It used to print one line per key, ~45 on a file from an older install, on
+ * every invocation and with no way to stop it. The per-key reasons are not
+ * lost: `settings:sync --prune-removed --dry-run` prints each with its reason.
  */
 export function warnRemovedKeys(merged: SettingsDict): void {
-    for (const [key, reason] of REMOVED_KEYS) {
-        if (_warnedRemovedKeys.has(key)) {
-            continue;
-        }
-        if (_readDotted(merged, key) === undefined) {
+    const fresh: string[] = [];
+    for (const [key] of REMOVED_KEYS) {
+        if (_warnedRemovedKeys.has(key) || _readDotted(merged, key) === undefined) {
             continue;
         }
         _warnedRemovedKeys.add(key);
-        process.stderr.write(`${key} was removed (${reason}); ignored.\n`);
+        fresh.push(key);
     }
+    if (fresh.length === 0) {
+        return;
+    }
+    const named = fresh.slice(0, 3).join(', ') + (fresh.length > 3 ? `, +${fresh.length - 3} more` : '');
+    const noun = fresh.length === 1 ? 'removed settings key is' : 'removed settings keys are';
+    process.stderr.write(
+        `${fresh.length} ${noun} ignored (${named}) — see why and delete: ${PRUNE_REMOVED_COMMAND} [--dry-run]\n`,
+    );
+}
+
+/** Test seam: forget which keys this process already reported. */
+export function _resetRemovedKeyWarnings(): void {
+    _warnedRemovedKeys.clear();
 }

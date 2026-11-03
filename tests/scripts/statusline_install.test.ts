@@ -26,7 +26,7 @@ describe('statusline install / uninstall', () => {
         const original = { type: 'command', command: 'ccline --theme x', padding: 1 };
         writeSettings({ model: 'opus', statusLine: original });
         expect(installTap(env).code).toBe(0);
-        expect(readSettings()['statusLine']).toEqual({ type: 'command', command: TAP_COMMAND });
+        expect(readSettings()['statusLine']).toEqual({ type: 'command', command: TAP_COMMAND, padding: 1 });
         expect(readSettings()['model']).toBe('opus');
         expect(uninstallTap(env).code).toBe(0);
         expect(readSettings()).toEqual({ model: 'opus', statusLine: original });
@@ -58,6 +58,29 @@ describe('statusline install / uninstall', () => {
         writeSettings({ statusLine: { type: 'command', command: 'mine' } });
         expect(uninstallTap(env).message).toMatch(/not installed/);
         expect(readSettings()['statusLine']).toEqual({ type: 'command', command: 'mine' });
+    });
+
+    it('backs settings.json up once before the first write', () => {
+        const before = JSON.stringify({ model: 'opus', statusLine: { type: 'command', command: 'mine' } });
+        fs.mkdirSync(path.dirname(claudeSettingsPath(env)), { recursive: true });
+        fs.writeFileSync(claudeSettingsPath(env), before);
+        installTap(env);
+        const backup = `${claudeSettingsPath(env)}.agent-config.bak`;
+        expect(fs.readFileSync(backup, 'utf-8')).toBe(before);
+        uninstallTap(env);
+        installTap(env);
+        expect(fs.readFileSync(backup, 'utf-8')).toBe(before);
+    });
+
+    it('writes no backup when there was no settings.json to lose', () => {
+        installTap(env);
+        expect(fs.existsSync(`${claudeSettingsPath(env)}.agent-config.bak`)).toBe(false);
+    });
+
+    it('keeps the original padding and refreshInterval on the tap', () => {
+        writeSettings({ statusLine: { type: 'command', command: 'mine', padding: 2, refreshInterval: 7 } });
+        installTap(env);
+        expect(readSettings()['statusLine']).toEqual({ type: 'command', command: TAP_COMMAND, padding: 2, refreshInterval: 7 });
     });
 
     it('refuses a settings file that is not a JSON object, changing nothing', () => {

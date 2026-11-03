@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml, YAMLParseError } from 'yaml';
 
 import { sync as rtSync } from './sync_yaml_rt.js';
+import { pruneRemovedMain } from './_lib/settings_prune_removed.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _SCRIPT_DIR = path.dirname(_HERE);
@@ -932,6 +933,8 @@ function pyStr(v: unknown): string {
 // --- main ----------------------------------------------------------------
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
+  // A separate mode, not one more step of the merge: it deletes, the merge only adds.
+  if (argv.includes('--prune-removed')) return pruneRemovedMain(argv);
   let args: Args;
   try {
     args = parseArgs(argv);

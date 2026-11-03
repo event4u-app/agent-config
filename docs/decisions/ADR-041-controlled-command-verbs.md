@@ -14,7 +14,7 @@ type: forward-looking
 ## Status
 
 **Accepted** · 2026-06-03. Authored as Phase 2 / Step 4 of
-[`road-to-6.0.0-c-governance-and-evals`](../../agents/roadmaps/road-to-6.0.0-c-governance-and-evals.md),
+[`road-to-6.0.0-c-governance-and-evals`](../../agents/roadmaps/archive/road-to-6.0.0-c-governance-and-evals.md),
 the governance front of the experience-first rebuild. Sits alongside the
 per-pack command budget ([`capability-packs.md` § Budget exemption
 process](../contracts/capability-packs.md)) and the routing-metadata

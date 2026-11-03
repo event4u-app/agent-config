@@ -51,8 +51,10 @@ __pycache__/
 /.tmp/
 /agents/tmp/
 /agents/tmp.old/
-# The code map is committed-safe (ADR-303); only its build folder is local.
+# The code map is committed-safe (ADR-303); its build folder and the viewer page,
+# rendered from the committed data, are local.
 /agents/map/.build/
+/agents/map/index.html
 
 # Evidence-discipline ephemeral session cache (Evidence Reports, raw probe /
 # introspection dumps, absence-search logs). Overwritten each task; never
@@ -166,7 +168,9 @@ src/scripts/external_sources_denylist.private.json
 /.agents/
 /.codex/
 
-# Claude Code projection — only `.claude/settings.json` stays TRACKED.
+# Claude Code projection — nothing under `.claude/` is tracked in this repo;
+# `.claude/settings.json` is merely not ignored here (see docs/setup/cloud-sessions.md
+# for what that means for a cloud session on a clone).
 # The dirs below are generated projections rebuilt by `task generate-tools`,
 # so they stay ignored like the other tool trees above. The plugin
 # marketplace (`.claude-plugin/marketplace.json`) references the committed
@@ -347,13 +351,7 @@ agents/runtime/council/sessions/
 # B4 docs site (Starlight) build artifacts
 /site/dist
 /site/.astro
-/site/src/content/docs/proof.md
-/site/src/content/docs/benchmark.md
-/site/src/content/docs/claims.md
-/site/src/content/docs/catalog.md
-/site/src/content/docs/works-with-agent-switch.md
-# Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
-/site/public/media/
+# Generated pages, media and the demo map: see site/.gitignore.
 # Ghostwriter profiles hold real-person voices: local-only here as in every
 # consumer (src/config/gitignore-block.txt), README carved out.
 /agents/reference/ghostwriter/**

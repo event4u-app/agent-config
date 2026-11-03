@@ -67,6 +67,101 @@ describe('runTap', () => {
     });
 });
 
+describe('runTap — prompt cache (road-to-a-return-that-names-its-price 1.1, 1.4, 3.1)', () => {
+    function store(starts: number[]): string {
+        const dir = fs.mkdtempSync(path.join(home, 'store-'));
+        starts.forEach((t, i) => {
+            const first = { type: 'assistant', isSidechain: false, message: { usage: { input_tokens: t - 1000, cache_read_input_tokens: 0, cache_creation_input_tokens: 1000 } } };
+            fs.writeFileSync(path.join(dir, `s${i}.jsonl`), `${JSON.stringify({ type: 'user', message: { content: 'hi' } })}\n${JSON.stringify(first)}\n`);
+        });
+        return dir;
+    }
+    const cachePayload = (dir: string, expires: number, recache = 182_000): string =>
+        JSON.stringify({
+            session_id: 's',
+            transcript_path: path.join(dir, 's0.jsonl'),
+            prompt_cache: { warm: now < expires, ttl: '1h', expires_at: new Date(expires).toISOString(), recache_tokens_if_cold: recache },
+        });
+
+    it('a warm cache above the threshold shows the expiry as a clock, and the ledger keeps the measured start', () => {
+        const dir = store([20_000, 24_000, 30_000]);
+        const out = runTap({ stdin: cachePayload(dir, now + 20 * 60_000), env, now });
+        expect(out).toMatch(/^AC cache warm until \d\d:\d\d$/);
+        const [snap] = readQuotaLedger(env, now);
+        expect(snap?.clear_start).toBe(24_000);
+        expect(snap?.cache?.recache_tokens_if_cold).toBe(182_000);
+    });
+
+    it('a cold cache names what continuing re-processes, on the same single AC line as a warm window', () => {
+        const dir = store([24_000]);
+        const payload = JSON.parse(cachePayload(dir, now - 60_000)) as Record<string, unknown>;
+        payload['rate_limits'] = { five_hour: { used_percentage: 64, resets_at: Math.trunc(now / 1000) + 3600 } };
+        const out = runTap({ stdin: JSON.stringify(payload), env, now });
+        expect(out).toMatch(/^AC 5h window 64 %.* · cache cold · continue ≈182k$/);
+        expect(out.split('\n')).toHaveLength(1);
+    });
+
+    it('below twice the measured start the cache part stays out of the line', () => {
+        const dir = store([100_000]);
+        expect(runTap({ stdin: cachePayload(dir, now - 60_000), env, now })).toBe('');
+    });
+
+    it('a store with no readable session yields no start, never a guess', () => {
+        const dir = fs.mkdtempSync(path.join(home, 'empty-'));
+        runTap({ stdin: cachePayload(dir, now + 60_000), env, now });
+        expect(readQuotaLedger(env, now)[0]?.clear_start).toBeUndefined();
+    });
+});
+
+describe('runTap with a chained status line', () => {
+    const warm = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 64, resets_at: Math.trunc(now / 1000) + 3600 } } });
+
+    it('writes the snapshot and the verdict before the chained command runs, so a slow or killed one cannot lose it', async () => {
+        const { hotWindowLine } = await import('../../src/scripts/_lib/pressure_state.js');
+        recordOriginal({ type: 'command', command: 'slow-line' });
+        const hot = JSON.stringify({ rate_limits: { five_hour: { used_percentage: 91, resets_at: Math.trunc(now / 1000) + 3600 } } });
+        let seenAtRun = -1;
+        let verdictAtRun: string | null = null;
+        runTap({
+            stdin: hot,
+            env,
+            now,
+            run: () => {
+                seenAtRun = readQuotaLedger(env, now).length;
+                verdictAtRun = hotWindowLine(env, now);
+                throw new Error('killed by the host timeout');
+            },
+        });
+        expect(seenAtRun).toBe(1);
+        expect(verdictAtRun).toMatch(/^5h window 91 %/);
+    });
+
+    it('at warm the AC segment follows the chained output on its own line', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        const out = runTap({ stdin: warm, env, now, run: () => 'MY LINE' });
+        const lines = out.split('\n');
+        expect(lines[0]).toBe('MY LINE');
+        expect(lines[1]).toMatch(/^AC 5h window 64 %/);
+        expect(lines).toHaveLength(2);
+        expect(lines[1]).not.toMatch(/[\u0000-\u001f\u007f]/);
+    });
+
+    it('a chained output ending in a newline gets no blank line before the segment', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        expect(runTap({ stdin: warm, env, now, run: () => 'MY LINE\n' })).toMatch(/^MY LINE\nAC 5h window 64 %[^\n]*$/);
+    });
+
+    it('the segment still shows when the chained command printed nothing', () => {
+        recordOriginal({ type: 'command', command: 'boom' });
+        expect(runTap({ stdin: warm, env, now, run: () => '' })).toMatch(/^AC 5h window 64 %/);
+    });
+
+    it('below warm the chained output is printed unchanged', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        expect(runTap({ stdin: PAYLOAD, env, now, run: () => 'MY LINE\n' })).toBe('MY LINE\n');
+    });
+});
+
 describe('runTap → pressure verdict', () => {
     it('leaves a fresh verdict the dispatch-path readers can find', async () => {
         const { hotWindowLine } = await import('../../src/scripts/_lib/pressure_state.js');

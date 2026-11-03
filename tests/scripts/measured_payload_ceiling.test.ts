@@ -435,10 +435,18 @@ describe('payload outside every measured bucket is refused', () => {
 describe('the shipped exceptions ledger', () => {
     const file = path.join(REPO_ROOT, EXCEPTIONS_CONFIG_PATH);
 
-    it('parses, and is empty — the ordinary path needs no grant', () => {
+    it('parses, and every grant in it is backed by a committed owner directive', () => {
+        // The ordinary path needs no grant; a recorded one is the owner's break-glass
+        // and must name the directive that ordered it, which must exist.
         const r = readExceptions(file);
         expect(r.errors).toStrictEqual([]);
-        expect(r.exceptions).toStrictEqual([]);
+        for (const e of r.exceptions) {
+            const cited = /agents\/evidence\/owner-directives\/[\w.-]+\.md/.exec(e.reason)?.[0];
+            expect(cited, `${e.id} names no owner directive`).toBeDefined();
+            expect(fs.existsSync(path.join(REPO_ROOT, cited!)), `${e.id}: ${cited} is not in the tree`).toBe(true);
+            // The directive must name this grant, so citing an unrelated directive does not pass.
+            expect(fs.readFileSync(path.join(REPO_ROOT, cited!), 'utf-8'), `${cited} does not name ${e.id}`).toContain(e.id);
+        }
     });
 
     it('an absent ledger is not an error — it is a repository with no grants', () => {

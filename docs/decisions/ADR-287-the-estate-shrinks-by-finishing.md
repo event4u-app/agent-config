@@ -88,6 +88,14 @@ existing one. All three required closing or parking roadmaps.
 Not 12, not 8, not any number. The count of active roadmaps is not a budget
 and no gate may treat it as one.
 
+> **Superseded in part on 2026-10-24 by the owner** — directive
+> `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`
+> item 3 sets at most five active roadmaps, implemented as `WIP_CAP` in
+> `src/scripts/_lib/estate_wip.ts`. D1 stands as the history of the 2026-10-23
+> decision; the cap governs today. Recorded 2026-10-29 by council record
+> correction (`agents/evidence/council/records-that-match-their-code-20261029.responses.md`); the rest of this ADR
+> is untouched.
+
 ### D2 — Parking is not an estate-management device
 
 A roadmap moves to `later/` because its own work is blocked on a condition it

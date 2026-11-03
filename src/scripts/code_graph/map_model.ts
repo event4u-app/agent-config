@@ -14,7 +14,6 @@ import { isTestFile } from './scope.js';
 import * as path from 'node:path';
 
 import Graph from 'graphology';
-import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 import {
@@ -316,19 +315,8 @@ export interface MapDiff {
 }
 
 const DEFAULT_SEED = 42;
-
-
-/** mulberry32 — a 32-bit seeded PRNG; Louvain's only source of randomness. */
-function seededRng(seed: number): () => number {
-    let a = seed >>> 0;
-    return () => {
-        a = (a + 0x6d2b79f5) >>> 0;
-        let t = a;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
+/** A folder area above this many files is split one folder level deeper. */
+const MAX_FOLDER_AREA = 40;
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
@@ -498,7 +486,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         if (i !== undefined && CLUSTER_ROLES.has(roles[i] as FileRole)) routeFiles.add(i);
     }
 
-    // 4. Areas: seeded Louvain over the coupled roles.
+    // 4. Areas: folders over the coupled roles; tests join what they link to most.
     const clusterable = (i: number): boolean => CLUSTER_ROLES.has(roles[i] as FileRole) && !routeFiles.has(i);
     const undirected = new Map<string, number>();
     for (const [s, t, w] of edges) {
@@ -513,16 +501,41 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     for (const k of undirected.keys()) for (const n of k.split(' ')) members.add(Number(n));
     for (let i = 0; i < paths.length; i++) if (clusterable(i) && !members.has(i)) members.add(i);
 
-    const communities = clusterOnce([...members].sort((a, b) => a - b), undirected, seed, 1);
+    // Areas follow folders (owner decision, 2026-11-01): a coupling community is
+    // recomputed globally, so one local edit could move files between areas and
+    // rename area pages on every branch. A folder is a stable key — a file
+    // changes area only when it moves — so two branches touching different
+    // folders never collide in the map.
     const total = members.size;
     const maxShare = 0.25;
-    const groups: number[][] = [];
-    for (const g of communities) {
-        if (g.length > maxShare * total && g.length > 8) {
-            const sub = clusterOnce(g, undirected, seed, 2);
-            groups.push(...sub);
-        } else groups.push(g);
+    const sorted = [...members].sort((a, b) => a - b);
+    const keyed = folderGroups(
+        sorted.filter((f) => roles[f] !== 'test'),
+        paths,
+        // A quarter of a 2,000-file repository is 500 files, no area a reader can scan.
+        Math.max(8, Math.min(Math.floor(maxShare * total), MAX_FOLDER_AREA)),
+    );
+    // A test joins the group of the file it links to most — a function of its own
+    // edges only, so it moves when its imports change, never when others' do.
+    const groupOfFile = new Map<number, number>();
+    keyed.forEach(([, g], gi) => g.forEach((f) => groupOfFile.set(f, gi)));
+    const orphanTests: number[] = [];
+    for (const t of sorted.filter((f) => roles[f] === 'test')) {
+        const pull = new Map<number, number>();
+        for (const [k, w] of undirected) {
+            const [a, b] = k.split(' ').map(Number) as [number, number];
+            const other = a === t ? b : b === t ? a : -1;
+            const gi = other >= 0 ? groupOfFile.get(other) : undefined;
+            if (gi !== undefined) pull.set(gi, (pull.get(gi) ?? 0) + w);
+        }
+        const best = [...pull.entries()].sort((x, y) => y[1] - x[1] || x[0] - y[0])[0]?.[0];
+        if (best === undefined) orphanTests.push(t);
+        else (keyed[best] as [string, number[]])[1].push(t);
     }
+    keyed.push(...folderGroups(orphanTests, paths, Number.POSITIVE_INFINITY));
+    for (const [, g] of keyed) g.sort((a, b) => a - b);
+    const groups: number[][] = keyed.map(([, g]) => g);
+    const keyOf = new Map<number[], string>(keyed.map(([k, g]) => [g, k]));
 
     // 5. Fold areas under three files into per-directory small-parts buckets.
     const weightedDegree = new Map<number, number>();
@@ -561,7 +574,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     for (const g of big) {
         const files = [...g].sort((a, b) => byPath(paths[a] as string, paths[b] as string));
         const hub = pickHub(files);
-        drafts.push({ files, kind: 'area', hub, name: paths[hub] as string });
+        drafts.push({ files, kind: 'area', hub, name: keyOf.get(g) ?? (paths[hub] as string) });
     }
     for (const [dir, fs] of [...buckets.entries()].sort((a, b) => byPath(a[0], b[0]))) {
         const files = [...fs].sort((a, b) => byPath(paths[a] as string, paths[b] as string));
@@ -611,6 +624,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
 
     const neighboursPerArea = 12;
     const titles = areaTitles(drafts);
+    const ids = areaIds(drafts);
     const areas: MapArea[] = drafts.map((d, ai) => {
         const hubDir = path.posix.dirname(paths[d.hub] as string);
         // Tests live under their own tree by convention, so they say nothing
@@ -623,7 +637,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         const { local, neighbours } = layoutLocal(d.files, edges, areaOf, ai, neighboursPerArea);
         const pos = overview[ai] as [number, number];
         return {
-            id: `a${ai + 1}`,
+            id: ids[ai] as string,
             name: d.name,
             title: titles[ai] as string,
             hub: d.hub,
@@ -973,33 +987,62 @@ export function areaTitles(areas: ReadonlyArray<{ name: string; kind: MapArea['k
     });
 }
 
+/**
+ * Files grouped by folder: one group per top-level folder, and a group above
+ * `cap` split one folder level deeper, up to six levels; a folder with a single
+ * subfolder is followed into it. Deterministic, and
+ * independent of any other file's edges.
+ */
+export function folderGroups(nodes: readonly number[], paths: readonly string[], cap: number): Array<[string, number[]]> {
+    const dirOf = (f: number, depth: number): string => (paths[f] as string).split('/').slice(0, -1).slice(0, depth).join('/') || '.';
+    const out: Array<[string, number[]]> = [];
+    const bucket = (group: readonly number[], depth: number): Map<string, number[]> => {
+        const m = new Map<string, number[]>();
+        for (const f of group) {
+            const k = dirOf(f, depth);
+            const g = m.get(k);
+            if (g) g.push(f);
+            else m.set(k, [f]);
+        }
+        return m;
+    };
+    const split = (key: string, group: number[], depth: number): void => {
+        const sub = group.length > cap && depth < 6 ? bucket(group, depth + 1) : null;
+        if (!sub || sub.size === 0) {
+            out.push([key, group]);
+            return;
+        }
+        if (sub.size === 1) {
+            // A folder whose files all sit in one subfolder: descend instead of stopping,
+            // or `resources/` holding only `views/` stays one area of every view.
+            const [only] = sub.keys();
+            if (only === key) out.push([key, group]);
+            else split(only as string, group, depth + 1);
+            return;
+        }
+        for (const [k, g] of [...sub.entries()].sort((a, b) => byPath(a[0], b[0]))) split(k, g, depth + 1);
+    };
+    for (const [k, g] of [...bucket(nodes, 1).entries()].sort((a, b) => byPath(a[0], b[0]))) split(k, g, 1);
+    return out;
+}
+
+/** Stable area ids from their folder (`src/vm` → `src-vm`, the root → `root`), unique per map. */
+function areaIds(drafts: ReadonlyArray<{ name: string; kind: string }>): string[] {
+    const seen = new Map<string, number>();
+    return drafts.map((d) => {
+        const folder = d.kind === 'small-parts' ? d.name.replace(/^small parts · /, '') : d.name;
+        const slug = folder === '.' ? 'root' : folder.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'root';
+        const base = d.kind === 'small-parts' ? `small-${slug}` : slug;
+        const n = (seen.get(base) ?? 0) + 1;
+        seen.set(base, n);
+        return n === 1 ? base : `${base}-${n}`;
+    });
+}
+
 function topDir(p: string): string {
     const parts = p.split('/');
     if (parts.length <= 1) return '.';
     return parts.slice(0, Math.min(2, parts.length - 1)).join('/');
-}
-
-/** One seeded Louvain pass over `nodes`; communities sorted by first member. */
-function clusterOnce(nodes: number[], weights: Map<string, number>, seed: number, resolution: number): number[][] {
-    const set = new Set(nodes);
-    const g = new Graph({ type: 'undirected' });
-    for (const n of nodes) g.addNode(String(n));
-    for (const [k, w] of weights) {
-        const [a, b] = k.split(' ').map(Number) as [number, number];
-        if (set.has(a) && set.has(b)) g.addEdge(String(a), String(b), { weight: w });
-    }
-    if (g.size === 0) return nodes.map((n) => [n]);
-    const assignment = louvain(g, { rng: seededRng(seed), resolution, getEdgeWeight: 'weight' });
-    const byCommunity = new Map<number, number[]>();
-    for (const n of nodes) {
-        const c = assignment[String(n)] as number;
-        const list = byCommunity.get(c) ?? [];
-        list.push(n);
-        byCommunity.set(c, list);
-    }
-    return [...byCommunity.values()]
-        .map((l) => l.sort((a, b) => a - b))
-        .sort((a, b) => (a[0] as number) - (b[0] as number));
 }
 
 /** Golden-angle spiral start: deterministic, spread, no two points equal. */

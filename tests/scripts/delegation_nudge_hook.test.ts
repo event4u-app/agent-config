@@ -342,6 +342,25 @@ describe("classifyPrompt — activation + verdict wiring", () => {
     expect(result?.tier).toBe("inherit");
   });
 
+  // Characterization, not a target: any fired signal lifts size_estimate past
+  // SIZE_FLOOR, so a trivial edit written as numbered lines still clears the floor.
+  // auto-dispatch-classification.md § size floor states this; a change here is an
+  // evidence-bearing trigger change and must update that paragraph too.
+  it("trivial-signalled-prompt-still-dispatches", () => {
+    const root = makeWorkspace(null);
+    const trivial = classifyPrompt(
+      "Fix the typo in README:\n1. open it\n2. fix the word\n3. save",
+      root,
+      "claude",
+    );
+    expect(trivial?.rung).toBe(2);
+    expect(trivial?.classification.mode).toBe("do-in-steps");
+    expect(trivial?.sliceCount).toBe(3);
+
+    const unsignalled = classifyPrompt("Fix the typo in README", root, "claude");
+    expect(unsignalled?.classification.mode ?? null).not.toBe("do-in-steps");
+  });
+
   it("a read-only fan-out nudge names the mapped model value and dispatches nothing", () => {
     const root = makeWorkspace(null);
     const result = classifyPrompt(

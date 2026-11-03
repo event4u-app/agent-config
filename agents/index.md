@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **755 artefacts** in this package.
+Maintainer-facing index of all **759 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (301)
+## Skills (303)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -46,13 +46,14 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`character-consistency`](../src/skills/character-consistency/SKILL.md) | official | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../src/skills/check-refs/SKILL.md) | official | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../src/skills/churn-prevention/SKILL.md) | official | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
+| skill | [`code-film`](../src/skills/code-film/SKILL.md) | official | Motion film rendered from code, frame-checked. |
 | skill | [`code-intelligence`](../src/skills/code-intelligence/SKILL.md) | official | Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'. |
 | skill | [`code-refactoring`](../src/skills/code-refactoring/SKILL.md) | official | When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools. |
 | skill | [`code-review`](../src/skills/code-review/SKILL.md) | official | Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
 | skill | [`command-routing`](../src/skills/command-routing/SKILL.md) | official | Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns. |
 | skill | [`command-writing`](../src/skills/command-writing/SKILL.md) | official | Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'. |
 | skill | [`comp-banding`](../src/skills/comp-banding/SKILL.md) | official | Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'. |
-| skill | [`competitive-moat-analysis`](../src/skills/competitive-moat-analysis/SKILL.md) | official | Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'. |
+| skill | [`competitive-moat-analysis`](../src/skills/competitive-moat-analysis/SKILL.md) | official | Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play. Triggers on 'who are we competing with', 'what's our moat'. |
 | skill | [`competitive-positioning`](../src/skills/competitive-positioning/SKILL.md) | official | Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'. |
 | skill | [`complexity-first-planning`](../src/skills/complexity-first-planning/SKILL.md) | official | Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first. |
 | skill | [`composer-packages`](../src/skills/composer-packages/SKILL.md) | official | Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'. |
@@ -66,7 +67,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`copilot-agents-optimization`](../src/skills/copilot-agents-optimization/SKILL.md) | official | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
 | skill | [`copilot-config`](../src/skills/copilot-config/SKILL.md) | official | Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`). |
 | skill | [`corpus-grounding`](../src/skills/corpus-grounding/SKILL.md) | official | Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints. |
-| skill | [`customer-research`](../src/skills/customer-research/SKILL.md) | official | Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'. |
+| skill | [`customer-research`](../src/skills/customer-research/SKILL.md) | official | Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus. Triggers on 'talk to users', 'why did they cancel', 'before we build X'. |
 | skill | [`dashboard-design`](../src/skills/dashboard-design/SKILL.md) | official | Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling. |
 | skill | [`data-flow-mapper`](../src/skills/data-flow-mapper/SKILL.md) | official | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
 | skill | [`data-handling-judgment`](../src/skills/data-handling-judgment/SKILL.md) | official | Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'. |
@@ -109,6 +110,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`forecasting`](../src/skills/forecasting/SKILL.md) | official | Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'. |
 | skill | [`forensics-report`](../src/skills/forensics-report/SKILL.md) | official | Use when a release review needs machine-derived evidence from git history — hotspot risk and change-coupling analyzers. Triggers on 'hotspot', 'what changes together', 'release forensics'. |
 | skill | [`form-handler`](../src/skills/form-handler/SKILL.md) | official | Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'. |
+| skill | [`founder-idea-interview`](../src/skills/founder-idea-interview/SKILL.md) | official | Use when a founder's hobbies, ideas or daily problems should become a business roadmap. |
 | skill | [`frontend-render-security`](../src/skills/frontend-render-security/SKILL.md) | official | Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage |
 | skill | [`fundraising-narrative`](../src/skills/fundraising-narrative/SKILL.md) | official | Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'. |
 | skill | [`funnel-analysis`](../src/skills/funnel-analysis/SKILL.md) | official | Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven. |
@@ -120,7 +122,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`guideline-writing`](../src/skills/guideline-writing/SKILL.md) | official | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
 | skill | [`hiring-loop-design`](../src/skills/hiring-loop-design/SKILL.md) | official | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
 | skill | [`history-design`](../src/skills/history-design/SKILL.md) | official | Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'. |
-| skill | [`html-deck`](../src/skills/html-deck/SKILL.md) | official | Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
+| skill | [`html-deck`](../src/skills/html-deck/SKILL.md) | official | Build a slide presentation as one HTML file — fixed 1920×1080 canvas, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
 | skill | [`humanizer`](../src/skills/humanizer/SKILL.md) | official | Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'. |
 | skill | [`iconography`](../src/skills/iconography/SKILL.md) | official | Resolve an icon request to an Iconify name and emit the stack's embedding. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
 | skill | [`image-analyser`](../src/skills/image-analyser/SKILL.md) | official | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
@@ -181,7 +183,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`module-detect-on-the-fly`](../src/skills/module-detect-on-the-fly/SKILL.md) | official | When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference. |
 | skill | [`module-management`](../src/skills/module-management/SKILL.md) | official | When working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`monorepo-workspace`](../src/skills/monorepo-workspace/SKILL.md) | official | Use to orient in a monorepo — which package manager, which workspaces, which task runner and its tasks — derived from the repository's own config and the runner's own listing, never guessed. |
-| skill | [`motion-choreographer`](../src/skills/motion-choreographer/SKILL.md) | official | When turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
+| skill | [`motion-choreographer`](../src/skills/motion-choreographer/SKILL.md) | official | Locked still + blueprint → provider motion prompt: camera, motion, physics, audio sync, for Veo/Kling/Sora. Code film → code-film. |
 | skill | [`multi-tenancy`](../src/skills/multi-tenancy/SKILL.md) | official | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`nda-triage`](../src/skills/nda-triage/SKILL.md) | official | Use when triaging an inbound NDA fast — GREEN/YELLOW/RED so only the hard ones reach a lawyer. Triggers on 'check this NDA', 'can we sign this NDA', 'is this NDA standard'. |
 | skill | [`nextjs-patterns`](../src/skills/nextjs-patterns/SKILL.md) | official | Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture. |
@@ -356,7 +358,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`downstream-changes`](../src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
 | rule | [`engineering-safety-floor`](../src/rules/engineering-safety-floor.md) | auto | Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous |
 | rule | [`evaluator-independence`](../src/rules/evaluator-independence.md) | auto | Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result |
-| rule | [`external-code-graph-interop`](../src/rules/external-code-graph-interop.md) | auto | Repo ships a code-graph index (graph.json-shaped or SCIP) — query IT first for codebase-structure questions, do not grep from scratch |
+| rule | [`external-code-graph-interop`](../src/rules/external-code-graph-interop.md) | auto | Repo ships a code-graph index (graph.json or SCIP) — find with IT first for structure questions, confirm with the source before acting |
 | rule | [`external-reference-deep-dive`](../src/rules/external-reference-deep-dive.md) | auto | User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README |
 | rule | [`fast-path-marker-visibility`](../src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path — surface the transparency marker verbatim as the reply opener |
 | rule | [`finance-safety-floor`](../src/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer |
@@ -439,7 +441,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (212)
+## Commands (214)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -483,8 +485,9 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`bug`](../src/domains/engineering-base/bug/command.md) | cluster: bug | Bug orchestrator — routes to investigate (root cause) and fix (plan + implement) |
 | command | [`bug-fix`](../src/domains/engineering-base/bug/fix/command.md) | cluster: bug | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../src/domains/engineering-base/bug/investigate/command.md) | cluster: bug | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
-| command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs, closure |
+| command | [`challenge-me`](../src/domains/meta/challenge-me/command.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs, closure, founder |
 | command | [`challenge-me-closure`](../src/domains/meta/challenge-me/closure/command.md) | cluster: challenge-me | Close every foreseeable decision in a roadmap before execution — detect the open ones, resolve each at the lowest rung that owns it, and write the answers into a `## Decisions` table. |
+| command | [`challenge-me-founder`](../src/domains/meta/challenge-me/founder/command.md) | cluster: challenge-me | Founder interview — from hobbies, ideas and everyday problems to a researched roadmap, then prototype, business plan and deck asked one at a time. |
 | command | [`challenge-me-vision`](../src/domains/meta/challenge-me/vision/command.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me-with-docs`](../src/domains/meta/challenge-me/with-docs/command.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
 | command | [`check-current-md`](../src/domains/meta/check-current-md/command.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
@@ -543,7 +546,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`image-verify`](../src/domains/ai-video/image/verify/command.md) | cluster: image | Verify a candidate render against its canon — run the analyser in loop mode, emit the gate verdict + remaining diff, halt-and-surface on non-pass. |
 | command | [`implement-ticket`](../src/domains/engineering-base/implement-ticket/command.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over `work_engine`, block-on-ambiguity, no auto-git, test-first enforced. |
 | command | [`jira-ticket`](../src/domains/product-basic/jira-ticket/command.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
-| command | [`judge`](../src/domains/engineering-base/judge/command.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`judge`](../src/domains/engineering-base/judge/command.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff, bracket |
+| command | [`judge-bracket`](../src/domains/engineering-base/judge/bracket/command.md) | cluster: judge | Run a resumable bracket of competing solutions whose losses can be appealed — AC sizes it (default 10), the script scores, a paid seat plays the second-chance card |
 | command | [`judge-on-diff`](../src/domains/engineering-base/judge/on-diff/command.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
 | command | [`judge-solo`](../src/domains/engineering-base/judge/solo/command.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge-steps`](../src/domains/engineering-base/judge/steps/command.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |

@@ -126,7 +126,7 @@ tolerance. A **Hard-Floor** stop and a **locked decision class** stop the whole
 set, not one member: both are about the user's authority rather than about the
 member's code, and continuing past them under a set contract would be exactly
 the "several authorizations from one Accept" failure the enumeration guards
-against. Likewise the **N=3 validation budget** is per validation target and is
+against. Likewise the **`execution.fix_loop_max` validation budget** is per validation target and is
 not reset by moving to the next member.
 
 #### Parallel lanes — shipped under the canonical brief

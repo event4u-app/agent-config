@@ -1,17 +1,16 @@
 /**
  * `agent-config code-graph map` — write the project map to `agents/map/`.
  *
- * IO around the pure projection in `map_model.ts`: read the engine's graph
- * (building or refreshing it first when needed), derive the model, and write
- * one generation of the map folder (ADR-297, ADR-303):
+ * IO around the pure projection in `map_model.ts`: read the engine's graph (building or
+ * refreshing it first when needed), derive the model, write one map generation (ADR-297, ADR-303):
  *
- *   agents/map/index.html             one self-contained offline file
+ *   agents/map/index.html             the offline viewer: local and gitignored, re-rendered from the data below
  *   agents/map/MAP.md                 the same picture in words, budgeted
  *   agents/map/manifest.json          generation, sources and freshness per area
  *   agents/map/code/map.json          the model and the area payloads the pages are rendered from
  *   agents/map/code/areas/<id>.md     one page per code area of five or more files
  *   agents/map/<area>/<area>.json     data, interfaces, runtime, delivery: that area's payload
- *   agents/map/.build/                graph cache, twin, lock, staging — the only gitignored part
+ *   agents/map/.build/                graph cache, twin, lock, staging — gitignored, like index.html (map_local.ts)
  *
  * Same tree in, same bytes out: nothing written here carries a timestamp, a
  * host path or anything else that differs between two builds of one commit.
@@ -21,9 +20,10 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
+import { withGitVisibleScopeAsync } from '../_lib/git_visible_files.js';
 import { write_atomic } from '../_lib/fs_atomic.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import { gitProbe, hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
@@ -47,13 +47,14 @@ import { attachDomains, domainsOnAreas, mapBranches, mapProvenance } from './map
 import { nodeOwner } from './verify/owner_index.js';
 import { type Overlay, readOverlay } from './verify/overlay.js';
 import { workingChanges } from './verify/paths.js';
+import { keepViewerLocal } from './map_local.js';
+import { lineJson, readManifestAt, storedAreas, storedMeta, storedModel, withManifest } from './map_stored.js';
 import { areaProblems, areaSummaryLines, KNOWLEDGE_AREA_IDS, type MapAreas, type MapTour, witnessesOf } from './map_areas.js';
 import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
 import { dead, repoEntryPoints } from './verbs.js';
 
-const _HERE = path.dirname(fileURLToPath(import.meta.url));
-const VIEWER_DIR = path.join(_HERE, 'map_viewer');
+const VIEWER_DIR = path.join(resolvePackageRoot(import.meta.url), 'src', 'scripts', 'code_graph', 'map_viewer');
 
 /** Rough characters-per-token used to hold MAP.md to its budget. */
 const CHARS_PER_TOKEN = 4;
@@ -119,8 +120,10 @@ export function holdsOnlyMapInputs(dir: string): boolean {
     return fs.readdirSync(data).every((e) => DATA_USER_INPUTS.has(e));
 }
 
-/** The generation a drawn map records, or null when it records none (an older map) or cannot be read. */
+/** The generation a drawn map records (manifest first, then an older map's meta), or null. */
 export function mapGeneration(outDir: string): string | null {
+    const fromManifest = readManifestAt(outDir)?.generation;
+    if (fromManifest) return fromManifest;
     try {
         const doc = JSON.parse(fs.readFileSync(mapJsonPath(outDir), 'utf-8')) as { meta?: { graph_generation?: unknown } };
         return typeof doc.meta?.graph_generation === 'string' ? doc.meta.graph_generation : null;
@@ -198,7 +201,7 @@ export function declaredEntryFiles(root: string): string[] {
  * root it would describe the wrong repository.
  */
 async function artefactGraph(root: string): Promise<MapInputsArtefacts | null> {
-    const pkgRoot = path.resolve(_HERE, '..', '..', '..');
+    const pkgRoot = resolvePackageRoot(import.meta.url);
     if (path.resolve(root) !== pkgRoot || !fs.existsSync(path.join(root, 'src', 'skills'))) return null;
     try {
         const dg = await import('../discovery_graph.js');
@@ -393,7 +396,7 @@ export async function buildMap(
     if (release === null) throw new Error('another process holds the code-graph refresh lock');
     drawing = true;
     try {
-        return await drawGeneration(root, opts);
+        return await withGitVisibleScopeAsync(() => drawGeneration(root, opts));
     } finally {
         drawing = false;
         release();
@@ -488,15 +491,17 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
             written.push(rel.split(path.sep).join('/'));
             opts._afterWrite?.(rel);
         };
-        write(path.join('code', 'map.json'), `${JSON.stringify({ meta, model, areas })}\n`);
+        // Every tracked file but the manifest is a function of the tree alone (map_stored.ts).
+        const stored = { meta: storedMeta(meta), model: storedModel(model), areas: storedAreas(areas) };
+        write(path.join('code', 'map.json'), `${lineJson(stored)}\n`);
         for (const [i, a] of model.areas.entries()) {
-            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('code', 'areas', `${a.id}.md`), renderAreaMd(model, i, meta));
+            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('code', 'areas', `${a.id}.md`), renderAreaMd(stored.model, i, stored.meta));
         }
         for (const id of AREA_FOLDERS) {
             const payload = areas[id];
-            if (payload) write(path.join(id, `${id}.json`), `${JSON.stringify({ generation: meta.graph_generation ?? '', [id]: payload })}\n`);
+            if (payload) write(path.join(id, `${id}.json`), `${lineJson({ [id]: payload })}\n`);
         }
-        write('MAP.md', renderMapMd(model, meta, areas));
+        write('MAP.md', renderMapMd(stored.model, stored.meta, stored.areas));
         write('manifest.json', `${JSON.stringify(mapManifest(model, meta, areas), null, 2)}\n`);
         write('index.html', renderHtml(model, meta, areas));
         for (const page of produced.erd) write(page.file, page.content);
@@ -512,6 +517,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
             }
         }
         swapIn(next, outDir, prev);
+        keepViewerLocal(outDir);
         // The render check described the generation it checked, not this one.
         fs.rmSync(path.join(build, 'map-render.json'), { force: true });
     } finally {
@@ -735,7 +741,7 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
     const head = [
         `# ${md(meta.title)}`,
         '',
-        `> Map built at \`${meta.commit}\`${meta.built ? ` · ${meta.built}` : ''} by \`agent-config code-graph map\` — this describes that commit; compare it with HEAD yourself.`,
+        '> Built by `agent-config code-graph map`; the commit it describes and its freshness are in `manifest.json` — compare that commit with HEAD yourself.',
         '> Deterministic, no model call. Rebuild with `agent-config code-graph map`; never edit by hand.',
         '',
         `**${f.length} files · ${m.areas.length} areas · ${m.analyses.trustedEdges} trusted links · guess share ${pct(m.analyses.guessShare)}**`,
@@ -870,9 +876,9 @@ export function mapMdParts(m: MapModel, meta: MapMeta, areas: MapAreas = {}): { 
         [
             '## Areas',
             '',
-            'Files grouped by how they are coupled, not by folder. *Outside hub folder* is the share of an',
-            "area's non-test files whose directory differs from its hub's — where the folder layout and the",
-            'actual dependencies disagree.',
+            'Files grouped by folder — a folder above 40 files (or a quarter of them) is split one level deeper — and each',
+            'test joins the area of the file it links to most, so an area changes only when its own files do.',
+            "*Outside hub folder* is the share of an area's non-test files whose directory differs from its hub's.",
             '',
             '| Area | Named after (hub) | Files | Cohesion | Tests | Outside hub folder | Most used |',
             '|---|---|---|---|---|---|---|',
@@ -1059,7 +1065,7 @@ export function renderAreaMd(m: MapModel, i: number, meta: MapMeta): string {
     return [
         `# ${a.id} — ${md(a.name)}`,
         '',
-        `> Part of [${md(meta.title)}](../MAP.md) at \`${meta.commit}\`. Generated; never edit by hand.`,
+        `> Part of [${md(meta.title)}](../MAP.md)${meta.commit ? ` at \`${meta.commit}\`` : ''}. Generated; never edit by hand.`,
         '',
         `${a.files.length} files · cohesion ${pct(a.cohesion)} · tests ${pct(a.testShare)} · outside hub folder ${pct(a.folderMismatch)}`,
         '',
@@ -1330,6 +1336,10 @@ export interface MapManifest {
     schema: 1;
     generation: string;
     commit: string;
+    /** The build commit's date (`YYYY-MM-DD`), moved here from `code/map.json` so only this file changes per commit. */
+    built?: string;
+    /** The commit `state` describes — the build's, never HEAD's; compare it with HEAD yourself. */
+    built_at_commit: string;
     state: string;
     areas: Record<string, ManifestArea>;
 }
@@ -1363,7 +1373,7 @@ export function mapManifest(m: MapModel, meta: MapMeta, areas: MapAreas): MapMan
             ...(reason ? { reason } : {}),
         };
     }
-    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, state: meta.state, areas: out };
+    return { schema: 1, generation: meta.graph_generation ?? '', commit: meta.commit, ...(meta.built ? { built: meta.built } : {}), built_at_commit: meta.commit, state: meta.state, areas: out };
 }
 
 /** The map a previous `code-graph map` wrote, or null when there is none. */
@@ -1381,7 +1391,7 @@ function previousTours(dir: string): MapTour[] {
     }
 }
 
-function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
+export function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
     const p = mapJsonPath(dir);
     try {
         const parsed = JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta?: MapMeta; model?: Partial<MapModel> } | null;
@@ -1400,7 +1410,7 @@ function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
         ) {
             return null;
         }
-        return parsed as { meta: MapMeta; model: MapModel };
+        return { meta: withManifest(parsed.meta, readManifestAt(dir)), model: parsed.model as MapModel };
     } catch {
         return null;
     }

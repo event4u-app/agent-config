@@ -1466,7 +1466,7 @@ gates:
   - id: check_claims
     argv: []
     min_scanned: 60
-    corpus: "ledger entries in docs/CLAIMS.md (97 at registration: 59 backed, 30 unbacked, 8 closed). The gate's SECOND root, the five files in `PUBLISH_SURFACES`, is not summed into this count — ledger entries and files are different units and a sum of the two is a number nobody can re-derive. That root is guarded by `assertWatchlistResolves` inside the gate, which fires when every publish surface has vanished while a retired phrasing is still registered."
+    corpus: "ledger entries in docs/CLAIMS.md (97 at registration: 59 backed, 30 unbacked, 8 closed). The gate's SECOND root, the seven files in `PUBLISH_SURFACES`, is not summed into this count — ledger entries and files are different units and a sum of the two is a number nobody can re-derive. That root is guarded by `assertWatchlistResolves` inside the gate, which fires when every publish surface has vanished while a retired phrasing is still registered."
     status: enforced
     no_canary_reason: "The gate carries its own `--self-test` (5 cases, 3 rejecting) — so this row is an adopter, not an exemption; the reason field states why a PLANTED canary is additionally unavailable. Beyond the self-test the negative controls are the 30 mechanism tests in tests/scripts/check_claims.test.ts (17) and tests/scripts/check_claims_retired_phrasings.test.ts (13), each building a throwaway tree and running the real script in it. Twenty-one assert a REJECTION, and one publishes the LITERAL historical string (`zero runtime daemon`) that shipped in package.json and .github/about.yml while claim:no-runtime-daemon was already withdrawn. A planted canary here would mean committing a retired phrasing to a real publish surface and removing it again, and a forgotten one is precisely the defect this gate exists to catch."
 
@@ -3313,13 +3313,16 @@ gates:
       under `check_kernel_edit_ratified`. Discrimination is proven instead by
       two things that run. `--self-test` drives the real decision functions over
       the real table, including both directions of every state — unchanged vs
-      changed, filled vs missed, 404 (`gone`) vs 503 (`unreachable`), and drift
-      write vs no write. And `tests/scripts/host_docs_digest.test.ts` (20 cases)
+      changed, a moved body whose claimed tokens survive (`confirmed`, green,
+      writes nothing) vs one that lost a token (`absent`, red, names it), filled
+      vs missed, 404 (`gone`) vs 503 (`unreachable`), and drift write vs no
+      write. And `tests/scripts/host_docs_digest.test.ts`
       runs the REAL `lint_hook_manifest._check_host_lowering` over the REAL
       writer's output, so the full drift-to-refusal chain is exercised end to
       end rather than asserted. Both were seen RED deliberately: neutralising
-      `isDrift` fails 4 of 20, and reverting the `gone` write-skip fails the
-      case that pins it. The `filled`-vs-`missed` direction named above is
+      `isDrift` fails 4 of 20, reverting the `gone` write-skip fails the case
+      that pins it, and neutralising the claim check fails the three ABSENT
+      cases. The `filled`-vs-`missed` direction named above is
       asserted in BOTH places — it was credited to `--self-test` before it was
       actually there, which a review caught and which is why the assertion now
       exists rather than the sentence being softened.

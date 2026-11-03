@@ -1,63 +1,60 @@
 # Trae Setup
 
-Trae (ByteDance's AI IDE, <https://trae.ai>) reads the Anthropic-shaped
-markdown skill bundle from its user-scope anchor `~/.trae/`. The
-package deploys via the universal skill convention; project-scope
-bridge is not yet wired (Phase 2.4 anchor).
+Trae (ByteDance's AI IDE, <https://trae.ai>). The installer deploys the skill bundle to its user-level folder `~/.trae/`.
+
+> `agent-config init` installs into your home directory — the package under
+> `~/.event4u/agent-config/` and each AI tool's user-level folder such as
+> `~/.claude/` or `~/.cursor/` — and writes no skills, rules or commands into
+> your repository, which only gets an `agents/overrides/` folder for your own
+> changes plus a few gitignored bookkeeping files and a block each in
+> `.gitignore` and `.gitattributes`; `agent-config init --project` creates just
+> those in a repository and nothing else.
 
 ## Prerequisites
 
 - Trae IDE: <https://trae.ai>.
-- Node.js ≥ 18 for the install entrypoints.
+- Node.js >= 22.6 (for `npx`).
 
 ## Install
 
-Global only (canonical scope):
-
 ```bash
-npx @event4u/agent-config init --tools=trae --global
+npx @event4u/agent-config init --tools=trae
 ```
 
-Populates:
+## What lands
 
-- `~/.trae/skills/`   — Anthropic-shaped skill bundle
-- `~/.trae/rules/`    — kernel + tier-1/2 rules
-- `~/.trae/personas/` — review-lens personas
+Under `~/.trae/`:
 
-(Project-scope `--tools=trae` is rejected with exit code 1 — Trae
-has no documented project-discovery convention yet.)
+- `rules/`    — kernel + routed rules
+- `skills/`   — skill bundle
+- `commands/` — slash-command bodies (invoke them by name in chat)
+- `personas/` — review-lens personas
+
+Nothing is written into your repository besides `agents/overrides/` and
+the gitignored bookkeeping files.
 
 ## How to use
 
-- Trae reads the skill bundle from `~/.trae/skills/` on every
-  session — no manual action required.
-- Slash commands (`/work`, `/implement-ticket`, `/commit`,
-  `/create-pr`, …) ship inside the skill bundle as named skills.
-  Invoke them by name in chat.
-- Trae exposes **Chat** and **Builder** modes; both surfaces read
-  the same skill bundle. Builder is the closest match for the
-  package's `/implement-ticket` flow.
+- Slash commands (`/work`, `/implement-ticket`, `/commit`, …) are not
+  registered natively — invoke them by name in chat.
+- Trae exposes Chat and Builder modes; Builder is the closest match for
+  the package's `/implement-ticket` flow.
 
 ## Verification
 
 ```bash
-test -d ~/.trae/skills
-test -d ~/.trae/rules
+ls ~/.trae/rules/ | head -5
+ls ~/.trae/skills/ | head -5
 ```
-
-In Trae: open the Chat panel and ask *"What is this repo?"* — the
-answer should cite the AGENTS.md emergency triage block when the
-workspace is open.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| Skills not listed | Re-run `npx @event4u/agent-config init --tools=trae --global --force`. |
-| `--tools=trae` rejected | Add `--global` (Trae has global-only scope). |
-| Builder ignores rules | Reload the Trae workspace; the bundle is indexed on session start. |
+| Directories under `~/.trae/` missing | Re-run `npx @event4u/agent-config init --tools=trae`. |
+| You used `--tools=trae` and nothing changed in the repo | Expected — the install is user-level; check `~/.trae/`. |
 
 ## Cross-references
 
-- [`AGENTS.md`](../../../AGENTS.md) — canonical agent self-orientation.
 - [`docs/installation.md`](../../installation.md) — install matrix index.
+- [Uninstalling](../../installation.md#uninstall) — removal sequence.

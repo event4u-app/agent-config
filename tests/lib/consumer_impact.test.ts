@@ -115,6 +115,14 @@ describe('parse_impact_trailers — GitHub squash-merge bodies', () => {
         expect(parse_impact_trailers(body)).toEqual({ impact: 'action', recorded: true, invalid: null, security: false });
     });
 
+    it('reports a wrapped Consumer-Impact value as invalid instead of absent, and keeps the impact none', () => {
+        const wrapped = 'feat: thing\n\nConsumer-Impact: action\nbecause the flag was renamed\n\n' + coauthor;
+        const t = parse_impact_trailers(wrapped);
+        expect(t.recorded).toBe(false);
+        expect(t.impact).toBe('none');
+        expect(t.invalid).toMatch(/outside a trailer block/);
+    });
+
     it('does not count a Consumer-Impact line inside prose, a quote or a code fence', () => {
         const prose = 'The squashed PR said Consumer-Impact: action in passing.\n\n' + coauthor;
         const quoted = 'Reviewer wrote:\n> Consumer-Impact: action\nso we kept it.\n\n' + coauthor;
@@ -289,5 +297,27 @@ describe('release impact map', () => {
         fs.writeFileSync(p, JSON.stringify({ name: 'x', version: '1.0.0' }, null, 4) + '\n');
         set_package_version(p, '1.0.1');
         expect(Object.keys(JSON.parse(fs.readFileSync(p, 'utf-8')) as object)).toEqual(['name', 'version']);
+    });
+});
+
+// Release review 19.2.0 (M4): 187 commits, 0 trailers, a new `stop` binding on
+// seven platforms in the hook manifest — and the release entry read `none`.
+describe('a span that touched a consumer surface without any trailer', () => {
+    const sha = 'e'.repeat(40);
+    const c = (body: string): Commit => commit_from_record({ sha, subject: 'feat: x', body });
+
+    it('floors an untrailered span at notice', () => {
+        expect(release_impact_entry([c(''), c('')], { consumerSurfaceTouched: true })).toEqual({ impact: 'notice' });
+        expect(with_release_impact({}, '19.2.0', [c('')], { consumerSurfaceTouched: true })).toEqual({ '19.2.0': { impact: 'notice' } });
+    });
+
+    it('stays none when no consumer surface changed', () => {
+        expect(release_impact_entry([c('')], { consumerSurfaceTouched: false })).toEqual({ impact: 'none' });
+        expect(release_impact_entry([c('')])).toEqual({ impact: 'none' });
+    });
+
+    it('honours a recorded declaration, including an explicit none', () => {
+        expect(release_impact_entry([c('Consumer-Impact: none'), c('')], { consumerSurfaceTouched: true })).toEqual({ impact: 'none' });
+        expect(release_impact_entry([c('Consumer-Impact: action')], { consumerSurfaceTouched: true })).toEqual({ impact: 'action' });
     });
 });

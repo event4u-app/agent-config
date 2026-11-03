@@ -40,6 +40,7 @@ import {
     type StanceAgreement,
 } from './events_log.js';
 import { evaluateQuorum, formatAttendanceCaveats, SOLO_FLOOR_MIN_PRESENT, withUnparsed, type QuorumResult } from './quorum.js';
+import { isIncompleteStop } from './stop_class.js';
 import { absentReasonFromCliFailure, classifyCliFailure } from './transport_resolver.js';
 
 type Dict = Record<string, unknown>;
@@ -195,6 +196,17 @@ export function _postRunQuorum(
         // AC-2 asks for the distinction. A caller with no map gets the exact
         // pre-2.3 behaviour, key-for-key.
         if (r !== undefined && !r.error && r.text.trim() !== '') {
+            // D5 — the provider said it cut this answer short. Its text may parse
+            // perfectly and still be a fragment, so it is an abstention, never
+            // attendance. Not `unparsed` either: it was readable, just incomplete.
+            if (isIncompleteStop(r.stop_class)) {
+                absent.push({
+                    member: m.name,
+                    reason: 'truncated',
+                    detail: `answer cut off by the provider (stop_class: ${String(r.stop_class)})`,
+                });
+                continue;
+            }
             if (parse_outcomes?.get(m.name) === 'parse_failed') {
                 unparsed += 1;
                 absent.push({

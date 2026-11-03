@@ -158,11 +158,10 @@ to Phase 2, treat the failure as new evidence.
 
 If you have tried **three** fixes and the bug is still present:
 
-* Stop attempting fixes.
-* Re-read phases 1–3 — something about the root cause is wrong.
+* Stop; re-read phases 1–3 — the root cause is wrong.
 * Ask explicitly: is this bug in the code, or in the architecture /
   design that keeps producing this class of bug?
-* Surface the question to the user. Do not attempt fix #4 silently.
+* Fix #4 is a new strategy, not a smaller edit (fix-loop ladder).
 
 ## Debug micro-loop — one test, one fix, one re-run
 
@@ -221,8 +220,9 @@ entirely — surface on first occurrence; another lap cannot fix them.
 | Is this a known issue? | Search tracker / Sentry / changelog of the dependency |
 | Step through execution | Xdebug — see [`php-debugging`](../php-debugging/SKILL.md) |
 
-Prefer the cheapest tool that resolves the question. A `dd()` at the
-right line beats five minutes of IDE breakpoints.
+Prefer the cheapest tool: a `dd()` at the right line beats five minutes of
+IDE breakpoints. **Tag temporary debug lines** with one prefix
+(`DEBUG-<slug>:`); before finishing, `grep -rn 'DEBUG-<slug>' .` returns nothing.
 
 **Known failure signature?** If the symptom has a recognisable shape — a
 tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
