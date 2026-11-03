@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 parent_roadmap: road-to-a-page-that-says-what-it-loads
 tree_pin: af5ab4dc22
 review_by: 2027-01-31
@@ -40,7 +40,7 @@ turn. The function exists (`writeTimeFindings` in
 
 ## Phase 2 — Carried from ratification round 14
 
-- [ ] **2.1 Decide whether a lazy-loaded `data-src` is a first-paint load.**
+- [x] **2.1 Decide whether a lazy-loaded `data-src` is a first-paint load.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/web_launch_third_party.ts -->
       Rows 2.1 read `src` only, on purpose: a click-to-load iframe carrying only
       `data-src` is not a load (`tests/scripts/web_launch_linear.test.ts`).
       Round 14's refusing seat raised that lazy-load libraries fetch `data-src`
@@ -49,6 +49,13 @@ turn. The function exists (`writeTimeFindings` in
       verify: a page with `<img data-src>` of a registered provider and a lazy
       loader, no gate marker, yields an undecided or a finding; the
       click-to-load twin with a gate marker does not.
+      Decided: a `data-src` (read only when no `src`) loads when its file
+      carries a lazy-loader marker (lazysizes, lazyload, lozad,
+      IntersectionObserver) — a finding, or undecided beside a gate as a gated
+      `src` is; with neither marker nor gate it is undecided; behind a gate
+      without a loader it stays silent. Pinned in
+      `tests/scripts/web_launch_write_time.test.ts`; chunk 13,996 / 14,000 B,
+      no raise.
 
 ## Blockers
 

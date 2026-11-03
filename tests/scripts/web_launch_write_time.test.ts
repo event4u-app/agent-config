@@ -1,6 +1,6 @@
-// writeTimeFindings: rows 2.1 and 2.2 over ONE written file — the function a
-// write-time carrier calls. The carrier itself (design_pass_hook) is carried to
-// later/road-to-a-page-check-at-write-time; this pins the function it will call.
+// writeTimeFindings: rows 2.1 and 2.2 over ONE written file — the function the
+// write-time carrier in design_pass_hook calls
+// (tests/hooks/design_pass_web_launch.test.ts covers the carrier itself).
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
