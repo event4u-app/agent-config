@@ -140,6 +140,17 @@ describe('lint_agents_layout — ported pytest suite (helpers)', () => {
         expect(mod.find_violations(agents, true)).toEqual([]);
     });
 
+    it('test_source_repo_auto_learnings_dir_is_clean_but_a_sibling_round_is_not', () => {
+        // Only the registered round is whitelisted; a later round needs its own entry.
+        const agents = path.join(tmp, 'agents');
+        fs.mkdirSync(path.join(agents, 'auto-learnings-1'), { recursive: true });
+        expect(mod.find_violations(agents, true)).toEqual([]);
+        fs.mkdirSync(path.join(agents, 'auto-learnings-2'), { recursive: true });
+        const violations = mod.find_violations(agents, true);
+        expect(violations.length).toBe(1);
+        expect(violations[0]).toContain('auto-learnings-2');
+    });
+
     it('test_consumer_mode_unknown_dir_not_error', () => {
         // In consumer mode (sourceRepo=false), unknown dirs stay warnings-only.
         const agents = path.join(tmp, 'agents');
