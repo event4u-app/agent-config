@@ -57,6 +57,7 @@ import {
     not_implemented_envelope,
 } from './catalog.js';
 import { GRAPH_TOOLS } from './graph_tools.js';
+import { memorySignalAnswer } from './memory_signal_answer.js';
 import { LISTING_PAGE_PROPS, pageListing } from './listing_page.js';
 import { resolvePath as _resolvePath, strip as _strip } from './path_util.js';
 import { type Outcome, record_call } from './telemetry.js';
@@ -620,38 +621,13 @@ async function _memorySignalHandler(
     const memorySignal = await import(
         '../../agent-src/templates/scripts/memory_signal.js'
     );
-    let record: Record<string, unknown> | null;
-    try {
-        record = await _withChdir(consumerRoot, () =>
-            memorySignal.emit(entryType, anchorPath, body),
-        );
-    } catch (e) {
-        // A capture refusal is an answer, not a tool failure: the caller learns
-        // which category refused it and the intake file is untouched.
-        if (e instanceof memorySignal.CaptureRefusedError) {
-            return {
-                recorded: false,
-                refused: true,
-                category: e.category,
-                reason: e.message,
-                entry_type: entryType,
-                path: anchorPath,
-            };
-        }
-        throw e;
-    }
-    if (record === null) {
-        return {
-            recorded: false,
-            skipped: true,
-            reason:
-                `already emitted within the ` +
-                `${memorySignal.RATE_LIMIT_WINDOW_DAYS}d rate-limit window`,
-            entry_type: entryType,
-            path: anchorPath,
-        };
-    }
-    return { recorded: true, signal: record };
+    return memorySignalAnswer(
+        memorySignal,
+        (fn) => _withChdir(consumerRoot, fn),
+        entryType,
+        anchorPath,
+        body,
+    );
 }
 
 /**

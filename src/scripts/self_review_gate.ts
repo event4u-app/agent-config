@@ -44,6 +44,7 @@ import {
 } from './ai_council/clients.js';
 import { type Exhibit, splitLineSuffix, wellFormedExhibit } from './_lib/finding_exhibits.js';
 import { independenceFields } from './_lib/review_independence.js';
+import { riskTier } from './_lib/review_risk_tier.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -740,17 +741,7 @@ export interface DiffPartition {
     unreviewed: { path: string; reason: string }[];
 }
 
-const RISK_TIERS: readonly (readonly string[])[] = [
-    ['src/scripts/', 'src/rules/', '.github/workflows/', 'src/cli/', 'src/install/'],
-    ['src/', 'docs/contracts/'],
-    ['tests/', 'docs/'],
-];
-
-/** 1 = highest risk; a path matching no tier prefix is tier 4. */
-export function riskTier(path: string): number {
-    const i = RISK_TIERS.findIndex((prefixes) => prefixes.some((p) => path.startsWith(p)));
-    return i < 0 ? RISK_TIERS.length + 1 : i + 1;
-}
+export { riskTier };
 
 /**
  * Pack per-file diffs into as few chunks as fit the budget.
