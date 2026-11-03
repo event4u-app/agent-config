@@ -27,7 +27,7 @@ turn. The function exists (`writeTimeFindings` in
 
 ## Phase 1 — The carrier
 
-- [x] **1.1 Wire `writeTimeFindings` into `design_pass_hook`'s post_tool_use pass**
+- [x] **1.1 Wire `writeTimeFindings` into `design_pass_hook`'s post_tool_use pass** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       for `.html`/`.css` writes, advisory P2, exit 0, with the rows in a
       conditional chunk so the dispatch bundle carries only the call site.
       Blocked by `hook-bundle-budget-for-web-launch`.
