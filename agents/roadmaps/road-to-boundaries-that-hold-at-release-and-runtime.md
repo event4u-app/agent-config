@@ -108,7 +108,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       `template-injection` and `privileged-job-cache` assertions (SHA-pin assertion excluded
       pending owner decision OD-1); regenerate projections with `task sync`.
       verify: `npx vitest run tests/contracts/ci_supply_chain.test.ts` → 0 and `LINT_WORKFLOW_SECURITY_DIR=src/agent-src/templates/github-workflows ./scripts-run src/scripts/lint_workflow_security --strict` → exit 0
-- [ ] **2.4 The CI skill teaches the same rules, project-neutral.** In
+- [x] **2.4 The CI skill teaches the same rules, project-neutral.** In
       `src/skills/github-ci/SKILL.md`, add three conventions naming the linter rules
       (free-text `${{ }}` only via `env:`; explicit `persist-credentials` on every checkout;
       no cache in a job with `id-token: write` / `contents: write` / a non-default secret), and
