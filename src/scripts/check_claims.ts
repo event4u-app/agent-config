@@ -47,6 +47,7 @@ import {
 } from './_lib/exec_evidence.js';
 import { asOf, localIsoDate } from './_lib/as_of.js';
 import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
+import { staleVerifiedVerdict } from './_lib/claims_stale_verified.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { WITNESS_MARKER, settleSiteFindings, siteScannedLine, siteWitnessSurfaces } from './_lib/claims_site_sweep.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
@@ -454,28 +455,6 @@ export function overdue_entries(ledger: Map<string, LedgerEntry>, today: string)
     return [...ledger.values()].filter(
         (e) => OPEN_STATUSES.has(e.status) && ISO_DATE_RE.test(e.review_by) && e.review_by < today,
     );
-}
-
-/**
- * Entries whose `last_verified` predates the newest dated change their own claim
- * text names (road-to-rewrites-that-keep-their-facts 3.3). A claim that says
- * "two figures moved on 2026-09-07" while recording `last_verified: 2026-07-11`
- * dates its verification to before the change it describes — the field is then
- * a statement nobody re-checked. Dates after `today` are plans, not changes,
- * and are ignored.
- */
-export function stale_last_verified(
-    ledger: Map<string, LedgerEntry>,
-    today: string,
-): Array<{ entry: LedgerEntry; newest: string }> {
-    const out: Array<{ entry: LedgerEntry; newest: string }> = [];
-    for (const e of ledger.values()) {
-        if (!ISO_DATE_RE.test(e.last_verified)) continue;
-        const named = (e.claim.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []).filter((d) => d <= today).sort();
-        const newest = named[named.length - 1];
-        if (newest !== undefined && newest > e.last_verified) out.push({ entry: e, newest });
-    }
-    return out;
 }
 
 export function render_overdue(overdue: readonly LedgerEntry[]): string {
@@ -1197,26 +1176,8 @@ function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     // 7. Stale last_verified ratchet (road-to-rewrites-that-keep-their-facts 3.3).
-    //    A ratchet, not a hard zero: the entries it revealed at introduction
-    //    carry backed claims whose re-verification is owner work (a narrowed
-    //    claim or a re-measurement), never a date bumped to silence the gate.
-    const staleVerified = stale_last_verified(ledger, local_today());
-    const staleVerdict = fs.existsSync(baselinesPath)
-        ? checkRatchet({
-              gate: 'check_claims:stale-last-verified',
-              actual: staleVerified.length,
-              repoRoot: REPO,
-          })
-        : { ok: true, message: '' };
-    if (!staleVerdict.ok) {
-        findings.push({
-            id: 'stale-last-verified',
-            file: LEDGER_REL,
-            reason:
-                `${staleVerdict.message} — last_verified older than a date the claim names: ` +
-                staleVerified.map((x) => `${x.entry.id} (${x.entry.last_verified} < ${x.newest})`).join(', '),
-        });
-    }
+    const stale = staleVerifiedVerdict(ledger.values(), local_today(), REPO, baselinesPath);
+    if (stale.reason !== null) findings.push({ id: 'stale-last-verified', file: LEDGER_REL, reason: stale.reason });
 
     if (findings.length > 0) {
         process.stderr.write(`❌  check_claims: ${findings.length} unbacked/dangling claim(s):\n`);
@@ -1230,12 +1191,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
     // Printed under --quiet too: CI runs this gate quiet, and an overdue
     // measurement nobody sees is the defect the field exists to end.
     process.stdout.write(render_overdue(overdue_entries(ledger, today)));
-    if (staleVerified.length > 0) {
-        process.stdout.write(
-            `⚠️  Stale last_verified: ${staleVerified.length} claim(s) older than a date they name (ratchet, reported)\n` +
-                staleVerified.map((x) => `      ${x.entry.id} — last_verified ${x.entry.last_verified} < ${x.newest}\n`).join(''),
-        );
-    }
+    process.stdout.write(stale.report);
     if (!args.quiet) {
         const backed = [...ledger.values()].filter((e) => e.status === 'backed').length;
         const unbacked = [...ledger.values()].filter((e) => e.status === 'unbacked').length;
@@ -1290,7 +1246,7 @@ function selfTest(): number {
     // a missing one fails as a module resolution error in EVERY case at once —
     // which reads as the detection having broken rather than the fixture being
     // incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts'];
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));

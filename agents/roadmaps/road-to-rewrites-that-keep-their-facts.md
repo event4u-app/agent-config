@@ -122,7 +122,7 @@ stops counting ranges.
 - [x] **3.3 `check_claims` flags a stale `last_verified`** older than the newest
       date named in the claim text.
       verify: a fixture claim with a newer dated change fails.
-      Done: `stale_last_verified` + ratchet `check_claims:stale-last-verified` (7 at introduction, `humanizer-tell-reduction` among them, listed as reported findings); `npx vitest run tests/scripts/check_claims.test.ts` 32/32 with the stale fixture exiting 2; `./scripts-run src/scripts/check_claims` exit 0.
+      Done: `stale_last_verified` (`src/scripts/_lib/claims_stale_verified.ts`, kept out of `check_claims.ts` to hold the source-size ratchet) + ratchet `check_claims:stale-last-verified` (7 at introduction, `humanizer-tell-reduction` among them, listed as reported findings); `npx vitest run tests/scripts/check_claims.test.ts` 32/32 with the stale fixture exiting 2; `./scripts-run src/scripts/check_claims` exit 0.
       production entry: `src/scripts/check_claims.ts`
 - [~] **3.4 Corpus repair and claim narrowing.** Blocked by
       `owner-instrument-change` (owner).
