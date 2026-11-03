@@ -49,7 +49,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
       verify: `npx vitest run tests/scripts/tests_workflow_result_aggregate.test.ts` — runs the
       step's script with `RESULTS="skipped skipped"` (summary says nothing ran, exit 0) and
       `RESULTS="success skipped"` (no line, exit 0) and `RESULTS="failure"` (exit 1).
-- [ ] **1.3 The pre-cut gate reads a conclusion of the run it started.** Rewrite the loop at
+- [x] **1.3 The pre-cut gate reads a conclusion of the run it started.** Rewrite the loop at
       `docs/release-runbook.md:127-136`: record the dispatch time and `origin/main` SHA, select the
       run by `event=workflow_dispatch`, `headSha` and `createdAt >=` dispatch time, wait with
       `gh run watch`, then require `gh run view "$id" --json conclusion --jq .conclusion` to equal
