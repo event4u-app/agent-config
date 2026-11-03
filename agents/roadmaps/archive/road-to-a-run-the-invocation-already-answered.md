@@ -48,33 +48,33 @@ rests on attributable data.
       `process-full/command.md:49-58` still says "ONE acceptance activates all run
       grants", while `roadmap-execution-contract.md:26-35` (ADR-237) says the
       invocation is the confirmation. Reword the bullet and pin it in a test.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, seen red before the rewording.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
 - [x] **1.2 process-full names the rules it inherits.** Replace "All other rules <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       from process-phase § Rules apply unchanged" (`:286-287`) with the three
       rules that do apply: dashboard sync, a silent council, decline = silence.
       process-phase's "no commit without permission" and "halt on true ambiguity"
       no longer arrive by inheritance.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, asserting the inherited list and the absence of the blanket clause.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
 - [x] **1.3 The consumer doc stops describing a screen process-full does not show.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `docs/customization.md:380-392` says "the contract screen is still shown once"
       and names an "N=3 validation budget". Correct it to ADR-237 and
       `execution.fix_loop_max`.
-      verify: `grep -n 'N=3\|still shown once either way' docs/customization.md` -> no match.
+      verify: `grep -n 'N=3\|still shown once either way' docs/customization.md` -> 1
 - [x] **1.4 A start-of-run environment line.** At start, process-full records <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `agent-config hooks:status` and `routing:doctor` in the run's PR body. A
       missing hook or flag is reported there and never stops the run.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, asserting the preflight line in `process-full-delivery.md`.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
 
 ## Phase 2 — A window is not a step
 
 - [x] **2.1 `isTimeGated` reads relative windows.** Besides a future ISO date, it <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       also accepts an observation count or a duration beside the wait vocabulary.
       A dotted step id followed by a verb is not a count. The cases live in the test.
-      verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts` -> 0, both new cases seen red first; drain-queue JSON over the live estate identical before and after.
+      verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts` -> 0
 - [x] **2.2 Rule 17c names the relative form.** `src/agent-src/templates/roadmaps.md:151-157` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       says a step needs no date to count as a wait, and that the lint still only
       warns (D6).
-      verify: `grep -n 'relative window' src/agent-src/templates/roadmaps.md` -> 1 match.
+      verify: `grep -n 'relative window' src/agent-src/templates/roadmaps.md` -> /relative window/
 
 ## Phase 3 — The invocation carries answers and policy
 
@@ -82,12 +82,12 @@ rests on attributable data.
       invocation line `O<n> <decision-id>: <answer>` is written into the target
       roadmap's Decisions table as `owner (invocation, <date>)`. It is never
       recorded as a council row, and it covers only the decision it names.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, asserting the contract section and the process-full pointer.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
 - [x] **3.2 Run-level policy flags.** `--late-artifacts auto-research` and <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `--deferred spawn-follow-up-draft` declare the § 2a / § 2b values under
       process-full. The cap of three is unchanged. The declared value goes into the
       roadmap's Decisions table so that it survives a resumed run.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, asserting the two flags in `argument-hint` and the contract rows.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
 
 ## Phase 4 — One grant model, scope as the parameter
 
@@ -96,21 +96,21 @@ rests on attributable data.
       opening the PR; never a merge. There is no confirmation round. process-step
       stops after one step and asks nothing. The Hard-Floor, security-sensitive and
       scope-out halts are unchanged.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, asserting both commands and `roadmap-execution-contract.md` § 1 agree.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
 - [x] **4.2 ADR-237 records the extension.** An amendment cites the council record and D2. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
-      verify: `./scripts-run src/scripts/adr_cite_check ADR-237` -> 0.
+      verify: `./scripts-run src/scripts/adr_cite_check ADR-237` -> 0
 
 ## Phase 5 — One invocation, at most one delivery PR
 
 - [x] **5.1 `roadmap_set_manifest`.** `--roadmaps a,b,c` or `--from-pr <N>` (the PR's <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_set_manifest.ts -->
       changed roadmap files) resolve to a frozen manifest ordered by `depends`. A
       cycle is refused. A PR's content names candidates and never widens authority.
-      verify: `npx vitest run tests/scripts/roadmap_set_manifest.test.ts` -> 0, cycle and order cases seen red first.
+      verify: `npx vitest run tests/scripts/roadmap_set_manifest.test.ts` -> 0
       production entry: src/scripts/roadmap_set_manifest.ts
 - [x] **5.2 process-full takes the set.** Add `argument-hint` entries and reword the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_set_manifest.ts -->
       Iron Law to "one invocation, at most one delivery PR". The PR body lists each
       member's outcome.
-      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0, asserting the reworded law.
+      verify: `npx vitest run tests/scripts/process_full_lane_brief.test.ts` -> 0
       production entry: src/scripts/roadmap_set_manifest.ts
 
 ## Phase 6 — Attribution before enforcement
@@ -120,12 +120,12 @@ rests on attributable data.
       Since the fix of 2026-08-19, claims live in the git common dir
       (`session_register_hook.ts:137-189`). Measured in the main checkout: 476 of
       479 rows carry `roadmap: null`. Reuse the shared reader.
-      verify: `npx vitest run tests/scripts/hooks/interruption_ledger.test.ts` -> 0, the shared-dir case seen red first.
+      verify: `npx vitest run tests/scripts/hooks/interruption_ledger.test.ts` -> 0
 - [x] **6.2 Long-runs 8.1 carries the arrival and the experiment bar.** Add an <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Arrivals line, plus the council's criteria for any refusal gate: a dated
       trial, a completion threshold, time and spend budgets, a disable switch that
       works on corrupt state, and cancellation preserved.
-      verify: `grep -n 'inbox-2026-11-v' agents/roadmaps/later/road-to-adversarial-verification-and-long-runs.md` -> ≥ 1.
+      verify: `grep -n 'inbox-2026-11-v' agents/roadmaps/later/road-to-adversarial-verification-and-long-runs.md` -> /inbox-2026-11-v/
 
 ## Owner decisions (not executed here)
 
