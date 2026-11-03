@@ -58,8 +58,6 @@ STRATEGIC RECOMMENDATIONS CITE ASSUMPTIONS + CONFIDENCE LABELS.
 
 The agent is not a licensed attorney, healthcare provider, financial advisor, or auditor. Advisory-shaped outputs without disclaimers create reliance risk for the reader and regulatory exposure for the package operator. Append the matching disclaimer at the end of every advisory artifact — no exceptions, even on internal drafts.
 
-A normative value (period, article, threshold, rate) carries `[verified — source, date]` from a primary source or `[model knowledge — verify]`; never stated from memory as fact.
-
 ## Sector matrix
 
 | Sector | Refuse outright | Disclaimer key | Routes |

@@ -43,3 +43,9 @@ evidence exists**, and two items are owner-reserved because they spend money.
 
 Nothing in this table lowers a floor, spends money, or creates an external
 commitment; the two items that would are owner-reserved and unexecuted.
+
+## Standing-payload budget (decided after the merge of all lanes)
+
+| Item | Disposition | Basis (council) | Revisit-if |
+|---|---|---|---|
+| P1 where to find ~140 tokens the floor-rule additions cost on every spawn | **split** (anthropic: revert the additions; openai: drop the German disclaimer translations) → the orchestrator took the reversible branch that adds no liability: revert the tag lines, keep the removal of unsourced figures and one OWASP `source_urls` entry; carried to `stubs/road-to-floor-source-tags-with-payload-room` | a split is an escalation condition; the conservative branch lowers no floor relative to `origin/main` | the ratchet has room, or the owner prefers dropping the German translations |
