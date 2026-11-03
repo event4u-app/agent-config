@@ -75,7 +75,7 @@ instrument can say whether a subagent that reported `DONE` wrote anything
 
 ## Phase 2 — Shared memory does not double an entry
 
-- [ ] **2.1 The curated reader yields an id once.** In `src/scripts/memory_lookup.ts`
+- [x] **2.1 The curated reader yields an id once.** In `src/scripts/memory_lookup.ts`
       `_iter_curated_entries` and `_iter_curated_entries_all` (`:352-420`), keep the first entry
       per `id` across both layouts; an entry without `id` is yielded as today. Update the caveat in
       `.gitattributes:57-60`, which states the reader does not dedup.
