@@ -34,9 +34,15 @@ declared nothing, which was never the authorization anyway. Waiting for an
 acceptance the user already gave is the mid-run interruption
 `process-full § Final-PR-only` forbids.
 
-For `process-step` and `process-phase` the confirmation round stays: their
-scope is narrow enough that a contract screen costs one line, and neither
-carries ADR-237's end-to-end delegation.
+The same holds for **every `/roadmap:process-*` wrapper**, `process-step` and
+`process-phase` included (council 2/2, 2026-11-03,
+`agents/evidence/council/inbox-2026-11-v-autonomous-runs-20261103.md`; owner
+demand of 2026-10-22). The three differ in scope only. `process-step` stops
+after one step, `process-phase` at the phase boundary, and neither asks for a
+confirmation the invocation already gave. Their grants are the § 3 table's,
+never the `process-full`-only rows: no settings change, no merge. The excluded
+actions and the safety floors are unchanged. `/roadmap:next`, which chooses
+the roadmap itself, keeps its contract screen.
 
 ## 1. Pre-scan — four detection classes
 

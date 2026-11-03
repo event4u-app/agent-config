@@ -97,8 +97,38 @@ describe('process-full scope-delta row agrees with the execution contract (ADR-2
         expect(cell).not.toMatch(/^When `execution\.mode/);
     });
 
-    it('the process-phase row keeps its execution.mode gate', () => {
-        expect(row('process-phase')[4]).toMatch(/^When `execution\.mode: autonomous/);
+    it('process-step and process-phase rows take the same grant model (inbox-2026-11-v D2)', () => {
+        for (const w of ['process-step', 'process-phase']) {
+            const cell = row(w)[4] ?? '';
+            expect(cell).toMatch(/invocation is the confirmation/i);
+            expect(cell).not.toMatch(/mode ignored/);
+        }
+    });
+
+    it('the contract no longer keeps a confirmation round for step and phase', () => {
+        const flat = contract.replace(/\s+/g, ' ');
+        expect(flat).not.toMatch(/the confirmation round stays/);
+        expect(flat).toMatch(/every `\/roadmap:process-\*` wrapper/);
+    });
+
+    it('process-step reads the mode, stops after one step and never asks', () => {
+        const step = fs
+            .readFileSync(path.resolve(__dirname, '../../src/domains/product-basic/roadmap/process-step/command.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(step).not.toMatch(/ignored by this wrapper/);
+        expect(step).not.toMatch(/no auto-commit/);
+        expect(step).toMatch(/never asks/i);
+        const phase = fs
+            .readFileSync(path.resolve(__dirname, '../../src/domains/product-basic/roadmap/process-phase/command.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(phase).toMatch(/the invocation is the grant/i);
+        expect(phase).toMatch(/never (covers )?a merge/i);
+    });
+
+    it('the mode ladder shows no contract screen under a process wrapper', () => {
+        const prescan = fs.readFileSync(path.join(EXEC, 'roadmap-process-loop-prescan.md'), 'utf8');
+        expect(prescan).toMatch(/\| `\/roadmap:process-step` \| `autonomous`/);
+        expect(prescan.replace(/\s+/g, ' ')).not.toMatch(/never whether the screen is shown/);
     });
 });
 

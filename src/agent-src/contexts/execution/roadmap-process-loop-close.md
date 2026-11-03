@@ -246,8 +246,8 @@ completed roadmap rotting in the active tree.
 
 | Wrapper | Working set | Stop after | Execution contract (§ 3) |
 |---|---|---|---|
-| `process-step` | Single first open step | One iteration of § 5 | Never — mode ignored |
-| `process-phase` | All open steps in first phase with `count_open > 0` | Phase boundary; per-phase quality if cadence ≠ `end_of_roadmap` | When `execution.mode: autonomous \| phase-checkpoints` |
+| `process-step` | Single first open step | One iteration of § 5 | Always — the invocation is the confirmation (ADR-237, amended 2026-11-03); § 3 base grants only, never a merge |
+| `process-phase` | All open steps in first phase with `count_open > 0` | Phase boundary; per-phase quality if cadence ≠ `end_of_roadmap` | Always — the invocation is the confirmation (ADR-237, amended 2026-11-03); § 3 base grants only, never a merge |
 | `process-full` | Every open step across every phase, in order | Roadmap fully closed (or halt) | Always — the invocation is the confirmation ([ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md)); `execution.mode` neither gates nor reduces the grant |
 
 `process-full` runs the per-phase quality pipeline at every phase

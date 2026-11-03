@@ -91,13 +91,13 @@ rests on attributable data.
 
 ## Phase 4 — One grant model, scope as the parameter
 
-- [ ] **4.1 process-step and process-phase: the invocation is the grant.** It
+- [x] **4.1 process-step and process-phase: the invocation is the grant.** It
       covers the run's branch, chunked commits, a push to that branch only and
       opening the PR; never a merge. There is no confirmation round. process-step
       stops after one step and asks nothing. The Hard-Floor, security-sensitive and
       scope-out halts are unchanged.
       verify: test asserts both commands and `roadmap-execution-contract.md` § 1 agree.
-- [ ] **4.2 ADR-237 records the extension.** An amendment cites the council record and D2.
+- [x] **4.2 ADR-237 records the extension.** An amendment cites the council record and D2.
       verify: `./scripts-run src/scripts/adr_cite_check ADR-237` -> 0.
 
 ## Phase 5 — One invocation, at most one delivery PR

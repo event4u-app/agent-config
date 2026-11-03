@@ -74,14 +74,16 @@ Rung 3, by wrapper:
 |---|---|---|
 | `/roadmap:process-full` | `autonomous`, **preselected** | offered |
 | `/roadmap:next` | `phase-checkpoints`, **preselected** | offered |
-| `/roadmap:process-phase` | `phase-checkpoints` | offered |
-| `/roadmap:process-step` | — | none (one step needs no run contract) |
+| `/roadmap:process-phase` | `phase-checkpoints` | active from the invocation |
+| `/roadmap:process-step` | `autonomous` | active from the invocation |
 
-Still **exactly one confirmation**, never two: rung 3 changes which option the
-contract screen arrives preselected on, never whether the screen is shown. The
-screen's `3. Run interactive instead` option
-([`roadmap-execution-contract § 2`](roadmap-execution-contract.md)) stays on it
-in every case, so a derived mode is always one keystroke from being refused.
+**Under a `/roadmap:process-*` wrapper the invocation is the confirmation**
+(ADR-237, extended to step and phase on 2026-11-03), so no contract screen is
+shown. The derived contract is printed as a one-line status, never as a prompt.
+Only `/roadmap:next` still shows the screen with its `3. Run interactive
+instead` option ([`roadmap-execution-contract § 2`](roadmap-execution-contract.md)),
+because there the run itself picks the roadmap. An explicit `interactive` (rung
+1 or 2) is still honoured: the user asked for it.
 
 <!-- decision 2026-08-20: /roadmap:next preselects `phase-checkpoints`, not
      `autonomous`. AI council 2/2 (anthropic + openai) on the
@@ -148,16 +150,16 @@ its four-class pre-scan over every open step:
 4. open questions / ambiguity markers (incl. `ask-when-uncertain`
    vague-trigger patterns).
 
-Surface the contract summary; the user's single **Accept** activates
-all run grants (branch, chunked commits, push to the run's own feature
+Surface the contract summary. Under a `/roadmap:process-*` wrapper the
+invocation is the **Accept**, and the summary is a status line; under
+`/roadmap:next` the user's single **Accept** activates all run grants (branch, chunked commits, push to the run's own feature
 branch only, PR-open, batched artifact drafting, council auto-enable) —
 cached for the run, never re-asked. The contract never lifts a Hard
 Floor or any safety floor; boundaries + per-mode gate table live in the
 contract context.
 
-**Derived `interactive`** — i.e. the user asked for it explicitly (rung 1), the
-frontmatter declares it (rung 2), or the invocation was `process-step` (rung 3)
-→ legacy commit-step scan only: lines matching `commit:` / `git commit` /
+**Derived `interactive`**, i.e. the user asked for it explicitly (rung 1) or the
+frontmatter declares it (rung 2) → legacy commit-step scan only: lines matching `commit:` / `git commit` /
 `Commit phase`. An ABSENT field no longer reaches this branch; that is the whole
 change in § 3a.
 
