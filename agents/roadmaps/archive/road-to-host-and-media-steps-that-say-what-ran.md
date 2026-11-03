@@ -34,12 +34,12 @@ Evidence (read): `src/scripts/_lib/runtime_wiring_checks.ts:428` — "managed ho
 in user-visible doctor text collides with the host's managed-settings tier;
 `docs/contracts/harness-expectations.md:27` lists Classes A–C and no mod case.
 
-- [x] **1.1 "managed hooks" becomes "agent-config hooks".** User-visible doctor
+- [x] **1.1 "managed hooks" becomes "agent-config hooks".** User-visible doctor <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/runtime_wiring_checks.ts -->
       and installer text only (`runtime_wiring_checks.ts`, `install.ts`); the
       internal enum stays. A test asserts no hook-wiring message says
       "managed"; seen red first.
       verify: `npx vitest run tests/scripts/runtime_wiring_checks.test.ts` -> 0
-- [x] **1.2 Class D — a host mod can override a refusal.** A section in
+- [x] **1.2 Class D — a host mod can override a refusal.** A section in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `harness-expectations.md` stating only tree-established facts
       (ADR-302, `host_mod_census.ts`): load order is the host's, per-arm order
       is unmeasured and owned by the mod-surfaces roadmap, diagnose with
@@ -51,7 +51,7 @@ in user-visible doctor text collides with the host's managed-settings tier;
 Evidence (read): `src/skills/supply-chain-intake/SKILL.md:4` — the description
 routes dependencies only; third-party skills and skill archives are uncovered.
 
-- [x] **2.1 Intake routes plugins, mods and agent skills.** Description and
+- [x] **2.1 Intake routes plugins, mods and agent skills.** Description and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: src/skills/supply-chain-intake/SKILL.md -->
       scope name them; the plugin/mod section gains the archive step (list
       before unpack; refuse `..`, absolute, symlink and nested entries; name
       every script); trigger cases added, with a near-miss for writing a new
@@ -65,15 +65,15 @@ duration is clamped to {4,6,8} with no notice; `src/skills/prompt-validator/`
 has no reference-index check; `agents/settings/policies/media/likeness.md:12`
 has no trigger for a supplied reference photo.
 
-- [x] **3.1 The Veo clamp says so.** A requested duration outside {4,6,8}
+- [x] **3.1 The Veo clamp says so.** A requested duration outside {4,6,8} <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/adapters/gemini-veo.sh -->
       prints `requested <n>s -> rendered <m>s` on stderr; the song-to-script
       skill tells planners the Veo grid.
       verify: `npx vitest run tests/scripts/ai_video_veo_duration.test.ts` -> 0
-- [x] **3.2 Reference-index check.** A script refuses a prompt that cites
+- [x] **3.2 Reference-index check.** A script refuses a prompt that cites <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai-video/lib/check-ref-index.sh -->
       image N when fewer than N inputs are supplied; the validator skill calls
       it before the prose check.
       verify: `npx vitest run tests/scripts/ai_video_ref_index.test.ts` -> 0
-- [x] **3.3 A supplied photo of a person is a likeness trigger.** Policy and
+- [x] **3.3 A supplied photo of a person is a likeness trigger.** Policy and <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       rule name it and route it to the existing consent path.
       verify: `grep -ci 'reference image' agents/settings/policies/media/likeness.md src/rules/image-likeness-and-rights.md` -> ≥1 each
 

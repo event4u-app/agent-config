@@ -31,7 +31,7 @@ Evidence (executed): `src/scripts/_lib/verification_command.ts:240` — a probe 
 `bundle exec rspec`, `./gradlew test`, `mvn test`, `npx playwright test`, all of
 which `resolve_toolchain` itself emits (`toolchain-resolver.md:64-76`).
 
-- [x] **1.1 Resolver↔gate parity.** `segmentVerifies` accepts `dotnet test`,
+- [x] **1.1 Resolver↔gate parity.** `segmentVerifies` accepts `dotnet test`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
       `rspec` (and `bundle exec` peeled like `npx`), `mvn`/`mvnw` and
       `gradle`/`gradlew` with `test`/`verify`/`check`, and `playwright test`.
       A parity test reads every runner command the resolver documents and
@@ -45,20 +45,20 @@ Evidence (executed): `src/agent-src/templates/scripts/work_engine/stack/runner.t
 detected as stack `plain` (`stack/detect.ts:85`) and as project kind `unknown`
 (`src/install/detect.ts:136`).
 
-- [x] **2.1 Extract the dotnet basis into a leaf module.** `runner.ts` sits at
+- [x] **2.1 Extract the dotnet basis into a leaf module.** `runner.ts` sits at <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/stack/runner.ts -->
       1,498/1,500 lines; move `_dotnet_basis`, `_dotnet_runners`,
       `_dotnet_project_text` to `stack/dotnet.ts` with no behaviour change.
       verify: `npx vitest run tests/scripts/work_engine/stack_runner.test.ts` -> 0
-- [x] **2.2 An engine marker suppresses `dotnet test`.** A Unity
+- [x] **2.2 An engine marker suppresses `dotnet test`.** A Unity <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/stack/dotnet.ts -->
       (`ProjectSettings/ProjectVersion.txt`) or Unreal (`*.uproject`) root
       yields no dotnet runner instead of a wrong one; note the precedence in
       `toolchain-resolver.md`.
       verify: `npx vitest run tests/scripts/work_engine/stack_runner.test.ts` -> 0 with a Unity fixture asserting no `dotnet test`
-- [x] **2.3 An engine project is not `plain`.** `detect_stack` returns
+- [x] **2.3 An engine project is not `plain`.** `detect_stack` returns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/templates/scripts/work_engine/stack/detect.ts -->
       `UNSUPPORTED_STACK` for an engine marker with no web marker, so the UI
       lane refuses instead of driving a browser at a game.
       verify: `npx vitest run tests/scripts/work_engine/stack_detect.test.ts` -> 0
-- [x] **2.4 Installer engine kinds.** `ProjectKind` gains `godot`, `unity`,
+- [x] **2.4 Installer engine kinds.** `ProjectKind` gains `godot`, `unity`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/install/detect.ts -->
       `unreal`, detected from `project.godot`,
       `ProjectSettings/ProjectVersion.txt`, `*.uproject`; the install route's
       enum follows. Not added to the scope-prompt manifests.
@@ -70,7 +70,7 @@ Evidence (read): `src/scripts/code_graph/build.ts:59` — `IGNORE_DIRS` holds no
 engine cache directory; since #2808 `.gitignore` is honoured, so the walk only
 reaches them in a checkout without git or without an ignore file.
 
-- [x] **3.1 Engine cache dirs, conditional on a root marker.** With a Unity
+- [x] **3.1 Engine cache dirs, conditional on a root marker.** With a Unity <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/build.ts -->
       marker skip `Library`, `Temp`, `Obj`, `Logs`, `UserSettings`; with an
       Unreal marker skip `Intermediate`, `Saved`, `Binaries`,
       `DerivedDataCache`. Never unconditional — these names occur elsewhere.
@@ -81,7 +81,7 @@ reaches them in a checkout without git or without an ignore file.
 Evidence (read): `agents/roadmaps/later/road-to-reach-transcribe.md:12` — arrival
 1 only; `src/scripts/media_bundle.ts:512` still probes `whisper-cli`/`whisper` only.
 
-- [x] **4.1 Arrivals lines on existing owners.** `later/road-to-reach-transcribe.md`
+- [x] **4.1 Arrivals lines on existing owners.** `later/road-to-reach-transcribe.md` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       gets arrival 2; `stubs/road-to-mcp-fingerprint-slot-binding.md` gets the
       app-side code-tool shape as arrival 1.
       verify: `grep -c 'inbox-2026-11-q' agents/roadmaps/later/road-to-reach-transcribe.md agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md` -> 1 each
