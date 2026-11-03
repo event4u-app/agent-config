@@ -1283,6 +1283,15 @@ the run's end state, including `handed-back`, because the retro's
 `analysis-run` unit reads adoption per run and a missing record reads as a run
 that never happened. An unread turnaround is `missing`, never `0`.
 
+## Engine modules the model carries
+
+No CLI and no hook runs these modules; the steps above state what each one
+specifies, and the model applies it. Each is a reference spec for the stage,
+not a check that ran — a run that cites one has not executed it.
+
+- `src/scripts/analysis_inbox_final.ts` (`directiveBinding` / `roundUnion`, the last loop) — reference spec, model-carried.
+- `src/scripts/analysis_publish.ts` (the publish stage, after Phase 6b) — reference spec, model-carried.
+
 ## Honest enforcement — `instruction-only`
 
 Nothing gates any of this. The three passes, the anchor census, the transcript

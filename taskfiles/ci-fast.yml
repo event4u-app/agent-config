@@ -912,6 +912,11 @@ tasks:
     desc: "Report a roadmap step this diff ticks whose tested symbols no production entry reaches, or that is ticked while it says `built, not wired`. Enforcing since road-to-a-tick-the-shipped-path-earns 3.3; a false positive carries a line `reach exempt: <reason>` in its own step block. Diff-scoped against origin/main"
     cmd: ./scripts-run src/scripts/check_step_production_reach --base origin/main --enforce
 
+  report-production-reach-unreached:
+    silent: true
+    desc: "Fail when an analysis engine module (src/scripts/analysis_*.ts) no production entry reaches carries no `reference spec, model-carried` label in its door, or a labelled module is reached after all or missing from the tree (road-to-a-ledger-that-can-say-no 2.3). Whole-tree, not diff-scoped"
+    cmd: ./scripts-run src/scripts/report_production_reach --unreached 'src/scripts/analysis_*.ts'
+
   check-graph-writers:
     silent: true
     desc: "Fail a graph, map or cache write that lands outside the two layouts ADR-303 allows (agents/map/ in a project, the hub's map/ elsewhere), then run the gate's own self-test"

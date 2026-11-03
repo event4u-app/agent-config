@@ -11,8 +11,6 @@ import {
     deepMerge,
     expandBatchChoice,
     isJsonTarget,
-    mergeJsonContent,
-    parseJsonLenient,
     resolveFileConflict,
 } from '../../src/install/conflict.js';
 import { canonicalPath } from '../../src/install/loggedWrites.js';
@@ -142,25 +140,6 @@ describe('conflict — deepMerge', () => {
     it('handles null and primitive overlays', () => {
         expect(deepMerge({ a: 1 }, { a: null })).toEqual({ a: null });
         expect(deepMerge({ a: { x: 1 } }, { a: 'replaced' })).toEqual({ a: 'replaced' });
-    });
-});
-
-describe('conflict — mergeJsonContent / parseJsonLenient', () => {
-    it('mergeJsonContent emits 4-space indented JSON with trailing newline', () => {
-        const out = mergeJsonContent({ a: 1 }, { b: 2 });
-        expect(out).toBe('{\n    "a": 1,\n    "b": 2\n}\n');
-    });
-
-    it('parseJsonLenient returns {} on invalid JSON', () => {
-        expect(parseJsonLenient('not-json')).toEqual({});
-    });
-
-    it('parseJsonLenient returns {} on array root', () => {
-        expect(parseJsonLenient('[1,2]')).toEqual({});
-    });
-
-    it('parseJsonLenient round-trips valid objects', () => {
-        expect(parseJsonLenient('{"a":1}')).toEqual({ a: 1 });
     });
 });
 

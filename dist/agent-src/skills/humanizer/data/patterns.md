@@ -81,7 +81,9 @@ AI copy. House rule: **density cap, not zero** — keep at or under ~2 per
 500 words (CP1 parity with `docs/guidelines/design-antipatterns.md`).
 Replace surplus dashes with a period, comma, colon, or parentheses.
 Spaced double hyphens (` -- `) always go. A captured voice fingerprint
-that genuinely writes in dashes wins over this rule.
+that genuinely writes in dashes wins over this rule. A range between two
+numbers (`pages 12–14`, `2019–2021`, `9–17 Uhr`, `Q1–Q2`) is typography, not
+this tell, and the scanner does not count it.
 
 **3.2 Mechanical boldface.** Bolding every key term. Fix: bold nothing or
 the one thing the reader must not miss.

@@ -1,0 +1,116 @@
+{
+  "_comment": "Dated crawler register for `staging-noindex-leftover` (road-to-verdicts-the-markup-cannot-flip 2.2). Read by `loadCrawlerRegister()` in src/scripts/web_launch_crawlers.ts. ONE ROW PER CRAWLER WHOSE PURPOSE THE OPERATOR'S OWN DOCUMENTATION STATES, at `source`, read on `checked_at`. `affects_search_inclusion` is true only where that page says blocking the token removes the site from the operator's search results; a blanket `Disallow: /` is a critical staging leftover for `*` and for those tokens, never for a training, ads or user-fetch token. `meta_name` is set only where the operator documents a robots meta name for the crawler (`meta_source`). A token missing here is unclassified and never judged. A row past `review_by` reads `unknown` rather than live: crawler purposes change, and an undated list rots. Bingbot is absent because its official page could not be read on 2026-11-03.",
+  "schema_version": 1,
+  "owner": "maintainer",
+  "registered_at": "2026-11-03",
+  "review_by": "2027-05-03",
+  "purposes": [
+    "search",
+    "training",
+    "user-fetch",
+    "ads"
+  ],
+  "rows": [
+    {
+      "token": "Googlebot",
+      "operator": "Google",
+      "purpose": "search",
+      "affects_search_inclusion": true,
+      "source": "https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03",
+      "meta_name": "googlebot",
+      "meta_source": "https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag"
+    },
+    {
+      "token": "Google-Extended",
+      "operator": "Google",
+      "purpose": "training",
+      "affects_search_inclusion": false,
+      "source": "https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "OAI-SearchBot",
+      "operator": "OpenAI",
+      "purpose": "search",
+      "affects_search_inclusion": true,
+      "source": "https://developers.openai.com/docs/gptbot",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "GPTBot",
+      "operator": "OpenAI",
+      "purpose": "training",
+      "affects_search_inclusion": false,
+      "source": "https://developers.openai.com/docs/gptbot",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "ChatGPT-User",
+      "operator": "OpenAI",
+      "purpose": "user-fetch",
+      "affects_search_inclusion": false,
+      "source": "https://developers.openai.com/docs/gptbot",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "OAI-AdsBot",
+      "operator": "OpenAI",
+      "purpose": "ads",
+      "affects_search_inclusion": false,
+      "source": "https://developers.openai.com/docs/gptbot",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "Claude-SearchBot",
+      "operator": "Anthropic",
+      "purpose": "search",
+      "affects_search_inclusion": true,
+      "source": "https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "ClaudeBot",
+      "operator": "Anthropic",
+      "purpose": "training",
+      "affects_search_inclusion": false,
+      "source": "https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "Claude-User",
+      "operator": "Anthropic",
+      "purpose": "user-fetch",
+      "affects_search_inclusion": false,
+      "source": "https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "Applebot",
+      "operator": "Apple",
+      "purpose": "search",
+      "affects_search_inclusion": true,
+      "source": "https://support.apple.com/en-us/119829",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    },
+    {
+      "token": "Applebot-Extended",
+      "operator": "Apple",
+      "purpose": "training",
+      "affects_search_inclusion": false,
+      "source": "https://support.apple.com/en-us/119829",
+      "checked_at": "2026-11-03",
+      "review_by": "2027-05-03"
+    }
+  ]
+}

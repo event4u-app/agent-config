@@ -33,6 +33,7 @@
 // the TS analogue of Python's `try: import mcp`). `run_stdio` likewise
 // degrades: it builds the server, emits the same boot-log lines, and only
 // drives the SDK transport when the SDK is present.
+import { NOT_IMPLEMENTED_CODE } from './catalog.js';
 import { SERVER_NAME, __version__ } from './index.js';
 import {
     boot_log_line as identity_boot_log_line,
@@ -244,6 +245,20 @@ export function build_server(
     return { request_handlers: handlers };
 }
 
+/**
+ * A handler's returned object as a `tools/call` result. Mirrors the Python SDK:
+ * the object becomes one JSON-serialized text block. A discovery stub's
+ * `not_implemented` envelope ran nothing, so it is a tool error — `isError:
+ * true` with the envelope unchanged as the body.
+ */
+export function toCallToolResult(result: Record<string, unknown>): {
+    content: { type: 'text'; text: string }[];
+    isError?: true;
+} {
+    const content = [{ type: 'text' as const, text: JSON.stringify(result) }];
+    return result['code'] === NOT_IMPLEMENTED_CODE ? { content, isError: true } : { content };
+}
+
 // The npm `@modelcontextprotocol/sdk` is a soft dependency: it IS declared
 // in package.json, but the specifiers are built at runtime and imported
 // dynamically so the module stays importable (and the boot path stays
@@ -402,9 +417,7 @@ async function _serveOverSdk(server: BuiltServer): Promise<void> {
                     req.params?.name as string,
                     (req.params?.arguments as Record<string, unknown>) ?? {},
                 );
-                // Mirror the Python SDK: a returned object becomes a single
-                // JSON-serialized text content block.
-                return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+                return toCallToolResult(result);
             } catch (err) {
                 // Mirror the Python SDK's `call_tool` wrapper: a raised
                 // exception becomes a tool-error CallToolResult (isError),

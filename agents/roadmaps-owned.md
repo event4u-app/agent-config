@@ -101,7 +101,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-experience-loop-owner-decisions | later | — | Road to the experience loop's two owner-reserved decisions |
 | road-to-external-proof-upgrade | later | later | External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events |
 | road-to-federation-behind-adr-278 | later | later | Once ADR-278 answers ADR-088 § 3 (`docs/decisions/ADR-088-*.md:95-105`), a neighbour's capability can be invoked through one typed boundary and its result … |
-| road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md:487`). |
+| road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md` § `claim: reference-loop-upgrade-value`). |
 | road-to-floor-source-tags-with-payload-room | later | later | Floor source tags. |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
@@ -147,6 +147,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
+| road-to-rewrites-that-keep-their-facts-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
 | road-to-rules-that-say-when-they-reject | later | parked | A rule declared `enforced_by: instruction-only` carries a short Rejected when block — observable conditions a reviewer can cite as `<rule>#R<n>` … |

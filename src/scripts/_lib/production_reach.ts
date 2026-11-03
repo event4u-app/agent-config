@@ -102,7 +102,7 @@ export interface ModuleImport {
 
 /** Every relative import of `rel`, resolved, with the names it takes. */
 export function moduleImports(tree: ReachTree, rel: string): ModuleImport[] {
-    const source = (tree.read(rel) ?? '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const source = stripComments(tree.read(rel) ?? '');
     const out: ModuleImport[] = [];
     const re = /\b(import|export)\s+(?:type\s+)?((?:(?!\b(?:import|export)\b)[^;'"])*?)\bfrom\s*['"](\.{1,2}\/[^'"]+)['"]|\bimport\s*['"](\.{1,2}\/[^'"]+)['"]/g;
     let m: RegExpExecArray | null;
@@ -115,18 +115,118 @@ export function moduleImports(tree: ReachTree, rel: string): ModuleImport[] {
     return out;
 }
 
-/** Entries from the committed config: the fixed list plus every script an entry source names. */
+/** A `/` here starts a regex literal, not a division: the previous token cannot end an expression. */
+const REGEX_CAN_FOLLOW = /(?:^|[(,=:[!&|?{};+\-*%<>~^]|\breturn|\btypeof|\bcase|\bdo|\belse|\bin|\bof)\s*$/;
+
+/**
+ * Remove comments without being fooled by a literal: `'docs/*.md'` or `/a\/*b/`
+ * holds a `/*` that opens no comment. With `blankStrings`, the contents of
+ * string, template and regex literals are dropped too (delimiters kept), so a
+ * quoted `process.argv[1]` reads as no code at all.
+ */
+export function stripComments(source: string, blankStrings = false): string {
+    let out = '';
+    let i = 0;
+    const n = source.length;
+    while (i < n) {
+        const ch = source[i] as string;
+        const next = source[i + 1];
+        if (ch === '/' && next === '/') {
+            while (i < n && source[i] !== '\n') i += 1;
+            continue;
+        }
+        if (ch === '/' && next === '*') {
+            const end = source.indexOf('*/', i + 2);
+            i = end === -1 ? n : end + 2;
+            out += ' ';
+            continue;
+        }
+        const regex = ch === '/' && REGEX_CAN_FOLLOW.test(out.slice(-12));
+        if (ch === '"' || ch === "'" || ch === '`' || regex) {
+            const start = i;
+            let inClass = false;
+            i += 1;
+            while (i < n) {
+                const c = source[i] as string;
+                if (c === '\\') {
+                    i += 2;
+                    continue;
+                }
+                if (regex) {
+                    if (c === '\n') break;
+                    if (c === '[') inClass = true;
+                    else if (c === ']') inClass = false;
+                    else if (c === '/' && !inClass) break;
+                } else if (c === ch || (ch !== '`' && c === '\n')) break;
+                i += 1;
+            }
+            i += 1;
+            out += blankStrings ? `${ch}${regex ? '/' : ch}` : source.slice(start, i);
+            continue;
+        }
+        out += ch;
+        i += 1;
+    }
+    return out;
+}
+
+/** Helpers whose call is a main guard. A definition (`function isCliEntry(`) is not a call. */
+const GUARD_HELPER_CALL = /(?<![\w$.])(?<!\bfunction\s+)(?:isCliEntry|runGateCli)\s*\(/;
+
+/**
+ * Does the module run something when executed directly? A comparison against
+ * `process.argv[1]` (or `process.argv[1]` and `import.meta.url` in one
+ * statement), `import.meta.main`, a call of a known guard helper
+ * (`isCliEntry`, `runGateCli`), or a bare top-level `main()` call. Comments and
+ * literals are read string-aware first, so a quoted mention counts as nothing.
+ */
+export function hasMainGuard(source: string): boolean {
+    const code = stripComments(source, true);
+    const argvCompared =
+        /process\.argv\[1\]\s*[!=]==?|[!=]==?\s*process\.argv\[1\]/.test(code) ||
+        code.split(/[;{}]/).some((stmt) => stmt.includes('process.argv[1]') && /import\.meta\.(?:url|filename)\b/.test(stmt));
+    return (
+        argvCompared ||
+        /import\.meta\.main\b/.test(code) ||
+        GUARD_HELPER_CALL.test(code) ||
+        /^(?:process\.exit(?:Code\s*=\s*|\s*\(\s*))?(?:await\s+|void\s+)?main\s*\(/m.test(code)
+    );
+}
+
+/** The mention is the argument of a command: `./scripts-run`, `node`, `tsx`. */
+const COMMAND_PREFIX = /(?:\.\/scripts-run|\bnode(?:\s+--?[\w=.-]+)*|\btsx)\s+$/;
+
+/**
+ * Entries from the committed config: the fixed list plus every script an entry
+ * source names. A markdown source is prose, and prose mentions modules it never
+ * runs, so a `.md` mention is an entry only when the module has a main guard or
+ * the mention is a command line. Other sources (Taskfiles, workflows, the
+ * dispatcher, the hook manifest) name only what they run.
+ */
 export function productionEntries(tree: ReachTree): string[] {
     const raw = tree.read(ENTRIES_CONFIG_REL);
     if (raw === null) return [];
     const cfg = JSON.parse(raw) as { entries?: string[]; entry_sources?: string[] };
     const entries = new Set((cfg.entries ?? []).filter((e) => tree.read(e) !== null));
     const sources = (cfg.entry_sources ?? []).map(globToRegExp);
+    const guarded = new Map<string, boolean>();
+    const runnable = (rel: string): boolean => {
+        if (!guarded.has(rel)) guarded.set(rel, hasMainGuard(tree.read(rel) ?? ''));
+        return guarded.get(rel) as boolean;
+    };
     for (const file of tree.list()) {
         if (!sources.some((re) => re.test(file))) continue;
-        for (const m of (tree.read(file) ?? '').matchAll(/(?:src\/)?scripts\/([A-Za-z0-9_/.-]+?)(?:\.ts)?(?![A-Za-z0-9_/.-])/g)) {
+        const prose = file.endsWith('.md');
+        const text = tree.read(file) ?? '';
+        for (const m of text.matchAll(/(?:src\/)?scripts\/([A-Za-z0-9_/.-]+?)(?:\.ts)?(?![A-Za-z0-9_/.-])/g)) {
             const candidate = `src/scripts/${m[1] as string}.ts`;
-            if (tree.read(candidate) !== null) entries.add(candidate);
+            if (tree.read(candidate) === null) continue;
+            if (prose) {
+                const lineStart = text.lastIndexOf('\n', (m.index as number) - 1) + 1;
+                const invoked = COMMAND_PREFIX.test(text.slice(lineStart, m.index));
+                if (!invoked && !runnable(candidate)) continue;
+            }
+            entries.add(candidate);
         }
     }
     return [...entries].sort();
@@ -138,11 +238,12 @@ export function productionEntries(tree: ReachTree): string[] {
  * a concern calls is reached; one only its test calls is not.
  */
 export function usedExports(source: string): string[] {
-    const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const code = stripComments(source);
     const out: string[] = [];
     for (const m of code.matchAll(/\bexport\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|const|let|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/g)) {
         const name = m[1] as string;
-        const uses = code.match(new RegExp(`(?<![\\w$.])${name.replace(/\$/g, '\\$')}(?![\\w$])`, 'g'))?.length ?? 0;
+        // A `.name` member access is someone else's property; `...name` is a spread of this one.
+        const uses = code.match(new RegExp(`(?<![\\w$])(?<!(?:^|[^.])\\.)${name.replace(/\$/g, '\\$')}(?![\\w$])`, 'gm'))?.length ?? 0;
         if (uses >= 2) out.push(name);
     }
     return out;

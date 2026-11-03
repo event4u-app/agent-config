@@ -23,6 +23,9 @@ function row(over: Partial<Obligation> = {}): Obligation {
     };
 }
 
+/** The evidence ids the run actually recorded. */
+const CTX = { evidenceIds: new Set(['E1', 'E2', 'E3']) };
+
 describe('reconstruction obligation ledger', () => {
     it('names the equivalence tiers and statuses of the contract', () => {
         expect(EQUIVALENCE_TIERS).toEqual(['inspired-by', 'ux', 'behavior', 'protocol', 'byte']);
@@ -46,13 +49,13 @@ describe('reconstruction obligation ledger', () => {
     });
 
     it('reads an empty ledger as unknown, never as closed', () => {
-        expect(evaluateLedger([])).toEqual({ state: 'unknown', verified: 0, counted: 0, parity: null, errors: [] });
+        expect(evaluateLedger([], CTX)).toEqual({ state: 'unknown', verified: 0, counted: 0, parity: null, errors: [] });
     });
 
     it('stays open while any row is open or visible-only, and closes when all rows are verified or waived', () => {
-        expect(evaluateLedger([row(), row({ id: 'o2', status: 'open' })]).state).toBe('open');
-        expect(evaluateLedger([row(), row({ id: 'o2', status: 'visible-only' })]).state).toBe('open');
-        expect(evaluateLedger([row(), row({ id: 'o2', status: 'waived', waiver_reason: 'licensed asset' })]).state).toBe('closed');
+        expect(evaluateLedger([row(), row({ id: 'o2', status: 'open' })], CTX).state).toBe('open');
+        expect(evaluateLedger([row(), row({ id: 'o2', status: 'visible-only' })], CTX).state).toBe('open');
+        expect(evaluateLedger([row(), row({ id: 'o2', status: 'waived', waiver_reason: 'licensed asset' })], CTX).state).toBe('closed');
     });
 
     it('counts only verified rows toward parity — visible-only never counts, waived leaves the denominator', () => {
@@ -61,17 +64,39 @@ describe('reconstruction obligation ledger', () => {
             row({ id: 'o2', status: 'visible-only' }),
             row({ id: 'o3', status: 'open' }),
             row({ id: 'o4', status: 'waived', waiver_reason: 'licensed asset' }),
-        ]);
+        ], CTX);
         expect(verdict.verified).toBe(1);
         expect(verdict.counted).toBe(3);
         expect(verdict.parity).toBeCloseTo(1 / 3);
     });
 
     it('does not count a row that claims verified on analyst inference, and refuses to close on it', () => {
-        const verdict = evaluateLedger([row({ verifier_authority: 'analyst-inference' })]);
+        const verdict = evaluateLedger([row({ verifier_authority: 'analyst-inference' })], CTX);
         expect(verdict.verified).toBe(0);
         expect(verdict.parity).toBe(0);
         expect(verdict.state).toBe('invalid');
         expect(verdict.errors.join('\n')).toMatch(/o1/);
+    });
+
+    it('closes a well-formed ledger whose evidence ids all resolve', () => {
+        expect(evaluateLedger([row()], CTX)).toMatchObject({ state: 'closed', errors: [] });
+    });
+
+    // One row carrying all three fabrications. Each check contributes exactly one
+    // of the three errors, so removing any one check turns this case — and only
+    // this case — red.
+    it('refuses a fabricated row: unknown evidence id, authority outside the enum, empty verifier', () => {
+        const fabricated = row({
+            evidence: { happy: ['E1'], empty: ['E2'], 'too-long': ['E999'] },
+            verifier: '   ',
+            verifier_authority: 'trust-me' as Obligation['verifier_authority'],
+        });
+        const verdict = evaluateLedger([fabricated], CTX);
+        expect(verdict.state).toBe('invalid');
+        expect(verdict.verified).toBe(0);
+        expect(verdict.errors).toHaveLength(3);
+        expect(verdict.errors.join('\n')).toMatch(/unknown evidence id E999/);
+        expect(verdict.errors.join('\n')).toMatch(/unknown verifier_authority trust-me/);
+        expect(verdict.errors.join('\n')).toMatch(/verified with an empty verifier/);
     });
 });

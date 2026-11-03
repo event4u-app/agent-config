@@ -8,7 +8,8 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { loadConfig } from '../../src/scripts/check_web_launch_readiness';
-import { classifyLoads, legalPagePlaceholders, loadRegister, tagsOf, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
+import { tagsOf } from '../../src/scripts/_lib/html_tags';
+import { classifyLoads, legalPagePlaceholders, loadRegister, visibleText, writeTimeFindings } from '../../src/scripts/web_launch_third_party';
 
 const REPO = path.resolve(__dirname, '..', '..');
 const register = loadRegister(REPO, '2026-11-02');

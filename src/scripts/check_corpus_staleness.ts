@@ -427,6 +427,14 @@ export interface RunResult {
     readonly csvs: number;
     /** Per-corpus completeness accounting — every discovered corpus reaches one outcome. */
     readonly ledger: GateLedger;
+    /** Slugs whose declared cadence was compared against a date — named, so coverage is visible. */
+    readonly cadenced: string[];
+}
+
+/** Whether a corpus declares a cadence AND a date it can be held to. */
+function has_enforceable_cadence(corpus: Corpus): boolean {
+    const provenance = as_object(corpus.manifest['provenance']) ?? corpus.manifest;
+    return typeof provenance['refresh_cadence'] === 'string' && as_object(provenance['upstream']) !== null;
 }
 
 export function run_checks(todayStamp: number, skillsDir: string = SKILLS_DIR): RunResult {
@@ -450,7 +458,8 @@ export function run_checks(todayStamp: number, skillsDir: string = SKILLS_DIR): 
             ledger.complete(corpus.slug);
         }
     }
-    return { findings, corpora: corpora.length, csvs, ledger };
+    const cadenced = corpora.filter(has_enforceable_cadence).map((c) => c.slug);
+    return { findings, corpora: corpora.length, csvs, ledger, cadenced };
 }
 
 const HELP = `check_corpus_staleness — offline staleness + CSV-integrity gate for the grounding corpora
@@ -679,7 +688,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `✅  ${String(result.corpora)} corpus manifest(s), ${String(result.csvs)} CSV(s) opened: ` +
                 `every declared cadence is met, every declared CSV exists with its declared columns ` +
-                `(offline check, reference date ${today ?? today_iso()}).\n`,
+                `(offline check, reference date ${today ?? today_iso()}). ` +
+                `Cadence held to a date: ${result.cadenced.length > 0 ? result.cadenced.join(', ') : 'none'}.\n`,
         );
     }
     return 0;
