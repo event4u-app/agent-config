@@ -76,7 +76,7 @@ export function gradient(kind: 'ltr' | 'rtl' | 'vee'): Uint8Array {
     return f;
 }
 
-export function encode(frames: Uint8Array[], out: string, extra: { silentAudio?: boolean; fps?: number; quality?: number } = {}): string {
+export function encode(frames: Uint8Array[], out: string, extra: { silentAudio?: boolean; fps?: number; quality?: number | undefined } = {}): string {
     const args = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'gray', '-s', `${W}x${H}`, '-r', String(extra.fps ?? FPS), '-i', '-'];
     if (extra.silentAudio === true) args.push('-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono', '-shortest', '-c:a', 'aac');
     args.push('-c:v', 'mpeg4', '-q:v', String(extra.quality ?? 3), '-pix_fmt', 'yuv420p', out);
