@@ -7,6 +7,7 @@ verdict: confirmed-non-expanding
 seats:
   anthropic: confirmed-non-expanding
   openai: confirmed-non-expanding
+subject: db4f6a008f86ec316b2af88cc856a3ce89846a11ffb4154bbcb344c2c1251ba0
 effective_after: merge
 ---
 
