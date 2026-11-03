@@ -47,7 +47,7 @@ green after the fix, and the release-side rules fail the contract test on regres
       an agent-message hand-back likewise; the bare sentence without the tag on line 2, and a
       human question quoting the frame, still count as human turns.
       verify: `npx vitest run tests/scripts/git_authorization.test.ts tests/scripts/language_mirror_hook.test.ts tests/scripts/evidence_independence_turn_marker.test.ts` → 0
-- [ ] **1.2 `settings.local.json` is fenced like `settings.json`.** Widen the host-directory
+- [x] **1.2 `settings.local.json` is fenced like `settings.json`.** Widen the host-directory
       regex in `src/scripts/hooks/block_config_weakening.ts:264-265` to `settings(\.local)?\.json`
       under the same host directories. Negative tests in
       `tests/scripts/hooks/block_config_weakening.test.ts`: a Write adding `hooks.SessionStart`
