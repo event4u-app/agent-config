@@ -163,11 +163,12 @@ stops counting ranges.
 
 ## Phase 7 — Hiring side
 
-- [ ] **7.1 "AI-assisted screening" routing section** in
+- [x] **7.1 "AI-assisted screening" routing section** in
       `src/skills/hiring-loop-design/SKILL.md`: route to `legal-practice-profile`,
       `privacy-review`, `dpa-review`; CVs as untrusted input; name-swap bias
       probe before any LLM ranking. No dated legal statements without a source.
       verify: skill linter green.
+      Done: § AI-assisted screening routes the legal, data and vendor questions (named, not linked — cross-pack), keeps the untrusted-CV and name-swap-probe controls in the loop, and makes no legal statement; `task lint-skills` exit 0 (`[PASS] hiring-loop-design`).
 
 ## Phase 8 — Consumers of the witness
 
