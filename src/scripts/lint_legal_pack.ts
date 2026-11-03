@@ -15,8 +15,8 @@
  *   1.3 freshness — any legal-pack artefact that DECLARES `last_verified` /
  *       `freshness_window` frontmatter must use a valid shape and not be stale
  *       (no-op when absent; the mechanism for when positions carry dates).
- *   1.4 source-tag-pointer — the skill must point at `legal-practice-profile`
- *       § Source-tag + currency vocabulary (presence of the pointer only, never
+ *   1.4 source-tag-pointer — the skill must point at the source-tag and currency
+ *       vocabulary of `legal-practice-profile` (presence of the pointer only, never
  *       the tags in generated output). The profile owns the vocabulary and is
  *       exempt.
  *
