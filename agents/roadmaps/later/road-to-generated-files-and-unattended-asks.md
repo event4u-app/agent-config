@@ -11,7 +11,9 @@ entry_condition:
     posture (advisory vs blocking). (2) Parking a native AskUserQuestion in a
     provably unattended run needs the owner's answer whether a
     /roadmap:process-full started from an attended chat counts as unattended.
-  when: when either decision is recorded, or at review_by.
+  when: >-
+    both decisions recorded 2026-11-03 (Q1 advisory, Q2 unattended); pulled
+    into the active tree when an active roadmap closes (WIP cap of five).
   who: maintainer (posture of a new concern; ADR-268 § 7 scope of the one native owner ask).
 execution:
   mode: phase-checkpoints
@@ -36,15 +38,19 @@ run nobody is watching does not wait on a question nobody can read.
       verify: fixtures for each marker fire; an unmarked file and a Bash
       generator run do not.
 - [ ] **1.2** The shadow line names the file, the marker, and "change the
-      generator input and regenerate".
+      generator input and regenerate". Target posture after the shadow window
+      is **advisory, never blocking** (Q1, owner 2026-11-03).
 - [ ] **1.3** Code graph reuses the same detection instead of its fixed list
       (`src/scripts/code_graph/build.ts`), after the 1.1 flip.
 
 ## Phase 2 — Unattended ask parks
 
 - [ ] **2.1** `unattendedReason(env)` in `src/shared/interactiveContext.ts`
-      reads only CI variables and `AGENT_CONFIG_NO_UI` — no TTY probe (a hook's
-      stdin is always a pipe).
+      reads CI variables, `AGENT_CONFIG_NO_UI`, and an active
+      `/roadmap:process-full` run marker — no TTY probe (a hook's stdin is
+      always a pipe). A process-full run started from an attended chat counts
+      as unattended (Q2, owner 2026-11-03), so the run marker is a positive
+      signal of its own.
 - [ ] **2.2** Shadow branch in the existing `one-question-per-ask` concern:
       unattended → log "would park", allow.
 - [ ] **2.3** Armed: deny with a reason that sets the blocked marker with
@@ -55,5 +61,5 @@ run nobody is watching does not wait on a question nobody can read.
 
 | # | Question | Owner |
 |---|---|---|
-| Q1 | Target posture of 1.1: advisory or blocking? Recommendation: advisory; blocking only if shadow shows zero legitimate edits to marked files. | maintainer |
-| Q2 | Does a `/roadmap:process-full` started from an attended chat count as unattended (never `AskUserQuestion`)? | maintainer |
+| Q1 | Target posture of 1.1: advisory or blocking? | **answered 2026-11-03: advisory (warn only)** — `agents/evidence/owner-directives/2026-11-03-generated-files-and-unattended-asks.md` |
+| Q2 | Does a `/roadmap:process-full` started from an attended chat count as unattended (never `AskUserQuestion`)? | **answered 2026-11-03: yes, unattended** — same record |
