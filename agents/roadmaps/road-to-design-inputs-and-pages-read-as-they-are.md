@@ -116,7 +116,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 4 — Instruments that read what they claim
 
-- [ ] **4.1 Press feedback is visible to the probe.** Add `transform`,
+- [x] **4.1 Press feedback is visible to the probe.** Add `transform`,
       `box-shadow`, `opacity` and `filter` to `COMPARED_PROPERTIES`
       (`src/scripts/ui_conformance_probe.ts:139-153`); the state comparison
       (`:363`, `:559`, `:631`) treats a key missing from an older observation as
