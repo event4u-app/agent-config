@@ -47,6 +47,8 @@ export interface StrikeEntry {
     readonly green_without_edit: boolean;
     readonly last_at: string;
     readonly platform: string;
+    /** `agentKey` of the agent this entry counts for — ties it to its edit counter. */
+    readonly agent: string;
 }
 
 /**
@@ -67,9 +69,16 @@ export interface StrikeLedger {
     readonly entries: Readonly<Record<string, StrikeEntry>>;
 }
 
-/** Hard caps on the two maps; the oldest go first. */
+/**
+ * Size bounds. Entries: at most MAX_ENTRIES, oldest dropped first. Edit
+ * counters: every agent that owns a surviving entry keeps its counter — an
+ * entry's `at_edit` is a position on that counter, so evicting the counter
+ * while the entry lives would restart it below the baseline and hide the next
+ * attempts — plus at most MAX_IDLE_AGENTS counters with no entry. So the file
+ * holds at most MAX_ENTRIES + MAX_IDLE_AGENTS counters.
+ */
 export const MAX_ENTRIES = 256;
-export const MAX_AGENTS = 64;
+export const MAX_IDLE_AGENTS = 64;
 
 export function emptyLedger(): StrikeLedger {
     return { version: 1, edits: {}, entries: {} };
@@ -178,7 +187,7 @@ export function observeRun(
     const prev = ledger.entries[key];
     const myEdits = editsOf(ledger, ctx.agent);
     const edited = prev === undefined || myEdits > prev.at_edit;
-    const base = { at_edit: myEdits, last_at: ctx.now, platform: ctx.platform };
+    const base = { at_edit: myEdits, last_at: ctx.now, platform: ctx.platform, agent: agentKey(ctx.agent) };
 
     let next: StrikeEntry;
     if (outcome === 'green') {
@@ -224,14 +233,23 @@ function keepRecent<T extends { readonly last_at: string }>(
     );
 }
 
-/** Drop entries and edit counters untouched for longer than the TTL, then cap both maps. */
+/**
+ * Drop entries untouched for longer than the TTL and cap them; then keep every
+ * edit counter a surviving entry depends on, and at most MAX_IDLE_AGENTS of the
+ * rest, within the TTL. Run on the COMPLETED ledger, after the event's edit and
+ * run were folded in, so the bounds hold for what is written.
+ */
 export function pruneLedger(ledger: StrikeLedger, now: string, ttlDays = STRIKE_TTL_DAYS): StrikeLedger {
     const cutoff = Date.parse(now) - ttlDays * 86_400_000;
-    return {
-        ...ledger,
-        edits: keepRecent(ledger.edits, cutoff, MAX_AGENTS),
-        entries: keepRecent(ledger.entries, cutoff, MAX_ENTRIES),
-    };
+    const entries = keepRecent(ledger.entries, cutoff, MAX_ENTRIES);
+    const owners = new Set(Object.values(entries).map((e) => e.agent));
+    const owned = Object.fromEntries(Object.entries(ledger.edits).filter(([k]) => owners.has(k)));
+    const idle = keepRecent(
+        Object.fromEntries(Object.entries(ledger.edits).filter(([k]) => !owners.has(k))),
+        cutoff,
+        MAX_IDLE_AGENTS,
+    );
+    return { ...ledger, edits: { ...owned, ...idle }, entries };
 }
 
 const HASH = /^[0-9a-f]{16}$/;
@@ -258,7 +276,10 @@ function coerceEntry(raw: unknown): StrikeEntry | null {
     if (typeof r['green_without_edit'] !== 'boolean') return null;
     if (!validTime(lastAt)) return null;
     if (typeof platform !== 'string' || !PLATFORM.test(platform)) return null;
+    const agent = r['agent'];
+    if (typeof agent !== 'string' || !HASH.test(agent)) return null;
     return {
+        agent,
         sig,
         streak,
         verdict: verdict as StrikeVerdict,

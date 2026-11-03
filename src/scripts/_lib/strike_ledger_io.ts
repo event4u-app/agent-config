@@ -54,10 +54,10 @@ export function observeStrike(
         update_json_under_lock<StrikeLedger>(
             path.join(consumer_root, STRIKE_LEDGER_FILE),
             (loaded) => {
-                let ledger = pruneLedger(coerceLedger(loaded), now);
+                let ledger = coerceLedger(loaded);
                 if (event.isEdit) ledger = recordEdit(ledger, agent, now);
                 if (run !== null) ledger = observeRun(ledger, run, { agent, now, platform }).ledger;
-                return ledger;
+                return pruneLedger(ledger, now);
             },
             { blocking: false },
         );

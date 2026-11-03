@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-    MAX_AGENTS,
+    MAX_IDLE_AGENTS,
     agentKey,
     coerceLedger,
     emptyLedger,
@@ -167,16 +167,32 @@ describe('ledger lifetime and shape', () => {
         expect(() => pruneLedger(back, '2026-11-04T00:00:00Z')).not.toThrow();
     });
 
-    it('expires idle edit counters and caps both maps, newest kept', () => {
+    it('caps idle edit counters, newest kept, and expires them after the TTL', () => {
         let l = emptyLedger();
-        for (let i = 0; i < MAX_AGENTS + 10; i += 1) {
+        for (let i = 0; i < MAX_IDLE_AGENTS + 10; i += 1) {
             l = recordEdit(l, `sub-${String(i)}`, `2026-11-03T10:${String(Math.floor(i / 60)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}Z`);
         }
         const capped = pruneLedger(l, '2026-11-03T12:00:00Z');
-        expect(Object.keys(capped.edits)).toHaveLength(MAX_AGENTS);
-        expect(capped.edits[agentKey(`sub-${String(MAX_AGENTS + 9)}`)]).toBeDefined();
+        expect(Object.keys(capped.edits)).toHaveLength(MAX_IDLE_AGENTS);
+        expect(capped.edits[agentKey(`sub-${String(MAX_IDLE_AGENTS + 9)}`)]).toBeDefined();
         expect(capped.edits[agentKey('sub-0')]).toBeUndefined();
         expect(pruneLedger(l, '2026-11-20T00:00:00Z').edits).toEqual({});
+    });
+
+    it('a counter whose entry survives is never evicted — by the TTL or by the idle cap', () => {
+        // main edits 10 times on day 0, then only re-runs for 8 days: the entry
+        // stays fresh, the counter does not. Then 70 idle subagents arrive.
+        let l = emptyLedger();
+        for (let i = 0; i < 10; i += 1) l = recordEdit(l, 'main', '2026-11-01T00:00:00Z');
+        l = observeRun(l, red('adds'), { ...ctx(1), now: '2026-11-01T00:00:01Z' }).ledger;
+        l = observeRun(l, red('adds'), { ...ctx(2), now: '2026-11-08T23:00:00Z' }).ledger;
+        for (let i = 0; i < MAX_IDLE_AGENTS + 6; i += 1) l = recordEdit(l, `idle-${String(i)}`, '2026-11-09T00:00:00Z');
+        l = pruneLedger(l, '2026-11-09T00:00:00Z');
+        expect(l.edits[agentKey('main')]?.n).toBe(10);
+        l = recordEdit(l, 'main', '2026-11-09T00:00:01Z');
+        const r = observeRun(l, red('adds'), { ...ctx(3), now: '2026-11-09T00:00:02Z' });
+        expect(r.verdict).toBe('SAME');
+        expect(r.ledger.entries[targetKey('main', green)]?.streak).toBe(2);
     });
 
     it('the first observed red is the baseline strike, without an edit before it', () => {

@@ -10,7 +10,7 @@ import * as path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { run } from '../../src/scripts/before_complete_hook.js';
-import { STRIKE_LEDGER_FILE, type StrikeLedger } from '../../src/scripts/_lib/strike_ledger.js';
+import { MAX_ENTRIES, STRIKE_LEDGER_FILE, type StrikeLedger } from '../../src/scripts/_lib/strike_ledger.js';
 
 let tmp: string;
 beforeEach(() => {
@@ -67,5 +67,19 @@ describe('strike ledger via before_complete_hook', () => {
         // and a non-verifying Bash event does not re-observe the red either
         send('s1', 'post_tool_use', { tool_name: 'Bash', tool_input: { command: 'ls' }, tool_response: { stdout: 'a', exit_code: 0 } });
         expect(only()).toMatchObject({ streak: 1, verdict: 'NEW' });
+    });
+
+    it('the written file honours the entry cap after this event is folded in', () => {
+        const entries: Record<string, unknown> = {};
+        for (let i = 0; i < MAX_ENTRIES; i += 1) {
+            entries[i.toString(16).padStart(16, '0')] = {
+                sig: null, streak: 0, verdict: 'FIXED', at_edit: 0, green_without_edit: false,
+                last_at: new Date(Date.now() - 1000 * (i + 10)).toISOString(), platform: 'claude', agent: 'a'.repeat(16),
+            };
+        }
+        fs.mkdirSync(path.join(tmp, 'agents/state'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, STRIKE_LEDGER_FILE), JSON.stringify({ version: 1, edits: {}, entries }));
+        bash('s1', RED, 1);
+        expect(Object.keys(ledger().entries)).toHaveLength(MAX_ENTRIES);
     });
 });
