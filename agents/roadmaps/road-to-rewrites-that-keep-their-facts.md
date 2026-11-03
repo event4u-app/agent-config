@@ -119,9 +119,11 @@ stops counting ranges.
       verify: the objective-only run prints `fact_added_pairs` per split.
       Done: `npx tsx src/scripts/bench_humanizer_eval.ts` exit 0 printed tune 11/12, holdout 8/8 `fact_added_pairs`; the regenerated reports were not committed — the canonical report backs `humanizer-tell-reduction`, whose rerun is 3.4.
       production entry: `src/scripts/bench_humanizer_eval.ts`
-- [ ] **3.3 `check_claims` flags a stale `last_verified`** older than the newest
+- [x] **3.3 `check_claims` flags a stale `last_verified`** older than the newest
       date named in the claim text.
       verify: a fixture claim with a newer dated change fails.
+      Done: `stale_last_verified` + ratchet `check_claims:stale-last-verified` (7 at introduction, `humanizer-tell-reduction` among them, listed as reported findings); `npx vitest run tests/scripts/check_claims.test.ts` 32/32 with the stale fixture exiting 2; `./scripts-run src/scripts/check_claims` exit 0.
+      production entry: `src/scripts/check_claims.ts`
 - [~] **3.4 Corpus repair and claim narrowing.** Blocked by
       `owner-instrument-change` (owner).
       verify: `./scripts-run src/scripts/check_claims` -> 0 after the narrowed row.

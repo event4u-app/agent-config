@@ -490,3 +490,35 @@ describe('check_claims — mechanism', () => {
     });
 
 });
+
+// road-to-rewrites-that-keep-their-facts 3.3: a last_verified older than a
+// dated change the claim itself names is a stale verification. The ratchet
+// reads the baselines file, so these fixtures write one with no entry — the
+// hard-zero branch.
+describe('check_claims — stale last_verified', () => {
+    const ledger = (claim: string, lastVerified: string) =>
+        ['# Claims Ledger', '', '### claim: dated', `- claim: ${claim}`, '- kind: qual', '- evidence: docs/evidence.md#ANCHOR', '- status: backed', `- last_verified: ${lastVerified}`, ''].join('\n');
+
+    beforeEach(() => {
+        write('src/config/gate-violation-baselines.json', '{ "gates": {} }\n');
+        write('README.md', 'no markers here\n');
+    });
+
+    it('a claim naming a change newer than its last_verified fails', () => {
+        write('docs/CLAIMS.md', ledger('A figure moved on 2026-09-07 under a scoring change.', '2026-07-11'));
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('stale-last-verified');
+        expect(r.stderr).toContain('dated (2026-07-11 < 2026-09-07)');
+    });
+
+    it('a last_verified on or after the newest named date passes', () => {
+        write('docs/CLAIMS.md', ledger('A figure moved on 2026-09-07 under a scoring change.', '2026-09-07'));
+        expect(run().code).toBe(0);
+    });
+
+    it('a date after today is a plan, not a change', () => {
+        write('docs/CLAIMS.md', ledger('Re-measured before 2099-01-01.', '2026-07-11'));
+        expect(run().code).toBe(0);
+    });
+});
