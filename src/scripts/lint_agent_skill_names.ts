@@ -21,6 +21,7 @@ const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
 const SRC_DOMAINS = path.join(ROOT, 'src', 'domains');
 const SRC_SKILLS = path.join(ROOT, 'src', 'skills');
+const TWIN_BASELINE = path.join(ROOT, 'src', 'config', 'name-twin-baseline.json');
 
 // Agent-Skills spec name shape: lowercase letters, digits, single hyphens,
 // no leading/trailing hyphen, 1-64 chars.
@@ -206,6 +207,66 @@ export function check_skills(): string[] {
     return violations;
 }
 
+/**
+ * Skill/command same-name twins against a shrink-only baseline: a twin the
+ * baseline does not list fails, and so does a listed twin that no longer
+ * exists — otherwise a stale line would be headroom for the next twin.
+ */
+export function _twin_violations(
+    skill_names: readonly string[],
+    command_names: readonly string[],
+    baseline: readonly string[],
+): string[] {
+    const commands = new Set(command_names);
+    const twins = new Set(skill_names.filter((n) => commands.has(n)));
+    const listed = new Set(baseline);
+    const violations: string[] = [];
+    for (const name of [...twins].sort()) {
+        if (!listed.has(name)) {
+            violations.push(
+                `\`${name}\` is both a skill directory and a command \`name:\` — ` +
+                    'two artefacts may not share one name; rename one ' +
+                    '(src/config/name-twin-baseline.json lists the existing twins and never grows)',
+            );
+        }
+    }
+    for (const name of [...listed].sort()) {
+        if (!twins.has(name)) {
+            violations.push(
+                `src/config/name-twin-baseline.json: \`${name}\` is no longer a twin — ` +
+                    'delete its line; the baseline only shrinks',
+            );
+        }
+    }
+    return violations;
+}
+
+function read_twin_baseline(): string[] {
+    const doc = JSON.parse(fs.readFileSync(TWIN_BASELINE, 'utf-8')) as {
+        twins?: ReadonlyArray<{ name?: unknown }>;
+    };
+    return (doc.twins ?? []).map((t) => {
+        if (typeof t.name !== 'string') {
+            throw new Error('name-twin-baseline.json: every twin needs a string `name`');
+        }
+        return t.name;
+    });
+}
+
+export function check_twins(): string[] {
+    if (!isDir(SRC_SKILLS) || !isDir(SRC_DOMAINS)) {
+        return [];
+    }
+    const skills = fs
+        .readdirSync(SRC_SKILLS, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && isFile(path.join(SRC_SKILLS, e.name, 'SKILL.md')))
+        .map((e) => e.name);
+    const commands = rglobNamed(SRC_DOMAINS, 'command.md')
+        .map((md) => frontmatterNameFromFile(md))
+        .filter((n): n is string => typeof n === 'string' && n.length > 0);
+    return _twin_violations(skills, commands, read_twin_baseline());
+}
+
 function parse_args(argv: readonly string[]): { quiet: boolean } {
     let quiet = false;
     for (const arg of argv) {
@@ -258,7 +319,7 @@ export function main(argv?: readonly string[]): number {
 
     let violations: string[];
     try {
-        violations = [...check_commands(), ...check_skills()];
+        violations = [...check_commands(), ...check_skills(), ...check_twins()];
     } catch (exc) {
         const msg = exc instanceof Error ? exc.message : String(exc);
         process.stderr.write(`❌  lint-skill-names internal error: ${msg}\n`);

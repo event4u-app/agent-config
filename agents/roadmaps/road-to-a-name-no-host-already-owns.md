@@ -87,7 +87,7 @@ sees the user's machine. Nothing is deleted — every fix renames or reports.
       iterates every fixture in the directory. No current package name is in
       either set (checked at the pin), so nothing new turns red.
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts` -> 0 failed and `./scripts-run src/scripts/lint_agent_skill_names --quiet` -> exit 0
-- [ ] **2.2 A gate on same-name twins.** `lint_agent_skill_names` fails when a
+- [x] **2.2 A gate on same-name twins.** `lint_agent_skill_names` fails when a
       skill directory name equals a command `name:` slug, except the eight twins
       present at the pin, listed by name in `src/config/name-twin-baseline.json`
       with the owner decision that closes them. A ninth twin fails; deleting a
