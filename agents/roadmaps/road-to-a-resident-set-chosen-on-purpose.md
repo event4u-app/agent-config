@@ -80,7 +80,7 @@ the measured listing-arm baseline its owner requires.
 
 ## Phase 3 — The turnkey server offers declared arguments, and three content lines
 
-- [ ] **3.1 Turnkey `arguments` from `inputs:`.** Add `inputs` to `ContentEntry` in
+- [x] **3.1 Turnkey `arguments` from `inputs:`.** Add `inputs` to `ContentEntry` in
       `src/cli/mcp/content.ts` (prompts only, read from the already-parsed
       frontmatter: `name`, `description`, `required === true`), and map it in
       `listPrompts` in `src/cli/mcp/dispatch.ts` instead of `arguments: []`. An entry
@@ -88,19 +88,19 @@ the measured listing-arm baseline its owner requires.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0, with a red-first case:
       a fixture skill declaring one required input lists exactly that argument, and an
       undeclared one lists `[]`; plus `npx vitest run src/cli/mcp/content.test.ts` -> 0.
-- [ ] **3.2 Expression injection in workflows.** In `src/skills/github-ci/SKILL.md`
+- [x] **3.2 Expression injection in workflows.** In `src/skills/github-ci/SKILL.md`
       (Conventions → Workflow structure, and Do NOT) and
       `src/skills/code-review/checklists/infra.md`: attacker-controlled
       `${{ github.event.* }}` / `github.head_ref` never interpolated into `run:`; pass
       it through `env:` and quote the variable.
       verify: `grep -n "github.event" src/skills/github-ci/SKILL.md src/skills/code-review/checklists/infra.md` -> at least one hit in each file.
-- [ ] **3.3 ReDoS and shell rows.** Two rows in the surface table of
+- [x] **3.3 ReDoS and shell rows.** Two rows in the surface table of
       `src/skills/ai-code-blindspots/SKILL.md`: **Regex on untrusted input** (no nested
       or overlapping quantifiers, anchored, bounded input length, a must-match and a
       must-not-match test) and **Shell script** (`set -euo pipefail`, every expansion
       quoted, ShellCheck when present).
       verify: `grep -nE "ReDoS|pipefail" src/skills/ai-code-blindspots/SKILL.md` -> two hits.
-- [ ] **3.4 Persona template value.** `src/skills/persona-writing/SKILL.md:90` reads
+- [x] **3.4 Persona template value.** `src/skills/persona-writing/SKILL.md:90` reads
       `tier: core | specialist`, matching `docs/contracts/persona-schema.md:25`.
       verify: `grep -c "core | specialty" src/skills/persona-writing/SKILL.md` -> 0, then
       `task sync` and `bash src/scripts/condense.sh --changed` lists nothing.
@@ -114,6 +114,7 @@ the measured listing-arm baseline its owner requires.
 | The repo-tree test asserts the alphabetical arm equals `computeOverrides`, not the literal 45. | Assert `45`. | Parallel work renames skills and their descriptions; the match is the failing condition the step names, and a literal would go red on any description edit. Observed at the run: 45 of 303 described at 200,000 under both arms; 228 at 1,000,000. | The owner wants the count itself pinned. |
 | The sidecar read ignores the record's `settings_path` and reads only `entries` whose value is `name-only`. | Re-validate against `~/.claude/settings.json` like `loadRecord` does. | The hook has no settings path in its envelope; the record is the package's own and is rewritten on every install. A stale record can over-suppress at worst, never invent a pointer. | A stale-record over-suppression is observed. |
 | `routeDecision` returns before the provider when `rank` yields no rows, which is the 2.2 guarantee. | Leave the provider call after an empty rank. | Byte-identical result (an empty ranking produces no pointer either way); the provider was the only file read on that path. | Never. |
+| Turnkey reads `inputs:` from its existing YAML parse, and a test asserts it equals the kernel's `_parse_inputs` for every bundled skill. | A shared reader. | The kernel reader is line-based by design (pinned by `check_inputs_parity`); a cross-reader equality test is the cheaper guard. | The equality test reds on a new block form. |
 | Finding, recorded not acted on: at 200,000 the priority arm keeps none of `systematic-debugging`, `test-driven-development`, `verify-repair-loop`, `sql-writing`, `security-audit` — the 72 `routes_to:` targets fill the 8,000-char budget first. | Re-weight bands now. | The roadmap fixes the band order; re-weighting is the owner's call together with the default switch. | The listing-arm baseline is measured. |
 
 ## Risk Register
@@ -127,14 +128,14 @@ the measured listing-arm baseline its owner requires.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `report_resident_set` shows, at the pin, which named core skills the
+- [x] AC-1 — `report_resident_set` shows, at the pin, which named core skills the
       priority order would keep described, and the alphabetical arm matches the
       installer.
-- [ ] AC-2 — The skill-route hook never names a skill the installer recorded as
+- [x] AC-2 — The skill-route hook never names a skill the installer recorded as
       `name-only` on `claude`, and is byte-identical without a sidecar.
-- [ ] AC-3 — `prompts/list` on the turnkey server carries the declared arguments of
+- [x] AC-3 — `prompts/list` on the turnkey server carries the declared arguments of
       every skill or command that declares `inputs:`.
-- [ ] AC-4 — The three content lines and the persona template value are present.
+- [x] AC-4 — The three content lines and the persona template value are present.
 
 ## Non-goals
 

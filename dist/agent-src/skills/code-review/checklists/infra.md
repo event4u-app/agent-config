@@ -10,6 +10,7 @@ Terraform/Pulumi, Dockerfiles, Kubernetes manifests, or CI workflows.
 | **Encryption** | Encryption at rest enabled on new storage; TLS on new endpoints. |
 | **No hardcoded creds** | Secrets come from a vault / secret store, never inline in the manifest or workflow. |
 | **CI-agent trust** | A workflow that runs an AI agent or executes PR-derived content checks its trigger (`pull_request_target` on fork PRs is attacker-influenced) and does not expose repo secrets to untrusted input — see [`agent-security-review`](../../agent-security-review/SKILL.md). |
+| **Workflow expression injection** | No attacker-controlled `${{ github.event.* }}` / `${{ github.head_ref }}` interpolated into a `run:` script; the value goes through `env:` and the script quotes the variable. |
 | **Scanner backstop** | A real scanner (Checkov / Trivy) is the gate, not just a successful `plan`. |
 
 Any prod-touching infra change (deploy, prod data/infra, secrets rotation) is a

@@ -63,6 +63,7 @@ Read `.github/workflows/` to discover the actual job matrix. Common patterns:
 - Use **concurrency groups** to prevent duplicate runs: `group: ${{ github.workflow }}-${{ github.ref }}`
 - Use **`fail-fast: false`** in matrix strategies for independent job execution.
 - Extract shared logic into **reusable workflows** (`module-deploy.yaml` pattern).
+- **Never interpolate attacker-controlled context into `run:`** — `${{ github.event.issue.title }}`, `${{ github.event.pull_request.body }}`, `${{ github.event.comment.body }}`, `${{ github.head_ref }}` and similar are expanded into the script text before the shell sees it, so a crafted title becomes a command. Pass the value through `env:` (`TITLE: ${{ github.event.issue.title }}`) and reference the quoted variable (`"$TITLE"`) in the script.
 - A job with **`container:`** MUST run `git config --global --add safe.directory "$GITHUB_WORKSPACE"` immediately after `actions/checkout` — the checkout is owned by a different UID than the container user, so without it every git-backed step dies with `fatal: detected dubious ownership`.
 
 ### Composer auth
@@ -123,6 +124,7 @@ See `commands/fix/ci.md` for the full debugging workflow.
 ## Do NOT
 
 - Do NOT use unpinned action versions (e.g., `actions/checkout@v4`).
+- Do NOT write `${{ github.event.* }}` or `${{ github.head_ref }}` directly inside a `run:` block — route it through `env:` and quote the variable.
 - Do NOT hardcode PHP versions — always extract from Dockerfile.
 - Do NOT add new secrets without documenting them.
 - Do NOT change runner types without considering cost and architecture (ARM vs x86).

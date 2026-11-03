@@ -100,7 +100,8 @@ function listPrompts(tree: ContentTree, cursor: string | undefined): unknown {
             name: wireNameOf(e),
             title: e.name,
             description: e.description,
-            arguments: [],
+            // Derived from the declaration, never invented; nothing declared serves `[]`.
+            arguments: (e.inputs ?? []).map((i) => ({ name: i.name, description: i.description, required: i.required })),
             _meta: { source: e.source, kind: e.kind },
         })),
         ...(next ? { nextCursor: next } : {}),
