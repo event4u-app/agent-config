@@ -113,7 +113,7 @@ finding disposition names a command but not the outcome it must produce
       `describeDrift` (already used at `:303`); never refuse, and a header
       without `Branch:` gets no drift line.
       verify: `npx vitest run tests/scripts/handoff_context_hook.test.ts` -> 0 — new cases: other branch → drift line present; same branch → output byte-identical; no `Branch:` → no drift line.
-- [ ] **4.3 Set-aside transcript copies are not sessions.** In
+- [x] **4.3 Set-aside transcript copies are not sessions.** In
       `listTranscriptFiles` (`src/scripts/_lib/cc_transcript.ts:284`) skip names
       matching `/\.orphaned-[^/]*\.jsonl$/`; expose the skipped count where the
       scan result is built so a report can print `set_aside: n`.
