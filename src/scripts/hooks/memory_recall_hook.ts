@@ -62,6 +62,7 @@
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -298,8 +299,11 @@ export interface StoreResolution {
  * in it — the store belongs to the parent checkout. So this walks ancestors
  * rather than assuming one slug, which also covers a subdirectory cwd.
  *
- * `AGENT_CONFIG_MEMORY_DIR` overrides everything, for tests and for a user
- * whose store is elsewhere.
+ * Order: `AGENT_CONFIG_MEMORY_DIR` (tests, or a store elsewhere) → the host's
+ * `autoMemoryDirectory` from its user settings file, the sibling of
+ * `projectsRoot` → the slug walk. The settings file is only read, never
+ * written; an unreadable one, or a key that is not an absolute or `~/` path,
+ * falls through to the walk as if absent.
  */
 export function resolveMemoryDir(
     startDir: string,
@@ -309,6 +313,10 @@ export function resolveMemoryDir(
     const override = env['AGENT_CONFIG_MEMORY_DIR'];
     if (typeof override === 'string' && override !== '') {
         return { dir: isDirectory(override) ? override : null, tried: [override] };
+    }
+    const configured = hostAutoMemoryDirectory(path.join(path.dirname(projectsRoot), 'settings.json'));
+    if (configured !== null) {
+        return { dir: isDirectory(configured) ? configured : null, tried: [configured] };
     }
     const tried: string[] = [];
     let cur = path.resolve(startDir);
@@ -323,6 +331,20 @@ export function resolveMemoryDir(
         cur = parent;
     }
     return { dir: null, tried };
+}
+
+function hostAutoMemoryDirectory(settingsPath: string): string | null {
+    let raw: unknown;
+    try {
+        const parsed: unknown = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+        raw = (parsed as Record<string, unknown>)['autoMemoryDirectory'];
+    } catch {
+        return null;
+    }
+    if (typeof raw !== 'string' || raw === '') return null;
+    const expanded = raw.startsWith('~/') ? path.join(os.homedir(), raw.slice(2)) : raw;
+    return path.isAbsolute(expanded) ? expanded : null;
 }
 
 function isDirectory(p: string): boolean {

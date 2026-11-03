@@ -32,7 +32,7 @@ describe('evals.schema.json', () => {
             const f = path.join(skillsDir, name, 'evals', 'evals.json');
             if (fs.existsSync(f)) shipped.push(f);
         }
-        expect(shipped.length).toBeGreaterThanOrEqual(2); // bug-analyzer + code-review
+        expect(shipped.length).toBeGreaterThanOrEqual(2); // bug-analyzer + code-review-lens
         for (const f of shipped) {
             const spec = JSON.parse(fs.readFileSync(f, 'utf-8'));
             const ok = validate(spec);

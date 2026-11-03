@@ -20,7 +20,7 @@ estate_growth_exempt: concern_count +1 for the `intake-pass` hook concern, the o
 
 ## Goal
 
-Every step road-to-the-question-only-the-owner-can-answer deferred is either done here or explicitly disposed
+Every step the parent roadmap deferred is either done here or explicitly disposed
 of — a step that still cannot run is re-deferred with its reason, never
 left to read as finished.
 

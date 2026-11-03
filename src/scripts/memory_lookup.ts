@@ -44,8 +44,7 @@ import {
 } from './_lib/memory_fts_index.js';
 // Single source of truth for the sidecar filename (versioning + invalidation
 // rationale live at its declaration in learning_sidecar.ts, versioned-cache B5b).
-import { SIDECAR_NAME as _LEARNING_SIDECAR_NAME } from './learning_sidecar.js';
-
+import { SIDECAR_NAME as _LEARNING_SIDECAR_NAME, parseVerdictOverlay, type Verdict as LearningVerdict } from './learning_sidecar.js';
 
 // PyYAML implicit timestamp resolver. PyYAML's `safe_load` turns a plain
 // `YYYY-MM-DD` scalar into a `datetime.date` (str → `YYYY-MM-DD`) and a full
@@ -129,34 +128,13 @@ let _corpusFileCounts: { perType: Map<string, number>; total: number } | null = 
 // retrieve() attaches the verdict to a matching entry's body at DISPLAY time —
 // it never mutates the curated YAML, and absent a sidecar the envelope is
 // unchanged. Keyed by `<entry_type>\0<anchor path>`; memoised per root.
-type LearningVerdict = 'preferred' | 'contested' | 'dead_end';
 let _learningOverlay: Map<string, LearningVerdict> | null | undefined;
 
 function _loadLearningOverlay(): Map<string, LearningVerdict> | null {
     if (_learningOverlay !== undefined) return _learningOverlay;
     const file = path.join(MEMORY_ROOT, _LEARNING_SIDECAR_NAME);
     try {
-        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
-        const lessons = _isPlainObject(parsed) ? parsed['lessons'] : null;
-        if (!Array.isArray(lessons)) {
-            _learningOverlay = null;
-            return null;
-        }
-        const map = new Map<string, LearningVerdict>();
-        for (const l of lessons) {
-            if (!_isPlainObject(l)) continue;
-            const t = l['entry_type'];
-            const p = l['path'];
-            const v = l['verdict'];
-            if (
-                typeof t === 'string' &&
-                typeof p === 'string' &&
-                (v === 'preferred' || v === 'contested' || v === 'dead_end')
-            ) {
-                map.set(`${t}\0${p}`, v);
-            }
-        }
-        _learningOverlay = map.size > 0 ? map : null;
+        _learningOverlay = parseVerdictOverlay(JSON.parse(fs.readFileSync(file, 'utf-8')));
     } catch {
         _learningOverlay = null; // no sidecar / unreadable → no overlay
     }
@@ -338,6 +316,26 @@ function _pad2(v: string): string {
 }
 
 /**
+ * True for the first entry seen with its `id`, false for every later one.
+ *
+ * A union merge of a flat curated file concatenates both sides per line, so
+ * an entry both branches carried can survive twice. The first occurrence
+ * wins, across both layouts; an entry without an `id` always passes.
+ */
+function _firstOfId(seen: Set<string>, e: Record<string, unknown>): boolean {
+    const id = e['id'];
+    if ((typeof id !== 'string' && typeof id !== 'number') || id === '') {
+        return true;
+    }
+    const key = String(id);
+    if (seen.has(key)) {
+        return false;
+    }
+    seen.add(key);
+    return true;
+}
+
+/**
  * Yield [file, entry] pairs for curated files of `mtype`.
  *
  * Supports both the content-addressed layout (`agents/memory/<type>/
@@ -352,11 +350,12 @@ function _pad2(v: string): string {
 function* _iter_curated_entries(mtype: string): Generator<[string, Record<string, unknown>]> {
     const type_dir = path.join(MEMORY_ROOT, mtype);
     const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
+    const seen = new Set<string>();
     if (_isFile(single_file)) {
         const data = _load_yaml(single_file);
         const entries = _isPlainObject(data) ? data['entries'] : null;
         for (const e of Array.isArray(entries) ? entries : []) {
-            if (_isPlainObject(e)) {
+            if (_isPlainObject(e) && _firstOfId(seen, e)) {
                 if (_statusExcluded(e)) {
                     continue;
                 }
@@ -371,14 +370,14 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
             const entries = _isPlainObject(data) ? data['entries'] : undefined;
             if (Array.isArray(entries)) {
                 for (const e of entries) {
-                    if (_isPlainObject(e)) {
+                    if (_isPlainObject(e) && _firstOfId(seen, e)) {
                         if (_statusExcluded(e)) {
                             continue;
                         }
                         yield [yml, e];
                     }
                 }
-            } else if (_isPlainObject(data) && data['id']) {
+            } else if (_isPlainObject(data) && data['id'] && _firstOfId(seen, data)) {
                 // Flat, one-entry-per-file layout (content-addressed).
                 if (_statusExcluded(data)) {
                     continue;
@@ -397,11 +396,12 @@ function* _iter_curated_entries(mtype: string): Generator<[string, Record<string
 function* _iter_curated_entries_all(mtype: string): Generator<[string, Record<string, unknown>]> {
     const type_dir = path.join(MEMORY_ROOT, mtype);
     const single_file = path.join(MEMORY_ROOT, `${mtype}.yml`);
+    const seen = new Set<string>();
     if (_isFile(single_file)) {
         const data = _load_yaml(single_file);
         const entries = _isPlainObject(data) ? data['entries'] : null;
         for (const e of Array.isArray(entries) ? entries : []) {
-            if (_isPlainObject(e)) {
+            if (_isPlainObject(e) && _firstOfId(seen, e)) {
                 yield [single_file, e];
             }
         }
@@ -413,11 +413,11 @@ function* _iter_curated_entries_all(mtype: string): Generator<[string, Record<st
             const entries = _isPlainObject(data) ? data['entries'] : undefined;
             if (Array.isArray(entries)) {
                 for (const e of entries) {
-                    if (_isPlainObject(e)) {
+                    if (_isPlainObject(e) && _firstOfId(seen, e)) {
                         yield [yml, e];
                     }
                 }
-            } else if (_isPlainObject(data) && data['id']) {
+            } else if (_isPlainObject(data) && data['id'] && _firstOfId(seen, data)) {
                 yield [yml, data];
             }
         }

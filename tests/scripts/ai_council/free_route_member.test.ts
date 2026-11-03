@@ -150,6 +150,27 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
         expect(client.billable).toBe(false);
     });
 
+    it('the catalogued aggregator route asks its providers not to keep prompts; another route sends no provider key', () => {
+        const bodies: Record<string, unknown>[] = [];
+        const client = (base_url: string): FreeRouteClient =>
+            new FreeRouteClient({
+                name: 'hands',
+                model: 'm',
+                base_url,
+                api_key: 'k',
+                billing: 'free-quota',
+                content_ceiling: 'public-artifact',
+                post: (_url, _headers, body) => {
+                    bodies.push(body as Record<string, unknown>);
+                    return { model: 'm', choices: [{ message: { content: 'ok' } }] };
+                },
+            });
+        client('https://openrouter.ai/api/v1/').ask('s', 'u');
+        client('https://route.example.test/v1').ask('s', 'u');
+        expect(bodies[0]?.['provider']).toEqual({ data_collection: 'deny' });
+        expect('provider' in (bodies[1] ?? {})).toBe(false);
+    });
+
     it('build_members constructs a keyless free route as an unbilled member', () => {
         const members = build_members({
             ai_council: {

@@ -42,7 +42,8 @@ import type { chromium as Chromium } from '@playwright/test';
 import { runAssetRender } from './uiRenderAsset.js';
 import { filmExitCode, runFilmRender, type FilmManifest } from './uiRenderFilm.js';
 import { resolveBrowser } from './browserReach.js';
-import { interactWith, type InteractionReading } from './uiRenderInteract.js';
+import { interactWith, openForInteraction, type InteractionReading } from './uiRenderInteract.js';
+import { confinePage, type NetworkRecord } from './uiRenderAssetIsolation.js';
 import { BASELINE_REL, regionReading, type RegionReading } from './uiRenderRegion.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
 import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
@@ -77,7 +78,21 @@ export const CAPTURED_PROPERTIES = [
     'position',
     'z-index',
     'background-image',
+    // 4.2 (road-to-design-inputs-and-pages-read-as-they-are): what a sibling-gap
+    // reading needs to say whether child margins or the container's gap cause it.
+    'margin-top',
+    'margin-right',
+    'margin-bottom',
+    'margin-left',
+    'gap',
+    'row-gap',
+    'column-gap',
+    'display',
+    'flex-direction',
 ] as const;
+
+/** Elements whose styles one capture records; beyond it the reading is partial. */
+export const STYLE_SAMPLE_CAP = 1500;
 
 export interface ViewportCapture {
     viewport: string;
@@ -99,6 +114,14 @@ export interface ViewportCapture {
     settle_cap_ms?: number;
     /** Console errors/warnings and uncaught page errors heard during this capture. Never blocking. */
     console?: ConsoleRow[];
+    /**
+     * The style record's denominator: rows written, and elements the document
+     * had. `partial` (`<sampled>/<total>`) appears only when the record was cut
+     * at {@link STYLE_SAMPLE_CAP} — a reading over it is a reading of a prefix.
+     */
+    styles_sampled?: number;
+    styles_total?: number;
+    partial?: string;
 }
 
 /** One message heard on the page; `text` is truncated to {@link CONSOLE_TEXT_MAX} chars. */
@@ -170,6 +193,11 @@ export interface RenderManifest {
     interactions?: InteractionReading[];
     /** `--region`: the changed region against its approved baseline. Optional, page profile only. */
     region?: RegionReading;
+    /**
+     * URL targets only: the write requests aborted and the off-origin requests
+     * blocked during the run (4.3). Absent for a file target.
+     */
+    network?: NetworkRecord;
     /**
      * WHY the verification is not `verified`, as a token rather than as prose,
      * and only when the COMMAND can say why.
@@ -375,9 +403,11 @@ async function settlePage(
 async function declaresDarkScheme(
     browser: Awaited<ReturnType<typeof Chromium.launch>>,
     url: string,
+    urlGuard?: { origin: string; network: NetworkRecord },
 ): Promise<boolean> {
     const page = await browser.newPage();
     try {
+        if (urlGuard !== undefined) await confinePage(page, [], [], undefined, urlGuard);
         await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
         return await page.evaluate(() =>
             Array.from(document.styleSheets).some((sheet) => {
@@ -526,6 +556,11 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     let region: RegionReading | undefined;
     const allStyles: Array<Record<string, string>> = [];
     let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
+    // A URL target is a live site: no request the render sends may write or
+    // leave the origin (road-to-design-inputs-and-pages-read-as-they-are 4.3).
+    const network: NetworkRecord = { aborted: [], blocked: [] };
+    const urlGuard = isUrl ? { origin: new URL(abs).origin, network } : undefined;
+    const pageUrl = isUrl ? abs : `file://${abs}`;
 
     try {
         browser = await chromium.launch({ headless: true });
@@ -542,13 +577,14 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                 if (type === 'error' || type === 'warning') heard.push(consoleRow(type, msg.text()));
             });
             page.on('pageerror', (err) => heard.push(consoleRow('pageerror', err.message)));
-            await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+            if (urlGuard !== undefined) await confinePage(page, [], [], undefined, urlGuard);
+            await page.goto(pageUrl, { waitUntil: 'load', timeout: 30_000 });
 
             // Settle → evaluate → screenshot: the style record and the picture
             // describe one state, and neither is taken while the page still moves.
             const settle = await settlePage(page);
 
-            const styles = await page.evaluate((props: readonly string[]) => {
+            const { rows: styles, total: stylesTotal } = await page.evaluate(({ props, cap }: { props: readonly string[]; cap: number }) => {
                 // The family that PAINTED, beside the one declared (step 1.3 of
                 // road-to-type-with-a-witness). Walked in stack order: a generic
                 // family always paints; a family registered through @font-face
@@ -590,7 +626,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                     return out;
                 };
                 const rows: Array<Record<string, string>> = [];
-                const els = Array.from(document.querySelectorAll('*')).slice(0, 1500);
+                const all = Array.from(document.querySelectorAll('*'));
+                const els = all.slice(0, cap);
                 const indexOf = new Map(els.map((e, i) => [e, i]));
                 for (const [i, el] of els.entries()) {
                     const cs = window.getComputedStyle(el);
@@ -629,8 +666,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                     if (ownText) rec['painted-family'] = paintedOf(cs.fontFamily);
                     rows.push(rec);
                 }
-                return rows;
-            }, CAPTURED_PROPERTIES as unknown as string[]);
+                return { rows, total: all.length };
+            }, { props: CAPTURED_PROPERTIES as unknown as string[], cap: STYLE_SAMPLE_CAP });
             allStyles.push(...styles);
             const stylePath = path.join(outDir, `${vp.name}.styles.json`);
             fs.writeFileSync(stylePath, `${JSON.stringify(styles, null, 2)}\n`);
@@ -658,19 +695,21 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
                     ? { settled_ms: settle.settled_ms }
                     : { unsettled: true as const, settle_cap_ms: settle.cap_ms }),
                 console: heard.slice(),
+                styles_sampled: styles.length,
+                styles_total: stylesTotal,
+                ...(stylesTotal > styles.length ? { partial: `${styles.length}/${stylesTotal}` } : {}),
             });
         };
         for (const vp of VIEWPORTS) await captureAt(vp);
         // A page that declares a dark scheme gets a dark desktop pass too.
-        const declaresDark = allStyles.length > 0 && (await declaresDarkScheme(open, isUrl ? abs : `file://${abs}`));
+        const declaresDark = allStyles.length > 0 && (await declaresDarkScheme(open, pageUrl, urlGuard));
         if (declaresDark) await captureAt({ ...VIEWPORTS[0], name: 'desktop-dark' }, 'dark');
         if (opts.interact && opts.interact.length > 0) {
             const vp = VIEWPORTS[0];
             for (const [i, selector] of opts.interact.entries()) {
                 // A fresh page per control, so one popup left open cannot hide
                 // the next control's open state.
-                const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-                await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+                const page = await openForInteraction(browser, pageUrl, { width: vp.width, height: vp.height }, urlGuard);
                 const reading = await interactWith(page, selector, outDir, i);
                 await page.close();
                 interactions.push({
@@ -682,7 +721,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         if (opts.region !== undefined) {
             const vp = VIEWPORTS[0];
             const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-            await page.goto(isUrl ? abs : `file://${abs}`, { waitUntil: 'load', timeout: 30_000 });
+            if (urlGuard !== undefined) await confinePage(page, [], [], undefined, urlGuard);
+            await page.goto(pageUrl, { waitUntil: 'load', timeout: 30_000 });
             const baselinePath = path.resolve(projectRoot, opts.baseline ?? path.join(BASELINE_REL, `${slug}.json`));
             region = await regionReading(page, opts.region, baselinePath, opts.approve === true);
             await page.close();
@@ -698,6 +738,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             type_families: collectTypeFamilies(allStyles),
             verification: 'degraded',
             degradation_reason: `capture failed after ${captures.length} viewport(s): ${String(err)}`,
+            ...(urlGuard !== undefined ? { network } : {}),
         };
         writeManifest(outDir, manifest);
         process.stderr.write(`[ui:render] ${manifest.degradation_reason}\n`);
@@ -719,6 +760,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         verification: 'verified',
         ...(interactions.length > 0 ? { interactions } : {}),
         ...(region === undefined ? {} : { region }),
+        ...(urlGuard !== undefined ? { network } : {}),
     };
     writeManifest(outDir, manifest);
 

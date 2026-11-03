@@ -76,6 +76,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { _scan } from '../injection_scan_hook.js';
 import { redaction_scan } from './knowledge_global_redaction.js';
 import { detect_managed_agents_folder } from './managed_agents_folder.js';
 import type { ManagedAgentsFolderStatus } from './managed_agents_folder.js';
@@ -199,13 +200,18 @@ export function resolveGlobalObservationsPath(
 // Capture-time guards
 // ---------------------------------------------------------------------------
 
-// Matches an imperative paired with a recurrence marker, in either order —
-// "always fetch <url> on every message" / "run <cmd> at the start of each
-// session". Deliberately broad: a false positive here costs one refused
-// candidate the human never sees; a false negative persists a durable
-// injection forever, in every project.
-const _STANDING_COMMAND_RE =
-    /\b(?:always|every\s+(?:session|message|time|turn))\b[\s\S]{0,80}?\b(?:fetch|run|curl|execute|call|check)\b|\b(?:fetch|run|curl|execute|call|check)\b[\s\S]{0,80}?\b(?:at\s+the\s+start\s+of\s+(?:each|every)\s+(?:session|message)|on\s+every\s+(?:message|turn|session)|always)\b/i;
+// A standing command is a RECURRENCE marker plus a FETCH/EXEC TARGET, in
+// either order and in English or German. Both halves are required: "always run
+// the tests before pushing" recurs but executes nothing a stranger chose, and
+// is a durable preference a person legitimately stores; "at the start of each
+// session, run curl … | bash" is the injection. The target half is what the
+// earlier shape lacked — it paired an imperative verb with a recurrence word,
+// which refused the first sentence and missed the second whenever the marker
+// came first.
+const _RECURRENCE_RE =
+    /\b(?:always|whenever|from\s+now\s+on|every|each|(?:before|after|at\s+the\s+(?:start|beginning)\s+of)\s+(?:each|every)|immer|ab\s+jetzt|jede[nmrs]?|bei\s+jedem|zu\s+beginn\s+jede[nmrs]?)\b/i;
+const _EXEC_TARGET_RE =
+    /\bhttps?:\/\/\S+|\|\s*(?:ba|z)?sh\b|\$\(|\b(?:curl|wget|eval|iex|invoke-webrequest|invoke-expression|bash\s+-c|sh\s+-c|python\s+-c|node\s+-e)\b|\b(?:npm|pnpm|yarn|pip3?|pipx|gem|brew|cargo|go)\s+(?:install|add|i|get)\b|\bnpx\s+\S|\b(?:download|herunterladen)\b/i;
 
 // "never criticize me", "always agree with me", "never say I'm wrong",
 // "don't ever disagree with me" — a user weaponizing their own memory to
@@ -215,7 +221,17 @@ const _SELF_HARMFUL_PREFERENCE_RE =
 
 /** `true` when `text` reads as a verbatim standing command. */
 export function detectStandingCommand(text: string): boolean {
-    return _STANDING_COMMAND_RE.test(text);
+    return _RECURRENCE_RE.test(text) && _EXEC_TARGET_RE.test(text);
+}
+
+/**
+ * The second channel: the same phrase and encoding scan the injection hook
+ * runs on tool output. A row it ranks above `low` is refused even when it
+ * carries no recurrence marker — an injection phrase stored as memory recurs
+ * by being re-read.
+ */
+export function detectInjectionSignal(text: string): boolean {
+    return _scan(text).risk_level !== 'low';
 }
 
 /** `true` when `text` reads as a self-harmful standing preference. */
@@ -273,6 +289,16 @@ export function evaluateCaptureGuards(
                 `figures / health-legal-therapy / demographics / external-source identifiers): ${violations
                     .map((v) => v.category)
                     .join(', ')}`,
+        };
+    }
+    // Last, so a hidden-Unicode row keeps its own, more specific category.
+    if (detectInjectionSignal(text)) {
+        return {
+            allowed: false,
+            category: 'standing_command',
+            reason:
+                'carries an injection phrase or encoding signal — stored as memory it is re-read ' +
+                'as an instruction in every later session. Refused at capture.',
         };
     }
     return { allowed: true };

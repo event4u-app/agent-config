@@ -30,7 +30,16 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
-_Nothing staged._ Twenty entries that had accumulated here were drained to
+### Changed
+
+* **skills:** `/mcp` and `/code-review` open Claude Code's own commands again.
+  The package skills that shadowed them are renamed `mcp-tool-use` and
+  `code-review-lens`; `user-invocable: false` had only hidden them from the
+  menu, it never gave the name back. The next update removes the old
+  `skills/mcp/` and `skills/code-review/` directories the package recorded
+  writing; a same-name skill you wrote yourself is kept.
+
+Twenty entries that had accumulated here were drained to
 [`docs/archive/CHANGELOG-unreleased-drain-2026-10.md`](docs/archive/CHANGELOG-unreleased-drain-2026-10.md)
 on 2026-10-13; every one of them had already shipped, the oldest in 9.7.0.
 An entry belongs under a dated release section, not here — see

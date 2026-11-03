@@ -85,6 +85,31 @@ describe('dispatch — prompts', () => {
     });
 });
 
+describe('dispatch — prompt arguments from declared inputs', () => {
+    const tree: ContentTree = {
+        uris: Object.fromEntries(
+            [
+                {
+                    ...entry({ name: 'declares-one', kind: 'skill' }),
+                    inputs: [{ name: 'source', description: 'the document', required: true }],
+                },
+                entry({ name: 'declares-none', kind: 'skill' }),
+            ].map((e) => [e.uri, e]),
+        ),
+    };
+    const listed = (): { name: string; arguments: unknown[] }[] =>
+        (ok(dispatch(tree, ID, req('prompts/list'))).result as { prompts: { name: string; arguments: unknown[] }[] })
+            .prompts;
+
+    it('lists exactly the declared argument', () => {
+        const p = listed().find((x) => x.name === 'skill.declares-one')!;
+        expect(p.arguments).toEqual([{ name: 'source', description: 'the document', required: true }]);
+    });
+    it('serves [] for an entry that declares nothing', () => {
+        expect(listed().find((x) => x.name === 'skill.declares-none')!.arguments).toEqual([]);
+    });
+});
+
 describe('dispatch — resources', () => {
     it('resources/list returns rule:// + guideline:// uris, markdown mime', () => {
         const result = ok(dispatch(TREE, ID, req('resources/list'))).result as {

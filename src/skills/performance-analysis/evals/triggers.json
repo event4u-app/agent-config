@@ -1,0 +1,58 @@
+{
+    "skill": "performance-analysis",
+    "last_eval": "2026-11-03",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars ask explicitly for a performance audit: profiling a bottleneck, finding N+1 queries, a hot-path analysis. Near-misses share the speed vocabulary and route elsewhere: a slow test suite (test-performance), implementing a cache (performance), and a database index design (database). Counterexamples guard 'performance' and 'profile' in unrelated senses.",
+    "queries": [
+        {
+            "q": "profile the order export endpoint and find out where the 4 seconds go",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "audit this controller for N+1 queries before we ship it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "do a hot-path analysis of the pricing calculation, it is called on every request",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "mach eine Performance-Analyse der Dashboard-API, die Antwortzeiten sind zu hoch",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "our pest suite takes 12 minutes, speed up the tests",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "test-suite speed → test-performance"
+        },
+        {
+            "q": "add a Redis cache in front of the product catalogue query",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "implementing an optimisation, not auditing for one → performance"
+        },
+        {
+            "q": "which index should the orders table get for this query?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "schema and index design → database"
+        },
+        {
+            "q": "write the quarterly performance review for my direct report",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'performance' as people feedback"
+        },
+        {
+            "q": "add a profile page where users can change their avatar",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'profile' as a UI page"
+        }
+    ]
+}

@@ -74,10 +74,30 @@ export const SCOPE: ReadonlyArray<{ rule: string; why: string }> = [
     // decision this gate has no business forcing. `domain-safety-retention`
     // takes the slot: same class, `type: "auto"`, and its normative content is
     // more externally sourced than most (GDPR Art. 17, tax and VAT floors).
-    { rule: 'domain-safety-retention', why: 'cites GDPR Art. 17 plus tax and VAT retention floors by jurisdiction' },
+    { rule: 'domain-safety-retention', why: 'routes GDPR Art. 17 and tax / VAT retention floors to their primary sources' },
     { rule: 'engineering-safety-floor', why: 'the production / infra / bulk-destructive floor' },
     { rule: 'code-provenance', why: 'states the knowledge-layer obligation this gate enforces' },
 ];
+
+/**
+ * In-scope rules that name an external source but carry no `source_urls` yet.
+ *
+ * Shrink-only. A `verified_on` stamp that names no source cannot be checked by
+ * anyone, so a rule claiming an external source must say where it lives. These
+ * rules predate that obligation and their primary sources were not fetched when
+ * it landed; listing them keeps the gate green without pretending they comply.
+ * A listed rule that gains URLs fails until its row is removed, so the list can
+ * only get shorter. Emptying it needs each primary source fetched and read;
+ * only then does that rule's `verified_on` move.
+ */
+export const SOURCE_URLS_PENDING: Readonly<Record<string, string>> = {
+    'untrusted-input-defense': 'primary URL not yet fetched',
+    'lethal-trifecta-guard': 'primary URL not yet fetched',
+    'tool-safety': 'primary URL not yet fetched',
+    'domain-safety-pii': 'primary URL not yet fetched',
+    'domain-safety-retention': 'primary URL not yet fetched',
+    'code-provenance': 'primary URL not yet fetched',
+};
 
 /** Keys every declaration must carry, per rule.schema.json. */
 const REQUIRED_KEYS = ['source_type'] as const;
@@ -127,8 +147,41 @@ export function evidenceLines(fm: string): string[] | null {
     return out;
 }
 
+/**
+ * Number of `source_urls` entries in an evidence block — inline `[a, b]` or a
+ * dash list under the key. Same line-scan stance as `evidenceLines`.
+ */
+export function sourceUrlCount(block: string[]): number {
+    const idx = block.findIndex((l) => /^\s+source_urls:/.test(l));
+    if (idx === -1) return 0;
+    const head = block[idx]!;
+    const indent = head.length - head.trimStart().length;
+    const inline = head.replace(/^\s+source_urls:\s*/, '');
+    if (inline.startsWith('[')) {
+        return inline
+            .replace(/^\[|\]\s*$/g, '')
+            .split(',')
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0).length;
+    }
+    let count = 0;
+    for (const line of block.slice(idx + 1)) {
+        const lineIndent = line.length - line.trimStart().length;
+        if (lineIndent <= indent && !line.trimStart().startsWith('-')) break;
+        if (/^\s*-\s*\S/.test(line)) count += 1;
+        else break;
+    }
+    return count;
+}
+
 export function analyse(root = REPO_ROOT): Finding[] {
     const findings: Finding[] = [];
+    const inScope = new Set(SCOPE.map((s) => s.rule));
+    for (const rule of Object.keys(SOURCE_URLS_PENDING)) {
+        if (!inScope.has(rule)) {
+            findings.push({ rule, reason: 'listed in SOURCE_URLS_PENDING but not in SCOPE — remove the pending row' });
+        }
+    }
     for (const { rule } of SCOPE) {
         const abs = path.join(root, 'src', 'rules', `${rule}.md`);
         let body: string;
@@ -169,6 +222,21 @@ export function analyse(root = REPO_ROOT): Finding[] {
                         'questions wherever a source exists, and neither is where one does not',
                 });
             }
+        }
+        const urls = sourceUrlCount(block);
+        const pending = Object.prototype.hasOwnProperty.call(SOURCE_URLS_PENDING, rule);
+        if (pending && urls > 0) {
+            findings.push({
+                rule,
+                reason: 'now carries `source_urls` — remove it from SOURCE_URLS_PENDING (the list is shrink-only)',
+            });
+        } else if (!ownAnalysis && has('source_type') && urls === 0 && !pending) {
+            findings.push({
+                rule,
+                reason:
+                    'names an external source but carries no `source_urls` — a `verified_on` stamp ' +
+                    'that names no source cannot be checked; add the primary URL',
+            });
         }
     }
     return findings;
@@ -228,7 +296,16 @@ function selfTest(): number {
         return runGate(dir);
     };
 
-    const EXT = ['evidence:', '  source_type: external-standard', '  verified_on: 2026-08-30', '  normative_level: recommended'];
+    const EXT = [
+        'evidence:',
+        '  source_type: external-standard',
+        '  source_urls:',
+        '    - https://example.org/standard',
+        '  verified_on: 2026-08-30',
+        '  normative_level: recommended',
+    ];
+    const EXT_NO_URLS = ['evidence:', '  source_type: external-standard', '  verified_on: 2026-08-30', '  normative_level: recommended'];
+    const PENDING_RULE = Object.keys(SOURCE_URLS_PENDING)[0]!;
     const OWN = ['evidence:', '  source_type: own-analysis'];
 
     const cases: SelfTestCase[] = [
@@ -269,14 +346,34 @@ function selfTest(): number {
             expect: 'accept',
             run: () => fixture(OWN.join('\n')),
         },
+        {
+            name: 'an external-standard block without source_urls, not pending → reject',
+            expect: 'reject',
+            run: () => fixture(EXT_NO_URLS.join('\n')),
+        },
+        {
+            name: 'a pending rule that now carries source_urls → reject',
+            expect: 'reject',
+            run: () => fixture(EXT.join('\n'), [PENDING_RULE]),
+        },
+        {
+            name: 'a pending rule without source_urls → accept',
+            expect: 'accept',
+            run: () => fixture(EXT_NO_URLS.join('\n'), [PENDING_RULE]),
+        },
+        {
+            name: 'inline source_urls list counts → accept',
+            expect: 'accept',
+            run: () => fixture([...EXT_NO_URLS, '  source_urls: [https://example.org/a]'].join('\n')),
+        },
     ];
 
     try {
         return runSelfTest({
             gate: 'check_rule_evidence_declaration',
             cases,
-            minCases: 6,
-            minRejectCases: 4,
+            minCases: 10,
+            minRejectCases: 6,
         });
     } finally {
         for (const d of roots) fs.rmSync(d, { recursive: true, force: true });

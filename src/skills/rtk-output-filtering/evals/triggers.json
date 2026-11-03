@@ -1,7 +1,7 @@
 {
     "skill": "rtk-output-filtering",
     "last_eval": "2026-10-18",
-    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three uses the SKILL.md lists: wrapping a verbose command, installing rtk on a machine, and writing project-local filters, with a German variant. Near-misses are the token-saving neighbours: the general token decision tree (token-optimizer), packing a codebase for an LLM (repomix-packer), and the case this skill itself forbids — a git diff where completeness matters, which belongs to code-review. Counterexamples guard short commands and the 'filter' homonym in data code.",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three uses the SKILL.md lists: wrapping a verbose command, installing rtk on a machine, and writing project-local filters, with a German variant. Near-misses are the token-saving neighbours: the general token decision tree (token-optimizer), packing a codebase for an LLM (repomix-packer), and the case this skill itself forbids — a git diff where completeness matters, which belongs to code-review-lens. Counterexamples guard short commands and the 'filter' homonym in data code.",
     "queries": [
         {
             "q": "run the full phpunit suite but don't flood the context with the output",
@@ -45,7 +45,7 @@
             "q": "show me the complete git diff of this branch so we can review every change",
             "trigger": false,
             "class": "near-miss",
-            "note": "this skill's SKILL.md forbids rtk where completeness matters, git diff by name — the raw diff serves a review → code-review"
+            "note": "this skill's SKILL.md forbids rtk where completeness matters, git diff by name — the raw diff serves a review → code-review-lens"
         },
         {
             "q": "what's the current branch?",

@@ -24,9 +24,15 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { scan_workflow } from '../../src/scripts/lint_workflow_security.js';
+
 const ROOT = path.join(__dirname, '../..');
 const WF = path.join(ROOT, '.github/workflows');
 const ACT = path.join(ROOT, '.github/actions');
+// The workflow templates shipped to consumers. A third root for the
+// persist-credentials, template-injection and privileged-job-cache nets; the
+// SHA-pin assertions above stay on our own two roots pending owner decision OD-1.
+const TPL = path.join(ROOT, 'src/agent-src/templates/github-workflows');
 
 function yamlFiles(dir: string): string[] {
     if (!fs.existsSync(dir)) return [];
@@ -93,12 +99,14 @@ describe('CI supply chain — every action resolves to an immutable commit', () 
 });
 
 describe('CI supply chain — no checkout leaves a credential behind it', () => {
-    const checkouts = (): { file: string; line: number; block: string }[] => {
+    const checkouts = (roots: string[] = [WF]): { file: string; line: number; block: string }[] => {
         const out: { file: string; line: number; block: string }[] = [];
-        for (const f of yamlFiles(WF)) {
+        for (const f of roots.flatMap(yamlFiles)) {
             const lines = fs.readFileSync(f, 'utf-8').split('\n');
             lines.forEach((L, i) => {
                 if (!/uses:\s+actions\/checkout@/.test(L)) return;
+                // A commented-out example step is documentation, not a checkout.
+                if (L.trimStart().startsWith('#')) return;
                 // The step's own block: from here to the next `- ` at the same
                 // or lower indent, capped so a malformed file cannot run away.
                 const ind = L.length - L.trimStart().length;
@@ -127,6 +135,16 @@ describe('CI supply chain — no checkout leaves a credential behind it', () => 
         // an ambient one, and only the second is a defect.
         const silent = checkouts().filter((c) => !/persist-credentials:\s*(true|false)/.test(c.block));
         expect(silent.map((c) => `${c.file}:${c.line}`)).toEqual([]);
+    });
+
+    it('every checkout in a shipped workflow template states persist-credentials explicitly', () => {
+        const tpl = checkouts([TPL]);
+        // 7 checkouts across 7 templates when this landed; 1 carried the flag.
+        expect(tpl.length).toBeGreaterThanOrEqual(7);
+        const silent = tpl.filter((c) => !/persist-credentials:\s*(true|false)/.test(c.block));
+        expect(silent.map((c) => `${c.file}:${c.line}`)).toEqual([]);
+        const kept = tpl.filter((c) => /persist-credentials:\s*true/.test(c.block));
+        expect(kept.filter((c) => !/#.*persist-credentials KEPT/.test(c.block)).map((c) => `${c.file}:${c.line}`)).toEqual([]);
     });
 
     it('every kept credential names the step that needs it', () => {
@@ -178,5 +196,31 @@ describe('CI supply chain — the eslint warn tier cannot drift upward', () => {
     it('no-explicit-any is an error, not a warning', () => {
         const cfg = fs.readFileSync(path.join(ROOT, 'eslint.config.js'), 'utf-8');
         expect(cfg).toMatch(/'@typescript-eslint\/no-explicit-any':\s*'error'/);
+    });
+});
+
+describe('CI supply chain — free text and caches stay out of privileged scripts', () => {
+    // road-to-boundaries-that-hold-at-release-and-runtime 2.1-2.3. The linter
+    // reports privileged-job-cache as MEDIUM, which exits 0 even under --strict;
+    // this is the net that blocks, over our workflows and the shipped templates.
+    const files = [...yamlFiles(WF), ...yamlFiles(TPL)];
+    const findings = (rule: string): string[] =>
+        files.flatMap((f) =>
+            scan_workflow(f, [])
+                .filter((x) => x['rule'] === rule)
+                .map((x) => `${path.relative(ROOT, f)} ${String(x['location'])}`),
+        );
+
+    it('the scan covers both roots', () => {
+        expect(yamlFiles(WF).length).toBeGreaterThan(20);
+        expect(yamlFiles(TPL).length).toBeGreaterThanOrEqual(7);
+    });
+
+    it('no free-text context is interpolated into a script (template-injection)', () => {
+        expect(findings('template-injection')).toEqual([]);
+    });
+
+    it('no privileged job restores an Actions cache (privileged-job-cache)', () => {
+        expect(findings('privileged-job-cache')).toEqual([]);
     });
 });

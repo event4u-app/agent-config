@@ -49,6 +49,24 @@ describe('subagent-v1 contract', () => {
         expect(errors.map((e) => `${e.path}: ${e.message}`)).toEqual([]);
     });
 
+    it('accepts every host effort level including xhigh, and rejects an invented one', () => {
+        for (const level of ['low', 'medium', 'high', 'xhigh', 'max']) {
+            const data = _frontmatterOf(_UNIT);
+            data.effort = level;
+            expect(validate(data, schema).filter((e) => e.path === '$.effort')).toEqual([]);
+        }
+        const data = _frontmatterOf(_UNIT);
+        data.effort = 'ultra';
+        expect(validate(data, schema).some((e) => e.path === '$.effort' && e.rule === 'enum')).toBe(true);
+    });
+
+    it('the skill schema carries the same effort levels as the subagent schema', () => {
+        const skill = load_schema('skill') as { properties: { effort: { enum: string[] } } };
+        const sub = schema as { properties: { effort: { enum: string[] } } };
+        expect(skill.properties.effort.enum).toEqual(sub.properties.effort.enum);
+        expect(sub.properties.effort.enum).toContain('xhigh');
+    });
+
     it('rejects a model_tier outside the enum', () => {
         const data = _frontmatterOf(_UNIT);
         data.model_tier = 'gpt-ultra';

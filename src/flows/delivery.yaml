@@ -35,5 +35,5 @@ team:                  # OPTIONAL demand-probe annotation (Phase 3) — no execu
     - senior-engineer
   skills:
     - verify-completion-evidence
-    - code-review
+    - code-review-lens
     - requesting-code-review

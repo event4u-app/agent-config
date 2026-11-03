@@ -354,7 +354,7 @@
       "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/acceptance-criteria.md",
       "status": "still_open",
       "rationale": "Carried by road-to-the-16-3-0-findings-residue (item 6). The premise is true and wider than stated: rounds 10 to 21 record `roadmap: none`, and the round-11 and round-12 acceptance-criteria inputs are empty. The records themselves stay as they are: they are what each reviewer was actually given, rewriting them would falsify that, and each round already discloses itself as single-member and provisional; the roadmap's acceptance criteria cite no round 10 to 21 as evidence. What is open is the mechanism: a review can still be dispatched without the roadmap when the roadmap is in the changed set, so the row is not accepted as closed.",
-      "verified_by": "grep -c 'roadmap: none' agents/evidence/reviews/behavior-vocabulary-close-round1[0-9].findings.md agents/evidence/reviews/behavior-vocabulary-close-round2[01].findings.md",
+      "verified_by": "grep -c 'roadmap: none' agents/evidence/reviews/behavior-vocabulary-close-round1[0-9].findings.md agents/evidence/reviews/behavior-vocabulary-close-round2[01].findings.md -> 0",
       "date": "2026-10-07"
     },
     {
@@ -442,7 +442,7 @@
       "status": "fixed",
       "commit": "00612c1f2",
       "rationale": "Neither the `ls src/skills | grep` probe nor the bold 'deliberately names none' line exists in src/domains/engineering-base/tests/create/command.md or its projection; the text now says skills: names no single-stack skill, matching its frontmatter. The removal was squashed into 00612c1f2 and the 16.3.0 tag already carries the fixed text, so the defect lived only in a reviewed intermediate snapshot.",
-      "verified_by": "grep -rn -e 'ls src/skills' -e 'deliberately names none' src/domains/engineering-base/tests dist/agent-src/commands/tests",
+      "verified_by": "grep -rn -e 'ls src/skills' -e 'deliberately names none' src/domains/engineering-base/tests dist/agent-src/commands/tests -> 1",
       "date": "2026-10-07"
     },
     {
@@ -455,7 +455,7 @@
       "status": "fixed",
       "commit": "fc1bdec4f",
       "rationale": "fc1bdec4f (#2243) removed the narrated budget history (6,000 / 7,500 / 8,500 and the '66 characters' claim) from src/agent-src/contexts/execution/toolchain-resolver.md. Its size section now states only the enforced DEPTH_CEILING_CHARS ceiling, and both cost figures name constants that exist (_MAX_BEHAVIOR_SCOPES = 200, DEPTH_CEILING_CHARS = 16_000).",
-      "verified_by": "grep -rn '66 characters' src/agent-src dist/agent-src",
+      "verified_by": "grep -rn '66 characters' src/agent-src dist/agent-src -> 1",
       "date": "2026-10-07"
     },
     {

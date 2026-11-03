@@ -11,7 +11,7 @@ packs:
 
 # mcp-builder
 
-Author MCP servers that LLMs can drive end-to-end. The quality bar is *can the agent finish the workflow*, not *does the endpoint return 200*. This skill is the **server-author** counterpart to the existing [`mcp`](../mcp/SKILL.md) consumer skill.
+Author MCP servers that LLMs can drive end-to-end. The quality bar is *can the agent finish the workflow*, not *does the endpoint return 200*. This skill is the **server-author** counterpart to the existing [`mcp-tool-use`](../mcp-tool-use/SKILL.md) consumer skill.
 
 ## When to use
 
@@ -21,7 +21,7 @@ Author MCP servers that LLMs can drive end-to-end. The quality bar is *can the a
 
 Do NOT use when:
 
-- You only need to *call* an MCP server — route to [`mcp`](../mcp/SKILL.md).
+- You only need to *call* an MCP server — route to [`mcp-tool-use`](../mcp-tool-use/SKILL.md).
 - The integration belongs in the host process — write a regular service, not an MCP server.
 - The "server" wraps one endpoint with no workflow — a CLI wrapper is enough.
 
@@ -133,7 +133,7 @@ Two of the ten are **authority questions**, expected answer *no*: "Can a caller 
 - Upstream protocol: https://modelcontextprotocol.io
 - Upstream SDKs: https://github.com/modelcontextprotocol/python-sdk · https://github.com/modelcontextprotocol/typescript-sdk
 - Adopted from: an external reference (internal provenance, redacted) — external `./reference/*.md` file links replaced with inline guidance + upstream URLs.
-- Cross-linked: [`mcp`](../mcp/SKILL.md), [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), [`api-design`](../api-design/SKILL.md).
+- Cross-linked: [`mcp-tool-use`](../mcp-tool-use/SKILL.md), [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), [`api-design`](../api-design/SKILL.md).
 - Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `mcp-builder`).
 - Iron-Law floor: `verify-before-complete`, `tool-safety`, `skill-quality`.
 

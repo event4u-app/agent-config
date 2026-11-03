@@ -1,11 +1,11 @@
 rule: evaluator-independence
 positives:
   - prompt: "Run a blind review over the diff I just wrote and tell me what it finds."
-    expected_skills: [code-review]
+    expected_skills: [code-review-lens]
   - prompt: "I want an adversarial review of my own change before it goes out."
-    expected_skills: [adversarial-review, code-review]
+    expected_skills: [adversarial-review, code-review-lens]
   - prompt: "Commission a review of this branch and record the verdict as evidence."
-    expected_skills: [code-review, requesting-code-review]
+    expected_skills: [code-review-lens, requesting-code-review]
 near_misses:
   - prompt: "Rename the reviewer field in the pull request template."
     expected_skills: []

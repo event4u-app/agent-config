@@ -13,6 +13,7 @@ import {
     INTENT_UI_TRIVIAL,
     KNOWN_INTENTS,
     ValueError,
+    classify_intent,
     directive_set_for,
     populate_routing,
 } from '../../../src/agent-src/templates/scripts/work_engine/intent/classify.js';
@@ -85,5 +86,31 @@ describe('intent/classify — TS-side unit checks', () => {
         populate_routing(st);
         expect(st.intent).toBe('backend-coding');
         expect(st.directive_set).toBe('backend');
+    });
+});
+
+// road-to-design-inputs-and-pages-read-as-they-are 3.2.
+describe('intent/classify — plural and German symptom nouns', () => {
+    it.each([
+        'The buttons only react on release.',
+        'The dropdowns close before I can pick an option.',
+        'Die Animationen kann man nicht unterbrechen.',
+        'Die Abstände zwischen den Karten sind ungleich.',
+        'Die Kacheln haben unterschiedliche Höhen.',
+    ])('%s → a UI set, never backend', (prompt) => {
+        expect(directive_set_for(classify_intent(prompt))).not.toBe('backend');
+    });
+
+    it.each(['The pages table needs an index on the slug.', 'Create SQL views for the monthly report.'])(
+        '%s → backend (views/pages stay singular-only)',
+        (prompt) => {
+            expect(classify_intent(prompt)).toBe(INTENT_BACKEND);
+        },
+    );
+
+    it('an English "accessibility pass" is not the German verb `pass`', () => {
+        expect(classify_intent('Run an accessibility pass over the checkout flow — fix focus order, ARIA labels, and contrast.')).not.toBe(
+            INTENT_UI_TRIVIAL,
+        );
     });
 });

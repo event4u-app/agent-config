@@ -15,6 +15,10 @@
  *   1.3 freshness — any legal-pack artefact that DECLARES `last_verified` /
  *       `freshness_window` frontmatter must use a valid shape and not be stale
  *       (no-op when absent; the mechanism for when positions carry dates).
+ *   1.4 source-tag-pointer — the skill must point at the source-tag and currency
+ *       vocabulary of `legal-practice-profile` (presence of the pointer only, never
+ *       the tags in generated output). The profile owns the vocabulary and is
+ *       exempt.
  *
  * Scope is the legal pack only — it never touches the other 250+ skills.
  * Exit codes: 0 all legal-pack skills compliant, 1 one or more violations.
@@ -36,6 +40,8 @@ const SKILLS_DIR = path.join(REPO, 'src', 'skills');
 const ATTORNEY_LINE = 'Attorney review required on material use';
 const JURISDICTION_TAG = 'Jurisdiction:';
 const FRESHNESS_WINDOW_RE = /^\d+\s+(day|days|month|months|year|years)$/;
+const VOCAB_OWNER = 'legal-practice-profile';
+const VOCAB_SECTION = 'Source-tag + currency vocabulary';
 
 // D5 — the floor must carry the hard individual-case STOP block (not just a
 // hedge). road-to-legal-review-prep Phase 1. Checked once, against the floor
@@ -208,6 +214,10 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
         const fw = /(^|\n)freshness_window:\s*"?([^"\n]+)"?/.exec(fm);
         if (fw && !FRESHNESS_WINDOW_RE.test((fw[2] ?? '').trim())) {
             violations.push({ file: rel, rule: 'freshness', msg: `freshness_window "${fw[2]}" is not a valid "<N> days|months|years" shape` });
+        }
+        // 1.4 source-tag-pointer — the vocabulary reaches every drafting skill
+        if (d !== VOCAB_OWNER && !(body.includes(VOCAB_OWNER) && body.includes(VOCAB_SECTION))) {
+            violations.push({ file: rel, rule: 'source-tag-pointer', msg: `missing the pointer to \`${VOCAB_OWNER}\` § ${VOCAB_SECTION}` });
         }
         // 4.1 — no definitive legal language (line-scoped, skips negative examples)
         for (const line of body.split('\n')) {

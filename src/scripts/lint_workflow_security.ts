@@ -32,9 +32,18 @@
  * this gate under `--strict` (AI council, 2/2), so a HIGH fails a pull request;
  * the tiers are unchanged.
  *
- * Script-injection detection (regex-based) is intentionally deferred — it
- * requires an AST-aware pass to avoid false positives on quoted / escaped
- * expressions.
+ * Added after the lock, as new rules rather than a re-tiering:
+ *   HIGH  — template-injection: a free-text context (`type: string` or untyped
+ *            input, release tag/name/body, PR title/body/head ref, head_ref,
+ *            commit message, label name) inside `run:` or a github-script
+ *            `script:`. Free text reaches a script only through `env:`.
+ *   MEDIUM — privileged-job-cache: an Actions cache restored into a job with
+ *            `id-token: write`, `contents: write` or a non-default secret.
+ *            Blocking for this tree comes from tests/contracts/ci_supply_chain.
+ *
+ * The template-injection check reads parsed YAML, so a quoted or escaped
+ * `${{ }}` inside a YAML string is still the expression the runner expands —
+ * which is why the earlier "needs an AST-aware pass" deferral no longer holds.
  */
 
 import * as fs from 'node:fs';
@@ -343,6 +352,170 @@ function _mutable_third_party_actions(doc: JsonObject, _workflow_name: string): 
 }
 
 // ---------------------------------------------------------------------------
+// template-injection (road-to-boundaries-that-hold-at-release-and-runtime 2.1)
+// ---------------------------------------------------------------------------
+
+// Contexts whose value a person with write, triage or fork access can set to
+// arbitrary text. Interpolated into a shell or a script they become code; read
+// from `env:` they stay data. SHAs, numbers, ids and step outputs are absent on
+// purpose: their shape is fixed by the platform or by this repository.
+const FREE_TEXT_CONTEXTS: readonly RegExp[] = [
+    /^github\.event\.release\.(tag_name|name|body)\b/,
+    /^github\.event\.pull_request\.(title|body|head\.ref|head\.label)\b/,
+    /^github\.event\.pull_request\.labels\b/,
+    /^github\.event\.(issue|discussion)\.(title|body)\b/,
+    /^github\.event\.(comment|review|review_comment)\.body\b/,
+    /^github\.event\.label\.name\b/,
+    /^github\.event\.(head_commit|commits)\b.*\b(message|name|email)\b/,
+    /^github\.event\.workflow_run\.(head_branch|head_commit|display_title)\b/,
+    /^github\.head_ref\b/,
+];
+
+const _EXPR_RE = /\$\{\{([\s\S]*?)\}\}/g;
+const _CONTEXT_REF_RE = /\b(?:github|inputs|steps|env|vars|secrets|needs|matrix|job|runner)(?:\.[A-Za-z0-9_*-]+|\[[^\]]*\])+/g;
+
+/** Input name → declared `type` across `workflow_dispatch` and `workflow_call`. */
+function _input_types(on_block: JsonValue | undefined): Map<string, string> {
+    const out = new Map<string, string>();
+    const on = _asObject(on_block ?? null);
+    if (on === null) return out;
+    for (const trig of ['workflow_dispatch', 'workflow_call']) {
+        const inputs = _asObject(_asObject(on[trig] ?? null)?.['inputs'] ?? null);
+        if (inputs === null) continue;
+        for (const [name, spec] of Object.entries(inputs)) {
+            const t = _asObject(spec)?.['type'];
+            const prev = out.get(name);
+            // Two triggers may declare the same name; any free-text declaration wins.
+            const next = typeof t === 'string' ? t : 'string';
+            out.set(name, prev === undefined || prev !== 'string' ? next : prev);
+        }
+    }
+    return out;
+}
+
+/** The free-text context a reference reads, or null when its shape is fixed. */
+function _free_text_ref(ref: string, input_types: Map<string, string>): string | null {
+    const input = /^(?:github\.event\.)?inputs\.([A-Za-z0-9_-]+)/.exec(ref);
+    if (input !== null) {
+        const t = input_types.get(String(input[1]));
+        // Undeclared or untyped is string — the platform's own default.
+        return t === undefined || t === 'string' ? ref : null;
+    }
+    return FREE_TEXT_CONTEXTS.some((re) => re.test(ref)) ? ref : null;
+}
+
+function _free_text_refs(text: string, input_types: Map<string, string>): string[] {
+    const out: string[] = [];
+    for (const m of text.matchAll(_EXPR_RE)) {
+        for (const r of String(m[1]).matchAll(_CONTEXT_REF_RE)) {
+            const hit = _free_text_ref(r[0], input_types);
+            if (hit !== null && !out.includes(hit)) out.push(hit);
+        }
+    }
+    return out;
+}
+
+/** One HIGH finding per step whose `run:` or github-script `script:` inlines free text. */
+function _template_injection(doc: JsonObject, on_block: JsonValue | undefined): Finding[] {
+    const findings: Finding[] = [];
+    const input_types = _input_types(on_block);
+    const jobs = _asObject(doc['jobs']) ?? {};
+    for (const [job_name, job] of Object.entries(jobs)) {
+        const steps = Array.isArray(_asObject(job)?.['steps']) ? (_asObject(job)!['steps'] as JsonValue[]) : [];
+        for (let i = 0; i < steps.length; i++) {
+            const step = _asObject(steps[i] as JsonValue);
+            if (step === null) continue;
+            const sinks: string[] = [];
+            if (typeof step['run'] === 'string') sinks.push(step['run']);
+            const uses = typeof step['uses'] === 'string' ? step['uses'].toLowerCase() : '';
+            if (uses.startsWith('actions/github-script@')) {
+                const script = _asObject(step['with'] ?? null)?.['script'];
+                if (typeof script === 'string') sinks.push(script);
+            }
+            const refs = _free_text_refs(sinks.join('\n'), input_types);
+            if (refs.length === 0) continue;
+            findings.push({
+                severity: 'HIGH',
+                rule: 'template-injection',
+                detail:
+                    `\${{ ${refs.join(' }}, ${{ ')} }} interpolated into a script — ` +
+                    'free text becomes code; pass it through a step env: variable and read it as "$VAR"',
+                location: `job:${job_name}/step:${i + 1}`,
+            });
+        }
+    }
+    return findings;
+}
+
+// ---------------------------------------------------------------------------
+// privileged-job-cache (road-to-boundaries-that-hold-at-release-and-runtime 2.2)
+// ---------------------------------------------------------------------------
+
+function _grants_write(perms: JsonValue | undefined): boolean {
+    if (perms === 'write-all') return true;
+    const obj = _asObject(perms ?? null);
+    if (obj === null) return false;
+    return obj['id-token'] === 'write' || obj['contents'] === 'write';
+}
+
+const _SECRET_RE = /\bsecrets\.([A-Za-z_][A-Za-z0-9_]*)/g;
+
+function _uses_non_default_secret(value: JsonValue | undefined): boolean {
+    const text = JSON.stringify(value ?? null);
+    for (const m of text.matchAll(_SECRET_RE)) {
+        if (String(m[1]).toUpperCase() !== 'GITHUB_TOKEN') return true;
+    }
+    return false;
+}
+
+function _restores_cache(step: JsonObject): boolean {
+    const uses = typeof step['uses'] === 'string' ? step['uses'].toLowerCase() : '';
+    const action = uses.includes('@') ? uses.slice(0, uses.indexOf('@')) : uses;
+    if (action === 'actions/cache' || action.startsWith('actions/cache/')) return true;
+    if (/(^|\/)setup-[a-z0-9-]+$/.test(action)) {
+        const cache = _asObject(step['with'] ?? null)?.['cache'];
+        return cache !== undefined && cache !== null && cache !== false && cache !== '';
+    }
+    return false;
+}
+
+/**
+ * A job holding `id-token: write`, `contents: write` or a non-default secret
+ * must not restore an Actions cache: a lower-privilege workflow on the same
+ * repository can write the entry it restores. Job `permissions:` replace the
+ * workflow block entirely, which is why a job override to `contents: read`
+ * clears the inherited `id-token: write`.
+ */
+function _privileged_job_cache(doc: JsonObject): Finding[] {
+    const findings: Finding[] = [];
+    const jobs = _asObject(doc['jobs']) ?? {};
+    const wf_secret = _uses_non_default_secret(doc['env']);
+    for (const [job_name, job] of Object.entries(jobs)) {
+        const jobObj = _asObject(job);
+        if (jobObj === null) continue;
+        const perms = Object.prototype.hasOwnProperty.call(jobObj, 'permissions')
+            ? jobObj['permissions']
+            : doc['permissions'];
+        const privileged = _grants_write(perms) || wf_secret || _uses_non_default_secret(jobObj);
+        if (!privileged) continue;
+        const steps = Array.isArray(jobObj['steps']) ? (jobObj['steps'] as JsonValue[]) : [];
+        for (let i = 0; i < steps.length; i++) {
+            const step = _asObject(steps[i] as JsonValue);
+            if (step === null || !_restores_cache(step)) continue;
+            findings.push({
+                severity: 'MEDIUM',
+                rule: 'privileged-job-cache',
+                detail:
+                    `${String(step['uses'])} restores an Actions cache in a privileged job — ` +
+                    'a lower-privilege workflow can poison the entry; drop the cache in this job',
+                location: `job:${job_name}/step:${i + 1}`,
+            });
+        }
+    }
+    return findings;
+}
+
+// ---------------------------------------------------------------------------
 // Per-workflow scan
 // ---------------------------------------------------------------------------
 
@@ -439,6 +612,15 @@ function scan_workflow(filePath: string, allowlist: Finding[]): Finding[] {
                 'untrusted PRs execute with repository write access',
             allowlisted: is_allowlisted(allowlist, workflow_name, rule),
         });
+    }
+
+    // --- HIGH: free text interpolated into a script --------------------------
+    // --- MEDIUM: an Actions cache restored into a privileged job -------------
+    for (const finding of [..._template_injection(doc, on_block), ..._privileged_job_cache(doc)]) {
+        const rule = finding['rule'] as string;
+        finding['workflow'] = workflow_name;
+        finding['allowlisted'] = is_allowlisted(allowlist, workflow_name, rule);
+        findings.push(finding);
     }
 
     // --- MEDIUM: mutable third-party action tags ----------------------------

@@ -127,10 +127,14 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
     // taken under the old token class; it is annotated rather than rewritten,
     // because its `idf` narration is about a comparison made that day. The pin
     // below is the live reading, which is what this test is for.
-    it('reproduces 69 of 316 on tuning and 14 of 75 on sealed', () => {
+    // 14 -> 13 sealed on 2026-11-03: the rename of `mcp` and `code-review` to
+    // `mcp-tool-use` and `code-review-lens`, and the tightened `mcp-tool-use`
+    // description, moved catalogue tokens, and one sealed row left a tie block.
+    // A scoring-input change, re-measured against the tree rather than loosened.
+    it('reproduces 69 of 316 on tuning and 13 of 75 on sealed', () => {
         const tuning = readRows(partitionBySlice(whole, 'tuning'), SKILLS_DIR, 'keyword-v1');
         const sealed = readRows(partitionBySlice(whole, 'sealed'), SKILLS_DIR, 'keyword-v1');
         expect([tuning.length, tuning.filter((r) => r.lostOnTie).length]).toEqual([316, 69]);
-        expect([sealed.length, sealed.filter((r) => r.lostOnTie).length]).toEqual([75, 14]);
+        expect([sealed.length, sealed.filter((r) => r.lostOnTie).length]).toEqual([75, 13]);
     }, 120_000);
 });

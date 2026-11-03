@@ -33,13 +33,13 @@
             "q": "connect the GitHub MCP server to Claude Code",
             "trigger": false,
             "class": "near-miss",
-            "note": "wiring an existing server into a host → mcp"
+            "note": "wiring an existing server into a host → mcp-tool-use"
         },
         {
             "q": "which MCP servers do I have configured?",
             "trigger": false,
             "class": "near-miss",
-            "note": "listing configured servers → mcp"
+            "note": "listing configured servers → mcp-tool-use"
         },
         {
             "q": "review who can call the delete endpoint",

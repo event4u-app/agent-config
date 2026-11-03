@@ -51,7 +51,7 @@
             "q": "review this pull request for bugs",
             "trigger": false,
             "class": "counterexample",
-            "note": "'review' meaning code review → code-review"
+            "note": "'review' meaning code review → code-review-lens"
         },
         {
             "q": "design the REST endpoints for the invoice service",

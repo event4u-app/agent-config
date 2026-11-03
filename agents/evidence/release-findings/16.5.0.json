@@ -27,7 +27,7 @@
       "file": "agents/evidence/analysis/svg-rules-loading-strategy-2026-10-11.md",
       "status": "false_positive",
       "rationale": "The chunk has a digest since #2305: a sidecar written by build:hook-chunks and checked by the loader before require.",
-      "verified_by": "grep -n \"write_bundle_digest.mjs dist/hooks/svg_rules.chunk.cjs\" package.json",
+      "verified_by": "grep -n write_bundle_digest src/scripts/hook_chunks.mjs -> 0",
       "date": "2026-10-12"
     },
     {

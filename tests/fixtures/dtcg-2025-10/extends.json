@@ -1,0 +1,6 @@
+{
+  "primitive": {
+    "base": { "red": { "$type": "color", "$value": "#ff0000" } },
+    "ext": { "$extends": "{primitive.base}" }
+  }
+}

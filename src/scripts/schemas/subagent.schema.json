@@ -40,7 +40,7 @@
     },
     "effort": {
       "type": "string",
-      "enum": ["low", "medium", "high", "max"],
+      "enum": ["low", "medium", "high", "xhigh", "max"],
       "description": "Optional pinned reasoning-effort level. Projects into the generated .claude/agents/<name>.md frontmatter (`effort:`) on hosts with an effort knob; ignored elsewhere. Orthogonal to `model_tier`. Omit for host-default effort.",
       "$comment": "road-to-ecosystem-harvest-skill-quality-gates Phase 4, Source S."
     },

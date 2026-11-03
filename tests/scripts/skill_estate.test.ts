@@ -189,6 +189,10 @@ describe('the live corpus', () => {
         // 11488 -> 11487 on 2026-11-03: inbox round 2026-11-r widened the
         // `supply-chain-intake` description to plugins, mods and agent skills,
         // one token shorter than before.
+        // 2026-11-03: `adversarial-review`'s description routes to
+        // `code-review-lens`, the renamed `code-review`, and `mcp-tool-use`'s
+        // description was tightened by the same amount, so the total holds at
+        // 11488 (road-to-a-name-no-host-already-owns 1.1/1.2).
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(303);
         expect(e.skill_description_tokens).toBe(11487);

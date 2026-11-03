@@ -128,6 +128,52 @@ describe('applyFlips', () => {
     });
 });
 
+describe('observationsFromAuditLines joins the head verdict to its ask by work_id', () => {
+    const ask = (i: number): Record<string, unknown> => ({
+        ts: '2026-11-02T10:00:00.000Z',
+        work_id: `ask-${String(i)}`,
+        phase: 'implement',
+        orchestration: { route_taken: 'ask', hand_kind: 'classify', route_billing: 'free-quota', verified: 'skipped' },
+    });
+    const verify = (i: number, verified: string, ts = '2026-11-02T10:05:00.000Z', extra: Record<string, unknown> = {}): Record<string, unknown> => ({
+        ts,
+        work_id: `ask-${String(i)}`,
+        phase: 'verify',
+        orchestration: { route_taken: 'ask', verified, ...extra },
+    });
+
+    it('30 free asks with 30 head pass lines do not revert the kind', () => {
+        const lines = Array.from({ length: REVERT_MIN_SAMPLE }, (_, i) => [ask(i), verify(i, 'pass')]).flat();
+        const live = observationsFromAuditLines(lines);
+        expect(live).toHaveLength(REVERT_MIN_SAMPLE);
+        expect(live.every((o) => o.verified === 'pass' && o.kind === 'classify')).toBe(true);
+        const root = tmpRoot();
+        applyFlips(root, { shadow: [stats()], live: [], now: T_FLIP });
+        expect(applyFlips(root, { shadow: [stats()], live, now: T_LATER })).toEqual([]);
+        expect(isKindFlipped(root, 'classify')).toBe(true);
+    });
+
+    it('the verify line inherits billing from its ask, and the latest verdict wins', () => {
+        const live = observationsFromAuditLines([
+            ask(1),
+            verify(1, 'fail', '2026-11-02T10:06:00.000Z', { route_billing: 'free-quota', hand_kind: 'classify' }),
+            verify(1, 'pass', '2026-11-02T10:05:00.000Z'),
+        ]);
+        expect(live).toEqual([{ kind: 'classify', verified: 'fail', ts: '2026-11-02T10:00:00.000Z' }]);
+    });
+
+    it('an ask with no later verdict stays skipped; a verdict with no ask is dropped', () => {
+        expect(observationsFromAuditLines([ask(1), verify(2, 'pass')])).toEqual([
+            { kind: 'classify', verified: 'skipped', ts: '2026-11-02T10:00:00.000Z' },
+        ]);
+    });
+
+    it('a paid ask does not become free through its verify line', () => {
+        const paid = { ...ask(1), orchestration: { route_taken: 'ask', hand_kind: 'classify', route_billing: 'per-token', verified: 'skipped' } };
+        expect(observationsFromAuditLines([paid, verify(1, 'pass')])).toEqual([]);
+    });
+});
+
 describe('askOnce routes a typed ask to a free route only for a flipped kind', () => {
     function member(name: string, billing: string): ExternalAIClient {
         return {

@@ -257,7 +257,7 @@ Family semantics used for this pass:
 | adversarial-review | review | Keep | |
 | architecture-review-lens | review | Keep | judge dispatched by /review-changes. |
 | bug-analyzer | review | Keep | root-cause analysis of reported bugs. |
-| code-review | review | Keep | |
+| code-review-lens | review | Keep | |
 | decision-review | review | Keep | backward audit of a past decision. |
 | design-review | review | Keep | UI/UX review. |
 | judge-bug-hunter | review | Keep | |

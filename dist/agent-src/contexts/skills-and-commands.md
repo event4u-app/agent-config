@@ -65,7 +65,7 @@ Commands often chain together. Here are the main workflows:
   PHPStan/Rector  Self-review     Open PR       Address feedback
 ```
 
-**Skills used:** `code-refactoring`, `code-review`, `git-workflow`
+**Skills used:** `code-refactoring`, `code-review-lens`, `git-workflow`
 
 ### Agent Infrastructure
 

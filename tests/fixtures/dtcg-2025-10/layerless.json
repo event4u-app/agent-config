@@ -1,0 +1,9 @@
+{
+  "color": {
+    "brand": { "$type": "color", "$value": { "colorSpace": "srgb", "components": [0, 0.333, 1], "hex": "#0055FF" } },
+    "accent": { "$type": "color", "$value": "{color.brand}" }
+  },
+  "space": {
+    "md": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
+  }
+}

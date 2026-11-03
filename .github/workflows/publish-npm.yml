@@ -72,7 +72,7 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
+          # Actions cache left off: this job is privileged (lint rule privileged-job-cache).
 
       - name: Upgrade npm (Trusted Publishing requires >= 11.5.1)
         # Pin to the npm 11 line: npm@latest is now 12.x, which requires
@@ -82,12 +82,22 @@ jobs:
 
       - name: Resolve effective tag
         id: tag
+        # Free text reaches the shell only through env:, and the resolved name is
+        # held to a release-version shape so every later `steps.tag.outputs.name`
+        # interpolation reads a fixed-shape value (lint rule template-injection).
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ inputs.tag }}"
+            tag="$TAG_INPUT"
           else
             tag="${GITHUB_REF_NAME}"
           fi
+          case "$tag" in
+            *[!0-9A-Za-z.-]*|"")
+              echo "::error::tag '$tag' is not a release version" >&2
+              exit 1 ;;
+          esac
           echo "name=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Verify package version matches tag
@@ -209,12 +219,22 @@ jobs:
     steps:
       - name: Resolve tag and channel
         id: tag
+        # Free text reaches the shell only through env:, and the resolved name is
+        # held to a release-version shape so every later `steps.tag.outputs.name`
+        # interpolation reads a fixed-shape value (lint rule template-injection).
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ inputs.tag }}"
+            tag="$TAG_INPUT"
           else
             tag="${GITHUB_REF_NAME}"
           fi
+          case "$tag" in
+            *[!0-9A-Za-z.-]*|"")
+              echo "::error::tag '$tag' is not a release version" >&2
+              exit 1 ;;
+          esac
           echo "name=$tag" >> "$GITHUB_OUTPUT"
           # A prerelease never becomes the registry's latest entry.
           if [[ "$tag" == *-* ]]; then
@@ -252,7 +272,7 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: '22'
-          cache: 'npm'
+          # Actions cache left off: this job is privileged (lint rule privileged-job-cache).
 
       - name: Build and lint server.json
         if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'

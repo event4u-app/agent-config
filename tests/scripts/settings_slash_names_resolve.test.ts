@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SETTINGS = path.join(REPO_ROOT, 'src/server/schemas/settings.ts');
 /** Host commands no tree in this repo carries. */
-const HOST_BUILTINS = new Set(['model']);
+const HOST_BUILTINS = new Set(['model', 'code-review']);
 
 function commandNames(): Set<string> {
     const names = new Set<string>();

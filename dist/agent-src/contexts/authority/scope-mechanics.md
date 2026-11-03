@@ -118,7 +118,7 @@ User decides. Default: **3** when the current branch's name and scope match the 
 
 **Failure mode — opening a PR on a stale long-lived branch.** A pre-existing feature branch (e.g. `feat/X` last touched days ago) is still "the current branch" but its base — `main` — has moved on. Auto-generated artifacts (`agents/roadmaps-progress.md`, ownership matrices, condensed mirrors, hash files) are the canonical collision surface: any merged PR on `main` touched them, and the stale branch's copy is now a content conflict by construction. Opening a PR without fetching `main` first surfaces conflicts only after `gh pr create` has already published the broken PR.
 
-**Pre-PR freshness check — MANDATORY** (mirrored in [`/create-pr` Step 1b](../../commands/create-pr.md)). Before `gh pr create`:
+**Pre-PR freshness check — MANDATORY** (mirrored in [`/create-pr` Step 1b](../../commands/pr/create.md)). Before `gh pr create`:
 
 1. `git fetch origin {target-base} --quiet`.
 2. `git rev-list --count HEAD..origin/{target-base}` — commits behind base.

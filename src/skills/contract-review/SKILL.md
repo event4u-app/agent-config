@@ -65,6 +65,8 @@ List what the licensed attorney must decide (which clauses are counsel-led vs co
 
 Produce `review-frame.md` and `redline-suggestions.md` (see Output). Every artifact carries the `Jurisdiction:` tag and the work-product line below.
 
+Tag every cited authority (statute, article, case, guidance) per [`legal-practice-profile`](../legal-practice-profile/SKILL.md) § Source-tag + currency vocabulary — a cite with no current source is `[model knowledge — verify]`, never stated as settled.
+
 > ⚠️ Attorney review required on material use. This is a draft for a licensed attorney, not legal advice and not a legal conclusion.
 
 ## Related Skills
