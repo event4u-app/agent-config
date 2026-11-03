@@ -78,7 +78,7 @@ reaches them in a checkout without git or without an ignore file.
       marker skip `Library`, `Temp`, `Obj`, `Logs`, `UserSettings`; with an
       Unreal marker skip `Intermediate`, `Saved`, `Binaries`,
       `DerivedDataCache`. Never unconditional — these names occur elsewhere.
-      verify: `npx vitest run tests/scripts/code_graph_engine_caches.test.ts` -> 0, run in a tmp dir without git
+      verify: `npx vitest run tests/scripts/code_graph_engine_caches.test.ts` -> 0 (the test builds in a tmp dir without git)
 
 ## Phase 4 — Carry the round's other findings to their owners
 

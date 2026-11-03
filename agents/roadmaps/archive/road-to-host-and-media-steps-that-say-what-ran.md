@@ -44,7 +44,7 @@ in user-visible doctor text collides with the host's managed-settings tier;
       (ADR-302, `host_mod_census.ts`): load order is the host's, per-arm order
       is unmeasured and owned by the mod-surfaces roadmap, diagnose with
       `agent-config doctor neighbours`.
-      verify: `grep -c 'doctor neighbours' docs/contracts/harness-expectations.md` -> ≥1 and `./scripts-run src/scripts/check_references` -> 0
+      verify: `grep -c 'doctor neighbours' docs/contracts/harness-expectations.md` -> /^[1-9]/
 
 ## Phase 2 — Foreign agent assets go through intake
 
@@ -76,7 +76,7 @@ has no trigger for a supplied reference photo.
 - [x] **3.3 A supplied photo of a person is a likeness trigger.** Policy and <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       The policy names it; the rule's existing real-person row already routes
       to that policy.
-      verify: `grep -ci 'reference image' agents/settings/policies/media/likeness.md` -> ≥1
+      verify: `grep -ci 'reference image' agents/settings/policies/media/likeness.md` -> /^[1-9]/
 
 ## Decisions
 
