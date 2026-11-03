@@ -107,6 +107,7 @@ as a dependency — use zod v4's native export.
       error path.
       Done: toolTextResult sets isError from the payload status (error, not_found, no_catalogue); status unchanged; dispatch.test.ts -> 0 with one case per error path; CHANGELOG sentence handed to the release owner (this branch does not edit CHANGELOG.md).
       production entry: `src/cli/mcp/stdio.ts`
+      reach exempt: liteToolsTokenCost and LITE_TOOLS_TOKEN_CAP are budget figures only the cap test reads; isError is set in dispatch(), served by src/cli/mcp/stdio.ts
 - [x] **3.2 `limit` maximum 20** in schema and server, `clamped_from` reported. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/mcp/dispatch.ts -->
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0 with a case
       calling limit 100000 and getting ≤ 20 rows, and
