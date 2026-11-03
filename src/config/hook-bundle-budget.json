@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1567400,
+    "max_bytes": 1570600,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -154,6 +154,15 @@
             "what_was_added": "Profile awareness on the session-register path, which runs on session_start: `session_profile` in `_lib/session_register.ts` (reads only the environment) plus `install/agentSwitchProfile.ts` (2,033 B), newly pulled into the bundle so the profile is parsed by the one existing matching rule rather than a second copy; and `_lib/provider_home.ts` (903 B), the single resolver for `CLAUDE_CONFIG_DIR` / `CODEX_HOME` that `claude_plugin.claude_config_dir` now delegates to. Measured 1,566,892 bytes by the gate, 4,892 over the 1,562,000 ceiling; the base sat at 1,561,506.",
             "why_it_could_not_be_avoided": "Room was looked for first: `sessions_cli.ts` (16,380 B) rides in through `env_session_id` and `other_worktree_branches_detailed`, but extracting those is an unrelated refactor of two hooks and a CLI; the schema-flag code added to it is tree-shaken because the bundled entry never reaches `cmd_list`. Inlining a reduced agent-switch path match would save about 1.5 KB at the cost of a second matching rule that drifts from the first. The profile must be recorded when the session registers, in the hook, because a later reader runs in another process with another environment.",
             "what_would_have_caught_it": "Nothing earlier: the growth is the feature. Sized to the measurement plus about 500 bytes of rebuild jitter."
+        },
+        {
+            "date": "2026-11-03",
+            "from": 1567400,
+            "to": 1570600,
+            "by": "agent, analysis/inbox-2026-11-n (eight roadmaps executed in one round)",
+            "what_was_added": "Fixes that run on dispatched hook paths: the skill-route hook reads the installer's name-only record so it never points at a skill the listing sent to name-only (road-to-a-resident-set-chosen-on-purpose 2.1); the forwarded-session frame recognised in machine_wake so a relayed message writes no pr-merge grant, and settings.local.json fenced by the config-weakening guard (road-to-boundaries-that-hold-at-release-and-runtime 1.1, 1.2); segment-wise containment in agent_settings (1.3); reserved-name normalisation in claude_builtin_names (road-to-a-name-no-host-already-owns 1.4); memory-recall and transcript-scan trims recorded instead of rendered as empty (road-to-a-record-that-says-what-it-lost 4.x). Measured 1,570,041 bytes by the gate, 2,641 over the 1,567,400 ceiling.",
+            "why_it_could_not_be_avoided": "Each addition is a correctness or trust-boundary fix on a path the dispatch bundle already carries; none adds a dependency (YAML package count unchanged at 1). Moving any of them to a lazy chunk would relocate a guard that must run on every matching event, which a chunk does not guarantee on the spawn fallback's latency budget.",
+            "what_would_have_caught_it": "Nothing earlier: eight lanes ran in parallel worktrees and the bundle is measured over their merge. Sized to the measurement plus about 550 bytes of rebuild jitter."
         }
     ],
     "chunks": [
