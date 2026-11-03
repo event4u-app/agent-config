@@ -1,0 +1,6 @@
+{
+  "primitive": {
+    "a": { "$type": "color", "$value": "#123456" },
+    "b": { "$type": "color", "$ref": "#/primitive/a/$value" }
+  }
+}

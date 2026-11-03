@@ -31,7 +31,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
 
 ## Phase 1 — Token files read as written
 
-- [ ] **1.1 A layerless file is read; emptiness is an error.** In
+- [x] **1.1 A layerless file is read; emptiness is an error.** In
       `src/skills/design-tokens/scripts/tokens.ts` `generateCss`: when none of
       `primitive`/`semantic`/`component`/`dark` is present, flatten every
       top-level group the way `semantic` is flattened today; when layers exist
@@ -40,20 +40,20 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `tests/fixtures/dtcg-2025-10/`, test in `tests/scripts/dtcg_conformance.test.ts`.
       The starter golden stays byte-identical; the empty-`{}` case stays 0/0.
       verify: `npx vitest run tests/scripts/dtcg_conformance.test.ts tests/scripts/skills_design_tokens_tokens.test.ts` -> 0
-- [ ] **1.2 An unresolvable reference is an error.** `resolveReference`
+- [x] **1.2 An unresolvable reference is an error.** `resolveReference`
       (`tokens.ts:178-197`) throws `TokenValueError` naming the token path and
       the missing target; `generate` exits 1. Rewrite the pinning case at
       `tests/scripts/skills_design_tokens_tokens.test.ts:118` to the new
       expectation (it was the defect, not the guard).
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t "unresolvable"` -> 0
-- [ ] **1.3 `$root` named, `$extends` and spec-form `$ref` never silent.**
+- [x] **1.3 `$root` named, `$extends` and spec-form `$ref` never silent.**
       In `flattenTokens` (`tokens.ts:310-327`): a `$root` key takes the group's
       own name (no `$` in any custom-property name); a group carrying `$extends`
       or a token carrying `$ref` without `$value` raises a named
       `TokenValueError` ("not supported: $extends at <path>") instead of being
       dropped or emitted verbatim. Resolution of both is a later step.
       verify: `npx vitest run tests/scripts/dtcg_conformance.test.ts -t "root|extends|ref"` -> 0
-- [ ] **1.4 Arrays never reach string concatenation.** `tokenValueToCss`
+- [x] **1.4 Arrays never reach string concatenation.** `tokenValueToCss`
       (`tokens.ts:284-305`): `shadow` (object or array) → one `box-shadow`
       value; `cubicBezier` → `cubic-bezier(a, b, c, d)`; a `fontFamily` array →
       a comma list, names with spaces quoted; any other array or a
@@ -62,7 +62,7 @@ clicks on a live URL unguarded (`uiRenderInteract.ts:163-187`).
       `src/skills/design-tokens/scripts/tokens.mjs` from the source. This closes
       the residue of the archived brand roadmap's AC-5.
       verify: `npx vitest run tests/scripts/dtcg_conformance.test.ts -t "array|shadow|cubic"` -> 0 and `grep -c "object Object" tests/scripts/dtcg_conformance.test.ts` shows the assertion is an absence check
-- [ ] **1.5 A front-matter scale is reported, never silent.**
+- [x] **1.5 A front-matter scale is reported, never silent.**
       `src/scripts/_lib/design_lock.ts` and the `src/scripts/design_lock.ts`
       CLI: a DESIGN.md whose YAML front matter declares `colors`, `rounded` or
       `spacing` but has no Lock line prints one line — scale read (n colours,

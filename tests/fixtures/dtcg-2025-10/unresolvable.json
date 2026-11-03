@@ -1,0 +1,3 @@
+{
+  "semantic": { "color": { "primary": { "$type": "color", "$value": "{primitive.color.nope}" } } }
+}

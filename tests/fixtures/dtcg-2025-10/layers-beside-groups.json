@@ -1,0 +1,4 @@
+{
+  "primitive": { "color": { "a": { "$type": "color", "$value": "#111111" } } },
+  "brand": { "color": { "b": { "$type": "color", "$value": "#222222" } } }
+}
