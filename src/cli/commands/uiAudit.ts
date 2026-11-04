@@ -348,6 +348,8 @@ export function gitHead(cwd: string): string | null {
             cwd,
             encoding: 'utf8',
             stdio: ['ignore', 'pipe', 'ignore'],
+            // Runs on every UI write: a stalled process costs the answer, never the hook event.
+            timeout: 3000,
         }).trim();
     } catch {
         return null;

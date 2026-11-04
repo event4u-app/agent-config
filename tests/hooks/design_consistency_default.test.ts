@@ -248,6 +248,25 @@ describe('the role map is recomputed only when a primitive can have changed', ()
     });
 });
 
+describe('a stalled version-control process', () => {
+    it('costs the stamp within the timeout, never the hook event', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-stall-'));
+        const bin = path.join(dir, 'bin');
+        fs.mkdirSync(bin);
+        // A stand-in for the binary that never answers.
+        fs.writeFileSync(path.join(bin, 'git'), '#!/bin/sh\nsleep 30\n', { mode: 0o755 });
+        const saved = process.env['PATH'];
+        process.env['PATH'] = `${bin}${path.delimiter}${saved ?? ''}`;
+        const t = Date.now();
+        try {
+            expect(dirtyPrimitives(dir)).toBeNull();
+        } finally {
+            process.env['PATH'] = saved;
+        }
+        expect(Date.now() - t).toBeLessThan(10_000);
+    }, 20_000);
+});
+
 describe('the stamp of uncommitted primitives', () => {
     it('a modified file that loses its last primitive still changes the stamp', () => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-consistency-stamp-'));

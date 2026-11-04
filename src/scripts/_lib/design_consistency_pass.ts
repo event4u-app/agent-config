@@ -9,9 +9,10 @@
  * Two postures in one call, per `docs/contracts/concern-activation-policy.md`:
  *
  *   consistency-raw-control      RETURNED. A retroactive shadow window of
- *                                1,565 UI writes met all four flip conditions
- *                                (docs/CLAIMS.md `design-consistency-default-on`);
- *                                the caller delivers it only with `shadow: false`.
+ *                                1,565 UI writes met conditions 1, 2 and 4; the
+ *                                benefit of condition 3 is an estimate
+ *                                (docs/CLAIMS.md `design-consistency-default-on`),
+ *                                so the caller delivers it only with `shadow: false`.
  *   consistency-sibling-metrics  SHADOW. The same window read no box metric on
  *                                either side of a single comparison, so it has
  *                                no distribution to derive a tolerance from.
@@ -47,6 +48,8 @@ export function dirtyPrimitives(root: string): string[] | null {
             cwd: root,
             encoding: 'utf8',
             stdio: ['ignore', 'pipe', 'ignore'],
+            // Runs on every UI write: a stalled process costs the answer, never the hook event.
+            timeout: 3000,
         });
     } catch {
         return null;
