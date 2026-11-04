@@ -55,25 +55,25 @@ empty verifier and on an authority outside its enum
 
 ## Phase 1 — The slot
 
-- [x] **1.1 Declare the slot.** A settings key naming zero or more configured
+- [x] **1.1 Declare the slot.** A settings key naming zero or more configured <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       providers (MCP server name plus the evidence kinds it yields), class A,
       empty by default. `docs/contracts/reconstruction-obligations.md` names
       which equivalence tiers a provider observation may verify and which it
       may not (it never lifts a `visible-only` row to parity on its own).
       Done: `reconstruction.observation_providers` (list of `{server, kinds}`, kinds `runtime|browser|binary|device`, default `[]`) in the template and `src/server/schemas/settings.ts`; contract § Observation providers names `ux`/`behavior`/`protocol` as the tiers a provider may verify, refuses `byte` and `inspired-by` in `validateObligation`, and keeps `visible-only` out of parity. Deviation: class **C**, not A — it is a list of trusted evidence sources that decides which MCP server is called, so C-tests 2 and 5 of `settings-classes.md` fire; the plan yielded to the contract. `lint_settings_classes` -> A=11 B=4 C=104.
-- [x] **1.2 Read it in the reference door.** The `--transfer` section of
+- [x] **1.2 Read it in the reference door.** The `--transfer` section of <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `src/domains/analysis-workbench/analyze/reference/command.md` checks the
       slot, calls a configured provider only through the host's MCP tools, and
       records each observation with its provider as `authority`.
       Done: § Runtime evidence — observation providers in the reference door runs `reconstruction_ledger --providers`, calls a listed provider only through the host's MCP tools, and records it as `verifier: provider:<server>` with an enum authority (`controlled-replay` / `external-claim`). Deviation, per Risk 2: the provider goes into `verifier`, not `authority` — Phase 0 refuses an authority outside the enum, and the enum stays unwidened.
-- [x] **1.3 Absence is a stated result.** No provider, or a provider that does
+- [x] **1.3 Absence is a stated result.** No provider, or a provider that does <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/reconstruction_ledger.ts -->
       not answer: the run records `coverage: unknown` for the runtime half and
       never treats it as "not observed".
       Done: `--providers` prints `runtime evidence unavailable · no observation provider configured · coverage: unknown` and exits 0 with the slot empty; a malformed slot exits 2 instead of reading as empty; the door records a non-answering provider as `coverage: unknown`. `npx vitest run tests/scripts/reconstruction_observation_provider.test.ts` -> 0 (11 tests).
 
 ## Phase 2 — Proof
 
-- [x] **2.1 A ledger row closes on provider evidence.** A test feeds a recorded
+- [x] **2.1 A ledger row closes on provider evidence.** A test feeds a recorded <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       provider observation into `evaluateLedger` and shows a `behavior` row
       move from `open` to `verified` — the ledger verdict `open` → `closed` —
       with the observation's id among the context's `evidenceIds`; without the
