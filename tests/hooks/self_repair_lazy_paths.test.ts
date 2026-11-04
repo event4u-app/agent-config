@@ -103,4 +103,39 @@ describe('self-repair through both dispatch paths', () => {
         expect(listRecords(project)).toHaveLength(1);
         expect(res.stdout).toContain('<self-repair-queue>');
     });
+
+    it('with the chunk missing, the built dispatcher falls back to the spawn path exactly once', (t) => {
+        const built = path.resolve('dist', 'hooks');
+        // skip-reason: dist/ is untracked, so a clean checkout has no bundle to run.
+        if (!fs.existsSync(path.join(built, 'dispatch.js'))) {
+            t.skip('dist/hooks is not built');
+            return;
+        }
+        // A package layout identical to the built one except for the chunk:
+        // the loader returns null and the dispatcher must spawn the script.
+        const pkg = path.join(tmp, 'pkg');
+        fs.mkdirSync(path.join(pkg, 'dist', 'hooks'), { recursive: true });
+        for (const name of fs.readdirSync(built)) {
+            if (name.startsWith('self_repair.chunk')) continue;
+            fs.cpSync(path.join(built, name), path.join(pkg, 'dist', 'hooks', name), { recursive: true });
+        }
+        fs.symlinkSync(path.resolve('src'), path.join(pkg, 'src'));
+        fs.symlinkSync(path.resolve('node_modules'), path.join(pkg, 'node_modules'));
+        fs.copyFileSync(path.resolve('package.json'), path.join(pkg, 'package.json'));
+        const project = path.join(tmp, 'project-fallback');
+        fs.mkdirSync(project);
+        const res = spawnSync(
+            process.execPath,
+            [path.join(pkg, 'dist', 'hooks', 'dispatch.js'), '--platform', 'claude', '--event', 'user_prompt_submit', '--native-event', 'UserPromptSubmit', '--project-dir', project, '--min-version', '1'],
+            {
+                input: JSON.stringify({ prompt: PROMPT, hook_event_name: 'UserPromptSubmit', session_id: 't', cwd: project }),
+                encoding: 'utf-8',
+            },
+        );
+        expect(res.status).toBe(0);
+        const records = listRecords(project);
+        expect(records).toHaveLength(1);
+        expect(records[0]!.occurrences).toBe(1);
+        expect(res.stdout.split('<self-repair-queue>').length - 1).toBe(1);
+    });
 });
