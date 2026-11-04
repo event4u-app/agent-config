@@ -52,10 +52,50 @@ export function canVerify(o: Obligation): boolean {
     return o.required_cases.length > 0 && missingCases(o).length === 0 && o.verifier_authority !== 'analyst-inference';
 }
 
+/** A verifier written as `provider:<server>` is an observation provider (contract § Observation providers). */
+export const PROVIDER_VERIFIER_PREFIX = 'provider:';
+/** Byte equality needs a byte comparison and `inspired-by` promises nothing observable. */
+export const PROVIDER_VERIFIABLE_TIERS: readonly EquivalenceTier[] = ['ux', 'behavior', 'protocol'];
+
+export const OBSERVATION_KINDS = ['runtime', 'browser', 'binary', 'device'] as const;
+export type ObservationKind = (typeof OBSERVATION_KINDS)[number];
+
+/** One entry of `reconstruction.observation_providers`. */
+export interface ObservationProvider {
+    server: string;
+    kinds: ObservationKind[];
+}
+
+/** Read the slot as written; a malformed entry is an error, never a silently dropped provider. */
+export function parseObservationProviders(raw: unknown): { providers: ObservationProvider[]; errors: string[] } {
+    if (raw === undefined || raw === null) return { providers: [], errors: [] };
+    if (!Array.isArray(raw)) return { providers: [], errors: ['reconstruction.observation_providers must be a list'] };
+    const providers: ObservationProvider[] = [];
+    const errors: string[] = [];
+    raw.forEach((entry, i) => {
+        const e = entry as { server?: unknown; kinds?: unknown } | null;
+        const server = e !== null && typeof e === 'object' && typeof e.server === 'string' ? e.server.trim() : '';
+        const kinds = e !== null && typeof e === 'object' && Array.isArray(e.kinds) ? e.kinds : [];
+        if (server === '') errors.push(`provider ${i}: \`server\` must be a non-empty MCP server name`);
+        const bad = kinds.filter((k) => !(OBSERVATION_KINDS as readonly unknown[]).includes(k));
+        if (kinds.length === 0) errors.push(`provider ${i}: \`kinds\` must name at least one of ${OBSERVATION_KINDS.join(', ')}`);
+        if (bad.length > 0) errors.push(`provider ${i}: unknown kind ${bad.map(String).join(', ')}`);
+        if (server !== '' && kinds.length > 0 && bad.length === 0) providers.push({ server, kinds: kinds as ObservationKind[] });
+    });
+    return { providers, errors };
+}
+
+export function isProviderVerifier(verifier: string | undefined): boolean {
+    return (verifier ?? '').startsWith(PROVIDER_VERIFIER_PREFIX);
+}
+
 export function validateObligation(o: Obligation): string[] {
     const errors: string[] = [];
     if (!EQUIVALENCE_TIERS.includes(o.tier)) errors.push(`${o.id}: unknown equivalence tier ${String(o.tier)}`);
     if (!OBLIGATION_STATUSES.includes(o.status)) errors.push(`${o.id}: unknown status ${String(o.status)}`);
+    if (o.status === 'verified' && isProviderVerifier(o.verifier) && !PROVIDER_VERIFIABLE_TIERS.includes(o.tier)) {
+        errors.push(`${o.id}: an observation provider cannot verify tier ${String(o.tier)}`);
+    }
     if (o.status === 'verified') {
         if (o.required_cases.length === 0) errors.push(`${o.id}: verified without any required case`);
         const missing = missingCases(o);

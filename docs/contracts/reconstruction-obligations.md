@@ -84,6 +84,30 @@ claims a stricter tier than its rows prove.
 `required_cases` list, …) or a file it cannot read. A file without
 `evidence_ids` is refused rather than read as "no evidence needed".
 
+## Observation providers
+
+A consumer may name runtime, browser, binary or device observation tools it has
+configured as MCP servers in `reconstruction.observation_providers` (class C,
+default empty). The reference door calls one only through the host's MCP tools
+and only while the slot names it; nothing is installed for it.
+
+- **The provider is the verifier, never the authority.** A row it checks
+  carries `verifier: provider:<server>` and an authority from the enum above:
+  `controlled-replay` when the provider drove the destination with recorded
+  inputs, `external-claim` when it only reported what it saw. A provider name
+  written as `verifier_authority` is refused like any other value outside the
+  enum.
+- **Tiers it may verify:** `ux`, `behavior` and `protocol`. A `verified` row
+  whose verifier is a provider and whose tier is `byte` or `inspired-by` is
+  refused: byte equality needs a byte comparison, not an observation, and
+  `inspired-by` promises no behavior to observe.
+- **It never lifts `visible-only` on its own.** A screen or screenshot a
+  provider captured is still `visible-only`; the row becomes `verified` only
+  when every required case carries an observation of the behavior behind it.
+- **Absence is a result.** With the slot empty, or a named provider that does
+  not answer, the run records `coverage: unknown` for the runtime half and says
+  so in one line. That is never read as "observed, nothing found".
+
 ## Non-goals
 
 - No proprietary code, assets, keys or data are copied into the destination.

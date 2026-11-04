@@ -11,21 +11,49 @@
  * outside it.
  *
  * Usage: ./scripts-run src/scripts/reconstruction_ledger --check <file>
+ *        ./scripts-run src/scripts/reconstruction_ledger --providers [--root <dir>]
  *
- * Exit 0 closed · 1 open or unknown · 2 invalid, or a usage / read error.
+ * --check: exit 0 closed · 1 open or unknown · 2 invalid, or a usage / read error.
+ * --providers: exit 0 configured or not (none is `coverage: unknown`) · 2 malformed slot.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { evaluateLedger, shapeErrors, type Obligation } from './_lib/reconstruction_ledger.js';
+import { load_agent_settings } from './_lib/agent_settings.js';
+import { evaluateLedger, parseObservationProviders, shapeErrors, type Obligation } from './_lib/reconstruction_ledger.js';
 
 function fail(message: string): number {
     process.stderr.write(`reconstruction_ledger: ${message}\n`);
     return 2;
 }
 
+/**
+ * `--providers [--root <dir>]`: which observation providers the run may call.
+ * Exit 0 whether or not one is configured — absence is a result, stated as
+ * `coverage: unknown` — and 2 only when the slot itself is malformed.
+ */
+function providers(argv: readonly string[]): number {
+    const r = argv.indexOf('--root');
+    const root = r >= 0 ? argv[r + 1] : process.cwd();
+    if (root === undefined) return fail('usage: reconstruction_ledger --providers [--root <dir>]');
+    const section = (load_agent_settings({ cwd: root }) as Record<string, unknown>)['reconstruction'];
+    const raw = section !== null && typeof section === 'object' ? (section as Record<string, unknown>)['observation_providers'] : undefined;
+    const { providers: list, errors } = parseObservationProviders(raw);
+    if (errors.length > 0) {
+        for (const e of errors) process.stderr.write(`reconstruction_ledger: ${e}\n`);
+        return 2;
+    }
+    if (list.length === 0) {
+        process.stdout.write('runtime evidence unavailable · no observation provider configured · coverage: unknown\n');
+        return 0;
+    }
+    for (const p of list) process.stdout.write(`provider ${p.server} · ${p.kinds.join(', ')}\n`);
+    return 0;
+}
+
 export function main(argv: readonly string[]): number {
+    if (argv.includes('--providers')) return providers(argv);
     const i = argv.indexOf('--check');
     const file = i >= 0 ? argv[i + 1] : undefined;
     if (file === undefined) return fail('usage: reconstruction_ledger --check <file>');
