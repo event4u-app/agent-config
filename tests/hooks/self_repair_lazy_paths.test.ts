@@ -54,7 +54,7 @@ describe('self-repair through both dispatch paths', () => {
         expect(typeof main).toBe('function');
         vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
         setHookStdinOverride(payload(viaLoader));
-        expect(main!([])).toBe(0);
+        expect(main!([])).toBe(2);
         clearHookStdinOverride();
         vi.restoreAllMocks();
 
@@ -63,12 +63,44 @@ describe('self-repair through both dispatch paths', () => {
             encoding: 'utf-8',
             env: { ...process.env, CLAUDE_CONFIG_DIR: path.join(tmp, 'claude') },
         });
-        expect(res.status).toBe(0);
+        expect(res.status).toBe(2);
         expect(res.stdout).toContain('<self-repair-queue>');
 
         const loaderRecords = stripTimes(viaLoader);
         expect(loaderRecords).toHaveLength(1);
         expect(loaderRecords).toEqual(stripTimes(viaSpawn));
         expect(fs.existsSync(path.join(viaSpawn, 'agents', 'runtime', 'self-repair', '_subject-index.json'))).toBe(true);
+    });
+
+    it('reads the prompt the dispatcher nests under `payload`', () => {
+        const root = path.join(tmp, 'nested');
+        vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        setHookStdinOverride(
+            JSON.stringify({ event: 'user_prompt_submit', workspace_root: root, payload: { prompt: PROMPT } }),
+        );
+        expect(resolveConcernMain(SCRIPT)!([])).toBe(2);
+        expect(listRecords(root)).toHaveLength(1);
+    });
+
+    it('the built dispatcher writes the record and delivers the queue line to the host', (t) => {
+        const dispatch = path.resolve('dist', 'hooks', 'dispatch.js');
+        // skip-reason: dist/ is untracked, so a clean checkout has no bundle to run.
+        if (!fs.existsSync(dispatch) || !fs.existsSync(path.resolve('dist', 'hooks', 'self_repair.chunk.cjs'))) {
+            t.skip('dist/hooks is not built');
+            return;
+        }
+        const project = path.join(tmp, 'project');
+        fs.mkdirSync(project);
+        const res = spawnSync(
+            process.execPath,
+            [dispatch, '--platform', 'claude', '--event', 'user_prompt_submit', '--native-event', 'UserPromptSubmit', '--project-dir', project, '--min-version', '1'],
+            {
+                input: JSON.stringify({ prompt: PROMPT, hook_event_name: 'UserPromptSubmit', session_id: 't', cwd: project }),
+                encoding: 'utf-8',
+            },
+        );
+        expect(res.status).toBe(0);
+        expect(listRecords(project)).toHaveLength(1);
+        expect(res.stdout).toContain('<self-repair-queue>');
     });
 });

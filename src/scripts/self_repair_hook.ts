@@ -14,7 +14,8 @@
  *     prompt reaches the same agent one turn later at a fraction of the tokens.
  *   - every other slot — clean no-op.
  *
- * ADVISORY BY CONSTRUCTION (`fail_closed: false`, always exit 0). Blocking a
+ * ADVISORY BY CONSTRUCTION (`fail_closed: false`; exit 0, or the advisory warn
+ * code 2 when it carries the queue line — never the block code). Blocking a
  * turn-end on a heuristic is the failure mode the enforcement-projection and
  * recursive-verification nulls both warn about; this hook records, it does not
  * gate. The one outward step (push + PR, or an issue) stays behind the
@@ -42,6 +43,7 @@ import { readHookStdin } from './hooks/hook_stdin.js';
 import { emitDefectShadow } from './hooks/telemetry_self_repair.js';
 
 const EXIT_ALLOW = 0;
+const EXIT_WARN = 2;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -195,15 +197,26 @@ export function main(): number {
     const root = workspaceRoot(env);
     const now = new Date().toISOString();
     const findings: DefectFinding[] = [];
+    // The dispatcher nests the host's own payload under `payload`; a direct
+    // caller passes the fields at the top level. Reading only the top level
+    // meant no prompt and no transcript ever reached a detector in production.
+    const payload = isObject(env['payload']) ? env['payload'] : env;
+    const field = (...keys: string[]): string => {
+        for (const k of keys) {
+            const v = str(payload[k]) || str(env[k]);
+            if (v !== '') return v;
+        }
+        return '';
+    };
 
     if (slot === 'user_prompt_submit') {
-        const prompt = str(env['prompt'] ?? env['user_prompt'] ?? env['text']);
+        const prompt = field('prompt', 'user_prompt', 'text');
         const f = detectUserReport(prompt);
         if (f !== null) {
             findings.push(f);
         }
     } else {
-        const tp = str(env['transcript_path'] ?? env['transcriptPath']);
+        const tp = field('transcript_path', 'transcriptPath');
         findings.push(...runDetectors(readTurn(tp, pinnedLanguage(env))));
     }
 
@@ -247,18 +260,21 @@ export function main(): number {
     if (open.length === 0) {
         return EXIT_ALLOW;
     }
+    // `additional_context` under the advisory warn code is the shape the
+    // dispatcher forwards on `user_prompt_submit`; a `context` key is forwarded
+    // on `session_start` only, so the queue line used to reach no model.
     process.stdout.write(
         `${JSON.stringify({
-            decision: 'allow',
+            decision: 'warn',
             reason: `self-repair: ${open.length} open record(s)`,
-            context: buildQueueLine(
+            additional_context: buildQueueLine(
                 open.length,
                 open[0]!.defect_class,
                 open[0]!.occurrences,
             ),
         })}\n`,
     );
-    return EXIT_ALLOW;
+    return EXIT_WARN;
 }
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
