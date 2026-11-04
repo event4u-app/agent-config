@@ -152,6 +152,8 @@ function _is_executable_path(p: string): boolean {
     );
 }
 
+const _TEST_PATH = /(?:^tests\/|\.(?:test|spec)\.[cm]?[jt]sx?$)/u;
+
 function _touches_executable(files: SpanCommit['files']): boolean {
     return files.some((f) => _is_executable_path(f.path));
 }
@@ -332,7 +334,9 @@ export function derive_category_hits(
             return null;
         }
         for (const f of files) {
-            if (f.status.startsWith('D') || !_is_executable_path(f.path)) {
+            // Tests never ship (package.json `files` excludes them), and the
+            // highlight tests assert on the label text itself — 20.1.0 red.
+            if (f.status.startsWith('D') || !_is_executable_path(f.path) || _TEST_PATH.test(f.path)) {
                 continue;
             }
             let verdict = residualPath.get(f.path);
