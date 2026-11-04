@@ -483,10 +483,10 @@ export const settingsSchema = z.object({
         }).prefault({}),
         design_consistency: z.object({
             enabled: z.boolean().default(true).describe(
-                'Control consistency on a UI write (road-to-a-control-that-matches-its-neighbours 3.8). Default on, independent of design_pass. A raw select, input or textarea written where the project already has its own Select, Input or Textarea is delivered as one advisory line naming the project control; it never blocks. A file that cannot render the component (a server template, a handover prototype) is not measured. Turned on after a retroactive shadow window met all four conditions of the concern-activation policy. The box-metrics half stays in shadow: while this is enabled, every UI write adds a row to agents/runtime/state/design-consistency-shadow.jsonl and nothing is shown. Disabled, nothing runs and nothing is recorded.',
+                'Control consistency on a UI write (road-to-a-control-that-matches-its-neighbours 3.8). Default on, independent of design_pass. A raw select, input or textarea written where the project already has its own Select, Input or Textarea is recorded, and with shadow false delivered as one advisory line naming the project control; it never blocks. A file that cannot render the component (a server template, a handover prototype) is not measured. Turned on after a retroactive shadow window met all four conditions of the concern-activation policy. The box-metrics half stays in shadow: while this is enabled, every UI write adds a row to agents/runtime/state/design-consistency-shadow.jsonl and nothing is shown. Disabled, nothing runs and nothing is recorded.',
             ),
-            shadow: z.boolean().default(false).describe(
-                'With design_consistency enabled, true keeps the check running and recording to the shadow log but delivers no finding. The rollback of the activation policy reverse trigger: the rule returns to measurable shadow rather than off.',
+            shadow: z.boolean().default(true).describe(
+                'With design_consistency enabled, true keeps the check running and recording to the shadow log but delivers no finding. Default true until definitions are read by a parser rather than patterns (owner, 2026-11-04); false delivers the advisory line. Also the rollback of the activation policy reverse trigger: the rule returns to measurable shadow rather than off.',
             ),
         }).prefault({}),
         ui_route_nudge: z.object({

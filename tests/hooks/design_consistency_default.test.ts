@@ -1,6 +1,7 @@
-// road-to-a-control-that-matches-its-neighbours 3.8: the consistency check is
-// on without a setting, off with one, delivered as advisory context, and every
-// write it sees adds a shadow row. Run end to end, because the default lives in
+// road-to-a-control-that-matches-its-neighbours 3.8: the consistency check runs
+// without a setting and records every write it sees as a shadow row, but by
+// default delivers nothing (owner, 2026-11-04); `shadow: false` turns delivery
+// on, `enabled: false` turns the check off. Run end to end, because the default lives in
 // `main` and a unit test of the parts cannot see whether it is wired.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -21,6 +22,7 @@ import {
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO, 'src', 'scripts', 'hooks', 'design_pass_hook.ts');
 const SHADOW = path.join('agents', 'runtime', 'state', 'design-consistency-shadow.jsonl');
+const DELIVER = 'hooks:\n  design_consistency:\n    shadow: false\n';
 
 let dir = '';
 afterEach(() => {
@@ -54,18 +56,26 @@ function run(root: string, file: string): { status: number | null; stdout: strin
     return { status: r.status, stdout: r.stdout };
 }
 
-describe('the consistency check ships on', () => {
-    it('with no setting at all, a raw select beside the project Select is delivered', () => {
+describe('the consistency check ships recording, not speaking', () => {
+    it('with no setting at all, a raw select is recorded and nothing is delivered', () => {
         const root = project();
+        expect(run(root, 'app/filters.tsx')).toEqual({ status: 0, stdout: '' });
+        const rows = fs.readFileSync(path.join(root, SHADOW), 'utf8').trim().split('\n');
+        expect(JSON.parse(rows[0]!)).toMatchObject({ file: 'app/filters.tsx', raw_control: 1 });
+    });
+
+    it('a settings file that never names the key leaves it recording and silent', () => {
+        const root = project('hooks:\n  design_pass:\n    enabled: false\n');
+        expect(run(root, 'app/filters.tsx')).toEqual({ status: 0, stdout: '' });
+        expect(fs.existsSync(path.join(root, SHADOW))).toBe(true);
+    });
+
+    it('shadow: false delivers a raw select beside the project Select', () => {
+        const root = project(DELIVER);
         const r = run(root, 'app/filters.tsx');
         expect(r.status).toBe(2);
         expect(r.stdout).toContain('raw select');
         expect(r.stdout).toContain("this project's select is Select");
-    });
-
-    it('a settings file that never names the key leaves it on', () => {
-        const root = project('hooks:\n  design_pass:\n    enabled: false\n');
-        expect(run(root, 'app/filters.tsx').status).toBe(2);
     });
 
     it('an explicit opt-out silences it', () => {
@@ -123,7 +133,7 @@ describe('the consistency check ships on', () => {
 // the real dispatcher, with the absolute path a host sends.
 describe('through the dispatcher', () => {
     it('a raw select written by a host is recorded and delivered', () => {
-        const root = project();
+        const root = project(DELIVER);
         const r = spawnSync(
             'npx',
             ['tsx', path.join(REPO, 'src', 'scripts', 'hooks', 'dispatch_entry.ts'), '--platform', 'claude', '--event', 'post_tool_use', '--project-dir', root],
@@ -156,6 +166,7 @@ describe('the role map follows uncommitted primitives', () => {
         const git = (...a: string[]) =>
             spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...a], { cwd: dir, encoding: 'utf8' });
         w('app/home.tsx', 'export const H = () => <main />;\n');
+        w('.agent-settings.yml', DELIVER);
         git('init', '-q');
         git('add', '-A');
         git('commit', '-q', '-m', 'init');
@@ -183,6 +194,7 @@ describe('the role map is recomputed only when a primitive can have changed', ()
             spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', ...a], { cwd: dir, encoding: 'utf8' });
         w('components/ui/select.tsx', 'export function Select(props) {\n  return <div {...props} />;\n}\n');
         w('app/orders.tsx', 'export const O = () => <><Select name="a" /><Select name="b" /></>;\n');
+        w('.agent-settings.yml', DELIVER);
         git('init', '-q');
         git('add', '-A');
         git('commit', '-q', '-m', 'init');

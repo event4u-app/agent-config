@@ -662,8 +662,8 @@ function main(): number {
     // The consistency check ships ON (3.8); the rest of the pass ships OFF.
     const pass = enabled(root);
     const consistency = enabled(root, 'design_consistency', true);
-    // The reverse trigger's rollback: still recorded, never delivered.
-    const shadow = enabled(root, 'design_consistency', false, 'shadow');
+    // Ships recording, not delivering (owner, 2026-11-04): `shadow: false` speaks.
+    const shadow = enabled(root, 'design_consistency', true, 'shadow');
     if (!pass && !consistency) return EXIT_ALLOW;
 
     const slotArg = process.argv.includes('--slot') ? process.argv[process.argv.indexOf('--slot') + 1] : undefined;
