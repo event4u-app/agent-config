@@ -14,7 +14,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
 | road-to-a-memory-each-worker-is-handed | active | ready | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
-| road-to-a-noted-that-is-a-write | active | ready | When the agent says "noted" or "from now on", a write to a carrier the next session reads has happened … |
 | road-to-an-observation-provider-slot | active | ready | `/analyze:reference --transfer=rebuild\|adapt` can take evidence from a runtime, browser or binary observation tool the consumer has configured — a reverse-engineering … |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
