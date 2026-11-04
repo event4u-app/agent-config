@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council question — b-history-credential-store-vs-egress-contract
 
 The repository owner delegated this decision to the council on 2026-11-04

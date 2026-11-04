@@ -1,9 +1,12 @@
+<!-- evidence-type: analysis -->
+
 # Council verdict — b-history-credential-store-vs-egress-contract
 
 - **Date:** 2026-11-04
 - **Delegated by:** the repository owner, in chat: "zu dem blocker, entscheide den im ai council".
 - **Prompt:** `history-credential-store-blocker-20261104.question.md` (this directory), sent
-  unchanged in both runs. It states both options without a recommendation.
+  unchanged in both runs. It states both options without a recommendation. Its
+  `evidence-type` comment line was added after the runs; nothing else differs.
 - **Members:** anthropic (Claude CLI), openai (Codex CLI). Subscription transport, USD 0.00.
 - **Verdict:** `option-1` — unanimous (2/2).
 
