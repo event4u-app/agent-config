@@ -1,10 +1,22 @@
 ---
 complexity: structural
-status: ready
+status: later
 tree_pin: 23d66791da
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Owner-directed 2026-11-04: a council run spent one Codex account while the others sat idle; the owner asked for this roadmap in agent-config next to the agent-switch fix."
+entry_condition:
+  what: an active roadmap closes, so this one fits under the WIP limit of five
+  when: at the next active-roadmap closure
+  who: agent
+review_by: 2027-02-04
+estate_offset_exempt: >-
+  Carries the owner's 2026-11-04 request (council runs on one Codex account); no active roadmap
+  owns the finding, so merging into one was not available, and it is parked rather than active
+  because the WIP limit is full. Owner search: a grep over agents/roadmaps/{*,later,stubs} for
+  CODEX_HOME, "agent-switch dir" and council seat/account wording finds only CODEX_HOME isolation
+  spikes (road-to-profile-reach-and-account-spikes, road-to-host-primitive-lowering), not seat
+  account selection.
+estate_growth_exempt: Parked carrier of the owner's 2026-11-04 request; adds one later roadmap, no active one.
 relates:
   - slug: road-to-reciprocal-ecosystem
     relation: extends
@@ -12,6 +24,10 @@ relates:
 ---
 # Road to a council that spreads across accounts
 
+> **Parked:** the WIP limit of five is full (8 active at the pin); it resumes
+> when an active roadmap closes. Nothing below is blocked on agent-switch:
+> Phase 1 works with `agent-switch dir --json` from 2.11.0.
+>
 > **Source:** owner report 2026-11-04 — a council run used the Codex CLI on one
 > account only, while agent-switch held two signed-in Codex accounts
 > (`codex/Matze1`, `codex/Matze2`) with headroom.
@@ -47,7 +63,7 @@ at the pin.
     next release.
   - `agent-switch exec --provider <p> [--exclude a,b] [--plain] -- <args…>` —
     resolves like `dir`, records the pick, runs the binary with the env var set,
-    passes stdio and the exit code through. Ships with the next release.
+    passes stdio and the exit code through. Comes with agent-switch PR #148 / #149.
 - `src/install/agentSwitchProfile.ts` already detects "running under an
   agent-switch profile" from the env, but nothing consumes it for spawns.
 
