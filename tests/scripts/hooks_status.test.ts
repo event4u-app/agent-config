@@ -20,6 +20,7 @@ import {
     main,
     type PlatformRow,
     type StatusMatrix,
+    type UserScope,
 } from '../../src/scripts/hooks_status.js';
 import { MANAGED_SIGNATURE } from '../../src/scripts/_lib/claude_settings_hooks.js';
 
@@ -314,5 +315,50 @@ describe('hooks_status — blocking enforcement per slot', () => {
         expect(unverifiedLine).toBeDefined();
         expect(unverifiedLine).not.toMatch(/cannot/i);
         expect(unverifiedLine).toContain('nothing established');
+    });
+});
+
+// road-to-a-fill-the-session-sees-coming 1.2 — the fill warning and the cache
+// notice share one row, and the row says why it is not live.
+describe('hooks_status — fill warning / cache notice row', () => {
+    function scopeWith(statusLine: unknown): UserScope {
+        const home = fs.mkdtempSync(path.join(tmp, 'home-'));
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        fs.writeFileSync(path.join(home, '.claude', 'settings.json'), JSON.stringify(statusLine === undefined ? {} : { statusLine }));
+        return { home, runtimeRoot: path.join(home, 'runtime'), pathEnv: '' };
+    }
+
+    it('without the tap, claude reads "no status-line tap" and "fallback (no tap)"', () => {
+        const claude = byPlatform(collect(tmp, manifest(), scopeWith(undefined)))['claude']!;
+        expect(claude.fill_warning).toBe('no status-line tap');
+        expect(claude.cache_notice).toBe('fallback (no tap)');
+        const table = _render_table({ schema_version: 1, platforms: [claude] });
+        const rows = table.split('\n').filter((l) => l.includes('fill warning'));
+        expect(rows).toEqual(['    fill warning           → no status-line tap · cache notice: fallback (no tap)']);
+    });
+
+    it('a chained user line that is not the tap still counts as no tap', () => {
+        const claude = byPlatform(collect(tmp, manifest(), scopeWith({ type: 'command', command: 'my-line' })))['claude']!;
+        expect(claude.fill_warning).toBe('no status-line tap');
+    });
+
+    it('with the tap installed both read live', () => {
+        const claude = byPlatform(
+            collect(tmp, manifest(), scopeWith({ type: 'command', command: 'agent-config statusline:tap' })),
+        )['claude']!;
+        expect(claude.fill_warning).toBe('live');
+        expect(claude.cache_notice).toBe('live');
+    });
+
+    it('a host that does not bind quota-notice reads "not bound on this host"', () => {
+        const rows = byPlatform(collect(tmp, manifest(), scopeWith(undefined)));
+        const unbound = Object.values(rows).filter(
+            (r) => !r.fallback_only && !(r.bindings['user_prompt_submit'] ?? []).includes('quota-notice'),
+        );
+        expect(unbound.length).toBeGreaterThan(0);
+        for (const r of unbound) {
+            expect(r.fill_warning).toBe('not bound on this host');
+            expect(r.cache_notice).toBe('not bound');
+        }
     });
 });
