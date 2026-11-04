@@ -227,6 +227,34 @@ export function stateOf(e: PayloadException, today: string): ExceptionState {
     return e.expires_at < today ? 'expired' : 'active';
 }
 
+const OWNER_DIRECTIVE = /agents\/evidence\/owner-directives\/[A-Za-z0-9._-]+\.md/gu;
+
+/**
+ * Which active grants cite only owner-directive files that already exist at
+ * the merge-base — rule 2's test, done from git history alone.
+ *
+ * The same predicate as the "Verify exception approvals" step in
+ * `.github/workflows/standing-payload-delta.yml`. It lives here so a local run
+ * reaches the verdict CI reaches: without it the local gate was told nothing
+ * was verified and refused every live grant, a red remote CI never showed.
+ * `existsAtBase` is injected so the predicate stays pure.
+ */
+export function approvalsAtBase(
+    exceptions: readonly PayloadException[],
+    today: string,
+    existsAtBase: (repoPath: string) => boolean,
+): { verified: string[]; refused: string[] } {
+    const verified: string[] = [];
+    const refused: string[] = [];
+    for (const e of exceptions) {
+        if (stateOf(e, today) !== 'active') continue;
+        const cited = e.approval_event.match(OWNER_DIRECTIVE) ?? [];
+        if (cited.length > 0 && cited.every(existsAtBase)) verified.push(e.id);
+        else refused.push(e.id);
+    }
+    return { verified, refused };
+}
+
 export interface CeilingReading {
     /** The number the payload is compared against. */
     ceiling: number;

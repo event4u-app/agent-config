@@ -68,6 +68,10 @@ detectors:
         note: an ordinary question; fired on the first broadened pattern (council round 3, 2026-10-29)
       - text: "wie oft noch soll die Schleife laufen?"
         note: an ordinary question; fired on the first broadened pattern (council round 3, 2026-10-29)
+      - text: "how many times should I retry?"
+        note: a first-person question about a count; fired until a saying-verb was required (council review 2026-10-29)
+      - text: "wie oft soll ich es versuchen?"
+        note: the German twin of the line above
 
   council-availability-claim:
     fire:
@@ -106,3 +110,30 @@ detectors:
       - pinned_language: de
         reply: "Done."
         note: too short to judge
+
+  persistence-claim:
+    fire:
+      - text: "Benutze ab jetzt immer Tabs statt Spaces."
+        reply: "Notiert — ab jetzt Tabs statt Spaces."
+        tool_commands: []
+        note: the owner's case (inbox-2026-10-bi T1) — a durable promise with no write anywhere
+    near-miss-fire:
+      - text: "Please always run the formatter before you hand back."
+        reply: "Noted. I'll run the formatter before handing back."
+        tool_commands: ["Read AGENTS.md", "Bash cat .editorconfig"]
+        note: >-
+          weak claim under a durable ask, and the turn did touch the carriers —
+          by reading them, which writes nothing
+    must-not-fire:
+      - text: "Benutze ab jetzt immer Tabs statt Spaces."
+        reply: "Notiert, ab jetzt Tabs — steht in der .editorconfig."
+        tool_commands: ["Write /repo/.editorconfig"]
+        note: the claim beside a matching write
+      - text: "what did the review say?"
+        reply: "Noted, see the PR — two findings, both fixed."
+        tool_commands: []
+        note: '"noted" as "observed", and nothing durable was asked'
+      - text: "merk dir: keine Emojis in Commits"
+        reply: "Gemerkt, steht jetzt in der Memory."
+        tool_commands: ["Bash agent-config memory:add --type feedback \"no emojis in commits\""]
+        note: the write went through the memory CLI, not an Edit

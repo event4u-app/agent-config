@@ -34,6 +34,7 @@ import {
     type TurnSnapshot,
     detectCouncilClaim,
     detectLanguageMirror,
+    detectPersistenceClaim,
     detectUserReport,
 } from './_lib/self_repair.js';
 import { assertScanned } from './_lib/scan_scope.js';
@@ -65,6 +66,7 @@ export const DETECTORS: Record<string, (f: Fixture) => DefectFinding | null> = {
     'user-reported': (f) => detectUserReport(f.text ?? f.reply ?? ''),
     'council-availability-claim': (f) => detectCouncilClaim(asTurn(f)),
     'language-mirror': (f) => detectLanguageMirror(asTurn(f)),
+    'persistence-claim': (f) => detectPersistenceClaim(asTurn(f)),
 };
 
 function asTurn(f: Fixture): TurnSnapshot {

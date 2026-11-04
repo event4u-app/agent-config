@@ -1,0 +1,18 @@
+[
+  {
+    "name": "durable promise with no write anywhere (owner case, inbox-2026-10-bi T1)",
+    "turn": {
+      "prompt": "Benutze ab jetzt immer Tabs statt Spaces.",
+      "reply": "Notiert — ab jetzt Tabs statt Spaces.",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "English strong claim, the only write is to a product file",
+    "turn": {
+      "prompt": "Never use default exports in this repo.",
+      "reply": "From now on I'll use named exports only.",
+      "toolCommands": ["Edit /repo/src/index.ts"]
+    }
+  }
+]

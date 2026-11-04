@@ -115,7 +115,7 @@ between every round so the user can stop the spend at any point.
 | Cost gate | After every round the CLI prints `Spent so far: $X · Next round: ~$Y · Cap: $Z`. `n` exits cleanly with partial results; `y` continues. |
 | Hard cap | If the projected next-round cost would breach `max_total_usd`, `run_debate()` raises `DebateCapExceeded` and the CLI exits with the partial transcript. No silent overrun. |
 | `--continue-as-debate` | Seeds round 1 from an existing `/council default` (or analysis lens) session. No round-1 API calls are billed; round 2+ run normally. Member list must match. |
-| Session files | One file per round under `agents/runtime/council/sessions/<slug>/debate-round-NN.md`. |
+| Session files | One file per round under `agents/runtime/council/responses/<slug>/debate-round-N.json` — the only root `debate --output` accepts. |
 | Anonymisation | Identical to `rounds:N`. The continue-as-debate path also anonymises the seeded round-1 responses when building the round-2 prompt. |
 
 Use this when the artefact is genuinely contentious and the user

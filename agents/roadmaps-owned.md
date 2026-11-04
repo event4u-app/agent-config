@@ -14,7 +14,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
 | road-to-a-memory-each-worker-is-handed | active | ready | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
-| road-to-a-noted-that-is-a-write | active | ready | When the agent says "noted" or "from now on", a write to a carrier the next session reads has happened … |
+| road-to-a-noted-that-is-a-write-carried | active | ready | A correction the host's own auto-memory already recorded counts as an earlier arrival of that subject in the self-repair subject … |
 | road-to-an-observation-provider-slot | active | ready | `/analyze:reference --transfer=rebuild\|adapt` can take evidence from a runtime, browser or binary observation tool the consumer has configured — a reverse-engineering … |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
@@ -175,6 +175,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-tool-results-that-leave-a-handle | later | later | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
 | road-to-touched-files-that-pass-their-own-tools-carried | later | later | The one step road-to-touched-files-that-pass-their-own-tools deferred is either done here or explicitly disposed of — a step that still cannot run … |
 | road-to-trigger-eval-freshness-has-no-writer | later | later | `check_trigger_evals` either measures something a mechanism produces, or it stops claiming to. |
+| road-to-trigger-evals-that-stay-fresh | later | later | `check-trigger-evals` is green on a fresh checkout and stays green without anyone hand-editing a date. |
 | road-to-typed-grants-that-persist | later | later | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
 | road-to-web-launch-readiness-benchmark | later | later | Road to web-launch-readiness — the benchmark and its verdict |
 | road-to-worker-generation-recycling | later | later | On subagent-capable hosts, a worker that reaches 80 % of its tier budget emits a structured state capsule and is … |

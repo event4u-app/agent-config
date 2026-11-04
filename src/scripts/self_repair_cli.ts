@@ -69,6 +69,7 @@ import {
     attachReleaseErrors,
     listRecords,
     markReleased,
+    writeSubjectIndex,
     writeTargetIndex,
     openRecords,
     readOverflow,
@@ -991,6 +992,7 @@ function releaseCmd(root: string, argv: string[]): number {
  * could ever establish its own precondition.
  */
 function targetsCmd(root: string): number {
+    writeSubjectIndex(root);
     const counts = writeTargetIndex(root);
     if (counts.length === 0) {
         process.stdout.write('self-repair: no record carries a resolved target yet.\n');

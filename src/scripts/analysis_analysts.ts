@@ -16,10 +16,14 @@ import { parse as parseYaml } from 'yaml';
 
 import { independenceFields, type ContextRelation, type IndependenceFields } from './_lib/review_independence.js';
 import { ANALYST_BOUNDS } from './ai_council/cli_agency_bounds.js';
+import { _cliVersion } from './ai_council/cli_launch_env.js';
+import { claudeEffortArgs, codexEffortArgs, type Effort } from './ai_council/effort.js';
 
 export const DEFAULT_ANALYSTS = 3;
 export const MAX_ANALYSTS = 5;
 export const DROPS_REL = 'agents/tmp';
+/** An analyst reads and argues; `medium` keeps the deepen loops without paying for an exhaustive search. */
+export const ANALYST_DEFAULT_EFFORT: Effort = 'medium';
 
 export type AnalystMode = 'subagent' | 'external' | 'cli';
 export type AnalystPhase = 'seed' | 'deepen';
@@ -126,12 +130,21 @@ export interface CliAnalystCommand {
  * profile — never the seat bound. A member whose profile was refused or never
  * probed has no analyst mode at all.
  */
-export function cliAnalystCommand(member: string): CliAnalystCommand {
+export function cliAnalystCommand(
+    member: string,
+    /** `version` omitted → probed from the binary; `null` → treated as unknown (no version-gated flag). */
+    opts: { effort?: Effort | null; version?: string | null } = {},
+): CliAnalystCommand {
     const b = ANALYST_BOUNDS.find((x) => x.member === member);
     if (b === undefined || b.bound.length === 0) {
         throw new AnalystError(`${member}: no probed read-only analyst profile in cli_agency_bounds.ts`);
     }
-    return { binary: b.binary, argv: [...b.bound], promptVia: b.prompt_via };
+    const effort = opts.effort ?? ANALYST_DEFAULT_EFFORT;
+    const effortArgs =
+        member === 'anthropic'
+            ? claudeEffortArgs(effort, opts.version === undefined ? _cliVersion(b.binary) : opts.version)
+            : member === 'openai' ? codexEffortArgs(effort) : [];
+    return { binary: b.binary, argv: [...b.bound, ...effortArgs], promptVia: b.prompt_via };
 }
 
 /** Every reason a round's seed and deepen outputs are not independent. Empty means clean. */

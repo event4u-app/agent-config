@@ -12,6 +12,7 @@
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { readingBlock, resolveRepoReference } from './_lib/repo_reference.js';
 import type { Finding } from './analysis_emit.js';
 import { EVIDENCE_TIERS } from './analysis_ledger.js';
 import { RESEARCH_BRIEF } from './network_sources.js';
@@ -64,12 +65,16 @@ function frontmatter(phase: 'seed' | 'exchange', loop: number, pin: string): str
 
 const SECTIONS = 'Sections, in this order: Findings vs tree · Kills · Decisions · Steps with `verify:` · Loop log.';
 
-export function emitPrompts(input: { scope: string; pin: string; roundId: string }): { analyst: string; exchange: string } {
+export function emitPrompts(input: { scope: string; pin: string; roundId: string; reading?: string }): {
+    analyst: string;
+    exchange: string;
+} {
     const drop = `agents/tmp/${input.roundId}/`;
     const shared = [
         `You analyse one project at commit \`${input.pin}\`. ${input.scope}.`,
         'Every claim carries an anchor (file:line, command and output, or URL) and a tier: executed, read, claimed or inferred. Only executed and read count as verified.',
         'Name no outside source in this file; if a source must be named, put it in a sibling `*.annex.md`.',
+        ...(input.reading === undefined ? [] : ['', input.reading]),
     ];
     const analyst = [
         ...shared,
@@ -120,7 +125,8 @@ export function main(argv: string[] = process.argv.slice(2), cwd: string = proce
         return 2;
     }
     const target = resolveAnalysisTarget({ cwd, project: null, scope: readFlag(argv, 'scope') });
-    const p = emitPrompts({ scope: scopeLine(target), pin, roundId });
+    const reading = readingBlock(resolveRepoReference({ cwd, pin }));
+    const p = emitPrompts({ scope: scopeLine(target), pin, roundId, reading });
     process.stdout.write(`## Analyst prompt\n\n${p.analyst}\n\n## Exchange prompt\n\n${p.exchange}\n`);
     return 0;
 }

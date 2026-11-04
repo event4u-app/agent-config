@@ -1,0 +1,18 @@
+[
+  {
+    "name": "weak claim under a durable ask; carriers were read, not written",
+    "turn": {
+      "prompt": "Please always run the formatter before you hand back.",
+      "reply": "Noted. I'll run the formatter before handing back.",
+      "toolCommands": ["Read AGENTS.md", "Bash cat .editorconfig"]
+    }
+  },
+  {
+    "name": "promise phrased as 'merke ich mir', no write",
+    "turn": {
+      "prompt": "keine Emojis in Commit-Messages bitte",
+      "reply": "Alles klar, das merke ich mir für die nächsten Commits.",
+      "toolCommands": []
+    }
+  }
+]

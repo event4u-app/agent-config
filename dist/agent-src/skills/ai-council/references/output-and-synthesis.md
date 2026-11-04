@@ -33,7 +33,8 @@ Three directories, three modes:
 |---|---|---|
 | **Topic-anchored question** (paired with a roadmap or ADR) | `agents/runtime/council/questions/<topic-slug>.md` | Markdown |
 | **Topic-anchored response** (paired with the question above) | `agents/runtime/council/responses/<topic-slug>.json` | JSON from `council:run --output` |
-| **Ad-hoc session** (no durable artefact yet) | `agents/runtime/council/sessions/<UTC-timestamp>.json` | JSON from `council:run --output` |
+| **Ad-hoc run** (no durable artefact yet) | `agents/runtime/council/responses/<UTC-timestamp>.json` | JSON from `council:run --output` — `run` and `debate` refuse any other root |
+| **Rendered output** | `agents/runtime/council/sessions/<name>` | `council render` / `replay` `--output` |
 
 `<topic-slug>` is kebab-case and **must match** the corresponding
 roadmap / ADR slug if one exists (e.g. `path-fixes` mirrors the

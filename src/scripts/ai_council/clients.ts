@@ -50,7 +50,8 @@ import { vendorPrefix } from '../_lib/egress_rules.js';
 import { withoutUngrantedCredentials } from '../_lib/billing_grant.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
-import { _cliVersion, _subagentModelCeiling } from './cli_launch_env.js';
+import { claudeEffortArgs, codexEffortArgs, type Effort } from './effort.js';
+import { _cliVersion, _subagentModelCeiling, cliFailureText } from './cli_launch_env.js';
 export { _resetModelCeilingMemo, _subagentModelCeiling } from './cli_launch_env.js';
 import { resumeBound, seatResumeArgs, type SeatSession } from './seat_resume.js';
 import { councilEgress } from './council_egress.js';
@@ -401,6 +402,8 @@ interface CliClientOptions {
      * `CLI_CONSUMER_UNKNOWN`, which is a finding rather than a default.
      */
     consumer?: string | undefined;
+    /** Reasoning effort for this seat (`effort.ts`); `null`/absent = vendor default. */
+    effort?: Effort | null | undefined;
 }
 
 export class AnthropicClient extends ExternalAIClient {
@@ -1139,6 +1142,7 @@ export abstract class CliClient extends ExternalAIClient {
     protected _cli_calls_path: string | null;
     /** Attribution label for every booking this client makes. */
     protected _consumer: string;
+    effort: Effort | null;
     /** The session the last answered call ran in; `resumeNext` continues it once, never while `blind`. */
     lastSession: SeatSession | null = null;
     resumeNext: SeatSession | null = null;
@@ -1186,6 +1190,7 @@ export abstract class CliClient extends ExternalAIClient {
         this.warn_at = opts.warn_at ?? 0.8;
         this._cli_calls_path = opts.cli_calls_path ?? null;
         this._consumer = opts.consumer ?? budget.CLI_CONSUMER_UNKNOWN;
+        this.effort = opts.effort ?? null;
         const binary = opts.binary ?? null;
         if (binary !== null) {
             this.binary = binary;
@@ -1486,7 +1491,7 @@ export abstract class CliClient extends ExternalAIClient {
         // 4. non-zero exit → classify and bail.
         if (proc.returncode !== 0) {
             const code = (this.constructor as typeof CliClient)._classify_stderr(
-                proc.stderr || '',
+                cliFailureText(proc.stderr, proc.stdout),
                 proc.returncode,
             );
             return new CouncilResponse({
@@ -1498,7 +1503,7 @@ export abstract class CliClient extends ExternalAIClient {
                 metadata: {
                     cli: true,
                     returncode: proc.returncode,
-                    stderr_tail: (proc.stderr || '').slice(-500),
+                    stderr_tail: (proc.stderr || '').slice(-500), ...(proc.stderr ? {} : { stdout_tail: (proc.stdout || '').slice(-500) }),
                     // The vendor refused us; the local-budget refusal above
                     // returns before spawning. Opposite remedies, one error
                     // string — so discriminate explicitly rather than leaving it
@@ -1640,6 +1645,7 @@ export class AnthropicCliClient extends CliClient {
             'json',
             '--model',
             this.model,
+            ...claudeEffortArgs(this.effort, _cliVersion(this.binary)),
             // A council member is a text-in/text-out oracle: it reads a question
             // and returns an opinion. It never edits, never runs a command,
             // never fetches. `claude` is an AGENTIC CLI and grants its full
@@ -1780,7 +1786,10 @@ export class OpenAICliClient extends CliClient {
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
         const resume = seatResumeArgs(this.name, this.resumeNext, { blind: this.blind, now_ms: Date.now() });
         const bound = resume.length === 0 ? boundFor('openai') : resumeBound(boundFor('openai'));
-        return [this.binary, 'exec', ...resume, '--json', '--skip-git-repo-check', ...bound, ...modelArgs, '-'];
+        return [
+            this.binary, 'exec', ...resume, '--json', '--skip-git-repo-check', ...bound, ...modelArgs,
+            ...codexEffortArgs(this.effort), '-',
+        ];
     }
 
     /**
