@@ -10,6 +10,11 @@ review_by: 2026-12-28
 > capability non-inferiority gate beside the deciding `cap_sig || dis_sig`
 > gate (`src/scripts/bench_ab_v2_stats.ts`), in shadow. Flipping which gate
 > decides is the question that waits here.
+>
+> **Arrivals:** 1 — `inbox-2026-11-bn` (2026-11-04): an owner-commissioned
+> review asks for verified resolution as the primary endpoint and discipline
+> only conditional on it (source decision D1). Same mechanism as this stub;
+> the margin is still the owner's to pre-register.
 
 ## What waits here
 

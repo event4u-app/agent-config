@@ -63,7 +63,8 @@ export interface ArmSpec {
 // + `downstream-changes` (one of the two lift-carrying rules; the other,
 // `scope-control`, is already in the kernel) — the cheapest configuration that
 // contains both. `rules-balanced` = kernel + tier_1 rule bodies, i.e. the
-// shipped `balanced` router profile (which does NOT include downstream-changes
+// size-cut `balanced` router profile retired 2026-07-07 after this arm measured
+// a null (it does NOT include downstream-changes
 // — tier_2 — so this arm also tests whether that profile cut loses the lift).
 // Both are opt-in: NOT in the default arm list; existing runs unchanged.
 //

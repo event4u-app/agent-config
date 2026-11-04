@@ -415,7 +415,7 @@ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap b
 | `design-consistency-default-on` | quant | backed | — | `internal/bench/corpora/design-consistency-shadow-window.md#The four conditions` |
 | `design-slop-false-positive-baseline` | quant | backed | — | `internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run` |
 | `design-slop-near-miss-baseline` | quant | backed | — | `internal/bench/corpora/design-slop-nearmiss-PREREG.md#The bar, declared before the run` |
-| `discipline-lift-weak-host` | quant | backed | — | `docs/benchmark.md#weak-host-specific` |
+| `discipline-lift-weak-host` | quant | backed | ab-v2 scorer before the 2026-10-28 task-validity repair (docs/benchmark.md § Task validity); not re-scored, and the pinned reports keep no per-run diff, so they cannot be re-scored offline | `docs/benchmark.md#weak-host-specific` |
 | `dispatch-event-capture-reliability` | quant | resolved-null | — | `PRE-REGISTERED 2026-08-30 (`road-to-experience-loop-broadening`` |
 | `domain-soundness-scoped` | qual | backed | — | `exec:domain_soundness_status --check -> 0` |
 | `domain-soundness-validated-count` | quant | backed | — | `exec:domain_soundness_status -> 0` |
@@ -424,7 +424,7 @@ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap b
 | `encoding-floor-text-layer-only` | quant | backed | — | `agents/evidence/reports/encoding-floor-measurement.md#Selected branch: ADOPT` |
 | `enforcement-coverage-resolved` | quant | backed | — | `exec:check_enforcement_coverage --check -> 0` |
 | `enforcement-undeclared-denominator` | quant | backed | — | `exec:check_enforcement_denominator -> 0` |
-| `essential-tier-cost-factor` | quant | backed | — | `docs/benchmark.md#REPLICATION FAILED` |
+| `essential-tier-cost-factor` | quant | backed | ab-v2 scorer before the 2026-10-28 task-validity repair (docs/benchmark.md § Task validity); not re-scored, and the pinned reports keep no per-run diff, so they cannot be re-scored offline | `docs/benchmark.md#REPLICATION FAILED` |
 | `eval-coverage-ratcheted` | qual | backed | — | `exec:skill_eval_coverage --check -> 0` |
 | `experience-loop-repeated-failure-effect` | quant | unbacked | — | `PRE-REGISTERED 2026-08-30` |
 | `experiment-loop-iteration-floor` | quant | unbacked | — | `PRE-REGISTERED 2026-08-17 (road-to-metric-loop-and-review-integrity Phase 0/5 — the floor was fixed before the spike ran, and the spike's kill criterion was its complement: "fewer than five clean iterations" would have left Phase 3 unbuilt). Measured on a toy metric in a scratch repository, `agents/evidence/eval-findings/metric-loop-s01.md`: 6 clean iterations, metric 24 → 3, with iteration 5 reverting a change that improved the metric 67 % and broke behavior. That result answers the PHASE GATE and is why the skill shipped. It does NOT back this claim, and the distinction is the whole reason the entry stays unbacked: the run was one agent, one session, one toy metric whose evaluator was written alongside the loop, so it measured whether the PROTOCOL holds, not whether the shipped skill drives a real metric. BACKING REQUIRES: ≥ 3 runs of the shipped `experiment-loop` skill against metrics that existed before the run, each with its register committed, each reaching ≥ 5 clean iterations. DROP: any run below the floor publishes the null and the skill is withdrawn rather than the floor lowered — lowering a pre-registered floor after seeing the data is the tuning this roadmap's own s04 finding forbids.` |
