@@ -22,6 +22,7 @@ import {
     readBudget,
     renderBounds,
 } from '../../src/scripts/check_preamble_payload_budget.js';
+import { type GitRunner, realGit } from '../../src/scripts/_lib/standing_bound_ratchet.js';
 
 /** Repo root, resolved the way the gate resolves it. */
 const REPO_ROOT_FOR_TESTS = path.resolve(
@@ -299,6 +300,48 @@ describe('the gate reds on growth past whichever ceiling applies', () => {
         // A live grant nobody verified buys nothing, so the same run without the
         // verification is red. With no live grant the two runs are the same.
         expect(main([])).toBe(LIVE_GRANTS.length > 0 ? 1 : 0);
+    });
+
+    describe('--verify-approvals reads the approval from git history, as the workflow does', () => {
+        // Driven through the `git` seam, not the runner's real history: the
+        // Node Tests checkout is shallow, so no merge-base is reachable there,
+        // and an end-to-end `main(['--verify-approvals'])` measured the
+        // checkout rather than the code.
+        const pinned = { baseRef: 'origin/main', basePayload: 135_824, today: '2026-11-04' } as const;
+        const stub =
+            (mergeBase: string | null, present: boolean): GitRunner =>
+            (args, cwd) => {
+                if (args[0] === 'merge-base')
+                    return mergeBase === null
+                        ? { ok: false, stdout: '', stderr: 'no merge base' }
+                        : { ok: true, stdout: `${mergeBase}\n`, stderr: '' };
+                if (args[0] === 'cat-file') return { ok: present, stdout: '', stderr: '' };
+                return realGit(args, cwd);
+            };
+        const explicit = () => decide({ ...pinned, verifiedApprovals: LIVE_GRANTS }).ceiling;
+        const unverified = () => decide({ ...pinned }).ceiling;
+
+        it('directive present at the merge-base → the ceiling an explicit --approved buys', () => {
+            const c = decide({ ...pinned, verifyApprovalsAtBase: true, git: stub('abc123', true) }).ceiling;
+            expect(c.ceiling).toBe(explicit().ceiling);
+            expect(c.activeIds).toEqual(explicit().activeIds);
+        });
+
+        it('directive absent at the merge-base → no grant; a diff cannot approve itself', () => {
+            const c = decide({ ...pinned, verifyApprovalsAtBase: true, git: stub('abc123', false) }).ceiling;
+            expect(c.ceiling).toBe(unverified().ceiling);
+            expect(c.activeIds).toEqual(unverified().activeIds);
+        });
+
+        it('merge-base unreadable → fails closed to the unverified ceiling', () => {
+            const c = decide({ ...pinned, verifyApprovalsAtBase: true, git: stub(null, true) }).ceiling;
+            expect(c.ceiling).toBe(unverified().ceiling);
+        });
+
+        it('a live grant makes the two ceilings differ — the cases above are not vacuous', () => {
+            if (LIVE_GRANTS.length === 0) return;
+            expect(explicit().ceiling).toBeGreaterThan(unverified().ceiling);
+        });
     });
 
     it('an UNESTABLISHED ceiling does not become an over-budget verdict', () => {
