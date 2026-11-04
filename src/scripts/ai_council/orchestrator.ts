@@ -124,6 +124,7 @@ import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block, deterministic_s
 import type { AbsentReason } from './transport_resolver.js';
 import { formatAttendanceCaveats, isSoloConcluded, type QuorumResult } from './quorum.js';
 import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
+import { beginSeatAccountRound } from '../_lib/agent_switch_account.js';
 
 
 /**
@@ -595,6 +596,9 @@ function _run_round(
 
     const results: CouncilResponse[] = [];
     const reservations = new RoundReservations(budget);
+    // A round spreads its CLI seats across agent-switch accounts; the next
+    // round starts with every account free again.
+    beginSeatAccountRound();
     const estimates: CostEstimate[] | null =
         table !== null
             ? estimate(question, members, table, {

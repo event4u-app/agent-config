@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: active
 tree_pin: 23d66791da
 execution:
   mode: phase-checkpoints
@@ -24,9 +24,8 @@ relates:
 ---
 # Road to a council that spreads across accounts
 
-> **Parked:** the WIP limit of five is full (8 active at the pin); it resumes
-> when an active roadmap closes. Nothing below is blocked on agent-switch:
-> Phase 1 works with `agent-switch dir --json` from 2.11.0.
+> **Unparked 2026-11-04** on the owner's explicit `/roadmap:process-full`
+> request; executed and closed in the same change.
 >
 > **Source:** owner report 2026-11-04 — a council run used the Codex CLI on one
 > account only, while agent-switch held two signed-in Codex accounts
@@ -69,15 +68,15 @@ at the pin.
 
 ## Phase 0 — Reproduce
 
-- [ ] **0.1 Evidence of the single account.** A fixture spawn through the same
+- [x] **0.1 Evidence of the single account.** A fixture spawn through the same
       env path as `clients.ts:1322` with a stub `codex` that prints
       `$CODEX_HOME`; parent env without `CODEX_HOME`.
       verify: the stub reports an empty `CODEX_HOME` (default login) — the
-      failure this roadmap removes, red before Phase 1.
+      failure this roadmap removes, red before Phase 1. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
 
 ## Phase 1 — Resolve the account per spawn
 
-- [ ] **1.1 A resolver seam.** `src/scripts/_lib/agent_switch_account.ts`:
+- [x] **1.1 A resolver seam.** `src/scripts/_lib/agent_switch_account.ts`:
       `resolveSeatHome(vendor, {exclude, cwd})` → `{envVar, dir, profile} | null`.
       Calls `agent-switch dir --provider <codex|claude> --json` (5 s timeout),
       returns null when the binary is missing, the call fails, the JSON has no
@@ -85,62 +84,71 @@ at the pin.
       rule cannot be served) is surfaced as a seat error naming the rule, never
       silently replaced by the default login.
       verify: unit tests with an injected runner — missing binary → null;
-      `{configDir}` → env var set; exit 86 → typed refusal; malformed JSON → null.
-- [ ] **1.2 Wire it into the CLI seat spawn.** In the builder that produces the
+      `{configDir}` → env var set; exit 86 → typed refusal; malformed JSON → null. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+- [x] **1.2 Wire it into the CLI seat spawn.** In the builder that produces the
       spawn env (`clients.ts` ~1322), add `{[envVar]: dir}` to the
       `hardenedSpawnEnv` overrides when the resolver returns one. An env var the
       **user** set explicitly for the seat in `.ai-council.yml` wins over the
       resolver (owner config beats balancing). Same for the `claude` CLI seat
       (`CLAUDE_CONFIG_DIR`).
       verify: the Phase 0 fixture now reports the resolved dir; with the
-      resolver returning null it still reports the inherited value.
-- [ ] **1.3 Record which account served.** The seat's journal / events-log row
+      resolver returning null it still reports the inherited value. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+- [x] **1.3 Record which account served.** The seat's journal / events-log row
       carries `account: "codex/<name>"` (profile name only — never a path
       component beyond it, never a token). Absent when unresolved.
       verify: an events-log fixture shows the field; a privacy test asserts no
-      `configDir` path is written.
-- [ ] **1.4 Folder rules — decide, then implement.** Default: respect them
+      `configDir` path is written. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+- [x] **1.4 Folder rules — decide, then implement.** Default: respect them
       (call `dir` from the project cwd, no `--plain`) — a project pinned to a
       work account must not spill council traffic onto a private one. Offer
       `council.agent_switch: rules | balance | off` (class A, default `rules`).
       verify: a unit test shows the resolver called with --plain under the balance
-      value and not called at all under off.
+      value and not called at all under off. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
 
 ## Phase 2 — Move on when a seat hits a limit
 
-- [ ] **2.1 Classify the limit error.** Codex `usage_limit_reached` / HTTP 429
+- [x] **2.1 Classify the limit error.** Codex `usage_limit_reached` / HTTP 429
       in the `--json` event stream, Claude "usage limit reached" — one typed
       `SeatLimitReached` with the profile that served.
       verify: fixtures of both vendors' real error lines classify; an ordinary
-      failure does not.
-- [ ] **2.2 One retry on another account.** On `SeatLimitReached` with a
+      failure does not. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+- [x] **2.2 One retry on another account.** On `SeatLimitReached` with a
       resolved profile, re-resolve with `--exclude <that profile>` (needs the
       agent-switch release that ships `--exclude`; older versions → no retry,
       reported as such) and re-run the seat once. Bounded: one retry per seat
       per round, never a loop.
       verify: a fake runner that limits on account A and succeeds on B yields
       B's answer and two journal rows; when no other account exists the seat
-      fails with the original limit error.
+      fails with the original limit error. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
 
 ## Phase 3 — Spread parallel seats
 
-- [ ] **3.1 Exclude accounts already serving this round.** When a round spawns
+- [x] **3.1 Exclude accounts already serving this round.** When a round spawns
       several seats of one vendor, pass the profiles already assigned in this
       round as `--exclude`, so they spread while free accounts exist; once none
       is left, fall back to the unexcluded pick (share, never fail).
       verify: two Codex seats with two accounts land on two accounts; three
-      seats with two accounts land on both, the third shared.
+      seats with two accounts land on both, the third shared. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
 
 ## Phase 4 — Say it out loud
 
-- [ ] **4.1 `council:status` names the account source.** One line per CLI
+- [x] **4.1 `council:status` names the account source.** One line per CLI
       vendor: "codex seats: agent-switch (2 accounts)" / "default login
       (agent-switch not found)".
-      verify: status snapshot for both cases.
-- [ ] **4.2 Docs.** The council doc states that CLI seats follow agent-switch's
+      verify: status snapshot for both cases. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+- [x] **4.2 Docs.** The council doc states that CLI seats follow agent-switch's
       pick when it is installed, how folder rules apply, and the retry rule.
       verify: the doc names `dir --json`, the `council.agent_switch` key and the
-      one-retry bound.
+      one-retry bound. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+
+## Decisions
+
+| id | decision | why | revisit if |
+|---|---|---|---|
+| D1 (1.4) | The mode key lives in `.ai-council.yml` as top-level `agent_switch:`, not in `.agent-settings.yml` | Council config is user-global and never lives in `.agent-settings.yml` (ADR-104); a council key there would split one config across two files | a non-council CLI consumer needs its own mode |
+| D2 (1.2) | "An env var the user set for the seat wins" maps to `agent_switch: off` and the `AGENT_CONFIG_AGENT_SWITCH` env override | `.ai-council.yml` has no per-seat env block; adding one is scope this roadmap did not plan | someone needs different accounts per seat of one vendor |
+| D3 (2.2) | A limit refusal is recognised on codex's `turn.failed` too, not only on a non-zero exit | codex exits 0 on a refused turn (contract § Quota exhaustion), so an exit-only check would never retry the case the owner reported | — |
+| D4 (0.1) | The Phase 0 fixture went red by neutralising the env wiring after implementation, not before it | the seam the fixture needs is the one Phase 1 builds; 5 of 20 cases failed with the wiring removed, which is the sensitivity proof | — |
 
 ## Out of scope
 

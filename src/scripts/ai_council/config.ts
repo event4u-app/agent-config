@@ -543,6 +543,13 @@ export type { FallbackConfig } from './fallback_config.js';
 import { buildFallback, buildSecondModel, type FallbackConfig as _FallbackConfig } from './fallback_config.js';
 import { OWNERSHIP_CLASSES, allOwnerLocked, defaultModeFor, ownershipModeError } from './ownership_classes.js';
 import {
+    AGENT_SWITCH_MODES,
+    DEFAULT_AGENT_SWITCH_MODE,
+    isAgentSwitchMode,
+    setAgentSwitchMode,
+    type AgentSwitchMode,
+} from '../_lib/agent_switch_account.js';
+import {
     _f,
     _pyOct,
     _pyRepr,
@@ -576,6 +583,12 @@ export interface CouncilConfig {
     readonly routing: RoutingConfig;
     readonly low_impact: LowImpactConfig;
     readonly lens_overrides: LensOverridesConfig;
+    /**
+     * How CLI seats pick their agent-switch account: `rules` (default) honours
+     * folder rules, `balance` ignores them, `off` keeps the inherited login.
+     * Optional so hand-built configs in tests stay valid; absent = `rules`.
+     */
+    readonly agent_switch?: AgentSwitchMode;
     readonly source_path: PathLike | null;
     /**
      * Transport keys the config file still carries and the loader deliberately
@@ -737,7 +750,10 @@ export function load_council_config(p: PathLike): CouncilConfig {
     if (!_isDict(raw)) {
         throw new CouncilConfigError(`${p}: top-level must be a mapping.`);
     }
-    return _build_config(raw, p);
+    const cfg = _build_config(raw, p);
+    // CLI seats spawned after this load pick their account under this mode.
+    setAgentSwitchMode(cfg.agent_switch ?? DEFAULT_AGENT_SWITCH_MODE);
+    return cfg;
 }
 
 // ── builders ───────────────────────────────────────────────────────
@@ -857,6 +873,12 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const lens_overrides = _build_lens_overrides(
         _asDict(_getOr(raw, 'lenses', {})),
     );
+    const agent_switch_raw = _getOr(raw, 'agent_switch', DEFAULT_AGENT_SWITCH_MODE);
+    if (!isAgentSwitchMode(agent_switch_raw)) {
+        throw new CouncilConfigError(
+            `\`agent_switch\` must be one of ${AGENT_SWITCH_MODES.join(' | ')}; got ${_pyReprStr(String(agent_switch_raw))}.`,
+        );
+    }
 
     return {
         enabled,
@@ -882,6 +904,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         routing,
         low_impact,
         lens_overrides,
+        agent_switch: agent_switch_raw,
         source_path,
         ignored_transport_keys,
     };

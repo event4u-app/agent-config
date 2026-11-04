@@ -49,6 +49,14 @@ import * as path from 'node:path';
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { withoutUngrantedCredentials } from '../_lib/billing_grant.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import {
+    FolderRuleRefusal,
+    noteRoundProfile,
+    resolveRoundSeatHome,
+    resolveSeatHome,
+    type SeatHome,
+} from '../_lib/agent_switch_account.js';
+import { classifySeatLimit } from './seat_limit.js';
 import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
 import { claudeEffortArgs, codexEffortArgs, type Effort } from './effort.js';
 import { _cliVersion, _subagentModelCeiling, cliFailureText } from './cli_launch_env.js';
@@ -1331,6 +1339,9 @@ export abstract class CliClient extends ExternalAIClient {
                         const ceiling = _subagentModelCeiling();
                         return ceiling !== null ? { CLAUDE_CODE_SUBAGENT_MODEL: ceiling } : {};
                     })(),
+                    // The account agent-switch picked for this call (CODEX_HOME /
+                    // CLAUDE_CONFIG_DIR); empty when it had no answer.
+                    ...this._accountEnv,
                 }),
                 this.billable,
                 process.cwd(),
@@ -1438,6 +1449,98 @@ export abstract class CliClient extends ExternalAIClient {
                 egress_rule: refusal.what,
             });
         }
+        return this._withSeatAccount(cmd, stdinPayload, t0, system_prompt, user_prompt);
+    }
+
+    /**
+     * Run the call on the account agent-switch picks for it, and once more on a
+     * different account when the first one hit its usage limit.
+     *
+     * With agent-switch absent (or `agent_switch: off`) the resolver answers
+     * null and this is exactly one `_spawnAndParse` on the inherited env — the
+     * behaviour before accounts were resolved at all. A folder rule that cannot
+     * be served refuses the seat rather than quietly using the default login.
+     */
+    protected _withSeatAccount(
+        cmd: string[],
+        stdinPayload: string | null,
+        t0: number,
+        system_prompt: string,
+        user_prompt: string,
+    ): CouncilResponse {
+        let seat: SeatHome | null;
+        try {
+            seat = resolveRoundSeatHome(this.name);
+        } catch (exc) {
+            if (exc instanceof FolderRuleRefusal) {
+                return this._cliFailure(_elapsedMs(t0), 'folder_rule_refused', { cli: true, detail: exc.rule });
+            }
+            seat = null;
+        }
+        if (seat === null) {
+            this._accountEnv = {};
+            return this._spawnAndParse(cmd, stdinPayload, t0, system_prompt, user_prompt);
+        }
+        noteRoundProfile(this.name, seat.profile);
+        const first = this._spawnOn(seat, cmd, stdinPayload, t0, system_prompt, user_prompt);
+        const limit = first.error ? classifySeatLimit(_failureText(first), seat.profile) : null;
+        if (limit === null) return first;
+        let other: SeatHome | null = null;
+        try {
+            other = resolveSeatHome(this.name, { exclude: [seat.profile] });
+        } catch {
+            other = null;
+        }
+        if (other === null || other.profile === seat.profile) {
+            first.metadata = { ...first.metadata, account_limit: limit.line, account_retry: 'no_other_account' };
+            return first;
+        }
+        noteRoundProfile(this.name, other.profile);
+        const second = this._spawnOn(other, cmd, stdinPayload, t0, system_prompt, user_prompt);
+        second.metadata = { ...second.metadata, account_retry_from: seat.profile, account_limit: limit.line };
+        return second;
+    }
+
+    /** Env overrides naming the account this seat's next spawn runs on. */
+    protected _accountEnv: Record<string, string> = {};
+
+    private _spawnOn(
+        seat: SeatHome,
+        cmd: string[],
+        stdinPayload: string | null,
+        t0: number,
+        system_prompt: string,
+        user_prompt: string,
+    ): CouncilResponse {
+        this._accountEnv = { [seat.envVar]: seat.dir };
+        let response: CouncilResponse;
+        try {
+            response = this._spawnAndParse(cmd, stdinPayload, t0, system_prompt, user_prompt);
+        } finally {
+            this._accountEnv = {};
+        }
+        // Profile name only: the config dir is a path under the user's home.
+        response.metadata = { ...response.metadata, account: seat.profile };
+        this._logSeatAccount(seatAccountEvent(this.name, this.model, seat.profile, response.error ?? null));
+        return response;
+    }
+
+    /** Events-log write for one account-served spawn; a test seam, never throws. */
+    protected _logSeatAccount(event: Record<string, unknown>): void {
+        try {
+            appendEvent(event);
+        } catch {
+            // never crash ask()
+        }
+    }
+
+    protected _spawnAndParse(
+        cmd: string[],
+        stdinPayload: string | null,
+        t0: number,
+        system_prompt: string,
+        user_prompt: string,
+    ): CouncilResponse {
         let proc: SubprocessResult;
         try {
             proc = this._runSubprocess(cmd, stdinPayload);
@@ -1585,6 +1688,35 @@ export abstract class CliClient extends ExternalAIClient {
  * Empty system prompt returns the user prompt untouched, so a caller that never
  * had one sends exactly the bytes it sent before.
  */
+/**
+ * The events-log row for one account-served seat call. The profile NAME only —
+ * `SeatHome.dir` is a path under the user's home and never reaches the log.
+ */
+export function seatAccountEvent(
+    provider: string,
+    model: string,
+    profile: string,
+    error: string | null,
+): Record<string, unknown> {
+    return {
+        action: 'seat_account',
+        provider_caps: { [provider]: { mode: 'cli', model } },
+        account: profile,
+        outcome: error === null || error === '' ? 'ok' : error,
+    };
+}
+
+/** Everything a failed CLI response says about why — the code, the vendor detail, the captured tails. */
+function _failureText(r: CouncilResponse): string {
+    const meta = r.metadata ?? {};
+    const parts: string[] = [r.error ?? ''];
+    for (const k of ['detail', 'stderr_tail', 'stdout_tail']) {
+        const v = (meta as Record<string, unknown>)[k];
+        if (typeof v === 'string') parts.push(v);
+    }
+    return parts.join('\n');
+}
+
 export function _foldSystemPrompt(system_prompt: string, user_prompt: string): string {
     if (!system_prompt) {
         return user_prompt;
