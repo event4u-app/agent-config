@@ -63,11 +63,26 @@ says so.
 
 ## Phase 2 — The paid sweeps
 
-- [ ] **2.1 Weak host, cost factor and profiles.** `--arms
+- [x] **2.1 Weak host, cost factor and profiles.** `--arms <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_workspace.ts -->
       vanilla,package,placebo,rules-kernel-dc,rules-balanced,profile-minimal,profile-full
       --tasks trapE-scope-01,trapE-scope-02 --seeds 12 --model claude-haiku-4-5
       --budget 3.5 --max-usd 25`. Record the sweep spend and the mean cost per
       arm-run.
+      **Done in two reports, $22.08 of $25.** Report A
+      (`2026-11-04T21-26-13Z`, 168 runs, $14.77) failed its activation audit:
+      16 `package` pairs because clones under the OS temp dir never load
+      `~/.claude/rules` (fixed: `stage_package_scope`, rules copied above the
+      plugin clones), 19 `placebo` pairs because a ~1.7k-token surface cannot
+      clear a 1.2× whole-run lift (council, both seats: text direction only —
+      `agents/evidence/analysis/council-placebo-lift-audit-2026-11-04.*`), 1
+      `rules-balanced` pair at 0.81× (vanilla seed 9 was the longest baseline
+      run). Report A's `package` arm is superseded; report B
+      (`2026-11-04T21-50-27Z`, `vanilla,package`, 48 runs, $7.04) re-measures it
+      with the rules staged, audit 0/24. One probe run, $0.27. Mean cost per
+      arm-run at list rates: vanilla $0.031, placebo $0.036, profile-minimal
+      $0.061, rules-kernel-dc $0.074, rules-balanced $0.104, package $0.262,
+      profile-full $0.267.
+      verify: `./scripts-run src/scripts/bench_ab_v2_stats internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json` -> /package lift/
 - [ ] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package
       --seeds 3 --model claude-sonnet-4-6 --budget 5 --max-usd 75`, seeds
       lowered only if 2.1's per-run cost projects past the cap.
