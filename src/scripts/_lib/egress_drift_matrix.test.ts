@@ -22,6 +22,7 @@ import { scrub_string as explainScrub } from '../_cli/explain_last/scrubber.js';
 import { redact as bundlerRedact } from '../ai_council/bundler.js';
 import { load_council_config } from '../ai_council/config.js';
 import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
+import { redact_credentials as chatHistoryRedact } from './chat_history_redact.js';
 import { redact as crossRepoRedact } from '../cross_repo_retrieve.js';
 import { hasInlineSecret } from '../lint_mcp_config_security.js';
 import { detect, EGRESS_RULES } from './egress_rules.js';
@@ -77,6 +78,7 @@ const PATTERN_GRADE: Readonly<Record<string, Consumer>> = {
     workspace_secrets_scrub: (f, s) => !workspaceScrub(inSentence(f))[0].includes(s),
     cross_repo_retrieve: (f, s) => !crossRepoRedact(inSentence(f), {})[0].includes(s),
     council_bundler: (f, s) => !bundlerRedact(inSentence(f)).includes(s),
+    chat_history: (f, s) => !JSON.stringify(chatHistoryRedact({ t: 'user', text: inSentence(f) })).includes(s),
 };
 
 // A row a consumer's policy deliberately leaves out, with the reason. The MCP

@@ -44,8 +44,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { _entry_tokens_estimate } from './memory_lookup.js';
-
 import { load_agent_settings } from './_lib/agent_settings.js';
+import { redact_credentials } from './_lib/chat_history_redact.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 
 export const DEFAULT_FILE = 'agents/runtime/.agent-chat-history';
@@ -589,7 +589,7 @@ export function append(
     if (_is_replay_mode()) {
         return;
     }
-    fs.appendFileSync(target, _pyDumps(entry) + '\n', { encoding: 'utf-8' });
+    fs.appendFileSync(target, _pyDumps(redact_credentials(entry)) + '\n', { encoding: 'utf-8' });
 }
 
 function _atomic_write_text(target: string, text: string): void {
@@ -628,7 +628,7 @@ function _normalize_entries(entries: Entry[]): Entry[] {
         if (!('ts' in e)) {
             e.ts = _now();
         }
-        out.push(e);
+        out.push(redact_credentials(e));
     }
     return out;
 }
