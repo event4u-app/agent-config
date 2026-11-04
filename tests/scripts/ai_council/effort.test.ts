@@ -87,7 +87,7 @@ describe('effort argv', () => {
 });
 
 describe('member effort config', () => {
-    const base = (effort: unknown) => ({
+    const base = (effort: string) => ({
         enabled: true,
         members: { anthropic: { enabled: true, mode: 'cli', model: 'sonnet', effort } },
     });

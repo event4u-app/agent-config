@@ -467,9 +467,8 @@ interface BuildMembersOptions {
      * reason. Defaults to `run` for a caller that does not say.
      */
     command?: QuorumCommand;
-    /** `--effort` of this invocation; wins over the member key and the lens default (`effort.ts`). */
+    /** `--effort` wins over the member key, which wins over the `lens` default (`effort.ts`). */
     effort_flag?: string | null;
-    /** The lens whose default effort applies when neither flag nor member sets one. */
     lens?: string | null;
     /**
      * Test-only injection point, mirroring the `settings`/`members`/`table`
@@ -3318,6 +3317,7 @@ interface Args {
     siblings: string[] | null;
     original_ask: string;
     peer_review: boolean;
+    effort?: string | null;
     // run / debate
     output?: string | null;
     confirm: boolean;
@@ -3433,7 +3433,7 @@ function _commonInputSpecs(): OptSpec[] {
         { flag: '--siblings', takesValue: true, apply: (o, v) => { (o.siblings ??= []).push(v as string); } },
         { flag: '--original-ask', takesValue: true, apply: (o, v) => (o.original_ask = v as string) },
         { flag: '--peer-review', takesValue: false, apply: (o) => (o.peer_review = true) },
-        { flag: '--effort', takesValue: true, choices: ['low', 'medium', 'high'], apply: (o, v) => (o['effort'] = v) },
+        { flag: '--effort', takesValue: true, choices: ['low', 'medium', 'high'], apply: (o, v) => (o.effort = v) },
     ];
 }
 
