@@ -1579,6 +1579,23 @@ security_ops:
 update:
   mode: notify
 
+# --- Reconstruction: observation providers ---
+#
+# Runtime, browser, binary or device observation tools YOU have configured as
+# MCP servers, which `/analyze:reference --transfer=adapt|rebuild` may call for
+# evidence against obligation-ledger rows
+# (docs/contracts/reconstruction-obligations.md § Observation providers).
+# Nothing is installed by this key and nothing is called while it is empty:
+# the run then records `coverage: unknown` for the runtime half and says so.
+#
+#   observation_providers:
+#     - server: <the MCP server name as your host lists it>
+#       kinds: [runtime, browser, binary, device]   # what it can observe
+#
+# Default: [] (no provider — the reference door behaves as without this key).
+reconstruction:
+  observation_providers: []
+
 # ─── legal-review-prep consent gate ──────────────────────────────────────────
 # The legal-review-prep pack is high-risk (EU/DE legal review-prep, NOT legal
 # advice). It stays inactive until you acknowledge it is not legal advice — set

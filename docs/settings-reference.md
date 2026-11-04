@@ -271,6 +271,12 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `reasoning.enabled` | C | boolean | `true` |  | Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead). |
 
+## reconstruction
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `reconstruction.observation_providers` | C | array | `[]` |  | Observation tools you have configured as MCP servers (server name plus the evidence kinds it yields: runtime, browser, binary, device) that /analyze:reference --transfer=adapt\|rebuild may call for evidence against obligation-ledger rows. Empty (default) = no provider is called and the run records coverage: unknown for the runtime half. Nothing is installed by this key. Which equivalence tiers a provider observation may verify: docs/contracts/reconstruction-obligations.md § Observation providers. |
+
 ## retro
 
 | Key | Class | Type | Default | Allowed values | What it does |
