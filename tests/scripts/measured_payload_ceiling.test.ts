@@ -14,6 +14,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { extractSurfacesAtRef, measurePayloadAtRef } from '../../src/scripts/_lib/base_ref_payload.js';
 import {
+    approvalsAtBase,
     computeCeiling,
     EXCEPTIONS_CONFIG_PATH,
     type PayloadException,
@@ -509,5 +510,47 @@ describe('end to end over a real repository', () => {
         expect(v.ok).toBe(true);
         expect(v.verified).toBe(true);
         expect(v.baseBounds).toStrictEqual({ design_ceiling: 100 });
+    });
+});
+
+describe('approvalsAtBase — the local twin of the workflow\'s "Verify exception approvals" step', () => {
+    const DIR = 'agents/evidence/owner-directives';
+    const grant = (over: Partial<PayloadException> = {}): PayloadException => ({
+        id: 'g1',
+        granted_tokens: 100,
+        watermark: 1000,
+        reason: 'r',
+        approval_event: `Approved: ${DIR}/2026-10-29-grant.md, confirmed in ${DIR}/2026-10-31-approval.md.`,
+        approved_at: '2026-10-29',
+        expires_at: '2026-12-31',
+        repaid_at: null,
+        ...over,
+    });
+    const atBase = (present: readonly string[]) => (p: string): boolean => present.includes(p);
+    const both = [`${DIR}/2026-10-29-grant.md`, `${DIR}/2026-10-31-approval.md`];
+
+    it('verifies a live grant whose every cited directive exists at the merge-base', () => {
+        expect(approvalsAtBase([grant()], '2026-11-04', atBase(both)).verified).toEqual(['g1']);
+    });
+
+    it('refuses a grant when one cited directive is missing at the merge-base', () => {
+        const r = approvalsAtBase([grant()], '2026-11-04', atBase([both[0]!]));
+        expect(r.verified).toEqual([]);
+        expect(r.refused).toEqual(['g1']);
+    });
+
+    it('refuses a grant that cites no owner-directive file at all', () => {
+        const r = approvalsAtBase([grant({ approval_event: 'the owner said so' })], '2026-11-04', atBase(both));
+        expect(r.verified).toEqual([]);
+        expect(r.refused).toEqual(['g1']);
+    });
+
+    it('skips repaid and expired grants — they need no approval', () => {
+        const r = approvalsAtBase(
+            [grant({ id: 'paid', repaid_at: '2026-11-01' }), grant({ id: 'old', expires_at: '2026-11-03' })],
+            '2026-11-04',
+            atBase(both),
+        );
+        expect(r).toEqual({ verified: [], refused: [] });
     });
 });
