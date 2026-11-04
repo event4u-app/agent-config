@@ -11,6 +11,7 @@
  * byte-identical (ADR-279).
  */
 
+import { beginSeatAccountRound } from '../_lib/agent_switch_account.js';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -48,7 +49,12 @@ export class RoundReservations {
     constructor(
         private readonly budget: CostBudget,
         private readonly ledgerPath: string | null = null,
-    ) {}
+    ) {
+        // One instance per round, so a round's CLI seats also start spreading
+        // across agent-switch accounts afresh here (`seat_account_run.ts`) —
+        // kept out of `orchestrator.ts` for the same size reason as above.
+        beginSeatAccountRound();
+    }
 
     /**
      * Claim the seat's estimate under the ledger lock. Returns `'daily'` when

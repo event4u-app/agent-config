@@ -100,6 +100,9 @@ const _VALID_ACTIONS: ReadonlySet<string> = new Set([
     // two are indistinguishable in the response set, and only one of them
     // costs money that the operator did not plan.
     'transport_fallback',
+    // Which agent-switch account served a CLI seat call. Carries the profile
+    // name only (`codex/<name>`), never its config dir.
+    'seat_account',
 ]);
 
 /**
