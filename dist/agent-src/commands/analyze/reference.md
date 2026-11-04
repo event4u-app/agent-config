@@ -108,6 +108,34 @@ cannot read. The check proves the file is consistent with itself, not that the
 evidence exists outside it. Only exit 0
 closes the transfer.
 
+### Runtime evidence — observation providers
+
+For `adapt` and `rebuild`, read which observation providers the user has
+configured — in their user-global settings only; a repository cannot name one —
+before gathering evidence:
+
+```bash
+./scripts-run src/scripts/reconstruction_ledger --providers
+```
+
+- **None configured** (the default) — the line reads `coverage: unknown`. Record
+  that for the runtime half in the analysis document and continue with the
+  repository and web evidence. Never write it as "not observed": nothing looked.
+- **A provider listed** — call it only through the host's MCP tools, under the
+  server name the slot gives, and only for the kinds it lists. Never install,
+  start or configure one. Record each observation's id in `evidence_ids`, and
+  write a row it checks with `verifier: provider:<server>` and an authority from
+  the enum: `controlled-replay` when the provider drove the destination with
+  recorded inputs, `external-claim` when it only reported what it saw — never
+  the provider name as the authority. A provider verifies `ux`, `behavior` or
+  `protocol` rows only; a screen it captured stays `visible-only`.
+- **A provider that does not answer** — record `coverage: unknown` for the
+  runtime half, as above.
+- **Exit 2** — the slot is malformed; say which entry, and run without a
+  provider rather than guessing what was meant.
+
+Contract: `docs/contracts/reconstruction-obligations.md` § Observation providers.
+
 ## Enforced limits
 
 The frontmatter `limits:` block is the machine-readable pin

@@ -250,8 +250,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 11 |
 | B — consent | 4 |
-| C — guarded | 103 |
-| **Total** | **118** |
+| C — guarded | 104 |
+| **Total** | **119** |
+
+It rose to 119 on 2026-11-04 when `road-to-an-observation-provider-slot` step 1.1 added `reconstruction.observation_providers` — one C, `un-inferrable`: the roadmap planned it as class A, but it is a list of evidence sources whose observations may close ledger rows and it decides which MCP server the reference door calls, so C-tests 2 and 5 fire and the plan yielded to this contract.
 
 It rose to 116 on 2026-11-02 when `security_ops.plan` joined class B (OQ-60 item 2, ADR-304 amendment) — `un-inferrable`: only the user knows whether a deployed product should get a containment section, and their answer is persisted once. It fell to 115 on 2026-10-25 when `ai_team.max_calls_per_day` stopped shipping in the template (ADR-279 Amendment 1, owner directive 2026-10-22): it stays an optional integer a user may write, unset means counted and never refused, so it is no longer a template leaf this table classifies. It rose to 116 on 2026-10-25 when ADR-301 added `star_ask.mode` and `star_ask.starred` — two A, `consent`: the user's own choice whether a monthly star ask reaches them, and their own statement that they starred. It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
 
@@ -409,10 +411,10 @@ the template, which is the drift this contract exists to prevent.
 | Disposition | Keys |
 |---|---|
 | derivable | 33 |
-| un-inferrable | 11 |
+| un-inferrable | 12 |
 | consent | 54 |
 | policy | 20 |
-| **Total** | **118** |
+| **Total** | **119** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -623,6 +625,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `advisories.kev` | C | `on` | decides whether a refresh reads the CISA known-exploited catalog that raises a tier | policy |
 | `security_ops.plan` | B | `false` | turns a containment finding into a drafted plan without asking again — the user should say yes once (OQ-60) | un-inferrable |
 | `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
+| `reconstruction.observation_providers` | C | `[]` | names MCP servers the reference door calls and whose observations may close obligation-ledger rows — C-tests 2 and 5: a list of trusted evidence sources that decides which code runs | un-inferrable — which observation tools a consumer has configured is theirs to state |
 | `worktrees.cleanup` | C | `notify` | a standing authorisation to delete worktree directories on the proven-merged set; `auto` removes them unasked (ADR-295) | consent |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
 | `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |

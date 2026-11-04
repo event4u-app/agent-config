@@ -21840,6 +21840,14 @@ var settingsSchema = object({
       "What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only \u2014 a repository cannot set how your global install updates itself."
     )
   }).prefault({ mode: "notify" }),
+  reconstruction: object({
+    observation_providers: array(object({
+      server: string2().regex(/^[A-Za-z0-9._-]+$/),
+      kinds: array(_enum(["runtime", "browser", "binary", "device"])).min(1)
+    })).default([]).describe(
+      "Observation tools you have configured as MCP servers (server name plus the evidence kinds it yields: runtime, browser, binary, device) that /analyze:reference --transfer=adapt|rebuild may call for evidence against obligation-ledger rows. Empty (default) = no provider is called and the run records coverage: unknown for the runtime half. Read from the user-global layer only \u2014 a repository cannot choose which MCP server is called. Nothing is installed by this key. Which equivalence tiers a provider observation may verify: docs/contracts/reconstruction-obligations.md \xA7 Observation providers."
+    )
+  }).prefault({ observation_providers: [] }),
   legal_review_prep: object({
     acknowledged: boolean2().default(false).describe(
       "I understand the legal-review-prep pack provides templates and general information ONLY \u2014 it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked."
