@@ -103,7 +103,8 @@ at the pin.
       (call `dir` from the project cwd, no `--plain`) — a project pinned to a
       work account must not spill council traffic onto a private one. Offer
       `council.agent_switch: rules | balance | off` (class A, default `rules`).
-      verify: `balance` passes `--plain`; `off` skips the resolver entirely.
+      verify: a unit test shows the resolver called with --plain under the balance
+      value and not called at all under off.
 
 ## Phase 2 — Move on when a seat hits a limit
 
