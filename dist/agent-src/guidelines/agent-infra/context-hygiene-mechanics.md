@@ -6,11 +6,17 @@ _Origin: migrated from `src/rules/context-hygiene.md` per the P4 pattern of `roa
 
 ## Conversation-freshness suggestion — how to phrase it
 
-Estimate token cost: responses × ~1,500 tokens.
+Never estimate the size from the message count. Where the host reports it, the
+`quota-notice` concern already measured it: from 80 % context fill
+(`CONTEXT_NOTICE_PCT` in `src/scripts/_lib/pressure.ts`) every prompt carries
+`AC: Context <pct> % (<used> / <size> tokens)`, and with the status-line tap the
+same figure stays on the status line. Quote that figure. Where neither exists,
+say the size is unmeasured rather than inventing one; `hooks:status` names which
+case this host is in (`fill warning: live | no status-line tap | not bound on this host`).
 
 ```
-> ⚡ This conversation has ~{N} messages (~{N×1500} tokens history cost — charged on EVERY request).
-> A fresh chat saves ~{N×1500} input tokens per request.
+> ⚡ This conversation is at {pct} % of its context window ({used} / {size} tokens, as measured).
+> Every request re-sends that history; a fresh chat starts near the `/clear` baseline.
 >
 > 1. Start fresh — I'll initiate a session handoff
 > 2. Continue here
