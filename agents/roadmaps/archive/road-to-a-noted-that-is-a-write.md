@@ -31,7 +31,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       `notebook_path` for Edit, Write, MultiEdit and NotebookEdit; measure the
       hook-bundle bytes first (tight headroom).
       verify: a transcript fixture with a Write yields `"Write <path>"`.
-- [~] **1.3 Read the host's auto-memory as a recurrence source.** Read-only,
+- [~] **1.3 Read the host's auto-memory as a recurrence source.** Read-only, <!-- deferred-resolution: carried-to=road-to-a-noted-that-is-a-write-carried -->
       no consent prompt (owner answer OQ-33, 2026-10-29): a correction the host
       already recorded under `~/.claude/projects/*/memory` counts as an earlier
       arrival. Never write there; give `host-memory` in
