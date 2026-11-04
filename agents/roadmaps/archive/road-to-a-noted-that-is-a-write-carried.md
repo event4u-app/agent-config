@@ -23,7 +23,7 @@ that is decided and tested rather than assumed.
 
 ## Phase 1 — The host memory as a recurrence source
 
-- [x] **1.1 Decide the read boundary, then read.** Owner answer OQ-33
+- [x] **1.1 Decide the read boundary, then read.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json --> Owner answer OQ-33
       (2026-10-29) permits a read-only read with no consent prompt. Open
       question from the ratification review of 2026-11-04: every project's
       memory directory, or only the current project's. Threat-model the choice
