@@ -88,7 +88,9 @@ claims a stricter tier than its rows prove.
 
 A consumer may name runtime, browser, binary or device observation tools it has
 configured as MCP servers in `reconstruction.observation_providers` (class C,
-default empty). The reference door calls one only through the host's MCP tools
+default empty). The slot is read from the **user-global** settings only: which
+server gets called is the user's decision, and a repository's own settings file
+cannot make it. The reference door calls one only through the host's MCP tools
 and only while the slot names it; nothing is installed for it.
 
 - **The provider is the verifier, never the authority.** A row it checks
@@ -96,7 +98,8 @@ and only while the slot names it; nothing is installed for it.
   `controlled-replay` when the provider drove the destination with recorded
   inputs, `external-claim` when it only reported what it saw. A provider name
   written as `verifier_authority` is refused like any other value outside the
-  enum.
+  enum. The `--check` also refuses a `verified` row whose `provider:` verifier
+  names no server, or a server the slot does not list.
 - **Tiers it may verify:** `ux`, `behavior` and `protocol`. A `verified` row
   whose verifier is a provider and whose tier is `byte` or `inspired-by` is
   refused: byte equality needs a byte comparison, not an observation, and

@@ -1592,6 +1592,9 @@ update:
 #     - server: <the MCP server name as your host lists it>
 #       kinds: [runtime, browser, binary, device]   # what it can observe
 #
+# Read from the USER-GLOBAL layer only: which MCP server gets called is your
+# decision, and a repository's own settings file cannot make it.
+#
 # Default: [] (no provider — the reference door behaves as without this key).
 reconstruction:
   observation_providers: []

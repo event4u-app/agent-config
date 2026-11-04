@@ -110,8 +110,9 @@ closes the transfer.
 
 ### Runtime evidence — observation providers
 
-For `adapt` and `rebuild`, read which observation providers the consumer has
-configured before gathering evidence:
+For `adapt` and `rebuild`, read which observation providers the user has
+configured — in their user-global settings only; a repository cannot name one —
+before gathering evidence:
 
 ```bash
 ./scripts-run src/scripts/reconstruction_ledger --providers

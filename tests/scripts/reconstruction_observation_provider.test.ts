@@ -72,6 +72,13 @@ describe('2.1 a ledger row closes on provider evidence', () => {
         expect(evaluateLedger([behaviorRow({ tier: 'byte', verifier: 'cmp out.bin ref.bin' })], ctx).state).toBe('closed');
     });
 
+    it('refuses a provider verifier that names no server, or a server outside the slot', () => {
+        const ctx = { evidenceIds: new Set(['OBS-1']), providers: new Set(['device-driver']) };
+        expect(evaluateLedger([behaviorRow()], ctx).state).toBe('closed');
+        expect(evaluateLedger([behaviorRow({ verifier: 'provider:' })], ctx).errors.join()).toMatch(/names no server/);
+        expect(evaluateLedger([behaviorRow({ verifier: 'provider:other' })], ctx).state).toBe('invalid');
+    });
+
     it('never lifts a visible-only row: a provider screenshot leaves the ledger open with parity 0', () => {
         const v = evaluateLedger([behaviorRow({ status: 'visible-only' })], { evidenceIds: new Set(['OBS-1']) });
         expect(v).toMatchObject({ state: 'open', verified: 0, parity: 0 });
@@ -98,14 +105,27 @@ describe('1.1 the slot', () => {
         expect(bad.providers).toEqual([]);
         expect(bad.errors).toHaveLength(3);
         expect(parseObservationProviders('rev-mcp').errors).toHaveLength(1);
+        expect(parseObservationProviders([{ server: 'provider:x', kinds: ['runtime'] }]).errors.join()).toMatch(/bare MCP server name/);
+        const dup = parseObservationProviders([{ server: 'a', kinds: ['runtime'] }, { server: 'a', kinds: ['binary'] }]);
+        expect(dup.providers).toHaveLength(1);
+        expect(dup.errors.join()).toMatch(/listed twice/);
+        expect(() => slot.parse({ observation_providers: [{ server: '  ', kinds: ['runtime'] }] })).toThrow();
     });
 });
 
 describe('1.2 / 1.3 reading the slot, absence as a stated result', () => {
     let dir: string;
+    let home: string;
     let out: string;
+    const prevHome = process.env['EVENT4U_CONFIG_HOME'];
+    const userGlobal = (yaml: string): void => {
+        fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
+        fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), yaml);
+    };
     beforeEach(() => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'obs-slot-'));
+        home = fs.mkdtempSync(path.join(os.tmpdir(), 'obs-home-'));
+        process.env['EVENT4U_CONFIG_HOME'] = home;
         out = '';
         const capture = (chunk: string | Uint8Array): boolean => {
             out += String(chunk);
@@ -116,27 +136,60 @@ describe('1.2 / 1.3 reading the slot, absence as a stated result', () => {
     });
     afterEach(() => {
         vi.restoreAllMocks();
+        if (prevHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+        else process.env['EVENT4U_CONFIG_HOME'] = prevHome;
         fs.rmSync(dir, { recursive: true, force: true });
+        fs.rmSync(home, { recursive: true, force: true });
     });
 
     it('says coverage: unknown and exits 0 with no provider configured', () => {
-        expect(main(['--providers', '--root', dir])).toBe(0);
+        expect(main(['--providers'])).toBe(0);
         expect(out).toMatch(/runtime evidence unavailable .*coverage: unknown/);
     });
 
-    it('lists a configured provider from the project settings', () => {
-        fs.writeFileSync(
-            path.join(dir, '.agent-settings.yml'),
-            'reconstruction:\n  observation_providers:\n    - server: device-driver\n      kinds: [device, runtime]\n',
-        );
-        expect(main(['--providers', '--root', dir])).toBe(0);
+    it('lists a provider from the user-global settings', () => {
+        userGlobal('reconstruction:\n  observation_providers:\n    - server: device-driver\n      kinds: [device, runtime]\n');
+        expect(main(['--providers'])).toBe(0);
         expect(out).toMatch(/provider device-driver · device, runtime/);
         expect(out).not.toMatch(/coverage: unknown/);
     });
 
+    it('never takes a provider from a repository settings file', () => {
+        fs.writeFileSync(
+            path.join(dir, '.agent-settings.yml'),
+            'reconstruction:\n  observation_providers:\n    - server: planted\n      kinds: [runtime]\n',
+        );
+        const cwd = process.cwd();
+        process.chdir(dir);
+        try {
+            expect(main(['--providers'])).toBe(0);
+        } finally {
+            process.chdir(cwd);
+        }
+        expect(out).toMatch(/coverage: unknown/);
+        expect(out).not.toMatch(/planted/);
+    });
+
     it('exits 2 on a malformed slot rather than reading it as empty', () => {
-        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'reconstruction:\n  observation_providers:\n    - server: x\n');
-        expect(main(['--providers', '--root', dir])).toBe(2);
+        userGlobal('reconstruction:\n  observation_providers:\n    - server: x\n');
+        expect(main(['--providers'])).toBe(2);
         expect(out).toMatch(/kinds/);
+    });
+
+    it('refuses --providers mixed with --check or extra arguments', () => {
+        expect(main(['--providers', '--check', 'x.json'])).toBe(2);
+        expect(main(['--providers', '--root', dir])).toBe(2);
+    });
+
+    it('refuses in --check a provider row whose server the slot does not list', () => {
+        userGlobal('reconstruction:\n  observation_providers:\n    - server: device-driver\n      kinds: [device]\n');
+        const file = path.join(dir, 'obligations.json');
+        const write = (verifier: string): void =>
+            fs.writeFileSync(file, JSON.stringify({ evidence_ids: ['OBS-1'], obligations: [behaviorRow({ verifier })] }));
+        write('provider:device-driver');
+        expect(main(['--check', file])).toBe(0);
+        write('provider:other');
+        expect(main(['--check', file])).toBe(2);
+        expect(out).toMatch(/provider other is not in reconstruction.observation_providers/);
     });
 });

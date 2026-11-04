@@ -564,10 +564,10 @@ export const settingsSchema = z.object({
     }).prefault({ mode: 'notify' }),
     reconstruction: z.object({
         observation_providers: z.array(z.object({
-            server: z.string().min(1),
+            server: z.string().regex(/^[A-Za-z0-9._-]+$/),
             kinds: z.array(z.enum(['runtime', 'browser', 'binary', 'device'])).min(1),
         })).default([]).describe(
-            'Observation tools you have configured as MCP servers (server name plus the evidence kinds it yields: runtime, browser, binary, device) that /analyze:reference --transfer=adapt|rebuild may call for evidence against obligation-ledger rows. Empty (default) = no provider is called and the run records coverage: unknown for the runtime half. Nothing is installed by this key. Which equivalence tiers a provider observation may verify: docs/contracts/reconstruction-obligations.md § Observation providers.',
+            'Observation tools you have configured as MCP servers (server name plus the evidence kinds it yields: runtime, browser, binary, device) that /analyze:reference --transfer=adapt|rebuild may call for evidence against obligation-ledger rows. Empty (default) = no provider is called and the run records coverage: unknown for the runtime half. Read from the user-global layer only — a repository cannot choose which MCP server is called. Nothing is installed by this key. Which equivalence tiers a provider observation may verify: docs/contracts/reconstruction-obligations.md § Observation providers.',
         ),
     }).prefault({ observation_providers: [] }),
     legal_review_prep: z.object({

@@ -77,10 +77,12 @@ export function parseObservationProviders(raw: unknown): { providers: Observatio
         const server = e !== null && typeof e === 'object' && typeof e.server === 'string' ? e.server.trim() : '';
         const kinds = e !== null && typeof e === 'object' && Array.isArray(e.kinds) ? e.kinds : [];
         if (server === '') errors.push(`provider ${i}: \`server\` must be a non-empty MCP server name`);
+        else if (!/^[A-Za-z0-9._-]+$/.test(server)) errors.push(`provider ${i}: \`server\` ${server} must be a bare MCP server name`);
+        else if (providers.some((p) => p.server === server)) errors.push(`provider ${i}: \`server\` ${server} is listed twice`);
         const bad = kinds.filter((k) => !(OBSERVATION_KINDS as readonly unknown[]).includes(k));
         if (kinds.length === 0) errors.push(`provider ${i}: \`kinds\` must name at least one of ${OBSERVATION_KINDS.join(', ')}`);
         if (bad.length > 0) errors.push(`provider ${i}: unknown kind ${bad.map(String).join(', ')}`);
-        if (server !== '' && kinds.length > 0 && bad.length === 0) providers.push({ server, kinds: kinds as ObservationKind[] });
+        if (/^[A-Za-z0-9._-]+$/.test(server) && !providers.some((p) => p.server === server) && kinds.length > 0 && bad.length === 0) providers.push({ server, kinds: kinds as ObservationKind[] });
     });
     return { providers, errors };
 }
@@ -138,6 +140,8 @@ export function shapeErrors(row: unknown, index: number): string[] {
 /** What the run recorded, so a row's evidence ids can be resolved. */
 export interface LedgerContext {
     evidenceIds: ReadonlySet<string>;
+    /** Servers the observation-provider slot names; a `provider:` verifier outside it is refused. */
+    providers?: ReadonlySet<string>;
 }
 
 /** Errors only the run's own records can see: ids that resolve, an authority in the enum, a named verifier. */
@@ -149,6 +153,13 @@ export function resolveObligation(o: Obligation, ctx: LedgerContext): string[] {
         errors.push(`${o.id}: unknown verifier_authority ${String(o.verifier_authority)}`);
     }
     if (o.status === 'verified' && (o.verifier ?? '').trim() === '') errors.push(`${o.id}: verified with an empty verifier`);
+    if (o.status === 'verified' && isProviderVerifier(o.verifier)) {
+        const server = (o.verifier ?? '').slice(PROVIDER_VERIFIER_PREFIX.length).trim();
+        if (server === '') errors.push(`${o.id}: provider verifier names no server`);
+        else if (ctx.providers !== undefined && !ctx.providers.has(server)) {
+            errors.push(`${o.id}: provider ${server} is not in reconstruction.observation_providers`);
+        }
+    }
     return errors;
 }
 

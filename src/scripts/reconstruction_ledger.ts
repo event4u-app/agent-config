@@ -11,17 +11,26 @@
  * outside it.
  *
  * Usage: ./scripts-run src/scripts/reconstruction_ledger --check <file>
- *        ./scripts-run src/scripts/reconstruction_ledger --providers [--root <dir>]
+ *        ./scripts-run src/scripts/reconstruction_ledger --providers
  *
  * --check: exit 0 closed · 1 open or unknown · 2 invalid, or a usage / read error.
  * --providers: exit 0 configured or not (none is `coverage: unknown`) · 2 malformed slot.
+ * The slot is read from the user-global settings only (`readProviderSlot`).
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { load_agent_settings } from './_lib/agent_settings.js';
-import { evaluateLedger, parseObservationProviders, shapeErrors, type Obligation } from './_lib/reconstruction_ledger.js';
+import { parse as parseYaml } from 'yaml';
+
+import { user_global_settings_paths } from './_lib/agent_settings.js';
+import {
+    evaluateLedger,
+    parseObservationProviders,
+    shapeErrors,
+    type Obligation,
+    type ObservationProvider,
+} from './_lib/reconstruction_ledger.js';
 
 function fail(message: string): number {
     process.stderr.write(`reconstruction_ledger: ${message}\n`);
@@ -29,17 +38,35 @@ function fail(message: string): number {
 }
 
 /**
- * `--providers [--root <dir>]`: which observation providers the run may call.
- * Exit 0 whether or not one is configured — absence is a result, stated as
- * `coverage: unknown` — and 2 only when the slot itself is malformed.
+ * The slot, read from the USER-GLOBAL settings files only. A repository's own
+ * `.agent-settings.yml` is never consulted: which MCP server gets called is the
+ * user's decision, and a cloned repository must not be able to make it.
  */
-function providers(argv: readonly string[]): number {
-    const r = argv.indexOf('--root');
-    const root = r >= 0 ? argv[r + 1] : process.cwd();
-    if (root === undefined) return fail('usage: reconstruction_ledger --providers [--root <dir>]');
-    const section = (load_agent_settings({ cwd: root }) as Record<string, unknown>)['reconstruction'];
-    const raw = section !== null && typeof section === 'object' ? (section as Record<string, unknown>)['observation_providers'] : undefined;
-    const { providers: list, errors } = parseObservationProviders(raw);
+export function readProviderSlot(paths: readonly string[] = user_global_settings_paths()): { providers: ObservationProvider[]; errors: string[] } {
+    let raw: unknown;
+    for (const p of paths) {
+        if (!fs.existsSync(p)) continue;
+        let doc: unknown;
+        try {
+            doc = parseYaml(fs.readFileSync(p, 'utf-8'));
+        } catch (err) {
+            return { providers: [], errors: [`${p}: not YAML (${err instanceof Error ? err.message : String(err)})`] };
+        }
+        const section = doc !== null && typeof doc === 'object' ? (doc as Record<string, unknown>)['reconstruction'] : undefined;
+        if (section !== null && typeof section === 'object' && 'observation_providers' in section) {
+            raw = (section as Record<string, unknown>)['observation_providers'];
+        }
+    }
+    return parseObservationProviders(raw);
+}
+
+/**
+ * `--providers`: which observation providers the run may call. Exit 0 whether
+ * or not one is configured — absence is a result, stated as `coverage: unknown`
+ * — and 2 only when the slot itself is malformed.
+ */
+function providers(): number {
+    const { providers: list, errors } = readProviderSlot();
     if (errors.length > 0) {
         for (const e of errors) process.stderr.write(`reconstruction_ledger: ${e}\n`);
         return 2;
@@ -53,7 +80,8 @@ function providers(argv: readonly string[]): number {
 }
 
 export function main(argv: readonly string[]): number {
-    if (argv.includes('--providers')) return providers(argv);
+    if (argv.includes('--providers') && argv.includes('--check')) return fail('--providers and --check are separate modes');
+    if (argv.includes('--providers')) return argv.length === 1 ? providers() : fail('usage: reconstruction_ledger --providers');
     const i = argv.indexOf('--check');
     const file = i >= 0 ? argv[i + 1] : undefined;
     if (file === undefined) return fail('usage: reconstruction_ledger --check <file>');
@@ -77,7 +105,12 @@ export function main(argv: readonly string[]): number {
         for (const e of malformed) process.stdout.write(`  - ${e}\n`);
         return 2;
     }
-    const verdict = evaluateLedger(doc.obligations as Obligation[], { evidenceIds: new Set(doc.evidence_ids as string[]) });
+    const slot = readProviderSlot();
+    if (slot.errors.length > 0) return fail(slot.errors.join('; '));
+    const verdict = evaluateLedger(doc.obligations as Obligation[], {
+        evidenceIds: new Set(doc.evidence_ids as string[]),
+        providers: new Set(slot.providers.map((p) => p.server)),
+    });
     const parity = verdict.parity === null ? 'n/a' : `${verdict.verified}/${verdict.counted}`;
     process.stdout.write(`ledger ${verdict.state} · parity ${parity}\n`);
     for (const e of verdict.errors) process.stdout.write(`  - ${e}\n`);
