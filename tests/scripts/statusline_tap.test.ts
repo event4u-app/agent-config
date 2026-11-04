@@ -162,6 +162,36 @@ describe('runTap with a chained status line', () => {
     });
 });
 
+describe('runTap — context fill (road-to-a-fill-the-session-sees-coming 1.1)', () => {
+    const ctx = (pct: number, extra: Record<string, unknown> = {}): string =>
+        JSON.stringify({ session_id: 's', context_window: { used_percentage: pct, context_window_size: 200_000 }, ...extra });
+
+    it('at 85 % the line carries the context segment with the measured size', () => {
+        expect(runTap({ stdin: ctx(85), env, now })).toBe('AC context 85 % (170,000 / 200,000 tokens)');
+    });
+
+    it('exactly at the band the segment shows; one point below it does not', () => {
+        expect(runTap({ stdin: ctx(80), env, now })).toMatch(/^AC context 80 %/);
+        expect(runTap({ stdin: ctx(79.4), env, now })).toBe('');
+    });
+
+    it('joins a warm window on the single AC line, never a second one', () => {
+        const rate_limits = { five_hour: { used_percentage: 64, resets_at: Math.trunc(now / 1000) + 3600 } };
+        const out = runTap({ stdin: ctx(91, { rate_limits }), env, now });
+        expect(out).toMatch(/^AC 5h window 64 %.* · context 91 % \(182,000 \/ 200,000 tokens\)$/);
+        expect(out.split('\n')).toHaveLength(1);
+    });
+
+    it('without a window size the segment names the percentage only', () => {
+        expect(runTap({ stdin: JSON.stringify({ context_window: { used_percentage: 88 } }), env, now })).toBe('AC context 88 %');
+    });
+
+    it('follows a chained line on its own line', () => {
+        recordOriginal({ type: 'command', command: 'my-line' });
+        expect(runTap({ stdin: ctx(85), env, now, run: () => 'MY LINE' })).toBe('MY LINE\nAC context 85 % (170,000 / 200,000 tokens)');
+    });
+});
+
 describe('runTap → pressure verdict', () => {
     it('leaves a fresh verdict the dispatch-path readers can find', async () => {
         const { hotWindowLine } = await import('../../src/scripts/_lib/pressure_state.js');

@@ -32,6 +32,7 @@ import {
 import { loadHostLowering } from "./hooks/host_lowering.js";
 import { type ClaudeHookScope, claudeHookScope } from "./_lib/claude_hook_scope.js";
 import { event4u_root } from "./_lib/user_global_paths.js";
+import { tapInstalled } from "./_cli/cmd_statusline.js";
 import { type SlotReading, readSlots } from "./report_enforcement_drift.js";
 
 // src/scripts/hooks_status.ts → parents[1] is the repo root (.../parents[2]
@@ -115,7 +116,18 @@ export interface PlatformRow {
    * so one file cannot answer "are the hooks installed" for that host.
    */
   claude_scope?: ClaudeHookScope;
+  /**
+   * Whether the context-fill warning and the cold-cache notice can reach the
+   * user here. Both come from `quota-notice`, which reads the ledger only the
+   * status-line tap writes, so a bound concern without the tap is silent.
+   * Absent on a fallback-only host, which binds nothing.
+   */
+  fill_warning?: FillWarning;
+  cache_notice?: CacheNotice;
 }
+
+export type FillWarning = "live" | "no status-line tap" | "not bound on this host";
+export type CacheNotice = "live" | "fallback (no tap)" | "not bound";
 
 export interface StatusMatrix {
   schema_version: number;
@@ -220,14 +232,39 @@ export interface UserScope {
   home: string;
   runtimeRoot: string;
   pathEnv: string;
+  /** `CLAUDE_CONFIG_DIR`, when the user moved Claude's settings away from `~/.claude`. */
+  claudeConfigDir?: string;
 }
 
 function _defaultUserScope(): UserScope {
+  const dir = process.env["CLAUDE_CONFIG_DIR"];
   return {
     home: process.env["HOME"] ?? "",
     runtimeRoot: path.join(event4u_root(), "runtime"),
     pathEnv: process.env["PATH"] ?? "",
+    ...(dir ? { claudeConfigDir: dir } : {}),
   };
+}
+
+function _fill_row(
+  bindings: Record<string, string[]>,
+  userScope: UserScope,
+): { fill_warning: FillWarning; cache_notice: CacheNotice } {
+  if (!(bindings["user_prompt_submit"] ?? []).includes("quota-notice")) {
+    return { fill_warning: "not bound on this host", cache_notice: "not bound" };
+  }
+  let tap = false;
+  try {
+    tap = tapInstalled({
+      HOME: userScope.home,
+      ...(userScope.claudeConfigDir ? { CLAUDE_CONFIG_DIR: userScope.claudeConfigDir } : {}),
+    });
+  } catch {
+    tap = false;
+  }
+  return tap
+    ? { fill_warning: "live", cache_notice: "live" }
+    : { fill_warning: "no status-line tap", cache_notice: "fallback (no tap)" };
 }
 
 /** Build the runtime matrix as a plain object — JSON-serialisable. */
@@ -280,6 +317,7 @@ export function collect(
         ? hint
         : null,
       ...(claude_scope !== undefined ? { claude_scope } : {}),
+      ...(fallback_only ? {} : _fill_row(bindings, userScope)),
     });
   }
   return { schema_version: 1, platforms: rows };
@@ -348,6 +386,9 @@ export function _render_table(matrix: StatusMatrix): string {
           "— hooks are not auto-firing on this platform.",
       );
       continue;
+    }
+    if (row.fill_warning !== undefined) {
+      lines.push(`    ${"fill warning".padEnd(22)} → ${row.fill_warning} · cache notice: ${row.cache_notice ?? "not bound"}`);
     }
     if (Object.keys(row.bindings).length === 0) {
       lines.push("    (no bindings declared in manifest)");

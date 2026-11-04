@@ -29,7 +29,7 @@ import { write_atomic } from '../_lib/fs_atomic.js';
 import { appendQuotaSnapshot, quotaStateDir } from '../_lib/quota_ledger.js';
 import { cacheSegment, snapshotWithCache } from '../_lib/prompt_cache_reading.js';
 import type { QuotaSnapshot } from '../_lib/quota_ledger.js';
-import { quotaSegment, writePressureState } from '../_lib/pressure.js';
+import { contextSegment, quotaSegment, writePressureState } from '../_lib/pressure.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
 
 /** The command the installer writes into `statusLine.command`. */
@@ -72,6 +72,13 @@ function wrappedCommand(env?: EnvMap | null): string | null {
 
 function isTap(command: unknown): boolean {
     return typeof command === 'string' && command.trim().startsWith(TAP_COMMAND);
+}
+
+/** Is the tap the status line Claude Code runs? Unreadable settings read as no tap. */
+export function tapInstalled(env?: EnvMap | null): boolean {
+    const settings = readSettings(claudeSettingsPath(env));
+    const sl = settings?.['statusLine'];
+    return sl !== null && typeof sl === 'object' && isTap((sl as Record<string, unknown>)['command']);
 }
 
 export interface TapOptions {
@@ -123,12 +130,12 @@ export function runTap(opts: TapOptions): string {
             printed = '';
         }
     }
-    // One AC line (D6): the cache part joins the quota segment, never a second line.
+    // One AC line (D6): the cache and context parts join the quota segment, never a second line.
     let segment = '';
     try {
         const quota = quotaSegment(opts.env, now);
-        const cache = cacheSegment(snapshot, now);
-        segment = stripControl(quota !== '' && cache !== '' ? `${quota} · ${cache}` : quota || (cache && `AC ${cache}`));
+        const rest = [cacheSegment(snapshot, now), contextSegment(snapshot)].filter((s) => s !== '').join(' · ');
+        segment = stripControl(quota !== '' && rest !== '' ? `${quota} · ${rest}` : quota || (rest && `AC ${rest}`));
     } catch {
         segment = '';
     }
