@@ -83,6 +83,7 @@ Do not use this skill when:
 * If unsure between skill and guideline: does it need step-by-step decisions? → Skill. Just conventions? → Guideline
 * If unsure between guideline and pattern: is it *"how to write code in X"* (prose convention)? → Guideline. Is it *"I have problem P — here's the proven recipe + a verification step + how reliable it is"*? → **Pattern**
 * When a related workflow fires, **surface** a matching `src/patterns/` recipe (never auto-apply) — the human decides
+* Learning from a landed commit → `git show <sha>`: diff is evidence, message is intent; one commit never passes Repetition; `source_learning: <sha>`
 
 ## Procedure
 
@@ -317,6 +318,7 @@ complete, draft body in §4.
 * after task
 * what did we learn
 * post-mortem
+* learn from this commit
 
 ## Anti-patterns
 
