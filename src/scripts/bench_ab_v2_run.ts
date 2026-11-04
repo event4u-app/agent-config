@@ -149,7 +149,7 @@ export function hardened_blocks_text(): string {
  * `dist/agent-src/rules/` — deterministic per checkout, so the injected text is
  * exactly what the shipped profiles would always-load:
  * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
- * - 'rules-balanced'   → kernel + tier_1 (the shipped `balanced` profile).
+ * - 'rules-balanced'   → kernel + tier_1 (the size-cut `balanced` profile, retired 2026-07-07).
  */
 export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
     const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {

@@ -112,7 +112,7 @@ Per-task artifact comparisons with and without agent-config, including the cost 
 | arm | loaded content | injected chars | mean tokens/run | cost factor | mean discipline | lift vs vanilla |
 |---|---|---|---|---|---|---|
 | `vanilla` | none | 0 | 103,319 | 1.0× | 0.458 | — |
-| `rules-balanced` | kernel + tier 1 (shipped `balanced` profile) | 98,825 | 303,186 | **2.9×** | 0.417 | −0.042 (p=0.8127, **NULL**) |
+| `rules-balanced` | kernel + tier 1 (retired size-cut `balanced`, 2026-07-07) | 98,825 | 303,186 | **2.9×** | 0.417 | −0.042 (p=0.8127, **NULL**) |
 | `rules-kernel-dc` | kernel (9 rules) + `downstream-changes` | 30,698 | 344,483 | **3.3×** | 0.917 | **+0.458 (p=0.0135, significant)** |
 | `package` | full plugin | 0 | 1,210,078 | **11.7×** | 1.000 | **+0.542 (p=0.0017, significant)** |
 
@@ -145,7 +145,7 @@ Three findings:
    package's 1.000; the residual is not significant at this N) at ~28% of the
    full package's tokens. The 12× full load is not required for this trap
    family's lift.
-2. **Content selection beats size — the shipped `balanced` profile is a null.**
+2. **Content selection beats size — the then-shipped `balanced` profile (retired 2026-07-07) is a null.**
    `rules-balanced` injects 3× more chars than `rules-kernel-dc` and costs
    almost the same per run, but delivers ZERO lift: it lacks
    `downstream-changes` (a tier-2 rule), and `scope-control` alone does not

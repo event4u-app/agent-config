@@ -73,8 +73,8 @@ discipline_profile: auto
 #
 # minimal  = kernel only (always-loaded Iron-Law floor, ≤ 26k chars).
 #            No router, no auto-rules. Lowest token footprint.
-# balanced = kernel + router + tier-1 auto-rules (default — current behaviour
-#            superset; matches what existing consumer projects expect).
+# balanced = the essential tier: kernel + downstream-changes (default). The
+#            kernel + tier-1 size cut was retired 2026-07-07 after a measured null.
 # full     = kernel + tier-1 + tier-2 (everything). Highest fidelity,
 #            highest token cost. Pick this when working on agent-config
 #            itself or when you need every behavioural rule active.
