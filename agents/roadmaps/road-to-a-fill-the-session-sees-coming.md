@@ -5,7 +5,7 @@ tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-15
-estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction."
+estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction. 2026-11-04: open_blockers +1 for b-history-credential-store-vs-egress-contract — step 3.1 was not new work but an owner answer (OQ-34) that conflicts with the egress-placeholders contract's never-stored floor; recording the conflict is the carry made visible, and without it 3.1 would read as unblocked."
 estate_offset_exempt: "Promoted from later/ on owner instruction, agents/evidence/owner-directives/2026-10-29-promote-memory-roadmaps.md (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for quota-notice, context_used_pct, statusline:tap, compact-instructions over agents/roadmaps, later, stubs): only stubs/road-to-a-quota-notice-that-earned-its-bands (owns the band VALUES, not these surfaces) and stubs/road-to-compaction-survival-census (live-host census)."
 relates:
   - slug: road-to-a-memory-that-arrives
@@ -37,11 +37,11 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 
 ## Phase 1 — Visible outside the reply
 
-- [x] **1.1 Context segment in the status-line tap.** `cmd_statusline.ts`
+- [x] **1.1 Context segment in the status-line tap.** `cmd_statusline.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/pressure.ts -->
       adds a context segment at or over the band.
       verify: `tests/scripts/statusline_tap.test.ts` case at 85 %.
       Done: `contextSegment` and the shared `CONTEXT_NOTICE_PCT` / `contextFigure` now live in `_lib/pressure.ts`, so the tap and the per-prompt notice read one band and one figure format; the segment joins the single AC line (`AC 5h window 64 % … · context 91 % (182,000 / 200,000 tokens)`). `npx vitest run tests/scripts/statusline_tap.test.ts` -> 0, five new cases (85 %, band edge 80 / 79.4, joined line, no size, chained line), all seen red first.
-- [x] **1.2 Doctor line.** `hooks:status` / `doctor` print "fill warning: live
+- [x] **1.2 Doctor line.** `hooks:status` / `doctor` print "fill warning: live <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: tests/hooks/surface_envelope.test.ts -->
       | no status-line tap | not bound on this host".
       The same row carries a cache column, `cache notice: live | fallback
       (no tap) | not bound` (folded in from `road-to-a-return-that-names-its-price`
@@ -49,7 +49,7 @@ continuity record no longer depends on reaching the 800k recycle threshold.
       verify: a fixture without the tap prints "no status-line tap" and
       "fallback (no tap)".
       Done: `hooks:status` gives every non-fallback row `fill_warning` / `cache_notice` (JSON) and one table line `fill warning → <state> · cache notice: <state>`; "live" needs `quota-notice` bound on `user_prompt_submit` AND the tap as Claude's `statusLine` (`tapInstalled` in `_cli/cmd_statusline.ts`, honouring `CLAUDE_CONFIG_DIR`). `npx vitest run tests/scripts/hooks_status.test.ts` -> 0, four new cases (no tap, a chained non-tap line, tap installed, unbound hosts), all seen red first.
-- [x] **1.4 Correct the manifest comment.** `src/scripts/hook_manifest.yaml`
+- [x] **1.4 Correct the manifest comment.** `src/scripts/hook_manifest.yaml` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml -->
       still describes `quota-notice` as "one per session at 80 % context fill";
       since `road-to-a-memory-that-arrives` 2.1 it repeats every prompt. The
       same edit corrects the turn-end-gate comment from "FIVE detectors" to six
@@ -58,18 +58,18 @@ continuity record no longer depends on reaching the 800k recycle threshold.
       manifest is hook plumbing, so the edit ships with a ratification artifact.
       verify: `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0 with the artifact in the diff.
       Done: both comments corrected (comments only; `hook_manifest.json` unchanged). AI council round 1 of 2026-11-04, anthropic + openai, both `confirmed-non-expanding`; artifact `agents/evidence/ratifications/fill-session-manifest-comments-20261104.md`, prompt `agents/evidence/council/fill-session-manifest-comment-ratification-r1-20261104.question.md`. `./scripts-run src/scripts/check_kernel_edit_ratified --base origin/main` -> 0.
-- [x] **1.3 Drop the ×1,500 estimate.** `context-hygiene-mechanics.md` points
+- [x] **1.3 Drop the ×1,500 estimate.** `context-hygiene-mechanics.md` points <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       at the measured notice instead of a message-count estimate.
       verify: reference check green.
       Done: the freshness template now quotes the measured `AC: Context <pct> % (<used> / <size> tokens)` figure and says "unmeasured" where neither the notice nor the tap exists, pointing at `hooks:status` for which case applies. Sibling sweep (`1,500 tokens|N×1500|×1500` over `src/`, `docs/`): 3 other hits — `agent-status` (a table that declares itself "Estimates only", so no contradicted claim), and two worker-payload budgets in `lint_spawn_payload.ts` / `orchestration-telemetry.md` (a different quantity) — none changed. `./scripts-run src/scripts/check_references` -> "No broken references found."
 
 ## Phase 2 — Continuity without the 800k threshold
 
-- [x] **2.1 Record at the band or on an early `/clear`.** `session_eol_hook.ts`
+- [x] **2.1 Record at the band or on an early `/clear`.** `session_eol_hook.ts` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/session_eol_hook.ts -->
       writes the continuity record at the band, not only at 800k.
       verify: a fixture at the band and below 800k writes one record.
       Done: `atContextBand` reads the fill the status-line tap recorded for this session (hashed id) against the shared `CONTEXT_NOTICE_PCT`; `writeContinuityRecord` fires at the threshold OR the band, and the `0` override still switches both off. The early `/clear` is covered by the band — the record already exists when the user clears at the warning — so no `session_end` binding was added. Without the tap there is no measured fill and the threshold lane alone decides, unchanged. `npx vitest run tests/scripts/session_eol_hook.test.ts` -> 0, five new cases (band below 800k writes one, a second Stop supersedes, below band none, a peer session's fill does not count, 0-override still off), the two positive ones seen red first.
-- [x] **2.2 Pointer instead of body after `/clear`.** `handoff_context_hook.ts`
+- [x] **2.2 Pointer instead of body after `/clear`.** `handoff_context_hook.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/handoff_context_hook.ts -->
       injects a pointer and digest after `/clear`, not the record body.
       verify: a `/clear` fixture emits the pointer and no body.
       Done: `recordDelivery(source)` returns `pointer` for `clear` and `body` for every other injecting source; in pointer mode `consume_recycle_envelope` injects `{pointer, summary, task, next, remaining_count, sha256, read}` under kind `recycle-envelope-pointer`, with drift and directive warnings still leading, and the consumed file at the pointer keeps the full body. `npx vitest run tests/scripts/handoff_context_clear_pointer.test.ts` -> 0 (4 cases, 3 seen red first); the eight neighbouring handoff/recycle suites stay green (145 tests).
