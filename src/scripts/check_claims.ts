@@ -457,6 +457,22 @@ export function overdue_entries(ledger: Map<string, LedgerEntry>, today: string)
     );
 }
 
+/**
+ * A backed number from the ab-v2 page must say which scorer produced it: the
+ * 2026-10-28 oracle repair split that page into before and after, and nothing
+ * re-scored the pinned runs, so an unlabelled number reads as post-repair.
+ */
+export function scorer_epoch_findings(ledger: Map<string, LedgerEntry>): Finding[] {
+    return [...ledger.values()]
+        .filter((e) => e.status === 'backed' && e.kind === 'quant' && e.evidence.includes('docs/benchmark.md'))
+        .filter((e) => !/\bscorer\b/i.test(e.measured_on))
+        .map((e) => ({
+            id: e.id,
+            file: LEDGER_REL,
+            reason: 'backed quant claim on docs/benchmark.md names no scorer in `measured_on` — say which side of the 2026-10-28 repair it was scored on',
+        }));
+}
+
 export function render_overdue(overdue: readonly LedgerEntry[]): string {
     if (overdue.length === 0) {
         return '';
@@ -646,7 +662,7 @@ function pointer_unresolved(evidence: string): string | null {
     return null;
 }
 
-interface Finding {
+export interface Finding {
     id: string;
     file: string;
     reason: string;
@@ -833,6 +849,8 @@ function main(argv: string[] = process.argv.slice(2)): number {
             findings.push({ id: entry.id, file: LEDGER_REL, reason: `measured-in-repo entry has dangling evidence — ${un}` });
         }
     }
+
+    findings.push(...scorer_epoch_findings(ledger));
 
     // 2d. `retires_phrasings` — shape. A retirement that names no wording
     //     forbids no wording, and a wording too short to be specific forbids

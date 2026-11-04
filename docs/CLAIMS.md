@@ -389,6 +389,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/benchmark.md#weak-host-specific
 - status: backed
 - last_verified: 2026-07-05
+- measured_on: ab-v2 scorer before the 2026-10-28 task-validity repair (docs/benchmark.md § Task validity); not re-scored, and the pinned reports keep no per-run diff, so they cannot be re-scored offline
 
 ### claim: essential-tier-cost-factor
 - claim: The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed.
@@ -396,6 +397,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/benchmark.md#REPLICATION FAILED
 - status: backed
 - last_verified: 2026-07-07
+- measured_on: ab-v2 scorer before the 2026-10-28 task-validity repair (docs/benchmark.md § Task validity); not re-scored, and the pinned reports keep no per-run diff, so they cannot be re-scored offline
 
 ### claim: downshift-cost-reduction
 - claim: On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy sonnet) nets a ≥30% USD-weighted token-cost reduction at held quality — measured 2026-07-08 (n=10 paired live dispatches, 20 telemetry lines): 10/10 exact-match on BOTH arms, 29.4% fewer raw tokens, 76.5% USD-weighted cost reduction at the 3x haiku↔sonnet price ratio. FAMILY-SCOPED — the mechanical-edit family is unmeasured and its downshift (incl. the deferred tier downgrades of existing units) stays gated. Negative control held: an open-ended synthesis/unknown slice never resolves below the session tier (inferSliceTier → medium/inherit, never lite).
