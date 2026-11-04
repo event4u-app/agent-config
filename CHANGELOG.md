@@ -487,7 +487,7 @@ An entry belongs under a dated release section, not here — see
 - **Default changes + migration:** _none_
 - **Security and correctness:** do not re-dispatch tag workflows the tag push already started (5a762d3).
 - **Honest nulls:** _none_
-- **Known limitations:** _none_
+- **Known limitations:** _none_ in shipped code — the highlights gate matched label text in test fixtures (8b69b9e); #2843 scopes the scan to shipped files.
 
 > **Governance mix:** governance-only 0 vs consumer-only 2 (mixed 0, maintenance 1; taxonomy 1.1.0; range ba83f4684fed..b06428236ad1).
 
