@@ -100,7 +100,7 @@ to abort.
 
 ```bash
 ./scripts-run src/scripts/council_cli debate <topic-path> \
-  --output agents/runtime/council/sessions/<date>-<slug>/ \
+  --output agents/runtime/council/responses/<date>-<slug>/ \
   --confirm \
   --rounds <N> \
   [--auto-continue] \
@@ -108,7 +108,7 @@ to abort.
   --original-ask "<verbatim topic>"
 ```
 
-Session directory shape: `agents/runtime/council/sessions/<YYYY-MM-DD>-debate-<slug>/`
+Session directory shape: `agents/runtime/council/responses/<YYYY-MM-DD>-debate-<slug>/` (`debate` refuses any other root)
 with `debate-round-1.json`, `debate-round-2.json`, … written incrementally.
 An interrupted debate leaves every completed round on disk.
 
@@ -126,7 +126,7 @@ After all rounds complete, render the last round's JSON via
 `/council` render flow:
 
 ```bash
-./scripts-run src/scripts/council_cli render agents/runtime/council/sessions/<dir>/debate-round-<N>.json
+./scripts-run src/scripts/council_cli render agents/runtime/council/responses/<dir>/debate-round-<N>.json
 ```
 
 The debate mode uses the structured decision-lens template (Karpathy

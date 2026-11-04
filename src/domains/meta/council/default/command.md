@@ -193,7 +193,10 @@ roadmap file with `--input-mode roadmap`. `diff` and `files` modes
 remain Phase 4 — for now ask the user to convert into a `prompt`.
 
 The CLI prints a `council:estimate · members=N (billable=M)` line
-followed by per-member projected USD and a TOTAL. Render that table per
+followed by per-member projected USD and a TOTAL. A
+size-fit line under it ending in `Apply with --model <member>=<id>` is a
+smaller-model suggestion; on a low-stakes question carry that `--model` into
+Step 4, per the `ai-council` skill (§ Subscription-quota levers). Render that table per
 the `ai-council` skill (§ Pre-call estimate format) in every case — it is
 what makes the spend legible whether or not it is being asked about.
 
@@ -209,18 +212,23 @@ Then read `billable=M` together with the two caps:
 ### 4. Run the CLI
 
 Invoke the same arguments with `run` plus
-`--confirm` and an output path under `agents/runtime/council/sessions/`:
+`--confirm` and an output path under `agents/runtime/council/responses/` (the only root `run` accepts):
 
 ```bash
 ./agent-config council:run <question-file> \
-    --output agents/runtime/council/sessions/<UTC-timestamp>.json \
+    --output agents/runtime/council/responses/<UTC-timestamp>.json \
     --confirm \
     [--rounds 1|2|3] \
     [--depth standard|deep] \
     [--input-mode …] [--max-tokens …] [--mode-override …] \
     [--prompt-mode …] \
+    [--effort low|medium|high] [--model <member>=<id>] \
     [--original-ask "<framing sentence>"]
 ```
+
+`--effort` overrides the per-seat reasoning effort for this run; leave it
+unset to get the lens default (`docs/contracts/ai-council-config.md` §
+`effort`).
 
 `--rounds` defaults to `defaults.min_rounds` from the resolved
 `.ai-council.yml` (or `2` if unset). Pass `--rounds N` only when
@@ -316,7 +324,7 @@ council input" always present as an option.
 - Open, comment on, or merge any PR.
 - Run `git` commands beyond `git diff` (read-only).
 
-The CLI persists the responses JSON under `agents/runtime/council/sessions/`
+The CLI persists the responses JSON under `agents/runtime/council/responses/`
 for traceability, but the agent never edits other project files on
 the user's behalf. The neutrality framing loses meaning if the
 council can act on the project directly.
