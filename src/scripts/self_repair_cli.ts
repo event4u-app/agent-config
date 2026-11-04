@@ -69,6 +69,7 @@ import {
     attachReleaseErrors,
     listRecords,
     markReleased,
+    writeSubjectIndex,
     writeTargetIndex,
     openRecords,
     readOverflow,
@@ -95,6 +96,7 @@ import {
 } from './_lib/self_repair_outgoing.js';
 import { _detect_project_identifiers } from './check_portability.js';
 import { gitEnv } from './_lib/git_env.js';
+import { readHostMemory } from './_lib/host_memory_reader.js';
 
 export { consumerDenyList };
 
@@ -991,6 +993,7 @@ function releaseCmd(root: string, argv: string[]): number {
  * could ever establish its own precondition.
  */
 function targetsCmd(root: string): number {
+    writeSubjectIndex(root, readHostMemory());
     const counts = writeTargetIndex(root);
     if (counts.length === 0) {
         process.stdout.write('self-repair: no record carries a resolved target yet.\n');

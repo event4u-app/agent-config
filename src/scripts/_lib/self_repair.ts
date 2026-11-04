@@ -71,7 +71,8 @@ export type DefectClass =
     | 'user-reported'
     | 'council-availability-claim'
     | 'language-mirror'
-    | 'model-noticed';
+    | 'model-noticed'
+    | 'persistence-claim';
 
 /**
  * Runtime mirror of `DefectClass`, in declaration order. The upstream issue
@@ -84,6 +85,7 @@ export const DEFECT_CLASSES: readonly DefectClass[] = [
     'council-availability-claim',
     'language-mirror',
     'model-noticed',
+    'persistence-claim',
 ];
 
 /** How far a record may travel outward. */
@@ -216,6 +218,13 @@ export interface DefectRecord extends DefectFinding {
     last_seen: string;
     occurrences: number;
     status: DefectStatus;
+    /**
+     * Arrivals per subject. `subject` keeps the first one named, but one
+     * fingerprint can fold reports about different subjects ("you forgot
+     * `tabs`", later "you forgot `lint`"), so the count per subject lives here.
+     * Local-only like `subject`.
+     */
+    subjects?: Record<string, number>;
     /** MANDATORY when `status === 'parked'`: when the record comes back. */
     parked_until?: string;
     /** One line saying why the record reached a terminal status. */
@@ -234,7 +243,10 @@ export interface TurnSnapshot {
     prompt: string;
     /** The assistant's final reply text. */
     reply: string;
-    /** Shell commands / tool names invoked during the turn. */
+    /**
+     * Tool calls of the turn: `<tool> <command>` for a shell call, `<tool> <path>`
+     * for Edit / Write / MultiEdit / NotebookEdit, the bare tool name otherwise.
+     */
     toolCommands: readonly string[];
     /** The language the turn was pinned to, when the host pinned one. */
     pinnedLanguage?: 'de' | 'en' | null;
@@ -508,14 +520,16 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
     // spurious PR. Ordinals and numerals only.
     /\b(schon|bereits)[^.!?]{0,30}(zum (zweiten|dritten|vierten|fünften) mal|(zwei|drei|vier|fünf)mal|mehrmals|mehrfach|\d+ ?mal)[^.!?]{0,20}(gesagt|erwähnt|geschrieben|angesprochen)\b/i,
     /\b(sage|sag|sagte)[^.!?]{0,30}(zum (zweiten|dritten|vierten|fünften) mal|(zwei|drei|vier|fünf)mal|mehrmals|mehrfach|\d+ ?mal)\b/i,
-    /\bwie oft (soll|muss|müssen)\b/i,
+    // A saying-verb is required: "wie oft soll ich es versuchen?" is a question
+    // about a retry count, not a recurrence (council review, 2026-10-29).
+    /\bwie oft (soll|muss|müssen)\b[^.!?]{0,40}\b(sagen|erklären|schreiben|wiederholen|erinnern)\b/i,
     // Typographic AND ASCII apostrophe: the curly form is what a real prompt
     // carries, and matching only the ASCII one is a dead branch on live input.
     /\bi ?(have|['’]ve)? ?already (told|said)\b/i,
     /\b(told|said) (you )?(this|that|it)? ?(\w+|\d+) times?\b/i,
     // An ordinal restates only when punctuation follows it ("Zum dritten Mal: Tabs!",
     // not "zum dritten Mal gewonnen"); "schon wieder" needs an addressee nearby.
-    /\b(zum (zweiten|dritten|vierten|fünften) mal|for the (second|third|fourth|fifth) time)\s*[:!,—–-]|\bwie oft (noch|muss|soll) ich\b|\bhow many times (do|must|should|have|will) (i|we)\b|\bas i (mentioned|said) (before|earlier)\b|\btold you (this|that)\b|\bimmer noch nicht\b|\bschon wieder\b[^.!?]{0,40}\b(du|you|ihr)\b|\b(du|you|ihr)\b[^.!?]{0,40}\bschon wieder\b/i,
+    /\b(zum (zweiten|dritten|vierten|fünften) mal|for the (second|third|fourth|fifth) time)\s*[:!,—–-]|\bwie oft (noch|muss|soll) ich(\s*[:!—–-]|\b[^.!?]{0,30}\b(sagen|erklären|schreiben|wiederholen|erinnern)\b)|\bhow many times (do|must|should|have|will) (i|we)(\s*[:!—–-]|\b[^.!?]{0,20}\b(tell|say|ask|explain|repeat|remind)\b)|\bas i (mentioned|said) (before|earlier)\b|\btold you (this|that)\b|\bimmer noch nicht\b|\bschon wieder\b[^.!?]{0,40}\b(du|you|ihr)\b|\b(du|you|ihr)\b[^.!?]{0,40}\bschon wieder\b/i,
 ];
 
 // Phrasings that MATCH a complaint pattern but are not complaints — a curious
@@ -563,11 +577,26 @@ function spanExonerated(prompt: string, start: number, end: number): boolean {
 export const MAX_SUBJECT = 40;
 
 /**
- * A backticked token anywhere in the prompt, else the clause after a colon that
- * closes the matched marker. Undefined when neither names anything.
+ * The backticked token nearest the matched marker inside its own sentence, else
+ * the clause after a colon that closes the marker. Undefined when neither names
+ * anything. A backtick in another sentence is about something else.
  */
-function reportSubject(prompt: string, matchEnd: number): string | undefined {
-    let raw = /`([^`\n]+)`/.exec(prompt)?.[1];
+function reportSubject(prompt: string, matchStart: number, matchEnd: number): string | undefined {
+    // Sentence bounds are read with code spans blanked, so `foo.ts` ends nothing.
+    const masked = prompt.replace(/`[^`\n]+`/g, (s) => '`'.padEnd(s.length - 1, 'x') + '`');
+    const from = Math.max(masked.slice(0, matchStart).search(/[.!?\n][^.!?\n]*$/) + 1, 0);
+    const rest = masked.slice(matchEnd).search(/[.!?\n]/);
+    const to = rest < 0 ? prompt.length : matchEnd + rest;
+    let raw: string | undefined;
+    let best = Infinity;
+    for (const m of prompt.slice(from, to).matchAll(/`([^`\n]+)`/g)) {
+        const at = from + (m.index ?? 0);
+        const dist = at < matchStart ? matchStart - at : Math.max(0, at - matchEnd);
+        if (dist < best) {
+            best = dist;
+            raw = m[1];
+        }
+    }
     if (raw === undefined) {
         const colon = /^[^.!?\n:]{0,3}:\s*([^.!?\n]+)/.exec(prompt.slice(matchEnd - 1));
         raw = colon?.[1];
@@ -588,7 +617,7 @@ export function detectUserReport(prompt: string): DefectFinding | null {
     for (const re of COMPLAINT_PATTERNS) {
         const m = re.exec(prompt);
         if (m !== null && !spanExonerated(prompt, m.index, m.index + m[0].length)) {
-            const subject = reportSubject(prompt, m.index + m[0].length);
+            const subject = reportSubject(prompt, m.index, m.index + m[0].length);
             return {
                 defect_class: 'user-reported',
                 source: 'user-reported',
@@ -682,6 +711,52 @@ export function detectLanguageMirror(turn: TurnSnapshot): DefectFinding | null {
     };
 }
 
+// A promise that something will hold beyond this session. The strong forms
+// promise it outright; the weak ones ("noted") only promise it when the user
+// asked for something durable, otherwise "noted" means "observed" and is prose.
+const STRONG_PERSISTENCE_RE =
+    /\b(ab jetzt|ab sofort|von nun an|für immer|künftig|(ich )?merke? (ich )?(mir|es mir)|gemerkt|from now on|going forward|I(['’]ll| will) remember)\b/i;
+const WEAK_PERSISTENCE_RE = /\b(notiert|noted)\b/i;
+const DURABLE_ASK_RE =
+    /\b(immer|nie|niemals|ab jetzt|ab sofort|künftig|in zukunft|merk dir|merke dir|always|never|from now on|going forward|in future|remember)\b/i;
+
+// What the next session reads: the instruction files, the formatter and lint
+// configs that enforce a convention without anyone reading it, the host's rule
+// directory, and memory directories.
+const CARRIER_PATH_RE =
+    /(^|[\s/])(AGENTS\.md|CLAUDE[^\s/]*\.md|\.editorconfig|\.prettierrc[^\s/]*|prettier\.config\.[^\s/]+|\.eslintrc[^\s/]*|eslint\.config\.[^\s/]+|biome\.jsonc?|\.stylelintrc[^\s/]*|\.php-cs-fixer[^\s/]*|pint\.json|ecs\.php|ruff\.toml|\.ruff\.toml|pyproject\.toml|\.rubocop\.yml|\.?rustfmt\.toml|\.clang-format)$|\.claude\/rules\/|\/memory\//;
+const WRITE_TOOL_RE = /^(Write|Edit|MultiEdit|NotebookEdit)\s+(.+)$/;
+const SHELL_CARRIER_RE = /\bmemory:(add|propose|promote)\b|(>>?|\btee\b(\s+-a)?)\s*["']?(\S*\/)?(AGENTS\.md|CLAUDE[^\s/"']*\.md|\.editorconfig)\b/;
+
+/** Whether one recorded tool call wrote to a carrier. */
+export function writesCarrier(toolCommand: string): boolean {
+    const m = WRITE_TOOL_RE.exec(toolCommand.trim());
+    if (m !== null) return CARRIER_PATH_RE.test((m[2] as string).trim());
+    return /^Bash\s/.test(toolCommand) && SHELL_CARRIER_RE.test(toolCommand);
+}
+
+/**
+ * Detector 3 — "noted" / "from now on" with no write to anything the next
+ * session reads. The claim is read from the reply's opening only: a "noted"
+ * deep in a summary describes a change, it does not promise one.
+ */
+export function detectPersistenceClaim(turn: TurnSnapshot): DefectFinding | null {
+    const opening = proseOpening(turn.reply);
+    const m = STRONG_PERSISTENCE_RE.exec(opening) ?? (DURABLE_ASK_RE.test(turn.prompt) ? WEAK_PERSISTENCE_RE.exec(opening) : null);
+    if (m === null || turn.toolCommands.some(writesCarrier)) {
+        return null;
+    }
+    return {
+        defect_class: 'persistence-claim',
+        source: 'self-detected',
+        evidence: sanitizeEvidence(m[0]),
+        suggested_surface:
+            'A persistence claim was made with no write to a carrier the next session reads ' +
+            '(AGENTS.md, CLAUDE*.md, a formatter config, .claude/rules/, memory) — report which ' +
+            'surface should have carried the convention.',
+    };
+}
+
 /** One registered detector — the unit the corpus gate enumerates. */
 export interface RegisteredDetector {
     defect_class: DefectClass;
@@ -704,6 +779,7 @@ export const DETECTOR_REGISTRY: readonly RegisteredDetector[] = [
     },
     { defect_class: 'council-availability-claim', source: 'self-detected', detect: detectCouncilClaim },
     { defect_class: 'language-mirror', source: 'self-detected', detect: detectLanguageMirror },
+    { defect_class: 'persistence-claim', source: 'self-detected', detect: detectPersistenceClaim },
 ];
 
 /** Run every self-detected detector over a finished turn. */
@@ -863,6 +939,7 @@ export function mergeRecord(
 ): DefectRecord {
     const fp = fingerprint(finding.defect_class, finding.evidence);
     if (existing !== null && existing.fingerprint === fp) {
+        const subjects = _countSubject(subjectsOf(existing), finding.subject);
         const target = _mergeIds(existing.target, finding.target);
         const proposes = _mergeIds(existing.proposes, finding.proposes);
         const unitKeys = _mergeIds(existing.unit_keys, finding.unit_keys);
@@ -878,6 +955,7 @@ export function mergeRecord(
             ...(proposes.length > 0 ? { proposes } : {}),
             ...(unitKeys.length > 0 ? { unit_keys: unitKeys } : {}),
             ...(existing.subject ?? finding.subject ? { subject: existing.subject ?? finding.subject } : {}),
+            ...(Object.keys(subjects).length > 0 ? { subjects } : {}),
             // A detector-opened record that a retro later names keeps the name.
             ...claimFields(existing, finding),
         };
@@ -885,14 +963,31 @@ export function mergeRecord(
         delete merged.parked_until;
         return merged;
     }
+    const subjects = _countSubject({}, finding.subject);
     return {
         ...finding,
+        ...(Object.keys(subjects).length > 0 ? { subjects } : {}),
         fingerprint: fp,
         first_seen: now,
         last_seen: now,
         occurrences: 1,
         status: 'open',
     };
+}
+
+/**
+ * The per-subject tally of a record. A record written before `subjects`
+ * existed carries only `subject`, and every one of its arrivals was counted
+ * against it.
+ */
+export function subjectsOf(rec: DefectRecord): Record<string, number> {
+    if (rec.subjects !== undefined) return { ...rec.subjects };
+    return rec.subject !== undefined ? { [rec.subject]: rec.occurrences } : {};
+}
+
+function _countSubject(acc: Record<string, number>, subject: string | undefined): Record<string, number> {
+    if (subject !== undefined) acc[subject] = (acc[subject] ?? 0) + 1;
+    return acc;
 }
 
 // ── egress ─────────────────────────────────────────────────────────

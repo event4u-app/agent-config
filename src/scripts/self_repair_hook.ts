@@ -36,7 +36,8 @@ import {
     runDetectors,
     type TurnSnapshot,
 } from './_lib/self_repair.js';
-import { openRecords, upsertFinding } from './_lib/self_repair_store.js';
+import { readHostMemory } from './_lib/host_memory_reader.js';
+import { openRecords, upsertFinding, writeSubjectIndex } from './_lib/self_repair_store.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { emitDefectShadow } from './hooks/telemetry_self_repair.js';
 
@@ -97,7 +98,10 @@ export function readTurn(transcriptPath: string, pinned: 'de' | 'en' | null): Tu
         }
         const content = msg['content'];
         if (obj['type'] === 'user' && typeof content === 'string') {
+            // A new prompt opens a new turn: a write in an earlier turn does not
+            // discharge a claim made in this one.
             prompt = content;
+            toolCommands.length = 0;
         }
         if (obj['type'] !== 'assistant') {
             continue;
@@ -120,7 +124,9 @@ export function readTurn(transcriptPath: string, pinned: 'de' | 'en' | null): Tu
             if (blk['type'] === 'tool_use') {
                 const input = blk['input'];
                 const name = str(blk['name']);
-                const cmd = isObject(input) ? str(input['command']) : '';
+                const cmd = isObject(input)
+                    ? str(input['command']) || str(input['file_path']) || str(input['notebook_path'])
+                    : '';
                 toolCommands.push(`${name} ${cmd}`.trim());
             }
         }
@@ -216,6 +222,15 @@ export function main(): number {
             }
         } catch {
             // an unwritable store must never cost the user their turn
+        }
+    }
+    if (findings.length > 0) {
+        try {
+            // Kept current on every arrival, so a subject's third differently
+            // worded correction is readable as its third arrival right away.
+            writeSubjectIndex(root, readHostMemory());
+        } catch {
+            // derived and regenerable; a failed write loses nothing
         }
     }
 

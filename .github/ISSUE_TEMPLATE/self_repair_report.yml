@@ -25,6 +25,7 @@ body:
         - council-availability-claim
         - language-mirror
         - model-noticed
+        - persistence-claim
     validations:
       required: true
   - type: dropdown

@@ -11,6 +11,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { type HostMemoryEntry, hostMemoryArrivals } from './host_memory_reader.js';
 import {
     ACTIVE_STATUSES,
     creationCapReached,
@@ -21,6 +22,7 @@ import {
     isWellFormedTarget,
     mergeRecord,
     parseTarget,
+    subjectsOf,
     validateRecord,
 } from './self_repair.js';
 
@@ -84,7 +86,7 @@ export function listRecords(root: string): DefectRecord[] {
         // The overflow counter shares the directory and the extension but is not
         // a record. `isRecord` would reject it anyway; naming it here keeps the
         // exclusion intentional rather than incidental.
-        if (!n.endsWith('.json') || n === OVERFLOW_FILE || n === TARGET_INDEX_FILE) {
+        if (!n.endsWith('.json') || n === OVERFLOW_FILE || n === TARGET_INDEX_FILE || n === SUBJECT_INDEX_FILE) {
             continue;
         }
         const rec = readRecord(root, n.slice(0, -'.json'.length));
@@ -397,6 +399,57 @@ export function writeTargetIndex(root: string): TargetCount[] {
     const counts = targetCounts(root);
     fs.mkdirSync(storeDir(root), { recursive: true });
     fs.writeFileSync(targetIndexPath(root), `${JSON.stringify(counts, null, 2)}\n`, 'utf-8');
+    return counts;
+}
+
+// per-subject arrival index
+//
+// The target index joins records by the asset they are about; this one joins
+// them by what the USER named. Three differently worded complaints about `tabs`
+// are three fingerprints with one occurrence each, and only the subject says
+// they are one recurring correction. Derived and deterministic, like the
+// target index, and regenerated wholesale on every write.
+export const SUBJECT_INDEX_FILE = '_subject-index.json';
+
+export interface SubjectCount {
+    subject: string;
+    /** Arrivals naming this subject: the store's records plus `host_memory`. */
+    arrivals: number;
+    /** Fingerprints that carried it. */
+    records: string[];
+    /** Corrections the host's own auto-memory had already recorded about it. */
+    host_memory: number;
+}
+
+/**
+ * Aggregate arrivals by subject over the store's record files. `hostMemory`
+ * adds the corrections the host already recorded (`host_memory_reader.ts`) to
+ * a subject the store knows; it never introduces a subject on its own, because
+ * a memory nobody complained about again is not a recurrence.
+ */
+export function subjectCounts(root: string, hostMemory: readonly HostMemoryEntry[] = []): SubjectCount[] {
+    const acc = new Map<string, { arrivals: number; records: string[] }>();
+    for (const rec of listRecords(root)) {
+        for (const [subject, n] of Object.entries(subjectsOf(rec))) {
+            const prev = acc.get(subject) ?? { arrivals: 0, records: [] };
+            prev.arrivals += Number.isFinite(n) ? n : 0;
+            if (!prev.records.includes(rec.fingerprint)) prev.records.push(rec.fingerprint);
+            acc.set(subject, prev);
+        }
+    }
+    return [...acc.entries()]
+        .map(([subject, v]) => {
+            const host = hostMemoryArrivals(hostMemory, subject);
+            return { subject, arrivals: v.arrivals + host, records: [...v.records].sort(), host_memory: host };
+        })
+        .sort((a, b) => (a.subject < b.subject ? -1 : a.subject > b.subject ? 1 : 0));
+}
+
+/** Write the derived subject index; same byte-stability contract as the target index. */
+export function writeSubjectIndex(root: string, hostMemory: readonly HostMemoryEntry[] = []): SubjectCount[] {
+    const counts = subjectCounts(root, hostMemory);
+    fs.mkdirSync(storeDir(root), { recursive: true });
+    fs.writeFileSync(path.join(storeDir(root), SUBJECT_INDEX_FILE), `${JSON.stringify(counts, null, 2)}\n`, 'utf-8');
     return counts;
 }
 
