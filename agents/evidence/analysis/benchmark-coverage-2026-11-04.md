@@ -13,7 +13,7 @@ benchmark?". Status vocabulary:
 
 Every ab-v2 discipline reading predates the 2026-10-28 oracle repair
 (`docs/benchmark.md` § Task validity) and is not re-scored; the re-run waits
-on `stubs/road-to-a-rerun-on-the-repaired-scorer` (owner question OQ-64).
+on `road-to-a-rerun-on-the-repaired-scorer` (owner question OQ-64, answered: $100).
 Families M01–M16 follow the source's numbering.
 
 | ID | Family | Newest reading | Status | Measurement owner |
