@@ -205,7 +205,7 @@ describe('stamp — the artefact knows what it was computed from', () => {
     // A full read of every file cost 11.6 s on a consumer repository with a
     // vendor tree; the artefact needs the text of UI files and a few named
     // documents only, so nothing else is opened.
-    it.skipIf(process.platform === 'win32')('a file whose text is never needed is never read', () => {
+    it('a file whose text is never needed is never read', () => {
         dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-audit-lazy-'));
         fs.mkdirSync(path.join(dir, 'components'), { recursive: true });
         fs.writeFileSync(path.join(dir, 'components', 'form.tsx'), 'export const F = () => <Input name="a" />;');

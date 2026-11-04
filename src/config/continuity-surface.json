@@ -499,6 +499,13 @@
             "reason": "Shadow-window measurement of the two consistency findings at several tolerances. Read to derive a threshold, never by a successor session to resume anything."
         },
         {
+            "id": "design-consistency-roles.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/design_consistency_pass.ts:36",
+            "reason": "Cache of the control-role map, keyed on HEAD and the dirty primitive files and recomputed whenever that key moves. A derived value, never read by a successor session to resume anything."
+        },
+        {
             "id": "ui-conformance.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
