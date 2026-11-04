@@ -37,13 +37,6 @@ export function isEffort(v: unknown): v is Effort {
     return typeof v === 'string' && (EFFORT_LEVELS as readonly string[]).includes(v);
 }
 
-/** Parse a configured value; `null`/absent stays `null`, anything else is an error message. */
-export function parseEffort(raw: unknown, where: string): { effort: Effort | null } | { error: string } {
-    if (raw === null || raw === undefined) return { effort: null };
-    if (isEffort(raw)) return { effort: raw };
-    return { error: `${where} must be one of ${EFFORT_LEVELS.join(', ')} (got ${JSON.stringify(raw)}).` };
-}
-
 export function resolveEffort(opts: {
     flag?: string | null | undefined;
     member?: string | null | undefined;

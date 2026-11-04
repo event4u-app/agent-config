@@ -9,8 +9,8 @@ import {
     codexEffortArgs,
     EFFORT_LEVELS,
     LENS_DEFAULT_EFFORT,
+    isEffort,
     onProbedLine,
-    parseEffort,
     resolveEffort,
 } from '../../../src/scripts/ai_council/effort.js';
 
@@ -34,11 +34,9 @@ describe('effort resolution', () => {
         expect(high).toEqual(['debate']);
     });
 
-    it('parseEffort accepts the three levels and null, rejects the rest', () => {
-        for (const level of EFFORT_LEVELS) expect(parseEffort(level, 'x')).toEqual({ effort: level });
-        expect(parseEffort(null, 'x')).toEqual({ effort: null });
-        expect(parseEffort(undefined, 'x')).toEqual({ effort: null });
-        for (const bad of ['max', 'HIGH', 3, true, '']) expect('error' in parseEffort(bad, 'x')).toBe(true);
+    it('isEffort accepts exactly the three levels', () => {
+        for (const level of EFFORT_LEVELS) expect(isEffort(level)).toBe(true);
+        for (const bad of [null, undefined, 'max', 'HIGH', 3, true, '']) expect(isEffort(bad)).toBe(false);
     });
 });
 
