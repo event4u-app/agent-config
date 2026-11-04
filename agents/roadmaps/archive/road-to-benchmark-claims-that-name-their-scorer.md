@@ -64,7 +64,7 @@ Evidence (read): `src/agent-src/templates/scripts/work_engine/_lib/agent_setting
       `docs/benchmark.pinned.yml`, its rendered row and the curated finding in
       `docs/benchmark.md`, and the two bench-arm code comments read "retired
       size-cut `balanced`", never "shipped".
-      verify: `grep -rnE "shipped \`balanced\` (router )?profile[)]|the shipped \`balanced\` profile is a null|\(the shipped \`balanced\` profile\)" docs src` -> /^$/
+      verify: `grep -rnE "shipped .balanced. (router )?profile[)]|the shipped .balanced. profile is a null" docs src` -> /^$/
 
 ## Phase 2 — Claims that carry their scorer epoch
 
@@ -77,7 +77,8 @@ Evidence (read): `docs/benchmark.md:25-31`
 - [x] **2.2 The ledger refuses an epoch-less benchmark claim.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_claims.ts --> `check_claims`
       reports a `backed` entry whose `evidence` points into `docs/benchmark.md`
       and whose `kind` is `quant` without a `measured_on` naming a scorer.
-      verify: `npx vitest run tests/scripts/check_claims_scorer_epoch.test.ts` -> 0, and `./scripts-run src/scripts/check_claims` -> 0
+      verify: `npx vitest run tests/scripts/check_claims_scorer_epoch.test.ts` -> 0
+      verify: `./scripts-run src/scripts/check_claims` -> 0
 
 ## Phase 3 — Runs a later scorer can re-score
 
