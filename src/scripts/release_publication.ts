@@ -32,9 +32,7 @@ import {
     NEXT_SECTION_RE,
     extract_changelog_section,
     tag_message_from_section,
-    pr_body_from_section,
-    PR_ONLY_START,
-    PR_ONLY_END,
+    pr_body_from_section, PR_ONLY_START, PR_ONLY_END,
 } from './_lib/release_material.js';
 
 import {
@@ -1006,11 +1004,8 @@ function _target_from_branch(branch: string): string {
  * fixed 200 fell short of the 267-character wrapper and failed the 19.0.0 cut.
  */
 export function release_pr_body(sectionBody: string, target: string, extra = ''): string {
-    // `extra` is PR-only material (the showcase), so it sits inside the
-    // PR-only markers the body ↔ CHANGELOG equality check strips; bare, it
-    // followed the footer and failed that check on 20.1.0. Its length is
-    // reserved before capping — 20.0.0 overshot the limit with it appended
-    // after a cap that had already spent the whole budget.
+    // `extra` (the showcase) is PR-only: inside the markers the CHANGELOG-equality check strips
+    // (bare, it failed that check on 20.1.0), its length reserved before capping (20.0.0 overshot).
     const tail = extra ? `\n${PR_ONLY_START}${extra}\n${PR_ONLY_END}\n` : '';
     const reserved = [...pr_body_from_section('', target)].length + [...tail].length;
     const capped = _cap_body(sectionBody, GH_PR_BODY_LIMIT - reserved, '`CHANGELOG.md` in this PR');
