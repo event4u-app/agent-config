@@ -93,6 +93,14 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/hooks/web_launch_rows.ts',
         outfile: 'dist/hooks/web_launch_rows.chunk.cjs',
     }),
+    // `self-repair` on `user_prompt_submit` and `stop`; the detectors, the
+    // record store and the Class-A shadow stay off every other dispatch's
+    // parse. `yaml` external: the telemetry shadow reads the settings layers.
+    Object.freeze({
+        entry: 'src/scripts/self_repair_hook.ts',
+        outfile: 'dist/hooks/self_repair.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
 ]);
 
 /**
