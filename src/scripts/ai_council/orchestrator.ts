@@ -39,6 +39,7 @@ import {
     DEFAULT_MAX_TOKENS,
     CouncilResponse
 } from './clients.js';
+import { QUOTA_EXHAUSTED, QUOTA_EXHAUSTED_MARK, quotaExhaustedNames, runSkippingExhausted } from './quota_carry.js';
 import type {
     ConsensusMetadata,
     Finding} from './consensus.js';
@@ -434,6 +435,7 @@ export function consult(
 
     const stance_tally = opts.stance_tally ?? false;
     const inline_findings = opts.inline_findings ?? false;
+    const exhausted = new Set<string>();
     for (let round_idx = 0; round_idx < rounds; round_idx++) {
         // The FINAL round carries the opt-in closing contracts (STANCE line,
         // inline findings). Both off → the question flows through untouched,
@@ -449,7 +451,7 @@ export function consult(
                       user_prompt: prompt_for_round,
                       max_tokens: question.max_tokens,
                   });
-        last_results = _run_round(members, round_question, resolvedBudget, spent, {
+        last_results = runSkippingExhausted(members, exhausted, (live) => _run_round(live, round_question, resolvedBudget, spent, {
             table,
             on_overrun,
             project,
@@ -463,7 +465,8 @@ export function consult(
             split: suffix_for_round
                 ? { stable: question.user_prompt, suffix: suffix_for_round }
                 : null,
-        });
+        }));
+        for (const n of quotaExhaustedNames(last_results)) exhausted.add(n);
         if (on_round_complete !== null) {
             on_round_complete(round_idx, last_results);
         }
@@ -485,7 +488,7 @@ export function consult(
                 continue;
             }
             const member = members[i];
-            if (member === undefined || !on_stance_repair(member.name)) {
+            if (member === undefined || exhausted.has(member.name) || !on_stance_repair(member.name)) {
                 continue;
             }
             const repairQ = new CouncilQuestion({
@@ -510,6 +513,7 @@ export function consult(
                 if (seat.resumeNext !== undefined) seat.resumeNext = null; // a quota gate or refusal returns before the seat clears it
             }
             const rep = rr[0];
+            if (rep?.error === QUOTA_EXHAUSTED) r.metadata[QUOTA_EXHAUSTED_MARK] = true; // answer stands; peer review skips the seat
             if (rep !== undefined) {
                 opts.on_stance_repair_result?.(rep);
                 if (rep.error === null && parse_stance_line(rep.text) !== null) {
@@ -1067,6 +1071,7 @@ function _run_debate_gate_repairs(
         fallback_twins?: Map<string, EstablishedTwin> | null;
     },
     on_repair: ((member: string, reason: string) => boolean) | null,
+    exhausted: Set<string> = new Set(),
 ): CouncilResponse[] {
     const flagged: Array<{ idx: number; reason: string }> = [];
     const okText = (r: CouncilResponse | undefined): string =>
@@ -1100,7 +1105,7 @@ function _run_debate_gate_repairs(
             continue; // hard cap: <= 1 repair per member per round
         }
         const member = members[f.idx];
-        if (member === undefined) {
+        if (member === undefined || exhausted.has(member.name)) {
             continue;
         }
         if (!on_repair(member.name, f.reason)) {
@@ -1118,6 +1123,7 @@ function _run_debate_gate_repairs(
         });
         const rr = _run_round([member], repairQ, budget, spent, round_opts);
         const r0 = rr[0];
+        for (const n of quotaExhaustedNames(rr)) exhausted.add(n);
         if (r0 !== undefined && r0.error === null && r0.text.trim() !== '') {
             out[f.idx] = r0;
         }
@@ -1264,6 +1270,7 @@ export function run_debate(
     // road-to-cache-economy Phase 4: wall-clock marker for the inter-round
     // cache-gap measurement. `null` until round 1 finishes.
     let previous_round_end_ms: number | null = null;
+    const debate_exhausted = new Set<string>();
 
     // Phase 3 restate: one pre-round-1 call per member. Runs BEFORE any debate
     // spend so a diverging restatement can be flagged before round-2 cost.
@@ -1286,6 +1293,7 @@ export function run_debate(
             fallback_ledger,
             fallback_twins,
         });
+        for (const n of quotaExhaustedNames(restated)) debate_exhausted.add(n);
         opts.on_restate?.(restated);
     }
 
@@ -1308,7 +1316,7 @@ export function run_debate(
                           user_prompt: current_user_prompt,
                           max_tokens: question.max_tokens,
                       });
-            results = _run_round(members, round_question, budget, spent, {
+            results = runSkippingExhausted(members, debate_exhausted, (live) => _run_round(live, round_question, budget, spent, {
                 table,
                 on_overrun,
                 project,
@@ -1320,8 +1328,9 @@ export function run_debate(
                 split: current_suffix
                     ? { stable: question.user_prompt, suffix: current_suffix }
                     : null,
-            });
+            }));
         }
+        for (const n of quotaExhaustedNames(results)) debate_exhausted.add(n);
 
         if (opts.debate_gates === true && round_idx > 0 && all_rounds.length > 0) {
             results = _run_debate_gate_repairs(
@@ -1347,6 +1356,7 @@ export function run_debate(
                     fallback_twins,
                 },
                 opts.on_repair ?? null,
+                debate_exhausted,
             );
         }
         all_rounds.push(results);
@@ -1503,9 +1513,10 @@ export function run_peer_review(
     // as the serialised compatibility field (`council_cli.ts:1480`/`:1492`).
     const label_to_source_by_reviewer = new Map<string, Map<string, string>>();
 
+    const reviewer_exhausted = quotaExhaustedNames(deliberation_responses);
     for (const reviewer of members) {
         const scorer = `${reviewer.name}:${reviewer.model}`;
-        if (!member_by_name.has(reviewer.name)) {
+        if (!member_by_name.has(reviewer.name) || reviewer_exhausted.has(reviewer.name)) {
             continue;
         }
         const others_pairs: Array<[string, string]> = [];
