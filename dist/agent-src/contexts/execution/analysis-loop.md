@@ -150,3 +150,12 @@ Sections, in order: **Findings vs tree** · **Kills** · **Decisions** · **Step
 with `verify:`** · **Loop log**. Source names appear only in a sibling
 `*.annex.md`, never in the handoff itself. The owner drops the file into
 `agents/tmp/<round-id>/`; the engine never writes there.
+
+**How the external analyst reads the project.** `analysis_prompts.ts` adds a
+reading block to both prompts (`_lib/repo_reference.ts`): when the repository
+is public and the pin is on the remote, the analyst fetches files from GitHub at
+that commit by path; otherwise it works from files the owner attaches. Either
+way the block carries a work budget (about 15 file reads, about 10 searches) and
+asks for every pass in one conversation — every extra fetch re-sends the whole
+conversation, so a deep answer is cheapest as one bounded session, not three.
+CLI analysts (`cliAnalystCommand`) run at `medium` effort unless told otherwise.
