@@ -48,6 +48,7 @@ import {
 import { asOf, localIsoDate } from './_lib/as_of.js';
 import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
 import { staleVerifiedVerdict } from './_lib/claims_stale_verified.js';
+import { scorer_epoch_findings } from './_lib/claims_scorer_epoch.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { WITNESS_MARKER, settleSiteFindings, siteScannedLine, siteWitnessSurfaces } from './_lib/claims_site_sweep.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
@@ -457,22 +458,6 @@ export function overdue_entries(ledger: Map<string, LedgerEntry>, today: string)
     );
 }
 
-/**
- * A backed number from the ab-v2 page must say which scorer produced it: the
- * 2026-10-28 oracle repair split that page into before and after, and nothing
- * re-scored the pinned runs, so an unlabelled number reads as post-repair.
- */
-export function scorer_epoch_findings(ledger: Map<string, LedgerEntry>): Finding[] {
-    return [...ledger.values()]
-        .filter((e) => e.status === 'backed' && e.kind === 'quant' && e.evidence.includes('docs/benchmark.md'))
-        .filter((e) => !/\bscorer\b/i.test(e.measured_on))
-        .map((e) => ({
-            id: e.id,
-            file: LEDGER_REL,
-            reason: 'backed quant claim on docs/benchmark.md names no scorer in `measured_on` — say which side of the 2026-10-28 repair it was scored on',
-        }));
-}
-
 export function render_overdue(overdue: readonly LedgerEntry[]): string {
     if (overdue.length === 0) {
         return '';
@@ -662,7 +647,7 @@ function pointer_unresolved(evidence: string): string | null {
     return null;
 }
 
-export interface Finding {
+interface Finding {
     id: string;
     file: string;
     reason: string;
@@ -1264,7 +1249,7 @@ function selfTest(): number {
     // a missing one fails as a module resolution error in EVERY case at once —
     // which reads as the detection having broken rather than the fixture being
     // incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts'];
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts', 'claims_scorer_epoch.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));

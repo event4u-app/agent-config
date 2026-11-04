@@ -4,7 +4,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { type LedgerEntry, scorer_epoch_findings } from '../../src/scripts/check_claims.js';
+import { scorer_epoch_findings } from '../../src/scripts/_lib/claims_scorer_epoch.js';
+import type { LedgerEntry } from '../../src/scripts/check_claims.js';
 
 function entry(over: Partial<LedgerEntry>): LedgerEntry {
     return {

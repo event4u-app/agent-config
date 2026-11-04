@@ -573,17 +573,10 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // Delta #7 — where this trial's evidence lives. Recorded on the trial
         // rather than recomputed later, so an offline re-scorer reads the path the
         // sweep actually used instead of re-deriving a key that may have changed.
-        workspace: clone,
+        ...scoring.workspace_fields(fixture, clone),
         transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
-        ...final_files_fields(fixture, clone),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
-}
-
-/** The trial's post-state, so a later scorer can rebuild and re-score it. */
-export function final_files_fields(fixture: string, clone: string): Dict {
-    const { files, truncated } = scoring.final_files(fixture, clone);
-    return { final_files: files, final_files_truncated: truncated };
 }
 
 export interface RecursiveAttempt {
@@ -695,9 +688,8 @@ export function selftest_run(
         discipline_pass: score.discipline_pass,
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
-        workspace: clone,
+        ...scoring.workspace_fields(fixture, clone),
         // No transcript_path — a synthetic transcript would give T5 a score of the harness.
-        ...final_files_fields(fixture, clone),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }

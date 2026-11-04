@@ -414,6 +414,15 @@ export function final_files(
     return { files, truncated: false };
 }
 
+/** The run-record fields naming the trial's workspace and its post-state. */
+export function workspace_fields(
+    fixture_root: string,
+    clone_root: string,
+): { workspace: string; final_files: Record<string, string | null>; final_files_truncated: boolean } {
+    const { files, truncated } = final_files(fixture_root, clone_root);
+    return { workspace: clone_root, final_files: files, final_files_truncated: truncated };
+}
+
 /**
  * Python `str.splitlines()` — splits on universal newlines, no trailing empty
  * element for a final newline. Mirrors the line keepends=False behaviour.
