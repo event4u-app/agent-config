@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Ratification review — two comment corrections in `src/scripts/hook_manifest.yaml`
 
 `check_kernel_edit_ratified` gates `src/scripts/hook_manifest.yaml` as hook plumbing, so
