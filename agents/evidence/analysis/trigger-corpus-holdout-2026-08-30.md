@@ -833,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  97ac2153dadddb7afa2409065d0c6e0cd6ccaf1e517dcbdb5428ae731f0ff2ba
+SET-SHA256  8822755379e44d59b8e1046e29d3ab880d487e3f430b971b5c871a7022782192
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1278,6 +1278,7 @@ open and which this file does not settle.
 | `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
 | `gated-reach` | `8d39468e75ff725b8e4454fc3a783c2490447ac3f8658ec91e62dbc48352c8a1` |
 | `git-workflow` | `508cdaa8fac1ca9fe1da6934db8a6e1496fc6c46b39dd19ef068b752966b271d` |
+| `hiring-loop-design` | `dd5eaf112af3de7313f8f7f61b1426c0dabc0655d3eabd40cf02ce26f8ba6829` |
 | `history-design` | `50825f6db0683e20a9c16c6a190b52e197caa9a8f20ea85dfa1f6294e70f5145` |
 | `html-deck` | `6bad648f124ea1af4c39f9af19f3fedfb077edc595d63816a8abcf450d2be35d` |
 | `humanizer` | `76c89f2ed3146d11d0f08c97d2595b60b35c1c912ad5c8c9707c0799c52dd221` |
@@ -2362,3 +2363,31 @@ computed over every row.
 guard (**+4.93 pp** against +2.0 pp). `delivery-set-measurement-2026-08-31.json`:
 recall loss **38.14 pp**, the ceiling stays **BREACHED**; context cost **229.7**
 tokens against the 500 target, still **MET**. Neither verdict changes in kind.
+
+## Growth — 2026-11-03c, one new corpus (hiring-loop-design); nothing seals
+
+```
+ONE ROW IS NEW AND TRAINS. NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH
+TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS WAS ON DISK.
+```
+
+**What changed.** Round `inbox-2026-11-u` gave `hiring-loop-design` a classed
+corpus of ten queries (5 exemplars, 3 near-misses, 2 counterexamples), and the
+skill leaves the grandfather allowlist in the same change.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `hiring-loop-design` | train | `0xcf` = 207 ≥ 51 | new |
+
+The sealed set stays **46**, the train set moves **156 -> 157**, the set
+**202 -> 203**. `SET-SHA256` moves because it is computed over every row.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation
+guard (**+4.89 pp** against +2.0 pp; was +4.93 pp).
+`delivery-set-measurement-2026-08-31.json`: recall loss **38.15 pp** (was
+38.14 pp), the ceiling stays **BREACHED**; context cost **229.6** tokens against
+the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.

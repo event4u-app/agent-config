@@ -175,6 +175,16 @@ describe('each --layer value produces its stated effect', () => {
         expect(json['other']).toBe(1); // unrelated keys survive
     });
 
+    it('backs up the pre-existing settings file once and re-reads what it wrote', () => {
+        const p = path.join(project, '.claude', 'settings.local.json');
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        const original = JSON.stringify({ other: 1 });
+        fs.writeFileSync(p, original, 'utf-8');
+        _gate_rule_layer_overlap(project, 'global', false);
+        expect(fs.readFileSync(`${p}.agent-config.bak`, 'utf-8')).toBe(original);
+        expect((JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>)['other']).toBe(1);
+    });
+
     it('is idempotent across a re-install', () => {
         _gate_rule_layer_overlap(project, 'global', false);
         _gate_rule_layer_overlap(project, 'global', false);

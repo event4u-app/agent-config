@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **646**
-- Edges (incl. self-WRITE): **2474**
+- Files indexed: **649**
+- Edges (incl. self-WRITE): **2481**
 
 ## READ_ONLY edges
 
@@ -1176,6 +1176,7 @@
 | `.agent-src.uncondensed/skills/guideline-writing/SKILL.md` | `.agent-src.uncondensed/rules/preservation-guard.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/guideline-writing/SKILL.md` | `.agent-src.uncondensed/skills/description-assist/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/comp-banding/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/hiring-loop-design/references/ai-screening.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/onboarding-program/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/hiring-loop-design/SKILL.md` | `.agent-src.uncondensed/skills/perf-feedback-craft/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/html-deck/SKILL.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
@@ -1506,6 +1507,7 @@
 | `.agent-src.uncondensed/skills/release-comms/SKILL.md` | `.agent-src.uncondensed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/release-comms/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/release-comms/SKILL.md` | `.agent-src.uncondensed/skills/incident-commander/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/release-comms/SKILL.md` | `.agent-src.uncondensed/skills/release-comms/references/inflation-checks.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/release-comms/SKILL.md` | `.agent-src.uncondensed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/repomix-packer/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/repomix-packer/SKILL.md` | `.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
@@ -1560,9 +1562,11 @@
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-writing/references/follow-up-roadmap-shape.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-writing/references/inflation-checklist.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/references/follow-up-roadmap-shape.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/references/follow-up-roadmap-shape.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/references/follow-up-roadmap-shape.md` | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-writing/references/inflation-checklist.md` | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/root-cause-frameworks/SKILL.md` | `.agent-src.uncondensed/skills/blameless-post-mortem/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/root-cause-frameworks/SKILL.md` | `.agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/root-cause-frameworks/SKILL.md` | `.agent-src.uncondensed/skills/bug-analyzer/SKILL.md` | `body_link` | 1 |
@@ -1848,5 +1852,5 @@
 | `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 409 |
+| `skill` | 412 |
 

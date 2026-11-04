@@ -1,0 +1,17 @@
+{
+    "skill": "hiring-loop-design",
+    "last_eval": "2026-11-03",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-11-03 when round inbox-2026-11-u added the AI-assisted screening section. Exemplars cover designing or auditing an engineering interview loop, a model in the screening step, and the German phrasing. Near-misses are neighbours that share hiring vocabulary and are another skill's job: comp bands (comp-banding), new-hire onboarding (onboarding-program), performance reviews (perf-feedback-craft). Counterexamples guard the 'loop' and 'screen' homonyms (an event loop, a screen layout) that carry none of the hiring meaning.",
+    "queries": [
+        {"q": "design our interview loop for senior backend engineers", "trigger": true, "class": "exemplar"},
+        {"q": "audit our hiring bar, too many false positives", "trigger": true, "class": "exemplar"},
+        {"q": "take-home or live coding for this role?", "trigger": true, "class": "exemplar"},
+        {"q": "can we use an LLM to screen the CVs for this position?", "trigger": true, "class": "exemplar"},
+        {"q": "wie sollten wir unseren Bewerbungsprozess für Entwickler aufbauen", "trigger": true, "class": "exemplar", "language": "de"},
+        {"q": "set salary bands for our engineering levels", "trigger": false, "class": "near-miss", "note": "comp-banding"},
+        {"q": "plan the first 30 days for a new hire", "trigger": false, "class": "near-miss", "note": "onboarding-program"},
+        {"q": "help me write a difficult performance review", "trigger": false, "class": "near-miss", "note": "perf-feedback-craft"},
+        {"q": "why does this Node event loop block under load?", "trigger": false, "class": "counterexample", "note": "'loop' homonym"},
+        {"q": "lay out the settings screen for mobile", "trigger": false, "class": "counterexample", "note": "'screen' homonym"}
+    ]
+}

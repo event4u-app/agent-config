@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+Sitemap: https://example.com/sitemap.xml

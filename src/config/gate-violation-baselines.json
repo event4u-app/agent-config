@@ -170,6 +170,12 @@
       "landed": "2026-11-02",
       "falsifier": "./scripts-run src/scripts/check_gate_contracts  # counts self-test gates whose runSelfTest options carry no exit: { finding, cannot_run }",
       "note": "Self-test gates that do not declare which exit code means a finding and which means could-not-run. Without it the harness counts any non-zero exit as a catch (road-to-checks-that-name-their-catch 1.3). No gate has to change its codes to declare them."
+    },
+    "check_claims:stale-last-verified": {
+      "count": 7,
+      "landed": "2026-11-03",
+      "falsifier": "./scripts-run src/scripts/check_claims  # names every entry whose last_verified predates a date its own claim text names; it fails when the count RISES above this entry",
+      "note": "Ledger entries whose `last_verified` is older than the newest past date their own `claim:` text names (road-to-rewrites-that-keep-their-facts step 3.3). The field is new as a check, so the 7 at introduction are inherited, not revealed by a repair: skill-activation-census-zero, lexical-ranking-lift, thin-inject-delivery-equivalence, humanizer-tell-reduction, code-graph-retrieval-null, conformance-advisory-vs-blocking, skill-tiering-h1-unmeasured. A ratchet rather than a hard zero because clearing an entry means re-verifying a backed claim or narrowing it — owner work for humanizer-tell-reduction (blocker owner-instrument-change) — and bumping a date to silence the gate is the defect the check exists to catch."
     }
   },
   "retired": {

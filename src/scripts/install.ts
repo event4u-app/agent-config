@@ -87,7 +87,7 @@ import * as mcp_bridge from './_lib/mcp_bridge.js';
 import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import { createConflictTracker } from '../install/conflictTracker.js';
-import { manualSnippet, mergeHostConfigFile, parseHostConfig } from '../install/hostConfigMerge.js';
+import { manualSnippet, mergeHostConfigFile, parseHostConfig, writeHostConfig } from '../install/hostConfigMerge.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
@@ -477,9 +477,10 @@ function read_json_file(p: string): Record<string, unknown> | null {
     return null;
 }
 
-function write_json_file(p: string, data: unknown): void {
-    const content = jsonDumpsIndent(data, 4) + '\n';
-    write_file(p, content);
+function write_json_file(p: string, data: Record<string, unknown>): boolean {
+    const o = writeHostConfig(p, data, { write: write_file });
+    if (o.status === 'skipped-readback-mismatch') warn(`${p}: ${o.status} (${o.detail ?? ''})`);
+    return o.status !== 'skipped-readback-mismatch';
 }
 
 function merge_json_file(
@@ -927,7 +928,7 @@ function _heal_legacy_claude_plugin_ids(p: string): string[] {
     for (const pid of removed) {
         delete (enabled as Record<string, unknown>)[pid];
     }
-    write_json_file(p, data);
+    if (!write_json_file(p, data)) return [];
     return removed;
 }
 
@@ -1258,8 +1259,7 @@ function ensure_copilot_bridge(project_root: string, force: boolean): void {
         skip('.github/plugin/marketplace.json already exists');
         return;
     }
-    write_json_file(target, bridge);
-    success('.github/plugin/marketplace.json created');
+    if (write_json_file(target, bridge)) success('.github/plugin/marketplace.json created');
 }
 
 const ROOCODE_MARKER = `# Agent Config bridge
@@ -1967,7 +1967,7 @@ function _suppress_rule_layer(project_root: string, suppress_dir: string): void 
     const entry = rule_layer_overlap.claudeMdExcludesGlob(real_dir);
     const merged = rule_layer_overlap.mergeClaudeMdExcludes(existing['claudeMdExcludes'], entry);
     if (JSON.stringify(existing['claudeMdExcludes'] ?? null) === JSON.stringify(merged)) return;
-    write_json_file(target, { ...existing, claudeMdExcludes: merged });
+    if (!write_json_file(target, { ...existing, claudeMdExcludes: merged })) return;
     success(`.claude/settings.local.json: claudeMdExcludes += ${entry}`);
 }
 

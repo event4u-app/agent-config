@@ -387,6 +387,10 @@ release ledger. The residue items are closed the same way.
       `agent-config` verb, so a consumer cannot run them.
       verify: every script invocation in a shipped context either names an
       `agent-config` verb or is marked maintainer-only.
+      Arrival `inbox-2026-11-u` (2026-11-03): shipped **commands** carry the same
+      defect — `dist/agent-src/commands/analyze/reference.md:49` tells a
+      consumer to run `./scripts-run`, which the package does not ship; widen
+      the scope and `lint_consumer_internal_refs` to commands.
 - [ ] **6.3 Residue — re-run the setup-layer baseline report redacted.**
       `agents/evidence/analysis/setup-layer-baseline.md` still holds unredacted
       hook lines.

@@ -73,6 +73,7 @@ Cut surfaces aggressively. A weekly release does not need a blog post.
 1. Every claim links back to a changelog row or a doc URL. Unsourced claim → cut.
 2. No tense games — past for shipped, future for coming-soon (and only if the date is committed). "Roadmap" lives outside this skill.
 3. Names match the product surface. If the in-app says "Reports" and the email says "Insights", the user fires the lookup tax.
+4. Run the [inflation checks](references/inflation-checks.md) per claim.
 
 ### Step 5: Hand off
 

@@ -372,6 +372,12 @@ naming and the peer gaps; subsystem-class stages wait on
 - [ ] **5.6 Product and marketing.** Experiment statistics, Linear, PRD-to-backlog;
   channel execution, SEO, lifecycle email.
   verify: as 5.1.
+  Arrival `inbox-2026-11-u` (2026-11-03), SEO stage-1 content: connector-neutral
+  search-performance recipes that resolve the property first; guardrails —
+  filter or paginate before ranking, compare periods only on keys present in
+  both complete sets, exclude incomplete recent days, read-only scope, no tokens
+  in logs; GEO is a measurement, never a promise. Fixture: a recorded export
+  with seeded cannibalisation, a seeded drop and a row a top-1000 cut hides.
 - [ ] **5.7 Carried defects.** The supplied plan's governance defects go to
   `agents/roadmaps/stubs/road-to-command-runtime-requirements.md` (dead
   `skills:` pointers) and one new stub owned by the maintainer for the rest —

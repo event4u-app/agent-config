@@ -414,7 +414,8 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 200 -> 202 on 2026-11-03: two corpora for skills the same round touched;
         // `performance-analysis` (0x1a) seals (45 -> 46), `data-handling-judgment` (0x5f)
         // trains (155 -> 156).
-        expect(all.length).toBe(202);
+        // 202 -> 203 on 2026-11-03: inbox round 2026-11-u. `hiring-loop-design` (0xcf) trains (156 -> 157).
+        expect(all.length).toBe(203);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(46);
     });
 });
@@ -499,7 +500,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 154 -> 155 on 2026-11-03: `code-review` leaves train, `mcp-tool-use` and
         // `copilot-config` join it (see the 200 line).
         // 155 -> 156 on 2026-11-03: `data-handling-judgment` trains (see the 202 line).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(156);
+        // 156 -> 157 on 2026-11-03: `hiring-loop-design` trains (see the 203 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(157);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

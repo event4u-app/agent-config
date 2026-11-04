@@ -82,12 +82,26 @@ describe('unparseable and ambiguous host settings', () => {
         expect(output).toContain('skipped-duplicate-key');
     });
 
-    it('does not refuse a duplicated key the merge never touches', () => {
-        fs.writeFileSync(settings, '{\n    "editor.fontSize": 12,\n    "editor.fontSize": 14\n}\n');
+    // The merge rewrites the whole file from a strict parse, which keeps only the
+    // last of two equal keys — so a duplicate the merge never touches would still
+    // be collapsed. A rewrite therefore refuses a duplicate anywhere.
+    it('refuses a duplicated key the merge never touches when the file would be rewritten', () => {
+        const original = '{\n    "editor.fontSize": 12,\n    "editor.fontSize": 14\n}\n';
+        fs.writeFileSync(settings, original);
         bridge();
-        const after = JSON.parse(fs.readFileSync(settings, 'utf-8')) as Record<string, unknown>;
-        expect(after['chat.pluginLocations']).toEqual({ [PLUGIN]: true });
-        expect(after['editor.fontSize']).toBe(14);
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+        expect(output).toContain('skipped-duplicate-key');
+        expect(fs.existsSync(`${settings}.agent-config.bak`)).toBe(false);
+    });
+
+    it('reports unchanged, not a refusal, when a file with an untouched duplicate needs no write', () => {
+        const original =
+            '{\n    "chat.pluginLocations": { "./plugin/agent-config": true },\n' +
+            '    "editor.fontSize": 12,\n    "editor.fontSize": 14\n}\n';
+        fs.writeFileSync(settings, original);
+        bridge();
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+        expect(output).toContain('unchanged');
         expect(output).not.toContain('skipped-duplicate-key');
     });
 });
@@ -102,12 +116,15 @@ describe('strict JSON host settings', () => {
         expect(fs.readFileSync(`${settings}.agent-config.bak`, 'utf-8')).toBe(original);
     });
 
-    it('writes the backup once, so a second overwrite keeps the first original', () => {
+    // A once-only backup would keep whatever the first original held — a token
+    // since rotated out of the live file included. Each changing write refreshes it.
+    it('refreshes the backup on every changing write, so it holds the bytes before the latest write', () => {
         const original = '{\n    "editor.fontSize": 14\n}\n';
         fs.writeFileSync(settings, original);
         bridge();
+        const beforeSecond = fs.readFileSync(settings, 'utf-8');
         inst.merge_json_file(settings, { 'editor.tabSize': 2 }, false, '.vscode/settings.json');
-        expect(fs.readFileSync(`${settings}.agent-config.bak`, 'utf-8')).toBe(original);
+        expect(fs.readFileSync(`${settings}.agent-config.bak`, 'utf-8')).toBe(beforeSecond);
         const after = JSON.parse(fs.readFileSync(settings, 'utf-8')) as Record<string, unknown>;
         expect(after['editor.tabSize']).toBe(2);
     });
@@ -135,6 +152,62 @@ describe('the merge module', () => {
             write: (p, content) => fs.writeFileSync(p, content.replace('14', '15')),
         });
         expect(outcome.status).toBe('skipped-readback-mismatch');
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+    });
+
+    it('writeHostConfig refreshes the backup on each overwrite and re-reads it', async () => {
+        const { writeHostConfig } = await import('../../src/install/hostConfigMerge.js');
+        const original = '{\n    "a": 1\n}\n';
+        fs.writeFileSync(settings, original);
+        expect(writeHostConfig(settings, { a: 2 }).status).toBe('updated');
+        const beforeSecond = fs.readFileSync(settings, 'utf-8');
+        expect(writeHostConfig(settings, { a: 3 }).status).toBe('updated');
+        expect(fs.readFileSync(`${settings}.agent-config.bak`, 'utf-8')).toBe(beforeSecond);
+        expect(JSON.parse(fs.readFileSync(settings, 'utf-8'))).toEqual({ a: 3 });
+    });
+
+    it('writeHostConfig restores the original bytes on a readback mismatch', async () => {
+        const { writeHostConfig } = await import('../../src/install/hostConfigMerge.js');
+        const original = '{\n    "a": 1\n}\n';
+        fs.writeFileSync(settings, original);
+        const outcome = writeHostConfig(settings, { a: 2 }, {
+            write: (p, content) => fs.writeFileSync(p, content.replace('2', '9')),
+        });
+        expect(outcome.status).toBe('skipped-readback-mismatch');
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+    });
+
+    it('writeHostConfig creates a missing file without a backup', async () => {
+        const { writeHostConfig } = await import('../../src/install/hostConfigMerge.js');
+        fs.rmSync(settings, { force: true });
+        expect(writeHostConfig(settings, { a: 1 }).status).toBe('created');
+        expect(fs.existsSync(`${settings}.agent-config.bak`)).toBe(false);
+    });
+
+    it('refuses a duplicated key inside a nested container the merge touches', async () => {
+        const { mergeHostConfigFile } = await import('../../src/install/hostConfigMerge.js');
+        const original =
+            '{\n    "mcpServers": {\n        "agent-config": { "command": "a" },\n' +
+            '        "agent-config": { "command": "b" }\n    }\n}\n';
+        fs.writeFileSync(settings, original);
+        const incoming = { mcpServers: { 'agent-config': { command: 'c' } } };
+        const outcome = mergeHostConfigFile(settings, incoming, (existing, inc) => ({ ...existing, ...inc }));
+        expect(outcome.status).toBe('skipped-duplicate-key');
+        expect(outcome.detail).toContain('mcpServers.agent-config');
+        expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
+    });
+
+    it('refuses a nested duplicate in a container the merge never touches, since the rewrite would collapse it', async () => {
+        const { mergeHostConfigFile } = await import('../../src/install/hostConfigMerge.js');
+        const original = '{\n    "mcpServers": {\n        "theirs": { "a": 1, "a": 2 }\n    }\n}\n';
+        fs.writeFileSync(settings, original);
+        const incoming = { mcpServers: { 'agent-config': { command: 'c' } } };
+        const outcome = mergeHostConfigFile(settings, incoming, (existing, inc) => ({
+            ...existing,
+            mcpServers: { ...(existing['mcpServers'] as object), ...inc['mcpServers'] as object },
+        }));
+        expect(outcome.status).toBe('skipped-duplicate-key');
+        expect(outcome.detail).toContain('mcpServers.theirs.a');
         expect(fs.readFileSync(settings, 'utf-8')).toBe(original);
     });
 });

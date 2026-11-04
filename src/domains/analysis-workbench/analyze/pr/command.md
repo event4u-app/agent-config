@@ -124,6 +124,16 @@ introduced; any other line was already there). A clean head reports
 
 Never merges, never approves its own changes — the port has neither.
 
+## Engine modules the model carries
+
+No CLI and no hook runs these modules; the steps above state what each one
+specifies, and the model applies it. Each is a reference spec for the stage,
+not a check that ran — a run that cites one has not executed it.
+
+- `src/scripts/analysis_pr_target.ts` (`resolvePrTarget`, step 1) — reference spec, model-carried.
+- `src/scripts/analysis_pr_review.ts` (`reviewPr`, step 2) — reference spec, model-carried.
+- `src/scripts/analysis_pr_optimize.ts` (`optimizePr`, step 4) — reference spec, model-carried.
+
 ## Output
 
 The verdict (and with `--optimize` the fixes and their dispositions, or the

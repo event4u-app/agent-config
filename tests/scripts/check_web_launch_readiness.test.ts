@@ -86,7 +86,7 @@ describe('conditional, not flat — the skip reason is the site type', () => {
     it('a SaaS app skips the local-business items, naming the type', () => {
         const r = audit(path.join(FIX, 'saas-app'), 'saas-app', REPO);
         const ids = r.skipped.map((s) => s.check).sort();
-        expect(ids).toEqual(['canonical-and-sitemap-coherence', 'per-route-metadata']);
+        expect(ids).toEqual(['canonical-and-sitemap-coherence', 'per-route-metadata', 'snippet-eligibility']);
         for (const s of r.skipped) {
             // 2.3 requires the site type verbatim as the reason.
             expect(s.reason).toBe('site type is saas-app');
@@ -661,8 +661,9 @@ describe('1.1 — no check may PASS on input it cannot see', () => {
             reversed += 1;
         }
         // 7 markup/route checks plus the four outward rows of
-        // road-to-a-page-that-says-what-it-loads, which read pages and stylesheets.
-        expect(reversed).toBe(11);
+        // road-to-a-page-that-says-what-it-loads, which read pages and stylesheets,
+        // plus snippet-eligibility and structured-data-parses, which read pages.
+        expect(reversed).toBe(13);
     });
 
     it('the two probes that need their OWN tree are blind there and decidable elsewhere', () => {
@@ -868,6 +869,10 @@ describe('2.2 — site type and region resolve from settings, and absence is sta
             path.join(REPO, 'src/config/third-party-origins.json'),
             path.join(root, 'src/config/third-party-origins.json'),
         );
+        fs.copyFileSync(
+            path.join(REPO, 'src/config/crawler-register.json'),
+            path.join(root, 'src/config/crawler-register.json'),
+        );
     });
     afterEach(() => {
         fs.rmSync(root, { recursive: true, force: true });
@@ -996,5 +1001,112 @@ describe('2.3 — no fifth state; the new paths are a reason CLASS', () => {
         }
         // `declaration-missing` is exercised by the D12 case in the 1.1 block.
         expect(members).toContain('declaration-missing');
+    });
+});
+
+describe('form variants — the verdict follows what the markup says, never how it is written', () => {
+    const VARIANTS = path.join(FIX, 'form-variants');
+    const verdict = (dir: string) => audit(path.join(VARIANTS, dir), 'marketing-site', REPO);
+    const located = (dir: string, check: string): string[] =>
+        verdict(dir)
+            .findings.filter((f) => f.check === check)
+            .map((f) => f.location)
+            .sort();
+
+    it('reordered description and canonical attributes read as present', () => {
+        expect(verdict('reordered-description-canonical').findings).toEqual([]);
+    });
+
+    it('a robots meta with content before name is a noindex', () => {
+        expect(located('robots-content-first', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+
+    it('content="none" is a noindex', () => {
+        expect(located('robots-none', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+
+    it('a search crawler named in the meta (googlebot) is a noindex', () => {
+        expect(located('googlebot-noindex', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+
+    it('a training-only robots.txt block is not a critical finding', () => {
+        const r = verdict('training-only-block');
+        expect(r.findings.filter((f) => f.tier === 'critical')).toEqual([]);
+        expect(r.findings).toEqual([]);
+    });
+
+    it('a relative canonical and a second, conflicting canonical are findings', () => {
+        const hits = verdict('canonical-relative-and-conflicting').findings.filter(
+            (f) => f.check === 'canonical-and-sitemap-coherence',
+        );
+        expect(hits.map((h) => h.location.split(':')[0])).toContain('index.html');
+        expect(hits.some((h) => /relative/i.test(h.evidence))).toBe(true);
+        expect(hits.some((h) => /conflict/i.test(h.evidence))).toBe(true);
+    });
+
+    it('a sitemap host that merely CONTAINS the canonical host does not match it', () => {
+        const hits = verdict('sitemap-lookalike-host').findings.filter(
+            (f) => f.check === 'canonical-and-sitemap-coherence',
+        );
+        expect(hits.length).toBeGreaterThan(0);
+        expect(hits.every((h) => h.evidence.includes('example.com'))).toBe(true);
+    });
+
+    it('the control — the form the old reader already handled — still fires', () => {
+        expect(located('robots-control', 'staging-noindex-leftover')).toEqual(['index.html:4']);
+    });
+});
+
+describe('snippet-eligibility and structured-data-parses', () => {
+    const run = (dir: string) => audit(path.join(FIX, dir), 'marketing-site', REPO);
+    const at = (dir: string, check: string): string[] =>
+        run(dir)
+            .findings.filter((f) => f.check === check)
+            .map((f) => f.location)
+            .sort();
+
+    it('nosnippet or max-snippet:0 on an indexable page fires, in any attribute order and for a search crawler name', () => {
+        expect(at('snippet-blocked', 'snippet-eligibility')).toEqual(['about.html:5', 'index.html:5']);
+        expect(run('snippet-blocked').findings.find((f) => f.check === 'snippet-eligibility')?.tier).toBe('high');
+    });
+
+    it('a JSON-LD block that does not parse fires with file:line; nothing else about it is scored', () => {
+        expect(at('structured-data-broken', 'structured-data-parses')).toEqual(['about.html:9']);
+    });
+
+    it('the clean fixture carries a valid JSON-LD block and passes both', () => {
+        expect(fs.readFileSync(path.join(FIX, 'clean-marketing/about.html'), 'utf8')).toContain('application/ld+json');
+        const r = run('clean-marketing');
+        expect(r.passed).toContain('snippet-eligibility');
+        expect(r.passed).toContain('structured-data-parses');
+    });
+
+    it('a noindex page is not also a snippet finding — it is not indexable to begin with', () => {
+        expect(at('staging-leftover', 'snippet-eligibility')).toEqual([]);
+    });
+
+    it('a nosnippet on a crawler name whose register row lapsed is unknown, not passed', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wl-lapsed-'));
+        fs.mkdirSync(path.join(root, 'src/config'), { recursive: true });
+        for (const f of fs.readdirSync(path.join(REPO, 'src/config')).filter((x) => x.endsWith('.json'))) {
+            fs.copyFileSync(path.join(REPO, 'src/config', f), path.join(root, 'src/config', f));
+        }
+        const regPath = path.join(root, 'src/config/crawler-register.json');
+        const reg = JSON.parse(fs.readFileSync(regPath, 'utf8')) as { rows: { token: string; checked_at: string; review_by: string }[] };
+        for (const r of reg.rows) if (r.token === 'Googlebot') Object.assign(r, { checked_at: '2020-01-01', review_by: '2020-06-01' });
+        fs.writeFileSync(regPath, JSON.stringify(reg));
+        const build = path.join(root, 'build');
+        fs.mkdirSync(build);
+        fs.writeFileSync(
+            path.join(build, 'index.html'),
+            '<!doctype html>\n<html lang="en">\n<head>\n<title>x</title>\n<meta name="googlebot" content="nosnippet">\n</head>\n<body></body>\n</html>\n',
+        );
+        try {
+            const r = audit(build, 'marketing-site', root);
+            expect(r.passed).not.toContain('snippet-eligibility');
+            expect(r.unknown.filter((u) => u.check === 'snippet-eligibility').map((u) => u.location)).toEqual(['index.html:5']);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 });

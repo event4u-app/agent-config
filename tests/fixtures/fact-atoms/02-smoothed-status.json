@@ -1,0 +1,1 @@
+{ "type": "mutation", "class": "status", "before": "The retention plan is a draft proposal and has not been voted on.", "after": "The retention plan is adopted and has not been voted on." }

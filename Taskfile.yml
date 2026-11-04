@@ -131,6 +131,7 @@ tasks:
       - task: lint-code-comments
       - task: check-step-receipts
       - task: check-step-production-reach
+      - task: report-production-reach-unreached
       - task: check-graph-writers
       - task: lint-deferral-integrity
       - task: lint-never-silent

@@ -1,5 +1,5 @@
 {
-  "$comment": "Production entries for check_step_production_reach (road-to-a-tick-the-shipped-path-earns 3.1). `entries` are modules a host or a consumer runs directly. `entry_sources` are files that name runnable scripts by path (`src/scripts/<name>`, with or without `.ts`); every script they name is an entry too; the hook manifest is one, because the dispatcher runs every concern it names, a lazily loaded chunk included. Projected subagent definitions are markdown read by the host, not imported, so they are not entries here: a step about one names its generator with `production entry: <path>`.",
+  "$comment": "Production entries for check_step_production_reach (road-to-a-tick-the-shipped-path-earns 3.1). `entries` are modules a host or a consumer runs directly. `entry_sources` are files that name runnable scripts by path (`src/scripts/<name>`, with or without `.ts`); every script they name is an entry too, except that a markdown source is prose: a `.md` mention counts only when the script has a main guard or the mention is a command line (`./scripts-run`, `node`, `tsx`), so a library a door describes is not an entry by being described; the hook manifest is one, because the dispatcher runs every concern it names, a lazily loaded chunk included. Projected subagent definitions are markdown read by the host, not imported, so they are not entries here: a step about one names its generator with `production entry: <path>`.",
   "entries": [
     "src/scripts/hooks/dispatch_hook.ts",
     "src/cli/agent-config.ts",
@@ -13,6 +13,7 @@
     "hooks/hooks.json",
     ".github/workflows/*.yml",
     "src/agent-src/commands/**/*.md",
+    "src/agent-src/contexts/**/*.md",
     "src/domains/**/*.md",
     "src/skills/**/SKILL.md"
   ]
