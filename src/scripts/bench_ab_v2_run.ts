@@ -54,7 +54,7 @@ import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
-import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
+import { plugin_scope, preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
 import {
     SweepBudget,
     activation_verdict,
@@ -533,7 +533,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         return run_one_recursive(task, opts);
     }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0);
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, plugin_scope(spec));
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     if (host === 'codex') {
@@ -706,7 +706,7 @@ export function run_one_recursive(
         ((depth: number, priorVerdict: string | null): RecursiveAttempt => {
             // Each correction round gets its own preserved workspace too — a
             // depth-2 attempt must not overwrite the depth-1 evidence.
-            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0);
+            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0, plugin_scope(ARMS['package']!));
             let sp_file: string | null = null;
             if (priorVerdict) {
                 sp_file = path.join(opts.sp_dir, `.sp-recursive-${depth}.txt`);

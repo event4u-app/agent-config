@@ -35,6 +35,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import process from 'node:process';
 
 import { pristine_tree_for } from './bench_ab_pinned_repo.js';
 import { fileURLToPath } from 'node:url';
@@ -88,9 +89,52 @@ export function preserve_transcript(clone: string, transcript: string): string |
  * `arm` is sanitised because arm names are used verbatim as a path segment and
  * one of them would otherwise be free to escape the root.
  */
-export function workspace_dir(task_id: string, arm: string, seed: number): string {
+export function workspace_dir(task_id: string, arm: string, seed: number, root: string = WORK_ROOT): string {
     const safe_arm = arm.replace(/[^A-Za-z0-9._-]/g, '_');
-    return path.join(WORK_ROOT, `${task_id}__${safe_arm}__seed${seed}`);
+    return path.join(root, `${task_id}__${safe_arm}__seed${seed}`);
+}
+
+/**
+ * The directory a plugin-arm clone sits under so the operator's installed rules
+ * reach it, or `null` when there are none to stage.
+ *
+ * The CLI loads `.claude/rules` from the working directory's ancestors as project
+ * memory. An install whose rules live in `~/.claude/rules` therefore reaches every
+ * project under the home directory and none under the OS temp dir, where clones
+ * are made — measured 2026-11-04: the `package` arm's first-turn prompt was ~3k
+ * tokens above `vanilla` (skill listing only), and the activation audit flagged
+ * 16 of 24 pairs as collapsed. Copying the rules into an ancestor of the plugin
+ * clones restores what a consumer project under `~` gets, without placing a file
+ * inside the clone, where `changed_files` would count it as the run's own work.
+ * Baseline arms never sit under this root, so their footprint is unchanged.
+ */
+export function stage_package_scope(
+    rulesDir: string = process.env['BENCH_PACKAGE_RULES_DIR'] || path.join(os.homedir(), '.claude', 'rules'),
+    root: string = path.join(WORK_ROOT, '_package-scope'),
+): { root: string; rule_files: number } | null {
+    if (!fs.existsSync(rulesDir)) return null;
+    const dest = path.join(root, '.claude', 'rules');
+    fs.rmSync(dest, { recursive: true, force: true });
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.cpSync(rulesDir, dest, { recursive: true, dereference: true });
+    const rule_files = fs.readdirSync(dest).filter((f) => f.endsWith('.md')).length;
+    return rule_files > 0 ? { root, rule_files } : null;
+}
+
+let _scope: { root: string; rule_files: number } | null | undefined;
+
+/**
+ * The clone root for an arm that loads the operator's own install (all setting
+ * sources, no `--plugin-dir`), staged once per process; `undefined` for every
+ * other arm, and when there are no rules to stage.
+ */
+export function plugin_scope(spec: { setting_sources: string | null; plugin_dir_env?: string }): string | undefined {
+    if (spec.setting_sources !== null || spec.plugin_dir_env) return undefined;
+    if (_scope === undefined) {
+        _scope = stage_package_scope();
+        if (_scope) process.stderr.write(`bench_ab_v2: package scope — ${_scope.rule_files} rule file(s) staged above the plugin clones\n`);
+    }
+    return _scope?.root;
 }
 
 /**
@@ -100,7 +144,7 @@ export function workspace_dir(task_id: string, arm: string, seed: number): strin
  * repeated trial still starts pristine — the per-trial key changes *which*
  * directory that is, never whether it is clean.
  */
-export function reset_fixture(task: Dict, arm: string, seed: number): [string, string] {
+export function reset_fixture(task: Dict, arm: string, seed: number, root: string = WORK_ROOT): [string, string] {
     // Delta #9: a task may pin an external repo at a SHA instead of naming an
     // in-repo fixture. `pristine_tree_for` returns the tree either way, so the
     // per-trial copy below — and every endpoint that diffs against the pristine
@@ -109,7 +153,7 @@ export function reset_fixture(task: Dict, arm: string, seed: number): [string, s
     if (fixture === null) {
         throw new Error(`task ${String(task['id'])} declares neither a \`fixture\` nor a pinned \`repo\`/\`sha\``);
     }
-    const dest = workspace_dir(String(task['id']), arm, seed);
+    const dest = workspace_dir(String(task['id']), arm, seed, root);
     if (fs.existsSync(dest)) {
         fs.rmSync(dest, { recursive: true, force: true });
     }
