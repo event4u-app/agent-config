@@ -23,23 +23,27 @@
  * artefact → no finding, and the run says so: absence of the map is not
  * evidence of consistency.
  *
- * REPORT-ONLY. Exit 0 whatever it finds; 1 on an internal error. It runs in
+ * REPORT-ONLY. Exit 0 whatever it finds; 1 on an internal error, and for
+ * --shadow-report also when the evidence is missing, empty or incomplete. It runs in
  * shadow (road-to-a-control-that-matches-its-neighbours 3.3) until the
  * activation policy's four conditions hold.
  *
  * Usage:
  *   npx tsx lint_design_consistency.ts --dir <ui src> [--audit <artefact>] [--tolerance <px>] [--json]
  *   npx tsx lint_design_consistency.ts --dir <ui src> --shadow   (records, prints nothing)
+ *   npx tsx lint_design_consistency.ts --shadow-report [--days 14] [--json]   (the reverse trigger's reading)
  *   npx tsx lint_design_consistency.ts --render <viewport.styles.json> [--json] [--tolerance <px>] [--shadow]
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { isHandoverShape } from './_lib/ui_surface.js';
 
 import {
     boxMetricsFromClasses,
     definedComponents,
+    fileFamily,
     occurrences,
     type BoxMetrics,
     type ControlRole,
@@ -56,6 +60,15 @@ export const SHADOW_REL = path.join('agents', 'runtime', 'state', 'design-consis
  */
 export const SHADOW_TOLERANCES_PX = [0, 2, 4] as const;
 
+/** What fired on a write, kept so it can be classified after the file has moved on. */
+export interface ShadowFinding {
+    rule: ConsistencyFinding['rule'];
+    line: number;
+    message: string;
+    /** The source line, trimmed, at most 200 characters around the control. */
+    context: string;
+}
+
 export interface ShadowRecord {
     at: string;
     file: string;
@@ -67,6 +80,9 @@ export interface ShadowRecord {
     would_fire: Record<string, number>;
     raw_control: number;
     deviations_px: number[];
+    findings?: ShadowFinding[];
+    /** The git HEAD the write was made on, when the caller knows it. */
+    head?: string | null;
 }
 
 /** One shadow row for a file: counts per tolerance, never a finding shown to anyone. */
@@ -76,16 +92,144 @@ export function shadowRecord(content: string, relPath: string, roles: ControlRol
     for (const t of SHADOW_TOLERANCES_PX) {
         would_fire[`tolerance_${t}px`] = consistencyFindings(content, relPath, roles, t).length;
     }
+    const lines = content.split('\n');
+    const raw = all.filter((f) => f.rule === 'consistency-raw-control');
     return {
         at: now.toISOString(),
         file: relPath,
         would_fire,
-        raw_control: all.filter((f) => f.rule === 'consistency-raw-control').length,
+        raw_control: raw.length,
         deviations_px: all.flatMap((f) => (f.deviation_px === undefined ? [] : [f.deviation_px])),
+        findings: raw.map((f) => ({
+            rule: f.rule,
+            line: f.line,
+            message: f.message,
+            context: around(lines[f.line - 1] ?? '', f.column),
+        })),
+    };
+}
+
+/** At most 200 characters of the line, around this finding's own control. */
+function around(line: string, column: number | undefined): string {
+    if (line.trim().length <= 200) return line.trim();
+    const at = column ?? line.length - line.trimStart().length;
+    const start = Math.max(0, Math.min(at - 60, line.length - 200));
+    return line.slice(start, start + 200).trim();
+}
+
+export interface ShadowWindow {
+    since: string;
+    days: number;
+    writes: number;
+    firing: number;
+    files: Array<{ file: string; firing_writes: number }>;
+    /** Every firing write in the window, one entry each, for classification. */
+    firings: Array<{ at: string; file: string; head: string | null; findings: ShadowFinding[] }>;
+}
+
+/**
+ * The live rows of the last `days`, as the reverse trigger reads them
+ * (`internal/bench/corpora/design-consistency-shadow-window.md` § The reverse
+ * trigger). Counts only: whether a firing write is a false positive is a
+ * human classification, so this never prints a rate.
+ */
+export function shadowWindow(rows: readonly ShadowRecord[], now: Date, days = 14): ShadowWindow {
+    const since = new Date(now.getTime() - days * 86_400_000);
+    const files = new Map<string, number>();
+    const firings: ShadowWindow['firings'] = [];
+    let writes = 0;
+    for (const r of rows) {
+        const at = Date.parse(r.at);
+        if (Number.isNaN(at) || at < since.getTime() || at > now.getTime()) continue;
+        writes++;
+        if (r.raw_control > 0) {
+            files.set(r.file, (files.get(r.file) ?? 0) + 1);
+            firings.push({ at: r.at, file: r.file, head: r.head ?? null, findings: r.findings ?? [] });
+        }
+    }
+    return {
+        since: since.toISOString(),
+        days,
+        writes,
+        firing: firings.length,
+        files: [...files].sort((a, b) => b[1] - a[1]).map(([file, firing_writes]) => ({ file, firing_writes })),
+        firings,
     };
 }
 
 export type ControlRoleMap = Partial<Record<ControlRole, RoleEntry>>;
+
+/** Why a parsed row cannot be read as evidence, or null when it can. */
+const SHADOW_RULES: ReadonlySet<string> = new Set<ConsistencyFinding['rule']>(['consistency-raw-control', 'consistency-sibling-metrics']);
+
+function rowDefect(v: unknown): string | null {
+    if (typeof v !== 'object' || v === null) return 'not a row';
+    const r = v as Partial<ShadowRecord>;
+    if (typeof r.at !== 'string' || Number.isNaN(Date.parse(r.at))) return '`at` is not a date';
+    if (typeof r.file !== 'string' || r.file === '') return '`file` is missing';
+    if (typeof r.raw_control !== 'number' || !Number.isInteger(r.raw_control) || r.raw_control < 0) return '`raw_control` is not a count';
+    if (r.findings !== undefined) {
+        if (!Array.isArray(r.findings)) return 'a finding is malformed';
+        const ok = (f: unknown) => {
+            const x = f as Partial<ShadowFinding> | null;
+            return typeof x === 'object' && x !== null && SHADOW_RULES.has(x.rule as string) && Number.isInteger(x.line) && (x.line as number) > 0 && typeof x.message === 'string' && typeof x.context === 'string';
+        };
+        if (!r.findings.every(ok)) return 'a finding is malformed';
+    }
+    if (r.raw_control > 0 && (r.findings?.length ?? 0) !== r.raw_control) return 'a firing row without its findings';
+    return null;
+}
+
+/**
+ * The reverse trigger's reading of one shadow file. Missing, unreadable or
+ * partly malformed evidence exits 1 and says so, so it can never be read as a
+ * clean window; valid rows beside a rejected one still count.
+ */
+export function shadowReport(file: string, now: Date, days: number, json: boolean): { out: string; code: number } {
+    let text: string;
+    try {
+        text = fs.readFileSync(file, 'utf8');
+    } catch (exc) {
+        const missing = (exc as NodeJS.ErrnoException).code === 'ENOENT';
+        const why = missing ? `no shadow file at ${file}: nothing was recorded, so there is no window to read` : `shadow file unreadable at ${file}: ${(exc as Error).message}`;
+        return { out: json ? `${JSON.stringify({ evidence: missing ? 'none' : 'unreadable', file, reason: why }, null, 2)}\n` : `${why}\n`, code: 1 };
+    }
+    const rows: ShadowRecord[] = [];
+    const rejected: Array<{ line: number; reason: string }> = [];
+    text.split('\n').forEach((l, i) => {
+        if (l.trim() === '') return;
+        let v: unknown;
+        try {
+            v = JSON.parse(l);
+        } catch {
+            rejected.push({ line: i + 1, reason: 'not JSON' });
+            return;
+        }
+        const defect = rowDefect(v);
+        if (defect === null) rows.push(v as ShadowRecord);
+        else rejected.push({ line: i + 1, reason: defect });
+    });
+    const w = shadowWindow(rows, now, days);
+    // No write in the window proves the parser, not the recording: never a clean window.
+    const empty = w.writes === 0;
+    const code = rejected.length > 0 || empty ? 1 : 0;
+    if (json) {
+        const evidence = rejected.length > 0 ? 'incomplete' : empty ? 'empty' : 'complete';
+        return { out: `${JSON.stringify({ ...w, evidence, rejected_lines: rejected.map((x) => x.line), rejected }, null, 2)}\n`, code };
+    }
+    let out = `design-consistency shadow, ${w.days} days since ${w.since}: ${w.writes} UI write(s), ${w.firing} firing.\n`;
+    if (empty) out += 'no UI write recorded in the window: no observations, which is not a clean window; check the recording is on.\n';
+    if (rejected.length > 0) {
+        out += `${rejected.length} row(s) rejected — the window is incomplete; read those rows before classifying:\n`;
+        for (const x of rejected) out += `  line ${x.line}: ${x.reason}\n`;
+    }
+    for (const f of w.firings) {
+        out += `  ${f.at}  ${f.file}${f.head ? `  @${f.head.slice(0, 10)}` : ''}\n`;
+        for (const x of f.findings) out += `      L${x.line}  ${x.message}\n      | ${x.context}\n`;
+    }
+    out += 'Classify each firing write as real or false; false / writes above 1 % returns the rule to shadow.\n';
+    return { out, code };
+}
 
 export interface ConsistencyFinding {
     rule: 'consistency-raw-control' | 'consistency-sibling-metrics';
@@ -94,6 +238,8 @@ export interface ConsistencyFinding {
     line: number;
     role: ControlRole;
     message: string;
+    /** Offset of the control's `<` within its line. */
+    column?: number;
     /** For sibling-metrics: the largest deviation in px across the compared metrics. */
     deviation_px?: number;
 }
@@ -115,6 +261,22 @@ export function loadControlRoles(artefactPath: string): ControlRoleMap | null {
 }
 
 /**
+ * Whether a file of this kind can render the canonical at all: its family must
+ * be one the project defines the canonical in. A server template cannot use a JSX
+ * `Select`, nor a `.vue` file a React one; a map that does not say is not trusted.
+ */
+export function canRender(relPath: string, canonical: string, families: readonly string[] | undefined): boolean {
+    if (canonical.startsWith('native:')) return true;
+    const family = fileFamily(relPath);
+    return family !== null && families !== undefined && families.includes(family);
+}
+
+/** A design handover or an agent's reference copy is not the product's UI. */
+function isProductUi(relPath: string): boolean {
+    return !isHandoverShape(relPath) && !/(^|\/)agents\//.test(relPath.replace(/\\/g, '/'));
+}
+
+/**
  * Pure core. `tolerancePx` applies to sibling metrics only; the raw-control
  * check has no tolerance — an element either is the project's control or not.
  */
@@ -124,6 +286,7 @@ export function consistencyFindings(
     roles: ControlRoleMap,
     tolerancePx = 0,
 ): ConsistencyFinding[] {
+    if (!isProductUi(relPath)) return [];
     const definesRole = new Set(
         definedComponents(relPath, content)
             .map((t) => occurrences(`<${t}>`)[0]?.role)
@@ -136,7 +299,7 @@ export function consistencyFindings(
         // The file that implements a role's primitive is the primitive.
         if (definesRole.has(o.role)) continue;
         const entry = roles[o.role];
-        if (!entry || entry.canonical === null) continue;
+        if (!entry || entry.canonical === null || !canRender(relPath, entry.canonical, entry.families)) continue;
 
         if (o.impl.startsWith('native:') && !entry.canonical.startsWith('native:')) {
             out.push({
@@ -144,6 +307,7 @@ export function consistencyFindings(
                 severity: 'P1',
                 file: relPath,
                 line: o.line,
+                column: o.column,
                 role: o.role,
                 message: `raw ${o.impl.slice(7)} — this project's ${o.role} is ${entry.canonical}`,
             });
@@ -400,6 +564,11 @@ export function main(args: string[]): number {
     const render = arg(args, '--render');
     if (render !== undefined) return renderMode(args, path.resolve(render));
     const json = args.includes('--json');
+    if (args.includes('--shadow-report')) {
+        const r = shadowReport(path.resolve(SHADOW_REL), asOf(), Number(arg(args, '--days') ?? '14'), json);
+        process.stdout.write(r.out);
+        return r.code;
+    }
     const dir = path.resolve(arg(args, '--dir') ?? 'src');
     const audit = path.resolve(arg(args, '--audit') ?? AUDIT_ARTEFACT_REL);
     const tolerance = Number(arg(args, '--tolerance') ?? '0');

@@ -31,6 +31,12 @@ const SAMPLES = [
     '<table class="w-full">',
     '<SelectPrimitive.Trigger className="h-9">',
     '<!-- select the dialog --> prose about a select box',
+    '/** a bare `<select>` in a docblock */',
+    '// a page-size <select> in a line comment',
+    '} satisfies Meta<typeof Popover>;',
+    '<input onChange={(e) => pick(e)} type="file" />',
+    '<input onChange={(e) => set(e)} type="text" />',
+    '<NativeSelect>',
 ];
 
 describe('control-role parser parity — CLI vs work engine', () => {

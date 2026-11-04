@@ -131,7 +131,7 @@ import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit
 import { span_bump } from './_lib/impact_bump.js';
 import { span_surfaces, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
-import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
+import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows, tagPushProbe } from './_lib/release_tag_dispatch.js';
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
@@ -1010,7 +1010,7 @@ function execute(
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
-        const pr_body = release_pr_body(section!.body, plan.target) + (opts.pr_extra ?? '');
+        const pr_body = release_pr_body(section!.body, plan.target, opts.pr_extra ?? '');
         gh(['pr', 'create', '--base', MAIN_BRANCH, '--head', branch,
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }
@@ -1106,7 +1106,7 @@ function execute(
         if (ci) {
             _step(10, total, `Dispatch ${TAG_TRIGGERED_WORKFLOWS.join(' + ')} for the tag`);
             dispatchTagWorkflows(
-                { run, warn: (s) => process.stderr.write(s), trunk: MAIN_BRANCH },
+                { run, warn: (s) => process.stderr.write(s), trunk: MAIN_BRANCH, ...tagPushProbe(gh, _sleep_ms) },
                 plan.target,
             );
         }

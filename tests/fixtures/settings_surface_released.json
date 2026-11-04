@@ -1,5 +1,5 @@
 {
-  "version": "19.2.0",
+  "version": "20.0.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -571,6 +571,10 @@
     "screenshots.identity_allowlist": {
       "type": "array",
       "default": []
+    },
+    "security_ops.plan": {
+      "type": "boolean",
+      "default": false
     },
     "star_ask.mode": {
       "type": "string",

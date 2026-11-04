@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "mcpName": "io.github.event4u-app/agent-config",
-    "version": "19.2.0",
+    "version": "20.0.0",
     "description": "Skills, rules, slash commands and subagents for Claude Code, Cursor, Copilot, Codex and more AI coding tools — teach your AI coding agents to check their work before they say done.",
     "license": "MIT",
     "private": false,
@@ -55,6 +55,7 @@
         "src/agent-src/scripts/",
         "src/cli/python/knowledge_ingest.ts",
         "src/cli/python/workspace_secrets.ts",
+        "src/cli/commands/uiAudit.ts",
         "src/agent-src/templates/scripts/",
         "src/templates/",
         "src/vendor/grammars/",
@@ -177,6 +178,9 @@
             },
             "19.2.0": {
                 "impact": "notice"
+            },
+            "20.0.0": {
+                "impact": "action"
             }
         }
     }

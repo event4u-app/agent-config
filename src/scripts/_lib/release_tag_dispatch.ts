@@ -11,8 +11,8 @@
  * tag-triggered workflow: GitHub's recursion guard suppresses the event. All
  * three workflows accept a `tag` input for exactly this recovery, so under
  * `--ci` the release dispatches them rather than waiting for an event that will
- * never arrive. When the tag was pushed with a PAT they already fired and this
- * is redundant.
+ * never arrive. When the tag was pushed with a PAT they already fired, so a
+ * workflow with a push run on the tag is skipped rather than run twice.
  *
  * WHY IT NEVER FAILS THE RELEASE. By the time it runs the release is complete —
  * the tag is pushed, the GitHub Release is created, npm publishes
@@ -38,6 +38,15 @@ export interface TagDispatchDeps {
     warn: (s: string) => void;
     /** The ref the dispatch runs against — the trunk. */
     trunk: string;
+    /**
+     * Whether the tag push already started `workflow` for `version`. A
+     * PAT-pushed tag fires all three; dispatching them again ran each twice
+     * on 20.0.0, and the copies failed on the already-published package and
+     * the already-uploaded release assets.
+     */
+    alreadyFired: (workflow: string, version: string) => boolean;
+    /** Where a skipped dispatch is reported. */
+    info: (s: string) => void;
 }
 
 /** Why one failed dispatch is a warning and not a stop, said to the operator. */
@@ -51,8 +60,54 @@ export function dispatchWarning(workflow: string, code: number, version: string)
     );
 }
 
+type GhProbe = (args: readonly string[], opts: { check?: boolean }) => { returncode: number; stdout: string };
+
+/**
+ * The live `alreadyFired` + `info` pair for `release.ts`. A push run is listed
+ * a few seconds after the tag push, so an empty first answer is re-asked
+ * before it is believed; on a GITHUB_TOKEN-pushed tag that costs one short
+ * wait, once, because the first workflow's answer settles the question for
+ * the rest. An unreadable listing counts as "not fired" — dispatching is the
+ * behaviour this replaced, so a probe failure cannot lose a publish.
+ */
+export function tagPushProbe(
+    gh: GhProbe,
+    sleep: (ms: number) => void,
+    attempts = 4,
+    delayMs = 5_000,
+): Pick<TagDispatchDeps, 'alreadyFired' | 'info'> {
+    let waited = false;
+    const fired = (wf: string, version: string): boolean => {
+        const r = gh(
+            ['run', 'list', '--workflow', wf, '--branch', version, '--event', 'push', '--json', 'databaseId', '-q', 'length'],
+            { check: false },
+        );
+        return r.returncode === 0 && Number(r.stdout.trim()) > 0;
+    };
+    return {
+        info: (s) => process.stdout.write(s),
+        alreadyFired: (wf, version) => {
+            for (let i = 0; i < (waited ? 1 : attempts); i++) {
+                if (fired(wf, version)) {
+                    waited = true;
+                    return true;
+                }
+                if (!waited && i < attempts - 1) {
+                    sleep(delayMs);
+                }
+            }
+            waited = true;
+            return false;
+        },
+    };
+}
+
 export function dispatchTagWorkflows(deps: TagDispatchDeps, version: string): void {
     for (const wf of TAG_TRIGGERED_WORKFLOWS) {
+        if (deps.alreadyFired(wf, version)) {
+            deps.info(`ℹ️  ${wf} already started on the ${version} tag push — not dispatching it again.\n`);
+            continue;
+        }
         const r = deps.run(['gh', 'workflow', 'run', wf, '--ref', deps.trunk, '-f', `tag=${version}`], {
             check: false,
         });
