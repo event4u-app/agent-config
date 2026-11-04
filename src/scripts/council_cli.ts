@@ -69,7 +69,6 @@ import { renderSubHelp } from './ai_council/cli_help.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
-    type MemberConfig,
     COUNCIL_CONFIG_ENV,
     COUNCIL_CONFIG_USER_GLOBAL_REL,
     CouncilConfigError,
@@ -80,7 +79,7 @@ import {
     resolve_config_path,
 } from './ai_council/config.js';
 import { planWindowHot } from './_lib/pressure.js';
-import { accountSourceLine, providerFor } from './_lib/agent_switch_account.js';
+import { accountStatusLines } from './_lib/agent_switch_account.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
@@ -2054,23 +2053,6 @@ function _posture(
     });
 }
 
-/**
- * Where each CLI seat's account comes from — agent-switch's pick, or the
- * default login. Only seats on the cli transport spawn a vendor CLI, and only
- * vendors agent-switch serves get a line.
- */
-function _accountStatusLines(enabledMembers: readonly (readonly [string, MemberConfig])[]): string[] {
-    const out: string[] = [];
-    for (const [name, member] of enabledMembers) {
-        const provider = providerFor(name);
-        if (provider === null) continue;
-        const t = _resolvedTransportFor(name, member);
-        if (!t.available || t.transport !== 'cli') continue;
-        out.push(accountSourceLine(name, provider));
-    }
-    return out;
-}
-
 export function cmd_status(args: Args, opts: { env?: Record<string, string | undefined> } = {}): number {
     const env = opts.env ?? process.env;
     const override = env[COUNCIL_CONFIG_ENV];
@@ -2139,7 +2121,6 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                     ),
                 },
                 disabled_seats: _disabledSeats(cfg),
-                accounts: _accountStatusLines(enabledMembers),
                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
                 qualification: qualificationJson(qualifications),
                 qualified_members: countableSeats(qualifications),
@@ -2184,7 +2165,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             _stdout(`  content ceiling  ${name}: ${member.content_ceiling}\n`);
         }
         for (const line of _routeStatusLines(enabledMembers)) _stdout(`${line}\n`);
-        for (const line of _accountStatusLines(enabledMembers)) _stdout(`  accounts         ${line}\n`);
+        for (const line of accountStatusLines(enabledMembers.filter(([n, m]) => _resolvedTransportFor(n, m).transport === 'cli').map(([n]) => n))) _stdout(`  accounts         ${line}\n`);
         // 1.2: a disabled seat was invisible here — `enabled` members only.
         for (const [name, reason] of Object.entries(_disabledSeats(cfg))) {
             _stdout(`  disabled seat    ${name}: ${reason}\n`);

@@ -14,6 +14,12 @@
  * served, and falling back to the default login would spill this project's
  * traffic onto an account the owner fenced it off from — so it is a typed
  * refusal, never a null.
+ *
+ * The refusal text is cut to 300 chars with absolute paths masked before it
+ * reaches response metadata; the full text stays with agent-switch.
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: `agent-switch dir --provider <codex|claude> --json` run from the project directory
  */
 import { spawnSync } from 'node:child_process';
 
@@ -98,6 +104,19 @@ export function setAgentSwitchMode(mode: AgentSwitchMode): void {
 
 export function isAgentSwitchMode(v: unknown): v is AgentSwitchMode {
     return typeof v === 'string' && (AGENT_SWITCH_MODES as readonly string[]).includes(v);
+}
+
+/** Make a freshly loaded council config's mode the one CLI seats read; returns the config. */
+export function withAgentSwitchMode<T extends { readonly agent_switch?: AgentSwitchMode }>(cfg: T): T {
+    setAgentSwitchMode(cfg.agent_switch ?? DEFAULT_AGENT_SWITCH_MODE);
+    return cfg;
+}
+
+/** The `agent_switch:` config value; absent → `rules`, anything unknown → `err`. */
+export function parseAgentSwitchMode(raw: unknown, err: (msg: string) => Error): AgentSwitchMode {
+    if (raw === null || raw === undefined) return DEFAULT_AGENT_SWITCH_MODE;
+    if (isAgentSwitchMode(raw)) return raw;
+    throw err(`\`agent_switch\` must be one of ${AGENT_SWITCH_MODES.join(' | ')}; got ${JSON.stringify(raw)}.`);
 }
 
 export function agentSwitchMode(env: NodeJS.ProcessEnv = process.env): AgentSwitchMode {
@@ -230,6 +249,11 @@ export function resolveRoundSeatHome(
         }
     }
     return resolveSeatHome(vendor, { ...opts, exclude: extra });
+}
+
+/** `council:status` lines for the CLI-transport members agent-switch serves. */
+export function accountStatusLines(cliMembers: readonly string[]): string[] {
+    return cliMembers.filter((n) => providerFor(n) !== null).map((n) => accountSourceLine(n, providerFor(n) as string));
 }
 
 /** One status line per CLI vendor, for `council:status`. */

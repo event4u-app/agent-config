@@ -22,7 +22,8 @@ import {
     type Runner,
 } from '../../../src/scripts/_lib/agent_switch_account.js';
 import { appendEvent } from '../../../src/scripts/ai_council/events_log.js';
-import { OpenAICliClient, seatAccountEvent } from '../../../src/scripts/ai_council/clients.js';
+import { OpenAICliClient } from '../../../src/scripts/ai_council/clients.js';
+import { seatAccountEvent } from '../../../src/scripts/ai_council/seat_account_run.js';
 import { _build_config, load_council_config } from '../../../src/scripts/ai_council/config.js';
 import { agentSwitchMode, setAgentSwitchMode } from '../../../src/scripts/_lib/agent_switch_account.js';
 import { classifySeatLimit } from '../../../src/scripts/ai_council/seat_limit.js';
