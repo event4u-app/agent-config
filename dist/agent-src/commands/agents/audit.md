@@ -103,6 +103,27 @@ Then audit against the **Capability-over-Structure heuristic** (canonical:
 
 Failures route to `/agents optimize` — this command does **not** edit.
 
+Then check that no host instruction file shadows `AGENTS.md`:
+
+```bash
+./scripts-run src/scripts/agents_md_shadow
+```
+
+A `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` that neither imports
+(`@AGENTS.md`) nor symlinks to a non-empty `AGENTS.md` means a convention
+written to `AGENTS.md` never reaches a Claude session. Report it as a finding;
+the fix is one `@AGENTS.md` line or a symlink, which the user makes.
+
+A convention the user keeps restating that no file carries yet is reported with
+its proposed config change, shown and never applied:
+
+```bash
+./scripts-run src/scripts/convention_propose "<the convention, as the user said it>"
+```
+
+The output names the target file, the rung, the diff and a digest; the user
+applies it with `--accept <digest>`, so this command still edits nothing.
+
 ### 5. Check docs sync + stale references
 
 ```bash

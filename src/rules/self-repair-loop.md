@@ -102,7 +102,7 @@ because the earlier disposition demonstrably did not hold.
 
 ## Enforcement
 
-The hook is `fail_closed: false` and always exits 0: it records, it never
+The hook is `fail_closed: false` and never exits with the block code: it records, it never
 gates — blocking a turn-end on a heuristic is the failure mode the
 enforcement-projection null warns about. Detection is hook-carried, analysis and
 fix model-carried; only the privacy gate and route choice are deterministic.
