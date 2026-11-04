@@ -6,6 +6,7 @@ import {
     parsePriceRows,
     priceRefusal,
     selectPrice,
+    sweepRates,
     type PriceRow,
 } from '../../src/scripts/_lib/price_freshness.js';
 

@@ -110,3 +110,13 @@ export function parsePriceRows(yamlText: string): PriceRow[] {
     }
     return rows;
 }
+
+/**
+ * Rates a sweep cap may price with: the served model's fresh row, or a reason.
+ * A family row is refused by `priceRefusal` once stale or unvouched, so a cap can
+ * no longer under-price a newer, dearer generation by reading an old family rate.
+ */
+export function sweepRates(yamlText: string, servedModel: string, asOf: Date): { rates: Rates | null; why: string | null } {
+    const r = selectPrice(parsePriceRows(yamlText), servedModel, asOf);
+    return 'price' in r ? { rates: r.price, why: null } : { rates: null, why: r.refusal };
+}

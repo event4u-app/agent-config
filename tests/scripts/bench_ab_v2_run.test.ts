@@ -514,6 +514,15 @@ describe('bench_ab_v2_run — measurement integrity', () => {
         expect(r.status).toBe(0);
     });
 
+    it('refuses --max-usd when only a stale family row would price the model', () => {
+        // The haiku family row (2026-05-14) priced claude-haiku-4-5 at a quarter of
+        // its rate, so a "$100" cap admitted ~$330 of real spend. Opus has no
+        // model row, only that same-era family row.
+        const r = runTs(['--model', 'claude-opus-4-1', '--max-usd', '10', '--limit', '1', '--mode', 'dry-run']);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('days old');
+    });
+
     it('leaves an unpriceable model alone when no cap was asked for', () => {
         // The refusal is about an unenforceable CAP, not about the model.
         const r = runTs(['--model', 'some-unpriced-model-9', '--limit', '1', '--mode', 'dry-run']);
