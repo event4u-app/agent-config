@@ -10,8 +10,9 @@ tree_pin: 9ed90dbe85
 > **Source:** `agents/tmp.old/inbox-2026-11-bn/` — owner chat: rerun the
 > benchmarks on the current tree, then write the next improvement roadmaps
 > from what the rerun shows.
-> **Owner question (open):** a total dollar cap for the runs below. The
-> earlier $150 S4 grant and $250 bench grant do not carry over.
+> **Owner cap (OQ-64, answered 2026-11-04):** $100 total for steps 1-2,
+> enforced per sweep with `--max-usd`. The earlier $150 S4 grant and $250
+> bench grant do not carry over; the powered comparison is not covered.
 
 ## Why it waits
 

@@ -133,22 +133,6 @@ and the run that applies it links its PR.
   later change must ratify, so it is yours to accept.
 - **Blocks:** nothing executable.
 
-### OQ-64 — A dollar cap for the post-repair rerun and the powered comparison?
-
-- **Context:** round `inbox-2026-11-bn`. Every published ab-v2 headline was
-  scored before the 2026-10-28 oracle repair; the reports keep no per-run diff,
-  so only a new paid run gives a post-repair number. The real-world comparison
-  (vanilla, short instruction file, installed profiles, neighbour) is the
-  sixth arrival on `road-to-assurance-benchmark`. Earlier grants ($150 S4,
-  $250 bench) do not carry over.
-- **Options:** (a) one cap for both — rerun first, comparison second; (b) a cap
-  for the rerun only; (c) no spend now, offline work only.
-- **Recommendation:** (b) — the rerun re-measures what is already public, is
-  bounded by the original arm/seed counts, and its residue decides whether the
-  comparison is worth funding.
-- **Blocks:** `stubs/road-to-a-rerun-on-the-repaired-scorer`,
-  `stubs/road-to-assurance-benchmark` (confirmation run).
-
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
@@ -818,3 +802,20 @@ and the run that applies it links its PR.
   demotion as two separate questions.
 - **Blocks:** nothing executable.
 - **Answered 2026-10-31 (you, option 2):** "2" — the wildcard-grant finding stays HIGH. A consequence-aware rebuild of `tool-safety` is allowed and council-decidable, provided it is demonstrably equivalent or stricter; any demotion of the finding stays yours.
+
+### OQ-64 — A dollar cap for the post-repair rerun and the powered comparison?
+
+- **Context:** round `inbox-2026-11-bn`. Every published ab-v2 headline was
+  scored before the 2026-10-28 oracle repair; the reports keep no per-run diff,
+  so only a new paid run gives a post-repair number. The real-world comparison
+  (vanilla, short instruction file, installed profiles, neighbour) is the
+  sixth arrival on `road-to-assurance-benchmark`. Earlier grants ($150 S4,
+  $250 bench) do not carry over.
+- **Options:** (a) one cap for both — rerun first, comparison second; (b) a cap
+  for the rerun only; (c) no spend now, offline work only.
+- **Recommendation:** (b) — the rerun re-measures what is already public, is
+  bounded by the original arm/seed counts, and its residue decides whether the
+  comparison is worth funding.
+- **Blocks:** `stubs/road-to-a-rerun-on-the-repaired-scorer`,
+  `stubs/road-to-assurance-benchmark` (confirmation run).
+- **Answered 2026-11-04:** "OQ-64: b, $100 Cap für den Neulauf" — a cap for the rerun only: at most $100 total for `stubs/road-to-a-rerun-on-the-repaired-scorer` steps 1-2, enforced per sweep with `--max-usd`; a refused budget ends the sweep and it does not resume past the cap. The powered comparison on `road-to-assurance-benchmark` stays unfunded until the rerun's residue is read. <!-- md-language-check: ignore -->
