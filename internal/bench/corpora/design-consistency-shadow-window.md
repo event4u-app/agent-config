@@ -102,8 +102,12 @@ The same window, with the six defects fixed, against
 4. **The window is met.** 1,565 observations over six months, against a floor
    of 100 or two weeks, and the targeted shape is in it.
 
-All four hold for **consistency-raw-control**, which ships on. It ships
-recording, not delivering: see § Delivery held below.
+Conditions 1, 2 and 4 hold for **consistency-raw-control**. Condition 3 holds
+only as an estimate, and only for delivery: the check ships recording, not
+delivering (§ Delivery held below), and recording pays the latency while
+avoiding no review round itself, so its benefit is prospective (ratification
+rounds 19 and 20). What ships is the shadow collection; delivery is decided
+again when it is turned on.
 
 ## Second reading, 2026-11-03 — after the family boundary
 
@@ -209,7 +213,8 @@ manual control because classifying a firing write as false takes a reading.
 - **Classification.** Read each firing write from what the row recorded, not
   from the file as it is now, and mark it real (a raw control beside the
   project's own) or false (anything else). The rate is false firing writes
-  over all UI writes in the window.
+  over the legitimate writes in the window (all UI writes less the real
+  ones), the same denominator as the readings above.
 - **Record.** One dated row in the roadmap's Decisions table: window,
   denominator, real, false, rate, outcome.
 - **Rollback.** While delivery is held, the shipped default already is the
