@@ -342,12 +342,14 @@ export function inputsDigest(files: ReadonlyArray<readonly [string, string]>): s
     return h.digest('hex').slice(0, 16);
 }
 
-function gitHead(cwd: string): string | null {
+export function gitHead(cwd: string): string | null {
     try {
         return execFileSync('git', ['rev-parse', 'HEAD'], {
             cwd,
             encoding: 'utf8',
             stdio: ['ignore', 'pipe', 'ignore'],
+            // Runs on every UI write: a stalled process costs the answer, never the hook event.
+            timeout: 3000,
         }).trim();
     } catch {
         return null;
@@ -392,9 +394,16 @@ function readPairs(projectRoot: string, target: string): { pairs: Array<readonly
     const pairs: Array<readonly [string, string]> = [];
     let unreadable = 0;
     for (const abs of absFiles) {
+        const rel = path.relative(projectRoot, abs).split(path.sep).join('/');
+        // Every other file is read by its path alone (system markers), so its
+        // text is never opened: a vendor tree made a full read cost seconds.
+        if (!(isUiPath(rel) || isUiTreePath(rel) || /(^|\/)(components\.json|DESIGN\.md|PRODUCT\.md)$/.test(rel))) {
+            pairs.push([rel, '']);
+            continue;
+        }
         try {
             if (fs.statSync(abs).size > 2_000_000) continue;
-            pairs.push([path.relative(projectRoot, abs).split(path.sep).join('/'), fs.readFileSync(abs, 'utf8')]);
+            pairs.push([rel, fs.readFileSync(abs, 'utf8')]);
         } catch {
             unreadable++;
         }
@@ -443,8 +452,13 @@ export function renderedBoxMetrics(projectRoot: string): Partial<Record<ControlR
 }
 
 /** Compute the artefact for `target` under `projectRoot`, stamped with git HEAD. */
-export function computeUiAudit(projectRoot: string, target: string): UiAuditArtefact {
+export function computeUiAudit(
+    projectRoot: string,
+    target: string,
+    onPairs?: (pairs: ReadonlyArray<readonly [string, string]>) => void,
+): UiAuditArtefact {
     const { pairs, unreadable } = readPairs(projectRoot, target);
+    onPairs?.(pairs);
     let artefact = buildArtefact(path.relative(projectRoot, target).split(path.sep).join('/') || '.', pairs);
     artefact = { ...artefact, stamp: { ...artefact.stamp, head: gitHead(projectRoot) } };
     const rendered = renderedBoxMetrics(projectRoot);

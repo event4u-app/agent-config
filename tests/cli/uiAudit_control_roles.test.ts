@@ -32,6 +32,74 @@ function pairsOf(caseId: string): Array<[string, string]> {
     return out;
 }
 
+describe('control_roles — where the canonical can be rendered', () => {
+    it('families name the file kinds that define the canonical; a same-named use elsewhere adds none', () => {
+        const roles = buildArtefact('.', [
+            ['src/ui/select.tsx', 'export function Select(p) {\n  return <select {...p} />;\n}\n'],
+            ['app/orders.tsx', 'export const A = () => <Select name="a" />;\n'],
+            ['pages/list.astro', '<Select name="b" />\n'],
+            ['legacy/Picker.vue', '<template><Select name="d" /></template>\n'],
+            ['legacy/Orders.vue', '<template><select name="c"></select></template>\n'],
+        ]).control_roles;
+        expect(roles.select).toMatchObject({ canonical: 'Select', families: ['jsx'] });
+    });
+
+    it('a re-export is not a definition; an export list of a local declaration is', () => {
+        const uses = ['app/orders.tsx', 'export const A = () => <><Select name="a" /><Select name="b" /></>;\n'] as [string, string];
+        const reexport = [
+            ['src/ui/select.tsx', 'export { Select } from "@vendor/components";\n'],
+            ['src/ui/index.tsx', 'import { Select } from "@vendor/components";\nexport { Select };\n'],
+            uses,
+        ] as Array<[string, string]>;
+        expect(buildArtefact('.', reexport).control_roles.select).toMatchObject({ canonical: 'Select', families: [] });
+        const local = [
+            ['src/ui/select.tsx', 'function BaseSelect(p) {\n  return <select {...p} />;\n}\nexport { BaseSelect as Select };\n'],
+            uses,
+        ] as Array<[string, string]>;
+        expect(buildArtefact('.', local).control_roles.select).toMatchObject({ canonical: 'Select', families: ['jsx'] });
+    });
+
+    it('a declaration in a comment, a string or a nested scope does not make an import local', () => {
+        const uses = ['app/orders.tsx', 'export const A = () => <><Select name="a" /><Select name="b" /></>;\n'] as [string, string];
+        const imported = 'import { Select } from "@vendor/components";\n';
+        for (const body of [
+            `${imported}// const Select was the old implementation\nexport { Select };\n`,
+            `${imported}/* function Select() {} */\nexport { Select };\n`,
+            `${imported}const note = "\\nconst Select = 1";\nexport { Select };\n`,
+            `${imported}function example() {\n  const Select = 1;\n  return Select;\n}\nexport { Select };\n`,
+            '/* export function Select(p) { return <select {...p} />; } */\nexport const note = 1;\n',
+            '// export const Select = () => null;\nexport const note = 1;\n',
+        ]) {
+            const roles = buildArtefact('.', [['src/ui/select.tsx', body], uses]).control_roles;
+            expect(roles.select, body).toMatchObject({ canonical: 'Select', families: [] });
+        }
+        const local = 'const Select = (p) => <select {...p} />;\nexport { Select };\n';
+        expect(buildArtefact('.', [['src/ui/select.tsx', local], uses]).control_roles.select).toMatchObject({ families: ['jsx'] });
+        const aliased = "import { Select as SelectPrimitive } from '@base-ui/react/select';\nfunction Select(p) {\n  return <SelectPrimitive {...p} />;\n}\nexport { Select };\n";
+        expect(buildArtefact('.', [['src/ui/select.tsx', aliased], uses]).control_roles.select).toMatchObject({ families: ['jsx'] });
+        const noSemi ='import React from "react"\nconst Select = (p) => <select {...p} />\nexport { Select }\nexport const all = Array.from([])\n';
+        expect(buildArtefact('.', [['src/ui/select.tsx', noSemi], uses]).control_roles.select).toMatchObject({ families: ['jsx'] });
+    });
+
+    it('a single-file component is defined by its file name', () => {
+        const roles = buildArtefact('.', [
+            ['src/components/Select.vue', '<script setup>\ndefineProps(["modelValue"]);\n</script>\n<template><select><slot /></select></template>\n'],
+            ['src/views/Orders.vue', '<template><Select name="a" /><Select name="b" /></template>\n'],
+            ['src/lib/Toggle.svelte', '<input type="checkbox" />\n'],
+            ['src/views/form.vue', '<template><div /></template>\n'],
+        ]).control_roles;
+        expect(roles.select).toMatchObject({ canonical: 'Select', families: ['vue'], uses: 2 });
+    });
+
+    it('a canonical the project does not define has no family, so nothing is measured against it', () => {
+        const roles = buildArtefact('.', [
+            ['app/orders.tsx', 'import { Select } from "some-lib";\nexport const A = () => <><Select name="a" /><Select name="b" /></>;\n'],
+            ['app/filters.tsx', 'export const F = () => <select name="c"></select>;\n'],
+        ]).control_roles;
+        expect(roles.select).toMatchObject({ canonical: 'Select', families: [] });
+    });
+});
+
 describe('control_roles — which implementation IS the control', () => {
     it('shadcn: the project Select is canonical for select, Input for input, with box metrics', () => {
         const a = buildArtefact('.', pairsOf('follow-up-select-shadcn'));
@@ -132,6 +200,22 @@ describe('stamp — the artefact knows what it was computed from', () => {
         );
         const a = computeUiAudit(dir, dir);
         expect(a.control_roles.input!.box_metrics).toMatchObject({ height_px: 40, padding_x_px: 14, source: 'render' });
+    });
+
+    // A full read of every file cost 11.6 s on a consumer repository with a
+    // vendor tree; the artefact needs the text of UI files and a few named
+    // documents only, so nothing else is opened.
+    it('a file whose text is never needed is never read', () => {
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-audit-lazy-'));
+        fs.mkdirSync(path.join(dir, 'components'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'components', 'form.tsx'), 'export const F = () => <Input name="a" />;');
+        fs.mkdirSync(path.join(dir, 'storage'), { recursive: true });
+        const upload = path.join(dir, 'storage', 'upload.bin');
+        fs.writeFileSync(upload, 'x');
+        fs.chmodSync(upload, 0o000);
+        const a = computeUiAudit(dir, dir);
+        expect(a.verification).toBe('verified');
+        expect(a.control_roles.input).toMatchObject({ uses: 1 });
     });
 
     it('an artefact without a stamp is stale', () => {
