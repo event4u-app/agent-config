@@ -1349,6 +1349,25 @@ hooks:
   design_pass:
     enabled: false
 
+  # Control consistency on a UI write (road-to-a-control-that-matches-its-
+  # neighbours 3.8). Default-ON, and independent of design_pass above: it runs
+  # when that is off. A raw <select>, <input> or <textarea> written where the
+  # project already has its own Select / Input / Textarea is delivered as one
+  # advisory line naming the project's control; it never blocks. A file that
+  # cannot render the component (a server template, a handover prototype) is
+  # not measured. Turned on after a retroactive shadow window met all four
+  # conditions of docs/contracts/concern-activation-policy.md. The second rule,
+  # box metrics, stays in shadow: its findings are only recorded, never shown.
+  # While this is enabled, every UI write adds a row to
+  # agents/runtime/state/design-consistency-shadow.jsonl.
+  # Disabled, nothing runs and nothing is recorded. It ships with shadow: true,
+  # recording without delivering, until definitions are read by a parser
+  # rather than patterns (owner, 2026-11-04); shadow: false delivers the
+  # advisory line (internal/bench/corpora/design-consistency-shadow-window.md).
+  design_consistency:
+    enabled: true
+    shadow: true
+
   # PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4).
   # Default-OFF. When enabled, a Write/Edit to a UI surface with no design
   # consultation latched this session WARNS (exit 2, never blocks) naming the
