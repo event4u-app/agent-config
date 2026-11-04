@@ -1306,6 +1306,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 
 | Switch | Owner | What it does | Read at |
 |---|---|---|---|
+| `AGENT_CONFIG_AGENT_SWITCH` | operator | `=off` / `=rules` / `=balance` overrides `.ai-council.yml`'s `agent_switch:` for one process: `off` stops CLI council seats asking agent-switch which account to start on, so they inherit the parent's login (`docs/contracts/ai-council-config.md` § `agent_switch`). The test suite pins it to `off` | `_lib/agent_switch_account.ts:27` |
 | `AGENT_CONFIG_ALLOW_SPEAKING_INBOX` | maintainer | Lets a write into the speaking-inbox directory through the PreToolUse block | `hooks/block_speaking_inbox_dir.ts:79` |
 | `AGENT_CONFIG_ALLOW_CREDENTIAL_READS` | maintainer | Lets a read of a credential-class file, or a command that prints the environment, through the PreToolUse block | `hooks/block_credential_reads.ts:52` |
 | `AGENT_CONFIG_CODE_GRAPH_REFRESH` | maintainer | `=off` stops the `code-graph-refresh` concern (session start and turn end) spawning its background `code-graph refresh --single-flight --map`, even in a project whose auto-refresh is on; the git-hook refresh in this package's own checkout is unaffected | `hooks/code_graph_refresh_hook.ts:140` |

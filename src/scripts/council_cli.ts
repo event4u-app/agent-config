@@ -79,6 +79,7 @@ import {
     resolve_config_path,
 } from './ai_council/config.js';
 import { planWindowHot } from './_lib/pressure.js';
+import { accountStatusLines } from './_lib/agent_switch_account.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
@@ -2164,6 +2165,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             _stdout(`  content ceiling  ${name}: ${member.content_ceiling}\n`);
         }
         for (const line of _routeStatusLines(enabledMembers)) _stdout(`${line}\n`);
+        for (const line of accountStatusLines(enabledMembers.filter(([n, m]) => _resolvedTransportFor(n, m).transport === 'cli').map(([n]) => n))) _stdout(`  accounts         ${line}\n`);
         // 1.2: a disabled seat was invisible here — `enabled` members only.
         for (const [name, reason] of Object.entries(_disabledSeats(cfg))) {
             _stdout(`  disabled seat    ${name}: ${reason}\n`);

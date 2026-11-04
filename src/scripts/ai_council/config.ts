@@ -542,6 +542,7 @@ export type QuorumMinPresent = number;
 export type { FallbackConfig } from './fallback_config.js';
 import { buildFallback, buildSecondModel, type FallbackConfig as _FallbackConfig } from './fallback_config.js';
 import { OWNERSHIP_CLASSES, allOwnerLocked, defaultModeFor, ownershipModeError } from './ownership_classes.js';
+import { parseAgentSwitchMode, withAgentSwitchMode, type AgentSwitchMode } from '../_lib/agent_switch_account.js';
 import {
     _f,
     _pyOct,
@@ -576,6 +577,7 @@ export interface CouncilConfig {
     readonly routing: RoutingConfig;
     readonly low_impact: LowImpactConfig;
     readonly lens_overrides: LensOverridesConfig;
+    readonly agent_switch?: AgentSwitchMode;
     readonly source_path: PathLike | null;
     /**
      * Transport keys the config file still carries and the loader deliberately
@@ -737,7 +739,7 @@ export function load_council_config(p: PathLike): CouncilConfig {
     if (!_isDict(raw)) {
         throw new CouncilConfigError(`${p}: top-level must be a mapping.`);
     }
-    return _build_config(raw, p);
+    return withAgentSwitchMode(_build_config(raw, p));
 }
 
 // ── builders ───────────────────────────────────────────────────────
@@ -882,6 +884,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         routing,
         low_impact,
         lens_overrides,
+        agent_switch: parseAgentSwitchMode(_getOr(raw, 'agent_switch', null), (m) => new CouncilConfigError(m)),
         source_path,
         ignored_transport_keys,
     };

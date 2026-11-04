@@ -101,3 +101,9 @@ process.env[CONFIG_HOME_VAR] = HERMETIC_CONFIG_HOME;
 afterAll(() => {
     fs.rmSync(HERMETIC_CONFIG_HOME, { recursive: true, force: true });
 });
+
+// CLI council seats ask agent-switch which account to start on. A developer
+// machine with agent-switch installed would answer, so every seat test there
+// would spawn the real binary and carry an `account` the CI runner never sees.
+// Off by default; the resolver's own tests inject a runner and pass a mode.
+process.env['AGENT_CONFIG_AGENT_SWITCH'] = 'off';
