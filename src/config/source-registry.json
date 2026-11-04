@@ -1,7 +1,8 @@
 {
  "$comment": "One row per knowledge store (roadmap I.1, K.1). Checked by src/scripts/check_source_registry.ts: a source file that writes under a store root without being named as that store's writer fails. owner: user | project | team | machine. A user-owned store lives under the user's home keyed by repo id, never under a committed path.",
  "reviewed_not_writers": [
-  { "file": "src/scripts/fold_intake.ts", "root": "agents/knowledge", "reason": "reads the knowledge intake; its writes go to agents/memory/archive (memory-archive row)" }
+  { "file": "src/scripts/fold_intake.ts", "root": "agents/knowledge", "reason": "reads the knowledge intake; its writes go to agents/memory/archive (memory-archive row)" },
+  { "file": "src/scripts/check_owner_question_ids.ts", "root": "agents/owner-questions.md", "reason": "reads the owner-question file; its only write is the self-test fixture, created under a fresh mkdtemp directory" }
  ],
  "stores": [
   {

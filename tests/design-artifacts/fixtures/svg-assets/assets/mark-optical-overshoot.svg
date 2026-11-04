@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CONTROL: a deliberate 0.5 degree optical overshoot. The stroke from (100,240) to (380,242.443)
+     sits inside the near-miss window by construction; the author declares it on the element with
+     data-optical="overshoot", and the near-miss reading must stay silent. Geometry alone cannot
+     tell an intended overshoot from a slip, so the declaration is the discriminator. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img">
+  <title>Optical-overshoot mark</title>
+  <circle cx="240" cy="240" r="200" fill="#1d4ed8"/>
+  <path d="M100 240 L380 242.443" stroke="#f8fafc" stroke-width="24" stroke-linecap="round" data-optical="overshoot"/>
+</svg>

@@ -142,6 +142,8 @@ import { readHookStdin } from "./hook_stdin.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 import { OBSERVATION_LOG, readObservationLog, resolveSkillCatalogueRoots } from "../_lib/skill_catalogue.js";
 import { knownBareNames } from "../_lib/skill_catalogue_series.js";
+import { NAME_ONLY, recordPath } from "../_lib/skill_listing_record.js";
+import type { EnvMap } from "../_lib/user_global_paths.js";
 import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -194,11 +196,46 @@ function _isObject(v: unknown): v is JsonObject {
  * read. The three-way distinction `knownBareNames` draws is preserved: an empty
  * set means *measured clean*, `null` means *never measured*, and only the second
  * one is produced here by accident.
+ *
+ * On `claude` the installer's own `name-only` record is unioned in: those
+ * skills are bare by construction, whether or not an observation ever caught
+ * them. A missing or malformed record contributes nothing.
  */
-export function knownBareForHost(workspaceRoot: string, host: string | null): Set<string> | null {
+export function knownBareForHost(
+  workspaceRoot: string,
+  host: string | null,
+  env?: EnvMap | null,
+): Set<string> | null {
   if (host === null || host === "") return null;
+  let observed: Set<string> | null;
   try {
-    return knownBareNames(readObservationLog(path.join(workspaceRoot, OBSERVATION_LOG)), host);
+    observed = knownBareNames(readObservationLog(path.join(workspaceRoot, OBSERVATION_LOG)), host);
+  } catch {
+    observed = null;
+  }
+  const recorded = host === SIDECAR_HOST ? installerNameOnly(env) : null;
+  if (recorded === null || recorded.size === 0) return observed;
+  return observed === null ? recorded : new Set([...observed, ...recorded]);
+}
+
+/** The one host the installer writes a listing override for. */
+const SIDECAR_HOST = "claude";
+
+/**
+ * Skills the installer itself sent to `name-only` on this machine, from its
+ * ownership sidecar. Only the package's own record counts — never a user value
+ * in the settings file — and any read or shape problem yields `null`, so a bad
+ * sidecar can never turn "never measured" into a filter.
+ */
+function installerNameOnly(env?: EnvMap | null): Set<string> | null {
+  try {
+    const data: unknown = JSON.parse(fs.readFileSync(recordPath(env), "utf-8"));
+    if (!_isObject(data)) return null;
+    const entries = data["entries"];
+    if (!_isObject(entries)) return null;
+    const out = new Set<string>();
+    for (const [name, value] of Object.entries(entries)) if (value === NAME_ONLY) out.add(name);
+    return out;
   } catch {
     return null;
   }
@@ -276,6 +313,8 @@ export function routeDecision(
   } catch {
     return silent;
   }
+  // Nothing ranked → nothing to filter; skip the provider so this path reads no file.
+  if (rows.length === 0) return silent;
   let bare: Set<string> | null = null;
   if (bareProvider !== undefined) {
     try {

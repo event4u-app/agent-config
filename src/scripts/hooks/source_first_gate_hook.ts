@@ -139,7 +139,7 @@ export interface MatcherHit {
  * repository already writes down, which is the closest available substitute
  * for the multi-host census Phase 1 Step 2 could not finish:
  *
- *   - `browser_take_screenshot` — `src/skills/mcp/SKILL.md` § tool table.
+ *   - `browser_take_screenshot` — `src/skills/mcp-tool-use/SKILL.md` § tool table.
  *   - `claude-in-chrome` — `src/skills/screenshot-hygiene/SKILL.md`,
  *     `docs/decisions/ADR-125-doc-screenshot-anonymization.md`.
  *   - `screencapture` — the one entry the census measured present,

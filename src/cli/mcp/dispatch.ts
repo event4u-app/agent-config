@@ -26,6 +26,7 @@
  * Node-only grounds; Phase 1.1 widens what is READ, never what is executed.
  */
 
+import * as z from 'zod';
 import { DEFAULT_SUGGEST_LIMIT, rankSkills, type RankableSkill } from '../../shared/skillRanking.js';
 import type { ContentTree, ContentEntry } from './content.js';
 import { entriesOfKind } from './content.js';
@@ -100,7 +101,8 @@ function listPrompts(tree: ContentTree, cursor: string | undefined): unknown {
             name: wireNameOf(e),
             title: e.name,
             description: e.description,
-            arguments: [],
+            // Derived from the declaration, never invented; nothing declared serves `[]`.
+            arguments: (e.inputs ?? []).map((i) => ({ name: i.name, description: i.description, required: i.required })),
             _meta: { source: e.source, kind: e.kind },
         })),
         ...(next ? { nextCursor: next } : {}),
@@ -169,8 +171,51 @@ export const INSTRUCTIONS =
 
 /** Standing-context budget for the two tool definitions, in tokens (chars/4). */
 export const LITE_TOOLS_TOKEN_CAP = 600;
+/** Largest `limit` `suggest_skill_for_task` serves; a larger request is clamped and says so. */
+export const SUGGEST_LIMIT_MAX = 20;
 /** Byte cap on `INSTRUCTIONS`, so the nudge cannot grow into a preamble. */
 export const INSTRUCTIONS_BYTE_CAP = 400;
+
+/**
+ * The output contract of each lite tool, ONE zod source apiece. Loose objects,
+ * so the shipped JSON schema never closes the payload: a later field is an
+ * addition a strict client must not reject.
+ */
+export const SUGGEST_OUTPUT = z.looseObject({
+    status: z.enum(['ok', 'error', 'no_catalogue']),
+    suggestions: z.array(
+        z.looseObject({ skill: z.string(), score: z.number(), personas: z.array(z.string()), description: z.string() }),
+    ),
+    skills_indexed: z.number().optional(),
+    tiers: z.enum(['unknown', 'tier-b-only']).optional(),
+    tier_filter: z.string().optional(),
+    clamped_from: z.number().optional(),
+    error: z.string().optional(),
+});
+export const READ_SKILL_OUTPUT = z.looseObject({
+    status: z.enum(['ok', 'error', 'not_found']),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    source: z.string().optional(),
+    body: z.string().optional(),
+    error: z.string().optional(),
+});
+
+/** zod → the JSON schema served as `outputSchema`, minus the `$schema` URI and the no-op `additionalProperties: {}`. */
+function outputSchemaOf(schema: z.ZodType): Record<string, unknown> {
+    const strip = (v: unknown): unknown => {
+        if (Array.isArray(v)) return v.map(strip);
+        if (v === null || typeof v !== 'object') return v;
+        const out: Record<string, unknown> = {};
+        for (const [k, x] of Object.entries(v)) {
+            if (k === '$schema') continue;
+            if (k === 'additionalProperties' && x !== null && typeof x === 'object' && Object.keys(x).length === 0) continue;
+            out[k] = strip(x);
+        }
+        return out;
+    };
+    return strip(z.toJSONSchema(schema, { io: 'output' })) as Record<string, unknown>;
+}
 
 /**
  * The two discovery tools. Read-only, shell-free, and pure over the content
@@ -196,12 +241,14 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
                 limit: {
                     type: 'integer',
                     minimum: 1,
+                    maximum: SUGGEST_LIMIT_MAX,
                     default: DEFAULT_SUGGEST_LIMIT,
                     description: `Max results. Default ${String(DEFAULT_SUGGEST_LIMIT)}.`,
                 },
             },
             additionalProperties: false,
         },
+        outputSchema: outputSchemaOf(SUGGEST_OUTPUT),
         annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     {
@@ -214,6 +261,7 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
             properties: { name: { type: 'string', description: 'Skill name.' } },
             additionalProperties: false,
         },
+        outputSchema: outputSchemaOf(READ_SKILL_OUTPUT),
         annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
 ];
@@ -236,12 +284,15 @@ export function liteToolsTokenCost(): number {
     return Math.round(JSON.stringify({ tools: LITE_TOOLS }).length / 4);
 }
 
-/** MCP `tools/call` success shape: text content plus the structured result. */
-function toolTextResult(payload: unknown): Record<string, unknown> {
+/** Payload statuses that mean the call failed. The payload keeps its `status`; `isError` says it on the wire. */
+const ERROR_STATUSES: ReadonlySet<string> = new Set(['error', 'not_found', 'no_catalogue']);
+
+/** MCP `tools/call` result: text content plus the structured result, `isError` when the status is a failure. */
+function toolTextResult(payload: Record<string, unknown>): Record<string, unknown> {
     return {
         content: [{ type: 'text', text: JSON.stringify(payload) }],
         structuredContent: payload,
-        isError: false,
+        isError: typeof payload.status === 'string' && ERROR_STATUSES.has(payload.status),
     };
 }
 
@@ -268,6 +319,19 @@ function tierState(tree: ContentTree): 'unknown' | 'tier-b-only' {
     return tree.tier_a ? 'tier-b-only' : 'unknown';
 }
 
+/** Bound on an inlined body, so a unique hit cannot turn the answer into a context payload. */
+export const INLINE_BODY_CHAR_CAP = 6000;
+
+/** Server-level switches the impure shell resolves; every one defaults off. */
+export interface DispatchOptions {
+    /**
+     * Inline the top skill's body when its score is strictly above the runner-up
+     * (road-to-routing-assurance-live-floors 4.4). Off until the 4.2 parity gate
+     * passes on it; a tie never inlines, because then the choice is the caller's.
+     */
+    inlineTopBody?: boolean;
+}
+
 /**
  * `suggest_skill_for_task`. Mirrors the kernel handler's envelope — `status`,
  * `suggestions[]` of `{skill, score, personas, description}` — so a consumer
@@ -278,14 +342,21 @@ function tierState(tree: ContentTree): 'unknown' | 'tier-b-only' {
  * `description` rides with the row because a NAME is not a choosing criterion:
  * a caller handed five names either guesses or opens five bodies. It is capped
  * at 200 characters per skill by `skill.schema.json`, so the envelope grows by
- * a bounded amount per row and no body is returned at any depth.
+ * a bounded amount per row. No row carries a body; the one exception is the
+ * opt-in `top_body` field (`DispatchOptions.inlineTopBody`), bounded by
+ * `INLINE_BODY_CHAR_CAP`.
  */
-function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>): Record<string, unknown> {
+function suggestSkillForTask(
+    tree: ContentTree,
+    params: Record<string, unknown>,
+    opts: DispatchOptions = {},
+): Record<string, unknown> {
     const task = typeof params.task === 'string' ? params.task.trim() : '';
     if (!task) return { status: 'error', error: 'params.task is required', suggestions: [] };
     const rawLimit =
         typeof params.limit === 'number' ? Math.floor(params.limit) : DEFAULT_SUGGEST_LIMIT;
-    const limit = Math.max(1, rawLimit);
+    const limit = Math.min(SUGGEST_LIMIT_MAX, Math.max(1, rawLimit));
+    const clamped = rawLimit > SUGGEST_LIMIT_MAX ? { clamped_from: rawLimit } : {};
     const skills = rankableSkills(tree);
     if (skills.length === 0) {
         return { status: 'no_catalogue', suggestions: [], tiers: 'unknown' };
@@ -299,11 +370,24 @@ function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>)
     const filtered = tierA ? all.filter((r) => !tierA.has(r.name)) : all;
     // Never let the tier filter turn a real match into an empty answer.
     const kept = filtered.length > 0 ? filtered : all;
+    const top = kept[0];
+    const runnerUp = kept[1];
+    const topEntry = top === undefined ? undefined : tree.uris[`skill://${top.name}`];
+    const topBody =
+        opts.inlineTopBody === true && top !== undefined && (runnerUp === undefined || top.score > runnerUp.score) && topEntry?.kind === 'skill'
+            ? {
+                  skill: top.name,
+                  body: topEntry.body.slice(0, INLINE_BODY_CHAR_CAP),
+                  truncated: topEntry.body.length > INLINE_BODY_CHAR_CAP,
+              }
+            : undefined;
     return {
+        ...(topBody === undefined ? {} : { top_body: topBody }),
         status: 'ok',
         skills_indexed: skills.length,
         tiers,
         ...(tierA && filtered.length === 0 && all.length > 0 ? { tier_filter: 'bypassed-to-avoid-empty' } : {}),
+        ...clamped,
         suggestions: kept.slice(0, limit).map((r) => ({
             skill: r.name,
             score: r.score,
@@ -353,6 +437,7 @@ export function dispatch(
     tree: ContentTree,
     identity: ServerIdentity,
     req: JsonRpcRequest,
+    opts: DispatchOptions = {},
 ): JsonRpcResponse {
     const id = req.id ?? null;
     const params = (req.params ?? {}) as Record<string, unknown>;
@@ -404,7 +489,7 @@ export function dispatch(
                 const args = (params.arguments ?? {}) as Record<string, unknown>;
                 const payload =
                     name === 'suggest_skill_for_task'
-                        ? suggestSkillForTask(tree, args)
+                        ? suggestSkillForTask(tree, args, opts)
                         : readSkill(tree, args);
                 return rpcResult(id, toolTextResult(payload));
             }

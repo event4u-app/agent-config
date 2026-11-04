@@ -175,14 +175,20 @@ jobs:
         # pre-existing SC2129 (style: group the >> redirects) first surfaced
         # when the dependabot action bump touched this file. The individual
         # redirects are deliberate — one computed flag per line.
+        # Free text reaches the shell only through env:, and `version` is held to
+        # a semver shape so `steps.flags.outputs.version` below reads a
+        # fixed-shape value (lint rule template-injection).
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             bump="${{ inputs.bump }}"
-            version="${{ inputs.version }}"
+            version="$VERSION_INPUT"
             dry_run="${{ inputs.dry_run }}"
             resume="${{ inputs.resume }}"
           else
-            labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+            labels="$PR_LABELS"
             bump="auto"
             matched=0
             for candidate in major minor patch; do
@@ -201,6 +207,11 @@ jobs:
             dry_run="false"
             resume="false"
           fi
+          case "$version" in
+            *[!0-9A-Za-z.-]*)
+              echo "::error::version '$version' is not a release version" >&2
+              exit 1 ;;
+          esac
           # shellcheck disable=SC2129
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -235,7 +246,7 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: '22'
-          cache: 'npm'
+          # Actions cache left off: this job is privileged (lint rule privileged-job-cache).
 
       - name: Install Node deps
         run: npm ci --no-audit --no-fund --prefer-offline

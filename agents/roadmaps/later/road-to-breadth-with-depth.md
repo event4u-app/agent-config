@@ -372,6 +372,12 @@ naming and the peer gaps; subsystem-class stages wait on
 - [ ] **5.6 Product and marketing.** Experiment statistics, Linear, PRD-to-backlog;
   channel execution, SEO, lifecycle email.
   verify: as 5.1.
+  Arrival `inbox-2026-11-u` (2026-11-03), SEO stage-1 content: connector-neutral
+  search-performance recipes that resolve the property first; guardrails —
+  filter or paginate before ranking, compare periods only on keys present in
+  both complete sets, exclude incomplete recent days, read-only scope, no tokens
+  in logs; GEO is a measurement, never a promise. Fixture: a recorded export
+  with seeded cannibalisation, a seeded drop and a row a top-1000 cut hides.
 - [ ] **5.7 Carried defects.** The supplied plan's governance defects go to
   `agents/roadmaps/stubs/road-to-command-runtime-requirements.md` (dead
   `skills:` pointers) and one new stub owned by the maintainer for the rest —
@@ -474,6 +480,7 @@ K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC 
 > footage seeking shipped in `archive/road-to-a-timeline-the-witness-can-seek.md`.
 > Each item below joins the 5.3 roadmap as a step or carries a recorded kill
 > when that roadmap is written (same rule as 5.3a).
+> **Arrivals:** 1 — `inbox-2026-11-n` lane F (2026-11-03): step V12a.
 
 **5.3 stage 1–2, talking-head edit**
 
@@ -495,6 +502,7 @@ K1 bundled ML or Python dependencies · K2 video-to-audio models as default (NC 
 - [ ] **V10** ffmpeg capability gate for `/video:*`: tool absent → `skipped(capability)`, never pass.
 - [ ] **V11** Adapter inputs: multi-reference image/video/audio, a "keep X, change only Y" edit mode, motion transfer — each gated on a smoke trace.
 - [ ] **V12** Licence `{id, territory_excluded[], checked_at}` on every manifest entry; an entry without it fails `lint_adapter_tier`.
+- [ ] **V12a** The two Hunyuan entries (`src/scripts/ai-video/lib/model-capabilities/replicate.json` `tencent/hunyuan-video`, `fal.json` `fal-ai/hunyuan-video`) are `verified: true` with `license: null` at `b234d08480`; fill the licence from its text with a dated source before any `territory_excluded` value is written — never from memory (`inbox-2026-11-n` lane F).
 - [ ] **V13** Cost per *accepted* second as the quote basis next to the modelled estimate (owner decision on display).
 - [ ] **V14** Retry cap per shot inside calibration/stitch: a shot that fails twice stops with one ask.
 - [ ] **V15** Media ingest gate for user-supplied references (type allowlist, bounded probe, re-encode, metadata/EXIF strip, hash) — security-sensitive, threat-model first.

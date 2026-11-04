@@ -203,20 +203,6 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 }
 
 function selfTest(): number {
-    const run = (files: Record<string, string>, args: readonly string[] = []): number => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctd-'));
-        try {
-            return runGateCli(
-                REPO,
-                'src/scripts/check_test_delta.ts',
-                ['--root', dir, '--quiet', ...args],
-                dir,
-            );
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-            void files;
-        }
-    };
     const eventWith = (labels: string[]): string => {
         const f = path.join(
             fs.mkdtempSync(path.join(os.tmpdir(), 'ctd-ev-')),
@@ -224,6 +210,24 @@ function selfTest(): number {
         );
         fs.writeFileSync(f, JSON.stringify({ pull_request: { labels: labels.map((name) => ({ name })) } }));
         return f;
+    };
+    // A case without its own event gets an unlabelled one: otherwise the child
+    // inherits GITHUB_EVENT_PATH, and on a PR carrying the owner label every
+    // REJECT case would pass.
+    const run = (files: Record<string, string>, args: readonly string[] = []): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctd-'));
+        const event = args.includes('--event-path') ? [] : ['--event-path', eventWith([])];
+        try {
+            return runGateCli(
+                REPO,
+                'src/scripts/check_test_delta.ts',
+                ['--root', dir, '--quiet', ...event, ...args],
+                dir,
+            );
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+            void files;
+        }
     };
 
     return runSelfTest({

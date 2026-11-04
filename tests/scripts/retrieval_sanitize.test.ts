@@ -13,6 +13,7 @@ import {
     sanitize_entry,
     sanitize_markup,
     sanitize_text,
+    scan_invisible_findings,
 } from '../../src/scripts/_lib/retrieval_sanitize.js';
 import {
     _setIntakeRoot,
@@ -142,5 +143,27 @@ describe('sanitize_markup — the two layers compose, in that order', () => {
 
         expect(sanitize_markup(plain).text).toBe(sanitize_text(plain));
         expect(sanitize_markup(plain).removals).toHaveLength(0);
+    });
+});
+
+// road-to-boundaries-that-hold-at-release-and-runtime 1.4. A carriage return in
+// CRLF output or a progress bar is not a hidden instruction; reporting it
+// trains readers to dismiss `control-char`, so a real C0/C1 smuggle goes
+// unread. Every other control still reports.
+describe('scan_invisible_findings — carriage return', () => {
+    it('CRLF text and a progress-bar CR produce no finding', () => {
+        expect(scan_invisible_findings('a\r\nb')).toEqual([]);
+        expect(scan_invisible_findings('10%\r20%')).toEqual([]);
+    });
+
+    it('BEL (U+0007) and CSI (U+009B) still report control-char', () => {
+        expect(scan_invisible_findings('a\u0007b').map((f) => f.channel)).toEqual(['control-char']);
+        expect(scan_invisible_findings('a\u009bb').map((f) => f.channel)).toEqual(['control-char']);
+    });
+
+    it('a CR beside a real control reports only the real one', () => {
+        const found = scan_invisible_findings('x\r\u0007y');
+        expect(found).toHaveLength(1);
+        expect(found[0]?.detail).toContain('U+0007');
     });
 });

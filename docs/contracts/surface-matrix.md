@@ -24,7 +24,7 @@ tools:
   <tool-id>:                # must exist in install.ts::USER_SCOPE_PATHS
     surface: projection | plugin | bundles | export-only
     scope_path: "~/..."     # must equal USER_SCOPE_PATHS[tool-id]
-    hooks: managed-settings-block | settings-hooks-opt-in | plugin | none
+    hooks: ac-owned-settings-block | settings-hooks-opt-in | plugin | none
     alternates:             # optional — legitimate secondary surfaces
       - id: <slug>
         role: <why it is legitimate>

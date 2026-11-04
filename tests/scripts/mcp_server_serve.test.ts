@@ -80,4 +80,33 @@ describe('mcp_server — stdio serving (real SDK transport)', () => {
         const content = res.content as Array<{ type: string; text?: string }>;
         expect((content[0]!.text ?? '').length).toBeGreaterThan(0);
     });
+
+    it('tools/call on a stub name answers isError, never a success', async () => {
+        // Stubs are not registered on the stdio wire (ADR-132), so the call
+        // fails as an unknown tool — still a tool error, never a success.
+        const res = await client.callTool({ name: 'suggest_command', arguments: {} });
+        expect(res.isError).toBe(true);
+    });
+});
+
+// The result shaping the SDK handler applies, for a registry that DOES carry the
+// catalog stubs (the cloud packer and parity tests build one). A stub ran
+// nothing: isError: true, envelope unchanged as the JSON text body.
+describe('toCallToolResult — a stub envelope is a tool error', () => {
+    it('a catalog stub handler result answers isError with the envelope unchanged', async () => {
+        const { toCallToolResult } = await import('../../src/scripts/mcp_server/server.js');
+        const { CATALOG_STUBS } = await import('../../src/scripts/mcp_server/tools.js');
+        const stub = CATALOG_STUBS['suggest_command']!;
+        const env = await stub.handler({}, REPO_ROOT);
+        const res = toCallToolResult(env);
+        expect(res.isError).toBe(true);
+        expect(JSON.parse(res.content[0]!.text)).toEqual(env);
+        expect(env['code']).toBe('not_implemented');
+        expect(Object.keys(env).sort()).toEqual(['alternative', 'code', 'install_hint', 'message', 'tool', 'transport']);
+    });
+
+    it('a real result stays a success', async () => {
+        const { toCallToolResult } = await import('../../src/scripts/mcp_server/server.js');
+        expect(toCallToolResult({ rules: [] })).toEqual({ content: [{ type: 'text', text: '{"rules":[]}' }] });
+    });
 });

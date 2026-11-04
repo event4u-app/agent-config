@@ -132,12 +132,55 @@ task probe:skills
 
 The probe lists every duplicate / drift finding with the exact source paths so the cause is visible in one read.
 
+## Class D — A host mod overrides or skips a refusal
+
+### Symptom
+
+A tool call this package refuses — a deny row or a `PreToolUse` refusal — goes
+through anyway, or is refused with a reason this package never emits. The
+package's hook ran; its verdict did not decide the call.
+
+### What's actually happening
+
+Claude Code loads hooks modules ("mods") from plugins into its own worker
+([ADR-302](../decisions/ADR-302-host-owned-module-class.md)). A foreign mod is
+bound by nothing this package declares: one that registers a tool check is
+verdict-capable, and on an unmanaged account it can override this package's deny
+rows and `PreToolUse` refusals (`src/scripts/_lib/host_mod_census.ts`). The host
+decides the load order. In which order the package's hook and a mod's hook
+decide a given call is **unmeasured** — this contract makes no claim about it.
+
+Unlike Classes A and B, the package can see the cause; unlike Class C, it cannot
+fix it. This package's own module is display-only by ADR-302 and decides nothing.
+
+### What the package can do
+
+Name it. The census classifies every installed mod by what its source shows
+(verdict-capable, prompt-capable, side-effects, display-only). The scan is
+static and best-effort; a mod that reaches an event through an indirection the
+text does not show is classed by what the text shows. The deny-row consent
+screen states the same limit next to the rows it writes. Host switches that turn
+the package's hooks off before any mod is involved (`disableAllHooks`, managed
+`allowManagedHooksOnly`) are listed in
+[`enforcement-by-host`](../enforcement-by-host.md).
+
+### Where to look for the true source
+
+```bash
+agent-config doctor neighbours
+```
+
+A `verdict-capable` row is the candidate. Removing or disabling that plugin
+through the host's plugin management, then retrying the call, separates the two
+verdicts. Reports about the mod's behavior go to its maintainer.
+
 ## When in doubt — diagnostic sequence
 
 1. Run `task probe:skills` — rules out Class C.
 2. If the suspicious skill carries a `<vendor>:` prefix you don't recognise → Class A. Check `claude plugin list`.
 3. If the harness logs `deferred tools … available via ToolSearch` → Class B. The skill needs an explicit `ToolSearch` step.
-4. None of the above → file an issue at https://github.com/event4u-app/agent-config with the output of `task probe:skills` attached.
+4. If a refusal this package should have made did not decide the call → Class D. Run `agent-config doctor neighbours` and look for a `verdict-capable` mod.
+5. None of the above → file an issue at https://github.com/event4u-app/agent-config with the output of `task probe:skills` attached.
 
 ## See also
 

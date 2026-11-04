@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { type LockFinding, checkFile, newDrift, parseLocks } from './_lib/design_lock.js';
+import { type LockFinding, checkFile, newDrift, parseLocks, scaleNotice } from './_lib/design_lock.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const UI_FILE = /\.(css|scss|sass|less|html|htm|vue|svelte|astro|jsx|tsx)$/i;
@@ -63,6 +63,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
     const locks = parseLocks(md);
+    const notice = scaleNotice(path.basename(designMd), md);
+    if (notice !== null) (json ? process.stderr : process.stdout).write(`${notice}\n`);
     const files: string[] = [];
     for (const t of targets) if (fs.existsSync(t)) collect(t, files);
     let findings: LockFinding[] = files.flatMap((f) => checkFile(path.relative(process.cwd(), f), fs.readFileSync(f, 'utf-8'), locks));

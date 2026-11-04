@@ -246,7 +246,7 @@ open fact instead of Severity):
 - **Impact:** What an attacker could achieve
 - **Evidence:** code reference showing the weakness
 - **Fix:** concrete mitigation
-- **Confidence:** Low / Medium / High — High only with `proof: test`
+- **Confidence:** `confirmed | plausible | unverified` (`docs/contracts/adversarial-review-protocol.md` § Confidence) — `confirmed` only with `proof: test`
 - **Proof:** `static-trace` or `test` (with the proof-test path)
 
 Severity is anchored to the demonstrated impact: the overall rating never

@@ -114,7 +114,7 @@ this table is a derived view, kept readable for reviewers.
 
 ### quality (25)
 
-`adversarial-review`, `api-testing`, `authz-review`, `code-review`, `defense-in-depth`, `design-review`, `judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-test-coverage`, `mobile-e2e-strategy`, `pest-testing`, `playwright-testing`, `quality-tools`, `readme-reviewer`, `review-routing`, `security`, `security-audit`, `skill-reviewer`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `threat-modeling`, `validate-feature-fit`, `verify-completion-evidence`
+`adversarial-review`, `api-testing`, `authz-review`, `code-review-lens`, `defense-in-depth`, `design-review`, `judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-test-coverage`, `mobile-e2e-strategy`, `pest-testing`, `playwright-testing`, `quality-tools`, `readme-reviewer`, `review-routing`, `security`, `security-audit`, `skill-reviewer`, `test-driven-development`, `test-performance`, `testing-anti-patterns`, `threat-modeling`, `validate-feature-fit`, `verify-completion-evidence`
 
 ### devops (13)
 
@@ -122,7 +122,7 @@ this table is a derived view, kept readable for reviewers.
 
 ### process (48)
 
-`adr-create`, `agent-docs-writing`, `agents-md-thin-root`, `ai-council`, `check-refs`, `command-routing`, `command-writing`, `context-authoring`, `context-document`, `conventional-commits-writing`, `copilot-agents-optimization`, `copilot-config`, `description-assist`, `developer-like-execution`, `file-editor`, `finishing-a-development-branch`, `git-workflow`, `guideline-writing`, `jira-integration`, `learning-to-rule-or-skill`, `lint-skills`, `markitdown`, `mcp`, `mcp-builder`, `md-language-check`, `merge-conflicts`, `module-management`, `override-management`, `persona-writing`, `project-docs`, `readme-writing`, `readme-writing-package`, `receiving-code-review`, `repomix-packer`, `requesting-code-review`, `roadmap-management`, `roadmap-writing`, `rtk-output-filtering`, `rule-writing`, `script-writing`, `sequential-thinking`, `skill-improvement-pipeline`, `skill-management`, `skill-writing`, `subagent-orchestration`, `token-optimizer`, `upstream-contribute`, `using-git-worktrees`
+`adr-create`, `agent-docs-writing`, `agents-md-thin-root`, `ai-council`, `check-refs`, `command-routing`, `command-writing`, `context-authoring`, `context-document`, `conventional-commits-writing`, `copilot-agents-optimization`, `copilot-config`, `description-assist`, `developer-like-execution`, `file-editor`, `finishing-a-development-branch`, `git-workflow`, `guideline-writing`, `jira-integration`, `learning-to-rule-or-skill`, `lint-skills`, `markitdown`, `mcp-builder`, `mcp-tool-use`, `md-language-check`, `merge-conflicts`, `module-management`, `override-management`, `persona-writing`, `project-docs`, `readme-writing`, `readme-writing-package`, `receiving-code-review`, `repomix-packer`, `requesting-code-review`, `roadmap-management`, `roadmap-writing`, `rtk-output-filtering`, `rule-writing`, `script-writing`, `sequential-thinking`, `skill-improvement-pipeline`, `skill-management`, `skill-writing`, `subagent-orchestration`, `token-optimizer`, `upstream-contribute`, `using-git-worktrees`
 
 ### discovery (19)
 

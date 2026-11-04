@@ -132,7 +132,7 @@ graceful / 🟢 defensive-coding suggestion.
 
 **A killed 🔴 is demoted, never deleted.** This judge runs a refutation pass on
 every 🔴 and used to leave no trace of what it killed — the one judge with a
-refutation step and no demotion bucket, where `code-review`, `security-audit`,
+refutation step and no demotion bucket, where `code-review-lens`, `security-audit`,
 `bug-analyzer`, and the adversarial council all pair theirs with one. The
 asymmetry matters because refutation is a judgement: a reviewer who was wrong to
 refute leaves the reader no way to notice. Confidence is what the row carries;

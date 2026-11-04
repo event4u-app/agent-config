@@ -1,0 +1,3 @@
+{
+  "primitive": { "font": { "$type": "fontFamily", "body": { "$value": ["Helvetica Neue", "Arial", "sans-serif"] } } }
+}

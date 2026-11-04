@@ -233,6 +233,18 @@ to the same PR; (g) evaluate the tripwire (§ Enforced limits — including
 the two-consecutive-no-gain stop). Loop output is a delta summary in the PR
 description's changelog section, not a comment (`no-pr-progress-comments`).
 
+## Engine modules the model carries
+
+No CLI and no hook runs these modules; the steps above state what each one
+specifies, and the model applies it. Each is a reference spec for the stage,
+not a check that ran — a run that cites one has not executed it.
+
+- `src/scripts/analysis_and_optimize.ts` (`readSet`, Step 1) — reference spec, model-carried.
+- `src/scripts/analysis_anchors.ts` (`buildAnchorTable`, the anchor table) — reference spec, model-carried.
+- `src/scripts/analysis_exchange.ts` (the exchange, Step 1.3) — reference spec, model-carried.
+- `src/scripts/analysis_gate.ts` (the gain gate, Step 3) — reference spec, model-carried.
+- `src/scripts/analysis_questions.ts` (question routing, Step 3) — reference spec, model-carried.
+
 ## Output
 
 - The PR URL (literal last line of the closing reply).

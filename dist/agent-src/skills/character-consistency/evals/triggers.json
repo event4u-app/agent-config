@@ -1,0 +1,68 @@
+{
+    "skill": "character-consistency",
+    "last_eval": "2026-11-03",
+    "description": "6 exemplars (one German) + 4 near-misses + 1 counterexample. Exemplars cover keeping one character visually identical across AI video scenes (character lock, identity tokens). Near-misses are neighbours sharing its vocabulary: single-image generation (image-generation), prompt-only authoring (prompt-engineering-image), checking a found clip for defects (analyze:post) and storyboard planning (video:storyboard). The counterexample is logo work, which shares only the word design.",
+    "queries": [
+        {
+            "q": "keep the same character across all six scenes of my AI music video",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "create a character lock for Mia so her red jacket and silver ring stay identical in every clip",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the hero's face drifts between scenes, how do I lock her identity tokens?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "define silhouette, palette and wardrobe tokens so the mascot looks the same in every shot",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "same character in scene 1 and scene 4, please, the hair colour keeps changing",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "die Figur soll in allen Szenen gleich aussehen, Jacke und Ring dürfen sich nicht ändern",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "generate one portrait image of a woman in a red jacket",
+            "trigger": false,
+            "note": "single image, no cross-scene identity → image-generation",
+            "class": "near-miss"
+        },
+        {
+            "q": "write me a Midjourney prompt for a cyberpunk street scene",
+            "trigger": false,
+            "note": "prompt authoring only → prompt-engineering-image",
+            "class": "near-miss"
+        },
+        {
+            "q": "is this TikTok clip AI-generated? the ring on her hand disappears",
+            "trigger": false,
+            "note": "analysing a found clip → analyze:post",
+            "class": "near-miss"
+        },
+        {
+            "q": "design a logo mark for our bakery",
+            "trigger": false,
+            "note": "logo work → logo-generation",
+            "class": "counterexample"
+        },
+        {
+            "q": "plan the shot list and storyboard for a 30-second ad",
+            "trigger": false,
+            "note": "storyboard planning → video:storyboard",
+            "class": "near-miss"
+        }
+    ]
+}

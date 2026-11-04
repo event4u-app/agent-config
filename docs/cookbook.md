@@ -12,7 +12,7 @@ Each recipe is a short command sequence. Run the commands in order; the listed s
 *You have a diff and want a real review, not a rubber-stamp.*
 
 - **Commands:** `/review:changes` → `/judge` → `/fix:quality`
-- **Skills:** `code-review`, `adversarial-review`
+- **Skills:** `code-review-lens`, `adversarial-review`
 
 ### Fix a red CI run
 
@@ -135,14 +135,14 @@ Explore, plan, estimate, refine, and investigate before building. The "what shou
 Build it. The core "make the change" front — drive a prompt, ticket, or feature end-to-end through plan → implement → verify.
 
 - **Path:** `/work` → `/review:changes` → `/fix:quality` → `/commit`
-- **Skills:** `test-driven-development`, `code-review`, `systematic-debugging`, `git-workflow`
+- **Skills:** `test-driven-development`, `code-review-lens`, `systematic-debugging`, `git-workflow`
 
 ### Review flow
 
 Check it. Self-review, judge, fix/quality, and threat-model a change before it ships.
 
 - **Path:** `/review:changes` → `/judge` → `/fix:quality` → `/threat-model`
-- **Skills:** `code-review`, `adversarial-review`, `quality-tools`, `threat-modeling`, `receiving-code-review`, `design-review`
+- **Skills:** `code-review-lens`, `adversarial-review`, `quality-tools`, `threat-modeling`, `receiving-code-review`, `design-review`
 
 ### Delivery flow
 

@@ -1,0 +1,53 @@
+{
+  "$comment": "Skill/command same-name twins present at tree pin b234d08480 (road-to-a-name-no-host-already-owns 2.2). lint_agent_skill_names fails on any twin NOT listed here, and on any listed twin that no longer exists, so the list only shrinks and only by deleting a line. Every entry is closed by the same owner decision (OD-4 of that roadmap): project the skill where the host loads skills and the command elsewhere, or rename the command slug. Never add a line.",
+  "twins": [
+    {
+      "name": "brand",
+      "closed_by": "OD-4",
+      "reason": "`brand` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "brand-identity",
+      "closed_by": "OD-4",
+      "reason": "`brand-identity` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "brand-strategy",
+      "closed_by": "OD-4",
+      "reason": "`brand-strategy` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "design-system-capture",
+      "closed_by": "OD-4",
+      "reason": "`design-system-capture` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "estimate-ticket",
+      "closed_by": "OD-4",
+      "reason": "`estimate-ticket` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "refine-ticket",
+      "closed_by": "OD-4",
+      "reason": "`refine-ticket` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "review-routing",
+      "closed_by": "OD-4",
+      "reason": "`review-routing` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    },
+    {
+      "name": "upstream-contribute",
+      "closed_by": "OD-4",
+      "reason": "`upstream-contribute` is both a skill directory and a command name: slug at pin b234d08480; closing it needs owner decision OD-4.",
+      "falsifier": "./scripts-run src/scripts/lint_agent_skill_names --quiet"
+    }
+  ]
+}

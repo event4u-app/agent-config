@@ -3,7 +3,7 @@
 > The one place this package names what duplication *is*, what may be decided
 > about it, and how to tell a second explanation that adds information from one
 > that only adds length. Cited by [`code-clarity`](code-clarity.md) at the
-> authoring moment, by `skill:code-review` at the review moment, and by
+> authoring moment, by `skill:code-review-lens` at the review moment, and by
 > `skill:code-refactoring` at the refactoring moment. Those three cite it —
 > they do not restate it, because three copies of a redundancy taxonomy would
 > be the defect it describes.

@@ -5,6 +5,8 @@ complexity: lightweight
 
 # Road to a Thin Flip Under Anchor-Scoring
 
+> **Resume when:** a different evaluation instrument exists that clears inter-evaluator κ ≥ 0.800 on the frozen corpus (Phase 1 is a final honest null for the current one; a third attempt at it is refused).
+
 **Goal.** Decide the thin-projection flip on evidence a deterministic instrument
 can produce — or record a second, honest negative.
 

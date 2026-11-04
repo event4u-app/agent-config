@@ -7,6 +7,16 @@ a scope delta, a footer strip, a red CI. The Iron-Law blocks and the default
 flow skeleton stay in the command; this file carries the explanatory prose,
 rationale, and per-branch procedure.
 
+
+## Foreign repo — its AI-contribution policy
+
+Applies before the push in § 1a. When the target repo is not the user's (a fork
+PR, or an issue or comment on someone else's repo), read its `AGENTS.md`,
+`CONTRIBUTING*` and `AI_POLICY*` before pushing, and quote the AI-relevant lines
+inside the push confirmation — no extra question. If they forbid AI-authored
+contributions, do not post: hand the drafted title and body to the user to submit
+themselves. Never add `Signed-off-by` (or any certification trailer) on the
+user's behalf; that line is a personal attestation only the user can make.
 ## 1b. Freshness gate — MANDATORY before opening any PR
 
    It resolves the base itself — explicit `--base`, else the base of the **open

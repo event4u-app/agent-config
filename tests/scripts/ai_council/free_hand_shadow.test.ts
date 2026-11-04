@@ -181,6 +181,45 @@ describe('shadowAsk — the hand contract (D5)', () => {
     });
 });
 
+describe('shadowReport — production rows are tagged and kept out of the flip stats', () => {
+    function row(origin: 'production' | 'bench' | undefined, freeVerified: 'pass' | 'skipped'): string {
+        const side = (route: string, billing: string, verified: string) => ({
+            route, billing, outcome: 'ok', schema_valid: true, verified, tokens: 100, verify_tokens: 5,
+        });
+        return JSON.stringify({
+            ts: '2026-10-20T10:00:00Z',
+            kind: 'classify',
+            ...(origin !== undefined ? { origin } : {}),
+            paid: side('p', 'per-token', 'pass'),
+            free: side('f', 'free-quota', freeVerified),
+        });
+    }
+
+    it('production rows with skipped verdicts leave the kind free rate unchanged', () => {
+        const root = tmpRoot();
+        const file = path.join(root, SHADOW_LEDGER_RELPATH);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, [row('bench', 'pass'), row(undefined, 'pass'), row('production', 'skipped'), row('production', 'skipped')].join('\n') + '\n');
+        const [stats] = shadowReport(readShadowLedger(root));
+        expect(stats).toMatchObject({ kind: 'classify', n: 2, free_rate: 0, paid_rate: 0 });
+    });
+
+    it('production rows do not count toward the bench cap, but a production shadow keeps the total bound', async () => {
+        const root = tmpRoot();
+        const file = path.join(root, SHADOW_LEDGER_RELPATH);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, `${row('production', 'skipped')}\n`.repeat(SHADOW_CALL_CAP));
+        const paid = member('p', 'per-token', PAID_ANSWER);
+        const free = member('f', 'free-quota', FREE_ANSWER);
+        const prod = await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free, verify: passAll, stateRoot: root, origin: 'production' });
+        expect(prod.skipped).toBe('cap-reached');
+        const bench = await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free, verify: passAll, stateRoot: root, origin: 'bench' });
+        expect(bench.skipped).toBeUndefined();
+        expect(bench.row?.origin).toBe('bench');
+        expect(free.calls).toBe(1);
+    });
+});
+
 describe('shadowReport', () => {
     it('per kind: both rates, tokens avoided, the head’s verify tokens, and the net per week', async () => {
         const root = tmpRoot();

@@ -131,6 +131,8 @@ export interface ScanResult {
     dedupedCount: number;
     /** Fraction of seen records that were replays: `(totalSeen - dedupedCount) / totalSeen`. */
     dedup_ratio: number;
+    /** `*.orphaned-*.jsonl` set-aside copies skipped — not sessions, so not scanned. */
+    setAside: number;
 }
 
 /** Per-bucket rollup: call count, the four raw token sums, the TTL write split, and two derived metrics. */
@@ -255,12 +257,21 @@ function parseLine(line: string): RawAssistantRecord | null {
  * session files without a second code path.
  */
 export function listTranscriptFiles(opts: ScanOptions = {}): string[] {
+    return listTranscriptFilesCounted(opts).files;
+}
+
+/** A copy the host set aside (`<id>.orphaned-<stamp>-<tag>.jsonl`), not a session of its own. */
+const SET_ASIDE_RE = /\.orphaned-[^/]*\.jsonl$/;
+
+/** {@link listTranscriptFiles}, plus how many set-aside copies were skipped. */
+export function listTranscriptFilesCounted(opts: ScanOptions = {}): { files: string[]; setAside: number } {
     const root = opts.root ?? DEFAULT_PROJECTS_ROOT;
     const base = opts.projectDir
         ? (path.isAbsolute(opts.projectDir) ? opts.projectDir : path.join(root, opts.projectDir))
         : root;
-    if (!fs.existsSync(base)) return [];
+    if (!fs.existsSync(base)) return { files: [], setAside: 0 };
 
+    let setAside = 0;
     const cutoffMs = opts.maxAgeDays !== undefined
         ? (opts.now ?? new Date()).getTime() - opts.maxAgeDays * 24 * 60 * 60 * 1000
         : null;
@@ -282,6 +293,10 @@ export function listTranscriptFiles(opts: ScanOptions = {}): string[] {
                 continue;
             }
             if (!entry.isFile() || !entry.name.endsWith('.jsonl')) continue;
+            if (SET_ASIDE_RE.test(entry.name)) {
+                setAside += 1;
+                continue;
+            }
             if (cutoffMs !== null) {
                 let mtimeMs: number;
                 try {
@@ -294,7 +309,7 @@ export function listTranscriptFiles(opts: ScanOptions = {}): string[] {
             out.push(full);
         }
     }
-    return out.sort();
+    return { files: out.sort(), setAside };
 }
 
 /**
@@ -304,7 +319,7 @@ export function listTranscriptFiles(opts: ScanOptions = {}): string[] {
  * has no effect on the aggregated totals.
  */
 export function scanTranscripts(opts: ScanOptions = {}): ScanResult {
-    const files = listTranscriptFiles(opts);
+    const { files, setAside } = listTranscriptFilesCounted(opts);
     const seen = new Set<string>();
     const records: TranscriptRecord[] = [];
     let totalSeen = 0;
@@ -342,6 +357,7 @@ export function scanTranscripts(opts: ScanOptions = {}): ScanResult {
         totalSeen,
         dedupedCount,
         dedup_ratio: totalSeen > 0 ? (totalSeen - dedupedCount) / totalSeen : 0,
+        setAside,
     };
 }
 

@@ -2,11 +2,14 @@
 // a popup clipped by a scrolling dialog is reported, a native select is never
 // reported as a captured open state.
 import * as fs from 'node:fs';
+import * as http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { Page } from '@playwright/test';
 import { afterAll, describe, expect, it } from 'vitest';
 
+import { runUiRender } from '../../src/cli/commands/uiRender.js';
 import { interactWith } from '../../src/cli/commands/uiRenderInteract.js';
 import { chromiumAvailable } from '../../src/scripts/ui_conformance_probe.js';
 
@@ -70,4 +73,40 @@ describe('interactWith — live', () => {
         const r = await withPage((page) => interactWith(page, '#nope', dir, 2));
         expect(r).toMatchObject({ found: false, open_state: 'not-captured' });
     }, 60_000);
+});
+
+// road-to-design-inputs-and-pages-read-as-they-are 4.3 / AC-4: interacting with
+// a URL target clicks a real control; a click that submits must never reach
+// the server, and nothing may leave the origin.
+describe('ui:render --interact on a URL target — live, loopback only', () => {
+    const live = chromiumAvailable();
+
+    // skip-reason: tool absent — needs a local Chromium; runs under AGENT_CONFIG_BROWSER_SUITES=1
+    it.skipIf(!live)('a submitting click is aborted and recorded; an off-origin request is blocked', async () => {
+        const writes: string[] = [];
+        const server = http.createServer((req, res) => {
+            if (req.method !== 'GET' && req.method !== 'HEAD') writes.push(`${req.method} ${req.url}`);
+            res.setHeader('content-type', 'text/html');
+            res.end(`<!doctype html><html><body>
+<form method="post" action="/cart/delete"><button id="del" type="submit">Delete</button></form>
+<img src="http://127.0.0.2:9/pixel.gif" alt="">
+</body></html>`);
+        });
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        const port = (server.address() as AddressInfo).port;
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'interact-url-'));
+        try {
+            const code = await runUiRender({ target: `http://127.0.0.1:${port}/`, projectRoot: dir, slug: 'url', interact: ['#del'] });
+            expect(code).toBe(0);
+            const manifest = JSON.parse(
+                fs.readFileSync(path.join(dir, 'agents', 'runtime', 'state', 'render', 'url', 'manifest.json'), 'utf8'),
+            );
+            expect(writes).toEqual([]);
+            expect(manifest.network.aborted.some((r: string) => r.startsWith('POST ') && r.endsWith('/cart/delete'))).toBe(true);
+            expect(manifest.network.blocked.some((u: string) => u.startsWith('http://127.0.0.2:9/'))).toBe(true);
+        } finally {
+            server.close();
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 180_000);
 });

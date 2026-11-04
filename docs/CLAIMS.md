@@ -91,6 +91,15 @@ every open entry with its dates. The dispatch-policy table
 `check_claims` fails when a row disagrees with the file that carries its value,
 cites a claim that is not closed, or a floor row is learnable.
 
+**`last_verified` — never older than a change the claim names.** When the
+`claim:` text names a past date (`two figures moved on 2026-09-07`) newer than
+the entry's `last_verified`, the verification predates the change it describes.
+`check_claims` counts those entries against a shrink-only ratchet
+(`check_claims:stale-last-verified` in `src/config/gate-violation-baselines.json`),
+lists each under `Stale last_verified` without failing at the recorded count, and
+fails when the count rises. A date after today is a plan and is ignored. Clearing
+an entry means re-verifying or narrowing the claim, never bumping the date.
+
 **`non_inference` — the sentence that stops a number travelling.** A measured
 figure outlives its measurement: it is quoted without the corpus, the arm count,
 or the population it ran over, and a reader with only the headline cannot tell

@@ -331,6 +331,7 @@ to every roadmap you author.
   template rule 13 + [`scope-control`](../../rules/scope-control.md#git-operations--permission-gated).
 * Plan automatic branch switches mid-roadmap (template rule 14).
 * Ship a phase without checkboxes (`roadmap-progress-sync` Iron Law #2).
+* Write a `Done:` note that says more than its `verify:` output — run the four inflation checks in [`references/inflation-checklist.md`](references/inflation-checklist.md) instead.
 * Write inline human-verification or "Review / Sign-off" phases (§ 4c /
   template rule 22).
 * Write merge, push, or commit steps into the roadmap. Roadmaps plan

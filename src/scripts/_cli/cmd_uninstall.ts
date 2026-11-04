@@ -1035,7 +1035,7 @@ function _uninstall_global(opts: Options): number {
         if (opts.dry_run) {
             _print(
                 _stdout,
-                `  · claude-code: would remove managed hooks and recorded listing overrides from ${settings_path}`,
+                `  · claude-code: would remove agent-config hooks and recorded listing overrides from ${settings_path}`,
             );
         } else {
             try {
@@ -1043,7 +1043,7 @@ function _uninstall_global(opts: Options): number {
                 if (res.changed) {
                     _print(
                         _stdout,
-                        `  · claude-code: removed managed hooks (${res.events.join(', ')})`,
+                        `  · claude-code: removed agent-config hooks (${res.events.join(', ')})`,
                     );
                 }
             } catch (e) {

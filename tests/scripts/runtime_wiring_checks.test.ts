@@ -15,6 +15,7 @@ import {
     _routerRuleCount,
     canaryLivenessCheck,
     checkHookResolution,
+    checkHookWiring,
     checkInheritedGitEnv,
     checkRouterArtifact,
     checkSettingsResolution,
@@ -207,5 +208,47 @@ describe('remedy hints a consumer can act on', () => {
         vi.stubEnv('AGENT_CONFIG_DEV_MODE', '1');
         for (const r of routerRemedies()) expect(r).toContain('task generate-tools');
         expect(canaryRemedy()).toContain('./scripts-run src/scripts/canary_liveness --refresh');
+    });
+});
+
+describe('checkHookWiring wording', () => {
+    // "managed" is the host's own name for its administrator settings tier;
+    // these hooks are agent-config's and must not read as that tier.
+    const MANAGED = /\bmanaged hooks?\b|\bmanaged settings/i;
+
+    function results(): ReturnType<typeof checkHookWiring>[] {
+        const base = {
+            which: (bin: string) => `/usr/bin/${bin}`,
+            packageRoot: tmp,
+            homeDir: tmp,
+            buildMatrix: () => ({ Stop: {}, PreToolUse: {} }),
+            managedSignature: 'agent-config-sig',
+            pluginInstalled: () => false,
+        };
+        fs.mkdirSync(path.join(tmp, '.claude'), { recursive: true });
+        const settings = path.join(tmp, '.claude', 'settings.json');
+        const out: ReturnType<typeof checkHookWiring>[] = [];
+        fs.writeFileSync(settings, '{ broken', 'utf8');
+        out.push(checkHookWiring(base));
+        fs.writeFileSync(
+            settings,
+            JSON.stringify({ hooks: { Stop: ['agent-config-sig'], PreToolUse: ['agent-config-sig'] } }),
+            'utf8',
+        );
+        out.push(checkHookWiring(base));
+        fs.writeFileSync(settings, '{}', 'utf8');
+        out.push(checkHookWiring({ ...base, pluginInstalled: () => true }));
+        out.push(checkHookWiring({ ...base, which: (bin) => (bin === 'claude' ? '/usr/bin/claude' : null) }));
+        return out;
+    }
+
+    it('never calls agent-config hooks "managed" in a message or remedy', () => {
+        const all = results();
+        expect(all.map((r) => r.status)).toEqual(['fail', 'ok', 'warn', 'fail']);
+        for (const r of all) {
+            expect(r.message, r.message).not.toMatch(MANAGED);
+            expect(r.remedy, r.remedy).not.toMatch(MANAGED);
+        }
+        expect(all[1]?.message).toContain('agent-config hooks');
     });
 });

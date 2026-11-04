@@ -70,10 +70,9 @@ pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 
 ## Goal
 
-Every rubric category **in the declared manifest** of
-`agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or
-`max-boundary` under the six-dimension definition frozen in
-`road-to-score-contract.md` — with no existing 10
+Every declared rubric category reaches `ten`, `measured-null` or `max-boundary`.
+The manifest is the one in `agents/evidence/ac-capability-scorecard.yaml`, the
+definition the six-dimension one frozen in `road-to-score-contract.md` — with no existing 10
 regressed, no aggregate averaging, and no mechanism shipped only to satisfy a
 rubric row. The v1 "doctrine caps" are withdrawn: a pre-registered **measured
 no-build null is itself a terminal 10-eligible state**, which protects the same

@@ -7804,12 +7804,18 @@ var _CURRENT = [
   "add-dir",
   "advisor",
   "agents",
+  "artifact-capabilities",
+  "artifact-design",
+  "artifact-diagramming",
   "autofix-pr",
   "background",
   "batch",
+  "bg",
   "branch",
   "btw",
   "cd",
+  "checkpoint",
+  "checkup",
   "chrome",
   "claude-api",
   "clear",
@@ -7818,6 +7824,7 @@ var _CURRENT = [
   "compact",
   "config",
   "context",
+  "continue",
   "copy",
   "cost",
   "dataviz",
@@ -7844,11 +7851,14 @@ var _CURRENT = [
   "help",
   "hooks",
   "ide",
+  "import",
   "init",
   "insights",
   "install-github-app",
   "install-slack-app",
   "keybindings",
+  "keybindings-help",
+  "list-agents",
   "login",
   "logout",
   "loop",
@@ -7856,14 +7866,20 @@ var _CURRENT = [
   "memory",
   "mobile",
   "model",
+  "new",
   "passes",
+  "peers",
   "permissions",
   "plan",
   "plugin",
+  "plugin-authoring",
   "powerup",
   "pr-comments",
   "privacy-settings",
+  "proactive",
+  "quit",
   "radio",
+  "rc",
   "recap",
   "release-notes",
   "reload-plugins",
@@ -7871,33 +7887,49 @@ var _CURRENT = [
   "remote-control",
   "remote-env",
   "rename",
+  "reset",
   "resume",
   "review",
   "rewind",
+  "routines",
   "run",
   "run-skill-generator",
   "sandbox",
   "schedule",
   "scroll-speed",
   "security-review",
+  "settings",
   "setup-bedrock",
   "setup-vertex",
+  "share",
   "simplify",
+  "skill-doctor",
   "skills",
   "stats",
   "status",
   "statusline",
   "stickers",
+  "stop",
+  "subtask",
+  "tasks",
+  "team-onboarding",
   "teleport",
   "thinking",
   "trust",
+  "tui",
+  "ultraplan",
+  "ultrareview",
+  "undo",
+  "update-config",
   "upgrade",
   "usage",
   "verify",
   "vim",
+  "voice",
   "web",
   "whats-new",
   "workflow",
+  "workflow-authoring",
   "workflows",
   "worktree"
 ];
@@ -7914,8 +7946,11 @@ var CLAUDE_CODE_BUILTIN_NAMES = /* @__PURE__ */ new Set([
   ..._CURRENT,
   ..._LEGACY
 ]);
+function normalize_builtin_name(slug) {
+  return slug.normalize("NFKC").replace(/[\s\p{Cf}]/gu, "").toLowerCase();
+}
 function is_claude_builtin_name(slug) {
-  return CLAUDE_CODE_BUILTIN_NAMES.has(slug.toLowerCase());
+  return CLAUDE_CODE_BUILTIN_NAMES.has(normalize_builtin_name(slug));
 }
 
 // src/scripts/_lib/installed_lock.ts
@@ -10536,6 +10571,7 @@ function joinPath(parent, key) {
 }
 
 // src/install/hostConfigMerge.ts
+var defaultSerialize = (data) => jsonDumpsIndent(data, 4) + "\n";
 var defaultIo = {
   write: (p, content) => fs13.writeFileSync(p, content, "utf-8")
 };
@@ -10594,33 +10630,54 @@ function parseHostConfig(text) {
 function manualSnippet(incoming) {
   return jsonDumpsIndent(incoming, 4);
 }
+function keyPath(container, key) {
+  return container === "" ? key : `${container}.${key}`;
+}
+function touchedKeyPaths(incoming, container = "", out = /* @__PURE__ */ new Set()) {
+  for (const [key, value] of Object.entries(incoming)) {
+    const here = keyPath(container, key);
+    out.add(here);
+    if (isPlainObject(value)) touchedKeyPaths(value, here, out);
+  }
+  return out;
+}
 function mergeHostConfigFile(p, incoming, merge2, io = defaultIo) {
   if (!fs13.existsSync(p)) {
     fs13.mkdirSync(path12.dirname(p), { recursive: true });
-    io.write(p, jsonDumpsIndent(incoming, 4) + "\n");
+    io.write(p, (io.serialize ?? defaultSerialize)(incoming));
     return { status: "created" };
   }
   const original = fs13.readFileSync(p, "utf-8");
   const parsed = parseHostConfig(original);
   if (parsed.kind === "invalid") return { status: "skipped-invalid", detail: parsed.reason };
-  const touched = findDuplicateKeys(parsed.kind === "jsonc" ? stripJsonc(original) : original).filter(
-    (d) => d.container === "" && d.key in incoming
-  );
-  if (touched.length > 0) {
-    const d = touched[0];
-    return {
-      status: "skipped-duplicate-key",
-      detail: `"${d.key}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}`
-    };
-  }
+  const touchedKeys = touchedKeyPaths(incoming);
+  const duplicates = findDuplicateKeys(parsed.kind === "jsonc" ? stripJsonc(original) : original);
+  const refuse = (d, why) => ({
+    status: "skipped-duplicate-key",
+    detail: `"${keyPath(d.container, d.key)}" appears on lines ${String(d.firstLine)} and ${String(d.laterLine)}${why}`
+  });
+  const touched = duplicates.find((d) => touchedKeys.has(keyPath(d.container, d.key)));
+  if (touched !== void 0) return refuse(touched, "");
   const merged = merge2(parsed.data, incoming);
   if (jsonEqual(merged, parsed.data)) return { status: "unchanged" };
   if (parsed.kind === "jsonc") return { status: "skipped-jsonc", detail: "comments would be lost on rewrite" };
+  if (duplicates[0] !== void 0) return refuse(duplicates[0], " (a rewrite would keep only the last)");
+  return overwriteWithBackup(p, original, merged, io);
+}
+function writeHostConfig(p, data, io = defaultIo) {
+  if (!fs13.existsSync(p)) {
+    fs13.mkdirSync(path12.dirname(p), { recursive: true });
+    io.write(p, (io.serialize ?? defaultSerialize)(data));
+    return { status: "created" };
+  }
+  return overwriteWithBackup(p, fs13.readFileSync(p, "utf-8"), data, io);
+}
+function overwriteWithBackup(p, original, data, io) {
   const backup = p + BACKUP_SUFFIX;
-  if (!fs13.existsSync(backup)) fs13.writeFileSync(backup, original, "utf-8");
-  io.write(p, jsonDumpsIndent(merged, 4) + "\n");
+  fs13.writeFileSync(backup, original, "utf-8");
+  io.write(p, (io.serialize ?? defaultSerialize)(data));
   const reread = parseObject(fs13.readFileSync(p, "utf-8"));
-  if (typeof reread === "string" || !jsonEqual(reread, merged)) {
+  if (typeof reread === "string" || !jsonEqual(reread, data)) {
     fs13.writeFileSync(p, original, "utf-8");
     return { status: "skipped-readback-mismatch", detail: "original bytes restored" };
   }
@@ -12281,13 +12338,15 @@ function applyCodexResidentSet(home, report) {
   }
 }
 
-// src/scripts/_lib/skill_listing_overrides.ts
-var OVERRIDE_KEY = "skillOverrides";
+// src/scripts/_lib/skill_listing_record.ts
 var NAME_ONLY = "name-only";
 var RECORD_BASENAME = "skill-overrides.json";
 function recordPath2(env) {
   return write_target(RECORD_BASENAME, { env: env ?? null });
 }
+
+// src/scripts/_lib/skill_listing_overrides.ts
+var OVERRIDE_KEY = "skillOverrides";
 function ownedSkillNames(currentFiles) {
   const out = /* @__PURE__ */ new Set();
   for (const rel of currentFiles) {
@@ -14843,7 +14902,7 @@ function installerThinsHost(_hostId, _opts = {}) {
 
 // src/install/wizard-plan.ts
 import { homedir as homedir15 } from "node:os";
-import { isAbsolute as isAbsolute7, join as join39, resolve as resolve20 } from "node:path";
+import { isAbsolute as isAbsolute6, join as join39, resolve as resolve20 } from "node:path";
 var USER_SCOPE_PATHS = {
   "claude-code": "~/.claude/",
   "claude-desktop": "~/Library/Application Support/Claude/",
@@ -14926,7 +14985,7 @@ function expandAnchor(anchor2, home) {
   const h = home ?? homedir15();
   if (anchor2 === "~") return h;
   if (anchor2.startsWith("~/")) return join39(h, anchor2.slice(2));
-  if (isAbsolute7(anchor2)) return anchor2;
+  if (isAbsolute6(anchor2)) return anchor2;
   return resolve20(anchor2);
 }
 function dryRunTargetLines(global, tools, projectTarget) {
@@ -14948,7 +15007,7 @@ function dryRunTargetLines(global, tools, projectTarget) {
 `;
   }
   out += "  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n";
-  out += "               host projection + managed hooks \u2014 would run\n";
+  out += "               host projection + agent-config hooks \u2014 would run\n";
   return out;
 }
 function dryRunBool(v) {
@@ -23001,8 +23060,9 @@ function read_json_file(p) {
   return null;
 }
 function write_json_file(p, data) {
-  const content = jsonDumpsIndent(data, 4) + "\n";
-  write_file(p, content);
+  const o = writeHostConfig(p, data, { write: write_file });
+  if (o.status === "skipped-readback-mismatch") warn(`${p}: ${o.status} (${o.detail ?? ""})`);
+  return o.status !== "skipped-readback-mismatch";
 }
 function merge_json_file(p, new_data, _force, label) {
   const new_entries = build_merge_entries(label, new_data);
@@ -23360,7 +23420,7 @@ function _heal_legacy_claude_plugin_ids(p) {
   for (const pid of removed) {
     delete enabled[pid];
   }
-  write_json_file(p, data);
+  if (!write_json_file(p, data)) return [];
   return removed;
 }
 function ensure_claude_bridge(project_root, force) {
@@ -23626,8 +23686,7 @@ function ensure_copilot_bridge(project_root, force) {
     skip(".github/plugin/marketplace.json already exists");
     return;
   }
-  write_json_file(target, bridge);
-  success(".github/plugin/marketplace.json created");
+  if (write_json_file(target, bridge)) success(".github/plugin/marketplace.json created");
 }
 var ROOCODE_MARKER = `# Agent Config bridge
 
@@ -24148,7 +24207,7 @@ function _suppress_rule_layer(project_root, suppress_dir) {
   const entry = claudeMdExcludesGlob(real_dir);
   const merged = mergeClaudeMdExcludes(existing["claudeMdExcludes"], entry);
   if (JSON.stringify(existing["claudeMdExcludes"] ?? null) === JSON.stringify(merged)) return;
-  write_json_file(target, { ...existing, claudeMdExcludes: merged });
+  if (!write_json_file(target, { ...existing, claudeMdExcludes: merged })) return;
   success(`.claude/settings.local.json: claudeMdExcludes += ${entry}`);
 }
 function _gate_rule_layer_overlap(project_root, layer, dry_run) {
@@ -24876,14 +24935,14 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         if (!state.QUIET) {
           if (res.changed) {
             success(
-              `claude-code: managed hooks registered in ~/.claude/settings.json (${res.events.length} event(s))`
+              `claude-code: agent-config hooks registered in ~/.claude/settings.json (${res.events.length} event(s))`
             );
           } else {
-            skip("claude-code: managed hooks already registered");
+            skip("claude-code: agent-config hooks already registered");
           }
         }
       } catch (e) {
-        warn(`claude-code: managed-hook registration failed \u2014 ${String(e)}`);
+        warn(`claude-code: agent-config hook registration failed \u2014 ${String(e)}`);
         _emit_progress({ type: "hooks_failed", tool: tool_id, error: String(e) });
       }
     }

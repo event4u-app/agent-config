@@ -92,7 +92,7 @@ Focus on code paths with high execution frequency or large data volumes:
 ## Output format
 
 1. Emit one entry per bottleneck using the field list below; never collapse multiple bottlenecks into a single entry.
-2. Severity, Effort, and Confidence are required for every entry and must use the bounded vocabulary (Low / Medium / High / Critical for severity).
+2. Severity, Effort, and Confidence are required for every entry and must use the bounded vocabulary (Low / Medium / High / Critical for severity; `confirmed | plausible | unverified` for confidence, per `docs/contracts/adversarial-review-protocol.md` § Confidence).
 3. Close with a *Recommended Fix Order* ranked by `Impact ÷ Effort` and capped at 5 items.
 
 For each bottleneck:
@@ -104,7 +104,7 @@ For each bottleneck:
 - **Evidence:** code reference, query pattern, or measurement
 - **Fix:** concrete optimization
 - **Effort:** Low / Medium / High
-- **Confidence:** Low / Medium / High
+- **Confidence:** `confirmed | plausible | unverified`
 
 ## Integration with other skills
 

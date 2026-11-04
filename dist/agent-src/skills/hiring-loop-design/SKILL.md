@@ -116,6 +116,13 @@ All three must pass. If any fails, return to the failing step.
 
 Produce the loop-design artifact for the hiring team. The artifact contains the role-shape, the stage-signal map, the per-stage rubrics, the calibration shape, and the candidate-time budget. The first three candidates after the loop opens trigger a retrospective check (signal-vs-actual review).
 
+## AI-assisted screening — route, do not design here
+
+A model that screens, ranks or scores candidates: routing to
+`legal-practice-profile`, `privacy-review`, `dpa-review`, CVs as untrusted input
+and the name-swap bias probe are in
+[`references/ai-screening.md`](references/ai-screening.md). Read it first.
+
 ## Related Skills
 
 **WHEN to use this**
@@ -139,6 +146,7 @@ Produce the loop-design artifact for the hiring team. The artifact contains the 
 - "Should we use a take-home?"
 - "Why are we mis-hiring at L5?"
 - "Wie sieht unser Hiring-Loop für Staff Engineer aus?"
+- "Can we use an LLM to screen CVs?"
 
 ## Output
 
@@ -161,6 +169,7 @@ Produce the loop-design artifact for the hiring team. The artifact contains the 
 - Do NOT design a loop without a written role-shape; un-defined roles produce un-falsifiable signals.
 - Do NOT score on 5-band scales; everything collapses to "3" and the rubric becomes decorative.
 - Do NOT skip calibration on a "we all agree" basis; the disagreements are where the signal lives.
+- Do NOT let a model rank candidates before the name-swap probe has passed — run the probe in `references/ai-screening.md` first, and route the legal question to `legal-practice-profile` instead of answering it.
 
 ## Runnable example
 

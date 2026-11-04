@@ -48,8 +48,11 @@ on:
 # the install-tests matrix and keeps the queue depth low so fresh
 # pushes don't sit behind stale ones.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A merge_group run gets its own group and is never cancelled: two queue
+  # entries share no ref-level staleness, and cancelling one drops it from
+  # the queue. push and pull_request keep the ref group and cancellation.
+  group: ${{ github.workflow }}-${{ github.event_name == 'merge_group' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 # Read-only token. The repository default is write, and these jobs run
 # untrusted inputs (planted SVG fixtures in a real browser among them).
@@ -911,6 +914,8 @@ jobs:
     name: Tests result
     runs-on: ubuntu-latest
     if: always()
+    outputs:
+      all_skipped: ${{ steps.aggregate.outputs.all_skipped }}
     needs:
       - platform-scope
       - install-tests
@@ -923,13 +928,26 @@ jobs:
       - workspace-tests
     steps:
       - name: Every needed job passed or was skipped by its own condition
+        id: aggregate
+        # An all-skipped matrix is still green (the release-PR skip is
+        # intended), but it checked nothing, so the summary says so instead of
+        # letting "skipped" read as "passed".
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           echo "needed job results: $RESULTS"
+          ran=0
+          skipped=0
           for r in $RESULTS; do
             case "$r" in
-              success|skipped) ;;
+              success) ran=$((ran + 1)) ;;
+              skipped) skipped=$((skipped + 1)) ;;
               *) echo "::error::a needed Tests job ended '$r'"; exit 1 ;;
             esac
           done
+          if [ "$ran" -eq 0 ]; then
+            echo "all_skipped=true" >> "$GITHUB_OUTPUT"
+            echo "Tests result: nothing ran — all $skipped needed job(s) skipped." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "all_skipped=false" >> "$GITHUB_OUTPUT"
+          fi

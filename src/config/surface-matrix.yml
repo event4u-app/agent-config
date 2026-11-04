@@ -16,7 +16,7 @@
 #                bundles     = manual import artifacts (ZIPs); no filesystem
 #                              discovery convention
 #                export-only = a config/marker export; no content tree
-#   hooks:       managed-settings-block | settings-hooks-opt-in | plugin | none
+#   hooks:       ac-owned-settings-block | settings-hooks-opt-in | plugin | none
 #   alternates:  legitimate secondary surfaces (NOT duplicates), with role
 #   duplicate:   the duplicate-surface definition — `detect` paths that, when
 #                ALL present, mean the tool has a duplicate content surface.
@@ -32,7 +32,7 @@ tools:
   claude-code:
     surface: projection
     scope_path: "~/.claude/"
-    hooks: managed-settings-block
+    hooks: ac-owned-settings-block
     alternates:
       - id: marketplace-plugin
         role: bootstrap-shim
@@ -175,7 +175,7 @@ tools:
     #
     # `plugin`, and the value is the HOST's channel type rather than a claim that
     # this suite binds it. An `unbound` value was tried first and rejected by
-    # lint_surface_matrix's enum {managed-settings-block, settings-hooks-opt-in,
+    # lint_surface_matrix's enum {ac-owned-settings-block, settings-hooks-opt-in,
     # plugin, none} — correctly: every other row here describes what the host
     # offers, and whether this package binds it is hook_manifest.yaml's business,
     # where opencode still has ZERO entries. The notes below carry the

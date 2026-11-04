@@ -1,0 +1,58 @@
+{
+    "skill": "data-handling-judgment",
+    "last_eval": "2026-11-03",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars ask for a data-classification, retention, transfer or DSR judgement. Near-misses share the privacy vocabulary and route elsewhere: a regulatory-regime read of a feature (privacy-review), raw identifiers in a log line (domain-safety-pii territory, via logging-monitoring), and a data-processing agreement redline (dpa-review). Counterexamples guard 'keep' and 'transfer' in unrelated senses.",
+    "queries": [
+        {
+            "q": "how long do we keep support tickets and their attachments after the case is closed?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "can we send our EU customer records to an analytics vendor hosted in the US?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "classify these columns in the users table by sensitivity so we know what needs encryption",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wie bauen wir einen Ablauf für DSGVO-Auskunfts- und Löschanfragen auf?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "run a privacy review of the new referral feature before launch",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a regulatory-regime read of a feature, not a data-handling judgement → privacy-review"
+        },
+        {
+            "q": "our logger writes the full request body including emails — make it log only user ids",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a log-redaction fix → logging-monitoring"
+        },
+        {
+            "q": "redline this data processing agreement from our vendor",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a contract review → dpa-review"
+        },
+        {
+            "q": "keep the sidebar open when the user navigates between pages",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'keep' as UI state"
+        },
+        {
+            "q": "transfer the domain to the new registrar",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'transfer' of a domain, not of data"
+        }
+    ]
+}

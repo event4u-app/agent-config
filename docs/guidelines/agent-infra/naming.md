@@ -59,7 +59,7 @@ source: package
 | Same name across layers | Routing confusion | `agent-docs` (rule) + `agent-docs-writing` (skill) |
 | `-er` suffix for skills | Skills are not agents | `-ing` or `-management` |
 | `{dir}/{dir}.md` for guidelines | Redundant | `php/general.md` not `php/php.md` |
-| Abbreviations alone (`rtk`, `mcp`) | Meaningless to new users | `rtk-output-filtering`, `mcp` (OK if well-known) |
+| Abbreviations alone (`rtk`, `mcp`) | Meaningless to new users | `rtk-output-filtering`, `mcp-tool-use` |
 | Inconsistent prefix grouping | Hard to discover related items | All Laravel skills start with `laravel-*` |
 
 ## Linter enforcement

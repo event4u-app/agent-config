@@ -7,7 +7,7 @@ positives:
   - prompt: "Erstelle bitte ein Logo für unser neues Produkt, angelehnt an die Marke des Wettbewerbers."
     expected_skills: [logo-generation]
   - prompt: "Review this adapter change before we ship it."
-    expected_skills: [code-review]
+    expected_skills: [code-review-lens]
     open_files: ["scripts/ai-image/adapters/openai_images.ts"]
 near_misses:
   - prompt: "Compress the hero photo on the landing page so it loads faster."

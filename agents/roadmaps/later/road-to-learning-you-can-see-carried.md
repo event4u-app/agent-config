@@ -44,7 +44,7 @@ estate_growth_exempt: >-
 
 ## Goal
 
-Every step road-to-learning-you-can-see deferred is either done here or explicitly disposed
+Every step the parent roadmap deferred is either done here or explicitly disposed
 of — a step that still cannot run is re-deferred with its reason, never
 left to read as finished.
 

@@ -131,6 +131,7 @@ tasks:
       - task: lint-code-comments
       - task: check-step-receipts
       - task: check-step-production-reach
+      - task: report-production-reach-unreached
       - task: check-graph-writers
       - task: lint-deferral-integrity
       - task: lint-never-silent
@@ -334,6 +335,7 @@ tasks:
       - task: lint-versioned-cache
       - task: check-no-local-settings
       - task: check-council-references
+      - task: check-owner-question-ids
       - task: lint-one-off-age
       - task: check-ownership-matrix
       - task: check-settings-reference

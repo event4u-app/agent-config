@@ -1,7 +1,7 @@
 # Review-Mechanics Eval Fixtures
 
 Behavioral baseline for the review-surface upgrades folded into
-[`code-review`](../../src/skills/code-review/SKILL.md) and its
+[`code-review-lens`](../../src/skills/code-review-lens/SKILL.md) and its
 `checklists/` (`road-to-ecosystem-harvest-review-mechanics`). Decidable parts
 are checkable output-contract patterns; rubric parts are judged in PR review,
 never by a hidden LLM judge (same scoring model as

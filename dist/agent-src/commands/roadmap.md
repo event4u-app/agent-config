@@ -79,8 +79,9 @@ each only binds a scope delta.
 ## Rules
 
 - **Do NOT commit, push, or open a PR** unless the sub-command
-  explicitly authorizes it. Roadmap-listed commit steps follow the
-  single-upfront-ask flow in
+  explicitly authorizes it. Every `process-*` sub-command does, from its
+  invocation (ADR-237); in an explicit `interactive` run, roadmap-listed
+  commit steps follow the single-upfront-ask flow in
   [`roadmap-process-loop § 3`](../contexts/execution/roadmap-process-loop.md#3-pre-scan--execution-contract-or-commit-step-ask).
 - **Do NOT chain sub-commands.** One `/roadmap <sub>` per turn.
 - If the user invokes `/roadmap` with no argument, **show the menu** —

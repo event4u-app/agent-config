@@ -260,9 +260,10 @@ function classify_config(p: string): ConfigKind {
     }
     // `settings.json` only under a host directory: the bare name is common
     // enough elsewhere that classifying it on the basename alone would fence
-    // files that carry no settings key at all.
-    if (base === 'settings.json') {
-        return /(^|\/)\.(claude|cursor|augment|windsurf)\/settings\.json$/.test(posix) ? 'class-c' : null;
+    // files that carry no settings key at all. The gitignored `.local` sibling is
+    // loaded by the host just the same and never shows up in review.
+    if (base === 'settings.json' || base === 'settings.local.json') {
+        return /(^|\/)\.(claude|cursor|augment|windsurf)\/settings(\.local)?\.json$/.test(posix) ? 'class-c' : null;
     }
     if (CLASS_C_BASENAMES.includes(base)) {
         return 'class-c';

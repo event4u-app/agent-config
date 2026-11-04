@@ -59,6 +59,8 @@ For a **lawyer** role, GREEN still emits the verdict but the attorney *is* the g
 
 Produce `triage-verdict.md` carrying the `Jurisdiction:` tag, the bucket, the deviations found, the route, and the mandatory work-product line. Route per bucket: YELLOW/RED → [`contract-review`](../contract-review/SKILL.md) for redlines. Never issue a final legal call (`legal-safety-floor`).
 
+Tag every cited authority (statute, article, case, guidance) per [`legal-practice-profile`](../legal-practice-profile/SKILL.md) § Source-tag + currency vocabulary — a cite with no current source is `[model knowledge — verify]`, never stated as settled.
+
 ## Related Skills
 
 **WHEN to use this**

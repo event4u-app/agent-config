@@ -82,7 +82,7 @@ shortcuts · **truth source** (how the medium verifies) · **handoff** in/out ·
 | **research** | `research:deep`/`research:report` | claim without a retrieved source | per-part grounding + disconfirmation | — |
 | **visualizer/diagram** | `html-deck`, image skills | decorative chart over the data's shape | the rendered diagram | render → described-structure caveat |
 | **cowork/dispatch** | `subagent-orchestration` | one agent doing parallel-safe work serially | verified subagent returns | spawn primitive → in-session |
-| **MCP/app connector** | `mcp` | generic web search when a connector fits | the connector's own result | connector present → suggest/opt-in |
+| **MCP/app connector** | `mcp-tool-use` | generic web search when a connector fits | the connector's own result | connector present → suggest/opt-in |
 
 This taxonomy table **is** the canonical work-surface map. (Note: the existing
 `src/config/surface-matrix.yml` is a *different* concept — per-tool **install-surface**
@@ -146,7 +146,7 @@ The external code-prompt mechanisms, audited against existing rules — **covere
 | Minimal scoped changes | **covered** | `minimal-safe-diff` (fixture `ssac-broad-refactor-around-bugfix`) |
 | Todo/task visibility | **covered** | host task tooling + roadmap loop; no new rule |
 | Parallel independent exploration | **tighten** | note in `subagent-orchestration` / this contract's cowork row — sequential independent reads when parallel is available is a miss |
-| Specialized tools over shell | **covered** | `mcp` § tool-tier ladder (execution-discipline harvest) |
+| Specialized tools over shell | **covered** | `mcp-tool-use` § tool-tier ladder (execution-discipline harvest) |
 | No shell as user communication | **covered** | `output-discipline` / `direct-answers` |
 | Line-specific references | **covered** | `file_path:line` convention in host instructions |
 | No time estimates | **covered** | `direct-answers` § no-duration (execution-discipline harvest) |

@@ -9,14 +9,16 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     classifyRow,
+    classifyRun,
     deriveFloors,
     ingestCases,
     invokedFromTrace,
     selectBaseline,
+    sha256,
     unitRows,
     type CaseRow,
 } from '../../src/scripts/_lib/routing_baseline.js';
-import { buildArtifact, buildBaselinePlugin, type LabelledQuery } from '../../src/scripts/compile_trigger_evals.js';
+import { buildArtifact, buildBaselinePlugin, main, type LabelledQuery } from '../../src/scripts/compile_trigger_evals.js';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -145,6 +147,113 @@ describe('classifyRow — 5.3, three states, only REGRESSION gates', () => {
 
     it('UNKNOWN when nothing was measured — never green', () => {
         expect(classifyRow(base, { recall: null, invoked: [] }, 0.9)).toBe('UNKNOWN');
+    });
+});
+
+describe('classifyRun — 5.3 wired: a whole run against the frozen baseline', () => {
+    const caseRow = (skill: string, verdict: CaseRow['verdict'], invoked: string[] | null): CaseRow => ({
+        case: `001-${skill}`,
+        skill,
+        query_sha256: 'x',
+        verdict,
+        cost_usd: 0,
+        invoked,
+    });
+    const baseline = {
+        cases: [caseRow('a', 'fired', ['a']), caseRow('b', 'fired', ['b']), caseRow('c', 'fired', ['c'])],
+        units: [
+            { unit: 'a', n: 1, fired: 1, unknown: 0, recall: 1 },
+            { unit: 'b', n: 1, fired: 1, unknown: 0, recall: 1 },
+            { unit: 'c', n: 1, fired: 1, unknown: 0, recall: 1 },
+        ],
+    };
+    const floors = [
+        { unit: 'a', baseline_recall: 1, floor: 0.9 },
+        { unit: 'b', baseline_recall: 1, floor: 0.9 },
+        { unit: 'c', baseline_recall: 1, floor: 0.9 },
+    ];
+
+    it('classifies every unit and gates only on REGRESSION', () => {
+        const current = {
+            cases: [caseRow('a', 'fired', ['a']), caseRow('b', 'not-fired', []), caseRow('c', 'fired', ['c', 'x'])],
+            units: [
+                { unit: 'a', n: 1, fired: 1, unknown: 0, recall: 1 },
+                { unit: 'b', n: 1, fired: 0, unknown: 0, recall: 0 },
+                { unit: 'c', n: 1, fired: 1, unknown: 0, recall: 1 },
+            ],
+        };
+        const r = classifyRun(baseline, current, floors);
+        expect(r.rows.map((x) => [x.unit, x.state])).toEqual([
+            ['a', 'PASSED'],
+            ['b', 'REGRESSION'],
+            ['c', 'ROUTING_CHANGED'],
+        ]);
+        expect(r.counts).toEqual({ PASSED: 1, ROUTING_CHANGED: 1, REGRESSION: 1, UNKNOWN: 0 });
+        expect(r.gate).toBe('red');
+    });
+
+    it('a run without a REGRESSION is green even when routing changed', () => {
+        const current = {
+            cases: [caseRow('a', 'fired', ['a', 'y'])],
+            units: [{ unit: 'a', n: 1, fired: 1, unknown: 0, recall: 1 }],
+        };
+        const r = classifyRun(baseline, current, floors);
+        expect(r.gate).toBe('green');
+        expect(r.not_run).toEqual(['b', 'c']);
+    });
+
+    it('a unit with no floor is reported, never classified against an invented one', () => {
+        const current = {
+            cases: [caseRow('z', 'fired', ['z'])],
+            units: [{ unit: 'z', n: 1, fired: 1, unknown: 0, recall: 1 }],
+        };
+        const r = classifyRun(baseline, current, floors);
+        expect(r.rows).toEqual([]);
+        expect(r.unfloored).toEqual(['z']);
+    });
+
+    it('--classify exits 1 on a REGRESSION, 0 without one, 2 on a floors/baseline mismatch', () => {
+        const dir = tmp();
+        const b = path.join(dir, 'b.json');
+        const f = path.join(dir, 'f.json');
+        fs.writeFileSync(b, JSON.stringify(baseline));
+        const bSha = sha256(fs.readFileSync(b, 'utf8'));
+        fs.writeFileSync(f, JSON.stringify({ baseline_sha256: bSha, floors }));
+        const write = (name: string, recall: number): string => {
+            const p = path.join(dir, name);
+            const verdict = recall === 1 ? 'fired' : 'not-fired';
+            fs.writeFileSync(p, JSON.stringify({ cases: [caseRow('a', verdict, recall === 1 ? ['a'] : [])], units: [{ unit: 'a', n: 1, fired: recall, unknown: 0, recall }] }));
+            return p;
+        };
+        const out = path.join(dir, 'r.json');
+        expect(main(['--classify', write('bad.json', 0), '--baseline', b, '--floors', f, '--out', out])).toBe(1);
+        expect(JSON.parse(fs.readFileSync(out, 'utf8')).counts.REGRESSION).toBe(1);
+        expect(main(['--classify', write('ok.json', 1), '--baseline', b, '--floors', f, '--out', out])).toBe(0);
+        fs.writeFileSync(f, JSON.stringify({ baseline_sha256: 'other', floors }));
+        expect(main(['--classify', write('ok.json', 1), '--baseline', b, '--floors', f, '--out', out])).toBe(2);
+        fs.writeFileSync(f, JSON.stringify({ floors }));
+        expect(main(['--classify', write('ok.json', 1), '--baseline', b, '--floors', f, '--out', out])).toBe(2);
+    });
+
+    it('--classify exits 3 when the run measured nothing — an empty canary never exits like a pass', () => {
+        const dir = tmp();
+        const b = path.join(dir, 'b.json');
+        const f = path.join(dir, 'f.json');
+        const cur = path.join(dir, 'empty.json');
+        fs.writeFileSync(b, JSON.stringify(baseline));
+        fs.writeFileSync(f, JSON.stringify({ baseline_sha256: sha256(fs.readFileSync(b, 'utf8')), floors }));
+        fs.writeFileSync(cur, JSON.stringify({ cases: [], units: [] }));
+        expect(main(['--classify', cur, '--baseline', b, '--floors', f, '--out', path.join(dir, 'r.json')])).toBe(3);
+    });
+
+    it('an all-UNKNOWN run is never green', () => {
+        const current = {
+            cases: [caseRow('a', 'unknown', null)],
+            units: [{ unit: 'a', n: 0, fired: 0, unknown: 1, recall: null }],
+        };
+        const r = classifyRun(baseline, current, floors);
+        expect(r.counts.UNKNOWN).toBe(1);
+        expect(r.gate).toBe('unknown');
     });
 });
 

@@ -20,14 +20,25 @@
  *   lint_svg_asset --dir <path> [--delivery inline|img|css-bg|document]
  *   lint_svg_asset --file <a.svg> [--file <b.svg>] [--delivery …]
  *   lint_svg_asset --file <after.svg> --baseline <before.svg> --allow id,id
+ *   lint_svg_asset … --class icon|mark|illustration|diagram|animated
+ *
+ * `--class` names the asset class with the vocabulary `ui:render` already uses
+ * (`ASSET_CLASSES`). Only `mark` adds readings today — the `svg-mark-*` family
+ * in `_lib/svg_mark_rules.ts`, pre-registered in
+ * `internal/bench/corpora/svg-mark-PREREG.md`. Any other class, or no class,
+ * leaves the output byte-identical to an invocation without the flag.
  *
  * Exit codes: 0 = clean, 2 = findings, 1 = internal error (including the
  * scanned-nothing refusal — a gate that scanned no file is not a clean gate).
+ * A finding at severity `report` is printed and serialised and never changes
+ * the exit code.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { ASSET_CLASSES, type AssetClass } from './_lib/asset_classes.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { scanMark, type AssetFinding } from './_lib/svg_mark_rules.js';
 import {
     DELIVERY_MODES,
     parseElements,
@@ -35,12 +46,30 @@ import {
     scanHostHtml,
     scanSvg,
     type DeliveryMode,
-    type Finding,
     type ProjectConfig,
+    type ScanOptions,
     type SvgElement,
 } from './_lib/svg_rules.js';
 
 export * from './_lib/svg_rules.js';
+export type { AssetFinding, AssetSeverity } from './_lib/svg_mark_rules.js';
+
+/**
+ * Every finding for one file under an asset class. Without a class, or with a
+ * class that adds no readings, this is exactly `scanSvg` / `scanHostHtml`.
+ */
+export function scanAsset(
+    content: string,
+    relPath: string,
+    opts: ScanOptions & { assetClass?: AssetClass | undefined } = {},
+): AssetFinding[] {
+    const isSvg = /\.svg$/i.test(relPath);
+    const base = isSvg
+        ? scanSvg(content, relPath, { delivery: opts.delivery })
+        : scanHostHtml(content, relPath, { delivery: opts.delivery });
+    if (opts.assetClass !== 'mark' || !isSvg) return base;
+    return [...base, ...scanMark(content, relPath)];
+}
 
 // Step 1.2 — preservation readout for a surgical edit
 // ---------------------------------------------------------------------------
@@ -225,6 +254,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
     const delivery = deliveryRaw as DeliveryMode | undefined;
+    const classRaw = readFlag(args, '--class');
+    if (classRaw !== undefined && !ASSET_CLASSES.includes(classRaw as AssetClass)) {
+        process.stderr.write(
+            `[lint_svg_asset] unknown --class "${classRaw}"; expected one of ${ASSET_CLASSES.join(', ')}\n`,
+        );
+        return 1;
+    }
+    const assetClass = classRaw as AssetClass | undefined;
 
     // --- step 1.2: preservation readout -------------------------------------
     const baseline = readFlag(args, '--baseline');
@@ -315,14 +352,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         throw exc;
     }
 
-    const all: Finding[] = [];
+    const all: AssetFinding[] = [];
     for (const abs of scanned) {
         const rel = path.relative(process.cwd(), abs);
         try {
             const content = fs.readFileSync(abs, 'utf-8');
-            const findings = /\.svg$/i.test(abs)
-                ? scanSvg(content, rel, { delivery })
-                : scanHostHtml(content, rel, { delivery });
+            const findings = scanAsset(content, rel, { delivery, assetClass });
             all.push(...findings.filter((f) => !ignoreRules.has(f.rule.toLowerCase())));
             if (!quiet) {
                 for (const [rule, ig] of parseIgnores(content.split('\n'))) {
@@ -340,11 +375,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
+    // A `report` row is a reading, not a finding the gate counts.
+    const gating = all.filter((f) => f.severity !== 'report');
     if (jsonMode) {
         process.stdout.write(`${JSON.stringify(all, null, 2)}\n`);
-        return all.length > 0 ? 2 : 0;
+        return gating.length > 0 ? 2 : 0;
     }
-    if (!all.length) {
+    if (!gating.length) {
+        for (const f of all) process.stdout.write(`ℹ️  ${f.file}:${f.line} [${f.rule}] (report) ${f.snippet}\n`);
         if (!quiet) {
             process.stdout.write(
                 `✅  lint_svg_asset: clean — ${scanned.length} file(s) checked, no violations.\n`,

@@ -66,7 +66,7 @@ export const KNOWN_INTENTS: ReadonlySet<string> = new Set([
  */
 const _UI_NOUNS: ReadonlySet<string> = new Set([
     'ui', 'screen', 'page', 'view', 'form', 'modal', 'dialog',
-    'button', 'card', 'tile',
+    'button', 'card', 'tile', 'animation',
     'header', 'footer', 'nav', 'navigation', 'sidebar', 'menu',
     'dropdown', 'tab', 'panel', 'layout', 'component', 'icon',
     'tooltip', 'toast', 'banner', 'badge', 'avatar', 'label',
@@ -93,6 +93,9 @@ export const UI_I18N: Readonly<
             'seite', 'webseite', 'website', 'formular', 'schaltfläche', 'knopf',
             'auswahlfeld', 'auswahlliste', 'eingabefeld', 'dialog', 'menü',
             'selectbox', 'dropdown', 'oberfläche', 'ansicht', 'layout',
+            // Symptom nouns (road-to-design-inputs-and-pages-read-as-they-are
+            // 3.2): a defect reported by what the user sees names the surface.
+            'karte', 'kachel', 'animation', 'abstand', 'abständ',
         ],
         build: ['füg', 'füge', 'hinzufügen', 'erstell', 'erstelle', 'bau', 'baue', 'ergänz', 'ergänze'],
         trivial: ['änder', 'ändere', 'pass', 'passe', 'tausch', 'tausche', 'setz', 'setze', 'mach', 'mache', 'korrigier', 'korrigiere', 'ersetz', 'ersetze'],
@@ -129,7 +132,11 @@ function _i18n_trivial(text: string): boolean {
         const obj = _stemRe(table.objects, true);
         // German puts the finite verb first ("Ändere die Farbe") or the
         // infinitive last ("die Farbe ändern"); either order, same sentence.
-        for (const sentence of text.split(/[.!?]/)) {
+        for (const raw of text.split(/[.!?]/)) {
+            // English "a/an/the (…) pass" is a noun, not the German verb
+            // `pass` ("pass die Farbe an") — surfaced by plural UI nouns
+            // (corpus uit-030, "an accessibility pass … aria labels").
+            const sentence = raw.replace(/\b(?:a|an|the|another|one)\s+(?:\p{L}+\s+)?pass\b/gu, '');
             if (verb.test(sentence) && obj.test(sentence) && !_stemRe(table.build, false).test(sentence)) {
                 return true;
             }
@@ -185,8 +192,10 @@ const _FULLSTACK_PHRASE: RegExp = /\bfull[ -]?stack\b/;
 // article/adjective window. Deliberately omits `product` (math
 // polysemy), `page` / `screen` / `component` (pure-UI — the
 // UI-Build rung owns them), and `endpoint` / `api` (pure-backend).
+// `game` is in; `level` / `scene` / `world` / `mod` / `plugin` are not —
+// "add a log level" and "set the scene" fit the same build-object window.
 const _FULLSTACK_BUILD: RegExp =
-    /\b(?:build|create|scaffold|implement|ship|draft|wire|introduce|add)\b(?:\s+(?:me|a|an|the|our|my|new|complete|full|entire|whole|single))*(?:\s+[\w-]+){0,2}\s+\b(?:feature|app|application|module|system|mvp|prototype|saas|platform|crud|workflow)\b/;
+    /\b(?:build|create|scaffold|implement|ship|draft|wire|introduce|add)\b(?:\s+(?:me|a|an|the|our|my|new|complete|full|entire|whole|single))*(?:\s+[\w-]+){0,2}\s+\b(?:feature|app|application|module|system|mvp|prototype|saas|platform|crud|workflow|game)\b/;
 
 const _NEW_SURFACE: RegExp =
     /\b(new|fresh|blank)\s+(page|screen|view|component|form|modal|tile|dashboard)\b/;
@@ -308,9 +317,18 @@ export function directive_set_for(intent: string): string {
 
 // --- helpers ----------------------------------------------------------
 
+// `views` and `pages` stay singular-only: plural, they are database words
+// ("SQL views", "the pages table" — corpus uit-077, uit-078).
+const _SINGULAR_ONLY_UI_NOUNS: ReadonlySet<string> = new Set(['view', 'page']);
+
+function _ui_noun_re(word: string): RegExp {
+    const plural = _SINGULAR_ONLY_UI_NOUNS.has(word) ? '' : '(?:s|es)?';
+    return new RegExp(`\\b${reEscape(word)}${plural}\\b`);
+}
+
 function _has_ui_signal(text: string): boolean {
     for (const w of _UI_NOUNS) {
-        if (reSearch(wordBoundary(w), text)) {
+        if (reSearch(_ui_noun_re(w), text)) {
             return true;
         }
     }
@@ -441,14 +459,64 @@ export function populate_routing(state: WorkState): void {
     }
 
     const [text, title] = _extract_text(state);
-    const intent = classify_intent(text, { title });
-    state.intent = intent;
-    state.directive_set = directive_set_for(intent);
-    if (intent === INTENT_UI_IMPROVE && is_review_only(text)) {
+    const routing = routing_for(text, title);
+    state.intent = routing.intent;
+    state.directive_set = routing.directive_set;
+    if (routing.review_only) {
         // Review before rebuild (road-to-a-control-that-matches-its-neighbours
         // 4.1): `ui/apply` writes nothing until the user selected findings.
         (state.input.data as Record<string, unknown>)['review_only'] = true;
     }
+}
+
+/**
+ * The routing a text gets: intent, directive set, and whether `ui/apply` must
+ * halt for a selection. One function so the engine and the corpus eval read
+ * the same answer.
+ */
+export function routing_for(
+    text: string,
+    title: string | null = null,
+): { intent: string; directive_set: string; review_only: boolean } {
+    const intent = classify_intent(text, { title });
+    const joined = [title, text].filter((p): p is string => Boolean(p)).join(' ');
+    if ((intent === INTENT_UI_IMPROVE || intent === INTENT_BACKEND) && is_quality_adjective_review(joined)) {
+        return { intent: INTENT_UI_IMPROVE, directive_set: directive_set_for(INTENT_UI_IMPROVE), review_only: true };
+    }
+    return {
+        intent,
+        directive_set: directive_set_for(intent),
+        review_only: intent === INTENT_UI_IMPROVE && is_review_only(text),
+    };
+}
+
+// Evaluative adjectives (road-to-design-inputs-and-pages-read-as-they-are 3.3).
+const _QUALITY_ADJECTIVE: RegExp =
+    /\b(?:premium|polished|nicer|prettier|sleeker|classier|more\s+(?:professional|elegant|modern|refined))\b|(?<![\p{L}])(?:hochwertig|edl|edel|schöner|moderner|professioneller|aufgeräumter|eleganter)\p{L}*/u;
+
+// Surface words that count as a UI signal ONLY beside a quality adjective:
+// on their own `site`, `shop` and `app` are as often a data layer.
+const _ADJECTIVE_SURFACE: RegExp = /\b(?:site|shop|store|app|dashboard)s?\b/;
+
+// A concrete object turns the adjective into a scoped change, not a review.
+const _CONCRETE_OBJECT: RegExp =
+    /\b(?:colou?rs?|copy|text|labels?|wording|padding|margin|spacing|fonts?|weight|radius|tokens?|icons?|placeholder|heading|title|alignment|borders?|shadows?|typography|contrast)\b/;
+
+/**
+ * True when the whole goal of a prompt is an evaluative adjective over a UI
+ * surface ("Mach die Website hochwertiger", "make the site feel more
+ * premium"): no build or fix verb, no concrete object, no backend signal.
+ * Such a request is reviewed before anything is rebuilt.
+ */
+export function is_quality_adjective_review(raw: string): boolean {
+    const text = pyLower(pyStrip(raw));
+    if (!_QUALITY_ADJECTIVE.test(text)) return false;
+    if (_has_backend_signal(text) || _is_build(text) || _is_fix(text)) return false;
+    if (_CONCRETE_OBJECT.test(text)) return false;
+    for (const table of Object.values(UI_I18N)) {
+        if (_stemRe(table.objects, true).test(text)) return false;
+    }
+    return _has_ui_signal(text) || _ADJECTIVE_SURFACE.test(text);
 }
 
 /**

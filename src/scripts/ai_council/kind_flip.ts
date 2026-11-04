@@ -62,19 +62,57 @@ export interface FreeObservation {
 
 const _BILLINGS: ReadonlySet<string> = new Set<string>(ROUTE_BILLINGS);
 
-/** The free-routed asks among orchestration audit lines. */
+function _verdictOf(v: unknown): VerifyVerdict | null {
+    return v === 'pass' || v === 'fail' || v === 'skipped' ? v : null;
+}
+
+interface _Ask {
+    readonly kind: HandKind;
+    readonly ts: string;
+    verified: VerifyVerdict;
+    verdictTs: string;
+}
+
+/**
+ * The free-routed asks among orchestration audit lines, one per `work_id`.
+ *
+ * The head's verify line carries the same `work_id` as the ask and may lack
+ * `hand_kind` and billing, so it inherits both from the ask; the latest verdict
+ * wins. Counting the ask's `skipped` and the head's `pass` as two asks would
+ * make every verified flip revert itself. A verdict with no ask line is not a
+ * free-routed ask, and an ask nobody verified stays `skipped`.
+ */
 export function observationsFromAuditLines(lines: readonly Record<string, unknown>[]): FreeObservation[] {
-    const out: FreeObservation[] = [];
+    const asks: _Ask[] = [];
+    const byWork = new Map<string, _Ask>();
+    const verdicts: { work: string; verified: VerifyVerdict; ts: string; kind: unknown; billing: unknown }[] = [];
     for (const l of lines) {
         const o = (l['orchestration'] ?? {}) as Record<string, unknown>;
+        const verified = _verdictOf(o['verified']);
+        if (o['route_taken'] !== 'ask' || typeof l['ts'] !== 'string' || verified === null) continue;
+        const work = typeof l['work_id'] === 'string' && l['work_id'] !== '' ? l['work_id'] : null;
+        if (work !== null && l['phase'] === 'verify') {
+            verdicts.push({ work, verified, ts: l['ts'], kind: o['hand_kind'], billing: o['route_billing'] });
+            continue;
+        }
         const billing = o['route_billing'];
-        const verified = o['verified'];
-        if (o['route_taken'] !== 'ask' || !isHandKind(o['hand_kind']) || typeof l['ts'] !== 'string') continue;
+        if (!isHandKind(o['hand_kind'])) continue;
         if (typeof billing !== 'string' || !_BILLINGS.has(billing) || !isUnpaid(billing as RouteBilling)) continue;
-        if (verified !== 'pass' && verified !== 'fail' && verified !== 'skipped') continue;
-        out.push({ kind: o['hand_kind'] as HandKind, verified, ts: l['ts'] });
+        const a: _Ask = { kind: o['hand_kind'], ts: l['ts'], verified, verdictTs: l['ts'] };
+        asks.push(a);
+        if (work !== null && !byWork.has(work)) byWork.set(work, a);
     }
-    return out;
+    for (const v of verdicts) {
+        const a = byWork.get(v.work);
+        if (a === undefined) continue;
+        if (v.kind !== undefined && v.kind !== null && v.kind !== a.kind) continue;
+        if (typeof v.billing === 'string' && v.billing !== '' && (!_BILLINGS.has(v.billing) || !isUnpaid(v.billing as RouteBilling))) continue;
+        if (v.ts >= a.verdictTs) {
+            a.verified = v.verified;
+            a.verdictTs = v.ts;
+        }
+    }
+    return asks.map((a) => ({ kind: a.kind, verified: a.verified, ts: a.ts }));
 }
 
 export interface FlipEvent {

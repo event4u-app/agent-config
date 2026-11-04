@@ -260,13 +260,23 @@ export function sheetIds(text: string): Set<string> {
     return new Set([...text.matchAll(SHEET_ID_RE)].map((m) => (m[1] ?? '').toLowerCase()));
 }
 
-/** A dated wait the run cannot outlast: a wait word and a date after today. */
+// A window measured in observations or elapsed time rather than a date: "100 Agent calls",
+// "≥ 333 shadow calls", "30 resumes", "two weeks". It still needs a wait word beside it, so a
+// retention period ("originals for 7 days") or a run size ("run 3 sessions") is not a wait.
+// A number after a dot is a step id ("until 3.5 runs"), never a count.
+const RELATIVE_WINDOW_RE = new RegExp(
+    String.raw`(?<![\d.])\b\d+\s+(?:[\w-]+\s+)?(?:calls?|runs?|sessions?|resumes?|samples?|asks?)\b|` +
+        String.raw`(?<![\d.])\b(?:\d+|two|three|four|five|six|eight)\s+(?:days?|weeks?|months?)\b`,
+    'i',
+);
+
+/** A wait the run cannot outlast: a wait word and a future date or a relative window. */
 export function isTimeGated(block: string, today: string): boolean {
     if (!WAIT_WORD_RE.test(block)) return false;
     for (const m of block.matchAll(ISO_DATE_RE)) {
         if ((m[1] ?? '') > today) return true;
     }
-    return false;
+    return RELATIVE_WINDOW_RE.test(block);
 }
 
 export type BlockerLookup = (ref: string) => Blocker | undefined;

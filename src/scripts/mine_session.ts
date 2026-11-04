@@ -34,7 +34,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { appendGlobalObservation, applySharedFactCap } from './_lib/user_global_observations.js';
+import { appendGlobalObservation, applySharedFactCap, evaluateCaptureGuards } from './_lib/user_global_observations.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/mine_session.py → parent.parent.parent == repo root.
@@ -384,10 +384,23 @@ export function renderPreview(
     return lines.join('\n') + '\n';
 }
 
+/** `true` when the capture guards allow a mined fact into project intake. */
+export function factPassesCaptureGuards(f: Record<string, Json>): boolean {
+    const text = typeof f.observation === 'string' ? f.observation : '';
+    return evaluateCaptureGuards({ ts: '', field: 'preferences', suggest: text, source: 'mine', evidence: '' }).allowed;
+}
+
+/**
+ * Append each fact to its type's intake file. A fact the capture guards refuse
+ * (a standing fetch/exec command, an injection phrase, an exclusion-list match)
+ * is skipped, so the file it would have joined is left unchanged.
+ */
 export function commitIntake(facts: Array<Record<string, Json>>, intakeRoot: string): number {
+    const allowed = facts.filter(factPassesCaptureGuards);
+    if (allowed.length === 0) return 0;
     fs.mkdirSync(intakeRoot, { recursive: true });
     let written = 0;
-    for (const f of facts) {
+    for (const f of allowed) {
         const dest = path.join(intakeRoot, `${f.type}.jsonl`);
         fs.appendFileSync(dest, _jsonDumpsUnicode(f) + '\n', 'utf-8');
         written += 1;
@@ -673,7 +686,10 @@ export function main(argv: string[] | null = null): number {
 
     if (ns.commit_intake) {
         const written = commitIntake(facts, ns.intake_root);
-        const filesTouched = new Set(facts.map((f) => f.type as string)).size;
+        const filesTouched = new Set(facts.filter(factPassesCaptureGuards).map((f) => f.type as string)).size;
+        if (written < facts.length) {
+            process.stderr.write(`⚠️  ${facts.length - written} fact(s) refused by the capture guards — not written.\n`);
+        }
         process.stdout.write(
             `✅ Appended ${written} intake lines across ${filesTouched} ` +
                 'files.\n   Next: /memory promote to lift validated lines ' +

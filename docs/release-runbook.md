@@ -119,24 +119,46 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       them from a clean `main`:
 
       ```bash
+      # 0. Pin what this gate certifies: the main SHA and the dispatch time.
+      git fetch origin main
+      sha="$(git rev-parse origin/main)"
+      since="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
       # 1. Fire all three against main (order does not matter; they are independent).
       gh workflow run evaluator-umbrella.yml --ref main
       gh workflow run consumer-matrix.yml   --ref main
       gh workflow run release-validation.yml --ref main
 
-      # 2. Watch each to completion. `--exit-status` makes a red run exit non-zero,
-      #    so this is a gate and not a status page. Takes ~20-30 min in total;
-      #    consumer-matrix is the long pole.
+      # 2. Bind each to the run THIS dispatch started — event, head SHA and a
+      #    creation time at or after the dispatch — never to whatever run is
+      #    newest. Then wait, and read the run's conclusion: only `success`
+      #    passes. A watcher's exit code is not the verdict, and `cancelled`,
+      #    no matching run, or a run still in progress are all stops.
+      #    Takes ~20-30 min in total; consumer-matrix is the long pole.
+      ok=1
       for wf in evaluator-umbrella.yml consumer-matrix.yml release-validation.yml; do
-        sleep 5   # let the dispatch register before querying for its run id
-        id="$(gh run list --workflow "$wf" --branch main --event workflow_dispatch \
-                --limit 1 --json databaseId --jq '.[0].databaseId')"
+        id=""
+        for _ in 1 2 3 4 5 6; do   # let the dispatch register before giving up
+          sleep 10
+          id="$(gh run list --workflow "$wf" --branch main --event workflow_dispatch \
+                  --limit 20 --json databaseId,headSha,createdAt \
+                  --jq "map(select(.headSha == \"$sha\" and .createdAt >= \"$since\")) | sort_by(.createdAt) | .[0].databaseId // empty")"
+          [ -n "$id" ] && break
+        done
+        if [ -z "$id" ]; then echo "STOP: $wf — no run of this dispatch on $sha"; ok=0; break; fi
         echo "== $wf → run $id"
-        gh run watch "$id" --exit-status || { echo "RED: $wf — do not cut"; break; }
+        gh run watch "$id" >/dev/null
+        conclusion="$(gh run view "$id" --json conclusion --jq .conclusion)"
+        if [ "$conclusion" != "success" ]; then
+          echo "STOP: $wf run $id concluded '${conclusion:-none}' — do not cut"; ok=0; break
+        fi
       done
+      [ "$ok" -eq 1 ] && echo "all three green on $sha"
       ```
 
-      Any red here is a **stop**: fix it on `main` first, then re-dispatch. On a
+      Anything but `success` here is a **stop** — red, cancelled, still
+      running, or no run bound to this dispatch: fix it on `main` first, then
+      re-dispatch. On a
       `workflow_dispatch` the four release-shape jobs in `release-validation.yml`
       run without a `release/*` head branch (their `if:` admits dispatch), which
       is intended — a shape failure there is a real signal about `main`.

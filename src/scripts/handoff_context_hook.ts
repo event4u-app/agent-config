@@ -92,6 +92,19 @@ export function guardedInjection(block: string, reason: string): ConsumeDecision
 }
 
 /**
+ * Drift between the handoff header and the checkout, annotated the way the
+ * recycle envelope is. Never a refusal. A header without `Branch:` (or with
+ * `Branch: unknown`) records nothing to compare, so it yields no line — and
+ * reading the repo anchor is skipped entirely in that case.
+ */
+function handoffDrift(text: string, root: string): string[] {
+    const branch = text.match(/^Branch: (.+)$/m)?.[1]?.trim();
+    if (!branch || branch === 'unknown') return [];
+    const head = text.match(/^Last commit: (.+)$/m)?.[1]?.trim();
+    return describeDrift({ branch, ...(head ? { head } : {}) }, collectRepoAnchor(root));
+}
+
+/**
  * Consume the one-shot handoff file: inject when fresh, discard when stale.
  * BOTH outcomes remove the file — the handoff never survives a second
  * session_start (consume-once is the contract, staleness is the guard).
@@ -130,9 +143,11 @@ export function consume_handoff_context(root: string, now: Date = new Date()): C
     }
 
     const sourceSession = text.match(/^Source-Session: (.+)$/m)?.[1]?.trim() ?? 'unknown';
+    const drift = handoffDrift(text, root);
     const block = wrapAsPriorSessionData(text, {
         kind: `handoff session=${sourceSession}`,
         source: HANDOFF_CONTEXT_REL,
+        ...(drift.length > 0 ? { warnings: drift } : {}),
     });
     remove(); // consume-once: the file never outlives its first injection
     return guardedInjection(block, `handoff consumed (session=${sourceSession})`);

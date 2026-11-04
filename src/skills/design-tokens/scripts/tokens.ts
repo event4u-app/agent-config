@@ -26,6 +26,9 @@
  * `validate` blanks the `var(--…)` span instead of skipping the whole line.
  * With `--tokens`, `validate --json` adds a palette tag per colour literal
  * and a stable finding id (3.3); without it the output is unchanged.
+ * road-to-design-inputs-and-pages-read-as-they-are Phase 1 removed the last
+ * silent paths: a layerless file is read, an unresolvable reference fails,
+ * and arrays (shadow, cubicBezier, fontFamily) serialise or fail by name.
  *
  * Pure stdlib (Node builtins only) · read-only except `generate -o` · no
  * network · no subprocess. A `.ts` MUST NOT import a `.py`.
@@ -174,8 +177,12 @@ function _pyDumpsIndent2(value: unknown, depth = 0): string {
 
 // --------------------------------------------------------------- generate
 
-/** Resolve `{primitive.color.blue.600}`-style references recursively. */
-export function resolveReference(value: Json, tokens: JsonObject): Json {
+/**
+ * Resolve `{primitive.color.blue.600}`-style references recursively. A
+ * reference whose target does not exist throws, naming the token and the
+ * missing target — emitting the literal `{…}` into CSS was silent data loss.
+ */
+export function resolveReference(value: Json, tokens: JsonObject, tokenPath = '<unknown>'): Json {
     if (typeof value !== 'string' || !value.startsWith('{')) {
         return value;
     }
@@ -183,18 +190,15 @@ export function resolveReference(value: Json, tokens: JsonObject): Json {
     const pathParts = stripped.split('.');
     let node: Json = tokens;
     for (const key of pathParts) {
-        if (!_isPlainObject(node)) {
-            return value;
-        }
-        node = node[key] === undefined ? null : node[key];
+        node = _isPlainObject(node) && node[key] !== undefined ? node[key] : null;
         if (node === null) {
-            return value;
+            throw new TokenValueError(`token ${tokenPath}: reference ${value} does not resolve (missing ${stripped})`);
         }
     }
     if (_isPlainObject(node) && '$value' in node) {
-        return resolveReference(node['$value'], tokens);
+        return resolveReference(node['$value'], tokens, tokenPath);
     }
-    return node !== null ? node : value;
+    return node;
 }
 
 // ------------------------------------------------- DTCG 2025.10 object values
@@ -278,14 +282,87 @@ function _colorToCss(v: JsonObject, tokenPath: string): string {
     return `${open}${parts.join(' ')}${alphaPart})`;
 }
 
+function _dimensionToCss(v: Json, what: string, tokenPath: string): string {
+    if (typeof v === 'string') return v;
+    if (v === 0) return '0';
+    if (_isPlainObject(v) && 'unit' in v && 'value' in v) {
+        const unit = v['unit'];
+        const n = _finite(v['value'], `${what} value`, tokenPath);
+        if (typeof unit !== 'string' || !DIMENSION_UNITS.has(unit)) {
+            throw new TokenValueError(`token ${tokenPath}: ${what} unit ${JSON.stringify(unit)} is not px or rem`);
+        }
+        return `${_num(n)}${unit}`;
+    }
+    throw new TokenValueError(`token ${tokenPath}: ${what} ${JSON.stringify(v)} is not a dimension`);
+}
+
+function _shadowLayerToCss(layer: Json, tokens: JsonObject, tokenPath: string): string {
+    if (!_isPlainObject(layer)) {
+        throw new TokenValueError(`token ${tokenPath}: shadow layer ${JSON.stringify(layer)} is not an object`);
+    }
+    const part = (key: string): Json => resolveReference(layer[key], tokens, tokenPath);
+    const dims = ['offsetX', 'offsetY', 'blur', 'spread'].map((k) =>
+        layer[k] === undefined ? '0' : _dimensionToCss(part(k), `shadow ${k}`, tokenPath),
+    );
+    const colour = part('color');
+    const colourCss = _isPlainObject(colour) ? _colorToCss(colour, tokenPath) : colour;
+    if (typeof colourCss !== 'string') {
+        throw new TokenValueError(`token ${tokenPath}: shadow color ${JSON.stringify(colour)} is not a colour`);
+    }
+    return `${layer['inset'] === true ? 'inset ' : ''}${dims.join(' ')} ${colourCss}`;
+}
+
+function _fontFamilyName(name: Json, tokenPath: string): string {
+    if (typeof name !== 'string') {
+        throw new TokenValueError(`token ${tokenPath}: fontFamily entry ${JSON.stringify(name)} is not a string`);
+    }
+    return /\s/.test(name) && !/^["'].*["']$/.test(name) ? JSON.stringify(name) : name;
+}
+
+const UNSUPPORTED_COMPOSITES: ReadonlySet<string> = new Set(['border', 'transition', 'gradient', 'strokeStyle', 'typography']);
+
 /**
  * Serialise a resolved token value for CSS. Strings pass through unchanged
- * (legacy-valid). A DTCG 2025.10 colour or dimension/duration object becomes
- * CSS; any other object is a hard error naming the token — never `[object Object]`.
+ * (legacy-valid). A DTCG 2025.10 colour, dimension/duration, shadow (object or
+ * array), cubicBezier or fontFamily array becomes CSS; any other object or
+ * array is a hard error naming the token — never `[object Object]` and never
+ * an array joined by string coercion.
  */
-export function tokenValueToCss(value: Json, tokenPath: string): Json {
+export function tokenValueToCss(value: Json, tokenPath: string, type: Json = undefined, tokens: JsonObject = {}): Json {
+    if (Array.isArray(value)) {
+        if (type === 'shadow') {
+            return value.map((layer) => _shadowLayerToCss(layer, tokens, tokenPath)).join(', ');
+        }
+        if (type === 'cubicBezier') {
+            if (value.length !== 4) {
+                throw new TokenValueError(`token ${tokenPath}: cubicBezier must be an array of four numbers`);
+            }
+            const [x1, y1, x2, y2] = value.map((c, i) => _finite(c, `cubicBezier component ${i}`, tokenPath)) as [
+                number,
+                number,
+                number,
+                number,
+            ];
+            if (x1 < 0 || x1 > 1 || x2 < 0 || x2 > 1) {
+                throw new TokenValueError(`token ${tokenPath}: cubicBezier x values must be within 0-1`);
+            }
+            return `cubic-bezier(${[x1, y1, x2, y2].map(_num).join(', ')})`;
+        }
+        if (type === 'fontFamily') {
+            return value.map((n) => _fontFamilyName(n, tokenPath)).join(', ');
+        }
+        throw new TokenValueError(
+            `token ${tokenPath}: array value of type ${JSON.stringify(type ?? null)} has no CSS mapping`,
+        );
+    }
     if (!_isPlainObject(value)) {
         return value;
+    }
+    if (type === 'shadow') {
+        return _shadowLayerToCss(value, tokens, tokenPath);
+    }
+    if (typeof type === 'string' && UNSUPPORTED_COMPOSITES.has(type)) {
+        throw new TokenValueError(`token ${tokenPath}: composite ${type} value is not supported by generate`);
     }
     if ('colorSpace' in value || 'components' in value || 'hex' in value) {
         return _colorToCss(value, tokenPath);
@@ -303,24 +380,45 @@ export function tokenValueToCss(value: Json, tokenPath: string): Json {
     );
 }
 
-/** Flatten a DTCG token tree into `--css-var → resolved value`. */
+/**
+ * Flatten a DTCG token tree into `--css-var → resolved value`. A `$root` token
+ * takes its group's own name; `$extends` and a `$ref` without `$value` are not
+ * resolved yet, so they fail by name instead of being dropped. Other `$`-keys
+ * (`$type`, `$description`, `$extensions`) are metadata, never tokens; a
+ * group-level `$type` is inherited by the tokens below it.
+ */
 export function flattenTokens(
     obj: JsonObject,
     tokens: JsonObject,
     prefix: string[] | null = null,
     result: Record<string, Json> | null = null,
+    inheritedType: Json = undefined,
 ): Record<string, Json> {
     const pfx = prefix || [];
     const res = result !== null ? result : {};
+    if ('$extends' in obj) {
+        throw new TokenValueError(`not supported: $extends at ${pfx.join('.') || '<root>'}`);
+    }
+    const groupType = typeof obj['$type'] === 'string' ? obj['$type'] : inheritedType;
     for (const key of Object.keys(obj)) {
         const value = obj[key];
-        const current = [...pfx, key];
+        if (key.startsWith('$') && key !== '$root') {
+            continue;
+        }
+        const current = key === '$root' ? pfx : [...pfx, key];
+        if (current.length === 0) {
+            throw new TokenValueError('not supported: $root at the top level');
+        }
         if (_isPlainObject(value)) {
+            const tokenPath = current.join('.');
             if ('$value' in value) {
                 const cssVar = '--' + current.join('-').replace(/\./g, '-');
-                res[cssVar] = tokenValueToCss(resolveReference(value['$value'], tokens), current.join('.'));
+                const type = value['$type'] !== undefined ? value['$type'] : groupType;
+                res[cssVar] = tokenValueToCss(resolveReference(value['$value'], tokens, tokenPath), tokenPath, type, tokens);
+            } else if ('$ref' in value) {
+                throw new TokenValueError(`not supported: $ref at ${tokenPath}`);
             } else {
-                flattenTokens(value, tokens, current, res);
+                flattenTokens(value, tokens, current, res, groupType);
             }
         }
     }
@@ -337,11 +435,51 @@ function _orEmpty(v: Json): JsonObject {
     return {};
 }
 
+const LAYERS = ['primitive', 'semantic', 'component', 'dark'] as const;
+
+function _hasLayers(tokens: JsonObject): boolean {
+    return LAYERS.some((l) => l in tokens);
+}
+
+/** Top-level groups `generate` does not read because the file uses layers. */
+export function unreadTopLevelGroups(tokens: JsonObject): string[] {
+    if (!_hasLayers(tokens)) return [];
+    return Object.keys(tokens).filter(
+        (k) => !k.startsWith('$') && !(LAYERS as readonly string[]).includes(k) && _isPlainObject(tokens[k]),
+    );
+}
+
+/** The tree flattened into the semantic block: the `semantic` layer, or the whole file when it has no layers. */
+function _semanticSource(tokens: JsonObject): JsonObject {
+    return _hasLayers(tokens) ? _orEmpty(tokens['semantic']) : tokens;
+}
+
+function _countTokens(node: JsonObject): number {
+    let n = 0;
+    for (const key of Object.keys(node)) {
+        if (key.startsWith('$') && key !== '$root') continue;
+        const v = node[key];
+        if (!_isPlainObject(v)) continue;
+        n += '$value' in v || '$ref' in v ? 1 : _countTokens(v);
+    }
+    return n;
+}
+
 export function generateCss(tokens: JsonObject): string {
     const primitive = flattenTokens(_orEmpty(tokens['primitive']), tokens, ['primitive']);
-    const semantic = flattenTokens(_orEmpty(tokens['semantic']), tokens, []);
+    const semantic = flattenTokens(_semanticSource(tokens), tokens, []);
     const component = flattenTokens(_orEmpty(tokens['component']), tokens, []);
     const dark = flattenTokens(_orEmpty(_orEmpty(tokens['dark'])['semantic']), tokens, []);
+
+    const total = [primitive, semantic, component, dark].reduce((n, b) => n + Object.keys(b).length, 0);
+    const found = _countTokens(tokens);
+    if (total === 0 && found > 0) {
+        const unread = unreadTopLevelGroups(tokens);
+        throw new TokenValueError(
+            `${found} token(s) in the file produced 0 CSS variables` +
+                (unread.length > 0 ? `; top-level group(s) not read beside the layers: ${unread.join(', ')}` : ''),
+        );
+    }
 
     const block = (entries: Record<string, Json>): string =>
         Object.keys(entries)
@@ -361,7 +499,7 @@ export function generateCss(tokens: JsonObject): string {
 }
 
 export function generateTailwind(tokens: JsonObject): string {
-    const semantic = flattenTokens(_orEmpty(tokens['semantic']), tokens, []);
+    const semantic = flattenTokens(_semanticSource(tokens), tokens, []);
     const colors: Record<string, string> = {};
     for (const key of Object.keys(semantic)) {
         if (key.includes('color')) {
@@ -657,7 +795,14 @@ export function readPalette(tokens: JsonObject): PaletteEntry[] {
             const value = node[key];
             if (!_isPlainObject(value)) continue;
             if ('$value' in value) {
-                const rgb = _tokenColor(resolveReference(value['$value'], tokens));
+                let resolved: Json;
+                try {
+                    resolved = resolveReference(value['$value'], tokens);
+                } catch (exc) {
+                    if (exc instanceof TokenValueError) continue;
+                    throw exc;
+                }
+                const rgb = _tokenColor(resolved);
                 if (rgb !== null) out.push({ token: [...at, key].join('.'), rgb });
             } else {
                 walk(value, [...at, key]);
@@ -1102,6 +1247,10 @@ export function main(argv: string[] | null = null): number {
         let output: string;
         try {
             output = parsed.format === 'tailwind' ? generateTailwind(tokens) : generateCss(tokens);
+            const unread = unreadTopLevelGroups(tokens);
+            if (unread.length > 0) {
+                process.stderr.write(`Warning: top-level group(s) not read beside the layers: ${unread.join(', ')}\n`);
+            }
         } catch (exc) {
             if (exc instanceof TokenValueError) {
                 process.stderr.write(`Error: ${exc.message}\n`);

@@ -19,12 +19,14 @@ entry_condition:
 > true on every install shape. A major is the place to make it true, so they are
 > release blockers, not accepted risk.
 >
-> **Arrivals:** 1 — `inbox-2026-10-bi` (2026-10-29): session-start context lost
-> on a compact restore (Phase 7). Not un-parked: the active estate is at its cap.
+> **Arrivals:** 2 — latest `inbox-2026-11-n` (2026-11-03): user-scope trampolines
+> that run the opened project's `./agent-config` (Phase 8). Before it:
+> `inbox-2026-10-bi` (2026-10-29): session-start context lost on a compact restore
+> (Phase 7). Not un-parked: the active estate is at its cap.
 
 ## Goal
 
-17.0.0 is cut only when the three `fail_closed` hook guards
+17.0.0 is cut only when the three `fail_closed` hook guards hold. That is: they
 (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`)
 refuse what they claim on every install shape, the window an `upgrade` opens is
 proven closed, the admin-token workflow is fenced to `main` by a rule a branch
@@ -113,6 +115,22 @@ ratification artifact.
       `HOST_REPLACE_CHARS`; drop whole blocks lowest priority first and name
       them on stderr.
       verify: blocks at their caps exceeding 10,000 chars, plus a multibyte case.
+
+## Phase 8 — user-scope trampolines run only package code (inbox-2026-11-n)
+
+Verified at `b234d08480`: `src/scripts/hooks/cursor-dispatcher.sh:58-71` reads the
+workspace root from the event, `cd`s into it and runs `./agent-config
+dispatch:hook` when that file is executable; the augment, cline, gemini and
+windsurf dispatchers have the same shape. An opened project can therefore plant
+an `./agent-config` and have a user-scope hook run it — project code executed
+with the user's hook trust.
+
+- [ ] **8.1 User-scope trampolines run only package code.**
+      `src/scripts/hooks/{cursor,augment,cline,gemini,windsurf}-dispatcher.sh`
+      resolve the dispatcher from the staged runtime or an absolute PATH entry
+      outside the workspace, never `./agent-config` of the opened project.
+      verify: a fixture with a planted `./agent-config` in the workspace is red
+      before (the planted file runs) and green after (it does not).
 
 ## Phase 6 — a review that completed, and a ledger with nothing open
 

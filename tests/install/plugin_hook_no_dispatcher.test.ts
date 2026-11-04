@@ -5,7 +5,7 @@
 // commands in an empty directory under a stripped PATH.
 //
 // The plugin branch is keyed on CLAUDE_PLUGIN_ROOT, which the host sets for a
-// plugin's hooks only. The managed settings.json block carries the byte-same
+// plugin's hooks only. The package's own settings.json hook block carries the byte-same
 // command (dedupe depends on it), and its no-dispatcher branch stays silent:
 // that carrier is Phase 3's, where silence on a full layer is the decided
 // behaviour.

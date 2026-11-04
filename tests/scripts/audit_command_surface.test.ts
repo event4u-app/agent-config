@@ -56,3 +56,17 @@ describe('audit_command_surface — keyword_vector + cosine', () => {
         expect(acs.cosine(new Map(), acs.keyword_vector('alpha'))).toBe(0);
     });
 });
+
+describe('visible_in_frontmatter — the baseline side of the budget gate', () => {
+    it('reads the named visibility field when the old revision carries no tier alias', () => {
+        expect(acs.visible_in_frontmatter('---\nname: x\nvisibility: advanced\n---\n')).toBe(true);
+        expect(acs.visible_in_frontmatter('---\nname: x\nvisibility: visible\n---\n')).toBe(true);
+    });
+    it('treats an explicitly internal revision as not visible, whatever its tier says', () => {
+        expect(acs.visible_in_frontmatter('---\nvisibility: internal\ntier: 1\n---\n')).toBe(false);
+    });
+    it('falls back to the tier alias, and to internal when both are absent', () => {
+        expect(acs.visible_in_frontmatter('---\ntier: 1\n---\n')).toBe(true);
+        expect(acs.visible_in_frontmatter('---\nname: x\n---\n')).toBe(false);
+    });
+});

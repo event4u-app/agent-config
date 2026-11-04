@@ -89,7 +89,9 @@ above before encoding:
 | handheld drift | handheld / gimbal-glide |
 | orbit | crane / arc via truck+pan |
 
-Adapter quirks (per-provider encoding of the mapped move):
+Adapter quirks (per-provider encoding of the mapped move). These are undated
+and unverified against provider documentation — check the model-capabilities
+entry (`verified`, `recheck_by`) before trusting one:
 
 - **Veo** — accepts named moves; prefers ≤ 8s clips.
 - **Kling** — motion intensity 0–1 token; map our speed to that.

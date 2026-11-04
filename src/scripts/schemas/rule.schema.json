@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/rule.schema.json",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.0.1",
   "title": "Rule frontmatter",
   "$comment": "Source: agents/reference/docs/frontmatter-contract.md#rules. `type` is authoritative; `alwaysApply` is a Cursor/Cline sidecar and accepted but not enforced.",
   "type": "object",
@@ -182,7 +182,7 @@
           "type": "array",
           "uniqueItems": true,
           "items": { "type": "string", "minLength": 8 },
-          "description": "Optional. Where the source lives. An `ENC1:` token per `src/rules/source-confidentiality.md` where naming the source in the tracked tree is not permitted. Absent is CORRECT for `own-analysis`, and for an `internal-incident` whose record is a commit or an ADR rather than a URL."
+          "description": "Optional in the schema; required by `check_rule_evidence_declaration` for an in-scope rule that names an external source, unless listed in its shrink-only `SOURCE_URLS_PENDING`. Where the source lives. An `ENC1:` token per `src/rules/source-confidentiality.md` where naming the source in the tracked tree is not permitted. Absent is CORRECT for `own-analysis`, and for an `internal-incident` whose record is a commit or an ADR rather than a URL."
         },
         "verified_on": {
           "type": "string",

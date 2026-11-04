@@ -57,9 +57,12 @@ describe('process-full lane brief', () => {
 });
 
 describe('process-full finish-first contract', () => {
-    it('states one roadmap, one PR, and finish-before-start in the Iron Law', () => {
+    it('states one invocation, at most one PR, and finish-before-start in the Iron Law', () => {
         const law = section(text, '## Iron Law — Full is Full');
-        expect(law).toMatch(/ONE ROADMAP, ONE PR: NO PUSH, PR OR MERGE OF A ROADMAP BEFORE ITS LAST STEP/);
+        expect(law).toMatch(/ONE INVOCATION, AT MOST ONE DELIVERY PR: NO PUSH, PR OR MERGE BEFORE THE LAST STEP/);
+        expect(law).toMatch(/UNDER `--all`, EACH ROADMAP IS STILL ITS OWN PR/);
+        expect(text).toMatch(/argument-hint: ".*--roadmaps a,b,c.*--from-pr N.*"/);
+        expect(text).toMatch(/roadmap_set_manifest/);
         expect(law).toMatch(/NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`/);
         expect(law).toMatch(/A STARTED ROADMAP THAT CAN STILL MOVE IS FINISHED BEFORE ANY OTHER IS STARTED/);
     });
@@ -97,7 +100,113 @@ describe('process-full scope-delta row agrees with the execution contract (ADR-2
         expect(cell).not.toMatch(/^When `execution\.mode/);
     });
 
-    it('the process-phase row keeps its execution.mode gate', () => {
-        expect(row('process-phase')[4]).toMatch(/^When `execution\.mode: autonomous/);
+    it('process-step and process-phase rows take the same grant model (inbox-2026-11-v D2)', () => {
+        for (const w of ['process-step', 'process-phase']) {
+            const cell = row(w)[4] ?? '';
+            expect(cell).toMatch(/invocation is the confirmation/i);
+            expect(cell).not.toMatch(/mode ignored/);
+        }
+    });
+
+    it('the contract no longer keeps a confirmation round for step and phase', () => {
+        const flat = contract.replace(/\s+/g, ' ');
+        expect(flat).not.toMatch(/the confirmation round stays/);
+        expect(flat).toMatch(/every `\/roadmap:process-\*` wrapper/);
+    });
+
+    it('process-step reads the mode, stops after one step and never asks', () => {
+        const step = fs
+            .readFileSync(path.resolve(__dirname, '../../src/domains/product-basic/roadmap/process-step/command.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(step).not.toMatch(/ignored by this wrapper/);
+        expect(step).not.toMatch(/no auto-commit/);
+        expect(step).toMatch(/never asks/i);
+        const phase = fs
+            .readFileSync(path.resolve(__dirname, '../../src/domains/product-basic/roadmap/process-phase/command.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(phase).toMatch(/the invocation is the grant/i);
+        expect(phase).toMatch(/never (covers )?a merge/i);
+    });
+
+    it('the mode ladder shows no contract screen under a process wrapper', () => {
+        const prescan = fs.readFileSync(path.join(EXEC, 'roadmap-process-loop-prescan.md'), 'utf8');
+        expect(prescan).toMatch(/\| `\/roadmap:process-step` \| `autonomous`/);
+        expect(prescan.replace(/\s+/g, ' ')).not.toMatch(/never whether the screen is shown/);
+    });
+});
+
+describe('process-full says one thing about who grants the run (inbox-2026-11-v Phase 1)', () => {
+    const flat = text.replace(/\s+/g, ' ');
+
+    it('its scope delta does not ask for an acceptance the invocation already gave', () => {
+        expect(flat).not.toMatch(/ONE acceptance activates/);
+        expect(section(text, '## Scope delta').replace(/\s+/g, ' ')).toMatch(
+            /the invocation is the confirmation/i,
+        );
+    });
+
+    it('names the process-phase rules it inherits instead of inheriting all of them', () => {
+        const rules = section(text, '## Rules').replace(/\s+/g, ' ');
+        expect(rules).not.toMatch(/All other rules from .{0,80}apply unchanged/);
+        expect(rules).toMatch(/dashboard sync/i);
+        expect(rules).toMatch(/council/i);
+        expect(rules).toMatch(/decline = silence/i);
+    });
+
+    it('turns owner answers in the invocation into dated owner rows, never council rows', () => {
+        const contract = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(contract).toMatch(/### 2d\. Owner answers carried by the invocation/);
+        expect(contract).toMatch(/`owner \(invocation, <date>\)`/);
+        expect(contract).toMatch(/never a council row/i);
+        expect(flat).toMatch(/2d\. Owner answers carried by the invocation|owner answers carried by the invocation/i);
+    });
+
+    it('lets the invocation declare the run-level policy and keeps it across a resume', () => {
+        expect(text).toMatch(/argument-hint: ".*--late-artifacts.*--deferred.*"/);
+        expect(text).toMatch(/`--late-artifacts` \/ `--deferred` \(contract § 2a\/§ 2b\)/);
+        const contract = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(contract).toMatch(/`--late-artifacts auto-research`/);
+        expect(contract).toMatch(/`--deferred spawn-follow-up-draft`/);
+        expect(contract).toMatch(/Decisions table.{0,80}survives a resumed run/i);
+    });
+
+    it('O-1 (council, owner-delegated 2026-11-03): process-full defaults late_artifacts to auto-research only', () => {
+        const branches = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(branches).toMatch(/omitted `late_artifacts` resolves to `auto-research`/);
+        expect(branches).toMatch(/`deferred_policy` stays `wait`/);
+        expect(branches).not.toMatch(/Whether `process-full` should change its default is an owner question/);
+    });
+
+    it('O-2: a PR-body decision is delivery, never consent, and its dependents stay blocked', () => {
+        const branches = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract-branches.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(branches).toMatch(/### Owner-class decisions under `process-full`/);
+        expect(branches).toMatch(/delivery, never consent/);
+        expect(branches).toMatch(/uncertainty means blocked/i);
+        expect(branches).toMatch(/reported `partial`/);
+        const contract = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-execution-contract.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(contract).not.toMatch(/classifications STILL escalate to the user/);
+        const park = fs
+            .readFileSync(path.resolve(__dirname, '../../src/agent-src/contexts/execution/roadmap-process-loop-set.md'), 'utf8')
+            .replace(/\s+/g, ' ');
+        expect(park).toMatch(/Under `process-full` the ask is the PR body/);
+    });
+
+    it('records the environment at run start without stopping on it', () => {
+        const delivery = fs.readFileSync(
+            path.resolve(__dirname, '../../src/agent-src/contexts/execution/process-full-delivery.md'),
+            'utf8',
+        );
+        expect(delivery).toMatch(/hooks:status/);
+        expect(delivery).toMatch(/routing:doctor/);
     });
 });

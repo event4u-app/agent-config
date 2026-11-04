@@ -122,14 +122,38 @@ substituted inline and the root key renamed to `mcpServers`.
 - **Unresolved `${env:VAR}`** — exit 1, grouped report listing every missing
   variable and every path in the config where it is used. **No target file
   is written**, not even a partial one. Set the variable(s) and re-run.
+- **Target is commented (JSONC), unparseable, or repeats a key the render
+  would write** — exit 1, the target is left byte-for-byte untouched and the
+  report names the status (`skipped-jsonc`, `skipped-invalid`,
+  `skipped-duplicate-key`) plus the snippet to add by hand.
 - **`task mcp:check` disagrees with on-disk targets** — exit 1; run
-  `task mcp:render` to regenerate.
+  `task mcp:render` to regenerate. The check compares only the servers
+  `mcp.json` renders; servers you added to a target by hand are not compared.
 
 ## What this is not
 
-The renderer is one-way: `mcp.json` → tool configs. It does not read or diff
-pre-existing tool configs. Remove stale entries from your source file and
-re-render.
+The renderer is one-way: `mcp.json` → tool configs. It merges into an existing
+target rather than replacing it: only the servers named in `mcp.json` are
+written under `mcpServers`, every other server and top-level key in the target
+survives, and an overwrite leaves `<target>.agent-config.bak`. Because foreign
+entries survive, removing a server from `mcp.json` does not remove it from the
+targets — delete it from the target by hand.
+
+A target is rewritten as a whole from a strict parse, which keeps only the last
+of two equal keys. So a target with a duplicate key **anywhere** — even inside a
+server `mcp.json` does not name — is refused (`skipped-duplicate-key`, both line
+numbers printed, file untouched) whenever a write would be needed.
+
+**Backups and secrets.** Targets such as `.cursor/mcp.json` are often committed,
+and they carry resolved tokens. The backup is refreshed on every changing write,
+so it holds the bytes just before the latest render and never keeps a token the
+live file has since dropped — but it still holds the previous token values. The
+managed `.gitignore` block (`agent-config sync:gitignore`) ignores
+`*.agent-config.bak`; in a project that does not use that block, add the entry by
+hand and do not commit the backup.
+
+**Known cosmetic.** A rewritten target is serialised with sorted keys, so foreign
+keys and servers you wrote by hand may change order. Their values are kept.
 
 Keychain backends (`security`, `secret-tool`, Bitwarden CLI) are **out of
 scope**. The environment is the only secret surface. Pipe from whatever
@@ -141,7 +165,7 @@ secret tool you already use into the process environment before you run
 - [`docs/mcp-registries.md`](mcp-registries.md) — where to *discover* MCP servers
   (official registry / Glama / Smithery) and how to install one per agent, incl.
   Augment's manual Import-from-JSON path.
-- [`src/skills/mcp/SKILL.md`](../src/skills/mcp/SKILL.md) — MCP server
+- [`src/skills/mcp-tool-use/SKILL.md`](../src/skills/mcp-tool-use/SKILL.md) — MCP server
   selection and usage patterns.
 - [`agents/roadmaps/archive/road-to-mcp.md`](../agents/roadmaps/archive/road-to-mcp.md) — archived roadmap that produced this feature.
 - Reference substitution implementation: an external reference.

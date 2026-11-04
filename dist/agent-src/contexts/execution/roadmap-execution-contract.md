@@ -34,9 +34,7 @@ declared nothing, which was never the authorization anyway. Waiting for an
 acceptance the user already gave is the mid-run interruption
 `process-full § Final-PR-only` forbids.
 
-For `process-step` and `process-phase` the confirmation round stays: their
-scope is narrow enough that a contract screen costs one line, and neither
-carries ADR-237's end-to-end delegation.
+So does **every `/roadmap:process-*` wrapper**, with § 3 base grants only.
 
 ## 1. Pre-scan — four detection classes
 
@@ -158,6 +156,7 @@ preservation test in that rule already splits them the same way:
      decides. Removing the value later removes an option nobody was obliged to
      use; the default stays `wait` either way. -->
 
+**Invocation flags and `O<n>` owner answers** — read [branches](roadmap-execution-contract-branches.md).
 
 **2c. `traceability` — requirement to acceptance to evidence, OPTIONAL** — on that branch, read [`roadmap-execution-contract-branches § 2c. traceability`](roadmap-execution-contract-branches.md#2c-traceability--requirement-to-acceptance-to-evidence-optional).
 
@@ -170,7 +169,7 @@ preservation test in that rule already splits them the same way:
 | Push to that branch **only** | Push to any other ref = Hard Floor, ask |
 | Open ONE PR (description-only flow) | Acceptance never merges, closes or retargets; merging is § 5's one exception |
 | Batched artifact drafting | The drafting-protocol **Research/overlap pass runs NOW at contract time against current artifact state**; results cached; Understand/Draft phases run non-interactively during the run. Artifacts NOT in the batch still trigger the interactive protocol |
-| Council auto-enable | In-run open questions route to the AI council silently; `high_impact` / `user_required` classifications STILL escalate to the user per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md). **No council configured** → the contract summary says so and in-run true ambiguity halts (never silent guessing) |
+| Council auto-enable | In-run open questions route to the AI council silently; `high_impact` / `user_required` reach the user per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md); `process-full`: PR body (branches). **No council configured** → the contract summary says so and in-run true ambiguity halts (never silent guessing) |
 
 **`process-full` only — added by ADR-237**, because a delegation that ends at
 the PR has to be able to reach one:

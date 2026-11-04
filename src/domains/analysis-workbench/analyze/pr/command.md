@@ -6,7 +6,7 @@ visibility: internal
 sub: pr
 cluster: analyze
 replaces: []
-skills: [ai-council, code-review, receiving-code-review]
+skills: [ai-council, code-review-lens, receiving-code-review]
 description: Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
 argument-hint: "[<pr-url|number>] [--comment] [--optimize] [--threshold=<0..1>] [--quick]"
 limits:
@@ -123,6 +123,16 @@ introduced; any other line was already there). A clean head reports
   included — never in your checkout.
 
 Never merges, never approves its own changes — the port has neither.
+
+## Engine modules the model carries
+
+No CLI and no hook runs these modules; the steps above state what each one
+specifies, and the model applies it. Each is a reference spec for the stage,
+not a check that ran — a run that cites one has not executed it.
+
+- `src/scripts/analysis_pr_target.ts` (`resolvePrTarget`, step 1) — reference spec, model-carried.
+- `src/scripts/analysis_pr_review.ts` (`reviewPr`, step 2) — reference spec, model-carried.
+- `src/scripts/analysis_pr_optimize.ts` (`optimizePr`, step 4) — reference spec, model-carried.
 
 ## Output
 

@@ -183,7 +183,7 @@ describe('source_shape — enforcement tier', () => {
     });
 
     it('warns everywhere else', () => {
-        expect(tierFor('src/skills/mcp/SKILL.md')).toBe('warn');
+        expect(tierFor('src/skills/mcp-tool-use/SKILL.md')).toBe('warn');
         expect(tierFor('docs/mcp.md')).toBe('warn');
         expect(tierFor('README.md')).toBe('warn');
         // A path that merely CONTAINS "agents/" deeper down is not the agents tree.

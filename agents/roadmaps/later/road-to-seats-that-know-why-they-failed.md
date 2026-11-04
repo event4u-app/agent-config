@@ -26,6 +26,9 @@ relates:
 > method; every tree fact below was re-verified against `origin/main@447f8fd` on 2026-10-22.
 > External sources are coded S1–S6; their identities stay out of the tree. The source's code
 > is AGPL-3.0 and this package is MIT: only ideas are taken, re-derived (K1).
+> **Arrivals:** `inbox-2026-11-n` (2026-11-03) — steps 2.4 and 2.5 (quota headers, retry-after forms
+> and 429 order), routed here from `road-to-a-free-call-that-earns-its-flip` because this file owns
+> the vocabulary.
 
 ## Goal
 
@@ -94,6 +97,18 @@ shape.
 - [ ] **2.3 `Retry-After` is capped** at the 1.3 bound; above it nothing sleeps and the cause is
   named (an uncapped wait is a known weakness of S1, K3).
   verify: a day-long `Retry-After` header causes no sleep and a named cause.
+- [ ] **2.4 Quota headers write `remaining_quota`.** The curl transport captures response
+  headers (`-D`) and parses `x-ratelimit-remaining-{requests,tokens}` and the provider's
+  limit header; below 10 % remaining the chooser skips the route before calling it, which gives
+  the dead reader at `route_chooser.ts:153` its first writer. The IETF `RateLimit` draft is
+  parsed behind a reader that accepts absence.
+  verify: a fixture with `x-ratelimit-remaining-requests: 1` of 20 skips the route without a call.
+- [ ] **2.5 Retry-after formats and 429 order.** `retry-after` in seconds, HTTP-date and `5m`/`2h`
+  forms, and a body `retryDelay`; a 429 with a declared retry under one hour is `rate_limited`
+  even when the body names quota; per-day wording is `quota_exhausted` with its reset time.
+  verify: one table test row per form and per ordering case.
+
+(2.4–2.5 source: `agents/tmp.old/inbox-2026-11-n/` topic T4, Phase 3.)
 
 ## Phase 3 — Cooldown across runs (M2 woken)
 

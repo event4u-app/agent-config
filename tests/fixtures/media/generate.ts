@@ -64,7 +64,7 @@ export function drawText(frame: Uint8Array, text: string, x0: number, y0: number
     }
 }
 
-function gradient(kind: 'ltr' | 'rtl' | 'vee'): Uint8Array {
+export function gradient(kind: 'ltr' | 'rtl' | 'vee'): Uint8Array {
     const f = new Uint8Array(W * H);
     for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
@@ -76,16 +76,18 @@ function gradient(kind: 'ltr' | 'rtl' | 'vee'): Uint8Array {
     return f;
 }
 
-function encode(frames: Uint8Array[], out: string, extra: { silentAudio?: boolean } = {}): string {
-    const args = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'gray', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-'];
+export function encode(frames: Uint8Array[], out: string, extra: { silentAudio?: boolean; fps?: number; quality?: number | undefined; lossless?: boolean } = {}): string {
+    const args = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'gray', '-s', `${W}x${H}`, '-r', String(extra.fps ?? FPS), '-i', '-'];
     if (extra.silentAudio === true) args.push('-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono', '-shortest', '-c:a', 'aac');
-    args.push('-c:v', 'mpeg4', '-q:v', '3', '-pix_fmt', 'yuv420p', out);
+    // Lossless gray keeps a frozen region bit-identical, so a reading on it carries no codec noise.
+    if (extra.lossless === true) args.push('-c:v', 'ffv1', '-pix_fmt', 'gray', out);
+    else args.push('-c:v', 'mpeg4', '-q:v', String(extra.quality ?? 3), '-pix_fmt', 'yuv420p', out);
     const res = spawnSync('ffmpeg', args, { input: Buffer.concat(frames.map((f) => Buffer.from(f))) });
     if (res.status !== 0) throw new Error(`fixture ${path.basename(out)}: ffmpeg exited ${String(res.status)}: ${res.stderr.toString('utf8')}`);
     return out;
 }
 
-function hold(frame: Uint8Array, seconds: number): Uint8Array[] {
+export function hold(frame: Uint8Array, seconds: number): Uint8Array[] {
     return Array.from({ length: Math.round(seconds * FPS) }, () => frame);
 }
 
@@ -158,4 +160,23 @@ export function generateBurstTail(dir: string): string {
     }
     frames.push(...hold(gradient('vee'), 21));
     return encode(frames, path.join(dir, 'burst-tail.mp4'));
+}
+
+/**
+ * A local event of four frames: a 6×6 bright block on a textured, static
+ * background vanishes for `gapFrames` frames starting at decode index
+ * `gapStart`, then returns. Too small for scene detection and too short for
+ * one-per-second sampling — the case a forensic read exists for.
+ */
+export const LOCAL_EVENT = { fps: 24, gapStart: 70, gapFrames: 4, block: { x: 150, y: 80, size: 6 }, level: 250 } as const;
+
+export function generateLocalEvent(dir: string, seconds = 6): string {
+    const base = gradient('vee');
+    const { x, y, size } = LOCAL_EVENT.block;
+    const withBlock = Uint8Array.from(base);
+    for (let r = 0; r < size; r++) withBlock.fill(LOCAL_EVENT.level, (y + r) * W + x, (y + r) * W + x + size);
+    const total = Math.round(seconds * LOCAL_EVENT.fps);
+    const gapEnd = LOCAL_EVENT.gapStart + LOCAL_EVENT.gapFrames;
+    const frames = Array.from({ length: total }, (_, n) => (n >= LOCAL_EVENT.gapStart && n < gapEnd ? base : withBlock));
+    return encode(frames, path.join(dir, `local-event-${seconds}s.mp4`), { fps: LOCAL_EVENT.fps });
 }

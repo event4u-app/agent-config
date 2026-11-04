@@ -1,0 +1,58 @@
+{
+    "skill": "github-ci",
+    "last_eval": "2026-11-03",
+    "description": "4 exemplars (1 de) + 3 near-misses + 2 counterexamples. Exemplars are GitHub Actions work: a failing workflow, a new check, a test matrix, a reusable workflow. Near-misses share the CI or GitHub vocabulary and route elsewhere: a red test that is a code bug reproducible outside CI (systematic-debugging), tuning the Copilot assistant (copilot-config), and infrastructure provisioning (terraform). Counterexamples guard the 'pipeline' and 'action' vocabulary in unrelated work.",
+    "queries": [
+        {
+            "q": "my CI is failing on the setup-node step in the GitHub Actions workflow — fix the YAML",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add a test matrix for PHP 8.2 and 8.3 to our workflow file",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "extract the shared lint steps into a reusable workflow that both repos can call",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "füge einen GitHub-Actions-Check hinzu, der bei jedem Pull Request die Tests ausführt",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "this unit test fails locally too — find out why the date parsing is off by one day",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the red check is a code bug reproducible outside CI, not workflow configuration → systematic-debugging"
+        },
+        {
+            "q": "make GitHub Copilot's PR review comments shorter",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "GitHub and pull-request vocabulary, but the ask tunes the Copilot assistant → copilot-config"
+        },
+        {
+            "q": "provision the staging ECS cluster and its load balancer as code",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "deployment-adjacent infrastructure, not the workflow that triggers it → terraform"
+        },
+        {
+            "q": "design a sales pipeline with stages from lead to closed-won",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'pipeline' in the sales sense"
+        },
+        {
+            "q": "write the action items from today's meeting into a list",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'action' in the meeting sense"
+        }
+    ]
+}

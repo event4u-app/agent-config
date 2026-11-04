@@ -426,6 +426,37 @@ describe('update_roadmap_progress — intent', () => {
         expect(dashboard).not.toContain('(a) do it now (b) defer it.');
     });
 
+    it('regen: a quoted What-to-do step carries ref-ignore, since it may name a file not yet written', () => {
+        // The roadmap's own `<!-- ref-ignore -->` is stripped when the step is
+        // quoted, so a path the step asks someone to CREATE reached check-refs as a
+        // broken live reference on every run.
+        mkRoadmap(
+            'road-to-a-file-to-write.md',
+            [
+                '# Roadmap: A file to write',
+                '',
+                '## Phase 1 — Ship',
+                '- [ ] step one',
+                '',
+                '## Blockers',
+                '',
+                '### blocker: needs-a-record',
+                '- **Status:** open',
+                '- **Owner:** maintainer',
+                '- **Blocks:** Phase 1 — Ship',
+                '- **What to do:** record the choice in `agents/evidence/decisions/not-yet.md`. <!-- ref-ignore -->',
+                '- **Resolved when:** the record exists.',
+                '',
+            ].join('\n'),
+        );
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        const line = dashboard.split('\n').find((l) => l.includes('agents/evidence/decisions/not-yet.md')) as string;
+        expect(line).toBeDefined();
+        expect(line.trimEnd().endsWith('<!-- ref-ignore -->')).toBe(true);
+        expect(line.match(/<!-- ref-ignore -->/g)?.length).toBe(1);
+    });
+
     it('regen: a wrapped multi-line field value is not truncated at the first line', () => {
         mkRoadmap(
             'road-to-wrapped-field.md',

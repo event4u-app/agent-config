@@ -1,7 +1,7 @@
 {
     "skill": "requesting-code-review",
     "last_eval": "2026-10-18",
-    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the PR-opening moment in its explicit and implicit forms ('open a PR', 'ready to merge'), a stacked-PR handover, a targeted sanity-check ask and a German variant. Near-misses use the exclusions this skill's SKILL.md names: processing feedback (receiving-code-review, the sharpest edge) and work that is not yet code-complete, plus doing the review itself (code-review). Counterexamples guard documentation-only changes, which the skill excludes, and a non-code 'request'.",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the PR-opening moment in its explicit and implicit forms ('open a PR', 'ready to merge'), a stacked-PR handover, a targeted sanity-check ask and a German variant. Near-misses use the exclusions this skill's SKILL.md names: processing feedback (receiving-code-review, the sharpest edge) and work that is not yet code-complete, plus doing the review itself (code-review-lens). Counterexamples guard documentation-only changes, which the skill excludes, and a non-code 'request'.",
     "queries": [
         {
             "q": "the feature is done and tests are green — open a PR for it",
@@ -39,7 +39,7 @@
             "q": "review this diff for security problems",
             "trigger": false,
             "class": "near-miss",
-            "note": "the user wants the review itself performed, not a review requested → code-review"
+            "note": "the user wants the review itself performed, not a review requested → code-review-lens"
         },
         {
             "q": "half the tests still fail but let's wrap up the branch — merge it or keep it?",

@@ -188,7 +188,7 @@ tell: default theme + Inter fallback + neutral grays).
 
 **MCP path (opt-in)** — the shadcn MCP server exposes browse / search-across-
 registries / install-with-natural-language over MCP; configure per the
-[`mcp`](../mcp/SKILL.md) skill. It is an alternative to the CLI, never a hard
+[`mcp-tool-use`](../mcp-tool-use/SKILL.md) skill. It is an alternative to the CLI, never a hard
 dependency. Decision note: **CLI path = default + universal; MCP path = opt-in
 when the user has it configured; registry-JSON literacy underpins both.**
 

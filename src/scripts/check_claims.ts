@@ -47,6 +47,7 @@ import {
 } from './_lib/exec_evidence.js';
 import { asOf, localIsoDate } from './_lib/as_of.js';
 import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
+import { staleVerifiedVerdict } from './_lib/claims_stale_verified.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { WITNESS_MARKER, settleSiteFindings, siteScannedLine, siteWitnessSurfaces } from './_lib/claims_site_sweep.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
@@ -1174,6 +1175,10 @@ function main(argv: string[] = process.argv.slice(2)): number {
         });
     }
 
+    // 7. Stale last_verified ratchet (road-to-rewrites-that-keep-their-facts 3.3).
+    const stale = staleVerifiedVerdict(ledger.values(), local_today(), REPO, baselinesPath);
+    if (stale.reason !== null) findings.push({ id: 'stale-last-verified', file: LEDGER_REL, reason: stale.reason });
+
     if (findings.length > 0) {
         process.stderr.write(`❌  check_claims: ${findings.length} unbacked/dangling claim(s):\n`);
         for (const f of findings) {
@@ -1186,6 +1191,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
     // Printed under --quiet too: CI runs this gate quiet, and an overdue
     // measurement nobody sees is the defect the field exists to end.
     process.stdout.write(render_overdue(overdue_entries(ledger, today)));
+    process.stdout.write(stale.report);
     if (!args.quiet) {
         const backed = [...ledger.values()].filter((e) => e.status === 'backed').length;
         const unbacked = [...ledger.values()].filter((e) => e.status === 'unbacked').length;
@@ -1240,7 +1246,7 @@ function selfTest(): number {
     // a missing one fails as a module resolution error in EVERY case at once —
     // which reads as the detection having broken rather than the fixture being
     // incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts'];
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));

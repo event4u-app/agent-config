@@ -57,7 +57,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fix-comments`** — Review the code comments touched by the current branch and simplify, shorten, or remove each one
 - **`fix-commit-messages`** — Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects to it — own commits and full history by default
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
-- **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
+- **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR, incl. minimizing resolved bot review summaries
 - **`fix-pr-comments-loop`** — Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments
 - **`fix-quality`** — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - **`fix-refs`** — Find and fix broken cross-references in .augment/ and agents/ files
@@ -290,8 +290,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`lint-skills`** — Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata.
 - **`llm-provider-knowledge`** — Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory.
 - **`markitdown`** — Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
-- **`mcp`** — Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
 - **`mcp-builder`** — Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness.
+- **`mcp-tool-use`** — Use when calling MCP (Model Context Protocol) server tools — picking, chaining or debugging them in an agent workflow.
 - **`md-language-check`** — Use BEFORE saving any .md under .augment/, dist/agent-src*/, or agents/ — scans umlauts, German function words, and German phrases outside DE:/EN: anchor blocks. Hard gate per language-and-tone.
 - **`memory-consolidation`** — Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'.
 - **`module-detect-on-the-fly`** — When editing a module-shaped path (`Modules/*`, `packages/*`, `apps/*`) while `modules.enabled` is false — asks once to enable it; also the project/stack + task-runner detection reference.

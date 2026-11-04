@@ -25,8 +25,11 @@ design-side instrument uses and the same weakness it declares.
 
 ## Corpus pin
 
-`abee8424da898d1cd35c737562b4a40ff70c67f0f340e192f5914667907c6e57`
-— 35 files, `tests/fixtures/ai-tells/clean/{en,de}/`.
+`77986d06677b39877d82efe79452a77bf15e31360a1908a2223c92f5f119fcf8`
+— 36 files, `tests/fixtures/ai-tells/clean/{en,de}/` (2026-11-03).
+
+The epochs below were promoted against the previous pin,
+`abee8424da898d1cd35c737562b4a40ff70c67f0f340e192f5914667907c6e57` (35 files).
 
 Three files were added to the corpus *before* the epochs below were promoted
 (`en/23-direct-opener.md`, `en/24-strong-claim.md`,
@@ -34,6 +37,16 @@ Three files were added to the corpus *before* the epochs below were promoted
 table. That started a new epoch relative to the run-1 pin in
 `internal/bench/reports/prose-tells-fp-v1.md`; the additions make the corpus
 harder, never easier, and no file was edited to move a number.
+
+**Dash epoch, 2026-11-03 (road-to-rewrites-that-keep-their-facts 4.1).** The
+dash counter stopped counting a dash between two range endpoints (`12–14`,
+`2019–2021`, `9:00–17:00`, `Q1–Q2`). No dash count on any existing clean or
+seeded file moved. One file was added, `de/12-gedankenstrich.md`: German prose
+with two Gedankenstriche and five ranges, counting 2. It is a near-miss for the
+counter, not for a family — M1 stays 0 for every family in the tables below —
+and it raises the shipped-threshold rejection count from 10 / 35 to 11 / 36, the
+same way `en/02-two-em-dashes.md` does, because two dashes over 97 words exceed
+the density default.
 
 ## Epoch 0 — the two bounds the reference table already claimed (step 1.4)
 

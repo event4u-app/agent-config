@@ -176,7 +176,7 @@ export const DetectResponseSchema = z.object({
     cwd: z.string(),
     scope: z.object({ scope: z.enum(['project', 'prompt', 'global']), reason: z.string() }),
     projectShape: z.object({
-        kind: z.enum(['composer', 'npm', 'cargo', 'pyproject', 'go', 'ruby', 'unknown']),
+        kind: z.enum(['composer', 'npm', 'cargo', 'pyproject', 'go', 'ruby', 'godot', 'unity', 'unreal', 'unknown']),
         root: z.string(),
         manifest: z.string().nullable(),
     }),

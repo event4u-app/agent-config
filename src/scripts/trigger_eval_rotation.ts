@@ -112,13 +112,19 @@ export const QUERIES_PER_SUITE = 10;
  * `emit-tickets` gained its corpus and brought the busiest slot to 22, a peak
  * of 230. Same two options stay rejected; reopen when a slot reaches 23.
  *
+ * **Raised to 240 by the repository owner on 2026-11-03** (PR #2829, the
+ * reopen above): `hiring-loop-design` gained its corpus and brought slot 10 to
+ * 24 suites, a peak of 240 (slot 2 holds 23). Same two options stay rejected;
+ * a 13-week cycle is not an option, it exceeds the 90-day window. Reopen when
+ * a slot reaches 25.
+ *
  * The number nobody can lower by tuning: a 90-day window over N suites costs
  * `N × QUERIES_PER_SUITE` every 90 days, whatever the schedule. The scheme this
  * replaced looked cheaper only because it never completed a pass — `batch = 5`
  * over 102 suites is a 21-week cycle, which misses the 90-day window by 57 days.
  * Cheapness was the symptom of the defect, not a property worth preserving.
  */
-export const MAX_WEEKLY_QUERIES = 230;
+export const MAX_WEEKLY_QUERIES = 240;
 
 /**
  * FNV-1a over the suite id. Any stable hash works; what matters is that a

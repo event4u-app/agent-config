@@ -59,7 +59,7 @@ const SIZE_BUDGETS: Record<string, number> = {
 // ADR-092: `visibility:` is the named source of truth (visible / advanced /
 // internal). The integer `tier:` alias was REMOVED from live command files in
 // road-to-tier-removal Phase 4, but this file still parses it on purpose: the
-// surface-growth check reads PAST git revisions (`_tier_at_ref`), and pre-ADR-092
+// surface-growth check reads PAST git revisions (`_visible_at_ref`), and pre-ADR-092
 // blobs carry only the alias. The live-file tier read below is therefore a
 // harmless residue on current files and the correct read on historical ones.
 // A command counts toward the per-pack budget when it is surfaced — visibility
@@ -910,21 +910,34 @@ function _git_lines(args: string[]): string[] {
     return (r.stdout ?? '').split('\n').filter((ln) => ln.trim().length > 0);
 }
 
-function _tier_at_ref(ref: string, relpath: string): number | null {
+/**
+ * Whether a command revision's frontmatter declares it visible.
+ *
+ * The same precedence `_is_visible` applies to the working tree — the named
+ * `visibility` field first, the tier alias second, internal when both are
+ * absent — because a revision written after ADR-092 carries no tier, and
+ * reading the tier alone made every edit to such a command look like a
+ * promotion into visibility.
+ */
+export function visible_in_frontmatter(text: string): boolean {
+    const v = VISIBILITY_RE.exec(text);
+    if (v !== null) {
+        return VISIBLE_VISIBILITIES.has(v[1] as string);
+    }
+    const m = TIER_RE.exec(text);
+    return VISIBLE_TIERS.has(m ? parseInt(m[1] as string, 10) : 2);
+}
+
+function _visible_at_ref(ref: string, relpath: string): boolean {
     const r = spawnSync('git', ['show', `${ref}:${relpath}`], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         timeout: 15000,
     });
     if ((r.status ?? 1) !== 0) {
-        return null;
+        return false;
     }
-    const m = TIER_RE.exec(r.stdout ?? '');
-    return m ? parseInt(m[1] as string, 10) : null;
-}
-
-function _is_visible_tier(tier: number | null): boolean {
-    return VISIBLE_TIERS.has(tier !== null ? tier : 2);
+    return visible_in_frontmatter(r.stdout ?? '');
 }
 
 export function grown_packs(baseline: string, commands: Command[]): Map<string, string[]> {
@@ -967,9 +980,7 @@ export function grown_packs(baseline: string, commands: Command[]): Map<string, 
         }
         if (modified.has(relpath) && !added.has(relpath)) {
             // Modified file: only a *promotion* into visibility grows the surface.
-            // Baseline is historical (pre-ADR-092) so it carries only the tier
-            // alias — the tier proxy is the correct read for the old revision.
-            if (_is_visible_tier(_tier_at_ref(baseline, relpath))) {
+            if (_visible_at_ref(baseline, relpath)) {
                 continue; // was already visible — not a new surface
             }
         }

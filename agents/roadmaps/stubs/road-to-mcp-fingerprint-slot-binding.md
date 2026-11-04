@@ -9,6 +9,11 @@ blocker_opened: 2026-09-07
 
 # Stub: road to binding the MCP tool-fingerprint store to a hook slot
 
+> **Arrivals:** 1 — `inbox-2026-11-q` (2026-11-03): creative-app MCP servers
+> expose code-execution tools whose definitions can change between sessions;
+> the store still has no slot, so a changed tool definition goes unnoticed
+> (`src/scripts/_lib/mcp_tool_fingerprint.ts:10`).
+
 > **Stub — not active work.** Holds the implementation half of one blocker
 > transferred out of
 > [`road-to-scan-that-fails-closed.md`](../road-to-scan-that-fails-closed.md)

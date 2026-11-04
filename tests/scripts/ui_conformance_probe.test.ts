@@ -143,6 +143,54 @@ describe('ui_conformance_probe — Phase 3 state and breakpoint sensitivity', ()
     });
 });
 
+// road-to-design-inputs-and-pages-read-as-they-are 4.1: press feedback lives in
+// transform / box-shadow / opacity / filter, which the probe did not compare.
+describe('ui_conformance_probe — press feedback is visible to the probe', () => {
+    const style = (extra: Record<string, string> = {}): Record<string, string> => ({
+        color: 'rgb(0, 0, 0)',
+        transform: 'none',
+        'box-shadow': 'none',
+        opacity: '1',
+        filter: 'none',
+        ...extra,
+    });
+    const node = (probe_id: string, active: Record<string, string>, base = style()) => ({
+        probe_id,
+        base,
+        hover: base,
+        focus: base,
+        active,
+        keyboard: base,
+        reduced_motion: base,
+        viewports: {},
+        click_effect: null,
+    });
+    const obs = (source: string, nodes: unknown[]) => ({ variant: source, source, nodes }) as never;
+
+    it('a reference whose :active scales and a target whose does not is reported as lost', () => {
+        const ref = obs('ref.html', [node('cta', style({ transform: 'matrix(0.97, 0, 0, 0.97, 0, 0)' }))]);
+        const got = obs('got.html', [node('cta', style())]);
+        const artefact = evaluate(ref, got, []);
+        const lost = artefact.findings.filter((f) => f.dimension === 'interaction' && f.state === 'active');
+        expect(lost).toHaveLength(1);
+        expect(lost[0]!.property).toBe('transform');
+        const press = ['transform', 'box-shadow', 'opacity', 'filter'];
+        expect(artefact.properties_not_available!.filter((p) => press.includes(p.property))).toEqual([]);
+    });
+
+    it('a key missing from an older observation is not_available, never unchanged', () => {
+        const older = { color: 'rgb(0, 0, 0)' };
+        const ref = obs('ref.html', [node('cta', style({ transform: 'matrix(0.97, 0, 0, 0.97, 0, 0)' }))]);
+        const got = obs('got.html', [node('cta', older, older)]);
+        const artefact = evaluate(ref, got, []);
+        expect(artefact.findings.filter((f) => f.property === 'transform')).toEqual([]);
+        expect(artefact.properties_not_available).toEqual(
+            expect.arrayContaining([{ probe_id: 'cta', property: 'transform', side: 'target' }]),
+        );
+        expect(artefact.findings.filter((f) => f.dimension === 'computed_style')).toEqual([]);
+    });
+});
+
 describe('ui_conformance_probe — an empty comparison reports as empty', () => {
     // AC-1 of `road-to-a-probe-that-cannot-report-a-false-green`. Before that
     // roadmap this exact input returned five `exercised` rows with `findings: 0`
@@ -223,6 +271,8 @@ describe('ui_conformance_probe — an empty comparison reports as empty', () => 
                 'generated_at',
                 'host_class',
                 'inputs',
+                // road-to-design-inputs-and-pages-read-as-they-are 4.1: promised there.
+                'properties_not_available',
                 'reference',
                 'reference_nodes',
                 'schema',

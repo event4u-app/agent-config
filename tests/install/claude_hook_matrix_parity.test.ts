@@ -1,5 +1,5 @@
 // Guardrail (road-to-claude-code-single-surface Phase 4): the shipped plugin
-// hooks/hooks.json, the managed settings.json block, and hook_manifest.yaml
+// hooks/hooks.json, the package's own settings.json hook block, and hook_manifest.yaml
 // must describe the SAME hook matrix. Both generators consume
 // build_claude_hook_matrix(), so drift is impossible by construction — this
 // test is the CI backstop that fails loudly if either side regresses to an

@@ -54,6 +54,9 @@ unknown to resolve), or when the user has already fixed the sequence.
    before building anything that depends on it. Record the result in the notes
    file (see [`notes-first-reasoning`](../../rules/notes-first-reasoning.md)):
    prediction → result → lesson.
+   For a game, the load-bearing unknown is one level playable end-to-end on the
+   target device — before content breadth. Say plainly when the ask outsizes
+   what one slice can prove.
 4. **Cascade.** Once the riskiest assumption holds (or is corrected), sequence
    the dependent work. If it fails, the cheap early failure saved the rework.
 
