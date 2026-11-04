@@ -32,6 +32,60 @@
 
 Per-task artifact comparisons with and without agent-config, including the cost of parity: [docs/examples/bench/](examples/bench/index.md).
 
+## Post-repair rerun (2026-11-04) {#post-repair}
+
+> Every number in this section was scored by the repaired scorer (task-validity
+> epoch 2026-10-28). The pre-repair sections below stay as published, with their
+> own label. **No delta is computed between the two**: the scorer, the `package`
+> install and the vanilla baseline all moved, so a subtraction would mix three
+> changes. Owner cap for both sweeps: $100 (OQ-64).
+
+### Weak host (`claude-haiku-4-5`, 2 tasks × 12 seeds) {#post-repair-weak}
+
+Two reports, $22.08 in total at list rates (the runs were subscription-authed).
+
+- **Report A** — `internal/bench/reports/ab-v2/2026-11-04T21-26-13Z-ab-v2-paired.json`,
+  seven arms, 168 runs, $14.77. Its activation audit failed, and the failure
+  was in the harness:
+  - 16 `package` pairs: clones live under the OS temp dir, where the
+    operator's `~/.claude/rules` never loads, so the arm carried the skill
+    listing only (1.2× vanilla tokens). Its `package` arm is superseded by
+    report B. The harness now copies the rules above the plugin clones.
+  - 19 `placebo` pairs: a ~1.7k-token inert surface cannot clear a 1.2×
+    whole-run lift over a baseline whose spread is turn count. Council (both
+    seats) narrowed `placebo` to the text direction, which held on 24/24 runs
+    (`agents/evidence/analysis/council-placebo-lift-audit-2026-11-04.*`).
+  - 1 `rules-balanced` pair at 0.81×, against the longest vanilla run.
+- **Report B** — `internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json`,
+  `vanilla` + `package` with the rules staged, 48 runs, $7.04, audit 0/24.
+
+| arm | loaded content | injected chars | mean tokens/run | cost factor | mean discipline | vs `vanilla` (Wilcoxon) |
+|---|---|---|---|---|---|---|
+| `vanilla` (A) | none | 0 | 130,717 | 1.0× | 0.750 | — |
+| `profile-minimal` (A) | kernel (9 rules) | 29,109 | 274,503 | 2.1× | 0.750 | +0.000, p=1.0 |
+| `rules-kernel-dc` (A) | kernel + `downstream-changes` = `essential` | 36,430 | 377,686 | 2.9× | 1.000 | **+0.261, p=0.036** (6/6 discordant) |
+| `rules-balanced` (A) | kernel + tier 1 | 108,841 | 436,206 | 3.3× | 0.917 | +0.167, p=0.173 |
+| `profile-full` (A) | kernel + tier 1 + tier 2 | 472,044 | 929,122 | 7.1× | 0.625 | −0.125, p=0.353 |
+| `placebo` (A) | inert prose | 6,709 | 147,877 | 1.1× | 0.708 | — |
+| `vanilla` (B) | none | 0 | 152,065 | 1.0× | 0.833 | — |
+| `package` (B) | installed plugin + rules | 0 | 1,186,213 | 7.8× | 0.958 | +0.125, p=0.181 (3/3 discordant) |
+
+Capability stayed at 23–24 of 24 on every arm. Gate verdict on both reports:
+**FALSIFIED-OR-INCONCLUSIVE**.
+
+What the repaired scorer shows on this host:
+
+- **The lift sits in `downstream-changes`.** Adding it to the kernel moves
+  discipline 0.739 → 1.000 on the 23 complete pairs (p=0.036, one run
+  errored); the kernel alone moves nothing.
+- **The full package no longer shows a significant lift.** The direction holds
+  (3 of 3 discordant pairs favour it), but vanilla now scores 0.833, so there
+  is little headroom on these two tasks.
+- **More rules did not help.** `profile-full` loads 7× the tokens and scores
+  below vanilla (not significant).
+- `package` vs `placebo` is not reported: the two arms sit in different
+  reports, and report A's `package` arm is invalid.
+
 ## Weak host (`claude-haiku-4-5`) — Gate verdict: **PASS**
 
 <!-- pinned:weak-stats -->

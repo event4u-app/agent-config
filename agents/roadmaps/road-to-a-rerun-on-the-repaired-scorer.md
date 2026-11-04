@@ -83,9 +83,15 @@ says so.
       $0.061, rules-kernel-dc $0.074, rules-balanced $0.104, package $0.262,
       profile-full $0.267.
       verify: `./scripts-run src/scripts/bench_ab_v2_stats internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json` -> /package lift/
-- [ ] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package
+- [x] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package
       --seeds 3 --model claude-sonnet-4-6 --budget 5 --max-usd 75`, seeds
       lowered only if 2.1's per-run cost projects past the cap.
+      **Done, $52.50 of $75.** Report `2026-11-04T22-57-15Z` (34 tasks, 204
+      runs, 3 seeds, no seed cut). `package` vs `vanilla`, 83 pairs: capability
+      90% → 89% (McNemar p=1.0); discipline 0.958 → 0.916 (Δ −0.042, Wilcoxon
+      p=0.0587); discipline given capability 0.879 → 0.837 (p=0.036). No lift on
+      the strong host; a small, borderline negative. Total spend $74.58 of $100.
+      verify: `./scripts-run src/scripts/bench_ab_v2_stats internal/bench/reports/ab-v2/2026-11-04T22-57-15Z-ab-v2-paired.json` -> /package lift/
 
 ## Phase 3 — Report and residue
 
