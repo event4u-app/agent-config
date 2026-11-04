@@ -94,6 +94,7 @@ import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { unwrap } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
+import { loadConsistencyPass } from './design_consistency_loader.js';
 import { CHUNK_BASENAME, isBundled, loadSvgScan } from './svg_rules_loader.js';
 import { WEB_LAUNCH_CHUNK, loadWebLaunchScan } from './web_launch_rows_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -132,12 +133,12 @@ export interface PassResult {
 }
 
 /** Minimal settings reader — mirrors design_slop_hook rather than adding a parser. */
-export function enabled(root: string, key = 'design_pass'): boolean {
+export function enabled(root: string, key = 'design_pass', fallback = false, field = 'enabled'): boolean {
     let text: string;
     try {
         text = fs.readFileSync(path.join(root, SETTINGS_FILE), 'utf-8');
     } catch {
-        return false;
+        return fallback;
     }
     let inHooks = false;
     let inKey = false;
@@ -156,11 +157,30 @@ export function enabled(root: string, key = 'design_pass'): boolean {
             continue;
         }
         if (inKey) {
-            const m4 = /^ {4}enabled\s*:\s*(\S+)/.exec(line);
+            const m4 = new RegExp(`^ {4}${field}\\s*:\\s*(\\S+)`).exec(line);
             if (m4) return /^(true|yes|on)$/i.test(m4[1]!);
         }
     }
-    return false;
+    return fallback;
+}
+
+/** Raw-control findings for one UI file, from the conditional chunk. */
+export function consistencyFor(root: string, rel: string, load = loadConsistencyPass): Finding[] {
+    try {
+        const run = load();
+        if (!run) return [];
+        const abs = path.resolve(root, rel);
+        return run(root, rel, fs.readFileSync(abs, 'utf-8')).map((n) => ({
+            file: rel,
+            severity: 'P1',
+            catalogId: 'consistency',
+            rule: 'consistency-raw-control',
+            line: n.line,
+            message: n.message,
+        }));
+    } catch {
+        return [];
+    }
 }
 
 /**
@@ -600,6 +620,14 @@ export function targetPath(payload: unknown): string | null {
     return null;
 }
 
+/** The written path relative to the project root; null when absent or outside it. */
+export function writtenPath(root: string, payload: unknown): string | null {
+    const t = targetPath(payload);
+    if (!t) return null;
+    const rel = path.relative(root, path.resolve(root, t)).split(path.sep).join('/');
+    return rel === '' || rel.startsWith('../') || path.isAbsolute(rel) ? null : rel;
+}
+
 export function render(result: PassResult, conformance?: string): string {
     const lines: string[] = [];
     if (result.blocked.length) {
@@ -636,23 +664,38 @@ export function withDegradation(result: PassResult, reason: string): PassResult 
 }
 
 function main(): number {
-    const root = process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
-    if (!enabled(root)) return EXIT_ALLOW;
+    // In-process the dispatcher hands an envelope; a direct run hands the host
+    // payload. Both carry the write in `payload`, and only the envelope the root.
+    const [envelope, payload] = unwrap(readHookStdin(), 'claude');
+    const ws = envelope['workspace_root'];
+    const root = typeof ws === 'string' && ws ? ws : (process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd());
+    // The consistency check ships ON (3.8); the rest of the pass ships OFF.
+    const pass = enabled(root);
+    const consistency = enabled(root, 'design_consistency', true);
+    // Ships recording, not delivering (owner, 2026-11-04): `shadow: false` speaks.
+    const shadow = enabled(root, 'design_consistency', true, 'shadow');
+    if (!pass && !consistency) return EXIT_ALLOW;
 
     const slotArg = process.argv.includes('--slot') ? process.argv[process.argv.indexOf('--slot') + 1] : undefined;
     const slot: PassResult['slot'] = slotArg === 'stop' ? 'stop' : 'post_tool_use';
+    // The manifest binds the post pass without `--slot`; any other slot name is not a write.
+    const post = slotArg === undefined || slotArg === 'post_tool_use';
 
-    // Dispatched in-process, stdin is the dispatcher's envelope with the host
-    // payload under `payload`; a direct run gets the host payload itself.
-    // Unparsable stdin yields {}, which names no target: not a block.
-    const [, payload] = unwrap(readHookStdin(), 'claude');
+    if (!pass) {
+        const t = post ? writtenPath(root, payload) : null;
+        const only = t && isUiSurface(t) ? consistencyFor(root, t) : [];
+        if (!only.length || shadow) return EXIT_ALLOW;
+        const r: PassResult = { slot, findings: only, blocked: [], audit_missing: [], verification: 'verified' };
+        process.stdout.write(`${JSON.stringify({ reason: render(r) })}\n`);
+        return EXIT_WARN;
+    }
 
     const state = readState(root);
     let targets: string[];
     if (slot === 'stop') {
         targets = state.touched;
     } else {
-        const t = targetPath(payload);
+        const t = writtenPath(root, payload);
         if (!t || !isPassSurface(t)) return EXIT_ALLOW;
         targets = [t];
         if (!state.touched.includes(t)) state.touched.push(t);
@@ -683,6 +726,11 @@ function main(): number {
                 const scan = loadSvgScan();
                 if (scan === null) svgRulesUnavailable = true;
                 else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
+            }
+            // One shadow row per write: the stop pass re-reads the same files.
+            if (consistency && post && isUiSurface(rel)) {
+                const c = consistencyFor(root, rel);
+                if (!shadow) findings.push(...c);
             }
             if (WEB_LAUNCH_RE.test(rel)) {
                 // No chunk in a bundled install: the file is reported unchecked,

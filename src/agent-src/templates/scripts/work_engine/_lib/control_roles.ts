@@ -40,7 +40,7 @@ export type ControlRole = (typeof CONTROL_ROLES)[number];
 // `tests/scripts/control_roles_parity.test.ts`. Markup only — prose and
 // identifiers never count.
 const NAME: Record<ControlRole, string> = {
-    select: 'select|selectbox|listbox|native-select',
+    select: 'select|selectbox|listbox|native-?select',
     input: 'input|text-?field|text-?input',
     textarea: 'textarea',
     checkbox: 'checkbox',
@@ -76,9 +76,21 @@ const INPUT_TYPE_ROLE: Record<string, ControlRole> = {
     month: 'date',
     week: 'date',
 };
-const INPUT_TYPES_NOT_A_CONTROL = new Set(['hidden', 'submit', 'button', 'reset', 'image']);
+// `file` is a control, but no role here has a primitive to compare it with.
+const INPUT_TYPES_NOT_A_CONTROL = new Set(['hidden', 'submit', 'button', 'reset', 'image', 'file']);
 
-const TAG_RE = /<([A-Za-z][\w:.-]*)([^<>]*?)\/?>/g;
+// `=>` is consumed whole: a JSX arrow attribute would otherwise end the tag
+// before a later `type="file"` is read.
+const TAG_RE = /<([A-Za-z][\w:.-]*)((?:=>|[^<>])*?)\/?>/g;
+
+/** Comments blanked, not removed: offsets and line numbers hold. */
+function blankComments(text: string): string {
+    const blank = (c: string) => c.replace(/[^\n]/g, ' ');
+    return text
+        .replace(/\/\*[^]*?\*\//g, blank)
+        .replace(/<!--[^]*?-->/g, blank)
+        .replace(/^[ \t]*\/\/.*$/gm, blank);
+}
 
 /** The role of a tag, or null. A component matches on its last name segment. */
 export function roleOfTag(tag: string, attrs: string): ControlRole | null {
@@ -100,14 +112,15 @@ export function roleOfTag(tag: string, attrs: string): ControlRole | null {
         const segment = last.replace(/^(?:x|ui|v|el|n|q|a|b)-/i, '');
         if (new RegExp(`^(?:${NAME[role]})$`, 'i').test(segment)) return role;
     }
-    if (isNative && /\bpopover\b/i.test(attrs)) return 'popover';
+    // Case-sensitive on purpose: `Meta<typeof Popover>` is a type argument.
+    if (isNative && /(?:^|\s)popover(?=[\s=]|$)/.test(attrs)) return 'popover';
     return null;
 }
 
 /** Every control role whose markup occurs in `text`. */
 export function rolesIn(text: string): Set<ControlRole> {
     const found = new Set<ControlRole>();
-    for (const m of text.matchAll(TAG_RE)) {
+    for (const m of blankComments(text).matchAll(TAG_RE)) {
         const role = roleOfTag(m[1]!, m[2] ?? '');
         if (role !== null) found.add(role);
     }
