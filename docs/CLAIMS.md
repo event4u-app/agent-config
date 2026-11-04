@@ -840,11 +840,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
   defect, a CSS comment above a block read as part of its selector.
 
 ### claim: design-consistency-default-on
-- claim: The design-consistency check ships on by default (`hooks.design_consistency.enabled`): a raw select, input or textarea written beside the project's own component is delivered as one advisory line, never a block. In a retroactive shadow window of 1,565 UI writes from two private consumer repositories it fired on 8: 5 on the failure it targets and 3 false positives (0.19 %), meeting all four conditions of the activation policy. Its box-metrics half stays in shadow because the window held no metric comparison at all.
+- claim: The design-consistency check ships on by default (`hooks.design_consistency.enabled`) and records every UI write; with `hooks.design_consistency.shadow: false` a raw select, input or textarea written beside the project's own component is delivered as one advisory line, never a block. Delivery ships off (`shadow: true`) until definitions are read by a parser rather than patterns. In a retroactive shadow window of 1,565 UI writes from two private consumer repositories it fired on 8: 5 on the failure it targets and 3 false positives (0.19 %), meeting all four conditions of the activation policy. Its box-metrics half stays in shadow because the window held no metric comparison at all.
 - kind: quant
 - evidence: internal/bench/corpora/design-consistency-shadow-window.md#The four conditions
 - status: backed
-- last_verified: 2026-10-27
+- last_verified: 2026-11-04
 
   The 0.19 % is in-sample: the six false-alarm classes the first reading
   surfaced were fixed and then measured on the same window. The live recorder

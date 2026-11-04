@@ -102,7 +102,8 @@ The same window, with the six defects fixed, against
 4. **The window is met.** 1,565 observations over six months, against a floor
    of 100 or two weeks, and the targeted shape is in it.
 
-All four hold for **consistency-raw-control**, which ships on.
+All four hold for **consistency-raw-control**, which ships on. It ships
+recording, not delivering: see § Delivery held below.
 
 ## Second reading, 2026-11-03 — after the family boundary
 
@@ -143,6 +144,21 @@ it disabled, and with definition-only families:
   fix also discarded `function Input` beside `import { Input as InputPrimitive }`,
   which silenced every finding in B; the replay caught it, the import clause
   is now read by the names it binds, and both replays are identical again.
+
+## Delivery held, 2026-11-04
+
+Ratification round 18 split. One seat confirmed and named a gap: an `export`
+inside a `namespace` or `declare module` block matches the module-level
+pattern. The other refused: a declaration inside a regex literal
+(`/export const Select/`) is read as code, and pattern repairs keep finding
+the next case. Neither case occurs in either repository, and both replays are
+unchanged. The owner chose (2026-11-04) to ship the check with
+`hooks.design_consistency.shadow: true`: it runs and records every UI write,
+so the live recorder and the reverse trigger work from the first day, and it
+shows nothing until definitions are read by scope-aware syntax analysis. The
+latency stated under condition 3 is paid either way, because recording runs
+the same check. Delivery is the next step of the roadmap, a change of one
+default.
 
 ## What this does not establish
 
@@ -196,8 +212,10 @@ manual control because classifying a firing write as false takes a reading.
   over all UI writes in the window.
 - **Record.** One dated row in the roadmap's Decisions table: window,
   denominator, real, false, rate, outcome.
-- **Rollback.** Above 1 %: set `hooks.design_consistency.shadow` to `true`
-  in `src/config/agent-settings.template.yml` and as the default in
+- **Rollback.** While delivery is held, the shipped default already is the
+  rollback state, and the review classifies the recorded rows the same way.
+  Once delivery is on, above 1 %: set `hooks.design_consistency.shadow` to
+  `true` in `src/config/agent-settings.template.yml` and as the default in
   `src/server/schemas/settings.ts`, in one PR. The rule then keeps running and
   recording on every UI write but delivers nothing, which is the shadow the
   policy returns it to, and the next window is measured the same way. An
