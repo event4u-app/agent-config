@@ -76,21 +76,29 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 
 ## Phase 3 — Credentials in the history expire (OQ-34)
 
-- [ ] **3.1 Placeholders in the history, originals for 7 days.** Owner answer
-      OQ-34 (2026-10-29): chat history stores placeholders for credentials; the
-      original values go to a separate local, untracked store the agent can
-      resolve while it works, and a purge deletes them after 7 days, leaving
-      only the placeholders. Reuse the existing egress rules and placeholder view.
-      verify: `npx vitest run tests/scripts/chat_history_secret_ttl.test.ts` -> 0 —
-      with a fixture where a key is resolvable on day 6 and only its placeholder
-      remains on day 8.
-      Blocked by `b-history-credential-store-vs-egress-contract` (2026-11-04).
+- [ ] **3.1 Placeholders in the history, no original anywhere.** Chat history
+      runs the egress credential rules before it persists a message and stores
+      the placeholder; no credential value is written to the history, a side
+      store, or a log. Existing history files are rewritten the same way on
+      first read. This supersedes OQ-34's (2026-10-29) "originals resolvable for
+      7 days" — decided by the council on the owner's delegation, see blocker
+      `b-history-credential-store-vs-egress-contract` below.
+      verify: `npx vitest run tests/scripts/chat_history_credentials.test.ts` -> 0 —
+      with a fixture where a pasted key reaches the history file only as its
+      placeholder, and a pre-existing plaintext key is replaced on first read.
 
 ## Blockers
 
 ### blocker: b-history-credential-store-vs-egress-contract
 
-- **Status:** open — 2026-11-04.
+- **Status:** resolved — 2026-11-04, option 1. The owner delegated the decision to the AI
+  council ("zu dem blocker, entscheide den im ai council"); both seats (anthropic, openai)
+  returned `VERDICT: option-1`. Prompt:
+  `agents/evidence/council/history-credential-store-blocker-20261104.question.md`; record:
+  `agents/evidence/council/history-credential-store-blocker-20261104.verdict.md`.
+  **Revisit if** a demonstrated workflow needs a credential across sessions and an approved
+  threat model justifies amending the contract; such a design must expire on time, not only on
+  a read or write, since an idle store would otherwise outlive 7 days.
 - **Owner:** owner — the step stores credential values, and the recorded floor says none may be stored.
 - **Blocks:** 3.1.
 - **Conflict:** `docs/contracts/egress-placeholders-v1.md` line 38 defines the `credential`
