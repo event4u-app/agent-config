@@ -1361,13 +1361,13 @@ hooks:
   # box metrics, stays in shadow: its findings are only recorded, never shown.
   # While this is enabled, every UI write adds a row to
   # agents/runtime/state/design-consistency-shadow.jsonl.
-  # Disabled, nothing runs and nothing is recorded. It ships with shadow: true,
-  # recording without delivering, until definitions are read by a parser
-  # rather than patterns (owner, 2026-11-04); shadow: false delivers the
-  # advisory line (internal/bench/corpora/design-consistency-shadow-window.md).
+  # Disabled, nothing runs and nothing is recorded. shadow: true keeps it
+  # recording without delivering; it ships false since definitions are read by
+  # a scope-aware scanner rather than patterns
+  # (internal/bench/corpora/design-consistency-shadow-window.md).
   design_consistency:
     enabled: true
-    shadow: true
+    shadow: false
 
   # PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4).
   # Default-OFF. When enabled, a Write/Edit to a UI surface with no design
@@ -1579,6 +1579,26 @@ security_ops:
 # being updated is your global install, not that project's.
 update:
   mode: notify
+
+# --- Reconstruction: observation providers ---
+#
+# Runtime, browser, binary or device observation tools YOU have configured as
+# MCP servers, which `/analyze:reference --transfer=adapt|rebuild` may call for
+# evidence against obligation-ledger rows
+# (docs/contracts/reconstruction-obligations.md § Observation providers).
+# Nothing is installed by this key and nothing is called while it is empty:
+# the run then records `coverage: unknown` for the runtime half and says so.
+#
+#   observation_providers:
+#     - server: <the MCP server name as your host lists it>
+#       kinds: [runtime, browser, binary, device]   # what it can observe
+#
+# Read from the USER-GLOBAL layer only: which MCP server gets called is your
+# decision, and a repository's own settings file cannot make it.
+#
+# Default: [] (no provider — the reference door behaves as without this key).
+reconstruction:
+  observation_providers: []
 
 # ─── legal-review-prep consent gate ──────────────────────────────────────────
 # The legal-review-prep pack is high-risk (EU/DE legal review-prep, NOT legal

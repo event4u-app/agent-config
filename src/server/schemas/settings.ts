@@ -485,8 +485,8 @@ export const settingsSchema = z.object({
             enabled: z.boolean().default(true).describe(
                 'Control consistency on a UI write (road-to-a-control-that-matches-its-neighbours 3.8). Default on, independent of design_pass. A raw select, input or textarea written where the project already has its own Select, Input or Textarea is recorded, and with shadow false delivered as one advisory line naming the project control; it never blocks. A file that cannot render the component (a server template, a handover prototype) is not measured. Turned on after a retroactive shadow window met all four conditions of the concern-activation policy. The box-metrics half stays in shadow: while this is enabled, every UI write adds a row to agents/runtime/state/design-consistency-shadow.jsonl and nothing is shown. Disabled, nothing runs and nothing is recorded.',
             ),
-            shadow: z.boolean().default(true).describe(
-                'With design_consistency enabled, true keeps the check running and recording to the shadow log but delivers no finding. Default true until definitions are read by a parser rather than patterns (owner, 2026-11-04); false delivers the advisory line. Also the rollback of the activation policy reverse trigger: the rule returns to measurable shadow rather than off.',
+            shadow: z.boolean().default(false).describe(
+                'With design_consistency enabled, true keeps the check running and recording to the shadow log but delivers no finding; false (the default since definitions are read by a scope-aware scanner, road-to-a-control-that-matches-its-neighbours 3.10) delivers the advisory line. Also the rollback of the activation policy reverse trigger: the rule returns to measurable shadow rather than off.',
             ),
         }).prefault({}),
         ui_route_nudge: z.object({
@@ -562,6 +562,14 @@ export const settingsSchema = z.object({
             'What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only — a repository cannot set how your global install updates itself.',
         ),
     }).prefault({ mode: 'notify' }),
+    reconstruction: z.object({
+        observation_providers: z.array(z.object({
+            server: z.string().regex(/^[A-Za-z0-9._-]+$/),
+            kinds: z.array(z.enum(['runtime', 'browser', 'binary', 'device'])).min(1),
+        })).default([]).describe(
+            'Observation tools you have configured as MCP servers (server name plus the evidence kinds it yields: runtime, browser, binary, device) that /analyze:reference --transfer=adapt|rebuild may call for evidence against obligation-ledger rows. Empty (default) = no provider is called and the run records coverage: unknown for the runtime half. Read from the user-global layer only — a repository cannot choose which MCP server is called. Nothing is installed by this key. Which equivalence tiers a provider observation may verify: docs/contracts/reconstruction-obligations.md § Observation providers.',
+        ),
+    }).prefault({ observation_providers: [] }),
     legal_review_prep: z.object({
         acknowledged: z.boolean().default(false).describe(
             'I understand the legal-review-prep pack provides templates and general information ONLY — it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked.',

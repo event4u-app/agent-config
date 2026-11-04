@@ -24,7 +24,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { ARTEFACT_REL, computeUiAudit, gitHead, type UiAuditArtefact } from '../../cli/commands/uiAudit.js';
-import { consistencyFindings, SHADOW_REL, shadowRecord } from '../lint_design_consistency.js';
+import { consistencyFindings, SHADOW_REL, shadowRecord } from './design_consistency_rules.js';
 import { definedComponents, roleOfTag } from './control_roles.js';
 import { isUiPath } from './ui_surface.js';
 
