@@ -52,29 +52,29 @@ unmeasured" has one dated answer. No step spends money.
 
 Evidence (read): `src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts:1255`
 
-- [x] **1.1 `balanced` described as what it loads.** `docs/getting-started.md`,
+- [x] **1.1 `balanced` described as what it loads.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml --> `docs/getting-started.md`,
       `docs/contracts/cost-profile-defaults.md`, the settings schema
       description (and the generated `docs/settings-reference.md`) and both
       settings templates say `balanced` resolves to the `essential` cut
       (kernel + `downstream-changes`) and that the size-cut kernel + tier-1
       variant was retired after a measured null. The ADR that introduced the
       cut stays as recorded.
-      verify: `grep -rnE "balanced = kernel \+ (router \+ )?tier-1|default — kernel \+ tier-1|Kernel \+ tier-1 auto-rules \(workflow" docs src` -> no output
-- [x] **1.2 The NULL arm is labelled retired.** The cost-factor arm label in
+      verify: `grep -rnE "balanced = kernel \+ (router \+ )?tier-1|default — kernel \+ tier-1|Kernel \+ tier-1 auto-rules \(workflow" docs src` -> /^$/
+- [x] **1.2 The NULL arm is labelled retired.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts --> The cost-factor arm label in
       `docs/benchmark.pinned.yml`, its rendered row and the curated finding in
       `docs/benchmark.md`, and the two bench-arm code comments read "retired
       size-cut `balanced`", never "shipped".
-      verify: `grep -rnE "shipped \`balanced\` (router )?profile[)]|the shipped \`balanced\` profile is a null|\(the shipped \`balanced\` profile\)" docs src` -> no output
+      verify: `grep -rnE "shipped \`balanced\` (router )?profile[)]|the shipped \`balanced\` profile is a null|\(the shipped \`balanced\` profile\)" docs src` -> /^$/
 
 ## Phase 2 — Claims that carry their scorer epoch
 
 Evidence (read): `docs/benchmark.md:25-31`
 
-- [x] **2.1 Epoch on the two pre-repair claims.** Both entries gain
+- [x] **2.1 Epoch on the two pre-repair claims.** <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 --> Both entries gain
       `measured_on` naming the ab-v2 scorer before the 2026-10-28 repair, that
       they were not re-scored, and that per-run diffs were not retained.
-      verify: `grep -A6 -E '^### claim: (discipline-lift-weak-host|essential-tier-cost-factor)' docs/CLAIMS.md | grep -c 'measured_on:.*2026-10-28'` -> 2
-- [x] **2.2 The ledger refuses an epoch-less benchmark claim.** `check_claims`
+      verify: `grep -A6 -E '^### claim: (discipline-lift-weak-host|essential-tier-cost-factor)' docs/CLAIMS.md | grep -c 'measured_on:.*2026-10-28'` -> /^2$/
+- [x] **2.2 The ledger refuses an epoch-less benchmark claim.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_claims.ts --> `check_claims`
       reports a `backed` entry whose `evidence` points into `docs/benchmark.md`
       and whose `kind` is `quant` without a `measured_on` naming a scorer.
       verify: `npx vitest run tests/scripts/check_claims_scorer_epoch.test.ts` -> 0, and `./scripts-run src/scripts/check_claims` -> 0
@@ -83,7 +83,7 @@ Evidence (read): `docs/benchmark.md:25-31`
 
 Evidence (executed): `bench_ab_v2_run --mode selftest — record keys carry no diff`
 
-- [x] **3.1 Final post-state in the record.** Every live and selftest ab-v2
+- [x] **3.1 Final post-state in the record.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_scoring_v2.ts --> Every live and selftest ab-v2
       run record carries `final_files` — the post-state of each file the trial
       changed (`null` = deleted), so the pristine fixture plus this map rebuilds
       the clone — capped at 256 KiB with `final_files_truncated`. The
@@ -95,18 +95,18 @@ Evidence (executed): `bench_ab_v2_run --mode selftest — record keys carry no d
 
 Evidence (read): `src/scripts/_lib/bench_task_validity.ts:29-30`
 
-- [x] **4.1 `verifier-delete` arm.** Deleting every verifier file the task
+- [x] **4.1 `verifier-delete` arm.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_task_validity.ts --> Deleting every verifier file the task
       names must not pass a capability oracle.
-      verify: `./scripts-run src/scripts/check_bench_task_validity --gate` -> 0 with a `verifier-delete` column at 0 passes
+      verify: `./scripts-run src/scripts/check_bench_task_validity --gate` -> 0
 
 ## Phase 5 — What is still unmeasured
 
 Evidence (read): `docs/benchmark.md:994`
 
-- [x] **5.1 Dated coverage table.** The source's sixteen capability families
+- [x] **5.1 Dated coverage table.** <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 --> The source's sixteen capability families
       each get one row: owning roadmap, newest measurement, status from
       `measured-live | pilot | built-not-run | not-measured`.
-      verify: `grep -cE '^\| M[0-9]{2} ' agents/evidence/analysis/benchmark-coverage-2026-11-04.md` -> 16
+      verify: `grep -cE '^\| M[0-9]{2} ' agents/evidence/analysis/benchmark-coverage-2026-11-04.md` -> /^16$/
 
 ## Acceptance
 
