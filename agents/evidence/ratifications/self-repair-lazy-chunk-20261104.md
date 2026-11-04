@@ -2,7 +2,7 @@
 proposed_by: road-to-a-noted-that-is-a-write (roadmap:next run)
 implemented_by: claude-opus-5.5 session on feat/road-to-a-noted-that-is-a-write
 reviewed_by: ai-council
-subject: 16159a21425e8d4465c2221005282faff79eea1de59fe1c66081dc1ed04e9b1a
+subject: 96ad8e7b07228ee3832db79d967ba5d8148d20414a5df4b27252b60c92b2a58a
 providers: [anthropic, openai]
 verdict: confirmed-non-expanding
 seats:
@@ -15,9 +15,9 @@ effective_after: merge
 
 # Modification review
 
-self-repair concern moved into a lazy chunk; chunk ceiling 61,600 B; max_bytes unchanged
+Registers the self-repair concern as a lazy hook chunk (55,991 B under a 61,600 B ceiling) with its derivation; round 13 reviewed the text that answers the round-12 refusal's three documentation gaps.
 
-Verdict `confirmed-non-expanding`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/self-repair-lazy-chunk-ratification-r10-20261104.question.md`, committed at `fccd65c8e910dd085f8b5e77fb8726106e391578` and naming this record's subject.
+Verdict `confirmed-non-expanding`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/self-repair-lazy-chunk-ratification-r13-20261104.question.md`, committed at `9a6e4ccadf4d48d1a6874f5a4604e1e96cea20ce` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
@@ -26,40 +26,25 @@ What this record does not establish: that a council produced the session it was 
 ### anthropic — `confirmed-non-expanding`
 
 ```text
-Matze, reviewing this `self-repair` lazy-chunk change as an independent critic:
+Matze, reviewing the round-13 derivation independently.
 
-## Findings
+## Assessment: Confirmed non-expanding
 
-**Scope analysis:**
-- The concern code itself is untouched; only the loading mechanism changes (inline → lazy with spawn fallback)
-- Execution triggers unchanged: `user_prompt_submit` and `stop`, `fail_closed: false`
-- Write scope explicitly bounded: `agents/runtime/self-repair/` only
-- The derivation claims "the chunk no longer reads anything outside the project" after removing the auto-memory reader, yet it also states the telemetry shadow "reads the settings layers" via `yaml`. This is a **documentation ambiguity** — settings typically live in `~/.claude/`, not the project. I interpret "no longer reads anything outside" to mean "no longer reads *auto-memory* outside", since settings-read is standard for telemetry concerns and `yaml` is already external for other chunks.
+**Core finding:** This change moves an existing concern to a lazy-loading mechanism for dispatch bundle headroom. The behavior is identical on both paths (tested), `fail_closed: false` remains unchanged, and the chunk doesn't gain authority - it's a performance optimization.
 
-**Budget discipline:**
-- Measured 55,991 B, ceiling 61,600 B (10% margin, consistent with `quota_notice`/`intake_pass` rows)
-- Dispatch bundle freed 24,693 B (1,581,986 → 1,557,293 B), staying under 1,582,000 B ceiling
-- The math checks out; the WHY-IT-WAS-MOVED rationale is clear (dispatch near ceiling, council-approved strategy)
+**Strongest argument FOR ratification:**
+The three gaps from round 12 are now closed:
+1. Roadmap is fully specified (`agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md`)
+2. Telemetry shadow is defined (structural-fields-only copy via `emitDefectShadow`, inert unless org telemetry pack activates)
+3. Failure visibility is documented (exit code written to `agents/runtime/state/.dispatcher/<session>/self-repair.json`)
 
-**Test coverage:**
-The description claims chunked and spawned paths produce identical records, and generic fallback tests pass. I don't see the test diff here, so I'm trusting the assertion. If the tests lie, this review is invalid.
+The derivation also states the margin "approves no planned code" and that `tests/hooks/self_repair_lazy_paths.test.ts` pins that loader and spawn fallback produce identical records. The move is operationally transparent: same inputs, outputs, and failure modes as before.
 
-**Red flags:**
-- ❌ New read paths? No (actually removed auto-memory)
-- ❌ New write paths? No (same runtime dir)
-- ❌ Expanded triggers? No
-- ❌ Changed fail-closed? No (stays false)
-- ❌ New external services? No (`yaml` for local settings)
+**Strongest counter-argument the developer should consider:**
+The chunk is large (55,991 B, 90.9% of ceiling) and carries a 10% margin that could mask creep. However, the derivation explicitly addresses this: "A later addition to the chunk is measured and reviewed on its own change." That commitment makes the margin a measurement artifact rather than pre-approval for expansion.
 
-**What's missing:**
-The derivation mentions "four detectors including persistence-claim" but doesn't name the other three. However, since this is a *move* not a *change*, those detectors already exist. Not a blocker, but opaque.
-
-**Authority expansion check:**
-Moving existing code from inline to lazy-loaded does not expand what the concern can do. The fallback to spawning on chunk corruption is a *safety feature*, not a risk. The external `yaml` dependency is standard for settings access.
-
-## Verdict
-
-This is a **non-expanding refactoring** with proper budget discipline and test-verified equivalence. The one documentation flaw (ambiguous phrasing about reading "outside the project" when settings are read) doesn't change the substance: the scope actually *shrank* by removing auto-memory access.
+**Concrete next step:**
+Ratify. The move is authority-neutral, the sizing is justified with measured headroom, and the three gaps from round 12 are now documented. The fallback equivalence test ensures the lazy loading doesn't silently change behavior.
 
 STANCE: confirmed-non-expanding | CONFIDENCE: high | DEALBREAKER: no
 ```
@@ -67,14 +52,13 @@ STANCE: confirmed-non-expanding | CONFIDENCE: high | DEALBREAKER: no
 ### openai — `confirmed-non-expanding`
 
 ```text
-The supplied diff is **non-authority-expanding**: it changes how an existing concern loads, without changing its event bindings, permissions, write scope, or failure policy.
+1. **Assessment: agree, narrowly.** The displayed budget-row addition appears non-authority-expanding and suitable to land. It registers an existing concern as a measured lazy chunk; it grants no evident new triggers, write targets, or telemetry permissions. This verdict covers the supplied diff, not independent verification of the three undisplayed implementation files.
 
-- **Correctness / reuse:** `concern_registry.ts` removes the eager registration, while `lazy_concern.ts` and `hook_chunks.mjs` add matching lazy registration and chunk output. This composes the existing mechanism without introducing an unnecessary abstraction.
-- **Shipping risk:** externalizing `yaml` makes installed-package resolution relevant. The reported package-layout fallback and record-equivalence tests provide useful coverage, although their implementation and results are not independently verifiable from this diff.
-- **Low severity — documentation:** the new budget row’s `derivation` reserves growth for a future host-memory reader, despite the scope statement excluding that reader. Byte headroom does not authorize future reads, but this wording could encourage a tired reviewer to treat that work as preapproved. Its fallback-test description also understates the concern-specific tests now reported.
-- **Security:** no new injection surface or authorization expansion is visible in these four changes. This conclusion covers the loading move, not detector changes absent from the supplied diff.
+2. **Strongest argument:** The `derivation` makes the move accountable: it records the measured size, explains the dispatch-bundle reduction, sets a bounded ceiling, and identifies fallback behavior. Its statement that “the margin approves no planned code” explicitly separates size headroom from approval for future functionality.
 
-**APPROVE** — the move is coherent and narrowly scoped; the highest-leverage improvement before merge is to update the derivation to describe only current behavior and current test evidence.
+3. **Strongest counter-argument:** A detailed explanation cannot establish implementation equivalence. The cited test covers record parity and one missing-chunk fallback, but the supplied evidence does not demonstrate parity for digest mismatch, telemetry behavior, or concern failures. An exit-code file establishes observability, not that anyone notices or acts on failures.
+
+4. **Concrete next steps:** Land the row once the gated revision’s composition and cited parity tests pass. Verify that the three implementation files preserve existing triggers, write scope, telemetry activation, and failure policy. Treat those as implementation checks; the revised derivation adequately answers the three stated documentation gaps.
 
 STANCE: confirmed-non-expanding | CONFIDENCE: medium | DEALBREAKER: no
 ```
