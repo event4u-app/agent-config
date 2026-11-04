@@ -408,6 +408,8 @@ export function writeTargetIndex(root: string): TargetCount[] {
 // are three fingerprints with one occurrence each, and only the subject says
 // they are one recurring correction. Derived and deterministic, like the
 // target index, and regenerated wholesale on every write.
+// cache-invalidation: rebuilt from scratch by `writeSubjectIndex` on every write,
+// deterministic, never read back as input — same reasoning as TARGET_INDEX_FILE.
 export const SUBJECT_INDEX_FILE = '_subject-index.json';
 
 export interface SubjectCount {
