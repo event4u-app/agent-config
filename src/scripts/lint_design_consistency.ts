@@ -37,7 +37,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { asOf } from './_lib/as_of.js';
-import { boxMetricsFromClasses, occurrences, type ControlRole } from './_lib/control_roles.js';
 import {
     consistencyFindings,
     SHADOW_REL,
