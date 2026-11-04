@@ -68,15 +68,15 @@ at the pin.
 
 ## Phase 0 — Reproduce
 
-- [x] **0.1 Evidence of the single account.** A fixture spawn through the same
+- [x] **0.1 Evidence of the single account.** A fixture spawn through the same <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       env path as `clients.ts:1322` with a stub `codex` that prints
       `$CODEX_HOME`; parent env without `CODEX_HOME`.
       verify: the stub reports an empty `CODEX_HOME` (default login) — the
-      failure this roadmap removes, red before Phase 1. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      failure this roadmap removes, red before Phase 1.
 
 ## Phase 1 — Resolve the account per spawn
 
-- [x] **1.1 A resolver seam.** `src/scripts/_lib/agent_switch_account.ts`:
+- [x] **1.1 A resolver seam.** `src/scripts/_lib/agent_switch_account.ts`: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       `resolveSeatHome(vendor, {exclude, cwd})` → `{envVar, dir, profile} | null`.
       Calls `agent-switch dir --provider <codex|claude> --json` (5 s timeout),
       returns null when the binary is missing, the call fails, the JSON has no
@@ -84,62 +84,62 @@ at the pin.
       rule cannot be served) is surfaced as a seat error naming the rule, never
       silently replaced by the default login.
       verify: unit tests with an injected runner — missing binary → null;
-      `{configDir}` → env var set; exit 86 → typed refusal; malformed JSON → null. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
-- [x] **1.2 Wire it into the CLI seat spawn.** In the builder that produces the
+      `{configDir}` → env var set; exit 86 → typed refusal; malformed JSON → null.
+- [x] **1.2 Wire it into the CLI seat spawn.** In the builder that produces the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       spawn env (`clients.ts` ~1322), add `{[envVar]: dir}` to the
       `hardenedSpawnEnv` overrides when the resolver returns one. An env var the
       **user** set explicitly for the seat in `.ai-council.yml` wins over the
       resolver (owner config beats balancing). Same for the `claude` CLI seat
       (`CLAUDE_CONFIG_DIR`).
       verify: the Phase 0 fixture now reports the resolved dir; with the
-      resolver returning null it still reports the inherited value. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
-- [x] **1.3 Record which account served.** The seat's journal / events-log row
+      resolver returning null it still reports the inherited value.
+- [x] **1.3 Record which account served.** The seat's journal / events-log row <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       carries `account: "codex/<name>"` (profile name only — never a path
       component beyond it, never a token). Absent when unresolved.
       verify: an events-log fixture shows the field; a privacy test asserts no
-      `configDir` path is written. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
-- [x] **1.4 Folder rules — decide, then implement.** Default: respect them
+      `configDir` path is written.
+- [x] **1.4 Folder rules — decide, then implement.** Default: respect them <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       (call `dir` from the project cwd, no `--plain`) — a project pinned to a
       work account must not spill council traffic onto a private one. Offer
       `council.agent_switch: rules | balance | off` (class A, default `rules`).
       verify: a unit test shows the resolver called with --plain under the balance
-      value and not called at all under off. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+      value and not called at all under off.
 
 ## Phase 2 — Move on when a seat hits a limit
 
-- [x] **2.1 Classify the limit error.** Codex `usage_limit_reached` / HTTP 429
+- [x] **2.1 Classify the limit error.** Codex `usage_limit_reached` / HTTP 429 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       in the `--json` event stream, Claude "usage limit reached" — one typed
       `SeatLimitReached` with the profile that served.
       verify: fixtures of both vendors' real error lines classify; an ordinary
-      failure does not. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
-- [x] **2.2 One retry on another account.** On `SeatLimitReached` with a
+      failure does not.
+- [x] **2.2 One retry on another account.** On `SeatLimitReached` with a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       resolved profile, re-resolve with `--exclude <that profile>` (needs the
       agent-switch release that ships `--exclude`; older versions → no retry,
       reported as such) and re-run the seat once. Bounded: one retry per seat
       per round, never a loop.
       verify: a fake runner that limits on account A and succeeds on B yields
       B's answer and two journal rows; when no other account exists the seat
-      fails with the original limit error. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+      fails with the original limit error.
 
 ## Phase 3 — Spread parallel seats
 
-- [x] **3.1 Exclude accounts already serving this round.** When a round spawns
+- [x] **3.1 Exclude accounts already serving this round.** When a round spawns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       several seats of one vendor, pass the profiles already assigned in this
       round as `--exclude`, so they spread while free accounts exist; once none
       is left, fall back to the unexcluded pick (share, never fail).
       verify: two Codex seats with two accounts land on two accounts; three
-      seats with two accounts land on both, the third shared. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
+      seats with two accounts land on both, the third shared.
 
 ## Phase 4 — Say it out loud
 
-- [x] **4.1 `council:status` names the account source.** One line per CLI
+- [x] **4.1 `council:status` names the account source.** One line per CLI <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
       vendor: "codex seats: agent-switch (2 accounts)" / "default login
       (agent-switch not found)".
-      verify: status snapshot for both cases. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/agent_switch_account.ts -->
-- [x] **4.2 Docs.** The council doc states that CLI seats follow agent-switch's
+      verify: status snapshot for both cases.
+- [x] **4.2 Docs.** The council doc states that CLI seats follow agent-switch's <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       pick when it is installed, how folder rules apply, and the retry rule.
       verify: the doc names `dir --json`, the `council.agent_switch` key and the
-      one-retry bound. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      one-retry bound.
 
 ## Decisions
 
