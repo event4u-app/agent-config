@@ -42,6 +42,19 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 20.0.0 — two skills are renamed
+
+✋ manual only if you invoke either skill by name.
+
+`mcp` is now `mcp-tool-use`, and `code-review` is now `code-review-lens`
+(`7690bd9`). The skills' content is unchanged; only the name a host lists and
+a prompt invokes moved.
+
+- **You never name either skill:** nothing to do.
+- **You invoke one by name** (a prompt, a slash command, an override under
+  `agents/overrides/`, a script): replace `mcp` with `mcp-tool-use` and
+  `code-review` with `code-review-lens`.
+
 ## 19.0.0 — a leftover `projection.rule_packs` no longer decides
 
 ✋ manual only if you still carry the key.
