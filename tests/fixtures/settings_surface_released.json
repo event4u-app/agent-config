@@ -1,5 +1,5 @@
 {
-  "version": "20.0.0",
+  "version": "20.1.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -331,6 +331,14 @@
     "hooks.concern_budget.tier1_concerns": {
       "type": "array",
       "default": []
+    },
+    "hooks.design_consistency.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "hooks.design_consistency.shadow": {
+      "type": "boolean",
+      "default": true
     },
     "hooks.design_pass.enabled": {
       "type": "boolean",
