@@ -34,6 +34,7 @@
  * (`{platform, event, payload, workspace_root, …}`).
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -154,6 +155,19 @@ export function consume_handoff_context(root: string, now: Date = new Date()): C
 }
 
 /**
+ * How the continuity record reaches the successor: the whole body, or a pointer
+ * to the consumed file plus a digest (road-to-a-fill-the-session-sees-coming
+ * 2.2). `/clear` gets the pointer — the user cleared to get a small context
+ * back, and the body re-injected would undo part of that; the consumed file
+ * stays on disk at the pointer. Every other injecting source keeps the body.
+ */
+export type RecordDelivery = 'body' | 'pointer';
+
+export function recordDelivery(source: string): RecordDelivery {
+    return source.trim() === 'clear' ? 'pointer' : 'body';
+}
+
+/**
  * Consume the one-shot RECYCLE ENVELOPE (road-to-token-economy-recycling
  * Phase 2.3) — the main-session sibling of the handoff file above, same
  * lifecycle discipline, stricter validation:
@@ -185,6 +199,7 @@ export function consume_recycle_envelope(
     root: string,
     now: Date = new Date(),
     session_id: string | null | undefined = undefined,
+    delivery: RecordDelivery = 'body',
 ): ConsumeDecision {
     // Phase 2.1: which record belongs to THIS session is a resolution, not a
     // path constant. `resolveContinuityRecord` returns `null` with a reason
@@ -215,12 +230,10 @@ export function consume_recycle_envelope(
         return { action: 'absent', reason: 'no recycle envelope' };
     }
 
+    const consumedPath = path.join(path.dirname(target), path.basename(recycle_consumed_rel(sessionId)));
     const consume = (): void => {
         try {
-            fs.renameSync(
-                target,
-                path.join(path.dirname(target), path.basename(recycle_consumed_rel(sessionId))),
-            );
+            fs.renameSync(target, consumedPath);
         } catch {
             try {
                 fs.unlinkSync(target); // fallback — never let it survive
@@ -320,8 +333,21 @@ export function consume_recycle_envelope(
     // notice — surfaced, never executed, never silently stripped.
     const warnings = scanEnvelopeDirectives(envelope);
     const focus = (process.env.AGENT_RESUME_FOCUS ?? '').trim();
-    const block = wrapAsPriorSessionData(JSON.stringify(envelope, null, 2), {
-        kind: 'recycle-envelope',
+    const remaining = Array.isArray(envelope['remaining']) ? envelope['remaining'] : [];
+    const payload =
+        delivery === 'pointer'
+            ? {
+                  pointer: path.relative(root, consumedPath) || path.basename(consumedPath),
+                  summary: envelope['summary'],
+                  task: envelope['task'],
+                  next: remaining[0] ?? null,
+                  remaining_count: remaining.length,
+                  sha256: createHash('sha256').update(text).digest('hex').slice(0, 12),
+                  read: 'Read the pointer for the full record before acting on anything it would carry.',
+              }
+            : envelope;
+    const block = wrapAsPriorSessionData(JSON.stringify(payload, null, 2), {
+        kind: delivery === 'pointer' ? 'recycle-envelope-pointer' : 'recycle-envelope',
         source: path.relative(root, target) || path.basename(target),
         warnings: [
             ...drift,
@@ -355,7 +381,8 @@ export function consume_recycle_envelope(
  *
  *   - `startup` (and an ABSENT source) — a fresh session. Both gates inject:
  *     this is the ordinary case and the one every existing fixture exercises.
- *   - `clear` — the operator wrote the record and cleared. Both gates inject.
+ *   - `clear` — the operator wrote the record and cleared. Both gates inject,
+ *     the record as a pointer and digest ({@link recordDelivery}), not its body.
  *     This is the recycle path the record was built for, and suppressing it
  *     would defeat the mechanism. Note that hot-context DISCARDS on the same
  *     source, and the two are right for opposite reasons: hot-context is a
@@ -521,6 +548,7 @@ export function main(): number {
                       root,
                       new Date(),
                       String(envelope['session_id'] ?? '').trim() || env_session_id(),
+                      recordDelivery(source),
                   )
                 : { action: 'absent', reason: recycleGate.reason };
             const blocks: string[] = [];
