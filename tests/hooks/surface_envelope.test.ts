@@ -62,12 +62,19 @@ describe('hooks:status is untouched by the surface field', () => {
         // Code merges `~/.claude/settings.json` with the project file, so that
         // host's status needs both scopes and the runtime the hooks reach. It is
         // a reading of the settings files, not a surface claim.
+        //
+        // `fill_warning` / `cache_notice` are the fourth (road-to-a-fill-the-
+        // session-sees-coming 1.2), on every non-fallback row: whether
+        // `quota-notice` is bound there and whether the status-line tap feeds it.
+        // A reading of the manifest and Claude's settings, not a surface claim.
         const base = [
             'ask',
             'bindings',
             'blocking_enforcement',
             'bridge_path',
+            'cache_notice',
             'fallback_only',
+            'fill_warning',
             'hint',
             'platform',
             'status',

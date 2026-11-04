@@ -52,6 +52,14 @@ describe('synthetic arms — every arm on one task', () => {
         });
     }
 
+    it('verifier-delete: removing every verifier the task names cannot pass', () => {
+        expect(ALL_ARMS).toContain('verifier-delete');
+        const task = byId('capH-debug-01');
+        const r = scoreArm(task, fixtureRootFor(task) as string, 'verifier-delete');
+        expect(r.applicable).toBe(true);
+        expect(r.capability_pass).toBe(false);
+    });
+
     it('is sensitive: the pre-repair oracle of trapA-overeng-01 passes touch and regex-comment', () => {
         const task = structuredClone(byId('trapA-overeng-01'));
         (task['capability_oracle'] as Record<string, unknown>)['regex_in_target'] = 'start \\+ pageSize\\b(?! *- *1)';

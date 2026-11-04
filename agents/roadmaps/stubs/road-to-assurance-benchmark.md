@@ -10,7 +10,17 @@ review_by: 2026-09-25
 > underpowered, direction favouring this package at ~13x the neighbour's tokens.
 > A sixth arrival meets that number and the cheap confirmation run it proposes.
 >
-> **Arrivals:** 5 (at least) - latest `inbox-2026-10-au` (2026-10-25): a third
+> **Arrivals:** 6 (at least) - latest `inbox-2026-11-bn` (2026-11-04): an
+> owner-commissioned review rates the package's independently shown effect 5/10
+> and asks for the powered real-world comparison — vanilla, a short instruction
+> file, installed `minimal`/`essential`/`full`, a length-matched placebo and a
+> neighbour at matched hooks and permissions, verified resolution (fail-to-pass
+> plus pass-to-pass on a pristine replay) as the primary endpoint, cost per
+> verified success beside it, no weighted score. Folded here, no new file. The
+> sixth arrival meets the S4 pilot number this header anticipated; what blocks
+> the confirmation is unchanged — an owner dollar cap, now asked together with
+> `road-to-a-rerun-on-the-repaired-scorer`.
+> The count before it read: 5 (at least) - latest `inbox-2026-10-au` (2026-10-25): a third
 > comparison against deny group S4 closes on "no winner until a shared benchmark
 > runs" and plans its head-to-head KPIs on this stub; put to the owner as OQ-17, who chose a capped pilot (`road-to-a-pilot-benchmark-against-s4`).
 > The count before it read: 4 (at least) - latest `inbox-2026-10-t` (2026-10-16): two parallel

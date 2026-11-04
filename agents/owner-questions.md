@@ -133,6 +133,22 @@ and the run that applies it links its PR.
   later change must ratify, so it is yours to accept.
 - **Blocks:** nothing executable.
 
+### OQ-64 — A dollar cap for the post-repair rerun and the powered comparison?
+
+- **Context:** round `inbox-2026-11-bn`. Every published ab-v2 headline was
+  scored before the 2026-10-28 oracle repair; the reports keep no per-run diff,
+  so only a new paid run gives a post-repair number. The real-world comparison
+  (vanilla, short instruction file, installed profiles, neighbour) is the
+  sixth arrival on `road-to-assurance-benchmark`. Earlier grants ($150 S4,
+  $250 bench) do not carry over.
+- **Options:** (a) one cap for both — rerun first, comparison second; (b) a cap
+  for the rerun only; (c) no spend now, offline work only.
+- **Recommendation:** (b) — the rerun re-measures what is already public, is
+  bounded by the original arm/seed counts, and its residue decides whether the
+  comparison is worth funding.
+- **Blocks:** `stubs/road-to-a-rerun-on-the-repaired-scorer`,
+  `stubs/road-to-assurance-benchmark` (confirmation run).
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its

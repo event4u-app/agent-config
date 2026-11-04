@@ -48,6 +48,7 @@ import {
 import { asOf, localIsoDate } from './_lib/as_of.js';
 import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
 import { staleVerifiedVerdict } from './_lib/claims_stale_verified.js';
+import { scorer_epoch_findings } from './_lib/claims_scorer_epoch.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { WITNESS_MARKER, settleSiteFindings, siteScannedLine, siteWitnessSurfaces } from './_lib/claims_site_sweep.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
@@ -834,6 +835,8 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
 
+    findings.push(...scorer_epoch_findings(ledger));
+
     // 2d. `retires_phrasings` — shape. A retirement that names no wording
     //     forbids no wording, and a wording too short to be specific forbids
     //     half the tree. Both are findings at any count; the COVERAGE question
@@ -1246,7 +1249,7 @@ function selfTest(): number {
     // a missing one fails as a module resolution error in EVERY case at once —
     // which reads as the detection having broken rather than the fixture being
     // incomplete.
-    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts'];
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts', 'as_of.ts', 'dispatch_policy.ts', 'claims_site_sweep.ts', 'claims_stale_verified.ts', 'claims_scorer_epoch.ts'];
 
     const fixture = (files: Record<string, string>): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));

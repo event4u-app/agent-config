@@ -174,7 +174,10 @@ Set your profile in `.agent-settings.yml`:
 rule_loading_tier: balanced
 ```
 
-`balanced` is the default — kernel + tier-1 auto-rules. Rationale:
+`balanced` is the default. It resolves to the `essential` discipline tier —
+the kernel plus `downstream-changes`, the cut that carried the measured lift —
+unless `discipline_profile` is set, which wins. The older kernel + tier-1 cut
+was retired on 2026-07-07 after a measured null. Rationale:
 [`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md).
 You can override any individual setting. See [Customization](customization.md) for details.
 

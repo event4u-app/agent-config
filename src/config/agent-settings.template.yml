@@ -116,7 +116,8 @@ discipline_profile: __DISCIPLINE_PROFILE__
 #
 # minimal  = kernel only (always-loaded Iron-Law floor, ≤ 26k chars).
 #            No router, no auto-rules. Lowest token footprint.
-# balanced = kernel + tier-1 auto-rules (default — current behaviour superset).
+# balanced = the essential tier: kernel + downstream-changes (default). The
+#            kernel + tier-1 size cut was retired 2026-07-07 after a measured null.
 # full     = kernel + tier-1 + tier-2 (everything, highest token cost).
 # custom   = ignore profile — every matrix value must be set explicitly.
 rule_loading_tier: __RULE_LOADING_TIER__

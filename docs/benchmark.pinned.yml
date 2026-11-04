@@ -21,7 +21,7 @@ sections:
       - id: vanilla
         label: none
       - id: rules-balanced
-        label: kernel + tier 1 (shipped `balanced` profile)
+        label: kernel + tier 1 (retired size-cut `balanced`, 2026-07-07)
       - id: rules-kernel-dc
         label: kernel (9 rules) + `downstream-changes`
       - id: package

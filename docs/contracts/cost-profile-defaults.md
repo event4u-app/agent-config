@@ -28,7 +28,7 @@ unless the user passes `--profile=minimal` or `--profile=full`.
 | Profile | Contents | Token footprint | Use when |
 |---|---|---|---|
 | `minimal` | Kernel only (9 always-loaded Iron-Law rules, ≤ 26 k chars) | Lowest | Token-constrained agents (small context windows, free-tier models) or projects that opt out of routing |
-| **`balanced`** *(default)* | Kernel + tier-1 auto-rules (workflow + safety floor) | Medium | Every productized install — the documented "current behaviour superset" |
+| **`balanced`** *(default)* | Resolves to the `essential` tier: kernel + `downstream-changes` (`resolve_discipline_profile`; an explicit `discipline_profile` wins). The kernel + tier-1 size cut this row used to name was retired 2026-07-07 after a measured null (`docs/benchmark.md` § Cost-factor sweep) | Medium | Every productized install — the documented "current behaviour superset" |
 | `full` | Kernel + tier-1 + tier-2 (every rule, every guideline-cited skill) | Highest | Teams running large-context models (Opus 4, GPT-5) that want maximum guardrail coverage |
 | `custom` | Ignore profile; every matrix value set explicitly | Variable | Power users tuning per-rule load decisions |
 

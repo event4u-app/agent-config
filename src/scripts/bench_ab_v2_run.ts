@@ -149,7 +149,7 @@ export function hardened_blocks_text(): string {
  * `dist/agent-src/rules/` — deterministic per checkout, so the injected text is
  * exactly what the shipped profiles would always-load:
  * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
- * - 'rules-balanced'   → kernel + tier_1 (the shipped `balanced` profile).
+ * - 'rules-balanced'   → kernel + tier_1 (the size-cut `balanced` profile, retired 2026-07-07).
  */
 export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
     const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
@@ -573,7 +573,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // Delta #7 — where this trial's evidence lives. Recorded on the trial
         // rather than recomputed later, so an offline re-scorer reads the path the
         // sweep actually used instead of re-deriving a key that may have changed.
-        workspace: clone,
+        ...scoring.workspace_fields(fixture, clone),
         transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
@@ -688,7 +688,7 @@ export function selftest_run(
         discipline_pass: score.discipline_pass,
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
-        workspace: clone,
+        ...scoring.workspace_fields(fixture, clone),
         // No transcript_path — a synthetic transcript would give T5 a score of the harness.
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
