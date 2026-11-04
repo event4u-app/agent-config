@@ -161,7 +161,7 @@
         "laravel-validation": 3325,
         "laravel-websocket": 2519,
         "launch-readiness": 9752,
-        "learning-to-rule-or-skill": 16477,
+        "learning-to-rule-or-skill": 16654,
         "learning-tutor": 10027,
         "legal-intake-triage": 7476,
         "legal-practice-profile": 12921,
@@ -893,6 +893,12 @@
             "old": 16325,
             "new": 16477,
             "reason": "A config / check rung above Rule: a consumer convention that keeps not arriving is proposed as a project config diff, the strongest carrier, before any prose rule. road-to-a-correction-that-is-heard 2.3."
+        },
+        {
+            "skill": "learning-to-rule-or-skill",
+            "old": 16477,
+            "new": 16654,
+            "reason": "A landed commit as a learning source: one decision hint plus one trigger keyword (road-to-lessons-from-landed-commits 1.1/1.2). The planned standalone section would have added ~1,300 bytes and tripped skill_too_large, so it was compressed to a single hint first."
         },
         {
             "skill": "standards-from-config",
