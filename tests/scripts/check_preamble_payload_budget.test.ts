@@ -299,6 +299,10 @@ describe('the gate reds on growth past whichever ceiling applies', () => {
         // A live grant nobody verified buys nothing, so the same run without the
         // verification is red. With no live grant the two runs are the same.
         expect(main([])).toBe(LIVE_GRANTS.length > 0 ? 1 : 0);
+        // `task check-preamble-payload` passes --verify-approvals, which reads
+        // the same fact from git history the workflow reads. It must reach the
+        // workflow's verdict: green, with no --approved handed in.
+        expect(main(['--verify-approvals'])).toBe(0);
     });
 
     it('an UNESTABLISHED ceiling does not become an over-budget verdict', () => {

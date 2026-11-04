@@ -75,6 +75,7 @@ import { attributeGrowth, buildLedger, renderAttribution } from './_lib/asset_de
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { extractSurfacesAtRef, measurePayloadAtRef } from './_lib/base_ref_payload.js';
 import {
+    approvalsAtBase,
     type CeilingReading,
     computeCeiling,
     EXCEPTIONS_CONFIG_PATH,
@@ -431,6 +432,13 @@ export interface DecideOptions {
      * access can populate this, which is why it is not read from the tree.
      */
     verifiedApprovals?: readonly string[];
+    /**
+     * Verify approvals from git history instead of trusting `verifiedApprovals`
+     * alone: an active grant counts when every owner-directive file it cites
+     * exists at the merge-base of HEAD and the base ref. The local twin of the
+     * workflow's "Verify exception approvals" step (`--verify-approvals`).
+     */
+    verifyApprovalsAtBase?: boolean;
 }
 
 /**
@@ -477,6 +485,17 @@ export function decide(opts: DecideOptions = {}): Decision {
 
     const exceptionsFile = path.join(repoRoot, EXCEPTIONS_CONFIG_PATH);
     const ex = readExceptions(exceptionsFile);
+    const today = opts.today ?? asOf().toISOString().slice(0, 10);
+
+    const verifiedApprovals = [...(opts.verifiedApprovals ?? [])];
+    if (opts.verifyApprovalsAtBase === true && baseRef !== null && baseRef.trim() !== '') {
+        const mb = git(['merge-base', 'HEAD', baseRef], repoRoot);
+        const mergeBase = mb.ok ? mb.stdout.trim() : '';
+        if (mergeBase !== '') {
+            const existsAtBase = (p: string): boolean => git(['cat-file', '-e', `${mergeBase}:${p}`], repoRoot).ok;
+            verifiedApprovals.push(...approvalsAtBase(ex.exceptions, today, existsAtBase).verified);
+        }
+    }
     const ceiling = computeCeiling({
         designCeiling: design,
         basePayload,
@@ -484,12 +503,12 @@ export function decide(opts: DecideOptions = {}): Decision {
         headPayload: sumPayload(repoRoot),
         exceptions: ex.exceptions,
         exceptionErrors: ex.errors,
-        verifiedApprovals: opts.verifiedApprovals ?? [],
+        verifiedApprovals,
         // Through the as-of seam, not the wall clock. An exception expiry is
         // exactly the kind of verdict that must be reproducible from the
         // commit: a grant that expires overnight would make the same tree pass
         // and then fail with nothing in the diff to explain it.
-        today: opts.today ?? asOf().toISOString().slice(0, 10),
+        today,
         requireBase: opts.requireBase === true,
     });
 
@@ -716,6 +735,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         }
         verifiedApprovals.push(id);
     }
+    // `--verify-approvals`: establish the same fact from git history here —
+    // a grant counts when every owner-directive file it cites exists at the
+    // merge-base. Used by `task check-preamble-payload`, so a local run gives
+    // the verdict the workflow gives instead of refusing every live grant.
 
     // `--repo-root <path>`: measure THIS tree, rather than the one this script
     // happens to sit in. Prerequisite 3 of the measured-ceiling verdict — CI
@@ -791,7 +814,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     let decision: Decision;
     try {
-        decision = decide({ repoRoot, requireBase, verifiedApprovals });
+        decision = decide({
+            repoRoot,
+            requireBase,
+            verifiedApprovals,
+            verifyApprovalsAtBase: argv.includes('--verify-approvals'),
+        });
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;
