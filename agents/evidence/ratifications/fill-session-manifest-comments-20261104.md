@@ -1,24 +1,25 @@
 ---
 proposed_by: road-to-a-fill-the-session-sees-coming step 1.4
 implemented_by: claude-opus-5.5 session on feat/road-to-a-fill-the-session-sees-coming
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), round 1 of 2026-11-04
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), round 3 of 2026-11-04
 providers: [anthropic, openai]
 verdict: confirmed-non-expanding
 seats:
   anthropic: confirmed-non-expanding
   openai: confirmed-non-expanding
 effective_after: merge
-subject: 4151d470f9c0a14c2444c85d5cb2a756369c81bedc57a781fcfef23ff036875f
+subject: c58b57a00e267fe854d6e8e208ae801ec0f2fd2066fc7bda74aedb5d822f85bc
 ---
 
 <!-- evidence-type: ratification -->
 
 # Ratification — two comment corrections in the hook manifest
 
-`check_kernel_edit_ratified` gates one hook-plumbing file on this branch:
-`src/scripts/hook_manifest.yaml`. The `subject:` digest covers it, computed with
-`./scripts-run src/scripts/ratification_subject --files src/scripts/hook_manifest.yaml --base-ref origin/main`
-at revision `f238c5ab69`. The header is the output of
+`check_kernel_edit_ratified` gates two hook-plumbing files on this branch:
+`src/scripts/hook_manifest.yaml` and its compiled projection `src/scripts/hook_manifest.json`.
+The `subject:` digest covers both, computed with
+`./scripts-run src/scripts/ratification_subject --files $(git diff --name-only origin/main...HEAD) --base-ref origin/main`
+at revision `e975afaefe`. The header is the output of
 `ratification_header --seat anthropic=confirmed-non-expanding --seat openai=confirmed-non-expanding`.
 
 ## What was reviewed
@@ -30,13 +31,21 @@ at revision `f238c5ab69`. The header is the output of
   joined. The comment now lists all six.
 
 Comments only: no binding, script, argument, severity, effect, `fail_closed` value or other parsed
-key changes. `hook_manifest.json` is byte-identical.
+key changes. `hook_manifest.json` changes in its `fingerprint` alone (sha256 and length of the YAML
+text, comments included); its `body_fingerprint` over the parsed manifest is identical.
 
-## Round 1
+## How it got here
 
-One round, CLI subscription transport, USD 0.00. Prompt committed verbatim:
-`agents/evidence/council/fill-session-manifest-comment-ratification-r1-20261104.question.md`.
-Both seats answered `confirmed-non-expanding` and found no parsed-key change.
+Three rounds, CLI subscription transport, USD 0.00. Prompts committed verbatim:
+`agents/evidence/council/fill-session-manifest-comment-ratification-r1-20261104.question.md`
+through `…-r3-20261104.question.md`.
+
+- **Round 1, both `confirmed-non-expanding`** on the YAML diff. `check_generator_sync` then
+  required the compiled JSON to be regenerated, which changed the gated set and its digest.
+- **Round 2, split:** one seat approved on the identical `body_fingerprint`; the other asked for
+  the YAML diff in the same prompt rather than by reference to round 1.
+- **Round 3, both `confirmed-non-expanding`** on the complete gated diff of both files in one
+  prompt.
 
 Residuals named by seats and not built: both suggested "once per prompt key" as more precise than
 "every prompt" (the dedup key exists so a double hook run prints one line); the history clause
