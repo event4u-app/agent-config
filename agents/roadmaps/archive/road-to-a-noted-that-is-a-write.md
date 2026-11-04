@@ -31,13 +31,25 @@ pin because the detector needs the write paths the turn snapshot does not carry
       `notebook_path` for Edit, Write, MultiEdit and NotebookEdit; measure the
       hook-bundle bytes first (tight headroom).
       verify: a transcript fixture with a Write yields `"Write <path>"`.
-- [x] **1.3 Read the host's auto-memory as a recurrence source.** Read-only,
+- [~] **1.3 Read the host's auto-memory as a recurrence source.** Read-only,
       no consent prompt (owner answer OQ-33, 2026-10-29): a correction the host
       already recorded under `~/.claude/projects/*/memory` counts as an earlier
       arrival. Never write there; give `host-memory` in
       `src/config/source-registry.json` its reader.
       verify: `npx vitest run tests/scripts/host_memory_reader.test.ts` -> 0 — with a
       fixture memory dir read and a test that no write reaches it.
+      **Carried, 2026-11-04.** Blocker: the ratification of this branch's
+      `hook-bundle-budget.json` change did not converge — the OpenAI seat named
+      the reader's read boundary (every project's memory, not only the current
+      one) as its last open point over nine rounds. Options: (1) narrow the
+      reader and re-review, (2) push without ratification, (3) carry the step.
+      Verdict: (3), AI council on the owner's delegation ("entscheide im ai
+      council"), anthropic seat in two runs: the boundary deserves its own design
+      and threat-model pass rather than line edits under review pressure.
+      Dissent: none recorded — the OpenAI seat failed both runs (`exit_1`, CLI
+      transport), so quorum came from one seat. Destination:
+      `agents/roadmaps/road-to-a-noted-that-is-a-write-carried.md` step 1.1.
+      Closes when that step lands with its read boundary decided.
 - [x] **1.2 Subject-count index.** A derived `_subject-index.json` beside the
       target index in `self_repair_store.ts`.
       verify: three records with different fingerprints and one subject count 3.

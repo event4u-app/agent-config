@@ -37,7 +37,6 @@ import {
     runDetectors,
     type TurnSnapshot,
 } from './_lib/self_repair.js';
-import { readHostMemory } from './_lib/host_memory_reader.js';
 import { openRecords, upsertFinding, writeSubjectIndex } from './_lib/self_repair_store.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { emitDefectShadow } from './hooks/telemetry_self_repair.js';
@@ -241,7 +240,7 @@ export function main(): number {
         try {
             // Kept current on every arrival, so a subject's third differently
             // worded correction is readable as its third arrival right away.
-            writeSubjectIndex(root, readHostMemory());
+            writeSubjectIndex(root);
         } catch {
             // derived and regenerable; a failed write loses nothing
         }

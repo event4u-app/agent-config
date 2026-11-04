@@ -11,7 +11,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { type HostMemoryEntry, hostMemoryArrivals } from './host_memory_reader.js';
 import {
     ACTIVE_STATUSES,
     creationCapReached,
@@ -413,21 +412,14 @@ export const SUBJECT_INDEX_FILE = '_subject-index.json';
 
 export interface SubjectCount {
     subject: string;
-    /** Arrivals naming this subject: the store's records plus `host_memory`. */
+    /** Arrivals naming this subject, summed across records. */
     arrivals: number;
     /** Fingerprints that carried it. */
     records: string[];
-    /** Corrections the host's own auto-memory had already recorded about it. */
-    host_memory: number;
 }
 
-/**
- * Aggregate arrivals by subject over the store's record files. `hostMemory`
- * adds the corrections the host already recorded (`host_memory_reader.ts`) to
- * a subject the store knows; it never introduces a subject on its own, because
- * a memory nobody complained about again is not a recurrence.
- */
-export function subjectCounts(root: string, hostMemory: readonly HostMemoryEntry[] = []): SubjectCount[] {
+/** Aggregate arrivals by subject. Pure over the store's record files. */
+export function subjectCounts(root: string): SubjectCount[] {
     const acc = new Map<string, { arrivals: number; records: string[] }>();
     for (const rec of listRecords(root)) {
         for (const [subject, n] of Object.entries(subjectsOf(rec))) {
@@ -438,16 +430,13 @@ export function subjectCounts(root: string, hostMemory: readonly HostMemoryEntry
         }
     }
     return [...acc.entries()]
-        .map(([subject, v]) => {
-            const host = hostMemoryArrivals(hostMemory, subject);
-            return { subject, arrivals: v.arrivals + host, records: [...v.records].sort(), host_memory: host };
-        })
+        .map(([subject, v]) => ({ subject, arrivals: v.arrivals, records: [...v.records].sort() }))
         .sort((a, b) => (a.subject < b.subject ? -1 : a.subject > b.subject ? 1 : 0));
 }
 
 /** Write the derived subject index; same byte-stability contract as the target index. */
-export function writeSubjectIndex(root: string, hostMemory: readonly HostMemoryEntry[] = []): SubjectCount[] {
-    const counts = subjectCounts(root, hostMemory);
+export function writeSubjectIndex(root: string): SubjectCount[] {
+    const counts = subjectCounts(root);
     fs.mkdirSync(storeDir(root), { recursive: true });
     fs.writeFileSync(path.join(storeDir(root), SUBJECT_INDEX_FILE), `${JSON.stringify(counts, null, 2)}\n`, 'utf-8');
     return counts;

@@ -234,7 +234,7 @@
    "path": "host-owned (for example ~/.claude/projects/<project>/memory)",
    "format": "host-defined",
    "writer": [],
-   "readers": ["src/scripts/_lib/host_memory_reader.ts"],
+   "readers": [],
    "privacy": "personal",
    "owner": "user",
    "delete_path": "the host's own memory controls",

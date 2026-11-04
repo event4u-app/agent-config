@@ -17,16 +17,10 @@ const SCRIPT = 'src/scripts/self_repair_hook.ts';
 const PROMPT = 'Du hast schon wieder `tabs` ignoriert';
 
 let tmp: string;
-let prevConfig: string | undefined;
 beforeEach(() => {
     tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sr-lazy-')));
-    fs.mkdirSync(path.join(tmp, 'claude'));
-    prevConfig = process.env['CLAUDE_CONFIG_DIR'];
-    process.env['CLAUDE_CONFIG_DIR'] = path.join(tmp, 'claude');
 });
 afterEach(() => {
-    if (prevConfig === undefined) delete process.env['CLAUDE_CONFIG_DIR'];
-    else process.env['CLAUDE_CONFIG_DIR'] = prevConfig;
     clearHookStdinOverride();
     vi.restoreAllMocks();
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -61,7 +55,6 @@ describe('self-repair through both dispatch paths', () => {
         const res = spawnSync(process.execPath, ['--import', 'tsx', path.resolve(SCRIPT)], {
             input: payload(viaSpawn),
             encoding: 'utf-8',
-            env: { ...process.env, CLAUDE_CONFIG_DIR: path.join(tmp, 'claude') },
         });
         expect(res.status).toBe(2);
         expect(res.stdout).toContain('<self-repair-queue>');

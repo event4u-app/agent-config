@@ -144,7 +144,7 @@ describe('1.2 — the subject-count index', () => {
         expect(new Set(recs.map((r) => r.fingerprint)).size).toBe(3);
         const counts = subjectCounts(tmp);
         expect(counts).toEqual([
-            { subject: 'tabs', arrivals: 3, records: recs.map((r) => r.fingerprint).sort(), host_memory: 0 },
+            { subject: 'tabs', arrivals: 3, records: recs.map((r) => r.fingerprint).sort() },
         ]);
     });
 
@@ -159,17 +159,6 @@ describe('1.2 — the subject-count index', () => {
         expect(listRecords(tmp)).toHaveLength(3);
     });
 
-    it('adds the host memory to a subject the store knows, never invents one', () => {
-        upsertFinding(tmp, detectUserReport('For the third time: tabs.')!, NOW);
-        const host = [
-            { project: 'p', name: 'tabs', description: 'use tabs', type: 'feedback', body: '' },
-            { project: 'p', name: 'quotes', description: 'single quotes', type: 'feedback', body: '' },
-            { project: 'p', name: 'who', description: 'likes tabs', type: 'user', body: '' },
-        ];
-        expect(subjectCounts(tmp, host)).toEqual([
-            { subject: 'tabs', arrivals: 2, records: [listRecords(tmp)[0]!.fingerprint], host_memory: 1 },
-        ]);
-    });
 
     it('reads a legacy record that carries only `subject` as all of its arrivals', () => {
         const f: DefectFinding = { ...detectUserReport('For the third time: tabs.')! };
