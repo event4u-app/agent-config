@@ -27,7 +27,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
 
 ## Phase 1 — The turn snapshot knows what was written
 
-- [x] **1.1 Write paths in the turn snapshot.** Append `file_path` /
+- [x] **1.1 Write paths in the turn snapshot.** Append `file_path` / <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
       `notebook_path` for Edit, Write, MultiEdit and NotebookEdit; measure the
       hook-bundle bytes first (tight headroom).
       verify: a transcript fixture with a Write yields `"Write <path>"`.
@@ -50,7 +50,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       transport), so quorum came from one seat. Destination:
       `agents/roadmaps/road-to-a-noted-that-is-a-write-carried.md` step 1.1.
       Closes when that step lands with its read boundary decided.
-- [x] **1.2 Subject-count index.** A derived `_subject-index.json` beside the
+- [x] **1.2 Subject-count index.** A derived `_subject-index.json` beside the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
       target index in `self_repair_store.ts`.
       verify: three records with different fingerprints and one subject count 3.
       Before it counts, close the two precision gaps the 2026-10-29 council
@@ -61,18 +61,18 @@ pin because the detector needs the write paths the turn snapshot does not carry
 
 ## Phase 2 — "Noted" without a write is a defect
 
-- [x] **2.1 `persistence-claim` defect class.** Reply-opening claim
+- [x] **2.1 `persistence-claim` defect class.** Reply-opening claim <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
       (`notiert|gemerkt|für immer|ab jetzt|noted|I'll remember|from now on`) with
       no written path matching a carrier (`AGENTS.md`, `CLAUDE*.md`,
       `.editorconfig`, formatter configs, `.claude/rules/`, memory dirs);
       advisory, stop slot; issue-template dropdown updated.
       verify: corpus with fire, near-miss and must-not-fire rows ("noted, see the
       PR" plus a Write to `.editorconfig` stays silent).
-- [x] **2.2 Shadow detector.** Pure `detectAgentsMdShadow(root)` flags a
+- [x] **2.2 Shadow detector.** Pure `detectAgentsMdShadow(root)` flags a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/convention_rung.ts -->
       `CLAUDE.md` / `.claude/CLAUDE.md` / `CLAUDE.local.md` that neither imports
       nor symlinks a non-empty `AGENTS.md`; surfaced by `/agents audit`.
       verify: five temp-dir layouts.
-- [x] **2.3 Carrier-rung classifier.** Pure `conventionRung(sentence)` →
+- [x] **2.3 Carrier-rung classifier.** Pure `conventionRung(sentence)` → <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/convention_rung.ts -->
       config | check | prose, unclassifiable = prose; classifies only, writes
       nothing.
       verify: a 30-sentence DE/EN corpus where a too-strong rung is the failing
@@ -80,7 +80,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
 
 ## Phase 3 — Proposing the config change (OQ-32)
 
-- [x] **3.1 Propose the convention as a project diff, outside self-repair.**
+- [x] **3.1 Propose the convention as a project diff, outside self-repair.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/convention_rung.ts -->
       AI council decision OQ-32 (2026-10-29, 2/2, option b): the self-repair
       Iron Law stays unchanged; a convention that keeps not arriving goes
       through a separate proposal-only path that emits a diff the user sees and
