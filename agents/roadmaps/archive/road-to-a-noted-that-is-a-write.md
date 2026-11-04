@@ -68,7 +68,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       advisory, stop slot; issue-template dropdown updated.
       verify: corpus with fire, near-miss and must-not-fire rows ("noted, see the
       PR" plus a Write to `.editorconfig` stays silent).
-- [x] **2.2 Shadow detector.** Pure `detectAgentsMdShadow(root)` flags a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/convention_rung.ts -->
+- [x] **2.2 Shadow detector.** Pure `detectAgentsMdShadow(root)` flags a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/agents_md_shadow.ts -->
       `CLAUDE.md` / `.claude/CLAUDE.md` / `CLAUDE.local.md` that neither imports
       nor symlinks a non-empty `AGENTS.md`; surfaced by `/agents audit`.
       verify: five temp-dir layouts.
@@ -77,6 +77,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       nothing.
       verify: a 30-sentence DE/EN corpus where a too-strong rung is the failing
       direction.
+      production entry: src/scripts/convention_propose.ts (run by `/agents:audit`, src/domains/meta/agents/audit/command.md)
 
 ## Phase 3 — Proposing the config change (OQ-32)
 
@@ -87,6 +88,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       accepts, never a silent write and never from the self-repair loop.
       verify: a fixture where the proposal is emitted and no file changes
       without the accept.
+      production entry: src/scripts/convention_propose.ts (run by `/agents:audit`, src/domains/meta/agents/audit/command.md)
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
