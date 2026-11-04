@@ -215,7 +215,7 @@ describe('bench_ab_v2_run — pure helpers', () => {
         fs.rmSync(dir, { recursive: true, force: true });
     });
 
-    it('lift_audit_arms: excludes the tiny-treatment arm, keeps every real lift arm', () => {
+    it('lift_audit_arms: excludes the tiny-treatment arms, keeps every real lift arm', () => {
         const selected = lift_audit_arms(['vanilla', 'package', 'package-ladder', 'bare-principle', 'placebo']);
 
         // Baseline is never its own lift arm.
@@ -227,7 +227,15 @@ describe('bench_ab_v2_run — pure helpers', () => {
         // half that must not silently shrink.
         expect(selected).toContain('package');
         expect(selected).toContain('package-ladder');
-        expect(selected).toContain('placebo');
+        // `placebo` left the lift set on the council's 2026-11-04 verdict: its
+        // ~1.7k-token surface sits inside the turn-count spread of the baseline.
+        // Its text direction is still checked both ways.
+        expect(selected).not.toContain('placebo');
+        expect(lift_audit_arms(['vanilla', 'rules-kernel-dc', 'rules-balanced', 'profile-full'])).toEqual([
+            'rules-kernel-dc',
+            'rules-balanced',
+            'profile-full',
+        ]);
 
         // An unknown arm name is not silently promoted into the audit set.
         expect(lift_audit_arms(['no-such-arm'])).toEqual([]);
