@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: archived
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
@@ -76,21 +76,22 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 
 ## Phase 3 — Credentials in the history expire (OQ-34)
 
-- [ ] **3.1 Placeholders in the history, originals for 7 days.** Owner answer
-      OQ-34 (2026-10-29): chat history stores placeholders for credentials; the
-      original values go to a separate local, untracked store the agent can
-      resolve while it works, and a purge deletes them after 7 days, leaving
-      only the placeholders. Reuse the existing egress rules and placeholder view.
-      verify: `npx vitest run tests/scripts/chat_history_secret_ttl.test.ts` -> 0 —
-      with a fixture where a key is resolvable on day 6 and only its placeholder
-      remains on day 8.
-      Blocked by `b-history-credential-store-vs-egress-contract` (2026-11-04).
+- [x] **3.1 Credential placeholders in the history.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/chat_history.ts --> Owner answer
+      OQ-34 (2026-10-29) asked for placeholders in the history plus the
+      originals in a local store resolvable for 7 days; the store conflicts with
+      the egress contract's never-stored floor, and the owner resolved the
+      blocker below with option 1 on 2026-11-04: placeholders only, no original
+      anywhere. Reuse the existing egress rules.
+      verify: `npx vitest run tests/scripts/chat_history_credential_placeholders.test.ts` -> 0 —
+      a credential appended, reset or prepended is a placeholder on disk and no
+      sibling file holds the value.
+      Done: `redact_credentials` (`_lib/chat_history_redact.ts`, kept out of `chat_history.ts` for the source-size budget) runs in `chat_history.ts` on `append` and on `_normalize_entries` (reset, prepend): every string leaf but `t`/`ts`/`s` goes through `replaceValues(text, scope, 'credential')` — a new optional class filter in `egress_token.ts` — under one scope per entry whose key is never persisted, so no placeholder resolves. A leaf whose extent cannot be proven, or every leaf when the engine chunk cannot load, is withheld whole. Identifiers stay as written. The engine loads through `egress_engine_loader` (sibling chunk when bundled), so the `chat_history` chunk measured 224,320 B under its 232,000 ceiling and the engine chunk 32,360 B under 33,000; `check_hook_bundle_composition` -> 0. `npx vitest run tests/scripts/chat_history_credential_placeholders.test.ts` -> 0 (6 cases, the 4 positive ones seen red first); `chat_history_credential_engine_missing.test.ts` pins the fail-closed path; `chat_history` joins the pattern-grade consumers of `egress_drift_matrix.test.ts` (every credential row). The `docs/contracts/egress-placeholders-v1.md` placeholder-view paragraph names the new consumer. Residue: entries written before this change stay plaintext until a reset rewrites them.
 
 ## Blockers
 
 ### blocker: b-history-credential-store-vs-egress-contract
 
-- **Status:** open — 2026-11-04.
+- **Status:** resolved — 2026-11-04, owner picked option 1 (placeholders only) in session.
 - **Owner:** owner — the step stores credential values, and the recorded floor says none may be stored.
 - **Blocks:** 3.1.
 - **Conflict:** `docs/contracts/egress-placeholders-v1.md` line 38 defines the `credential`
