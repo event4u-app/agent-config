@@ -27,6 +27,7 @@ import {
 } from './ai_council/bundler.js';
 import { select_chairman } from './ai_council/chairman.js';
 import { warnIfRecounciled } from './ai_council/recouncil_guard.js';
+import { resolveEffort, type Effort } from './ai_council/effort.js';
 import { jaccardSimilarity } from './_lib/text_similarity.js';
 import type { ChairmanCandidate } from './ai_council/chairman.js';
 import { synthesis_template } from './ai_council/prompts.js';
@@ -120,13 +121,13 @@ import {
     type FallbackPosture,
 } from './_lib/council_fallback_posture.js';
 import { wireCouncilFallback } from './_lib/council_fallback_wiring.js';
+import { _isDict, _pyBool } from './_lib/py_truthiness.js';
+import { _pyReprStr, _pyReprStrList, _pySortedStr } from './_lib/council_py_repr.js';
+import { _size_fit_gate } from './_lib/council_size_fit.js';
 import { BILLING_SUBCOMMANDS, billingArgSpec, handleBillingCommand, printBillingGate } from './_lib/billing_grant_cli.js';
 import {
     type ClassificationResult,
-    type SizeFitVerdict,
     classify_necessity,
-    classify_size_fit,
-    downgrade_message,
     educate_message,
 } from './ai_council/necessity.js';
 import type {
@@ -151,9 +152,7 @@ import {
 import { serializeResponses } from './ai_council/response_record.js';
 import {
     type PriceTable,
-    downgrade_coupling,
     allSeatsNonBillable,
-    estimate_input_tokens,
     load_prices,
     prices_file_for,
     sumBillableCost,
@@ -299,34 +298,12 @@ function _pyRound(value: number, ndigits: number): number {
     return rounded / factor;
 }
 
-/** Python `repr()` for a string (single-quoted unless it embeds a `'`). */
-function _pyReprStr(s: string): string {
-    if (s.includes("'") && !s.includes('"')) {
-        return `"${s}"`;
-    }
-    return `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-}
-
-/** Python `repr()` of a list of strings. */
-function _pyReprStrList(items: readonly string[]): string {
-    return `[${items.map(_pyReprStr).join(', ')}]`;
-}
-
-/** Python `sorted(...)` of strings (code-point order). */
-function _pySortedStr(items: Iterable<string>): string[] {
-    return [...items].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-}
-
 function _getattr<T>(obj: unknown, name: string, fallback: T): T {
     if (obj !== null && typeof obj === 'object' && name in (obj as Dict)) {
         const v = (obj as Dict)[name];
         return v === undefined ? fallback : (v as T);
     }
     return fallback;
-}
-
-function _isDict(v: unknown): v is Dict {
-    return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 /** Python `int(x)` truncation toward zero for the loose ints. */
@@ -350,31 +327,6 @@ function _pyFloat(v: unknown, fallback = 0.0): number {
         return fallback;
     }
     return n;
-}
-
-function _pyBool(v: unknown): boolean {
-    if (v === null || v === undefined) {
-        return false;
-    }
-    if (typeof v === 'boolean') {
-        return v;
-    }
-    if (typeof v === 'number') {
-        return v !== 0;
-    }
-    if (typeof v === 'string') {
-        return v.length > 0;
-    }
-    if (Array.isArray(v)) {
-        return v.length > 0;
-    }
-    if (v instanceof Map || v instanceof Set) {
-        return v.size > 0;
-    }
-    if (typeof v === 'object') {
-        return Object.keys(v as Dict).length > 0;
-    }
-    return Boolean(v);
 }
 
 /** `json.dumps(obj, indent=2)` byte-parity (ensure_ascii=True default). */
@@ -515,6 +467,10 @@ interface BuildMembersOptions {
      * reason. Defaults to `run` for a caller that does not say.
      */
     command?: QuorumCommand;
+    /** `--effort` of this invocation; wins over the member key and the lens default (`effort.ts`). */
+    effort_flag?: string | null;
+    /** The lens whose default effort applies when neither flag nor member sets one. */
+    lens?: string | null;
     /**
      * Test-only injection point, mirroring the `settings`/`members`/`table`
      * DI pattern the CLI commands already use. Production callers never set
@@ -795,6 +751,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             try {
                 members.push(
                     _construct_cli_member(name, model, {
+                        effort: resolveEffort({ flag: opts.effort_flag, member: cfg['effort'] as string | null, lens: opts.lens }),
                         binary: (cfg['binary'] as string | null) ?? null,
                         max_calls_per_day: cli_caps[name] ?? null,
                         warn_at: cli_warn_at,
@@ -1039,7 +996,7 @@ const _CLI_FACTORY: Record<
 function _construct_cli_member(
     name: string,
     model: string | null,
-    opts: { binary?: string | null; max_calls_per_day?: number | null; warn_at?: number } = {},
+    opts: { binary?: string | null; max_calls_per_day?: number | null; warn_at?: number; effort?: Effort | null } = {},
 ): ExternalAIClient {
     const binary = opts.binary ?? null;
     const max_calls_per_day = opts.max_calls_per_day ?? null;
@@ -1052,6 +1009,7 @@ function _construct_cli_member(
                 max_calls_per_day?: number | null;
                 warn_at?: number;
                 consumer?: string;
+                effort?: Effort | null;
             }) => CliClient,
             string,
             string,
@@ -1061,6 +1019,7 @@ function _construct_cli_member(
             binary,
             max_calls_per_day,
             warn_at,
+            effort: opts.effort ?? null,
             // Declared at the construction site — the client cannot know its
             // caller. The council half of the two enumerated consumers.
             consumer: CLI_CONSUMER_COUNCIL,
@@ -1681,6 +1640,7 @@ function cmd_estimate(
             skipped,
             quorum_out,
             probe_store: readProbeStore(REPO_ROOT),
+            effort_flag: _getattr<string | null>(args, 'effort', null), lens: _getattr<boolean>(args, 'debate', false) ? 'debate' : (_getattr<string | null>(args, 'prompt_mode', null) ?? args.input_mode),
             // A cost preview spends nothing and runs no pass. The line is
             // still written — tagged, so a consumer excludes it deliberately
             // instead of never learning it was there.
@@ -1699,6 +1659,9 @@ function cmd_estimate(
         max_tokens: _resolve_max_tokens(args, ai_cfg),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
+    // Same inputs and position as `run`: before pricing, so a pin prices the model it pins.
+    const lens = _getattr(args, 'debate', false) ? 'debate' : question.mode;
+    _size_fit_gate({ prompt: question.user_prompt, lens, members, ai_cfg, rounds: _getattr(args, 'rounds', 1) as number, price_table: table, suggest_only: true });
     const project = detect_project_context(REPO_ROOT);
     const billable = members.filter((m) => _getattr(m, 'billable', true));
     const estimates = estimate(question, billable, table, {
@@ -1961,115 +1924,6 @@ function _necessity_gate(opts: {
     out(educate_message(result, opts.lens) + '\n');
     _emit('skip_necessity');
     return [false, 2, result];
-}
-
-function _resolve_model_downgrade(ai_cfg: Dict, lens: string): [boolean, boolean] {
-    const md_block = (ai_cfg['model_downgrade'] as Dict) || {};
-    let enabled = md_block['enabled'] === undefined ? true : Boolean(_pyBool(md_block['enabled']));
-    // A3: auto-downgrade is the default; `auto_apply: false` is the opt-out.
-    let auto_apply = md_block['auto_apply'] === undefined ? true : Boolean(_pyBool(md_block['auto_apply']));
-    const overrides = ((ai_cfg['lens_overrides'] as Dict) || {})['model_downgrade'] || {};
-    const lens_override = _isDict(overrides) ? (overrides as Dict)[lens] : null;
-    if (_isDict(lens_override)) {
-        enabled = lens_override['enabled'] === undefined ? enabled : Boolean(_pyBool(lens_override['enabled']));
-        auto_apply =
-            lens_override['auto_apply'] === undefined ? auto_apply : Boolean(_pyBool(lens_override['auto_apply']));
-    }
-    return [enabled, auto_apply];
-}
-
-function _size_fit_gate(opts: {
-    prompt: string;
-    lens: string;
-    members: ExternalAIClient[];
-    ai_cfg: Dict;
-    stdout?: ((s: string) => void) | null;
-    /** Planned rounds for the run; expected same-model cache reads = rounds − 1. */
-    rounds?: number;
-    /** Price table for the A1↔A3 cache-coupling gate; null → coupling skipped. */
-    price_table?: PriceTable | null;
-}): Array<[string, SizeFitVerdict, boolean]> {
-    const out = opts.stdout ?? _stdout;
-    const [enabled, auto_apply] = _resolve_model_downgrade(opts.ai_cfg, opts.lens);
-    const decisions: Array<[string, SizeFitVerdict, boolean]> = [];
-    if (!enabled) {
-        return decisions;
-    }
-    const md_block = (opts.ai_cfg['model_downgrade'] as Dict) || {};
-    const tier_override = (md_block['model_tier_override'] as Dict) || {};
-    const cache_enabled = opts.ai_cfg['prompt_cache'] !== false;
-    const expected_reads = Math.max(0, (opts.rounds ?? 1) - 1);
-    const members_cfg = (opts.ai_cfg['members'] as Dict) || {};
-    for (const member of opts.members) {
-        // Per-run escape hatch: a member pinned in model_tier_override gets
-        // exactly that model — classifier and coupling both skipped.
-        const pinned = tier_override[member.name];
-        if (typeof pinned === 'string' && pinned.length > 0) {
-            if (pinned !== member.model) {
-                out(
-                    `council:size-fit · ${member.name} · model_tier_override ` +
-                        `\`${member.model}\` → \`${pinned}\` (operator pin)\n`,
-                );
-                member.model = pinned;
-            }
-            continue;
-        }
-        const member_cfg = (members_cfg[member.name] as Dict) || {};
-        const ladder = (member_cfg['model_ladder'] as string[]) || [];
-        if (ladder.length === 0) {
-            continue;
-        }
-        const verdict = classify_size_fit(opts.prompt, member.model, ladder, opts.lens);
-        let applied = false;
-        if (!verdict.fit && verdict.suggested_model) {
-            // A1↔A3 coupling: a downgraded member misses the model-scoped
-            // prompt cache — downgrade only when the model saving beats the
-            // forfeited cache reads. No price table → conservative skip is
-            // wrong for the cost goal, so coupling only gates when computable.
-            if (opts.price_table) {
-                const prefix_tokens = estimate_input_tokens(opts.prompt);
-                const coupling = downgrade_coupling(
-                    member.name,
-                    member.model,
-                    verdict.suggested_model,
-                    prefix_tokens,
-                    4096,
-                    {
-                        enabled: cache_enabled,
-                        cacheable_prefix_tokens: prefix_tokens,
-                        expected_reads,
-                    },
-                    opts.price_table,
-                );
-                if (!coupling.net_positive) {
-                    out(
-                        `council:size-fit · ${member.name} · downgrade skipped — ` +
-                            `lost cache savings $${coupling.lost_cache_savings_usd.toFixed(4)} ` +
-                            `≥ model savings $${coupling.downgrade_savings_usd.toFixed(4)}\n`,
-                    );
-                    decisions.push([member.name, verdict, false]);
-                    continue;
-                }
-            }
-            if (auto_apply) {
-                out(
-                    `council:size-fit · ${member.name} · auto-downgrade ` +
-                        `\`${member.model}\` → \`${verdict.suggested_model}\` · ` +
-                        `${verdict.reason}\n`,
-                );
-                Object.assign(member, { size_fit: { configured_model: member.model, size_fit_reason: verdict.reason } });
-                member.model = verdict.suggested_model;
-                applied = true;
-            } else {
-                out(
-                    `council:size-fit · ${member.name} · ` +
-                        `${downgrade_message(verdict, member.model)}\n`,
-                );
-            }
-        }
-        decisions.push([member.name, verdict, applied]);
-    }
-    return decisions;
 }
 
 function _resolve_cost_disclosure(ai_cfg: Dict, lens: string): [string, number, boolean] {
@@ -2430,6 +2284,7 @@ function cmd_run(
             quorum_out,
             probe_store: readProbeStore(REPO_ROOT),
             fallback_out,
+            effort_flag: _getattr<string | null>(args, 'effort', null), lens: _getattr<string | null>(args, 'prompt_mode', null) ?? args.input_mode,
         });
     }
     // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
@@ -2990,6 +2845,7 @@ function cmd_debate(
             probe_store: readProbeStore(REPO_ROOT),
             command: 'debate',
             fallback_out,
+            effort_flag: _getattr<string | null>(args, 'effort', null), lens: 'debate',
         });
     }
     if (table === null) {
@@ -3577,6 +3433,7 @@ function _commonInputSpecs(): OptSpec[] {
         { flag: '--siblings', takesValue: true, apply: (o, v) => { (o.siblings ??= []).push(v as string); } },
         { flag: '--original-ask', takesValue: true, apply: (o, v) => (o.original_ask = v as string) },
         { flag: '--peer-review', takesValue: false, apply: (o) => (o.peer_review = true) },
+        { flag: '--effort', takesValue: true, choices: ['low', 'medium', 'high'], apply: (o, v) => (o['effort'] = v) },
     ];
 }
 
