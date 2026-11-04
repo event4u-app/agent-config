@@ -190,6 +190,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
 | road-to-a-quota-notice-that-earned-its-bands | stubs | — | road to a quota notice that earned its bands |
+| road-to-a-rerun-on-the-repaired-scorer | stubs | — | Road to a rerun on the repaired scorer — stub |
 | road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
