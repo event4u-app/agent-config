@@ -8,9 +8,10 @@
  *
  * Two postures in one call, per `docs/contracts/concern-activation-policy.md`:
  *
- *   consistency-raw-control      DELIVERED. A retroactive shadow window of
+ *   consistency-raw-control      RETURNED. A retroactive shadow window of
  *                                1,565 UI writes met all four flip conditions
- *                                (docs/CLAIMS.md `design-consistency-default-on`).
+ *                                (docs/CLAIMS.md `design-consistency-default-on`);
+ *                                the caller delivers it only with `shadow: false`.
  *   consistency-sibling-metrics  SHADOW. The same window read no box metric on
  *                                either side of a single comparison, so it has
  *                                no distribution to derive a tolerance from.
