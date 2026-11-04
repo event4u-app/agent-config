@@ -76,6 +76,8 @@ import {
     run_checkpoints_enabled,
 } from '../_lib/continuity_writer.js';
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
+import { CONTEXT_NOTICE_PCT, sessionContextFill } from '../_lib/pressure.js';
+import { hashSessionId, readQuotaLedger } from '../_lib/quota_ledger.js';
 import { current_branch } from '../_lib/git_common_dir.js';
 import { derive_session_tag } from '../_lib/session_tag.js';
 import { localDay, pruneStaleMarkers, pruneStalePointers, writeSessionPointer } from '../retro_queue.js';
@@ -464,6 +466,20 @@ export function writeRetroPointer(
 const RETRO_PRUNE_STAMP = 'retro-prune';
 
 /**
+ * Is this session at or above the context band the per-prompt notice warns at?
+ *
+ * road-to-a-fill-the-session-sees-coming 2.1. The 800k recycle threshold is an
+ * absolute count that a 200k window never reaches, so a session the user clears
+ * at the warning left no record. The fill the status-line tap reported for this
+ * session is the only measured percentage there is; without the tap there is no
+ * reading and the threshold lane alone decides, as before.
+ */
+export function atContextBand(rawSessionId: string): boolean {
+    const fill = sessionContextFill(readQuotaLedger(), hashSessionId(rawSessionId));
+    return fill !== null && fill >= CONTEXT_NOTICE_PCT;
+}
+
+/**
  * The continuity-record handler — one of the three lifecycle handlers this
  * concern carries, and independently switchable from the other two.
  *
@@ -484,6 +500,10 @@ const RETRO_PRUNE_STAMP = 'retro-prune';
  * successor reads is always the newest state, and the write rate is still
  * bounded to the end phase of a session rather than every turn of it.
  *
+ * The end phase now also starts at the context band ({@link atContextBand}),
+ * because on a 200k window the threshold is never reached and the user clears
+ * at the warning instead; the same supersede-per-Stop policy applies there.
+ *
  * Best-effort throughout, like the checkpoint above it: a continuity record is
  * a recovery aid, and a recovery aid that can fail a Stop is a liability.
  */
@@ -494,10 +514,12 @@ function writeContinuityRecord(
     threshold: number | null,
     tokens: number | null,
 ): void {
-    if (threshold === null || tokens === null || tokens < threshold) return;
+    // `threshold === null` is the emergency off switch and stays one for both lanes.
+    if (threshold === null || tokens === null) return;
     const sessionId = String(rawSessionId ?? '').trim();
     if (sessionId === '') return;
     try {
+        if (tokens < threshold && !atContextBand(sessionId)) return;
         if (!auto_record_enabled(workspaceRoot)) return;
         const slug = read_claimed_slug(workspaceRoot, sessionId);
         const decision = buildContinuityRecord({

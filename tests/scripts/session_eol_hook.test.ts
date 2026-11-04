@@ -30,7 +30,8 @@ import {
     THRESHOLD_OVERRIDE_ENV,
     unconsumedRecordLines,
 } from '../../src/scripts/hooks/session_eol_hook.js';
-import { recycle_envelope_rel } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { listContinuityRecords, recycle_envelope_rel } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { appendQuotaSnapshot, hashSessionId } from '../../src/scripts/_lib/quota_ledger.js';
 import { readCheckpoint } from '../../src/scripts/_lib/run_checkpoint.js';
 import { eolSessionKey } from '../../src/scripts/_lib/session_eol.js';
 import { roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
@@ -413,6 +414,89 @@ describe('deterministic checkpoint (UOTL Phase 6.1)', () => {
         const r = runMain();
         expect(r).toEqual({ rc: 0, out: '' });
         expect(stateOf().advisory_fired_at).not.toBeNull();
+    });
+});
+
+/**
+ * road-to-a-fill-the-session-sees-coming 2.1 — the continuity record no longer
+ * waits for the 800k recycle threshold: at the 80 % context band the status-line
+ * tap reported for THIS session, it is written too, so a session cleared early
+ * still leaves one.
+ */
+describe('continuity record at the context band (fill 2.1)', () => {
+    const SLUG = 'road-to-eol-band-fixture';
+    let priorConfigHome: string | undefined;
+    let configHome: string;
+
+    beforeEach(() => {
+        priorConfigHome = process.env['EVENT4U_CONFIG_HOME'];
+        configHome = fs.mkdtempSync(path.join(os.tmpdir(), 'session-eol-cfg-'));
+        process.env['EVENT4U_CONFIG_HOME'] = configHome;
+    });
+    afterEach(() => {
+        if (priorConfigHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+        else process.env['EVENT4U_CONFIG_HOME'] = priorConfigHome;
+    });
+
+    function claim(sessionId: string): void {
+        const roadmaps = path.join(workspace, 'agents', 'roadmaps');
+        fs.mkdirSync(roadmaps, { recursive: true });
+        fs.writeFileSync(path.join(roadmaps, `${SLUG}.md`), '- [x] done\n- [ ] next\n', 'utf-8');
+        const file = path.join(workspace, roadmap_claim_rel(sessionId));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, JSON.stringify({ slug: SLUG, session_id: sessionId }), 'utf-8');
+    }
+
+    function fill(sessionId: string, pct: number): void {
+        appendQuotaSnapshot({ ts: Date.now(), session: hashSessionId(sessionId), context_used_pct: pct, context_size: 200_000 });
+    }
+
+    it('at the band and far below 800k, one record is written', () => {
+        writeThreshold(800_000);
+        claim('session-a');
+        fill('session-a', 85);
+        fs.writeFileSync(transcript, assistantLine(5_000, 160_000));
+        expect(runMain()).toEqual({ rc: 0, out: '' });
+        expect(listContinuityRecords(workspace)).toHaveLength(1);
+    });
+
+    it('a second Stop at the band supersedes the record instead of adding one', () => {
+        writeThreshold(800_000);
+        claim('session-a');
+        fill('session-a', 85);
+        fs.writeFileSync(transcript, assistantLine(5_000, 160_000));
+        runMain();
+        fs.appendFileSync(transcript, USER_LINE + assistantLine(5_000, 162_000));
+        fill('session-a', 86);
+        runMain();
+        expect(listContinuityRecords(workspace)).toHaveLength(1);
+    });
+
+    it('below the band and below the threshold, no record', () => {
+        writeThreshold(800_000);
+        claim('session-a');
+        fill('session-a', 70);
+        fs.writeFileSync(transcript, assistantLine(5_000, 135_000));
+        runMain();
+        expect(listContinuityRecords(workspace)).toEqual([]);
+    });
+
+    it("another session's fill never counts for this one", () => {
+        writeThreshold(800_000);
+        claim('session-a');
+        fill('session-b', 95);
+        fs.writeFileSync(transcript, assistantLine(5_000, 135_000));
+        runMain();
+        expect(listContinuityRecords(workspace)).toEqual([]);
+    });
+
+    it('the 0-override emergency switch still stops the record at the band', () => {
+        writeThreshold(0);
+        claim('session-a');
+        fill('session-a', 90);
+        fs.writeFileSync(transcript, assistantLine(5_000, 160_000));
+        runMain();
+        expect(listContinuityRecords(workspace)).toEqual([]);
     });
 });
 
