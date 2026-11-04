@@ -414,6 +414,15 @@ describe('release_pr_body', () => {
         expect(body.startsWith('Release 19.0.0.')).toBe(true);
     });
 
+    it('reserves room for an appended extra section, so the whole body stays within the limit', () => {
+        const section = Array.from({ length: 5_000 }, (_, i) => `* bullet ${i} — ${'x'.repeat(20)}`).join('\n');
+        const extra = `\n\n## Showcase\n\n${'y'.repeat(3_000)}`;
+        const body = release_pr_body(section, '20.0.0', extra);
+        expect([...body].length).toBeLessThanOrEqual(GH_PR_BODY_LIMIT);
+        expect(body.endsWith(extra)).toBe(true);
+        expect(body).toContain('Changelog truncated to fit GitHub');
+    });
+
     it('leaves a section that fits untouched', () => {
         const body = release_pr_body('* one bullet', '19.0.0');
         expect(body).not.toContain('Changelog truncated');
