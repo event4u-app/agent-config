@@ -41,14 +41,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { hasBillingGrant } from './_lib/billing_grant.js';
 import { hostSettingsPaths, readBillingClass, type BillingClassReading } from './_lib/billing_class.js';
 import { coldLine } from './_lib/cold_return.js';
-import { atLeast, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
+import { atLeast, CONTEXT_NOTICE_PCT, contextFigure, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
 import { hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
 import { hostShowsUserNotice, USER_NOTICE_ID_KEY, USER_NOTICE_KEY } from './hooks/user_notice.js';
 
-export const CONTEXT_NOTICE_PCT = 80;
+export { CONTEXT_NOTICE_PCT };
 const CLAIM_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
 
 export interface QuotaNoticeDeps {
@@ -158,13 +158,10 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
  * history uncached (host prompt-caching doc, "Compacting the conversation").
  */
 function contextLine(pct: number, snap: QuotaSnapshot | undefined, cold: boolean): string {
-    const size = snap?.context_size;
-    const n = (x: number): string => Math.round(x).toLocaleString('en-US');
-    const abs = size !== undefined && size > 0 ? ` (${n((pct / 100) * size)} / ${n(size)} tokens)` : '';
     const exits = cold
         ? 'cache cold: /clear, or continue knowingly — /compact now re-reads the full history uncached.'
         : 'new task → /clear, same task → /compact.';
-    return `AC: Context ${Math.round(pct)} %${abs} — ${exits}`;
+    return `AC: Context ${contextFigure(pct, snap?.context_size)} — ${exits}`;
 }
 
 export interface AskDeps extends QuotaNoticeDeps {

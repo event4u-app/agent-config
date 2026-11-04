@@ -158,6 +158,23 @@ export function sessionContextFill(snapshots: readonly QuotaSnapshot[], session:
     return null;
 }
 
+/** One band, shared by the per-prompt notice and the status-line segment so the two can never disagree about "full". */
+export const CONTEXT_NOTICE_PCT = 80;
+
+/** `85 % (170,000 / 200,000 tokens)`; without a reported size, no absolute figures. */
+export function contextFigure(pct: number, size: number | undefined): string {
+    const n = (x: number): string => Math.round(x).toLocaleString('en-US');
+    const abs = size !== undefined && size > 0 ? ` (${n((pct / 100) * size)} / ${n(size)} tokens)` : '';
+    return `${Math.round(pct)} %${abs}`;
+}
+
+/** The status-line part for this refresh's own snapshot, empty below the band. */
+export function contextSegment(snap: QuotaSnapshot | null): string {
+    const pct = snap?.context_used_pct;
+    if (pct === undefined || pct < CONTEXT_NOTICE_PCT) return '';
+    return `context ${contextFigure(pct, snap?.context_size)}`;
+}
+
 const WINDOW_LABEL: Record<WindowName, string> = { five_hour: '5h', seven_day: '7d' };
 
 /** Local `HH:MM` for an epoch-millisecond instant. */
