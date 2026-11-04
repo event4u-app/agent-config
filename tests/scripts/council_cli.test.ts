@@ -722,7 +722,10 @@ describe('council_cli size-fit — a downgrade is on the record', () => {
             prompt: 'Is two bigger than one?',
             lens: 'analysis',
             members: [seat],
-            ai_cfg: { members: { anthropic: { model_ladder: ['claude-small', 'claude-big'] } } },
+            ai_cfg: {
+                model_downgrade: { auto_apply: true },
+                members: { anthropic: { model_ladder: ['claude-small', 'claude-big'] } },
+            },
             stdout: (s: string) => lines.push(s),
         });
         expect(decisions.map(([, , applied]) => applied)).toEqual([true]);
@@ -733,5 +736,48 @@ describe('council_cli size-fit — a downgrade is on the record', () => {
         expect(downgraded?.metadata['configured_model']).toBe('claude-big');
         expect(downgraded?.metadata['size_fit_reason']).toBe(decisions[0]?.[1].reason);
         expect(untouched?.metadata).not.toHaveProperty('configured_model');
+    });
+});
+
+describe('council_cli size-fit — suggest unless opted in', () => {
+    const ladder = { members: { anthropic: { model_ladder: ['claude-small', 'claude-big'] } } };
+    async function seat() {
+        const { CouncilResponse, ExternalAIClient } = await import('../../src/scripts/ai_council/clients.js');
+        class Seat extends ExternalAIClient {
+            constructor() {
+                super();
+                this.name = 'anthropic';
+                this.model = 'claude-big';
+            }
+            override ask(): InstanceType<typeof CouncilResponse> {
+                return new CouncilResponse({ provider: this.name, model: this.model, text: 'ok' });
+            }
+        }
+        return new Seat();
+    }
+
+    it('a settings block without auto_apply suggests and names the --model to apply it', async () => {
+        const { _size_fit_gate } = await import('../../src/scripts/council_cli.js');
+        const s = await seat();
+        const lines: string[] = [];
+        const decisions = _size_fit_gate({ prompt: 'Is two bigger than one?', lens: 'analysis', members: [s], ai_cfg: ladder, stdout: (l) => lines.push(l) });
+        expect(decisions.map(([, , applied]) => applied)).toEqual([false]);
+        expect(s.model).toBe('claude-big');
+        expect(lines.join('')).toContain('Apply with `--model anthropic=claude-small`.');
+    });
+
+    it('the estimate preview never applies, even where auto_apply is on', async () => {
+        const { _size_fit_gate } = await import('../../src/scripts/council_cli.js');
+        const s = await seat();
+        const decisions = _size_fit_gate({
+            prompt: 'Is two bigger than one?',
+            lens: 'analysis',
+            members: [s],
+            ai_cfg: { ...ladder, model_downgrade: { auto_apply: true } },
+            stdout: () => undefined,
+            suggest_only: true,
+        });
+        expect(decisions.map(([, , applied]) => applied)).toEqual([false]);
+        expect(s.model).toBe('claude-big');
     });
 });

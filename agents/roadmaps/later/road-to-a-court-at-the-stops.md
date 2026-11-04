@@ -87,7 +87,8 @@ labelled unmeasured until the precision claim passes.
 ## Phase 3 — Paid runs keep their findings
 
 - [ ] **3.1** `bench_adversarial_council` stores the full finding objects next
-      to the counts, keyed by corpus hash, prompt version and model id.
+      to the counts, keyed by corpus hash, prompt version, model id and seat
+      `effort` — two arms at different effort are different arms.
       verify: a stored run re-scores offline without a model call.
 - [ ] **3.2** Shadow the debate stop: run `argument_exhaustion` after each
       round and log would-stop; behaviour unchanged. Promotion belongs to the
@@ -118,6 +119,19 @@ labelled unmeasured until the precision claim passes.
       stay inside prompts. Default-on only behind 4.2 passing.
       verify: command doc plus a dry-run fixture; grep against the closed
       verdict vocabularies finds no new label.
+- [ ] **5.3 The court spends like the council.** The court reuses the
+      council's quota levers instead of growing its own: seat `effort`
+      (`effort.ts`) with a `court` lens default of `medium` for the first pass
+      and `high` only for the cross-examination round; the `council estimate`
+      size-fit preview before any paid pass; quota exhaustion carried across
+      rounds (`quota_carry.ts`), so a seat out of quota is named as absent
+      rather than re-asked; exhibits inlined as the cited span only, never the
+      whole file; seats stay text-in/text-out — no fetch tools. The Phase 4
+      runs execute sequentially, one arm at a time, at a pinned effort recorded
+      with the run.
+      verify: a dry-run fixture shows the per-round effort in the seat argv, a
+      quota-refused seat is called once across the cross-examination, and the
+      Phase 4 run record carries the effort.
 
 ## Blockers
 
@@ -145,3 +159,4 @@ labelled unmeasured until the precision claim passes.
 - [ ] AC-2 — The paid tier is offered only on its triggers.
 - [ ] AC-4 — Admissibility filters only after `exhibit-precision-lift` passes. <!-- blocked-by: court-measurement-spend -->
 - [ ] AC-3 — `/council court` adds no verb and no verdict label.
+- [ ] AC-5 — A court run uses the council's effort, size-fit and quota-carry levers; no court seat gets a fetch tool.

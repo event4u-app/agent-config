@@ -69,3 +69,16 @@ describe('emitPrompts (step 4.4)', () => {
         for (const loop of ['inventory', 'cross-exam', 'converge']) expect(prompts.exchange).toContain(loop);
     });
 });
+
+describe('emitPrompts reading block', () => {
+    it('carries the reading block into both prompts when given', () => {
+        const p = emitPrompts({ scope: 's', pin: 'abc123', roundId: 'r', reading: 'READ-BLOCK-MARKER' });
+        expect(p.analyst).toContain('READ-BLOCK-MARKER');
+        expect(p.exchange).toContain('READ-BLOCK-MARKER');
+    });
+
+    it('omits it when absent', () => {
+        const p = emitPrompts({ scope: 's', pin: 'abc123', roundId: 'r' });
+        expect(p.analyst).not.toContain('READ-BLOCK-MARKER');
+    });
+});

@@ -98,6 +98,7 @@ members:                        # per-provider blocks, at least one enabled
     api_key_ref: <string>                 # optional — the credential for the metered `api` fallback rung
     # no per-member `mode:` either — same reason as `defaults`
     binary: <string>                      # optional; only valid when effective mode == "cli" or "auto"
+    effort: <"low" | "medium" | "high">   # optional — reasoning effort of this CLI seat; see "`effort`" below
     verified_at: "<YYYY-MM-DD>"           # optional, MUST BE QUOTED — when a human last checked this member's pin
                                           # the provider's own surface. Read by `check_council_pin_staleness`
                                           # (cadence 100d). A malformed or impossible date fails CLOSED at load, and
@@ -1343,8 +1344,16 @@ model_downgrade:
 ```
 
 - Small / low-complexity artefacts (per `necessity.classify_size_fit`,
-  character-based) auto-downgrade one ladder rung; the `debate` lens never
-  downgrades.
+  character-based) get a one-rung downgrade — applied when `auto_apply` is on,
+  otherwise printed as a suggestion ending in the exact override, e.g.
+  ``Apply with `--model anthropic=claude-small`.``; the `debate` lens never
+  downgrades. `auto_apply` absent from the YAML resolves to `false` at load; a
+  settings dict built by hand (tests, embedding callers) that lacks the key is
+  read the same way — it suggests, never applies.
+- **Preview:** `council estimate` runs the same gate in suggest-only mode, so
+  the calling agent can pass the suggested `--model` to `council run` before
+  anything is spent. That is the sanctioned way for an agent to choose a smaller
+  model on a low-stakes question without flipping `auto_apply`.
 - **Cache coupling:** a downgrade is applied only when the model saving beats
   the forfeited model-scoped prompt-cache reads
   (`pricing.downgrade_coupling`: `downgrade_savings > lost_cache_savings`,
@@ -1354,6 +1363,52 @@ model_downgrade:
   coupling both skipped. Set it per artefact when a specific tier is needed.
 - Requires `model_ladder` on the member (smallest → largest, must include the
   active `model`).
+
+## `effort` — reasoning effort per CLI seat
+
+```yaml
+members:
+  anthropic:
+    effort: low       # 'low' | 'medium' | 'high'; absent → the lens default
+```
+
+Resolution, first hit wins: the invocation's `--effort` flag → the member's
+`effort:` → the lens default (`effort.ts::LENS_DEFAULT_EFFORT`: `debate` is
+`high`; `pr`, `design`, `analysis`, `roadmap`, `diff`, `files` are `medium`;
+everything else `low`). An unknown value is a load error.
+
+- `claude` seats get `--effort <level>` — only on a binary on a probed
+  `major.minor` line at or after `CLAUDE_EFFORT_PROBED_VERSION`; an older binary
+  gets no flag and runs at its default.
+- `codex` seats get `-c model_reasoning_effort="<level>"`, which codex ignores
+  rather than rejects on a version that does not know the key.
+- API transports are untouched: they bill per token and are bounded by
+  `max_output_tokens`.
+
+The light seat launch (`cli_agency_bounds.ts::LIGHT_LAUNCH_PROBES`) uses the
+same version-line rule. It used to require the exact probed version, so the
+first `claude` patch update dropped `--safe-mode` and every seat booted the
+full user environment again (probe: ~146k vs ~2.8k first-call input tokens).
+
+## Quota exhaustion carries across rounds
+
+A seat answering `cli_quota_exhausted` (a local cap or the provider's own
+refusal) is not called again in the same invocation. Later deliberation and
+debate rounds give it a placeholder response with the same error and
+`metadata.not_called: true`, in the seat's usual position; the restate pass and
+gate repairs feed the same record, and a gate repair skips the seat. The
+peer-review pass leaves it out (peer review returns no entry per seat anyway).
+A stance repair refused for quota keeps the seat's answer and marks it
+`metadata.quota_exhausted_after: true`, which peer review honours. A seat that
+the `fallback.api_on_quota` path answered via API has no error and is not
+affected. Other errors (`timeout`, `auth_expired`, …) do not retire a seat.
+
+`codex exec --json` reports a refused turn — the usage limit included — as a
+`turn.failed` / `error` event on stdout with an empty stderr. A failed seat is
+therefore classified on stderr plus those events' `message` strings
+(`cli_launch_env.ts::cliFailureText`), never on the rest of stdout, whose token
+counts would match the numeric patterns. A failure with an empty stderr also
+records `metadata.stdout_tail`.
 
 ## `prompt_cache.ttl` — cache-control TTL tier (Phase 4, road-to-cache-economy)
 

@@ -32,6 +32,8 @@
  * documented step ABOVE the bound, never the widest.
  */
 
+import { onProbedLine } from './effort.js';
+
 /** One member's bound, its control counterpart, and the probe behind them. */
 export interface AgencyBound {
     /** Council member key (`anthropic`, `openai`, …). */
@@ -272,12 +274,14 @@ export const LIGHT_LAUNCH_PROBES: readonly LightLaunchProbe[] = [
 
 /**
  * The light-launch flag a seat uses for this member on this binary version, or
- * `[]` when that version was never probed.
+ * `[]` when the version is not on a probed `major.minor` line at or after the
+ * probe. An exact-version match dropped the flag on the first patch update and
+ * sent every seat back to booting the full user environment.
  */
 export function lightLaunchFor(member: string, version: string | null): readonly string[] {
     if (version === null) return [];
     const probe = LIGHT_LAUNCH_PROBES.find(
-        (p) => p.selected && p.member === member && p.probed_version === version.trim(),
+        (p) => p.selected && p.member === member && onProbedLine(version, p.probed_version),
     );
     return probe?.flag ?? [];
 }

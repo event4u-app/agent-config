@@ -17,6 +17,7 @@ import {
     type AnalystOutput,
 } from '../../src/scripts/analysis_analysts.js';
 import { AGENCY_BYPASS_FLAGS, ANALYST_BOUNDS, analystBoundFor, boundFor } from '../../src/scripts/ai_council/cli_agency_bounds.js';
+import { CLAUDE_EFFORT_PROBED_VERSION } from '../../src/scripts/ai_council/effort.js';
 
 let root: string;
 
@@ -216,11 +217,20 @@ describe('cli analysts (step 2.4b)', () => {
     });
 
     it('builds the analyst argv from the read-only analyst profile, not the seat bound', () => {
-        const cmd = cliAnalystCommand('anthropic');
+        const cmd = cliAnalystCommand('anthropic', { version: null });
         expect(cmd.binary).toBe('claude');
         expect(cmd.argv).toEqual(analystBoundFor('anthropic'));
         expect(cmd.argv).not.toEqual(boundFor('anthropic'));
         expect(cmd.promptVia).toBe('stdin');
+    });
+
+    it('appends the analyst effort after the read-only profile, never in place of it', () => {
+        const codex = cliAnalystCommand('openai');
+        expect(codex.argv.slice(0, analystBoundFor('openai').length)).toEqual(analystBoundFor('openai'));
+        expect(codex.argv.slice(-2)).toEqual(['-c', 'model_reasoning_effort="medium"']);
+        expect(cliAnalystCommand('openai', { effort: 'low' }).argv.slice(-2)).toEqual(['-c', 'model_reasoning_effort="low"']);
+        const claude = cliAnalystCommand('anthropic', { version: CLAUDE_EFFORT_PROBED_VERSION });
+        expect(claude.argv).toEqual([...analystBoundFor('anthropic'), '--effort', 'medium']);
     });
 
     it('refuses a member whose analyst profile was never probed or failed its probe', () => {
