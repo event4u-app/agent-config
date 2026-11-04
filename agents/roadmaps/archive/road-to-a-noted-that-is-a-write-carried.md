@@ -23,7 +23,7 @@ that is decided and tested rather than assumed.
 
 ## Phase 1 — The host memory as a recurrence source
 
-- [ ] **1.1 Decide the read boundary, then read.** Owner answer OQ-33
+- [x] **1.1 Decide the read boundary, then read.** Owner answer OQ-33
       (2026-10-29) permits a read-only read with no consent prompt. Open
       question from the ratification review of 2026-11-04: every project's
       memory directory, or only the current project's. Threat-model the choice
@@ -35,6 +35,19 @@ that is decided and tested rather than assumed.
       read-only (`0o555`) fixture whose bytes and mtimes are unchanged after the
       read, and a fixture memory of another project that the chosen boundary
       reads or skips as decided.
+      **Decision (AI council 2026-11-04, anthropic + openai, 2/2 concur):**
+      current project only — `hostMemoryDir(root)` = the host projects root +
+      `projectStoreSlug(root)` + `/memory`; no sibling project, no worktree
+      directory. Fail closed: a symlinked directory or entry, a file over
+      64 KiB, or more than 500 files contributes nothing. Host contributions are
+      kept as a separate `host_memory` count beside `arrivals`, so the
+      store-only figure stays recoverable. Recorded dissent: the openai seat
+      wanted host contributions kept OUT of `arrivals` until subject matching
+      is validated against representative memories; the `host_memory` split is
+      the reversible middle. revisit-if: a false-positive subject match is
+      reported from a real memory. Evidence: `npx vitest run
+      tests/scripts/host_memory_reader.test.ts` → 6/6 passed; the symlink-dir
+      guard was neutralised and the test went red, then it was restored.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-04 | reviewer: claude/host -->
@@ -46,6 +59,6 @@ that is decided and tested rather than assumed.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A subject the host memory recorded as feedback reads one more
+- [x] AC-1 — A subject the host memory recorded as feedback reads one more
       arrival in `_subject-index.json`; nothing is written under the host's
       memory directory.
