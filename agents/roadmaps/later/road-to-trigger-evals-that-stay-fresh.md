@@ -45,18 +45,19 @@ window at no extra spend.
       `--record <results-dir>` mode that sets `last_eval` to the run date only for
       a suite whose result JSON meets its precision and recall floor; a suite
       below floor, or without a result, is left untouched.
-      verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0,
-      with a fixture where a passing suite is bumped, a below-floor suite is not,
-      and a suite with no result JSON is not.
+      verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
+      The run includes a fixture where a passing suite is bumped, a below-floor
+      suite is not, and a suite with no result JSON is not.
 - [ ] **1.2 The scheduled job proposes the bump as a PR.** After the replay, the
       workflow runs `--record` and opens one PR with the changed `triggers.json`
       files and the result summary. It never pushes to `main`.
-      verify: a `workflow_dispatch` run on a branch opens a PR touching only
-      `src/skills/*/evals/triggers.json`.
+      verify: `gh pr diff <rotation-pr> --name-only | grep -v '/evals/triggers.json$'` -> 1
+      A dispatch run on a branch opened the PR, and no file outside the trigger
+      corpora is in it.
 - [ ] **1.3 Docs follow.** The `check-trigger-evals` task description and the
       remediation hint in `src/scripts/check_trigger_evals.ts` name the rotation
       PR as the way a date moves, instead of "re-run skill_trigger_eval and bump it".
-      verify: `grep -n "bump it" src/scripts/check_trigger_evals.ts` -> no hits.
+      verify: `grep -n "bump it" src/scripts/check_trigger_evals.ts` -> 1
 
 ## Phase 2 — The suites below floor
 
@@ -80,11 +81,13 @@ window at no extra spend.
       (`api-testing`, `test-driven-development`, `test-performance`, and the
       others the gate names.) Confirm each hashes into a slot, so the first
       recorded run gives it a date.
-      verify: `./scripts-run src/scripts/trigger_eval_rotation --dry-run --week <n>`
-      over weeks 1–12 lists each of the 7 exactly once.
+      verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
+      The run includes a case asserting that over weeks 1–12 each of the 7
+      lands in exactly one slot.
 - [ ] **3.2 Green on a fresh checkout.** After one full 12-week cycle with Phase 1
       live, `./scripts-run src/scripts/check_trigger_evals` exits 0 on `main`.
-      verify: that command on a fresh clone of `main` -> 0.
+      verify: `./scripts-run src/scripts/check_trigger_evals` -> 0
+      Run on a fresh clone of `main`.
 
 ## Out of scope
 
