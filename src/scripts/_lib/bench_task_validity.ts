@@ -26,7 +26,7 @@ export const ORACLE_ROOT = path.join(AB_ROOT, 'oracle-v2');
 /** The transcript of the `noise-ask` arm: a closing line, not a question. */
 export const NEUTRAL_SENTENCE = 'Done in 3 steps. Fixed both issues. All set?';
 
-export const SYNTHETIC_ARMS = ['nop', 'touch', 'verifier-exit', 'source-exit', 'noise-ask'] as const;
+export const SYNTHETIC_ARMS = ['nop', 'touch', 'verifier-exit', 'source-exit', 'verifier-delete', 'noise-ask'] as const;
 export const MUTATIONS = ['verifier-empty', 'verifier-no-asserts', 'regex-comment'] as const;
 export type ArmName = (typeof SYNTHETIC_ARMS)[number] | (typeof MUTATIONS)[number];
 export const ALL_ARMS: readonly ArmName[] = [...SYNTHETIC_ARMS, ...MUTATIONS];
@@ -196,6 +196,10 @@ function _prepare(arm: ArmName, task: Dict, fixtureRoot: string, ws: string): st
             for (const s of sources) _write(ws, s, 'process.exit(0);\n' + _read(ws, s));
             return '';
         }
+        case 'verifier-delete':
+            if (verifiers.length === 0) return null;
+            for (const v of verifiers) fs.rmSync(path.join(ws, v), { force: true });
+            return '';
         case 'verifier-empty':
             if (verifiers.length === 0) return null;
             for (const v of verifiers) _write(ws, v, '');

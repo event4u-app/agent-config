@@ -575,8 +575,15 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // sweep actually used instead of re-deriving a key that may have changed.
         workspace: clone,
         transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
+        ...final_files_fields(fixture, clone),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
+}
+
+/** The trial's post-state, so a later scorer can rebuild and re-score it. */
+export function final_files_fields(fixture: string, clone: string): Dict {
+    const { files, truncated } = scoring.final_files(fixture, clone);
+    return { final_files: files, final_files_truncated: truncated };
 }
 
 export interface RecursiveAttempt {
@@ -690,6 +697,7 @@ export function selftest_run(
         injected_chars: sp_text ? sp_text.length : 0,
         workspace: clone,
         // No transcript_path — a synthetic transcript would give T5 a score of the harness.
+        ...final_files_fields(fixture, clone),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }

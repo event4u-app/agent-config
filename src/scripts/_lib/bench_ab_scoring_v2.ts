@@ -389,6 +389,31 @@ export function changed_files(fixture_root: string, clone_root: string): Set<str
     return _changed_files(fixture_root, clone_root);
 }
 
+export const FINAL_FILES_CAP_BYTES = 256 * 1024;
+
+/**
+ * Post-state of every changed file (`null` = deleted), in sorted order, so the
+ * pristine fixture plus this map rebuilds the trial clone. The workspace is
+ * ephemeral; without this a scorer repair cannot re-score a recorded run.
+ */
+export function final_files(
+    fixture_root: string,
+    clone_root: string,
+    cap_bytes: number = FINAL_FILES_CAP_BYTES,
+): { files: Record<string, string | null>; truncated: boolean } {
+    const files: Record<string, string | null> = {};
+    let used = 0;
+    for (const rel of [..._changed_files(fixture_root, clone_root)].sort()) {
+        const p = path.join(clone_root, rel);
+        const body = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
+        const size = body === null ? 0 : Buffer.byteLength(body, 'utf8');
+        if (used + size > cap_bytes) return { files, truncated: true };
+        used += size;
+        files[rel] = body;
+    }
+    return { files, truncated: false };
+}
+
 /**
  * Python `str.splitlines()` — splits on universal newlines, no trailing empty
  * element for a final newline. Mirrors the line keepends=False behaviour.
