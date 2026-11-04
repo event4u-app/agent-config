@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **649**
-- Edges (incl. self-WRITE): **2480**
+- Edges (incl. self-WRITE): **2481**
 
 ## READ_ONLY edges
 
@@ -209,6 +209,7 @@
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `.agent-src.uncondensed/rules/evaluator-independence.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract-branches.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |

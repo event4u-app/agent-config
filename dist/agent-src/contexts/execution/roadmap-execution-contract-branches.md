@@ -50,10 +50,45 @@ cautious value became inherited rather than chosen. The invocation flags
 them instead. The cap of three and the preservation test are unchanged. The run
 writes each declared value into the target roadmap's Decisions table as its
 first act, so the value survives a resumed run rather than living only in the
-session that read the flag. Without a flag, the defaults above still apply.
-Whether `process-full` should change its default is an owner question, recorded
-as O-1 in `road-to-a-run-the-invocation-already-answered`; the 2026-11-03
-council split on it.
+session that read the flag.
+
+**Defaults under `process-full` (O-1, decided 2026-11-03).** The owner delegated
+this to the council, which converged in two rounds
+(`agents/evidence/council/inbox-2026-11-v-o1-o2-20261103.md`). For a
+`process-full` run, an omitted `late_artifacts` resolves to `auto-research`. The cap
+of three is unchanged, and research never widens execution authority: a
+discovered artifact is classified against the roadmap scope and the halt
+conditions before anything is written. `deferred_policy` stays `wait`, because
+the seats split on spawning follow-up roadmaps by default; the
+`--deferred spawn-follow-up-draft` flag still opts in. `--late-artifacts halt`
+restores the cautious value. The other commands keep `halt` / `wait`.
+
+### Owner-class decisions under `process-full`
+
+O-2, decided by the council on 2026-11-03 on the owner's delegation. A
+`high_impact` or `user_required` decision that arises during a `process-full`
+run does not interrupt the run. It is delivered at the final PR boundary. That
+is delivery, never consent: the run never acts on an inferred answer.
+
+1. **Block the affected step and every semantic dependent.** A step continues
+   only when its implementation and acceptance hold under every option of the
+   open decision. Uncertainty means blocked. A shared file is not the test;
+   whether the answer could change the step is.
+2. **Quarantine assumptions already made.** An edit written before the decision
+   surfaced that assumes one of its answers is reverted or isolated on the run's
+   branch before independent work is published.
+3. **Publish the decision first in the PR body.** It gets a stable id, the
+   options, one recommendation and the steps it blocks.
+4. **The run is reported `partial`, never `complete`.** The closing reply in the
+   invoking session names the PR link and every unresolved decision. If the PR
+   cannot be published, the reply says that directly; it never claims the
+   decision reached the user.
+5. **Resume needs an explicit answer** bound to that decision id, after which the
+   affected work is revalidated.
+
+Hard-Floor actions and the other halt conditions are untouched: they keep their
+this-turn confirmation. A follow-up roadmap that carries a blocked item carries
+its open decision with it and never treats the transfer as permission to choose.
 
 ### 2d. Owner answers carried by the invocation
 

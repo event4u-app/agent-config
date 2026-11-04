@@ -12,6 +12,10 @@ make", and the marker below used to be written with no ask in between — so the
 decision ended up filed, correctly labelled, in a file nobody is watching. The
 ordering is the fix, not the label.
 
+- **Under `process-full` the ask is the PR body** — the decision is delivered
+  there and its dependents stay blocked, per
+  [`roadmap-execution-contract-branches`](roadmap-execution-contract-branches.md)
+  § Owner-class decisions under `process-full`. No mid-run question.
 - **Interactive host** — put the question, one at a time, per
   [`ask-when-uncertain`](../../rules/ask-when-uncertain.md). An answer ends the
   block and nothing is parked.
