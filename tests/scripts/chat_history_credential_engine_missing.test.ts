@@ -8,7 +8,7 @@ vi.mock('../../src/scripts/hooks/egress_engine_loader.js', () => ({
     loadEgressEngine: () => ({ ok: false, reason: 'missing' }),
 }));
 
-const { redact_credentials } = await import('../../src/scripts/chat_history.js');
+const { redact_credentials } = await import('../../src/scripts/_lib/chat_history_redact.js');
 
 describe('chat history without the egress engine', () => {
     it('withholds every string leaf and keeps the structural keys', () => {

@@ -22,7 +22,7 @@ import { scrub_string as explainScrub } from '../_cli/explain_last/scrubber.js';
 import { redact as bundlerRedact } from '../ai_council/bundler.js';
 import { load_council_config } from '../ai_council/config.js';
 import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
-import { redact_credentials as chatHistoryRedact } from '../chat_history.js';
+import { redact_credentials as chatHistoryRedact } from './chat_history_redact.js';
 import { redact as crossRepoRedact } from '../cross_repo_retrieve.js';
 import { hasInlineSecret } from '../lint_mcp_config_security.js';
 import { detect, EGRESS_RULES } from './egress_rules.js';
