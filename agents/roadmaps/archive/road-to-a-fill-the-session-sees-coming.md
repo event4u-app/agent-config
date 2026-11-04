@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: archived
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
