@@ -64,6 +64,7 @@ import {
     resolve_split_decision,
 } from '../../src/scripts/release.js';
 import { GH_PR_BODY_LIMIT } from '../../src/scripts/release_env.js';
+import { normalize_release_text, strip_pr_wrapper } from '../../src/scripts/_lib/release_material.js';
 import {
     CURRENT_ERA_BODY_CAP,
     current_era_accumulated_body_size,
@@ -419,8 +420,19 @@ describe('release_pr_body', () => {
         const extra = `\n\n## Showcase\n\n${'y'.repeat(3_000)}`;
         const body = release_pr_body(section, '20.0.0', extra);
         expect([...body].length).toBeLessThanOrEqual(GH_PR_BODY_LIMIT);
-        expect(body.endsWith(extra)).toBe(true);
+        expect(body).toContain(extra);
+        expect(body.trimEnd().endsWith('<!-- release-pr-only:end -->')).toBe(true);
         expect(body).toContain('Changelog truncated to fit GitHub');
+    });
+
+    it('keeps an appended extra section out of the PR-body ↔ CHANGELOG equality check', () => {
+        const section = '### Features\n\n* **x:** one feature\n\nTests: 10 (+1 since 20.0.0)';
+        const extra = '\n## Showcase (advisory — never blocks this release)\n\n- Verdict: `INDETERMINATE`\n';
+        const body = release_pr_body(section, '20.1.0', extra);
+        expect(body).toContain('## Showcase');
+        const surface = strip_pr_wrapper(body, '20.1.0');
+        expect(surface).not.toBeNull();
+        expect(normalize_release_text(surface!)).toBe(normalize_release_text(section));
     });
 
     it('leaves a section that fits untouched', () => {
