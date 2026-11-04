@@ -16,8 +16,8 @@ Answer: **2** — the recommended option.
 
 What this authorises, and nothing more:
 
-- One new active roadmap, `road-to-trigger-evals-that-stay-fresh`, added without
-  archiving another (`estate_offset_exempt`).
+- One new roadmap, `road-to-trigger-evals-that-stay-fresh`, parked in `later/`
+  until an active roadmap closes (WIP cap of 5, owner directive 2026-10-24).
 - No single paid batch re-run, and no `last_eval` bump without a run behind it.
 - The spend stays inside the existing weekly rotation ceiling
   (`MAX_WEEKLY_QUERIES` = 240, owner directive 2026-11-03); raising it is not
