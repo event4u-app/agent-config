@@ -36,6 +36,14 @@ that is decided and tested rather than assumed.
       read, and a fixture memory of another project that the chosen boundary
       reads or skips as decided.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-04 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Reader reaches another project's memory | implementation | A boundary wider than decided reads corrections recorded for unrelated projects | Boundary chosen under threat-modeling first; a fixture of another project pins the decided read-or-skip | Phase 1 — The host memory as a recurrence source |
+| 2 | Reader mutates the host's memory | implementation | Any write, rename or touch under the host directory corrupts state the host owns | Read-only `0o555` fixture whose bytes and mtimes are asserted unchanged | Phase 1 — The host memory as a recurrence source |
+
 ## Acceptance Criteria
 
 - [ ] AC-1 — A subject the host memory recorded as feedback reads one more
