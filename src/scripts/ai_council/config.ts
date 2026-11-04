@@ -76,6 +76,7 @@ import { parse as parseYaml } from 'yaml';
 import { CREDENTIAL_PREFIXES } from '../_lib/egress_prefixes.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as budget from './cli_call_budget.js';
+import { type Effort, isEffort } from './effort.js';
 // LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while
 // `quorum.ts` imports `QuorumSetting` back from here. That back-edge is
 // `import type` and is erased at build, so there is no runtime cycle today.
@@ -312,6 +313,8 @@ export interface MemberConfig {
      * the falsification condition that gates ever enabling `'1h'`.
      */
     readonly prompt_cache_ttl: '5m' | '1h';
+    /** Reasoning effort for this seat (`effort.ts`); `null` defers to the lens default. */
+    readonly effort?: Effort | null;
     /**
      * Optional `YYYY-MM-DD` stamp: the date this member's `model:` pin was last
      * checked against the provider's own surface. `null` when unset.
@@ -1894,10 +1897,15 @@ function _build_member(
         }
         prompt_cache_ttl = ttl_raw;
     }
+    const effort = _get(cfg, 'effort', null);
+    if (effort !== null && !isEffort(effort)) {
+        throw new CouncilConfigError(`members.${name}.effort must be low, medium or high (got ${JSON.stringify(effort)}).`);
+    }
     return {
         name,
         enabled: member_enabled,
         model,
+        effort: effort as Effort | null,
         api_key_ref: (api_key_ref as string | null) ?? null,
         mode: (member_mode as string | null) ?? null,
         binary: (binary as string | null) ?? null,

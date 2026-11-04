@@ -483,7 +483,7 @@ Examples (Tier 1):
   ./agent-config keys:install-anthropic
   ./agent-config keys:install-openai
   ./agent-config council:estimate prompt.txt
-  ./agent-config council:run prompt.txt --output agents/runtime/council/sessions/out.json --confirm
+  ./agent-config council:run prompt.txt --output agents/runtime/council/responses/out.json --confirm
   ./agent-config council:render agents/runtime/council/sessions/out.json
 EOF
   fi

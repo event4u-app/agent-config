@@ -47,6 +47,28 @@ The pricing module bootstraps it from `_default_prices.ts` on first
 use and flags it stale when older than the most recent Monday 00:00
 UTC.
 
+### Subscription-quota levers — pick before `run`, not after
+
+A CLI seat costs no dollars but spends the owner's subscription window, and a
+window spent on an oversized call is gone for hours. Read `council:estimate`
+before `council:run` and pick, in this order:
+
+1. **Smaller model.** A `council:size-fit … Apply with --model <member>=<id>`
+   line in the estimate is a suggestion the agent may take on a low-stakes lens
+   (`default`, `prompt`, `optimize`): pass that `--model` to `run`. Never on
+   `debate`, and never on a security, data-loss or merge-control question.
+2. **Lower effort.** Lens defaults already sit at `low`/`medium`; pass
+   `--effort high` only where the question needs alternatives weighed
+   (debate already does). `--effort low` is right for a yes/no or a one-file
+   check.
+
+Rounds stay where the settings owner put them (`defaults.min_rounds`); they
+are not a lever the agent pulls to save quota.
+
+A seat that hits its quota mid-run is not called again in that run — the
+output names it, and the run continues on the remaining seats. Report the
+seat as missing; do not retry the run until its window resets.
+
 ### Pre-call estimate format
 
 Before the cost gate, compute `orchestrator.estimate(question, members,

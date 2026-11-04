@@ -323,6 +323,10 @@ members:
     model: sonnet
     api_key_ref: file:anthropic.key
     # binary: /usr/local/bin/claude      # only valid when mode == cli
+    # Reasoning effort of the CLI seat: low | medium | high. Absent → the
+    # lens default (debate high; pr/design/analysis medium; else low).
+    # `council run --effort <level>` overrides it for one invocation.
+    # effort: low
     # Phase 7 — size-fit downgrade ladder (smallest → largest). The
     # active `model:` above must appear on this list. When the size
     # classifier flags a request as oversized, it suggests the next

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "claim beside a matching write to .editorconfig",
+    "turn": {
+      "prompt": "Benutze ab jetzt immer Tabs statt Spaces.",
+      "reply": "Notiert, ab jetzt Tabs — steht in der .editorconfig.",
+      "toolCommands": ["Write /repo/.editorconfig"]
+    }
+  },
+  {
+    "name": "'noted' as 'observed' with nothing durable asked",
+    "turn": {
+      "prompt": "what did the review say?",
+      "reply": "Noted, see the PR — two findings, both fixed.",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "write through the memory CLI",
+    "turn": {
+      "prompt": "merk dir: keine Emojis in Commits",
+      "reply": "Gemerkt, steht jetzt in der Memory.",
+      "toolCommands": ["Bash agent-config memory:add --type feedback \"no emojis in commits\""]
+    }
+  },
+  {
+    "name": "claim deep in a summary, not in the opening",
+    "turn": {
+      "prompt": "fass zusammen was du gemacht hast",
+      "reply": "Ich habe die drei fehlschlagenden Tests repariert, den Linter auf den geänderten Dateien laufen lassen, die Fixtures aktualisiert und zwei Typfehler im Store behoben. Danach lief die Suite grün durch, auch auf dem Branch nach dem Merge mit main, und der Review-Bot hat keine neuen Findings gemeldet. Der Nightly-Job läuft ab jetzt um drei Uhr.",
+      "toolCommands": []
+    }
+  }
+]

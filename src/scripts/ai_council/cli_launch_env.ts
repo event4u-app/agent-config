@@ -52,3 +52,25 @@ export function _cliVersion(binary: string): string | null {
     _cliVersionCache.set(binary, version);
     return version;
 }
+
+/**
+ * The text a failed seat is classified on. `codex exec --json` reports a refused
+ * turn — the usage limit included — as a `turn.failed` / `error` event on stdout
+ * and leaves stderr empty, so stderr alone classified a quota refusal as a plain
+ * exit. Only the events' `message` strings are taken: the rest of stdout carries
+ * token counts that would match the numeric patterns (`429`, `401`).
+ */
+export function cliFailureText(stderr: string | null | undefined, stdout: string | null | undefined): string {
+    const messages: string[] = [];
+    for (const line of (stdout ?? '').split('\n')) {
+        if (!line.includes('"turn.failed"') && !line.includes('"type":"error"')) continue;
+        try {
+            const ev = JSON.parse(line) as { message?: unknown; error?: { message?: unknown } };
+            const msg = ev.error?.message ?? ev.message;
+            if (typeof msg === 'string') messages.push(msg);
+        } catch {
+            // not a JSON event line
+        }
+    }
+    return [stderr ?? '', ...messages].filter((s) => s !== '').join('\n');
+}

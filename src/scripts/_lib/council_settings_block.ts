@@ -48,6 +48,9 @@ export function synthesizeAiCouncilBlock(cfg: CouncilConfig): Dict {
         if (m.prompt_cache_ttl !== '5m') {
             entry['prompt_cache_ttl'] = m.prompt_cache_ttl;
         }
+        if (m.effort !== null && m.effort !== undefined) {
+            entry['effort'] = m.effort;
+        }
         // Dropping these turned every configured `base_url` route into an
         // unknown provider at `build_members`, so no free route was ever built.
         if (m.route) {
