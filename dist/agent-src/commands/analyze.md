@@ -39,7 +39,7 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
 | `/analyze:reference` | `analyze/reference/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
 | `/analyze:roadmap-repos` | `analyze/roadmap-repos/command.md` | Walk the estate's encrypted reference tokens and feed each unique repo through `reference`, one subagent at a time |
-| `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification + step reproduction against the current tree + artefact mapping + roadmap |
+| `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) plus every inbox entry belonging to the same change → claim verification + step reproduction against the current tree + artefact mapping + roadmap |
 | `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
 | `/analyze:and-optimize` | `analyze/and-optimize/command.md` | Analyse this project, repository or module and improve it → analysts, exchange, council, ready roadmaps, PR (alias: `/optimize:deep`) |
 | `/analyze:pr` | `analyze/pr/command.md` | Run the loops and councils on an existing pull request → a read-only verdict by default, `--optimize` to push tested fixes |

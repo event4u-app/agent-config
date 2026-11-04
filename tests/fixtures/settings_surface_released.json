@@ -1,5 +1,5 @@
 {
-  "version": "19.2.0",
+  "version": "20.1.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -332,6 +332,14 @@
       "type": "array",
       "default": []
     },
+    "hooks.design_consistency.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "hooks.design_consistency.shadow": {
+      "type": "boolean",
+      "default": true
+    },
     "hooks.design_pass.enabled": {
       "type": "boolean",
       "default": false
@@ -571,6 +579,10 @@
     "screenshots.identity_allowlist": {
       "type": "array",
       "default": []
+    },
+    "security_ops.plan": {
+      "type": "boolean",
+      "default": false
     },
     "star_ask.mode": {
       "type": "string",
