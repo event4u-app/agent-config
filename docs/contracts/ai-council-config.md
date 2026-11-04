@@ -602,7 +602,8 @@ Schema v1:
 }
 ```
 
-- `action` ∈ `proceed | skip_necessity | block_quota | quorum_result | transport_fallback`.
+- `action` ∈ `proceed | skip_necessity | block_quota | quorum_result | transport_fallback | seat_account`.
+- `seat_account` names the agent-switch account (`codex/<name>`) one CLI seat call ran on, and its `outcome`; never the account's config dir.
   (`quorum_result` was shipped and undocumented here until 2026-08-19;
   it is listed now rather than left for the next reader to find in the
   validator's error message.)
@@ -1409,6 +1410,47 @@ therefore classified on stderr plus those events' `message` strings
 (`cli_launch_env.ts::cliFailureText`), never on the rest of stdout, whose token
 counts would match the numeric patterns. A failure with an empty stderr also
 records `metadata.stdout_tail`.
+
+## `agent_switch` — which account a CLI seat starts on
+
+```yaml
+agent_switch: rules     # 'rules' (default) | 'balance' | 'off'
+```
+
+When agent-switch (2.11.0 or later; `--exclude` from 2.12.0) is installed,
+every `codex` and `claude` CLI seat starts on the account agent-switch would
+pick for that start, instead of inheriting the parent's login. The council
+asks `agent-switch dir --provider <codex|claude> --json` (5 s timeout) per seat
+call and spawns with `CODEX_HOME` / `CLAUDE_CONFIG_DIR` set to the returned
+`configDir`. Applies to council members, `ai_team` and every other
+`CliClient` spawn.
+
+- **`rules`** — `dir` runs from the project directory, so a folder rule that
+  pins this project to an account is honoured. A rule that cannot be served
+  (agent-switch exit `86`) refuses the seat with `folder_rule_refused` — it is
+  never replaced by the default login.
+- **`balance`** — passes `--plain`: folder rules are ignored, accounts are
+  balanced by headroom only.
+- **`off`** — agent-switch is never asked; seats inherit the parent's env.
+- `AGENT_CONFIG_AGENT_SWITCH=<mode>` overrides the file for one process.
+- agent-switch missing, failing, or returning no `configDir` → the seat spawns
+  exactly as before, on the inherited login. An unknown value is a load error.
+
+**One retry on another account.** A seat refused for an account usage limit
+(codex `usage_limit_reached` / "you've hit your usage limit", claude "usage
+limit reached", HTTP 429 — `seat_limit.ts`) re-resolves with `--exclude <that
+profile>` and runs once more on the returned account. Bounded: one retry per
+seat per call, never a loop. No other account → the seat fails with the
+original error and `metadata.account_retry: no_other_account`. A served retry
+carries `metadata.account_retry_from`.
+
+**Spread within a round.** Seats of one vendor in the same round exclude the
+accounts already serving that round while a free one exists, and share once
+none is left — sharing beats failing. The response records the serving
+profile as `metadata.account`; `council:status` prints one `accounts` line per
+CLI vendor (`codex seats: agent-switch (2 accounts, rules)` / `default login
+(agent-switch not found)`). AC never writes a login or a credential — it only
+chooses among config dirs agent-switch already holds.
 
 ## `prompt_cache.ttl` — cache-control TTL tier (Phase 4, road-to-cache-economy)
 
