@@ -141,7 +141,7 @@ describe('shadow window report', () => {
         const r = {
             ...row('2026-11-02T00:00:00Z', 'app/b.tsx', 1),
             head: 'abc123',
-            findings: [{ rule: 'consistency-raw-control', line: 3, message: 'raw select', context: '<select name="s">' }],
+            findings: [{ rule: 'consistency-raw-control' as const, line: 3, message: 'raw select', context: '<select name="s">' }],
         };
         const w = shadowWindow([r, { ...r, at: '2026-11-03T00:00:00Z' }], now, 14);
         expect(w.firings).toHaveLength(2);
@@ -149,7 +149,7 @@ describe('shadow window report', () => {
             at: '2026-11-02T00:00:00Z',
             file: 'app/b.tsx',
             head: 'abc123',
-            findings: [{ rule: 'consistency-raw-control', line: 3, message: 'raw select', context: '<select name="s">' }],
+            findings: [{ rule: 'consistency-raw-control' as const, line: 3, message: 'raw select', context: '<select name="s">' }],
         });
     });
 });

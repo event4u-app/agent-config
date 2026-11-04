@@ -117,7 +117,7 @@ function roles(root: string, head: string | null): UiAuditArtefact['control_role
         const stamp = stampOf(head, dirty, new Set(c.primitive_files ?? []));
         // A map written before `families` existed would silence every finding.
         const current = c.control_roles && Object.values(c.control_roles).every((e) => !e || e.canonical === null || e.families);
-        if (stamp !== null && c.stamp === stamp && current) return c.control_roles;
+        if (stamp !== null && c.stamp === stamp && current && c.control_roles) return c.control_roles;
     } catch {
         // absent or unreadable: computed below
     }
