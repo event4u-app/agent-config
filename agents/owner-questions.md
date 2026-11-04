@@ -429,6 +429,7 @@ and the run that applies it links its PR.
   condition.
 - **Blocks:** nothing executable now.
 - **Answered 2026-10-29:** "Es wäre gut, wenn wir diese für eine gewisse zeit woanders speichern und sie dann in regelmäßigen abständen (z.b. nach 7 tagen) gelöscht werden. Ab da ist es dann so gut wie geschwärszt, aber bis dahin arbeitet der agent wie der nutzer es erwartet" — a fourth option: chat history stores placeholders; the original values sit in a separate local, untracked store the agent can resolve, and are purged after 7 days, after which only the placeholders remain. Applied in `later/road-to-a-fill-the-session-sees-coming` 3.1. <!-- md-language-check: ignore -->
+- **Narrowed 2026-11-04:** the resolvable 7-day store conflicts with the never-stored floor of `docs/contracts/egress-placeholders-v1.md` (blocker `b-history-credential-store-vs-egress-contract`). Asked in session with three options; the owner answered "1" — placeholders only, no original stored anywhere. Shipped as step 3.1.
 
 ### OQ-35 — A memory shared across providers vs. the ADR-249 floor
 
