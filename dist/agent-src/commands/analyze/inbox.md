@@ -8,7 +8,7 @@ sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
-argument-hint: "[<file> | <dir> | <round-id>]... [--no-related] [--process] [--pr] [--merge] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
+argument-hint: "[<path>|<round-id>]... [--process] [--pr] [--merge] [--no-related] [--no-pr] [--worktree] [--triage-only]"
 limits:
   mode_default: execute
   max_iterations: 3
