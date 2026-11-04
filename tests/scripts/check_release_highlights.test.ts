@@ -771,6 +771,32 @@ describe('Known limitations — the fifth label, derived since 2026-09-13', () =
         expect(derived['Known limitations']).toEqual([]);
     });
 
+    it('a TEST file is not shipped surface — its residual-shaped fixtures are not a release property', () => {
+        // 20.1.0: a fix touching tests/scripts/release.test.ts was reported as
+        // "declares a residual" because that file asserts on the rendered
+        // 'Known limitations' label. tests/scripts/ and *.test.ts never ship.
+        const derived = derive_categories(
+            [
+                commit({
+                    subject: 'fix(release): keep the showcase section inside the PR-only region',
+                    files: [
+                        { status: 'M', path: 'src/scripts/release_publication.ts' },
+                        { status: 'M', path: 'tests/scripts/release.test.ts' },
+                        { status: 'M', path: 'src/scripts/_lib/foo.test.ts' },
+                    ],
+                }),
+            ],
+            {
+                readTouchedFile: readerFor({
+                    'src/scripts/release_publication.ts': 'const x = 1;\n',
+                    'tests/scripts/release.test.ts': "expect(head).toContain('Known limitations');\n",
+                    'src/scripts/_lib/foo.test.ts': DECLARING_TEXT,
+                }),
+            },
+        );
+        expect(derived['Known limitations']).toEqual([]);
+    });
+
     it('the narrowings hold: report vocabulary and threshold rationale are NOT residuals', () => {
         // Both measured over the two real spans before this gated anything.
         // `build_proof.ts` EMITS a section titled "Known limits"; the phrase is
