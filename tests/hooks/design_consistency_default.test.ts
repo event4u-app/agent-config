@@ -1,7 +1,7 @@
 // road-to-a-control-that-matches-its-neighbours 3.8: the consistency check runs
-// without a setting and records every write it sees as a shadow row, but by
-// default delivers nothing (owner, 2026-11-04); `shadow: false` turns delivery
-// on, `enabled: false` turns the check off. Run end to end, because the default lives in
+// without a setting, records every write it sees as a shadow row and delivers a
+// finding as one advisory line (3.10); `shadow: true` keeps it recording only,
+// `enabled: false` turns the check off. Run end to end, because the default lives in
 // `main` and a unit test of the parts cannot see whether it is wired.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -56,17 +56,19 @@ function run(root: string, file: string): { status: number | null; stdout: strin
     return { status: r.status, stdout: r.stdout };
 }
 
-describe('the consistency check ships recording, not speaking', () => {
-    it('with no setting at all, a raw select is recorded and nothing is delivered', () => {
+describe('the consistency check ships on and speaking', () => {
+    it('with no setting at all, a raw select is recorded and delivered', () => {
         const root = project();
-        expect(run(root, 'app/filters.tsx')).toEqual({ status: 0, stdout: '' });
+        const r = run(root, 'app/filters.tsx');
+        expect(r.status).toBe(2);
+        expect(r.stdout).toContain('raw select');
         const rows = fs.readFileSync(path.join(root, SHADOW), 'utf8').trim().split('\n');
         expect(JSON.parse(rows[0]!)).toMatchObject({ file: 'app/filters.tsx', raw_control: 1 });
     });
 
-    it('a settings file that never names the key leaves it recording and silent', () => {
+    it('a settings file that never names the key leaves it on and speaking', () => {
         const root = project('hooks:\n  design_pass:\n    enabled: false\n');
-        expect(run(root, 'app/filters.tsx')).toEqual({ status: 0, stdout: '' });
+        expect(run(root, 'app/filters.tsx').stdout).toContain('raw select');
         expect(fs.existsSync(path.join(root, SHADOW))).toBe(true);
     });
 

@@ -164,7 +164,7 @@ export function definedComponents(rel: string, text: string): string[] {
     // A single-file component is named by its file.
     const sfc = /(?:^|\/)([A-Z][A-Za-z0-9_]*)\.(?:vue|svelte|astro)$/.exec(rel);
     if (sfc) out.push(sfc[1]!);
-    const code = codeOnly(text);
+    const code = moduleCode(text);
     for (const m of code.matchAll(/export\s+(?:default\s+)?(?:function|const|class)\s+([A-Z][A-Za-z0-9_]*)/g)) {
         out.push(m[1]!);
     }
@@ -200,13 +200,85 @@ function importedBindings(clause: string): string[] {
     return out;
 }
 
-/** Comments and string contents blanked, so a declaration can only match live code. */
-function codeOnly(text: string): string {
-    const blank = (c: string) => c.replace(/[^\n]/g, ' ');
-    return text
-        .replace(/`(?:\\[^]|[^\\`])*`|'(?:\\.|[^\\'\n])*'|"(?:\\.|[^\\"\n])*"/g, (q) => q[0] + blank(q.slice(1, -1)) + q[0])
-        .replace(/\/\*[^]*?\*\//g, blank)
-        .replace(/\/\/.*$/gm, blank);
+const REGEX_AFTER = '(,=:[!&|?{};+-*%~^';
+
+/** `/` at `i` opens a regex literal, judged by the token before it. */
+function regexAt(text: string, i: number): boolean {
+    let j = i - 1;
+    while (j >= 0 && /\s/.test(text[j]!)) j--;
+    if (j < 0 || REGEX_AFTER.includes(text[j]!) || (text[j] === '>' && text[j - 1] === '=')) return true;
+    return /\b(?:return|typeof|case|in|of|new|delete|void|throw|yield|await|else|do)$/.test(text.slice(Math.max(0, j - 9), j + 1));
+}
+
+/**
+ * Module-level code only: strings, templates, comments and regex bodies blanked, and
+ * every scope below the top level blanked, so a namespace, `declare` block or function
+ * body cannot read as a module definition. An import or export clause `{…}` stays.
+ * Offsets hold.
+ */
+function moduleCode(text: string): string {
+    const out = text.split('');
+    const blank = (a: number, b: number) => {
+        for (let k = a; k < b; k++) if (out[k] !== '\n') out[k] = ' ';
+    };
+    // '{' scope · 'c' import/export clause · '`' template text · 't' template expression
+    const stack: string[] = [];
+    const deep = () => stack.some((x) => x !== 'c');
+    let open = -1;
+    const push = (x: string, at: number) => {
+        if (x !== 'c' && !deep()) open = at;
+        stack.push(x);
+    };
+    const pop = (at: number) => {
+        stack.pop();
+        if (!deep() && open >= 0) {
+            blank(open + 1, at);
+            open = -1;
+        }
+    };
+    let i = 0;
+    while (i < text.length) {
+        const c = text[i]!;
+        const d = text[i + 1];
+        if (stack.at(-1) === '`') {
+            if (c === '`') pop(i);
+            else if (c === '$' && d === '{') push('t', i++);
+            else if (c === '\\') i++;
+            i++;
+        } else if (c === '/' && (d === '/' || d === '*')) {
+            const e = d === '/' ? text.indexOf('\n', i) : text.indexOf('*/', i + 2);
+            const end = e < 0 ? text.length : d === '/' ? e : e + 2;
+            blank(i, end);
+            i = end;
+        } else if (c === '"' || c === "'") {
+            let k = i + 1;
+            while (k < text.length && text[k] !== c && text[k] !== '\n') k += text[k] === '\\' ? 2 : 1;
+            blank(i + 1, k);
+            i = k + 1;
+        } else if (c === '/' && regexAt(text, i)) {
+            let k = i + 1;
+            for (let cls = false; k < text.length && text[k] !== '\n' && (cls || text[k] !== '/'); k++) {
+                if (text[k] === '\\') k++;
+                else if (text[k] === '[') cls = true;
+                else if (text[k] === ']') cls = false;
+            }
+            if (text[k] === '/') {
+                blank(i + 1, k);
+                i = k;
+            }
+            i++;
+        } else {
+            if (c === '`') push('`', i);
+            else if (c === '}' && stack.length) pop(i);
+            else if (c === '{') {
+                const before = out.slice(Math.max(0, i - 80), i).join('');
+                push(!deep() && /(?:^|[;}\n])\s*(?:import|export)(?:\s+type)?(?:\s+[\w$]+\s*,)?\s*$/.test(before) ? 'c' : '{', i);
+            }
+            i++;
+        }
+    }
+    if (open >= 0) blank(open + 1, text.length);
+    return out.join('');
 }
 
 export interface BoxMetrics {
