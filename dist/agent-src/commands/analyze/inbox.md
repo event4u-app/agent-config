@@ -8,7 +8,7 @@ sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
-argument-hint: "[<file> | <dir> | <round-id>] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
+argument-hint: "[<file> | <dir> | <round-id>]... [--no-related] [--process] [--pr] [--merge] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
 limits:
   mode_default: execute
   max_iterations: 3
@@ -47,17 +47,34 @@ shared vocabulary, lenses and tiers:
 
 | Given | Scope |
 |---|---|
-| a file path | that file only |
-| a directory | every file in it, triaged first |
+| a file path | that file, **plus** the inbox entries that belong to the same change (Phase 1a) |
+| a directory | every file in it, triaged first, **plus** the entries that belong to the same change (Phase 1a) |
+| several paths | their union, expanded once (Phase 1a) — one change, not one run per path |
 | a round id | the round: `agents/runtime/analysis/<round-id>/` plus `agents/tmp/<round-id>/`, read as one set |
 | nothing | `agents/tmp/` |
 
-Flags: `--triage-only` stops after Phase 2 (no deep analysis, no roadmap) ·
-`--no-roadmap` analyses but emits findings instead of roadmaps ·
-`--no-pr` stops after validation, without a commit or a push ·
+Scope flags: `--no-related` takes the named paths literally and skips the
+Phase 1a expansion · `--triage-only` stops after Phase 2 (no deep analysis, no
+roadmap) · `--no-roadmap` analyses but emits findings instead of roadmaps ·
 `--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6) ·
-`--worktree` runs the analysis itself in an isolated worktree (see below; off
-by default).
+`--worktree` runs the run in an isolated worktree (see below; off by default,
+implied by `--process`).
+
+Chain flags — what happens **after** the roadmaps exist (§ The chain):
+`--process` executes every emitted roadmap with
+[`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md)
+in the same run · `--pr` publishes the run as one non-draft PR (already the
+default when `vcs: git`; naming it is accepted and changes nothing on its own) ·
+`--merge` merges that one PR into its base once its checks
+are green, then removes the worktree · `--no-pr` stops after validation, without
+a commit or a push. `--merge` implies `--pr`; `--merge` together with `--no-pr`,
+or `--process` together with `--no-roadmap` / `--triage-only`, is refused before
+Phase 1 with one line naming the conflict.
+
+The invocation the operator types today in prose — *"analyse agents/tmp/x and
+everything that fits, then process the roadmaps with `/roadmap:process-full`, in
+a worktree, open a PR and merge it"* — is
+`/analyze:inbox agents/tmp/x --process --merge`.
 
 ## Enforced limits
 
@@ -89,7 +106,7 @@ rather than a loop budget, and it is stated where it fires.
 THE RUN ENDS IN A NON-DRAFT PR CARRYING EXACTLY ITS ROADMAPS, WHEN vcs: git.
 --no-pr STOPS AFTER VALIDATION, WITHOUT A COMMIT OR A PUSH.
 THE INVOCATION AUTHORISES ONLY THE RUN'S OWN BRANCH AND ITS ONE PR — NEVER
-ANOTHER BRANCH, NEVER A MERGE.
+ANOTHER BRANCH, AND A MERGE ONLY WHEN IT CARRIES --merge.
 ```
 
 This is the final stage of the analysis doors (ADR-288), so it ends the way the
@@ -113,12 +130,63 @@ resolves with `vcs: git` and `--no-pr` is absent:
    push plus three CI-fix rounds, then `handed-back` naming the red.
 4. One PR, opened non-draft (`isDraft: false`) and never twice for the same
    run; its body carries the point ledger, the coverage ledger and the open
-   decisions. Merging is never part of the run.
+   decisions. Merging is never part of the run — unless the invocation carries
+   `--merge` (§ The chain).
 
 The invocation is the this-turn confirmation of exactly those objects (ADR-288
 D6/D7); [`scope-control`](../../../../rules/scope-control.md) § Git operations
 still gates every other branch, PR or worktree. `vcs: none` or `--no-pr` ends
 the run validated and local, and says so in one line.
+
+### The chain — `--process`, `--pr`, `--merge`
+
+```
+THE FLAGS ON THE INVOCATION ARE THE THIS-TURN CONFIRMATION OF EXACTLY THEIR
+OBJECTS: --process THE EMITTED ROADMAPS, --pr THE RUN'S ONE PR, --merge THAT
+ONE PR INTO ITS BASE. NOTHING ELSE INHERITS THEM.
+NEVER MERGE ON RED, NEVER --admin, NEVER BYPASS BRANCH PROTECTION.
+```
+
+Without a chain flag this command authors and stops (§ Do NOT, authoring never
+inherits execution). With one, the stages run in this order, and the order is
+printed as one `Order:` line before Phase 1
+([`invocation-plan`](../../contexts/execution/invocation-plan.md)):
+
+1. **Worktree.** `--process` and `--merge` imply `--worktree`: the run gets its
+   own branch `analysis/<run-id>` in an isolated worktree, created per
+   [`using-git-worktrees`](../../../../skills/using-git-worktrees/SKILL.md). The
+   inbox itself is gitignored and therefore **not** in the worktree — Phase 1
+   reads the sources from the primary checkout's `agents/tmp/`, and the Phase 6
+   `tmp.old/` move happens there too. A worktree that cannot see its inputs reads
+   an empty inbox and reports a clean round; say the primary path in the scope
+   line.
+2. **Analysis** — Phases 1–6c, then closure. With a later stage writing the same
+   branch this run is the **inner stage**: it commits and stops at `committed`,
+   no push. `--process` counts as the operator asking for active roadmaps
+   (Phase 6), so the emitted roadmaps land in `agents/roadmaps/`, not `later/`.
+3. **`--process`** — `/roadmap:process-full` on each emitted roadmap, in the
+   order the change set needs (foundation first; one roadmap's prerequisite
+   before its dependant). Its own gates are unchanged: Hard Floor, human-gated
+   `[~]` items, the fix-loop budget, per-step verification. A roadmap it cannot
+   close stays open and is named; the remaining ones still run.
+4. **`--pr`** (default, implied by `--merge`) — the terminal stage publishes
+   **once**: one push, one non-draft PR carrying the roadmaps *and* the work
+   that executed them, one CI settle (`ci_settle <pr>`), at most three CI-fix
+   rounds, then `handed-back` naming the red.
+5. **`--merge`** — waits for CI regardless of `delivery.wait_for_ci`, and only
+   after every required check on the PR's head is green
+   and the PR is mergeable: `gh pr merge <n>` with the repository's configured
+   merge method (read it, never pick one), then verify with
+   `gh pr view <n> --json state,mergedAt` and remove the worktree via
+   [`/worktree:cleanup`](../../../engineering-base/worktree/cleanup/command.md). A red, a
+   requested change, a merge conflict or a pending required review ends the run
+   at `pr-open` with the reason in one line — never a retry with force. A
+   `[~]` human-gated item still open in a processed roadmap is **not** a merge
+   blocker by itself; it is listed in the PR body and in the closing summary.
+
+Each stage that ends early ends the chain there, and the closing summary names
+the stage reached: `committed` · `processed` · `pr-open` · `merged` ·
+`handed-back`.
 
 **A composed invocation makes this run an inner stage.** When a later stage of
 the same invocation writes this branch — "first the roadmap, then
@@ -297,6 +365,63 @@ Paste the `ENC1:` token into the intake note. That token, and the codename map a
 `agents/evidence/reports/source-codename-map.md`, are the only places the
 correspondence may exist. Never a second plaintext copy — not in the roadmap, not
 in the PR body, not in a commit message.
+
+### Phase 1a — Expand a named target to its change set
+
+```
+A NAMED PATH IS A SEED, NOT A BOUNDARY. EVERY OTHER INBOX ENTRY IS CHECKED
+AGAINST IT, AND THE ONES THAT BELONG TO THE SAME CHANGE JOIN THE RUN.
+ONE CHANGE → ONE ROUND, ONE LEDGER, ONE BRANCH, ONE PR.
+THE EXPANSION IS SHOWN, WITH ITS SIGNALS, BEFORE PHASE 2 — NEVER SILENT.
+```
+
+An operator who names `agents/tmp/design-fix` usually means "this, and the other
+drops about the same thing". Analysing them as separate runs costs one full
+census, one ledger, one closure pass and one PR **each**, and — worse — plans
+the same surface several times without any run seeing the others' constraints.
+So a named path seeds the scope; the change set is what gets analysed.
+
+**Candidates** are every other top-level entry in `agents/tmp/` (never
+`tmp.old/`, never `agents/runtime/`). Each is scored on four cheap signals,
+none of which requires a deep read:
+
+| Signal | How it is read | Strength |
+|---|---|---|
+| **name** | shares a stem or a leading token with a seed (`design-fix` ↔ `design-fix-2`, `design-*`), or a declared lineage/manifest links them | strong |
+| **subject** | the seed's distinctive anchors — headings, file paths, component / command / rule names, decision ids — `grep -rlF` across the candidate; ≥ 3 distinct anchors hit | strong |
+| **owner** | the candidate's subject maps to the same `agents/roadmaps-owned.md` row as a seed's | medium |
+| **time** | dropped within the same few days as a seed | weak — never decides alone |
+
+Anchors are fixed strings from untrusted content: each goes in its own `-e`
+under `-F`, and one carrying a quote or a newline is dropped and named — the
+same discipline as Phase 5's owner search.
+
+A candidate **joins** on one strong signal plus any other, or on two strong
+ones. One medium signal alone, or time alone, **does not** join — it is listed
+as `near-miss` so the operator sees it was looked at. The thresholds are stated
+defaults, not a measured optimum; *revisit-if:* an operator removes a joined
+entry, or names a near-miss as belonging, on more than one run.
+
+Print one table before Phase 2, one row per candidate checked:
+
+| entry | signals | verdict | why (one clause) |
+
+Verdicts are `seed` · `joined` · `near-miss` · `unrelated`. The scope line then
+states the seeds, the joined entries and the totals. `--no-related` skips the
+expansion and prints `expansion: skipped (--no-related)` instead of the table.
+
+What joining means, downstream:
+
+- The seeds and the joined entries are **one source set** for Phase 2b — read,
+  grouped and censused together; if the union crosses the Phase 2b size
+  threshold it runs as lanes, which split work, never the change.
+- They become **one round**: gathered under one opaque round directory
+  (Phase 1's naming rule), each member renamed to an opaque member name, the
+  original names recorded once, `ENC1:`-encrypted, in that round's intake note.
+- Phase 5 plans them as one change: a subject the members share gets **one**
+  roadmap (or one step on its owner), never one per file. Several roadmaps are
+  fine when the change genuinely has several owners.
+- Phase 6 consumes exactly the members of the change — never a `near-miss`.
 
 ### Phase 2 — Triage (cheap, all files)
 
@@ -1329,7 +1454,13 @@ prompted this section could not be given.
 - Start executing a roadmap this command wrote — authoring never inherits
   execution authorization
   ([`scope-control`](../../../../rules/scope-control.md) § Authoring vs.
-  implementation).
+  implementation). `--process` on the invocation is the one exception, and it
+  covers only the roadmaps this run emitted.
+- Merge without `--merge` on the invocation, merge on anything but green, or
+  merge any PR but the run's own.
+- Analyse a named path alone when another inbox entry belongs to the same
+  change, without listing that entry as `near-miss` or `unrelated`. A silent
+  narrow scope plans half a change.
 - Drop a point because it is phrased as a feeling. A complaint carries a demand
   and goes through Phase 5b like any other: "this is annoying", "das nervt",
   "wenn es endlich mal …". <!-- md-language-check: ignore -->
