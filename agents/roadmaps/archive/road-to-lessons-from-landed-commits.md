@@ -9,8 +9,7 @@ execution:
 
 > **Source:** a 2026-05 roadmap draft that was never landed and was kept only
 > as a local stash, re-analysed against the tree on 2026-11-04. Its external
-> reference is recorded once, encrypted:
-> `ENC1:5qFA148CmR0mqWnHnbH5/a9uY0rL1KhbLQePujQToEz93IqQqtIjLwoMZ/2CB2zK3+H8nbxiFZbaEiZ8JySluMTM8t+nu6g/TkngqpgJykM0D93PTrpcwFnxapqR/f9IRrtEadaZlEdVDVFfct7nXHAhqn6iugCo4Sp5c/FN`
+> reference is not named here.
 
 ## Goal
 
@@ -41,7 +40,7 @@ Re-checked at the pin. Only one proposal names something the tree lacks.
 
 ## Phase 1 — A commit as a learning source
 
-- [x] **1.1 The commit source.** `src/skills/learning-to-rule-or-skill/SKILL.md`
+- [x] **1.1 The commit source.** `src/skills/learning-to-rule-or-skill/SKILL.md` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       names a landed commit as a learning source: read the diff as the
       evidence and the message as the intent, keep the Promotion Gate in full
       (a single commit never satisfies Repetition on its own), and set
@@ -51,12 +50,13 @@ Re-checked at the pin. Only one proposal names something the tree lacks.
       the planned standalone `## Commit-derived learnings` section took the skill
       to 418 lines and raised a new `skill_too_large` warning (> 400 lines,
       density 0.53), so the source ships as a decision hint — the skill is 399
-      lines and lints clean.
-- [x] **1.2 Reachable by the words people use.** The skill's auto-trigger
+      lines and lints clean. The hint still crossed the per-skill byte ceiling
+      by 177 bytes; the raise is recorded in `src/config/skill-body-budget.json`.
+- [x] **1.2 Reachable by the words people use.** The skill's auto-trigger <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
       keywords name the commit phrasing.
       verify: `grep -c '^\* learn from this commit$' src/skills/learning-to-rule-or-skill/SKILL.md` -> 1
       Done: keyword line added; the grep returns 1.
-- [x] **1.3 Projection in step.** `dist/agent-src/` regenerated from `src/`.
+- [x] **1.3 Projection in step.** `dist/agent-src/` regenerated from `src/`. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: `bash src/scripts/condense.sh --changed` -> 0 and lists no stale file
       Done: `task sync` + `task generate-tools`; condense reports every projection matches its source.
 
