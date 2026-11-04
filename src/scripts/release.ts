@@ -1010,7 +1010,7 @@ function execute(
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
-        const pr_body = release_pr_body(section!.body, plan.target) + (opts.pr_extra ?? '');
+        const pr_body = release_pr_body(section!.body, plan.target, opts.pr_extra ?? '');
         gh(['pr', 'create', '--base', MAIN_BRANCH, '--head', branch,
             '--title', `release: ${plan.target}`, '--body', pr_body]);
     }

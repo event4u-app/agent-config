@@ -1003,10 +1003,13 @@ function _target_from_branch(branch: string): string {
  * GitHub's limit. The reserve is the wrapper's measured size, not a guess: a
  * fixed 200 fell short of the 267-character wrapper and failed the 19.0.0 cut.
  */
-export function release_pr_body(sectionBody: string, target: string): string {
-    const wrapper = [...pr_body_from_section('', target)].length;
-    const capped = _cap_body(sectionBody, GH_PR_BODY_LIMIT - wrapper, '`CHANGELOG.md` in this PR');
-    return pr_body_from_section(capped, target);
+export function release_pr_body(sectionBody: string, target: string, extra = ''): string {
+    // `extra` is appended after the wrapper, so its length is reserved before
+    // capping — 20.0.0 overshot the limit with the showcase section added
+    // after a cap that had already spent the whole budget.
+    const reserved = [...pr_body_from_section('', target)].length + [...extra].length;
+    const capped = _cap_body(sectionBody, GH_PR_BODY_LIMIT - reserved, '`CHANGELOG.md` in this PR');
+    return pr_body_from_section(capped, target) + extra;
 }
 
 function _refresh_pr_body_from_head(branch: string, target: string): void {
