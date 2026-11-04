@@ -1,14 +1,17 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 tree_pin: 9f12d31f78
 execution:
   mode: phase-checkpoints
-review_by: 2027-02-15
+entry_condition:
+  what: an active roadmap closes, so this one fits under the WIP limit of five
+  when: at the next active-roadmap closure
+  who: agent
+review_by: 2026-12-15
 # roadmap:context scanned: 1266 roadmap file(s) across active/later/stubs/archive; no sibling on trigger-eval freshness or the rotation write-back
 relates: []
-estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-11-04 (answer 2 to the stale-trigger-eval question in the PR #2841 session): the gradual refresh is tracked as its own roadmap instead of a one-off paid batch."
-estate_offset_exempt: "Added on owner instruction, agents/evidence/owner-directives/2026-11-04-trigger-eval-freshness-roadmap.md (2026-11-04); no active roadmap covers trigger-eval freshness, so none is archived to offset it."
+estate_growth_exempt: "+1 later_roadmaps, owner-directed 2026-11-04 (answer 2 to the stale-trigger-eval question in the PR #2841 session, agents/evidence/owner-directives/2026-11-04-trigger-eval-freshness-roadmap.md): parked rather than active because 8 roadmaps are active against a WIP cap of 5."
 ---
 # Road to trigger evals that stay fresh
 
