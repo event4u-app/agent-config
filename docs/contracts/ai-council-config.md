@@ -1442,11 +1442,18 @@ limit reached", HTTP 429 — `seat_limit.ts`) re-resolves with `--exclude <that
 profile>` and runs once more on the returned account. Bounded: one retry per
 seat per call, never a loop. No other account → the seat fails with the
 original error and `metadata.account_retry: no_other_account`. A served retry
-carries `metadata.account_retry_from`.
+carries `metadata.account_retry_from`. The retry books a second call, so a
+seat at its `max_calls_per_day` cap does not retry (`account_retry:
+daily_cap`); an agent-switch without `--exclude` is reported as
+`account_retry: agent_switch_without_exclude`. A **resumed** session runs on
+the account it was created on and is never retried elsewhere — its session id
+exists only in that account's config dir. Folder-rule refusal text is stored
+with absolute paths masked.
 
 **Spread within a round.** Seats of one vendor in the same round exclude the
 accounts already serving that round while a free one exists, and share once
-none is left — sharing beats failing. The response records the serving
+none is left — sharing beats failing. Spreading applies inside an orchestrator round only;
+standalone seats (`ai_team`, self-review) always take agent-switch's best pick. The response records the serving
 profile as `metadata.account`; `council:status` prints one `accounts` line per
 CLI vendor (`codex seats: agent-switch (2 accounts, rules)` / `default login
 (agent-switch not found)`). AC never writes a login or a credential — it only

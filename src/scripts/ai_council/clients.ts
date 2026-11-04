@@ -50,6 +50,7 @@ import { vendorPrefix } from '../_lib/egress_rules.js';
 import { withoutUngrantedCredentials } from '../_lib/billing_grant.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import {
+    ExcludeUnsupported,
     FolderRuleRefusal,
     noteRoundProfile,
     resolveRoundSeatHome,
@@ -1436,6 +1437,11 @@ export abstract class CliClient extends ExternalAIClient {
 
         // 2. build command + spawn.
         const cmd = this._build_command(system_prompt, user_prompt, max_tokens);
+        // The session the command resumes, if it resumes one: it pins the account.
+        const resumed =
+            seatResumeArgs(this.name, this.resumeNext, { blind: this.blind, now_ms: Date.now() }).length > 0
+                ? this.resumeNext
+                : null;
         this.resumeNext = null;
         const stdinPayload = this._stdin_payload(system_prompt, user_prompt);
         // The final egress check, immediately before the request is written
@@ -1449,7 +1455,7 @@ export abstract class CliClient extends ExternalAIClient {
                 egress_rule: refusal.what,
             });
         }
-        return this._withSeatAccount(cmd, stdinPayload, t0, system_prompt, user_prompt);
+        return this._withSeatAccount(cmd, stdinPayload, t0, system_prompt, user_prompt, resumed);
     }
 
     /**
@@ -1467,7 +1473,19 @@ export abstract class CliClient extends ExternalAIClient {
         t0: number,
         system_prompt: string,
         user_prompt: string,
+        resumed: SeatSession | null = null,
     ): CouncilResponse {
+        // A resumed session exists only in the config dir it was created in:
+        // run it there (or on the inherited login), never re-balance it, and
+        // never retry it elsewhere — the resume id means nothing on another account.
+        if (resumed !== null) {
+            const pinned = resumed.account ?? null;
+            if (pinned === null) {
+                this._accountEnv = {};
+                return this._spawnAndParse(cmd, stdinPayload, t0, system_prompt, user_prompt);
+            }
+            return this._spawnOn(pinned, cmd, stdinPayload, t0, system_prompt, user_prompt);
+        }
         let seat: SeatHome | null;
         try {
             seat = resolveRoundSeatHome(this.name);
@@ -1483,18 +1501,25 @@ export abstract class CliClient extends ExternalAIClient {
         }
         noteRoundProfile(this.name, seat.profile);
         const first = this._spawnOn(seat, cmd, stdinPayload, t0, system_prompt, user_prompt);
-        const limit = first.error ? classifySeatLimit(_failureText(first), seat.profile) : null;
+        const limit = first.error ? classifySeatLimit(_failureText(first), seat.profile || null) : null;
         if (limit === null) return first;
+        const tag = (why: string): CouncilResponse => {
+            first.metadata = { ...first.metadata, account_limit: limit.line, account_retry: why };
+            return first;
+        };
+        // The retry is a second spawn and books a second call: the daily cap holds.
+        if (this.max_calls_per_day !== null) {
+            const used = load_cli_call_counts(this._cli_calls_path)[this.name] ?? 0;
+            if (used >= this.max_calls_per_day) return tag('daily_cap');
+        }
         let other: SeatHome | null = null;
         try {
             other = resolveSeatHome(this.name, { exclude: [seat.profile] });
-        } catch {
+        } catch (exc) {
+            if (exc instanceof ExcludeUnsupported) return tag('agent_switch_without_exclude');
             other = null;
         }
-        if (other === null || other.profile === seat.profile) {
-            first.metadata = { ...first.metadata, account_limit: limit.line, account_retry: 'no_other_account' };
-            return first;
-        }
+        if (other === null || other.dir === seat.dir) return tag('no_other_account');
         noteRoundProfile(this.name, other.profile);
         const second = this._spawnOn(other, cmd, stdinPayload, t0, system_prompt, user_prompt);
         second.metadata = { ...second.metadata, account_retry_from: seat.profile, account_limit: limit.line };
@@ -1519,9 +1544,15 @@ export abstract class CliClient extends ExternalAIClient {
         } finally {
             this._accountEnv = {};
         }
-        // Profile name only: the config dir is a path under the user's home.
-        response.metadata = { ...response.metadata, account: seat.profile };
-        this._logSeatAccount(seatAccountEvent(this.name, this.model, seat.profile, response.error ?? null));
+        // A session created here can only be resumed here.
+        if (this.lastSession !== null && this.lastSession.account === undefined) {
+            this.lastSession = { ...this.lastSession, account: seat };
+        }
+        if (seat.profile !== '') {
+            // Profile name only: the config dir is a path under the user's home.
+            response.metadata = { ...response.metadata, account: seat.profile };
+            this._logSeatAccount(seatAccountEvent(this.name, this.model, seat.profile, response.error ?? null));
+        }
         return response;
     }
 
@@ -1652,7 +1683,11 @@ export abstract class CliClient extends ExternalAIClient {
         }
         response.metadata = meta;
         const sid = meta['session_id'];
-        if (typeof sid === 'string' && sid !== '' && !response.error) this.lastSession = { id: sid, at_ms: Date.now() };
+        if (typeof sid === 'string' && sid !== '' && !response.error) {
+            const seatEnv = Object.keys(this._accountEnv).length === 0;
+            // Created on the inherited login → pinned there (null); on an account → `_spawnOn` pins it.
+            this.lastSession = seatEnv ? { id: sid, at_ms: Date.now(), account: null } : { id: sid, at_ms: Date.now() };
+        }
         return response;
     }
 

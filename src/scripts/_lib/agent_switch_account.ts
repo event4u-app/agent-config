@@ -50,6 +50,14 @@ export class FolderRuleRefusal extends Error {
     }
 }
 
+/** An agent-switch older than `--exclude`: retries and spreading are unavailable. */
+export class ExcludeUnsupported extends Error {
+    constructor() {
+        super('agent-switch does not support --exclude (needs 2.12.0+)');
+        this.name = 'ExcludeUnsupported';
+    }
+}
+
 export interface RunResult {
     readonly status: number | null;
     readonly stdout: string;
@@ -123,6 +131,9 @@ export function resolveSeatHome(
     if (r.status === FOLDER_RULE_EXIT) {
         throw new FolderRuleRefusal(folderRuleText(r));
     }
+    if (exclude.length > 0 && r.status !== 0 && !r.missing && /unknown (option|flag|argument)|--exclude/i.test(r.stderr)) {
+        throw new ExcludeUnsupported();
+    }
     if (r.missing || r.status !== 0) return null;
     let parsed: unknown;
     try {
@@ -135,10 +146,25 @@ export function resolveSeatHome(
     const dir = o['configDir'];
     const profile = o['profile'];
     if (typeof dir !== 'string' || dir === '') return null;
-    return { envVar: spec.envVar, dir, profile: typeof profile === 'string' && profile !== '' ? profile : `${spec.provider}/?` };
+    // No profile name → the account cannot be excluded, recorded or spread;
+    // `profile: ''` still runs the seat on the dir agent-switch chose.
+    return { envVar: spec.envVar, dir, profile: typeof profile === 'string' ? profile : '' };
 }
 
+/**
+ * The rule as agent-switch words it, with absolute paths masked: folder rules
+ * are keyed by folder paths, and this text reaches response metadata.
+ */
 function folderRuleText(r: RunResult): string {
+    return redactPaths(rawFolderRuleText(r)).slice(0, 300);
+}
+
+export function redactPaths(text: string): string {
+    // A path starts a token; `codex/Work` (a profile name) does not match.
+    return text.replace(/(^|[\s"'(=])(?:~|[A-Za-z]:)?[/\\][^\s"'`,;)]+/g, '$1<path>');
+}
+
+function rawFolderRuleText(r: RunResult): string {
     try {
         const o = JSON.parse(r.stdout) as Record<string, unknown>;
         const note = o['note'] ?? o['blocked'];
@@ -156,20 +182,31 @@ function folderRuleText(r: RunResult): string {
  * another, so "already assigned earlier in this round" is exactly the set a
  * later seat should avoid while a free account exists.
  */
-const roundLedger = new Map<string, string[]>();
+const roundLedger = new Map<string, Set<string>>();
+// Only a caller that declares rounds (the orchestrator) spreads; a standalone
+// seat (ai_team, self-review) never accumulates exclusions.
+let roundOpen = false;
 
 export function beginSeatAccountRound(): void {
     roundLedger.clear();
+    roundOpen = true;
+}
+
+/** Close the round: later seats run unspread until the next round opens. */
+export function endSeatAccountRound(): void {
+    roundLedger.clear();
+    roundOpen = false;
 }
 
 export function roundProfiles(vendor: string): readonly string[] {
-    return roundLedger.get(vendor) ?? [];
+    return [...(roundLedger.get(vendor) ?? [])];
 }
 
 export function noteRoundProfile(vendor: string, profile: string): void {
-    const list = roundLedger.get(vendor) ?? [];
-    list.push(profile);
-    roundLedger.set(vendor, list);
+    if (!roundOpen || profile === '') return;
+    const set = roundLedger.get(vendor) ?? new Set<string>();
+    set.add(profile);
+    roundLedger.set(vendor, set);
 }
 
 /**
@@ -183,8 +220,14 @@ export function resolveRoundSeatHome(
     const taken = roundProfiles(vendor);
     const extra = opts.exclude ?? [];
     if (taken.length > 0) {
-        const spread = resolveSeatHome(vendor, { ...opts, exclude: [...extra, ...taken] });
-        if (spread !== null) return spread;
+        // Spreading is best-effort: a folder rule that leaves no other account,
+        // or an agent-switch without --exclude, means sharing — never failing.
+        try {
+            const spread = resolveSeatHome(vendor, { ...opts, exclude: [...extra, ...taken] });
+            if (spread !== null) return spread;
+        } catch (exc) {
+            if (!(exc instanceof FolderRuleRefusal) && !(exc instanceof ExcludeUnsupported)) throw exc;
+        }
     }
     return resolveSeatHome(vendor, { ...opts, exclude: extra });
 }

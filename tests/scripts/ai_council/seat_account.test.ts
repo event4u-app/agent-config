@@ -13,14 +13,18 @@ import {
     _setRunner,
     accountSourceLine,
     beginSeatAccountRound,
+    endSeatAccountRound,
+    ExcludeUnsupported,
     FolderRuleRefusal,
+    redactPaths,
     resolveSeatHome,
     type RunResult,
     type Runner,
 } from '../../../src/scripts/_lib/agent_switch_account.js';
 import { appendEvent } from '../../../src/scripts/ai_council/events_log.js';
 import { OpenAICliClient, seatAccountEvent } from '../../../src/scripts/ai_council/clients.js';
-import { _build_config } from '../../../src/scripts/ai_council/config.js';
+import { _build_config, load_council_config } from '../../../src/scripts/ai_council/config.js';
+import { agentSwitchMode, setAgentSwitchMode } from '../../../src/scripts/_lib/agent_switch_account.js';
 import { classifySeatLimit } from '../../../src/scripts/ai_council/seat_limit.js';
 
 const ok = (o: unknown): RunResult => ({ status: 0, stdout: JSON.stringify(o), stderr: '' });
@@ -273,5 +277,94 @@ describe('4.1 council:status names the account source', () => {
         expect(accountSourceLine('openai', 'codex')).toBe('codex seats: agent-switch (2 accounts, rules)');
         _setRunner(() => ({ status: null, stdout: '', stderr: '', missing: true }));
         expect(accountSourceLine('openai', 'codex')).toBe('codex seats: default login (agent-switch not found)');
+    });
+});
+
+describe('review hardening', () => {
+    it('a resumed session runs on the account it was created on, never re-balanced', () => {
+        _setRunner(fakeAgentSwitch(['codex/A', 'codex/B'], []));
+        const c = seat();
+        // A seat whose session lives on codex/B; balancing would now pick codex/A.
+        c.resumeNext = {
+            id: 'sess-1',
+            at_ms: Date.now(),
+            account: { envVar: 'CODEX_HOME', dir: '/as/codex/B/config', profile: 'codex/B' },
+        };
+        expect(c.ask('', 'q').text).toBe('HOME=/as/codex/B/config');
+    });
+    it('a resumed session created on the inherited login stays there', () => {
+        _setRunner(fakeAgentSwitch(['codex/A'], []));
+        const c = seat();
+        c.resumeNext = { id: 'sess-2', at_ms: Date.now(), account: null };
+        expect(c.ask('', 'q').text).toBe('HOME=');
+    });
+    it('a limited resumed session is not retried on another account', () => {
+        _setRunner(fakeAgentSwitch(['codex/A', 'codex/B'], []));
+        process.env['LIMIT_ON'] = '/as/codex/A/config';
+        const c = seat();
+        c.resumeNext = { id: 's', at_ms: Date.now(), account: { envVar: 'CODEX_HOME', dir: '/as/codex/A/config', profile: 'codex/A' } };
+        const r = c.ask('', 'q');
+        expect(r.error).toBe('turn_failed');
+        expect(c.events).toHaveLength(1);
+    });
+    it('a folder rule in the spread attempt shares the account instead of refusing', () => {
+        const calls: string[][] = [];
+        _setRunner((args) => {
+            calls.push([...args]);
+            if (args.includes('--exclude')) return { status: 86, stdout: JSON.stringify({ blocked: 'only codex/Work' }), stderr: '' };
+            return ok({ profile: 'codex/Work', configDir: '/as/codex/Work/config' });
+        });
+        expect(seat().ask('', 'q').text).toBe('HOME=/as/codex/Work/config');
+        expect(seat().ask('', 'q').text).toBe('HOME=/as/codex/Work/config');
+    });
+    it('the retry respects the daily cap', () => {
+        _setRunner(fakeAgentSwitch(['codex/A', 'codex/B'], []));
+        process.env['LIMIT_ON'] = '/as/codex/A/config';
+        const c = new SeatClient({ binary: stub, model: 'codex-default', cli_calls_path: path.join(tmp, 'calls.json'), max_calls_per_day: 1 });
+        const r = c.ask('', 'q');
+        expect(r.error).toBe('turn_failed');
+        expect(r.metadata['account_retry']).toBe('daily_cap');
+        expect(c.events).toHaveLength(1);
+    });
+    it('an agent-switch without --exclude is reported as such', () => {
+        _setRunner((args) =>
+            args.includes('--exclude')
+                ? { status: 1, stdout: '', stderr: "error: unknown option '--exclude'" }
+                : ok({ profile: 'codex/A', configDir: '/as/codex/A/config' }),
+        );
+        expect(() => resolveSeatHome('openai', { mode: 'rules', exclude: ['codex/A'] })).toThrow(ExcludeUnsupported);
+        process.env['LIMIT_ON'] = '/as/codex/A/config';
+        expect(seat().ask('', 'q').metadata['account_retry']).toBe('agent_switch_without_exclude');
+    });
+    it('a folder-rule refusal masks paths but keeps profile names', () => {
+        expect(redactPaths('folder /Users/me/work pins codex/Work')).toBe('folder <path> pins codex/Work');
+        _setRunner(() => ({ status: 86, stdout: JSON.stringify({ blocked: 'folder ~/clients/acme pins codex/Work' }), stderr: '' }));
+        const r = seat().ask('', 'q');
+        expect(String(r.metadata['detail'])).toBe('folder <path> pins codex/Work');
+    });
+    it('outside a declared round nothing accumulates: every standalone seat gets the best pick', () => {
+        endSeatAccountRound();
+        _setRunner(fakeAgentSwitch(['codex/A', 'codex/B'], []));
+        expect(seat().ask('', 'q').text).toBe('HOME=/as/codex/A/config');
+        expect(seat().ask('', 'q').text).toBe('HOME=/as/codex/A/config');
+    });
+    it('a missing profile name runs on the dir but is neither recorded nor excluded', () => {
+        _setRunner(() => ok({ configDir: '/as/codex/X/config' }));
+        const c = seat();
+        const r = c.ask('', 'q');
+        expect(r.text).toBe('HOME=/as/codex/X/config');
+        expect(r.metadata['account']).toBeUndefined();
+        expect(c.events).toEqual([]);
+    });
+    it('load_council_config sets the mode the seats read', () => {
+        delete process.env['AGENT_CONFIG_AGENT_SWITCH'];
+        const f = path.join(tmp, 'council.yml');
+        fs.writeFileSync(f, 'enabled: true\nagent_switch: balance\n');
+        try {
+            load_council_config(f);
+            expect(agentSwitchMode()).toBe('balance');
+        } finally {
+            setAgentSwitchMode('rules');
+        }
     });
 });

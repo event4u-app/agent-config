@@ -10,6 +10,12 @@
 export interface SeatSession {
     readonly id: string;
     readonly at_ms: number;
+    /**
+     * The agent-switch account the session was created under. A session lives
+     * in that account's config dir, so a resume must run there too; `null` /
+     * absent = the inherited login.
+     */
+    readonly account?: { readonly envVar: string; readonly dir: string; readonly profile: string } | null;
 }
 
 /** The prompt-cache lifetime a resume is worth paying for. */
