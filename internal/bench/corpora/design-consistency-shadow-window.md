@@ -164,6 +164,30 @@ latency stated under condition 3 is paid either way, because recording runs
 the same check. Delivery is the next step of the roadmap, a change of one
 default.
 
+## Delivery on, 2026-11-04
+
+Step 3.10 replaced the definition patterns with a scanner that tracks strings,
+template literals, comments, regex literals and brace scope, so a declaration
+counts only at module level and outside every literal; an import or export
+clause stays readable. Both ratification counter-examples (an `export` inside
+a `namespace` or `declare` block, a declaration inside a regex literal) have
+tests, and neither is read as a definition. The window was replayed on each
+repository's current HEAD with the old and the new reader, same bound
+(2026-04-27 to 2026-10-27):
+
+| Repository | UI writes | Firing writes, old reader | Firing writes, scanner | Rows identical |
+|---|---:|---:|---:|---|
+| A | 262 | 0 | 0 | yes |
+| B | 1,333 | 5 | 5 | yes |
+
+B's count differs from the 2026-11-03 reading (1,443) because its HEAD is
+another branch again; the comparison is between readers on one HEAD. The
+default of `hooks.design_consistency.shadow` is now `false`: the check
+delivers. An install that synced its settings while 20.0.0 or 20.1.0 was
+current carries `shadow: true` in its own `.agent-settings.yml`, because a
+settings sync never rewrites an existing value, and stays recording until that
+line is changed.
+
 ## What this does not establish
 
 - **The box-metrics rule has no reading.** Not one comparison in 1,565 writes
@@ -217,9 +241,7 @@ manual control because classifying a firing write as false takes a reading.
   ones), the same denominator as the readings above.
 - **Record.** One dated row in the roadmap's Decisions table: window,
   denominator, real, false, rate, outcome.
-- **Rollback.** While delivery is held, the shipped default already is the
-  rollback state, and the review classifies the recorded rows the same way.
-  Once delivery is on, above 1 %: set `hooks.design_consistency.shadow` to
+- **Rollback.** Above 1 %: set `hooks.design_consistency.shadow` to
   `true` in `src/config/agent-settings.template.yml` and as the default in
   `src/server/schemas/settings.ts`, in one PR. The rule then keeps running and
   recording on every UI write but delivers nothing, which is the shadow the
