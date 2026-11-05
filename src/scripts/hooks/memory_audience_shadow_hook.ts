@@ -99,7 +99,7 @@ function eligibleFile(ref: string, store: string, root: string): { real: string;
     try {
         const real = fs.realpathSync(path.join(root, ref));
         const rel = path.relative(store, real);
-        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return null;
+        if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) return null;
         // A curated name that resolves into intake is intake, whatever it is called.
         if (rel === 'intake' || rel.startsWith(`intake${path.sep}`)) return null;
         const stat = fs.statSync(real);

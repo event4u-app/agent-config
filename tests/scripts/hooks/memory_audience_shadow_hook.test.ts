@@ -85,6 +85,18 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', tool: 'Edit', target: 'curated' }]);
     });
 
+    it('a MultiEdit by a child is recorded like a Write', () => {
+        processEnvelope(write('agent-abc', 'agents/memory/product-rules.yml', 'MultiEdit'), root);
+        expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', tool: 'MultiEdit', target: 'curated' }]);
+    });
+
+    it('a child write survives the dispatcher projection and is recorded', () => {
+        const spec = manifest().concerns['memory-audience-shadow']!;
+        const projected = applyPayloadFields(spec, write('agent-abc', 'agents/memory/product-rules.yml') as never);
+        expect(processEnvelope(projected as never, root)).toBe(EXIT_ALLOW);
+        expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', target: 'curated' }]);
+    });
+
     it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {
         processEnvelope(write('agent-abc', 'agents/memory/../../src/x.ts'), root);
         expect(ledgerLines()).toHaveLength(0);
@@ -133,6 +145,12 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         for (const n of names) writeFileSync(join(root, n), 'q'.repeat(40));
         processEnvelope(spawn(`refs: ${names.join(' ')}`), root);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 5, dropped: 2, est_tokens: 50 });
+    });
+
+    it('a file whose name starts with two dots is inside the store', () => {
+        writeFileSync(join(root, 'agents', 'memory', '..notes.yml'), 'n'.repeat(40));
+        processEnvelope(spawn('see agents/memory/..notes.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 10 });
     });
 
     it('a named ref that does not exist is not part of the slice', () => {
