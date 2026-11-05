@@ -104,17 +104,18 @@ Evidence (read): `src/scripts/_lib/paired_verdict.ts:54-65` · `docs/benchmark.m
 sign test; nothing turns that into "how many pairs do I need". The 2026-11-05 A/A
 control measured about one discordant pair in six.
 
-- [ ] **3.1** `src/scripts/bench_ab_power.ts`: given a discordance rate (default
-  from an A/A report, or `--discordance`), the share of discordant pairs expected
-  to favour one arm, α and the target probability of reaching the floor, print the
-  discordant pairs required and the total pairs per arm. Uses the existing floor,
-  adds no new statistics.
+- [x] **3.1** `src/scripts/bench_ab_power.ts`: given a discordance rate (the A/A
+  figure as published, `--aa 2/12`, or `--discordance`), the share of discordant
+  pairs expected to favour one arm, α and the target power, print the discordant
+  pairs required and the total pairs per arm. Uses the same exact one-sided sign
+  test as `paired_verdict`. (Reading an A/A report directly would need win/loss
+  counts the discipline block does not carry; the published figure is enough.)
   verify: `./scripts-run src/scripts/bench_ab_power --discordance 0.167 --share 1` exits 0 and prints required pairs
-- [ ] **3.2** Tests: at a 100 % one-directional share the planner returns exactly
+- [x] **3.2** Tests: at a 100 % one-directional share the planner returns exactly
   the `paired_verdict` floor; at 50 % it reports "not reachable" instead of a
   number; required pairs fall as the discordance rate rises.
   verify: `npx vitest run tests/scripts/bench_ab_power.test.ts` -> 0
-- [ ] **3.3** `task bench:ab:power` in `taskfiles/bench-ab.yml`, and one paragraph
+- [x] **3.3** `task bench:ab:power` in `taskfiles/bench-ab.yml`, and one paragraph
   in `docs/benchmark.md` § container sweep that says a paid sweep is sized with it
   first.
   verify: `task --list | grep -c bench:ab:power` -> 1

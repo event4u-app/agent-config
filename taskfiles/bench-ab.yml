@@ -199,6 +199,14 @@ tasks:
         task bench:showcase:quick -- --max-usd 15
     cmd: ./scripts-run src/scripts/showcase_run --tier quick {{.CLI_ARGS}}
 
+  bench:ab:power:
+    silent: true
+    desc: |
+      Pairs a paired sweep needs before it is paid for, from the A/A noise and
+      the expected direction share. Same sign test as paired_verdict. Cost-free:
+        task bench:ab:power -- --aa 2/12 --share 0.9
+    cmd: ./scripts-run src/scripts/bench_ab_power {{.CLI_ARGS}}
+
   bench:showcase:replay:
     silent: true
     desc: |

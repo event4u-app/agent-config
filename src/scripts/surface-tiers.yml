@@ -65,6 +65,7 @@ lab_modules:
   - bench_run            # benchmarking runner (council clients)
   - bench_ab_run         # A/B benchmarking runner
   - bench_ab_v2_run      # V2 benchmark runner
+  - bench_ab_power       # sweep sizing (pairs before spend)
   - cost_by_conversation # cost analytics
   - cost_summary         # cost summary
   - build_cloud_bundle   # Claude.ai cloud-bundle builder (pilot distribution)

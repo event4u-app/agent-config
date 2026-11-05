@@ -77,6 +77,8 @@ What these runs show:
 
 Raw reports are kept under `internal/bench/reports/ab-v2/` in the primary checkout (gitignored).
 
+**Size a paid sweep before running it.** `task bench:ab:power -- --aa 2/12 --share 0.9` computes the pairs per arm a sweep needs to reach 80 % power, with the same one-sided exact sign test `paired_verdict` decides with. At the A/A discordance measured here (2 of 12) it needs 39 pairs per arm if every discordant pair favours one arm, 63 at a 90 % share and 111 at 80 %. The 24-pair Haiku sweep above was below the smallest of these. A share at or below one half has no size: the planner says so instead of printing a number.
+
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
