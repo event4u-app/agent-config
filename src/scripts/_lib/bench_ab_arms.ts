@@ -94,8 +94,8 @@ export const ARMS: Record<string, ArmSpec> = {
     package: { setting_sources: null, inject: null },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
     // ~1.7k inert tokens per turn cannot clear a 1.2x whole-run lift over a
-    // 72k-235k baseline whose spread is turn count; council 2026-11-04 (both seats)
-    // narrowed it to the text direction — agents/evidence/analysis/council-placebo-lift-audit-2026-11-04.*.
+    // 72k-235k baseline whose spread is turn count, so only the text direction is
+    // a meaningful activation check for this arm.
     placebo: { setting_sources: 'project,local', inject: 'placebo', min_lift_ratio: null },
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
     hardened: { setting_sources: null, inject: 'hardened' },

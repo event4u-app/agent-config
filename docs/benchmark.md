@@ -54,7 +54,7 @@ Two reports, $22.08 in total at list rates (the runs were subscription-authed).
   - 19 `placebo` pairs: a ~1.7k-token inert surface cannot clear a 1.2×
     whole-run lift over a baseline whose spread is turn count. Council (both
     seats) narrowed `placebo` to the text direction, which held on 24/24 runs
-    (`agents/evidence/analysis/council-placebo-lift-audit-2026-11-04.*`).
+    (`agents/evidence/council/council-placebo-lift-audit-2026-11-04.*`).
   - 1 `rules-balanced` pair at 0.81×, against the longest vanilla run.
 - **Report B** — `internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json`,
   `vanilla` + `package` with the rules staged, 48 runs, $7.04, audit 0/24.

@@ -38,6 +38,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 
 import { pristine_tree_for } from './bench_ab_pinned_repo.js';
+import { claudeHome } from './provider_home.js';
 import { fileURLToPath } from 'node:url';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -107,9 +108,11 @@ export function workspace_dir(task_id: string, arm: string, seed: number, root: 
  * clones restores what a consumer project under `~` gets, without placing a file
  * inside the clone, where `changed_files` would count it as the run's own work.
  * Baseline arms never sit under this root, so their footprint is unchanged.
+ * The default is the DEFAULT home on purpose, not the session profile's: the
+ * ancestor directory is what loads, whatever `CLAUDE_CONFIG_DIR` points at.
  */
 export function stage_package_scope(
-    rulesDir: string = process.env['BENCH_PACKAGE_RULES_DIR'] || path.join(os.homedir(), '.claude', 'rules'),
+    rulesDir: string = process.env['BENCH_PACKAGE_RULES_DIR'] || path.join(claudeHome({ ...process.env, CLAUDE_CONFIG_DIR: '' }), 'rules'),
     root: string = path.join(WORK_ROOT, '_package-scope'),
 ): { root: string; rule_files: number } | null {
     if (!fs.existsSync(rulesDir)) return null;

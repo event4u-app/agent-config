@@ -74,7 +74,7 @@ says so.
       `~/.claude/rules` (fixed: `stage_package_scope`, rules copied above the
       plugin clones), 19 `placebo` pairs because a ~1.7k-token surface cannot
       clear a 1.2× whole-run lift (council, both seats: text direction only —
-      `agents/evidence/analysis/council-placebo-lift-audit-2026-11-04.*`), 1
+      `agents/evidence/council/council-placebo-lift-audit-2026-11-04.*`), 1
       `rules-balanced` pair at 0.81× (vanilla seed 9 was the longest baseline
       run). Report A's `package` arm is superseded; report B
       (`2026-11-04T21-50-27Z`, `vanilla,package`, 48 runs, $7.04) re-measures it
