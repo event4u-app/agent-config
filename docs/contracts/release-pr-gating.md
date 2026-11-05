@@ -94,6 +94,11 @@ hold:
      finding-disposition ledger, committed by hand. No release workflow waits
      for it (owner, 2026-10-22: main is already reviewed); the consistency
      coverage guard still requires any committed ledger to be valid.
+     A row may carry `affected_files` and an `evidence_checksum` (sha256 over
+     those files at closure time); `check_finding_dispositions` then reports a
+     closed row whose files changed or vanished as `stale` and asks for a new
+     disposition — red for a blocking row, a warning otherwise. `stale` is
+     computed, never written to the ledger; `--root` sets where the paths resolve.
      The evidence-temperature census is NOT on this list since 2026-10-28:
      `release-prepare` no longer writes it, because its header named the HEAD
      commit and so every new commit on a release branch cost a commit and a

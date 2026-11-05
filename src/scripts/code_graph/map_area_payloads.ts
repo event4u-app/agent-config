@@ -51,7 +51,7 @@ import type {
     Witness,
 } from './map_areas.js';
 import { loadGraph } from './query.js';
-import { diffHunks, type Hunk, reviewRisk, type RiskItem } from './review_risk.js';
+import { diffHunks, graphRiskSource, type Hunk, reviewRisk, type RiskItem } from './review_risk.js';
 import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
 import { contextPack } from './verify/pack.js';
 
@@ -856,7 +856,8 @@ function impactPayload(c: Ctx, opts: ProduceOptions): ImpactPayload | null {
     if (hunks === null) return null;
     const reader = 'review-risk over the working diff';
     if (hunks.length === 0) return { reader, completeness: 'complete', empty: `no change against ${rev}`, findings: [], rev, changed: [], affected: [] };
-    const r = reviewRisk(c.root, c.graph, rev, hunks);
+    // The map already holds the parsed graph and its lookups for every other area; reuse them.
+    const r = reviewRisk(c.root, graphRiskSource(c.graph, { byId: c.byId, inn: c.inn, out: c.out }), rev, hunks);
     const affected: ImpactItem[] = [];
     const add = (layer: ImpactLayer, i: RiskItem): void => {
         const w = i.witness ? witness(c, i.witness) : null;
@@ -1071,9 +1072,15 @@ export function fixtureScopeProblems(areas: MapAreas): string[] {
 /** Every knowledge area the merged graph can fill, with its ERD pages. */
 export function produceAreas(root: string, graph: CodeGraph, opts: ProduceOptions = {}): AreaBuild {
     const c: Ctx = { root, graph, byId: new Map(graph.nodes.map((n) => [n.id, n] as const)), out: new Map(), inn: new Map(), lines: new Map(), added: new Set(opts.added ?? []) };
+    // Push, never spread: a spread per edge copies the list each time, quadratic on a hub.
+    const push = (m: Map<string, CodeEdge[]>, k: string, e: CodeEdge): void => {
+        const list = m.get(k);
+        if (list) list.push(e);
+        else m.set(k, [e]);
+    };
     for (const e of graph.edges) {
-        c.out.set(e.source, [...(c.out.get(e.source) ?? []), e]);
-        c.inn.set(e.target, [...(c.inn.get(e.target) ?? []), e]);
+        push(c.out, e.source, e);
+        push(c.inn, e.target, e);
     }
     const legacyRan = graph.nodes.some((n) => n.fact?.lane !== undefined) || graph.edges.some((e) => e.fact?.lane !== undefined);
     const lane = (id: string): LaneState => laneState(c, id, legacyRan);

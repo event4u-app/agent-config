@@ -82,6 +82,7 @@
  *   dead      [--entry-points F]              zero accepted in-edges, minus
  *             [--accept-missing-exports]      declared entry points; REFUSES
  *                                             when a source is unavailable
+ *   prove     [--scorecard P] [--out P]       evidence bundle from internal/bench/scorecard.yaml
  *
  * The four gate verbs (3.1–3.3) each print the `resolved_via` histogram of the
  * edges they accepted AND of the edges they refused to walk, plus the graph's
@@ -147,7 +148,7 @@ import { resolvePackageRoot } from '../_lib/package_root.js';
 import { buildFromRepo, discoverFiles, isTestFile, type LaneSummary, sidecarPath } from './build.js';
 import { selectionVerdict, selectRegressionsFromCode, type RegressionSpec } from '../_lib/regression_neighbourhood.js';
 import { capAnswer, capReviewRisk, parseDetail } from './answer_detail.js';
-import { diffHunks, renderReviewRisk, renderReviewRiskMarkdown, reviewRisk } from './review_risk.js';
+import { diffHunks, renderReviewRisk, renderReviewRiskMarkdown, reviewRiskAt } from './review_risk.js';
 import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
@@ -193,6 +194,7 @@ import type { CodeGraph } from './types.js';
 import { validateGraph } from './validate.js';
 import {
     dead,
+    deadBodyLines,
     type DeadResult,
     entryPointsFromFile,
     impact,
@@ -641,8 +643,7 @@ function cmdReviewRisk(argv: string[]): number {
         process.stderr.write(`code-graph: graph not found: ${p} — run \`code-graph build\` first\n`);
         return 1;
     }
-    const graph = JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph;
-    const r = reviewRisk(root, graph, rev, hunks, undefined, { includeGuesses: argv.includes('--include-guesses') });
+    const r = reviewRiskAt(p, root, rev, hunks, { includeGuesses: argv.includes('--include-guesses') });
     // Whose work the diff touches — informational, never a weighted term of the sum.
     const prov = readCachedProvenance(root, path.dirname(p));
     const tickets = prov ? ticketsTouched(prov, r.changed) : null;
@@ -834,9 +835,7 @@ function renderDead(res: DeadResult & { omitted: Record<string, number> }): numb
         process.stderr.write(`❌  dead refused: ${res.refusal}\n`);
         return 1;
     }
-    process.stdout.write(`excluded as declared entry points: ${res.excluded.length}\n`);
-    process.stdout.write(`dead (${res.dead.length}):\n`);
-    for (const d of res.dead) process.stdout.write(`  ${d}\n`);
+    for (const line of deadBodyLines(res)) process.stdout.write(`${line}\n`);
     renderOmitted(res.omitted);
     renderReads(res.recommended_reads);
     return 0;
@@ -1451,6 +1450,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
             return cmdQuery(sub, argv.slice(1));
         if (sub === 'impact') return cmdImpact(argv.slice(1));
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
+        if (sub === 'prove') return (await import('./prove.js')).proveMain(argv.slice(1));
         if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
         if (sub === 'why' || sub === 'usage' || sub === 'remove-plan') return await cmdSystems(sub, argv.slice(1));
         if (sub === 'provenance') return cmdProvenance(argv.slice(1));

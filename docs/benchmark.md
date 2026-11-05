@@ -40,6 +40,17 @@ Per-task artifact comparisons with and without agent-config, including the cost 
 > install and the vanilla baseline all moved, so a subtraction would mix three
 > changes. Owner cap for both sweeps: $100 (OQ-64).
 
+> **The four raw report files cited below are lost.** They lived only in the
+> gitignored `internal/bench/reports/ab-v2/` of the worktree that ran the sweeps,
+> and were deleted with it on 2026-11-05 before being copied out. The figures in
+> this section were transcribed from them before deletion and are not
+> re-checkable against the raw files; per-run token counts and cost cannot be
+> recovered. What survives is the per-trial workspaces and transcripts, kept
+> locally under `internal/bench/reports/ab-v2/2026-11-04-rerun-workspaces/`
+> (also gitignored). Workspaces are keyed `task|arm|seed`, so each holds the
+> LAST sweep that wrote that key: report C overwrote B′ on its six tasks, and the
+> Sonnet sweeps overwrote the Haiku runs wherever the keys coincide.
+
 ### Weak host (`claude-haiku-4-5`, 2 tasks × 12 seeds) {#post-repair-weak}
 
 Two reports, $22.08 in total at list rates (the runs were subscription-authed).

@@ -122,16 +122,22 @@ tracked.
       vue through its script block) and 4.2 (Blade directive scan).**
       Blade via a directive scanner (`@include/@extends/@component/@livewire`, `<x-…>`),
       `resolved_via: directive-scan`; a compiled grammar is optional and later.
-- [ ] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
+- [x] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
       **Laravel half moved 2026-10-23 to `road-to-a-map-that-draws-itself` Phase 4;
       `depends_on` stays here.**
       Laravel overlay statically: routes → `Controller@method`, Blade → view nodes,
       Eloquent relation methods → model edges, migrations → table nodes.
       verify: fixture app; `path "GET /invoices" "Invoice"` resolves route → controller →
       model.
+      > note: closed 2026-11-05. The manifest half shipped as the systems lane's `requires`
+      > relation (package → package, `lanes/systems/read_systems.ts`, pinned by
+      > `tests/scripts/code_graph/systems_lane.test.ts`); the vocabulary's `depends-on` is the
+      > runtime lane's service relation, so no second name was added. The route half is pinned
+      > by the `path` verb on the Laravel fixture (`GET /books` → `BookController::index` →
+      > `Book`): `npx vitest run tests/scripts/code_graph_provider_laravel.test.ts -t 'route → controller → model'` -> 0
 
 ## Phase 2 — Registration, then measurement
-- [ ] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
+- [x] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
       per ADR-260 § 5 (fitness: ≥ 200 routes, Eloquent relations, migrations, PHPUnit/Pest
       tests, TS/Vue frontend, permissive licence, active in 2026), named in the corpus
       header with role "benchmark subject", SHA-pinned, cloned by the runner. Suites: A
@@ -139,6 +145,7 @@ tracked.
       model → table, tests-for) · D negative-control only (a `threats.csv` sink no accepted
       path reaches returns empty) · E change impact incl. class 7 `change-impact-xplane` ·
       F agentic (24 tasks: localise-and-fix from issue text; PR review for missed callers).
+      > note: registered 2026-11-05 in `internal/bench/code-graph/PREREGISTRATION-v3-2026-11-05.md` (pins unopim `56071226`, larasend `da5c06c7`), `corpus-v3-2026-11-05.yaml` (45 questions B–E, truth pending the oracle) and `suite-f-tasks-v3-2026-11-05.yaml` (24 tasks, all fix commits reachable in the forks); every input is sha256-bound in the registration. The engine never read either subject. The 20 % human-check sample (13 of 45) is drawn by a stated seed.
 - [ ] 2.2 Truth from an oracle arm (tsserver references; Psalm `--find-references-to` or
       LSP references for PHP), symbol level, 20 % human-checked, hop strata 1/2/≥ 3. The
       oracle lives only under `internal/bench/` and is never an arm or a provider.
@@ -146,10 +153,12 @@ tracked.
       oracle — the files the real fix commit touched, for suite F and for 3.5. Truth is
       never derived from the graph under test (a recall of 1.0 against graph-derived
       truth is circular, which S1's own benchmark notes).
-- [ ] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
+      > note: 2026-11-05 — the oracle arm runs. `internal/bench/code-graph/oracle/` is an on-demand image (PHP 8.4, Psalm 7.0.3, scip-typescript 0.6.1, all pinned; `oracle.sh build|deps|run`, indexing with `--network none`), and `oracle_truth.ts` wrote `truth-v3-2026-11-05.yaml`: 8 items complete from the oracle, 15 partial with the reason named (Vue files scip-typescript cannot index, route and framework hops), 16 `human-required` (route, model-to-migration, Inertia/Blade — no reference engine emits them), 5 negative controls confirmed empty, 1 unresolved. Two Psalm findings shaped it: a call whose return value is used is filed under the method's return node, which `--find-references-to` never reads (the plugin reads both), and the bundled Laravel plugin's config typing exhausts 16 GB on one Pest test (switched off; the file is excluded only after a check that it names no probe). `run_bench_v3.ts --truth` refuses until all 13 sampled items carry `human_checked: agree | corrected` (`npx vitest run tests/scripts/code_graph/bench_v3_truth_file.test.ts tests/scripts/code_graph/oracle_truth.test.ts` -> 0). Open: the 20 % human check, and the human-required and partial items — that is a person's work, not the agent's.
+- [x] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
       `internal/bench`, mapping relation and confidence names). F = floor / floor + native
       tools. No "fused" arm.
-- [ ] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
+      > note: closed 2026-11-05 — `internal/bench/code-graph/run_bench_v3.ts` (refuses on a hash or pin mismatch; foreign arm ABSENT without an export, never zero; PENDING truth never scored) and `foreign_reader.ts` (reuses `adaptForeignGraph`), pinned by `tests/scripts/code_graph/bench_v3_runner.test.ts`. First raw run on both pinned subjects recorded in `internal/bench/reports/code-graph-v3-traces-2026-11-05/`: 39 of 45 PENDING truth; native `tests-for` empty on 4 of 5 (diagnosis waits for the oracle). Truth enters as a new dated truth file, since the corpus is hash-bound.
+- [x] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
       calibration diagnostic (predicted class vs gold, overconfidence rate); F primary
       **solved per 100k tokens ≥ 1.25× floor**, solved per minute, escaped-regression rate.
       Gate for F: `dispatch-event-capture-reliability` ≥ 95 %.
@@ -167,6 +176,8 @@ tracked.
       run against the external tool the `inbox-2026-10-bb` round compared runs on the
       maintainer's machine, recorded without the tool's name. Census baseline:
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
+      > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
+      > note: 2026-11-05, later — the indexer blocker is gone: `internal/bench/code-graph/oracle/oracle.sh run <dir> scip-typescript index --output /subject/.oracle/index.scip` produces the index `edge_oracle.ts --scip` reads, inside the pinned image with no network, and the 2.1 registration is committed. Still open: the measurement itself, and PHP edges — the PHP oracle is Psalm, whose references `edge_oracle.ts` does not read yet (it reads SCIP only).
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
@@ -185,15 +196,21 @@ tracked.
       `--include-guesses`, marked per line. Fixture: one `name-lookup`, one `dynamic`
       and one `import-specifier` edge; without the flag all six return only the third.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'guess edges withheld by every consumer'` -> 0
-- [ ] 3.2 Detectors read edges: `detect_verification_tampering` + "test deleted whose
+- [x] 3.2 Detectors read edges: `detect_verification_tampering` + "test deleted whose
       subject keeps ≥ 1 accepted caller"; `detect_silent_catch` + "catch on an accepted
       path from a route/entry point". Each records the edges used; `paired_verdict`
       against the plain detector.
-- [ ] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
+      verify: `npx vitest run tests/scripts/graph_backed_detectors.test.ts` -> 0
+      > note: `_lib/graph_detector_edges.ts`, behind `--graph-backed` on both CLIs; the plain verdict and exit code are unchanged. The paired verdict reads `underpowered` until labelled rows exist (3.5 supplies them), so AC-3 stays open. "Entry point" is a `route` node only.
+- [x] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
       checksum; a change touching them flips the closure to `stale` and re-requests
       disposition (file-level; symbol-level when the finding schema gains `symbols[]`).
-- [ ] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
+      verify: `npx vitest run tests/scripts/finding_invalidation.test.ts -t 'edited affected file'` -> 0
+      > note: `_lib/finding_invalidation.ts` + the gate wiring in `check_finding_dispositions.ts`; nothing writes the two fields yet (`--ingest` does not record them).
+- [x] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
       rows naming a path/symbol → code/test nodes.
+      verify: `npx vitest run tests/scripts/code_graph/coverage.test.ts` -> 0
+      > note: `code_graph/coverage.ts`, reached through `ask` (intent `coverage`, no new verb per ADR-041); accepted `tests` edges only, every unmatched ref listed under `unresolved` with its reason.
 - [ ] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
       arms plain vs graph-fed reviewer; a miss counts only if the oracle confirms the edge;
       `paired_verdict` decides direction. Bar: oracle-confirmed miss on ≥ 40 % of PRs,
@@ -204,9 +221,11 @@ tracked.
       pasted beside a diff degrading reviews across eight models, so the hypothesis is
       B1 > A ≥ B2; without B2 the run cannot tell whether the form or the graph acted.
       K3 holds for all three arms.
-- [ ] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
+- [x] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
       `resolved_via` histogram, 3.5 record, staleness state) from
       `internal/bench/scorecard.yaml` (row → metric → artefact → bar → expiry).
+      verify: `npx vitest run tests/scripts/code_graph/prove.test.ts` -> 0
+      > note: `code_graph/prove.ts` (13 scorecard rows); a missing artefact is named `missing`, never omitted. Today suite F, the edge oracle and the 3.5 record read `missing`, the oracle version null — their runners must write the names the scorecard declares.
 
 ## Phase 4 — Answers that say what they do not know
 Added 2026-10-27 from round `inbox-2026-10-bf`. Order binds: honesty before cost
@@ -248,7 +267,7 @@ answers. Each step is fixture-gated (K5).
       verbs' `budget` / `truncated` and the context pack's accounting — no third
       mechanism. Caps derive from per-line costs measured here, not from S1's figures.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'omitted counted not truncated'` -> 0
-- [ ] 4.6 **The review path reads the index.** `review-risk` parses the whole JSON
+- [x] 4.6 **The review path reads the index.** `review-risk` parses the whole JSON
       graph in the CLI (`cli.ts`), the MCP tool (`graph_tools.ts`) and the map's agent
       area (`map_area_payloads.ts`); it reads through `openGraphIndex` instead, and
       builds adjacency without an array spread per edge. Measure the 50k-edge
@@ -259,6 +278,7 @@ answers. Each step is fixture-gated (K5).
       collision shapes fixed since. Confirm on the real graph before scheduling.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'reads through the index'` -> 0
       > note: precondition met 2026-10-27 — this repository's twin opens (261,913 edges, 0 duplicate node ids); adjacency no longer spreads per edge. Open: the index path needs kind- and relation-scoped reads in `sqlite_store.ts`, which is in the hook bundle at 1 byte of headroom, so it needs a `raise_log` entry first; the 50k crossover is unmeasured.
+      > note: closed 2026-11-05 — `RiskSource` over the index for the CLI and MCP paths (the map keeps its parsed graph and reuses its own lookups), scoped reads in `sqlite_store.ts` (+1,277 B, under the current bundle cap, no `raise_log` needed), twin meta keys `lanes_run` / `partial`. Crossover measured at ~1k edges for `query`, ~10k for `review-risk`; the threshold is now 10,000 (`internal/bench/reports/code-graph-index-crossover-2026-11-05.md`). Twins built earlier fall back to JSON until rebuilt.
 - [x] 4.7 **A region read list.** Extend the existing `recommended_reads` (`query.ts`)
       and the pack's `at=file:line` items with a region budget — changed regions
       risk-ordered round-robin, at most 40 % per file, definitions up to 40 lines
@@ -333,7 +353,7 @@ obligation inference in any pack/selection verb · K7 no external flow-analyzer 
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-05 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -343,13 +363,15 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 | 4 | Honesty changes break the answers consumers already read | implementation | `partial_files`, `unknown` terms and caps change output the map, the stop-gate feeder and the MCP tools consume today | Non-empty answers stay byte-identical (4.3); omitted items are counted, never cut (4.5); the map copy changes in the same step (4.2) | Phase 4 — Answers that say what they do not know |
 | 5 | The graph reaches the review as prose and makes it worse | product | A consumer pastes graph output into the review prompt, the form S3 measured as degrading | Checks and line-range read lists only (5.1, 5.2); prose exists only as arm B2 of 3.5; the self-review gate stays advisory until 3.5 shows B1 > A | Phase 5 — The review reaches the graph |
 | 6 | A lane gap reads as noise and is ignored | product | `ask` lists a failed lane under `degraded`; an agent reading only the answer rows misses it | The answer drops to low confidence, which the envelope surfaces first (4.8) | Phase 4 — Answers that say what they do not know |
+| 7 | The truth arrives without its human check | implementation | The oracle can be run by the agent once an indexer is installed, but the registered 20 % human-checked sample cannot; scoring on unchecked truth would break the registration | The runner reports PENDING until a dated truth file exists; 2.2 stays open until the sample is checked by a person | Phase 2 — Registration, then measurement |
 
 ## Acceptance Criteria
-- [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
+- [x] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
 - [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
 - [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
-- [ ] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
+- [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
 - [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
-- [ ] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
-- [ ] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
+- [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
+- [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
+      verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
 - [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.

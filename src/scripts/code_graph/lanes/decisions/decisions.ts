@@ -86,7 +86,7 @@ export function parseAdrRefs(value: string): Array<{ number: number; partial: bo
     return out;
 }
 
-function numberFromFile(file: string): number | null {
+export function numberFromFile(file: string): number | null {
     const base = path.posix.basename(file);
     const m = /^ADR[-_]?0*(\d+)/i.exec(base) ?? /^0*(\d+)[-_]/.exec(base);
     return m ? Number(m[1]) : null;

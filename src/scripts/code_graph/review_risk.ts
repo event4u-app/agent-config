@@ -22,8 +22,9 @@ import * as path from 'node:path';
 
 import { gitProbe } from '../_lib/spawn_env.js';
 import { spanHash } from './lanes/lane_fact.js';
-import { admitEdge, type ReadRegion, type RecommendedRead, regionReads, type WalkOptions } from './query.js';
-import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
+import { admitEdge, indexedReadMinEdges, type ReadRegion, type RecommendedRead, regionReads, type WalkOptions } from './query.js';
+import { type GraphIndex, type NodeColumn, openGraphIndex } from './sqlite_store.js';
+import type { CodeEdge, CodeGraph, CodeNode, LaneRunRecord } from './types.js';
 import { laneOfKind } from './vocabulary.js';
 
 export const RISK_TERMS = ['callers', 'entry points', 'flows', 'missing partners', 'area crossings', 'columns', 'operations', 'pipelines'] as const;
@@ -120,6 +121,113 @@ export interface ReviewRisk {
     basis: { graph_checksum: string; weights: Readonly<Record<RiskTerm, number>> };
 }
 
+/**
+ * What `reviewRisk` reads from a graph: per-id lookups plus three scoped reads.
+ * The scoped reads return graph order, because several terms keep the first
+ * fact they meet and must keep the same one on either store.
+ */
+export interface RiskSource {
+    readonly checksum: string;
+    readonly lanesRun: LaneRunRecord[] | undefined;
+    node(id: string): CodeNode | undefined;
+    inEdges(id: string): readonly CodeEdge[];
+    outEdges(id: string): readonly CodeEdge[];
+    nodesBy(column: NodeColumn, values: readonly string[]): CodeNode[];
+    coChanges(files: readonly string[]): CodeEdge[];
+}
+
+/** A parsed graph as a risk source; a caller that already holds the lookups passes them instead of rebuilding them. */
+export function graphRiskSource(
+    graph: CodeGraph,
+    held?: { byId: ReadonlyMap<string, CodeNode>; inn: ReadonlyMap<string, CodeEdge[]>; out: ReadonlyMap<string, CodeEdge[]> },
+): RiskSource {
+    let maps = held;
+    const lookups = (): NonNullable<typeof held> => {
+        if (maps) return maps;
+        const inn = new Map<string, CodeEdge[]>();
+        const out = new Map<string, CodeEdge[]>();
+        // Push, never spread: a spread per edge copies the list each time, quadratic on a hub.
+        const push = (m: Map<string, CodeEdge[]>, k: string, e: CodeEdge): void => {
+            const list = m.get(k);
+            if (list) list.push(e);
+            else m.set(k, [e]);
+        };
+        for (const e of graph.edges) {
+            push(inn, e.target, e);
+            push(out, e.source, e);
+        }
+        maps = { byId: new Map(graph.nodes.map((n) => [n.id, n] as const)), inn, out };
+        return maps;
+    };
+    const valueOf: Record<NodeColumn, (n: CodeNode) => string | undefined> = { kind: (n) => n.kind, source_file: (n) => n.source_file, owner: (n) => n.fact?.owner };
+    return {
+        checksum: graph.source_checksum,
+        lanesRun: graph.lanes_run,
+        node: (id) => lookups().byId.get(id),
+        inEdges: (id) => lookups().inn.get(id) ?? [],
+        outEdges: (id) => lookups().out.get(id) ?? [],
+        nodesBy: (column, values) => {
+            const set = new Set(values);
+            return graph.nodes.filter((n) => set.has(valueOf[column](n) as string));
+        },
+        coChanges: (files) => {
+            const set = new Set(files);
+            return graph.edges.filter((e) => e.relation === 'co-changes' && (set.has(e.source) || set.has(e.target)));
+        },
+    };
+}
+
+/**
+ * The SQLite twin as a risk source, or null when it predates the two graph-level
+ * facts the row tables cannot carry (`lanes_run`, `partial`): answering without
+ * them would turn a skipped lane into a zero and a partial parse into a complete one.
+ */
+export function indexRiskSource(index: GraphIndex): RiskSource | null {
+    const lanes = index.meta('lanes_run');
+    const partialIds = index.meta('partial');
+    if (lanes === undefined || partialIds === undefined) return null;
+    const partial = new Set(JSON.parse(partialIds) as string[]);
+    const mark = (n: CodeNode): CodeNode => {
+        if (partial.has(n.id)) n.partial = true;
+        return n;
+    };
+    const nodes = new Map<string, CodeNode | undefined>();
+    return {
+        checksum: index.sourceChecksum,
+        lanesRun: (JSON.parse(lanes) as LaneRunRecord[] | null) ?? undefined,
+        node: (id) => {
+            if (!nodes.has(id)) {
+                const n = index.getNode(id);
+                nodes.set(id, n && mark(n));
+            }
+            return nodes.get(id);
+        },
+        inEdges: (id) => index.edgesTo(id),
+        outEdges: (id) => index.edgesFrom(id),
+        nodesBy: (column, values) => index.nodesBy(column, values).map(mark),
+        coChanges: (files) => index.edgesOfRelation('co-changes', files),
+    };
+}
+
+/**
+ * The risk source for a graph file: the index when it is current, carries the
+ * graph-level facts, and holds at least the indexed-read threshold of edges;
+ * the parsed JSON otherwise. `readJson` is the whole-graph parse, injectable so
+ * a test can show the index path never takes it.
+ */
+export function loadRiskSource(
+    jsonPath: string,
+    readJson: (p: string) => CodeGraph = (p) => JSON.parse(fs.readFileSync(p, 'utf-8')) as CodeGraph,
+): { source: RiskSource; via: 'index' | 'json'; close(): void } {
+    const index = openGraphIndex(jsonPath);
+    if (index) {
+        const source = index.edgeCount >= indexedReadMinEdges() ? indexRiskSource(index) : null;
+        if (source) return { source, via: 'index', close: () => index.close() };
+        index.close();
+    }
+    return { source: graphRiskSource(readJson(jsonPath)), via: 'json', close: () => undefined };
+}
+
 /** `git diff -U0 <rev>` (working tree, staged included) as hunks; null when the rev does not resolve. */
 export function diffHunks(root: string, rev: string): Hunk[] | null {
     if (rev.startsWith('-')) return null;
@@ -163,9 +271,19 @@ function lineText(root: string, file: string, line: number, cache: Map<string, s
     return cache.get(file)?.[line - 1] ?? null;
 }
 
+/** `reviewRisk` over the graph file at `jsonPath`, read through the index when one qualifies. */
+export function reviewRiskAt(jsonPath: string, root: string, rev: string, hunks: readonly Hunk[], opts: WalkOptions = {}): ReviewRisk {
+    const loaded = loadRiskSource(jsonPath);
+    try {
+        return reviewRisk(root, loaded.source, rev, hunks, RISK_WEIGHTS, opts);
+    } finally {
+        loaded.close();
+    }
+}
+
 export function reviewRisk(
     root: string,
-    graph: CodeGraph,
+    graph: CodeGraph | RiskSource,
     rev: string,
     hunks: readonly Hunk[],
     weights: Readonly<Record<RiskTerm, number>> = RISK_WEIGHTS,
@@ -174,19 +292,10 @@ export function reviewRisk(
     const files = new Map<string, Hunk[]>();
     for (const h of hunks) files.set(h.file, [...(files.get(h.file) ?? []), h]);
     const changed = [...files.keys()].sort();
-    const byId = new Map(graph.nodes.map((n) => [n.id, n] as const));
-    const inn = new Map<string, CodeEdge[]>();
-    const out = new Map<string, CodeEdge[]>();
-    // Push, never spread: a spread per edge copies the list each time, quadratic on a hub.
-    const push = (m: Map<string, CodeEdge[]>, k: string, e: CodeEdge): void => {
-        const list = m.get(k);
-        if (list) list.push(e);
-        else m.set(k, [e]);
-    };
-    for (const e of graph.edges) {
-        push(inn, e.target, e);
-        push(out, e.source, e);
-    }
+    const src = 'nodes' in graph ? graphRiskSource(graph) : graph;
+    const byId = { get: (id: string) => src.node(id), has: (id: string) => src.node(id) !== undefined };
+    const inn = { get: (id: string) => src.inEdges(id) };
+    const out = { get: (id: string) => src.outEdges(id) };
     const lines = new Map<string, string[] | null>();
     const witnessOf = (n: CodeNode | undefined, e?: CodeEdge): RiskWitness | null => {
         const w = e?.fact?.witness ?? n?.fact?.witness;
@@ -208,7 +317,7 @@ export function reviewRisk(
     };
 
     const inFile = new Map<string, CodeNode[]>();
-    for (const n of graph.nodes) if (files.has(n.source_file) && SYMBOL_KINDS.has(n.kind)) inFile.set(n.source_file, [...(inFile.get(n.source_file) ?? []), n]);
+    for (const n of src.nodesBy('source_file', changed)) if (SYMBOL_KINDS.has(n.kind)) inFile.set(n.source_file, [...(inFile.get(n.source_file) ?? []), n]);
     const seedIds = new Set<string>();
     for (const [file, hs] of files) {
         const symbols = (inFile.get(file) ?? []).filter((n) => overlaps(n, hs));
@@ -235,8 +344,7 @@ export function reviewRisk(
     const reach = new Set([...seedIds, ...callers.keys()]);
     const flows: RiskItem[] = [];
     const entries: RiskItem[] = [];
-    for (const n of graph.nodes) {
-        if (n.kind !== 'flow') continue;
+    for (const n of src.nodesBy('kind', ['flow'])) {
         const walked = n.fact?.attrs?.['nodes'];
         if (!Array.isArray(walked) || !walked.some((id) => reach.has(id))) continue;
         const hit = walked.find((id) => reach.has(id)) as string;
@@ -247,8 +355,7 @@ export function reviewRisk(
 
     const partners: RiskItem[] = [];
     const changedSet = new Set(changed);
-    for (const e of graph.edges) {
-        if (e.relation !== 'co-changes') continue;
+    for (const e of src.coChanges(changed)) {
         const [inside, other] = changedSet.has(e.source) ? [e.source, e.target] : changedSet.has(e.target) ? [e.target, e.source] : [null, null];
         if (!inside || !other || changedSet.has(other) || partners.some((p) => p.id === other)) continue;
         const count = e.fact?.attrs?.['count'];
@@ -262,7 +369,7 @@ export function reviewRisk(
     };
     const columns = new Map<string, RiskItem>();
     const operations = new Map<string, RiskItem>();
-    for (const n of graph.nodes) {
+    for (const n of src.nodesBy('kind', ['column', 'table', 'operation'])) {
         if ((n.kind === 'column' || n.kind === 'table') && owned(n)) columns.set(n.id, item(n.id, 'redefined by the diff'));
         if (n.kind === 'operation' && owned(n)) operations.set(n.id, item(n.id, 'redefined by the diff'));
     }
@@ -275,8 +382,9 @@ export function reviewRisk(
     }
     // A job owns the lines from its header to the next job's; the workflow owns what precedes its first job.
     const pipelines: RiskItem[] = [];
+    const pipelineDefs = src.nodesBy('kind', ['workflow', 'job']);
     for (const file of changed) {
-        const defs = graph.nodes.filter((n) => (n.kind === 'workflow' || n.kind === 'job') && n.fact?.owner === file);
+        const defs = pipelineDefs.filter((n) => n.fact?.owner === file);
         const jobs = defs.filter((n) => n.kind === 'job').sort((a, b) => a.fact!.witness.line - b.fact!.witness.line);
         const hs = files.get(file) ?? [];
         const firstJob = jobs[0]?.fact!.witness.line ?? Number.MAX_SAFE_INTEGER;
@@ -299,7 +407,7 @@ export function reviewRisk(
     for (const s of seeds) touch(areaOf(s.id) === 'code' ? 'code' : areaOf(s.id), s);
     for (const c of columns.values()) touch('data', c);
     for (const o of operations.values()) touch('interfaces', o);
-    for (const n of graph.nodes) if (n.fact?.lane === 'runtime' && changedSet.has(n.fact.owner)) touch('runtime', item(n.id, `defined in ${n.fact.owner}`));
+    for (const n of src.nodesBy('owner', changed)) if (n.fact?.lane === 'runtime') touch('runtime', item(n.id, `defined in ${n.fact.owner}`));
     for (const p of pipelines) touch('delivery', p);
     const crossings = [...areas.values()].slice(1);
 
@@ -313,7 +421,7 @@ export function reviewRisk(
         operations: [...operations.values()].sort((a, b) => (a.id < b.id ? -1 : 1)),
         pipelines,
     };
-    const laneState = new Map((graph.lanes_run ?? []).map((l) => [l.lane, l.skipped_reason ?? (l.error !== undefined ? `lane failed: ${l.error}` : null)] as const));
+    const laneState = new Map((src.lanesRun ?? []).map((l) => [l.lane, l.skipped_reason ?? (l.error !== undefined ? `lane failed: ${l.error}` : null)] as const));
     const terms = RISK_TERMS.map((term) => {
         const lane = TERM_LANE[term];
         const unknown = lane ? (laneState.get(lane) ?? null) : null;
@@ -373,7 +481,7 @@ export function reviewRisk(
         complete: partial.length === 0,
         recommended_reads: regionReads(regions),
         checks: [untestedCheck, partnerCheck, entryCheck],
-        basis: { graph_checksum: graph.source_checksum, weights },
+        basis: { graph_checksum: src.checksum, weights },
     };
 }
 

@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
 import { renderMapMd } from '../../src/scripts/code_graph/map.js';
 import { buildMapModel } from '../../src/scripts/code_graph/map_model.js';
+import { loadGraph, path as queryPath } from '../../src/scripts/code_graph/query.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
@@ -212,6 +213,18 @@ describe('data (4.3)', () => {
 
     it('keeps the graph schema-valid with the new relations and kinds', () => {
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
+    });
+});
+
+describe('the path verb walks the overlay (graph-that-wins 1.2)', () => {
+    it('resolves route → controller → model', () => {
+        const file = path.join(root, '.cg-path.json');
+        fs.writeFileSync(file, JSON.stringify(graph));
+        const res = queryPath(loadGraph(file, 'fixture'), 'routes/web.php#route:GET /books', 'app/Models/Book.php#Book');
+        const text = res.lines.join('\n');
+        expect(text).toContain('routes-to');
+        expect(text).toContain('BookController::index');
+        expect(text).toContain('app/Models/Book.php');
     });
 });
 

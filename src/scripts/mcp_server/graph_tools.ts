@@ -73,8 +73,8 @@ import {
 } from '../code_graph/query.js';
 import { capAnswer, capReviewRisk, parseDetail } from '../code_graph/answer_detail.js';
 import { noEntryLine, testsForModuleAnswer, withDeclaringFileTests } from '../code_graph/answer_correctness.js';
-import { diffHunks, reviewRisk } from '../code_graph/review_risk.js';
-import type { CodeGraph, Relation } from '../code_graph/types.js';
+import { diffHunks, loadRiskSource, reviewRisk } from '../code_graph/review_risk.js';
+import type { Relation } from '../code_graph/types.js';
 import { RELATIONS as VOCAB_RELATIONS } from '../code_graph/vocabulary.js';
 import {
     dead,
@@ -274,8 +274,12 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                 if (hunks === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
                 const cache = graphHome(root).cachePath;
                 if (!fs.existsSync(cache)) return { status: 'error', error: 'no graph yet — run `code-graph build`' };
-                const risk = reviewRisk(root, JSON.parse(fs.readFileSync(cache, 'utf-8')) as CodeGraph, rev, hunks);
-                return { status: 'ok', ...capReviewRisk(risk, detail) };
+                const loaded = loadRiskSource(cache);
+                try {
+                    return { status: 'ok', ...capReviewRisk(reviewRisk(root, loaded.source, rev, hunks), detail) };
+                } finally {
+                    loaded.close();
+                }
             }
             const files = changedFiles(root, rev);
             if (files === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
