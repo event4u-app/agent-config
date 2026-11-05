@@ -122,7 +122,7 @@ describe('verifier completion (1.2)', () => {
 
 describe('reference solutions (1.3)', () => {
     it('one reference per fixture task, each capability-green, none touching a verifier', () => {
-        expect(FIXTURE_TASKS.length).toBe(33);
+        expect(FIXTURE_TASKS.length).toBe(37);
         for (const task of FIXTURE_TASKS) {
             const fx = fixtureRootFor(task) as string;
             const patch = fs.readFileSync(path.join(AB_ROOT, 'oracle-v2', `${String(task['id'])}.patch`), 'utf8');
@@ -177,7 +177,7 @@ describe('CLI and --gate (0.1, 1.5)', () => {
         expect(b.stdout).toBe(a.stdout);
         const g = runTs('check_bench_task_validity.ts', ['--gate']);
         expect(g.status, g.stderr).toBe(0);
-        expect(g.stdout).toContain('scanned: 33');
+        expect(g.stdout).toContain('scanned: 37');
     }, 180_000);
 
     function seededCorpus(task: Record<string, unknown>, withReference: boolean): string[] {

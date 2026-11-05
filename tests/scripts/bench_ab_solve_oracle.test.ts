@@ -45,7 +45,7 @@ function stage(fixture: string): string {
 
 describe('verifiers are out of the subject workspace', () => {
     it('the corpus still carries verifier tasks', () => {
-        expect(VERIFIED.length).toBe(18);
+        expect(VERIFIED.length).toBe(22);
     });
 
     it('no fixture holds a file a verifier command runs', () => {
