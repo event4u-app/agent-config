@@ -46,6 +46,8 @@ const CURATED_REF_RE =
  * bounded by this, not by the prompt: names past it are counted, never resolved.
  */
 export const MAX_EXAMINED_REFS = 20;
+/** Prompt characters scanned for refs; the matcher never sees more than this. */
+export const MAX_SCAN_CHARS = 100_000;
 /** Same rough estimate the hook budgets use: four bytes per token. */
 const BYTES_PER_TOKEN = 4;
 
@@ -61,12 +63,38 @@ function str(o: JsonObject, ...keys: string[]): string | null {
     return null;
 }
 
-/** `intake` / `curated` when the path lies under `agents/memory/` of the root, else null. */
+/**
+ * Where a write would land: the real path of the nearest existing ancestor, with
+ * the not-yet-existing tail appended, so a new file under a symlinked directory
+ * is placed where the filesystem will put it. At most one realpath per level of
+ * the missing tail.
+ */
+function resolveDestination(abs: string): string {
+    const tail: string[] = [];
+    let cur = abs;
+    for (;;) {
+        try {
+            return path.join(fs.realpathSync(cur), ...tail.reverse());
+        } catch {
+            const parent = path.dirname(cur);
+            if (parent === cur) return abs;
+            tail.push(path.basename(cur));
+            cur = parent;
+        }
+    }
+}
+
+/**
+ * `intake` / `curated` when the write lands in the store's real directory —
+ * judged on the resolved destination, so a symlink out of the store is not a
+ * memory write and a symlink into it is — else null.
+ */
 export function memoryTarget(filePath: string, root: string): 'intake' | 'curated' | null {
     const abs = path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
-    const rel = path.relative(root, abs).split(path.sep).join('/');
-    if (!rel.startsWith(MEMORY_DIR)) return null;
-    return rel.startsWith(`${MEMORY_DIR}intake/`) ? 'intake' : 'curated';
+    const store = resolveDestination(path.join(root, MEMORY_DIR));
+    const rel = path.relative(store, resolveDestination(abs));
+    if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) return null;
+    return rel === 'intake' || rel.startsWith(`intake${path.sep}`) ? 'intake' : 'curated';
 }
 
 export interface SliceCounts {
@@ -77,6 +105,8 @@ export interface SliceCounts {
     examined: number;
     /** Distinct names past {@link MAX_EXAMINED_REFS}, counted but never resolved. */
     unexamined: number;
+    /** True when the prompt ran past {@link MAX_SCAN_CHARS} and its tail was not scanned. */
+    scan_truncated: boolean;
 }
 
 /**
@@ -115,8 +145,10 @@ function eligibleFile(ref: string, store: string, root: string): { real: string;
  * takes a slot from a deliverable one, and two names for one file count once.
  */
 export function sliceCounts(prompt: string, root: string): SliceCounts {
+    const scanTruncated = prompt.length > MAX_SCAN_CHARS;
+    const scanned = scanTruncated ? prompt.slice(0, MAX_SCAN_CHARS) : prompt;
     const names = [
-        ...new Set((prompt.match(CURATED_REF_RE) ?? []).map(curatedRef).filter((r): r is string => r !== null)),
+        ...new Set((scanned.match(CURATED_REF_RE) ?? []).map(curatedRef).filter((r): r is string => r !== null)),
     ];
     const toExamine = names.slice(0, MAX_EXAMINED_REFS);
     const unexamined = names.length - toExamine.length;
@@ -124,7 +156,7 @@ export function sliceCounts(prompt: string, root: string): SliceCounts {
     try {
         store = fs.realpathSync(path.join(root, MEMORY_DIR));
     } catch {
-        return { ref_count: 0, dropped: 0, est_tokens: 0, examined: 0, unexamined: names.length };
+        return { ref_count: 0, dropped: 0, est_tokens: 0, examined: 0, unexamined: names.length, scan_truncated: scanTruncated };
     }
     const eligible = new Map<string, number>();
     for (const ref of toExamine) {
@@ -140,6 +172,7 @@ export function sliceCounts(prompt: string, root: string): SliceCounts {
         est_tokens: Math.ceil(bytes / BYTES_PER_TOKEN),
         examined: toExamine.length,
         unexamined,
+        scan_truncated: scanTruncated,
     };
 }
 

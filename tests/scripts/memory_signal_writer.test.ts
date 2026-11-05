@@ -95,4 +95,13 @@ describe('an external_read taint never reaches aggregation', () => {
         const rec = sig.emit('historical-patterns', 'app/T.php', 'from a fetched page', { taint: 'external_read' });
         expect((rec as Record<string, unknown>)['taint']).toBe('external_read');
     });
+
+    it('end to end: a tainted emit never corroborates a lesson, an untainted pair does', () => {
+        sig.emit('historical-patterns', 'app/E.php', 'cache the lookup', { origin: 'session-a' });
+        sig.emit('historical-patterns', 'app/E.php', 'cache the lookup', { origin: 'session-b', taint: 'external_read', force: true });
+        const now = new Date(Date.now() + 1000).toISOString();
+        expect(buildSidecar(intake, now).lessons).toEqual([]);
+        sig.emit('historical-patterns', 'app/E.php', 'cache the lookup', { origin: 'session-c', force: true });
+        expect(buildSidecar(intake, now).lessons.map((l) => l.path)).toEqual(['app/E.php']);
+    });
 });

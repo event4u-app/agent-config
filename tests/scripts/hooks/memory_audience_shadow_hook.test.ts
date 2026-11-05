@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LEDGER_DIR } from '../../../src/scripts/hooks/subagent_ledger_hook.js';
-import { MAX_EXAMINED_REFS, processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
+import { MAX_EXAMINED_REFS, MAX_SCAN_CHARS, processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
 import { EXIT_ALLOW } from '../../../src/scripts/hooks/exit_codes.js';
 import { applyPayloadFields } from '../../../src/scripts/hooks/payload_stub.js';
 
@@ -95,6 +95,26 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         const projected = applyPayloadFields(spec, write('agent-abc', 'agents/memory/product-rules.yml') as never);
         expect(processEnvelope(projected as never, root)).toBe(EXIT_ALLOW);
         expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', target: 'curated' }]);
+    });
+
+    it('a write through a symlink out of the store is not a memory write', () => {
+        mkdirSync(join(root, 'elsewhere'), { recursive: true });
+        symlinkSync(join(root, 'elsewhere'), join(root, 'agents', 'memory', 'out'));
+        processEnvelope(write('agent-abc', 'agents/memory/out/new-file.yml'), root);
+        expect(ledgerLines()).toHaveLength(0);
+    });
+
+    it('a new file under a symlink into the store is a memory write', () => {
+        symlinkSync(join(root, 'agents', 'memory'), join(root, 'notes'));
+        processEnvelope(write('agent-abc', 'notes/new-file.yml'), root);
+        expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', target: 'curated' }]);
+    });
+
+    it('a symlink in the store into intake is classed intake', () => {
+        mkdirSync(join(root, 'agents', 'memory', 'intake'), { recursive: true });
+        symlinkSync(join(root, 'agents', 'memory', 'intake'), join(root, 'agents', 'memory', 'raw'));
+        processEnvelope(write('agent-abc', 'agents/memory/raw/s.jsonl'), root);
+        expect(ledgerLines()).toMatchObject([{ target: 'intake' }]);
     });
 
     it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {
@@ -232,6 +252,14 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         processEnvelope(spawn(prompt), root);
         expect(Date.now() - t0).toBeLessThan(500);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0 });
+    });
+
+    it('scans a bounded prefix of the prompt and says when it stopped', () => {
+        const filler = 'x '.repeat(MAX_SCAN_CHARS);
+        processEnvelope(spawn(`${filler} agents/memory/product-rules.yml`), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, scan_truncated: true });
+        processEnvelope(spawn('agents/memory/product-rules.yml'), root);
+        expect(ledgerLines()[1]).toMatchObject({ ref_count: 1, scan_truncated: false });
     });
 
     it('examines a bounded number of names per spawn, whatever the prompt holds', () => {
