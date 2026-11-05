@@ -82,6 +82,11 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['rules-kernel-dc', 'vanilla', 'kernel+downstream rules lift'],
     ['rules-balanced', 'vanilla', 'balanced-profile rules lift'],
     ['package', 'rules-kernel-dc', 'full package residual over kernel+downstream'],
+    // Post-repair rerun (2026-11): the rule sets the discipline profiles name.
+    // `profile-essential` equals `rules-kernel-dc`, so it has no row of its own.
+    ['profile-minimal', 'vanilla', 'minimal-profile (kernel) rules lift'],
+    ['profile-full', 'vanilla', 'full-profile rules lift'],
+    ['rules-kernel-dc', 'profile-minimal', 'downstream-changes over the kernel'],
     // Phase-3 T1: the size claim is `package-ladder` vs `package`, and it is a
     // metric PAIR — see `size_claim_verdict`. Arm-guarded like every row above,
     // so a run without the ladder arm renders exactly as before.
