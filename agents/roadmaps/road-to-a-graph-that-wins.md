@@ -137,7 +137,7 @@ tracked.
       > `Book`): `npx vitest run tests/scripts/code_graph_provider_laravel.test.ts -t 'route → controller → model'` -> 0
 
 ## Phase 2 — Registration, then measurement
-- [ ] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
+- [x] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
       per ADR-260 § 5 (fitness: ≥ 200 routes, Eloquent relations, migrations, PHPUnit/Pest
       tests, TS/Vue frontend, permissive licence, active in 2026), named in the corpus
       header with role "benchmark subject", SHA-pinned, cloned by the runner. Suites: A
@@ -145,6 +145,7 @@ tracked.
       model → table, tests-for) · D negative-control only (a `threats.csv` sink no accepted
       path reaches returns empty) · E change impact incl. class 7 `change-impact-xplane` ·
       F agentic (24 tasks: localise-and-fix from issue text; PR review for missed callers).
+      > note: registered 2026-11-05 in `internal/bench/code-graph/PREREGISTRATION-v3-2026-11-05.md` (pins unopim `56071226`, larasend `da5c06c7`), `corpus-v3-2026-11-05.yaml` (45 questions B–E, truth pending the oracle) and `suite-f-tasks-v3-2026-11-05.yaml` (24 tasks, all fix commits reachable in the forks); every input is sha256-bound in the registration. The engine never read either subject. The 20 % human-check sample (13 of 45) is drawn by a stated seed.
 - [ ] 2.2 Truth from an oracle arm (tsserver references; Psalm `--find-references-to` or
       LSP references for PHP), symbol level, 20 % human-checked, hop strata 1/2/≥ 3. The
       oracle lives only under `internal/bench/` and is never an arm or a provider.
@@ -155,7 +156,8 @@ tracked.
 - [ ] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
       `internal/bench`, mapping relation and confidence names). F = floor / floor + native
       tools. No "fused" arm.
-- [ ] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
+      > note: the arms are defined in the v3 registration; open is the v3 runner (it must refuse on a hash mismatch) and the foreign `graph.json` reader under `internal/bench`.
+- [x] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
       calibration diagnostic (predicted class vs gold, overconfidence rate); F primary
       **solved per 100k tokens ≥ 1.25× floor**, solved per minute, escaped-regression rate.
       Gate for F: `dispatch-event-capture-reliability` ≥ 95 %.
@@ -359,7 +361,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 | 6 | A lane gap reads as noise and is ignored | product | `ask` lists a failed lane under `degraded`; an agent reading only the answer rows misses it | The answer drops to low confidence, which the envelope surfaces first (4.8) | Phase 4 — Answers that say what they do not know |
 
 ## Acceptance Criteria
-- [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
+- [x] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
 - [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
 - [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
