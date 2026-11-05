@@ -5,7 +5,12 @@
  *
  *   tsx internal/bench/code-graph/run_bench_v3.ts --subjects-dir <dir>
  *       [--clone] [--foreign <subject>=<graph.json>]… [--date YYYY-MM-DD]
- *       [--suite-a] [--force]
+ *       [--suite-a] [--force] [--truth <truth-v3-DATE.yaml>]
+ *
+ * `--truth` takes the file `oracle_truth.ts` writes. It is refused while any item of
+ * the registered 20 % human sample lacks a verdict; after that, an item counts when
+ * the oracle answered it completely or a person sealed it, and anything else stays
+ * PENDING.
  *
  * Registered by `PREREGISTRATION-v3-2026-11-05.md` before this runner existed. The
  * arms, the verb map, the scoring and the refusal rules are that document's; where
@@ -186,6 +191,36 @@ export function truthOf(q: { truth?: unknown; expected?: unknown }): Truth {
         return { kind: 'set', files };
     }
     return { kind: 'pending' };
+}
+
+/** `truth-v3-<date>.yaml`, written by oracle_truth.ts; the corpus itself stays hash-bound. */
+export interface TruthDoc {
+    human_check: { sample: string[] };
+    items: { id: string; status: string; files: string[]; human_checked?: string | null }[];
+}
+
+const HUMAN_VERDICTS = new Set(['agree', 'corrected']);
+
+/**
+ * Registration § Truth: no truth is scored until the 20 % sample is checked by a
+ * person. Returns the reason to refuse, or null.
+ */
+export function truthDocRefusal(doc: TruthDoc): string | null {
+    const unchecked = doc.human_check.sample.filter((id) => !HUMAN_VERDICTS.has(doc.items.find((i) => i.id === id)?.human_checked ?? ''));
+    return unchecked.length > 0 ? `the human-checked sample is not complete — no verdict (agree | corrected) on ${unchecked.join(', ')}` : null;
+}
+
+/**
+ * The truth one question takes from an oracle truth file. An item counts when the
+ * oracle answered it completely, or when a person sealed it (`human_checked`). A
+ * negative control the oracle reached is VOID: removed from the clean-rate, listed.
+ */
+export function truthFromDoc(q: { id: string; truth?: unknown; expected?: unknown }, doc: TruthDoc): Truth | 'void' {
+    const item = doc.items.find((i) => i.id === q.id);
+    if (q.expected === 'empty') return item?.status === 'void' && item.human_checked !== 'corrected' ? 'void' : { kind: 'expected-empty' };
+    if (item === undefined) return truthOf(q);
+    const sealed = HUMAN_VERDICTS.has(item.human_checked ?? '');
+    return item.status === 'oracle' || sealed ? { kind: 'set', files: [...item.files] } : { kind: 'pending' };
 }
 
 export interface ArmAnswer {
@@ -438,10 +473,11 @@ interface Args {
     date: string;
     suiteA: boolean;
     force: boolean;
+    truth: string | null;
 }
 
 function parseArgs(argv: string[]): Args | string {
-    const a: Args = { subjectsDir: null, clone: false, foreign: new Map(), date: new Date().toISOString().slice(0, 10), suiteA: false, force: false };
+    const a: Args = { subjectsDir: null, clone: false, foreign: new Map(), date: new Date().toISOString().slice(0, 10), suiteA: false, force: false, truth: null };
     for (let i = 0; i < argv.length; i += 1) {
         const k = argv[i];
         const v = argv[i + 1];
@@ -450,6 +486,7 @@ function parseArgs(argv: string[]): Args | string {
         else if (k === '--suite-a') a.suiteA = true;
         else if (k === '--force') a.force = true;
         else if (k === '--date' && v !== undefined) (a.date = v), (i += 1);
+        else if (k === '--truth' && v !== undefined) (a.truth = path.resolve(v)), (i += 1);
         else if (k === '--foreign' && v !== undefined) {
             const eq = v.indexOf('=');
             if (eq <= 0) return `--foreign takes <subject>=<graph.json>, got '${v}'`;
@@ -492,6 +529,16 @@ export async function main(argv: string[]): Promise<number> {
     }
     const corpusSha = sha256File(path.join(HERE, CORPUS_FILE));
     const corpus = yaml.load(fs.readFileSync(path.join(HERE, CORPUS_FILE), 'utf-8')) as Corpus;
+    let truthDoc: TruthDoc | null = null;
+    if (args.truth !== null) {
+        truthDoc = yaml.load(fs.readFileSync(args.truth, 'utf-8')) as TruthDoc;
+        const refusal = truthDocRefusal(truthDoc);
+        if (refusal !== null) {
+            console.error(`run refused: ${refusal}`);
+            return 2;
+        }
+    }
+    const voided: string[] = [];
 
     const tracesDir = path.join(REPO_ROOT, 'internal', 'bench', 'reports', `code-graph-v3-traces-${args.date}`);
     if (fs.existsSync(tracesDir) && !args.force) {
@@ -582,7 +629,12 @@ export async function main(argv: string[]): Promise<number> {
             console.error(`probe failed, run aborted: ${e instanceof Error ? e.message : String(e)}`);
             return 2;
         }
-        const truth = truthOf(q);
+        const resolved = truthDoc === null ? truthOf(q) : truthFromDoc(q, truthDoc);
+        if (resolved === 'void') {
+            voided.push(q.id);
+            continue;
+        }
+        const truth = resolved;
         const row: Row = {
             id: q.id, suite: q.suite, class: q.class, subject: q.subject, language: q.language,
             ...(q.target_language !== undefined ? { target_language: q.target_language } : {}),
@@ -645,6 +697,8 @@ export async function main(argv: string[]): Promise<number> {
         arms: run,
         questions: rows.length,
         pending_truth: pendingQuestions,
+        truth_file: args.truth === null ? null : path.relative(REPO_ROOT, args.truth),
+        voided_negative_controls: voided,
         answers_per_arm: answersPerArm,
         non_empty_answers_per_arm: nonEmptyPerArm,
         questions_per_language: byLanguage,
@@ -671,6 +725,7 @@ export async function main(argv: string[]): Promise<number> {
     }
     md.push('');
     md.push(`**Truth:** ${pendingQuestions} of ${rows.length} questions are \`pending-oracle\` — scored as PENDING, never as a number. Every arm's raw answer is in \`traces.jsonl\` for scoring once the step-2.2 oracle lands.`, '');
+    if (args.truth !== null) md.push(`**Truth file:** \`${path.relative(REPO_ROOT, args.truth)}\` · VOID negative controls (removed from the clean-rate): ${voided.length === 0 ? 'none' : voided.join(', ')}.`, '');
     md.push(`**Answers per arm:** grep ${answersPerArm['grep']} (${nonEmptyPerArm['grep']} non-empty) · native ${answersPerArm['native']} (${nonEmptyPerArm['native']} non-empty) · foreign ${answersPerArm['foreign']}${answersPerArm['foreign'] === 0 ? ' — ABSENT, not zero' : ` (${nonEmptyPerArm['foreign']} non-empty)`}.`, '');
     md.push('## Per class (route-trace per subject, never pooled)', '');
     md.push('| Class | Subject | n | grep | native | foreign | native verdict | foreign verdict | verdict-bearing |', '|---|---|---|---|---|---|---|---|---|');
