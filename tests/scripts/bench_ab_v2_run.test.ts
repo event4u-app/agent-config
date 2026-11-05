@@ -21,6 +21,9 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { container_fields, is_quota_exhausted, quota_brake, trial_container } from '../../src/scripts/_lib/bench_ab_container.js';
+import { primary_checkout_root } from '../../src/scripts/_lib/bench_ab_workspace.js';
+
 import {
     placebo_prose,
     status_bucket,
@@ -640,7 +643,7 @@ describe('bench_ab_v2_run — selftest mode', () => {
         // measured one, and the payload says the same thing independently.
         const m = /internal\/bench\/reports\/ab-v2\/([^\s]+\.json)/.exec(r.stdout);
         expect(m).not.toBeNull();
-        const file = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2', (m as RegExpExecArray)[1] as string);
+        const file = path.join(primary_checkout_root(REPO_ROOT), 'internal', 'bench', 'reports', 'ab-v2', (m as RegExpExecArray)[1] as string);
         expect(path.basename(file)).toContain('-selftest');
 
         const payload = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
@@ -720,5 +723,72 @@ describe('bench_ab_v2_run — selftest mode', () => {
         expect(audit.violations).toHaveLength(1);
         expect(audit.violations[0]?.kind).toBe('collapsed-to-baseline');
         expect(audit.violations[0]?.arm).toBe('package');
+    });
+});
+
+describe('container isolation', () => {
+    const ctx = { base_image: 'sha256:base', ac_image: 'sha256:ac', token: 't', package_skills: new Set(['laravel']) };
+    const init = (skills: string[]): string => JSON.stringify({ type: 'system', subtype: 'init', skills, plugins: [] });
+
+    it('isolation: package-loading arms run on bench-ac, every other arm on bench-base', () => {
+        expect(trial_container(ctx, ARMS['package']!).image).toBe('sha256:ac');
+        expect(trial_container(ctx, ARMS['vanilla']!).image).toBe('sha256:base');
+        expect(trial_container(ctx, ARMS['rules-kernel-dc']!).image).toBe('sha256:base');
+    });
+
+    it('isolation: a load mismatch turns the trial into an errored one with the reason', () => {
+        const run = { errored: false, stream: init(['init']) };
+        expect(container_fields(run, ARMS['package']!, ctx)).toMatchObject({ errored: true, reason: expect.stringMatching(/^load_mismatch:/) });
+        expect(container_fields({ errored: false, stream: init(['laravel']) }, ARMS['package']!, ctx)).not.toHaveProperty('errored');
+    });
+
+    it('isolation: a container sweep never resumes a host checkpoint, and host keys are unchanged', () => {
+        const cfg = { corpus: 'trackb', model: 'm', seeds: 1, arms: ['vanilla'], budget: 1, timeout: 1, host: 'claude', task_ids: ['t'] };
+        expect(checkpoint_key(cfg)).toBe(checkpoint_key({ ...cfg }));
+        expect(checkpoint_key({ ...cfg, isolation: 'container' })).not.toBe(checkpoint_key(cfg));
+    });
+
+    it('brake: three runs in a row that did no work stop the sweep and keep what ran', () => {
+        const dead = { errored: true, reason: 'exit 1', tokens_breakdown: {} };
+        const brake = quota_brake(3);
+        const out = collect_records([{ id: 'a' }, { id: 'b' }], ['vanilla'], 3, () => ({ ...dead }), null, () => undefined, brake);
+        expect(out.executed).toBe(3);
+        expect(out.aborted).toMatch(/3 consecutive runs did no work/);
+    });
+
+    it('report dir: a linked worktree resolves to the primary checkout', () => {
+        const main = fs.mkdtempSync(path.join(os.tmpdir(), 'primary-'));
+        const git = (cwd: string, ...a: string[]): void => {
+            const r = spawnSync('git', a, { cwd, encoding: 'utf-8' });
+            if (r.status !== 0) throw new Error(r.stderr);
+        };
+        git(main, 'init', '-q');
+        git(main, '-c', 'user.email=a@b.c', '-c', 'user.name=a', 'commit', '-q', '--allow-empty', '-m', 'x');
+        const wt = path.join(main, '.claude', 'worktrees', 'w');
+        git(main, 'worktree', 'add', '-q', wt);
+        expect(fs.realpathSync(primary_checkout_root(wt))).toBe(fs.realpathSync(main));
+        expect(fs.realpathSync(primary_checkout_root(main))).toBe(fs.realpathSync(main));
+    });
+});
+
+describe('container controls', () => {
+    it('isolation: vanilla-b and vanilla-host are vanilla under other names, and only vanilla-host stays on the host', () => {
+        const { host_only: _h, ...hostSpec } = ARMS['vanilla-host']!;
+        expect(ARMS['vanilla-b']).toEqual(ARMS['vanilla']);
+        expect(hostSpec).toEqual(ARMS['vanilla']);
+        expect(ARMS['vanilla-host']?.host_only).toBe(true);
+        expect(lift_audit_arms(['vanilla', 'vanilla-b', 'vanilla-host'])).toEqual([]);
+    });
+});
+
+describe('brake and resume', () => {
+    it('brake: a run that did no work is not checkpointed, so a resume re-runs it', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ckpt-'));
+        const ckpt = { path: path.join(dir, 'c.jsonl'), completed: new Map() };
+        const dead = { errored: true, reason: 'error', transcript: "You've hit your weekly limit", tokens_breakdown: {} };
+        const live = { errored: false, tokens_breakdown: { input_tokens: 10 } };
+        let n = 0;
+        collect_records([{ id: 't' }], ['vanilla'], 4, () => ({ ...(n++ === 0 ? live : dead) }), ckpt, () => undefined, quota_brake(3), (r) => !is_quota_exhausted(r));
+        expect(load_checkpoint(ckpt.path).size).toBe(1);
     });
 });

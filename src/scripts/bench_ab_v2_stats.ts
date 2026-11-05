@@ -91,6 +91,10 @@ const COMPARISONS: Array<[string, string, string]> = [
     // metric PAIR — see `size_claim_verdict`. Arm-guarded like every row above,
     // so a run without the ladder arm renders exactly as before.
     ['package-ladder', 'package', 'ladder size claim (T1/T2 pair)'],
+    // Container controls (2026-11): an A/A pair that must show nothing, and the
+    // container baseline against the host one. Arm-guarded like every row above.
+    ['vanilla-b', 'vanilla', 'A/A control (vanilla vs vanilla)'],
+    ['vanilla', 'vanilla-host', 'container vs host baseline'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────

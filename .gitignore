@@ -403,3 +403,6 @@ internal/bench/corpora/*.local.yaml
 # would name the commit before the one it ships in and could never match. It is
 # a CI-time fact, not a tracked one.
 internal/reports/supervision-lifecycle.json
+
+# Bench image record — local image ids, rebuilt per machine by bench_ab_images
+internal/bench/containers/images.json

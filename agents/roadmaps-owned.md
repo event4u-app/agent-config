@@ -207,6 +207,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-artefact-family-registry | stubs | — | a declared artefact-family registry |
 | road-to-assurance-benchmark | stubs | — | Road to an assurance benchmark — stub |
 | road-to-batch-elicitation-kernel-delta | stubs | — | road to the batch-elicitation kernel delta |
+| road-to-bench-accounts-through-agent-switch | stubs | — | bench accounts through agent-switch |
 | road-to-bench-gate-capability-non-inferiority | stubs | — | the bench gate requires capability non-inferiority |
 | road-to-blocker-parse-visibility | stubs | — | road to a blocker the parser can actually see |
 | road-to-bracket-live-measurements | stubs | — | live bracket measurements |

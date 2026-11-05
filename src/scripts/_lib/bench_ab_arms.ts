@@ -43,6 +43,8 @@ export interface ArmSpec {
      * off or redirected without naming it here.
      */
     isolate_neighbour?: boolean;
+    /** Runs on the host CLI even in a `--isolation container` sweep — the host-vs-container control. */
+    host_only?: boolean;
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
@@ -92,6 +94,11 @@ export interface ArmSpec {
 export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
+    // Controls for the container path: `vanilla-b` is `vanilla` under a second
+    // name (an A/A pair), `vanilla-host` is `vanilla` kept on the host CLI when the
+    // rest of the sweep runs in containers.
+    'vanilla-b': { setting_sources: 'project,local', inject: null },
+    'vanilla-host': { setting_sources: 'project,local', inject: null, host_only: true },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
     // ~1.7k inert tokens per turn cannot clear a 1.2x whole-run lift over a
     // 72k-235k baseline whose spread is turn count, so only the text direction is
