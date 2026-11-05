@@ -124,12 +124,18 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
   three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
   the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
-- [ ] **2.6** Two faults the Sonnet artifact pilot exposed, both before any paid
+- [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
   rerun: every `package` run stopped at the per-call budget on its first turn ($1
   and $3, against $0.14 for `vanilla`), with the cause unknown because the
   workspaces are disposed; and the three PHP tasks end `indeterminate` because the
   artifact path runs on a host without PHP. Keep the transcript of an errored run,
   find what the first turn spends, and run the PHP tasks where PHP exists.
+  Done 2026-11-05: the arm loaded the repository's `agents/` tree as subagents via
+  `--plugin-dir` (~370k tokens); it now installs the packed checkout with the public
+  installer and is load-checked. Installed, `art-form-01` reaches parity on Sonnet
+  at $0.96 per run (vanilla $0.14). PHP grading runs through
+  `internal/bench/containers/php-in-docker.sh`; the self-test separates all three
+  PHP tasks (`docs/benchmark.md` § Headroom sweeps).
   verify: one `package` run of `art-form-01` on Sonnet reaches an outcome other than `errored`, and the PHP tasks score on the untouched fixture
   verify: the report names wins and losses per domain with priced cost
 
