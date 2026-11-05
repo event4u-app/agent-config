@@ -16,6 +16,9 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { read_oauth_token, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { package_skill_names } from './_lib/bench_ab_delivery_probe.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const CONTAINERS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'containers');
@@ -129,6 +132,25 @@ export function read_images(file: string = DEFAULT_IMAGES_FILE): ImagesFile {
         }
     }
     return raw as ImagesFile;
+}
+
+/**
+ * The container context a sweep runs with: the recorded images, the token and
+ * the package's skill names for the load check. A selftest makes no model call,
+ * so it needs neither images nor a token and gets placeholders it never uses.
+ */
+export function container_context(opts: { selftest: boolean; images_file?: string }): { ctx: ContainerCtx; images: ImagesFile | null } {
+    if (opts.selftest) {
+        return { ctx: { base_image: 'selftest', ac_image: 'selftest', token: '', package_skills: new Set() }, images: null };
+    }
+    const images = read_images(opts.images_file);
+    const ctx: ContainerCtx = {
+        base_image: images.base.id,
+        ac_image: images.ac.id,
+        token: read_oauth_token(),
+        package_skills: package_skill_names(path.join(REPO_ROOT, 'src', 'skills')),
+    };
+    return { ctx, images };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2), exec?: Exec): number {

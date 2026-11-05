@@ -86,36 +86,36 @@ Measured in the last sweep and in the tree:
 
 ## Phase 2 — Runner
 
-- [ ] **2.1 Container invocation.** `src/scripts/_lib/bench_ab_container.ts`
+- [x] **2.1 Container invocation.** `src/scripts/_lib/bench_ab_container.ts`
       builds the `docker run` argv for one trial: `--rm`, the clone bind-mounted
       as the working directory, a read-only mount for an injected prompt file,
       CPU and memory limits, the token passed by name only, no
       `ANTHROPIC_API_KEY`, then the CLI arguments the host path already builds,
       minus `--setting-sources`.
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts` -> /passed/ (argv shape, the token never in argv, the key always dropped, identical flags across arms).
-- [ ] **2.2 `--isolation container` in `bench_ab_v2_run`.** Arms that load the
+- [x] **2.2 `--isolation container` in `bench_ab_v2_run`.** Arms that load the
       package run on `bench-ac`, every other arm on `bench-base`; the report
       records isolation, both image digests, the CLI version and the package
       version. The host path stays the default.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts -t "isolation"` -> /passed/
-- [ ] **2.3 Load proof before scoring.** Each container trial parses
+- [x] **2.3 Load proof before scoring.** Each container trial parses
       `system/init`; a mismatch with the arm's image is recorded as
       `load_mismatch`, excluded from the statistics, and counted in the report.
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts -t "load"` -> /passed/
-- [ ] **2.4 Sweep brake.** A run that ends with zero tokens and an error, or
+- [x] **2.4 Sweep brake.** A run that ends with zero tokens and an error, or
       with a usage-limit message, is classed `quota_exhausted`; three in a row
       stop the sweep and the report says where. The cost cap stays as is.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts -t "brake"` -> /passed/
-- [ ] **2.5 Reports outside every worktree.** The default report directory
+- [x] **2.5 Reports outside every worktree.** The default report directory
       resolves through the git common dir to the primary checkout, so removing
       a worktree cannot delete a report again.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts -t "report dir"` -> /passed/
-- [ ] **2.6 Token file.** The runner reads the token from
+- [x] **2.6 Token file.** The runner reads the token from
       `~/.event4u/agent-config/secrets/claude-oauth-token` (mode 0600) or the
       environment, refuses a world-readable file, and never prints it; the
       transcript writer redacts it.
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts -t "token"` -> /passed/
-- [ ] **2.7 Selftest in container mode.** `--mode selftest --isolation container`
+- [x] **2.7 Selftest in container mode.** `--mode selftest --isolation container`
       runs green with no network and no token.
       verify: `./scripts-run src/scripts/bench_ab_v2_run --mode selftest --isolation container --arms vanilla,package --limit 2` -> exit 0
 
