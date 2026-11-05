@@ -127,7 +127,7 @@ Evidence (claimed): `agents/tmp.old/inbox-2026-11-x/chat.txt:1712` (owner turn 7
 The owner, turn 7: do not throw something away because one bench is bad; ask
 whether the right benefit was measured and whether the cost is really that high.
 
-- [ ] **4.1** `src/scripts/bench_ab_interpret.ts` reads an ab-v2 analysis JSON and
+- [x] **4.1** `src/scripts/bench_ab_interpret.ts` reads an ab-v2 analysis JSON and
   writes a Benchmark Interpretation Record: for each comparison, the deterministic
   labels the data supports — `ceiling` (control capability or discipline ≥ 0.90),
   `underpowered` (discordant below the `paired_verdict` floor), `not-delivered`
@@ -135,16 +135,16 @@ whether the right benefit was measured and whether the cost is really that high.
   above 2×) — and the questions it cannot answer from data (construct, real-world
   use), listed as open.
   verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0
-- [ ] **4.2** The record has no removal field. It carries
+- [x] **4.2** The record has no removal field. It carries
   `removal_supported: false` and the sentence "a benchmark result alone never
   supports removing an asset" on every output, and a test asserts no input can
   change either.
   verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0 (removal-invariant case)
-- [ ] **4.3** Fixtures from the real 2026-11-05 shape: the Haiku sweep reads
+- [x] **4.3** Fixtures from the real 2026-11-05 shape: the Haiku sweep reads
   `ceiling` + `underpowered`; a sweep whose package arm failed the load check reads
   `not-delivered`. Both seen red before 4.1 lands.
   verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0 (fixture cases), seen red before 4.1
-- [ ] **4.4** `docs/benchmark.md` § Reading a bad result: the four labels, what
+- [x] **4.4** `docs/benchmark.md` § Reading a bad result: the four labels, what
   each one sends you to do instead (harder tasks, more pairs, fix delivery, price
   the run), and the rule that removal needs the evidence named in
   `road-to-proof-where-the-owner-sees-it` Phase 4.
@@ -154,14 +154,14 @@ whether the right benefit was measured and whether the cost is really that high.
 
 Evidence (read): `docs/benchmark.md:76` · `docs/contracts/value-dashboard-spec.md:61-62`
 
-- [ ] **5.1** Re-run the stats for the three 2026-11-05 reports with Phase 2's
+- [x] **5.1** Re-run the stats for the three 2026-11-05 reports with Phase 2's
   prices (offline, $0) and add the priced cost factor and the dollars per arm next
   to the token factors in `docs/benchmark.md` § container sweep. Token factors stay
   as the secondary figure.
   verify: `grep -cE 'priced cost factor' docs/benchmark.md` -> >=1
-- [ ] **5.2** Replace the ten stale `.py` script references in
-  `docs/contracts/value-dashboard-spec.md` and the ones in
-  `docs/contracts/benchmark-report-schema.md` with the `.ts` paths that exist.
+- [x] **5.2** Replace the stale `.py` script references (eight in
+  `docs/contracts/value-dashboard-spec.md`, four in
+  `docs/contracts/benchmark-report-schema.md`) with the `.ts` paths that exist.
   verify: `grep -cE 'scripts/[a-z_]+\.py' docs/contracts/value-dashboard-spec.md docs/contracts/benchmark-report-schema.md` -> 0 per file
 
 ## Decisions

@@ -58,11 +58,11 @@ machine-readable source of truth.
 
 | Concern | Owner |
 |---|---|
-| Rung normalisation (raw report → `value-v1` rung) | `scripts/_lib/value_ladder.py` |
-| `value-v1` JSON assembly | `scripts/_lib/value_report.py` |
-| rtk savings measurement (new) | `scripts/bench_rtk_savings.py` + `internal/bench/corpora/rtk/commands.yaml` |
-| Rendered dashboard | `scripts/render_value_md.py` → `docs/value.md` |
-| Dashboard linter | `scripts/lint_value_dashboard.py` |
+| Rung normalisation (raw report → `value-v1` rung) | `src/scripts/_lib/value_ladder.ts` |
+| `value-v1` JSON assembly | `src/scripts/_lib/value_report.ts` |
+| rtk savings measurement (new) | `src/scripts/bench_rtk_savings.ts` + `internal/bench/corpora/rtk/commands.yaml` |
+| Rendered dashboard | `src/scripts/render_value_md.ts` → `docs/value.md` |
+| Dashboard linter | `src/scripts/lint_value_dashboard.ts` |
 | Task orchestration | `taskfiles/value.yml` (`task value*`) |
 
 ## Canonical output path
@@ -110,7 +110,7 @@ Rung order:
    caveat surfaces as a footnote, not a hidden exclusion.
 4. **+ rtk** — output-side savings on verbose CLI output that the
    agent would otherwise pipe into its context. New measurement:
-   `scripts/bench_rtk_savings.py` against
+   `src/scripts/bench_rtk_savings.ts` against
    `internal/bench/corpora/rtk/commands.yaml`. `pending` when `rtk`
    is not installed (with install hint per `missing-tool-handling`).
 5. **+ terse (telegraph)** — output-side carve-out from
@@ -308,7 +308,7 @@ dashboard was first conceived.
 **Correction 2026-05-28 (Phase 1 of `road-to-value-dashboard-netto-cuts`):**
 The `load` rung previously read `agents/runtime/frugality/baseline.jsonl`
 which measures a hardcoded 6-rule canon
-(`scripts/measure_frugality_savings.py::CANON_RULES`) — NOT the
+(`src/scripts/measure_frugality_savings.ts::CANON_RULES`) — NOT the
 actual always-loaded kernel. The real kernel has 9 rules per
 `dist/router.json::kernel`. After fix:
 
@@ -338,7 +338,7 @@ measure agent behaviour, not token footprint).
 
 - Phase 1 — corpus-surface inventory + state-fixture feasibility scan: 15 of 20 rules classified `addressable`; 5 state-bound (`autonomous-execution`, `context-hygiene`, `fast-path-marker-visibility`, `low-impact-corpus-privacy-floor`, `onboarding-gate`) get a permanent `keep-pending-state-trigger` verdict. 2/5 (`onboarding-gate`, `context-hygiene`) have feasible fixtures (documented but not built).
 - Phase 2 — 5 corpus extension files shipped under `internal/bench/corpora/router-coverage/`, 24 tasks total (well under the 40-task ceiling). New `intended_triggers` + `open_files` + `command` fields on the per-prompt schema; linter validates against `dist/router.json` rule ids.
-- Phase 3 — `scripts/router_telemetry.py` extended with manifest auto-discovery + `intended_vs_observed_match` per task + `unintended_activation_histogram` aggregate (Council R3 inter-rule conflict detection). Replay: **never-matched-tier-1 = 20 → 11**. The 11 split cleanly into 5 state-bound + 5 intent-only (NEW structural class — intent-only triggers cannot be exercised by router-telemetry replay regardless of corpus) + 1 partial.
+- Phase 3 — `src/scripts/router_telemetry.ts` extended with manifest auto-discovery + `intended_vs_observed_match` per task + `unintended_activation_histogram` aggregate (Council R3 inter-rule conflict detection). Replay: **never-matched-tier-1 = 20 → 11**. The 11 split cleanly into 5 state-bound + 5 intent-only (NEW structural class — intent-only triggers cannot be exercised by router-telemetry replay regardless of corpus) + 1 partial.
 - Phase 4 — second tier-1 audit, informed by widened corpus. The candidate set reduces to 1 real audit row (`artifact-engagement-recording`) — defended as load-bearing infrastructure for `/implement-ticket` + `/work` engine telemetry. Pareto raw-flagged 4 candidates with the tightened Council R3 thresholds (`body > 3 000 chars` AND `absolute_activations < 3` AND `activation_rate < 30 % of addressable_tasks`); all 4 are false-positives caused by the structural-unreachability dimension the pareto does not encode.
 - Phase 5 — zero cuts (0 demotes, 0 deletes). Same outcome as pass-1, but for a fundamentally different reason: pass-1 closed with zero cuts because the corpus was blind; pass-2 closes with zero cuts because the widened corpus **proved every tier-1 rule has structural reason to exist**.
 - Phase 6 — full live Track B re-run skipped: Phase 1-5 made zero rule-body / frontmatter / kernel edits — Panel B is unchanged from the 2026-05-28 baseline by construction.
