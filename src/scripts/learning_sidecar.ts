@@ -155,6 +155,8 @@ export function readSignals(intakeDir: string): Signal[] {
             }
             if (typeof obj !== 'object' || obj === null) continue;
             const r = obj as Record<string, unknown>;
+            // Derived from untrusted content: kept in the log, never corroborates a lesson.
+            if (r['taint'] === 'external_read') continue;
             const ts = typeof r['ts'] === 'string' ? r['ts'] : '';
             const tsMs = _parseTsMs(ts);
             const entryType = typeof r['entry_type'] === 'string' ? r['entry_type'] : '';
