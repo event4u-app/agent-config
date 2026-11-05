@@ -27,22 +27,33 @@ at the 2026-10-27 baseline; the three at 0/3 did not change their `description`
 since. Phase 1 covers all five — the three stable regressions and the two
 undecided ones — so nothing is fixed or dismissed on a single-run number.
 
-- [ ] **1.1 Read the traces.** For each 0/3 run, which skill (if any) the run
+- [x] **1.1 Read the traces.** For each 0/3 run, which skill (if any) the run
       invoked instead, from the kept trace (`invokedFromTrace`).
       verify: one table per unit — run, invoked skill, catalogue sha — committed
       under `agents/evidence/metrics/`.
-- [ ] **1.2 Separate host from catalogue.** Rerun the five units at three runs
+      reach exempt: a measurement read from committed traces; no code changes.
+      Done 2026-11-05: no miss invoked another skill — every one invoked none
+      (`agents/evidence/metrics/routing-carried-units-20261105.md`).
+- [x] **1.2 Separate host from catalogue.** Rerun the five units at three runs
       each on the frozen baseline catalogue (`1c967b17…`, materialised with
       `git archive 9e226440b6`) on today's host. Fires there → the catalogue
       change is the cause; does not fire → the host change is.
       verify: the rerun artefact names host version and catalogue sha, and the
       1.1 table gains the verdict column.
+      reach exempt: a measurement run; no code changes.
+      Done 2026-11-05: the host. On the frozen catalogue the units fail as on
+      today's; every miss globs the empty sandbox and asks for the material the
+      prompt names instead of routing.
 - [ ] **1.3 Repair the cause 1.2 names** — a description edit that restores the
       routing criterion the competing skill took, or a recorded reason the
       prompt now belongs to that skill (a corpus edit moving the positive).
       verify: the five units at three runs each reach the rate floor
       (`docs/contracts/routing-assurance-metrics.md` § The floors restated as
       rates) on today's catalogue, classified by `compile_trigger_evals --classify`.
+
+      2026-11-05: "Use when" descriptions changed nothing and were reverted; a
+      fixture pilot restored `type-design` 0/3 → 3/3. The council's staged plan
+      for the rest is in `routing-carried-units-20261105.md`.
 
 ## Phase 2 — the suggest-without-read gap (carried 4.4)
 
@@ -89,7 +100,7 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No unit of the five stays REGRESSION at three runs without a
+- [x] AC-1 — No unit of the five stays REGRESSION at three runs without a
       recorded reason.
 - [ ] AC-2 — 2.1's verify passes on an arm whose protocol was frozen by a
       session that did not author the mechanism, or 2.1 records why the gap is
