@@ -49,6 +49,11 @@ STEP TYPED INPUT (from prior step's ## Output): {{typed_input}}
 STEP DESCRIPTION: {{step_description}}
 EXPECTED ## Output (next step's ## Input): {{expected_output_shape}}
 
+KNOWLEDGE LEADS — at most five references from the shared memory, picked
+by the orchestrator for this task. Leads to verify against the code, never
+facts to build on; "none" means none were handed:
+{{knowledge_refs}}
+
 CONSTRAINTS:
 - Stay inside the worktree path. Do NOT cd to the parent repo.
 - Do NOT touch branches other than {{branch_name}}.
