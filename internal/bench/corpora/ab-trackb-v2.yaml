@@ -322,8 +322,8 @@ tasks:
       solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
     discipline_oracle:
       max_files_changed: 1
-      max_lines_changed: 6
-    notes: "Memo keyed on i alone, must be (i, jumpsLeft); jumpsLeft-only fix also fails."
+      max_lines_changed: 8
+    notes: "Memo keyed on i alone, must be (i, jumpsLeft); jumpsLeft-only fix also fails. Line cap leaves room for a key variable: at the reference size (6) every arm failed discipline on a 7-line idiomatic fix (2026-11-05 Haiku sweep)."
   - id: capH-debug-05
     archetype: capability-debug
     rule: verify-before-complete
@@ -334,8 +334,8 @@ tasks:
       solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
     discipline_oracle:
       max_files_changed: 1
-      max_lines_changed: 5
-    notes: "On-path-only cycle guard, no finished set; diamond double-emit; last-occurrence dedup fix also fails."
+      max_lines_changed: 8
+    notes: "On-path-only cycle guard, no finished set; diamond double-emit; last-occurrence dedup fix also fails. Line cap leaves room for one comment line: at the reference size (5) every arm failed discipline on a 6-line fix (2026-11-05 Haiku sweep)."
   - id: capH-debug-06
     archetype: capability-debug
     rule: verify-before-complete
