@@ -18,7 +18,7 @@ tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-15
-estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction."
+estate_growth_exempt: "concern_count +1 (73 -> 74): steps 2.2 and 2.3 add the record-only hook concern memory-audience-shadow, which the roadmap names as its deliverable; it is ratified (agents/evidence/ratifications/memory-audience-shadow-20261105.md) and carries its admission row. Earlier claim, 2026-10-29: +1 active_roadmaps when promoted from later/ on the owner instruction of that date."
 estate_offset_exempt: "Promoted from later/ on owner instruction, agents/evidence/owner-directives/2026-10-29-promote-memory-roadmaps.md (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for resolveBundle, composeSpawnBrief, knowledge_refs, memory_signal origin over agents/roadmaps, later, stubs) returned nothing; neighbours own fork economics (later/road-to-a-cold-start-paid-once-carried) and graph memory (stubs/road-to-typed-knowledge-graph-memory)."
 relates:
   - slug: road-to-a-cold-start-paid-once-carried

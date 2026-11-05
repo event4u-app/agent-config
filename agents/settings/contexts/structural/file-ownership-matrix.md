@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **649**
-- Edges (incl. self-WRITE): **2482**
+- Files indexed: **650**
+- Edges (incl. self-WRITE): **2486**
 
 ## READ_ONLY edges
 
@@ -135,6 +135,8 @@
 | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/rules/think-before-action.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/memory-audience.md` | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/memory-audience.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/non-interactive-contract.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/non-interactive-contract.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/orchestration-benchmark-gate.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
@@ -248,13 +250,13 @@
 | `.agent-src.uncondensed/contexts/execution/subagent-routing.md` | `.agent-src.uncondensed/contexts/model-recommendations.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-routing.md` | `.agent-src.uncondensed/contexts/subagent-configuration.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/contexts/execution/memory-audience.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/contexts/execution/orchestration-telemetry.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/contexts/execution/subagent-response-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/contexts/execution/subagent-routing.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/rules/lethal-trifecta-guard.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/contexts/execution/orchestration-telemetry.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/contexts/execution/subagent-response-contract.md` | `body_link` | 1 |
@@ -1683,6 +1685,7 @@
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/contexts/execution/memory-audience.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md` | `.agent-src.uncondensed/skills/subagent-orchestration/prompts/adversarial-verification-council.md` | `body_link` | 1 |
@@ -1850,7 +1853,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 79 |
+| `context` | 80 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 412 |
