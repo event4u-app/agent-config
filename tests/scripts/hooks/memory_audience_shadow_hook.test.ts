@@ -189,6 +189,33 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
     });
 
+    it.each([
+        ['sentence-final', 'See agents/memory/product-rules.yml.'],
+        ['in parentheses', '(agents/memory/product-rules.yml)'],
+        ['in backticks', 'read `agents/memory/product-rules.yml`, then act'],
+        ['dot-slash', 'open ./agents/memory/product-rules.yml now'],
+        ['quoted, comma', '"agents/memory/product-rules.yml", and more'],
+    ])('a ref %s is counted', (_label, prompt) => {
+        processEnvelope(spawn(prompt), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 200 });
+    });
+
+    it.each([
+        ['under another directory', 'src/agents/memory/product-rules.yml'],
+        ['glued to a word', 'xagents/memory/product-rules.yml'],
+    ])('a ref %s is not counted', (_label, prompt) => {
+        processEnvelope(spawn(prompt), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, examined: 0 });
+    });
+
+    it('a pathological run of name characters is scanned in bounded time', () => {
+        const prompt = 'agents/memory/'.concat('a'.repeat(20000), ' ').repeat(50);
+        const t0 = Date.now();
+        processEnvelope(spawn(prompt), root);
+        expect(Date.now() - t0).toBeLessThan(500);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0 });
+    });
+
     it('examines a bounded number of names per spawn, whatever the prompt holds', () => {
         const many = Array.from({ length: 500 }, (_, i) => `agents/memory/n${i}.yml`).join(' ');
         processEnvelope(spawn(`${many} agents/memory/product-rules.yml`), root);
