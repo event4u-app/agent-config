@@ -9,6 +9,7 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-bench-that-can-tell | active | ready | The bench tells an effect from noise and from its own defects. |
 | road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
@@ -135,6 +136,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-policy-evaluation-core | later | blocked-for-later | Road to policy-evaluation core — deterministic Class-A slice of the rejected resident enforcement plane |
 | road-to-post-pr-promotion-workflow | later | later | Road to post-PR promotion workflow |
 | road-to-product-bets | later | later | Road to product bets — simple/expert mode, explainability, connectors |
+| road-to-proof-where-the-owner-sees-it | later | later | Benefit is measured where the owner sees it. |
 | road-to-reach-cost-primary-bench | later | ready | Reach — test the cost thesis properly (the signal the capability bench was not built to decide) |
 | road-to-reach-headless | later | ready | Reach — headless browser for JS-only platforms |
 | road-to-reach-reddit-approved-api | later | ready | Reach — Reddit approved Data API access (the durable path) |
