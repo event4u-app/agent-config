@@ -29,6 +29,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-lead-the-user-can-reach-carried | later | parked | Road to a lead the user can reach — carried |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
 | road-to-a-library-the-agent-can-vouch-for | later | later | In a PHP project that needs DTOs, mapping, accessors or filters, AC writes code against the data-helpers version in the … |
+| road-to-a-link-with-agent-switch | later | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-engine-that-never-writes-through-a-symlink | later | later | Road to a map engine that never writes through a symlink |
 | road-to-a-mark-render-readings | later | later | A mark that only works in colour, on light, or above 64 px is reported by a render reading measured … |
 | road-to-a-memory-each-worker-is-handed | later | later | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
