@@ -1,0 +1,61 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-11-05T09:33:57.887Z",
+  "commit": "ea59b545f01a53ebfbb158d0cda75fb13ad9e331",
+  "host_version": "2.1.316",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-fixture-series-v1-protocol-20261105.md",
+    "sha256": "e7b58b54301f000d100c18afdc5cd7cc50f98ca53704c062f81bc534a49b15fc"
+  },
+  "catalogue_sha256": "e0ec68d388c16ef5c373e5c5523033afb5cff3e4b937d4baf409b8b6aec12f7f",
+  "cost_usd": 0.7499042,
+  "partial": false,
+  "cases": [
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.2494712,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.25110319999999997,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.24932980000000002,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    }
+  ],
+  "units": [
+    {
+      "unit": "dependency-upgrade",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    }
+  ]
+}

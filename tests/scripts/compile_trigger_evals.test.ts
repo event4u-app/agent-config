@@ -17,10 +17,13 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     HOLDOUT_CEILING,
+    buildBaselinePlugin,
     compileCorpus,
+    compileQueries,
     partitionOf,
     printRunCommand,
     readCorpus,
+    readFixture,
     skillInputPattern,
     type CompiledCase,
 } from '../../src/scripts/compile_trigger_evals.js';
@@ -325,5 +328,81 @@ describe('print-run — prints, never runs, 3.1', () => {
         // The whole point of D1: this roadmap builds the instrument and never
         // runs it. A function that returns a command cannot have run one.
         expect(typeof printRunCommand(complete)).toBe('string');
+    });
+});
+
+describe('workspace fixtures — carried 1.3', () => {
+    function corpusWith(root: string): string {
+        const skills = path.join(root, 'skills');
+        for (const s of ['alpha', 'beta']) {
+            fs.mkdirSync(path.join(skills, s, 'evals'), { recursive: true });
+            fs.writeFileSync(
+                path.join(skills, s, 'evals', 'triggers.json'),
+                JSON.stringify({ queries: [{ id: 'q1', q: `do the ${s} thing`, trigger: true, class: 'exemplar' }] }),
+            );
+        }
+        return skills;
+    }
+    function fixture(root: string, skill: string, id: string, script: string, extra?: unknown): string {
+        const fx = path.join(root, 'fixtures');
+        fs.mkdirSync(path.join(fx, skill, id), { recursive: true });
+        fs.writeFileSync(path.join(fx, skill, id, 'scaffold.sh'), script);
+        if (extra !== undefined) fs.writeFileSync(path.join(fx, skill, id, 'fixture.json'), JSON.stringify(extra));
+        return fx;
+    }
+
+    it('reads a fixture with its hash and declared tools, and returns null where none exists', () => {
+        const root = tmp();
+        const fx = fixture(root, 'alpha', 'q1', 'echo a > a.txt\n', { extra_tools: ['Edit', 'Write'] });
+        const f = readFixture(fx, 'alpha', 'q1');
+        expect(f?.sha8).toBe(createHash('sha256').update('echo a > a.txt\n').digest('hex').slice(0, 8));
+        expect(f?.extraTools).toEqual(['Edit', 'Write']);
+        expect(readFixture(fx, 'beta', 'q1')).toBeNull();
+    });
+
+    it('refuses a declared tool outside the allowlist', () => {
+        const root = tmp();
+        const fx = fixture(root, 'alpha', 'q1', 'true\n', { extra_tools: ['Bash'] });
+        expect(() => readFixture(fx, 'alpha', 'q1')).toThrow(/Bash/);
+    });
+
+    it('a fixture case carries case.yaml, its script, the tools and a versioned tag; a case without one is unchanged', () => {
+        const root = tmp();
+        const skills = corpusWith(root);
+        const fx = fixture(root, 'alpha', 'q1', 'echo a > a.txt\n', { extra_tools: ['Edit'] });
+        const out = path.join(root, 'out');
+        const cases = compileQueries(readCorpus(skills), out, undefined, { fixturesRoot: fx });
+        const alpha = cases.find((c) => c.skill === 'alpha')!;
+        const beta = cases.find((c) => c.skill === 'beta')!;
+        const a = path.join(out, alpha.dir);
+        expect(fs.readFileSync(path.join(a, 'scaffold.sh'), 'utf8')).toBe('echo a > a.txt\n');
+        expect(fs.readFileSync(path.join(a, 'case.yaml'), 'utf8')).toContain('scaffold_script: scaffold.sh');
+        expect(fs.readFileSync(path.join(a, 'prompt.md'), 'utf8')).toContain('allowed_tools: [Read, Glob, Grep, Skill, Edit]');
+        expect(alpha.tags.some((t) => /^fixture:[0-9a-f]{8}$/.test(t))).toBe(true);
+        const b = path.join(out, beta.dir);
+        expect(fs.existsSync(path.join(b, 'case.yaml'))).toBe(false);
+        expect(fs.readFileSync(path.join(b, 'prompt.md'), 'utf8')).toContain('allowed_tools: [Read, Glob, Grep, Skill]\n');
+        expect(beta.tags.some((t) => t.startsWith('fixture:'))).toBe(false);
+    });
+});
+
+describe('buildBaselinePlugin — --only keeps the full-selection case names', () => {
+    it('filters to the named units without renumbering, and records the fixture version per row', () => {
+        const root = tmp();
+        const skills = path.join(root, 'skills');
+        const cat = path.join(root, 'cat');
+        for (const s of ['alpha', 'beta', 'gamma']) {
+            fs.mkdirSync(path.join(skills, s, 'evals'), { recursive: true });
+            fs.writeFileSync(path.join(skills, s, 'evals', 'triggers.json'), JSON.stringify({ queries: [{ id: 'q1', q: `${s} please`, trigger: true }] }));
+            fs.mkdirSync(path.join(cat, s), { recursive: true });
+            fs.writeFileSync(path.join(cat, s, 'SKILL.md'), `---\nname: ${s}\n---\n`);
+        }
+        fs.mkdirSync(path.join(root, 'fx', 'gamma', 'q1'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'fx', 'gamma', 'q1', 'scaffold.sh'), 'true\n');
+        const full = buildBaselinePlugin({ skillsRoot: skills, catalogueRoot: cat, pluginRoot: path.join(root, 'p1'), plugin: 'ac', units: 9, perUnit: 1 });
+        const cut = buildBaselinePlugin({ skillsRoot: skills, catalogueRoot: cat, pluginRoot: path.join(root, 'p2'), plugin: 'ac', units: 9, perUnit: 1, only: ['gamma'], fixturesRoot: path.join(root, 'fx') });
+        expect(cut.rows.map((r) => r.case)).toEqual(full.rows.filter((r) => r.skill === 'gamma').map((r) => r.case));
+        expect(cut.rows[0]?.fixture_sha8).toMatch(/^[0-9a-f]{8}$/);
+        expect(full.rows.every((r) => r.fixture_sha8 === undefined)).toBe(true);
     });
 });
