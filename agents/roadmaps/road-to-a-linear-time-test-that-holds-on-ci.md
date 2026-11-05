@@ -3,7 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "A red check seen on PR #2866 and on main that this change could not fix without weakening a test it did not write; fix-what-you-see requires a tracked roadmap in the same change, and this is it."
+estate_offset_exempt: "A red check seen on PR #2866 and on main that this change could not fix without weakening a test it did not write; fix-what-you-see requires a tracked roadmap in the same change, and this is it."
 ---
 # Road to a linear-time test that holds on CI
 
