@@ -91,6 +91,11 @@ export interface LoadedGraph {
      * demand, and a query that never asks must not pay the parse.
      */
     lanesRun(): readonly LaneRunRecord[] | undefined;
+    /**
+     * Every file node that parsed with errors, sorted. Graph-wide, for `dead`:
+     * a call from any such file may be missing, so an absence is not complete.
+     */
+    partialFileIds(): string[];
     /** Release any handle the store holds. No-op for the in-memory path. */
     close(): void;
 }
@@ -112,13 +117,14 @@ export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: 
     // one). Read once, and parsed only when non-empty, so a graph with no
     // partial file pays no parse on the indexed path.
     let partial: ReadonlySet<string> | null = null;
-    const isPartial = (id: string): boolean => {
+    const partialSet = (): ReadonlySet<string> => {
         if (partial === null) {
             const raw = index.meta('partial');
             partial = raw === undefined || raw === '[]' ? new Set() : new Set(JSON.parse(raw) as string[]);
         }
-        return partial.has(id);
+        return partial;
     };
+    const isPartial = (id: string): boolean => partialSet().has(id);
     let lanes: { v: LaneRunRecord[] | undefined } | null = null;
     const nodeCache = new Map<string, CodeNode | undefined>();
     const readNode = (id: string): CodeNode | undefined => {
@@ -144,6 +150,7 @@ export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: 
             return lexical;
         },
         kindCount: (kind) => index.countKind(kind),
+        partialFileIds: () => [...partialSet()].sort(),
         lanesRun: () => {
             if (lanes === null) {
                 const raw = index.meta('lanes_run');
@@ -252,6 +259,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
         allNodeIds: () => graph.nodes.map((n) => n.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
         lex: () => lex,
         kindCount: (kind) => graph.nodes.filter((x) => x.kind === kind).length,
+        partialFileIds: () => graph.nodes.filter((n) => n.partial === true).map((n) => n.id).sort(),
         lanesRun: () => graph.lanes_run,
         close: () => {
             /* nothing held */

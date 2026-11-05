@@ -843,7 +843,8 @@ function renderDead(res: DeadResult & { omitted: Record<string, number> }): numb
         return 1;
     }
     process.stdout.write(`excluded as declared entry points: ${res.excluded.length}\n`);
-    process.stdout.write(`dead (${res.dead.length}):\n`);
+    if (res.partial_files.length) process.stdout.write(`partial files (parsed with errors, a call from them may be missing — not complete): ${res.partial_files.join(', ')}\n`);
+    process.stdout.write(`dead (${res.dead.length}${res.complete ? '' : ', candidates, not proof'}):\n`);
     for (const d of res.dead) process.stdout.write(`  ${d}\n`);
     renderOmitted(res.omitted);
     renderReads(res.recommended_reads);

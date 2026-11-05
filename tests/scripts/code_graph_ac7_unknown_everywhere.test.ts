@@ -8,6 +8,7 @@
  * the two stores reached the verbs through different node readers, and the
  * indexed one used to hand back file nodes without their `partial` flag.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -22,7 +23,7 @@ import { loadGraph, type LoadedGraph } from '../../src/scripts/code_graph/query.
 import { loadRiskSource, renderReviewRisk, reviewRisk } from '../../src/scripts/code_graph/review_risk.js';
 import { emitSqliteTwin, openGraphIndex, sqliteTwinPath } from '../../src/scripts/code_graph/sqlite_store.js';
 import type { CodeEdge, CodeGraph, CodeNode } from '../../src/scripts/code_graph/types.js';
-import { impact, testsForAnswer } from '../../src/scripts/code_graph/verbs.js';
+import { dead, impact, testsForAnswer } from '../../src/scripts/code_graph/verbs.js';
 import { isSqliteAvailableSync, loadSqliteSync } from '../../src/scripts/_lib/sqlite_guard.js';
 
 const CALLERS = 250;
@@ -30,6 +31,7 @@ const TESTS = 250;
 const PARTIAL = 'src/a.ts';
 const TARGET = 'src/a.ts#target';
 const ENV = 'AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES';
+const CLI = path.resolve('src/scripts/code_graph/cli.ts');
 
 function fixture(): CodeGraph {
     const node = (id: string, kind: string, file: string, loc: number[], extra: Partial<CodeNode> = {}): CodeNode =>
@@ -197,6 +199,30 @@ describe.runIf(sqliteOk).each(PATHS)('AC-7 on the $name path', ({ min, indexed }
             expect(r.envelope.complete).toBe(false);
         });
     });
+
+    it('dead: a partial file could hold the missing call, so the list is not complete', () => {
+        withGraph(min, (g) => {
+            const r = dead(g, [], 'fresh');
+            expect(r.refusal).toBeNull();
+            // The callers have no reference in-edge, so they are candidates.
+            expect(r.dead.length).toBe(CALLERS);
+            expect(r.partial_files).toEqual([PARTIAL]);
+            expect(r.complete).toBe(false);
+            const capped = capAnswer(r, ['dead', 'excluded', 'lines', 'recommended_reads'], 'minimal');
+            expect(capped.omitted['dead']).toBe(CALLERS - capped.dead.length);
+        });
+    });
+
+    it('dead (CLI): prints the partial files and that the list is a candidate set, not proof', () => {
+        const out = withThreshold(min, () =>
+            execFileSync('npx', ['tsx', CLI, 'dead', '--root', dir, '--graph', jsonPath, '--accept-missing-exports', '--detail', 'minimal'], {
+                encoding: 'utf8',
+                env: { ...process.env },
+            }),
+        );
+        expect(out).toContain(`partial files (parsed with errors, a call from them may be missing — not complete): ${PARTIAL}`);
+        expect(out).toMatch(/omitted by --detail cap: dead \d+/);
+    }, 120_000);
 });
 
 describe.runIf(sqliteOk)('AC-7 — a twin that predates the graph-level facts', () => {

@@ -270,6 +270,8 @@ export function overlayView(g: LoadedGraph, ov: Overlay | null): LoadedGraph {
             return [...base, ...extra];
         },
         allNodeIds: () => [...new Set([...g.allNodeIds().filter((id) => getNode(id) !== undefined), ...ov.nodes.map((n) => n.id)])].sort(),
+        partialFileIds: () =>
+            [...new Set([...g.partialFileIds().filter((id) => getNode(id)?.partial === true), ...ov.nodes.filter((n) => n.partial === true).map((n) => n.id)])].sort(),
         kindCount: (kind) => g.kindCount(kind) + added.filter((n) => n.kind === kind).length - ov.removed_nodes.filter((id) => g.byId.get(id)?.kind === kind).length,
     };
 }

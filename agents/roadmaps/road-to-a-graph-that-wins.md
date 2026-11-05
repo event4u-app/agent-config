@@ -369,5 +369,6 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
 - [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
 - [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
-- [ ] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
+- [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
+      verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
 - [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
