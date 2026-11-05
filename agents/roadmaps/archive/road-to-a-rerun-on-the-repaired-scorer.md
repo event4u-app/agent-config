@@ -57,7 +57,7 @@ says so.
       (`profile_rules_text`, `_lib/bench_ab_arms.ts`). `profile-essential` is
       byte-identical to `rules-kernel-dc` and is not run twice.
       verify: `npx vitest run tests/scripts/bench_ab_profile_arms.test.ts` -> /passed/
-- [x] **1.3 Selftest across the sweep's arms.** No network, no spend; every
+- [x] **1.3 Selftest across the sweep's arms.** No network, no spend; every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts -->
       arm carries its expected injection (`profile-full` ≈ 119k tokens).
       verify: `./scripts-run src/scripts/bench_ab_v2_run --mode selftest --arms vanilla,package,placebo,rules-kernel-dc,rules-balanced,profile-minimal,profile-full --seeds 1 --tasks trapE-scope-01 --model claude-haiku-4-5 --max-usd 25 --no-checkpoint` -> /SELFTEST/
 
@@ -83,7 +83,7 @@ says so.
       $0.061, rules-kernel-dc $0.074, rules-balanced $0.104, package $0.262,
       profile-full $0.267.
       verify: `./scripts-run src/scripts/bench_ab_v2_stats internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json` -> /package lift/
-- [x] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package
+- [x] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       --seeds 3 --model claude-sonnet-4-6 --budget 5 --max-usd 75`, seeds
       lowered only if 2.1's per-run cost projects past the cap.
       **Done, $52.50 of $75.** Report `2026-11-04T22-57-15Z` (34 tasks, 204
@@ -99,7 +99,7 @@ says so.
 
 ## Phase 3 — Report and residue
 
-- [x] **3.1 Post-repair sections in `docs/benchmark.md`.** New sections beside
+- [x] **3.1 Post-repair sections in `docs/benchmark.md`.** New sections beside <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       the pre-repair ones, never replacing them; each names its run id, scorer
       epoch, host, seeds and spend. `docs/CLAIMS.md` rows backed by the old
       numbers gain the post-repair figure or are narrowed to it.
@@ -108,7 +108,7 @@ says so.
       narrowed to the post-repair figures, and README, message house and
       `docs/proof.md` follow them.
       verify: `./scripts-run src/scripts/check_claims` -> /check_claims: 48 markered/
-- [x] **3.2 Residue roadmaps.** One `road-to-<observed-failure>` per failure
+- [x] **3.2 Residue roadmaps.** One `road-to-<observed-failure>` per failure <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       cluster with task ids and a reproducing artifact (the preserved
       `final_files`); nothing from a score delta alone. Already known before
       the sweeps: the discipline profile is inert on Claude while the settings
