@@ -27,14 +27,14 @@ at the 2026-10-27 baseline; the three at 0/3 did not change their `description`
 since. Phase 1 covers all five — the three stable regressions and the two
 undecided ones — so nothing is fixed or dismissed on a single-run number.
 
-- [x] **1.1 Read the traces.** For each 0/3 run, which skill (if any) the run
+- [x] **1.1 Read the traces.** For each 0/3 run, which skill (if any) the run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/evidence/metrics/routing-carried-units-20261105.md -->
       invoked instead, from the kept trace (`invokedFromTrace`).
       verify: one table per unit — run, invoked skill, catalogue sha — committed
       under `agents/evidence/metrics/`.
       reach exempt: a measurement read from committed traces; no code changes.
       Done 2026-11-05: no miss invoked another skill — every one invoked none
       (`agents/evidence/metrics/routing-carried-units-20261105.md`).
-- [x] **1.2 Separate host from catalogue.** Rerun the five units at three runs
+- [x] **1.2 Separate host from catalogue.** Rerun the five units at three runs <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/evidence/metrics/routing-carried-units-20261105.md -->
       each on the frozen baseline catalogue (`1c967b17…`, materialised with
       `git archive 9e226440b6`) on today's host. Fires there → the catalogue
       change is the cause; does not fire → the host change is.
