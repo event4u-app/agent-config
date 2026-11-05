@@ -93,7 +93,10 @@ export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
-    placebo: { setting_sources: 'project,local', inject: 'placebo' },
+    // ~1.7k inert tokens per turn cannot clear a 1.2x whole-run lift over a
+    // 72k-235k baseline whose spread is turn count, so only the text direction is
+    // a meaningful activation check for this arm.
+    placebo: { setting_sources: 'project,local', inject: 'placebo', min_lift_ratio: null },
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
     hardened: { setting_sources: null, inject: 'hardened' },
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
@@ -101,6 +104,14 @@ export const ARMS: Record<string, ArmSpec> = {
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
     'package-ladder': { setting_sources: null, inject: 'ladder' },
     'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
+    // The three shipped discipline profiles as text arms (post-repair rerun,
+    // 2026-11-04). On Claude nothing reads `discipline_profile` at runtime, so an
+    // installed-profile arm would equal `package`; these measure the rule set
+    // each profile names in `dist/router.json` `profiles`. `profile-minimal` is
+    // kernel only — too small a surface for the footprint-lift audit.
+    'profile-minimal': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },
+    'profile-essential': { setting_sources: 'project,local', inject: 'profile-essential' },
+    'profile-full': { setting_sources: 'project,local', inject: 'profile-full' },
     neighbour: {
         setting_sources: 'project,local',
         inject: null,
@@ -145,4 +156,27 @@ export function neighbour_plugin_dir(spec: ArmSpec, env: NodeJS.ProcessEnv = pro
         throw new Error(`${spec.plugin_dir_env} is not a directory: ${dir}`);
     }
     return dir;
+}
+
+/**
+ * The rule bodies a shipped discipline profile names, joined like
+ * `rules_subset_text`. Expanded from the router's own `profiles` table, so a
+ * profile redefinition changes the arm without touching the harness.
+ */
+export function profile_rules_text(profile: string, routerPath: string, rulesDir: string): string {
+    const router = JSON.parse(fs.readFileSync(routerPath, 'utf-8')) as {
+        kernel: string[];
+        tier_1: { id: string }[];
+        tier_2: { id: string }[];
+        profiles?: Record<string, string[]>;
+    };
+    const members = router.profiles?.[profile];
+    if (!members) throw new Error(`router has no profile "${profile}"`);
+    const expand: Record<string, string[]> = {
+        __kernel__: router.kernel,
+        __tier_1__: router.tier_1.map((t) => t.id),
+        __tier_2__: router.tier_2.map((t) => t.id),
+    };
+    const ids = members.flatMap((m) => expand[m] ?? [m]);
+    return ids.map((id) => fs.readFileSync(`${rulesDir}/${id}.md`, 'utf-8').trim()).join('\n\n---\n\n');
 }

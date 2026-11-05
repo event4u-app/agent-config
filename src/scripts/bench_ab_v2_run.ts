@@ -54,19 +54,18 @@ import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
-import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
+import { plugin_scope, preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
 import {
     SweepBudget,
     activation_verdict,
     audit_activation,
     expected_injection,
     is_bare_alias,
-    tier_for_model,
     verify_model_id,
     type TierRates,
     type TokensBreakdown,
 } from './_lib/bench_ab_activation.js';
-import { load_pricing } from './_lib/bench_cost.js';
+import { sweepRates } from './_lib/price_freshness.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -90,7 +89,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-import { ARMS, neighbour_env, neighbour_plugin_dir, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
@@ -247,6 +246,7 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject === 'rules-kernel-dc' || inject === 'rules-balanced') {
         return rules_subset_text(inject);
     }
+    if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
 }
 
@@ -533,7 +533,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         return run_one_recursive(task, opts);
     }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0);
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, plugin_scope(spec));
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     if (host === 'codex') {
@@ -706,7 +706,7 @@ export function run_one_recursive(
         ((depth: number, priorVerdict: string | null): RecursiveAttempt => {
             // Each correction round gets its own preserved workspace too — a
             // depth-2 attempt must not overwrite the depth-1 evidence.
-            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0);
+            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0, plugin_scope(ARMS['package']!));
             let sp_file: string | null = null;
             if (priorVerdict) {
                 sp_file = path.join(opts.sp_dir, `.sp-recursive-${depth}.txt`);
@@ -1055,13 +1055,12 @@ export function main(argv: string[] | null = null): number {
     // bad argument must be reported whether or not the host CLI is installed.
     // Behind the CLI-presence check it was unreachable on any machine without
     // `claude` — including CI.
-    const [rates] = load_pricing(PRICING_PATH);
-    const tier = tier_for_model(args.model);
-    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+    const priced = sweepRates(fs.existsSync(PRICING_PATH) ? fs.readFileSync(PRICING_PATH, 'utf-8') : '', args.model, new Date());
+    const tier_rates: TierRates | null = priced.rates;
     if (args.max_usd !== null && tier_rates === null) {
         process.stderr.write(
-            `bench_ab_v2: --max-usd given but no pricing row matches model "${args.model}" ` +
-                `(${_relToRootPosix(PRICING_PATH)}) — the sweep cap cannot be enforced.\n`,
+            `bench_ab_v2: --max-usd given but no fresh pricing row prices model "${args.model}" ` +
+                `(${_relToRootPosix(PRICING_PATH)}: ${priced.why}) — the sweep cap cannot be enforced.\n`,
         );
         return 2;
     }
