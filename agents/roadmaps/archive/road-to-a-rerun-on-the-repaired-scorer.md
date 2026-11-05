@@ -90,20 +90,36 @@ says so.
       runs, 3 seeds, no seed cut). `package` vs `vanilla`, 83 pairs: capability
       90% → 89% (McNemar p=1.0); discipline 0.958 → 0.916 (Δ −0.042, Wilcoxon
       p=0.0587); discipline given capability 0.879 → 0.837 (p=0.036). No lift on
-      the strong host; a small, borderline negative. Total spend $74.58 of $100.
+      the strong host; a small, borderline negative. The last 37 runs of that
+      report hit the subscription usage limit (0 tokens, errored); report C
+      (`2026-11-05T03-11-36Z`, the six fully lost tasks, 36 runs, $15.31, audit
+      0/18) re-measures them: 18 identical pairs. Package cost factor over the
+      101 valid pairs: 5.1×. Total spend $89.89 of $100.
       verify: `./scripts-run src/scripts/bench_ab_v2_stats internal/bench/reports/ab-v2/2026-11-04T22-57-15Z-ab-v2-paired.json` -> /package lift/
 
 ## Phase 3 — Report and residue
 
-- [ ] **3.1 Post-repair sections in `docs/benchmark.md`.** New sections beside
+- [x] **3.1 Post-repair sections in `docs/benchmark.md`.** New sections beside
       the pre-repair ones, never replacing them; each names its run id, scorer
       epoch, host, seeds and spend. `docs/CLAIMS.md` rows backed by the old
       numbers gain the post-repair figure or are narrowed to it.
-- [ ] **3.2 Residue roadmaps.** One `road-to-<observed-failure>` per failure
+      **Done.** `#post-repair-weak` and `#post-repair-strong`; the
+      `discipline-lift-weak-host` and `essential-tier-cost-factor` claims are
+      narrowed to the post-repair figures, and README, message house and
+      `docs/proof.md` follow them.
+      verify: `./scripts-run src/scripts/check_claims` -> /check_claims: 48 markered/
+- [x] **3.2 Residue roadmaps.** One `road-to-<observed-failure>` per failure
       cluster with task ids and a reproducing artifact (the preserved
       `final_files`); nothing from a score delta alone. Already known before
       the sweeps: the discipline profile is inert on Claude while the settings
       text promises a smaller rule set.
+      **Done, three stubs**, each with task ids and the reproducing
+      `final_files`: `stubs/road-to-a-discipline-profile-that-loads.md`,
+      `stubs/road-to-a-minimal-diff-that-holds-under-load.md` (`capH-debug-06`
+      seeds 0, 2), `stubs/road-to-a-line-budget-that-does-not-tax-a-why-comment.md`
+      (`capH-debug-05` seeds 1, 2). The three single-seed discordant pairs carry
+      no file. Haiku report B has no pair where `package` scores below `vanilla`.
+      verify: `ls agents/roadmaps/stubs/road-to-a-minimal-diff-that-holds-under-load.md` -> /holds-under-load/
 
 ## Risk Register
 

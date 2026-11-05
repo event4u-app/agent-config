@@ -86,6 +86,48 @@ What the repaired scorer shows on this host:
 - `package` vs `placebo` is not reported: the two arms sit in different
   reports, and report A's `package` arm is invalid.
 
+### Strong host (`claude-sonnet-4-6`, full corpus × 3 seeds) {#post-repair-strong}
+
+Two reports, $67.81 in total at list rates (subscription-authed). Spend for
+both post-repair sweeps: $89.89 of the $100 owner cap.
+
+- **Report B′** — `internal/bench/reports/ab-v2/2026-11-04T22-57-15Z-ab-v2-paired.json`,
+  `vanilla` + `package`, 34 tasks, 204 runs, $52.50, audit 0 violations on 83
+  checked pairs. The last 37 runs hit the operator's subscription usage limit
+  and returned zero tokens (`validation_failed`, 0 turns of work): six tasks on
+  every seed of both arms (`agL-debug-03`, `trapE-scope-laravel-01`,
+  `safeF-guard-01..03`, `trapA-pinned-click-01`) plus `agL-debug-02` package
+  seed 2. They are excluded as errored, not scored.
+- **Report C** — `internal/bench/reports/ab-v2/2026-11-05T03-11-36Z-ab-v2-paired.json`,
+  the six fully lost tasks re-run, 36 runs, $15.31, audit 0/18. The
+  `agL-debug-02` seed-2 pair is not re-run.
+
+| report | pairs | capability (vanilla → package) | discipline (vanilla → package) | Wilcoxon | discordant |
+|---|---|---|---|---|---|
+| B′ | 83 | 90% → 89% (McNemar p=1.0) | 0.958 → 0.916, Δ −0.042 | p=0.059 | 8 (1 favours package) |
+| C | 18 | 100% → 100% | 0.889 → 0.889, Δ 0 | p=1.0 | 0 |
+| B′ + C | 101 | 92.1% → 91.1% | 0.946 → 0.911 | — | 8 |
+
+Package cost factor over the 101 valid pairs: **5.1×** vanilla tokens. Gate
+verdict on both reports: **FALSIFIED-OR-INCONCLUSIVE**. The shadow axis
+(discipline given capability) reads 0.879 → 0.837 on B′, p=0.036, against the
+package.
+
+What the repaired scorer shows on this host:
+
+- **No lift, and a small negative on the discipline axis.** Seven of the eight
+  discordant pairs favour vanilla; the full-axis test misses significance
+  (p=0.059), the shadow axis reaches it.
+- **Four of those seven are two reproducible artifacts, not noise.**
+  `capH-debug-05` seeds 1–2: the package wrote vanilla's fix plus one
+  explanatory comment line, exceeding the oracle's 5-line budget
+  (`agents/roadmaps/stubs/road-to-a-line-budget-that-does-not-tax-a-why-comment.md`).
+  `capH-debug-06` seeds 0 and 2: the package rewrote a loop where vanilla moved
+  one declaration, a `minimal-safe-diff` violation with that rule loaded
+  (`agents/roadmaps/stubs/road-to-a-minimal-diff-that-holds-under-load.md`).
+- The remaining three (`trapA-overeng-03`, `trapC-ambig-01/02`) are single
+  seeds without a repeated pattern and carry no roadmap.
+
 ## Weak host (`claude-haiku-4-5`) — Gate verdict: **PASS**
 
 <!-- pinned:weak-stats -->
