@@ -94,6 +94,51 @@ A weak or negative result is a question about the measurement first. `task bench
 
 Both 2026-11-05 sweeps read `ceiling` + `underpowered` + `cost-overhead`. Construct (did the tasks measure what the asset is for), adherence and real-world use stay open in every record, because no report can answer them. The record has no removal field: **a benchmark result alone never supports removing an asset.** What a removal needs is set out in `agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md` Phase 4.
 
+### Headroom sweeps on harder tasks (2026-11-05) {#headroom-sweeps}
+
+The first container sweeps read `ceiling`. These runs use the harder task set: 14 Track-B tasks (the four new `hdr*` tasks, the hardest `capH` and `trap*` tasks) and the artifact corpus. Five arms per Track-B sweep, five seeds, container isolation, one subscription account. The activation audit passed on both Track-B reports after the per-turn fix below.
+
+| Sweep | Report | Runs | Spend |
+|---|---|---|---|
+| Track B, `claude-haiku-4-5`, 14 tasks × 5 arms × 5 seeds | `2026-11-05T15-15-11Z` | 350 | $17.05 |
+| Track B, `claude-sonnet-4-6`, same tasks | `2026-11-05T20-21-44Z` | 350 | $34.30 |
+| Artifact, `claude-haiku-4-5`, `vanilla` + `package` | `artifact-2026-11-05T15-29-36-217Z` | 35 of 108 (cap) | $20.26 |
+| Artifact, `claude-sonnet-4-6`, 6 unmeasured tasks × 2 seeds, `--budget 1` | `artifact-2026-11-05T20-23-30-767Z` | 48 | $28.74 |
+| Artifact, `claude-sonnet-4-6`, `package` only, 3 UI tasks, `--budget 3` | `artifact-2026-11-05T20-49-10-005Z` | 6 | $19.31 |
+
+**Track B, pooled.** No comparison is significant on either host.
+
+| Comparison | Haiku capability | Haiku discipline (Wilcoxon) | Sonnet capability | Sonnet discipline (Wilcoxon) |
+|---|---|---|---|---|
+| `package` vs `vanilla` | 64% → 60%, p=0.25 | 0.771 → 0.821, p=0.36 | 58% → 61%, p=0.50 | 0.949 → 0.927, p=0.48 |
+| `package` vs `placebo` | 66% → 60%, p=0.13 | 0.793 → 0.821, p=0.47 | 58% → 61%, p=0.50 | 0.949 → 0.927, p=0.45 |
+| `rules-kernel-dc` vs `vanilla` | 64% → 61%, p=0.63 | 0.771 → 0.857, p=0.056 | 59% → 57%, p=1.0 | 0.950 → 0.921, p=0.22 |
+| `vanilla-b` vs `vanilla` (A/A) | 64% → 66%, p=1.0 | 0.771 → 0.807, p=0.14 | 59% → 60%, p=1.0 | 0.950 → 0.929, p=0.42 |
+
+Priced cost: `package` costs $0.121 per run against $0.026 on Haiku (4.6×) and $0.264 against $0.052 on Sonnet (5.1×). Sonnet's control discipline is 0.95, so `bench_ab_interpret` labels every Sonnet comparison `ceiling`.
+
+**Track B, per task.** The pooled numbers hide the one place the package moves the result:
+
+- **Scope discipline on Haiku.** On `trapE-scope-01` and `trapE-scope-laravel-01`, `package` and `rules-kernel-dc` pass capability and discipline together in 10 of 10 and 8 of 10 runs; `vanilla` and `placebo` manage 1 of 10. A placebo of the same length does not reproduce it, so the effect comes from the rule content. On Sonnet the control already passes these tasks 10 of 10; there is nothing left to lift.
+- **A cost on Haiku.** In about 14% of `package` runs Haiku asks the user for code instead of reading the repository. That lowers `package` on `trapC-ambig-01` (2 of 5 joint against 5 of 5) and `hdrE-scope-large-01` (4 of 5 against 5 of 5).
+- **Hard for every arm.** `capH-debug-08`, `hdrH-done-01` and `hdrL-multistep-01` fail capability in almost every run on both hosts, in every arm. Replaying the runs' final files against the hidden verifiers shows real misses, not a broken oracle: a negative exponent returns `NaN`, a price cache is left stale after a price change, a zero limit is treated as a cap. These tasks have headroom, and no arm uses it. `trapC-ambig-02` scores 0 everywhere because no run asks before choosing a function name.
+
+**Artifact, Haiku.** The cap stopped the sweep after the first three tasks (`art-svg-prompt-01`, `art-svg-raster-01`, `art-landing-01`). `vanilla` reached parity on the first prompt in almost every run, at $0.03–0.06 per run. `package` cost about $0.50 per run and ended censored (budget reached before parity) three times. These three tasks sit at the ceiling for a short prompt; they cannot show a benefit.
+
+**Artifact, Sonnet.** No `package` result exists; the sweeps measured a cost, not a quality difference:
+
+- `vanilla` reached parity on the first prompt in all 12 runs of `art-form-01`, `art-page-copy-01` and `art-app-copy-01`, at $0.11–0.15 per run. These tasks are at the ceiling on Sonnet too.
+- Every `package` run stopped on its **first** turn at the per-call budget (`error_max_budget_usd`): at $1.02 with `--budget 1`, and again at $3.20–3.24 with `--budget 3`. The same task costs `vanilla` $0.14. The isolated workspaces are disposed after each run, so the cause (context size, a loop, or something the `--plugin-dir` load pulls in) is not established. On Haiku the same arm stayed near $0.50 per run.
+- `art-login-framework-01`, `art-login-plain-01` and `art-php-endpoint-01` ended `indeterminate` in every run: the artifact path runs on the host, and the host has no PHP. Web security is therefore still unmeasured.
+
+**Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
+
+- The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.
+- The artifact isolation's blackhole proxy also blocked the model API. The no-proxy list now admits `api.anthropic.com` only.
+- A host error with an empty result was logged as a bare `host error`. It now carries the envelope's subtype, which is how the budget stop above was identified.
+- `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
+- The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
+
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
