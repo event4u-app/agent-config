@@ -5,6 +5,12 @@ review_by: 2027-01-15
 
 # Stub: a discipline profile that changes what loads
 
+> **Arrivals:** 1 — latest `inbox-2026-11-na` (2026-11-06): the owner's "developer
+> model / PO model with fewer rules" idea is this stub's `essential` profile, the only
+> significant positive profile measurement on record. The round recommends the first
+> scope (make it select) with the default left at `full` until the non-trap
+> replication; the choice between the two scopes is still the owner's.
+
 > **Stub — not active work.** Created 2026-11-04 by
 > `road-to-a-rerun-on-the-repaired-scorer` (step 3.2), from an observed
 > failure rather than a score delta.

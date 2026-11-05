@@ -310,6 +310,12 @@ producers do not emit the shape — not because the schema rejects them.
       verify: each consumer references `episode_id` rather than carrying its
       own copy; a new schema is justified in writing by a named inability to
       reference.
+- [ ] **Step 7.2:** Join usage without model participation: the existing session reader
+      (`src/scripts/cost/track.mjs`) joined to hook events on `prompt_id` and `agent_id`
+      (OTel `prompt.id` as a second path where monitoring is on). No new event producer,
+      no daemon. Arrived from `inbox-2026-11-na`; hooks carry the ids but no token usage.
+      verify: fault fixtures (double stop, missing start, resume, child without parent)
+      yield `unknown`, never `0`; a join rate set against the ~8/100 of `docs/CLAIMS.md`.
 
 ## Blockers
 

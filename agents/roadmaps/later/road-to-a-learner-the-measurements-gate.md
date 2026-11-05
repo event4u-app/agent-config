@@ -30,9 +30,12 @@ depends:
 > that cannot close inside one run. Parked by the owner directive of 2026-10-24
 > (`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`).
 
-> **Arrivals:** 1 — latest `inbox-2026-10-bd` (2026-10-27): a review proposal
-> found that `council-vs-solo-baseline` cannot tell debate from more samples;
-> landed here as step 1.2a, because this file owns that run.
+> **Arrivals:** 2 — latest `inbox-2026-11-na` (2026-11-06): the owner asked for A/B
+> testing in daily work so AC learns which setup wins. That is Phase 5 here; bandits stay
+> killed (K2) and live randomisation of user work waits until outcomes join to episodes
+> (`road-to-episode-finalizer-and-outcome-attribution-v2` 7.2). Earlier: `inbox-2026-10-bd`
+> (2026-10-27): a review proposal found that `council-vs-solo-baseline` cannot tell
+> debate from more samples; landed here as step 1.2a, because this file owns that run.
 
 ## Goal
 

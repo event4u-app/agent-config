@@ -41,6 +41,12 @@ relates:
 > six plan revisions and the 2026-11-05 container result, re-verified at
 > `main@630d97cb5b`. Sibling: `road-to-a-bench-that-can-tell` (the $0 foundation).
 
+> **Arrivals:** 1 — latest `inbox-2026-11-na` (2026-11-06): the owner's roles /
+> second-agent / A/B thread, re-verified at `main@8206cc0`. It asks whether a reviewer
+> or tester step earns its spawn; the only place that can answer is the three tasks
+> every arm fails here, so it landed as step 1.6. It also re-raised 1.5 (the 14 %
+> asking rate) as if it had no owner — it has one, this file.
+
 ## Goal
 
 Benefit is measured where the owner sees it. In daily work that is terse
@@ -98,6 +104,37 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   in the 2026-11-05 Haiku sweep). Name the asset that triggers it from the
   transcripts before changing anything.
   verify: the transcripts of the asking runs name the asset; a rerun of the two tasks on Haiku shows the asking rate
+- [ ] **1.6** Does a second agent earn its spawn where every arm fails? Re-opens
+  `team-defect-finding-null` through its own condition (a): a corpus that breaks the
+  ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
+  `capH-debug-08`, `hdrH-done-01`, `hdrL-multistep-01` plus a sealed hold-out of three
+  new tasks of the same edge-case class (boundary value, invalidation, sentinel value),
+  written with reference fix and validity gate before the run and hashed into the
+  evidence record:
+  - **A** one agent, base profile (control, descriptive only);
+  - **B** as A with one effort step more, priced to match D — the same-cost arm; without
+    it a second agent only measures more compute;
+  - **C** as A plus a test-first step: a fresh subagent writes edge-case tests from the
+    requirement (method, not persona — `docs/CLAIMS.md` `persona-identity-placebo-null`),
+    the harness runs them, then the implementation runs;
+  - **D** as A plus a slim reviewer on diff + requirement (the arm of
+    `road-to-token-economy-dispatch-followup` 3.2a); findings go back to the author once.
+  Primary endpoints C vs B and D vs B on the hidden verifier, paired, Holm over both,
+  analysed per task cluster. Safety endpoints: reviewer findings the verifier does not
+  confirm (false positives) and unneeded changed lines. Pairs from `bench:ab:power` on
+  this setup's A/A. Budget-stop counts as fail; p50/p95 priced cost per arm. Gates before
+  the first paid run: 6.2 report durability, the Sonnet `package` first-turn budget
+  stop explained or excluded for the chosen host (2.6), the verdict comparison of
+  `road-to-token-economy-dispatch-followup` 3.2a passed, and `b-owner-spend` released
+  for 1.6 with its bars. The harness drives the steps as separate CLI calls, so
+  the run measures the mechanism, not prompt obedience. A ladder `review`/`test` rung is
+  proposed only if C or D beats **B** on the headroom tasks **and** the hold-out and holds
+  the false-positive bar — then as a shadow `would_choose` beside the real verdict of
+  `src/scripts/_lib/judgment_ladder.ts`, never a second classifier.
+  Pair/driver-navigator, a PO agent and an expert huddle (owner turns 3-4) stay parked
+  until this step is positive **and** a separate pre-registered question exists that
+  arm D does not answer.
+  verify: pre-registration committed before the first run; a result record with the hold-out, either direction
 
 ## Phase 2 — The owner's domains
 
@@ -244,7 +281,11 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 ### blocker: b-owner-spend
 
 - **Owner:** user
-- **What:** every paid sweep (2.5, 5.1–5.2). The first 2026-11-05 sweeps spent
+- **What:** every paid sweep (1.6, 2.5, 5.1–5.2). 1.6 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
+  the three bars it is judged against, set before the run and never after: the
+  false-positive ceiling for reviewer findings, the cost `D` of an escaped defect for the
+  net-value line `p_catch · D − C_review − r_FP · C_FP`, and arm A's base profile
+  (`essential` or `package`). The first 2026-11-05 sweeps spent
   $17.85 of a $30 release; the headroom sweeps the same day ran under a separate
   $150 release (spend in `docs/benchmark.md` § Headroom sweeps).
 - **Closes when:** the owner releases a budget per sweep.
