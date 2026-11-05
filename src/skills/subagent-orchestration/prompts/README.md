@@ -33,7 +33,7 @@ Implementer prompts — and only those — also carry `{{knowledge_refs}}`, labe
 as leads: at most five references from the shared memory. Judge, candidate,
 debate and skeptic prompts carry none, because a shared lead collapses their
 independence. The cut per audience is one table:
-[`subagent-spawn-contract` § Memory audience](../../../contexts/execution/subagent-spawn-contract.md#memory-audience).
+[`memory-audience`](../../../contexts/execution/memory-audience.md).
 
 ### UI-shaped slices carry the design context, or name its absence
 

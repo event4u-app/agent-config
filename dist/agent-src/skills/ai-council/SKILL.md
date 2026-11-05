@@ -205,7 +205,7 @@ user is told they got an outside vote when they did not. Externals
 down → surface and skip; never substitute the host as a reviewer.
 
 Seat memory: facts with provenance, no leads
-([`judge-seat`](../../contexts/execution/subagent-spawn-contract.md#memory-audience)).
+([`judge-seat`](../../contexts/execution/memory-audience.md)).
 
 ## Modes
 

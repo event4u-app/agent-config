@@ -242,7 +242,7 @@ export function _origin_is_global(origin: string): boolean {
 /**
  * Writer provenance at the write edge (road-to-a-memory-each-worker-is-handed
  * 2.1). A record names who wrote it in `writer` — `<audience>[:<id>]`, the
- * audiences of subagent-spawn-contract § Memory audience. A line without one
+ * audiences of contexts/execution/memory-audience.md. A line without one
  * reads `unknown`. An unpaid route and a judge or council seat may never write to the
  * shared memory, so they are refused before anything is written.
  */
@@ -274,13 +274,13 @@ export function _assert_writer_allowed(record: Readonly<Record<string, unknown>>
     if (!KNOWN_WRITER_CLASSES.has(cls)) {
         throw new WriterRefusedError(
             `writer gate: '${writer}' names no audience of the memory table — ` +
-                'refused, nothing written (subagent-spawn-contract § Memory audience).',
+                'refused, nothing written (contexts/execution/memory-audience.md).',
         );
     }
     if (REFUSED_WRITER_CLASSES.has(cls)) {
         throw new WriterRefusedError(
             `writer gate: a ${cls} writer may not write to the shared memory (${writer}) — ` +
-                'refused, nothing written (subagent-spawn-contract § Memory audience).',
+                'refused, nothing written (contexts/execution/memory-audience.md).',
         );
     }
 }

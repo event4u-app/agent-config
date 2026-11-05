@@ -49,6 +49,9 @@ and no spawn template has a knowledge slot.
       from the council skill's neutrality section; forks get nothing, judges
       facts with provenance, unpaid routes closed-vocabulary conventions only.
       verify: reference check and a test that the council skill links the anchor.
+      Note: the table lives in `contexts/execution/memory-audience.md`, with a
+      pointer section in `subagent-spawn-contract.md` — the contract would
+      otherwise pass the 16,000-char depth ceiling (`check_depth_budget`).
 - [x] **1.2 Knowledge slot in implementer templates.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> `{{knowledge_refs}}`,
       labelled as leads, in implementer and researcher templates; absent from
       competitive, debate and adversarial ones.

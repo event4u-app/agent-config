@@ -2,13 +2,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// Memory is cut per audience (subagent-spawn-contract § Memory audience). An implementer
+// Memory is cut per audience (contexts/execution/memory-audience.md). An implementer
 // gets a few knowledge references, labelled as leads; a competing candidate, a debating
 // judge and an adversarial skeptic get none, because a shared lead collapses the
 // independence those modes exist to buy.
 const root = path.resolve(__dirname, '..', '..');
 const promptsDir = path.join(root, 'src/skills/subagent-orchestration/prompts');
 const contractPath = path.join(root, 'src/agent-src/contexts/execution/subagent-spawn-contract.md');
+const audiencePath = path.join(root, 'src/agent-src/contexts/execution/memory-audience.md');
 const councilSkillPath = path.join(root, 'src/skills/ai-council/SKILL.md');
 const SLOT = '{{knowledge_refs}}';
 const INDEPENDENT_MODES = ['do-competitively.md', 'judge-with-debate.md', 'adversarial-verification-council.md'];
@@ -65,12 +66,17 @@ describe('independent-verdict and judge prompts carry no knowledge slot', () => 
 describe('the audience table is the single statement of the memory cut', () => {
     const contract = readFileSync(contractPath, 'utf8');
 
-    it('the contract carries the Memory audience section with all six audiences', () => {
-        expect(contract).toMatch(/^## Memory audience/m);
-        const section = contract.slice(contract.indexOf('## Memory audience'));
-        for (const audience of ['orchestrator', 'non-fork', 'fork', 'judge-seat', 'unpaid', 'cheap-paid']) {
-            expect(section).toMatch(new RegExp(`^\\| \\*\\*${audience}\\*\\* \\|`, 'm'));
+    it('the audience context carries all six audiences in one table', () => {
+        const audience = readFileSync(audiencePath, 'utf8');
+        for (const name of ['orchestrator', 'non-fork', 'fork', 'judge-seat', 'unpaid', 'cheap-paid']) {
+            expect(audience).toMatch(new RegExp(`^\\| \\*\\*${name}\\*\\* \\|`, 'm'));
         }
+    });
+
+    it('the spawn contract points at the audience context rather than restating it', () => {
+        expect(contract).toMatch(/^## Memory audience/m);
+        expect(contract).toContain('](memory-audience.md)');
+        expect(contract).not.toMatch(/^\| \*\*judge-seat\*\* \|/m);
     });
 
     it('the council skill cites the anchor from its neutrality section', () => {
@@ -78,6 +84,6 @@ describe('the audience table is the single statement of the memory cut', () => {
         const start = skill.indexOf('## Neutrality guidelines');
         const end = skill.indexOf('\n## ', start + 1);
         const neutrality = skill.slice(start, end);
-        expect(neutrality).toContain('subagent-spawn-contract.md#memory-audience');
+        expect(neutrality).toContain('contexts/execution/memory-audience.md');
     });
 });
