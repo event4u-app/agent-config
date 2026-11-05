@@ -4,7 +4,7 @@
 //   2.3  at the orchestrator's Agent call the slice is computed and only its counts
 //        are logged; nothing is delivered to the model.
 
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -174,16 +174,11 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         expect(ledgerLines()).toHaveLength(0);
     });
 
-    it.skipIf(process.getuid?.() === 0)('a write below a directory it may not traverse is not classified', () => {
-        const locked = join(root, 'agents', 'memory', 'locked');
-        mkdirSync(join(locked, 'sub'), { recursive: true });
-        chmodSync(locked, 0o000);
-        try {
-            expect(processEnvelope(write('agent-abc', 'agents/memory/locked/sub/x.yml'), root)).toBe(EXIT_ALLOW);
-            expect(ledgerLines()).toHaveLength(0);
-        } finally {
-            chmodSync(locked, 0o755);
-        }
+    it('a write below a regular file (ENOTDIR, not a missing component) is not classified', () => {
+        // Any resolution error other than a genuinely missing component leaves the
+        // destination unknown; ENOTDIR exercises that branch on every runner, root included.
+        expect(processEnvelope(write('agent-abc', 'agents/memory/product-rules.yml/x.yml'), root)).toBe(EXIT_ALLOW);
+        expect(ledgerLines()).toHaveLength(0);
     });
 
     it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {
