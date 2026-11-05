@@ -16,11 +16,13 @@ import { sanitizeLabel } from './sanitize.js';
 import type { LaneRunRecord } from './types.js';
 import { laneGaps } from './uncertainty.js';
 
-export type Intent = 'review' | 'tests-for' | 'usage' | 'affected' | 'explain' | 'path' | 'query' | 'provenance' | 'bugs' | 'fix-plan' | 'verify-fix' | 'sessions' | 'knowledge';
+export type Intent = 'review' | 'tests-for' | 'usage' | 'affected' | 'explain' | 'path' | 'query' | 'provenance' | 'bugs' | 'fix-plan' | 'verify-fix' | 'sessions' | 'knowledge' | 'coverage';
 
 const INTENTS: ReadonlyArray<readonly [Intent, RegExp]> = [
     ['review', /\breview checklist\b|\bchecklist for\b|\bwhat should (the )?review(er)? check\b/i],
-    ['verify-fix', /\b(did|does|is)\b.*\bfix(ed)?\b.*\b(work|hold|stick)|\bverify (the )?fix\b/i],
+    // Ahead of `knowledge` and `tests-for`: a coverage question names an ADR or tests too.
+    ['coverage', /\b(requirements?|adr[-\s]?\d*|basis|traceability)\b.*\bcover(age|ed|s)?\b|\bcover(age|ed|s)?\b.*\b(requirements?|adr[-\s]?\d*|traceability)\b/i],
+    ['verify-fix',/\b(did|does|is)\b.*\bfix(ed)?\b.*\b(work|hold|stick)|\bverify (the )?fix\b/i],
     ['fix-plan', /\b(how (do|should|can) (i|we) fix|fix plan|plan (a|the) fix)\b/i],
     ['bugs', /\b(bug|bugs|error|crash|regress(ion|ed)?|sentry|exception)\b/i],
     ['tests-for', /\b(which|what) tests?\b|\btests? (for|of|cover)\b/i],

@@ -17,6 +17,7 @@ import { type LoadedGraph, loadGraph, resolveSeeds, tree } from './query.js';
 import { repoIdentity } from './repo_identity.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 import { testsForModule } from './answer_correctness.js';
+import { coverageSources } from './coverage.js';
 import { correctionSignals, foldSignals, readUserSignals, reviewChecklist } from '../_lib/learning_inputs.js';
 
 const TOKENS_PER_LINE = 10;
@@ -123,7 +124,7 @@ export function askMain(argv: string[]): number {
     const scope: Scope = { repoId: repoIdentity(root).repoId, branch: git(['rev-parse', '--abbrev-ref', 'HEAD']), worktree: root, user: process.env['USER'] ?? '' };
     const g = loadGraph(cache, 'native');
     try {
-        const sources = [...graphSources(g, scope.repoId, root), ...reviewSources(root, g, scope)];
+        const sources = [...graphSources(g, scope.repoId, root), ...reviewSources(root, g, scope), ...coverageSources(g, scope.repoId, root)];
         const id = flag(argv, '--fetch');
         if (id) {
             const r = fetchById(id, sources, scope);

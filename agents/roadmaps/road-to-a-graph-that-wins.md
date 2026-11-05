@@ -202,8 +202,10 @@ tracked.
       disposition (file-level; symbol-level when the finding schema gains `symbols[]`).
       verify: `npx vitest run tests/scripts/finding_invalidation.test.ts -t 'edited affected file'` -> 0
       > note: `_lib/finding_invalidation.ts` + the gate wiring in `check_finding_dispositions.ts`; nothing writes the two fields yet (`--ingest` does not record them).
-- [ ] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
+- [x] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
       rows naming a path/symbol → code/test nodes.
+      verify: `npx vitest run tests/scripts/code_graph/coverage.test.ts` -> 0
+      > note: `code_graph/coverage.ts`, reached through `ask` (intent `coverage`, no new verb per ADR-041); accepted `tests` edges only, every unmatched ref listed under `unresolved` with its reason.
 - [ ] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
       arms plain vs graph-fed reviewer; a miss counts only if the oracle confirms the edge;
       `paired_verdict` decides direction. Bar: oracle-confirmed miss on ≥ 40 % of PRs,
