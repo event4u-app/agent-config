@@ -29,13 +29,14 @@ stays under 250 ms on a fast machine.
 
 ## Phase 1 — measure growth, not one sample
 
-- [x] **1.1 Replace the single absolute sample with a growth check** — time each shape at
+- [x] **1.1 Replace the single absolute sample with a growth check** — <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      time each shape at
       N and 4N (median of three runs each) and assert the ratio stays below a linear bound
       with headroom; keep an absolute ceiling far above the p95 budget only as a backstop.
       Not a loosened threshold: the assertion changes what it measures. Per
       `evaluator-independence` § Tests are evaluators, the new test is shown red against
       the removed quadratic regex before it lands, and an independent reviewer validates it.
-      > note: done 2026-11-05 — growth n/8 → n, fastest of three, bound 28 (measured: linear 11–13×, removed form 62–67×); a negative control rejects the removed form; the hook budget is held on the 100,000-character page. Reviewed by OpenAI, two rounds: `agents/evidence/reviews/2026-11-05-linear-time-test-growth.md`. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      > note: done 2026-11-05 — growth n/8 → n, fastest of three, bound 28 (measured: linear 11–13×, removed form 62–67×); a negative control rejects the removed form; the hook budget is held on the 100,000-character page. Reviewed by OpenAI, two rounds: `agents/evidence/reviews/2026-11-05-linear-time-test-growth.md`.
 - [ ] **1.2 Verify on CI** — the shard that ran it is green on three consecutive pushes.
 
 ## Risk Register
