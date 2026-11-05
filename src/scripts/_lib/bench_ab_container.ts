@@ -149,10 +149,11 @@ export function quota_brake(limit = 3): (record: Record<string, unknown>) => str
 export interface ContainerCtx {
     base_image: string;
     ac_image: string;
-    /** The token in use; `rotate()` moves it to the next account in the pool. */
     token: string;
     package_skills: ReadonlySet<string>;
-    pool?: TokenPool;
+    /** Every configured account, for the brake's resume hint; never rotated through. */
+    pool?: readonly PoolEntry[];
+    account?: string;
 }
 
 /** Arms that load the package (no `--setting-sources` on the host path) run on `bench-ac`. */
@@ -198,34 +199,23 @@ export function read_token_pool(env: NodeJS.ProcessEnv = process.env, file: stri
     return out.filter((e, i) => out.findIndex((o) => o.token === e.token) === i);
 }
 
-/** Moves through the pool once; an account that ran out is not tried again in this sweep. */
-export class TokenPool {
-    private i = 0;
-    constructor(readonly entries: readonly PoolEntry[]) {
-        if (entries.length === 0) throw new Error('empty token pool');
-    }
-    get current(): PoolEntry {
-        return this.entries[this.i] as PoolEntry;
-    }
-    /** Advance to the next account; false when none is left. */
-    rotate(): boolean {
-        if (this.i + 1 >= this.entries.length) return false;
-        this.i += 1;
-        return true;
-    }
+/**
+ * The account a sweep runs on: the one named, or the first in the pool. A sweep
+ * never moves to another account on its own — when its account runs out, the
+ * brake stops it and the operator chooses where to resume (`next_account_hint`).
+ */
+export function select_account(pool: readonly PoolEntry[], name: string | null = null): PoolEntry {
+    if (pool.length === 0) throw new Error('no token configured');
+    if (name === null) return pool[0] as PoolEntry;
+    const hit = pool.find((e) => e.name === name);
+    if (!hit) throw new Error(`no token for account "${name}"; configured: ${pool.map((e) => e.name).join(', ')}`);
+    return hit;
 }
 
-/**
- * Run one trial, and when it did no work because the account ran out, run it
- * again on the next account in the pool. The record names the account that
- * produced it, never its token.
- */
-export function with_rotation(ctx: ContainerCtx, run: () => Record<string, unknown>, log: (m: string) => void = (m) => process.stderr.write(m)): Record<string, unknown> {
-    for (;;) {
-        const r = run();
-        if (!ctx.pool) return r;
-        if (!is_quota_exhausted(r) || !ctx.pool.rotate()) return { ...r, account: ctx.pool.current.name };
-        ctx.token = ctx.pool.current.token;
-        log(`bench_ab_v2: account exhausted — continuing on ${ctx.pool.current.name}\n`);
-    }
+/** The line the brake adds: which other accounts have a token, and how to resume on one. */
+export function next_account_hint(pool: readonly PoolEntry[], current: string): string {
+    const others = pool.map((e) => e.name).filter((n) => n !== current);
+    return others.length === 0
+        ? `account "${current}" is exhausted and no other account has a token`
+        : `account "${current}" is exhausted; resume on another with --account <name> (configured: ${others.join(', ')})`;
 }

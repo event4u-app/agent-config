@@ -142,7 +142,7 @@ describe('quota brake', () => {
 });
 
 describe('token pool', async () => {
-    const { read_token_pool, TokenPool, with_rotation } = await import('../../src/scripts/_lib/bench_ab_container.js');
+    const { next_account_hint, read_token_pool, select_account } = await import('../../src/scripts/_lib/bench_ab_container.js');
     const dir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), 'pool-'));
     const put = (d: string, name: string, body: string, mode = 0o600): void => {
         fs.writeFileSync(path.join(d, name), body);
@@ -165,21 +165,17 @@ describe('token pool', async () => {
         expect(() => read_token_pool({}, path.join(d, 'none'), d)).toThrow(/chmod 600/);
     });
 
-    it('re-runs an exhausted trial on the next account and names the account, never the token', () => {
-        const ctx = { base_image: 'b', ac_image: 'a', token: 'tok-1', package_skills: new Set<string>(), pool: new TokenPool([{ name: 'one', token: 'tok-1' }, { name: 'two', token: 'tok-2' }]) };
-        const seen: string[] = [];
-        const r = with_rotation(ctx, () => {
-            seen.push(ctx.token);
-            return ctx.token === 'tok-1' ? { errored: true, transcript: "You've hit your weekly limit", tokens_breakdown: {} } : { errored: false, tokens_breakdown: { input_tokens: 5 } };
-        }, () => undefined);
-        expect(seen).toEqual(['tok-1', 'tok-2']);
-        expect(r).toMatchObject({ errored: false, account: 'two' });
-        expect(JSON.stringify(r)).not.toContain('tok-');
+    it('runs on the named account or the first one, and never picks another on its own', () => {
+        const pool = [{ name: 'a', token: 't1' }, { name: 'b', token: 't2' }];
+        expect(select_account(pool).name).toBe('a');
+        expect(select_account(pool, 'b').token).toBe('t2');
+        expect(() => select_account(pool, 'c')).toThrow(/configured: a, b/);
     });
 
-    it('returns the exhausted run when no account is left, so the brake can stop the sweep', () => {
-        const ctx = { base_image: 'b', ac_image: 'a', token: 't', package_skills: new Set<string>(), pool: new TokenPool([{ name: 'only', token: 't' }]) };
-        const r = with_rotation(ctx, () => ({ errored: true, tokens_breakdown: {} }), () => undefined);
-        expect(r).toMatchObject({ errored: true, account: 'only' });
+    it('tells the operator where a stopped sweep can resume, naming accounts only', () => {
+        const pool = [{ name: 'a', token: 'tok-1' }, { name: 'b', token: 'tok-2' }];
+        expect(next_account_hint(pool, 'a')).toMatch(/--account <name> \(configured: b\)/);
+        expect(next_account_hint(pool, 'a')).not.toContain('tok-');
+        expect(next_account_hint([{ name: 'a', token: 'x' }], 'a')).toMatch(/no other account/);
     });
 });

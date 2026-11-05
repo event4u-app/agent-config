@@ -54,7 +54,7 @@ import * as scoring from './_lib/bench_ab_scoring_v2.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { plugin_scope, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
-import { container_fields, is_quota_exhausted, quota_brake, with_rotation, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { container_fields, is_quota_exhausted, next_account_hint, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
 import { container_context } from './bench_ab_images.js';
 import {
     SweepBudget,
@@ -1000,7 +1000,7 @@ export function main(argv: string[] | null = null): number {
 
     const budget = new SweepBudget(args.max_usd, tier_rates);
     const brake = quota_brake(3);
-    const ctr = args.isolation === 'container' ? container_context({ selftest }) : null;
+    const ctr = args.isolation === 'container' ? container_context({ selftest, account: args.account }) : null;
 
     const { records, aborted } = collect_records(
         tasks,
@@ -1018,7 +1018,7 @@ export function main(argv: string[] | null = null): number {
                 container: ctr?.ctx ?? null,
             };
             if (selftest) return selftest_run(task, _arm, runOpts);
-            return ctr ? with_rotation(ctr.ctx, () => run_one(task, _arm, runOpts)) : run_one(task, _arm, runOpts);
+            return run_one(task, _arm, runOpts);
         },
         ckpt,
         undefined,
@@ -1046,6 +1046,7 @@ export function main(argv: string[] | null = null): number {
         corpus: sel.name,
         host: args.host,
         isolation: args.isolation,
+        account: ctr?.ctx.account ?? null,
         images: (ctr?.images ?? null) as unknown as Json,
         // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
         // one. Both the tier marker and the filename say so, because a number is
@@ -1081,6 +1082,7 @@ export function main(argv: string[] | null = null): number {
     // a publishable one.
     if (aborted) {
         process.stderr.write(`bench_ab_v2: ${aborted}\n`);
+        if (ctr?.ctx.pool && ctr.ctx.account) process.stderr.write(`bench_ab_v2: ${next_account_hint(ctr.ctx.pool, ctr.ctx.account)}\n`);
         return 2;
     }
     if (audit.violations.length > 0) {
@@ -1116,6 +1118,8 @@ interface ParsedArgs {
     checkpoint: boolean;
     fresh: boolean;
     isolation: string;
+    /** Container sweeps: which configured account to run on (default: the first). */
+    account: string | null;
 }
 
 class ArgExit extends Error {}
@@ -1136,8 +1140,9 @@ function parse_args(argv: string[]): ParsedArgs {
         checkpoint: true,
         fresh: false,
         isolation: 'host',
+        account: null,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--account NAME] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1208,6 +1213,9 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a === '--isolation' || a.startsWith('--isolation=')) {
             out.isolation = _choice(a === '--isolation' ? need(i, '--isolation') : a.slice('--isolation='.length), '--isolation', ['host', 'container'], argErr);
             if (a === '--isolation') i += 1;
+        } else if (a === '--account' || a.startsWith('--account=')) {
+            out.account = a === '--account' ? need(i, '--account') : a.slice('--account='.length);
+            if (a === '--account') i += 1;
         } else if (a === '--no-checkpoint') {
             out.checkpoint = false;
         } else if (a === '--fresh') {

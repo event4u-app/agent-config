@@ -61,6 +61,11 @@ Measured in the last sweep and in the tree:
 - **Positive proof of what loaded.** The `system/init` event lists loaded
   plugins and skills. A with-arm trial that shows no package skill, or a
   without-arm trial that shows any, is excluded before scoring and counted.
+- **No automatic account switching.** A sweep runs on one account (`--account`,
+  default the first configured token). When that account hits its limit, the brake
+  stops the sweep and names the other accounts that have a token; the operator
+  resumes on one, and the checkpoint carries over. The owner's line (2026-11-05):
+  stay inside the legal frame, offer the switch, never make it.
 - **Scoring stays on the host.** The scorer is deterministic and calls no
   model; the council's suggestion to containerise it rested on a scorer that
   judges with a model, which this one does not.

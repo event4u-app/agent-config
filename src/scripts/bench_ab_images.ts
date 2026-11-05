@@ -16,7 +16,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { read_token_pool, TokenPool, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { read_token_pool, select_account, type ContainerCtx, type PoolEntry } from './_lib/bench_ab_container.js';
 import { package_skill_names } from './_lib/bench_ab_delivery_probe.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -139,7 +139,7 @@ export function read_images(file: string = DEFAULT_IMAGES_FILE): ImagesFile {
  * the package's skill names for the load check. A selftest makes no model call,
  * so it needs neither images nor a token and gets placeholders it never uses.
  */
-export function container_context(opts: { selftest: boolean; images_file?: string }): { ctx: ContainerCtx; images: ImagesFile | null } {
+export function container_context(opts: { selftest: boolean; images_file?: string; account?: string | null }): { ctx: ContainerCtx; images: ImagesFile | null } {
     if (opts.selftest) {
         return { ctx: { base_image: 'selftest', ac_image: 'selftest', token: '', package_skills: new Set() }, images: null };
     }
@@ -149,9 +149,11 @@ export function container_context(opts: { selftest: boolean; images_file?: strin
         ac_image: images.ac.id,
         token: '',
         package_skills: package_skill_names(path.join(REPO_ROOT, 'src', 'skills')),
-        pool: new TokenPool(read_token_pool()),
+        pool: read_token_pool(),
     };
-    ctx.token = (ctx.pool as TokenPool).current.token;
+    const chosen = select_account(ctx.pool as PoolEntry[], opts.account ?? null);
+    ctx.token = chosen.token;
+    ctx.account = chosen.name;
     return { ctx, images };
 }
 

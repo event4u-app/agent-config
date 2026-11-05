@@ -29,7 +29,7 @@ pbpaste > ~/.event4u/agent-config/secrets/claude-oauth-token
 chmod 600 ~/.event4u/agent-config/secrets/claude-oauth-token
 ```
 
-**Several accounts.** Put one token file per account in `~/.event4u/agent-config/secrets/claude-oauth-tokens/<name>`, each with mode 0600. The runner works through these files in alphabetical order. When an account hits its usage limit, it reruns that trial on the next account. The report names the account that produced each trial, never its token. The sweep stops only when no account is left.
+**Several accounts.** Put one token file per account in `~/.event4u/agent-config/secrets/claude-oauth-tokens/<name>`, each with mode 0600. A sweep runs on **one** account: the one named with `--account <name>`, otherwise the first. It never switches accounts on its own. When an account hits its usage limit, the brake stops the sweep and prints the other accounts that have a token. Resume with the same command plus `--account <name>`. The checkpoint carries over, and the report names the account it ran on, never the token.
 
 You can also set `CLAUDE_CODE_OAUTH_TOKEN` in the environment. The runner:
 
