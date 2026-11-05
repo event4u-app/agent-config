@@ -83,7 +83,7 @@ Raw reports are kept under `internal/bench/reports/ab-v2/` in the primary checko
 
 ### Reading a bad result {#reading-a-bad-result}
 
-A weak or negative result is a question about the measurement first. `./scripts-run src/scripts/bench_ab_interpret <paired-report.json>` writes an interpretation record per comparison with the labels the data itself supports:
+A weak or negative result is a question about the measurement first. `task bench:ab:interpret -- <paired-report.json>` writes an interpretation record per comparison with the labels the data itself supports:
 
 | Label | When | Do instead |
 |---|---|---|

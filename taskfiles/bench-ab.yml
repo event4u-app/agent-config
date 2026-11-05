@@ -207,6 +207,15 @@ tasks:
         task bench:ab:power -- --aa 2/12 --share 0.9
     cmd: ./scripts-run src/scripts/bench_ab_power {{.CLI_ARGS}}
 
+  bench:ab:interpret:
+    silent: true
+    desc: |
+      Interpretation record for a paired ab-v2 report: ceiling, underpowered,
+      not-delivered, cost-overhead, and what stays open. Never a removal.
+      Cost-free:
+        task bench:ab:interpret -- internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
+    cmd: ./scripts-run src/scripts/bench_ab_interpret {{.CLI_ARGS}}
+
   bench:showcase:replay:
     silent: true
     desc: |
