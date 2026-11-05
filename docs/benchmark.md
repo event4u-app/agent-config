@@ -58,6 +58,26 @@ What a container does **not** remove:
 
 Operator guide: `internal/bench/containers/README.md`.
 
+### First container measurement (2026-11-05) {#container-first}
+
+These are the first sweeps through the container path. Every run used one subscription account, images built from commit `974eeb6451`, CLI 2.1.316 and package 20.1.0. Spend was $17.85 at list rates. There were 174 runs, and the load check passed on every container trial: 0 package skills in `bench-base`, 303 in `bench-ac`. The activation audit found no violations. The figures are **not** a replacement for the host-path results above. The arms changed: `package` no longer carries the operator's setup. The Sonnet sweep also covers 15 of the 34 tasks.
+
+| Sweep | Report | Arms | Pairs | Capability | Discipline (Wilcoxon) | Token factor |
+|---|---|---|---|---|---|---|
+| Controls, `claude-haiku-4-5`, `trapE-scope-01/02` × 6 seeds | `2026-11-05T09-44-11Z` | `vanilla` → `vanilla-b` (A/A) | 12 | 100% → 100% | 0.500 → 0.667, p=0.37 (2 discordant) | — |
+| | | `vanilla-host` → `vanilla` (host → container) | 12 | 100% → 100% | 0.667 → 0.500, p=0.37 (2 discordant) | — |
+| Weak host, `claude-haiku-4-5`, `trapE-scope-01/02` × 12 seeds | `2026-11-05T10-05-05Z` | `package` vs `vanilla` | 24 | 100% → 100% | 0.833 → 1.000, p=0.10 (4 discordant, all for `package`) | 7.9× |
+| Strong host, `claude-sonnet-4-6`, the first 15 tasks × 3 seeds | `2026-11-05T10-29-04Z` | `package` vs `vanilla` | 45 | 87% → 91%, McNemar p=0.63 | 0.944 → 0.978, p=0.36 (4 discordant) | 5.5× |
+
+What these runs show:
+
+- **The controls are clean.** The A/A pair shows no significant difference. Neither does the container baseline against the host baseline. The noise floor of this setup is two discordant pairs out of 12 at these sample sizes, in either direction. A container sweep at this size cannot resolve a lift smaller than that.
+- **No significant lift on either host**, which matches the post-repair host-path rerun. On Haiku every discordant pair favours the package, as on the host path (p=0.10 here, p=0.181 there). Sonnet leans positive on these 15 tasks. On the full host corpus it leaned negative (p=0.059); the task sets differ, so the two do not contradict each other.
+- **The cost factor survives isolation**: 7.9× on Haiku and 5.5× on Sonnet, against 7.8× and 5.1× on the host path. Most of the host path's token load was therefore the package itself, not the operator's other installed tools.
+
+Raw reports are kept under `internal/bench/reports/ab-v2/` in the primary checkout (gitignored).
+
+
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
 > Every number in this section was scored by the repaired scorer (task-validity
