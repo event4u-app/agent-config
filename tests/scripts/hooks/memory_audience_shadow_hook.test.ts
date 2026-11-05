@@ -4,7 +4,7 @@
 //   2.3  at the orchestrator's Agent call the slice is computed and only its counts
 //        are logged; nothing is delivered to the model.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -66,7 +66,7 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         expect(processEnvelope(write('agent-abc', 'agents/memory/intake/signals-2026-11.jsonl'), root)).toBe(EXIT_ALLOW);
         const lines = ledgerLines();
         expect(lines).toHaveLength(1);
-        expect(lines[0]).toMatchObject({ event: 'memory_child_write', tool: 'Write', target: 'intake', posture: 'record-only' });
+        expect(lines[0]).toMatchObject({ event: 'memory_child_write_attempt', tool: 'Write', target: 'intake', posture: 'record-only' });
         // Privacy by construction: no agent id, no path, no content reaches disk.
         const raw = JSON.stringify(lines[0]);
         expect(raw).not.toContain('agent-abc');
@@ -76,7 +76,17 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
 
     it('an absolute path inside the root counts as the same write', () => {
         processEnvelope(write('agent-abc', join(root, 'agents', 'memory', 'product-rules.yml'), 'Edit'), root);
-        expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write', tool: 'Edit', target: 'curated' }]);
+        expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', tool: 'Edit', target: 'curated' }]);
+    });
+
+    it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {
+        processEnvelope(write('agent-abc', 'agents/memory/../../src/x.ts'), root);
+        expect(ledgerLines()).toHaveLength(0);
+    });
+
+    it('a traversal that lands in intake is classed intake', () => {
+        processEnvelope(write('agent-abc', 'agents/memory/a/../intake/s.jsonl'), root);
+        expect(ledgerLines()).toMatchObject([{ target: 'intake' }]);
     });
 
     it('the same write without agent_id produces no record', () => {
@@ -121,6 +131,21 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
     it('intake lines are never part of the curated slice', () => {
         processEnvelope(spawn('look at agents/memory/intake/signals-2026-11.jsonl'), root);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, dropped: 0 });
+    });
+
+    it('a ref that climbs out of the store or into intake is not counted and stats nothing', () => {
+        writeFileSync(join(root, 'secret.yml'), 'z'.repeat(4000));
+        mkdirSync(join(root, 'agents', 'memory', 'intake'), { recursive: true });
+        writeFileSync(join(root, 'agents', 'memory', 'intake', 'x.yml'), 'z'.repeat(4000));
+        processEnvelope(spawn('agents/memory/../../secret.yml agents/memory/a/../intake/x.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, dropped: 0, est_tokens: 0 });
+    });
+
+    it('a symlink in the store pointing outside it adds nothing to the estimate', () => {
+        writeFileSync(join(root, 'outside.yml'), 'z'.repeat(4000));
+        symlinkSync(join(root, 'outside.yml'), join(root, 'agents', 'memory', 'link.yml'));
+        processEnvelope(spawn('agents/memory/link.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 0 });
     });
 
     it("a child's own spawn is not the orchestrator's and is not measured", () => {

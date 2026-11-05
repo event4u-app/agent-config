@@ -56,6 +56,7 @@ describe.each([
         ['unpaid', { writer: 'unpaid:free-route' }],
         ['council-seat', { writer: 'council-seat:openai' }],
         ['council-seat via extra', { extra: { writer: 'Council-Seat' } }],
+        ['judge-seat', { writer: 'judge-seat:spec-compliance' }],
     ])('refuses a %s writer and writes nothing', (_label, options) => {
         expect(() => mod.emit('historical-patterns', 'app/Y.php', 'a lesson', options)).toThrow(mod.WriterRefusedError);
         expect(intakeLineCount()).toBe(0);

@@ -244,12 +244,12 @@ export function _origin_is_global(origin: string): boolean {
  * Writer provenance at the write edge (road-to-a-memory-each-worker-is-handed
  * 2.1). A record names who wrote it in `writer` — `<audience>[:<id>]`, the
  * audiences of subagent-spawn-contract § Memory audience. A line without one
- * reads `unknown`. An unpaid route and a council seat may never write to the
+ * reads `unknown`. An unpaid route and a judge or council seat may never write to the
  * shared memory, so they are refused before anything is written.
  */
 export class WriterRefusedError extends Error {}
 
-export const REFUSED_WRITER_CLASSES: ReadonlySet<string> = new Set(['unpaid', 'council-seat']);
+export const REFUSED_WRITER_CLASSES: ReadonlySet<string> = new Set(['unpaid', 'council-seat', 'judge-seat']);
 /** A record carrying this taint was derived from untrusted content; never aggregated. */
 export const EXTERNAL_READ_TAINT = 'external_read';
 

@@ -1575,7 +1575,7 @@ concerns:
     effect: telemetry
   # road-to-a-memory-each-worker-is-handed 2.2 + 2.3 — memory audience, RECORD-ONLY
   # and SHADOW. A child's Write/Edit under agents/memory/ (payload carries
-  # agent_id) appends one `memory_child_write` line; the orchestrator's
+  # agent_id) appends one `memory_child_write_attempt` line; the orchestrator's
   # Agent/Task call appends the counts of the curated slice its prompt names
   # (`memory_slice_shadow`), delivering nothing. The prompt is read in memory
   # only: a line carries a tool name, a target class and integers. claude only —

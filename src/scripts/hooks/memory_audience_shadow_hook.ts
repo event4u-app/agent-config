@@ -7,7 +7,7 @@
  *   - **Child writes** (2.2). A Write / Edit / MultiEdit whose payload carries
  *     an `agent_id` — the host's marker that a subagent, not the session, made
  *     the call — and whose target lies under `agents/memory/` appends one
- *     `memory_child_write` line. Without `agent_id` nothing is recorded: the
+ *     `memory_child_write_attempt` line. Without `agent_id` nothing is recorded: the
  *     orchestrator writing its own store is the normal path.
  *   - **Slice shadow** (2.3). At the orchestrator's `Agent` / `Task` call, the
  *     curated references the prompt names are cut to the spawn contract's cap
@@ -66,18 +66,39 @@ export interface SliceCounts {
     est_tokens: number;
 }
 
+/**
+ * A named ref, normalised, if it stays inside the curated store; null otherwise.
+ * Normalising before the check is what closes `agents/memory/../../x` (leaves the
+ * store) and `agents/memory/a/../intake/x` (lands in intake).
+ */
+function curatedRef(ref: string): string | null {
+    const norm = path.posix.normalize(ref);
+    if (!norm.startsWith(MEMORY_DIR) || norm.startsWith(`${MEMORY_DIR}intake/`)) return null;
+    return norm;
+}
+
+/** Size of a curated file, counted only when its real path is still inside the store. */
+function curatedBytes(ref: string, root: string): number {
+    try {
+        const store = fs.realpathSync(path.join(root, MEMORY_DIR));
+        const real = fs.realpathSync(path.join(root, ref));
+        const rel = path.relative(store, real);
+        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return 0;
+        return fs.statSync(real).size;
+    } catch {
+        // A named file that does not exist adds nothing to the estimate.
+        return 0;
+    }
+}
+
 /** The slice a spawn naming these refs would receive, as counts only. */
 export function sliceCounts(prompt: string, root: string): SliceCounts {
-    const refs = [...new Set(prompt.match(CURATED_REF_RE) ?? [])];
+    const refs = [
+        ...new Set((prompt.match(CURATED_REF_RE) ?? []).map(curatedRef).filter((r): r is string => r !== null)),
+    ];
     const kept = refs.slice(0, MAX_KNOWLEDGE_REFS);
     let bytes = 0;
-    for (const ref of kept) {
-        try {
-            bytes += fs.statSync(path.join(root, ref)).size;
-        } catch {
-            // A named file that does not exist adds nothing to the estimate.
-        }
-    }
+    for (const ref of kept) bytes += curatedBytes(ref, root);
     return { ref_count: kept.length, dropped: refs.length - kept.length, est_tokens: Math.ceil(bytes / BYTES_PER_TOKEN) };
 }
 
@@ -97,7 +118,8 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
             const filePath = str(input, 'file_path', 'path');
             const target = filePath === null ? null : memoryTarget(filePath, consumerRoot);
             if (target === null) return EXIT_ALLOW;
-            appendLedgerLine(consumerRoot, nowIso, { event: 'memory_child_write', ts: nowIso, tool, target, posture: 'record-only' });
+            // pre_tool_use: the call may still fail or be denied, so this is an attempt.
+            appendLedgerLine(consumerRoot, nowIso, { event: 'memory_child_write_attempt', ts: nowIso, tool, target, posture: 'record-only' });
             return EXIT_ALLOW;
         }
 
@@ -120,14 +142,13 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
 }
 
 export function main(): number {
-    const raw = readHookStdin();
-    let envelope: JsonValue = {};
     try {
-        envelope = raw.trim() ? (JSON.parse(raw) as JsonValue) : {};
+        const raw = readHookStdin();
+        const envelope = raw.trim() ? (JSON.parse(raw) as JsonValue) : {};
+        return processEnvelope(envelope, resolveConsumerRoot(envelope));
     } catch {
         return EXIT_ALLOW;
     }
-    return processEnvelope(envelope, resolveConsumerRoot(envelope));
 }
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
