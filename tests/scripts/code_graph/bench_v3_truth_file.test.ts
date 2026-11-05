@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { truthDocRefusal, truthFromDoc, type TruthDoc } from '../../../internal/bench/code-graph/run_bench_v3.js';
+import { truthCheckedBy, truthDocRefusal, truthFromDoc, type TruthDoc } from '../../../internal/bench/code-graph/run_bench_v3.js';
 
 const doc = (over: Partial<TruthDoc['items'][number]>[] = []): TruthDoc => ({
     human_check: { sample: ['s-1'] },
@@ -24,6 +24,30 @@ describe('truthDocRefusal', () => {
         expect(truthDocRefusal(d)).toMatch(/s-1/);
         d.human_check.sample.push('missing-id');
         expect(truthDocRefusal(d)).toMatch(/missing-id/);
+    });
+});
+
+describe('a delegated check', () => {
+    const delegated = (by?: 'human' | 'council'): TruthDoc => ({
+        human_check: { sample: ['s-1'], ...(by === undefined ? {} : { checked_by: by }) },
+        items: [
+            { id: 's-1', status: 'oracle', files: ['a.php'], checked: 'agree' },
+            { id: 'h-1', status: 'human-required', files: ['routes/api.php'], checked: 'corrected' },
+        ],
+    });
+
+    it('accepts a verdict in `checked` only when the file names who checked', () => {
+        expect(truthDocRefusal(delegated('council'))).toBeNull();
+        expect(truthDocRefusal(delegated())).toMatch(/checked_by/);
+    });
+
+    it('seals an item with a delegated verdict exactly as with a human one', () => {
+        expect(truthFromDoc({ id: 'h-1' }, delegated('council'))).toEqual({ kind: 'set', files: ['routes/api.php'] });
+    });
+
+    it('reports the checker, defaulting to a person for the legacy field', () => {
+        expect(truthCheckedBy(delegated('council'))).toBe('council');
+        expect(truthCheckedBy(doc())).toBe('human');
     });
 });
 
