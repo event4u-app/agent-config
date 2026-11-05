@@ -93,11 +93,23 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   from 1/10 to 10/10 and the placebo does not reproduce it (`docs/benchmark.md`
   § Headroom sweeps).
   verify: report under `internal/bench/reports/ab-v2/` with an A/A pair and `bench_ab_interpret` labels for every comparison
-- [ ] **1.5** Find why `package` makes Haiku ask the user for code in about 14% of
+- [x] **1.5** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts --> Find why `package` makes Haiku ask the user for code in about 14% of
   runs instead of reading the repository (`trapC-ambig-01`, `hdrE-scope-large-01`
   in the 2026-11-05 Haiku sweep). Name the asset that triggers it from the
   transcripts before changing anything.
+  Done 2026-11-05: a kernel leave-one-out, then 40 runs per candidate, names
+  `ask-when-uncertain`: blind questions (no tool call first) 7/40 with the kernel,
+  1/40 without it (p = 0.028, ≈ 0.085 corrected for three candidates). Kept
+  streams under `reports/ab-v2/streams/` carry the evidence (`docs/benchmark.md`
+  § Which rule makes Haiku ask without looking).
   verify: the transcripts of the asking runs name the asset; a rerun of the two tasks on Haiku shows the asking rate
+- [ ] **1.6** A wording of `ask-when-uncertain` that puts looking before asking
+  ("read what the workspace already answers, then ask"), in its own PR under the
+  kernel-rule soak. Measure it against the 2026-11-05 baseline before it merges:
+  `rules-kernel-dc` with the new text on `trapC-ambig-01` and `hdrH-done-01`,
+  40 runs per arm on Haiku. Asking after a look on a genuinely ambiguous request
+  must not drop.
+  verify: blind questions below 3/40 with the new wording, and `trapC-ambig-01` questions after a look not below the baseline's 6/20
 
 ## Phase 2 — The owner's domains
 
