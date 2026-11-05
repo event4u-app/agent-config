@@ -219,9 +219,11 @@ tracked.
       pasted beside a diff degrading reviews across eight models, so the hypothesis is
       B1 > A ≥ B2; without B2 the run cannot tell whether the form or the graph acted.
       K3 holds for all three arms.
-- [ ] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
+- [x] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
       `resolved_via` histogram, 3.5 record, staleness state) from
       `internal/bench/scorecard.yaml` (row → metric → artefact → bar → expiry).
+      verify: `npx vitest run tests/scripts/code_graph/prove.test.ts` -> 0
+      > note: `code_graph/prove.ts` (13 scorecard rows); a missing artefact is named `missing`, never omitted. Today suite F, the edge oracle and the 3.5 record read `missing`, the oracle version null — their runners must write the names the scorecard declares.
 
 ## Phase 4 — Answers that say what they do not know
 Added 2026-10-27 from round `inbox-2026-10-bf`. Order binds: honesty before cost
@@ -366,6 +368,6 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
 - [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
-- [ ] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
+- [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
 - [ ] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
 - [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.

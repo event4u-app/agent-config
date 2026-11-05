@@ -1,0 +1,105 @@
+# Scorecard for road-to-a-graph-that-wins — read by `agent-config code-graph prove`.
+#
+# One row per claim the roadmap measures: row → metric → artefact → bar → expiry.
+# `bar` is copied from the registration (PREREGISTRATION-v3-2026-11-05.md) or the
+# roadmap step that fixed it; this file never restates a bar in its own words.
+# `artefact` is a path or a last-segment glob (newest name wins); a list means
+# every entry must resolve. `prove` reports a row `missing` when nothing matches
+# and `expired` when the artefact is older than `expiry_days` — it never scores.
+# `verdict_pattern` (optional) is a regex whose group 1 is the verdict the
+# artefact states; without one, a `**Result: …**` / `**Verdict: …**` line is read.
+# `role` marks the rows the bundle lifts out: `edge-oracle` (oracle version) and
+# `counterfactual-review` (the 3.5 record).
+
+version: 1
+registration: internal/bench/code-graph/PREREGISTRATION-v3-2026-11-05.md
+corpus: internal/bench/code-graph/corpus-v3-2026-11-05.yaml
+
+rows:
+  # Suites B–E, per scored class (registration § Bars; null path: < 4 of 6 WIN).
+  - id: v3-class-1-precise-semantics
+    metric: suite B class 1 — native vs grep mean recall and mean precision
+    artefact: &v3
+      - internal/bench/reports/code-graph-v3-2*.md
+      - internal/bench/reports/code-graph-v3-traces-*
+    bar: &classbar "native WINS iff mean recall >= grep + 10 pp AND mean precision no more than 5 pp below grep; otherwise TIE (recall within 10 pp, precision floor met) or NULL (precision floor failed)"
+    expiry_days: 90
+    verdict_pattern: '^\| precise-semantics \| all \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-class-2-route-trace-unopim
+    metric: suite C class 2 route-trace, unopim only (the verdict-bearing subject)
+    artefact: *v3
+    bar: *classbar
+    expiry_days: 90
+    verdict_pattern: '^\| route-trace \| unopim \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-class-2-route-trace-larasend
+    metric: suite C class 2 route-trace, larasend — published beside, never pooled, not verdict-bearing
+    artefact: *v3
+    bar: "no bar — larasend's route-trace result can neither turn a unopim win into a loss nor a loss into a win"
+    expiry_days: 90
+    verdict_pattern: '^\| route-trace \| larasend \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-class-3-model-table
+    metric: suite C class 3 model → table
+    artefact: *v3
+    bar: *classbar
+    expiry_days: 90
+    verdict_pattern: '^\| model-table \| all \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-class-4-tests-for
+    metric: suite C class 4 tests-for
+    artefact: *v3
+    bar: *classbar
+    expiry_days: 90
+    verdict_pattern: '^\| tests-for \| all \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-class-5-negative-control
+    metric: suite D class 5 clean-rate (correct answer is empty)
+    artefact: *v3
+    bar: "clean-rate, no bar; an item the oracle finds non-empty is VOID and listed by id"
+    expiry_days: 90
+    verdict_pattern: '^\| native \| ([0-9.]+|ABSENT) \|'
+  - id: v3-class-6-change-impact
+    metric: suite E class 6 change-impact
+    artefact: *v3
+    bar: *classbar
+    expiry_days: 90
+    verdict_pattern: '^\| change-impact \| all \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-class-7-change-impact-xplane
+    metric: suite E class 7 change-impact-xplane (change in one language, impact in another)
+    artefact: *v3
+    bar: *classbar
+    expiry_days: 90
+    verdict_pattern: '^\| change-impact-xplane \| all \|(?: [^|]* \|){4} (\S+) \|'
+  - id: v3-null-path
+    metric: scored classes (1, 2, 3, 4, 6, 7) the native arm WINS
+    artefact: internal/bench/reports/code-graph-v3-2*.md
+    bar: "fewer than 4 of the 6 scored classes WIN -> the graph-first wording stays withheld and code-intelligence names the classes that did not win"
+    expiry_days: 90
+    verdict_pattern: '^## Null path\s+(\S[^\n]*)'
+
+  # Suite F (registration § Bars, F primary + F gate).
+  - id: v3-suite-f-agentic
+    metric: suite F solved per 100k tokens, floor + native vs floor (sum over sum); solved per minute; escaped-regression rate
+    artefact: internal/bench/reports/code-graph-v3-suite-f-*.md
+    bar: "solved per 100k tokens, floor + native >= 1.25 x floor; scored only if dispatch-event-capture-reliability >= 95 % on the run's own audit stream, else GATED"
+    expiry_days: 90
+
+  # Step 2.6 — edge precision and recall per resolved_via against the 2.2 oracle.
+  - id: edge-precision-per-resolved-via
+    role: edge-oracle
+    metric: edge precision and recall per resolved_via against the SCIP / PHP oracle, on src/scripts/ and both subjects
+    artefact: internal/bench/reports/code-graph-edge-oracle-*.md
+    bar: "measured per resolved_via against the 2.2 oracle; the oracle index comes from an indexer the maintainer installs, never fetched at runtime (ADR-259)"
+    expiry_days: 90
+
+  # Step 3.5 — counterfactual review.
+  - id: counterfactual-review
+    role: counterfactual-review
+    metric: oracle-confirmed missed callers per PR, arms A plain / B1 checks + read list / B2 graph prose, paired_verdict
+    artefact: internal/bench/reports/code-graph-counterfactual-review-*.md
+    bar: "oracle-confirmed miss on >= 40 % of PRs, <= 1 false miss per 10 PRs; hypothesis B1 > A >= B2; scored by set comparison, no LLM judge (K3)"
+    expiry_days: 180
+
+  # Step 4.6 — the indexed-read threshold.
+  - id: index-crossover
+    metric: per-invocation cost of the JSON vs SQLite-index read path for query and review-risk
+    artefact: internal/bench/reports/code-graph-index-crossover-2026-11-05.md
+    bar: "replace the declared INDEXED_READ_MIN_EDGES (50,000) by the measured crossover, or confirm it"
+    expiry_days: 180

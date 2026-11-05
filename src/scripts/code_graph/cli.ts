@@ -82,6 +82,8 @@
  *   dead      [--entry-points F]              zero accepted in-edges, minus
  *             [--accept-missing-exports]      declared entry points; REFUSES
  *                                             when a source is unavailable
+ *   prove     [--scorecard P] [--out P]       the evidence bundle from
+ *                                             internal/bench/scorecard.yaml (prove.ts)
  *
  * The four gate verbs (3.1–3.3) each print the `resolved_via` histogram of the
  * edges they accepted AND of the edges they refused to walk, plus the graph's
@@ -221,6 +223,7 @@ import { scanMain } from './scan.js';
 import { bugsMain } from './cli_bugs.js';
 import { cmdBranchDiff, cmdBranches, cmdOnBranches, cmdProvenance, cmdSystems } from './cli_knowledge.js';
 import { CODE_GRAPH_HELP } from './cli_help.js';
+import { proveMain } from './prove.js';
 
 export { buildCacheFor, cacheFor } from './cli_args.js';
 const _HERE = fileURLToPath(import.meta.url);
@@ -1456,6 +1459,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
             return cmdQuery(sub, argv.slice(1));
         if (sub === 'impact') return cmdImpact(argv.slice(1));
         if (sub === 'tests-for') return cmdTestsFor(argv.slice(1));
+        if (sub === 'prove') return proveMain(argv.slice(1));
         if (sub === 'review-risk') return cmdReviewRisk(argv.slice(1));
         if (sub === 'why' || sub === 'usage' || sub === 'remove-plan') return await cmdSystems(sub, argv.slice(1));
         if (sub === 'provenance') return cmdProvenance(argv.slice(1));

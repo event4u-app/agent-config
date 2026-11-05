@@ -51,6 +51,7 @@ const ROWS: ReadonlyArray<readonly [string, string]> = [
     ['lineage', 'Where harvested mechanisms came from, and what is still missing'],
     ['bugs', 'Local bug facts: import a snapshot, measure fix commits'],
     ['scan', 'Sweep for known risky patterns; one file:line:rule per hit'],
+    ['prove', 'The evidence bundle behind each benchmark claim, from a scorecard (--scorecard, --out)'],
 ];
 
 function render(): string {
