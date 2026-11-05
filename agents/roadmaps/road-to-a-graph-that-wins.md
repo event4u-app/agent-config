@@ -153,6 +153,7 @@ tracked.
       oracle — the files the real fix commit touched, for suite F and for 3.5. Truth is
       never derived from the graph under test (a recall of 1.0 against graph-derived
       truth is circular, which S1's own benchmark notes).
+      > note: 2026-11-05 — the oracle arm runs. `internal/bench/code-graph/oracle/` is an on-demand image (PHP 8.4, Psalm 7.0.3, scip-typescript 0.6.1, all pinned; `oracle.sh build|deps|run`, indexing with `--network none`), and `oracle_truth.ts` wrote `truth-v3-2026-11-05.yaml`: 8 items complete from the oracle, 15 partial with the reason named (Vue files scip-typescript cannot index, route and framework hops), 16 `human-required` (route, model-to-migration, Inertia/Blade — no reference engine emits them), 5 negative controls confirmed empty, 1 unresolved. Two Psalm findings shaped it: a call whose return value is used is filed under the method's return node, which `--find-references-to` never reads (the plugin reads both), and the bundled Laravel plugin's config typing exhausts 16 GB on one Pest test (switched off; the file is excluded only after a check that it names no probe). `run_bench_v3.ts --truth` refuses until all 13 sampled items carry `human_checked: agree | corrected` (`npx vitest run tests/scripts/code_graph/bench_v3_truth_file.test.ts tests/scripts/code_graph/oracle_truth.test.ts` -> 0). Open: the 20 % human check, and the human-required and partial items — that is a person's work, not the agent's.
 - [x] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
       `internal/bench`, mapping relation and confidence names). F = floor / floor + native
       tools. No "fused" arm.
@@ -176,6 +177,7 @@ tracked.
       maintainer's machine, recorded without the tool's name. Census baseline:
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
       > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
+      > note: 2026-11-05, later — the indexer blocker is gone: `internal/bench/code-graph/oracle/oracle.sh run <dir> scip-typescript index --output /subject/.oracle/index.scip` produces the index `edge_oracle.ts --scip` reads, inside the pinned image with no network, and the 2.1 registration is committed. Still open: the measurement itself, and PHP edges — the PHP oracle is Psalm, whose references `edge_oracle.ts` does not read yet (it reads SCIP only).
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
