@@ -83,7 +83,7 @@ says so.
       $0.061, rules-kernel-dc $0.074, rules-balanced $0.104, package $0.262,
       profile-full $0.267.
       verify: `./scripts-run src/scripts/bench_ab_v2_stats internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json` -> /package lift/
-- [x] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.2 Strong host.** All 30 corpus tasks, `--arms vanilla,package <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/gate-violation-baselines.json -->
       --seeds 3 --model claude-sonnet-4-6 --budget 5 --max-usd 75`, seeds
       lowered only if 2.1's per-run cost projects past the cap.
       **Done, $52.50 of $75.** Report `2026-11-04T22-57-15Z` (34 tasks, 204
@@ -99,7 +99,7 @@ says so.
 
 ## Phase 3 — Report and residue
 
-- [x] **3.1 Post-repair sections in `docs/benchmark.md`.** New sections beside <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.1 Post-repair sections in `docs/benchmark.md`.** New sections beside <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/gate-violation-baselines.json -->
       the pre-repair ones, never replacing them; each names its run id, scorer
       epoch, host, seeds and spend. `docs/CLAIMS.md` rows backed by the old
       numbers gain the post-repair figure or are narrowed to it.
@@ -108,7 +108,7 @@ says so.
       narrowed to the post-repair figures, and README, message house and
       `docs/proof.md` follow them.
       verify: `./scripts-run src/scripts/check_claims` -> /check_claims: 48 markered/
-- [x] **3.2 Residue roadmaps.** One `road-to-<observed-failure>` per failure <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.2 Residue roadmaps.** One `road-to-<observed-failure>` per failure <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/gate-violation-baselines.json -->
       cluster with task ids and a reproducing artifact (the preserved
       `final_files`); nothing from a score delta alone. Already known before
       the sweeps: the discipline profile is inert on Claude while the settings
