@@ -153,10 +153,10 @@ tracked.
       oracle — the files the real fix commit touched, for suite F and for 3.5. Truth is
       never derived from the graph under test (a recall of 1.0 against graph-derived
       truth is circular, which S1's own benchmark notes).
-- [ ] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
+- [x] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
       `internal/bench`, mapping relation and confidence names). F = floor / floor + native
       tools. No "fused" arm.
-      > note: the arms are defined in the v3 registration; open is the v3 runner (it must refuse on a hash mismatch) and the foreign `graph.json` reader under `internal/bench`.
+      > note: closed 2026-11-05 — `internal/bench/code-graph/run_bench_v3.ts` (refuses on a hash or pin mismatch; foreign arm ABSENT without an export, never zero; PENDING truth never scored) and `foreign_reader.ts` (reuses `adaptForeignGraph`). verify: `npx vitest run tests/scripts/code_graph/bench_v3_runner.test.ts` -> 0. First raw run on both pinned subjects recorded in `internal/bench/reports/code-graph-v3-traces-2026-11-05/`: 39 of 45 PENDING truth; native `tests-for` empty on 4 of 5 (diagnosis waits for the oracle). Truth enters as a new dated truth file, since the corpus is hash-bound.
 - [x] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
       calibration diagnostic (predicted class vs gold, overconfidence rate); F primary
       **solved per 100k tokens ≥ 1.25× floor**, solved per minute, escaped-regression rate.
