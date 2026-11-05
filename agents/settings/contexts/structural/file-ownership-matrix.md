@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **649**
-- Edges (incl. self-WRITE): **2481**
+- Edges (incl. self-WRITE): **2482**
 
 ## READ_ONLY edges
 
@@ -254,6 +254,7 @@
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/rules/lethal-trifecta-guard.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/rules/role-mode-adherence.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/contexts/execution/orchestration-telemetry.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/subagent-steering.md` | `.agent-src.uncondensed/contexts/execution/subagent-response-contract.md` | `body_link` | 1 |

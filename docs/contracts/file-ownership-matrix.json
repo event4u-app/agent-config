@@ -6101,6 +6101,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-steering.md",
       "target": ".agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md",
       "type": "READ_ONLY",

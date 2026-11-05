@@ -44,12 +44,12 @@ and no spawn template has a knowledge slot.
 
 ## Phase 1 — The audience contract
 
-- [x] **1.1 Audience table.** One table in `subagent-spawn-contract.md`
+- [x] **1.1 Audience table.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> One table in `subagent-spawn-contract.md`
       (orchestrator / non-fork / fork / judge-seat / unpaid / cheap-paid), cited
       from the council skill's neutrality section; forks get nothing, judges
       facts with provenance, unpaid routes closed-vocabulary conventions only.
       verify: reference check and a test that the council skill links the anchor.
-- [x] **1.2 Knowledge slot in implementer templates.** `{{knowledge_refs}}`,
+- [x] **1.2 Knowledge slot in implementer templates.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> `{{knowledge_refs}}`,
       labelled as leads, in implementer and researcher templates; absent from
       competitive, debate and adversarial ones.
       verify: `tests/scripts/subagent_prompt_audience.test.ts`.
@@ -58,17 +58,17 @@ and no spawn template has a knowledge slot.
 
 ## Phase 2 — Provenance and a shadow baseline
 
-- [x] **2.1 `writer` and `taint` on intake.** `memory_signal.ts`: a legacy
+- [x] **2.1 `writer` and `taint` on intake.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> `memory_signal.ts`: a legacy
       line reads `writer: unknown`; unpaid and council-seat writers are
       refused; an `external_read` taint is excluded from aggregation.
       verify: three red-first unit tests.
       Landed in both twins (`src/scripts/` and the consumer template); the
       taint is honoured where intake is aggregated, `learning_sidecar.readSignals`.
-- [x] **2.2 Record-only guard on child writes to `agents/memory/`.** Never
+- [x] **2.2 Record-only guard on child writes to `agents/memory/`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> Never
       denies.
       verify: a payload with `agent_id` and a Write produces one record; without
       `agent_id` none.
-- [x] **2.3 Counts-only slice shadow.** At the orchestrator's `Agent`
+- [x] **2.3 Counts-only slice shadow.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> At the orchestrator's `Agent`
       pre_tool_use, compute the slice and log `{ref_count, dropped, est_tokens}`;
       deliver nothing.
       verify: a fixture naming two curated paths logs `ref_count: 2` and emits
