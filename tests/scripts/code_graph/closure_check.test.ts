@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { closureFromEdges, edgeKey, parseEdgeRulings, standingEdges, type Edge } from '../../../internal/bench/code-graph/closure_check.js';
+import { bothValidEdges, closureFromEdges, edgeKey, fakesItsChain, parseEdgeRulings, standingEdges, type Edge } from '../../../internal/bench/code-graph/closure_check.js';
 
 const target = { file: 'app/Guard.php', line: 10, symbol: 'Guard::check' };
 const e = (from: string, to: string, toLine = 1, toSymbol = 'X::y'): Edge => ({ from_file: from, from_line: 1, to_file: to, to_line: toLine, to_symbol: toSymbol, kind: 'call' });
@@ -103,5 +103,29 @@ describe('standingEdges', () => {
             google: new Map([[edgeKey(a), 'INVALID'], [edgeKey(b), 'UNSURE'], [edgeKey(c), 'VALID']]),
         } as const;
         expect(standingEdges([a, b, c], verdicts).map(edgeKey)).toEqual([edgeKey(a), edgeKey(c)]);
+    });
+});
+
+describe('bothValidEdges', () => {
+    it('keeps only edges every judge ruled VALID — the two-voice-free subset', () => {
+        const [a, b] = chain as [Edge, Edge];
+        const verdicts = {
+            openai: new Map([[edgeKey(a), 'VALID'], [edgeKey(b), 'UNSURE']]),
+            google: new Map([[edgeKey(a), 'VALID'], [edgeKey(b), 'VALID']]),
+        } as const;
+        expect(bothValidEdges([a, b], verdicts).map(edgeKey)).toEqual([edgeKey(a)]);
+    });
+});
+
+describe('fakesItsChain', () => {
+    it('flags a test that fakes the queue, bus or event dispatcher, or mocks a class', () => {
+        for (const src of ['Queue::fake();', 'Bus::fake([X::class]);', 'Event::fake ();', '$this->mock(Service::class, fn () => null);', '$this->partialMock(A::class);', 'Mockery::mock(A::class);', '$this->createMock(A::class);']) {
+            expect(fakesItsChain(src), src).toBe(true);
+        }
+    });
+
+    it('does not flag an HTTP fake or a plain test', () => {
+        expect(fakesItsChain('Http::fake(); $this->post("/x");')).toBe(false);
+        expect(fakesItsChain('$this->post("/api/emails")->assertOk();')).toBe(false);
     });
 });

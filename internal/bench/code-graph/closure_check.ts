@@ -62,6 +62,21 @@ export function parseEdgeRulings(text: string, ids: Record<string, string>): Map
     return out;
 }
 
+/** Edges every judge rules VALID — what remains when two-voice edges are set aside (§ Residual strata). */
+export function bothValidEdges(edges: Edge[], verdicts: Record<string, ReadonlyMap<string, EdgeVerdict | string>>): Edge[] {
+    const judges = Object.values(verdicts);
+    return edges.filter((e) => judges.length > 0 && judges.every((m) => m.get(edgeKey(e)) === 'VALID'));
+}
+
+/**
+ * A test whose source fakes the queue, bus or event dispatcher, or mocks a class, may
+ * reach the target only statically (§ Residual strata item 3). An HTTP fake is not one:
+ * it stubs the outbound call, not the chain in front of it.
+ */
+export function fakesItsChain(source: string): boolean {
+    return /\b(?:Queue|Bus|Event)::fake\s*\(|\$this->(?:mock|partialMock)\s*\(|\bMockery::mock\s*\(|->createMock\s*\(/.test(source);
+}
+
 /** Edges the reader states that at least one judge rules VALID (two of three). */
 export function standingEdges(edges: Edge[], verdicts: Record<string, ReadonlyMap<string, EdgeVerdict | string>>): Edge[] {
     return edges.filter((e) => Object.values(verdicts).some((m) => m.get(edgeKey(e)) === 'VALID'));
