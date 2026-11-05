@@ -51,6 +51,14 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import {
+    buildReport,
+    deletedTestReading,
+    type FindingLabels,
+    type GraphBackedReport,
+    openDetectorGraph,
+} from './_lib/graph_detector_edges.js';
+import type { LoadedGraph } from './code_graph/query.js';
 import { isTestPath } from './_lib/test_path.js';
 import { parseUnifiedDiff, type DiffFile, type DiffHunk, type DiffLine } from './_lib/unified_diff.js';
 import {
@@ -372,6 +380,27 @@ export function render(a: Analysis): string {
     return lines.join('\n');
 }
 
+/* ----------------------------------------------------------- graph-backed */
+
+/**
+ * `road-to-a-graph-that-wins` 3.2: a deleted test whose subject keeps an
+ * accepted caller. Beside the plain verdict, never instead of it —
+ * `plain_outcome` is `analyze`'s, untouched.
+ */
+export function graphBackedTampering(
+    diffText: string,
+    message: string,
+    g: LoadedGraph | null,
+    labels: FindingLabels = {},
+): GraphBackedReport & { plain_outcome: LoopOutcome } {
+    const plain = analyze(diffText, message, null);
+    const deleted = plain.findings.filter((f) => f.id === 'test-file-deleted');
+    return {
+        plain_outcome: plain.outcome,
+        ...buildReport(g, deleted, (graph, f) => deletedTestReading(graph, f.file), labels),
+    };
+}
+
 /* ----------------------------------------------------------------- corpus */
 
 interface Fixture {
@@ -480,6 +509,7 @@ function usage(): never {
     process.stderr.write(
         'usage: detect_verification_tampering --diff <file> [--message <s>|--message-file <f>]\n' +
             '                                    [--verdict <verdict.json>] [--json]\n' +
+            '                                    [--graph-backed] [--graph <graph.json>] [--labels <labels.json>]\n' +
             '       detect_verification_tampering --corpus | --self-test\n',
     );
     process.exit(2);
@@ -493,6 +523,9 @@ export function main(argv: readonly string[]): number {
     let message = '';
     let verdictPath: string | null = null;
     let json = false;
+    let graphBacked = false;
+    let graphPath: string | undefined;
+    let labelsPath: string | null = null;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i];
         if (a === '--diff') { diffPath = argv[++i] ?? null; }
@@ -500,6 +533,9 @@ export function main(argv: readonly string[]): number {
         else if (a === '--message-file') { message = fs.readFileSync(argv[++i] ?? '', 'utf-8'); }
         else if (a === '--verdict') { verdictPath = argv[++i] ?? null; }
         else if (a === '--json') { json = true; }
+        else if (a === '--graph-backed') { graphBacked = true; }
+        else if (a === '--graph') { graphBacked = true; graphPath = argv[++i]; }
+        else if (a === '--labels') { labelsPath = argv[++i] ?? null; }
         else usage();
     }
     if (diffPath === null) usage();
@@ -513,6 +549,18 @@ export function main(argv: readonly string[]): number {
     process.stdout.write(
         (json ? JSON.stringify(analysis, null, 2) : render(analysis)) + '\n',
     );
+    if (graphBacked) {
+        const g = openDetectorGraph(process.cwd(), graphPath);
+        const labels =
+            labelsPath === null ? {} : (JSON.parse(fs.readFileSync(labelsPath, 'utf-8')) as FindingLabels);
+        try {
+            const report = graphBackedTampering(diffText, message, g, labels);
+            process.stdout.write(`graph_backed: ${JSON.stringify(report, null, 2)}\n`);
+        } finally {
+            g?.close();
+        }
+    }
+    // The graph-backed report never moves the exit code; promotion is 3.5's call.
     return exitCodeFor(analysis);
 }
 

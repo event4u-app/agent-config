@@ -191,10 +191,12 @@ tracked.
       `--include-guesses`, marked per line. Fixture: one `name-lookup`, one `dynamic`
       and one `import-specifier` edge; without the flag all six return only the third.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'guess edges withheld by every consumer'` -> 0
-- [ ] 3.2 Detectors read edges: `detect_verification_tampering` + "test deleted whose
+- [x] 3.2 Detectors read edges: `detect_verification_tampering` + "test deleted whose
       subject keeps ≥ 1 accepted caller"; `detect_silent_catch` + "catch on an accepted
       path from a route/entry point". Each records the edges used; `paired_verdict`
       against the plain detector.
+      verify: `npx vitest run tests/scripts/graph_backed_detectors.test.ts` -> 0
+      > note: `_lib/graph_detector_edges.ts`, behind `--graph-backed` on both CLIs; the plain verdict and exit code are unchanged. The paired verdict reads `underpowered` until labelled rows exist (3.5 supplies them), so AC-3 stays open. "Entry point" is a `route` node only.
 - [x] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
       checksum; a change touching them flips the closure to `stale` and re-requests
       disposition (file-level; symbol-level when the finding schema gains `symbols[]`).
@@ -356,7 +358,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
 - [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
 - [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
-- [ ] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
+- [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
 - [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
 - [ ] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
 - [ ] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
