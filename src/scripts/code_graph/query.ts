@@ -16,7 +16,7 @@ import {
     openGraphIndex,
 } from './sqlite_store.js';
 import type { ConfirmState } from './map_areas.js';
-import { type CodeEdge, type CodeGraph, type CodeNode, isStatedResolution, type Relation } from './types.js';
+import { type CodeEdge, type CodeGraph, type CodeNode, isStatedResolution, type LaneRunRecord, type Relation } from './types.js';
 import { validateGraph } from './validate.js';
 import { adaptForeignGraph, looksForeign } from './foreign.js';
 
@@ -85,6 +85,12 @@ export interface LoadedGraph {
     lex(): LexicalIndex;
     /** Nodes of one kind in the whole graph: the population a filtered or empty answer is stated against. */
     kindCount(kind: string): number;
+    /**
+     * The build's lane record — a skipped or failed lane is `unknown`, never
+     * absent. A function because on the indexed path it is a meta row parsed on
+     * demand, and a query that never asks must not pay the parse.
+     */
+    lanesRun(): readonly LaneRunRecord[] | undefined;
     /** Release any handle the store holds. No-op for the in-memory path. */
     close(): void;
 }
@@ -101,10 +107,24 @@ export interface LoadedGraph {
  * cheap to remove and expensive to leave.
  */
 export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: string): LoadedGraph {
+    // The node rows carry no `partial` column; the twin keeps the partial ids
+    // in a meta row instead (`review_risk.ts` `indexRiskSource` reads the same
+    // one). Read once, and parsed only when non-empty, so a graph with no
+    // partial file pays no parse on the indexed path.
+    let partial: ReadonlySet<string> | null = null;
+    const isPartial = (id: string): boolean => {
+        if (partial === null) {
+            const raw = index.meta('partial');
+            partial = raw === undefined || raw === '[]' ? new Set() : new Set(JSON.parse(raw) as string[]);
+        }
+        return partial.has(id);
+    };
+    let lanes: { v: LaneRunRecord[] | undefined } | null = null;
     const nodeCache = new Map<string, CodeNode | undefined>();
     const readNode = (id: string): CodeNode | undefined => {
         if (nodeCache.has(id)) return nodeCache.get(id);
         const n = index.getNode(id);
+        if (n && isPartial(id)) n.partial = true;
         nodeCache.set(id, n);
         return n;
     };
@@ -124,8 +144,24 @@ export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: 
             return lexical;
         },
         kindCount: (kind) => index.countKind(kind),
+        lanesRun: () => {
+            if (lanes === null) {
+                const raw = index.meta('lanes_run');
+                lanes = { v: raw === undefined ? undefined : ((JSON.parse(raw) as LaneRunRecord[] | null) ?? undefined) };
+            }
+            return lanes.v;
+        },
         close: () => index.close(),
     };
+}
+
+/**
+ * Whether the twin carries the two graph-level facts its row tables cannot:
+ * `lanes_run` and `partial`. A twin written before them would answer a partial
+ * parse as complete and a skipped lane as absent, so it is not read from.
+ */
+function twinHasGraphFacts(index: GraphIndex): boolean {
+    return index.meta('lanes_run') !== undefined && index.meta('partial') !== undefined;
 }
 
 /**
@@ -146,9 +182,14 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     const index = openGraphIndex(graphPath);
     // `openGraphIndex` declines on exactly the conditions under which the twin
     // is stale, absent or corrupt — so a handle here means it needs no re-emit.
-    const twinCurrent = index !== null;
+    let twinCurrent = index !== null;
     if (index) {
-        if (index.edgeCount >= indexedReadMinEdges()) return indexBackedGraph(index, source, graphPath);
+        if (index.edgeCount >= indexedReadMinEdges()) {
+            if (twinHasGraphFacts(index)) return indexBackedGraph(index, source, graphPath);
+            // A twin from before the graph-level facts: answer from the JSON
+            // (never a silent `0`) and re-emit it below so the next read is indexed.
+            twinCurrent = false;
+        }
         // Small graph: the in-memory path is cheaper. Release the handle rather
         // than leaking a database for the life of the process.
         index.close();
@@ -211,6 +252,7 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
         allNodeIds: () => graph.nodes.map((n) => n.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
         lex: () => lex,
         kindCount: (kind) => graph.nodes.filter((x) => x.kind === kind).length,
+        lanesRun: () => graph.lanes_run,
         close: () => {
             /* nothing held */
         },
