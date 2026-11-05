@@ -150,7 +150,7 @@ The PHP graders now run without PHP on the host. `BENCH_PHP_BIN=internal/bench/c
 - No single rule removed the questions in the leave-one-out. Dropping `ask-when-uncertain`, `no-cheap-questions` or `downstream-changes` lowered them from 6 of 8 to 2 of 8, which is not separable from noise at that size.
 - At 40 runs per arm, only `ask-when-uncertain` moves the **blind** questions: 7 of 40 with the full kernel, 1 of 40 without it (Fisher one-sided p = 0.028; p ≈ 0.085 after correcting for the three candidates tested). All questions together fall from 18 to 13 of 40 (p = 0.18). Dropping `no-cheap-questions` (9 of 40 blind) or `downstream-changes` (7 of 40) changes nothing.
 
-So `ask-when-uncertain` makes Haiku ask before it has looked. Asking after a look on `trapC-ambig-01`, where two config files fit the request, is the behaviour the task's discipline oracle accepts, and that rule is not implicated in it. Nothing is changed on this result alone: the rule is a kernel rule, and the next step is a wording that puts looking before asking, measured against this baseline (roadmap `road-to-proof-where-the-owner-sees-it` 1.6).
+So `ask-when-uncertain` makes Haiku ask before it has looked. Asking after a look on `trapC-ambig-01`, where two config files fit the request, is the behavior the task's discipline oracle accepts, and that rule is not implicated in it. Nothing is changed on this result alone: the rule is a kernel rule, and the next step is a wording that puts looking before asking, measured against this baseline (roadmap `road-to-proof-where-the-owner-sees-it` 1.6).
 
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 
