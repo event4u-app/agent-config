@@ -161,12 +161,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const v = flag(argv, name);
         return v === null ? undefined : Number(v);
     };
+    const power = num('power');
+    const alpha = num('alpha');
+    const maxPairs = num('max-pairs');
     const plan = planPower({
         discordance,
         share: Number(share),
-        power: num('power'),
-        alpha: num('alpha'),
-        maxPairs: num('max-pairs'),
+        ...(power === undefined ? {} : { power }),
+        ...(alpha === undefined ? {} : { alpha }),
+        ...(maxPairs === undefined ? {} : { maxPairs }),
     });
     if (argv.includes('--json')) {
         process.stdout.write(`${JSON.stringify({ discordance, ...plan }, null, 2)}\n`);
