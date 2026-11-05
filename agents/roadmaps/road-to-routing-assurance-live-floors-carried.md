@@ -55,7 +55,9 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
       fixture pilot restored `type-design` 0/3 → 3/3. The council's staged plan
       for the rest is in `routing-carried-units-20261105.md`. Fixture series v1
       (`routing-fixture-v1-20261105.md`): 2 of 5 PASSED; `react-shadcn-ui` and
-      `project-analysis-core` answered directly; `type-design` open.
+      `project-analysis-core` answered directly. `type-design` 9/10 at n=10
+      (`routing-type-design-n10-20261105.md`), closed; council round 3: judge
+      the host's direct output against each skill's stated value first.
 
 ## Phase 2 — the suggest-without-read gap (carried 4.4)
 
