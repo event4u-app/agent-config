@@ -241,10 +241,10 @@ staleness — so a narrow answer is distinguishable from a decoupled one:
 
 `agent-config code-graph prove [--scorecard P] [--out P]` is not a diff verb: it
 emits the evidence bundle behind the engine's benchmark claims from
-`internal/bench/scorecard.yaml` — per row the artefact, its SHA-256 and date,
-`present` / `missing` / `expired`, the bar and the verdict the artefact states —
+`internal/bench/scorecard.yaml` — per row the artifact, its SHA-256 and date,
+`present` / `missing` / `expired`, the bar and the verdict the artifact states —
 plus the corpus SHA, the oracle version, the graph's `resolved_via` histogram and
-its staleness. It never scores; a missing artefact is named, never omitted.
+its staleness. It never scores; a missing artifact is named, never omitted.
 
 These answers reach an agent over MCP without shelling out, and the mapping is
 **not** one tool per verb:

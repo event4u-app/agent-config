@@ -590,6 +590,15 @@ export interface DeadResult extends VerbReport {
     complete: boolean;
 }
 
+/** The answering body of `dead`'s text rendering: exclusions, partial files, the list. */
+export function deadBodyLines(res: DeadResult): string[] {
+    const lines = [`excluded as declared entry points: ${res.excluded.length}`];
+    if (res.partial_files.length) lines.push(`partial files (parsed with errors, a call from them may be missing — not complete): ${res.partial_files.join(', ')}`);
+    lines.push(`dead (${res.dead.length}${res.complete ? '' : ', candidates, not proof'}):`);
+    for (const d of res.dead) lines.push(`  ${d}`);
+    return lines;
+}
+
 /**
  * Symbols with zero accepted in-edges, minus declared entry points.
  *

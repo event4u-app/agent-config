@@ -271,6 +271,16 @@ function lineText(root: string, file: string, line: number, cache: Map<string, s
     return cache.get(file)?.[line - 1] ?? null;
 }
 
+/** `reviewRisk` over the graph file at `jsonPath`, read through the index when one qualifies. */
+export function reviewRiskAt(jsonPath: string, root: string, rev: string, hunks: readonly Hunk[], opts: WalkOptions = {}): ReviewRisk {
+    const loaded = loadRiskSource(jsonPath);
+    try {
+        return reviewRisk(root, loaded.source, rev, hunks, RISK_WEIGHTS, opts);
+    } finally {
+        loaded.close();
+    }
+}
+
 export function reviewRisk(
     root: string,
     graph: CodeGraph | RiskSource,
