@@ -21,7 +21,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { container_fields, quota_brake, trial_container } from '../../src/scripts/_lib/bench_ab_container.js';
+import { container_fields, is_quota_exhausted, quota_brake, trial_container } from '../../src/scripts/_lib/bench_ab_container.js';
 import { primary_checkout_root } from '../../src/scripts/_lib/bench_ab_workspace.js';
 
 import {
@@ -778,5 +778,17 @@ describe('container controls', () => {
         expect(hostSpec).toEqual(ARMS['vanilla']);
         expect(ARMS['vanilla-host']?.host_only).toBe(true);
         expect(lift_audit_arms(['vanilla', 'vanilla-b', 'vanilla-host'])).toEqual([]);
+    });
+});
+
+describe('brake and resume', () => {
+    it('brake: a run that did no work is not checkpointed, so a resume re-runs it', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ckpt-'));
+        const ckpt = { path: path.join(dir, 'c.jsonl'), completed: new Map() };
+        const dead = { errored: true, reason: 'error', transcript: "You've hit your weekly limit", tokens_breakdown: {} };
+        const live = { errored: false, tokens_breakdown: { input_tokens: 10 } };
+        let n = 0;
+        collect_records([{ id: 't' }], ['vanilla'], 4, () => ({ ...(n++ === 0 ? live : dead) }), ckpt, () => undefined, quota_brake(3), (r) => !is_quota_exhausted(r));
+        expect(load_checkpoint(ckpt.path).size).toBe(1);
     });
 });

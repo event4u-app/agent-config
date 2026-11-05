@@ -54,7 +54,7 @@ import * as scoring from './_lib/bench_ab_scoring_v2.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { plugin_scope, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
-import { container_fields, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { container_fields, is_quota_exhausted, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
 import { container_context } from './bench_ab_images.js';
 import {
     SweepBudget,
@@ -822,6 +822,8 @@ export function collect_records(
      * abort costs no completed work.
      */
     guard: ((record: Dict) => string | null) | null = null,
+    /** A run this rejects is reported but not checkpointed, so a resume re-runs it. */
+    keep: (record: Dict) => boolean = () => true,
 ): { records: Dict[]; executed: number; reused: number; aborted: string | null } {
     const total = tasks.length * arms.length * seeds;
     let done = 0;
@@ -849,7 +851,7 @@ export function collect_records(
                 const r = run_fn(task, arm, seed);
                 r['seed'] = seed;
                 executed += 1;
-                if (ckpt) {
+                if (ckpt && keep(r)) {
                     append_checkpoint(ckpt.path, key, r);
                 }
                 seed_runs.push(r);
@@ -1020,6 +1022,7 @@ export function main(argv: string[] | null = null): number {
         ckpt,
         undefined,
         (r) => budget.add(r['tokens_breakdown'] as TokensBreakdown | undefined) ?? brake(r),
+        (r) => !is_quota_exhausted(r),
     );
 
     // Delta #1 — the activation audit. Runs BEFORE the report is judged usable:
@@ -1061,7 +1064,7 @@ export function main(argv: string[] | null = null): number {
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
     // The paired report now holds everything — retire the checkpoint so a
     // finished sweep leaves no residue and a later identical sweep starts fresh.
-    if (ckpt && fs.existsSync(ckpt.path)) {
+    if (ckpt && !aborted && fs.existsSync(ckpt.path)) {
         fs.rmSync(ckpt.path);
     }
     process.stdout.write(
