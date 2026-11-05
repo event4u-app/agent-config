@@ -195,9 +195,11 @@ tracked.
       subject keeps ≥ 1 accepted caller"; `detect_silent_catch` + "catch on an accepted
       path from a route/entry point". Each records the edges used; `paired_verdict`
       against the plain detector.
-- [ ] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
+- [x] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
       checksum; a change touching them flips the closure to `stale` and re-requests
       disposition (file-level; symbol-level when the finding schema gains `symbols[]`).
+      verify: `npx vitest run tests/scripts/finding_invalidation.test.ts -t 'edited affected file'` -> 0
+      > note: `_lib/finding_invalidation.ts` + the gate wiring in `check_finding_dispositions.ts`; nothing writes the two fields yet (`--ingest` does not record them).
 - [ ] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
       rows naming a path/symbol → code/test nodes.
 - [ ] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);

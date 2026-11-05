@@ -174,6 +174,16 @@
             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
             "description": "ISO calendar date of the disposition."
           },
+          "affected_files": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "description": "Repo-relative files a closed disposition is about. Optional: a row without it behaves exactly as before. With `evidence_checksum` it lets check_finding_dispositions notice that the code moved on under a closure — the row is then judged `stale` (a computed verdict, never written back) and needs a fresh disposition. File-level: an edit anywhere in a listed file invalidates the closure until the schema gains `symbols[]`."
+          },
+          "evidence_checksum": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "sha256 over `affected_files` at closure time, computed by `_lib/finding_invalidation.evidenceChecksum` (paths sorted, each entry length-prefixed). Required whenever `affected_files` is present — enforced in the gate, which treats a missing checksum as stale, because the subset validator resolves no `dependencies`."
+          },
           "contradicted": {
             "type": "string",
             "description": "The tree's mechanical disproof of the finding's premise, written by self_review_gate.annotateContradicted when a deletion claim names an artifact the range does not delete and the working tree still holds. A finding carrying this is NOT merge-blocking in either gate (self_review_gate.classifyBlocking and check_finding_dispositions.isBlocking both read it), and it is still reported so a human sees what was claimed and why it was set aside."

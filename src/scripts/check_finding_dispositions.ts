@@ -20,6 +20,9 @@
  *       comment reports must exist in the ledger — an un-ingested blocking
  *       finding is red. Deleting the comment can evade the trigger, but the
  *       committed ledger stays the durable record either way.
+ *   --root <dir>                              tree that a closure's
+ *       `affected_files` resolve against (default: the repo root). A closure
+ *       whose files no longer match its `evidence_checksum` is judged `stale`.
  *   --ingest <findings.json> --release X.Y.Z  merge findings (from
  *       self_review_gate --findings-out) into the ledger with an empty
  *       disposition, so validation is red until a human fills it.
@@ -54,6 +57,13 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { VERIFY_ARROW_SOURCE } from '../agent-src/scripts/verify_clause.js';
+import {
+    STALE_STATUS,
+    describeStale,
+    fsFileReader,
+    invalidateClosures,
+    staleClosures,
+} from './_lib/finding_invalidation.js';
 import { coverageLabel } from './_lib/review_coverage.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
@@ -101,6 +111,14 @@ export interface LedgerFinding {
      * blocking — see `isBlocking`.
      */
     contradicted?: string;
+    /**
+     * Repo-relative files the disposition is about. With `evidence_checksum`
+     * they let the gate notice the code moved on under a closure — see
+     * `_lib/finding_invalidation.ts`.
+     */
+    affected_files?: string[];
+    /** `evidenceChecksum(affected_files)` at closure time. */
+    evidence_checksum?: string;
 }
 
 export interface Ledger {
@@ -350,6 +368,10 @@ export function missing_dispositions(
         const status = (f.status ?? '').trim();
         if (!status) {
             problems.push(`${label}: no disposition status`);
+            continue;
+        }
+        if (status === STALE_STATUS) {
+            problems.push(`${label}: closure is stale — an affected file changed since disposition; re-disposition required`);
             continue;
         }
         if (status === 'still_open') {
@@ -812,12 +834,14 @@ function main(argv: readonly string[]): number {
     let dir = path.join(REPO_ROOT, LEDGER_DIR);
     let pr: string | null = null;
     let ingest: string | null = null;
+    let root = REPO_ROOT;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--release') release = argv[++i] ?? null;
         else if (a === '--dir') dir = argv[++i] ?? dir;
         else if (a === '--pr') pr = argv[++i] ?? null;
         else if (a === '--ingest') ingest = argv[++i] ?? null;
+        else if (a === '--root') root = argv[++i] ?? root;
         else {
             process.stderr.write(`unknown argument: ${a}\n`);
             return 2;
@@ -971,6 +995,18 @@ function main(argv: readonly string[]): number {
             return 1;
         }
         throw exc;
+    }
+
+    // Stale closures are judged as undispositioned; the committed file is left
+    // alone so the record of what was decided survives the re-disposition.
+    const read = fsFileReader(root);
+    const stale = staleClosures(ledger.findings, read);
+    ledger = { ...ledger, findings: invalidateClosures(ledger.findings, read) };
+    if (stale.length > 0) {
+        process.stderr.write(`⚠️   ${String(stale.length)} stale closure(s) for ${release}:\n`);
+        for (const s of stale) {
+            process.stderr.write(`    - ${describeStale(s)}\n`);
+        }
     }
 
     const problems = missing_dispositions(ledger.findings, release);
