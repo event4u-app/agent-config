@@ -76,3 +76,20 @@ describe('parsePriceRows', () => {
         expect(rows).toEqual([{ tier: 'claude-haiku-5-5', model: 'claude-haiku-5-5', sourced_on: '2026-10-23', source: 'https://example.com', ...RATES }]);
     });
 });
+
+describe('sweepRates', () => {
+    const FRESH_YAML =
+        'version: 1\nmodels:\n  - tier: claude-haiku-5-5\n    model: claude-haiku-5-5\n    sourced_on: 2026-10-23\n    input: 0.10\n    output: 0.50\n    cache_write: 0.125\n    cache_read: 0.01\n';
+
+    it('returns the served model’s rates and no refusal from a fresh file', () => {
+        expect(sweepRates(FRESH_YAML, 'claude-haiku-5-5', AS_OF)).toEqual({ rates: RATES, why: null });
+    });
+
+    it('returns no rates and the refusal for a stale row, an unpriced model, or an empty file', () => {
+        const stale = sweepRates(FRESH_YAML, 'claude-haiku-5-5', new Date(AS_OF.getTime() + (PRICE_MAX_AGE_DAYS + 1) * 86_400_000));
+        expect(stale.rates).toBeNull();
+        expect(stale.why).toMatch(/days old/);
+        expect(sweepRates(FRESH_YAML, 'claude-sonnet-5-5', AS_OF).rates).toBeNull();
+        expect(sweepRates('', 'claude-haiku-5-5', AS_OF).why).not.toBeNull();
+    });
+});

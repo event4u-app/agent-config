@@ -92,7 +92,7 @@ function isoDate(v: unknown): string {
 
 /** Rows of a `pricing.yaml` document; a row without a tier is skipped. */
 export function parsePriceRows(yamlText: string): PriceRow[] {
-    const doc = yamlLoad(yamlText) as { models?: unknown } | null;
+    const doc = (yamlText.trim() ? yamlLoad(yamlText) : null) as { models?: unknown } | null;
     const models = Array.isArray(doc?.models) ? (doc.models as Record<string, unknown>[]) : [];
     const rows: PriceRow[] = [];
     for (const m of models) {
