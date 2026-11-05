@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: code-intelligence
-description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'."
+description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first; cheaper, not better. Graph-first classes: none; grep routine. Also 'call graph'."
 domain: engineering
 workspaces:
   - engineering
@@ -17,8 +17,9 @@ requires_skills:
 > imports Z*, *what breaks if I change this symbol* — ask an index that already
 > exists before rebuilding the relationship by hand: it is already built, its
 > answer is structured, and it costs a fraction of the tokens. It is **not** more
-> precise than a blind `grep` — measured on this repository's own source, zero
-> classes met the win bar (§ Measured twice) — so grep is the arm you fall back
+> precise than a blind `grep` — measured on this repository's own source and on
+> two third-party Laravel subjects, zero classes met the win bar (§ Measured twice,
+> § v3) — so grep is the arm you fall back
 > to routinely and **with a stated reason**, not grudgingly. This skill routes
 > such questions to the native code-graph engine (ADR-124, Class A) or a
 > consumer-shipped index first. It is the executable side of
@@ -186,6 +187,34 @@ consumer-shipped SCIP index. Literal-string probes are reported as a separate
 `capability-boundary` class with no floor derived from them: a symbol index
 cannot answer them at all, which is where grep stays necessary rather than a
 defect in the engine.
+
+## v3 on third-party subjects (2026-11-05) — no class won
+
+`internal/bench/reports/code-graph-v3-2026-11-05-scored.md`, registered in
+`internal/bench/code-graph/PREREGISTRATION-v3-2026-11-05.md` before the engine read
+either subject (`unopim`, `larasend`; PHP carries 33 of the 39 scored questions). Same
+bar: a class is graph-first only on +10 pp recall at no more than 5 pp precision loss.
+
+| Class | grep P / R | native P / R | Verdict |
+|---|---|---|---|
+| precise-semantics | 0.665 / 0.813 | 0.519 / 0.362 | NULL |
+| route-trace (`unopim`, verdict-bearing) | 0.106 / 0.861 | 0.464 / 0.248 | TIE |
+| model-table | 0.083 / 0.361 | 0.917 / 0.361 | TIE |
+| tests-for | 0.200 / 0.059 | 0.200 / 0.012 | TIE |
+| change-impact | 0.792 / 0.138 | 0.353 / 0.322 | NULL |
+| change-impact-xplane | 0 / 0 | 0 / 0 | TIE |
+
+**Class list.** Graph-first: **none**. Grep-routine: **all six**. Read the TIEs for what
+they are: on route-trace and model-table the engine is far more precise and recalls
+less, and recall is what the bar measures; on change-impact it recalls more and loses
+the precision floor. The suite-A regression (v2 corpus, unchanged) tied on all four of
+its classes.
+
+Two cautions travel with these numbers. The truth was checked by a reader and two
+judges from other model providers, not by a person (registration § The owner deviation
+for the check); its strict stratum, without two-voice and faked files, turns no verdict.
+And the agentic suite F has not run — its result is published separately and does not
+substitute for a class win.
 
 ## Staleness delivery — which hosts get it for free, and which do not
 
