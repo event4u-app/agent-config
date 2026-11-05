@@ -348,7 +348,7 @@ export function main(argv: string[]): number {
 }
 
 export function truthFor(q: Question, seeds: Map<string, string[]>, refs: Refs, enclosing: Enclosing, docs: ScipDocument[], hasVue: boolean, maxDepth: number): TruthItem {
-    const base = { id: q.id, hop_stratum_corpus: q.hop_stratum };
+    const base = { id: q.id, ...(q.hop_stratum !== undefined ? { hop_stratum_corpus: q.hop_stratum } : {}) };
     if (HUMAN_CLASSES.has(q.class)) {
         return { ...base, status: 'human-required', truth_via: 'human', files: [], open: ['no reference engine emits this relation (registration § Truth)'] };
     }
