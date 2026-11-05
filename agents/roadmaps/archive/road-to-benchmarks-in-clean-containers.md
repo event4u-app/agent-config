@@ -78,7 +78,7 @@ Measured in the last sweep and in the tree:
       base pinned by digest, the CLI pinned to an exact npm version, `git` and
       `php-cli` for the one composer fixture, a non-root user, an empty home,
       `DISABLE_AUTOUPDATER=1` and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`.
-      verify: `docker run --rm bench-base claude --version` prints the pinned version.
+      verify: `docker run --rm bench-base claude --version` -> /2\.1\.316/
 - [x] **1.2 `bench-ac`.** `Dockerfile.ac` from `bench-base`: installs the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       packed tarball of the tree under test with the public installer, then
       records the installed file list under `/opt/bench/install-manifest.txt`.
@@ -122,7 +122,7 @@ Measured in the last sweep and in the tree:
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts -t "token"` -> /passed/
 - [x] **2.7 Selftest in container mode.** `--mode selftest --isolation container` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       runs green with no network and no token.
-      verify: `./scripts-run src/scripts/bench_ab_v2_run --mode selftest --isolation container --arms vanilla,package --limit 2` -> exit 0
+      verify: `./scripts-run src/scripts/bench_ab_v2_run --mode selftest --isolation container --arms vanilla,package --limit 2` -> /SELFTEST/
 
 ## Phase 3 — Documentation
 

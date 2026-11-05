@@ -1,7 +1,6 @@
 /**
  * Checkpoint / resume for the ab-v2 sweep, and the float wrapper its lossless
- * round-trip needs. Moved out of `bench_ab_v2_run.ts`, which sits past the
- * source-size cap; that file re-exports every name here.
+ * round-trip needs. `bench_ab_v2_run.ts` re-exports every name here.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -13,8 +12,6 @@ export class PyFloat {
     constructor(readonly value: number) {}
 }
 
-// ── checkpoint / resume ─────────────────────────────────────────────────────
-//
 // A sweep of tasks × arms × seeds can run for hours; without a checkpoint, a
 // kill (manual stop, harness timeout, machine sleep) loses EVERY completed run
 // because results only exist in memory until the single final report write.
