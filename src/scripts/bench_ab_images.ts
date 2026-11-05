@@ -16,7 +16,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { read_oauth_token, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { read_token_pool, TokenPool, type ContainerCtx } from './_lib/bench_ab_container.js';
 import { package_skill_names } from './_lib/bench_ab_delivery_probe.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -147,9 +147,11 @@ export function container_context(opts: { selftest: boolean; images_file?: strin
     const ctx: ContainerCtx = {
         base_image: images.base.id,
         ac_image: images.ac.id,
-        token: read_oauth_token(),
+        token: '',
         package_skills: package_skill_names(path.join(REPO_ROOT, 'src', 'skills')),
+        pool: new TokenPool(read_token_pool()),
     };
+    ctx.token = (ctx.pool as TokenPool).current.token;
     return { ctx, images };
 }
 

@@ -22,6 +22,8 @@ export const CONTAINER_WORKDIR = '/work';
 export const CONTAINER_SYSPROMPT = '/bench/sysprompt.txt';
 export const TOKEN_ENV = 'CLAUDE_CODE_OAUTH_TOKEN';
 export const DEFAULT_TOKEN_FILE = path.join(os.homedir(), '.event4u', 'agent-config', 'secrets', 'claude-oauth-token');
+/** One token file per account; a sweep moves to the next when one account runs out. */
+export const DEFAULT_TOKEN_DIR = path.join(os.homedir(), '.event4u', 'agent-config', 'secrets', 'claude-oauth-tokens');
 
 /** Credential variables that would override or bypass the subscription token. */
 const OVERRIDING_CREDENTIALS = ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_BASE_URL', 'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX'];
@@ -147,8 +149,10 @@ export function quota_brake(limit = 3): (record: Record<string, unknown>) => str
 export interface ContainerCtx {
     base_image: string;
     ac_image: string;
+    /** The token in use; `rotate()` moves it to the next account in the pool. */
     token: string;
     package_skills: ReadonlySet<string>;
+    pool?: TokenPool;
 }
 
 /** Arms that load the package (no `--setting-sources` on the host path) run on `bench-ac`. */
@@ -171,4 +175,57 @@ export function container_fields(run: Record<string, unknown>, spec: { setting_s
     const base = { image, load_check: check };
     if (check.ok || run['errored'] === true) return base;
     return { ...base, errored: true, reason: `load_mismatch: ${check.reason}` };
+}
+
+export interface PoolEntry {
+    name: string;
+    token: string;
+}
+
+/**
+ * Every configured token: the single file first, then one file per account in
+ * the pool directory, each held to the same 0600 rule. Duplicates are dropped.
+ */
+export function read_token_pool(env: NodeJS.ProcessEnv = process.env, file: string = DEFAULT_TOKEN_FILE, dir: string = DEFAULT_TOKEN_DIR): PoolEntry[] {
+    const out: PoolEntry[] = [];
+    if (env[TOKEN_ENV] || fs.existsSync(file)) out.push({ name: env[TOKEN_ENV] ? 'env' : 'default', token: read_oauth_token(env, file) });
+    if (fs.existsSync(dir)) {
+        for (const f of fs.readdirSync(dir).filter((n) => !n.startsWith('.')).sort()) {
+            out.push({ name: f, token: read_oauth_token({}, path.join(dir, f)) });
+        }
+    }
+    if (out.length === 0) read_oauth_token(env, file);
+    return out.filter((e, i) => out.findIndex((o) => o.token === e.token) === i);
+}
+
+/** Moves through the pool once; an account that ran out is not tried again in this sweep. */
+export class TokenPool {
+    private i = 0;
+    constructor(readonly entries: readonly PoolEntry[]) {
+        if (entries.length === 0) throw new Error('empty token pool');
+    }
+    get current(): PoolEntry {
+        return this.entries[this.i] as PoolEntry;
+    }
+    /** Advance to the next account; false when none is left. */
+    rotate(): boolean {
+        if (this.i + 1 >= this.entries.length) return false;
+        this.i += 1;
+        return true;
+    }
+}
+
+/**
+ * Run one trial, and when it did no work because the account ran out, run it
+ * again on the next account in the pool. The record names the account that
+ * produced it, never its token.
+ */
+export function with_rotation(ctx: ContainerCtx, run: () => Record<string, unknown>, log: (m: string) => void = (m) => process.stderr.write(m)): Record<string, unknown> {
+    for (;;) {
+        const r = run();
+        if (!ctx.pool) return r;
+        if (!is_quota_exhausted(r) || !ctx.pool.rotate()) return { ...r, account: ctx.pool.current.name };
+        ctx.token = ctx.pool.current.token;
+        log(`bench_ab_v2: account exhausted — continuing on ${ctx.pool.current.name}\n`);
+    }
 }

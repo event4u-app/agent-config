@@ -140,3 +140,46 @@ describe('quota brake', () => {
         expect(brake(empty)).toBeNull();
     });
 });
+
+describe('token pool', async () => {
+    const { read_token_pool, TokenPool, with_rotation } = await import('../../src/scripts/_lib/bench_ab_container.js');
+    const dir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), 'pool-'));
+    const put = (d: string, name: string, body: string, mode = 0o600): void => {
+        fs.writeFileSync(path.join(d, name), body);
+        fs.chmodSync(path.join(d, name), mode);
+    };
+
+    it('reads the single file and one file per account, sorted, without duplicates', () => {
+        const d = dir();
+        const pool = path.join(d, 'pool');
+        fs.mkdirSync(pool);
+        put(d, 'single', 'tok-a');
+        put(pool, 'b-account', 'tok-b');
+        put(pool, 'a-account', 'tok-a');
+        expect(read_token_pool({}, path.join(d, 'single'), pool).map((e) => e.name)).toEqual(['default', 'b-account']);
+    });
+
+    it('holds every pool file to the 0600 rule', () => {
+        const d = dir();
+        put(d, 'open', 'tok', 0o644);
+        expect(() => read_token_pool({}, path.join(d, 'none'), d)).toThrow(/chmod 600/);
+    });
+
+    it('re-runs an exhausted trial on the next account and names the account, never the token', () => {
+        const ctx = { base_image: 'b', ac_image: 'a', token: 'tok-1', package_skills: new Set<string>(), pool: new TokenPool([{ name: 'one', token: 'tok-1' }, { name: 'two', token: 'tok-2' }]) };
+        const seen: string[] = [];
+        const r = with_rotation(ctx, () => {
+            seen.push(ctx.token);
+            return ctx.token === 'tok-1' ? { errored: true, transcript: "You've hit your weekly limit", tokens_breakdown: {} } : { errored: false, tokens_breakdown: { input_tokens: 5 } };
+        }, () => undefined);
+        expect(seen).toEqual(['tok-1', 'tok-2']);
+        expect(r).toMatchObject({ errored: false, account: 'two' });
+        expect(JSON.stringify(r)).not.toContain('tok-');
+    });
+
+    it('returns the exhausted run when no account is left, so the brake can stop the sweep', () => {
+        const ctx = { base_image: 'b', ac_image: 'a', token: 't', package_skills: new Set<string>(), pool: new TokenPool([{ name: 'only', token: 't' }]) };
+        const r = with_rotation(ctx, () => ({ errored: true, tokens_breakdown: {} }), () => undefined);
+        expect(r).toMatchObject({ errored: true, account: 'only' });
+    });
+});

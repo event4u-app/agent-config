@@ -54,7 +54,7 @@ import * as scoring from './_lib/bench_ab_scoring_v2.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { plugin_scope, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
-import { container_fields, is_quota_exhausted, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { container_fields, is_quota_exhausted, quota_brake, with_rotation, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
 import { container_context } from './bench_ab_images.js';
 import {
     SweepBudget,
@@ -1017,7 +1017,8 @@ export function main(argv: string[] | null = null): number {
                 seed: _seed,
                 container: ctr?.ctx ?? null,
             };
-            return selftest ? selftest_run(task, _arm, runOpts) : run_one(task, _arm, runOpts);
+            if (selftest) return selftest_run(task, _arm, runOpts);
+            return ctr ? with_rotation(ctr.ctx, () => run_one(task, _arm, runOpts)) : run_one(task, _arm, runOpts);
         },
         ckpt,
         undefined,
