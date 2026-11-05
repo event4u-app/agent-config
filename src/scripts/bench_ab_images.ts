@@ -62,7 +62,7 @@ function must(exec: Exec, cmd: string, args: readonly string[], opts?: { cwd?: s
 /** `2.1.316 (Claude Code)` → `2.1.316`; null when the output carries no version. */
 export function parse_cli_version(out: string): string | null {
     const m = /\b(\d+\.\d+\.\d+)\b/.exec(out);
-    return m ? m[1] : null;
+    return m?.[1] ?? null;
 }
 
 /**
