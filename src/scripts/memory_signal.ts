@@ -262,12 +262,12 @@ export const KNOWN_WRITER_CLASSES: ReadonlySet<string> = new Set([
 /** A record carrying this taint was derived from untrusted content; never aggregated. */
 export const EXTERNAL_READ_TAINT = 'external_read';
 
-export function _writer_of(record: { writer?: unknown }): string {
-    const w = record.writer;
+export function _writer_of(record: Readonly<Record<string, unknown>>): string {
+    const w = record['writer'];
     return typeof w === 'string' && w.trim() !== '' ? w.trim() : 'unknown';
 }
 
-export function _assert_writer_allowed(record: { writer?: unknown }): void {
+export function _assert_writer_allowed(record: Readonly<Record<string, unknown>>): void {
     const writer = _writer_of(record);
     const cls = (writer.split(':')[0] ?? '').trim().toLowerCase();
     // A class outside the table cannot be told apart from a refused one in

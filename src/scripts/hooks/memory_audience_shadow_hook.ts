@@ -217,7 +217,7 @@ export function sliceCounts(prompt: string, root: string): SliceCounts {
     };
 }
 
-export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {
+export function processEnvelope(envelope: unknown, consumerRoot: string): number {
     try {
         if (!isObject(envelope)) return EXIT_ALLOW;
         const inner = envelope['payload'];

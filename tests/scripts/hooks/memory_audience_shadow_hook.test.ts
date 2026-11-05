@@ -92,7 +92,7 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
 
     it('a child write survives the dispatcher projection and is recorded', () => {
         const spec = manifest().concerns['memory-audience-shadow']!;
-        const projected = applyPayloadFields(spec, write('agent-abc', 'agents/memory/product-rules.yml') as never);
+        const projected = applyPayloadFields(spec as never, write('agent-abc', 'agents/memory/product-rules.yml') as never);
         expect(processEnvelope(projected as never, root)).toBe(EXIT_ALLOW);
         expect(ledgerLines()).toMatchObject([{ event: 'memory_child_write_attempt', target: 'curated' }]);
     });
@@ -359,7 +359,7 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         const env = spawn('agents/memory/product-rules.yml', null) as { payload: Record<string, unknown> };
         (env.payload as Record<string, unknown>)['agent_id'] = 'agent-abc';
         (env.payload['tool_input'] as Record<string, unknown>)['description'] = 'drop me';
-        const projected = applyPayloadFields(spec, env as never) as { payload: Record<string, unknown> };
+        const projected = applyPayloadFields(spec as never, env as never) as { payload: Record<string, unknown> };
         expect(projected.payload['agent_id']).toBe('agent-abc');
         expect(projected.payload['tool_input']).toEqual({ prompt: 'agents/memory/product-rules.yml' });
     });
