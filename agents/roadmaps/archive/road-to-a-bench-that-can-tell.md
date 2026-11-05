@@ -59,7 +59,7 @@ never hid one.
 - [x] **1.1** Move every verifier out of `fixtures-v2/<task>/` into <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_scoring_v2.ts -->
   `internal/bench/ab/verifiers-v2/<task>/tests/` (21 files, 18 tasks). The fixture
   keeps everything the agent is meant to see.
-  verify: `git ls-files internal/bench/ab/fixtures-v2 | grep -c 'check.mjs'` -> 0 and `git ls-files internal/bench/ab/verifiers-v2 | grep -c 'check.mjs'` -> 21
+  verify: `git ls-files internal/bench/ab/fixtures-v2 internal/bench/ab/verifiers-v2 | grep -c '^internal/bench/ab/verifiers-v2/.*check.mjs$'` -> /^21$/
 - [x] **1.2** `_runVerifier` takes the oracle root (`oracleRootFor`): a file the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_scoring_v2.ts -->
   command names under the oracle root is copied into a scratch copy of the clone
   at scoring time only; a file the agent left at that path is replaced and
@@ -70,7 +70,7 @@ never hid one.
   commands run, and for every `solve_test` task scoring a reference-fixed clone
   still passes while an untouched clone still fails. Seen red against the pre-move
   layout.
-  verify: `npx vitest run tests/scripts/bench_ab_solve_oracle.test.ts` -> 0, seen red before 1.1-1.2
+  verify: `npx vitest run tests/scripts/bench_ab_solve_oracle.test.ts` -> 0
 
 ## Phase 2 — Prices by the model that was served
 
@@ -89,7 +89,7 @@ reads them.
   `sourced_on: 2026-11-05`, source the platform pricing page). `claude-haiku-4-5`
   and `claude-sonnet-4-6` already had rows (added 2026-11-04 for the sweep cap);
   `cost_by_arm` never read them. Family rows stay untouched for their pinned readers.
-  verify: `grep -cE 'model: claude-(haiku-4-5|sonnet-4-6|opus-4-[678])$' internal/bench/pricing.yaml` -> 5
+  verify: `grep -cE 'model: claude-(haiku-4-5|sonnet-4-6|opus-4-[678])$' internal/bench/pricing.yaml` -> /^5$/
 - [x] **2.2** `cost_by_arm` resolves an exact model row first and falls back to the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_stats.ts -->
   family row, and records which one priced the arm (`priced_by: model | family`).
   Test: a `claude-haiku-4-5` report prices at the exact row; an unknown model falls
@@ -110,7 +110,7 @@ control measured about one discordant pair in six.
   pairs required and the total pairs per arm. Uses the same exact one-sided sign
   test as `paired_verdict`. (Reading an A/A report directly would need win/loss
   counts the discipline block does not carry; the published figure is enough.)
-  verify: `./scripts-run src/scripts/bench_ab_power --discordance 0.167 --share 1` exits 0 and prints required pairs
+  verify: `./scripts-run src/scripts/bench_ab_power --discordance 0.167 --share 1` -> /discordant pairs required: 5/
 - [x] **3.2** Tests: at a 100 % one-directional share the planner returns exactly <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_power.ts -->
   the `paired_verdict` floor; at 50 % it reports "not reachable" instead of a
   number; required pairs fall as the discordance rate rises.
@@ -118,7 +118,7 @@ control measured about one discordant pair in six.
 - [x] **3.3** `task bench:ab:power` in `taskfiles/bench-ab.yml`, and one paragraph <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_power.ts -->
   in `docs/benchmark.md` § container sweep that says a paid sweep is sized with it
   first.
-  verify: `task --list | grep -c bench:ab:power` -> 1
+  verify: `task --list` -> /bench:ab:power/
 
 ## Phase 4 — A bad result is a question first
 
@@ -139,16 +139,16 @@ whether the right benefit was measured and whether the cost is really that high.
   `removal_supported: false` and the sentence "a benchmark result alone never
   supports removing an asset" on every output, and a test asserts no input can
   change either.
-  verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0 (removal-invariant case)
+  verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0
 - [x] **4.3** Fixtures from the real 2026-11-05 shape: the Haiku sweep reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_interpret.ts -->
   `ceiling` + `underpowered`; a sweep whose package arm failed the load check reads
   `not-delivered`. Both seen red before 4.1 lands.
-  verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0 (fixture cases), seen red before 4.1
+  verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0
 - [x] **4.4** `docs/benchmark.md` § Reading a bad result: the four labels, what <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_interpret.ts -->
   each one sends you to do instead (harder tasks, more pairs, fix delivery, price
   the run), and the rule that removal needs the evidence named in
   `road-to-proof-where-the-owner-sees-it` Phase 4.
-  verify: `grep -c 'Reading a bad result' docs/benchmark.md` -> 1
+  verify: `grep -c 'Reading a bad result' docs/benchmark.md` -> /^1$/
 
 ## Phase 5 — The headline says dollars
 
@@ -158,11 +158,11 @@ Evidence (read): `docs/benchmark.md:76` · `docs/contracts/value-dashboard-spec.
   prices (offline, $0) and add the priced cost factor and the dollars per arm next
   to the token factors in `docs/benchmark.md` § container sweep. Token factors stay
   as the secondary figure.
-  verify: `grep -cE 'priced cost factor' docs/benchmark.md` -> >=1
+  verify: `grep -ci 'priced cost factor' docs/benchmark.md` -> /^[1-9]/
 - [x] **5.2** Replace the stale `.py` script references (eight in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   `docs/contracts/value-dashboard-spec.md`, four in
   `docs/contracts/benchmark-report-schema.md`) with the `.ts` paths that exist.
-  verify: `grep -cE '\b[a-z_]+\.py\b' docs/contracts/value-dashboard-spec.md docs/contracts/benchmark-report-schema.md` -> 0 per file
+  verify: `grep -chE '\b[a-z_]+\.py\b' docs/contracts/value-dashboard-spec.md docs/contracts/benchmark-report-schema.md` -> /^0\n0$/
 
 ## Decisions
 

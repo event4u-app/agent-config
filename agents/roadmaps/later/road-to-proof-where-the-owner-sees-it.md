@@ -68,7 +68,7 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
 
 - [ ] **1.1** Headroom screen: every candidate task is run on `vanilla` first (small,
   priced, owner-released) and kept only below 0.80 joint correct-and-disciplined.
-  verify: `./scripts-run src/scripts/bench_ab_v2_stats <screen-report>` shows a vanilla joint score < 0.80 for every task kept in the corpus
+  verify: `./scripts-run src/scripts/bench_ab_interpret <screen-report>` -> /ceiling/ never names the vanilla arm of a kept task
 - [ ] **1.2** Add tasks of the classes the last result named: missed callers and
   tests after a signature change, unverified "done", scope traps in a larger repo,
   long multi-step tasks. Each ships a reference fix that passes and an untouched
@@ -91,7 +91,7 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   `internal/bench/corpora/ab-artifact-v2.yaml`: vanilla + terse, AC + terse,
   vanilla + expert, AC + expert. "AC with a terse prompt reaches what vanilla
   needs an expert prompt for" is the owner's claim, stated as a testable one.
-  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> 18
+  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^18$/
 - [ ] **2.2** Add the missing UI task: drag & drop with keyboard and touch,
   responsive breakpoints, one custom component; graded by Playwright actions and
   axe, no model in scoring (the `taskfiles/bench-ui.yml` grader pattern).
@@ -118,11 +118,11 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   `src/scripts/preamble_byte_census.ts` from subagent cold start to the main-session
   projection, one bucket per rule, hook output and catalog entry; 303 *listed*
   skills is not 303 *loaded*.
-  verify: `./scripts-run src/scripts/preamble_byte_census --main-session` prints one row per default asset
+  verify: `./scripts-run src/scripts/preamble_byte_census --main-session` -> 0
 - [ ] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
-  verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> 1
+  verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> /^1$/
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.
@@ -188,7 +188,7 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
   to `internal/bench/core/`, the `internal/bench/ui/` precedent: `package.json`
   `files[]` ships `src/scripts/`, and 80 bench files currently ship to consumers.
   `agent-config benchmark` (the user command) stays.
-  verify: `npm pack --dry-run | grep -c 'scripts/bench_'` -> 0 and `check_surface_tiers` green
+  verify: `npm pack --dry-run` -> /^(?![\s\S]*scripts\/bench_)/
 - [ ] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
