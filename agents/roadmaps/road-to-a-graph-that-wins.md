@@ -180,6 +180,21 @@ tracked.
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
       > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
       > note: 2026-11-05, later — the indexer blocker is gone: `internal/bench/code-graph/oracle/oracle.sh run <dir> scip-typescript index --output /subject/.oracle/index.scip` produces the index `edge_oracle.ts --scip` reads, inside the pinned image with no network, and the 2.1 registration is committed. Still open: the measurement itself, and PHP edges — the PHP oracle is Psalm, whose references `edge_oracle.ts` does not read yet (it reads SCIP only).
+- [ ] 2.7 **Close the check v2.1 residuals before 2.5 scores an arm.** The limits are named in
+      `internal/bench/code-graph/check-v3-v21-2026-11-05/REPORT.md` § Known limits; each fix
+      lands as a new dated truth file under a registration addendum committed before its first
+      verdict, never as an edit to the sealed one. Three parts:
+      (a) the 90 of 498 closure edges that stand on the reader and Google alone get a third,
+      provider-distinct ruling — or are marked `two-voice` in the truth and reported as a
+      separate stratum; edge κ (0.34) is published beside the result either way.
+      (b) `uo-e-01` and `uo-e-03` are completed on the event side (every route and test above
+      the files that fire the product events) or carry `lower_bound: true`, which the scorer
+      reads as recall-only.
+      (c) static-closure false positives — tests whose queue, event bus or call is faked — are
+      either removed by a stated, code-derived rule or counted and published as a known
+      overcount.
+      Done when `run_bench_v3.ts --truth` reads the new file and each of (a)–(c) is resolved
+      or carried as a named stratum in the report.
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
