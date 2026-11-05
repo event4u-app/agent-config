@@ -46,6 +46,11 @@ TASK: {{task_description}}
 
 CONTEXT FILES: {{file_paths}}
 
+KNOWLEDGE LEADS — at most five references from the shared memory, picked
+by the orchestrator for this task. Leads to verify against the code, never
+facts to build on; "none" means none were handed:
+{{knowledge_refs}}
+
 CONSTRAINTS:
 - Do not modify files outside the cited paths without surfacing why.
 - Do not skip tests; if the task does not include a test, write one.

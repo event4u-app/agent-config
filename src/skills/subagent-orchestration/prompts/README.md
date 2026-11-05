@@ -29,6 +29,12 @@ what the user asked for reaches it only through that slot
 ([`subagent-spawn-contract`](../../../contexts/execution/subagent-spawn-contract.md)
 § Worker-prompt rules (a)).
 
+Implementer prompts — and only those — also carry `{{knowledge_refs}}`, labelled
+as leads: at most five references from the shared memory. Judge, candidate,
+debate and skeptic prompts carry none, because a shared lead collapses their
+independence. The cut per audience is one table:
+[`subagent-spawn-contract` § Memory audience](../../../contexts/execution/subagent-spawn-contract.md#memory-audience).
+
 ### UI-shaped slices carry the design context, or name its absence
 
 A delegated worker's context is whatever the dispatch prompt carries. For a

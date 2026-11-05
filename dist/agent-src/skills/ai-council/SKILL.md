@@ -206,6 +206,11 @@ Anonymising the host as "Reviewer C" is worse than excluding it — the
 user is told they got an outside vote when they did not. Externals
 down → surface and skip; never substitute the host as a reviewer.
 
+The same reasoning sets a council seat's memory cut: a member receives facts
+with provenance, never curated leads from the shared store — the
+`judge-seat` row of the
+[memory audience table](../../contexts/execution/subagent-spawn-contract.md#memory-audience).
+
 ## Modes
 
 This skill is a router head. Everything above is true in every mode and stays
