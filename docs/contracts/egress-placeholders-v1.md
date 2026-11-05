@@ -299,7 +299,11 @@ of one envelope through the payload-shape planner:
 - the **placeholder view** — every detected value replaced by its token. It goes
   to every other concern, so a local store written by a recording concern
   (chat history, journals, ledgers) inherits tokens without a scrubber of its
-  own. A key whose secret has no provable extent is withheld whole (an object
+  own. Chat history does not depend on that view: whatever the mode, every
+  write replaces credentials in each string leaf (`replaceValues` with
+  `only: 'credential'`, one unpersisted scope per entry) and withholds a leaf
+  it cannot scan, so no credential value rests in the history file (OQ-34,
+  2026-11-04). Identifiers are left as written there. A key whose secret has no provable extent is withheld whole (an object
   carrying `_agent_config_egress_withheld` and the rule id), never partly
   replaced; any other failure of the stage withholds every body and is
   recorded as a `stage-error` refusal.

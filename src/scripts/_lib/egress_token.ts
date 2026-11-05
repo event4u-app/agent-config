@@ -240,12 +240,15 @@ function replacementSpans(detected: readonly EgressSpan[], at: NormalizedDetecti
  * text is refused, never partly replaced. A detection is left alone only when it
  * lies inside a token this scope minted, so a second pass returns the same bytes
  * while a token-shaped substring planted inside a credential, or a token from
- * another scope, shields nothing.
+ * another scope, shields nothing. `only` limits replacement to one class; the
+ * other class is left as written.
  */
-export function replaceValues(text: string, scope: TokenScope): string {
+export function replaceValues(text: string, scope: TokenScope, only?: EgressClass): string {
     const owned = parseTokens(text).filter((t) => scope.owns(text.slice(t.start, t.end)));
     const at = detectWithExtent(text);
-    const detected = at.spans.filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
+    const detected = at.spans.filter(
+        (s) => (only === undefined || s.class === only) && !owned.some((t) => t.start <= s.start && s.end <= t.end),
+    );
     const spans = replacementSpans(detected, at);
     // Mint in text order first: replaceSpans substitutes right to left, and minting
     // inside its callback would number the last value 1.
