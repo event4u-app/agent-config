@@ -34,6 +34,7 @@ export interface ArmIsolation {
 
 /** A port nothing listens on: connections are refused at once instead of hanging. */
 export const BLACKHOLE_PROXY = 'http://127.0.0.1:9';
+export const MODEL_API_HOST = 'api.anthropic.com';
 
 function is_inside(child: string, parent: string): boolean {
     const rel = path.relative(fs.realpathSync(parent), fs.realpathSync(child));
@@ -48,7 +49,9 @@ export function network_env(network: NetworkMode): Record<string, string> {
         http_proxy: BLACKHOLE_PROXY,
         https_proxy: BLACKHOLE_PROXY,
         ALL_PROXY: BLACKHOLE_PROXY,
-        NO_PROXY: '',
+        // The host itself must still reach the model API; everything else is blackholed.
+        NO_PROXY: MODEL_API_HOST,
+        no_proxy: MODEL_API_HOST,
         npm_config_offline: 'true',
         PIP_NO_INDEX: '1',
         COMPOSER_DISABLE_NETWORK: '1',
