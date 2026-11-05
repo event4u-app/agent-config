@@ -39,6 +39,7 @@ import process from 'node:process';
 
 import { pristine_tree_for } from './bench_ab_pinned_repo.js';
 import { claudeHome } from './provider_home.js';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -164,4 +165,16 @@ export function reset_fixture(task: Dict, arm: string, seed: number, root: strin
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.cpSync(fixture, dest, { recursive: true });
     return [dest, fixture];
+}
+
+/**
+ * The reports root for a checkout: the PRIMARY checkout's, also when this runs
+ * in a linked worktree. Reports are gitignored, so a report written inside a
+ * worktree is deleted with it — measured 2026-11-05, when four paid reports
+ * went that way. Falls back to `repoRoot` outside git.
+ */
+export function primary_checkout_root(repoRoot: string): string {
+    const r = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], { cwd: repoRoot, encoding: 'utf-8' });
+    const common = (r.stdout ?? '').trim();
+    return r.status === 0 && common ? path.dirname(common) : repoRoot;
 }

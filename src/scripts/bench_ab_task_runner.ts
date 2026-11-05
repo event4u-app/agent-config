@@ -46,6 +46,7 @@ import { parse as parseYaml } from 'yaml';
 import { clone as _clone } from './bench_ab_clone.js';
 import * as bench_ab_cache from './_lib/bench_ab_cache.js';
 import { score_task } from './_lib/bench_ab_scoring.js';
+import { container_argv, container_env, redact, type ContainerSpec } from './_lib/bench_ab_container.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/bench_ab_task_runner.ts → parents[2] is the repo root.
@@ -228,6 +229,8 @@ export interface RunLiveOpts {
     env?: Record<string, string> | null;
     /** `--output-format stream-json --verbose`: every event, kept as `stream` on the result for a trace. */
     stream?: boolean;
+    /** Run inside this image instead of on the host (`_lib/bench_ab_container.ts`); implies `stream`. */
+    container?: (ContainerSpec & { token: string }) | null;
 }
 
 /** The claude command line for one run — pure, so the flags each arm passes are tested. */
@@ -292,7 +295,9 @@ export function run_live(
     timeoutS: number,
     opts: RunLiveOpts = {},
 ): RunResult {
-    const binary = claude_executable();
+    const ctr = opts.container ?? null;
+    if (ctr) opts = { ...opts, stream: true };
+    const binary = ctr ? 'docker' : claude_executable();
     if (binary === null) {
         return {
             mode: 'live-skipped',
@@ -306,14 +311,18 @@ export function run_live(
         };
     }
     const prompt = (task['prompt'] as string) ?? '';
-    const cmd = live_args(prompt, opts);
+    const cmd = ctr ? container_argv(ctr, cloneRoot, live_args(prompt, opts)) : live_args(prompt, opts);
     const started = _monotonic();
     const result = spawnSync(binary, cmd, {
         cwd: cloneRoot,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
-        ...(opts.env ? { env: { ...process.env, ...opts.env } } : {}),
+        ...(ctr ? { env: container_env(process.env, ctr.token) } : opts.env ? { env: { ...process.env, ...opts.env } } : {}),
     });
+    if (ctr) {
+        result.stdout = redact(result.stdout ?? '', ctr.token);
+        result.stderr = redact(result.stderr ?? '', ctr.token);
+    }
     const isTimeout =
         (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
         (result.signal === 'SIGTERM' && Boolean(result.error));
