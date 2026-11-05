@@ -130,16 +130,17 @@ Measured in the last sweep and in the tree:
 
 ## Phase 4 — Paid validation ($30, owner budget)
 
-- [ ] **4.1 A/A control.** `vanilla` against `vanilla` on `bench-base`,
-      `claude-haiku-4-5`, the two scope tasks, 6 seeds. Expected: no
-      significant difference on either axis; the activation audit and the load
-      proof clean.
-- [ ] **4.2 Container vs. host baseline.** Container `vanilla` against host
-      `vanilla`, same host and tasks, 6 seeds. A significant difference is a
+- [ ] **4.1 A/A control.** Arms `vanilla` and `vanilla-b` (the same spec under
+      a second name) in `bench-base`, `claude-haiku-4-5`, `trapE-scope-01/02`,
+      6 seeds. Expected: no significant difference on either axis, load check
+      clean. Rendered by `bench_ab_v2_stats` as `A/A control`.
+- [ ] **4.2 Container vs. host baseline.** `vanilla-host` (the old host
+      baseline, kept on the host CLI by `host_only`) in the same sweep as 4.1,
+      so all three arms pair by task and seed. A significant difference is a
       finding about the host path and is reported, not tuned away.
 - [ ] **4.3 With vs. without.** `vanilla` against `package` in containers on
-      `claude-haiku-4-5`, 12 seeds, with what is left of the budget. Reported
-      as a first container measurement, not as a replacement for the published
-      figures.
+      `claude-haiku-4-5`, 12 seeds, then on `claude-sonnet-4-6` with what is
+      left of the $30. Reported as the first container measurement, not as a
+      replacement for the published figures.
 - [ ] **4.4 Write-up.** Results in `docs/benchmark.md`, raw reports kept under
       the primary checkout, spend against the $30 cap.

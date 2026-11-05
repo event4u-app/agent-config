@@ -538,7 +538,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         return run_one_recursive(task, opts);
     }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container ? undefined : plugin_scope(spec));
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec));
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     let cf: Dict = {};
@@ -561,9 +561,9 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
             plugin_dir: neighbour_plugin_dir(spec),
             strict_mcp: spec.isolate_neighbour === true, no_session_persistence: true,
             env: spec.isolate_neighbour ? neighbour_env(fs.mkdtempSync(path.join(os.tmpdir(), 'bench-neighbour-'))) : null,
-            container: opts.container ? trial_container(opts.container, spec) : null,
+            container: opts.container && !spec.host_only ? trial_container(opts.container, spec) : null,
         }) as unknown as Dict;
-        cf = opts.container ? container_fields(run, spec, opts.container) : {};
+        cf = opts.container && !spec.host_only ? container_fields(run, spec, opts.container) : {};
     }
     const score = scoring.score_task_v2(task, {
         fixture_root: fixture,

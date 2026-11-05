@@ -770,3 +770,13 @@ describe('container isolation', () => {
         expect(fs.realpathSync(primary_checkout_root(main))).toBe(fs.realpathSync(main));
     });
 });
+
+describe('container controls', () => {
+    it('isolation: vanilla-b and vanilla-host are vanilla under other names, and only vanilla-host stays on the host', () => {
+        const { host_only: _h, ...hostSpec } = ARMS['vanilla-host']!;
+        expect(ARMS['vanilla-b']).toEqual(ARMS['vanilla']);
+        expect(hostSpec).toEqual(ARMS['vanilla']);
+        expect(ARMS['vanilla-host']?.host_only).toBe(true);
+        expect(lift_audit_arms(['vanilla', 'vanilla-b', 'vanilla-host'])).toEqual([]);
+    });
+});
