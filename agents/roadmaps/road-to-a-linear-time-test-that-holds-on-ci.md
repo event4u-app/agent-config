@@ -3,7 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "A red check seen on PR #2866 and on main that this change could not fix without weakening a test it did not write; fix-what-you-see requires a tracked roadmap in the same change, and this is it."
+estate_offset_exempt: "A red check seen on PR #2866 and on main that this change could not fix without weakening a test it did not write. Merging into road-to-a-graph-that-wins was rejected because the defect is in the design-pass linter's test, not the graph; parking it in later/ was rejected because it fails main today; archiving another roadmap was not available because none of the four active ones is complete."
 ---
 # Road to a linear-time test that holds on CI
 
