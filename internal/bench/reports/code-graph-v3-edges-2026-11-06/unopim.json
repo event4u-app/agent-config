@@ -1,0 +1,431 @@
+{
+  "meta": {
+    "root": "<scratch>/bench-subjects/unopim",
+    "graph": "<scratch>/edge-oracle/unopim.graph.json",
+    "prefix": "",
+    "census": {
+      "name_lookup_calls": 1192,
+      "name_lookup_multi": 2,
+      "top_multi_labels": [
+        [
+          "fieldGroup",
+          2
+        ]
+      ],
+      "symbol_targets": 22222,
+      "symbol_targets_ambiguous": 8249,
+      "name_collision_edges": 87,
+      "suppressed_edge_counts": {
+        "dynamic_no_candidate": 14840,
+        "contested_by_provider": {
+          "laravel": 13
+        }
+      }
+    },
+    "scip": {
+      "path": "<scratch>/oracle-work/unopim/.oracle/index.scip",
+      "indexer": "supplied with --scip"
+    },
+    "php_oracle": "<scratch>/edge-oracle/unopim.php-oracle.json",
+    "reference_relations": [
+      "calls",
+      "imports",
+      "uses",
+      "inherits",
+      "references",
+      "injects",
+      "tests"
+    ]
+  },
+  "typescript": {
+    "by_mechanism": {
+      "class-hierarchy": {
+        "graph_edges": 2796,
+        "scored": 0,
+        "confirmed_file": 0,
+        "precision_file": null,
+        "symbol_scored": 0,
+        "confirmed_symbol": 0,
+        "precision_symbol": null,
+        "oracle_pairs_covered": 0
+      },
+      "dynamic": {
+        "graph_edges": 3826,
+        "scored": 3,
+        "confirmed_file": 3,
+        "precision_file": 1,
+        "symbol_scored": 3,
+        "confirmed_symbol": 0,
+        "precision_symbol": 0,
+        "oracle_pairs_covered": 0
+      },
+      "import-specifier": {
+        "graph_edges": 10395,
+        "scored": 446,
+        "confirmed_file": 446,
+        "precision_file": 1,
+        "symbol_scored": 14,
+        "confirmed_symbol": 14,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 438
+      },
+      "name-lookup": {
+        "graph_edges": 1392,
+        "scored": 680,
+        "confirmed_file": 680,
+        "precision_file": 1,
+        "symbol_scored": 680,
+        "confirmed_symbol": 605,
+        "precision_symbol": 0.8897058823529411,
+        "oracle_pairs_covered": 199
+      },
+      "psr4": {
+        "graph_edges": 6703,
+        "scored": 0,
+        "confirmed_file": 0,
+        "precision_file": null,
+        "symbol_scored": 0,
+        "confirmed_symbol": 0,
+        "precision_symbol": null,
+        "oracle_pairs_covered": 0
+      },
+      "same-file": {
+        "graph_edges": 1329,
+        "scored": 681,
+        "confirmed_file": 632,
+        "precision_file": 0.9280469897209985,
+        "symbol_scored": 681,
+        "confirmed_symbol": 567,
+        "precision_symbol": 0.8325991189427313,
+        "oracle_pairs_covered": 0
+      },
+      "test-import": {
+        "graph_edges": 2164,
+        "scored": 0,
+        "confirmed_file": 0,
+        "precision_file": null,
+        "symbol_scored": 0,
+        "confirmed_symbol": 0,
+        "precision_symbol": null,
+        "oracle_pairs_covered": 0
+      }
+    },
+    "excluded": {
+      "unresolved_target": 22222,
+      "out_of_root": 0,
+      "outside_prefix": 0,
+      "not_reference_relation": 11324,
+      "outside_oracle_coverage": 26795
+    },
+    "oracle": {
+      "documents": 235,
+      "file_pairs": 477,
+      "symbol_pairs": 607
+    },
+    "recall_file": 0.939203354297694,
+    "recall_symbol": 0.7957166392092258,
+    "missing_by_kind": {
+      "namespace": 1,
+      "meta": 28,
+      "term": 10
+    },
+    "missing_examples": [
+      {
+        "source_file": "resources/js/app.js",
+        "target_file": "resources/js/bootstrap.js",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attribute-families.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attribute-families.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attribute-groups.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attribute-groups.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attribute-options.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attribute-options.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attributes.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/attributes.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/categories.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/categories.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/category-field-options.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/category-field-options.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/category-fields.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/category-fields.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/configurable-products.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/configurable-products.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/media.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/media.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "term"
+      },
+      {
+        "source_file": "tests/e2e-pw/payloads/products.payloads.js",
+        "target_file": "tests/e2e-pw/utils/api/config.js",
+        "kind": "meta"
+      }
+    ]
+  },
+  "php": {
+    "by_mechanism": {
+      "class-hierarchy": {
+        "graph_edges": 2796,
+        "scored": 2766,
+        "confirmed_file": 2762,
+        "precision_file": 0.9985538684020245,
+        "symbol_scored": 2766,
+        "confirmed_symbol": 2739,
+        "precision_symbol": 0.9902386117136659,
+        "oracle_pairs_covered": 126
+      },
+      "dynamic": {
+        "graph_edges": 3814,
+        "scored": 3787,
+        "confirmed_file": 1596,
+        "precision_file": 0.4214417744916821,
+        "symbol_scored": 3787,
+        "confirmed_symbol": 1580,
+        "precision_symbol": 0.4172167942962767,
+        "oracle_pairs_covered": 807
+      },
+      "import-specifier": {
+        "graph_edges": 458,
+        "scored": 458,
+        "confirmed_file": 458,
+        "precision_file": 1,
+        "symbol_scored": 458,
+        "confirmed_symbol": 451,
+        "precision_symbol": 0.9847161572052402,
+        "oracle_pairs_covered": 241
+      },
+      "name-lookup": {
+        "graph_edges": 684,
+        "scored": 265,
+        "confirmed_file": 261,
+        "precision_file": 0.9849056603773585,
+        "symbol_scored": 265,
+        "confirmed_symbol": 259,
+        "precision_symbol": 0.9773584905660377,
+        "oracle_pairs_covered": 200
+      },
+      "psr4": {
+        "graph_edges": 6703,
+        "scored": 6427,
+        "confirmed_file": 6426,
+        "precision_file": 0.9998444064104559,
+        "symbol_scored": 6427,
+        "confirmed_symbol": 6426,
+        "precision_symbol": 0.9998444064104559,
+        "oracle_pairs_covered": 5195
+      },
+      "same-file": {
+        "graph_edges": 636,
+        "scored": 11,
+        "confirmed_file": 11,
+        "precision_file": 1,
+        "symbol_scored": 11,
+        "confirmed_symbol": 11,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 0
+      },
+      "test-import": {
+        "graph_edges": 2164,
+        "scored": 2035,
+        "confirmed_file": 2035,
+        "precision_file": 1,
+        "symbol_scored": 2035,
+        "confirmed_symbol": 2035,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 2035
+      }
+    },
+    "excluded": {
+      "unresolved_target": 22222,
+      "out_of_root": 0,
+      "outside_prefix": 0,
+      "not_reference_relation": 11324,
+      "outside_oracle_coverage": 1506
+    },
+    "oracle": {
+      "documents": 2788,
+      "file_pairs": 6460,
+      "symbol_pairs": 10210
+    },
+    "recall_file": 0.8582043343653251,
+    "recall_symbol": 0.6916748285994123,
+    "missing_by_kind": {
+      "class": 699,
+      "interface": 127,
+      "method": 450,
+      "trait": 3
+    },
+    "missing_examples": [
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/AiAgent/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Attribute/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Category/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Core/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/DataTransfer/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/HistoryControl/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/MagicAI/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Measurement/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Notification/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Product/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/ProductPassport/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Publication/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/Resource/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "config/concord.php",
+        "target_file": "packages/Webkul/User/src/Providers/ModuleServiceProvider.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "packages/Webkul/Admin/src/DataGrids/Catalog/AttributeDataGrid.php",
+        "target_file": "packages/Webkul/Core/src/Contracts/Database/Grammar.php",
+        "kind": "interface"
+      },
+      {
+        "source_file": "packages/Webkul/Admin/src/DataGrids/Catalog/AttributeDataGrid.php",
+        "target_file": "packages/Webkul/Core/src/Contracts/Database/Grammar.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "packages/Webkul/Admin/src/DataGrids/Catalog/AttributeFamilyDataGrid.php",
+        "target_file": "packages/Webkul/Core/src/Contracts/Database/Grammar.php",
+        "kind": "interface"
+      },
+      {
+        "source_file": "packages/Webkul/Admin/src/DataGrids/Catalog/AttributeFamilyDataGrid.php",
+        "target_file": "packages/Webkul/Core/src/Contracts/Database/Grammar.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "packages/Webkul/Admin/src/DataGrids/Catalog/AttributeGroupDataGrid.php",
+        "target_file": "packages/Webkul/Core/src/Contracts/Database/Grammar.php",
+        "kind": "interface"
+      },
+      {
+        "source_file": "packages/Webkul/Admin/src/DataGrids/Catalog/AttributeGroupDataGrid.php",
+        "target_file": "packages/Webkul/Core/src/Contracts/Database/Grammar.php",
+        "kind": "method"
+      }
+    ]
+  }
+}

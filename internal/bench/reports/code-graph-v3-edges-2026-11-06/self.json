@@ -1,0 +1,225 @@
+{
+  "meta": {
+    "root": "<scratch>/self-2026-11-06",
+    "graph": "<scratch>/edge-oracle/self.graph.json",
+    "prefix": "src/scripts/",
+    "census": {
+      "name_lookup_calls": 1062,
+      "name_lookup_multi": 1,
+      "top_multi_labels": [
+        [
+          "f",
+          1
+        ]
+      ],
+      "symbol_targets": 34347,
+      "symbol_targets_ambiguous": 11509,
+      "name_collision_edges": 342,
+      "suppressed_edge_counts": {
+        "dynamic_no_candidate": 68855
+      }
+    },
+    "scip": {
+      "path": "<scratch>/self-2026-11-06/.oracle-index.scip",
+      "indexer": "supplied with --scip"
+    },
+    "php_oracle": null,
+    "reference_relations": [
+      "calls",
+      "imports",
+      "uses",
+      "inherits",
+      "references",
+      "injects",
+      "tests"
+    ]
+  },
+  "typescript": {
+    "by_mechanism": {
+      "class-hierarchy": {
+        "graph_edges": 116,
+        "scored": 116,
+        "confirmed_file": 116,
+        "precision_file": 1,
+        "symbol_scored": 116,
+        "confirmed_symbol": 116,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 0
+      },
+      "dynamic": {
+        "graph_edges": 3391,
+        "scored": 3321,
+        "confirmed_file": 598,
+        "precision_file": 0.1800662451068955,
+        "symbol_scored": 3321,
+        "confirmed_symbol": 489,
+        "precision_symbol": 0.14724480578139115,
+        "oracle_pairs_covered": 166
+      },
+      "import-specifier": {
+        "graph_edges": 26406,
+        "scored": 16751,
+        "confirmed_file": 16746,
+        "precision_file": 0.9997015103575906,
+        "symbol_scored": 16396,
+        "confirmed_symbol": 16396,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 4507
+      },
+      "name-lookup": {
+        "graph_edges": 1045,
+        "scored": 166,
+        "confirmed_file": 66,
+        "precision_file": 0.39759036144578314,
+        "symbol_scored": 166,
+        "confirmed_symbol": 49,
+        "precision_symbol": 0.29518072289156627,
+        "oracle_pairs_covered": 41
+      },
+      "same-file": {
+        "graph_edges": 27296,
+        "scored": 26450,
+        "confirmed_file": 26448,
+        "precision_file": 0.9999243856332704,
+        "symbol_scored": 26450,
+        "confirmed_symbol": 24238,
+        "precision_symbol": 0.9163705103969755,
+        "oracle_pairs_covered": 0
+      },
+      "test-import": {
+        "graph_edges": 182,
+        "scored": 182,
+        "confirmed_file": 182,
+        "precision_file": 1,
+        "symbol_scored": 182,
+        "confirmed_symbol": 182,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 66
+      }
+    },
+    "excluded": {
+      "unresolved_target": 34347,
+      "out_of_root": 0,
+      "outside_prefix": 25558,
+      "not_reference_relation": 39434,
+      "outside_oracle_coverage": 11450
+    },
+    "oracle": {
+      "documents": 2083,
+      "file_pairs": 4667,
+      "symbol_pairs": 10682
+    },
+    "recall_file": 0.9687165202485537,
+    "recall_symbol": 0.9064781876053174,
+    "missing_by_kind": {
+      "term": 98,
+      "method": 24,
+      "namespace": 32,
+      "type": 6,
+      "meta": 1
+    },
+    "missing_examples": [
+      {
+        "source_file": "src/scripts/_cli/cmd_conformance.ts",
+        "target_file": "src/scripts/_cli/_doctor_emit.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "src/scripts/_cli/cmd_uninstall.ts",
+        "target_file": "src/scripts/_lib/skill_listing_record.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/assumptions.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/council.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/halt.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/header.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/inputs.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/memory.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/pack.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/provider.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_cli/explain_last/render.ts",
+        "target_file": "src/scripts/_cli/explain_last/sections/route.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_lib/bench_artifact_selftest.ts",
+        "target_file": "src/scripts/_lib/bench_artifact_svg_gate.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "src/scripts/_lib/cold_return.ts",
+        "target_file": "src/scripts/_lib/prompt_cache_reading.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "src/scripts/_lib/collector_store.ts",
+        "target_file": "src/scripts/_lib/node_sqlite.d.ts",
+        "kind": "method"
+      },
+      {
+        "source_file": "src/scripts/_lib/collector_store.ts",
+        "target_file": "src/scripts/_lib/node_sqlite.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "src/scripts/_lib/collector_store.ts",
+        "target_file": "src/scripts/_lib/node_sqlite.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "src/scripts/_lib/council_settings_block.ts",
+        "target_file": "src/scripts/ai_council/fallback_config.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "src/scripts/_lib/council_settings_block.ts",
+        "target_file": "src/scripts/ai_council/free_route.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "src/scripts/_lib/delivery_arm_experiment.ts",
+        "target_file": "src/scripts/_lib/router_match.ts",
+        "kind": "type"
+      },
+      {
+        "source_file": "src/scripts/_lib/gate_collector_experimental.ts",
+        "target_file": "src/scripts/code_graph/lanes/runtime/read_runtime.ts",
+        "kind": "meta"
+      }
+    ]
+  },
+  "php": null
+}
