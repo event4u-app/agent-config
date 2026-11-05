@@ -130,6 +130,36 @@ checker (`human_check.checked_by: council`), the runner prints it beside every r
 and the oracle-versus-check disagreement rate is published as registered. The prompts,
 the reader answers and both judges' raw rulings are committed beside the truth file.
 
+### Check v2 — hardened, fixed before its first verdict (2026-11-05)
+
+The owner asked for the check above to be hardened before any arm is scored against
+it. No arm has been scored against any truth yet. Check v2 replaces the result of the
+check above; that result stays committed as a record (`check-v3-2026-11-05/`), and the
+oracle-versus-v1-versus-v2 differences are published. What changes:
+
+1. **One provider, one voice.** The reader stays the Anthropic reader above (its
+   answers are reused unchanged). The judges become OpenAI (`codex exec`, reasoning
+   `medium`) and Google (`agy`, `gemini-3.8-flash-medium`). No judge shares a provider
+   with the reader, and every file in the truth carries at least two providers' `IN`.
+2. **Blind judges.** A judge sees the question and, per candidate file, its path and the
+   source lines extracted from the checkout. It does not see who proposed a file
+   (reader, oracle, or neither), the reader's notes or conclusions, or the oracle's
+   status. Candidates are listed in a hashed order, not grouped by source.
+3. **Calibration, blind.** The 7 items the oracle answered completely and that are not
+   in the sample run through the same prompt, unmarked, each with its oracle files plus
+   up to three decoys: tracked files that contain the probe token but are not oracle
+   references. Judge precision and recall against that gold are published. Calibration
+   items never change the truth.
+4. **Class 3 is derived, not judged.** For model-table questions, the table is the
+   model's `$table` property or, without one, Laravel's convention (snake case, plural);
+   the answer is the model file plus every migration that creates, alters, renames or
+   drops that table via `Schema::` or a raw `ALTER TABLE` / `CREATE TABLE`. A migration
+   that only writes rows is not included. The 2-of-3 rule still runs on class 3 and
+   its disagreement with the derivation is published.
+5. **The rule is unchanged** for every other item: a file is in the truth when two of
+   the three say `IN`; a file a judge names as missing enters only on both judges' `IN`
+   in a second round. Cohen's kappa between the two judges is published.
+
 ## Arms (step 2.3)
 
 **A–E** (no fused arm, K4):
