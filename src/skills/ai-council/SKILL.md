@@ -194,22 +194,18 @@ ROUND 2+ MAY SEE PRIOR PEER REPLIES — ANONYMISED ONLY, NEVER ATTRIBUTED, NEVER
 THE HOST AGENT IS THE CONVENER, NEVER A REVIEWER.
 ```
 
-If you find yourself wanting to "frame" the artefact for the council,
-stop. Framing is exactly what kills the second-opinion value. Use the
+Never frame the artefact: it kills the second-opinion value. Use the
 unbiased system prompts in `scripts/ai_council/prompts.ts`; do not
 roll your own.
 
-The host runs the council and synthesises convergence — it is the
-convener, not a reviewer. The reviewer-ban is structural: the host
+Host convenes, never reviews. The ban is structural: the host
 wrote (or framed) the artefact and cannot critique it independently.
 Anonymising the host as "Reviewer C" is worse than excluding it — the
 user is told they got an outside vote when they did not. Externals
 down → surface and skip; never substitute the host as a reviewer.
 
-The same reasoning sets a council seat's memory cut: a member receives facts
-with provenance, never curated leads from the shared store — the
-`judge-seat` row of the
-[memory audience table](../../agent-src/contexts/execution/subagent-spawn-contract.md#memory-audience).
+Seat memory: facts with provenance, no leads
+([`judge-seat`](../../agent-src/contexts/execution/subagent-spawn-contract.md#memory-audience)).
 
 ## Modes
 
