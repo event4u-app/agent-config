@@ -74,16 +74,16 @@ Measured in the last sweep and in the tree:
 
 ## Phase 1 — Images
 
-- [x] **1.1 `bench-base`.** `internal/bench/containers/Dockerfile.base`: Node 22
+- [x] **1.1 `bench-base`.** `internal/bench/containers/Dockerfile.base`: Node 22 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       base pinned by digest, the CLI pinned to an exact npm version, `git` and
       `php-cli` for the one composer fixture, a non-root user, an empty home,
       `DISABLE_AUTOUPDATER=1` and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`.
       verify: `docker run --rm bench-base claude --version` prints the pinned version.
-- [x] **1.2 `bench-ac`.** `Dockerfile.ac` from `bench-base`: installs the
+- [x] **1.2 `bench-ac`.** `Dockerfile.ac` from `bench-base`: installs the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       packed tarball of the tree under test with the public installer, then
       records the installed file list under `/opt/bench/install-manifest.txt`.
       verify: the manifest lists the package's rules and skills under the user scope and nothing outside the home directory.
-- [x] **1.3 Build script.** `src/scripts/bench_ab_images.ts`: packs the tree,
+- [x] **1.3 Build script.** `src/scripts/bench_ab_images.ts`: packs the tree, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       builds both images, prints and writes their digests, CLI version and
       package version to `internal/bench/containers/images.json` (gitignored,
       read by the runner).
@@ -91,61 +91,61 @@ Measured in the last sweep and in the tree:
 
 ## Phase 2 — Runner
 
-- [x] **2.1 Container invocation.** `src/scripts/_lib/bench_ab_container.ts`
+- [x] **2.1 Container invocation.** `src/scripts/_lib/bench_ab_container.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       builds the `docker run` argv for one trial: `--rm`, the clone bind-mounted
       as the working directory, a read-only mount for an injected prompt file,
       CPU and memory limits, the token passed by name only, no
       `ANTHROPIC_API_KEY`, then the CLI arguments the host path already builds,
       minus `--setting-sources`.
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts` -> /passed/ (argv shape, the token never in argv, the key always dropped, identical flags across arms).
-- [x] **2.2 `--isolation container` in `bench_ab_v2_run`.** Arms that load the
+- [x] **2.2 `--isolation container` in `bench_ab_v2_run`.** Arms that load the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       package run on `bench-ac`, every other arm on `bench-base`; the report
       records isolation, both image digests, the CLI version and the package
       version. The host path stays the default.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts -t "isolation"` -> /passed/
-- [x] **2.3 Load proof before scoring.** Each container trial parses
+- [x] **2.3 Load proof before scoring.** Each container trial parses <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       `system/init`; a mismatch with the arm's image is recorded as
       `load_mismatch`, excluded from the statistics, and counted in the report.
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts -t "load"` -> /passed/
-- [x] **2.4 Sweep brake.** A run that ends with zero tokens and an error, or
+- [x] **2.4 Sweep brake.** A run that ends with zero tokens and an error, or <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       with a usage-limit message, is classed `quota_exhausted`; three in a row
       stop the sweep and the report says where. The cost cap stays as is.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts -t "brake"` -> /passed/
-- [x] **2.5 Reports outside every worktree.** The default report directory
+- [x] **2.5 Reports outside every worktree.** The default report directory <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       resolves through the git common dir to the primary checkout, so removing
       a worktree cannot delete a report again.
       verify: `npx vitest run tests/scripts/bench_ab_v2_run.test.ts -t "report dir"` -> /passed/
-- [x] **2.6 Token file.** The runner reads the token from
+- [x] **2.6 Token file.** The runner reads the token from <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       `~/.event4u/agent-config/secrets/claude-oauth-token` (mode 0600) or the
       environment, refuses a world-readable file, and never prints it; the
       transcript writer redacts it.
       verify: `npx vitest run tests/scripts/bench_ab_container.test.ts -t "token"` -> /passed/
-- [x] **2.7 Selftest in container mode.** `--mode selftest --isolation container`
+- [x] **2.7 Selftest in container mode.** `--mode selftest --isolation container` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       runs green with no network and no token.
       verify: `./scripts-run src/scripts/bench_ab_v2_run --mode selftest --isolation container --arms vanilla,package --limit 2` -> exit 0
 
 ## Phase 3 — Documentation
 
-- [x] **3.1 Methodology.** `docs/benchmark.md` gets a section on container
+- [x] **3.1 Methodology.** `docs/benchmark.md` gets a section on container <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       isolation: what each image holds, what is identical across arms, what the
       container does not remove (account-side settings, model nondeterminism,
       rate limits), and how to reproduce from `images.json`.
-- [x] **3.2 Operator guide.** `internal/bench/containers/README.md`: build the
+- [x] **3.2 Operator guide.** `internal/bench/containers/README.md`: build the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       images, create the token once, run a sweep, where the reports land.
 
 ## Phase 4 — Paid validation ($30, owner budget)
 
-- [x] **4.1 A/A control.** Arms `vanilla` and `vanilla-b` (the same spec under
+- [x] **4.1 A/A control.** Arms `vanilla` and `vanilla-b` (the same spec under <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       a second name) in `bench-base`, `claude-haiku-4-5`, `trapE-scope-01/02`,
       6 seeds. Expected: no significant difference on either axis, load check
       clean. Rendered by `bench_ab_v2_stats` as `A/A control`.
-- [x] **4.2 Container vs. host baseline.** `vanilla-host` (the old host
+- [x] **4.2 Container vs. host baseline.** `vanilla-host` (the old host <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       baseline, kept on the host CLI by `host_only`) in the same sweep as 4.1,
       so all three arms pair by task and seed. A significant difference is a
       finding about the host path and is reported, not tuned away.
-- [x] **4.3 With vs. without.** `vanilla` against `package` in containers on
+- [x] **4.3 With vs. without.** `vanilla` against `package` in containers on <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       `claude-haiku-4-5`, 12 seeds, then on `claude-sonnet-4-6` with what is
       left of the $30. Reported as the first container measurement, not as a
       replacement for the published figures.
-- [x] **4.4 Write-up.** Results in `docs/benchmark.md`, raw reports kept under
+- [x] **4.4 Write-up.** Results in `docs/benchmark.md`, raw reports kept under <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts -->
       the primary checkout, spend against the $30 cap.
