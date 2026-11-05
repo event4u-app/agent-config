@@ -187,3 +187,14 @@ export function profile_rules_text(profile: string, routerPath: string, rulesDir
     const ids = members.flatMap((m) => expand[m] ?? [m]);
     return ids.map((id) => fs.readFileSync(`${rulesDir}/${id}.md`, 'utf-8').trim()).join('\n\n---\n\n');
 }
+
+/**
+ * A leave-one-out arm over `rules-kernel-dc`, named `kernel-minus-<rule id>`:
+ * the kernel-dc text with that one rule dropped, as a control-scope text
+ * injection. Resolved on demand rather than listed in `ARMS`, so ablating a rule
+ * needs no harness change; an id outside the set fails when the text is built.
+ */
+export function ablation_arm(name: string): ArmSpec | null {
+    const m = /^kernel-minus-(.+)$/.exec(name);
+    return m ? { setting_sources: 'project,local', inject: `kernel-minus:${m[1]}` } : null;
+}

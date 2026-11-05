@@ -95,7 +95,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-import { ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { ablation_arm, ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
@@ -156,7 +156,7 @@ export function hardened_blocks_text(): string {
  * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
  * - 'rules-balanced'   → kernel + tier_1 (the size-cut `balanced` profile, retired 2026-07-07).
  */
-export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
+export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced', without: string | null = null): string {
     const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
         kernel: string[];
         tier_1: { id: string }[];
@@ -166,6 +166,11 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'):
         ids.push('downstream-changes');
     } else {
         ids.push(...router.tier_1.map((t) => t.id));
+    }
+    if (without !== null) {
+        const at = ids.indexOf(without);
+        if (at < 0) throw new Error(`rule "${without}" is not in ${subset}: ${ids.join(', ')}`);
+        ids.splice(at, 1);
     }
     const bodies = ids.map((id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim());
     return bodies.join('\n\n---\n\n');
@@ -252,6 +257,7 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject === 'rules-kernel-dc' || inject === 'rules-balanced') {
         return rules_subset_text(inject);
     }
+    if (inject?.startsWith('kernel-minus:')) return rules_subset_text('rules-kernel-dc', inject.slice('kernel-minus:'.length));
     if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
 }
@@ -896,6 +902,8 @@ export function main(argv: string[] | null = null): number {
         .map((a) => a.trim())
         .filter((a) => a.length > 0);
     for (const a of arms) {
+        const ablation = a in ARMS ? null : ablation_arm(a);
+        if (ablation) ARMS[a] = ablation;
         if (!(a in ARMS)) {
             process.stderr.write(`unknown arm: ${a}\n`);
             return 1;
