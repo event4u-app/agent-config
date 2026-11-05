@@ -1,0 +1,107 @@
+{
+ "ls-b-01": {
+  "gold": [
+   "app/Console/Commands/ThreadBackfillCommand.php",
+   "app/Services/EmailSendService.php",
+   "database/seeders/InboxDemoSeeder.php"
+  ],
+  "decoys": []
+ },
+ "ls-b-02": {
+  "gold": [
+   "app/Http/Controllers/Api/SuppressionController.php",
+   "app/Http/Controllers/DashboardActionController.php"
+  ],
+  "decoys": [
+   "resources/js/pages/Activity.vue",
+   "config/fortify.php",
+   "tests/Feature/WorkspaceMembersTest.php"
+  ]
+ },
+ "ls-b-03": {
+  "gold": [
+   "app/Console/Commands/ThreadBackfillCommand.php",
+   "app/Services/EmailSendService.php",
+   "app/Services/InboundEmailIngestor.php",
+   "database/seeders/InboxDemoSeeder.php"
+  ],
+  "decoys": [
+   "app/Http/Controllers/ThreadActionController.php"
+  ]
+ },
+ "uo-b-01": {
+  "gold": [
+   "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+   "packages/Webkul/AiAgent/src/Http/Requests/CredentialForm.php",
+   "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+   "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+   "packages/Webkul/Webhook/src/Http/Requests/WebhookForm.php",
+   "packages/Webkul/Webhook/src/Services/WebhookService.php",
+   "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+   "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php"
+  ],
+  "decoys": [
+   "packages/Webkul/Core/src/Rules/Address.php",
+   "packages/Webkul/Product/src/Validator/AssociationValidator.php",
+   "packages/Webkul/DataGrid/src/DataGrid.php"
+  ]
+ },
+ "uo-b-03": {
+  "gold": [
+   "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+   "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+   "packages/Webkul/Admin/src/Http/Requests/CheckVariantUniquenessForm.php",
+   "packages/Webkul/Admin/src/Http/Requests/VariantChildrenForm.php",
+   "packages/Webkul/Admin/src/Http/Requests/VariantNodeForm.php",
+   "packages/Webkul/Completeness/src/Jobs/ProductCompletenessJob.php",
+   "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+   "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+   "packages/Webkul/Installer/tests/Feature/DemoProductStructureComplianceTest.php",
+   "packages/Webkul/Product/src/Models/Product.php",
+   "packages/Webkul/Product/src/Providers/ProductServiceProvider.php",
+   "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+   "packages/Webkul/Product/src/Services/VariantStructurePlanner.php",
+   "packages/Webkul/Product/src/Type/Configurable.php",
+   "packages/Webkul/Product/tests/Unit/Models/VariantStructureTest.php",
+   "packages/Webkul/Product/tests/Unit/Services/VariantStructurePlannerTest.php"
+  ],
+  "decoys": [
+   "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+   "packages/Webkul/Installer/src/Database/Seeders/Demo/DemoProductSeeder.php",
+   "packages/Webkul/Product/tests/Unit/Enums/VariantLevelTest.php"
+  ]
+ },
+ "uo-b-04": {
+  "gold": [
+   "packages/Webkul/AdminApi/src/ApiDataSource/Catalog/VariantStructureDataSource.php",
+   "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+   "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+   "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+   "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+   "packages/Webkul/Installer/src/Database/Seeders/Demo/DemoProductSeeder.php",
+   "packages/Webkul/Installer/tests/Feature/DemoProductStructureComplianceTest.php",
+   "packages/Webkul/Product/src/Models/Product.php",
+   "packages/Webkul/Product/src/Providers/ProductServiceProvider.php",
+   "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+   "packages/Webkul/Product/src/Services/VariantStructurePlanner.php",
+   "packages/Webkul/Product/src/Type/Configurable.php",
+   "packages/Webkul/Product/src/Validator/RequiredAttributesValidator.php",
+   "packages/Webkul/Product/tests/Unit/Enums/VariantLevelTest.php",
+   "packages/Webkul/Product/tests/Unit/Models/VariantStructureTest.php",
+   "packages/Webkul/Product/tests/Unit/Services/VariantStructurePlannerTest.php"
+  ],
+  "decoys": [
+   "packages/Webkul/Completeness/src/Jobs/ProductCompletenessJob.php",
+   "packages/Webkul/Admin/src/Http/Requests/CheckVariantUniquenessForm.php",
+   "packages/Webkul/Admin/src/Http/Requests/VariantChildrenForm.php"
+  ]
+ },
+ "uo-b-06": {
+  "gold": [
+   "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+   "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+   "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php"
+  ],
+  "decoys": []
+ }
+}

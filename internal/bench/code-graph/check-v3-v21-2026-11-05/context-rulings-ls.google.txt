@@ -1,0 +1,36 @@
+```json
+{
+  "edges": [
+    {
+      "id": "E505da826c8",
+      "verdict": "UNSURE",
+      "reason": "The snippet truncates the create() arguments before showing whether the 'email' attribute is passed to trigger the mutator."
+    },
+    {
+      "id": "E57127119aa",
+      "verdict": "UNSURE",
+      "reason": "The snippet truncates the create() payload before showing whether the 'email' attribute is passed to invoke the mutator."
+    },
+    {
+      "id": "Ef0c059e433",
+      "verdict": "UNSURE",
+      "reason": "The snippet truncates the create() payload before showing whether the 'email' attribute is passed to invoke the mutator."
+    },
+    {
+      "id": "E354082ab05",
+      "verdict": "UNSURE",
+      "reason": "The snippet truncates the create() payload before showing whether the 'email' attribute is passed to invoke the mutator."
+    },
+    {
+      "id": "Ee3e0f60335",
+      "verdict": "UNSURE",
+      "reason": "The snippet truncates the create() payload before showing whether the 'email' attribute is passed to invoke the mutator."
+    },
+    {
+      "id": "E9e7bf8e0e6",
+      "verdict": "UNSURE",
+      "reason": "The snippet truncates the create() payload before showing whether the 'email' attribute is passed to invoke the mutator."
+    }
+  ]
+}
+```

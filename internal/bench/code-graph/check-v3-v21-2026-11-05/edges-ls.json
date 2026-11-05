@@ -1,0 +1,2101 @@
+[
+ {
+  "id": "ls-b-05",
+  "target": {
+   "file": "resources/js/composables/useAppearance.ts",
+   "line": 13,
+   "symbol": "updateTheme"
+  },
+  "edges": [
+   {
+    "from_file": "resources/js/composables/useAppearance.ts",
+    "from_line": 116,
+    "to_symbol": "updateTheme",
+    "to_file": "resources/js/composables/useAppearance.ts",
+    "to_line": 13,
+    "kind": "call",
+    "note": "inside updateAppearance (line 107)"
+   },
+   {
+    "from_file": "resources/js/composables/useAppearance.ts",
+    "from_line": 80,
+    "to_symbol": "updateTheme",
+    "to_file": "resources/js/composables/useAppearance.ts",
+    "to_line": 13,
+    "kind": "call",
+    "note": "inside initializeTheme (line 73)"
+   },
+   {
+    "from_file": "resources/js/composables/useAppearance.ts",
+    "from_line": 70,
+    "to_symbol": "updateTheme",
+    "to_file": "resources/js/composables/useAppearance.ts",
+    "to_line": 13,
+    "kind": "call",
+    "note": "inside handleSystemThemeChange (line 67)"
+   },
+   {
+    "from_file": "resources/js/app.ts",
+    "from_line": 36,
+    "to_symbol": "initializeTheme",
+    "to_file": "resources/js/composables/useAppearance.ts",
+    "to_line": 73,
+    "kind": "call"
+   },
+   {
+    "from_file": "resources/js/components/AppearanceTabs.vue",
+    "from_line": 21,
+    "to_symbol": "updateAppearance",
+    "to_file": "resources/js/composables/useAppearance.ts",
+    "to_line": 107,
+    "kind": "call",
+    "note": "obtained from useAppearance() at line 5"
+   },
+   {
+    "from_file": "resources/js/components/AppearanceTabs.vue",
+    "from_line": 5,
+    "to_symbol": "useAppearance",
+    "to_file": "resources/js/composables/useAppearance.ts",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "resources/js/pages/settings/Appearance.vue",
+    "from_line": 30,
+    "to_symbol": "AppearanceTabs",
+    "to_file": "resources/js/components/AppearanceTabs.vue",
+    "to_line": 1,
+    "kind": "component"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "resources/js/components/TwoFactorSetupModal.vue",
+    "reason": "calls useAppearance() but only reads resolvedAppearance; never calls updateAppearance/updateTheme"
+   },
+   {
+    "path": "resources/js/components/ui/sonner/Sonner.vue",
+    "reason": "calls useAppearance() but only reads the appearance ref; never calls updateAppearance/updateTheme"
+   }
+  ]
+ },
+ {
+  "id": "ls-b-06",
+  "target": {
+   "file": "resources/js/lib/utils.ts",
+   "line": 10,
+   "symbol": "toUrl"
+  },
+  "edges": [
+   {
+    "from_file": "resources/js/composables/useCurrentUrl.ts",
+    "from_line": 43,
+    "to_symbol": "toUrl",
+    "to_file": "resources/js/lib/utils.ts",
+    "to_line": 10,
+    "kind": "call",
+    "note": "inside isCurrentUrl (line 37)"
+   },
+   {
+    "from_file": "resources/js/composables/useCurrentUrl.ts",
+    "from_line": 65,
+    "to_symbol": "isCurrentUrl",
+    "to_file": "resources/js/composables/useCurrentUrl.ts",
+    "to_line": 37,
+    "kind": "call",
+    "note": "isCurrentOrParentUrl"
+   },
+   {
+    "from_file": "resources/js/composables/useCurrentUrl.ts",
+    "from_line": 73,
+    "to_symbol": "isCurrentUrl",
+    "to_file": "resources/js/composables/useCurrentUrl.ts",
+    "to_line": 37,
+    "kind": "call",
+    "note": "whenCurrentUrl"
+   },
+   {
+    "from_file": "resources/js/components/NavFooter.vue",
+    "from_line": 32,
+    "to_symbol": "toUrl",
+    "to_file": "resources/js/lib/utils.ts",
+    "to_line": 10,
+    "kind": "call"
+   },
+   {
+    "from_file": "resources/js/components/AppHeader.vue",
+    "from_line": 131,
+    "to_symbol": "toUrl",
+    "to_file": "resources/js/lib/utils.ts",
+    "to_line": 10,
+    "kind": "call"
+   },
+   {
+    "from_file": "resources/js/components/AppHeader.vue",
+    "from_line": 218,
+    "to_symbol": "toUrl",
+    "to_file": "resources/js/lib/utils.ts",
+    "to_line": 10,
+    "kind": "call"
+   },
+   {
+    "from_file": "resources/js/components/AppHeader.vue",
+    "from_line": 183,
+    "to_symbol": "isCurrentUrl",
+    "to_file": "resources/js/composables/useCurrentUrl.ts",
+    "to_line": 37,
+    "kind": "call",
+    "note": "from useCurrentUrl() at line 51"
+   },
+   {
+    "from_file": "resources/js/components/NavMain.vue",
+    "from_line": 27,
+    "to_symbol": "isCurrentUrl",
+    "to_file": "resources/js/composables/useCurrentUrl.ts",
+    "to_line": 37,
+    "kind": "call",
+    "note": "from useCurrentUrl() at line 17"
+   },
+   {
+    "from_file": "resources/js/layouts/settings/Layout.vue",
+    "from_line": 146,
+    "to_symbol": "isCurrentOrParentUrl",
+    "to_file": "resources/js/composables/useCurrentUrl.ts",
+    "to_line": 61,
+    "kind": "call",
+    "note": "from useCurrentUrl() at line 49"
+   },
+   {
+    "from_file": "resources/js/components/AppSidebar.vue",
+    "from_line": 57,
+    "to_symbol": "NavMain",
+    "to_file": "resources/js/components/NavMain.vue",
+    "to_line": 1,
+    "kind": "component"
+   },
+   {
+    "from_file": "resources/js/components/AppSidebar.vue",
+    "from_line": 61,
+    "to_symbol": "NavFooter",
+    "to_file": "resources/js/components/NavFooter.vue",
+    "to_line": 1,
+    "kind": "component"
+   },
+   {
+    "from_file": "resources/js/layouts/app/AppSidebarLayout.vue",
+    "from_line": 20,
+    "to_symbol": "AppSidebar",
+    "to_file": "resources/js/components/AppSidebar.vue",
+    "to_line": 1,
+    "kind": "component"
+   },
+   {
+    "from_file": "resources/js/layouts/app/AppHeaderLayout.vue",
+    "from_line": 19,
+    "to_symbol": "AppHeader",
+    "to_file": "resources/js/components/AppHeader.vue",
+    "to_line": 1,
+    "kind": "component"
+   },
+   {
+    "from_file": "resources/js/layouts/AppLayout.vue",
+    "from_line": 11,
+    "to_symbol": "AppSidebarLayout (imported as AppLayout, line 2)",
+    "to_file": "resources/js/layouts/app/AppSidebarLayout.vue",
+    "to_line": 1,
+    "kind": "component"
+   },
+   {
+    "from_file": "resources/js/app.ts",
+    "from_line": 27,
+    "to_symbol": "AppLayout",
+    "to_file": "resources/js/layouts/AppLayout.vue",
+    "to_line": 1,
+    "kind": "framework",
+    "note": "Inertia createInertiaApp layout resolver returns AppLayout (default case)"
+   },
+   {
+    "from_file": "resources/js/app.ts",
+    "from_line": 25,
+    "to_symbol": "SettingsLayout",
+    "to_file": "resources/js/layouts/settings/Layout.vue",
+    "to_line": 1,
+    "kind": "framework",
+    "note": "Inertia layout resolver for settings/* pages"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "resources/js/components/NavUser.vue, UserMenuContent.vue, UserInfo.vue, Breadcrumbs.vue, AppLogo.vue",
+    "reason": "none imports utils.toUrl, useCurrentUrl, or any component that does"
+   },
+   {
+    "path": "resources/js/layouts/AuthLayout.vue, layouts/auth/*.vue",
+    "reason": "auth layouts render only AppLogoIcon / Link / route helpers; no toUrl or useCurrentUrl chain"
+   },
+   {
+    "path": "resources/js/pages/Dashboard.vue",
+    "reason": "page never references a layout or nav component; its defineOptions layout is a props object; layout wrapping is applied by app.ts (edge runs app.ts -> layout, not page -> layout)"
+   },
+   {
+    "path": "resources/js/pages/Welcome.vue, Activity.vue, Inbox.vue, Onboarding.vue",
+    "reason": "no toUrl/useCurrentUrl use and no nav/layout component usage (app.ts gives them no layout)"
+   },
+   {
+    "path": "resources/js/pages/auth/*.vue",
+    "reason": "only form components; AuthLayout applied by app.ts, and AuthLayout itself has no path"
+   },
+   {
+    "path": "resources/js/pages/settings/Appearance.vue",
+    "reason": "uses AppearanceTabs/Heading only; SettingsLayout is applied by app.ts, not referenced by the page"
+   },
+   {
+    "path": "resources/js/pages/settings/Profile.vue",
+    "reason": "uses form components only; layout applied by app.ts"
+   },
+   {
+    "path": "resources/js/pages/settings/Security.vue",
+    "reason": "uses form/2FA components only; layout applied by app.ts"
+   }
+  ]
+ },
+ {
+  "id": "ls-c-tests-01",
+  "target": {
+   "file": "app/Services/ThreadResolver.php",
+   "line": 17,
+   "symbol": "ThreadResolver"
+  },
+  "edges": [
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 113,
+    "to_symbol": "ThreadResolver::attachOutbound",
+    "to_file": "app/Services/ThreadResolver.php",
+    "to_line": 49,
+    "kind": "call",
+    "note": "injected at :27"
+   },
+   {
+    "from_file": "app/Services/InboundEmailIngestor.php",
+    "from_line": 77,
+    "to_symbol": "ThreadResolver::attachInbound",
+    "to_file": "app/Services/ThreadResolver.php",
+    "to_line": 25,
+    "kind": "call",
+    "note": "injected at :26"
+   },
+   {
+    "from_file": "app/Console/Commands/ThreadBackfillCommand.php",
+    "from_line": 30,
+    "to_symbol": "ThreadResolver::attachOutbound",
+    "to_file": "app/Services/ThreadResolver.php",
+    "to_line": 49,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Console/Commands/ThreadBackfillCommand.php",
+    "from_line": 31,
+    "to_symbol": "ThreadResolver::attachInbound",
+    "to_file": "app/Services/ThreadResolver.php",
+    "to_line": 25,
+    "kind": "call"
+   },
+   {
+    "from_file": "database/seeders/InboxDemoSeeder.php",
+    "from_line": 161,
+    "to_symbol": "ThreadResolver::attachInbound",
+    "to_file": "app/Services/ThreadResolver.php",
+    "to_line": 25,
+    "kind": "call"
+   },
+   {
+    "from_file": "database/seeders/InboxDemoSeeder.php",
+    "from_line": 209,
+    "to_symbol": "ThreadResolver::attachOutbound",
+    "to_file": "app/Services/ThreadResolver.php",
+    "to_line": 49,
+    "kind": "call"
+   },
+   {
+    "from_file": "database/seeders/DatabaseSeeder.php",
+    "from_line": 78,
+    "to_symbol": "InboxDemoSeeder::seed",
+    "to_file": "database/seeders/InboxDemoSeeder.php",
+    "to_line": 40,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/Webhooks/CloudflareInboundController.php",
+    "from_line": 87,
+    "to_symbol": "InboundEmailIngestor::ingest",
+    "to_file": "app/Services/InboundEmailIngestor.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 22,
+    "to_symbol": "CloudflareInboundController::__invoke",
+    "to_file": "app/Http/Controllers/Webhooks/CloudflareInboundController.php",
+    "to_line": 25,
+    "kind": "route"
+   },
+   {
+    "from_file": "app/Http/Controllers/Api/EmailController.php",
+    "from_line": 80,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 387,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "sendEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 421,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "resendStoredEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 457,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "retrySoftBounces"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 398,
+    "to_symbol": "DashboardActionController::resendStoredEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 408,
+    "kind": "call",
+    "note": "resendEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 405,
+    "to_symbol": "DashboardActionController::resendStoredEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 408,
+    "kind": "call",
+    "note": "resendProjectEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 71,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "reply; injected at :26"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 132,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "compose"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 198,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "forward"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 13,
+    "to_symbol": "EmailController::store",
+    "to_file": "app/Http/Controllers/Api/EmailController.php",
+    "to_line": 40,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 62,
+    "to_symbol": "DashboardActionController::sendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 376,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 114,
+    "to_symbol": "DashboardActionController::sendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 376,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 63,
+    "to_symbol": "DashboardActionController::retrySoftBounces",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 438,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 115,
+    "to_symbol": "DashboardActionController::retrySoftBounces",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 438,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 64,
+    "to_symbol": "DashboardActionController::resendProjectEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 401,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 116,
+    "to_symbol": "DashboardActionController::resendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 394,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 70,
+    "to_symbol": "ThreadActionController::reply",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 34,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 71,
+    "to_symbol": "ThreadActionController::forward",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 160,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 76,
+    "to_symbol": "ThreadActionController::compose",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 107,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 64,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 122,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "app(EmailSendService::class)->send"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSendTest.php",
+    "from_line": 97,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "from_line": 421,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 601,
+    "to_symbol": "POST /send",
+    "to_file": "routes/web.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 667,
+    "to_symbol": "POST /emails/{email}/resend",
+    "to_file": "routes/web.php",
+    "to_line": 116,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 686,
+    "to_symbol": "POST /projects/{project}/send",
+    "to_file": "routes/web.php",
+    "to_line": 62,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 747,
+    "to_symbol": "POST /bounces/retry-soft",
+    "to_file": "routes/web.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 88,
+    "to_symbol": "POST /projects/{project}/threads/{thread}/reply",
+    "to_file": "routes/web.php",
+    "to_line": 70,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 112,
+    "to_symbol": "POST /projects/{project}/inbox/compose",
+    "to_file": "routes/web.php",
+    "to_line": 76,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 202,
+    "to_symbol": "POST /projects/{project}/threads/{thread}/forward",
+    "to_file": "routes/web.php",
+    "to_line": 71,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ThreadingTest.php",
+    "from_line": 93,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "tests/Feature/InboundEmailTest.php",
+    "from_line": 74,
+    "to_symbol": "POST /api/webhooks/inbound/cloudflare/{token}",
+    "to_file": "routes/api.php",
+    "to_line": 22,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboundEmailTest.php",
+    "from_line": 179,
+    "to_symbol": "InboundEmailIngestor::ingest",
+    "to_file": "app/Services/InboundEmailIngestor.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 72,
+    "to_symbol": "POST /api/webhooks/inbound/cloudflare/{token}",
+    "to_file": "routes/api.php",
+    "to_line": 22,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxTest.php",
+    "from_line": 52,
+    "to_symbol": "POST /api/webhooks/inbound/cloudflare/{token}",
+    "to_file": "routes/api.php",
+    "to_line": 22,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ThreadingTest.php",
+    "from_line": 62,
+    "to_symbol": "POST /api/webhooks/inbound/cloudflare/{token}",
+    "to_file": "routes/api.php",
+    "to_line": 22,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ThreadingTest.php",
+    "from_line": 149,
+    "to_symbol": "larasend:thread-backfill",
+    "to_file": "app/Console/Commands/ThreadBackfillCommand.php",
+    "to_line": 12,
+    "kind": "framework",
+    "note": "artisan command signature attribute -> handle(ThreadResolver) at line 16"
+   },
+   {
+    "from_file": "tests/Feature/DatabaseSeederSafetyTest.php",
+    "from_line": 24,
+    "to_symbol": "DatabaseSeeder::run",
+    "to_file": "database/seeders/DatabaseSeeder.php",
+    "to_line": 26,
+    "kind": "framework",
+    "note": "$this->seed(DatabaseSeeder::class) runs the seeder"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "tests/Feature/ActivityDashboardTest.php",
+    "reason": "only GET dashboard/activity requests and model setup; no send, inbound, backfill or seeder path"
+   },
+   {
+    "path": "tests/Feature/LarasendLaravelPackageTest.php",
+    "reason": "exercises the Larasend client package against Http::fake; no app route or service is hit"
+   },
+   {
+    "path": "tests/Feature/SesWebhookTest.php",
+    "reason": "posts to webhooks/ses -> SesWebhookController -> SesEventNormalizer, which never uses ThreadResolver"
+   },
+   {
+    "path": "tests/Feature/OutboundWebhookDeliveryTest.php",
+    "reason": "posts to webhooks/ses only; same SES path, no ThreadResolver"
+   },
+   {
+    "path": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "reason": "reads EmailSendService source as text (line 426) but never executes send/ingest"
+   }
+  ]
+ },
+ {
+  "id": "ls-c-tests-02",
+  "target": {
+   "file": "app/Services/SuppressionRemovalService.php",
+   "line": 11,
+   "symbol": "SuppressionRemovalService"
+  },
+  "edges": [
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 331,
+    "to_symbol": "SuppressionRemovalService::remove",
+    "to_file": "app/Services/SuppressionRemovalService.php",
+    "to_line": 20,
+    "kind": "call",
+    "note": "deleteSuppression"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 310,
+    "to_symbol": "DashboardActionController::deleteSuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 321,
+    "kind": "call",
+    "note": "destroySuppression"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 318,
+    "to_symbol": "DashboardActionController::deleteSuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 321,
+    "kind": "call",
+    "note": "destroyProjectSuppression"
+   },
+   {
+    "from_file": "app/Http/Controllers/Api/SuppressionController.php",
+    "from_line": 28,
+    "to_symbol": "SuppressionRemovalService::remove",
+    "to_file": "app/Services/SuppressionRemovalService.php",
+    "to_line": 20,
+    "kind": "call"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 59,
+    "to_symbol": "DashboardActionController::destroyProjectSuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 313,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 95,
+    "to_symbol": "DashboardActionController::destroySuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 306,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 15,
+    "to_symbol": "SuppressionController::destroy",
+    "to_file": "app/Http/Controllers/Api/SuppressionController.php",
+    "to_line": 17,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 79,
+    "to_symbol": "DELETE /projects/{project}/suppressions/{suppression}",
+    "to_file": "routes/web.php",
+    "to_line": 59,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 112,
+    "to_symbol": "DELETE /suppressions/{suppression}",
+    "to_file": "routes/web.php",
+    "to_line": 95,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 315,
+    "to_symbol": "DELETE /api/suppressions/{suppression}",
+    "to_file": "routes/api.php",
+    "to_line": 15,
+    "kind": "route"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "reason": "exercises the sync jobs and /api/emails; no suppression DELETE route and no direct use of SuppressionRemovalService"
+   },
+   {
+    "path": "tests/Feature/DashboardActionsTest.php",
+    "reason": "no request to a suppressions destroy route (its deletes target domains/api-keys)"
+   }
+  ]
+ },
+ {
+  "id": "ls-e-01",
+  "target": {
+   "file": "app/Services/WebhookUrlGuard.php",
+   "line": 11,
+   "symbol": "WebhookUrlGuard::isSafe"
+  },
+  "edges": [
+   {
+    "from_file": "app/Rules/PublicWebhookUrl.php",
+    "from_line": 21,
+    "to_symbol": "WebhookUrlGuard::isSafe",
+    "to_file": "app/Services/WebhookUrlGuard.php",
+    "to_line": 11,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Requests/StoreWebhookEndpointRequest.php",
+    "from_line": 28,
+    "to_symbol": "PublicWebhookUrl",
+    "to_file": "app/Rules/PublicWebhookUrl.php",
+    "to_line": 10,
+    "kind": "use",
+    "note": "new PublicWebhookUrl in rules()"
+   },
+   {
+    "from_file": "app/Http/Requests/StoreOnboardingRequest.php",
+    "from_line": 49,
+    "to_symbol": "PublicWebhookUrl",
+    "to_file": "app/Rules/PublicWebhookUrl.php",
+    "to_line": 10,
+    "kind": "use",
+    "note": "new PublicWebhookUrl in rules()"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 344,
+    "to_symbol": "StoreWebhookEndpointRequest",
+    "to_file": "app/Http/Requests/StoreWebhookEndpointRequest.php",
+    "to_line": 10,
+    "kind": "framework",
+    "note": "FormRequest type-hint: validated on resolution"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 362,
+    "to_symbol": "StoreWebhookEndpointRequest",
+    "to_file": "app/Http/Requests/StoreWebhookEndpointRequest.php",
+    "to_line": 10,
+    "kind": "framework",
+    "note": "FormRequest type-hint: validated on resolution"
+   },
+   {
+    "from_file": "app/Http/Controllers/OnboardingController.php",
+    "from_line": 145,
+    "to_symbol": "StoreOnboardingRequest",
+    "to_file": "app/Http/Requests/StoreOnboardingRequest.php",
+    "to_line": 10,
+    "kind": "framework",
+    "note": "FormRequest type-hint: validated on resolution"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 60,
+    "to_symbol": "DashboardActionController::storeWebhookEndpoint",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 344,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 61,
+    "to_symbol": "DashboardActionController::updateWebhookEndpoint",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 362,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 112,
+    "to_symbol": "DashboardActionController::storeWebhookEndpoint",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 344,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 113,
+    "to_symbol": "DashboardActionController::updateWebhookEndpoint",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 362,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 33,
+    "to_symbol": "OnboardingController::store",
+    "to_file": "app/Http/Controllers/OnboardingController.php",
+    "to_line": 145,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 501,
+    "to_symbol": "POST /webhooks",
+    "to_file": "routes/web.php",
+    "to_line": 112,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 514,
+    "to_symbol": "PUT /webhooks/{endpoint}",
+    "to_file": "routes/web.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 533,
+    "to_symbol": "POST /projects/{project}/webhooks",
+    "to_file": "routes/web.php",
+    "to_line": 60,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/OnboardingTest.php",
+    "from_line": 53,
+    "to_symbol": "POST /onboarding",
+    "to_file": "routes/web.php",
+    "to_line": 33,
+    "kind": "route"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1315,
+    "to_symbol": "POST {project}/webhooks",
+    "to_file": "routes/web.php",
+    "to_line": 60,
+    "kind": "route",
+    "note": "router.post via projectAction"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1306,
+    "to_symbol": "PUT {project}/webhooks/{endpoint}",
+    "to_file": "routes/web.php",
+    "to_line": 61,
+    "kind": "route",
+    "note": "router.put via projectAction"
+   },
+   {
+    "from_file": "resources/js/pages/Onboarding.vue",
+    "from_line": 346,
+    "to_symbol": "POST /onboarding",
+    "to_file": "routes/web.php",
+    "to_line": 33,
+    "kind": "route",
+    "note": "Inertia form post"
+   },
+   {
+    "from_file": "tests/Unit/WebhookUrlGuardTest.php",
+    "from_line": 8,
+    "to_symbol": "WebhookUrlGuard::isSafe",
+    "to_file": "app/Services/WebhookUrlGuard.php",
+    "to_line": 11,
+    "kind": "call"
+   },
+   {
+    "from_file": "tests/Pest.php",
+    "from_line": 23,
+    "to_symbol": "WebhookUrlGuard",
+    "to_file": "app/Services/WebhookUrlGuard.php",
+    "to_line": 9,
+    "kind": "use",
+    "note": "anonymous subclass (overrides resolveHost only) inherits isSafe and is container-bound for Feature tests, so PublicWebhookUrl's app(WebhookUrlGuard) resolves to it"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "app/Jobs/DeliverInboundWebhook.php",
+    "reason": "calls WebhookUrlGuard::requestOptions (line 92) directly, never isSafe; isSafe depends on requestOptions, not the reverse"
+   },
+   {
+    "path": "app/Jobs/DeliverWebhook.php",
+    "reason": "calls WebhookUrlGuard::requestOptions (line 65) directly, never isSafe"
+   }
+  ]
+ },
+ {
+  "id": "ls-e-02",
+  "target": {
+   "file": "app/Models/Suppression.php",
+   "line": 44,
+   "symbol": "Suppression::normalizeEmail"
+  },
+  "edges": [
+   {
+    "from_file": "app/Models/Suppression.php",
+    "from_line": 40,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "inside email() Attribute mutator (line 37)"
+   },
+   {
+    "from_file": "app/Models/Suppression.php",
+    "from_line": 58,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "scopeWhereNormalizedEmail (line 56)"
+   },
+   {
+    "from_file": "app/Models/Suppression.php",
+    "from_line": 124,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "normalizeEmails (line 121)"
+   },
+   {
+    "from_file": "app/Models/Suppression.php",
+    "from_line": 67,
+    "to_symbol": "Suppression::normalizeEmails",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 121,
+    "kind": "call",
+    "note": "scopeWhereNormalizedEmailIn (line 65)"
+   },
+   {
+    "from_file": "app/Models/Suppression.php",
+    "from_line": 76,
+    "to_symbol": "Suppression::normalizeEmails",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 121,
+    "kind": "call",
+    "note": "scopeWhereNormalizedEmailNotIn (line 74)"
+   },
+   {
+    "from_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "from_line": 61,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "from_line": 164,
+    "to_symbol": "scopeWhereNormalizedEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 56,
+    "kind": "framework",
+    "note": "Eloquent local scope ->whereNormalizedEmail()"
+   },
+   {
+    "from_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "from_line": 114,
+    "to_symbol": "scopeWhereNormalizedEmailNotIn",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 74,
+    "kind": "framework",
+    "note": "Eloquent local scope"
+   },
+   {
+    "from_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "from_line": 53,
+    "to_symbol": "CloudflareApiClient::listStableSuppressions",
+    "to_file": "app/Services/CloudflareApiClient.php",
+    "to_line": 97,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Services/CloudflareApiClient.php",
+    "from_line": 128,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "normalizeSuppressionSnapshot (line 123)"
+   },
+   {
+    "from_file": "app/Services/CloudflareApiClient.php",
+    "from_line": 107,
+    "to_symbol": "CloudflareApiClient::normalizeSuppressionSnapshot",
+    "to_file": "app/Services/CloudflareApiClient.php",
+    "to_line": 123,
+    "kind": "call",
+    "note": "inside listStableSuppressions"
+   },
+   {
+    "from_file": "app/Jobs/SyncCloudflareSuppressions.php",
+    "from_line": 40,
+    "to_symbol": "SyncCloudflareSourceSuppressions",
+    "to_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "to_line": 23,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "routes/console.php",
+    "from_line": 22,
+    "to_symbol": "SyncCloudflareSuppressions",
+    "to_file": "app/Jobs/SyncCloudflareSuppressions.php",
+    "to_line": 17,
+    "kind": "framework",
+    "note": "Schedule::job hourly"
+   },
+   {
+    "from_file": "app/Services/SesEventNormalizer.php",
+    "from_line": 159,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "recordSuppression (line 141)"
+   },
+   {
+    "from_file": "app/Services/SesEventNormalizer.php",
+    "from_line": 199,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "upsertSqlServerSuppression (line 190)"
+   },
+   {
+    "from_file": "app/Services/SesEventNormalizer.php",
+    "from_line": 70,
+    "to_symbol": "SesEventNormalizer::recordSuppression",
+    "to_file": "app/Services/SesEventNormalizer.php",
+    "to_line": 141,
+    "kind": "call",
+    "note": "inside record (line 21)"
+   },
+   {
+    "from_file": "app/Services/SesEventNormalizer.php",
+    "from_line": 171,
+    "to_symbol": "SesEventNormalizer::upsertSqlServerSuppression",
+    "to_file": "app/Services/SesEventNormalizer.php",
+    "to_line": 190,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/Webhooks/SesWebhookController.php",
+    "from_line": 61,
+    "to_symbol": "SesEventNormalizer::record",
+    "to_file": "app/Services/SesEventNormalizer.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 18,
+    "to_symbol": "SesWebhookController::__invoke",
+    "to_file": "app/Http/Controllers/Webhooks/SesWebhookController.php",
+    "to_line": 17,
+    "kind": "route"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 241,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "ensureRecipientsAreSendable (line 237)"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 256,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 254,
+    "to_symbol": "scopeWhereNormalizedEmailIn",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 65,
+    "kind": "framework",
+    "note": "Eloquent local scope"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 46,
+    "to_symbol": "EmailSendService::ensureRecipientsAreSendable",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 237,
+    "kind": "call",
+    "note": "inside send (line 34)"
+   },
+   {
+    "from_file": "app/Services/SuppressionRemovalService.php",
+    "from_line": 61,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call",
+    "note": "inside remove (line 20)"
+   },
+   {
+    "from_file": "app/Services/SuppressionRemovalService.php",
+    "from_line": 64,
+    "to_symbol": "Suppression::normalizeEmail",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Services/SuppressionRemovalService.php",
+    "from_line": 48,
+    "to_symbol": "CloudflareApiClient::listStableSuppressions",
+    "to_file": "app/Services/CloudflareApiClient.php",
+    "to_line": 97,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/Api/EmailController.php",
+    "from_line": 80,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 387,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "sendEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 421,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "resendStoredEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 457,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "retrySoftBounces"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 398,
+    "to_symbol": "DashboardActionController::resendStoredEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 408,
+    "kind": "call",
+    "note": "resendEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 405,
+    "to_symbol": "DashboardActionController::resendStoredEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 408,
+    "kind": "call",
+    "note": "resendProjectEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 71,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "reply; injected at :26"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 132,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "compose"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 198,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "forward"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 13,
+    "to_symbol": "EmailController::store",
+    "to_file": "app/Http/Controllers/Api/EmailController.php",
+    "to_line": 40,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 62,
+    "to_symbol": "DashboardActionController::sendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 376,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 114,
+    "to_symbol": "DashboardActionController::sendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 376,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 63,
+    "to_symbol": "DashboardActionController::retrySoftBounces",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 438,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 115,
+    "to_symbol": "DashboardActionController::retrySoftBounces",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 438,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 64,
+    "to_symbol": "DashboardActionController::resendProjectEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 401,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 116,
+    "to_symbol": "DashboardActionController::resendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 394,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 70,
+    "to_symbol": "ThreadActionController::reply",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 34,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 71,
+    "to_symbol": "ThreadActionController::forward",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 160,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 76,
+    "to_symbol": "ThreadActionController::compose",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 107,
+    "kind": "route"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 331,
+    "to_symbol": "SuppressionRemovalService::remove",
+    "to_file": "app/Services/SuppressionRemovalService.php",
+    "to_line": 20,
+    "kind": "call",
+    "note": "deleteSuppression"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 310,
+    "to_symbol": "DashboardActionController::deleteSuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 321,
+    "kind": "call",
+    "note": "destroySuppression"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 318,
+    "to_symbol": "DashboardActionController::deleteSuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 321,
+    "kind": "call",
+    "note": "destroyProjectSuppression"
+   },
+   {
+    "from_file": "app/Http/Controllers/Api/SuppressionController.php",
+    "from_line": 28,
+    "to_symbol": "SuppressionRemovalService::remove",
+    "to_file": "app/Services/SuppressionRemovalService.php",
+    "to_line": 20,
+    "kind": "call"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 59,
+    "to_symbol": "DashboardActionController::destroyProjectSuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 313,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 95,
+    "to_symbol": "DashboardActionController::destroySuppression",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 306,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 15,
+    "to_symbol": "SuppressionController::destroy",
+    "to_file": "app/Http/Controllers/Api/SuppressionController.php",
+    "to_line": 17,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 64,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 122,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "app(EmailSendService::class)->send"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSendTest.php",
+    "from_line": 97,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "from_line": 421,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 601,
+    "to_symbol": "POST /send",
+    "to_file": "routes/web.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 667,
+    "to_symbol": "POST /emails/{email}/resend",
+    "to_file": "routes/web.php",
+    "to_line": 116,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 686,
+    "to_symbol": "POST /projects/{project}/send",
+    "to_file": "routes/web.php",
+    "to_line": 62,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 747,
+    "to_symbol": "POST /bounces/retry-soft",
+    "to_file": "routes/web.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 88,
+    "to_symbol": "POST /projects/{project}/threads/{thread}/reply",
+    "to_file": "routes/web.php",
+    "to_line": 70,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 112,
+    "to_symbol": "POST /projects/{project}/inbox/compose",
+    "to_file": "routes/web.php",
+    "to_line": 76,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 202,
+    "to_symbol": "POST /projects/{project}/threads/{thread}/forward",
+    "to_file": "routes/web.php",
+    "to_line": 71,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ThreadingTest.php",
+    "from_line": 93,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 79,
+    "to_symbol": "DELETE /projects/{project}/suppressions/{suppression}",
+    "to_file": "routes/web.php",
+    "to_line": 59,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 112,
+    "to_symbol": "DELETE /suppressions/{suppression}",
+    "to_file": "routes/web.php",
+    "to_line": 95,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 315,
+    "to_symbol": "DELETE /api/suppressions/{suppression}",
+    "to_file": "routes/api.php",
+    "to_line": 15,
+    "kind": "route"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1257,
+    "to_symbol": "DELETE {project}/suppressions/{suppression}",
+    "to_file": "routes/web.php",
+    "to_line": 59,
+    "kind": "route",
+    "note": "router.delete via projectAction"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1334,
+    "to_symbol": "POST {project}/send",
+    "to_file": "routes/web.php",
+    "to_line": 62,
+    "kind": "route",
+    "note": "router.post via projectAction"
+   },
+   {
+    "from_file": "resources/js/pages/Inbox.vue",
+    "from_line": 680,
+    "to_symbol": "POST {project}/threads/{thread}/reply",
+    "to_file": "routes/web.php",
+    "to_line": 70,
+    "kind": "route",
+    "note": "Inertia form post"
+   },
+   {
+    "from_file": "tests/Feature/ActivityDashboardTest.php",
+    "from_line": 74,
+    "to_symbol": "Suppression email() mutator",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 37,
+    "kind": "framework",
+    "note": "Eloquent set-mutator fires on Suppression::query()->create(['email'=>...])"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 438,
+    "to_symbol": "Suppression email() mutator",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 37,
+    "kind": "framework",
+    "note": "Suppression::create with email"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "from_line": 135,
+    "to_symbol": "Suppression email() mutator",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 37,
+    "kind": "framework",
+    "note": "Suppression::create with email"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "from_line": 41,
+    "to_symbol": "SyncCloudflareSourceSuppressions",
+    "to_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "to_line": 23,
+    "kind": "use",
+    "note": "instantiates the job and calls handle (line 37)"
+   },
+   {
+    "from_file": "tests/Feature/SesWebhookTest.php",
+    "from_line": 47,
+    "to_symbol": "POST /api/webhooks/ses/{token}",
+    "to_file": "routes/api.php",
+    "to_line": 18,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/SesWebhookTest.php",
+    "from_line": 195,
+    "to_symbol": "SesEventNormalizer::record",
+    "to_file": "app/Services/SesEventNormalizer.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "tests/Feature/SesWebhookTest.php",
+    "from_line": 273,
+    "to_symbol": "Suppression email() mutator",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 37,
+    "kind": "framework",
+    "note": "Suppression::create with email"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "from_line": 189,
+    "to_symbol": "Suppression email() mutator",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 37,
+    "kind": "framework",
+    "note": "Suppression::create with email"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "from_line": 156,
+    "to_symbol": "SesEventNormalizer::record",
+    "to_file": "app/Services/SesEventNormalizer.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "from_line": 295,
+    "to_symbol": "SyncCloudflareSourceSuppressions",
+    "to_file": "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "to_line": 23,
+    "kind": "use",
+    "note": "instantiates and calls ->handle at line 296"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "from_line": 430,
+    "to_symbol": "scopeWhereNormalizedEmailIn",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 65,
+    "kind": "framework",
+    "note": "Eloquent local scope"
+   },
+   {
+    "from_file": "tests/Feature/SuppressionManagementTest.php",
+    "from_line": 50,
+    "to_symbol": "Suppression email() mutator",
+    "to_file": "app/Models/Suppression.php",
+    "to_line": 37,
+    "kind": "framework",
+    "note": "Suppression::create with email"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "app/Http/Controllers/ActivityController.php, ActivityExportController.php",
+    "reason": "list/export suppressions read-only; no normalizeEmail, normalized scope, send, or remove call"
+   }
+  ]
+ },
+ {
+  "id": "ls-e-03",
+  "target": {
+   "file": "app/Services/MimeMessageBuilder.php",
+   "line": 84,
+   "symbol": "MimeMessageBuilder::splitAddress"
+  },
+  "edges": [
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 70,
+    "to_symbol": "MimeMessageBuilder::splitAddress",
+    "to_file": "app/Services/MimeMessageBuilder.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "inside send (line 34); mimeBuilder injected at :25"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 96,
+    "to_symbol": "MimeMessageBuilder::splitAddress",
+    "to_file": "app/Services/MimeMessageBuilder.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "inside send"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 142,
+    "to_symbol": "MimeMessageBuilder::splitAddress",
+    "to_file": "app/Services/MimeMessageBuilder.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "ensureSourceCanSend (line 140)"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 197,
+    "to_symbol": "MimeMessageBuilder::splitAddress",
+    "to_file": "app/Services/MimeMessageBuilder.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "fromAddressUsesVerifiedDomain (line 195)"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 242,
+    "to_symbol": "MimeMessageBuilder::splitAddress",
+    "to_file": "app/Services/MimeMessageBuilder.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "ensureRecipientsAreSendable (line 237)"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 45,
+    "to_symbol": "EmailSendService::ensureSourceCanSend",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 140,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 46,
+    "to_symbol": "EmailSendService::ensureRecipientsAreSendable",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 237,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Services/EmailSendService.php",
+    "from_line": 156,
+    "to_symbol": "EmailSendService::fromAddressUsesVerifiedDomain",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 195,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/Api/EmailController.php",
+    "from_line": 80,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 387,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "sendEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 421,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "resendStoredEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 457,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "retrySoftBounces"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 398,
+    "to_symbol": "DashboardActionController::resendStoredEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 408,
+    "kind": "call",
+    "note": "resendEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/DashboardActionController.php",
+    "from_line": 405,
+    "to_symbol": "DashboardActionController::resendStoredEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 408,
+    "kind": "call",
+    "note": "resendProjectEmail"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 71,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "reply; injected at :26"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 132,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "compose"
+   },
+   {
+    "from_file": "app/Http/Controllers/ThreadActionController.php",
+    "from_line": 198,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "forward"
+   },
+   {
+    "from_file": "routes/api.php",
+    "from_line": 13,
+    "to_symbol": "EmailController::store",
+    "to_file": "app/Http/Controllers/Api/EmailController.php",
+    "to_line": 40,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 62,
+    "to_symbol": "DashboardActionController::sendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 376,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 114,
+    "to_symbol": "DashboardActionController::sendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 376,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 63,
+    "to_symbol": "DashboardActionController::retrySoftBounces",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 438,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 115,
+    "to_symbol": "DashboardActionController::retrySoftBounces",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 438,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 64,
+    "to_symbol": "DashboardActionController::resendProjectEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 401,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 116,
+    "to_symbol": "DashboardActionController::resendEmail",
+    "to_file": "app/Http/Controllers/DashboardActionController.php",
+    "to_line": 394,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 70,
+    "to_symbol": "ThreadActionController::reply",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 34,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 71,
+    "to_symbol": "ThreadActionController::forward",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 160,
+    "kind": "route"
+   },
+   {
+    "from_file": "routes/web.php",
+    "from_line": 76,
+    "to_symbol": "ThreadActionController::compose",
+    "to_file": "app/Http/Controllers/ThreadActionController.php",
+    "to_line": 107,
+    "kind": "route"
+   },
+   {
+    "from_file": "resources/js/pages/Inbox.vue",
+    "from_line": 680,
+    "to_symbol": "POST {project}/threads/{thread}/reply",
+    "to_file": "routes/web.php",
+    "to_line": 70,
+    "kind": "route",
+    "note": "Inertia form post"
+   },
+   {
+    "from_file": "resources/js/pages/Inbox.vue",
+    "from_line": 713,
+    "to_symbol": "POST {project}/inbox/compose",
+    "to_file": "routes/web.php",
+    "to_line": 76,
+    "kind": "route",
+    "note": "Inertia form post"
+   },
+   {
+    "from_file": "resources/js/pages/Inbox.vue",
+    "from_line": 743,
+    "to_symbol": "POST {project}/threads/{thread}/forward",
+    "to_file": "routes/web.php",
+    "to_line": 71,
+    "kind": "route",
+    "note": "Inertia form post"
+   },
+   {
+    "from_file": "resources/js/pages/Inbox.vue",
+    "from_line": 391,
+    "to_symbol": "POST {project}/emails/{email}/resend",
+    "to_file": "routes/web.php",
+    "to_line": 64,
+    "kind": "route",
+    "note": "router.post"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1319,
+    "to_symbol": "POST {project}/bounces/retry-soft",
+    "to_file": "routes/web.php",
+    "to_line": 63,
+    "kind": "route",
+    "note": "router.post via projectAction"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1334,
+    "to_symbol": "POST {project}/send",
+    "to_file": "routes/web.php",
+    "to_line": 62,
+    "kind": "route",
+    "note": "router.post via projectAction"
+   },
+   {
+    "from_file": "resources/js/pages/Activity.vue",
+    "from_line": 1351,
+    "to_symbol": "POST {project}/emails/{email}/resend",
+    "to_file": "routes/web.php",
+    "to_line": 64,
+    "kind": "route",
+    "note": "router.post via projectAction"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 64,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ApiEmailTest.php",
+    "from_line": 122,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "app(EmailSendService::class)->send"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSendTest.php",
+    "from_line": 97,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "from_line": 421,
+    "to_symbol": "POST /api/emails",
+    "to_file": "routes/api.php",
+    "to_line": 13,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 601,
+    "to_symbol": "POST /send",
+    "to_file": "routes/web.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 667,
+    "to_symbol": "POST /emails/{email}/resend",
+    "to_file": "routes/web.php",
+    "to_line": 116,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 686,
+    "to_symbol": "POST /projects/{project}/send",
+    "to_file": "routes/web.php",
+    "to_line": 62,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/DashboardActionsTest.php",
+    "from_line": 747,
+    "to_symbol": "POST /bounces/retry-soft",
+    "to_file": "routes/web.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 88,
+    "to_symbol": "POST /projects/{project}/threads/{thread}/reply",
+    "to_file": "routes/web.php",
+    "to_line": 70,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 112,
+    "to_symbol": "POST /projects/{project}/inbox/compose",
+    "to_file": "routes/web.php",
+    "to_line": 76,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/InboxReplyTest.php",
+    "from_line": 202,
+    "to_symbol": "POST /projects/{project}/threads/{thread}/forward",
+    "to_file": "routes/web.php",
+    "to_line": 71,
+    "kind": "route"
+   },
+   {
+    "from_file": "tests/Feature/ThreadingTest.php",
+    "from_line": 93,
+    "to_symbol": "EmailSendService::send",
+    "to_file": "app/Services/EmailSendService.php",
+    "to_line": 34,
+    "kind": "call"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "app/Services/Providers/CloudflareEmailProvider.php",
+    "reason": "injects MimeMessageBuilder but only calls address() (lines 163,165), never splitAddress"
+   },
+   {
+    "path": "tests/Feature/ActivityDashboardTest.php",
+    "reason": "no request to a send/resend/reply/compose/forward route and no direct EmailSendService call"
+   },
+   {
+    "path": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "reason": "reads EmailSendService.php as text (line 426) but never calls send"
+   }
+  ]
+ }
+]
