@@ -46,26 +46,29 @@ checkout, read-only.
 Evidence (read): `internal/bench/corpora/ab-trackb-v2.yaml:286` · `internal/bench/ab/fixtures-v2/capH-debug-02/tests/solve.check.mjs` · `src/scripts/_lib/bench_ab_scoring_v2.ts:643-671`
 
 The 15 `capability_oracle.solve_test` tasks in
-`internal/bench/corpora/ab-trackb-v2.yaml` call `node tests/solve.check.mjs`, and
-that file lives inside the task fixture
-(`internal/bench/ab/fixtures-v2/<task>/tests/solve.check.mjs`). The fixture is
-copied into the agent's working copy, so the "hidden" test is readable — and
-runnable — by the agent under test. `_runVerifier`
-(`src/scripts/_lib/bench_ab_scoring_v2.ts:643`) restores a *tampered* copy; it
-never hides one.
+`internal/bench/corpora/ab-trackb-v2.yaml` run a verifier (`tests/solve.check.mjs`
+or `tests/integration.check.mjs`), and three `discipline_oracle.hidden_test` tasks
+run `tests/hidden.check.mjs` — the corpus calls it "Hidden test (not in prompt)".
+All 21 files lived inside the task fixture
+(`internal/bench/ab/fixtures-v2/<task>/tests/`). The fixture is copied into the
+agent's working copy, so the "hidden" tests were readable — and runnable — by the
+agent under test. `_runVerifier`
+(`src/scripts/_lib/bench_ab_scoring_v2.ts:643`) restored a *tampered* copy; it
+never hid one.
 
-- [ ] **1.1** Move every `tests/solve.check.mjs` out of `fixtures-v2/<task>/` into
-  `internal/bench/ab/solve-v2/<task>/tests/solve.check.mjs`. The fixture keeps
-  everything the agent is meant to see.
-  verify: `git ls-files internal/bench/ab/fixtures-v2 | grep -c solve.check` -> 0 and `git ls-files internal/bench/ab/solve-v2 | grep -c solve.check` -> 15
-- [ ] **1.2** `_runVerifier` takes the oracle root: a file the command names that
-  exists under the oracle root is copied into the scratch workspace at scoring
-  time only. A command whose file is in neither root fails the check with a
-  named reason, never passes it.
+- [x] **1.1** Move every verifier out of `fixtures-v2/<task>/` into
+  `internal/bench/ab/verifiers-v2/<task>/tests/` (21 files, 18 tasks). The fixture
+  keeps everything the agent is meant to see.
+  verify: `git ls-files internal/bench/ab/fixtures-v2 | grep -c 'check.mjs'` -> 0 and `git ls-files internal/bench/ab/verifiers-v2 | grep -c 'check.mjs'` -> 21
+- [x] **1.2** `_runVerifier` takes the oracle root (`oracleRootFor`): a file the
+  command names under the oracle root is copied into a scratch copy of the clone
+  at scoring time only; a file the agent left at that path is replaced and
+  reported as `verifier-planted:`. A command whose file is in neither root runs
+  in the clone and fails, never passes.
   verify: `npx vitest run tests/scripts/bench_ab_solve_oracle.test.ts` -> 0
-- [ ] **1.3** Regression test: for every `solve_test` task, the prepared clone
-  contains no file from its oracle root, and scoring a reference-fixed clone still
-  passes while an untouched clone still fails. Seen red against the pre-move
+- [x] **1.3** Regression test: for every verifier task, no fixture holds a file its
+  commands run, and for every `solve_test` task scoring a reference-fixed clone
+  still passes while an untouched clone still fails. Seen red against the pre-move
   layout.
   verify: `npx vitest run tests/scripts/bench_ab_solve_oracle.test.ts` -> 0, seen red before 1.1-1.2
 

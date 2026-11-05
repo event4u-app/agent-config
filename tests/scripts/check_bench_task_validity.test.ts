@@ -19,6 +19,7 @@ import {
     scoreArm,
     scoreReference,
     verifierFiles,
+    verifierPath,
 } from '../../src/scripts/_lib/bench_task_validity.js';
 import { runTs } from './_bench_wave8d.js';
 
@@ -89,13 +90,14 @@ describe('verifier completion (1.2)', () => {
         expect(r.reports).toContain('verifier-bypass-suspect:src/window.mjs');
     });
 
-    it('a rewritten verifier is restored from the fixture, reported, and the clone is left as it was', () => {
+    it('a planted verifier is replaced from the oracle root, reported, and the clone is left as it was', () => {
         const { task, fx, ws } = stage('capH-debug-01');
         const v = path.join(ws, 'tests', 'solve.check.mjs');
+        fs.mkdirSync(path.dirname(v), { recursive: true });
         fs.writeFileSync(v, 'process.exit(0);\n');
         const r = score_task_v2(task, { fixture_root: fx, clone_root: ws });
         expect(r.capability_pass).toBe(false);
-        expect(r.reports).toContain('verifier-touched:tests/solve.check.mjs');
+        expect(r.reports).toContain('verifier-planted:tests/solve.check.mjs');
         expect(fs.readFileSync(v, 'utf8')).toBe('process.exit(0);\n');
     });
 
@@ -103,7 +105,7 @@ describe('verifier completion (1.2)', () => {
         for (const task of FIXTURE_TASKS) {
             const fx = fixtureRootFor(task) as string;
             for (const rel of verifierFiles(task, fx)) {
-                const lines = fs.readFileSync(path.join(fx, rel), 'utf8').trimEnd().split('\n');
+                const lines = fs.readFileSync(verifierPath(fx, rel), 'utf8').trimEnd().split('\n');
                 expect(lines[lines.length - 1], `${String(task['id'])}/${rel}`).toBe(
                     "console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');",
                 );
