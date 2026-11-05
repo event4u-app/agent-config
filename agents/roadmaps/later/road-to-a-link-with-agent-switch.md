@@ -26,7 +26,7 @@ relates:
 
 > **Source:** owner directive
 > `agents/evidence/owner-directives/2026-11-05-agent-switch-link.md`.
-> **Counterpart:** `agents/roadmaps/road-to-the-agent-config-link.md` in
+> **Counterpart:** roadmap `road-to-the-agent-config-link` in
 > `event4u-app/agent-switch`.
 
 ## Goal
@@ -53,11 +53,11 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 - [ ] **1.1 `docs/contracts/agent-switch-link.md`.** Tools, JSON shapes
       (`limits_get`, `switch_*`, `session_whoami`, `link_status`), request
       states, first-decision-wins, contract version `1`, and the absence rules.
-      verify: `./scripts-run src/scripts/check_refs` -> 0
+      verify: `./scripts-run src/scripts/check_references` -> 0
 - [ ] **1.2 Guide update.** `docs/guides/works-with-agent-switch.md` § "What AC
       never does" keeps moving/automatic switching and adds what AC now does
       (read limits, ask, relay).
-      verify: `./scripts-run src/scripts/check_refs` -> 0
+      verify: `./scripts-run src/scripts/check_references` -> 0
 
 ## Phase 2 — Automatic connection
 
