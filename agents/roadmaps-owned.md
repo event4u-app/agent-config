@@ -179,15 +179,17 @@ and keep the full search — this file only adds candidates to it.
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
 | orchestrator-spawn-injection | stubs | — | orchestrator-side spawn injection |
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
+| road-to-a-discipline-profile-that-loads | stubs | — | a discipline profile that changes what loads |
 | road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
+| road-to-a-line-budget-that-does-not-tax-a-why-comment | stubs | — | a line budget that does not tax a why-comment |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
+| road-to-a-minimal-diff-that-holds-under-load | stubs | — | a minimal diff that holds with the package loaded |
 | road-to-a-name-no-host-already-owns-later | stubs | — | Rename leftovers. |
 | road-to-a-page-check-on-by-default | stubs | — | road to a page check on by default |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
 | road-to-a-quota-notice-that-earned-its-bands | stubs | — | road to a quota notice that earned its bands |
-| road-to-a-rerun-on-the-repaired-scorer | stubs | — | Road to a rerun on the repaired scorer — stub |
 | road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
