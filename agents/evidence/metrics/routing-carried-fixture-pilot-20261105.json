@@ -1,0 +1,137 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-11-05T08:59:30.930Z",
+  "commit": "9e226440b6653348d409dab743b47439ab6c670c",
+  "host_version": "2.1.316",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-baseline-protocol-20261027.md",
+    "sha256": "38326fb3684777b2f31363970dae60605076c7f00441899b53161965d7935c1a"
+  },
+  "catalogue_sha256": "1c967b175fc6d5d682db730ff12295e7a347126c107a50913ee8917f03577293",
+  "cost_usd": 2.3084344,
+  "partial": false,
+  "cases": [
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "fired",
+      "cost_usd": 0.182002,
+      "invoked": [
+        "type-design"
+      ],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "fired",
+      "cost_usd": 0.18127,
+      "invoked": [
+        "type-design"
+      ],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "fired",
+      "cost_usd": 0.1850586,
+      "invoked": [
+        "type-design"
+      ],
+      "id": "q5",
+      "skill_sha256": "a717d21d40274641ec1d1de34fb613e421dd0e5201810ec6048d207a466a0017"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.3473966,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "f7d54bd8f76ff08a9df44a4b582e2ff93dc50566d1e3073061767d6a123c8931"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.42872219999999994,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "f7d54bd8f76ff08a9df44a4b582e2ff93dc50566d1e3073061767d6a123c8931"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.43871659999999996,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "f7d54bd8f76ff08a9df44a4b582e2ff93dc50566d1e3073061767d6a123c8931"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.19584000000000001,
+      "invoked": [
+        "analysis-skill-router"
+      ],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.172792,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.1766364,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    }
+  ],
+  "units": [
+    {
+      "unit": "project-analysis-core",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "react-shadcn-ui",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "type-design",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    }
+  ]
+}
