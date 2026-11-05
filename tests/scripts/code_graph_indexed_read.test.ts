@@ -138,7 +138,7 @@ function withUnreadableJson<T>(jsonPath: string, fn: () => T): T | null {
 }
 
 describe.runIf(sqliteOk)('indexed reads above the threshold', () => {
-    it('affected on a >=50k-edge graph never reads or parses the JSON', () => {
+    it('affected on a graph above the threshold never reads or parses the JSON', () => {
         const jsonPath = writeGraph(INDEXED_READ_MIN_EDGES + 1_000);
 
         const t = countParses(() =>
