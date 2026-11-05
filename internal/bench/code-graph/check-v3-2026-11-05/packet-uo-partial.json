@@ -1,0 +1,501 @@
+[
+ {
+  "id": "uo-b-02",
+  "question": {
+   "id": "uo-b-02",
+   "suite": "B",
+   "class": "precise-semantics",
+   "shape": "callers-transitive",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which files reach SafeWebhookUrl::httpOptions within two call hops?",
+   "probe": "httpOptions",
+   "declared_in": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php:93",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:154 (hop 1)",
+    "packages/Webkul/Webhook/src/Services/WebhookService.php:205 inside deliver() (hop 1)",
+    "packages/Webkul/MagicAI/src/Enums/AiProvider.php:422 (hop 1)",
+    "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php:131 (hop 1)",
+    "callers of WebhookService::deliver, AiProvider and AiApiClient (hop 2), resolved by the oracle"
+   ],
+   "distractors": [
+    {
+     "path": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+     "why": ":14 is a docblock listing call sites"
+    },
+    {
+     "path": "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+     "why": ":42 mentions httpOptions inside a test-name string; :50 is a real call and counts"
+    }
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-b-02",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Webhook\\Validators\\SafeWebhookUrl::httpOptions",
+   "files": [
+    "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php",
+    "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+    "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php",
+    "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/VisionDetectionStep.php",
+    "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+    "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "depth cap 6 reached",
+    "route hops not followed from 4 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: Webkul\\AiAgent\\Pipelines\\Stages\\CallAiProviderStage::handle, Webkul\\AiAgent\\Pipelines\\Stages\\Image\\EnrichmentStep::handle, Webkul\\AiAgent\\Chat\\Tools\\GenerateContent::register, Webkul\\AiAgent\\Chat\\Tools\\AnalyzeImage::register, Webkul\\AiAgent\\Pipelines\\Stages\\Image\\VisionDetectionStep::handle, Webkul\\AiAgent\\Services\\VisionService::analyzeContext, Webkul\\Webhook\\Jobs\\SendProductWebhook::handle, Webkul\\Webhook\\Services\\WebhookService::sendBatchBySkus, Webkul\\AiAgent\\Jobs\\AutoEnrichProductJob::handle, Webkul\\Webhook\\Jobs\\SendBulkEditProductWebhook::handle"
+   ]
+  }
+ },
+ {
+  "id": "uo-b-05",
+  "question": {
+   "id": "uo-b-05",
+   "suite": "B",
+   "class": "precise-semantics",
+   "shape": "callers",
+   "subject": "unopim",
+   "language": "js",
+   "question": "Which JavaScript files call or import sanitizeCode?",
+   "probe": "sanitizeCode",
+   "declared_in": "packages/Webkul/Admin/src/Resources/assets/js/utils/code.js:1",
+   "hop_stratum": 1,
+   "basis": [
+    "packages/Webkul/Admin/src/Resources/assets/js/directives/code.js:1 -- import",
+    "packages/Webkul/Admin/src/Resources/assets/js/app.js:245,300 -- import, exposed as $sanitizeCode",
+    "packages/Webkul/Admin/src/Resources/assets/js/utils/code.js:12 -- generateCode calls it"
+   ],
+   "note": "JS-only question; the Blade consumers of $sanitizeCode belong to uo-e-x-01.",
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-b-05",
+   "hop_stratum_corpus": 1,
+   "status": "oracle",
+   "truth_via": "oracle",
+   "symbol": "scip-typescript npm unopim 3.1.3 packages/Webkul/Admin/src/Resources/assets/js/utils/`code.js`/sanitizeCode().",
+   "files": [
+    "packages/Webkul/Admin/src/Resources/assets/js/app.js",
+    "packages/Webkul/Admin/src/Resources/assets/js/directives/code.js",
+    "packages/Webkul/Admin/src/Resources/assets/js/utils/code.js"
+   ],
+   "hop_stratum_oracle": 1
+  }
+ },
+ {
+  "id": "uo-c-tests-01",
+  "question": {
+   "id": "uo-c-tests-01",
+   "suite": "C",
+   "class": "tests-for",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which test files exercise SafeWebhookUrl, directly or through a caller?",
+   "probe": "SafeWebhookUrl",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php -- direct",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php and PlatformExtrasSsrfTest.php -- import it"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-tests-01",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Webhook\\Validators\\SafeWebhookUrl",
+   "files": [
+    "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFormValidationTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php",
+    "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "packages/Webkul/AiAgent/tests/Unit/CredentialApiUrlSsrfTest.php",
+    "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+    "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "depth cap 6 reached",
+    "route hops not followed from 7 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: webhookRules, Webkul\\AiAgent\\Pipelines\\Stages\\CallAiProviderStage::handle, Webkul\\AiAgent\\Pipelines\\Stages\\Image\\EnrichmentStep::handle, Webkul\\AiAgent\\Chat\\Tools\\GenerateContent::register, Webkul\\AiAgent\\Chat\\Tools\\AnalyzeImage::register, Webkul\\AiAgent\\Pipelines\\Stages\\Image\\VisionDetectionStep::handle, Webkul\\AiAgent\\Services\\VisionService::analyzeContext, Webkul\\Webhook\\Jobs\\SendProductWebhook::handle, Webkul\\Webhook\\Services\\WebhookService::sendBatchBySkus, Webkul\\AiAgent\\Jobs\\AutoEnrichProductJob::handle, Webkul\\MagicAI\\Console\\Commands\\Platform\\AddPlatform::perform, Webkul\\MagicAI\\Console\\Commands\\Platform\\EditPlatform::perform, Webkul\\Webhook\\Jobs\\SendBulkEditProductWebhook::handle"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-tests-02",
+  "question": {
+   "id": "uo-c-tests-02",
+   "suite": "C",
+   "class": "tests-for",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which test files exercise WebhookService::sendBatchForBulkEdit, directly or through the job that calls it?",
+   "probe": "sendBatchForBulkEdit",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php:26 -- direct",
+    "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php:31 -- calls it on a subclass (ChunkedWebhookService)",
+    "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php:31 -- the job; tests that push it are hop 2"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-tests-02",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Webhook\\Services\\WebhookService::sendBatchForBulkEdit",
+   "files": [
+    "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php"
+   ],
+   "hop_stratum_oracle": 1,
+   "open": [
+    "framework-invoked entry point(s) not followed: Webkul\\Webhook\\Jobs\\SendBulkEditProductWebhook::handle"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-tests-03",
+  "question": {
+   "id": "uo-c-tests-03",
+   "suite": "C",
+   "class": "tests-for",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which test files exercise ProductRepository::isUniqueVariantForProduct, directly or through a caller?",
+   "probe": "isUniqueVariantForProduct",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryTest.php:160 -- direct",
+    "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php:31 -- direct",
+    "callers: packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1280,1585; AdminApi ProductController.php:487,589; ConfigurableProductController.php:216; DataTransfer Importer.php:3139"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-tests-03",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Product\\Repositories\\ProductRepository::isUniqueVariantForProduct",
+   "files": [
+    "packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php",
+    "packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php",
+    "packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php",
+    "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php",
+    "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php",
+    "packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "route hops not followed from 9 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: Webkul\\Product\\Type\\Configurable::update, Webkul\\DataTransfer\\Helpers\\Importers\\Product\\Importer::saveValidatedBatches, runBulkVariantLevelUpdate"
+   ]
+  }
+ },
+ {
+  "id": "uo-d-01",
+  "question": {
+   "id": "uo-d-01",
+   "suite": "D",
+   "class": "negative-control",
+   "shape": "path",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Is there an accepted path from the PruneWebhookLogs console command to WebhookService::deliver?",
+   "probe": "PruneWebhookLogs",
+   "probe_to": "deliver",
+   "probe_to_declared_in": "packages/Webkul/Webhook/src/Services/WebhookService.php:187",
+   "threat_row": "threats.csv:24 SSRF via user-supplied URL",
+   "hop_stratum": ">=3",
+   "expected": "empty",
+   "reason": "packages/Webkul/Webhook/src/Console/Commands/PruneWebhookLogs.php imports only the console attributes, Command and the DB facade (:5-8) and has one method, handle() (:14). The outbound HTTP call sits in WebhookService::deliver (:187, :205)."
+  },
+  "oracle": {
+   "id": "uo-d-01",
+   "hop_stratum_corpus": ">=3",
+   "status": "confirms-empty",
+   "truth_via": "oracle",
+   "files": [],
+   "open": [
+    "engine-only: route, queue and event dispatch hops are not followed"
+   ]
+  }
+ },
+ {
+  "id": "uo-d-02",
+  "question": {
+   "id": "uo-d-02",
+   "suite": "D",
+   "class": "negative-control",
+   "shape": "path",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Is there an accepted path from ProductGridViewController to WebhookService::deliver?",
+   "probe": "ProductGridViewController",
+   "probe_to": "deliver",
+   "probe_to_declared_in": "packages/Webkul/Webhook/src/Services/WebhookService.php:187",
+   "threat_row": "threats.csv:24 SSRF via user-supplied URL",
+   "hop_stratum": ">=3",
+   "expected": "empty",
+   "reason": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductGridViewController.php uses only ProductGridViewRepository (:8, :25, :42, :69). Webhook delivery is driven by the catalog.product.* and data_transfer.* events bound in packages/Webkul/Webhook/src/Providers/EventServiceProvider.php:28-38; saving a grid view fires none of them."
+  },
+  "oracle": {
+   "id": "uo-d-02",
+   "hop_stratum_corpus": ">=3",
+   "status": "confirms-empty",
+   "truth_via": "oracle",
+   "files": [],
+   "open": [
+    "engine-only: route, queue and event dispatch hops are not followed"
+   ]
+  }
+ },
+ {
+  "id": "uo-d-03",
+  "question": {
+   "id": "uo-d-03",
+   "suite": "D",
+   "class": "negative-control",
+   "shape": "symbol",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which files call sendBatchBySku?",
+   "probe": "sendBatchBySku",
+   "hop_stratum": 1,
+   "expected": "empty",
+   "reason": "Near-miss of sendBatchBySkus (packages/Webkul/Webhook/src/Services/WebhookService.php:72). Verified absent from the whole clone with a word-boundary search at construction time."
+  },
+  "oracle": {
+   "id": "uo-d-03",
+   "hop_stratum_corpus": 1,
+   "status": "confirms-empty",
+   "truth_via": "oracle",
+   "files": [],
+   "open": [
+    "no declaration of the probe exists at the pin"
+   ]
+  }
+ },
+ {
+  "id": "uo-e-01",
+  "question": {
+   "id": "uo-e-01",
+   "suite": "E",
+   "class": "change-impact",
+   "subject": "unopim",
+   "language": "php",
+   "question": "If SafeWebhookUrl::httpOptions changes its contract, which files must be re-read (full closure, across packages)?",
+   "probe": "httpOptions",
+   "declared_in": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php:93",
+   "hop_stratum": ">=3",
+   "basis": [
+    "hop 1: WebhookController.php:154, WebhookService.php:205, MagicAI AiProvider.php:422, AiAgent AiApiClient.php:131",
+    "hop 2+: the jobs, listeners and controllers that reach those, across the Webhook, MagicAI and AiAgent packages"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-e-01",
+   "hop_stratum_corpus": ">=3",
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Webhook\\Validators\\SafeWebhookUrl::httpOptions",
+   "files": [
+    "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php",
+    "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php",
+    "packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php",
+    "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+    "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php",
+    "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/VisionDetectionStep.php",
+    "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+    "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "depth cap 6 reached",
+    "route hops not followed from 4 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: Webkul\\AiAgent\\Pipelines\\Stages\\CallAiProviderStage::handle, Webkul\\AiAgent\\Pipelines\\Stages\\Image\\EnrichmentStep::handle, Webkul\\AiAgent\\Chat\\Tools\\GenerateContent::register, Webkul\\AiAgent\\Chat\\Tools\\AnalyzeImage::register, Webkul\\AiAgent\\Pipelines\\Stages\\Image\\VisionDetectionStep::handle, Webkul\\AiAgent\\Services\\VisionService::analyzeContext, Webkul\\Webhook\\Jobs\\SendProductWebhook::handle, Webkul\\Webhook\\Services\\WebhookService::sendBatchBySkus, Webkul\\AiAgent\\Jobs\\AutoEnrichProductJob::handle, Webkul\\Webhook\\Jobs\\SendBulkEditProductWebhook::handle"
+   ]
+  }
+ },
+ {
+  "id": "uo-e-02",
+  "question": {
+   "id": "uo-e-02",
+   "suite": "E",
+   "class": "change-impact",
+   "subject": "unopim",
+   "language": "php",
+   "question": "If ProductRepository::isUniqueVariantForProduct changes its contract, which files must be re-read?",
+   "probe": "isUniqueVariantForProduct",
+   "declared_in": "packages/Webkul/Product/src/Repositories/ProductRepository.php:184",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Product/src/Repositories/ProductRepository.php:301 (self-call)",
+    "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1280,1585",
+    "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php:487,589 and ConfigurableProductController.php:216",
+    "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php:3139"
+   ],
+   "note": "Two controllers named ProductController in different packages; the oracle resolves both.",
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-e-02",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Product\\Repositories\\ProductRepository::isUniqueVariantForProduct",
+   "files": [
+    "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php",
+    "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php",
+    "packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php",
+    "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "packages/Webkul/Product/src/Type/AbstractType.php",
+    "packages/Webkul/Product/src/Type/Configurable.php",
+    "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php",
+    "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php",
+    "packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "route hops not followed from 9 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: Webkul\\Product\\Type\\Configurable::update, Webkul\\DataTransfer\\Helpers\\Importers\\Product\\Importer::saveValidatedBatches, runBulkVariantLevelUpdate"
+   ]
+  }
+ },
+ {
+  "id": "uo-e-03",
+  "question": {
+   "id": "uo-e-03",
+   "suite": "E",
+   "class": "change-impact",
+   "subject": "unopim",
+   "language": "php",
+   "question": "If WebhookService::getProductChangesForWebhook changes its contract, which files must be re-read?",
+   "probe": "getProductChangesForWebhook",
+   "declared_in": "packages/Webkul/Webhook/src/Services/WebhookService.php:366",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Webhook/src/Listeners/Product.php:34,49 (hop 1)",
+    "packages/Webkul/Webhook/src/Services/WebhookService.php:152 (self-call inside sendBatch)",
+    "packages/Webkul/Webhook/tests/Unit/ProductWebhookChangeResolutionTest.php:13"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-e-03",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "Webkul\\Webhook\\Services\\WebhookService::getProductChangesForWebhook",
+   "files": [
+    "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "packages/Webkul/Webhook/tests/Unit/ProductWebhookChangeResolutionTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "framework-invoked entry point(s) not followed: Webkul\\Webhook\\Listeners\\Product::afterCreate, Webkul\\Webhook\\Services\\WebhookService::sendBatchBySkus, Webkul\\Webhook\\Jobs\\SendBulkEditProductWebhook::handle"
+   ]
+  }
+ }
+]

@@ -1,0 +1,242 @@
+[
+ {
+  "id": "uo-c-route-01",
+  "question": {
+   "id": "uo-c-route-01",
+   "suite": "C",
+   "class": "route-trace",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Through which files does POST /api/v1/rest/products reach the Product model?",
+   "probe": "POST /api/v1/rest/products",
+   "probe_to": "Product",
+   "hop_stratum": ">=3",
+   "basis": [
+    "packages/Webkul/AdminApi/src/Providers/AdminApiServiceProvider.php:184-186 -- 'api' prefix, loads Routes/admin-api.php",
+    "packages/Webkul/AdminApi/src/Routes/admin-api.php:5-6,24 -- 'v1/rest' prefix, require 'V1/catalog-routes.php'",
+    "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php:127,130 -- SimpleProductController::store",
+    "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php:70,111 -- productRepository->create",
+    "packages/Webkul/Product/src/Repositories/ProductRepository.php:43-47 -- resolves the type class, calls its create()",
+    "packages/Webkul/Product/src/Type/AbstractType.php:109 -- create()"
+   ],
+   "note": "Route declared outside routes/, three prefix layers deep, behind a `require`; the repository's model() returns a contract, not the class.",
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-route-01",
+   "hop_stratum_corpus": ">=3",
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-route-02",
+  "question": {
+   "id": "uo-c-route-02",
+   "suite": "C",
+   "class": "route-trace",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Through which files does the route named admin.catalog.products.copy reach the Product model?",
+   "probe": "admin.catalog.products.copy",
+   "probe_to": "Product",
+   "hop_stratum": ">=3",
+   "basis": [
+    "packages/Webkul/Admin/src/Routes/catalog-routes.php:187,200 -- ProductController::copy",
+    "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1362,1365 -- productRepository->copy($id)",
+    "packages/Webkul/Product/src/Repositories/ProductRepository.php:161,171 -- getTypeInstance()->copy()",
+    "packages/Webkul/Product/src/Models/Product.php:123 and packages/Webkul/Product/src/Type/AbstractType.php:578"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-route-02",
+   "hop_stratum_corpus": ">=3",
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-route-03",
+  "question": {
+   "id": "uo-c-route-03",
+   "suite": "C",
+   "class": "route-trace",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Through which files does the route named webhook.test reach SafeWebhookUrl::httpOptions?",
+   "probe": "webhook.test",
+   "probe_to": "httpOptions",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Webhook/src/Providers/WebhookServiceProvider.php:19 -- loads Routes/web.php",
+    "packages/Webkul/Webhook/src/Routes/web.php:16 -- WebhookController::test",
+    "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:140,154 -- SafeWebhookUrl::httpOptions"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-route-03",
+   "hop_stratum_corpus": 2,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-model-01",
+  "question": {
+   "id": "uo-c-model-01",
+   "suite": "C",
+   "class": "model-table",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which table does the Apikey model persist to, and which migration files define or alter it?",
+   "probe": "Apikey",
+   "hop_stratum": 1,
+   "basis": [
+    "packages/Webkul/AdminApi/src/Models/Apikey.php:25 -- explicit protected $table = 'api_keys' (convention would give a different name)",
+    "packages/Webkul/AdminApi/src/Database/Migrations/2024_07_10_112208_api_keys.php:14 -- Schema::create('api_keys')"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-model-01",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-model-02",
+  "question": {
+   "id": "uo-c-model-02",
+   "suite": "C",
+   "class": "model-table",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which table does the VariantStructureAxis model persist to, and which migration files define or alter it?",
+   "probe": "VariantStructureAxis",
+   "hop_stratum": 1,
+   "basis": [
+    "packages/Webkul/Product/src/Models/VariantStructureAxis.php:18 -- no $table override; irregular plural (axis -> axes)",
+    "packages/Webkul/Product/src/Database/Migrations/2026_07_11_000001_create_variant_structures_tables.php:23 -- Schema::create('variant_structure_axes') inside a multi-table migration"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-model-02",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-c-model-03",
+  "question": {
+   "id": "uo-c-model-03",
+   "suite": "C",
+   "class": "model-table",
+   "subject": "unopim",
+   "language": "php",
+   "question": "Which table does the Webhook package's WebhookLog model persist to, and which migration files define or alter it?",
+   "probe": "WebhookLog",
+   "hop_stratum": 1,
+   "basis": [
+    "packages/Webkul/Webhook/src/Models/WebhookLog.php:19",
+    "packages/Webkul/Webhook/src/Database/Migrations/2025_09_20_101519_webhook_logs.php:11 -- Schema::create('webhook_logs')",
+    "packages/Webkul/Webhook/src/Database/Migrations/2026_05_12_120000_make_user_nullable_on_webhook_logs.php and 2026_07_20_120100_add_webhook_columns_to_webhook_logs.php -- alter it"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-c-model-03",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-e-x-01",
+  "question": {
+   "id": "uo-e-x-01",
+   "suite": "E",
+   "class": "change-impact-xplane",
+   "subject": "unopim",
+   "language": "js",
+   "target_language": "blade",
+   "question": "If sanitizeCode changes, which Blade templates must be re-read (via the v-code directive or the $sanitizeCode global)?",
+   "probe": "sanitizeCode",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Admin/src/Resources/assets/js/directives/code.js:1 -- the v-code directive uses it; registered at app.js:294",
+    "packages/Webkul/Admin/src/Resources/assets/js/app.js:300 -- exposed as the $sanitizeCode global",
+    "Blade users of v-code, e.g. packages/Webkul/Admin/src/Resources/views/catalog/attributes/create.blade.php and catalog/categories/create.blade.php"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-e-x-01",
+   "hop_stratum_corpus": 2,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "uo-e-x-02",
+  "question": {
+   "id": "uo-e-x-02",
+   "suite": "E",
+   "class": "change-impact-xplane",
+   "subject": "unopim",
+   "language": "js",
+   "target_language": "blade",
+   "question": "If generateCode changes, which Blade templates must be re-read (via the v-code-generator directive or the $generateCode global)?",
+   "probe": "generateCode",
+   "hop_stratum": 2,
+   "basis": [
+    "packages/Webkul/Admin/src/Resources/assets/js/directives/code-generator.js:1 -- registered at app.js:295",
+    "packages/Webkul/Admin/src/Resources/assets/js/app.js:299 -- exposed as the $generateCode global",
+    "Blade users of v-code-generator, e.g. packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php and components/catalog/quick-create-modal.blade.php"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "uo-e-x-02",
+   "hop_stratum_corpus": 2,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ }
+]

@@ -51,6 +51,7 @@ export interface Question {
     probe: string;
     probe_to?: string;
     declared_in?: string;
+    question?: string;
     hop_stratum?: number | string;
     expected?: string;
 }
@@ -347,6 +348,15 @@ export function main(argv: string[]): number {
     return 0;
 }
 
+const HOP_WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5 };
+
+/** The hop limit a question states ("within two call hops"), or null when it states none. */
+export function statedHopLimit(question: string | undefined): number | null {
+    const m = question?.match(/within (\w+) call hops?/i);
+    if (!m?.[1]) return null;
+    return HOP_WORDS[m[1].toLowerCase()] ?? (Number.isInteger(Number(m[1])) ? Number(m[1]) : null);
+}
+
 export function truthFor(q: Question, seeds: Map<string, string[]>, refs: Refs, enclosing: Enclosing, docs: ScipDocument[], hasVue: boolean, maxDepth: number): TruthItem {
     const base = { id: q.id, ...(q.hop_stratum !== undefined ? { hop_stratum_corpus: q.hop_stratum } : {}) };
     if (HUMAN_CLASSES.has(q.class)) {
@@ -379,9 +389,10 @@ export function truthFor(q: Question, seeds: Map<string, string[]>, refs: Refs, 
     const open: string[] = [];
     let fileHop: Map<string, number>;
     if (closure) {
-        const c = callerClosure(seed, refs, enclosing, maxDepth);
+        const limit = statedHopLimit(q.question);
+        const c = callerClosure(seed, refs, enclosing, limit ?? maxDepth);
         fileHop = c.fileHop;
-        if (c.truncated) open.push(`depth cap ${maxDepth} reached`);
+        if (c.truncated && limit === null) open.push(`depth cap ${maxDepth} reached`);
         const routes = c.terminals.filter((t) => /\\Http\\Controllers\\/.test(t));
         const framework = c.terminals.filter((t) => !routes.includes(t));
         if (routes.length) open.push(`route hops not followed from ${routes.length} controller entry point(s)`);
