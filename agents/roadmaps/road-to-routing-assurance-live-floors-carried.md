@@ -53,7 +53,9 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
 
       2026-11-05: "Use when" descriptions changed nothing and were reverted; a
       fixture pilot restored `type-design` 0/3 → 3/3. The council's staged plan
-      for the rest is in `routing-carried-units-20261105.md`.
+      for the rest is in `routing-carried-units-20261105.md`. Fixture series v1
+      (`routing-fixture-v1-20261105.md`): 2 of 5 PASSED; `react-shadcn-ui` and
+      `project-analysis-core` answered directly; `type-design` open.
 
 ## Phase 2 — the suggest-without-read gap (carried 4.4)
 
