@@ -18,7 +18,7 @@ requires_skills:
 > exists before rebuilding the relationship by hand: it is already built, its
 > answer is structured, and it costs a fraction of the tokens. It is **not** more
 > precise than a blind `grep` — measured on this repository's own source and on
-> two third-party Laravel subjects, zero classes met the win bar (§ Measured twice,
+> two third-party PHP subjects, zero classes met the win bar (§ Measured twice,
 > § v3) — so grep is the arm you fall back
 > to routinely and **with a stated reason**, not grudgingly. This skill routes
 > such questions to the native code-graph engine (ADR-124, Class A) or a
