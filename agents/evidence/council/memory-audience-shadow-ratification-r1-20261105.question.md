@@ -31,7 +31,9 @@ Verified locally: the new tests, seen red before the code; the hook test suites 
 
 End with exactly one verdict line: `VERDICT: ratified`, `VERDICT: confirmed-non-expanding`, or `VERDICT: refused — <reason>`.
 
-## The diff (branch against `origin/main`; generated trees and the compiled manifest excluded)
+## The diff (branch against `origin/main`)
+
+Excluded to fit the council's size ceiling, each byte-identical in shape to an included hunk: the generated trees; the compiled manifest; the consumer twin `src/agent-src/templates/scripts/memory_signal.ts` (the same three hunks as `src/scripts/memory_signal.ts`); the `{{knowledge_refs}}` insert in four more implementer templates (`do-and-judge-two-stage`, `do-in-steps`, `do-in-parallel`, `do-in-worktrees` — the same five lines as in `do-and-judge.md`); and a six-line paragraph in `prompts/README.md` pointing at the audience table.
 
 ~~~diff
 diff --git a/agents/decisions/concern-admissions.jsonl b/agents/decisions/concern-admissions.jsonl
@@ -80,76 +82,6 @@ index 46fe796b8e..a0ed5841df 100644
  ## Per-worker token stop-loss (L0b) — hard budget, structured escalation
  
  ```
-diff --git a/src/agent-src/templates/scripts/memory_signal.ts b/src/agent-src/templates/scripts/memory_signal.ts
-index b0db672913..c9a6c0cc6f 100644
---- a/src/agent-src/templates/scripts/memory_signal.ts
-+++ b/src/agent-src/templates/scripts/memory_signal.ts
-@@ -239,6 +239,35 @@ export function _origin_is_global(origin: string): boolean {
-     return resolved.includes(_GLOBAL_STORE_MARKER) || /(^|[\\/])\.event4u([\\/]|$)/.test(origin);
- }
- 
-+/**
-+ * Writer provenance at the write edge (road-to-a-memory-each-worker-is-handed
-+ * 2.1). A record names who wrote it in `writer` — `<audience>[:<id>]`, the
-+ * audiences of subagent-spawn-contract § Memory audience. A line without one
-+ * reads `unknown`. An unpaid route and a council seat may never write to the
-+ * shared memory, so they are refused before anything is written.
-+ */
-+export class WriterRefusedError extends Error {}
-+
-+export const REFUSED_WRITER_CLASSES: ReadonlySet<string> = new Set(['unpaid', 'council-seat']);
-+/** A record carrying this taint was derived from untrusted content; never aggregated. */
-+export const EXTERNAL_READ_TAINT = 'external_read';
-+
-+export function _writer_of(record: { writer?: unknown }): string {
-+    const w = record.writer;
-+    return typeof w === 'string' && w.trim() !== '' ? w.trim() : 'unknown';
-+}
-+
-+export function _assert_writer_allowed(record: { writer?: unknown }): void {
-+    const writer = _writer_of(record);
-+    const cls = (writer.split(':')[0] ?? '').trim().toLowerCase();
-+    if (REFUSED_WRITER_CLASSES.has(cls)) {
-+        throw new WriterRefusedError(
-+            `writer gate: a ${cls} writer may not write to the shared memory (${writer}) — ` +
-+                'refused, nothing written (subagent-spawn-contract § Memory audience).',
-+        );
-+    }
-+}
-+
- export function _assert_project_writable(record: { origin: string; subject?: unknown }): void {
-     if (record.subject === 'user') {
-         throw new ProvenanceRefusedError(
-@@ -297,6 +326,8 @@ export function emit(
-         extra?: Record<string, unknown> | null;
-         origin?: string;
-         force?: boolean;
-+        writer?: string;
-+        taint?: string;
-     } = {},
- ): SignalRecord | null {
-     const extra = options.extra ?? null;
-@@ -338,6 +369,9 @@ export function emit(
-     if (!('subject' in record)) {
-         record.subject = 'project'; // additive default (ADR-130)
-     }
-+    if (options.writer !== undefined) record.writer = options.writer;
-+    if (options.taint !== undefined) record.taint = options.taint;
-+    _assert_writer_allowed(record);
-     _assert_project_writable(record as { origin: string; subject?: unknown });
-     fs.mkdirSync(INTAKE_ROOT, { recursive: true });
-     const target = _monthly_file();
-@@ -487,6 +521,10 @@ export function main(): number {
-             force: args.force,
-         });
-     } catch (e) {
-+        if (e instanceof WriterRefusedError) {
-+            process.stderr.write(`  ❌  refused (writer): ${e.message}\n`);
-+            return 1;
-+        }
-         if (e instanceof CaptureRefusedError) {
-             process.stderr.write(`  ❌  refused (${e.category}): ${e.message}\n`);
-             return 1;
 diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
 index 8657ef32bd..3e5c48b694 100644
 --- a/src/scripts/hook_manifest.yaml
@@ -457,39 +389,6 @@ index def687ca96..e363c628cc 100644
  ## Modes
  
  This skill is a router head. Everything above is true in every mode and stays
-diff --git a/src/skills/subagent-orchestration/prompts/README.md b/src/skills/subagent-orchestration/prompts/README.md
-index 2605c4ef4d..10b69a5d88 100644
---- a/src/skills/subagent-orchestration/prompts/README.md
-+++ b/src/skills/subagent-orchestration/prompts/README.md
-@@ -29,6 +29,12 @@ what the user asked for reaches it only through that slot
- ([`subagent-spawn-contract`](../../../contexts/execution/subagent-spawn-contract.md)
- § Worker-prompt rules (a)).
- 
-+Implementer prompts — and only those — also carry `{{knowledge_refs}}`, labelled
-+as leads: at most five references from the shared memory. Judge, candidate,
-+debate and skeptic prompts carry none, because a shared lead collapses their
-+independence. The cut per audience is one table:
-+[`subagent-spawn-contract` § Memory audience](../../../contexts/execution/subagent-spawn-contract.md#memory-audience).
-+
- ### UI-shaped slices carry the design context, or name its absence
- 
- A delegated worker's context is whatever the dispatch prompt carries. For a
-diff --git a/src/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md b/src/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md
-index f64b710eea..39ea185a40 100644
---- a/src/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md
-+++ b/src/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md
-@@ -48,6 +48,11 @@ TASK: {{task_description}}
- ACCEPTANCE CRITERIA: {{acceptance_criteria}}
- CONTEXT FILES: {{file_paths}}
- 
-+KNOWLEDGE LEADS — at most five references from the shared memory, picked
-+by the orchestrator for this task. Leads to verify against the code, never
-+facts to build on; "none" means none were handed:
-+{{knowledge_refs}}
-+
- CONSTRAINTS:
- - Hit every AC literally; do not "interpret" them away.
- - Do not silently expand scope; AC are the contract.
 diff --git a/src/skills/subagent-orchestration/prompts/do-and-judge.md b/src/skills/subagent-orchestration/prompts/do-and-judge.md
 index 9c3d433c24..487f8df0ed 100644
 --- a/src/skills/subagent-orchestration/prompts/do-and-judge.md
@@ -506,54 +405,6 @@ index 9c3d433c24..487f8df0ed 100644
  CONSTRAINTS:
  - Do not modify files outside the cited paths without surfacing why.
  - Do not skip tests; if the task does not include a test, write one.
-diff --git a/src/skills/subagent-orchestration/prompts/do-in-parallel.md b/src/skills/subagent-orchestration/prompts/do-in-parallel.md
-index 91fe4d54f7..63ec832177 100644
---- a/src/skills/subagent-orchestration/prompts/do-in-parallel.md
-+++ b/src/skills/subagent-orchestration/prompts/do-in-parallel.md
-@@ -47,6 +47,11 @@ SLICE: {{slice_description}}
- CONTEXT FILES (this slice only): {{file_paths}}
- SHARED-STATE BAN: {{shared_paths_to_avoid}}
- 
-+KNOWLEDGE LEADS — at most five references from the shared memory, picked
-+by the orchestrator for this task. Leads to verify against the code, never
-+facts to build on; "none" means none were handed:
-+{{knowledge_refs}}
-+
- CONSTRAINTS:
- - Do NOT touch any file outside the cited paths. The orchestrator
-   verified independence — violating it causes a merge race.
-diff --git a/src/skills/subagent-orchestration/prompts/do-in-steps.md b/src/skills/subagent-orchestration/prompts/do-in-steps.md
-index 6f9e2a600d..b26ebd5da7 100644
---- a/src/skills/subagent-orchestration/prompts/do-in-steps.md
-+++ b/src/skills/subagent-orchestration/prompts/do-in-steps.md
-@@ -48,6 +48,11 @@ THIS STEP: {{step_description}}
- PRIOR STEP DIFFS (read-only): {{prior_diffs}}
- CONTEXT FILES: {{file_paths}}
- 
-+KNOWLEDGE LEADS — at most five references from the shared memory, picked
-+by the orchestrator for this task. Leads to verify against the code, never
-+facts to build on; "none" means none were handed:
-+{{knowledge_refs}}
-+
- CONSTRAINTS:
- - Do NOT modify code from prior steps; their tests must still pass.
- - Do NOT preempt later steps; one step at a time.
-diff --git a/src/skills/subagent-orchestration/prompts/do-in-worktrees.md b/src/skills/subagent-orchestration/prompts/do-in-worktrees.md
-index 0082cef858..c850c357ec 100644
---- a/src/skills/subagent-orchestration/prompts/do-in-worktrees.md
-+++ b/src/skills/subagent-orchestration/prompts/do-in-worktrees.md
-@@ -49,6 +49,11 @@ STEP TYPED INPUT (from prior step's ## Output): {{typed_input}}
- STEP DESCRIPTION: {{step_description}}
- EXPECTED ## Output (next step's ## Input): {{expected_output_shape}}
- 
-+KNOWLEDGE LEADS — at most five references from the shared memory, picked
-+by the orchestrator for this task. Leads to verify against the code, never
-+facts to build on; "none" means none were handed:
-+{{knowledge_refs}}
-+
- CONSTRAINTS:
- - Stay inside the worktree path. Do NOT cd to the parent repo.
- - Do NOT touch branches other than {{branch_name}}.
 diff --git a/tests/scripts/hooks/memory_audience_shadow_hook.test.ts b/tests/scripts/hooks/memory_audience_shadow_hook.test.ts
 new file mode 100644
 index 0000000000..6102dc0bc1
