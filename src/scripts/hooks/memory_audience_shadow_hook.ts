@@ -77,31 +77,47 @@ function curatedRef(ref: string): string | null {
     return norm;
 }
 
-/** Size of a curated file, counted only when its real path is still inside the store. */
-function curatedBytes(ref: string, root: string): number {
+/**
+ * The real path and size of a ref that could actually be delivered: an existing
+ * file whose real path lies in the curated store and not in intake. Anything else
+ * is null — a symlink out of the store or into intake, a missing file, a loop.
+ */
+function eligibleFile(ref: string, store: string, root: string): { real: string; size: number } | null {
     try {
-        const store = fs.realpathSync(path.join(root, MEMORY_DIR));
         const real = fs.realpathSync(path.join(root, ref));
         const rel = path.relative(store, real);
-        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return 0;
+        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return null;
         // A curated name that resolves into intake is intake, whatever it is called.
-        if (rel === 'intake' || rel.startsWith(`intake${path.sep}`)) return 0;
-        return fs.statSync(real).size;
+        if (rel === 'intake' || rel.startsWith(`intake${path.sep}`)) return null;
+        const stat = fs.statSync(real);
+        return stat.isFile() ? { real, size: stat.size } : null;
     } catch {
-        // A named file that does not exist adds nothing to the estimate.
-        return 0;
+        return null;
     }
 }
 
-/** The slice a spawn naming these refs would receive, as counts only. */
+/**
+ * The slice a spawn naming these refs would receive, as counts only. Eligibility
+ * is decided before deduplication and before the cap, so an ineligible name never
+ * takes a slot from a deliverable one, and two names for one file count once.
+ */
 export function sliceCounts(prompt: string, root: string): SliceCounts {
-    const refs = [
-        ...new Set((prompt.match(CURATED_REF_RE) ?? []).map(curatedRef).filter((r): r is string => r !== null)),
-    ];
-    const kept = refs.slice(0, MAX_KNOWLEDGE_REFS);
-    let bytes = 0;
-    for (const ref of kept) bytes += curatedBytes(ref, root);
-    return { ref_count: kept.length, dropped: refs.length - kept.length, est_tokens: Math.ceil(bytes / BYTES_PER_TOKEN) };
+    let store: string;
+    try {
+        store = fs.realpathSync(path.join(root, MEMORY_DIR));
+    } catch {
+        return { ref_count: 0, dropped: 0, est_tokens: 0 };
+    }
+    const eligible = new Map<string, number>();
+    for (const match of prompt.match(CURATED_REF_RE) ?? []) {
+        const ref = curatedRef(match);
+        const file = ref === null ? null : eligibleFile(ref, store, root);
+        if (file !== null && !eligible.has(file.real)) eligible.set(file.real, file.size);
+    }
+    const sizes = [...eligible.values()];
+    const kept = sizes.slice(0, MAX_KNOWLEDGE_REFS);
+    const bytes = kept.reduce((a, b) => a + b, 0);
+    return { ref_count: kept.length, dropped: sizes.length - kept.length, est_tokens: Math.ceil(bytes / BYTES_PER_TOKEN) };
 }
 
 export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {

@@ -12,6 +12,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LEDGER_DIR } from '../../../src/scripts/hooks/subagent_ledger_hook.js';
 import { processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
 import { EXIT_ALLOW } from '../../../src/scripts/hooks/exit_codes.js';
+import { applyPayloadFields } from '../../../src/scripts/hooks/payload_stub.js';
+
+function manifest(): { concerns: Record<string, Record<string, unknown>> } {
+    const compiled = JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'src', 'scripts', 'hook_manifest.json'), 'utf8'));
+    return compiled.manifest;
+}
 
 let root: string;
 
@@ -124,8 +130,30 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
 
     it('caps the slice at the spawn contract maximum and counts the rest as dropped', () => {
         const names = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((n) => `agents/memory/${n}.yml`);
+        for (const n of names) writeFileSync(join(root, n), 'q'.repeat(40));
         processEnvelope(spawn(`refs: ${names.join(' ')}`), root);
-        expect(ledgerLines()[0]).toMatchObject({ ref_count: 5, dropped: 2, est_tokens: 0 });
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 5, dropped: 2, est_tokens: 50 });
+    });
+
+    it('a named ref that does not exist is not part of the slice', () => {
+        processEnvelope(spawn('agents/memory/missing.yml agents/memory/product-rules.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, dropped: 0, est_tokens: 200 });
+    });
+
+    it('ineligible refs ahead of valid ones never take a slot under the cap', () => {
+        writeFileSync(join(root, 'outside.yml'), 'z'.repeat(4000));
+        const bad = ['o1', 'o2', 'o3', 'o4', 'o5'].map((n) => {
+            symlinkSync(join(root, 'outside.yml'), join(root, 'agents', 'memory', `${n}.yml`));
+            return `agents/memory/${n}.yml`;
+        });
+        processEnvelope(spawn(`${bad.join(' ')} agents/memory/product-rules.yml`), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, dropped: 0, est_tokens: 200 });
+    });
+
+    it('two names for one file count once', () => {
+        symlinkSync(join(root, 'agents', 'memory', 'product-rules.yml'), join(root, 'agents', 'memory', 'alias.yml'));
+        processEnvelope(spawn('agents/memory/product-rules.yml agents/memory/alias.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 200 });
     });
 
     it('intake lines are never part of the curated slice', () => {
@@ -145,7 +173,7 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         writeFileSync(join(root, 'outside.yml'), 'z'.repeat(4000));
         symlinkSync(join(root, 'outside.yml'), join(root, 'agents', 'memory', 'link.yml'));
         processEnvelope(spawn('agents/memory/link.yml'), root);
-        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 0 });
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
     });
 
     it('a symlink in the store pointing into intake adds nothing to the estimate', () => {
@@ -153,7 +181,17 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         writeFileSync(join(root, 'agents', 'memory', 'intake', 'raw.jsonl'), 'z'.repeat(4000));
         symlinkSync(join(root, 'agents', 'memory', 'intake', 'raw.jsonl'), join(root, 'agents', 'memory', 'into-intake.yml'));
         processEnvelope(spawn('agents/memory/into-intake.yml'), root);
-        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 0 });
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
+    });
+
+    it('the dispatcher projection keeps agent_id and prompt and drops every other input field', () => {
+        const spec = manifest().concerns['memory-audience-shadow']!;
+        const env = spawn('agents/memory/product-rules.yml', null) as { payload: Record<string, unknown> };
+        (env.payload as Record<string, unknown>)['agent_id'] = 'agent-abc';
+        (env.payload['tool_input'] as Record<string, unknown>)['description'] = 'drop me';
+        const projected = applyPayloadFields(spec, env as never) as { payload: Record<string, unknown> };
+        expect(projected.payload['agent_id']).toBe('agent-abc');
+        expect(projected.payload['tool_input']).toEqual({ prompt: 'agents/memory/product-rules.yml' });
     });
 
     it("a child's own spawn is not the orchestrator's and is not measured", () => {
