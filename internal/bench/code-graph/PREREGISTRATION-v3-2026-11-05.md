@@ -178,6 +178,11 @@ For the 14 items whose class or shape is a closure (`callers-transitive`, `tests
 2. **The judges verify edges.** OpenAI and Google each see, per edge, the source lines at
    both ends — blind, as in v2 — and rule `VALID`, `INVALID` or `UNSURE`. An edge stands
    on the reader plus at least one judge `VALID` (two of three).
+   **Context round** (added after the first larasend edge rulings, before any context
+   ruling): an edge a judge rules `UNSURE` goes back to that judge once, with the lines
+   such replies asked for — the source file's imports, the declaration of the receiver
+   the call goes through, and route-group prefixes and route registration. Its second
+   ruling replaces its `UNSURE`; a second `UNSURE` stays `UNSURE`.
 3. **Membership is computed.** The answer is every file from which the target is
    reachable over standing edges; for `tests-for`, the test files among them; where the
    question states a hop limit, only files within it.
