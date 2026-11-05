@@ -101,6 +101,35 @@ regression check; neither counts toward the null path below.
 - **Class 5.** An item whose oracle answer is non-empty is **VOID**: removed from the
   clean-rate and listed by id. It is never turned into a positive question after the fact.
 
+## The owner deviation for the check (2026-11-05)
+
+Fixed after the oracle run and **before any check verdict existed**. The owner declined
+to perform the human check above and delegated it. Every place this registration says
+"human" for the check — the 20 % sample, the `truth_via: human` items, the completion of
+items the oracle answered only in part — is carried out instead by:
+
+1. **A reader** — a Claude session with the subject checkout, reading source only (no
+   graph, no index), answering each question at file level with `path:line` evidence,
+   judging every oracle file, and naming plausible candidates it excluded.
+2. **Two judges** — the two providers the AI council is configured with, Anthropic
+   (`claude -p`) and OpenAI (`codex exec`, reasoning `medium`), called directly in an
+   empty directory with no repository to read. They are not called through
+   `council run` because every council lens wraps the answer in a critique template,
+   and a per-file ruling cannot be read out of one. Each judge is given the question,
+   every candidate file, and the source lines around each citation extracted
+   mechanically from the checkout, and rules `IN`, `OUT` or `UNSURE` per file.
+3. **The rule.** A file is in the truth when at least two of the three say `IN`
+   (`UNSURE` is not `IN`). A file a judge names as missing enters only when both judges
+   rule it `IN` in a second round that shows its source lines. An item's verdict is
+   `agree` when the result equals the oracle's set and `corrected` otherwise.
+
+What this costs, stated before the data: the check is no longer independent of language
+models, and the reader and one judge share a provider. No arm is a language model, so
+the truth is still not derived from anything under test. The truth file names the
+checker (`human_check.checked_by: council`), the runner prints it beside every result,
+and the oracle-versus-check disagreement rate is published as registered. The prompts,
+the reader answers and both judges' raw rulings are committed beside the truth file.
+
 ## Arms (step 2.3)
 
 **A–E** (no fused arm, K4):

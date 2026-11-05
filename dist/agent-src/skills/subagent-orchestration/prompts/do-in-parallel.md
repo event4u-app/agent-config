@@ -47,6 +47,11 @@ SLICE: {{slice_description}}
 CONTEXT FILES (this slice only): {{file_paths}}
 SHARED-STATE BAN: {{shared_paths_to_avoid}}
 
+KNOWLEDGE LEADS — at most five references from the shared memory, picked
+by the orchestrator for this task. Leads to verify against the code, never
+facts to build on; "none" means none were handed:
+{{knowledge_refs}}
+
 CONSTRAINTS:
 - Do NOT touch any file outside the cited paths. The orchestrator
   verified independence — violating it causes a merge race.

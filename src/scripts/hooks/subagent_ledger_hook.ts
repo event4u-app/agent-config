@@ -498,7 +498,41 @@ export function appendLedgerLine(root: string, ts: string, line: Record<string, 
     if (is_replay_mode()) return;
     const file = ledgerFileFor(root, ts);
     fs.mkdirSync(path.dirname(file), { recursive: true });
+    const firstOfMonth = !fs.existsSync(file);
     fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
+    if (firstOfMonth) pruneLedgerMonths(path.dirname(file), ts.slice(0, 7));
+}
+
+/**
+ * Months of ledger kept: the current month and the five before it. The stream is
+ * append-only and gitignored, and it grew ~22 MB in its first two and a half months
+ * on one machine, so it needs a bound. Six months covers every reader's window (the
+ * reports default to days or weeks; the index is read for this month and the last).
+ */
+export const LEDGER_RETENTION_MONTHS = 6;
+
+const MONTH_RE = /^\d{4}-\d{2}$/;
+
+/**
+ * Drop monthly files and index months older than the window. Runs once per month,
+ * on the write that opens it. Open records and anything not month-named stay.
+ * Best effort: a failure here never costs the line that was just written.
+ */
+function pruneLedgerMonths(dir: string, currentMonth: string): void {
+    const [y, m] = currentMonth.split('-').map(Number) as [number, number];
+    const oldest = new Date(Date.UTC(y, m - 1 - (LEDGER_RETENTION_MONTHS - 1), 1)).toISOString().slice(0, 7);
+    try {
+        for (const name of fs.readdirSync(dir)) {
+            const month = name.endsWith('.jsonl') ? name.slice(0, -'.jsonl'.length) : null;
+            if (month !== null && MONTH_RE.test(month) && month < oldest) fs.rmSync(path.join(dir, name), { force: true });
+        }
+        const index = path.join(dir, INDEX_SUBDIR);
+        for (const name of fs.existsSync(index) ? fs.readdirSync(index) : []) {
+            if (MONTH_RE.test(name) && name < oldest) fs.rmSync(path.join(index, name), { recursive: true, force: true });
+        }
+    } catch {
+        // Retention is housekeeping; the ledger line above is already written.
+    }
 }
 
 /**

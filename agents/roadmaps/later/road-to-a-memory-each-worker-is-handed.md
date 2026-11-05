@@ -1,11 +1,24 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+entry_condition:
+  what: >
+    The memory-audience-shadow concern has logged `memory_slice_shadow` lines
+    on at least 14 distinct dates. Checkable without judgement:
+    `jq -r 'select(.event=="memory_slice_shadow") | .ts[0:10]' agents/runtime/state/subagent-ledger/*.jsonl | sort -u | wc -l`
+    reads 14 or more.
+  when: >
+    Two weeks of ordinary orchestration after the Phase 2 change is merged and
+    installed; the concern runs on claude only, so the dates accrue where
+    claude sessions spawn subagents.
+  who: >
+    An implementer, for step 3.1. No owner decision is pending: OQ-35 answered
+    the delivery tiers on 2026-10-29.
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-15
-estate_growth_exempt: "+1 active_roadmaps, owner-directed 2026-10-29 (\"ziehe die 3 von later in den normalen ordner\"): promoted from later/ with its two siblings of round inbox-2026-10-bi once OQ-32..OQ-35 were answered; this takes the active estate from 5 to 8, over the WIP cap of 5, by the owner's explicit instruction."
+estate_growth_exempt: "concern_count +1 (73 -> 74): steps 2.2 and 2.3 add the record-only hook concern memory-audience-shadow, which the roadmap names as its deliverable; it is ratified (agents/evidence/ratifications/memory-audience-shadow-20261105.md) and carries its admission row. Earlier claim, 2026-10-29: +1 active_roadmaps when promoted from later/ on the owner instruction of that date."
 estate_offset_exempt: "Promoted from later/ on owner instruction, agents/evidence/owner-directives/2026-10-29-promote-memory-roadmaps.md (2026-10-29); no active roadmap is archived to offset it. Owner search at 58d43073b7 (grep -rlF for resolveBundle, composeSpawnBrief, knowledge_refs, memory_signal origin over agents/roadmaps, later, stubs) returned nothing; neighbours own fork economics (later/road-to-a-cold-start-paid-once-carried) and graph memory (stubs/road-to-typed-knowledge-graph-memory)."
 relates:
   - slug: road-to-a-cold-start-paid-once-carried
@@ -31,31 +44,40 @@ and no spawn template has a knowledge slot.
 
 ## Phase 1 — The audience contract
 
-- [ ] **1.1 Audience table.** One table in `subagent-spawn-contract.md`
+- [x] **1.1 Audience table.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> One table in `subagent-spawn-contract.md`
       (orchestrator / non-fork / fork / judge-seat / unpaid / cheap-paid), cited
       from the council skill's neutrality section; forks get nothing, judges
       facts with provenance, unpaid routes closed-vocabulary conventions only.
       verify: reference check and a test that the council skill links the anchor.
-- [ ] **1.2 Knowledge slot in implementer templates.** `{{knowledge_refs}}`,
+      Note: the table lives in `contexts/execution/memory-audience.md`, with a
+      pointer section in `subagent-spawn-contract.md` — the contract would
+      otherwise pass the 16,000-char depth ceiling (`check_depth_budget`).
+- [x] **1.2 Knowledge slot in implementer templates.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> `{{knowledge_refs}}`,
       labelled as leads, in implementer and researcher templates; absent from
       competitive, debate and adversarial ones.
       verify: `tests/scripts/subagent_prompt_audience.test.ts`.
+      Note: no researcher template exists under `prompts/`; the five implementer
+      prompts carry the slot, and the test pins that count.
 
 ## Phase 2 — Provenance and a shadow baseline
 
-- [ ] **2.1 `writer` and `taint` on intake.** `memory_signal.ts`: a legacy
+- [x] **2.1 `writer` and `taint` on intake.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> `memory_signal.ts`: a legacy
       line reads `writer: unknown`; unpaid and council-seat writers are
       refused; an `external_read` taint is excluded from aggregation.
       verify: three red-first unit tests.
-- [ ] **2.2 Record-only guard on child writes to `agents/memory/`.** Never
+      Landed in both twins (`src/scripts/` and the consumer template); the
+      taint is honoured where intake is aggregated, `learning_sidecar.readSignals`.
+- [x] **2.2 Record-only guard on child writes to `agents/memory/`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> Never
       denies.
       verify: a payload with `agent_id` and a Write produces one record; without
       `agent_id` none.
-- [ ] **2.3 Counts-only slice shadow.** At the orchestrator's `Agent`
+- [x] **2.3 Counts-only slice shadow.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> At the orchestrator's `Agent`
       pre_tool_use, compute the slice and log `{ref_count, dropped, est_tokens}`;
       deliver nothing.
       verify: a fixture naming two curated paths logs `ref_count: 2` and emits
       no context.
+      2.2 and 2.3 ship as one concern, `memory-audience-shadow` (claude,
+      pre_tool_use), tested in `tests/scripts/hooks/memory_audience_shadow_hook.test.ts`.
 
 ## Phase 3 — Delivery, tiered by model (OQ-35)
 
@@ -67,6 +89,8 @@ and no spawn template has a knowledge slot.
       hands them for the task. No reopen of ADR-249 — the shared memory is the
       existing curated store.
       verify: a delivery fixture plus the shadow's measured token delta.
+      Blocked (external, time): the step starts after two weeks of shadow
+      counts, and the shadow begins counting only once 2.3 is merged and running.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
@@ -77,6 +101,6 @@ and no spawn template has a knowledge slot.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every spawn audience has a stated memory cut, and the templates
+- [x] AC-1 — Every spawn audience has a stated memory cut, and the templates
       carry it.
-- [ ] AC-2 — Worker writes carry a writer, and unpaid writers are refused.
+- [x] AC-2 — Worker writes carry a writer, and unpaid writers are refused.

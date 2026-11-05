@@ -239,6 +239,52 @@ export function _origin_is_global(origin: string): boolean {
     return resolved.includes(_GLOBAL_STORE_MARKER) || /(^|[\\/])\.event4u([\\/]|$)/.test(origin);
 }
 
+/**
+ * Writer provenance at the write edge (road-to-a-memory-each-worker-is-handed
+ * 2.1). A record names who wrote it in `writer` — `<audience>[:<id>]`, the
+ * audiences of contexts/execution/memory-audience.md. A line without one
+ * reads `unknown`. An unpaid route and a judge or council seat may never write to the
+ * shared memory, so they are refused before anything is written.
+ */
+export class WriterRefusedError extends Error {}
+
+export const REFUSED_WRITER_CLASSES: ReadonlySet<string> = new Set(['unpaid', 'council-seat', 'judge-seat']);
+/** Every class a stamped writer may name: the audience table, plus `unknown`. */
+export const KNOWN_WRITER_CLASSES: ReadonlySet<string> = new Set([
+    'orchestrator',
+    'non-fork',
+    'fork',
+    'cheap-paid',
+    'unknown',
+    ...REFUSED_WRITER_CLASSES,
+]);
+/** A record carrying this taint was derived from untrusted content; never aggregated. */
+export const EXTERNAL_READ_TAINT = 'external_read';
+
+export function _writer_of(record: Readonly<Record<string, unknown>>): string {
+    const w = record['writer'];
+    return typeof w === 'string' && w.trim() !== '' ? w.trim() : 'unknown';
+}
+
+export function _assert_writer_allowed(record: Readonly<Record<string, unknown>>): void {
+    const writer = _writer_of(record);
+    const cls = (writer.split(':')[0] ?? '').trim().toLowerCase();
+    // A class outside the table cannot be told apart from a refused one in
+    // disguise (`:unpaid`, `free-route`), so it is refused as well.
+    if (!KNOWN_WRITER_CLASSES.has(cls)) {
+        throw new WriterRefusedError(
+            `writer gate: '${writer}' names no audience of the memory table — ` +
+                'refused, nothing written (contexts/execution/memory-audience.md).',
+        );
+    }
+    if (REFUSED_WRITER_CLASSES.has(cls)) {
+        throw new WriterRefusedError(
+            `writer gate: a ${cls} writer may not write to the shared memory (${writer}) — ` +
+                'refused, nothing written (contexts/execution/memory-audience.md).',
+        );
+    }
+}
+
 export function _assert_project_writable(record: { origin: string; subject?: unknown }): void {
     if (record.subject === 'user') {
         throw new ProvenanceRefusedError(
@@ -297,6 +343,8 @@ export function emit(
         extra?: Record<string, unknown> | null;
         origin?: string;
         force?: boolean;
+        writer?: string;
+        taint?: string;
     } = {},
 ): SignalRecord | null {
     const extra = options.extra ?? null;
@@ -338,6 +386,9 @@ export function emit(
     if (!('subject' in record)) {
         record.subject = 'project'; // additive default (ADR-130)
     }
+    if (options.writer !== undefined) record.writer = options.writer;
+    if (options.taint !== undefined) record.taint = options.taint;
+    _assert_writer_allowed(record);
     _assert_project_writable(record as { origin: string; subject?: unknown });
     fs.mkdirSync(INTAKE_ROOT, { recursive: true });
     const target = _monthly_file();
@@ -487,6 +538,10 @@ export function main(): number {
             force: args.force,
         });
     } catch (e) {
+        if (e instanceof WriterRefusedError) {
+            process.stderr.write(`  ❌  refused (writer): ${e.message}\n`);
+            return 1;
+        }
         if (e instanceof CaptureRefusedError) {
             process.stderr.write(`  ❌  refused (${e.category}): ${e.message}\n`);
             return 1;

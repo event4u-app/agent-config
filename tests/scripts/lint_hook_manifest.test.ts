@@ -377,7 +377,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // and 70 since `star-ask` (ADR-301, owner ruling amending ADR-286 § D2).
     // and 72 since `quota-notice` + `metered-spawn-ask` (road-to-a-quota-the-user-sees-coming).
     // and 73 since `intake-pass` (owner answer OQ-25, 2026-10-28).
-    expect(names.length).toBe(73);
+    // and 74 since `memory-audience-shadow` (road-to-a-memory-each-worker-is-handed 2.2/2.3).
+    expect(names.length).toBe(74);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(

@@ -1,5 +1,6 @@
-# Oracle truth for corpus v3 -- written by oracle_truth.ts, never by hand except the
-# human_checked verdicts and human-required files. See PREREGISTRATION-v3-2026-11-05.md § Truth.
+# Oracle truth for corpus v3 -- written by oracle_truth.ts, then sealed by apply_check.ts from the
+# delegated check in check-v3-2026-11-05/ (reader + two judges, two of three). Never edited by hand.
+# See PREREGISTRATION-v3-2026-11-05.md § Truth and § The owner deviation for the check.
 truth_version: 3
 generated: '2026-11-05'
 corpus:
@@ -39,7 +40,28 @@ human_check:
     - ls-e-01
     - uo-e-02
     - ls-e-x-01
-  completed: null
+  completed: '2026-11-05'
+  checked_by: council
+  disagreement:
+    sample: 10/13
+    sample_corrected:
+      - ls-b-06
+      - uo-b-02
+      - uo-c-route-02
+      - ls-c-route-02
+      - ls-c-model-02
+      - ls-c-model-01
+      - uo-c-tests-03
+      - ls-e-01
+      - uo-e-02
+      - ls-e-x-01
+    all_checked: 31/38
+    corrected_by_oracle_status:
+      human-required: 16/16
+      oracle-partial: 15/15
+      confirms-empty: 0/5
+      unresolved: 0/1
+      oracle: 0/1
 items:
   - id: ls-b-01
     hop_stratum_corpus: 1
@@ -77,31 +99,66 @@ items:
     truth_via: oracle
     symbol: scip-typescript npm larasend HEAD resources/js/lib/`utils.ts`/toUrl().
     files:
+      - resources/js/components/AppHeader.vue
+      - resources/js/components/NavFooter.vue
       - resources/js/composables/useCurrentUrl.ts
     hop_stratum_oracle: 1
     open:
       - scip-typescript does not index .vue single-file components; Vue call sites need the human reading
+    oracle_files:
+      - resources/js/composables/useCurrentUrl.ts
+    checked: corrected
+    check_split: []
   - id: ls-b-05
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: scip-typescript npm larasend HEAD resources/js/composables/`useAppearance.ts`/updateTheme().
     files:
+      - resources/js/app.ts
+      - resources/js/components/AppearanceTabs.vue
       - resources/js/composables/useAppearance.ts
     hop_stratum_oracle: 1
     open:
       - scip-typescript does not index .vue single-file components; Vue call sites need the human reading
+    oracle_files:
+      - resources/js/composables/useAppearance.ts
+    checked: corrected
+    check_split:
+      - resources/js/components/AppearanceTabs.vue
   - id: ls-b-06
     hop_stratum_corpus: '>=3'
     status: oracle-partial
     truth_via: oracle
     symbol: scip-typescript npm larasend HEAD resources/js/lib/`utils.ts`/toUrl().
     files:
+      - resources/js/app.ts
+      - resources/js/components/AppHeader.vue
+      - resources/js/components/AppSidebar.vue
+      - resources/js/components/NavFooter.vue
+      - resources/js/components/NavMain.vue
       - resources/js/composables/useCurrentUrl.ts
+      - resources/js/layouts/AppLayout.vue
+      - resources/js/layouts/app/AppHeaderLayout.vue
+      - resources/js/layouts/app/AppSidebarLayout.vue
+      - resources/js/layouts/settings/Layout.vue
     hop_stratum_oracle: 1
     open:
       - scip-typescript does not index .vue single-file components; Vue call sites need the human reading
-    human_checked: null
+    oracle_files:
+      - resources/js/composables/useCurrentUrl.ts
+    checked: corrected
+    check_split:
+      - resources/js/app.ts
+      - resources/js/components/AppHeader.vue
+      - resources/js/components/AppSidebar.vue
+      - resources/js/components/NavFooter.vue
+      - resources/js/components/NavMain.vue
+      - resources/js/composables/useCurrentUrl.ts
+      - resources/js/layouts/AppLayout.vue
+      - resources/js/layouts/app/AppHeaderLayout.vue
+      - resources/js/layouts/app/AppSidebarLayout.vue
+      - resources/js/layouts/settings/Layout.vue
   - id: uo-b-01
     hop_stratum_corpus: 1
     status: oracle
@@ -123,6 +180,25 @@ items:
     truth_via: oracle
     symbol: Webkul\Webhook\Validators\SafeWebhookUrl::httpOptions
     files:
+      - packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php
+      - packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php
+      - packages/Webkul/MagicAI/src/Enums/AiProvider.php
+      - packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php
+      - packages/Webkul/Webhook/src/Services/WebhookService.php
+      - packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php
+    hop_stratum_oracle: '>=3'
+    open:
+      - depth cap 6 reached
+      - route hops not followed from 4 controller entry point(s)
+      - >-
+        framework-invoked entry point(s) not followed: Webkul\AiAgent\Pipelines\Stages\CallAiProviderStage::handle,
+        Webkul\AiAgent\Pipelines\Stages\Image\EnrichmentStep::handle,
+        Webkul\AiAgent\Chat\Tools\GenerateContent::register, Webkul\AiAgent\Chat\Tools\AnalyzeImage::register,
+        Webkul\AiAgent\Pipelines\Stages\Image\VisionDetectionStep::handle,
+        Webkul\AiAgent\Services\VisionService::analyzeContext, Webkul\Webhook\Jobs\SendProductWebhook::handle,
+        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\AiAgent\Jobs\AutoEnrichProductJob::handle,
+        Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    oracle_files:
       - packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php
       - packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php
       - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
@@ -161,19 +237,8 @@ items:
       - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
       - packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php
       - packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php
-    hop_stratum_oracle: '>=3'
-    open:
-      - depth cap 6 reached
-      - route hops not followed from 4 controller entry point(s)
-      - >-
-        framework-invoked entry point(s) not followed: Webkul\AiAgent\Pipelines\Stages\CallAiProviderStage::handle,
-        Webkul\AiAgent\Pipelines\Stages\Image\EnrichmentStep::handle,
-        Webkul\AiAgent\Chat\Tools\GenerateContent::register, Webkul\AiAgent\Chat\Tools\AnalyzeImage::register,
-        Webkul\AiAgent\Pipelines\Stages\Image\VisionDetectionStep::handle,
-        Webkul\AiAgent\Services\VisionService::analyzeContext, Webkul\Webhook\Jobs\SendProductWebhook::handle,
-        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\AiAgent\Jobs\AutoEnrichProductJob::handle,
-        Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
-    human_checked: null
+    checked: corrected
+    check_split: []
   - id: uo-b-03
     hop_stratum_corpus: 1
     status: oracle
@@ -230,7 +295,12 @@ items:
       - packages/Webkul/Admin/src/Resources/assets/js/directives/code.js
       - packages/Webkul/Admin/src/Resources/assets/js/utils/code.js
     hop_stratum_oracle: 1
-    human_checked: null
+    oracle_files:
+      - packages/Webkul/Admin/src/Resources/assets/js/app.js
+      - packages/Webkul/Admin/src/Resources/assets/js/directives/code.js
+      - packages/Webkul/Admin/src/Resources/assets/js/utils/code.js
+    checked: agree
+    check_split: []
   - id: uo-b-06
     hop_stratum_corpus: '>=3'
     status: oracle
@@ -245,90 +315,192 @@ items:
     hop_stratum_corpus: '>=3'
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - app/Http/Controllers/Api/EmailController.php
+      - app/Models/Email.php
+      - app/Services/EmailSendService.php
+      - bootstrap/app.php
+      - routes/api.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split:
+      - app/Http/Middleware/AuthenticateLarasendApiKey.php
+      - app/Http/Middleware/ThrottleLarasendApiKey.php
+      - app/Http/Requests/SendEmailRequest.php
+      - bootstrap/app.php
   - id: ls-c-route-02
     hop_stratum_corpus: '>=3'
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - app/Http/Controllers/Webhooks/CloudflareInboundController.php
+      - app/Models/Thread.php
+      - app/Services/InboundEmailIngestor.php
+      - app/Services/ThreadResolver.php
+      - bootstrap/app.php
+      - routes/api.php
     open:
       - no reference engine emits this relation (registration § Truth)
-    human_checked: null
+    oracle_files: []
+    checked: corrected
+    check_split:
+      - bootstrap/app.php
   - id: ls-c-route-03
     hop_stratum_corpus: '>=3'
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - app/Http/Controllers/Api/SuppressionController.php
+      - app/Models/Suppression.php
+      - app/Services/SuppressionRemovalService.php
+      - bootstrap/app.php
+      - routes/api.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split:
+      - bootstrap/app.php
   - id: uo-c-route-01
     hop_stratum_corpus: '>=3'
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php
+      - packages/Webkul/AdminApi/src/Providers/AdminApiServiceProvider.php
+      - packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php
+      - packages/Webkul/AdminApi/src/Routes/admin-api.php
+      - packages/Webkul/Product/src/Config/product_types.php
+      - packages/Webkul/Product/src/Contracts/Product.php
+      - packages/Webkul/Product/src/Models/Product.php
+      - packages/Webkul/Product/src/Providers/ModuleServiceProvider.php
+      - packages/Webkul/Product/src/Repositories/ProductRepository.php
+      - packages/Webkul/Product/src/Type/AbstractType.php
+      - packages/Webkul/Product/src/Type/Simple.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split:
+      - bootstrap/providers.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php
+      - packages/Webkul/Product/src/Providers/ModuleServiceProvider.php
+      - packages/Webkul/Product/src/Type/Simple.php
   - id: uo-c-route-02
     hop_stratum_corpus: '>=3'
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php
+      - packages/Webkul/Admin/src/Providers/AdminServiceProvider.php
+      - packages/Webkul/Admin/src/Routes/catalog-routes.php
+      - packages/Webkul/Admin/src/Routes/web.php
+      - packages/Webkul/Product/src/Models/Product.php
+      - packages/Webkul/Product/src/Repositories/ProductRepository.php
+      - packages/Webkul/Product/src/Type/AbstractType.php
     open:
       - no reference engine emits this relation (registration § Truth)
-    human_checked: null
+    oracle_files: []
+    checked: corrected
+    check_split:
+      - packages/Webkul/Product/src/Contracts/Product.php
+      - packages/Webkul/Product/src/Providers/ModuleServiceProvider.php
+      - packages/Webkul/Product/src/Type/AbstractType.php
   - id: uo-c-route-03
     hop_stratum_corpus: 2
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php
+      - packages/Webkul/Webhook/src/Providers/WebhookServiceProvider.php
+      - packages/Webkul/Webhook/src/Routes/web.php
+      - packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: ls-c-model-01
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - app/Models/WebhookDelivery.php
+      - database/migrations/2026_05_11_120741_create_webhook_deliveries_table.php
     open:
       - no reference engine emits this relation (registration § Truth)
-    human_checked: null
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: ls-c-model-02
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - app/Models/Thread.php
+      - database/migrations/2026_07_11_001656_create_threads_table.php
+      - database/migrations/2026_07_12_034640_add_team_workflow_to_threads_table.php
     open:
       - no reference engine emits this relation (registration § Truth)
-    human_checked: null
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: ls-c-model-03
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - app/Models/ApiKey.php
+      - database/migrations/2026_05_11_033056_create_larasend_core_tables.php
+      - database/migrations/2026_06_24_141106_add_governance_fields_to_api_keys_table.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: uo-c-model-01
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/AdminApi/src/Database/Migrations/2024_07_10_112208_api_keys.php
+      - packages/Webkul/AdminApi/src/Models/Apikey.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: uo-c-model-02
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/Product/src/Database/Migrations/2026_07_11_000001_create_variant_structures_tables.php
+      - packages/Webkul/Product/src/Database/Migrations/2026_07_14_210000_add_level_to_variant_structure_axes_table.php
+      - packages/Webkul/Product/src/Database/Migrations/2026_07_15_124500_drop_legacy_variant_structure_axis_position_unique.php
+      - packages/Webkul/Product/src/Models/VariantStructureAxis.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: uo-c-model-03
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/Webhook/src/Database/Migrations/2025_09_20_101519_webhook_logs.php
+      - packages/Webkul/Webhook/src/Database/Migrations/2026_05_12_120000_make_user_nullable_on_webhook_logs.php
+      - packages/Webkul/Webhook/src/Database/Migrations/2026_07_20_120100_add_webhook_columns_to_webhook_logs.php
+      - packages/Webkul/Webhook/src/Models/WebhookLog.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: ls-c-tests-01
     hop_stratum_corpus: 2
     status: oracle-partial
@@ -336,8 +508,11 @@ items:
     symbol: App\Services\ThreadResolver
     files:
       - tests/Feature/ApiEmailTest.php
-      - tests/Feature/DatabaseSeederSafetyTest.php
+      - tests/Feature/CloudflareSendTest.php
+      - tests/Feature/DashboardActionsTest.php
       - tests/Feature/InboundEmailTest.php
+      - tests/Feature/InboxReplyTest.php
+      - tests/Feature/InboxTest.php
       - tests/Feature/ThreadingTest.php
     hop_stratum_oracle: '>=3'
     open:
@@ -346,21 +521,88 @@ items:
         framework-invoked entry point(s) not followed: App\Console\Commands\ThreadBackfillCommand::handle,
         App\Services\EmailSendService::__construct, App\Services\InboundEmailIngestor::__construct,
         Database\Seeders\InboxDemoSeeder::__construct, Database\Seeders\InboxDemoSeeder::run
+    oracle_files:
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/DatabaseSeederSafetyTest.php
+      - tests/Feature/InboundEmailTest.php
+      - tests/Feature/ThreadingTest.php
+    checked: corrected
+    check_split:
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/CloudflareSendTest.php
+      - tests/Feature/CloudflareSuppressionSyncTest.php
+      - tests/Feature/DashboardActionsTest.php
+      - tests/Feature/DatabaseSeederSafetyTest.php
+      - tests/Feature/InboundEmailTest.php
+      - tests/Feature/InboxReplyTest.php
+      - tests/Feature/InboxTest.php
+      - tests/Feature/ThreadingTest.php
   - id: ls-c-tests-02
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: App\Services\SuppressionRemovalService
-    files: []
+    files:
+      - tests/Feature/SuppressionManagementTest.php
     open:
       - route hops not followed from 3 controller entry point(s)
       - 'framework-invoked entry point(s) not followed: App\Services\SuppressionRemovalService::__construct'
+    oracle_files: []
+    checked: corrected
+    check_split:
+      - tests/Feature/SuppressionManagementTest.php
   - id: uo-c-tests-01
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: Webkul\Webhook\Validators\SafeWebhookUrl
     files:
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformAclBypassTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformDefaultValidationTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformModelsSubmitTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSaveValidatesCredentialsTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTildeModelTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/PlatformExtrasSsrfTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookFormValidationTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookQuickCreateTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php
+      - packages/Webkul/AiAgent/tests/Unit/CredentialApiUrlSsrfTest.php
+      - packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php
+      - packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
+      - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
+      - packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php
+    hop_stratum_oracle: '>=3'
+    open:
+      - depth cap 6 reached
+      - route hops not followed from 7 controller entry point(s)
+      - >-
+        framework-invoked entry point(s) not followed: webhookRules,
+        Webkul\AiAgent\Pipelines\Stages\CallAiProviderStage::handle,
+        Webkul\AiAgent\Pipelines\Stages\Image\EnrichmentStep::handle,
+        Webkul\AiAgent\Chat\Tools\GenerateContent::register, Webkul\AiAgent\Chat\Tools\AnalyzeImage::register,
+        Webkul\AiAgent\Pipelines\Stages\Image\VisionDetectionStep::handle,
+        Webkul\AiAgent\Services\VisionService::analyzeContext, Webkul\Webhook\Jobs\SendProductWebhook::handle,
+        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\AiAgent\Jobs\AutoEnrichProductJob::handle,
+        Webkul\MagicAI\Console\Commands\Platform\AddPlatform::perform,
+        Webkul\MagicAI\Console\Commands\Platform\EditPlatform::perform,
+        Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    oracle_files:
       - packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php
       - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
       - packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php
@@ -380,21 +622,37 @@ items:
       - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
       - packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php
       - packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php
-    hop_stratum_oracle: '>=3'
-    open:
-      - depth cap 6 reached
-      - route hops not followed from 7 controller entry point(s)
-      - >-
-        framework-invoked entry point(s) not followed: webhookRules,
-        Webkul\AiAgent\Pipelines\Stages\CallAiProviderStage::handle,
-        Webkul\AiAgent\Pipelines\Stages\Image\EnrichmentStep::handle,
-        Webkul\AiAgent\Chat\Tools\GenerateContent::register, Webkul\AiAgent\Chat\Tools\AnalyzeImage::register,
-        Webkul\AiAgent\Pipelines\Stages\Image\VisionDetectionStep::handle,
-        Webkul\AiAgent\Services\VisionService::analyzeContext, Webkul\Webhook\Jobs\SendProductWebhook::handle,
-        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\AiAgent\Jobs\AutoEnrichProductJob::handle,
-        Webkul\MagicAI\Console\Commands\Platform\AddPlatform::perform,
-        Webkul\MagicAI\Console\Commands\Platform\EditPlatform::perform,
-        Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    checked: corrected
+    check_split:
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformAclBypassTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformDefaultValidationTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformModelsSubmitTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSaveValidatesCredentialsTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTildeModelTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/OrphanPlatformFallbackTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/PlatformExtrasSsrfTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookFormValidationTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookQuickCreateTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php
+      - packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php
+      - packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
+      - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
   - id: uo-c-tests-02
     hop_stratum_corpus: 2
     status: oracle-partial
@@ -403,15 +661,39 @@ items:
     files:
       - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
       - packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
     hop_stratum_oracle: 1
     open:
       - 'framework-invoked entry point(s) not followed: Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle'
+    oracle_files:
+      - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php
+    checked: corrected
+    check_split:
+      - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
   - id: uo-c-tests-03
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: Webkul\Product\Repositories\ProductRepository::isUniqueVariantForProduct
     files:
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductCheckVariantUniquenessTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantCombinationExistsTest.php
+      - packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php
+      - packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryTest.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php
+      - packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php
+    hop_stratum_oracle: '>=3'
+    open:
+      - route hops not followed from 9 controller entry point(s)
+      - >-
+        framework-invoked entry point(s) not followed: Webkul\Product\Type\Configurable::update,
+        Webkul\DataTransfer\Helpers\Importers\Product\Importer::saveValidatedBatches, runBulkVariantLevelUpdate
+    oracle_files:
       - packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php
       - packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php
       - packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php
@@ -419,13 +701,18 @@ items:
       - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php
       - packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php
       - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
-    hop_stratum_oracle: '>=3'
-    open:
-      - route hops not followed from 9 controller entry point(s)
-      - >-
-        framework-invoked entry point(s) not followed: Webkul\Product\Type\Configurable::update,
-        Webkul\DataTransfer\Helpers\Importers\Product\Importer::saveValidatedBatches, runBulkVariantLevelUpdate
-    human_checked: null
+    checked: corrected
+    check_split:
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductCheckVariantUniquenessTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantCombinationExistsTest.php
+      - packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php
+      - packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php
+      - packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php
+      - packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php
+      - packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
   - id: ls-d-01
     hop_stratum_corpus: '>=3'
     status: confirms-empty
@@ -433,6 +720,9 @@ items:
     files: []
     open:
       - 'engine-only: route, queue and event dispatch hops are not followed'
+    oracle_files: []
+    checked: agree
+    check_split: []
   - id: ls-d-02
     hop_stratum_corpus: '>=3'
     status: unresolved
@@ -440,6 +730,9 @@ items:
     files: []
     open:
       - declaration not found in the scip index
+    oracle_files: []
+    checked: agree
+    check_split: []
   - id: ls-d-03
     hop_stratum_corpus: 1
     status: confirms-empty
@@ -447,7 +740,9 @@ items:
     files: []
     open:
       - no declaration of the probe exists at the pin
-    human_checked: null
+    oracle_files: []
+    checked: agree
+    check_split: []
   - id: uo-d-01
     hop_stratum_corpus: '>=3'
     status: confirms-empty
@@ -455,6 +750,9 @@ items:
     files: []
     open:
       - 'engine-only: route, queue and event dispatch hops are not followed'
+    oracle_files: []
+    checked: agree
+    check_split: []
   - id: uo-d-02
     hop_stratum_corpus: '>=3'
     status: confirms-empty
@@ -462,6 +760,9 @@ items:
     files: []
     open:
       - 'engine-only: route, queue and event dispatch hops are not followed'
+    oracle_files: []
+    checked: agree
+    check_split: []
   - id: uo-d-03
     hop_stratum_corpus: 1
     status: confirms-empty
@@ -469,19 +770,28 @@ items:
     files: []
     open:
       - no declaration of the probe exists at the pin
-    human_checked: null
+    oracle_files: []
+    checked: agree
+    check_split: []
   - id: ls-e-01
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: App\Services\WebhookUrlGuard::isSafe
     files:
+      - app/Http/Requests/StoreOnboardingRequest.php
+      - app/Http/Requests/StoreWebhookEndpointRequest.php
       - app/Rules/PublicWebhookUrl.php
       - tests/Unit/WebhookUrlGuardTest.php
     hop_stratum_oracle: 1
     open:
       - 'framework-invoked entry point(s) not followed: App\Rules\PublicWebhookUrl::validate'
-    human_checked: null
+    oracle_files:
+      - app/Rules/PublicWebhookUrl.php
+      - tests/Unit/WebhookUrlGuardTest.php
+    checked: corrected
+    check_split:
+      - app/Services/WebhookUrlGuard.php
   - id: ls-e-02
     hop_stratum_corpus: 2
     status: oracle-partial
@@ -499,10 +809,12 @@ items:
       - app/Services/EmailSendService.php
       - app/Services/SesEventNormalizer.php
       - app/Services/SuppressionRemovalService.php
+      - tests/Feature/ActivityDashboardTest.php
       - tests/Feature/ApiEmailTest.php
       - tests/Feature/CloudflareSuppressionSyncTest.php
       - tests/Feature/SesWebhookTest.php
       - tests/Feature/SuppressionEmailNormalizationMigrationTest.php
+      - tests/Feature/SuppressionManagementTest.php
       - tests/Feature/ThreadingTest.php
     hop_stratum_oracle: '>=3'
     open:
@@ -511,6 +823,35 @@ items:
         framework-invoked entry point(s) not followed: App\Models\Suppression::email,
         App\Models\Suppression::scopeWhereNormalizedEmail, runCloudflareSuppressionSourceSync,
         App\Models\Suppression::scopeWhereNormalizedEmailIn, App\Models\Suppression::scopeWhereNormalizedEmailNotIn
+    oracle_files:
+      - app/Http/Controllers/Api/EmailController.php
+      - app/Http/Controllers/Api/SuppressionController.php
+      - app/Http/Controllers/DashboardActionController.php
+      - app/Http/Controllers/ThreadActionController.php
+      - app/Http/Controllers/Webhooks/SesWebhookController.php
+      - app/Jobs/SyncCloudflareSourceSuppressions.php
+      - app/Models/Suppression.php
+      - app/Services/CloudflareApiClient.php
+      - app/Services/EmailSendService.php
+      - app/Services/SesEventNormalizer.php
+      - app/Services/SuppressionRemovalService.php
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/CloudflareSuppressionSyncTest.php
+      - tests/Feature/SesWebhookTest.php
+      - tests/Feature/SuppressionEmailNormalizationMigrationTest.php
+      - tests/Feature/ThreadingTest.php
+    checked: corrected
+    check_split:
+      - app/Http/Controllers/Api/EmailController.php
+      - app/Http/Controllers/Api/SuppressionController.php
+      - app/Http/Controllers/DashboardActionController.php
+      - app/Http/Controllers/ThreadActionController.php
+      - app/Http/Controllers/Webhooks/SesWebhookController.php
+      - tests/Feature/ActivityDashboardTest.php
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/SesWebhookTest.php
+      - tests/Feature/SuppressionManagementTest.php
+      - tests/Feature/ThreadingTest.php
   - id: ls-e-03
     hop_stratum_corpus: '>=3'
     status: oracle-partial
@@ -521,17 +862,103 @@ items:
       - app/Http/Controllers/DashboardActionController.php
       - app/Http/Controllers/ThreadActionController.php
       - app/Services/EmailSendService.php
+      - routes/api.php
+      - routes/web.php
       - tests/Feature/ApiEmailTest.php
+      - tests/Feature/CloudflareSendTest.php
+      - tests/Feature/CloudflareSuppressionSyncTest.php
+      - tests/Feature/DashboardActionsTest.php
+      - tests/Feature/InboxReplyTest.php
       - tests/Feature/ThreadingTest.php
     hop_stratum_oracle: 2
     open:
       - route hops not followed from 8 controller entry point(s)
+    oracle_files:
+      - app/Http/Controllers/Api/EmailController.php
+      - app/Http/Controllers/DashboardActionController.php
+      - app/Http/Controllers/ThreadActionController.php
+      - app/Services/EmailSendService.php
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/ThreadingTest.php
+    checked: corrected
+    check_split:
+      - app/Services/MimeMessageBuilder.php
   - id: uo-e-01
     hop_stratum_corpus: '>=3'
     status: oracle-partial
     truth_via: oracle
     symbol: Webkul\Webhook\Validators\SafeWebhookUrl::httpOptions
     files:
+      - packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php
+      - packages/Webkul/AiAgent/src/Agents/BaseAgent.php
+      - packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php
+      - packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php
+      - packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php
+      - packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php
+      - packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php
+      - packages/Webkul/AiAgent/src/Examples/EnrichProductsBatchCommand.php
+      - packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php
+      - packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php
+      - packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php
+      - packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php
+      - packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php
+      - packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php
+      - packages/Webkul/AiAgent/src/Jobs/BatchAgentJob.php
+      - packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php
+      - packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php
+      - packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php
+      - packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php
+      - packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php
+      - packages/Webkul/AiAgent/src/Pipelines/Stages/Image/VisionDetectionStep.php
+      - packages/Webkul/AiAgent/src/Services/AgentService.php
+      - packages/Webkul/AiAgent/src/Services/EnrichmentService.php
+      - packages/Webkul/AiAgent/src/Services/ImageToProductService.php
+      - packages/Webkul/AiAgent/src/Services/VisionService.php
+      - packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php
+      - packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php
+      - packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php
+      - packages/Webkul/MagicAI/src/Enums/AiProvider.php
+      - packages/Webkul/MagicAI/src/Services/ModelDiscovery.php
+      - packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php
+      - packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php
+      - packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php
+      - packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php
+      - packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php
+      - packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php
+      - packages/Webkul/Webhook/src/Listeners/Product.php
+      - packages/Webkul/Webhook/src/Services/WebhookService.php
+      - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
+      - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
+      - packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php
+      - packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php
+    hop_stratum_oracle: '>=3'
+    open:
+      - depth cap 6 reached
+      - route hops not followed from 4 controller entry point(s)
+      - >-
+        framework-invoked entry point(s) not followed: Webkul\AiAgent\Pipelines\Stages\CallAiProviderStage::handle,
+        Webkul\AiAgent\Pipelines\Stages\Image\EnrichmentStep::handle,
+        Webkul\AiAgent\Chat\Tools\GenerateContent::register, Webkul\AiAgent\Chat\Tools\AnalyzeImage::register,
+        Webkul\AiAgent\Pipelines\Stages\Image\VisionDetectionStep::handle,
+        Webkul\AiAgent\Services\VisionService::analyzeContext, Webkul\Webhook\Jobs\SendProductWebhook::handle,
+        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\AiAgent\Jobs\AutoEnrichProductJob::handle,
+        Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    oracle_files:
       - packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php
       - packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php
       - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
@@ -570,24 +997,75 @@ items:
       - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
       - packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php
       - packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php
-    hop_stratum_oracle: '>=3'
-    open:
-      - depth cap 6 reached
-      - route hops not followed from 4 controller entry point(s)
-      - >-
-        framework-invoked entry point(s) not followed: Webkul\AiAgent\Pipelines\Stages\CallAiProviderStage::handle,
-        Webkul\AiAgent\Pipelines\Stages\Image\EnrichmentStep::handle,
-        Webkul\AiAgent\Chat\Tools\GenerateContent::register, Webkul\AiAgent\Chat\Tools\AnalyzeImage::register,
-        Webkul\AiAgent\Pipelines\Stages\Image\VisionDetectionStep::handle,
-        Webkul\AiAgent\Services\VisionService::analyzeContext, Webkul\Webhook\Jobs\SendProductWebhook::handle,
-        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\AiAgent\Jobs\AutoEnrichProductJob::handle,
-        Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    checked: corrected
+    check_split:
+      - packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php
+      - packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php
+      - packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php
+      - packages/Webkul/AiAgent/src/Agents/BaseAgent.php
+      - packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php
+      - packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php
+      - packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php
+      - packages/Webkul/AiAgent/src/Examples/EnrichProductsBatchCommand.php
+      - packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php
+      - packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php
+      - packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php
+      - packages/Webkul/AiAgent/src/Jobs/BatchAgentJob.php
+      - packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php
+      - packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php
+      - packages/Webkul/AiAgent/src/Services/AgentService.php
+      - packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php
+      - packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php
+      - packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php
+      - packages/Webkul/MagicAI/src/Services/ModelDiscovery.php
+      - packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php
+      - packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php
+      - packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php
+      - packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php
+      - packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php
+      - packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php
+      - packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php
+      - packages/Webkul/Webhook/src/Listeners/Product.php
+      - packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php
+      - packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php
+      - packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php
+      - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
+      - packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php
+      - packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php
   - id: uo-e-02
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: Webkul\Product\Repositories\ProductRepository::isUniqueVariantForProduct
     files:
+      - packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php
+      - packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php
+      - packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php
+      - packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php
+      - packages/Webkul/Product/src/Repositories/ProductRepository.php
+      - packages/Webkul/Product/src/Type/AbstractType.php
+      - packages/Webkul/Product/src/Type/Configurable.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryTest.php
+      - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php
+      - packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php
+    hop_stratum_oracle: '>=3'
+    open:
+      - route hops not followed from 9 controller entry point(s)
+      - >-
+        framework-invoked entry point(s) not followed: Webkul\Product\Type\Configurable::update,
+        Webkul\DataTransfer\Helpers\Importers\Product\Importer::saveValidatedBatches, runBulkVariantLevelUpdate
+    oracle_files:
       - packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php
       - packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php
       - packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php
@@ -605,19 +1083,29 @@ items:
       - packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php
       - packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php
       - packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php
-    hop_stratum_oracle: '>=3'
-    open:
-      - route hops not followed from 9 controller entry point(s)
-      - >-
-        framework-invoked entry point(s) not followed: Webkul\Product\Type\Configurable::update,
-        Webkul\DataTransfer\Helpers\Importers\Product\Importer::saveValidatedBatches, runBulkVariantLevelUpdate
-    human_checked: null
+    checked: corrected
+    check_split:
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductCheckVariantUniquenessTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantCombinationExistsTest.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php
+      - packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php
   - id: uo-e-03
     hop_stratum_corpus: 2
     status: oracle-partial
     truth_via: oracle
     symbol: Webkul\Webhook\Services\WebhookService::getProductChangesForWebhook
     files:
+      - packages/Webkul/Webhook/src/Listeners/Product.php
+      - packages/Webkul/Webhook/src/Services/WebhookService.php
+      - packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php
+      - packages/Webkul/Webhook/tests/Unit/ProductWebhookChangeResolutionTest.php
+    hop_stratum_oracle: '>=3'
+    open:
+      - >-
+        framework-invoked entry point(s) not followed: Webkul\Webhook\Listeners\Product::afterCreate,
+        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    oracle_files:
       - packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php
       - packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php
       - packages/Webkul/Webhook/src/Listeners/Product.php
@@ -628,37 +1116,73 @@ items:
       - packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php
       - packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php
       - packages/Webkul/Webhook/tests/Unit/ProductWebhookChangeResolutionTest.php
-    hop_stratum_oracle: '>=3'
-    open:
-      - >-
-        framework-invoked entry point(s) not followed: Webkul\Webhook\Listeners\Product::afterCreate,
-        Webkul\Webhook\Services\WebhookService::sendBatchBySkus, Webkul\Webhook\Jobs\SendBulkEditProductWebhook::handle
+    checked: corrected
+    check_split:
+      - packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php
   - id: ls-e-x-01
     hop_stratum_corpus: 1
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - resources/js/pages/Inbox.vue
     open:
       - no reference engine emits this relation (registration § Truth)
-    human_checked: null
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: ls-e-x-02
     hop_stratum_corpus: 2
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - resources/js/components/DashboardPanel.vue
+      - resources/js/components/EmailProviderPanel.vue
+      - resources/js/components/GlobalRail.vue
+      - resources/js/components/PaginationControls.vue
+      - resources/js/pages/Activity.vue
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: uo-e-x-01
     hop_stratum_corpus: 2
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/attributegroups/create.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/attributes/create.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/categories/create.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/categories/field/create.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/categories/field/edit.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/categories/partials/form.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/families/index.blade.php
+      - packages/Webkul/Admin/src/Resources/views/components/associations/field-builder.blade.php
+      - packages/Webkul/Admin/src/Resources/views/components/catalog/quick-create-modal.blade.php
+      - packages/Webkul/ProductPassport/src/Resources/views/admin/templates/create.blade.php
+      - packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []
   - id: uo-e-x-02
     hop_stratum_corpus: 2
     status: human-required
     truth_via: human
-    files: []
+    files:
+      - packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/categories/field/edit.blade.php
+      - packages/Webkul/Admin/src/Resources/views/catalog/families/index.blade.php
+      - packages/Webkul/Admin/src/Resources/views/components/associations/field-builder.blade.php
+      - packages/Webkul/Admin/src/Resources/views/components/catalog/quick-create-modal.blade.php
+      - packages/Webkul/ProductPassport/src/Resources/views/admin/templates/create.blade.php
+      - packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php
     open:
       - no reference engine emits this relation (registration § Truth)
+    oracle_files: []
+    checked: corrected
+    check_split: []

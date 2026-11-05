@@ -1,0 +1,237 @@
+[
+ {
+  "id": "ls-c-route-01",
+  "question": {
+   "id": "ls-c-route-01",
+   "suite": "C",
+   "class": "route-trace",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Through which files does POST /api/emails reach the Email model?",
+   "probe": "POST /api/emails",
+   "probe_to": "Email",
+   "hop_stratum": ">=3",
+   "basis": [
+    "routes/api.php:13 -- Route::post('emails', [EmailController::class, 'store'])",
+    "app/Http/Controllers/Api/EmailController.php:40,80 -- store() calls EmailSendService::send",
+    "app/Services/EmailSendService.php:72 -- Email::create([...])",
+    "tests/Feature/ApiEmailTest.php uses the /api/ prefix (route file loaded under api)"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-route-01",
+   "hop_stratum_corpus": ">=3",
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-route-02",
+  "question": {
+   "id": "ls-c-route-02",
+   "suite": "C",
+   "class": "route-trace",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Through which files does POST /api/webhooks/inbound/cloudflare/{token} reach the Thread model?",
+   "probe": "POST /api/webhooks/inbound/cloudflare/{token}",
+   "probe_to": "Thread",
+   "hop_stratum": ">=3",
+   "basis": [
+    "routes/api.php:22 -- invokable CloudflareInboundController",
+    "app/Http/Controllers/Webhooks/CloudflareInboundController.php:28,87 -- InboundEmailIngestor::ingest",
+    "app/Services/InboundEmailIngestor.php:77 -- $this->threads->attachInbound($inbound)",
+    "app/Services/ThreadResolver.php:25 -- attachInbound returns Thread"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-route-02",
+   "hop_stratum_corpus": ">=3",
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-route-03",
+  "question": {
+   "id": "ls-c-route-03",
+   "suite": "C",
+   "class": "route-trace",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Through which files does DELETE /api/suppressions/{suppression} reach the Suppression model?",
+   "probe": "DELETE /api/suppressions/{suppression}",
+   "probe_to": "Suppression",
+   "hop_stratum": ">=3",
+   "basis": [
+    "routes/api.php:15 -- SuppressionController::destroy",
+    "app/Http/Controllers/Api/SuppressionController.php:17,28 -- calls SuppressionRemovalService::remove",
+    "app/Services/SuppressionRemovalService.php:20,25 -- $suppression->delete()"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-route-03",
+   "hop_stratum_corpus": ">=3",
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-model-01",
+  "question": {
+   "id": "ls-c-model-01",
+   "suite": "C",
+   "class": "model-table",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Which table does the WebhookDelivery model persist to, and which migration files define or alter it?",
+   "probe": "WebhookDelivery",
+   "hop_stratum": 1,
+   "basis": [
+    "app/Models/WebhookDelivery.php -- no $table override (conventional name)",
+    "database/migrations/2026_05_11_120741_create_webhook_deliveries_table.php:14 -- Schema::create('webhook_deliveries')"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-model-01",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-model-02",
+  "question": {
+   "id": "ls-c-model-02",
+   "suite": "C",
+   "class": "model-table",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Which table does the Thread model persist to, and which migration files define or alter it?",
+   "probe": "Thread",
+   "hop_stratum": 1,
+   "basis": [
+    "database/migrations/2026_07_11_001656_create_threads_table.php:15 -- Schema::create('threads')",
+    "database/migrations/2026_07_12_034640_add_team_workflow_to_threads_table.php -- alters threads"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-model-02",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-model-03",
+  "question": {
+   "id": "ls-c-model-03",
+   "suite": "C",
+   "class": "model-table",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Which table does the ApiKey model persist to, and which migration files define or alter it?",
+   "probe": "ApiKey",
+   "hop_stratum": 1,
+   "basis": [
+    "database/migrations/2026_05_11_033056_create_larasend_core_tables.php:78 -- Schema::create('api_keys') inside a multi-table migration",
+    "database/migrations/2026_06_24_141106_add_governance_fields_to_api_keys_table.php -- alters api_keys"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-model-03",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-e-x-01",
+  "question": {
+   "id": "ls-e-x-01",
+   "suite": "E",
+   "class": "change-impact-xplane",
+   "subject": "larasend",
+   "language": "php",
+   "target_language": "vue",
+   "question": "If the props InboxController passes to its page change, which frontend files must be re-read?",
+   "probe": "InboxController",
+   "hop_stratum": 1,
+   "basis": [
+    "app/Http/Controllers/InboxController.php:51 -- Inertia::render('Inbox', [...])",
+    "resources/js/pages/Inbox.vue -- the page component that receives those props"
+   ],
+   "note": "Wayfinder route helpers (resources/js/actions, routes, wayfinder) are gitignored generated code and are absent at the pin; no arm runs code generation.",
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-e-x-01",
+   "hop_stratum_corpus": 1,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ },
+ {
+  "id": "ls-e-x-02",
+  "question": {
+   "id": "ls-e-x-02",
+   "suite": "E",
+   "class": "change-impact-xplane",
+   "subject": "larasend",
+   "language": "php",
+   "target_language": "vue",
+   "question": "If the props ActivityController passes to its page change, which frontend files must be re-read (page and the components it passes them to)?",
+   "probe": "ActivityController",
+   "hop_stratum": 2,
+   "basis": [
+    "app/Http/Controllers/ActivityController.php:127 -- Inertia::render('Activity', [...])",
+    "resources/js/pages/Activity.vue -- receives the props (hop 1); child components it forwards them to (hop 2)"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-e-x-02",
+   "hop_stratum_corpus": 2,
+   "status": "human-required",
+   "truth_via": "human",
+   "files": [],
+   "open": [
+    "no reference engine emits this relation (registration \u00a7 Truth)"
+   ]
+  }
+ }
+]

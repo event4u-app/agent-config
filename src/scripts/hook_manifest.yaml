@@ -1573,6 +1573,23 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: telemetry
+  # road-to-a-memory-each-worker-is-handed 2.2 + 2.3 — memory audience, RECORD-ONLY
+  # and SHADOW. A child's Write/Edit under agents/memory/ (payload carries
+  # agent_id) appends one `memory_child_write_attempt` line; the orchestrator's
+  # Agent/Task call appends the counts of the curated slice its prompt names
+  # (`memory_slice_shadow`), delivering nothing. The prompt is read in memory
+  # only: a line carries a tool name, a target class and integers. claude only —
+  # the one host whose payload carries agent_id. Never blocks, never emits:
+  # exit 0 on every path, fail_closed: false.
+  memory-audience-shadow:
+    script: src/scripts/hooks/memory_audience_shadow_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: telemetry
+    tools: [Agent, Task, Write, Edit, MultiEdit]
+    needs_payload_bodies: [input]
+    payload_fields: [prompt, file_path, path]
   # road-to-source-first-frontend Phase 3 Steps 1-2 — source-first gate, SHADOW
   # ONLY, per docs/contracts/concern-activation-policy.md. On every
   # capture-shaped tool call it appends one `source_first_gate_shadow` line
@@ -1762,7 +1779,7 @@ platforms:
     # (+16,329 GPT tok, +69 % on the thin rule layer) are in
     # `project_thin_rules.path_only_ids`; the receiver is
     # `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, metered-spawn-ask, source-first-gate, memory-recall]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, metered-spawn-ask, source-first-gate, memory-recall, memory-audience-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record, spawn-guard-shadow, metered-spawn-ask]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that

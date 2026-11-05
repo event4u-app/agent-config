@@ -78,6 +78,15 @@ describe('truthFor', () => {
         expect(t.open).toEqual(['framework-invoked entry point(s) not followed: App\\Job::handle']);
     });
 
+    it('stops a closure at the hop limit the question states, and does not report that limit as open', () => {
+        const t = truthFor(
+            q({ class: 'precise-semantics', shape: 'callers-transitive', question: 'Which files reach check within one call hop?' }),
+            seeds('x', 'App\\Guard::check'), refs(), enclosing(), [], false, 6,
+        );
+        expect(t.files).toEqual(['app/Job.php', 'tests/GuardTest.php']);
+        expect(t.open ?? []).not.toContainEqual(expect.stringMatching(/depth cap/));
+    });
+
     it('keeps only test files for tests-for', () => {
         const t = truthFor(q({ class: 'tests-for' }), seeds('x', 'App\\Guard::check'), refs(), enclosing(), [], false, 6);
         expect(t.files).toEqual(['tests/GuardTest.php']);

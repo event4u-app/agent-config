@@ -48,6 +48,11 @@ THIS STEP: {{step_description}}
 PRIOR STEP DIFFS (read-only): {{prior_diffs}}
 CONTEXT FILES: {{file_paths}}
 
+KNOWLEDGE LEADS — at most five references from the shared memory, picked
+by the orchestrator for this task. Leads to verify against the code, never
+facts to build on; "none" means none were handed:
+{{knowledge_refs}}
+
 CONSTRAINTS:
 - Do NOT modify code from prior steps; their tests must still pass.
 - Do NOT preempt later steps; one step at a time.

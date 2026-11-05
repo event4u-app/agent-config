@@ -7,10 +7,11 @@
  *       [--clone] [--foreign <subject>=<graph.json>]… [--date YYYY-MM-DD]
  *       [--suite-a] [--force] [--truth <truth-v3-DATE.yaml>]
  *
- * `--truth` takes the file `oracle_truth.ts` writes. It is refused while any item of
- * the registered 20 % human sample lacks a verdict; after that, an item counts when
- * the oracle answered it completely or a person sealed it, and anything else stays
- * PENDING.
+ * `--truth` takes the file `oracle_truth.ts` writes and `apply_check.ts` seals. It is
+ * refused while any item of the registered 20 % sample lacks a verdict, or while a
+ * delegated verdict does not name its checker; after that, an item counts when the
+ * oracle answered it completely or a check sealed it, and anything else stays PENDING.
+ * The checker (`human` or `council`) is printed beside every result.
  *
  * Registered by `PREREGISTRATION-v3-2026-11-05.md` before this runner existed. The
  * arms, the verb map, the scoring and the refusal rules are that document's; where
@@ -195,31 +196,42 @@ export function truthOf(q: { truth?: unknown; expected?: unknown }): Truth {
 
 /** `truth-v3-<date>.yaml`, written by oracle_truth.ts; the corpus itself stays hash-bound. */
 export interface TruthDoc {
-    human_check: { sample: string[] };
-    items: { id: string; status: string; files: string[]; human_checked?: string | null }[];
+    /** `checked_by` names who sealed the verdicts; absent means the registered human check. */
+    human_check: { sample: string[]; checked_by?: 'human' | 'council' };
+    items: { id: string; status: string; files: string[]; human_checked?: string | null; checked?: string | null }[];
 }
 
-const HUMAN_VERDICTS = new Set(['agree', 'corrected']);
+const VERDICTS = new Set(['agree', 'corrected']);
+
+const verdictOf = (item: TruthDoc['items'][number] | undefined): string => item?.checked ?? item?.human_checked ?? '';
+
+export function truthCheckedBy(doc: TruthDoc): 'human' | 'council' {
+    return doc.human_check.checked_by ?? 'human';
+}
 
 /**
- * Registration § Truth: no truth is scored until the 20 % sample is checked by a
- * person. Returns the reason to refuse, or null.
+ * Registration § Truth: no truth is scored until the 20 % sample is checked. A verdict
+ * in `checked` is a delegated one and counts only when the file says who gave it.
+ * Returns the reason to refuse, or null.
  */
 export function truthDocRefusal(doc: TruthDoc): string | null {
-    const unchecked = doc.human_check.sample.filter((id) => !HUMAN_VERDICTS.has(doc.items.find((i) => i.id === id)?.human_checked ?? ''));
-    return unchecked.length > 0 ? `the human-checked sample is not complete — no verdict (agree | corrected) on ${unchecked.join(', ')}` : null;
+    if (doc.human_check.checked_by === undefined && doc.items.some((i) => i.checked != null)) {
+        return 'verdicts in `checked` without `human_check.checked_by` — the file must name who checked';
+    }
+    const unchecked = doc.human_check.sample.filter((id) => !VERDICTS.has(verdictOf(doc.items.find((i) => i.id === id))));
+    return unchecked.length > 0 ? `the checked sample is not complete — no verdict (agree | corrected) on ${unchecked.join(', ')}` : null;
 }
 
 /**
  * The truth one question takes from an oracle truth file. An item counts when the
- * oracle answered it completely, or when a person sealed it (`human_checked`). A
- * negative control the oracle reached is VOID: removed from the clean-rate, listed.
+ * oracle answered it completely, or when a check sealed it. A negative control the
+ * oracle reached is VOID: removed from the clean-rate, listed.
  */
 export function truthFromDoc(q: { id: string; truth?: unknown; expected?: unknown }, doc: TruthDoc): Truth | 'void' {
     const item = doc.items.find((i) => i.id === q.id);
-    if (q.expected === 'empty') return item?.status === 'void' && item.human_checked !== 'corrected' ? 'void' : { kind: 'expected-empty' };
+    if (q.expected === 'empty') return item?.status === 'void' && verdictOf(item) !== 'corrected' ? 'void' : { kind: 'expected-empty' };
     if (item === undefined) return truthOf(q);
-    const sealed = HUMAN_VERDICTS.has(item.human_checked ?? '');
+    const sealed = VERDICTS.has(verdictOf(item));
     return item.status === 'oracle' || sealed ? { kind: 'set', files: [...item.files] } : { kind: 'pending' };
 }
 
@@ -698,6 +710,7 @@ export async function main(argv: string[]): Promise<number> {
         questions: rows.length,
         pending_truth: pendingQuestions,
         truth_file: args.truth === null ? null : path.relative(REPO_ROOT, args.truth),
+        truth_checked_by: truthDoc === null ? null : truthCheckedBy(truthDoc),
         voided_negative_controls: voided,
         answers_per_arm: answersPerArm,
         non_empty_answers_per_arm: nonEmptyPerArm,
@@ -725,7 +738,7 @@ export async function main(argv: string[]): Promise<number> {
     }
     md.push('');
     md.push(`**Truth:** ${pendingQuestions} of ${rows.length} questions are \`pending-oracle\` — scored as PENDING, never as a number. Every arm's raw answer is in \`traces.jsonl\` for scoring once the step-2.2 oracle lands.`, '');
-    if (args.truth !== null) md.push(`**Truth file:** \`${path.relative(REPO_ROOT, args.truth)}\` · VOID negative controls (removed from the clean-rate): ${voided.length === 0 ? 'none' : voided.join(', ')}.`, '');
+    if (args.truth !== null) md.push(`**Truth file:** \`${path.relative(REPO_ROOT, args.truth)}\`, checked by ${truthDoc === null ? 'nobody' : truthCheckedBy(truthDoc)} · VOID negative controls (removed from the clean-rate): ${voided.length === 0 ? 'none' : voided.join(', ')}.`, '');
     md.push(`**Answers per arm:** grep ${answersPerArm['grep']} (${nonEmptyPerArm['grep']} non-empty) · native ${answersPerArm['native']} (${nonEmptyPerArm['native']} non-empty) · foreign ${answersPerArm['foreign']}${answersPerArm['foreign'] === 0 ? ' — ABSENT, not zero' : ` (${nonEmptyPerArm['foreign']} non-empty)`}.`, '');
     md.push('## Per class (route-trace per subject, never pooled)', '');
     md.push('| Class | Subject | n | grep | native | foreign | native verdict | foreign verdict | verdict-bearing |', '|---|---|---|---|---|---|---|---|---|');
