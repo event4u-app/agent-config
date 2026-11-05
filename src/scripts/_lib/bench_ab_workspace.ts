@@ -62,6 +62,25 @@ export function transcript_path_for(clone: string): string {
  * re-scorer reads as "not measured on this trial" — never as a zero score. A
  * failed write must not be able to look like a run that searched for nothing.
  */
+/**
+ * Keeps a container trial's full event stream (already token-redacted) under
+ * `dir`, named by the sweep stamp and the trial key. The final-message
+ * transcript beside the clone is overwritten by the next sweep that reuses the
+ * workspace key; a stream kept here is not.
+ */
+export function preserve_stream(dir: string, key: string, stream: string, sweep: string): string | null {
+    if (!stream) return null;
+    const name = `${sweep}__${key.replace(/[|/\\]/g, '__')}.stream.jsonl`;
+    try {
+        fs.mkdirSync(dir, { recursive: true });
+        const dest = path.join(dir, name);
+        fs.writeFileSync(dest, stream, { encoding: 'utf-8' });
+        return dest;
+    } catch {
+        return null;
+    }
+}
+
 export function preserve_transcript(clone: string, transcript: string): string | null {
     if (!transcript) return null;
     const dest = transcript_path_for(clone);
