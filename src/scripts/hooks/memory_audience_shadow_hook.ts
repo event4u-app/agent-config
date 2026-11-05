@@ -48,6 +48,8 @@ const CURATED_REF_RE =
 export const MAX_EXAMINED_REFS = 20;
 /** Prompt characters scanned for refs; the matcher never sees more than this. */
 export const MAX_SCAN_CHARS = 100_000;
+/** Missing path levels walked to find where a write lands; deeper is not resolved. */
+export const MAX_RESOLVE_DEPTH = 32;
 /** Same rough estimate the hook budgets use: four bytes per token. */
 const BYTES_PER_TOKEN = 4;
 
@@ -66,10 +68,10 @@ function str(o: JsonObject, ...keys: string[]): string | null {
 /**
  * Where a write would land: the real path of the nearest existing ancestor, with
  * the not-yet-existing tail appended, so a new file under a symlinked directory
- * is placed where the filesystem will put it. At most one realpath per level of
- * the missing tail.
+ * is placed where the filesystem will put it. At most {@link MAX_RESOLVE_DEPTH}
+ * missing levels are walked; past that the destination is unresolved (null).
  */
-function resolveDestination(abs: string): string {
+function resolveDestination(abs: string): string | null {
     const tail: string[] = [];
     let cur = abs;
     for (;;) {
@@ -77,7 +79,7 @@ function resolveDestination(abs: string): string {
             return path.join(fs.realpathSync(cur), ...tail.reverse());
         } catch {
             const parent = path.dirname(cur);
-            if (parent === cur) return abs;
+            if (parent === cur || tail.length >= MAX_RESOLVE_DEPTH) return null;
             tail.push(path.basename(cur));
             cur = parent;
         }
@@ -92,7 +94,9 @@ function resolveDestination(abs: string): string {
 export function memoryTarget(filePath: string, root: string): 'intake' | 'curated' | null {
     const abs = path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
     const store = resolveDestination(path.join(root, MEMORY_DIR));
-    const rel = path.relative(store, resolveDestination(abs));
+    const dest = resolveDestination(abs);
+    if (store === null || dest === null) return null;
+    const rel = path.relative(store, dest);
     if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) return null;
     return rel === 'intake' || rel.startsWith(`intake${path.sep}`) ? 'intake' : 'curated';
 }
@@ -139,6 +143,14 @@ function eligibleFile(ref: string, store: string, root: string): { real: string;
     }
 }
 
+/** Index just past the last whitespace before `end`, 0 when there is none. Linear. */
+function lastWhitespaceBefore(text: string, end: number): number {
+    for (let i = end - 1; i >= 0; i -= 1) {
+        if (/\s/.test(text[i] as string)) return i + 1;
+    }
+    return 0;
+}
+
 /**
  * The slice a spawn naming these refs would receive, as counts only. Eligibility
  * is decided before deduplication and before the cap, so an ineligible name never
@@ -146,7 +158,9 @@ function eligibleFile(ref: string, store: string, root: string): { real: string;
  */
 export function sliceCounts(prompt: string, root: string): SliceCounts {
     const scanTruncated = prompt.length > MAX_SCAN_CHARS;
-    const scanned = scanTruncated ? prompt.slice(0, MAX_SCAN_CHARS) : prompt;
+    // A cut prefix ends at its last whitespace, so a name the cut shortened
+    // (`a.yml.bak` cut to `a.yml`) is dropped rather than read as another name.
+    const scanned = scanTruncated ? prompt.slice(0, lastWhitespaceBefore(prompt, MAX_SCAN_CHARS)) : prompt;
     const names = [
         ...new Set((scanned.match(CURATED_REF_RE) ?? []).map(curatedRef).filter((r): r is string => r !== null)),
     ];

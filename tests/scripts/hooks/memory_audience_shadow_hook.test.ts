@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LEDGER_DIR } from '../../../src/scripts/hooks/subagent_ledger_hook.js';
-import { MAX_EXAMINED_REFS, MAX_SCAN_CHARS, processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
+import { MAX_EXAMINED_REFS, MAX_RESOLVE_DEPTH, MAX_SCAN_CHARS, processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
 import { EXIT_ALLOW } from '../../../src/scripts/hooks/exit_codes.js';
 import { applyPayloadFields } from '../../../src/scripts/hooks/payload_stub.js';
 
@@ -115,6 +115,12 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         symlinkSync(join(root, 'agents', 'memory', 'intake'), join(root, 'agents', 'memory', 'raw'));
         processEnvelope(write('agent-abc', 'agents/memory/raw/s.jsonl'), root);
         expect(ledgerLines()).toMatchObject([{ target: 'intake' }]);
+    });
+
+    it('a write path deeper than the resolution bound is not resolved and not recorded', () => {
+        const deep = Array.from({ length: MAX_RESOLVE_DEPTH + 50 }, (_, i) => `d${i}`).join('/');
+        expect(processEnvelope(write('agent-abc', `agents/memory/${deep}/x.yml`), root)).toBe(EXIT_ALLOW);
+        expect(ledgerLines()).toHaveLength(0);
     });
 
     it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {
@@ -252,6 +258,12 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         processEnvelope(spawn(prompt), root);
         expect(Date.now() - t0).toBeLessThan(500);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0 });
+    });
+
+    it('a name cut by the scan boundary is never counted as the shorter name', () => {
+        const prefix = 'x'.repeat(MAX_SCAN_CHARS - 'agents/memory/product-rules.yml'.length - 1);
+        processEnvelope(spawn(`${prefix} agents/memory/product-rules.yml.bak and more`), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, scan_truncated: true });
     });
 
     it('scans a bounded prefix of the prompt and says when it stopped', () => {
