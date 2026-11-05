@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decideItem, parseRulings, type Ruling } from '../../../internal/bench/code-graph/apply_check.js';
+import { calibrationScore, cohenKappa, decideItem, parseRulings, type Ruling } from '../../../internal/bench/code-graph/apply_check.js';
 
 const ruling = (files: Record<string, 'IN' | 'OUT' | 'UNSURE'>, missing: string[] = []): Ruling => ({
     files: Object.entries(files).map(([path, verdict]) => ({ path, verdict })),
@@ -53,5 +53,31 @@ describe('parseRulings', () => {
 
     it('refuses a reply with no ruling instead of treating it as all-OUT', () => {
         expect(() => parseRulings('I think the analysis is mostly right.')).toThrow(/no ruling/);
+    });
+});
+
+describe('calibrationScore', () => {
+    it('scores a judge against gold: IN on gold is a hit, IN on a decoy a false positive, UNSURE is not IN', () => {
+        const s = calibrationScore(
+            { 'c-1': { gold: ['g1.php', 'g2.php'], decoys: ['d1.php'] } },
+            new Map([['c-1', ruling({ 'g1.php': 'IN', 'g2.php': 'UNSURE', 'd1.php': 'IN' })]]),
+        );
+        expect(s).toEqual({ gold: 2, decoys: 1, true_in: 1, false_in: 1, recall: 0.5, precision: 0.5 });
+    });
+
+    it('counts a candidate the judge never ruled as not IN', () => {
+        const s = calibrationScore({ 'c-1': { gold: ['g1.php'], decoys: [] } }, new Map([['c-1', ruling({})]]));
+        expect(s.recall).toBe(0);
+    });
+});
+
+describe('cohenKappa', () => {
+    it('is 1 on full agreement and 0 when agreement is what chance predicts', () => {
+        expect(cohenKappa([true, false, true, false], [true, false, true, false])).toBe(1);
+        expect(cohenKappa([true, true, false, false], [true, false, true, false])).toBe(0);
+    });
+
+    it('is null when chance agreement is total, instead of dividing by zero', () => {
+        expect(cohenKappa([true, true], [true, true])).toBeNull();
     });
 });
