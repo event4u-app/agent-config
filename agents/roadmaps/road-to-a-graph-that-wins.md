@@ -173,6 +173,7 @@ tracked.
       run against the external tool the `inbox-2026-10-bb` round compared runs on the
       maintainer's machine, recorded without the tool's name. Census baseline:
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
+      > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
