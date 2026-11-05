@@ -1,6 +1,19 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+entry_condition:
+  what: >
+    The memory-audience-shadow concern has logged `memory_slice_shadow` lines
+    on at least 14 distinct dates. Checkable without judgement:
+    `jq -r 'select(.event=="memory_slice_shadow") | .ts[0:10]' agents/runtime/state/subagent-ledger/*.jsonl | sort -u | wc -l`
+    reads 14 or more.
+  when: >
+    Two weeks of ordinary orchestration after the Phase 2 change is merged and
+    installed; the concern runs on claude only, so the dates accrue where
+    claude sessions spawn subagents.
+  who: >
+    An implementer, for step 3.1. No owner decision is pending: OQ-35 answered
+    the delivery tiers on 2026-10-29.
 tree_pin: 58d43073b7
 execution:
   mode: phase-checkpoints
