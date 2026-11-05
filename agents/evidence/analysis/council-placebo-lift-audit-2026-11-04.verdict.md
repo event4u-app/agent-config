@@ -1,5 +1,7 @@
 # Council verdict — `placebo` and the footprint-lift audit (2026-11-04)
 
+<!-- evidence-type: analysis -->
+
 - **Prompt:** `council-placebo-lift-audit-2026-11-04.prompt.md` (beside this file), sent verbatim.
 - **Run:** `council_cli run --input-mode prompt --prompt-mode analysis --effort medium`; seats anthropic + openai, 2/2 present, quorum concluded, $0 billed (subscription-authed).
 - **Raw responses:** `agents/runtime/council/responses/placebo-lift-audit-2026-11-04.json` (runtime, not tracked).

@@ -1,5 +1,7 @@
 # Council question — should the `placebo` arm stay in the footprint-lift audit?
 
+<!-- evidence-type: analysis -->
+
 ## Context
 
 `bench_ab_v2_run` (an A/B harness that runs the Claude CLI on coding tasks under
