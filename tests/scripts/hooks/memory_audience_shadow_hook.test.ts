@@ -4,7 +4,7 @@
 //   2.3  at the orchestrator's Agent call the slice is computed and only its counts
 //        are logged; nothing is delivered to the model.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -155,6 +155,35 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
         processEnvelope(write('agent-abc', 'agents/memory/raw/s.jsonl'), root);
         expect(ledgerLines()[1]).toMatchObject({ target: 'intake' });
+    });
+
+    it.each([
+        ['a dangling symlink in the store', () => symlinkSync(join(root, 'nowhere'), join(root, 'agents', 'memory', 'dead')), 'agents/memory/dead/x.yml'],
+        ['a dangling intake link', () => symlinkSync(join(root, 'nowhere'), join(root, 'agents', 'memory', 'intake')), 'agents/memory/intake/s.jsonl'],
+        [
+            'a symlink loop',
+            () => {
+                symlinkSync(join(root, 'agents', 'memory', 'b'), join(root, 'agents', 'memory', 'a'));
+                symlinkSync(join(root, 'agents', 'memory', 'a'), join(root, 'agents', 'memory', 'b'));
+            },
+            'agents/memory/a/x.yml',
+        ],
+    ])('a write whose destination cannot be resolved (%s) is not classified', (_label, arrange, target) => {
+        arrange();
+        expect(processEnvelope(write('agent-abc', target), root)).toBe(EXIT_ALLOW);
+        expect(ledgerLines()).toHaveLength(0);
+    });
+
+    it.skipIf(process.getuid?.() === 0)('a write below a directory it may not traverse is not classified', () => {
+        const locked = join(root, 'agents', 'memory', 'locked');
+        mkdirSync(join(locked, 'sub'), { recursive: true });
+        chmodSync(locked, 0o000);
+        try {
+            expect(processEnvelope(write('agent-abc', 'agents/memory/locked/sub/x.yml'), root)).toBe(EXIT_ALLOW);
+            expect(ledgerLines()).toHaveLength(0);
+        } finally {
+            chmodSync(locked, 0o755);
+        }
     });
 
     it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {

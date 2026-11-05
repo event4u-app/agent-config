@@ -65,6 +65,14 @@ function str(o: JsonObject, ...keys: string[]): string | null {
     return null;
 }
 
+function isSymlink(p: string): boolean {
+    try {
+        return fs.lstatSync(p).isSymbolicLink();
+    } catch {
+        return false;
+    }
+}
+
 /**
  * Where a write would land: the real path of the nearest existing ancestor, with
  * the not-yet-existing tail appended, so a new file under a symlinked directory
@@ -77,7 +85,11 @@ function resolveDestination(abs: string): string | null {
     for (;;) {
         try {
             return path.join(fs.realpathSync(cur), ...tail.reverse());
-        } catch {
+        } catch (e) {
+            // Walk up only past a component that is genuinely absent. A dangling
+            // symlink, a loop, or a permission error leaves the destination
+            // unknown, and an unknown destination is not classified.
+            if ((e as NodeJS.ErrnoException).code !== 'ENOENT' || isSymlink(cur)) return null;
             const parent = path.dirname(cur);
             if (parent === cur || tail.length >= MAX_RESOLVE_DEPTH) return null;
             tail.push(path.basename(cur));
