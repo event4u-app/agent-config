@@ -84,6 +84,8 @@ function curatedBytes(ref: string, root: string): number {
         const real = fs.realpathSync(path.join(root, ref));
         const rel = path.relative(store, real);
         if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return 0;
+        // A curated name that resolves into intake is intake, whatever it is called.
+        if (rel === 'intake' || rel.startsWith(`intake${path.sep}`)) return 0;
         return fs.statSync(real).size;
     } catch {
         // A named file that does not exist adds nothing to the estimate.

@@ -148,6 +148,14 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 0 });
     });
 
+    it('a symlink in the store pointing into intake adds nothing to the estimate', () => {
+        mkdirSync(join(root, 'agents', 'memory', 'intake'), { recursive: true });
+        writeFileSync(join(root, 'agents', 'memory', 'intake', 'raw.jsonl'), 'z'.repeat(4000));
+        symlinkSync(join(root, 'agents', 'memory', 'intake', 'raw.jsonl'), join(root, 'agents', 'memory', 'into-intake.yml'));
+        processEnvelope(spawn('agents/memory/into-intake.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 0 });
+    });
+
     it("a child's own spawn is not the orchestrator's and is not measured", () => {
         processEnvelope(spawn('agents/memory/product-rules.yml', 'agent-abc'), root);
         expect(ledgerLines()).toHaveLength(0);
