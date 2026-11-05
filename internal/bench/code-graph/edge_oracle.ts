@@ -1,10 +1,14 @@
 #!/usr/bin/env tsx
 /**
- * Edge precision and recall per `resolved_via`, against a SCIP oracle
- * (road-to-a-graph-that-wins 2.6).
+ * Edge precision and recall per `resolved_via`, against a SCIP oracle for
+ * TypeScript/JavaScript and a Psalm oracle for PHP (road-to-a-graph-that-wins 2.6).
  *
  *   tsx internal/bench/code-graph/edge_oracle.ts --root <dir> --graph <graph.json>
- *       [--scip <index.scip>] [--prefix src/scripts/] [--out report.md] [--json report.json]
+ *       [--scip <index.scip>] [--php-oracle <php-oracle.json>] [--prefix src/scripts/]
+ *       [--out report.md] [--json report.json]
+ *
+ * `--php-oracle` is the file `php_edge_oracle.ts` writes; given alone, only PHP is
+ * scored and no TypeScript indexer is looked for.
  *
  * The oracle is a measuring instrument that lives under `internal/bench/` only:
  * never an arm, never a provider (K1). Its index comes from an indexer the
@@ -33,7 +37,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readScipIndex, scipEdges, type ScipDocument } from '../../../src/scripts/code_graph/scip_reader.js';
+import { alignScipLinesUnder, readScipIndex, scipEdges, type ScipDocument } from '../../../src/scripts/code_graph/scip_reader.js';
 import type { CodeGraph } from '../../../src/scripts/code_graph/types.js';
 import { edgeCensus, type EdgeCensus } from './edge_census.js';
 
@@ -226,16 +230,181 @@ export function scoreAgainstOracle(
     };
 }
 
+/**
+ * The PHP oracle, written by `php_edge_oracle.ts` from one Psalm analysis:
+ * `symbol_of` maps a graph node id (or a one-class file id) to the Psalm symbol
+ * it declares, `sites` holds Psalm's reference sites per symbol, `analyzed` the
+ * PHP files the analysis covered.
+ */
+export interface PhpOracle {
+    symbol_of: Record<string, string>;
+    sites: Record<string, Array<{ file: string; line: number }>>;
+    analyzed: string[];
+}
+
+const emptyMechanism = (): MechanismScore => ({
+    graph_edges: 0,
+    scored: 0,
+    confirmed_file: 0,
+    precision_file: null,
+    symbol_scored: 0,
+    confirmed_symbol: 0,
+    precision_symbol: null,
+    oracle_pairs_covered: 0,
+});
+
+/**
+ * PHP edges against Psalm references. An edge is scored when its source file
+ * was analysed and its target maps to a Psalm symbol; `confirmed_file` when
+ * Psalm has a reference to that symbol in the source file, `confirmed_symbol`
+ * (symbol targets) when that reference lies inside the source node's range.
+ * Recall is over the cross-file pairs Psalm reports for the mapped symbols —
+ * the graph's own declarations, so a symbol the graph never declared is
+ * outside it.
+ */
+export function scorePhpAgainstPsalm(graph: Pick<CodeGraph, 'nodes' | 'edges'>, oracle: PhpOracle, opts: { prefix?: string } = {}): OracleScore {
+    const prefix = opts.prefix ?? '';
+    const analyzed = new Set(oracle.analyzed);
+    const range = new Map(graph.nodes.map((n) => [n.id, n.source_location]));
+    const kindOf = new Map(graph.nodes.map((n) => [n.id, n.kind]));
+    const sitesOf = (id: string): Array<{ file: string; line: number }> => {
+        const s = oracle.symbol_of[id];
+        return s === undefined ? [] : (oracle.sites[s] ?? []);
+    };
+
+    const excluded = { unresolved_target: 0, out_of_root: 0, outside_prefix: 0, not_reference_relation: 0, outside_oracle_coverage: 0 };
+    const by: Record<string, MechanismScore> = {};
+    const coveredBy = new Map<string, Set<string>>();
+    const graphFilePairs = new Set<string>();
+    const graphSymbolPairs = new Set<string>();
+    for (const e of graph.edges) {
+        if (e.target.startsWith('symbol:')) {
+            excluded.unresolved_target++;
+            continue;
+        }
+        const sf = fileOf(e.source);
+        const tf = fileOf(e.target);
+        if (!inRoot(sf) || !inRoot(tf)) {
+            excluded.out_of_root++;
+            continue;
+        }
+        if (!sf.startsWith(prefix)) {
+            excluded.outside_prefix++;
+            continue;
+        }
+        if (!REFERENCE_RELATIONS.has(e.relation)) {
+            excluded.not_reference_relation++;
+            continue;
+        }
+        if (!sf.endsWith('.php') || !tf.endsWith('.php')) continue;
+        const m = (by[e.resolved_via] ??= emptyMechanism());
+        m.graph_edges++;
+        if (!analyzed.has(sf) || oracle.symbol_of[e.target] === undefined) {
+            excluded.outside_oracle_coverage++;
+            continue;
+        }
+        m.scored++;
+        const fileKey = `${sf}\0${tf}`;
+        graphFilePairs.add(fileKey);
+        const inSource = sitesOf(e.target).filter((s) => s.file === sf);
+        if (inSource.length > 0) {
+            m.confirmed_file++;
+            if (sf !== tf) {
+                const set = coveredBy.get(e.resolved_via) ?? new Set<string>();
+                set.add(fileKey);
+                coveredBy.set(e.resolved_via, set);
+            }
+        }
+        if (e.target.includes('#')) {
+            m.symbol_scored++;
+            graphSymbolPairs.add(`${sf}\0${e.target}`);
+            const loc = range.get(e.source) ?? [];
+            const within = e.source.includes('#') && loc.length >= 3 ? (l: number) => (loc[0] as number) <= l && l <= (loc[2] as number) : () => true;
+            if (inSource.some((s) => within(s.line))) m.confirmed_symbol++;
+        }
+    }
+    for (const [via, m] of Object.entries(by)) {
+        m.precision_file = ratio(m.confirmed_file, m.scored);
+        m.precision_symbol = ratio(m.confirmed_symbol, m.symbol_scored);
+        m.oracle_pairs_covered = coveredBy.get(via)?.size ?? 0;
+    }
+
+    const crossKinds = new Map<string, Set<string>>();
+    const oracleSymbolPairs = new Set<string>();
+    for (const id of Object.keys(oracle.symbol_of)) {
+        const tf = fileOf(id);
+        for (const s of sitesOf(id)) {
+            if (s.file === tf || !inRoot(s.file) || !s.file.startsWith(prefix) || !analyzed.has(s.file)) continue;
+            const key = `${s.file}\0${tf}`;
+            const kinds = crossKinds.get(key) ?? new Set<string>();
+            if (id.includes('#')) {
+                kinds.add(kindOf.get(id) ?? 'other');
+                oracleSymbolPairs.add(`${s.file}\0${id}`);
+            }
+            crossKinds.set(key, kinds);
+        }
+    }
+    const missing_by_kind: Record<string, number> = {};
+    const missing_examples: OracleScore['missing_examples'] = [];
+    let coveredFile = 0;
+    for (const key of [...crossKinds.keys()].sort()) {
+        if (graphFilePairs.has(key)) {
+            coveredFile++;
+            continue;
+        }
+        const [source_file, target_file] = key.split('\0') as [string, string];
+        for (const kind of [...(crossKinds.get(key) as Set<string>)].sort()) {
+            missing_by_kind[kind] = (missing_by_kind[kind] ?? 0) + 1;
+            if (missing_examples.length < MAX_EXAMPLES) missing_examples.push({ source_file, target_file, kind });
+        }
+    }
+    let coveredSymbol = 0;
+    for (const key of oracleSymbolPairs) if (graphSymbolPairs.has(key)) coveredSymbol++;
+
+    return {
+        by_mechanism: Object.fromEntries(Object.entries(by).sort((a, b) => (a[0] < b[0] ? -1 : 1))),
+        excluded,
+        oracle: { documents: analyzed.size, file_pairs: crossKinds.size, symbol_pairs: oracleSymbolPairs.size },
+        recall_file: ratio(coveredFile, crossKinds.size),
+        recall_symbol: ratio(coveredSymbol, oracleSymbolPairs.size),
+        missing_by_kind,
+        missing_examples,
+    };
+}
+
 const pct = (v: number | null): string => (v === null ? '—' : `${(v * 100).toFixed(1)} %`);
 
-export function renderMarkdown(r: OracleScore, meta: { root: string; graph: string; scip: string; indexer: string; prefix: string; census: EdgeCensus }): string {
+export interface ReportMeta {
+    root: string;
+    graph: string;
+    prefix: string;
+    census: EdgeCensus;
+    /** Index path and indexer, or null when no TypeScript oracle ran. */
+    scip: { path: string; indexer: string } | null;
+    php_oracle: string | null;
+}
+
+export function renderMarkdown(report: { typescript: OracleScore | null; php: OracleScore | null }, meta: ReportMeta): string {
     const lines = [
-        '# Edge precision and recall against a SCIP oracle',
+        '# Edge precision and recall against a compiler-grade oracle',
         '',
-        `Root \`${meta.root}\` · graph \`${meta.graph}\` · index \`${meta.scip}\` (${meta.indexer})${meta.prefix ? ` · prefix \`${meta.prefix}\`` : ''}.`,
+        `Root \`${meta.root}\` · graph \`${meta.graph}\`${meta.prefix ? ` · prefix \`${meta.prefix}\`` : ''}.`,
         'The oracle is a measuring instrument under `internal/bench/`, never an arm or a provider (K1);',
-        'its index was produced by an indexer the maintainer installed, never fetched (ADR-259).',
+        'its indexes were produced by indexers the maintainer installed, never fetched (ADR-259).',
         `Scored relations: ${[...REFERENCE_RELATIONS].map((x) => `\`${x}\``).join(', ')}.`,
+        `Census (same graph): name_lookup_calls ${meta.census.name_lookup_calls}, name_lookup_multi ${meta.census.name_lookup_multi}, name_collision_edges ${meta.census.name_collision_edges}.`,
+        '',
+    ];
+    if (report.typescript && meta.scip) lines.push(...renderSection(`TypeScript / JavaScript — SCIP index \`${meta.scip.path}\` (${meta.scip.indexer})`, report.typescript));
+    else lines.push('## TypeScript / JavaScript', '', 'Not measured: no SCIP index was given.', '');
+    if (report.php && meta.php_oracle) lines.push(...renderSection(`PHP — Psalm references \`${meta.php_oracle}\``, report.php));
+    else lines.push('## PHP', '', 'Not measured: no Psalm oracle was given (`--php-oracle`).', '');
+    return lines.join('\n');
+}
+
+function renderSection(title: string, r: OracleScore): string[] {
+    const lines = [
+        `## ${title}`,
         '',
         '| `resolved_via` | graph edges | scored | confirmed (file) | precision (file) | symbol-scored | confirmed (symbol) | precision (symbol) | oracle pairs covered |',
         '|---|---:|---:|---:|---:|---:|---:|---:|---:|',
@@ -253,9 +422,8 @@ export function renderMarkdown(r: OracleScore, meta: { root: string; graph: stri
         `Excluded: ${Object.entries(r.excluded)
             .map(([k, v]) => `${k} ${v}`)
             .join(' · ')}.`,
-        `Census (same graph): name_lookup_calls ${meta.census.name_lookup_calls}, name_lookup_multi ${meta.census.name_lookup_multi}, name_collision_edges ${meta.census.name_collision_edges}.`,
         '',
-        '## Oracle pairs the graph lacks, by kind',
+        '### Oracle pairs the graph lacks, by kind',
         '',
         '| kind | missing |',
         '|---|---:|',
@@ -266,7 +434,7 @@ export function renderMarkdown(r: OracleScore, meta: { root: string; graph: stri
         ...r.missing_examples.map((x) => `- \`${x.source_file}\` → \`${x.target_file}\` (${x.kind})`),
         '',
     );
-    return lines.join('\n');
+    return lines;
 }
 
 export function findOnPath(name: string, pathEnv: string): string | null {
@@ -313,12 +481,13 @@ export function runEdgeOracle(argv: readonly string[], io: OracleIo): number {
     const root = args.root;
     const graphPath = args.graph;
     if (!root || !graphPath) {
-        io.stderr('usage: edge_oracle.ts --root <dir> --graph <graph.json> [--scip <index.scip>] [--prefix <path>] [--out <md>] [--json <json>]\n');
+        io.stderr('usage: edge_oracle.ts --root <dir> --graph <graph.json> [--scip <index.scip>] [--php-oracle <php-oracle.json>] [--prefix <path>] [--out <md>] [--json <json>]\n');
         return 2;
     }
+    const phpPath = args['php-oracle'] ?? null;
     let scipPath = args.scip;
     let indexer = 'supplied with --scip';
-    if (!scipPath) {
+    if (!scipPath && phpPath === null) {
         const bin = findOnPath(INDEXER, io.pathEnv);
         if (!bin) {
             io.stderr(
@@ -336,15 +505,21 @@ export function runEdgeOracle(argv: readonly string[], io: OracleIo): number {
         indexer = `${bin}`;
     }
     const graph = JSON.parse(fs.readFileSync(graphPath, 'utf8')) as CodeGraph;
-    const docs = readScipIndex(fs.readFileSync(scipPath));
     const prefix = args.prefix ?? '';
-    const score = scoreAgainstOracle(graph, docs, { prefix });
-    const census = edgeCensus(graph);
-    const meta = { root, graph: graphPath, scip: scipPath, indexer, prefix, census };
-    const json = `${JSON.stringify({ meta: { ...meta, reference_relations: [...REFERENCE_RELATIONS] }, ...score }, null, 2)}\n`;
+    const typescript = scipPath ? scoreAgainstOracle(graph, alignScipLinesUnder(readScipIndex(fs.readFileSync(scipPath)), root), { prefix }) : null;
+    const php = phpPath === null ? null : scorePhpAgainstPsalm(graph, JSON.parse(fs.readFileSync(phpPath, 'utf8')) as PhpOracle, { prefix });
+    const meta: ReportMeta = {
+        root,
+        graph: graphPath,
+        prefix,
+        census: edgeCensus(graph),
+        scip: scipPath ? { path: scipPath, indexer } : null,
+        php_oracle: phpPath,
+    };
+    const json = `${JSON.stringify({ meta: { ...meta, reference_relations: [...REFERENCE_RELATIONS] }, typescript, php }, null, 2)}\n`;
     if (args.json) fs.writeFileSync(args.json, json);
     else io.stdout(json);
-    if (args.out) fs.writeFileSync(args.out, renderMarkdown(score, meta));
+    if (args.out) fs.writeFileSync(args.out, renderMarkdown({ typescript, php }, meta));
     return 0;
 }
 
