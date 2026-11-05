@@ -56,17 +56,17 @@ agent under test. `_runVerifier`
 (`src/scripts/_lib/bench_ab_scoring_v2.ts:643`) restored a *tampered* copy; it
 never hid one.
 
-- [x] **1.1** Move every verifier out of `fixtures-v2/<task>/` into
+- [x] **1.1** Move every verifier out of `fixtures-v2/<task>/` into <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_scoring_v2.ts -->
   `internal/bench/ab/verifiers-v2/<task>/tests/` (21 files, 18 tasks). The fixture
   keeps everything the agent is meant to see.
   verify: `git ls-files internal/bench/ab/fixtures-v2 | grep -c 'check.mjs'` -> 0 and `git ls-files internal/bench/ab/verifiers-v2 | grep -c 'check.mjs'` -> 21
-- [x] **1.2** `_runVerifier` takes the oracle root (`oracleRootFor`): a file the
+- [x] **1.2** `_runVerifier` takes the oracle root (`oracleRootFor`): a file the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_scoring_v2.ts -->
   command names under the oracle root is copied into a scratch copy of the clone
   at scoring time only; a file the agent left at that path is replaced and
   reported as `verifier-planted:`. A command whose file is in neither root runs
   in the clone and fails, never passes.
   verify: `npx vitest run tests/scripts/bench_ab_solve_oracle.test.ts` -> 0
-- [x] **1.3** Regression test: for every verifier task, no fixture holds a file its
+- [x] **1.3** Regression test: for every verifier task, no fixture holds a file its <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_scoring_v2.ts -->
   commands run, and for every `solve_test` task scoring a reference-fixed clone
   still passes while an untouched clone still fails. Seen red against the pre-move
   layout.
@@ -84,13 +84,13 @@ lists at $1 / $5. Every absolute dollar figure in the 2026-11-05 Haiku sweep is
 rows exist (`internal/bench/pricing.yaml:38-60`) but only `tier_downshift_verdict`
 reads them.
 
-- [x] **2.1** Add exact rows for `claude-opus-4-6`, `claude-opus-4-7` and
+- [x] **2.1** Add exact rows for `claude-opus-4-6`, `claude-opus-4-7` and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_stats.ts -->
   `claude-opus-4-8` (base input, 5-minute cache write, cache read, output;
   `sourced_on: 2026-11-05`, source the platform pricing page). `claude-haiku-4-5`
   and `claude-sonnet-4-6` already had rows (added 2026-11-04 for the sweep cap);
   `cost_by_arm` never read them. Family rows stay untouched for their pinned readers.
   verify: `grep -cE 'model: claude-(haiku-4-5|sonnet-4-6|opus-4-[678])$' internal/bench/pricing.yaml` -> 5
-- [x] **2.2** `cost_by_arm` resolves an exact model row first and falls back to the
+- [x] **2.2** `cost_by_arm` resolves an exact model row first and falls back to the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_stats.ts -->
   family row, and records which one priced the arm (`priced_by: model | family`).
   Test: a `claude-haiku-4-5` report prices at the exact row; an unknown model falls
   back and says so.
@@ -104,18 +104,18 @@ Evidence (read): `src/scripts/_lib/paired_verdict.ts:54-65` · `docs/benchmark.m
 sign test; nothing turns that into "how many pairs do I need". The 2026-11-05 A/A
 control measured about one discordant pair in six.
 
-- [x] **3.1** `src/scripts/bench_ab_power.ts`: given a discordance rate (the A/A
+- [x] **3.1** `src/scripts/bench_ab_power.ts`: given a discordance rate (the A/A <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_power.ts -->
   figure as published, `--aa 2/12`, or `--discordance`), the share of discordant
   pairs expected to favour one arm, α and the target power, print the discordant
   pairs required and the total pairs per arm. Uses the same exact one-sided sign
   test as `paired_verdict`. (Reading an A/A report directly would need win/loss
   counts the discipline block does not carry; the published figure is enough.)
   verify: `./scripts-run src/scripts/bench_ab_power --discordance 0.167 --share 1` exits 0 and prints required pairs
-- [x] **3.2** Tests: at a 100 % one-directional share the planner returns exactly
+- [x] **3.2** Tests: at a 100 % one-directional share the planner returns exactly <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_power.ts -->
   the `paired_verdict` floor; at 50 % it reports "not reachable" instead of a
   number; required pairs fall as the discordance rate rises.
   verify: `npx vitest run tests/scripts/bench_ab_power.test.ts` -> 0
-- [x] **3.3** `task bench:ab:power` in `taskfiles/bench-ab.yml`, and one paragraph
+- [x] **3.3** `task bench:ab:power` in `taskfiles/bench-ab.yml`, and one paragraph <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_power.ts -->
   in `docs/benchmark.md` § container sweep that says a paid sweep is sized with it
   first.
   verify: `task --list | grep -c bench:ab:power` -> 1
@@ -127,7 +127,7 @@ Evidence (claimed): `agents/tmp.old/inbox-2026-11-x/chat.txt:1712` (owner turn 7
 The owner, turn 7: do not throw something away because one bench is bad; ask
 whether the right benefit was measured and whether the cost is really that high.
 
-- [x] **4.1** `src/scripts/bench_ab_interpret.ts` reads an ab-v2 analysis JSON and
+- [x] **4.1** `src/scripts/bench_ab_interpret.ts` reads an ab-v2 analysis JSON and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_interpret.ts -->
   writes a Benchmark Interpretation Record: for each comparison, the deterministic
   labels the data supports — `ceiling` (control capability or discipline ≥ 0.90),
   `underpowered` (discordant below the `paired_verdict` floor), `not-delivered`
@@ -135,16 +135,16 @@ whether the right benefit was measured and whether the cost is really that high.
   above 2×) — and the questions it cannot answer from data (construct, real-world
   use), listed as open.
   verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0
-- [x] **4.2** The record has no removal field. It carries
+- [x] **4.2** The record has no removal field. It carries <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_interpret.ts -->
   `removal_supported: false` and the sentence "a benchmark result alone never
   supports removing an asset" on every output, and a test asserts no input can
   change either.
   verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0 (removal-invariant case)
-- [x] **4.3** Fixtures from the real 2026-11-05 shape: the Haiku sweep reads
+- [x] **4.3** Fixtures from the real 2026-11-05 shape: the Haiku sweep reads <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_interpret.ts -->
   `ceiling` + `underpowered`; a sweep whose package arm failed the load check reads
   `not-delivered`. Both seen red before 4.1 lands.
   verify: `npx vitest run tests/scripts/bench_ab_interpret.test.ts` -> 0 (fixture cases), seen red before 4.1
-- [x] **4.4** `docs/benchmark.md` § Reading a bad result: the four labels, what
+- [x] **4.4** `docs/benchmark.md` § Reading a bad result: the four labels, what <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_interpret.ts -->
   each one sends you to do instead (harder tasks, more pairs, fix delivery, price
   the run), and the rule that removal needs the evidence named in
   `road-to-proof-where-the-owner-sees-it` Phase 4.
@@ -154,12 +154,12 @@ whether the right benefit was measured and whether the cost is really that high.
 
 Evidence (read): `docs/benchmark.md:76` · `docs/contracts/value-dashboard-spec.md:61-62`
 
-- [x] **5.1** Re-run the stats for the three 2026-11-05 reports with Phase 2's
+- [x] **5.1** Re-run the stats for the three 2026-11-05 reports with Phase 2's <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   prices (offline, $0) and add the priced cost factor and the dollars per arm next
   to the token factors in `docs/benchmark.md` § container sweep. Token factors stay
   as the secondary figure.
   verify: `grep -cE 'priced cost factor' docs/benchmark.md` -> >=1
-- [x] **5.2** Replace the stale `.py` script references (eight in
+- [x] **5.2** Replace the stale `.py` script references (eight in <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   `docs/contracts/value-dashboard-spec.md`, four in
   `docs/contracts/benchmark-report-schema.md`) with the `.ts` paths that exist.
   verify: `grep -cE '\b[a-z_]+\.py\b' docs/contracts/value-dashboard-spec.md docs/contracts/benchmark-report-schema.md` -> 0 per file
