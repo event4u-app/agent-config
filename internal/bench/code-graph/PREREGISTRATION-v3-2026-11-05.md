@@ -160,6 +160,31 @@ oracle-versus-v1-versus-v2 differences are published. What changes:
    the three say `IN`; a file a judge names as missing enters only on both judges' `IN`
    in a second round. Cohen's kappa between the two judges is published.
 
+### Check v2.1 — closure items judged by edge, fixed after the v2 pass showed why
+
+Stated plainly: this change was made **after** the v2 rulings were read. The v2 pass
+showed that a blind judge cannot decide closure membership from local source lines — on
+`uo-e-01` ("full closure") one judge ruled 58 of 65 candidates `UNSURE` and the other
+`OUT` "because the file does not reference the target directly", which is true of every
+file beyond hop 1. The calibration items, all hop 1, did not expose it (recall 0.79 /
+0.85, precision 1.0). Still no arm has been scored against any truth.
+
+For the 14 items whose class or shape is a closure (`callers-transitive`, `tests-for`,
+`change-impact`):
+
+1. **The reader states edges, not files.** An Anthropic reader with the checkout lists
+   every edge it finds toward the target: `from_file:line` calls, uses, or routes to a
+   symbol declared at `to_file:line`.
+2. **The judges verify edges.** OpenAI and Google each see, per edge, the source lines at
+   both ends — blind, as in v2 — and rule `VALID`, `INVALID` or `UNSURE`. An edge stands
+   on the reader plus at least one judge `VALID` (two of three).
+3. **Membership is computed.** The answer is every file from which the target is
+   reachable over standing edges; for `tests-for`, the test files among them; where the
+   question states a hop limit, only files within it.
+
+Every other item keeps its v2 result. The v2 closure rulings stay committed beside the
+v2.1 ones, and both truths are published.
+
 ## Arms (step 2.3)
 
 **A–E** (no fused arm, K4):
