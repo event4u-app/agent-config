@@ -1,0 +1,497 @@
+# Suite F -- agentic tasks, v3. Registered 2026-11-05 by
+# PREREGISTRATION-v3-2026-11-05.md, BEFORE the code-graph engine has seen either
+# subject.
+#
+# 24 tasks from REAL upstream fixes, 11 on larasend and 13 on unopim. Every fix commit
+# and its parent are ancestors of the registered pin in the event4u-app fork
+# (`reachable_in: fork`), so a task checkout survives an upstream deletion, rename or
+# force-push. Sourced with `gh pr list/view` and `gh issue view` against the upstream
+# repositories and `git log` / `git show --name-only` on the forks; no graph tool was
+# run on either clone.
+#
+# Selection rule, fixed here: a merged upstream fix (a PR, or a fix commit inside a
+# merged PR when the PR bundles several) that touches at most 15 files, at least one of
+# them production code. Excluded: dependency bumps, Docker/CI/nginx configuration only,
+# docs/README only, tests only, and fixes whose commit is not an ancestor of the fork pin.
+#
+# Two kinds:
+#   localise-and-fix  -- the agent starts at `parent_sha` with `issue_text` only, and must
+#                        localise and fix. Truth source 2 = the production files in
+#                        `fix_files` (tests and the files under `excluded_from_truth` are
+#                        not localisation targets). A fix is "solved" when the upstream
+#                        tests the fix commit added or changed pass on the agent's tree;
+#                        an "escaped regression" is any test passing at `parent_sha` that
+#                        fails on the agent's tree.
+#   pr-review-missed-callers -- the agent starts at `parent_sha` with `issue_text` and the
+#                        fix diff MINUS every hunk in `held_out`. It must name the files the
+#                        change still needs. Truth = `held_out`, which the upstream fix did
+#                        touch (truth source 2). Scored deterministically by file-set
+#                        match, never by an LLM judge (K3).
+#
+# `issue_text` is the author's paraphrase of the upstream issue, PR description or commit
+# message: behaviour-level, at most 60 words, never more than 15 consecutive words of the
+# original, and with the original's file paths, class names and method names REMOVED, so
+# that localisation is measured rather than handed over.
+#
+# Contamination note: the unopim fixes are from September-October 2026, larasend's from
+# July-August 2026. Training-data recall of either cannot be excluded and is not claimed
+# to be excluded; both arms face the same exposure.
+
+tasks_version: 3
+generated: "2026-11-05"
+
+subjects:
+  larasend:
+    repo: event4u-app/larasend
+    upstream: savvyagents/larasend
+    pin: da5c06c725f51f537fd8e238e436263665f475d2
+  unopim:
+    repo: event4u-app/unopim
+    upstream: unopim/unopim
+    pin: 56071226255ff8e0f5dc40dafa72eab0f2751d54
+
+tasks:
+
+  # ── larasend (11) ──────────────────────────────────────────────────────────
+
+  - id: lf-01
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      Recipients listed as blind copies are accepted by the send API and stored, but never
+      receive the message. Direct and carbon-copy recipients are delivered normally. The
+      source uses Amazon SES.
+    parent_sha: ca87155899e2ce622396463e7efe73a1b828eb43
+    fix_sha: f74d6e69fcbe67bbf0792400505b906e14846fad
+    reachable_in: fork
+    fix_files:
+      - app/Jobs/SendQueuedEmail.php
+      - app/Services/SesV2Client.php
+      - tests/Feature/ApiEmailTest.php
+    upstream_ref: "savvyagents/larasend PR #2"
+
+  - id: lf-02
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      A fresh deployment on PostgreSQL fails during migrations: a foreign key pointing at the
+      conversation threads table is created before that table exists. Local SQLite and MySQL
+      setups did not surface the problem.
+    parent_sha: 8e322f1c347c40e21cc591d3a9bc3a606fb10802
+    fix_sha: e9a20d97d057f8d6b9235634d2f6aa52682b6790
+    reachable_in: fork
+    fix_files:
+      - database/migrations/2026_07_11_001656_create_threads_table.php
+    rename_from: database/migrations/2026_07_11_001657_create_threads_table.php
+    upstream_ref: "savvyagents/larasend PR #8"
+    note: "The fix is a rename plus a guard; the file at parent_sha is the rename_from path, which is the localisation target."
+
+  - id: lf-03
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      In the team inbox, older conversations look unreachable: the paging controls sit below
+      the scrolling list, and opening a conversation from page two jumps back to page one.
+      Changing a filter should return to the first page.
+    parent_sha: e6f59068f9801dae1e6391a167da80f02ffcafc8
+    fix_sha: d0bb92820ce6b068e315d683f1b92afa48993872
+    reachable_in: fork
+    fix_files:
+      - app/Http/Controllers/InboxController.php
+      - resources/js/pages/Inbox.vue
+      - tests/Feature/InboxTest.php
+    upstream_ref: "savvyagents/larasend PR #16"
+
+  - id: lf-04
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      On the public homepage the install-command preview shows a large horizontal scrollbar
+      when a command is wider than its box. It should stay on one line and end in an ellipsis,
+      while the copy button still copies the whole command.
+    parent_sha: d0d635e06dfb7ad7aeecc542ed95de84f86ccc0a
+    fix_sha: 1e0271e684fd61f6be48d9914b7e9c918d4e8c41
+    reachable_in: fork
+    fix_files:
+      - resources/js/pages/Welcome.vue
+      - tests/Feature/HomeRouteTest.php
+    upstream_ref: "savvyagents/larasend PR #13"
+
+  - id: lf-05
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      A suppression whose expiry date has passed still blocks every send to that address, and
+      the API rejects the request as containing suppressed recipients. The suppressions page
+      and its export also make no distinction between expired and active entries.
+    parent_sha: 3aa1ec00219e8f39363393e8920e621e6d7f70d8
+    fix_sha: c66604308950d9997d2e87ca2ece40e05da6c82c
+    reachable_in: fork
+    fix_files:
+      - app/Http/Controllers/ActivityController.php
+      - app/Http/Controllers/ActivityExportController.php
+      - app/Jobs/SyncCloudflareSuppressions.php
+      - app/Models/Suppression.php
+      - app/Services/EmailSendService.php
+      - tests/Feature/ActivityDashboardTest.php
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/CloudflareSuppressionSyncTest.php
+    upstream_ref: "savvyagents/larasend issue #10, fixed in PR #11 (first commit)"
+
+  - id: lf-06
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      Two bounce notifications for the same recipient arriving at once can race and fail on
+      the uniqueness rule for suppressions. Separately, syncing the Cloudflare suppression list
+      aborts at its page limit even when the page past the limit is empty.
+    parent_sha: a2e166179e4bb63087949230a55c19f76da5b294
+    fix_sha: 1d74c256e7f91629d7e11869dcbf9e6931090134
+    reachable_in: fork
+    fix_files:
+      - app/Services/CloudflareApiClient.php
+      - app/Services/SesEventNormalizer.php
+      - tests/Feature/CloudflareSuppressionSyncTest.php
+      - tests/Feature/SesWebhookTest.php
+    upstream_ref: "savvyagents/larasend PR #11 (commit 'Close suppression writer and pagination races')"
+
+  - id: lf-07
+    subject: larasend
+    kind: pr-review-missed-callers
+    issue_text: >-
+      Review this change. It replaces ad-hoc lower-casing of suppressed addresses with the
+      model's single normalisation helper, so that send-time lookups and stored values agree.
+      Which other code paths in the application still canonicalise suppressed addresses on
+      their own and need the same change?
+    parent_sha: 4075353c74115af3be3b089d908dd40802ce396b
+    fix_sha: b1c6af79796f6641340b93125e18e89bae92bf41
+    reachable_in: fork
+    fix_files:
+      - app/Services/EmailSendService.php
+      - app/Services/SuppressionRemovalService.php
+      - database/migrations/2026_07_24_201708_normalize_suppression_emails_and_enforce_unique_index.php
+      - tests/Feature/ApiEmailTest.php
+      - tests/Feature/SuppressionEmailNormalizationMigrationTest.php
+      - tests/Feature/SuppressionManagementTest.php
+    held_out:
+      - app/Services/SuppressionRemovalService.php
+    upstream_ref: "savvyagents/larasend PR #11 (commit 'Align suppression canonicalization paths')"
+
+  - id: lf-08
+    subject: larasend
+    kind: pr-review-missed-callers
+    issue_text: >-
+      Review this change. Suppression lookups move to new query scopes on the model that match
+      on the normalised address, the send guard now uses them, and the migration and a
+      database-specific upsert are adjusted. Which other readers or writers of suppressions
+      still match on the raw address column?
+    parent_sha: b1c6af79796f6641340b93125e18e89bae92bf41
+    fix_sha: aeb9b775a04a78beefb85014733460e81f23ae57
+    reachable_in: fork
+    fix_files:
+      - app/Jobs/SyncCloudflareSourceSuppressions.php
+      - app/Models/Suppression.php
+      - app/Services/EmailSendService.php
+      - app/Services/SesEventNormalizer.php
+      - database/migrations/2026_07_24_201708_normalize_suppression_emails_and_enforce_unique_index.php
+      - tests/Feature/SuppressionEmailNormalizationMigrationTest.php
+    held_out:
+      - app/Jobs/SyncCloudflareSourceSuppressions.php
+    upstream_ref: "savvyagents/larasend PR #11 (commit 'Close suppression driver contract gaps')"
+
+  - id: lf-09
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      After the first real send through the Cloudflare email adapter, the stored delivery
+      event contained the provider's API token: the SMTP transcript, including the login
+      exchange, is saved as-is. The provider's queue id is also not recorded as the message's
+      remote id.
+    parent_sha: da1b5ff680dedee680ca6c9981e6f4a364ee1674
+    fix_sha: 3a36c24144d7427381f98863547b8df488946406
+    reachable_in: fork
+    fix_files:
+      - app/Services/Providers/CloudflareEmailProvider.php
+      - tests/Feature/CloudflareSendTest.php
+    upstream_ref: "savvyagents/larasend PR #3 (commit 'Redact SMTP auth credentials from stored send transcripts')"
+
+  - id: lf-10
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      Setting up inbound mail for a Cloudflare source fails even with the documented token
+      permissions, because the explicit enable call for email routing needs a settings
+      permission those scopes lack. Setup should proceed when the catch-all rule works and the
+      MX records can be verified or published directly.
+    parent_sha: ea76002b33c73823d0d28608d80bdf8cf96511e7
+    fix_sha: 4f26f3283461bcf86b2ae77301fc8e78a8debaf3
+    reachable_in: fork
+    fix_files:
+      - app/Services/Providers/CloudflareInboundProvisioner.php
+      - tests/Feature/InboundProvisioningTest.php
+    upstream_ref: "savvyagents/larasend PR #4 (commit 'Treat Email Routing enable as best-effort, verify MX directly')"
+
+  - id: lf-11
+    subject: larasend
+    kind: localise-and-fix
+    issue_text: >-
+      In the inbox, the list of receiving addresses counts individual messages instead of
+      conversations, ignores the selected mailbox so archived conversations' addresses appear
+      under Inbox, and treats the same address in different letter case as two addresses.
+    parent_sha: 770b56797927c5d4e0aea6dd0a01ce7f75fbbe52
+    fix_sha: 4bc42109105b5eec74f2f95575f4bce9ad8394f0
+    reachable_in: fork
+    fix_files:
+      - app/Http/Controllers/InboxController.php
+      - resources/js/pages/Inbox.vue
+      - tests/Feature/InboxTest.php
+    upstream_ref: "savvyagents/larasend PR #7 (commit 'Fix inbox address filters and dark messages')"
+
+  # ── unopim (13) ────────────────────────────────────────────────────────────
+
+  - id: uf-01
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      A select attribute has options whose codes are 0, 1 and 2. Saving a product with option
+      1 or 2 works; saving it with option 0 silently clears the value, as if nothing had been
+      chosen.
+    parent_sha: 1b54e5c5890b6d885a27fe839d23a2b67178e527
+    fix_sha: 396369e0804bb279c873e0e12701a34df01d55ed
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductZeroAttributeValueTest.php
+      - packages/Webkul/Completeness/src/Jobs/ProductCompletenessJob.php
+      - packages/Webkul/Completeness/tests/Feature/ProductCompletenessJobTest.php
+      - packages/Webkul/Core/src/Http/helpers.php
+      - packages/Webkul/Measurement/tests/Feature/ProductMeasurementValidationTest.php
+      - packages/Webkul/Product/src/Type/AbstractType.php
+      - packages/Webkul/Product/src/Validator/Rule/AttributeOptionRule.php
+      - packages/Webkul/Product/tests/Unit/Services/VariantValueResolverTest.php
+    upstream_ref: "unopim/unopim issue #735 (also #247), fixed in PR #742"
+
+  - id: uf-02
+    subject: unopim
+    kind: pr-review-missed-callers
+    issue_text: >-
+      Review this fix. After an upgrade from 2.x, media paths stored outside the record's own
+      folder fail the path-ownership check even when resubmitted unchanged. The change accepts
+      a path the record already stores for the same field, channel and locale. Which other
+      callers of the ownership check still reject unchanged stored paths?
+    parent_sha: e5f9b8bfd5c143eb73331899b04b48d3db87f984
+    fix_sha: 4296a0d07a074d90023107f1f091dbccf5493351
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php
+      - packages/Webkul/Category/tests/Unit/StoredMediaPathValidationTest.php
+      - packages/Webkul/Core/src/Rules/FileOrImageValidValue.php
+      - packages/Webkul/Core/tests/Unit/FileOrImageValidValueSecurityTest.php
+      - packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php
+      - packages/Webkul/Product/tests/Unit/Validator/StoredMediaPathValidationTest.php
+    held_out:
+      - packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php
+    upstream_ref: "unopim/unopim issue #760, fixed in PR #761"
+
+  - id: uf-03
+    subject: unopim
+    kind: pr-review-missed-callers
+    issue_text: >-
+      Review this fix to the REST option endpoints. Malformed option bodies now return 422
+      instead of 500, an update without a code returns a validation error, option updates are
+      scoped to their attribute, and payload normalisation moves into the shared API base
+      controller. Which other option endpoints still carry their own copy?
+    parent_sha: 158a1d749b92110dbd1f06feb97894379376817f
+    fix_sha: e8d22bc77e8b300762e12e72de373596f3020476
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php
+      - packages/Webkul/AdminApi/tests/Feature/Catalog/ApiAttributeTest.php
+      - packages/Webkul/AdminApi/tests/Feature/Catalog/ApiCategoryFieldOptionUpdateTest.php
+    held_out:
+      - packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php
+    upstream_ref: "unopim/unopim PR #745 (refs issue #548)"
+
+  - id: uf-04
+    subject: unopim
+    kind: pr-review-missed-callers
+    issue_text: >-
+      Review this change. AI agent tools and admin endpoints that write data now check the
+      matching create or edit permission instead of only the view permission of the area they
+      touch. Which other agent write paths still check only the view permission?
+    parent_sha: 98b0f7e529b2cfbd1ee5eee9a235036b950e4b02
+    fix_sha: 751b6b09a851cfa35bc4753ba38a1a1d708c962c
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/src/Config/acl.php
+      - packages/Webkul/Admin/src/Config/system.php
+      - packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php
+      - packages/Webkul/Admin/src/SystemSettings.php
+      - packages/Webkul/Admin/tests/Feature/Acl/AiAgentWritePathAclTest.php
+      - packages/Webkul/AiAgent/Config/ai-agent.php
+      - packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php
+      - packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php
+      - packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php
+      - packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php
+      - packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php
+      - packages/Webkul/AiAgent/tests/Unit/Tools/RememberFactScopeTest.php
+      - packages/Webkul/AiAgent/tests/Unit/Tools/TaxonomyToolWritePermissionTest.php
+    held_out:
+      - packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php
+    upstream_ref: "unopim/unopim PR #778"
+
+  - id: uf-05
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      In the data grid's filter panel, the pill that shows an applied date range fills only
+      half of the panel's width, leaving the other half empty and making the range look
+      cramped and cut off.
+    parent_sha: 396369e0804bb279c873e0e12701a34df01d55ed
+    fix_sha: 83e9f9b2ec4c147d742b4b899fd4403e785b749d
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/src/Resources/views/components/datagrid/filters.blade.php
+      - tests/e2e-pw/tests/datagrid-date-range-applied-pill.spec.js
+    upstream_ref: "unopim/unopim issue #554, fixed in PR #741"
+
+  - id: uf-06
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      A product export profile that selects only a few attributes still writes a column for
+      every attribute in the installation; the unselected ones appear as empty columns, as if
+      the selection had been ignored.
+    parent_sha: c8e55b2eb2c9041a691d063a29ae75a51c998b9a
+    fix_sha: b4ec3d9cfa868b78bb72e7b2aa6190edb76a3f40
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/tests/Feature/Account/MicrosoftSsoTest.php
+      - packages/Webkul/DataTransfer/src/Helpers/Exporters/Product/Exporter.php
+      - packages/Webkul/DataTransfer/tests/Unit/Helpers/Exporters/Product/ScopeFilterTest.php
+    upstream_ref: "unopim/unopim issue #695, fixed in PR #697"
+
+  - id: uf-07
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      With Elasticsearch enabled, a product export filtered by a category whose code contains
+      an uppercase letter exports nothing; the job finishes as completed with zero records and
+      no file. Database-backed exports are not affected.
+    parent_sha: d33fc74c6bc02393e01b4dc547b2b50dbe8662d9
+    fix_sha: c8e55b2eb2c9041a691d063a29ae75a51c998b9a
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/DataTransfer/src/Helpers/Sources/Export/Elastic/ProductCursor.php
+      - packages/Webkul/DataTransfer/tests/Unit/Helpers/Sources/Export/Elastic/ProductCursorBoolQueryTest.php
+    upstream_ref: "unopim/unopim issue #696, fixed in PR #698"
+
+  - id: uf-08
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      On PostgreSQL, clearing a channel's name on its edit page fails with a not-null
+      violation. The name was made optional in an earlier release, but storage still requires
+      it; MySQL setups did not surface the error.
+    parent_sha: 9ab55d26850a3e0590d6b6aa6b665d55579629aa
+    fix_sha: bd9d8e24b55a53e26fa8901ee359aa0fd86e815b
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/src/DataGrids/Settings/ChannelDataGrid.php
+      - packages/Webkul/Admin/tests/Feature/Settings/ChannelTest.php
+      - packages/Webkul/Core/src/Database/Migrations/2026_09_24_172527_make_name_nullable_in_channel_translations_table.php
+    upstream_ref: "unopim/unopim PR #725"
+
+  - id: uf-09
+    subject: unopim
+    kind: pr-review-missed-callers
+    issue_text: >-
+      Review this fix. Replacing an image or file value on a saved product dropped the value,
+      because an empty marker field posted under the same name overrode the upload. A new
+      shared trait overlays uploads where the input is empty and is applied in the product form
+      request. Which other form requests need it?
+    parent_sha: a604a30161e307ee2721cd5f8a3a867ce9ce970e
+    fix_sha: 0df476264b5e1d3d9af0d45431d993cd75024315
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/src/Http/Requests/CategoryRequest.php
+      - packages/Webkul/Admin/src/Http/Requests/ProductForm.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/CategoryMediaReplaceTest.php
+      - packages/Webkul/Admin/tests/Feature/Catalog/ProductMediaReplaceTest.php
+      - packages/Webkul/Core/src/Traits/MergesUploadedFiles.php
+      - packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php
+      - tests/Pest.php
+      - tests/e2e-pw/tests/01-catalog/productImageReplacePersists.spec.js
+    held_out:
+      - packages/Webkul/Admin/src/Http/Requests/CategoryRequest.php
+    upstream_ref: "unopim/unopim PR #709"
+
+  - id: uf-10
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      While editing an existing attribute option, typing in its label rewrites the option's
+      disabled code field on screen. The code is not saved, but the form shows a changed code.
+      New options should keep getting a generated code.
+    parent_sha: ab75e4b8b7c9c5c1f0c628c1cc43cd5fec112053
+    fix_sha: 43ef78a0c5edd8e6d0cca15444282040eef7a81e
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/src/Resources/assets/js/directives/code-generator.js
+      - public/themes/admin/default/build/assets/app-BI7HEVhG.js
+      - public/themes/admin/default/build/manifest.json
+      - tests/e2e-pw/tests/01-catalog/attribute.spec.js
+    excluded_from_truth:
+      - public/themes/admin/default/build/assets/app-BI7HEVhG.js
+      - public/themes/admin/default/build/manifest.json
+    upstream_ref: "unopim/unopim PR #752"
+    note: "Built assets are generated output, excluded from every root and from truth by the rule in the corpus header."
+
+  - id: uf-11
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      Publishing a new version of a product passport deletes the document index rows of every
+      earlier version, so the documents a superseded version attested to can no longer be
+      served, although the version itself is kept.
+    parent_sha: 01ae4357066e916f13d9f8602b184bc2889a730c
+    fix_sha: ceadcad4a23971b07949431526f412e25ca6e2df
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Publication/src/Database/Migrations/2026_07_23_000004_create_publication_version_documents_table.php
+      - packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php
+      - packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php
+      - packages/Webkul/Publication/tests/Feature/PublicationAssetTest.php
+      - packages/Webkul/Publication/tests/PublicationTestCase.php
+    upstream_ref: "unopim/unopim PR #677"
+
+  - id: uf-12
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      After the import queue worker command exits on an empty queue, its job-timeout alarm stays
+      armed, and about a minute later the process that ran it is killed. In-process test runs
+      that invoke the command die with it.
+    parent_sha: 97773213fc5bff950437d90c7811d3641adfb4d9
+    fix_sha: 53aba9e4cc0f0d67570e08f2c02f3d96c4696611
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/tests/Feature/DataTransfer/Command/JobLauncherTest.php
+      - packages/Webkul/DataTransfer/src/Queue/Worker.php
+    upstream_ref: "unopim/unopim PR #722"
+
+  - id: uf-13
+    subject: unopim
+    kind: localise-and-fix
+    issue_text: >-
+      Magic AI content generation fails on current Claude models, which reject any request that
+      carries a temperature setting. Older Claude models still accept it and should keep
+      receiving the configured value.
+    parent_sha: ca688ab4de9401c8411a8a04404e4f34a382cc64
+    fix_sha: b0b45e815dd95461655d0ee24ff954e184870ed3
+    reachable_in: fork
+    fix_files:
+      - packages/Webkul/Admin/tests/Feature/MagicAi/ReasoningModelTemperatureTest.php
+      - packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php
+    upstream_ref: "unopim/unopim PR #728"
