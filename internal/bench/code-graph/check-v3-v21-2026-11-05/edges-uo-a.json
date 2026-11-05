@@ -1,0 +1,4897 @@
+[
+ {
+  "id": "uo-b-02",
+  "target": {
+   "file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+   "line": 93,
+   "symbol": "SafeWebhookUrl::httpOptions"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 131,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 205,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "from_line": 154,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 422,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php",
+    "from_line": 16,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "from_line": 50,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 96,
+    "to_symbol": "AiApiClient::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 128,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 109,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "from_line": 34,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php",
+    "from_line": 108,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call",
+    "note": "EnrichmentStep is not registered in any pipeline in the tree (named only in comments)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "from_line": 132,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "from_line": 82,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+    "from_line": 144,
+    "to_symbol": "AiApiClient::testConnection",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 106,
+    "kind": "call",
+    "note": "CredentialController has no route in ai-agent-routes.php"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "from_line": 74,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); configured client passed to VisionService::analyze"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "from_line": 86,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); passed to EnrichmentService::enrich"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 93,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); passed to EnrichmentService::enrich"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 47,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "type of the forwarded apiClient parameter"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "from_line": 10,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "AiApiClientCaptureDouble extends AiApiClient but overrides execute() (line 18): httpOptions is never invoked at runtime; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "from_line": 51,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call",
+    "note": "called on the double whose execute() override skips httpOptions"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "from_line": 161,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "from_line": 84,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/VisionDetectionStep.php",
+    "from_line": 62,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call",
+    "note": "VisionDetectionStep is not registered in any pipeline in the tree (named only in comments)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 58,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 73,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "from_line": 96,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 111,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 52,
+    "to_symbol": "AutoEnrichProductJob::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "to_line": 58,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "from_line": 42,
+    "to_symbol": "ImageToProductService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "to_line": 45,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Routes/ai-agent-routes.php",
+    "from_line": 49,
+    "to_symbol": "GenerateController::process",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "to_line": 35,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Config/ai-agent.php",
+    "from_line": 41,
+    "to_symbol": "AnalyzeImage",
+    "to_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "to_line": 16,
+    "kind": "framework",
+    "note": "chat tool registry config (ai-agent tools list)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Config/ai-agent.php",
+    "from_line": 38,
+    "to_symbol": "GenerateContent",
+    "to_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "to_line": 19,
+    "kind": "framework",
+    "note": "chat tool registry config (ai-agent tools list)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 107,
+    "to_symbol": "VisionService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 33,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 108,
+    "to_symbol": "EnrichmentService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 15,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 110,
+    "to_symbol": "ImageToProductService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "to_line": 20,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "from_line": 23,
+    "to_symbol": "AutoEnrichProductJob::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "to_line": 40,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 58,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 120,
+    "to_symbol": "CallAiProviderStage",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "default pipeline stage list"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php",
+    "from_line": 41,
+    "to_symbol": "CallAiProviderStage::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "to_line": 27,
+    "kind": "framework",
+    "note": "Illuminate Pipeline ->through($this->stages) invokes each stage handle()"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 53,
+    "to_symbol": "AgentPipeline::process",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php",
+    "to_line": 37,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 91,
+    "to_symbol": "ExecuteAgentJob::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php",
+    "to_line": 49,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php",
+    "from_line": 53,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/BatchAgentJob.php",
+    "from_line": 38,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "BatchAgentJob is never dispatched in the tree"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "from_line": 39,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "from_line": 32,
+    "to_symbol": "AgentService::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 80,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Routes/ai-agent-routes.php",
+    "from_line": 53,
+    "to_symbol": "ExecutionController::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "to_line": 20,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 104,
+    "to_symbol": "AgentService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 23,
+    "kind": "framework",
+    "note": "container binding AgentServiceContract -> AgentService"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "from_line": 16,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "framework",
+    "note": "interface method implemented by AgentService (bound at AiAgentServiceProvider:104)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "from_line": 21,
+    "to_symbol": "AgentService::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 80,
+    "kind": "framework",
+    "note": "interface method implemented by AgentService"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "from_line": 61,
+    "to_symbol": "AgentServiceContract::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 16,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "from_line": 82,
+    "to_symbol": "AgentServiceContract::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "from_line": 74,
+    "to_symbol": "AgentServiceContract::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 16,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "from_line": 102,
+    "to_symbol": "AgentServiceContract::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "from_line": 13,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "from_line": 58,
+    "to_symbol": "BaseAgent::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 48,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/TextDescriptionAgent.php",
+    "from_line": 20,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent (inherits execute)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ProductCategorizerAgent.php",
+    "from_line": 19,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent (inherits execute)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php",
+    "from_line": 72,
+    "to_symbol": "ImageProductAgent::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php",
+    "from_line": 59,
+    "to_symbol": "ImageProductAgent::analyzeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 82,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/EnrichProductsBatchCommand.php",
+    "from_line": 61,
+    "to_symbol": "BulkProductEnricherAgent::enrichBatch",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "to_line": 52,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php",
+    "from_line": 55,
+    "to_symbol": "ImageProductAgent::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php",
+    "from_line": 92,
+    "to_symbol": "BaseAgent::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 48,
+    "kind": "call",
+    "note": "on TextDescriptionAgent, inherited from BaseAgent"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 380,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 339,
+    "to_symbol": "AiProvider::discoveryOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 378,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 161,
+    "to_symbol": "AiProvider::fetchOpenAiModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 335,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 164,
+    "to_symbol": "AiProvider::fetchOllamaModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 399,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 403,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 165,
+    "to_symbol": "AiProvider::fetchAzureModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 442,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 454,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 392,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 217,
+    "to_symbol": "AiProvider::fetchOpenAiCompatModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 383,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 146,
+    "to_symbol": "AiProvider::fetchModelCatalog",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 155,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 206,
+    "to_symbol": "AiProvider::fetchModelCatalog",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 155,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "from_line": 19,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 351,
+    "to_symbol": "ModelDiscovery::discover",
+    "to_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "to_line": 17,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "from_line": 115,
+    "to_symbol": "MagicAIPlatformController::fetchModels",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "to_line": 321,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Resources/views/configuration/magic-ai/platform/index.blade.php",
+    "from_line": 506,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "frontend axios POST to the route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 199,
+    "to_symbol": "ModelDiscovery::discover",
+    "to_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "to_line": 17,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 154,
+    "to_symbol": "CollectsPlatform::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 195,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 108,
+    "to_symbol": "CollectsPlatform::askModels",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 152,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 41,
+    "to_symbol": "CollectsPlatform::collectInteractively",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "from_line": 23,
+    "to_symbol": "CollectsPlatform",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 29,
+    "kind": "use",
+    "note": "trait"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "from_line": 27,
+    "to_symbol": "CollectsPlatform::collectAndSave",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "from_line": 28,
+    "to_symbol": "CollectsPlatform",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 29,
+    "kind": "use",
+    "note": "trait"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "from_line": 34,
+    "to_symbol": "CollectsPlatform::collectAndSave",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "from_line": 32,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call",
+    "note": "Custom with null/empty api_url returns before any HTTP call; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php",
+    "from_line": 31,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php",
+    "from_line": 61,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call",
+    "note": "api_url supplied -> discoveryOptions -> ssrfGuardedOptions"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php",
+    "from_line": 32,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+    "from_line": 210,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "from_line": 63,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "from_line": 123,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 15,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "ACL denial (403) before discovery; static route edge"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 34,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "SSRF url rejected by isSafeApiUrl before discovery"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php",
+    "from_line": 108,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php",
+    "from_line": 198,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php",
+    "from_line": 32,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "dataset row of an ACL test; request refused before discovery"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php",
+    "from_line": 54,
+    "to_symbol": "unopim:magic-ai:platform:add",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "to_line": 9,
+    "kind": "framework",
+    "note": "artisan command signature (WIZARD const, line 13); ModelDiscovery is mocked in this test (line 22)"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php",
+    "from_line": 254,
+    "to_symbol": "unopim:magic-ai:platform:edit",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "to_line": 11,
+    "kind": "framework",
+    "note": "artisan command signature; ModelDiscovery is mocked in this test (line 22)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "from_line": 16,
+    "to_symbol": "WebhookController::test",
+    "to_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "to_line": 140,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Resources/views/webhooks/_fields.blade.php",
+    "from_line": 251,
+    "to_symbol": "route webhook.test",
+    "to_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "to_line": 16,
+    "kind": "route",
+    "note": "frontend axios POST to the route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 130,
+    "to_symbol": "WebhookService::deliver",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 187,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 175,
+    "to_symbol": "WebhookService::deliver",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 187,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 40,
+    "to_symbol": "WebhookService::fanOutSingle",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 110,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 48,
+    "to_symbol": "WebhookService::fanOutSingle",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 110,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 88,
+    "to_symbol": "WebhookService::sendBatch",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 140,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 56,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 61,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 66,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 74,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "from_line": 44,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "from_line": 45,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 36,
+    "to_symbol": "WebhookService::sendBatchCreatedByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 59,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 41,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 40,
+    "to_symbol": "SendProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "to_line": 31,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 55,
+    "to_symbol": "SendProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "to_line": 31,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 74,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 90,
+    "to_symbol": "SendBulkEditProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 25,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 60,
+    "to_symbol": "Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 65,
+    "to_symbol": "Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 28,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 30,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 32,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 34,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 36,
+    "to_symbol": "Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1344,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 150,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 271,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 298,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after'); passes isBulkEdit=true so the listener returns early"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1973,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "dispatch",
+    "note": "Event::dispatch('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1979,
+    "to_symbol": "Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "dispatch",
+    "note": "Event::dispatch('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 200,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 300,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 257,
+    "to_symbol": "BulkProductUpdate::persistProduct",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 287,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 248,
+    "to_symbol": "ProductBulkEditController::handleBulkSave",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 328,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 202,
+    "to_symbol": "ProductController::createVariantNode",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 242,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php",
+    "from_line": 105,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php",
+    "from_line": 45,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "from_line": 125,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "from_line": 170,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 9,
+    "to_symbol": "WebhookService",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 22,
+    "kind": "use",
+    "note": "ChunkedWebhookService extends WebhookService"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "from_line": 26,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 52,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 114,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 30,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "dispatch",
+    "note": "Queue::fake(): job pushed, not run"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 124,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookQueuedTest.php",
+    "from_line": 23,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake(): SendBulkEditProductWebhook pushed, never handled"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 40,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 58,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 31,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "webhook jobs faked (line 14)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantNodeCreateTest.php",
+    "from_line": 370,
+    "to_symbol": "route admin.catalog.products.variant_node.create",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 202,
+    "kind": "route",
+    "note": "Queue::fake() (line 367): SendProductWebhook pushed, not run"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "reason": "static edges are listed, but AiApiClientCaptureDouble overrides execute() (line 18), so httpOptions is never invoked at runtime"
+   }
+  ]
+ },
+ {
+  "id": "uo-c-tests-01",
+  "target": {
+   "file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+   "line": 26,
+   "symbol": "SafeWebhookUrl"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 131,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 205,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "from_line": 154,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 422,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php",
+    "from_line": 16,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "from_line": 50,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 96,
+    "to_symbol": "AiApiClient::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 128,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 109,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "from_line": 34,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php",
+    "from_line": 108,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call",
+    "note": "EnrichmentStep is not registered in any pipeline in the tree (named only in comments)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "from_line": 132,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "from_line": 82,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+    "from_line": 144,
+    "to_symbol": "AiApiClient::testConnection",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 106,
+    "kind": "call",
+    "note": "CredentialController has no route in ai-agent-routes.php"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "from_line": 74,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); configured client passed to VisionService::analyze"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "from_line": 86,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); passed to EnrichmentService::enrich"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 93,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); passed to EnrichmentService::enrich"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 47,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "type of the forwarded apiClient parameter"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "from_line": 10,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "AiApiClientCaptureDouble extends AiApiClient but overrides execute() (line 18): httpOptions is never invoked at runtime; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "from_line": 51,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call",
+    "note": "called on the double whose execute() override skips httpOptions"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "from_line": 161,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "from_line": 84,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/VisionDetectionStep.php",
+    "from_line": 62,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call",
+    "note": "VisionDetectionStep is not registered in any pipeline in the tree (named only in comments)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 58,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 73,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "from_line": 96,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 111,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 52,
+    "to_symbol": "AutoEnrichProductJob::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "to_line": 58,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "from_line": 42,
+    "to_symbol": "ImageToProductService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "to_line": 45,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Routes/ai-agent-routes.php",
+    "from_line": 49,
+    "to_symbol": "GenerateController::process",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "to_line": 35,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Config/ai-agent.php",
+    "from_line": 41,
+    "to_symbol": "AnalyzeImage",
+    "to_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "to_line": 16,
+    "kind": "framework",
+    "note": "chat tool registry config (ai-agent tools list)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Config/ai-agent.php",
+    "from_line": 38,
+    "to_symbol": "GenerateContent",
+    "to_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "to_line": 19,
+    "kind": "framework",
+    "note": "chat tool registry config (ai-agent tools list)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 107,
+    "to_symbol": "VisionService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 33,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 108,
+    "to_symbol": "EnrichmentService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 15,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 110,
+    "to_symbol": "ImageToProductService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "to_line": 20,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "from_line": 23,
+    "to_symbol": "AutoEnrichProductJob::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "to_line": 40,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 58,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 120,
+    "to_symbol": "CallAiProviderStage",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "default pipeline stage list"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php",
+    "from_line": 41,
+    "to_symbol": "CallAiProviderStage::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "to_line": 27,
+    "kind": "framework",
+    "note": "Illuminate Pipeline ->through($this->stages) invokes each stage handle()"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 53,
+    "to_symbol": "AgentPipeline::process",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php",
+    "to_line": 37,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 91,
+    "to_symbol": "ExecuteAgentJob::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php",
+    "to_line": 49,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php",
+    "from_line": 53,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/BatchAgentJob.php",
+    "from_line": 38,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "BatchAgentJob is never dispatched in the tree"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "from_line": 39,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "from_line": 32,
+    "to_symbol": "AgentService::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 80,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Routes/ai-agent-routes.php",
+    "from_line": 53,
+    "to_symbol": "ExecutionController::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "to_line": 20,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 104,
+    "to_symbol": "AgentService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 23,
+    "kind": "framework",
+    "note": "container binding AgentServiceContract -> AgentService"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "from_line": 16,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "framework",
+    "note": "interface method implemented by AgentService (bound at AiAgentServiceProvider:104)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "from_line": 21,
+    "to_symbol": "AgentService::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 80,
+    "kind": "framework",
+    "note": "interface method implemented by AgentService"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "from_line": 61,
+    "to_symbol": "AgentServiceContract::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 16,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "from_line": 82,
+    "to_symbol": "AgentServiceContract::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "from_line": 74,
+    "to_symbol": "AgentServiceContract::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 16,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "from_line": 102,
+    "to_symbol": "AgentServiceContract::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "from_line": 13,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "from_line": 58,
+    "to_symbol": "BaseAgent::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 48,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/TextDescriptionAgent.php",
+    "from_line": 20,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent (inherits execute)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ProductCategorizerAgent.php",
+    "from_line": 19,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent (inherits execute)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php",
+    "from_line": 72,
+    "to_symbol": "ImageProductAgent::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php",
+    "from_line": 59,
+    "to_symbol": "ImageProductAgent::analyzeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 82,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/EnrichProductsBatchCommand.php",
+    "from_line": 61,
+    "to_symbol": "BulkProductEnricherAgent::enrichBatch",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "to_line": 52,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php",
+    "from_line": 55,
+    "to_symbol": "ImageProductAgent::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php",
+    "from_line": 92,
+    "to_symbol": "BaseAgent::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 48,
+    "kind": "call",
+    "note": "on TextDescriptionAgent, inherited from BaseAgent"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 380,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 339,
+    "to_symbol": "AiProvider::discoveryOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 378,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 161,
+    "to_symbol": "AiProvider::fetchOpenAiModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 335,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 164,
+    "to_symbol": "AiProvider::fetchOllamaModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 399,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 403,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 165,
+    "to_symbol": "AiProvider::fetchAzureModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 442,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 454,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 392,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 217,
+    "to_symbol": "AiProvider::fetchOpenAiCompatModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 383,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 146,
+    "to_symbol": "AiProvider::fetchModelCatalog",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 155,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 206,
+    "to_symbol": "AiProvider::fetchModelCatalog",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 155,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "from_line": 19,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 351,
+    "to_symbol": "ModelDiscovery::discover",
+    "to_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "to_line": 17,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "from_line": 115,
+    "to_symbol": "MagicAIPlatformController::fetchModels",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "to_line": 321,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Resources/views/configuration/magic-ai/platform/index.blade.php",
+    "from_line": 506,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "frontend axios POST to the route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 199,
+    "to_symbol": "ModelDiscovery::discover",
+    "to_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "to_line": 17,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 154,
+    "to_symbol": "CollectsPlatform::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 195,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 108,
+    "to_symbol": "CollectsPlatform::askModels",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 152,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 41,
+    "to_symbol": "CollectsPlatform::collectInteractively",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "from_line": 23,
+    "to_symbol": "CollectsPlatform",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 29,
+    "kind": "use",
+    "note": "trait"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "from_line": 27,
+    "to_symbol": "CollectsPlatform::collectAndSave",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "from_line": 28,
+    "to_symbol": "CollectsPlatform",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 29,
+    "kind": "use",
+    "note": "trait"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "from_line": 34,
+    "to_symbol": "CollectsPlatform::collectAndSave",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "from_line": 32,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call",
+    "note": "Custom with null/empty api_url returns before any HTTP call; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php",
+    "from_line": 31,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php",
+    "from_line": 61,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call",
+    "note": "api_url supplied -> discoveryOptions -> ssrfGuardedOptions"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php",
+    "from_line": 32,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+    "from_line": 210,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "from_line": 63,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "from_line": 123,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 15,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "ACL denial (403) before discovery; static route edge"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 34,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "SSRF url rejected by isSafeApiUrl before discovery"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php",
+    "from_line": 108,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php",
+    "from_line": 198,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php",
+    "from_line": 32,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "dataset row of an ACL test; request refused before discovery"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php",
+    "from_line": 54,
+    "to_symbol": "unopim:magic-ai:platform:add",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "to_line": 9,
+    "kind": "framework",
+    "note": "artisan command signature (WIZARD const, line 13); ModelDiscovery is mocked in this test (line 22)"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php",
+    "from_line": 254,
+    "to_symbol": "unopim:magic-ai:platform:edit",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "to_line": 11,
+    "kind": "framework",
+    "note": "artisan command signature; ModelDiscovery is mocked in this test (line 22)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "from_line": 16,
+    "to_symbol": "WebhookController::test",
+    "to_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "to_line": 140,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Resources/views/webhooks/_fields.blade.php",
+    "from_line": 251,
+    "to_symbol": "route webhook.test",
+    "to_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "to_line": 16,
+    "kind": "route",
+    "note": "frontend axios POST to the route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 130,
+    "to_symbol": "WebhookService::deliver",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 187,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 175,
+    "to_symbol": "WebhookService::deliver",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 187,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 40,
+    "to_symbol": "WebhookService::fanOutSingle",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 110,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 48,
+    "to_symbol": "WebhookService::fanOutSingle",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 110,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 88,
+    "to_symbol": "WebhookService::sendBatch",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 140,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 56,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 61,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 66,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 74,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "from_line": 44,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "from_line": 45,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 36,
+    "to_symbol": "WebhookService::sendBatchCreatedByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 59,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 41,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 40,
+    "to_symbol": "SendProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "to_line": 31,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 55,
+    "to_symbol": "SendProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "to_line": 31,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 74,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 90,
+    "to_symbol": "SendBulkEditProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 25,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 60,
+    "to_symbol": "Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 65,
+    "to_symbol": "Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 28,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 30,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 32,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 34,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 36,
+    "to_symbol": "Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1344,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 150,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 271,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 298,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after'); passes isBulkEdit=true so the listener returns early"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1973,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "dispatch",
+    "note": "Event::dispatch('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1979,
+    "to_symbol": "Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "dispatch",
+    "note": "Event::dispatch('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 200,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 300,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 257,
+    "to_symbol": "BulkProductUpdate::persistProduct",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 287,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 248,
+    "to_symbol": "ProductBulkEditController::handleBulkSave",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 328,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 202,
+    "to_symbol": "ProductController::createVariantNode",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 242,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php",
+    "from_line": 105,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php",
+    "from_line": 45,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "from_line": 125,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "from_line": 170,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 9,
+    "to_symbol": "WebhookService",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 22,
+    "kind": "use",
+    "note": "ChunkedWebhookService extends WebhookService"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "from_line": 26,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 52,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 114,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 30,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "dispatch",
+    "note": "Queue::fake(): job pushed, not run"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 124,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookQueuedTest.php",
+    "from_line": 23,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake(): SendBulkEditProductWebhook pushed, never handled"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 40,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 58,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 31,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "webhook jobs faked (line 14)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantNodeCreateTest.php",
+    "from_line": 370,
+    "to_symbol": "route admin.catalog.products.variant_node.create",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 202,
+    "kind": "route",
+    "note": "Queue::fake() (line 367): SendProductWebhook pushed, not run"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php",
+    "from_line": 8,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "from_line": 19,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 189,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "from_line": 146,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Requests/WebhookForm.php",
+    "from_line": 51,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Requests/CredentialForm.php",
+    "from_line": 33,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "from_line": 147,
+    "to_symbol": "SafeWebhookUrl::validate",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 31,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "from_line": 126,
+    "to_symbol": "PlatformValidator::isSafeApiUrl",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "from_line": 138,
+    "to_symbol": "PlatformValidator::apiUrlError",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 118,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "from_line": 54,
+    "to_symbol": "PlatformValidator::validateApiUrl",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 136,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 66,
+    "to_symbol": "PlatformValidator::validateApiUrl",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 136,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 129,
+    "to_symbol": "PlatformValidator::validateApiUrl",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 136,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 220,
+    "to_symbol": "PlatformValidator::isSafeApiUrl",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 327,
+    "to_symbol": "PlatformValidator::isSafeApiUrl",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "from_line": 113,
+    "to_symbol": "MagicAIPlatformController::store",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "to_line": 61,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "from_line": 114,
+    "to_symbol": "MagicAIPlatformController::testConnection",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "from_line": 117,
+    "to_symbol": "MagicAIPlatformController::update",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "to_line": 116,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 85,
+    "to_symbol": "PlatformValidator::apiUrlError",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 118,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 342,
+    "to_symbol": "PlatformValidator::validate",
+    "to_file": "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php",
+    "to_line": 48,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 58,
+    "to_symbol": "CollectsPlatform::save",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 325,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "from_line": 11,
+    "to_symbol": "WebhookController::store",
+    "to_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "to_line": 47,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "from_line": 13,
+    "to_symbol": "WebhookController::update",
+    "to_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "to_line": 80,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "from_line": 47,
+    "to_symbol": "WebhookForm::rules",
+    "to_file": "packages/Webkul/Webhook/src/Http/Requests/WebhookForm.php",
+    "to_line": 41,
+    "kind": "framework",
+    "note": "FormRequest type-hint: the container runs rules() before the action"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "from_line": 80,
+    "to_symbol": "WebhookForm::rules",
+    "to_file": "packages/Webkul/Webhook/src/Http/Requests/WebhookForm.php",
+    "to_line": 41,
+    "kind": "framework",
+    "note": "FormRequest type-hint"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+    "from_line": 138,
+    "to_symbol": "CredentialForm::rules",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Requests/CredentialForm.php",
+    "to_line": 27,
+    "kind": "framework",
+    "note": "FormRequest type-hint; controller is unrouted"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "from_line": 51,
+    "to_symbol": "route admin.magic_ai.platform.test",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformAclBypassTest.php",
+    "from_line": 32,
+    "to_symbol": "route admin.magic_ai.platform.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 117,
+    "kind": "route",
+    "note": "ACL test; request may be refused before validateApiUrl"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformDefaultValidationTest.php",
+    "from_line": 8,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformModelsSubmitTest.php",
+    "from_line": 8,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 6,
+    "to_symbol": "route admin.magic_ai.platform.test",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTest.php",
+    "from_line": 38,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTest.php",
+    "from_line": 185,
+    "to_symbol": "route admin.magic_ai.platform.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 117,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformTildeModelTest.php",
+    "from_line": 8,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/OrphanPlatformFallbackTest.php",
+    "from_line": 115,
+    "to_symbol": "route admin.magic_ai.platform.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 117,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/PlatformExtrasSsrfTest.php",
+    "from_line": 19,
+    "to_symbol": "route admin.magic_ai.platform.test",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/PlatformExtrasSsrfTest.php",
+    "from_line": 47,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php",
+    "from_line": 42,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php",
+    "from_line": 23,
+    "to_symbol": "route admin.magic_ai.platform.test",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 114,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php",
+    "from_line": 41,
+    "to_symbol": "route admin.magic_ai.platform.store",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 113,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookQuickCreateTest.php",
+    "from_line": 37,
+    "to_symbol": "route webhook.store",
+    "to_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "to_line": 11,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFormValidationTest.php",
+    "from_line": 11,
+    "to_symbol": "WebhookForm::rules",
+    "to_file": "packages/Webkul/Webhook/src/Http/Requests/WebhookForm.php",
+    "to_line": 41,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/CredentialApiUrlSsrfTest.php",
+    "from_line": 25,
+    "to_symbol": "CredentialForm::rules",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Requests/CredentialForm.php",
+    "to_line": 27,
+    "kind": "call"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "reason": "static edges are listed, but AiApiClientCaptureDouble overrides execute() (line 18), so httpOptions is never invoked at runtime"
+   },
+   {
+    "path": "packages/Webkul/Admin/tests/Feature/Acl/MagicAi/MagicAiPlatformAclTest.php",
+    "reason": "only requests platform.index / platform.edit; neither action calls PlatformValidator or SafeWebhookUrl"
+   },
+   {
+    "path": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSaveValidatesCredentialsTest.php",
+    "reason": "reads the blade view as text (file_get_contents); executes no PHP path"
+   },
+   {
+    "path": "packages/Webkul/AiAgent/tests/Unit/EnrichmentLocaleAwarenessTest.php",
+    "reason": "only reads the EnrichmentService::TARGETS constant via reflection; never calls enrich()"
+   },
+   {
+    "path": "packages/Webkul/AiAgent/tests/Unit/MagicAIPermissionTest.php",
+    "reason": "reads controller source text and only resolves VisionService/EnrichmentService/ImageToProductService from the container; no chain method is called"
+   },
+   {
+    "path": "packages/Webkul/Core/tests/Unit/HttpExceptionRenderingTest.php",
+    "reason": "exercises the exception Handler only; no reference to any SafeWebhookUrl caller"
+   }
+  ]
+ },
+ {
+  "id": "uo-e-01",
+  "target": {
+   "file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+   "line": 93,
+   "symbol": "SafeWebhookUrl::httpOptions"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 131,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 205,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "from_line": 154,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 422,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php",
+    "from_line": 16,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php",
+    "from_line": 50,
+    "to_symbol": "SafeWebhookUrl::httpOptions",
+    "to_file": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php",
+    "to_line": 93,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 96,
+    "to_symbol": "AiApiClient::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 128,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "from_line": 109,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "from_line": 34,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php",
+    "from_line": 108,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call",
+    "note": "EnrichmentStep is not registered in any pipeline in the tree (named only in comments)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "from_line": 132,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "from_line": 82,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+    "from_line": 144,
+    "to_symbol": "AiApiClient::testConnection",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 106,
+    "kind": "call",
+    "note": "CredentialController has no route in ai-agent-routes.php"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "from_line": 74,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); configured client passed to VisionService::analyze"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "from_line": 86,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); passed to EnrichmentService::enrich"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 93,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "resolve(AiApiClient::class); passed to EnrichmentService::enrich"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 47,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "type of the forwarded apiClient parameter"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "from_line": 10,
+    "to_symbol": "AiApiClient",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "AiApiClientCaptureDouble extends AiApiClient but overrides execute() (line 18): httpOptions is never invoked at runtime; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "from_line": 51,
+    "to_symbol": "AiApiClient::chat",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+    "to_line": 88,
+    "kind": "call",
+    "note": "called on the double whose execute() override skips httpOptions"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "from_line": 161,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "from_line": 84,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/VisionDetectionStep.php",
+    "from_line": 62,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call",
+    "note": "VisionDetectionStep is not registered in any pipeline in the tree (named only in comments)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 58,
+    "to_symbol": "VisionService::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 101,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "from_line": 73,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "from_line": 96,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 111,
+    "to_symbol": "EnrichmentService::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 44,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "from_line": 52,
+    "to_symbol": "AutoEnrichProductJob::enrich",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "to_line": 58,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "from_line": 42,
+    "to_symbol": "ImageToProductService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "to_line": 45,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Routes/ai-agent-routes.php",
+    "from_line": 49,
+    "to_symbol": "GenerateController::process",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Controllers/GenerateController.php",
+    "to_line": 35,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Config/ai-agent.php",
+    "from_line": 41,
+    "to_symbol": "AnalyzeImage",
+    "to_file": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+    "to_line": 16,
+    "kind": "framework",
+    "note": "chat tool registry config (ai-agent tools list)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Config/ai-agent.php",
+    "from_line": 38,
+    "to_symbol": "GenerateContent",
+    "to_file": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+    "to_line": 19,
+    "kind": "framework",
+    "note": "chat tool registry config (ai-agent tools list)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 107,
+    "to_symbol": "VisionService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+    "to_line": 33,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 108,
+    "to_symbol": "EnrichmentService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+    "to_line": 15,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 110,
+    "to_symbol": "ImageToProductService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+    "to_line": 20,
+    "kind": "framework",
+    "note": "container scoped binding"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "from_line": 23,
+    "to_symbol": "AutoEnrichProductJob::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+    "to_line": 40,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 58,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 120,
+    "to_symbol": "CallAiProviderStage",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "to_line": 16,
+    "kind": "use",
+    "note": "default pipeline stage list"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php",
+    "from_line": 41,
+    "to_symbol": "CallAiProviderStage::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+    "to_line": 27,
+    "kind": "framework",
+    "note": "Illuminate Pipeline ->through($this->stages) invokes each stage handle()"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 53,
+    "to_symbol": "AgentPipeline::process",
+    "to_file": "packages/Webkul/AiAgent/src/Pipelines/AgentPipeline.php",
+    "to_line": 37,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "from_line": 91,
+    "to_symbol": "ExecuteAgentJob::handle",
+    "to_file": "packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php",
+    "to_line": 49,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/ExecuteAgentJob.php",
+    "from_line": 53,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Jobs/BatchAgentJob.php",
+    "from_line": 38,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call",
+    "note": "BatchAgentJob is never dispatched in the tree"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "from_line": 39,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "from_line": 32,
+    "to_symbol": "AgentService::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 80,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/Routes/ai-agent-routes.php",
+    "from_line": 53,
+    "to_symbol": "ExecutionController::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Http/Controllers/ExecutionController.php",
+    "to_line": 20,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+    "from_line": 104,
+    "to_symbol": "AgentService",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 23,
+    "kind": "framework",
+    "note": "container binding AgentServiceContract -> AgentService"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "from_line": 16,
+    "to_symbol": "AgentService::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 34,
+    "kind": "framework",
+    "note": "interface method implemented by AgentService (bound at AiAgentServiceProvider:104)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "from_line": 21,
+    "to_symbol": "AgentService::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Services/AgentService.php",
+    "to_line": 80,
+    "kind": "framework",
+    "note": "interface method implemented by AgentService"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "from_line": 61,
+    "to_symbol": "AgentServiceContract::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 16,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "from_line": 82,
+    "to_symbol": "AgentServiceContract::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "from_line": 74,
+    "to_symbol": "AgentServiceContract::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 16,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "from_line": 102,
+    "to_symbol": "AgentServiceContract::executeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Contracts/AgentServiceContract.php",
+    "to_line": 21,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "from_line": 13,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "from_line": 58,
+    "to_symbol": "BaseAgent::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 48,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/TextDescriptionAgent.php",
+    "from_line": 20,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent (inherits execute)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Agents/ProductCategorizerAgent.php",
+    "from_line": 19,
+    "to_symbol": "BaseAgent",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 20,
+    "kind": "use",
+    "note": "extends BaseAgent (inherits execute)"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php",
+    "from_line": 72,
+    "to_symbol": "ImageProductAgent::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/AnalyzeProductImageCommand.php",
+    "from_line": 59,
+    "to_symbol": "ImageProductAgent::analyzeAsync",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 82,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/EnrichProductsBatchCommand.php",
+    "from_line": 61,
+    "to_symbol": "BulkProductEnricherAgent::enrichBatch",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BulkProductEnricherAgent.php",
+    "to_line": 52,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php",
+    "from_line": 55,
+    "to_symbol": "ImageProductAgent::analyze",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/ImageProductAgent.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AiAgent/src/Examples/ExampleAgentController.php",
+    "from_line": 92,
+    "to_symbol": "BaseAgent::execute",
+    "to_file": "packages/Webkul/AiAgent/src/Agents/BaseAgent.php",
+    "to_line": 48,
+    "kind": "call",
+    "note": "on TextDescriptionAgent, inherited from BaseAgent"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 380,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 339,
+    "to_symbol": "AiProvider::discoveryOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 378,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 161,
+    "to_symbol": "AiProvider::fetchOpenAiModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 335,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 164,
+    "to_symbol": "AiProvider::fetchOllamaModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 399,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 403,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 165,
+    "to_symbol": "AiProvider::fetchAzureModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 442,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 454,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 392,
+    "to_symbol": "AiProvider::ssrfGuardedOptions",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 420,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 217,
+    "to_symbol": "AiProvider::fetchOpenAiCompatModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 383,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 146,
+    "to_symbol": "AiProvider::fetchModelCatalog",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 155,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "from_line": 206,
+    "to_symbol": "AiProvider::fetchModelCatalog",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 155,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "from_line": 19,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "from_line": 351,
+    "to_symbol": "ModelDiscovery::discover",
+    "to_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "to_line": 17,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "from_line": 115,
+    "to_symbol": "MagicAIPlatformController::fetchModels",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIPlatformController.php",
+    "to_line": 321,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Resources/views/configuration/magic-ai/platform/index.blade.php",
+    "from_line": 506,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "frontend axios POST to the route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 199,
+    "to_symbol": "ModelDiscovery::discover",
+    "to_file": "packages/Webkul/MagicAI/src/Services/ModelDiscovery.php",
+    "to_line": 17,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 154,
+    "to_symbol": "CollectsPlatform::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 195,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 108,
+    "to_symbol": "CollectsPlatform::askModels",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 152,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "from_line": 41,
+    "to_symbol": "CollectsPlatform::collectInteractively",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "from_line": 23,
+    "to_symbol": "CollectsPlatform",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 29,
+    "kind": "use",
+    "note": "trait"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "from_line": 27,
+    "to_symbol": "CollectsPlatform::collectAndSave",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "from_line": 28,
+    "to_symbol": "CollectsPlatform",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 29,
+    "kind": "use",
+    "note": "trait"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "from_line": 34,
+    "to_symbol": "CollectsPlatform::collectAndSave",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/Concerns/CollectsPlatform.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AiProviderCustomTest.php",
+    "from_line": 32,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call",
+    "note": "Custom with null/empty api_url returns before any HTTP call; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/AzureModelDiscoveryTest.php",
+    "from_line": 31,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/ConcentrateProviderTest.php",
+    "from_line": 61,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call",
+    "note": "api_url supplied -> discoveryOptions -> ssrfGuardedOptions"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/CustomModelDiscoveryTest.php",
+    "from_line": 32,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+    "from_line": 210,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "from_line": 63,
+    "to_symbol": "AiProvider::fetchModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 144,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Unit/AiProviderTest.php",
+    "from_line": 123,
+    "to_symbol": "AiProvider::discoverModels",
+    "to_file": "packages/Webkul/MagicAI/src/Enums/AiProvider.php",
+    "to_line": 201,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 15,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "ACL denial (403) before discovery; static route edge"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/MagicAI/MagicAIPlatformSecurityTest.php",
+    "from_line": 34,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "SSRF url rejected by isSafeApiUrl before discovery"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformConnectionTest.php",
+    "from_line": 108,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/ManagedPlatformTest.php",
+    "from_line": 198,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformManagementTest.php",
+    "from_line": 32,
+    "to_symbol": "route admin.magic_ai.platform.fetch_models",
+    "to_file": "packages/Webkul/Admin/src/Routes/rest-routes.php",
+    "to_line": 115,
+    "kind": "route",
+    "note": "dataset row of an ACL test; request refused before discovery"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php",
+    "from_line": 54,
+    "to_symbol": "unopim:magic-ai:platform:add",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/AddPlatform.php",
+    "to_line": 9,
+    "kind": "framework",
+    "note": "artisan command signature (WIZARD const, line 13); ModelDiscovery is mocked in this test (line 22)"
+   },
+   {
+    "from_file": "packages/Webkul/MagicAI/tests/Feature/PlatformCommandsTest.php",
+    "from_line": 254,
+    "to_symbol": "unopim:magic-ai:platform:edit",
+    "to_file": "packages/Webkul/MagicAI/src/Console/Commands/Platform/EditPlatform.php",
+    "to_line": 11,
+    "kind": "framework",
+    "note": "artisan command signature; ModelDiscovery is mocked in this test (line 22)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "from_line": 16,
+    "to_symbol": "WebhookController::test",
+    "to_file": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php",
+    "to_line": 140,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Resources/views/webhooks/_fields.blade.php",
+    "from_line": 251,
+    "to_symbol": "route webhook.test",
+    "to_file": "packages/Webkul/Webhook/src/Routes/web.php",
+    "to_line": 16,
+    "kind": "route",
+    "note": "frontend axios POST to the route"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 130,
+    "to_symbol": "WebhookService::deliver",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 187,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 175,
+    "to_symbol": "WebhookService::deliver",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 187,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 40,
+    "to_symbol": "WebhookService::fanOutSingle",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 110,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 48,
+    "to_symbol": "WebhookService::fanOutSingle",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 110,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 88,
+    "to_symbol": "WebhookService::sendBatch",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 140,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 56,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 61,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 66,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 74,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "from_line": 44,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "from_line": 45,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 36,
+    "to_symbol": "WebhookService::sendBatchCreatedByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 59,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 41,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 40,
+    "to_symbol": "SendProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "to_line": 31,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 55,
+    "to_symbol": "SendProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "to_line": 31,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 74,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 90,
+    "to_symbol": "SendBulkEditProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 25,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 60,
+    "to_symbol": "Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 65,
+    "to_symbol": "Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 28,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 30,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 32,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 34,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 36,
+    "to_symbol": "Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1344,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 150,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 271,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 298,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after'); passes isBulkEdit=true so the listener returns early"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1973,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "dispatch",
+    "note": "Event::dispatch('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1979,
+    "to_symbol": "Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "dispatch",
+    "note": "Event::dispatch('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 200,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 300,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "ProductEventListener::afterCreate",
+    "to_file": "packages/Webkul/AiAgent/src/Listeners/ProductEventListener.php",
+    "to_line": 17,
+    "kind": "dispatch",
+    "note": "Event::dispatch('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 257,
+    "to_symbol": "BulkProductUpdate::persistProduct",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 287,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 248,
+    "to_symbol": "ProductBulkEditController::handleBulkSave",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 328,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 202,
+    "to_symbol": "ProductController::createVariantNode",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 242,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookProductCreateTest.php",
+    "from_line": 105,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Webhook/WebhookStatusTest.php",
+    "from_line": 45,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "from_line": 125,
+    "to_symbol": "WebhookService::sendCreatedToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 46,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementWebhookTest.php",
+    "from_line": 170,
+    "to_symbol": "WebhookService::sendDataToWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 38,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 9,
+    "to_symbol": "WebhookService",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 22,
+    "kind": "use",
+    "note": "ChunkedWebhookService extends WebhookService"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "from_line": 26,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 52,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 114,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 30,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "dispatch",
+    "note": "Queue::fake(): job pushed, not run"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 124,
+    "to_symbol": "Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookQueuedTest.php",
+    "from_line": 23,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake(): SendBulkEditProductWebhook pushed, never handled"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 40,
+    "to_symbol": "Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 58,
+    "to_symbol": "Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake()"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 31,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "webhook jobs faked (line 14)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantNodeCreateTest.php",
+    "from_line": 370,
+    "to_symbol": "route admin.catalog.products.variant_node.create",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 202,
+    "kind": "route",
+    "note": "Queue::fake() (line 367): SendProductWebhook pushed, not run"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+    "reason": "static edges are listed, but AiApiClientCaptureDouble overrides execute() (line 18), so httpOptions is never invoked at runtime"
+   },
+   {
+    "path": "(tests faking the queue: BulkEditWebhookQueuedTest, BulkEditWebhookNotDuplicatedTest, ProductBulkEditWebhookDedupeTest, ProductVariantNodeCreateTest)",
+    "reason": "placeholder pool entry; the four concrete files are listed as edges with Queue::fake notes"
+   },
+   {
+    "path": "(product-saving code that fires catalog.product.*.after / data_transfer.imports.batch.* events: ProductRepository, Admin/AdminApi product controllers, DataTransfer importer, BulkProductUpdate, ...)",
+    "reason": "placeholder pool entry; concrete dispatcher files are listed as dispatch edges. Their own upstream callers (routes and tests hitting product create/update endpoints) are NOT enumerated"
+   }
+  ]
+ }
+]

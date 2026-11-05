@@ -1,0 +1,138 @@
+[
+ {"id": "ls-c-route-01",
+  "answer_files": [
+   {"path": "routes/api.php", "evidence": ["routes/api.php:13"], "reason": "Route::post('emails', [EmailController::class, 'store'])"},
+   {"path": "bootstrap/app.php", "evidence": ["bootstrap/app.php:13"], "reason": "registers routes/api.php under the api (/api) prefix, which makes the path /api/emails"},
+   {"path": "app/Http/Controllers/Api/EmailController.php", "evidence": ["app/Http/Controllers/Api/EmailController.php:40", "app/Http/Controllers/Api/EmailController.php:80"], "reason": "store() calls EmailSendService::send"},
+   {"path": "app/Services/EmailSendService.php", "evidence": ["app/Services/EmailSendService.php:40", "app/Services/EmailSendService.php:72"], "reason": "send() returns Email and calls Email::create"},
+   {"path": "app/Models/Email.php", "evidence": ["app/Services/EmailSendService.php:7"], "reason": "target model"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "app/Models/Project.php", "reason": "store() also reaches Email via $project->emails() (EmailController.php:60,86; Project.php:54-56) on the idempotency-replay branch. That is a secondary branch, not the create path; include it if the question means every branch."},
+   {"path": "app/Http/Middleware/AuthenticateLarasendApiKey.php", "reason": "route middleware; resolves the project/source attributes and does not touch Email"},
+   {"path": "app/Http/Middleware/ThrottleLarasendApiKey.php", "reason": "middleware with no Email relation"},
+   {"path": "app/Http/Requests/SendEmailRequest.php", "reason": "validation only"},
+   {"path": "app/Jobs/SendQueuedEmail.php", "reason": "dispatched with an Email id after creation; downstream of the model, not on the path to it"},
+   {"path": "app/Services/ThreadResolver.php", "reason": "attachOutbound(Email) receives the Email after it is created"}
+  ],
+  "open_followed": "Oracle open: no reference engine emits this relation. Followed by hand: api.php -> EmailController::store -> EmailSendService::send -> Email::create. The /api prefix comes from bootstrap/app.php:13.",
+  "answerable_as_registered": true,
+  "notes": "bootstrap/app.php is a registration hop, not a call. Drop it if the metric counts only call-path files.",
+  "confidence": "high"},
+ {"id": "ls-c-route-02",
+  "answer_files": [
+   {"path": "routes/api.php", "evidence": ["routes/api.php:22"], "reason": "route to the invokable CloudflareInboundController"},
+   {"path": "bootstrap/app.php", "evidence": ["bootstrap/app.php:13"], "reason": "registers the api route file with the /api prefix"},
+   {"path": "app/Http/Controllers/Webhooks/CloudflareInboundController.php", "evidence": ["app/Http/Controllers/Webhooks/CloudflareInboundController.php:28", "app/Http/Controllers/Webhooks/CloudflareInboundController.php:87"], "reason": "__invoke injects InboundEmailIngestor and calls ingest()"},
+   {"path": "app/Services/InboundEmailIngestor.php", "evidence": ["app/Services/InboundEmailIngestor.php:26", "app/Services/InboundEmailIngestor.php:77"], "reason": "ingest() calls $this->threads->attachInbound($inbound)"},
+   {"path": "app/Services/ThreadResolver.php", "evidence": ["app/Services/ThreadResolver.php:25", "app/Services/ThreadResolver.php:159"], "reason": "attachInbound returns a Thread, which it finds or creates through Thread::query()"},
+   {"path": "app/Models/Thread.php", "evidence": ["app/Services/ThreadResolver.php:7"], "reason": "target model"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "app/Models/InboundEmail.php", "reason": "created by the ingestor and passed to attachInbound. It carries thread_id, but the path reaches Thread through ThreadResolver"},
+   {"path": "app/Jobs/DeliverInboundWebhook.php", "reason": "dispatched by the ingestor; does not lead to Thread"},
+   {"path": "app/Services/Providers/CloudflareInboundProvisioner.php", "reason": "domain check in the controller; no Thread access"},
+   {"path": "app/Models/WebhookLog.php", "reason": "logging in the controller; no Thread access"}
+  ],
+  "open_followed": "Followed by hand through the invokable controller, the ingestor and the resolver.",
+  "answerable_as_registered": true,
+  "notes": "Same bootstrap/app.php caveat as ls-c-route-01.",
+  "confidence": "high"},
+ {"id": "ls-c-route-03",
+  "answer_files": [
+   {"path": "routes/api.php", "evidence": ["routes/api.php:15"], "reason": "Route::delete('suppressions/{suppression}', [SuppressionController::class, 'destroy'])"},
+   {"path": "bootstrap/app.php", "evidence": ["bootstrap/app.php:13"], "reason": "registers the api route file with the /api prefix"},
+   {"path": "app/Http/Controllers/Api/SuppressionController.php", "evidence": ["app/Http/Controllers/Api/SuppressionController.php:19", "app/Http/Controllers/Api/SuppressionController.php:28"], "reason": "binds Suppression through implicit route-model binding, then calls SuppressionRemovalService::remove"},
+   {"path": "app/Services/SuppressionRemovalService.php", "evidence": ["app/Services/SuppressionRemovalService.php:20", "app/Services/SuppressionRemovalService.php:25", "app/Services/SuppressionRemovalService.php:73"], "reason": "remove(Suppression) calls $suppression->delete()"},
+   {"path": "app/Models/Suppression.php", "evidence": ["app/Http/Controllers/Api/SuppressionController.php:9"], "reason": "target model"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "app/Services/SesV2Client.php", "reason": "provider call inside remove(); does not touch the Suppression model"},
+   {"path": "app/Services/CloudflareApiClient.php", "reason": "provider call inside remove(); no model access"},
+   {"path": "app/Http/Middleware/AuthenticateLarasendApiKey.php", "reason": "maps the route name to a scope (line 41); no Suppression access"}
+  ],
+  "open_followed": "Followed by hand. The controller already reaches Suppression directly through implicit binding (hop 2); the service performs the delete.",
+  "answerable_as_registered": true,
+  "notes": "Same bootstrap/app.php caveat.",
+  "confidence": "high"},
+ {"id": "ls-c-model-01",
+  "answer_files": [
+   {"path": "app/Models/WebhookDelivery.php", "evidence": ["app/Models/WebhookDelivery.php:9"], "reason": "no $table property, so the conventional table webhook_deliveries applies"},
+   {"path": "database/migrations/2026_05_11_120741_create_webhook_deliveries_table.php", "evidence": ["database/migrations/2026_05_11_120741_create_webhook_deliveries_table.php:14"], "reason": "Schema::create('webhook_deliveries')"}
+  ],
+  "oracle_files": [],
+  "excluded": [],
+  "open_followed": "Grepped all migrations for webhook_deliveries; only the create migration matches.",
+  "answerable_as_registered": true,
+  "notes": "Table: webhook_deliveries. No migration alters it.",
+  "confidence": "high"},
+ {"id": "ls-c-model-02",
+  "answer_files": [
+   {"path": "app/Models/Thread.php", "evidence": ["app/Models/Thread.php:9"], "reason": "no $table property, so the table is threads"},
+   {"path": "database/migrations/2026_07_11_001656_create_threads_table.php", "evidence": ["database/migrations/2026_07_11_001656_create_threads_table.php:15"], "reason": "Schema::create('threads')"},
+   {"path": "database/migrations/2026_07_12_034640_add_team_workflow_to_threads_table.php", "evidence": ["database/migrations/2026_07_12_034640_add_team_workflow_to_threads_table.php:14"], "reason": "Schema::table('threads') adds columns"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "database/migrations/2026_07_11_001657_add_thread_id_to_email_tables.php", "reason": "adds thread_id foreign keys to the email tables that reference threads; it alters those tables, not threads"},
+   {"path": "database/migrations/2026_07_12_034640_create_thread_events_table.php", "reason": "foreign key to threads; defines thread_events"},
+   {"path": "database/migrations/2026_07_12_034640_create_thread_user_states_table.php", "reason": "foreign key to threads; defines thread_user_states"},
+   {"path": "database/migrations/2026_07_11_055756_create_thread_notes_table.php", "reason": "foreign key to threads; defines thread_notes"}
+  ],
+  "open_followed": "Grepped the migrations for threads.",
+  "answerable_as_registered": true,
+  "notes": "Table: threads.",
+  "confidence": "high"},
+ {"id": "ls-c-model-03",
+  "answer_files": [
+   {"path": "app/Models/ApiKey.php", "evidence": ["app/Models/ApiKey.php:10"], "reason": "no $table property, so the table is api_keys"},
+   {"path": "database/migrations/2026_05_11_033056_create_larasend_core_tables.php", "evidence": ["database/migrations/2026_05_11_033056_create_larasend_core_tables.php:78"], "reason": "Schema::create('api_keys') inside a multi-table migration"},
+   {"path": "database/migrations/2026_06_24_141106_add_governance_fields_to_api_keys_table.php", "evidence": ["database/migrations/2026_06_24_141106_add_governance_fields_to_api_keys_table.php:14"], "reason": "Schema::table('api_keys') adds columns"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "database/migrations/2026_07_04_160533_merge_duplicate_sources_and_add_unique_constraint.php", "reason": "lists api_keys at line 17 and rewrites source_id values through DB::table (a data migration). It makes no schema change to api_keys; include it only if 'alter' covers data changes"}
+  ],
+  "open_followed": "Grepped the migrations for api_keys.",
+  "answerable_as_registered": true,
+  "notes": "Table: api_keys.",
+  "confidence": "high"},
+ {"id": "ls-e-x-01",
+  "answer_files": [
+   {"path": "resources/js/pages/Inbox.vue", "evidence": ["app/Http/Controllers/InboxController.php:51", "resources/js/pages/Inbox.vue:81"], "reason": "Inertia::render('Inbox') resolves to pages/Inbox.vue, whose defineProps receives the props"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "resources/js/components/GlobalRail.vue", "reason": "hop 2: receives project.path/name/slug, projects and counts.unread (Inbox.vue:1001-1007). It is outside the registered hop-1 stratum; include it if the question is read transitively"},
+   {"path": "resources/js/components/PaginationControls.vue", "reason": "hop 2: receives pagination.* (Inbox.vue:1439-1445). Same caveat"},
+   {"path": "resources/js/components/RichTextEditor.vue", "reason": "bound to form state (replyForm/composeForm), not to controller props"},
+   {"path": "resources/js/app.ts", "reason": "page and layout resolution. Inbox gets a null layout (app.ts:18-19), so no layout receives the props"},
+   {"path": "resources/js/routes/projects", "reason": "generated Wayfinder helper, absent at the pin"}
+  ],
+  "open_followed": "Followed Inertia page resolution: 'Inbox' -> resources/js/pages/Inbox.vue. The layout resolver gives Inbox no layout.",
+  "answerable_as_registered": true,
+  "notes": "Ambiguous. Read literally ('which frontend files must be re-read'), the question could include the child components the props are forwarded to. The hop-1 reading gives {Inbox.vue}; the transitive reading adds GlobalRail.vue and PaginationControls.vue.",
+  "confidence": "medium"},
+ {"id": "ls-e-x-02",
+  "answer_files": [
+   {"path": "resources/js/pages/Activity.vue", "evidence": ["app/Http/Controllers/ActivityController.php:127", "resources/js/pages/Activity.vue:181"], "reason": "the page that receives the props"},
+   {"path": "resources/js/components/GlobalRail.vue", "evidence": ["resources/js/pages/Activity.vue:1891"], "reason": "receives project.name/slug, section, projects, sidebarCounts and inboxUnread"},
+   {"path": "resources/js/components/DashboardPanel.vue", "evidence": ["resources/js/pages/Activity.vue:2085"], "reason": "receives metrics, emails, recentThreads, dashboard and system"},
+   {"path": "resources/js/components/EmailProviderPanel.vue", "evidence": ["resources/js/pages/Activity.vue:3479"], "reason": "receives source, quota, workspace.can_manage_domains, setup.webhook_url and values derived from domains"},
+   {"path": "resources/js/components/PaginationControls.vue", "evidence": ["resources/js/pages/Activity.vue:2520"], "reason": "receives emailPagination.*"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "resources/js/components/ui/sonner", "reason": "Toaster is rendered without props (Activity.vue:5715)"},
+   {"path": "resources/js/app.ts", "reason": "Activity gets a null layout (app.ts:16-17), so no layout receives the props"},
+   {"path": "resources/js/routes/projects", "reason": "generated Wayfinder helper, absent at the pin"},
+   {"path": "resources/js/routes/workspace-members/ownership", "reason": "generated Wayfinder helper, absent at the pin"}
+  ],
+  "open_followed": "Checked every component Activity.vue imports (DashboardPanel, EmailProviderPanel, GlobalRail, PaginationControls, Toaster) and its bindings. DashboardPanel imports no further components, so hop 3 from it is empty.",
+  "answerable_as_registered": true,
+  "notes": "ActivityController has only one Inertia::render (line 127).",
+  "confidence": "high"}
+]

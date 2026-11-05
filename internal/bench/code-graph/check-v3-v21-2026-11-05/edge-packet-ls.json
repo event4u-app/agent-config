@@ -1,0 +1,166 @@
+[
+ {
+  "id": "ls-b-05",
+  "question": {
+   "question": "Which files reach updateTheme within two call hops?",
+   "class": "precise-semantics",
+   "shape": "callers-transitive",
+   "probe": "updateTheme",
+   "declared_in": "resources/js/composables/useAppearance.ts:13"
+  },
+  "candidate_files": [
+   "resources/js/app.ts",
+   "resources/js/components/AppearanceTabs.vue",
+   "resources/js/components/TwoFactorSetupModal.vue",
+   "resources/js/components/ui/sonner/Sonner.vue",
+   "resources/js/composables/useAppearance.ts",
+   "resources/js/pages/settings/Appearance.vue"
+  ]
+ },
+ {
+  "id": "ls-b-06",
+  "question": {
+   "question": "Which files reach toUrl through any chain of calls or component usage (three or more hops)?",
+   "class": "precise-semantics",
+   "shape": "callers-transitive",
+   "probe": "toUrl",
+   "declared_in": "resources/js/lib/utils.ts:10"
+  },
+  "candidate_files": [
+   "resources/js/app.ts",
+   "resources/js/components/AppHeader.vue",
+   "resources/js/components/AppSidebar.vue",
+   "resources/js/components/NavFooter.vue",
+   "resources/js/components/NavMain.vue",
+   "resources/js/components/NavUser.vue, UserMenuContent.vue, UserInfo.vue, Breadcrumbs.vue, AppLogo.vue",
+   "resources/js/composables/useCurrentUrl.ts",
+   "resources/js/layouts/AppLayout.vue",
+   "resources/js/layouts/AuthLayout.vue, layouts/auth/*.vue",
+   "resources/js/layouts/app/AppHeaderLayout.vue",
+   "resources/js/layouts/app/AppSidebarLayout.vue",
+   "resources/js/layouts/settings/Layout.vue",
+   "resources/js/pages/Dashboard.vue",
+   "resources/js/pages/Welcome.vue, Activity.vue, Inbox.vue, Onboarding.vue",
+   "resources/js/pages/auth/*.vue",
+   "resources/js/pages/settings/Appearance.vue",
+   "resources/js/pages/settings/Profile.vue",
+   "resources/js/pages/settings/Security.vue"
+  ]
+ },
+ {
+  "id": "ls-c-tests-01",
+  "question": {
+   "question": "Which test files exercise ThreadResolver, directly or through a route or service that calls it?",
+   "class": "tests-for",
+   "probe": "ThreadResolver"
+  },
+  "candidate_files": [
+   "tests/Feature/ActivityDashboardTest.php",
+   "tests/Feature/ApiEmailTest.php",
+   "tests/Feature/CloudflareSendTest.php",
+   "tests/Feature/CloudflareSuppressionSyncTest.php",
+   "tests/Feature/DashboardActionsTest.php",
+   "tests/Feature/DatabaseSeederSafetyTest.php",
+   "tests/Feature/InboundEmailTest.php",
+   "tests/Feature/InboxReplyTest.php",
+   "tests/Feature/InboxTest.php",
+   "tests/Feature/LarasendLaravelPackageTest.php",
+   "tests/Feature/SesWebhookTest.php, tests/Feature/OutboundWebhookDeliveryTest.php",
+   "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+   "tests/Feature/ThreadingTest.php"
+  ]
+ },
+ {
+  "id": "ls-c-tests-02",
+  "question": {
+   "question": "Which test files exercise SuppressionRemovalService, directly or through a route that calls it?",
+   "class": "tests-for",
+   "probe": "SuppressionRemovalService"
+  },
+  "candidate_files": [
+   "tests/Feature/CloudflareSuppressionSyncTest.php",
+   "tests/Feature/DashboardActionsTest.php",
+   "tests/Feature/SuppressionManagementTest.php"
+  ]
+ },
+ {
+  "id": "ls-e-01",
+  "question": {
+   "question": "If WebhookUrlGuard::isSafe changes its contract, which files must be re-read?",
+   "class": "change-impact",
+   "probe": "isSafe",
+   "declared_in": "app/Services/WebhookUrlGuard.php:11"
+  },
+  "candidate_files": [
+   "app/Http/Requests/StoreOnboardingRequest.php",
+   "app/Http/Requests/StoreWebhookEndpointRequest.php",
+   "app/Jobs/DeliverInboundWebhook.php",
+   "app/Jobs/DeliverWebhook.php",
+   "app/Rules/PublicWebhookUrl.php",
+   "app/Services/WebhookUrlGuard.php",
+   "tests/Pest.php",
+   "tests/Unit/WebhookUrlGuardTest.php"
+  ]
+ },
+ {
+  "id": "ls-e-02",
+  "question": {
+   "question": "If Suppression::normalizeEmail changes its contract, which files must be re-read?",
+   "class": "change-impact",
+   "probe": "normalizeEmail",
+   "declared_in": "app/Models/Suppression.php:44"
+  },
+  "candidate_files": [
+   "app/Http/Controllers/ActivityController.php, ActivityExportController.php",
+   "app/Http/Controllers/Api/EmailController.php",
+   "app/Http/Controllers/Api/SuppressionController.php",
+   "app/Http/Controllers/DashboardActionController.php",
+   "app/Http/Controllers/ThreadActionController.php",
+   "app/Http/Controllers/Webhooks/SesWebhookController.php",
+   "app/Jobs/SyncCloudflareSourceSuppressions.php",
+   "app/Jobs/SyncCloudflareSuppressions.php",
+   "app/Models/Suppression.php",
+   "app/Services/CloudflareApiClient.php",
+   "app/Services/EmailSendService.php",
+   "app/Services/SesEventNormalizer.php",
+   "app/Services/SuppressionRemovalService.php",
+   "routes/web.php, routes/api.php",
+   "tests/Feature/ActivityDashboardTest.php",
+   "tests/Feature/ApiEmailTest.php",
+   "tests/Feature/CloudflareSuppressionSyncTest.php",
+   "tests/Feature/DashboardActionsTest.php, CloudflareSendTest.php, InboxReplyTest.php",
+   "tests/Feature/SesWebhookTest.php",
+   "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+   "tests/Feature/SuppressionManagementTest.php",
+   "tests/Feature/ThreadingTest.php"
+  ]
+ },
+ {
+  "id": "ls-e-03",
+  "question": {
+   "question": "If MimeMessageBuilder::splitAddress changes its contract, which files must be re-read (full closure)?",
+   "class": "change-impact",
+   "probe": "splitAddress",
+   "declared_in": "app/Services/MimeMessageBuilder.php:84"
+  },
+  "candidate_files": [
+   "app/Http/Controllers/Api/EmailController.php",
+   "app/Http/Controllers/DashboardActionController.php",
+   "app/Http/Controllers/ThreadActionController.php",
+   "app/Services/EmailSendService.php",
+   "app/Services/MimeMessageBuilder.php",
+   "app/Services/Providers/CloudflareEmailProvider.php",
+   "resources/js/pages/Inbox.vue, Activity.vue",
+   "routes/api.php",
+   "routes/web.php",
+   "tests/Feature/ActivityDashboardTest.php",
+   "tests/Feature/ApiEmailTest.php",
+   "tests/Feature/CloudflareSendTest.php",
+   "tests/Feature/CloudflareSuppressionSyncTest.php",
+   "tests/Feature/DashboardActionsTest.php",
+   "tests/Feature/InboxReplyTest.php",
+   "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+   "tests/Feature/ThreadingTest.php"
+  ]
+ }
+]

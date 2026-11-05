@@ -130,6 +130,72 @@ checker (`human_check.checked_by: council`), the runner prints it beside every r
 and the oracle-versus-check disagreement rate is published as registered. The prompts,
 the reader answers and both judges' raw rulings are committed beside the truth file.
 
+### Check v2 — hardened, fixed before its first verdict (2026-11-05)
+
+The owner asked for the check above to be hardened before any arm is scored against
+it. No arm has been scored against any truth yet. Check v2 replaces the result of the
+check above; that result stays committed as a record (`check-v3-2026-11-05/`), and the
+oracle-versus-v1-versus-v2 differences are published. What changes:
+
+1. **One provider, one voice.** The reader stays the Anthropic reader above (its
+   answers are reused unchanged). The judges become OpenAI (`codex exec`, reasoning
+   `medium`) and Google (`agy`, `gemini-3.8-flash-medium`). No judge shares a provider
+   with the reader, and every file in the truth carries at least two providers' `IN`.
+2. **Blind judges.** A judge sees the question and, per candidate file, its path and the
+   source lines extracted from the checkout. It does not see who proposed a file
+   (reader, oracle, or neither), the reader's notes or conclusions, or the oracle's
+   status. Candidates are listed in a hashed order, not grouped by source.
+3. **Calibration, blind.** The 7 items the oracle answered completely and that are not
+   in the sample run through the same prompt, unmarked, each with its oracle files plus
+   up to three decoys: tracked files that contain the probe token but are not oracle
+   references. Judge precision and recall against that gold are published. Calibration
+   items never change the truth.
+4. **Class 3 is derived, not judged.** For model-table questions, the table is the
+   model's `$table` property or, without one, Laravel's convention (snake case, plural);
+   the answer is the model file plus every migration that creates, alters, renames or
+   drops that table via `Schema::` or a raw `ALTER TABLE` / `CREATE TABLE`. A migration
+   that only writes rows is not included. The 2-of-3 rule still runs on class 3 and
+   its disagreement with the derivation is published.
+5. **The rule is unchanged** for every other item: a file is in the truth when two of
+   the three say `IN`; a file a judge names as missing enters only on both judges' `IN`
+   in a second round. Cohen's kappa between the two judges is published.
+
+### Check v2.1 — closure items judged by edge, fixed after the v2 pass showed why
+
+Stated plainly: this change was made **after** the v2 rulings were read. The v2 pass
+showed that a blind judge cannot decide closure membership from local source lines — on
+`uo-e-01` ("full closure") one judge ruled 58 of 65 candidates `UNSURE` and the other
+`OUT` "because the file does not reference the target directly", which is true of every
+file beyond hop 1. The calibration items, all hop 1, did not expose it (recall 0.79 /
+0.85, precision 1.0). Still no arm has been scored against any truth.
+
+For the 14 items whose class or shape is a closure (`callers-transitive`, `tests-for`,
+`change-impact`):
+
+1. **The reader states edges, not files.** An Anthropic reader with the checkout lists
+   every edge it finds toward the target: `from_file:line` calls, uses, or routes to a
+   symbol declared at `to_file:line`.
+2. **The judges verify edges.** OpenAI and Google each see, per edge, the source lines at
+   both ends — blind, as in v2 — and rule `VALID`, `INVALID` or `UNSURE`. An edge stands
+   on the reader plus at least one judge `VALID` (two of three).
+   **Context round** (added after the first larasend edge rulings, before any context
+   ruling): an edge a judge rules `UNSURE` goes back to that judge once, with the lines
+   such replies asked for — the source file's imports, the declaration of the receiver
+   the call goes through, and route-group prefixes and route registration. Its second
+   ruling replaces its `UNSURE`; a second `UNSURE` stays `UNSURE`.
+   **Symbol level** (changed after a first computation at file level was read): a chain
+   continues only through the symbol an edge lands in, resolved by the oracle image's
+   `enclosing.php`; a file-scope line is its own node; TypeScript, Vue and Blade lines,
+   which it cannot resolve, stay at file level. At file level a reached class made every
+   caller of any of its methods one hop away — `uo-b-02` ("within two call hops") grew
+   from 6 files to 34 through classes reached at hop 1.
+3. **Membership is computed.** The answer is every file from which the target is
+   reachable over standing edges; for `tests-for`, the test files among them; where the
+   question states a hop limit, only files within it.
+
+Every other item keeps its v2 result. The v2 closure rulings stay committed beside the
+v2.1 ones, and both truths are published.
+
 ## Arms (step 2.3)
 
 **A–E** (no fused arm, K4):

@@ -1,0 +1,184 @@
+[
+ {
+  "id": "uo-c-route-01",
+  "answer_files": [
+   {"path": "bootstrap/providers.php", "evidence": ["bootstrap/providers.php:33"], "reason": "registers AdminApiServiceProvider (entry point that makes the route exist)"},
+   {"path": "packages/Webkul/AdminApi/src/Providers/AdminApiServiceProvider.php", "evidence": ["packages/Webkul/AdminApi/src/Providers/AdminApiServiceProvider.php:121", "packages/Webkul/AdminApi/src/Providers/AdminApiServiceProvider.php:184-186"], "reason": "registerApiRoutes(): 'api' prefix + group(Routes/admin-api.php)"},
+   {"path": "packages/Webkul/AdminApi/src/Routes/admin-api.php", "evidence": ["packages/Webkul/AdminApi/src/Routes/admin-api.php:6", "packages/Webkul/AdminApi/src/Routes/admin-api.php:24"], "reason": "'v1/rest' prefix group, require 'V1/catalog-routes.php'"},
+   {"path": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php", "evidence": ["packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php:127", "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php:130"], "reason": "prefix('products') + Route::post('', 'store') on SimpleProductController"},
+   {"path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php", "evidence": ["packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php:70", "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php:111"], "reason": "store() calls $this->productRepository->create($data) with type=simple"},
+   {"path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php", "evidence": ["packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php:35", "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php:398", "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php:126"], "reason": "parent class: injects the ProductRepository used by store(); createOrUpdateVariant()/updateProduct() also called from store() on the same request"},
+   {"path": "packages/Webkul/Product/src/Repositories/ProductRepository.php", "evidence": ["packages/Webkul/Product/src/Repositories/ProductRepository.php:33-36", "packages/Webkul/Product/src/Repositories/ProductRepository.php:43-47"], "reason": "create() resolves config('product_types.<type>.class') and calls its create(); model() returns Contracts\\Product"},
+   {"path": "packages/Webkul/Product/src/Config/product_types.php", "evidence": ["packages/Webkul/Product/src/Config/product_types.php:9-14"], "reason": "maps 'simple' to Type\\Simple (the config indirection the repository resolves)"},
+   {"path": "packages/Webkul/Product/src/Type/Simple.php", "evidence": ["packages/Webkul/Product/src/Type/Simple.php:5"], "reason": "resolved type class; empty subclass of AbstractType"},
+   {"path": "packages/Webkul/Product/src/Type/AbstractType.php", "evidence": ["packages/Webkul/Product/src/Type/AbstractType.php:109-118"], "reason": "create(): productRepository->getModel()->fill($data) ... $product->save()"},
+   {"path": "packages/Webkul/Product/src/Contracts/Product.php", "evidence": ["packages/Webkul/Product/src/Repositories/ProductRepository.php:13"], "reason": "contract returned by model(); bound to the concrete model by concord"},
+   {"path": "packages/Webkul/Product/src/Providers/ModuleServiceProvider.php", "evidence": ["packages/Webkul/Product/src/Providers/ModuleServiceProvider.php:21", "config/concord.php:24"], "reason": "concord model registration binding Contracts\\Product -> Models\\Product"},
+   {"path": "packages/Webkul/Product/src/Models/Product.php", "evidence": ["packages/Webkul/Product/src/Models/Product.php:42"], "reason": "target: Product model implements ProductContract"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Product/src/Providers/ProductServiceProvider.php", "reason": "mergeConfigFrom product_types (line 106) is config plumbing, not on the request path; include only under a very broad reading"},
+   {"path": "config/concord.php", "reason": "lists ModuleServiceProvider; boot-time registration, borderline like bootstrap/providers.php"},
+   {"path": "packages/Webkul/Product/src/Models/ProductProxy.php", "reason": "proxy class, not used on this path"},
+   {"path": "packages/Webkul/Product/src/Type/Configurable.php", "reason": "store() sets type=simple; Configurable only reached via configurable-products routes"},
+   {"path": "packages/Webkul/Product/src/Type/VariantGroup.php", "reason": "internal type; not resolved for type=simple"},
+   {"path": "packages/Webkul/Core/src/Eloquent/Repository.php", "reason": "base repository providing getModel()/makeModel(); generic framework plumbing, borderline"},
+   {"path": "packages/Webkul/AdminApi/src/Http/Requests/Catalog/StoreSimpleProductRequest.php", "reason": "validation FormRequest, does not reach the model"}
+  ],
+  "open_followed": "Oracle produced nothing (human-required). Followed route prefixes api -> v1/rest -> products through the provider, admin-api.php require, and catalog-routes.php; followed config('product_types.simple.class') to Type\\Simple and the Contracts\\Product binding via concord ModuleServiceProvider to Models\\Product.",
+  "answerable_as_registered": true,
+  "notes": "Core chain (basis): provider, admin-api.php, V1/catalog-routes.php, SimpleProductController, ProductRepository, AbstractType, Models/Product = 7 files. The 13-file set adds the indirection hops a strict file-level trace needs (parent controller, product_types config, Simple, contract, concord ModuleServiceProvider, bootstrap/providers.php). Graders can treat the last group as tolerated extras.",
+  "confidence": "medium"
+ },
+ {
+  "id": "uo-c-route-02",
+  "answer_files": [
+   {"path": "packages/Webkul/Admin/src/Providers/AdminServiceProvider.php", "evidence": ["packages/Webkul/Admin/src/Providers/AdminServiceProvider.php:45"], "reason": "loads Routes/web.php"},
+   {"path": "packages/Webkul/Admin/src/Routes/web.php", "evidence": ["packages/Webkul/Admin/src/Routes/web.php:11"], "reason": "require 'catalog-routes.php'"},
+   {"path": "packages/Webkul/Admin/src/Routes/catalog-routes.php", "evidence": ["packages/Webkul/Admin/src/Routes/catalog-routes.php:187", "packages/Webkul/Admin/src/Routes/catalog-routes.php:200"], "reason": "Route::post('copy/{id}', 'copy')->name('admin.catalog.products.copy') on ProductController"},
+   {"path": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php", "evidence": ["packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1362", "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1365"], "reason": "copy(): $this->productRepository->copy($id)"},
+   {"path": "packages/Webkul/Product/src/Repositories/ProductRepository.php", "evidence": ["packages/Webkul/Product/src/Repositories/ProductRepository.php:161-171"], "reason": "copy(): findOrFail($id) returns the Product model; then $product->getTypeInstance()->copy()"},
+   {"path": "packages/Webkul/Product/src/Models/Product.php", "evidence": ["packages/Webkul/Product/src/Models/Product.php:123-130"], "reason": "target; getTypeInstance() resolves product_types class"},
+   {"path": "packages/Webkul/Product/src/Type/AbstractType.php", "evidence": ["packages/Webkul/Product/src/Type/AbstractType.php:578-597"], "reason": "copy(): $this->product->replicate() ... save()"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Product/src/Type/Configurable.php", "reason": "overrides copyRelationships (line 494); reached only when the copied product is configurable — runtime-dependent, extra hop beyond the model"},
+   {"path": "packages/Webkul/Product/src/Type/Simple.php", "reason": "possible runtime type class; empty subclass, not needed to reach Product"},
+   {"path": "packages/Webkul/Product/src/Config/product_types.php", "reason": "config indirection after the model is already reached"},
+   {"path": "packages/Webkul/Product/src/Contracts/Product.php", "reason": "findOrFail returns the model; contract binding is an alternative hop, borderline"},
+   {"path": "packages/Webkul/Product/src/Providers/ModuleServiceProvider.php", "reason": "concord binding; borderline as in uo-c-route-01"},
+   {"path": "bootstrap/providers.php", "reason": "registers AdminServiceProvider; boot plumbing"}
+  ],
+  "open_followed": "Followed AdminServiceProvider -> web.php require -> catalog-routes.php -> ProductController::copy -> ProductRepository::copy (findOrFail yields Product) -> Product::getTypeInstance -> AbstractType::copy.",
+  "answerable_as_registered": true,
+  "notes": "The model is reached at ProductRepository:163-165 already; Product.php and AbstractType.php are both on the path per the basis. Answer set 7 files (provider+web.php are the route-registration hops the basis omits).",
+  "confidence": "high"
+ },
+ {
+  "id": "uo-c-route-03",
+  "answer_files": [
+   {"path": "packages/Webkul/Webhook/src/Providers/WebhookServiceProvider.php", "evidence": ["packages/Webkul/Webhook/src/Providers/WebhookServiceProvider.php:19"], "reason": "Route::middleware('web')->group(Routes/web.php)"},
+   {"path": "packages/Webkul/Webhook/src/Routes/web.php", "evidence": ["packages/Webkul/Webhook/src/Routes/web.php:16"], "reason": "Route::post('test', 'test')->name('webhook.test') on WebhookController"},
+   {"path": "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php", "evidence": ["packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:140", "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:154"], "reason": "test() calls SafeWebhookUrl::httpOptions($url)"},
+   {"path": "packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php", "evidence": ["packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php:93"], "reason": "target: public static function httpOptions"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Webhook/src/Services/WebhookService.php", "reason": "also calls httpOptions (line 205) but is not reached from WebhookController::test"},
+   {"path": "bootstrap/providers.php", "reason": "registers WebhookServiceProvider (line 50); boot plumbing"}
+  ],
+  "open_followed": "Route registered by WebhookServiceProvider boot(); controller test() calls the static directly.",
+  "answerable_as_registered": true,
+  "notes": "Answer set 4 files; whether the target file SafeWebhookUrl.php counts as a 'through' file depends on the grading convention (basis omits it).",
+  "confidence": "high"
+ },
+ {
+  "id": "uo-c-model-01",
+  "answer_files": [
+   {"path": "packages/Webkul/AdminApi/src/Models/Apikey.php", "evidence": ["packages/Webkul/AdminApi/src/Models/Apikey.php:25"], "reason": "protected $table = 'api_keys'"},
+   {"path": "packages/Webkul/AdminApi/src/Database/Migrations/2024_07_10_112208_api_keys.php", "evidence": ["packages/Webkul/AdminApi/src/Database/Migrations/2024_07_10_112208_api_keys.php:14"], "reason": "Schema::create('api_keys') — the only schema-defining/altering migration"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Measurement/src/Database/Migrations/2026_07_29_120000_add_api_measurement_unit_permissions.php", "reason": "DB::table('api_keys') row updates (lines 53,69): data migration, not a schema alteration"},
+   {"path": "packages/Webkul/AdminApi/src/Database/Migrations/2026_07_20_100200_migrate_existing_api_keys_to_robots.php", "reason": "name mentions api keys but does not reference the api_keys table literal"},
+   {"path": "packages/Webkul/AdminApi/src/Database/Migrations/2026_07_27_100100_drop_system_api_role.php", "reason": "no api_keys reference"}
+  ],
+  "open_followed": "Table is api_keys (explicit $table; convention would give 'apikeys'). Grepped all packages and database/ for 'api_keys'.",
+  "answerable_as_registered": true,
+  "notes": "Table: api_keys. If 'alter' is read to include data-modifying migrations, add the Measurement migration.",
+  "confidence": "high"
+ },
+ {
+  "id": "uo-c-model-02",
+  "answer_files": [
+   {"path": "packages/Webkul/Product/src/Models/VariantStructureAxis.php", "evidence": ["packages/Webkul/Product/src/Models/VariantStructureAxis.php:18"], "reason": "no $table / #[Table]; Laravel convention pluralizes axis->axes giving variant_structure_axes"},
+   {"path": "packages/Webkul/Product/src/Database/Migrations/2026_07_11_000001_create_variant_structures_tables.php", "evidence": ["packages/Webkul/Product/src/Database/Migrations/2026_07_11_000001_create_variant_structures_tables.php:23"], "reason": "Schema::create('variant_structure_axes')"},
+   {"path": "packages/Webkul/Product/src/Database/Migrations/2026_07_14_210000_add_level_to_variant_structure_axes_table.php", "evidence": ["packages/Webkul/Product/src/Database/Migrations/2026_07_14_210000_add_level_to_variant_structure_axes_table.php:15"], "reason": "Schema::table('variant_structure_axes') adds level column"},
+   {"path": "packages/Webkul/Product/src/Database/Migrations/2026_07_15_124500_drop_legacy_variant_structure_axis_position_unique.php", "evidence": ["packages/Webkul/Product/src/Database/Migrations/2026_07_15_124500_drop_legacy_variant_structure_axis_position_unique.php:26"], "reason": "Schema::table('variant_structure_axes') drops legacy unique index"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Product/src/Database/Migrations/2026_07_20_000001_add_variant_structure_id_to_products_table.php", "reason": "alters products, not variant_structure_axes"},
+   {"path": "packages/Webkul/Installer/src/Database/Seeders/Demo/DemoProductSeeder.php", "reason": "seeder writing rows, not a migration"},
+   {"path": "packages/Webkul/Admin/src/DataGrids/Catalog/VariantStructureDataGrid.php", "reason": "queries the table, not a migration"}
+  ],
+  "open_followed": "Resolved the implicit table name via Laravel's inflector (axis -> axes); grepped all migrations for the table name.",
+  "answerable_as_registered": true,
+  "notes": "Basis lists only the create migration; two later migrations alter the table. Table: variant_structure_axes.",
+  "confidence": "high"
+ },
+ {
+  "id": "uo-c-model-03",
+  "answer_files": [
+   {"path": "packages/Webkul/Webhook/src/Models/WebhookLog.php", "evidence": ["packages/Webkul/Webhook/src/Models/WebhookLog.php:18"], "reason": "#[Table(name: 'webhook_logs')] attribute (class at line 19)"},
+   {"path": "packages/Webkul/Webhook/src/Database/Migrations/2025_09_20_101519_webhook_logs.php", "evidence": ["packages/Webkul/Webhook/src/Database/Migrations/2025_09_20_101519_webhook_logs.php:11"], "reason": "Schema::create('webhook_logs')"},
+   {"path": "packages/Webkul/Webhook/src/Database/Migrations/2026_05_12_120000_make_user_nullable_on_webhook_logs.php", "evidence": ["packages/Webkul/Webhook/src/Database/Migrations/2026_05_12_120000_make_user_nullable_on_webhook_logs.php:11"], "reason": "Schema::table('webhook_logs') makes user nullable"},
+   {"path": "packages/Webkul/Webhook/src/Database/Migrations/2026_07_20_120100_add_webhook_columns_to_webhook_logs.php", "evidence": ["packages/Webkul/Webhook/src/Database/Migrations/2026_07_20_120100_add_webhook_columns_to_webhook_logs.php:12"], "reason": "Schema::table('webhook_logs') adds columns"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Webhook/src/Database/Migrations/2026_07_20_120200_seed_default_webhook.php", "reason": "DB::table('webhook_logs')->update(webhook_id) (lines 49,74): data backfill, not schema"}
+  ],
+  "open_followed": "Only one WebhookLog model exists outside vendor; grepped all migrations for 'webhook_logs'.",
+  "answerable_as_registered": true,
+  "notes": "Table: webhook_logs. If data migrations count as 'alter', add seed_default_webhook.php.",
+  "confidence": "high"
+ },
+ {
+  "id": "uo-e-x-01",
+  "answer_files": [
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php:84"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/attributes/create.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/attributes/create.blade.php:73"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php:705"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/categories/create.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/categories/create.blade.php:60"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/categories/partials/form.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/categories/partials/form.blade.php:32"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/categories/field/create.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/categories/field/create.blade.php:76", "packages/Webkul/Admin/src/Resources/views/catalog/categories/field/create.blade.php:568"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/categories/field/edit.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/categories/field/edit.blade.php:641"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/attributegroups/create.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/attributegroups/create.blade.php:73"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/families/index.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/families/index.blade.php:86"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/components/associations/field-builder.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/components/associations/field-builder.blade.php:385"], "reason": "v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/components/catalog/quick-create-modal.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/components/catalog/quick-create-modal.blade.php:100"], "reason": "v-code"},
+   {"path": "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/create.blade.php", "evidence": ["packages/Webkul/ProductPassport/src/Resources/views/admin/templates/create.blade.php:71"], "reason": "v-code (other package, same admin Vue app)"},
+   {"path": "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php", "evidence": ["packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php:372", "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php:456"], "reason": "v-code"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/edit.blade.php", "reason": "only @include's partials/builder.blade.php (line 31); no direct v-code"},
+   {"path": "packages/Webkul/Admin/src/Resources/assets/js/utils/code.js", "reason": "defines sanitizeCode; JS, not a Blade template"},
+   {"path": "packages/Webkul/Admin/src/Resources/assets/js/directives/code.js", "reason": "JS directive, not Blade"},
+   {"path": "packages/Webkul/Admin/src/Resources/assets/js/app.js", "reason": "JS registration (lines 294, 300), not Blade"}
+  ],
+  "open_followed": "Directive registered at app.js:294 as 'code'; grepped every *.blade.php under packages/ and resources/ for v-code not followed by '-' (excludes v-code-generator). $sanitizeCode has zero Blade/PHP users. Note utils/code.js:12 generateCode calls sanitizeCode, so v-code-generator / $generateCode users are transitively affected too; every v-code-generator Blade user is already in this set, so the transitive reading yields the same 13 files.",
+  "answerable_as_registered": true,
+  "notes": "13 files. $sanitizeCode global: no Blade users. Includes ProductPassport views (same admin Vue app).",
+  "confidence": "high"
+ },
+ {
+  "id": "uo-e-x-02",
+  "answer_files": [
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php:67"], "reason": "v-code-generator"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php:684"], "reason": ":v-code-generator on x-admin::form.control-group.control (Blade component attribute that renders the directive for the requested locale)"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/categories/field/edit.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/categories/field/edit.blade.php:660"], "reason": ":v-code-generator on Blade component, same pattern"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/families/index.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/catalog/families/index.blade.php:69"], "reason": "v-code-generator"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/components/associations/field-builder.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/components/associations/field-builder.blade.php:364"], "reason": "v-code-generator"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/components/catalog/quick-create-modal.blade.php", "evidence": ["packages/Webkul/Admin/src/Resources/views/components/catalog/quick-create-modal.blade.php:75"], "reason": "v-code-generator"},
+   {"path": "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/create.blade.php", "evidence": ["packages/Webkul/ProductPassport/src/Resources/views/admin/templates/create.blade.php:54"], "reason": "v-code-generator"},
+   {"path": "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php", "evidence": ["packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php:356", "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/partials/builder.blade.php:440"], "reason": "v-code-generator"}
+  ],
+  "oracle_files": [],
+  "excluded": [
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/attributes/create.blade.php", "reason": "uses v-code only, not v-code-generator"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/categories/create.blade.php", "reason": "uses v-code only"},
+   {"path": "packages/Webkul/ProductPassport/src/Resources/views/admin/templates/edit.blade.php", "reason": "only @include's builder partial"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/components/form/control-group/control.blade.php", "reason": "forwards the attribute bag for the two :v-code-generator call sites but does not name the directive; borderline under a render-time reading"},
+   {"path": "packages/Webkul/Admin/src/Resources/views/catalog/associations/types/create.blade.php (line 5)", "reason": "line 5 is a comment mentioning v-code-generator; the file is included because of line 67"}
+  ],
+  "open_followed": "Directive registered at app.js:295 as 'code-generator'; grepped all Blade files for v-code-generator (plain and ':'-bound). $generateCode has zero Blade/PHP users.",
+  "answerable_as_registered": true,
+  "notes": "8 files. The two ':v-code-generator' sites are Blade component props whose value is a PHP expression; they emit the directive at render time, so they count.",
+  "confidence": "high"
+ }
+]

@@ -1,0 +1,2532 @@
+[
+ {
+  "id": "uo-c-tests-02",
+  "target": {
+   "file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+   "line": 64,
+   "symbol": "WebhookService::sendBatchForBulkEdit"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 90,
+    "to_symbol": "SendBulkEditProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 25,
+    "kind": "dispatch",
+    "note": "dispatch(new SendBulkEditProductWebhook(...))->onQueue(webhooks)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 32,
+    "to_symbol": "Listeners\\Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.bulk.edit.after', [Product::class, 'afterBulkEdit'])"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 271,
+    "to_symbol": "event 'catalog.product.bulk.edit.after' (listener registration)",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 32,
+    "kind": "dispatch",
+    "note": "Event::dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch",
+    "note": "BulkProductUpdate::dispatch (queued job)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 248,
+    "to_symbol": "ProductBulkEditController::handleBulkSave",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 328,
+    "kind": "route",
+    "note": "admin.catalog.products.bulk-edit.save"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "from_line": 26,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call",
+    "note": "called on subclass ChunkedWebhookService; method inherited"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 9,
+    "to_symbol": "WebhookService",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 22,
+    "kind": "use",
+    "note": "class ChunkedWebhookService extends WebhookService"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php",
+    "from_line": 139,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookQueuedTest.php",
+    "from_line": 23,
+    "to_symbol": "Listeners\\Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake: job is pushed, not executed"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookQueuedTest.php",
+    "from_line": 25,
+    "to_symbol": "SendBulkEditProductWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 11,
+    "kind": "use"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 58,
+    "to_symbol": "Listeners\\Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake: job is pushed, not executed"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 61,
+    "to_symbol": "SendBulkEditProductWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 11,
+    "kind": "use"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 36,
+    "to_symbol": "SendBulkEditProductWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 11,
+    "kind": "use"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditTest.php",
+    "from_line": 95,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "Event::fake on bulk.edit.after in this test; static chain only"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 31,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "Queue::fake on SendBulkEditProductWebhook; asserts it is pushed"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/Catalog/ProductBulkEditAclTest.php",
+    "from_line": 28,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool; ACL test"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/WriteRouteBypassRegressionTest.php",
+    "from_line": 196,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool; ACL regression test"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditMediaPathTest.php",
+    "from_line": 40,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditPriceValidationTest.php",
+    "from_line": 17,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   }
+  ],
+  "no_path": []
+ },
+ {
+  "id": "uo-c-tests-03",
+  "target": {
+   "file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+   "line": 184,
+   "symbol": "ProductRepository::isUniqueVariantForProduct"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 301,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "inside guardVariantLevelWrite (231)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "from_line": 199,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "inside AbstractType::update (131)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 61,
+    "to_symbol": "AbstractType::update",
+    "to_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "to_line": 131,
+    "kind": "call",
+    "note": "polymorphic getTypeInstance()->update; inside ProductRepository::update (57)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 148,
+    "to_symbol": "AbstractType::update",
+    "to_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "to_line": 131,
+    "kind": "call",
+    "note": "parent::update in Configurable::update"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 16,
+    "to_symbol": "AbstractType",
+    "to_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "to_line": 23,
+    "kind": "use",
+    "note": "class Configurable extends AbstractType"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 304,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in updateVariantGroupValues"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 450,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in updateVariant"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1280,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in ProductController::update (1269)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1585,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in checkVariantUniqueness (1581)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1333,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 214,
+    "to_symbol": "ProductController::update",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 1269,
+    "kind": "route",
+    "note": "admin.catalog.products.update"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 226,
+    "to_symbol": "ProductController::checkVariantUniqueness",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 1581,
+    "kind": "route",
+    "note": "admin.catalog.products.check-variant"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 483,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in validateVariantLevelValues (439)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 339,
+    "to_symbol": "ProductBulkEditController::validateVariantLevelValues",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 439,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 248,
+    "to_symbol": "ProductBulkEditController::handleBulkSave",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 328,
+    "kind": "route",
+    "note": "admin.catalog.products.bulk-edit.save"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 308,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in persistProduct (287)"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 257,
+    "to_symbol": "BulkProductUpdate::persistProduct",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 287,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 209,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in updateProduct (126)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 309,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in patchProduct (261)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 487,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in createVariantUnderGroup (428)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 589,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in validateVariantConfiguration (578)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 403,
+    "to_symbol": "ProductController::createVariantUnderGroup",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 428,
+    "kind": "call",
+    "note": "in createOrUpdateVariant (398)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 407,
+    "to_symbol": "ProductController::validateVariantConfiguration",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 578,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 16,
+    "to_symbol": "AdminApi ProductController",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 27,
+    "kind": "use",
+    "note": "extends ProductController"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 105,
+    "to_symbol": "ProductController::createOrUpdateVariant",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 398,
+    "kind": "call",
+    "note": "in store (70)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 115,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in store (70)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 154,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in update (129)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 186,
+    "to_symbol": "ProductController::patchProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 261,
+    "kind": "call",
+    "note": "in partialUpdate (168)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 23,
+    "to_symbol": "AdminApi ProductController",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 27,
+    "kind": "use",
+    "note": "extends ProductController"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 216,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in storeVariantGroup (179)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 101,
+    "to_symbol": "ConfigurableProductController::storeVariantGroup",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 179,
+    "kind": "call",
+    "note": "in store (97)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 161,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in store (97)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 284,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in update (255)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 316,
+    "to_symbol": "ProductController::patchProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 261,
+    "kind": "call",
+    "note": "in partialUpdate (298)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 130,
+    "to_symbol": "SimpleProductController::store",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "to_line": 70,
+    "kind": "route",
+    "note": "admin.api.products.store"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 131,
+    "to_symbol": "SimpleProductController::update",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "to_line": 129,
+    "kind": "route",
+    "note": "admin.api.products.update"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 133,
+    "to_symbol": "SimpleProductController::partialUpdate",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "to_line": 168,
+    "kind": "route",
+    "note": "admin.api.products.patch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 151,
+    "to_symbol": "ConfigurableProductController::store",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 97,
+    "kind": "route",
+    "note": "admin.api.configurable_products.store"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 152,
+    "to_symbol": "ConfigurableProductController::update",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 255,
+    "kind": "route",
+    "note": "admin.api.configurable_products.update"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 154,
+    "to_symbol": "ConfigurableProductController::partialUpdate",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 298,
+    "kind": "route",
+    "note": "admin.api.configurable_products.patch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 3139,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in validateVariantUniqueness (3100)"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 3159,
+    "to_symbol": "Importer::validateVariantUniqueness",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 3100,
+    "kind": "call",
+    "note": "in isUniqueVariation (3153)"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1303,
+    "to_symbol": "Importer::isUniqueVariation",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 3153,
+    "kind": "call",
+    "note": "in validateRow (1143)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryTest.php",
+    "from_line": 164,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php",
+    "from_line": 31,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php",
+    "from_line": 63,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php",
+    "from_line": 43,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php",
+    "from_line": 109,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductCheckVariantUniquenessTest.php",
+    "from_line": 44,
+    "to_symbol": "route admin.catalog.products.check-variant",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 226,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantCombinationExistsTest.php",
+    "from_line": 78,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductTest.php",
+    "from_line": 346,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php",
+    "from_line": 325,
+    "to_symbol": "Product\\Importer::validateRow",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 1143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php",
+    "from_line": 186,
+    "to_symbol": "Product\\Importer::validateRow",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 1143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php",
+    "from_line": 107,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php",
+    "from_line": 139,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php",
+    "from_line": 210,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php",
+    "from_line": 312,
+    "to_symbol": "route admin.api.configurable_products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 152,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php",
+    "from_line": 351,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 58,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 189,
+    "to_symbol": "route admin.api.configurable_products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 152,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 199,
+    "to_symbol": "route admin.api.configurable_products.patch",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 154,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 224,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/FileAttributeActiveContentTest.php",
+    "from_line": 43,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductAjaxValidationMessageTest.php",
+    "from_line": 18,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductEditLazyGroupsTest.php",
+    "from_line": 379,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductLinksViewTest.php",
+    "from_line": 288,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductMediaReplaceTest.php",
+    "from_line": 45,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductValuesTest.php",
+    "from_line": 57,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductZeroAttributeValueTest.php",
+    "from_line": 19,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/WebhookVariantEventTest.php",
+    "from_line": 55,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/WriteRouteBypassRegressionTest.php",
+    "from_line": 13,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditTest.php",
+    "from_line": 95,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 31,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/Catalog/ProductBulkEditAclTest.php",
+    "from_line": 28,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/WriteRouteBypassRegressionTest.php",
+    "from_line": 196,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditMediaPathTest.php",
+    "from_line": 40,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditPriceValidationTest.php",
+    "from_line": 17,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Acl/ApiAclTest.php",
+    "from_line": 455,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Acl/ConfigurableProductScopeBypassTest.php",
+    "from_line": 40,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiConfigurableProductTest.php",
+    "from_line": 142,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiConfigurableProductTest.php",
+    "from_line": 248,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiFamilyVariantStructureTest.php",
+    "from_line": 1300,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiProductAssociationSyncTest.php",
+    "from_line": 62,
+    "to_symbol": "route admin.api.products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 131,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiProductTest.php",
+    "from_line": 114,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiRichAssociationTest.php",
+    "from_line": 86,
+    "to_symbol": "route admin.api.products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 131,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiSimpleProductAxisGuardTest.php",
+    "from_line": 44,
+    "to_symbol": "route admin.api.products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 131,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantDetachmentTest.php",
+    "from_line": 53,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementApiCoverageTest.php",
+    "from_line": 73,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductZeroAttributeValueTest.php",
+    "from_line": 66,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/MeasurementDecimalStrategyTest.php",
+    "from_line": 85,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/ProductMeasurementValidationTest.php",
+    "from_line": 94,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementLifecycleTest.php",
+    "from_line": 44,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementScopeTest.php",
+    "from_line": 197,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementValidationMatrixTest.php",
+    "from_line": 112,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationCopyTest.php",
+    "from_line": 28,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationDualWriteTest.php",
+    "from_line": 21,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationRichSaveTest.php",
+    "from_line": 75,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationSyncResilienceTest.php",
+    "from_line": 41,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Services/VariantValueResolverTest.php",
+    "from_line": 205,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/ConfigurableUpdateTreeTest.php",
+    "from_line": 56,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/ConfigurableUpdateVariantQueryBudgetTest.php",
+    "from_line": 70,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/ConfigurableVariantLevelAttributeTest.php",
+    "from_line": 132,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantNodeCreateTest.php",
+    "reason": "only hits variant_node.create -> ProductController::createVariantNode -> Configurable::createVariantGroup/createVariant, which create via getModel()->create and never reach guardVariantLevelWrite or isUniqueVariantForProduct"
+   },
+   {
+    "path": "packages/Webkul/DataTransfer/tests/Feature/ProductAssociationImportTest.php",
+    "reason": "uses the ProductAssociation\\Importer (separate class extending AbstractImporter), which never touches ProductRepository::update or isUniqueVariantForProduct"
+   },
+   {
+    "path": "(every other test that PUTs admin.catalog.products.update or saves a product through AbstractType::update)",
+    "reason": "placeholder entry, not a file; expanded into concrete test files with edges above"
+   }
+  ]
+ },
+ {
+  "id": "uo-e-02",
+  "target": {
+   "file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+   "line": 184,
+   "symbol": "ProductRepository::isUniqueVariantForProduct"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 301,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "inside guardVariantLevelWrite (231)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "from_line": 199,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "inside AbstractType::update (131)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 61,
+    "to_symbol": "AbstractType::update",
+    "to_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "to_line": 131,
+    "kind": "call",
+    "note": "polymorphic getTypeInstance()->update; inside ProductRepository::update (57)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 148,
+    "to_symbol": "AbstractType::update",
+    "to_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "to_line": 131,
+    "kind": "call",
+    "note": "parent::update in Configurable::update"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 16,
+    "to_symbol": "AbstractType",
+    "to_file": "packages/Webkul/Product/src/Type/AbstractType.php",
+    "to_line": 23,
+    "kind": "use",
+    "note": "class Configurable extends AbstractType"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 304,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in updateVariantGroupValues"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 450,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in updateVariant"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1280,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in ProductController::update (1269)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1585,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in checkVariantUniqueness (1581)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1333,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 214,
+    "to_symbol": "ProductController::update",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 1269,
+    "kind": "route",
+    "note": "admin.catalog.products.update"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 226,
+    "to_symbol": "ProductController::checkVariantUniqueness",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "to_line": 1581,
+    "kind": "route",
+    "note": "admin.catalog.products.check-variant"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 483,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in validateVariantLevelValues (439)"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 339,
+    "to_symbol": "ProductBulkEditController::validateVariantLevelValues",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 439,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "from_line": 248,
+    "to_symbol": "ProductBulkEditController::handleBulkSave",
+    "to_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "to_line": 328,
+    "kind": "route",
+    "note": "admin.catalog.products.bulk-edit.save"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 308,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in persistProduct (287)"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 257,
+    "to_symbol": "BulkProductUpdate::persistProduct",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 287,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 209,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in updateProduct (126)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 309,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call",
+    "note": "in patchProduct (261)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 487,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in createVariantUnderGroup (428)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 589,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in validateVariantConfiguration (578)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 403,
+    "to_symbol": "ProductController::createVariantUnderGroup",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 428,
+    "kind": "call",
+    "note": "in createOrUpdateVariant (398)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 407,
+    "to_symbol": "ProductController::validateVariantConfiguration",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 578,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 16,
+    "to_symbol": "AdminApi ProductController",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 27,
+    "kind": "use",
+    "note": "extends ProductController"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 105,
+    "to_symbol": "ProductController::createOrUpdateVariant",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 398,
+    "kind": "call",
+    "note": "in store (70)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 115,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in store (70)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 154,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in update (129)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 186,
+    "to_symbol": "ProductController::patchProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 261,
+    "kind": "call",
+    "note": "in partialUpdate (168)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 23,
+    "to_symbol": "AdminApi ProductController",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 27,
+    "kind": "use",
+    "note": "extends ProductController"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 216,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in storeVariantGroup (179)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 101,
+    "to_symbol": "ConfigurableProductController::storeVariantGroup",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 179,
+    "kind": "call",
+    "note": "in store (97)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 161,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in store (97)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 284,
+    "to_symbol": "ProductController::updateProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 126,
+    "kind": "call",
+    "note": "in update (255)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 316,
+    "to_symbol": "ProductController::patchProduct",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "to_line": 261,
+    "kind": "call",
+    "note": "in partialUpdate (298)"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 130,
+    "to_symbol": "SimpleProductController::store",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "to_line": 70,
+    "kind": "route",
+    "note": "admin.api.products.store"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 131,
+    "to_symbol": "SimpleProductController::update",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "to_line": 129,
+    "kind": "route",
+    "note": "admin.api.products.update"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 133,
+    "to_symbol": "SimpleProductController::partialUpdate",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "to_line": 168,
+    "kind": "route",
+    "note": "admin.api.products.patch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 151,
+    "to_symbol": "ConfigurableProductController::store",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 97,
+    "kind": "route",
+    "note": "admin.api.configurable_products.store"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 152,
+    "to_symbol": "ConfigurableProductController::update",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 255,
+    "kind": "route",
+    "note": "admin.api.configurable_products.update"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "from_line": 154,
+    "to_symbol": "ConfigurableProductController::partialUpdate",
+    "to_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "to_line": 298,
+    "kind": "route",
+    "note": "admin.api.configurable_products.patch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 3139,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call",
+    "note": "in validateVariantUniqueness (3100)"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 3159,
+    "to_symbol": "Importer::validateVariantUniqueness",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 3100,
+    "kind": "call",
+    "note": "in isUniqueVariation (3153)"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1303,
+    "to_symbol": "Importer::isUniqueVariation",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 3153,
+    "kind": "call",
+    "note": "in validateRow (1143)"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryTest.php",
+    "from_line": 164,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php",
+    "from_line": 31,
+    "to_symbol": "ProductRepository::isUniqueVariantForProduct",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 184,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryGuardVariantLevelWriteTest.php",
+    "from_line": 63,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php",
+    "from_line": 43,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/AbstractTypeVariantGuardTest.php",
+    "from_line": 109,
+    "to_symbol": "ProductRepository::guardVariantLevelWrite",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 231,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductCheckVariantUniquenessTest.php",
+    "from_line": 44,
+    "to_symbol": "route admin.catalog.products.check-variant",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 226,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductVariantCombinationExistsTest.php",
+    "from_line": 78,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductTest.php",
+    "from_line": 346,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/DataTransfer/ImageZipDocumentUploadTest.php",
+    "from_line": 325,
+    "to_symbol": "Product\\Importer::validateRow",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 1143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php",
+    "from_line": 186,
+    "to_symbol": "Product\\Importer::validateRow",
+    "to_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "to_line": 1143,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/ProductMediaExportImportTest.php",
+    "from_line": 107,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/tests/Feature/BulkProductUpdateVariantLevelTest.php",
+    "from_line": 139,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php",
+    "from_line": 210,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php",
+    "from_line": 312,
+    "to_symbol": "route admin.api.configurable_products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 152,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantGroupProductTest.php",
+    "from_line": 351,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 58,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 189,
+    "to_symbol": "route admin.api.configurable_products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 152,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 199,
+    "to_symbol": "route admin.api.configurable_products.patch",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 154,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantStructureReferenceTest.php",
+    "from_line": 224,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/FileAttributeActiveContentTest.php",
+    "from_line": 43,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductAjaxValidationMessageTest.php",
+    "from_line": 18,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductEditLazyGroupsTest.php",
+    "from_line": 379,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductLinksViewTest.php",
+    "from_line": 288,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductMediaReplaceTest.php",
+    "from_line": 45,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductValuesTest.php",
+    "from_line": 57,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductZeroAttributeValueTest.php",
+    "from_line": 19,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/WebhookVariantEventTest.php",
+    "from_line": 55,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/WriteRouteBypassRegressionTest.php",
+    "from_line": 13,
+    "to_symbol": "route admin.catalog.products.update",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 214,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditTest.php",
+    "from_line": 95,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditWebhookDedupeTest.php",
+    "from_line": 31,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/Catalog/ProductBulkEditAclTest.php",
+    "from_line": 28,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Acl/WriteRouteBypassRegressionTest.php",
+    "from_line": 196,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditMediaPathTest.php",
+    "from_line": 40,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductBulkEditPriceValidationTest.php",
+    "from_line": 17,
+    "to_symbol": "route admin.catalog.products.bulk-edit.save",
+    "to_file": "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+    "to_line": 248,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Acl/ApiAclTest.php",
+    "from_line": 455,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Acl/ConfigurableProductScopeBypassTest.php",
+    "from_line": 40,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiConfigurableProductTest.php",
+    "from_line": 142,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiConfigurableProductTest.php",
+    "from_line": 248,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiFamilyVariantStructureTest.php",
+    "from_line": 1300,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiProductAssociationSyncTest.php",
+    "from_line": 62,
+    "to_symbol": "route admin.api.products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 131,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiProductTest.php",
+    "from_line": 114,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiRichAssociationTest.php",
+    "from_line": 86,
+    "to_symbol": "route admin.api.products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 131,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiSimpleProductAxisGuardTest.php",
+    "from_line": 44,
+    "to_symbol": "route admin.api.products.update",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 131,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiVariantDetachmentTest.php",
+    "from_line": 53,
+    "to_symbol": "route admin.api.configurable_products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 151,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementApiCoverageTest.php",
+    "from_line": 73,
+    "to_symbol": "route admin.api.products.store",
+    "to_file": "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php",
+    "to_line": 130,
+    "kind": "route",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/tests/Feature/Catalog/ProductZeroAttributeValueTest.php",
+    "from_line": 66,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/MeasurementDecimalStrategyTest.php",
+    "from_line": 85,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/ProductMeasurementValidationTest.php",
+    "from_line": 94,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementLifecycleTest.php",
+    "from_line": 44,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementScopeTest.php",
+    "from_line": 197,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Measurement/tests/Feature/Verify/ProductMeasurementValidationMatrixTest.php",
+    "from_line": 112,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationCopyTest.php",
+    "from_line": 28,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationDualWriteTest.php",
+    "from_line": 21,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationRichSaveTest.php",
+    "from_line": 75,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Feature/ProductAssociationSyncResilienceTest.php",
+    "from_line": 41,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Services/VariantValueResolverTest.php",
+    "from_line": 205,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/ConfigurableUpdateTreeTest.php",
+    "from_line": 56,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/ConfigurableUpdateVariantQueryBudgetTest.php",
+    "from_line": 70,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/Product/tests/Unit/Type/ConfigurableVariantLevelAttributeTest.php",
+    "from_line": 132,
+    "to_symbol": "ProductRepository::update",
+    "to_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "to_line": 57,
+    "kind": "call",
+    "note": "outside pool"
+   }
+  ],
+  "no_path": []
+ },
+ {
+  "id": "uo-e-03",
+  "target": {
+   "file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+   "line": 366,
+   "symbol": "WebhookService::getProductChangesForWebhook"
+  },
+  "edges": [
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 152,
+    "to_symbol": "WebhookService::getProductChangesForWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 366,
+    "kind": "call",
+    "note": "in sendBatch (140)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 88,
+    "to_symbol": "WebhookService::sendBatch",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 140,
+    "kind": "call",
+    "note": "in deliverChunked (83)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 56,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call",
+    "note": "in sendBatchByIds (54)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 61,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call",
+    "note": "in sendBatchCreatedByIds (59); computeChanges:false at runtime"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 66,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call",
+    "note": "in sendBatchForBulkEdit (64)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "from_line": 74,
+    "to_symbol": "WebhookService::deliverChunked",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 83,
+    "kind": "call",
+    "note": "in sendBatchBySkus (72)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 34,
+    "to_symbol": "WebhookService::getProductChangesForWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 366,
+    "kind": "call",
+    "note": "in afterUpdate (24)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 49,
+    "to_symbol": "WebhookService::getProductChangesForWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 366,
+    "kind": "call",
+    "note": "in afterCreate (43)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 36,
+    "to_symbol": "WebhookService::sendBatchCreatedByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 59,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "from_line": 41,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 90,
+    "to_symbol": "SendBulkEditProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php",
+    "to_line": 25,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 74,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "dispatch",
+    "note": "in dispatchBulkWebhook (68)"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 60,
+    "to_symbol": "Listeners\\Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "from_line": 65,
+    "to_symbol": "Listeners\\Product::dispatchBulkWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 68,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 28,
+    "to_symbol": "Listeners\\Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.update.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 30,
+    "to_symbol": "Listeners\\Product::afterCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 43,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.create.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 32,
+    "to_symbol": "Listeners\\Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "framework",
+    "note": "Event::listen('catalog.product.bulk.edit.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 34,
+    "to_symbol": "Listeners\\Product::afterBulkCreate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 58,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.created.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "from_line": 36,
+    "to_symbol": "Listeners\\Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "framework",
+    "note": "Event::listen('data_transfer.imports.batch.product.updated.after')"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ProductWebhookChangeResolutionTest.php",
+    "from_line": 13,
+    "to_symbol": "WebhookService::getProductChangesForWebhook",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 366,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 31,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call",
+    "note": "via subclass ChunkedWebhookService"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php",
+    "from_line": 9,
+    "to_symbol": "WebhookService",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 22,
+    "kind": "use"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php",
+    "from_line": 26,
+    "to_symbol": "WebhookService::sendBatchForBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 64,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 38,
+    "to_symbol": "WebhookService::sendBatchByIds",
+    "to_file": "packages/Webkul/Webhook/src/Services/WebhookService.php",
+    "to_line": 54,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/ImportUpdateWebhookDeliveryTest.php",
+    "from_line": 52,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 40,
+    "to_symbol": "event 'data_transfer.imports.batch.product.updated.after' (listener registration)",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 36,
+    "kind": "dispatch",
+    "note": "Queue::fake: bulk job pushed, not run"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 114,
+    "to_symbol": "SendBulkProductWebhook::handle",
+    "to_file": "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php",
+    "to_line": 29,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/ImportProductWebhookTest.php",
+    "from_line": 136,
+    "to_symbol": "Listeners\\Product::afterBulkEditFromImport",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 63,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookNotDuplicatedTest.php",
+    "from_line": 40,
+    "to_symbol": "Listeners\\Product::afterUpdate",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 24,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Unit/BulkEditWebhookQueuedTest.php",
+    "from_line": 23,
+    "to_symbol": "Listeners\\Product::afterBulkEdit",
+    "to_file": "packages/Webkul/Webhook/src/Listeners/Product.php",
+    "to_line": 84,
+    "kind": "call",
+    "note": "Queue::fake"
+   },
+   {
+    "from_file": "packages/Webkul/Webhook/tests/Feature/BulkEditWebhookActingUserTest.php",
+    "from_line": 36,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "call",
+    "note": "outside pool"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 271,
+    "to_symbol": "event 'catalog.product.bulk.edit.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 32,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 298,
+    "to_symbol": "event 'catalog.product.update.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 28,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "from_line": 149,
+    "to_symbol": "BulkProductUpdate::saveProducts",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 172,
+    "kind": "call"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductBulkEditController.php",
+    "from_line": 357,
+    "to_symbol": "BulkProductUpdate::handle",
+    "to_file": "packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php",
+    "to_line": 100,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 225,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 291,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php",
+    "from_line": 1344,
+    "to_symbol": "event 'catalog.product.update.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 28,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Repositories/ProductRepository.php",
+    "from_line": 150,
+    "to_symbol": "event 'catalog.product.update.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 28,
+    "kind": "dispatch",
+    "note": "in massUpdateStatus"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 200,
+    "to_symbol": "event 'catalog.product.update.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 28,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 300,
+    "to_symbol": "event 'catalog.product.update.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 28,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 358,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+    "from_line": 495,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php",
+    "from_line": 112,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 159,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php",
+    "from_line": 244,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 176,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 229,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/Product/src/Type/Configurable.php",
+    "from_line": 250,
+    "to_symbol": "event 'catalog.product.create.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 30,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1973,
+    "to_symbol": "event 'data_transfer.imports.batch.product.created.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 34,
+    "kind": "dispatch"
+   },
+   {
+    "from_file": "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php",
+    "from_line": 1979,
+    "to_symbol": "event 'data_transfer.imports.batch.product.updated.after'",
+    "to_file": "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php",
+    "to_line": 36,
+    "kind": "dispatch"
+   }
+  ],
+  "no_path": [
+   {
+    "path": "packages/Webkul/Webhook/src/Jobs/SendProductWebhook.php",
+    "reason": "calls sendCreatedToWebhook/sendDataToWebhook -> fanOutSingle, which use the pre-computed $changes and never call getProductChangesForWebhook"
+   }
+  ]
+ }
+]
