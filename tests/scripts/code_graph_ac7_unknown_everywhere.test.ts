@@ -117,6 +117,7 @@ function withGraph<T>(min: string, fn: (g: LoadedGraph) => T): T {
     });
 }
 
+// skip-reason: both paths share one fixture whose twin needs node:sqlite; without it the index path cannot exist.
 describe.runIf(sqliteOk).each(PATHS)('AC-7 on the $name path', ({ min, indexed }) => {
     it('answers from the store under test', () => {
         withGraph(min, (g) => expect(g.graph === null).toBe(indexed));
@@ -225,6 +226,7 @@ describe.runIf(sqliteOk).each(PATHS)('AC-7 on the $name path', ({ min, indexed }
     }, 120_000);
 });
 
+// skip-reason: an old SQLite twin can only be written where node:sqlite loads.
 describe.runIf(sqliteOk)('AC-7 — a twin that predates the graph-level facts', () => {
     it('is not answered from (never a silent 0), and is re-emitted with them', () => {
         const old = path.join(dir, 'old.json');
