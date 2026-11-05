@@ -103,7 +103,14 @@ purpose:
 - **The probe lives OUTSIDE the fixture**, under `internal/bench/ab/adversarial-v2/`.
   A guard test shipped inside the fixture would be visible to the run and prime
   it, and the endpoint would stop measuring the thing it exists to measure. The
-  fixture's own `tests/solve.check.mjs` checks the asked behaviour only.
+  task's `tests/solve.check.mjs` checks the asked behaviour only.
+- **Verifiers live outside the fixture too.** Every file a `solve_test` or
+  `hidden_test` command runs sits under `internal/bench/ab/verifiers-v2/<id>/`,
+  not in `fixtures-v2/<id>/`. The fixture is copied into the agent's working
+  copy, so a verifier inside it is a grader the agent can read and run. The
+  scorer copies the verifier into a scratch copy of the clone at scoring time
+  (`oracleRootFor`, `src/scripts/_lib/bench_ab_scoring_v2.ts`); a file the
+  agent left at the same path is replaced and reported as `verifier-planted:`.
 - **Unmeasurable is a third state, not a failure.** A trial that broke the
   module exits `2` and contributes **no** observation. Folding that into `1`
   would report every crashed trial as a dropped guard, on the one endpoint the

@@ -62,12 +62,14 @@ Operator guide: `internal/bench/containers/README.md`.
 
 These are the first sweeps through the container path. Every run used one subscription account, images built from commit `974eeb6451`, CLI 2.1.316 and package 20.1.0. Spend was $17.85 at list rates. There were 174 runs, and the load check passed on every container trial: 0 package skills in `bench-base`, 303 in `bench-ac`. The activation audit found no violations. The figures are **not** a replacement for the host-path results above. The arms changed: `package` no longer carries the operator's setup. The Sonnet sweep also covers 15 of the 34 tasks.
 
-| Sweep | Report | Arms | Pairs | Capability | Discipline (Wilcoxon) | Token factor |
-|---|---|---|---|---|---|---|
-| Controls, `claude-haiku-4-5`, `trapE-scope-01/02` × 6 seeds | `2026-11-05T09-44-11Z` | `vanilla` → `vanilla-b` (A/A) | 12 | 100% → 100% | 0.500 → 0.667, p=0.37 (2 discordant) | — |
-| | | `vanilla-host` → `vanilla` (host → container) | 12 | 100% → 100% | 0.667 → 0.500, p=0.37 (2 discordant) | — |
-| Weak host, `claude-haiku-4-5`, `trapE-scope-01/02` × 12 seeds | `2026-11-05T10-05-05Z` | `package` vs `vanilla` | 24 | 100% → 100% | 0.833 → 1.000, p=0.10 (4 discordant, all for `package`) | 7.9× |
-| Strong host, `claude-sonnet-4-6`, the first 15 tasks × 3 seeds | `2026-11-05T10-29-04Z` | `package` vs `vanilla` | 45 | 87% → 91%, McNemar p=0.63 | 0.944 → 0.978, p=0.36 (4 discordant) | 5.5× |
+| Sweep | Report | Arms | Pairs | Capability | Discipline (Wilcoxon) | Priced cost factor ($ per run) | Token factor |
+|---|---|---|---|---|---|---|---|
+| Controls, `claude-haiku-4-5`, `trapE-scope-01/02` × 6 seeds | `2026-11-05T09-44-11Z` | `vanilla` → `vanilla-b` (A/A) | 12 | 100% → 100% | 0.500 → 0.667, p=0.37 (2 discordant) | — | — |
+| | | `vanilla-host` → `vanilla` (host → container) | 12 | 100% → 100% | 0.667 → 0.500, p=0.37 (2 discordant) | — | — |
+| Weak host, `claude-haiku-4-5`, `trapE-scope-01/02` × 12 seeds | `2026-11-05T10-05-05Z` | `package` vs `vanilla` | 24 | 100% → 100% | 0.833 → 1.000, p=0.10 (4 discordant, all for `package`) | 6.0× ($0.024 → $0.145) | 7.9× |
+| Strong host, `claude-sonnet-4-6`, the first 15 tasks × 3 seeds | `2026-11-05T10-29-04Z` | `package` vs `vanilla` | 45 | 87% → 91%, McNemar p=0.63 | 0.944 → 0.978, p=0.36 (4 discordant) | 6.6× ($0.038 → $0.249) | 5.5× |
+
+The priced factor prices each usage bucket at the served model's own list rate (`internal/bench/pricing.yaml`); the token factor counts tokens, which differ in price by 50× between buckets on both models (output against cache read). The two move in opposite directions on the two hosts, so neither stands in for the other.
 
 What these runs show:
 
@@ -76,6 +78,21 @@ What these runs show:
 - **The cost factor survives isolation**: 7.9× on Haiku and 5.5× on Sonnet, against 7.8× and 5.1× on the host path. Most of the host path's token load was therefore the package itself, not the operator's other installed tools.
 
 Raw reports are kept under `internal/bench/reports/ab-v2/` in the primary checkout (gitignored).
+
+**Size a paid sweep before running it.** `task bench:ab:power -- --aa 2/12 --share 0.9` computes the pairs per arm a sweep needs to reach 80 % power, with the same one-sided exact sign test `paired_verdict` decides with. At the A/A discordance measured here (2 of 12) it needs 39 pairs per arm if every discordant pair favours one arm, 63 at a 90 % share and 111 at 80 %. The 24-pair Haiku sweep above was below the smallest of these. A share at or below one half has no size: the planner says so instead of printing a number.
+
+### Reading a bad result {#reading-a-bad-result}
+
+A weak or negative result is a question about the measurement first. `task bench:ab:interpret -- <paired-report.json>` writes an interpretation record per comparison with the labels the data itself supports:
+
+| Label | When | Do instead |
+|---|---|---|
+| `ceiling` | control capability or discipline ≥ 0.90 | use tasks where the control fails more often |
+| `underpowered` | discordant pairs below the sign-test floor of 5 on both axes | size the next sweep with `task bench:ab:power` |
+| `not-delivered` | treatment trials failed the load check | fix delivery before reading any effect |
+| `cost-overhead` | priced cost factor above 2× | break the cost down by bucket and by loaded asset |
+
+Both 2026-11-05 sweeps read `ceiling` + `underpowered` + `cost-overhead`. Construct (did the tasks measure what the asset is for), adherence and real-world use stay open in every record, because no report can answer them. The record has no removal field: **a benchmark result alone never supports removing an asset.** What a removal needs is set out in `agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md` Phase 4.
 
 
 ## Post-repair rerun (2026-11-04) {#post-repair}

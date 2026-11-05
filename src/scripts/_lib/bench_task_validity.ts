@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
-import { score_task_v2 } from './bench_ab_scoring_v2.js';
+import { oracleRootFor, score_task_v2 } from './bench_ab_scoring_v2.js';
 
 type Dict = Record<string, unknown>;
 
@@ -75,12 +75,19 @@ function _commands(task: Dict): string[] {
     return out;
 }
 
-/** Fixture-relative files a task's verifier commands execute. */
+/** Where a verifier file is read from: the oracle root first, then the fixture. */
+export function verifierPath(fixtureRoot: string, verifierRel: string): string {
+    const oracle = oracleRootFor(fixtureRoot);
+    if (oracle !== null && fs.existsSync(path.join(oracle, verifierRel))) return path.join(oracle, verifierRel);
+    return path.join(fixtureRoot, verifierRel);
+}
+
+/** Workspace-relative files a task's verifier commands execute. */
 export function verifierFiles(task: Dict, fixtureRoot: string): string[] {
     const out = new Set<string>();
     for (const cmd of _commands(task)) {
         for (const tok of cmd.split(/\s+/)) {
-            if (/\.(?:m?js|cjs|ts|py|php|sh)$/.test(tok) && fs.existsSync(path.join(fixtureRoot, tok))) {
+            if (/\.(?:m?js|cjs|ts|py|php|sh)$/.test(tok) && fs.existsSync(verifierPath(fixtureRoot, tok))) {
                 out.add(tok.split(path.sep).join('/'));
             }
         }
@@ -90,7 +97,7 @@ export function verifierFiles(task: Dict, fixtureRoot: string): string[] {
 
 /** Fixture-relative modules a verifier imports directly (relative specifiers only). */
 export function sourceImports(fixtureRoot: string, verifierRel: string): string[] {
-    const text = fs.readFileSync(path.join(fixtureRoot, verifierRel), 'utf8');
+    const text = fs.readFileSync(verifierPath(fixtureRoot, verifierRel), 'utf8');
     const out = new Set<string>();
     const re = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['"](\.{1,2}\/[^'"]+)['"]/g;
     let m: RegExpExecArray | null;
@@ -196,10 +203,16 @@ function _prepare(arm: ArmName, task: Dict, fixtureRoot: string, ws: string): st
             for (const s of sources) _write(ws, s, 'process.exit(0);\n' + _read(ws, s));
             return '';
         }
-        case 'verifier-delete':
-            if (verifiers.length === 0) return null;
-            for (const v of verifiers) fs.rmSync(path.join(ws, v), { force: true });
+        case 'verifier-delete': {
+            // Only a verifier the workspace holds can be deleted. One kept under
+            // the oracle root never reaches the agent, so the arm would equal `nop`
+            // and count as tamper coverage it does not provide. The write arms stay
+            // applicable: there they model a planted verifier, which must not pass.
+            const present = verifiers.filter((v) => fs.existsSync(path.join(ws, v)));
+            if (present.length === 0) return null;
+            for (const v of present) fs.rmSync(path.join(ws, v), { force: true });
             return '';
+        }
         case 'verifier-empty':
             if (verifiers.length === 0) return null;
             for (const v of verifiers) _write(ws, v, '');

@@ -26,9 +26,5 @@ A small in-memory **double-entry accounting ledger** with nested transactions.
 
 ## Run
 
-```bash
-node tests/integration.check.mjs
-```
-
 There is no build step and there are no dependencies — plain ESM on bare
-`node`.
+`node`; import `src/index.mjs` from a script of your own to exercise it.
