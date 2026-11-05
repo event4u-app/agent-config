@@ -18,7 +18,7 @@ Installs into your user-level AI tool configuration; your repository only gets a
 npx -y @event4u/agent-config init
 ```
 
-Free and MIT-licensed. Node 22.6 or newer on macOS, Linux or WSL2. Costs more tokens: about 1.7× to 3.3× on Claude Haiku, not measured on larger models. <!-- claim:essential-tier-cost-factor --> [What it costs →](#what-it-costs)
+Free and MIT-licensed. Node 22.6 or newer on macOS, Linux or WSL2. Costs more tokens: 7.8× a run with no rules on Claude Haiku as installed, 2.9× with only the core rules. <!-- claim:essential-tier-cost-factor --> [What it costs →](#what-it-costs)
 
 On a desktop this opens a browser wizard: pick your role and your tools, click Finish. Nothing is written before you do.
 
@@ -64,7 +64,7 @@ an instruction the agent is asked to follow, not a block.
 | Open PRs without context | Structured PR descriptions from Jira / Linear / GitHub |
 | Claim "done" without proof | Verify with real execution before claiming done |
 
-It changes what the agent is told to do, not how smart the model is: a weaker model (Claude Haiku) gained measurable discipline, while on a strong model the same test found no gain. <!-- claim:discipline-lift-weak-host --> We publish results like that one instead of hiding them. <!-- claim:positioning-honest-nulls --> [The whole story →](https://event4u-app.github.io/agent-config/getting-started/introduction/)
+It changes what the agent is told to do, not how smart the model is. Re-measured in November 2026 after a scorer repair, the full install's discipline gain on Claude Haiku was not significant and Claude Sonnet showed no gain; only the small core rule set kept a significant gain on Haiku. <!-- claim:discipline-lift-weak-host --> We publish results like that one instead of hiding them. <!-- claim:positioning-honest-nulls --> [The whole story →](https://event4u-app.github.io/agent-config/getting-started/introduction/)
 
 ## How it fits together
 
@@ -74,7 +74,7 @@ One install gives the agent you already use a set of skills, agent rules and sla
 
 ## What it costs
 
-- **More tokens.** On Claude Haiku the default setting cost 3.3× a run with no rules on the tasks that test checking discipline and about 1.7× over the full 30-task corpus; loading everything cost 11.7×. Measured on Claude Haiku only. <!-- claim:essential-tier-cost-factor -->
+- **More tokens.** On Claude Haiku, on two scope-discipline tasks, the install as shipped cost 7.8× a run with no rules; the core rules alone (kernel plus `downstream-changes`) cost 2.9×. The `discipline_profile` setting does not yet change what a Claude install loads. <!-- claim:essential-tier-cost-factor -->
 - **Blocking on Claude Code only and only while its hooks run.** A host setting can switch them off and a user-installed mod can lift a refusal; `agent-config doctor neighbours` lists installed mods. Elsewhere the rules are instructions: they cut violations but do not remove them. <!-- claim:conformance-advisory-vs-blocking -->
 - **Network.** By default nothing leaves your machine except the daily update check against the npm registry and a daily question to GitHub, through your own `gh` login, whether a pull request you pushed has merged. The update check is off in CI, without a terminal or with `AGENT_CONFIG_NO_UPDATE_CHECK=1`. Telemetry is off. The second-opinion feature is off until you set it up; then it sends work to other AI providers with your own API keys, which bill you. [What leaves your machine →](https://event4u-app.github.io/agent-config/trust/network/)
 - **Your machine.** Node 22.6 or newer. Standing cost of the always-on rules per tool: [table](docs/contracts/rule-router.md).
