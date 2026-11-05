@@ -75,6 +75,8 @@ by **who receives it**, not by what the task wants:
 | **unpaid** | a route with no paid terms behind it (ADR-257: may propose and score, never decide) | **No shared memory at all.** Only what the orchestrator hands it for the task, and of that only closed-vocabulary conventions — names from a fixed list, never free text drawn from the store. Its writes are refused at intake. |
 | **cheap-paid** | a paid route on a lower-tier model | The **non-fork** cut. It is a paid route, which the owner's answer of 2026-10-29 (OQ-35) puts on the shared side of the line. |
 
+A record written back names its writer as `<audience>[:<id>]` from this table. `memory_signal` refuses `unpaid`, `council-seat` and `judge-seat`, and refuses any class the table does not name; a record without a writer reads `unknown`. The writer is declared by the caller, so the refusal catches a misrouted write, not a forged one.
+
 The table is carried by the templates — implementer templates have the slot,
 judge-seat templates do not, which `tests/scripts/subagent_prompt_audience.test.ts`
 pins. Which audience a given dispatch belongs to is the orchestrator's call and

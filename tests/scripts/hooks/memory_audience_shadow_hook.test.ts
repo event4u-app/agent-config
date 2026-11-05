@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LEDGER_DIR } from '../../../src/scripts/hooks/subagent_ledger_hook.js';
-import { processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
+import { MAX_EXAMINED_REFS, processEnvelope } from '../../../src/scripts/hooks/memory_audience_shadow_hook.js';
 import { EXIT_ALLOW } from '../../../src/scripts/hooks/exit_codes.js';
 import { applyPayloadFields } from '../../../src/scripts/hooks/payload_stub.js';
 
@@ -182,6 +182,24 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         symlinkSync(join(root, 'agents', 'memory', 'intake', 'raw.jsonl'), join(root, 'agents', 'memory', 'into-intake.yml'));
         processEnvelope(spawn('agents/memory/into-intake.yml'), root);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
+    });
+
+    it('a longer name sharing a curated prefix is not that file', () => {
+        processEnvelope(spawn('agents/memory/product-rules.yml.bak agents/memory/product-rules.yml~'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
+    });
+
+    it('examines a bounded number of names per spawn, whatever the prompt holds', () => {
+        const many = Array.from({ length: 500 }, (_, i) => `agents/memory/n${i}.yml`).join(' ');
+        processEnvelope(spawn(`${many} agents/memory/product-rules.yml`), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, examined: MAX_EXAMINED_REFS, unexamined: 501 - MAX_EXAMINED_REFS });
+    });
+
+    it('a ledger write that fails still allows the call', () => {
+        const fileRoot = join(root, 'not-a-dir');
+        writeFileSync(fileRoot, 'x');
+        expect(processEnvelope(spawn('agents/memory/product-rules.yml'), fileRoot)).toBe(EXIT_ALLOW);
+        expect(processEnvelope(write('agent-abc', 'agents/memory/a.yml'), fileRoot)).toBe(EXIT_ALLOW);
     });
 
     it('the dispatcher projection keeps agent_id and prompt and drops every other input field', () => {

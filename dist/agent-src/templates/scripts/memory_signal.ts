@@ -249,6 +249,15 @@ export function _origin_is_global(origin: string): boolean {
 export class WriterRefusedError extends Error {}
 
 export const REFUSED_WRITER_CLASSES: ReadonlySet<string> = new Set(['unpaid', 'council-seat', 'judge-seat']);
+/** Every class a stamped writer may name: the audience table, plus `unknown`. */
+export const KNOWN_WRITER_CLASSES: ReadonlySet<string> = new Set([
+    'orchestrator',
+    'non-fork',
+    'fork',
+    'cheap-paid',
+    'unknown',
+    ...REFUSED_WRITER_CLASSES,
+]);
 /** A record carrying this taint was derived from untrusted content; never aggregated. */
 export const EXTERNAL_READ_TAINT = 'external_read';
 
@@ -260,6 +269,14 @@ export function _writer_of(record: { writer?: unknown }): string {
 export function _assert_writer_allowed(record: { writer?: unknown }): void {
     const writer = _writer_of(record);
     const cls = (writer.split(':')[0] ?? '').trim().toLowerCase();
+    // A class outside the table cannot be told apart from a refused one in
+    // disguise (`:unpaid`, `free-route`), so it is refused as well.
+    if (!KNOWN_WRITER_CLASSES.has(cls)) {
+        throw new WriterRefusedError(
+            `writer gate: '${writer}' names no audience of the memory table — ` +
+                'refused, nothing written (subagent-spawn-contract § Memory audience).',
+        );
+    }
     if (REFUSED_WRITER_CLASSES.has(cls)) {
         throw new WriterRefusedError(
             `writer gate: a ${cls} writer may not write to the shared memory (${writer}) — ` +

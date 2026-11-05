@@ -47,6 +47,9 @@ describe.each([
         const legacy = { id: 'sig-1', ts: '2026-10-01T00:00:00+00:00', origin: 'agent', entry_type: 'ownership', path: 'a', body: 'b' };
         expect(mod._writer_of(legacy)).toBe('unknown');
         expect(mod._writer_of({ ...legacy, writer: '   ' })).toBe('unknown');
+        for (const ok of ['orchestrator', 'fork:w1', 'cheap-paid:haiku', 'unknown']) {
+            expect(() => mod._assert_writer_allowed({ writer: ok })).not.toThrow();
+        }
         const rec = mod.emit('ownership', 'app/x', 'team-x', { writer: 'non-fork:implementer' });
         expect(rec).not.toBeNull();
         expect(mod._writer_of(rec as Record<string, unknown>)).toBe('non-fork:implementer');
@@ -57,6 +60,10 @@ describe.each([
         ['council-seat', { writer: 'council-seat:openai' }],
         ['council-seat via extra', { extra: { writer: 'Council-Seat' } }],
         ['judge-seat', { writer: 'judge-seat:spec-compliance' }],
+        ['an empty class', { writer: ':unpaid' }],
+        ['a bare colon', { writer: ':' }],
+        ['a class outside the audience table', { writer: 'free-route' }],
+        ['a padded refused class', { writer: '  unpaid : x' }],
     ])('refuses a %s writer and writes nothing', (_label, options) => {
         expect(() => mod.emit('historical-patterns', 'app/Y.php', 'a lesson', options)).toThrow(mod.WriterRefusedError);
         expect(intakeLineCount()).toBe(0);
@@ -73,6 +80,12 @@ describe('an external_read taint never reaches aggregation', () => {
         ];
         writeFileSync(join(intake, 'signals-2026-10.jsonl'), `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`);
 
+        expect(readSignals(intake).map((s) => s.id)).toEqual(['s1']);
+        const variants = ['EXTERNAL_READ', ' external_read ', 'External_Read'];
+        writeFileSync(
+            join(intake, 'signals-2026-09.jsonl'),
+            `${variants.map((t, i) => JSON.stringify({ id: `v${i}`, ts: '2026-09-01T00:00:00+00:00', origin: `o${i}`, taint: t, ...base })).join('\n')}\n`,
+        );
         expect(readSignals(intake).map((s) => s.id)).toEqual(['s1']);
         // Without the taint the two origins would corroborate into a lesson.
         expect(buildSidecar(intake, '2026-10-03T00:00:00+00:00').lessons).toEqual([]);

@@ -36,7 +36,12 @@ const WRITE_TOOLS: ReadonlySet<string> = new Set(['Write', 'Edit', 'MultiEdit'])
 const SPAWN_TOOLS: ReadonlySet<string> = new Set(['Agent', 'Task']);
 const MEMORY_DIR = 'agents/memory/';
 /** A curated store entry named in a prompt; intake is the raw log, never a slice member. */
-const CURATED_REF_RE = /agents\/memory\/(?!intake\/)[A-Za-z0-9._/-]+\.(?:ya?ml|md|json)\b/g;
+const CURATED_REF_RE = /agents\/memory\/(?!intake\/)[A-Za-z0-9._/-]+\.(?:ya?ml|md|json)(?![A-Za-z0-9._/~-])/g;
+/**
+ * Distinct names resolved per spawn. The filesystem work on the tool path is
+ * bounded by this, not by the prompt: names past it are counted, never resolved.
+ */
+export const MAX_EXAMINED_REFS = 20;
 /** Same rough estimate the hook budgets use: four bytes per token. */
 const BYTES_PER_TOKEN = 4;
 
@@ -64,6 +69,10 @@ export interface SliceCounts {
     ref_count: number;
     dropped: number;
     est_tokens: number;
+    /** Distinct names resolved against the filesystem. */
+    examined: number;
+    /** Distinct names past {@link MAX_EXAMINED_REFS}, counted but never resolved. */
+    unexamined: number;
 }
 
 /**
@@ -102,22 +111,32 @@ function eligibleFile(ref: string, store: string, root: string): { real: string;
  * takes a slot from a deliverable one, and two names for one file count once.
  */
 export function sliceCounts(prompt: string, root: string): SliceCounts {
+    const names = [
+        ...new Set((prompt.match(CURATED_REF_RE) ?? []).map(curatedRef).filter((r): r is string => r !== null)),
+    ];
+    const toExamine = names.slice(0, MAX_EXAMINED_REFS);
+    const unexamined = names.length - toExamine.length;
     let store: string;
     try {
         store = fs.realpathSync(path.join(root, MEMORY_DIR));
     } catch {
-        return { ref_count: 0, dropped: 0, est_tokens: 0 };
+        return { ref_count: 0, dropped: 0, est_tokens: 0, examined: 0, unexamined: names.length };
     }
     const eligible = new Map<string, number>();
-    for (const match of prompt.match(CURATED_REF_RE) ?? []) {
-        const ref = curatedRef(match);
-        const file = ref === null ? null : eligibleFile(ref, store, root);
+    for (const ref of toExamine) {
+        const file = eligibleFile(ref, store, root);
         if (file !== null && !eligible.has(file.real)) eligible.set(file.real, file.size);
     }
     const sizes = [...eligible.values()];
     const kept = sizes.slice(0, MAX_KNOWLEDGE_REFS);
     const bytes = kept.reduce((a, b) => a + b, 0);
-    return { ref_count: kept.length, dropped: sizes.length - kept.length, est_tokens: Math.ceil(bytes / BYTES_PER_TOKEN) };
+    return {
+        ref_count: kept.length,
+        dropped: sizes.length - kept.length,
+        est_tokens: Math.ceil(bytes / BYTES_PER_TOKEN),
+        examined: toExamine.length,
+        unexamined,
+    };
 }
 
 export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {
