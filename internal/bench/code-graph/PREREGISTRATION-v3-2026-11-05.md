@@ -183,6 +183,12 @@ For the 14 items whose class or shape is a closure (`callers-transitive`, `tests
    such replies asked for — the source file's imports, the declaration of the receiver
    the call goes through, and route-group prefixes and route registration. Its second
    ruling replaces its `UNSURE`; a second `UNSURE` stays `UNSURE`.
+   **Symbol level** (changed after a first computation at file level was read): a chain
+   continues only through the symbol an edge lands in, resolved by the oracle image's
+   `enclosing.php`; a file-scope line is its own node; TypeScript, Vue and Blade lines,
+   which it cannot resolve, stay at file level. At file level a reached class made every
+   caller of any of its methods one hop away — `uo-b-02` ("within two call hops") grew
+   from 6 files to 34 through classes reached at hop 1.
 3. **Membership is computed.** The answer is every file from which the target is
    reachable over standing edges; for `tests-for`, the test files among them; where the
    question states a hop limit, only files within it.
