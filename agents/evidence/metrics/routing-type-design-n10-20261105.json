@@ -1,0 +1,49 @@
+{
+  "protocol": "agents/evidence/preregistration/routing-type-design-n10-protocol-20261105.md",
+  "case": "061-type-design-q5",
+  "fixture_sha8": "9663e579",
+  "model": "claude-opus-5-5",
+  "arms": [
+    {
+      "arm": "frozen",
+      "catalogue": "1c967b175fc6d5d682db730ff12295e7a347126c107a50913ee8917f03577293",
+      "skills": 301,
+      "host": "2.1.316",
+      "started": "2026-11-05T13:03:33.574Z",
+      "cost_usd_cli_estimate": 1.8659931999999997,
+      "runs": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "arm": "today",
+      "catalogue": "e0ec68d388c16ef5c373e5c5523033afb5cff3e4b937d4baf409b8b6aec12f7f",
+      "skills": 303,
+      "host": "2.1.316",
+      "started": "2026-11-05T13:03:34.039Z",
+      "cost_usd_cli_estimate": 2.1625126,
+      "runs": [
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    }
+  ],
+  "fisher_two_sided_p": 1.0
+}

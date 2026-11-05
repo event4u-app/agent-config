@@ -30,11 +30,36 @@ function REMOVED(content: string): Array<{ selector: string; body: string; line:
     return blocks;
 }
 
-const timed = (fn: () => unknown): number => {
-    const t = performance.now();
-    fn();
-    return performance.now() - t;
+// Fastest of `runs`: the sample least disturbed by GC and scheduling, which is what a
+// ratio between two sizes needs.
+const fastest = (fn: () => unknown, runs: number): number => {
+    let best = Infinity;
+    for (let i = 0; i < runs; i++) {
+        const t = performance.now();
+        fn();
+        best = Math.min(best, performance.now() - t);
+    }
+    return best;
 };
+
+// Growth from n/8 to n, measured 2026-11-05 on one developer machine: the current
+// implementation grows ~8x (11-13x on the allocation-heavy shapes, through GC); the
+// removed form grows 62-67x. The bound sits near their geometric mean. It is built to
+// catch the quadratic shape this file exists for, not every superlinear one: an n^1.5
+// regression grows ~23x and would pass. A full-size run under FLOOR_MS is not timed as
+// a ratio — at that size and speed no growth is worth reporting, and the small run
+// would be too short to divide by.
+const SCALE = 8;
+const MAX_GROWTH = 28;
+const FLOOR_MS = 5;
+
+function grows(fn: (text: string) => unknown, make: (n: number) => string, n: number, runs = 3): { small: number; big: number; linear: boolean } {
+    const smallText = make(n / SCALE);
+    const bigText = make(n);
+    const small = fastest(() => fn(smallText), runs);
+    const big = fastest(() => fn(bigText), runs);
+    return { small, big, linear: big < FLOOR_MS || big / Math.max(small, 0.01) < MAX_GROWTH };
+}
 
 describe('cssBlocks equals the regex it replaced', () => {
     const files = (dir: string): string[] =>
@@ -65,18 +90,41 @@ describe('cssBlocks equals the regex it replaced', () => {
 
 describe('cssBlocks is linear on a megabyte', () => {
     const N = 1_000_000;
-    const shapes: Record<string, string> = {
-        'one brace-free run (a minified page with no CSS)': 'x'.repeat(N),
-        'a run ending in an opening brace that never closes': `${'x'.repeat(N - 1)}{`,
-        'many small blocks, one per line': 'a{b}\n'.repeat(N / 5),
-        'opening braces only': 'a{'.repeat(N / 2),
-        'comment openers that never close': '/*'.repeat(N / 2),
+    const shapes: Record<string, (n: number) => string> = {
+        'one brace-free run (a minified page with no CSS)': (n) => 'x'.repeat(n),
+        'a run ending in an opening brace that never closes': (n) => `${'x'.repeat(n - 1)}{`,
+        'many small blocks, one per line': (n) => 'a{b}\n'.repeat(n / 5),
+        'opening braces only': (n) => 'a{'.repeat(n / 2),
+        'comment openers that never close': (n) => '/*'.repeat(n / 2),
     };
-    for (const [name, text] of Object.entries(shapes)) {
+    for (const [name, make] of Object.entries(shapes)) {
         it(name, () => {
-            expect(timed(() => cssBlocks(text))).toBeLessThan(EVENT_P95_MS);
+            const g = grows(cssBlocks, make, N);
+            expect(g.linear, `n/${SCALE}: ${g.small.toFixed(1)} ms, n: ${g.big.toFixed(1)} ms`).toBe(true);
+            // A backstop against a slowdown that keeps its growth rate. This is NOT the hook
+            // budget: a megabyte is no longer held to 250 ms, because a single 1 MB sample
+            // on a shared runner measured 253-302 ms with the code unchanged. The budget is
+            // held on the realistic page in the next test instead.
+            expect(g.big).toBeLessThan(4 * EVENT_P95_MS);
         });
     }
+
+    it('keeps the 100,000-character minified page this file was written for inside the hook budget', () => {
+        const page = `<style>${'a{b:c}'.repeat(5_000)}</style>${'x'.repeat(69_985)}`;
+        expect(page.length).toBe(100_000);
+        expect(fastest(() => cssBlocks(page), 3)).toBeLessThan(EVENT_P95_MS);
+    });
+
+    // The removed form was quadratic twice over — the rescan of a brace-free run and the
+    // per-block line count — and one shape exercises each. Margins, measured locally: its
+    // full-size run takes ~250 ms, 50x above FLOOR_MS, and the whole test ~0.8 s, so a
+    // runner 8x slower stays far inside the 60 s timeout.
+    it('rejects the removed implementation, so the growth check can stand in for a time bound on a megabyte', () => {
+        for (const name of ['one brace-free run (a minified page with no CSS)', 'many small blocks, one per line']) {
+            const make = shapes[name] as (n: number) => string;
+            expect(grows(REMOVED, make, 24_000).linear, name).toBe(false);
+        }
+    }, 60_000);
 
     it('and still numbers lines on the megabyte', () => {
         const blocks = cssBlocks('a{b}\n'.repeat(N / 5));

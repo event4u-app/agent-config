@@ -16,9 +16,9 @@ import { fileURLToPath } from 'node:url';
 
 import * as yaml from 'js-yaml';
 
-import { closureFromEdges, parseEdgeRulings, standingEdges, type Edge, type EdgeVerdict, type Target } from './closure_check.js';
+import { bothValidEdges, closureFromEdges, fakesItsChain, parseEdgeRulings, standingEdges, type Edge, type EdgeVerdict, type Target } from './closure_check.js';
 import { deriveModelTable } from './model_table.js';
-import { statedHopLimit } from './oracle_truth.js';
+import { isTestPath, statedHopLimit } from './oracle_truth.js';
 
 export type Verdict = 'IN' | 'OUT' | 'UNSURE';
 
@@ -160,8 +160,8 @@ function listFiles(root: string): string[] {
  * Check v2.1: per closure item, the files reachable over standing edges. `<dir>` holds
  * `edges-*.json` (reader), `edge-ids-<prefix>.json` and `edge-rulings-<prefix>-<n>.json`.
  */
-function closureAnswers(dir: string | undefined, corpusPath: string | undefined): { answers: Map<string, { files: string[]; stated: number; standing: number }>; kappa: number | null } {
-    const out = new Map<string, { files: string[]; stated: number; standing: number }>();
+function closureAnswers(dir: string | undefined, corpusPath: string | undefined): { answers: Map<string, { files: string[]; strictFiles: string[]; stated: number; standing: number }>; kappa: number | null } {
+    const out = new Map<string, { files: string[]; strictFiles: string[]; stated: number; standing: number }>();
     if (!dir) return { answers: out, kappa: null };
     if (!corpusPath) throw new Error('--closure needs --corpus (class and hop limit per question)');
     const corpus = yaml.load(fs.readFileSync(corpusPath, 'utf8')) as { questions: { id: string; class: string; question?: string }[] };
@@ -205,13 +205,14 @@ function closureAnswers(dir: string | undefined, corpusPath: string | undefined)
             const standing = standingEdges(edges, verdicts);
             const limit = statedHopLimit(q.question);
             const symbols = enclosing.get(it.id.slice(0, 2));
-            const files = closureFromEdges(
-                { ...it.target, line: Number(it.target.line) },
-                standing,
-                { ...(limit === null ? {} : { hopLimit: limit }), testsOnly: q.class === 'tests-for' },
-                symbols === undefined ? undefined : (file, line) => symbols.get(`${file}:${line}`),
-            );
-            out.set(it.id, { files: [...files.keys()].sort(), stated: edges.length, standing: standing.length });
+            const close = (set: Edge[]): string[] =>
+                [...closureFromEdges(
+                    { ...it.target, line: Number(it.target.line) },
+                    set,
+                    { ...(limit === null ? {} : { hopLimit: limit }), testsOnly: q.class === 'tests-for' },
+                    symbols === undefined ? undefined : (file, line) => symbols.get(`${file}:${line}`),
+                ).keys()].sort();
+            out.set(it.id, { files: close(standing), strictFiles: close(bothValidEdges(edges, verdicts)), stated: edges.length, standing: standing.length });
         }
     }
     const [va, vb] = Object.values(verdicts);
@@ -241,8 +242,11 @@ export function main(argv: string[]): number {
     };
     const dir = arg('--check');
     const truthPath = arg('--truth');
+    const outPath = arg('--out') ?? truthPath;
+    const work = arg('--work');
+    const lowerBound = new Set((arg('--lower-bound') ?? '').split(',').filter(Boolean));
     if (!dir || !truthPath) {
-        process.stderr.write('usage: apply_check.ts --check <dir> --truth <truth.yaml> [--corpus <corpus.yaml> --work <dir>] [--closure <dir>] [--date YYYY-MM-DD]\n');
+        process.stderr.write('usage: apply_check.ts --check <dir> --truth <truth.yaml> [--corpus <corpus.yaml> --work <dir>] [--closure <dir>] [--lower-bound <ids>] [--out <file>] [--date YYYY-MM-DD]\n');
         return 2;
     }
     const truth = yaml.load(fs.readFileSync(truthPath, 'utf8')) as {
@@ -291,6 +295,11 @@ export function main(argv: string[]): number {
                 item.files = byEdges.files;
                 item['check_rule'] = 'edges';
                 item['check_edges'] = { stated: byEdges.stated, standing: byEdges.standing };
+                const twoVoice = byEdges.files.filter((f) => !byEdges.strictFiles.includes(f));
+                if (twoVoice.length > 0) item['two_voice_files'] = twoVoice;
+                const subjectDir = work === undefined ? undefined : path.join(work, a.id.startsWith('ls') ? 'larasend' : 'unopim');
+                const faked = subjectDir === undefined ? [] : byEdges.files.filter((f) => isTestPath(f) && fs.existsSync(path.join(subjectDir, f)) && fakesItsChain(fs.readFileSync(path.join(subjectDir, f), 'utf8')));
+                if (faked.length > 0) item['faked_files'] = faked;
                 item['check_vote_files'] = d.files;
             } else if (derivation === undefined) {
                 item.files = d.files;
@@ -344,7 +353,13 @@ export function main(argv: string[]): number {
     });
     if (classThree.length > 0) truth.human_check['class3_vote_agrees_with_derivation'] = `${classThree.filter((c) => c.agrees).length}/${classThree.length}`;
     const header = fs.readFileSync(truthPath, 'utf8').split('\n').filter((l) => l.startsWith('#')).join('\n');
-    fs.writeFileSync(truthPath, `${header}\n${yaml.dump(truth, { lineWidth: 120, noRefs: true })}`);
+    for (const id of lowerBound) {
+        const item = byId.get(id);
+        if (item === undefined) throw new Error(`--lower-bound ${id}: not in the truth file`);
+        item['lower_bound'] = true;
+    }
+    if (outPath === undefined) throw new Error('no output path');
+    fs.writeFileSync(outPath, `${header}\n${yaml.dump(truth, { lineWidth: 120, noRefs: true })}`);
     process.stdout.write(`sealed ${decided.length} items · corrected ${corrected.length} · sample corrected ${sampleCorrected.length}/${truth.human_check.sample.length}\n`);
     return 0;
 }

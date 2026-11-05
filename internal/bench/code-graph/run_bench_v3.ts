@@ -181,7 +181,8 @@ interface Corpus {
     questions: Question[];
 }
 
-export type Truth = { kind: 'pending' } | { kind: 'expected-empty' } | { kind: 'set'; files: string[] };
+/** `lowerBound`: registration § Residual strata item 2 — scored recall-only. */
+export type Truth = { kind: 'pending' } | { kind: 'expected-empty' } | { kind: 'set'; files: string[]; lowerBound?: true };
 
 export function truthOf(q: { truth?: unknown; expected?: unknown }): Truth {
     if (q.expected === 'empty') return { kind: 'expected-empty' };
@@ -198,7 +199,17 @@ export function truthOf(q: { truth?: unknown; expected?: unknown }): Truth {
 export interface TruthDoc {
     /** `checked_by` names who sealed the verdicts; absent means the registered human check. */
     human_check: { sample: string[]; checked_by?: 'human' | 'council' };
-    items: { id: string; status: string; files: string[]; human_checked?: string | null; checked?: string | null }[];
+    items: {
+        id: string;
+        status: string;
+        files: string[];
+        human_checked?: string | null;
+        checked?: string | null;
+        /** Registration § Residual strata: markings the strict stratum removes, and the recall-only flag. */
+        two_voice_files?: string[];
+        faked_files?: string[];
+        lower_bound?: boolean;
+    }[];
 }
 
 const VERDICTS = new Set(['agree', 'corrected']);
@@ -232,7 +243,21 @@ export function truthFromDoc(q: { id: string; truth?: unknown; expected?: unknow
     if (q.expected === 'empty') return item?.status === 'void' && verdictOf(item) !== 'corrected' ? 'void' : { kind: 'expected-empty' };
     if (item === undefined) return truthOf(q);
     const sealed = VERDICTS.has(verdictOf(item));
-    return item.status === 'oracle' || sealed ? { kind: 'set', files: [...item.files] } : { kind: 'pending' };
+    if (item.status !== 'oracle' && !sealed) return { kind: 'pending' };
+    return item.lower_bound === true ? { kind: 'set', files: [...item.files], lowerBound: true } : { kind: 'set', files: [...item.files] };
+}
+
+/**
+ * The strict stratum (registration § Residual strata): the same truth with the
+ * two-voice and faked files removed. It carries no bar and never turns a verdict.
+ */
+export function strictTruthFromDoc(q: { id: string; truth?: unknown; expected?: unknown }, doc: TruthDoc): Truth | 'void' {
+    const t = truthFromDoc(q, doc);
+    if (t === 'void' || t.kind !== 'set') return t;
+    const item = doc.items.find((i) => i.id === q.id);
+    const drop = new Set([...(item?.two_voice_files ?? []), ...(item?.faked_files ?? [])]);
+    const files = t.files.filter((f) => !drop.has(f));
+    return t.lowerBound ? { kind: 'set', files, lowerBound: true } : { kind: 'set', files };
 }
 
 export interface ArmAnswer {
@@ -279,7 +304,7 @@ export function scoreAnswer(a: ArmAnswer, truth: Truth): Scored {
     return {
         status: 'SCORED',
         recall: r3(expected.size > 0 ? hit.length / expected.size : 1),
-        precision: r3(answered > 0 ? hit.length / answered : 0),
+        precision: truth.lowerBound ? null : r3(answered > 0 ? hit.length / answered : 0),
         answered,
         missed: [...expected].filter((f) => !a.files.has(f)).sort(),
         wrong,
@@ -316,10 +341,12 @@ export function classSummary(rows: readonly Scored[]): ClassSummary {
     const items = live.reduce((a, r) => a + (r.top_label_items ?? 0), 0);
     const wrong = live.reduce((a, r) => a + (r.top_label_wrong ?? 0), 0);
     const labelled = live.some((r) => r.top_label_items !== null);
+    const withPrecision = live.filter((r) => r.precision !== null);
     return {
         ...base,
         status: 'SCORED',
-        precision: r3(mean(live.map((r) => r.precision ?? 0))),
+        // A recall-only (lower-bound) row has no precision and stays out of its mean.
+        precision: withPrecision.length > 0 ? r3(mean(withPrecision.map((r) => r.precision as number))) : null,
         recall: r3(mean(live.map((r) => r.recall ?? 0))),
         overconfidence_rate: labelled && items > 0 ? r3(wrong / items) : null,
     };
@@ -523,6 +550,8 @@ interface Row {
     grep: Scored;
     native: Scored;
     foreign: Scored;
+    /** Registration § Residual strata: the same answers against the strict truth; no bar. */
+    strict?: { grep: Scored; native: Scored; foreign: Scored };
 }
 
 export async function main(argv: string[]): Promise<number> {
@@ -654,6 +683,8 @@ export async function main(argv: string[]): Promise<number> {
             truth: truth.kind, verb: verbFor(q),
             grep: scoreAnswer(ga, truth), native: scoreAnswer(na, truth), foreign: scoreAnswer(fa, truth),
         };
+        const strict = truthDoc === null ? 'void' : strictTruthFromDoc(q, truthDoc);
+        if (strict !== 'void') row.strict = { grep: scoreAnswer(ga, strict), native: scoreAnswer(na, strict), foreign: scoreAnswer(fa, strict) };
         rows.push(row);
         for (const [arm, a] of [['grep', ga], ['native', na], ['foreign', fa]] as const) {
             traceLines.push(JSON.stringify({
@@ -671,15 +702,28 @@ export async function main(argv: string[]): Promise<number> {
     // Per class (route-trace per subject, never pooled), then suite D.
     type Arm = 'grep' | 'native' | 'foreign';
     const ARMS: Arm[] = ['grep', 'native', 'foreign'];
-    const cells: Array<{ class: string; subject: string; arms: Record<Arm, ClassSummary>; native_verdict: string; foreign_verdict: string; verdict_bearing: boolean }> = [];
+    const cells: Array<{
+        class: string;
+        subject: string;
+        arms: Record<Arm, ClassSummary>;
+        native_verdict: string;
+        foreign_verdict: string;
+        verdict_bearing: boolean;
+        strict?: Record<Arm, ClassSummary>;
+    }> = [];
     for (const c of SCORED_CLASSES) {
         const groups = c === ROUTE_CLASS ? corpus.subjects.map((s) => s.name) : ['all'];
         for (const sub of groups) {
             const set = rows.filter((r) => r.class === c && (sub === 'all' || r.subject === sub));
             if (set.length === 0) continue;
             const arms = Object.fromEntries(ARMS.map((a) => [a, classSummary(set.map((r) => r[a]))])) as Record<Arm, ClassSummary>;
+            const withStrict = set.filter((r) => r.strict !== undefined);
+            const strictArms = withStrict.length === set.length && set.length > 0
+                ? (Object.fromEntries(ARMS.map((a) => [a, classSummary(withStrict.map((r) => (r.strict as NonNullable<Row['strict']>)[a]))])) as Record<Arm, ClassSummary>)
+                : undefined;
             cells.push({
                 class: c, subject: sub, arms,
+                ...(strictArms === undefined ? {} : { strict: strictArms }),
                 native_verdict: classVerdict(arms.native, arms.grep),
                 foreign_verdict: classVerdict(arms.foreign, arms.grep),
                 verdict_bearing: c !== ROUTE_CLASS || sub === ROUTE_VERDICT_SUBJECT,
@@ -694,6 +738,11 @@ export async function main(argv: string[]): Promise<number> {
     const byLanguage: Record<string, number> = {};
     for (const r of rows) byLanguage[r.language] = (byLanguage[r.language] ?? 0) + 1;
     const wins = cells.filter((c) => c.verdict_bearing && c.native_verdict === 'WIN').map((c) => c.class);
+    // Registration § Bars, amendment of 2026-10-27: every figure per language too (scored classes only, no bar).
+    const perLanguage = [...new Set(rows.map((r) => r.language))].sort().map((lang) => {
+        const set = rows.filter((r) => r.language === lang && (SCORED_CLASSES as readonly string[]).includes(r.class));
+        return { language: lang, n: set.length, arms: Object.fromEntries(ARMS.map((a) => [a, classSummary(set.map((r) => r[a]))])) as Record<Arm, ClassSummary> };
+    }).filter((l) => l.n > 0);
 
     const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT, encoding: 'utf-8' }).stdout.trim();
     const engineTree = spawnSync('git', ['rev-parse', 'HEAD:src/scripts/code_graph'], { cwd: REPO_ROOT, encoding: 'utf-8' }).stdout.trim();
@@ -716,6 +765,7 @@ export async function main(argv: string[]): Promise<number> {
         non_empty_answers_per_arm: nonEmptyPerArm,
         questions_per_language: byLanguage,
         per_class: cells,
+        per_language: perLanguage,
         suite_d: suiteD,
         native_classes_won: wins,
         null_path: pendingQuestions > 0 ? 'PENDING — truth has not landed' : wins.length < 4 ? 'graph-first wording withheld (fewer than 4 of 6 classes won)' : 'graph-first wording supported',
@@ -744,6 +794,15 @@ export async function main(argv: string[]): Promise<number> {
     md.push('| Class | Subject | n | grep | native | foreign | native verdict | foreign verdict | verdict-bearing |', '|---|---|---|---|---|---|---|---|---|');
     const cell = (s: ClassSummary): string => (s.status === 'SCORED' ? `P ${s.precision} / R ${s.recall}` : s.status);
     for (const c of cells) md.push(`| ${c.class} | ${c.subject} | ${c.arms.grep.n} | ${cell(c.arms.grep)} | ${cell(c.arms.native)} | ${cell(c.arms.foreign)} | ${c.native_verdict} | ${c.foreign_verdict} | ${c.verdict_bearing ? 'yes' : 'no (larasend route-trace, published beside)'} |`);
+    md.push('');
+    if (cells.some((c) => c.strict !== undefined)) {
+        md.push('## Strict stratum (no bar)', '', 'The same answers against the truth without its two-voice and faked files (registration § Residual strata). It cannot turn a verdict; it shows how much of each result rests on them.', '');
+        md.push('| Class | Subject | grep | native | foreign | native verdict under the same rule |', '|---|---|---|---|---|---|');
+        for (const c of cells) if (c.strict) md.push(`| ${c.class} | ${c.subject} | ${cell(c.strict.grep)} | ${cell(c.strict.native)} | ${cell(c.strict.foreign)} | ${classVerdict(c.strict.native, c.strict.grep)} |`);
+        md.push('');
+    }
+    md.push('## Per language (scored classes, no bar)', '', '| Language | n | grep | native | foreign |', '|---|---|---|---|---|');
+    for (const l of perLanguage) md.push(`| ${l.language} | ${l.n} | ${cell(l.arms.grep)} | ${cell(l.arms.native)} | ${cell(l.arms.foreign)} |`);
     md.push('');
     md.push('## Suite D — negative controls (clean-rate, no bar)', '');
     md.push('| Arm | clean rate | n |', '|---|---|---|');

@@ -171,6 +171,7 @@ tracked.
 - [ ] 2.5 Run; publish both directions; no renegotiation. Record ADR-246/259's benchmark
       trigger as fired or not. Then, and only then, rewrite the skill description as a
       **class list** (which classes are graph-first, which stay grep-routine).
+      > note: 2026-11-05 — suites A–E ran against the strata truth: `internal/bench/reports/code-graph-v3-2026-11-05-scored.md` (traces beside it). **Zero of six classes won** — precise-semantics and change-impact NULL (precision floor), route-trace, model-table, tests-for, change-impact-xplane TIE; suite A tied all four classes. Null path: graph-first wording withheld; the `code-intelligence` description now reads as the class list (graph-first: none). ADR-246's second trigger (a post-repair measurement that beats grep on graph-shaped questions): **not fired**. ADR-259: a benchmark result is not a trigger by its own text. Still open: **suite F** — no agentic runner exists yet (`run_bench_v3.ts` says so); its result is published separately and cannot change the class verdict.
 - [ ] 2.6 Edge precision and recall per `resolved_via`, against the 2.2 oracle, on
       `src/scripts/` and both subjects. The oracle index is produced by an indexer the
       maintainer installs (`scip-typescript` first; PHP per 2.2), never fetched at
@@ -180,6 +181,22 @@ tracked.
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
       > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
       > note: 2026-11-05, later — the indexer blocker is gone: `internal/bench/code-graph/oracle/oracle.sh run <dir> scip-typescript index --output /subject/.oracle/index.scip` produces the index `edge_oracle.ts --scip` reads, inside the pinned image with no network, and the 2.1 registration is committed. Still open: the measurement itself, and PHP edges — the PHP oracle is Psalm, whose references `edge_oracle.ts` does not read yet (it reads SCIP only).
+- [x] 2.7 **Close the check v2.1 residuals before 2.5 scores an arm.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/run_bench_v3.ts --> The limits are named in
+      `internal/bench/code-graph/check-v3-v21-2026-11-05/REPORT.md` § Known limits; each fix
+      lands as a new dated truth file under a registration addendum committed before its first
+      verdict, never as an edit to the sealed one. Three parts:
+      (a) the 90 of 498 closure edges that stand on the reader and Google alone get a third,
+      provider-distinct ruling — or are marked `two-voice` in the truth and reported as a
+      separate stratum; edge κ (0.34) is published beside the result either way.
+      (b) `uo-e-01` and `uo-e-03` are completed on the event side (every route and test above
+      the files that fire the product events) or carry `lower_bound: true`, which the scorer
+      reads as recall-only.
+      (c) static-closure false positives — tests whose queue, event bus or call is faked — are
+      either removed by a stated, code-derived rule or counted and published as a known
+      overcount.
+      Done when `run_bench_v3.ts --truth` reads the new file and each of (a)–(c) is resolved
+      or carried as a named stratum in the report.
+      > note: done 2026-11-05 — registration § Residual strata, committed before any arm was scored; `truth-v3-2026-11-05-strata.yaml` carries the sealed file sets unchanged plus (a) 135 `two_voice_files` (no fourth provider is configured, so marked, not re-judged), (b) `lower_bound` on `uo-e-01` and `uo-e-03` (recall-only in the scorer), (c) 55 `faked_files` (a deliberately broad rule: any queue/bus/event fake or mock in the test — itself an overcount, stated). `run_bench_v3.ts --truth` reads it and reports a strict stratum per class (`tests/scripts/code_graph/bench_v3_strata.test.ts`). The strict stratum turns no verdict.
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
