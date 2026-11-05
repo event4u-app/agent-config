@@ -86,6 +86,12 @@ function resolveDestination(abs: string): string | null {
     }
 }
 
+/** True when `p` lies strictly inside directory `dir` (both already resolved). */
+function within(dir: string, p: string): boolean {
+    const rel = path.relative(dir, p);
+    return rel !== '' && rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel);
+}
+
 /**
  * `intake` / `curated` when the write lands in the store's real directory —
  * judged on the resolved destination, so a symlink out of the store is not a
@@ -93,12 +99,13 @@ function resolveDestination(abs: string): string | null {
  */
 export function memoryTarget(filePath: string, root: string): 'intake' | 'curated' | null {
     const abs = path.isAbsolute(filePath) ? filePath : path.join(root, filePath);
-    const store = resolveDestination(path.join(root, MEMORY_DIR));
     const dest = resolveDestination(abs);
-    if (store === null || dest === null) return null;
-    const rel = path.relative(store, dest);
-    if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) return null;
-    return rel === 'intake' || rel.startsWith(`intake${path.sep}`) ? 'intake' : 'curated';
+    if (dest === null) return null;
+    // Intake is resolved on its own: it may be a symlink out of the store.
+    const intake = resolveDestination(path.join(root, MEMORY_DIR, 'intake'));
+    if (intake !== null && (dest === intake || within(intake, dest))) return 'intake';
+    const store = resolveDestination(path.join(root, MEMORY_DIR));
+    return store !== null && within(store, dest) ? 'curated' : null;
 }
 
 export interface SliceCounts {
@@ -129,13 +136,18 @@ function curatedRef(ref: string): string | null {
  * file whose real path lies in the curated store and not in intake. Anything else
  * is null — a symlink out of the store or into intake, a missing file, a loop.
  */
-function eligibleFile(ref: string, store: string, root: string): { real: string; size: number } | null {
+function eligibleFile(
+    ref: string,
+    store: string,
+    intake: string | null,
+    root: string,
+): { real: string; size: number } | null {
     try {
         const real = fs.realpathSync(path.join(root, ref));
-        const rel = path.relative(store, real);
-        if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) return null;
-        // A curated name that resolves into intake is intake, whatever it is called.
-        if (rel === 'intake' || rel.startsWith(`intake${path.sep}`)) return null;
+        if (!within(store, real)) return null;
+        // A curated name that resolves into intake is intake, whatever it is
+        // called and wherever intake's own real directory is.
+        if (intake !== null && within(intake, real)) return null;
         const stat = fs.statSync(real);
         return stat.isFile() ? { real, size: stat.size } : null;
     } catch {
@@ -167,14 +179,16 @@ export function sliceCounts(prompt: string, root: string): SliceCounts {
     const toExamine = names.slice(0, MAX_EXAMINED_REFS);
     const unexamined = names.length - toExamine.length;
     let store: string;
+    let intake: string | null = null;
     try {
         store = fs.realpathSync(path.join(root, MEMORY_DIR));
+        intake = resolveDestination(path.join(root, MEMORY_DIR, 'intake'));
     } catch {
         return { ref_count: 0, dropped: 0, est_tokens: 0, examined: 0, unexamined: names.length, scan_truncated: scanTruncated };
     }
     const eligible = new Map<string, number>();
     for (const ref of toExamine) {
-        const file = eligibleFile(ref, store, root);
+        const file = eligibleFile(ref, store, intake, root);
         if (file !== null && !eligible.has(file.real)) eligible.set(file.real, file.size);
     }
     const sizes = [...eligible.values()];

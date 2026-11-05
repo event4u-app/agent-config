@@ -123,6 +123,40 @@ describe('2.2 — record-only guard on child writes to agents/memory/', () => {
         expect(ledgerLines()).toHaveLength(0);
     });
 
+    describe('an intake directory that is itself a symlink out of the store', () => {
+        beforeEach(() => {
+            mkdirSync(join(root, 'raw-logs'), { recursive: true });
+            writeFileSync(join(root, 'raw-logs', 'x.yml'), 'r'.repeat(4000));
+            symlinkSync(join(root, 'raw-logs'), join(root, 'agents', 'memory', 'intake'));
+        });
+
+        it('a child write into it is classed intake', () => {
+            processEnvelope(write('agent-abc', 'agents/memory/intake/s.jsonl'), root);
+            expect(ledgerLines()).toMatchObject([{ target: 'intake' }]);
+        });
+
+        it('a write straight to its real directory is classed intake', () => {
+            processEnvelope(write('agent-abc', 'raw-logs/s.jsonl'), root);
+            expect(ledgerLines()).toMatchObject([{ target: 'intake' }]);
+        });
+
+        it('a curated name resolving into it is not part of the slice', () => {
+            symlinkSync(join(root, 'raw-logs', 'x.yml'), join(root, 'agents', 'memory', 'alias.yml'));
+            processEnvelope(spawn('agents/memory/alias.yml'), root);
+            expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
+        });
+    });
+
+    it('an intake symlinked to a directory inside the store keeps its files out of the slice', () => {
+        mkdirSync(join(root, 'agents', 'memory', 'raw'), { recursive: true });
+        writeFileSync(join(root, 'agents', 'memory', 'raw', 'x.yml'), 'r'.repeat(4000));
+        symlinkSync(join(root, 'agents', 'memory', 'raw'), join(root, 'agents', 'memory', 'intake'));
+        processEnvelope(spawn('agents/memory/raw/x.yml'), root);
+        expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, est_tokens: 0 });
+        processEnvelope(write('agent-abc', 'agents/memory/raw/s.jsonl'), root);
+        expect(ledgerLines()[1]).toMatchObject({ target: 'intake' });
+    });
+
     it('a traversal that leaves agents/memory/ is not counted as a memory write', () => {
         processEnvelope(write('agent-abc', 'agents/memory/../../src/x.ts'), root);
         expect(ledgerLines()).toHaveLength(0);
