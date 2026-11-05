@@ -235,8 +235,8 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 
 | # | Decision | Reason | Revisit-if |
 |---|---|---|---|
-| D1 | "Agent Swarm" (owner turn 4) is not mapped to Ruflo silently | the plans did that without saying so; Phase 5 starts with one rival and asks before treating them as the same | the owner names the package |
-| D2 | "Awesome Claude Code" is not a rival arm | it is a catalogue, not an installable package (v10 §P1.5) | — |
+| D1 | Two packages the owner listed in turn 4 are not merged into one silently | the plans did that without saying so; Phase 5 starts with one rival and asks before treating two as the same (names under `b-private-store`) | the owner names the package |
+| D2 | A catalogue on the owner's list is not a rival arm | it is a list of packages, not an installable package (v10 §P1.5) | — |
 | D3 | No numeric cost target yet | v10 §P1.4: set after a pilot and a power calculation; lift-v8's ≤ 2× is a proposal without data | Phase 3 has a measured pilot |
 
 ## Risk Register
