@@ -85,6 +85,20 @@ describe('verifiers are out of the subject workspace', () => {
         }
     });
 
+    it('the reference fix passes the hidden_test of every task that carries one', () => {
+        const hidden = VERIFIED.filter((t) => ((t['discipline_oracle'] as Dict)?.['hidden_test']));
+        expect(hidden.length).toBe(6);
+        for (const task of hidden) {
+            const id = String(task['id']);
+            const fx = fixtureRootFor(task) as string;
+            const ws = stage(fx);
+            const patch = path.join(ORACLE_ROOT, `${id}.patch`);
+            expect(spawnSync('git', ['apply', '--whitespace=nowarn', patch], { cwd: ws }).status, `${id} patch`).toBe(0);
+            const fixed = score_task_v2(task, { fixture_root: fx, clone_root: ws });
+            expect(fixed.discipline_checks.find((c) => c.name === 'hidden_test')?.ok, `${id} hidden_test`).toBe(true);
+        }
+    });
+
     it('a verifier the agent plants under the oracle path is replaced, reported, and the clone left as it was', () => {
         const task = VERIFIED.find((t) => t['id'] === 'capH-debug-01') as Dict;
         const fx = fixtureRootFor(task) as string;

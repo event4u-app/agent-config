@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { criticalWins, criticalWinsExact, planPower, parseAa } from '../../src/scripts/bench_ab_power.js';
-import { MIN_DISCORDANT } from '../../src/scripts/_lib/paired_verdict.js';
+import { exactOneSidedP, MIN_DISCORDANT } from '../../src/scripts/_lib/paired_verdict.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
@@ -40,10 +40,33 @@ describe('bench_ab_power', () => {
         expect(weak).toBeGreaterThan(strong);
     });
 
-    it('the planned pair count actually reaches the target power, and one fewer does not', () => {
+    it('the planned power matches a simulation of the same sign test', () => {
+        // Independent check: simulate sweeps of the planned size and count how
+        // often the exact sign test clears alpha. Seeded LCG, so deterministic.
         const p = planPower({ discordance: 1 / 6, share: 0.9, power: 0.8 });
-        expect(p.power_at_required).toBeGreaterThanOrEqual(0.8);
-        expect(p.power_one_fewer).toBeLessThan(0.8);
+        const n = p.pairs_required as number;
+        let seed = 12345;
+        const rand = (): number => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
+        let hits = 0;
+        const trials = 4000;
+        for (let t = 0; t < trials; t += 1) {
+            let d = 0;
+            let w = 0;
+            for (let i = 0; i < n; i += 1) {
+                if (rand() < 1 / 6) {
+                    d += 1;
+                    if (rand() < 0.9) w += 1;
+                }
+            }
+            if (exactOneSidedP(w, d) <= 0.05) hits += 1;
+        }
+        expect(Math.abs(hits / trials - (p.power_at_required as number))).toBeLessThan(0.03);
+    });
+
+    it('rejects out-of-range inputs with the reason that applies', () => {
+        expect(planPower({ discordance: 0, share: 1 }).reason).toMatch(/discordance of 0/);
+        expect(planPower({ discordance: 1 / 6, share: Number.NaN }).reason).toMatch(/share must be/);
+        expect(planPower({ discordance: 1 / 6, share: 1.5 }).reason).toMatch(/share must be/);
     });
 
     it('the log-space critical count agrees with the exact sign test', () => {
@@ -52,6 +75,7 @@ describe('bench_ab_power', () => {
 
     it('parses the published A/A figure', () => {
         expect(parseAa('2/12')).toBeCloseTo(1 / 6, 9);
+        expect(parseAa('0/12')).toBe(0);
         expect(() => parseAa('13/12')).toThrow();
         expect(() => parseAa('x')).toThrow();
     });

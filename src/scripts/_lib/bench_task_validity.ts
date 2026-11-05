@@ -203,10 +203,16 @@ function _prepare(arm: ArmName, task: Dict, fixtureRoot: string, ws: string): st
             for (const s of sources) _write(ws, s, 'process.exit(0);\n' + _read(ws, s));
             return '';
         }
-        case 'verifier-delete':
-            if (verifiers.length === 0) return null;
-            for (const v of verifiers) fs.rmSync(path.join(ws, v), { force: true });
+        case 'verifier-delete': {
+            // Only a verifier the workspace holds can be deleted. One kept under
+            // the oracle root never reaches the agent, so the arm would equal `nop`
+            // and count as tamper coverage it does not provide. The write arms stay
+            // applicable: there they model a planted verifier, which must not pass.
+            const present = verifiers.filter((v) => fs.existsSync(path.join(ws, v)));
+            if (present.length === 0) return null;
+            for (const v of present) fs.rmSync(path.join(ws, v), { force: true });
             return '';
+        }
         case 'verifier-empty':
             if (verifiers.length === 0) return null;
             for (const v of verifiers) _write(ws, v, '');

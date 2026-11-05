@@ -490,7 +490,11 @@ export function price_row_for(
     model: string,
     rates: Record<string, TierRates>,
 ): { tier: string | null; priced_by: 'model' | 'family' | null } {
-    const m = model.toLowerCase();
+    // A provider prefix (`us.anthropic.`) and a context suffix (`[1m]`) do not
+    // change the list price; both are dropped before matching.
+    const raw = model.toLowerCase().replace(/\[[^\]]*\]$/, '');
+    const at = raw.indexOf('claude-');
+    const m = at > 0 ? raw.slice(at) : raw;
     const own = Object.keys(rates)
         .filter((k) => k.startsWith('claude-') && (m === k || m.startsWith(`${k}-`)))
         .sort((a, b) => b.length - a.length)[0];

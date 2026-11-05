@@ -46,16 +46,25 @@ function notDelivered(): Dict {
     return { stamp: 'x', model: 'claude-haiku-4-5', arms: ['vanilla', 'package'], records };
 }
 
-function labels(rec: Dict, compLabel = 'package lift'): string[] {
-    const c = (rec['comparisons'] as Dict[]).find((x) => x['arm_treatment'] === 'package') as Dict;
-    void compLabel;
-    return (c['labels'] as Array<{ label: string }>).map((l) => l.label).sort();
+function packageComparison(rec: Dict): Dict {
+    return (rec['comparisons'] as Dict[]).find((x) => x['arm_treatment'] === 'package') as Dict;
+}
+
+function labels(rec: Dict): string[] {
+    return (packageComparison(rec)['labels'] as Array<{ label: string }>).map((l) => l.label).sort();
 }
 
 describe('bench_ab_interpret', () => {
     it('reads the 2026-11-05 Haiku sweep as ceiling + underpowered + cost-overhead', () => {
         const rec = interpret(haikuSweep());
         expect(labels(rec)).toEqual(['ceiling', 'cost-overhead', 'underpowered']);
+    });
+
+    it('names only the axis at the ceiling, never one that still has room', () => {
+        const ceiling = (packageComparison(interpret(haikuSweep()))['labels'] as Array<{ label: string; evidence: string }>)
+            .find((l) => l.label === 'ceiling') as { evidence: string };
+        expect(ceiling.evidence).toMatch(/capability 1\.000/);
+        expect(ceiling.evidence).not.toMatch(/discipline/);
     });
 
     it('reads a sweep whose package arm never loaded as not-delivered', () => {

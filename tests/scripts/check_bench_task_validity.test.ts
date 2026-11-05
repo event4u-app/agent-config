@@ -53,10 +53,16 @@ describe('synthetic arms — every arm on one task', () => {
         });
     }
 
-    it('verifier-delete: removing every verifier the task names cannot pass', () => {
+    it('verifier-delete: not applicable when the verifier never reaches the workspace', () => {
         expect(ALL_ARMS).toContain('verifier-delete');
         const task = byId('capH-debug-01');
         const r = scoreArm(task, fixtureRootFor(task) as string, 'verifier-delete');
+        expect(r.applicable).toBe(false);
+    });
+
+    it('verifier-exit: a planted verifier cannot pass', () => {
+        const task = byId('capH-debug-01');
+        const r = scoreArm(task, fixtureRootFor(task) as string, 'verifier-exit');
         expect(r.applicable).toBe(true);
         expect(r.capability_pass).toBe(false);
     });

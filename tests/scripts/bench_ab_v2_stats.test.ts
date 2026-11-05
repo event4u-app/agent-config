@@ -457,7 +457,12 @@ describe('bench_ab_v2_stats — cost_by_arm (delta #6)', () => {
         // claude-haiku-4-5 lists at $1 / $5; the `haiku` family row carries a
         // former generation at a quarter of that. The 2026-11-05 sweep ran here.
         const records = [{ id: 't1', arms: { vanilla: [costTrial({ input: 1_000_000, output: 1_000_000 })] } }];
-        for (const model of ['claude-haiku-4-5', 'claude-haiku-4-5-20251001']) {
+        for (const model of [
+            'claude-haiku-4-5',
+            'claude-haiku-4-5-20251001',
+            'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+            'claude-haiku-4-5[1m]',
+        ]) {
             const cost = cost_by_arm(records, ['vanilla'], model, PRICING);
             expect(cost['priced_by'], model).toBe('model');
             expect(cost['tier'], model).toBe('claude-haiku-4-5');

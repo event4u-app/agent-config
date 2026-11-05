@@ -89,8 +89,14 @@ export function planPower(input: PowerInput): PowerPlan {
     const max = input.maxPairs ?? 2000;
     const base = { alpha, power: target };
     const none = { discordant_required: null, pairs_required: null, power_at_required: null, power_one_fewer: null };
-    if (!(input.discordance > 0 && input.discordance <= 1)) {
-        return { ...base, ...none, reachable: false, reason: 'discordance must be in (0, 1]' };
+    if (!(input.discordance >= 0 && input.discordance <= 1)) {
+        return { ...base, ...none, reachable: false, reason: 'discordance must be in [0, 1]' };
+    }
+    if (input.discordance === 0) {
+        return { ...base, ...none, reachable: false, reason: 'a discordance of 0 means no pair ever differs; no sample size can show a direction' };
+    }
+    if (!(input.share >= 0 && input.share <= 1)) {
+        return { ...base, ...none, reachable: false, reason: 'share must be in [0, 1]' };
     }
     if (input.share <= 0.5) {
         return { ...base, ...none, reachable: false, reason: 'a share at or below one half cannot clear a one-sided sign test at any size' };

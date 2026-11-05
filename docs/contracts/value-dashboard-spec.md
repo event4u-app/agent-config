@@ -199,7 +199,7 @@ glossary block); the renderer never silently changes it.
 | Marker | Meaning |
 |---|---|
 | `measured` | Derived from a raw report under `internal/bench/reports/` produced by an in-repo script |
-| `estimated` | Computed by `value_ladder.py` from primary measurements (e.g. cumulative %) |
+| `estimated` | Computed by `src/scripts/_lib/value_ladder.ts` from primary measurements (e.g. cumulative %) |
 | `vendor-claim` | Quoted from an upstream source without local measurement (used for context, never the headline) |
 | `pending` | The rung exists in the schema but no measurement is available yet |
 
@@ -363,7 +363,7 @@ measure agent behaviour, not token footprint).
 | A/B Track B | `—` — no `live` run on record | Closed in Phase 3 Step 1 |
 | Telegraph input-side (condense) | median **+3.52%** savings (Thin-Root files net **−3.92% to −4.84%**) | Aggregated to a single rung in Phase 2 Step 2; Thin-Root surfaced as footnote |
 | Telegraph output-side (`vs_terse`) | median **−9.27%** | Rendered honestly per § "Terse rung honesty" above |
-| rtk savings | **not measured anywhere** | Closed in Phase 2 Step 3 (new `bench_rtk_savings.py`) |
+| rtk savings | **not measured anywhere** | Closed in Phase 2 Step 3 (new `src/scripts/bench_rtk_savings.ts`) |
 | Right-skill selection (Track A vs. Track B coverage) | exists in the dev corpus; not surfaced as `with` vs. `without` | Closed in Phase 3 Step 2 |
 | Destructive-op stops | 5 prompts exist in the corpus spec; not measured | Closed in Phase 3 Step 3 |
 

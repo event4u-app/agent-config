@@ -69,7 +69,7 @@ These are the first sweeps through the container path. Every run used one subscr
 | Weak host, `claude-haiku-4-5`, `trapE-scope-01/02` × 12 seeds | `2026-11-05T10-05-05Z` | `package` vs `vanilla` | 24 | 100% → 100% | 0.833 → 1.000, p=0.10 (4 discordant, all for `package`) | 6.0× ($0.024 → $0.145) | 7.9× |
 | Strong host, `claude-sonnet-4-6`, the first 15 tasks × 3 seeds | `2026-11-05T10-29-04Z` | `package` vs `vanilla` | 45 | 87% → 91%, McNemar p=0.63 | 0.944 → 0.978, p=0.36 (4 discordant) | 6.6× ($0.038 → $0.249) | 5.5× |
 
-The priced factor prices each usage bucket at the served model's own list rate (`internal/bench/pricing.yaml`); the token factor counts tokens, which differ in price by up to 125× between buckets. The two move in opposite directions on the two hosts, so neither stands in for the other.
+The priced factor prices each usage bucket at the served model's own list rate (`internal/bench/pricing.yaml`); the token factor counts tokens, which differ in price by 50× between buckets on both models (output against cache read). The two move in opposite directions on the two hosts, so neither stands in for the other.
 
 What these runs show:
 

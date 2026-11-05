@@ -64,11 +64,15 @@ function labelsFor(comp: Dict, records: Dict[], cost: Dict): Label[] {
     const dis = dict(comp['discipline']);
     const capBase = num(cap['rate_baseline']);
     const disBase = num(dis['mean_baseline']);
-    if (num(comp['n_pairs']) > 0 && (capBase >= CEILING || disBase >= CEILING)) {
+    const atCeiling = [
+        ...(capBase >= CEILING ? [`capability ${capBase.toFixed(3)}`] : []),
+        ...(disBase >= CEILING ? [`discipline ${disBase.toFixed(3)}`] : []),
+    ];
+    if (num(comp['n_pairs']) > 0 && atCeiling.length > 0) {
         out.push({
             label: 'ceiling',
-            evidence: `control capability ${capBase.toFixed(3)}, discipline ${disBase.toFixed(3)} (≥ ${CEILING})`,
-            next: 'use tasks where the control fails more often',
+            evidence: `control ${atCeiling.join(', ')} (≥ ${CEILING}); the axes named have no room to show a lift`,
+            next: 'use tasks where the control fails more often on those axes',
         });
     }
     const capDisc = num(cap['discordant_b_only_treatment']) + num(cap['discordant_c_only_baseline']);

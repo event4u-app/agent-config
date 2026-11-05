@@ -162,7 +162,7 @@ Evidence (read): `docs/benchmark.md:76` · `docs/contracts/value-dashboard-spec.
 - [x] **5.2** Replace the stale `.py` script references (eight in
   `docs/contracts/value-dashboard-spec.md`, four in
   `docs/contracts/benchmark-report-schema.md`) with the `.ts` paths that exist.
-  verify: `grep -cE 'scripts/[a-z_]+\.py' docs/contracts/value-dashboard-spec.md docs/contracts/benchmark-report-schema.md` -> 0 per file
+  verify: `grep -cE '\b[a-z_]+\.py\b' docs/contracts/value-dashboard-spec.md docs/contracts/benchmark-report-schema.md` -> 0 per file
 
 ## Decisions
 
