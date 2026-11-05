@@ -133,7 +133,7 @@ export function indexBackedGraph(index: GraphIndex, source: string, answeredBy: 
  * `AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES` lowers it so a small fixture graph can
  * be answered through the real twin, which is how that path is tested.
  */
-function indexedReadMinEdges(): number {
+export function indexedReadMinEdges(): number {
     return Number(process.env['AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES'] ?? INDEXED_READ_MIN_EDGES);
 }
 

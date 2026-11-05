@@ -260,7 +260,7 @@ answers. Each step is fixture-gated (K5).
       verbs' `budget` / `truncated` and the context pack's accounting — no third
       mechanism. Caps derive from per-line costs measured here, not from S1's figures.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'omitted counted not truncated'` -> 0
-- [ ] 4.6 **The review path reads the index.** `review-risk` parses the whole JSON
+- [x] 4.6 **The review path reads the index.** `review-risk` parses the whole JSON
       graph in the CLI (`cli.ts`), the MCP tool (`graph_tools.ts`) and the map's agent
       area (`map_area_payloads.ts`); it reads through `openGraphIndex` instead, and
       builds adjacency without an array spread per edge. Measure the 50k-edge
@@ -271,6 +271,7 @@ answers. Each step is fixture-gated (K5).
       collision shapes fixed since. Confirm on the real graph before scheduling.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'reads through the index'` -> 0
       > note: precondition met 2026-10-27 — this repository's twin opens (261,913 edges, 0 duplicate node ids); adjacency no longer spreads per edge. Open: the index path needs kind- and relation-scoped reads in `sqlite_store.ts`, which is in the hook bundle at 1 byte of headroom, so it needs a `raise_log` entry first; the 50k crossover is unmeasured.
+      > note: closed 2026-11-05 — `RiskSource` over the index for the CLI and MCP paths (the map keeps its parsed graph and reuses its own lookups), scoped reads in `sqlite_store.ts` (+1,277 B, under the current bundle cap, no `raise_log` needed), twin meta keys `lanes_run` / `partial`. Crossover measured at ~1k edges for `query`, ~10k for `review-risk`; the threshold is now 10,000 (`internal/bench/reports/code-graph-index-crossover-2026-11-05.md`). Twins built earlier fall back to JSON until rebuilt.
 - [x] 4.7 **A region read list.** Extend the existing `recommended_reads` (`query.ts`)
       and the pack's `at=file:line` items with a region budget — changed regions
       risk-ordered round-robin, at most 40 % per file, definitions up to 40 lines
