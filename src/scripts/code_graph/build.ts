@@ -38,7 +38,7 @@ import {
 } from './resolution_tiers.js';
 import { templateBase } from './conventions_default.js';
 import { DOC_EXTS } from './docs_layer.js';
-import { readScipIndex, type ScipDocument } from './scip_reader.js';
+import { alignScipLinesUnder, readScipIndex, type ScipDocument } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
@@ -224,13 +224,20 @@ interface SymbolTable {
  * the very same-name table that produced the false `path` edge in the first
  * place.
  */
-type Capability = 'callable' | 'constructible' | 'any';
+type Capability = 'callable' | 'free-callable' | 'constructible' | 'any';
 const CALLABLE_KINDS: ReadonlySet<string> = new Set(['function', 'method']);
 const CONSTRUCTIBLE_KINDS: ReadonlySet<string> = new Set(['class']);
+/**
+ * Languages where a bare `f()` never reaches a method: a method needs `$this->`,
+ * `this.`, `self.` or a receiver. Java, C# and Ruby call their own methods bare,
+ * so they keep `callable`.
+ */
+const RECEIVER_LANGS: ReadonlySet<Lang> = new Set(['php', 'typescript', 'javascript', 'python', 'go']);
 
 function satisfies(kind: string | undefined, want: Capability): boolean {
     if (kind === undefined) return true; // a file id / external ref — unknown, not disqualified
     if (want === 'callable') return CALLABLE_KINDS.has(kind);
+    if (want === 'free-callable') return kind === 'function';
     if (want === 'constructible') return CONSTRUCTIBLE_KINDS.has(kind);
     return true;
 }
@@ -478,11 +485,14 @@ export function buildGraph(
      * yields to a concrete owner at the same level. `stated` is true only when
      * every link walked to reach the owners was stated by its child's file.
      */
-    const hierOwners = (classId: string, name: string): { owners: string[]; stated: boolean } => {
+    // `fromParents`: a `parent::m()` call never names the class it is written in.
+    const hierOwners = (classId: string, name: string, fromParents = false): { owners: string[]; stated: boolean } => {
         const seen = new Set<string>();
         let level = new Map<string, boolean>([[classId, true]]);
+        let skip = fromParents;
         while (level.size > 0) {
-            const hits = [...level].filter(([c]) => sym.ownMethods.get(c)?.has(name));
+            const hits = skip ? [] : [...level].filter(([c]) => sym.ownMethods.get(c)?.has(name));
+            skip = false;
             if (hits.length > 0) {
                 const concrete = hits.filter(([c]) => nodeKind.get(c) !== 'interface');
                 const pick = concrete.length > 0 ? concrete : hits;
@@ -877,7 +887,7 @@ export function buildGraph(
         }
         // relation === 'calls'
         if (r.callStyle === 'new' || r.callStyle === 'free') {
-            const want: Capability = r.callStyle === 'new' ? 'constructible' : 'callable';
+            const want: Capability = r.callStyle === 'new' ? 'constructible' : RECEIVER_LANGS.has(ex.lang) ? 'free-callable' : 'callable';
             const hit = resolveInScope(ex.file, r.targetName, want, ex.lang);
             emit({
                 source: r.sourceId,
@@ -896,7 +906,7 @@ export function buildGraph(
             return;
         }
         if (r.callStyle === 'this' || r.callStyle === 'self' || r.callStyle === 'static' || r.callStyle === 'parent') {
-            const walked = r.enclosingClassId ? hierOwners(r.enclosingClassId, r.targetName) : { owners: [], stated: false };
+            const walked = r.enclosingClassId ? hierOwners(r.enclosingClassId, r.targetName, r.callStyle === 'parent') : { owners: [], stated: false };
             const owners = walked.owners;
             if (owners.length === 1) {
                 emit({
@@ -926,7 +936,8 @@ export function buildGraph(
                 });
             } else {
                 // enclosing class extends an out-of-repo base → honest AMBIGUOUS
-                const cands = methodCandidates(r.targetName, ex.lang);
+                const own = r.callStyle === 'parent' && r.enclosingClassId ? `${r.enclosingClassId}::${r.targetName}` : null;
+                const cands = methodCandidates(r.targetName, ex.lang).filter((c) => c !== own);
                 emit({
                     source: r.sourceId,
                     target: ambiguousTarget(cands, r.targetName),
@@ -1364,7 +1375,7 @@ export function readScipIndexes(abs: string): ScipDocument[] {
             process.stderr.write(`code-graph: ${toPosixRel(abs, full)} not read — ${(e as Error).message}\n`);
         }
     }
-    return out;
+    return alignScipLinesUnder(out, abs);
 }
 
 /** Exported so `refresh` (cli.ts) can locate/seed/promote the sidecar next to

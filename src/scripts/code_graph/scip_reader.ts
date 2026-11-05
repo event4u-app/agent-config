@@ -13,6 +13,9 @@
  * Everything else is skipped by wire type, so a newer index with more fields
  * still reads. A malformed buffer throws; the caller treats that as "no SCIP".
  */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
 import type { CodeEdge, CodeNode } from './types.js';
 import { isStatedResolution } from './types.js';
 
@@ -113,6 +116,50 @@ export function readScipIndex(buf: Uint8Array): ScipDocument[] {
         else r.skip(wire);
     }
     return docs;
+}
+
+const LS = 0x2028;
+const PS = 0x2029;
+const CR = 0x0d;
+const LF = 0x0a;
+
+/**
+ * SCIP lines in the graph's numbering. A TypeScript indexer ends a line at
+ * LF, CRLF, a lone CR, U+2028 and U+2029; the native extractor (tree-sitter
+ * rows) ends one at LF only, so in a file holding either of the last three
+ * every later SCIP line points past its node. `readText` returns a document's
+ * source, or null when it cannot be read — that document is left as it is.
+ */
+export function alignScipLines(docs: readonly ScipDocument[], readText: (docPath: string) => string | null): ScipDocument[] {
+    return docs.map((d) => {
+        const text = readText(d.path);
+        if (text === null) return d;
+        const lfLineOf: number[] = [0];
+        let lfLine = 0;
+        let shifted = false;
+        for (let i = 0; i < text.length; i++) {
+            const c = text.charCodeAt(i);
+            if (c === LF) lfLine++;
+            else if (c === CR && text.charCodeAt(i + 1) === LF) continue;
+            else if (c !== CR && c !== LS && c !== PS) continue;
+            else shifted = true;
+            lfLineOf.push(lfLine);
+        }
+        if (!shifted) return d;
+        const last = lfLineOf.length - 1;
+        return { ...d, occurrences: d.occurrences.map((o) => ({ ...o, line: lfLineOf[Math.min(o.line, last)] as number })) };
+    });
+}
+
+/** {@link alignScipLines} over documents whose paths are relative to `root`. */
+export function alignScipLinesUnder(docs: readonly ScipDocument[], root: string): ScipDocument[] {
+    return alignScipLines(docs, (p) => {
+        try {
+            return fs.readFileSync(path.join(root, p), 'utf8');
+        } catch {
+            return null;
+        }
+    });
 }
 
 /**
