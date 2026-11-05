@@ -36,3 +36,11 @@ stays under 250 ms on a fast machine.
       `evaluator-independence` § Tests are evaluators, the new test is shown red against
       the removed quadratic regex before it lands, and an independent reviewer validates it.
 - [ ] **1.2 Verify on CI** — the shard that ran it is green on three consecutive pushes.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-05 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The growth check stops catching a quadratic regression | implementation | A ratio bound loose enough to survive runner noise could also admit the regex the test exists to forbid | 1.1 shows the new test red against the removed quadratic implementation before it lands, and an independent reviewer validates it | Phase 1 — measure growth, not one sample |
+| 2 | Weakening the test while calling it a fix | product | Raising the 250 ms bound would silence the red and remove the guard | The bound is not raised; the assertion changes what it measures, and the absolute ceiling stays as a backstop | Phase 1 — measure growth, not one sample |
