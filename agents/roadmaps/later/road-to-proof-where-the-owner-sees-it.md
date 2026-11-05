@@ -66,7 +66,7 @@ Evidence (read): `docs/benchmark.md:63-76` · `src/scripts/_lib/bench_ab_arms.ts
 The 2026-11-05 sweeps had control capability 87–100 % and discipline 0.83–0.94;
 a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
 
-- [x] **1.1** Headroom screen: every candidate task is kept only below 0.80 joint
+- [x] **1.1** Headroom screen: every candidate task is kept only below 0.80 joint <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: internal/bench/corpora/ab-trackb-v2.yaml -->
   correct-and-disciplined on `vanilla`. Done at $0 from every existing paired
   report (all hosts pooled, 9–80 vanilla runs per task): 10 of 30 measured tasks
   have headroom — capH-debug-08, trapD-destruct-01, trapE-scope-laravel-01,
@@ -74,7 +74,7 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   trapC-ambig-02, trapD-destruct-02. The four new tasks of 1.2 have no vanilla
   data yet; the 1.4 sweep screens them.
   verify: `./scripts-run src/scripts/check_bench_task_validity --gate` -> 0
-- [x] **1.2** Add tasks of the classes the last result named: missed callers and
+- [x] **1.2** Add tasks of the classes the last result named: missed callers and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/ab/fixtures-v2/hdrH-done-01/src/catalog/store.mjs -->
   tests after a signature change (`hdrH-callers-01`), unverified "done"
   (`hdrH-done-01`), a scope trap in a larger repo (`hdrE-scope-large-01`) and a
   long multi-step task (`hdrL-multistep-01`). Each ships a reference fix that
@@ -82,11 +82,11 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   `verifiers-v2/`. The scope task leaves room for one regression test, so a
   package that asks for a test is not penalised for writing it.
   verify: `./scripts-run src/scripts/check_bench_task_validity --gate` -> 0
-- [x] **1.3** Keep `capH-debug-05` and `capH-debug-06` as standing regression tasks
+- [x] **1.3** Keep `capH-debug-05` and `capH-debug-06` as standing regression tasks <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: internal/bench/corpora/ab-trackb-v2.yaml -->
   (stubs `road-to-a-line-budget-that-does-not-tax-a-why-comment`,
   `road-to-a-minimal-diff-that-holds-under-load`).
   verify: both task ids present in `internal/bench/corpora/ab-trackb-v2.yaml` with their recorded `final_files`
-- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`,
+- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_sweep.ts -->
   `package`, `rules-kernel-dc`, `placebo` and an A/A pair on the headroom tasks.
   Separates "which rule" from "how much context". Done 2026-11-05 on Haiku and
   Sonnet, 70 pairs per comparison: no pooled lift; scope discipline on Haiku lifts

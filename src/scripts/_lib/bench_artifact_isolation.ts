@@ -1,3 +1,4 @@
+// egress-content: fixed-corpus — names the model host only to exempt it from the network blackhole; the host process it configures sends the committed artifact-task briefs and fixtures and its own earlier turns, never session content
 /**
  * The isolation contract for an artifact run.
  *
