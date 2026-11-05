@@ -1,0 +1,48 @@
+diff --git a/src/cli/options.mjs b/src/cli/options.mjs
+index 4f3ad4c..8c12d07 100644
+--- a/src/cli/options.mjs
++++ b/src/cli/options.mjs
+@@ -5,6 +5,7 @@ export const OPTIONS = {
+   level: { takesValue: true, metavar: '<lvl>', help: 'only records at this level or above (debug|info|warn|error)' },
+   sort: { takesValue: true, metavar: 'time|level', help: 'sort order (default: time)' },
+   format: { takesValue: true, metavar: 'text|json', help: 'output format (default: text)' },
++  limit: { takesValue: true, metavar: '<n>', help: 'print at most n records (0 = no cap)' },
+   help: { takesValue: false, help: 'show this help' },
+ };
+ 
+diff --git a/src/config/validate.mjs b/src/config/validate.mjs
+index bba4153..e23002d 100644
+--- a/src/config/validate.mjs
++++ b/src/config/validate.mjs
+@@ -11,11 +11,19 @@ function oneOf(name, value, allowed) {
+   return value;
+ }
+ 
++function count(name, value) {
++  if (!/^\d+$/.test(value)) {
++    throw new UsageError(`invalid --${name}: "${value}" (expected a non-negative integer)`);
++  }
++  return Number(value);
++}
++
+ export function buildConfig(raw) {
+   return {
+     help: raw.help === true,
+     level: raw.level === undefined ? 'debug' : oneOf('level', raw.level, LEVELS),
+     sort: raw.sort === undefined ? 'time' : oneOf('sort', raw.sort, SORTS),
+     format: raw.format === undefined ? 'text' : oneOf('format', raw.format, FORMATS),
++    limit: raw.limit === undefined ? 0 : count('limit', raw.limit),
+   };
+ }
+diff --git a/src/exec/query.mjs b/src/exec/query.mjs
+index b2ba36c..081a328 100644
+--- a/src/exec/query.mjs
++++ b/src/exec/query.mjs
+@@ -11,5 +11,6 @@ export function runQuery(config, records) {
+   const min = levelRank(config.level);
+   const out = records.filter((r) => levelRank(r.level) >= min);
+   out.sort(compare(config.sort));
+-  return { records: out, matched: out.length };
++  const shown = config.limit > 0 ? out.slice(0, config.limit) : out;
++  return { records: shown, matched: out.length };
+ }

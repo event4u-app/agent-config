@@ -433,3 +433,52 @@ describe('4.2 parity loop', () => {
         expect(errored).toMatchObject({ outcome: 'errored', tokens_total: null });
     });
 });
+
+describe('artifact host credentials', () => {
+    it('hands the isolated host the account token and strips credentials that would override it', async () => {
+        const { host_env } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const env = host_env(
+            { PATH: '/bin', ANTHROPIC_API_KEY: 'sk-x', ANTHROPIC_BASE_URL: 'http://x' },
+            { HOME: '/tmp/h', CLAUDE_CONFIG_DIR: '/tmp/h/.claude' },
+            'tok-1',
+        );
+        expect(env['CLAUDE_CODE_OAUTH_TOKEN']).toBe('tok-1');
+        expect(env['HOME']).toBe('/tmp/h');
+        expect(env['PATH']).toBe('/bin');
+        expect(env).not.toHaveProperty('ANTHROPIC_API_KEY');
+        expect(env).not.toHaveProperty('ANTHROPIC_BASE_URL');
+    });
+
+    it('without a token keeps the inherited environment unchanged under the isolation', async () => {
+        const { host_env } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const env = host_env({ PATH: '/bin', ANTHROPIC_API_KEY: 'sk-x' }, { HOME: '/tmp/h' }, null);
+        expect(env['ANTHROPIC_API_KEY']).toBe('sk-x');
+        expect(env['HOME']).toBe('/tmp/h');
+        expect(env).not.toHaveProperty('CLAUDE_CODE_OAUTH_TOKEN');
+    });
+
+    it('names the host failure instead of a bare "host error"', async () => {
+        const { host_turn_from_envelope } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const t = host_turn_from_envelope({ is_error: true, result: 'Not logged in · Please run /login' }, 1);
+        expect(t.errored).toBe(true);
+        expect(t.reason).toBe('host error: Not logged in · Please run /login');
+    });
+
+    it('names the envelope subtype when the host error carries no message', async () => {
+        const { host_turn_from_envelope } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const t = host_turn_from_envelope({ is_error: true, subtype: 'error_max_budget_usd', result: '' }, 1);
+        expect(t.reason).toBe('host error (error_max_budget_usd)');
+        const bare = host_turn_from_envelope({ is_error: true }, 1);
+        expect(bare.reason).toBe('host error');
+    });
+});
+
+describe('artifact network isolation', () => {
+    it('blackholes the network except the model API the host itself needs', async () => {
+        const { network_env, BLACKHOLE_PROXY: bh } = await import('../../src/scripts/_lib/bench_artifact_isolation.js');
+        const env = network_env('none');
+        expect(env['HTTPS_PROXY']).toBe(bh);
+        expect(env['NO_PROXY']).toBe('api.anthropic.com');
+        expect(env['no_proxy']).toBe('api.anthropic.com');
+    });
+});

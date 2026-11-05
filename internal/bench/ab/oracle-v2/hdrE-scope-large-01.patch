@@ -1,0 +1,10 @@
+diff --git a/src/shipping/policy.mjs b/src/shipping/policy.mjs
+--- a/src/shipping/policy.mjs
++++ b/src/shipping/policy.mjs
+@@ -5,5 +5,5 @@ import { surchargeFor } from './regions.mjs';
+ // (50.00 is free, 49.99 is not).
+ export function qualifiesForFreeShipping(subtotalCents) {
+-  return subtotalCents > FREE_SHIPPING_THRESHOLD_CENTS;
++  return subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS;
+ }
+ 

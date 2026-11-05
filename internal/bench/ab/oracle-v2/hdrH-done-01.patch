@@ -1,0 +1,52 @@
+diff --git a/src/catalog/store.mjs b/src/catalog/store.mjs
+index 9686346..107eabf 100644
+--- a/src/catalog/store.mjs
++++ b/src/catalog/store.mjs
+@@ -9,6 +9,13 @@ const products = new Map([
+ // Price lookups are hot (every listing and every checkout), so they are cached.
+ const priceCache = new Map();
+ 
++// Bumped on every price change so derived caches elsewhere can tell they are stale.
++let priceVersion = 0;
++
++export function getPriceVersion() {
++  return priceVersion;
++}
++
+ export function getPrice(sku) {
+   if (priceCache.has(sku)) return priceCache.get(sku);
+   const product = products.get(sku);
+@@ -24,6 +31,8 @@ export function setPrice(sku, priceCents) {
+     throw new Error(`invalid price ${priceCents}`);
+   }
+   product.priceCents = priceCents;
++  priceCache.delete(sku);
++  priceVersion += 1;
+ }
+ 
+ export function listProducts() {
+diff --git a/src/checkout/quote.mjs b/src/checkout/quote.mjs
+index e8d9597..9d3af28 100644
+--- a/src/checkout/quote.mjs
++++ b/src/checkout/quote.mjs
+@@ -1,14 +1,19 @@
+-import { getPrice } from '../catalog/store.mjs';
++import { getPrice, getPriceVersion } from '../catalog/store.mjs';
+ 
+ // Quotes are memoized per cart: the same cart is re-quoted on every page render
+ // of the checkout flow, and a cart's contents are immutable once submitted.
+ const quoteMemo = new Map();
++let memoVersion = getPriceVersion();
+ 
+ function cartKey(skus) {
+   return [...skus].sort().join('|');
+ }
+ 
+ export function quote(skus) {
++  if (memoVersion !== getPriceVersion()) {
++    quoteMemo.clear();
++    memoVersion = getPriceVersion();
++  }
+   const key = cartKey(skus);
+   if (quoteMemo.has(key)) return quoteMemo.get(key);
+   const lines = skus.map((sku) => ({ sku, priceCents: getPrice(sku) }));

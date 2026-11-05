@@ -1,0 +1,97 @@
+diff --git a/src/core/money.mjs b/src/core/money.mjs
+index 53a0c98..eaf233f 100644
+--- a/src/core/money.mjs
++++ b/src/core/money.mjs
+@@ -1,22 +1,26 @@
+ // Amount parsing for the billing core. Amounts arrive as strings such as
+-// "12.50", "EUR 12.50" or "USD 3". Everything downstream works in integer cents.
++// "12.50", "EUR 12.50" or "USD 3". parseAmount returns { cents, currency };
++// everything downstream works in integer cents.
+ 
+ const CURRENCY_PREFIX = /^([A-Z]{3})\s+/;
++const DEFAULT_CURRENCY = 'EUR';
+ 
+ export function parseAmount(text) {
+   const raw = String(text).trim();
++  const match = raw.match(CURRENCY_PREFIX);
++  const currency = match ? match[1] : DEFAULT_CURRENCY;
+   const body = raw.replace(CURRENCY_PREFIX, '');
+   const value = Number(body);
+   if (!Number.isFinite(value)) {
+     throw new Error(`not an amount: ${text}`);
+   }
+-  return Math.round(value * 100);
++  return { cents: Math.round(value * 100), currency };
+ }
+ 
+ export function sumAmounts(texts) {
+   let total = 0;
+   for (const t of texts) {
+-    total += parseAmount(t);
++    total += parseAmount(t).cents;
+   }
+   return total;
+ }
+diff --git a/src/dev/seed.mjs b/src/dev/seed.mjs
+index 4395884..92f5b80 100644
+--- a/src/dev/seed.mjs
++++ b/src/dev/seed.mjs
+@@ -8,5 +8,5 @@ const DEMO = [
+ ];
+ 
+ export function buildDemoOrders() {
+-  return DEMO.map((o) => ({ id: o.id, totalCents: core.readAmount(o.price) * o.qty }));
++  return DEMO.map((o) => ({ id: o.id, totalCents: core.readAmount(o.price).cents * o.qty }));
+ }
+diff --git a/src/import/columns.mjs b/src/import/columns.mjs
+index 55b1986..6bd2bcd 100644
+--- a/src/import/columns.mjs
++++ b/src/import/columns.mjs
+@@ -20,7 +20,8 @@ export function importCsv(text, schema) {
+     const cells = line.split(',');
+     const row = {};
+     schema.forEach((col, i) => {
+-      row[col.name] = parserFor(col.type)(cells[i]);
++      const value = parserFor(col.type)(cells[i]);
++      row[col.name] = col.type === 'amount' ? value.cents : value;
+       if (col.type === 'amount') totalCents += row[col.name];
+     });
+     rows.push(row);
+diff --git a/src/invoice/lines.mjs b/src/invoice/lines.mjs
+index 2d70a78..fee773d 100644
+--- a/src/invoice/lines.mjs
++++ b/src/invoice/lines.mjs
+@@ -1,7 +1,7 @@
+ import { readAmount } from '../core/index.mjs';
+ 
+ export function lineTotal(line) {
+-  return readAmount(line.price) * line.qty;
++  return readAmount(line.price).cents * line.qty;
+ }
+ 
+ export function invoiceTotal(invoice) {
+@@ -10,7 +10,7 @@ export function invoiceTotal(invoice) {
+     total += lineTotal(line);
+   }
+   if (invoice.discount) {
+-    total -= readAmount(invoice.discount);
++    total -= readAmount(invoice.discount).cents;
+   }
+   return Math.max(total, 0);
+ }
+diff --git a/src/reports/budget.mjs b/src/reports/budget.mjs
+index 1e3ca85..e003844 100644
+--- a/src/reports/budget.mjs
++++ b/src/reports/budget.mjs
+@@ -1,9 +1,9 @@
+ import { parseAmount } from '../core/money.mjs';
+ 
+ export function remainingCents(entry) {
+-  return parseAmount(entry.budget) - parseAmount(entry.spent);
++  return parseAmount(entry.budget).cents - parseAmount(entry.spent).cents;
+ }
+ 
+ export function overBudget(entry) {
+-  return parseAmount(entry.spent) > parseAmount(entry.budget);
++  return parseAmount(entry.spent).cents > parseAmount(entry.budget).cents;
+ }

@@ -7,11 +7,14 @@
  * One JSONL line per run lands in the reports directory. Nothing here prices
  * or aggregates; a stats pass reads these lines.
  *
- * Unverified on a real host (no paid run was made when this landed): the
- * per-arm config dir carries no credentials, so the host authenticates only
- * through an inherited `ANTHROPIC_API_KEY`; and the user-scope plugin does not
- * load under a temp HOME, so the `package` arm loads this checkout with
- * `--plugin-dir`. Both are stated, not assumed to work.
+ * The per-arm config dir carries no credentials, so the host authenticates
+ * with the configured subscription token of the chosen `--account` (the same
+ * pool container sweeps use), and only falls back to an inherited
+ * `ANTHROPIC_API_KEY` when no token is configured. The first live sweep without
+ * that wiring errored on all 108 runs at $0. The user-scope plugin does not load
+ * under a temp HOME, so the `package` arm loads this checkout with
+ * `--plugin-dir`. `--isolation container` is not honoured on this path: the
+ * isolation is a temp HOME and workspace outside the repository.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -20,6 +23,7 @@ import process from 'node:process';
 
 import * as v1 from '../bench_ab_task_runner.js';
 import { ARMS, type ArmSpec } from './bench_ab_arms.js';
+import { container_env, read_token_pool, select_account } from './bench_ab_container.js';
 import { LADDER_NAMES, type ArtifactTask } from './bench_artifact_corpus.js';
 import { grade_primary } from './bench_artifact_graders.js';
 import { dispose, isolate_arm, seed_workspace, type ArmIsolation } from './bench_artifact_isolation.js';
@@ -28,13 +32,45 @@ import { parity_loop, type ArtifactHost, type HostTurn } from './bench_artifact_
 interface SweepArgs {
     tasks: Record<string, unknown>[];
     arms: string[];
-    args: { seeds: number; model: string; budget: number; timeout: number; mode: string; max_usd?: number | null };
+    args: { seeds: number; model: string; budget: number; timeout: number; mode: string; max_usd?: number | null; account?: string | null };
     repo_root: string;
     reports_dir: string;
 }
 
+/**
+ * The host process environment: the caller's, overlaid by the arm isolation. With
+ * a subscription token, credentials that would override it are dropped and the
+ * token is set; without one the inherited environment stands as it was.
+ */
+export function host_env(base: NodeJS.ProcessEnv, iso_env: Record<string, string>, token: string | null): Record<string, string> {
+    const merged: NodeJS.ProcessEnv = { ...base, ...iso_env };
+    if (token !== null) return container_env(merged, token);
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(merged)) if (typeof v === 'string') out[k] = v;
+    return out;
+}
+
+/** One host turn read from the CLI's JSON envelope; an error keeps the host's own message. */
+export function host_turn_from_envelope(o: Record<string, unknown>, _status: number | null): HostTurn {
+    const u = (o['usage'] ?? {}) as Record<string, number>;
+    const keys = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens'];
+    const tokens = keys.every((k) => typeof u[k] === 'number') ? keys.reduce((a, k) => a + (u[k] as number), 0) : null;
+    const errored = Boolean(o['is_error']);
+    const msg = typeof o['result'] === 'string' ? o['result'].trim().slice(0, 200) : '';
+    const subtype = typeof o['subtype'] === 'string' ? o['subtype'] : '';
+    const reason = msg ? `host error: ${msg}` : subtype ? `host error (${subtype})` : 'host error';
+    return {
+        session_id: typeof o['session_id'] === 'string' ? o['session_id'] : null,
+        errored,
+        ...(errored ? { reason } : {}),
+        tokens,
+        turns: typeof o['num_turns'] === 'number' ? o['num_turns'] : null,
+        usd: typeof o['total_cost_usd'] === 'number' ? o['total_cost_usd'] : null,
+    };
+}
+
 /** The claude CLI as an `ArtifactHost`: `--print` to start, `--resume <id>` to follow up. */
-export function claude_host(iso: ArmIsolation, spec: ArmSpec, opts: { model: string; budget: number; timeout: number; repo_root: string }): ArtifactHost {
+export function claude_host(iso: ArmIsolation, spec: ArmSpec, opts: { model: string; budget: number; timeout: number; repo_root: string; token?: string | null }): ArtifactHost {
     const call = (prompt: string, resume: string | null): HostTurn => {
         const binary = v1.claude_executable();
         if (binary === null) return { session_id: null, errored: true, reason: 'claude CLI not found', tokens: null, turns: null };
@@ -46,19 +82,9 @@ export function claude_host(iso: ArmIsolation, spec: ArmSpec, opts: { model: str
         });
         const at = cmd.indexOf('--');
         cmd.splice(at, 0, ...iso.host_flags, ...(resume ? ['--resume', resume] : []));
-        const r = spawnSync(binary, cmd, { cwd: iso.workspace, encoding: 'utf-8', timeout: opts.timeout * 1000, env: { ...process.env, ...iso.env } });
+        const r = spawnSync(binary, cmd, { cwd: iso.workspace, encoding: 'utf-8', timeout: opts.timeout * 1000, env: host_env(process.env, iso.env, opts.token ?? null) });
         try {
-            const o = JSON.parse(r.stdout ?? '') as Record<string, unknown>;
-            const u = (o['usage'] ?? {}) as Record<string, number>;
-            const keys = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens'];
-            const tokens = keys.every((k) => typeof u[k] === 'number') ? keys.reduce((a, k) => a + (u[k] as number), 0) : null;
-            return {
-                session_id: typeof o['session_id'] === 'string' ? o['session_id'] : null,
-                errored: Boolean(o['is_error']),
-                tokens,
-                turns: typeof o['num_turns'] === 'number' ? o['num_turns'] : null,
-                usd: typeof o['total_cost_usd'] === 'number' ? o['total_cost_usd'] : null,
-            };
+            return host_turn_from_envelope(JSON.parse(r.stdout ?? '') as Record<string, unknown>, r.status);
         } catch {
             return { session_id: null, errored: true, reason: `unparseable host output (exit ${r.status})`, tokens: null, turns: null };
         }
@@ -77,6 +103,7 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
     // Belt and braces over the per-call `--budget`: stop once reported spend reaches the sweep cap.
     const cap = a.args.max_usd ?? null;
     let spent = 0;
+    const token = sweep_token(a.args.account ?? null);
     for (const t of a.tasks as unknown as ArtifactTask[]) {
         for (const arm of a.arms) {
             for (let seed = 0; seed < a.args.seeds; seed += 1) {
@@ -88,7 +115,7 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
                     const iso = isolate_arm(arm, t.id, t.network, { repo_root: a.repo_root });
                     try {
                         seed_workspace(iso, path.join(ab, t.fixture));
-                        const host = claude_host(iso, ARMS[arm] as ArmSpec, { ...a.args, repo_root: a.repo_root });
+                        const host = claude_host(iso, ARMS[arm] as ArmSpec, { ...a.args, repo_root: a.repo_root, token });
                         const run = await parity_loop({ task: t, arm, ladder, host, grade: () => grade_primary(iso.workspace, t) });
                         spent += run.usd_total ?? 0;
                         fs.appendFileSync(out, JSON.stringify({ ...run, seed, model: a.args.model }) + '\n');
@@ -102,6 +129,20 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
     }
     process.stdout.write(`bench_ab_v2: artifact runs → ${path.relative(a.repo_root, out)}\n`);
     return 0;
+}
+
+/**
+ * The subscription token the sweep runs on: the named account, else the first
+ * configured one. No token configured and none named → null, so an inherited
+ * `ANTHROPIC_API_KEY` still works; a named account without a token is an error.
+ */
+function sweep_token(account: string | null): string | null {
+    try {
+        return select_account(read_token_pool(), account).token;
+    } catch (e) {
+        if (account !== null) throw e;
+        return null;
+    }
 }
 
 /**

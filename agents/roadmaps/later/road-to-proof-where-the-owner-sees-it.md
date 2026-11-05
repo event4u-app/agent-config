@@ -66,22 +66,38 @@ Evidence (read): `docs/benchmark.md:63-76` · `src/scripts/_lib/bench_ab_arms.ts
 The 2026-11-05 sweeps had control capability 87–100 % and discipline 0.83–0.94;
 a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
 
-- [ ] **1.1** Headroom screen: every candidate task is run on `vanilla` first (small,
-  priced, owner-released) and kept only below 0.80 joint correct-and-disciplined.
-  verify: `./scripts-run src/scripts/bench_ab_interpret <screen-report>` -> /ceiling/ never names the vanilla arm of a kept task
-- [ ] **1.2** Add tasks of the classes the last result named: missed callers and
-  tests after a signature change, unverified "done", scope traps in a larger repo,
-  long multi-step tasks. Each ships a reference fix that passes and an untouched
-  fixture that fails, with its solve check under the oracle root.
-  verify: `./scripts-run src/scripts/bench_ab_v2_run --mode selftest` -> 0 with every new task's reference fix passing and untouched fixture failing
-- [ ] **1.3** Keep `capH-debug-05` and `capH-debug-06` as standing regression tasks
+- [x] **1.1** Headroom screen: every candidate task is kept only below 0.80 joint <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: internal/bench/corpora/ab-trackb-v2.yaml -->
+  correct-and-disciplined on `vanilla`. Done at $0 from every existing paired
+  report (all hosts pooled, 9–80 vanilla runs per task): 10 of 30 measured tasks
+  have headroom — capH-debug-08, trapD-destruct-01, trapE-scope-laravel-01,
+  trapE-scope-01, capH-debug-04, capH-debug-05, trapC-ambig-01, trapA-overeng-03,
+  trapC-ambig-02, trapD-destruct-02. The four new tasks of 1.2 have no vanilla
+  data yet; the 1.4 sweep screens them.
+  verify: `./scripts-run src/scripts/check_bench_task_validity --gate` -> 0
+- [x] **1.2** Add tasks of the classes the last result named: missed callers and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/ab/fixtures-v2/hdrH-done-01/src/catalog/store.mjs -->
+  tests after a signature change (`hdrH-callers-01`), unverified "done"
+  (`hdrH-done-01`), a scope trap in a larger repo (`hdrE-scope-large-01`) and a
+  long multi-step task (`hdrL-multistep-01`). Each ships a reference fix that
+  passes and an untouched fixture that fails, with its verifier under
+  `verifiers-v2/`. The scope task leaves room for one regression test, so a
+  package that asks for a test is not penalised for writing it.
+  verify: `./scripts-run src/scripts/check_bench_task_validity --gate` -> 0
+- [x] **1.3** Keep `capH-debug-05` and `capH-debug-06` as standing regression tasks <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: internal/bench/corpora/ab-trackb-v2.yaml -->
   (stubs `road-to-a-line-budget-that-does-not-tax-a-why-comment`,
   `road-to-a-minimal-diff-that-holds-under-load`).
   verify: both task ids present in `internal/bench/corpora/ab-trackb-v2.yaml` with their recorded `final_files`
-- [~] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`,
+- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_sweep.ts -->
   `package`, `rules-kernel-dc`, `placebo` and an A/A pair on the headroom tasks.
-  Separates "which rule" from "how much context". Blocked: `b-owner-spend`.
+  Separates "which rule" from "how much context". Done 2026-11-05 on Haiku and
+  Sonnet, 70 pairs per comparison: no pooled lift; scope discipline on Haiku lifts
+  from 1/10 to 10/10 and the placebo does not reproduce it (`docs/benchmark.md`
+  § Headroom sweeps).
   verify: report under `internal/bench/reports/ab-v2/` with an A/A pair and `bench_ab_interpret` labels for every comparison
+- [ ] **1.5** Find why `package` makes Haiku ask the user for code in about 14% of
+  runs instead of reading the repository (`trapC-ambig-01`, `hdrE-scope-large-01`
+  in the 2026-11-05 Haiku sweep). Name the asset that triggers it from the
+  transcripts before changing anything.
+  verify: the transcripts of the asking runs name the asset; a rerun of the two tasks on Haiku shows the asking rate
 
 ## Phase 2 — The owner's domains
 
@@ -104,7 +120,17 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   editability (paths named, no embedded raster).
   verify: `npx vitest run tests/scripts/bench_artifact_svg.test.ts` -> 0
 - [~] **2.5** Owner-released pilot over 2.1–2.4 with a `--max-usd` cap; the report
-  states wins and losses alike. Blocked: `b-owner-spend`.
+  states wins and losses alike. Blocked: `b-owner-spend`. Partial 2026-11-05: an
+  artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
+  three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
+  the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
+- [ ] **2.6** Two faults the Sonnet artifact pilot exposed, both before any paid
+  rerun: every `package` run stopped at the per-call budget on its first turn ($1
+  and $3, against $0.14 for `vanilla`), with the cause unknown because the
+  workspaces are disposed; and the three PHP tasks end `indeterminate` because the
+  artifact path runs on a host without PHP. Keep the transcript of an errored run,
+  find what the first turn spends, and run the PHP tasks where PHP exists.
+  verify: one `package` run of `art-form-01` on Sonnet reaches an outcome other than `errored`, and the PHP tasks score on the untouched fixture
   verify: the report names wins and losses per domain with priced cost
 
 ## Phase 3 — Where the tokens go
@@ -218,8 +244,9 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 ### blocker: b-owner-spend
 
 - **Owner:** user
-- **What:** every paid sweep (1.4, 2.5, the 1.1 screen, 5.1–5.2). The 2026-11-05
-  sweeps spent $17.85 of a $30 release.
+- **What:** every paid sweep (2.5, 5.1–5.2). The first 2026-11-05 sweeps spent
+  $17.85 of a $30 release; the headroom sweeps the same day ran under a separate
+  $150 release (spend in `docs/benchmark.md` § Headroom sweeps).
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store
