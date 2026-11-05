@@ -196,6 +196,30 @@ For the 14 items whose class or shape is a closure (`callers-transitive`, `tests
 Every other item keeps its v2 result. The v2 closure rulings stay committed beside the
 v2.1 ones, and both truths are published.
 
+### Residual strata (roadmap step 2.7), fixed before any arm is scored
+
+The check v2.1 truth is sealed and stays unedited. A second truth file,
+`truth-v3-2026-11-05-strata.yaml`, carries the same files plus three markings, derived
+mechanically from the committed check records — no new ruling is taken:
+
+1. **`two_voice_files`** — per closure item, the files that are reachable over standing
+   edges but not over edges both judges ruled `VALID`. No fourth provider is configured
+   (the available alternatives are further Anthropic and OpenAI models), so these are
+   marked, not re-judged.
+2. **`lower_bound: true`** on `uo-e-01` and `uo-e-03`, whose event side the edge readers
+   did not complete. The scorer reads such an item as **recall-only**: its precision is
+   not computed and it does not enter a class's mean precision.
+3. **`faked_files`** — per closure item, the test files whose source calls
+   `Queue::fake`, `Bus::fake` or `Event::fake`, or mocks a class (`$this->mock`,
+   `partialMock`, `Mockery::mock`, `createMock`). They are a candidate overcount of the
+   static closure, counted and published; they are not removed.
+
+**What is scored.** The verdict (§ Bars) is drawn on the full file sets, with (2)
+applied. Beside every class result the report gives a **strict stratum**: the same
+scoring with (1) and (3) removed from the truth. The strict stratum carries no bar and
+cannot turn a verdict; it shows how much of a result rests on two-voice edges and
+faked paths.
+
 ## Arms (step 2.3)
 
 **A–E** (no fused arm, K4):

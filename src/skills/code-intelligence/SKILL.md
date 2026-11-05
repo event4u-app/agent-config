@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: code-intelligence
-description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead cheaper, never more precise; grep routine. Also 'call graph'."
+description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first; cheaper, not better. Graph-first classes: none; grep routine. Also 'call graph'."
 domain: engineering
 workspaces:
   - engineering
@@ -17,9 +17,9 @@ requires_skills:
 > imports Z*, *what breaks if I change this symbol* — ask an index that already
 > exists before rebuilding the relationship by hand: it is already built, its
 > answer is structured, and it costs a fraction of the tokens. It is **not** more
-> precise than a blind `grep` — measured on this repository's own source, zero
-> classes met the win bar (§ Measured twice) — so grep is the arm you fall back
-> to routinely and **with a stated reason**, not grudgingly. This skill routes
+> precise than a blind `grep` — measured on this repository and on two
+> third-party PHP subjects, zero classes met the win bar (§ Measured twice, § v3)
+> — so grep is the arm you fall back to routinely and **with a stated reason**, not grudgingly. This skill routes
 > such questions to the native code-graph engine (ADR-124, Class A) or a
 > consumer-shipped index first. It is the executable side of
 > [`external-code-graph-interop`](../../rules/external-code-graph-interop.md):
@@ -157,26 +157,16 @@ untouched; this is a second report beside it, which is how v1 was handled too.
 regressed, so the routing verdict below is unchanged — a TIE is not a win, and
 no bar was renegotiated after the repair.
 
-Read with two caveats the report states in full. A measured root is live source:
-`src/shared` is byte-identical between the runs, the council root moved
-by 27 files on `main` in between, and the graph-engine root IS the engine, so
-its content necessarily moves whenever the engine does — which is also why the
-GREP arm's macro precision moved (0.806 → 0.764) in a run that changed nothing
-about grep. Both classes that changed verdict did so on rows whose root did not
-drift: `references` moved on the graph-engine and shared roots, `transitive-impact` on
-`shared` alone.
+Root-drift caveats: that report (neither verdict change sat on a drifted root).
 
 **No class is graph-first.** Query the index first because an index that already
 exists is cheap to ask and its answer is structured — not because it answers
 better. When it returns nothing, that is the common case, and grep remains the
 arm to fall back to rather than a grudging afterthought.
 
-The sentence that stood here — *"the arm that won every valid class on this
-corpus"* — is withdrawn. It is the framing v1's own report forbids: that report
-says the defensible statement is *"zero classes met the pre-registered win
-criterion"*, **not** that grep proved superior. It was also false on its own
-terms under v2: grep wins two classes, ties two, and is out-precised on both
-ties.
+A withdrawn sentence here called grep *"the arm that won every valid class"*. The
+defensible statement is *"zero classes met the pre-registered win criterion"*, not that
+grep proved superior.
 
 Scope, stated so this table is not over-read: it measured the **native** engine
 on **this repository's TypeScript**, with a corpus of 19 questions. It is not
@@ -186,6 +176,22 @@ consumer-shipped SCIP index. Literal-string probes are reported as a separate
 `capability-boundary` class with no floor derived from them: a symbol index
 cannot answer them at all, which is where grep stays necessary rather than a
 defect in the engine.
+
+## v3, third-party subjects (2026-11-05) — no class won
+
+`internal/bench/reports/code-graph-v3-2026-11-05-scored.md`; same bar, mostly PHP.
+
+| Class | grep P / R | native P / R | Verdict |
+|---|---|---|---|
+| precise-semantics | .665 / .813 | .519 / .362 | NULL |
+| route-trace | .106 / .861 | .464 / .248 | TIE |
+| model-table | .083 / .361 | .917 / .361 | TIE |
+| tests-for | .200 / .059 | .200 / .012 | TIE |
+| change-impact | .792 / .138 | .353 / .322 | NULL |
+| change-impact-xplane | 0 / 0 | 0 / 0 | TIE |
+
+**Class list:** graph-first none, grep-routine all six. The engine is more precise on
+routes and models, recalls less. Truth model-checked; suite F not run.
 
 ## Staleness delivery — which hosts get it for free, and which do not
 
