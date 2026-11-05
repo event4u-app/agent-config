@@ -57,10 +57,12 @@ export function host_turn_from_envelope(o: Record<string, unknown>, _status: num
     const tokens = keys.every((k) => typeof u[k] === 'number') ? keys.reduce((a, k) => a + (u[k] as number), 0) : null;
     const errored = Boolean(o['is_error']);
     const msg = typeof o['result'] === 'string' ? o['result'].trim().slice(0, 200) : '';
+    const subtype = typeof o['subtype'] === 'string' ? o['subtype'] : '';
+    const reason = msg ? `host error: ${msg}` : subtype ? `host error (${subtype})` : 'host error';
     return {
         session_id: typeof o['session_id'] === 'string' ? o['session_id'] : null,
         errored,
-        ...(errored ? { reason: msg ? `host error: ${msg}` : 'host error' } : {}),
+        ...(errored ? { reason } : {}),
         tokens,
         turns: typeof o['num_turns'] === 'number' ? o['num_turns'] : null,
         usd: typeof o['total_cost_usd'] === 'number' ? o['total_cost_usd'] : null,

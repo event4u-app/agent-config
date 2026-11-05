@@ -463,6 +463,14 @@ describe('artifact host credentials', () => {
         expect(t.errored).toBe(true);
         expect(t.reason).toBe('host error: Not logged in · Please run /login');
     });
+
+    it('names the envelope subtype when the host error carries no message', async () => {
+        const { host_turn_from_envelope } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const t = host_turn_from_envelope({ is_error: true, subtype: 'error_max_budget_usd', result: '' }, 1);
+        expect(t.reason).toBe('host error (error_max_budget_usd)');
+        const bare = host_turn_from_envelope({ is_error: true }, 1);
+        expect(bare.reason).toBe('host error');
+    });
 });
 
 describe('artifact network isolation', () => {
