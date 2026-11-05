@@ -122,13 +122,19 @@ tracked.
       vue through its script block) and 4.2 (Blade directive scan).**
       Blade via a directive scanner (`@include/@extends/@component/@livewire`, `<x-…>`),
       `resolved_via: directive-scan`; a compiled grammar is optional and later.
-- [ ] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
+- [x] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
       **Laravel half moved 2026-10-23 to `road-to-a-map-that-draws-itself` Phase 4;
       `depends_on` stays here.**
       Laravel overlay statically: routes → `Controller@method`, Blade → view nodes,
       Eloquent relation methods → model edges, migrations → table nodes.
       verify: fixture app; `path "GET /invoices" "Invoice"` resolves route → controller →
       model.
+      > note: closed 2026-11-05. The manifest half shipped as the systems lane's `requires`
+      > relation (package → package, `lanes/systems/read_systems.ts`, pinned by
+      > `tests/scripts/code_graph/systems_lane.test.ts`); the vocabulary's `depends-on` is the
+      > runtime lane's service relation, so no second name was added. The route half is pinned
+      > by the `path` verb on the Laravel fixture (`GET /books` → `BookController::index` →
+      > `Book`): `npx vitest run tests/scripts/code_graph_provider_laravel.test.ts -t 'route → controller → model'` -> 0
 
 ## Phase 2 — Registration, then measurement
 - [ ] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
