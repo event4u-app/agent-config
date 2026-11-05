@@ -32,6 +32,32 @@
 
 Per-task artifact comparisons with and without agent-config, including the cost of parity: [docs/examples/bench/](examples/bench/index.md).
 
+## Container isolation (2026-11-05) {#container-isolation}
+
+Every result on this page so far ran on the **host path**: the operator's own CLI, with arms separated by CLI flags. That path has two confounds:
+
+- The `package` arm runs without `--setting-sources`, so it loads the operator's whole user scope: other plugins, the user `CLAUDE.md`, hooks and personal skills. "With agent-config" therefore means "with agent-config plus that setup".
+- `vanilla` and `package` pass different flags, and the CLI, Node and PHP versions are whatever the machine had that day.
+
+`bench_ab_v2_run --isolation container` removes both:
+
+| Held identical across arms | Differs between arms |
+|---|---|
+| Base image (Node 22, pinned digest), CLI version, toolchain, non-root user | The image only: `bench-base`, or `bench-ac` = `bench-base` + agent-config installed by its public installer from the commit under test |
+| Every CLI argument; no `--setting-sources` on any arm | — |
+| Model, per-run budget, task prompt, fixture | — |
+
+Every container trial reads the CLI's `system/init` event. A `bench-ac` trial with no package skill loaded, or a `bench-base` trial with any, is marked errored with a `load_mismatch:` reason before it reaches the statistics. The report records the isolation mode, both image ids, the CLI version and the package version (`images` in the report, built by `src/scripts/bench_ab_images.ts`).
+
+What a container does **not** remove:
+
+- settings the provider applies per account,
+- model nondeterminism, handled with seeds and paired tests,
+- the subscription's usage limits: three runs in a row that did no work stop the sweep,
+- network variance.
+
+Operator guide: `internal/bench/containers/README.md`.
+
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
 > Every number in this section was scored by the repaired scorer (task-validity

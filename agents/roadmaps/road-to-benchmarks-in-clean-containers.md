@@ -121,11 +121,11 @@ Measured in the last sweep and in the tree:
 
 ## Phase 3 — Documentation
 
-- [ ] **3.1 Methodology.** `docs/benchmark.md` gets a section on container
+- [x] **3.1 Methodology.** `docs/benchmark.md` gets a section on container
       isolation: what each image holds, what is identical across arms, what the
       container does not remove (account-side settings, model nondeterminism,
       rate limits), and how to reproduce from `images.json`.
-- [ ] **3.2 Operator guide.** `internal/bench/containers/README.md`: build the
+- [x] **3.2 Operator guide.** `internal/bench/containers/README.md`: build the
       images, create the token once, run a sweep, where the reports land.
 
 ## Phase 4 — Paid validation ($30, owner budget)
