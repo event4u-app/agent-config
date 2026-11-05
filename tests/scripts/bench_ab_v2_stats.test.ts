@@ -453,6 +453,36 @@ describe('bench_ab_v2_stats — cost_by_arm (delta #6)', () => {
         expect(Number((per['vanilla']?.['total_usd'] as { value: number }).value)).toBeCloseTo(3.0, 6);
     });
 
+    it('a served model with its own row is priced at that row, and says so', () => {
+        // claude-haiku-4-5 lists at $1 / $5; the `haiku` family row carries a
+        // former generation at a quarter of that. The 2026-11-05 sweep ran here.
+        const records = [{ id: 't1', arms: { vanilla: [costTrial({ input: 1_000_000, output: 1_000_000 })] } }];
+        for (const model of ['claude-haiku-4-5', 'claude-haiku-4-5-20251001']) {
+            const cost = cost_by_arm(records, ['vanilla'], model, PRICING);
+            expect(cost['priced_by'], model).toBe('model');
+            expect(cost['tier'], model).toBe('claude-haiku-4-5');
+            const per = cost['per_arm'] as Record<string, Record<string, unknown>>;
+            expect(Number((per['vanilla']?.['total_usd'] as { value: number }).value), model).toBeCloseTo(6.0, 6);
+        }
+    });
+
+    it('every current Opus is priced at its own row, not the retired family rate', () => {
+        const records = [{ id: 't1', arms: { vanilla: [costTrial({ input: 1_000_000, output: 1_000_000 })] } }];
+        for (const model of ['claude-opus-4-6', 'claude-opus-4-7', 'claude-opus-4-8']) {
+            const cost = cost_by_arm(records, ['vanilla'], model, PRICING);
+            expect(cost['priced_by'], model).toBe('model');
+            const per = cost['per_arm'] as Record<string, Record<string, unknown>>;
+            expect(Number((per['vanilla']?.['total_usd'] as { value: number }).value), model).toBeCloseTo(30.0, 6);
+        }
+    });
+
+    it('a model without its own row falls back to the family row and says so', () => {
+        const records = [{ id: 't1', arms: { vanilla: [costTrial({ input: 1_000_000 })] } }];
+        const cost = cost_by_arm(records, ['vanilla'], 'claude-sonnet-4-5-20250929', PRICING);
+        expect(cost['priced_by']).toBe('family');
+        expect(cost['tier']).toBe('sonnet');
+    });
+
     it('an unpriceable model yields null, never zero', () => {
         const records = [{ id: 't1', arms: { vanilla: [costTrial({ input: 1_000_000 })] } }];
         const cost = cost_by_arm(records, ['vanilla'], 'some-other-vendor-model', PRICING);

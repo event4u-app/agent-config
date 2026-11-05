@@ -83,6 +83,35 @@ models:
     cache_write: 3.75
     cache_read: 0.30
 
+  # The current Opus 4.x models, read 2026-11-05 from the source below. The
+  # opus family row above prices a former generation at three times this rate.
+  - tier: claude-opus-4-6
+    model: claude-opus-4-6
+    sourced_on: 2026-11-05
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    input: 5.00
+    output: 25.00
+    cache_write: 6.25
+    cache_read: 0.50
+
+  - tier: claude-opus-4-7
+    model: claude-opus-4-7
+    sourced_on: 2026-11-05
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    input: 5.00
+    output: 25.00
+    cache_write: 6.25
+    cache_read: 0.50
+
+  - tier: claude-opus-4-8
+    model: claude-opus-4-8
+    sourced_on: 2026-11-05
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    input: 5.00
+    output: 25.00
+    cache_write: 6.25
+    cache_read: 0.50
+
 # Tier resolution: model string is lowercased and matched substring-wise
 # against {haiku, sonnet, opus}; unmatched models price at 0 with a
 # `tier: unknown` marker in the report (NOT silently dropped — surface

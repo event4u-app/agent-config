@@ -84,12 +84,13 @@ lists at $1 / $5. Every absolute dollar figure in the 2026-11-05 Haiku sweep is
 rows exist (`internal/bench/pricing.yaml:38-60`) but only `tier_downshift_verdict`
 reads them.
 
-- [ ] **2.1** Add exact rows for `claude-haiku-4-5`, `claude-sonnet-4-6`,
-  `claude-opus-4-6`, `claude-opus-4-7` and `claude-opus-4-8` (base input, 5-minute
-  cache write, cache read, output; `sourced_on: 2026-11-05`, source the platform
-  pricing page). Family rows stay untouched for their pinned readers.
-  verify: `grep -c 'model: claude-haiku-4-5' internal/bench/pricing.yaml` -> 1
-- [ ] **2.2** `cost_by_arm` resolves an exact model row first and falls back to the
+- [x] **2.1** Add exact rows for `claude-opus-4-6`, `claude-opus-4-7` and
+  `claude-opus-4-8` (base input, 5-minute cache write, cache read, output;
+  `sourced_on: 2026-11-05`, source the platform pricing page). `claude-haiku-4-5`
+  and `claude-sonnet-4-6` already had rows (added 2026-11-04 for the sweep cap);
+  `cost_by_arm` never read them. Family rows stay untouched for their pinned readers.
+  verify: `grep -cE 'model: claude-(haiku-4-5|sonnet-4-6|opus-4-[678])$' internal/bench/pricing.yaml` -> 5
+- [x] **2.2** `cost_by_arm` resolves an exact model row first and falls back to the
   family row, and records which one priced the arm (`priced_by: model | family`).
   Test: a `claude-haiku-4-5` report prices at the exact row; an unknown model falls
   back and says so.

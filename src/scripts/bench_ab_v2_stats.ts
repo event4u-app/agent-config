@@ -480,11 +480,31 @@ export function mean_tokens_by_arm(records: Dict[], arms: string[]): Dict {
 // `tier_for_model` (both delta #4). What was missing was wiring them into the
 // REPORT, so the cost axis was priceable per run and unpriced per arm.
 
+/**
+ * The price row for a served model: its own row when pricing.yaml carries one
+ * (a dated snapshot id resolves to its base id), else the family row. Family
+ * rows price former generations — Haiku 4.5 at a quarter of its rate — so a
+ * report must say which kind priced it.
+ */
+export function price_row_for(
+    model: string,
+    rates: Record<string, TierRates>,
+): { tier: string | null; priced_by: 'model' | 'family' | null } {
+    const m = model.toLowerCase();
+    const own = Object.keys(rates)
+        .filter((k) => k.startsWith('claude-') && (m === k || m.startsWith(`${k}-`)))
+        .sort((a, b) => b.length - a.length)[0];
+    if (own !== undefined) return { tier: own, priced_by: 'model' };
+    const family = tier_for_model(m);
+    return family && rates[family] ? { tier: family, priced_by: 'family' } : { tier: family, priced_by: null };
+}
+
 /** Per-arm cost, priced bucket-by-bucket, plus the provenance of the prices. */
 export function cost_by_arm(records: Dict[], arms: string[], model: string | null, pricingPath: string): Dict {
     const [rates, sourced_on] = load_pricing(pricingPath);
-    const tier = model ? tier_for_model(model) : null;
-    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+    const row = model ? price_row_for(model, rates) : { tier: null, priced_by: null };
+    const tier = row.tier;
+    const tier_rates: TierRates | null = row.priced_by !== null && tier ? (rates[tier] as TierRates) : null;
 
     const per_arm: Dict = {};
     for (const arm of arms) {
@@ -524,6 +544,7 @@ export function cost_by_arm(records: Dict[], arms: string[], model: string | nul
     return {
         tier: tier ?? 'unknown',
         priced: tier_rates !== null,
+        priced_by: row.priced_by,
         pricing_sourced_on: sourced_on,
         per_arm,
     };
