@@ -3,6 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
+relates: []  # probe — agent-config roadmap:context (base 8206cc0274, 2026-11-06), scanned: 1280 roadmap file(s) across active/later/stubs/archive, 3 PRs, 1023 remote branch(es): no sibling roadmap, no file overlap.
 estate_offset_exempt: "A red check seen on PR #2866 and on main that this change could not fix without weakening a test it did not write. Merging into road-to-a-graph-that-wins was rejected because the defect is in the design-pass linter's test, not the graph; parking it in later/ was rejected because it fails main today; archiving another roadmap was not available because none of the four active ones is complete."
 ---
 # Road to a linear-time test that holds on CI
