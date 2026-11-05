@@ -68,11 +68,11 @@ stronger-than-ordering fork doctrine) and `reviewer-tier-quality-floor`
       waits on an owner release. The reviewer prompt stays neutral per
       `evaluator-independence` — a sceptic stance flagged 3 of 3 correct controls
       (`docs/benchmark.md` § adversarial council).
-      <!-- verify: a report under agents/evidence/analysis/ that 5.3 cites -->
+      <!-- verify: `ls agents/evidence/analysis/ | grep -c slim-reviewer` -> /^[1-9]/ -->
 - [ ] 3.2b A probe that a judge never runs as a fork: the host forks by default and a
       fork inherits the author's conversation (Arrivals line above). Typed subagent,
       `reuse: never`.
-      <!-- verify: a test that rejects a fork-shaped reviewer dispatch -->
+      <!-- verify: `npx vitest run tests/scripts/reviewer_never_fork.test.ts` -> 0 -->
 - [ ] 3.3 Escape hatch, envelope-carried: a worker that hits a wall
       (`needs_context: <rule-id>`) records the miss in its CHECKPOINT
       envelope; the orchestrator may re-dispatch with the widened

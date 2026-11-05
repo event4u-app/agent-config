@@ -32,17 +32,17 @@ it, `road-to-episode-finalizer-and-outcome-attribution-v2` 7.2), and it never go
 
 ## Phase 1 — Price by model id where a row exists
 
-- [x] **1.1** Red first: a test runs `track.mjs` on a one-message fixture per per-model
+- [x] **1.1** Red first: a test runs `track.mjs` on a one-message fixture per per-model <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/cost/track.mjs -->
   row of `pricing.yaml` (1M input, 1M output tokens) and expects the row's
   `input + output` as the session cost.
-  verify: `npx vitest run tests/scripts/cost_track.test.ts` fails on the new cases before 1.2
-- [x] **1.2** `track.mjs` carries the per-model rows beside the family rows and prices a
+  verify: `npx vitest run tests/scripts/cost_track.test.ts` -> /×.*claude-haiku-4-5/ (before 1.2)
+- [x] **1.2** `track.mjs` carries the per-model rows beside the family rows and prices a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/cost/track.mjs -->
   message by the longest model id that the served id equals or extends (a date suffix
   like `-20251001` or a context tag like `[1m]`); anything else keeps the family row.
   The `1h` cache-write rate follows the existing 2× of input. Per-tier and per-model
   aggregation are unchanged.
-  verify: `npx vitest run tests/scripts/cost_track.test.ts` green, including the existing `rate_missing` cases
-- [x] **1.3** The test reads the rows from `pricing.yaml`, so a rate bumped there and not
+  verify: `npx vitest run tests/scripts/cost_track.test.ts` -> 0
+- [x] **1.3** The test reads the rows from `pricing.yaml`, so a rate bumped there and not <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/cost/track.mjs -->
   in `track.mjs` fails CI instead of drifting (the header of both files asks for the
   mirror by hand today).
   verify: changing one per-model rate in a scratch copy of `pricing.yaml` turns the test red
