@@ -31,31 +31,37 @@ and no spawn template has a knowledge slot.
 
 ## Phase 1 — The audience contract
 
-- [ ] **1.1 Audience table.** One table in `subagent-spawn-contract.md`
+- [x] **1.1 Audience table.** One table in `subagent-spawn-contract.md`
       (orchestrator / non-fork / fork / judge-seat / unpaid / cheap-paid), cited
       from the council skill's neutrality section; forks get nothing, judges
       facts with provenance, unpaid routes closed-vocabulary conventions only.
       verify: reference check and a test that the council skill links the anchor.
-- [ ] **1.2 Knowledge slot in implementer templates.** `{{knowledge_refs}}`,
+- [x] **1.2 Knowledge slot in implementer templates.** `{{knowledge_refs}}`,
       labelled as leads, in implementer and researcher templates; absent from
       competitive, debate and adversarial ones.
       verify: `tests/scripts/subagent_prompt_audience.test.ts`.
+      Note: no researcher template exists under `prompts/`; the five implementer
+      prompts carry the slot, and the test pins that count.
 
 ## Phase 2 — Provenance and a shadow baseline
 
-- [ ] **2.1 `writer` and `taint` on intake.** `memory_signal.ts`: a legacy
+- [x] **2.1 `writer` and `taint` on intake.** `memory_signal.ts`: a legacy
       line reads `writer: unknown`; unpaid and council-seat writers are
       refused; an `external_read` taint is excluded from aggregation.
       verify: three red-first unit tests.
-- [ ] **2.2 Record-only guard on child writes to `agents/memory/`.** Never
+      Landed in both twins (`src/scripts/` and the consumer template); the
+      taint is honoured where intake is aggregated, `learning_sidecar.readSignals`.
+- [x] **2.2 Record-only guard on child writes to `agents/memory/`.** Never
       denies.
       verify: a payload with `agent_id` and a Write produces one record; without
       `agent_id` none.
-- [ ] **2.3 Counts-only slice shadow.** At the orchestrator's `Agent`
+- [x] **2.3 Counts-only slice shadow.** At the orchestrator's `Agent`
       pre_tool_use, compute the slice and log `{ref_count, dropped, est_tokens}`;
       deliver nothing.
       verify: a fixture naming two curated paths logs `ref_count: 2` and emits
       no context.
+      2.2 and 2.3 ship as one concern, `memory-audience-shadow` (claude,
+      pre_tool_use), tested in `tests/scripts/hooks/memory_audience_shadow_hook.test.ts`.
 
 ## Phase 3 — Delivery, tiered by model (OQ-35)
 
@@ -67,6 +73,8 @@ and no spawn template has a knowledge slot.
       hands them for the task. No reopen of ADR-249 — the shared memory is the
       existing curated store.
       verify: a delivery fixture plus the shadow's measured token delta.
+      Blocked (external, time): the step starts after two weeks of shadow
+      counts, and the shadow begins counting only once 2.3 is merged and running.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
@@ -77,6 +85,6 @@ and no spawn template has a knowledge slot.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every spawn audience has a stated memory cut, and the templates
+- [x] AC-1 — Every spawn audience has a stated memory cut, and the templates
       carry it.
-- [ ] AC-2 — Worker writes carry a writer, and unpaid writers are refused.
+- [x] AC-2 — Worker writes carry a writer, and unpaid writers are refused.
