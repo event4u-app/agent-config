@@ -37,10 +37,11 @@ const SPAWN_TOOLS: ReadonlySet<string> = new Set(['Agent', 'Task']);
 const MEMORY_DIR = 'agents/memory/';
 /** A curated store entry named in a prompt; intake is the raw log, never a slice member. */
 // Starts at a name boundary or after `./`, never inside another path or word;
-// ends where the extension ends, with a sentence-final `.` still allowed. The
+// ends where the extension ends: trailing dots are allowed (sentence end,
+// ellipsis) only when no name character follows them. The
 // bounded quantifier caps backtracking per start on an adversarial prompt.
 const CURATED_REF_RE =
-    /(?<=^|[^A-Za-z0-9._/~-]|(?:^|[^A-Za-z0-9._/~-])\.\/)agents\/memory\/(?!intake\/)[A-Za-z0-9._/-]{1,200}?\.(?:ya?ml|md|json)(?![A-Za-z0-9_/~-]|\.[A-Za-z0-9])/g;
+    /(?<=^|[^A-Za-z0-9._/~-]|(?:^|[^A-Za-z0-9._/~-])\.\/)agents\/memory\/(?!intake\/)[A-Za-z0-9._/-]{1,200}?\.(?:ya?ml|md|json)(?![A-Za-z0-9_/~-]|\.+[A-Za-z0-9_/~-])/g;
 /**
  * Distinct names resolved per spawn. The filesystem work on the tool path is
  * bounded by this, not by the prompt: names past it are counted, never resolved.

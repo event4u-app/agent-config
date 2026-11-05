@@ -302,6 +302,7 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
         ['in backticks', 'read `agents/memory/product-rules.yml`, then act'],
         ['dot-slash', 'open ./agents/memory/product-rules.yml now'],
         ['quoted, comma', '"agents/memory/product-rules.yml", and more'],
+        ['followed by an ellipsis', 'maybe agents/memory/product-rules.yml...'],
     ])('a ref %s is counted', (_label, prompt) => {
         processEnvelope(spawn(prompt), root);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 1, est_tokens: 200 });
@@ -310,6 +311,9 @@ describe('2.3 — counts-only slice shadow at the orchestrator spawn', () => {
     it.each([
         ['under another directory', 'src/agents/memory/product-rules.yml'],
         ['glued to a word', 'xagents/memory/product-rules.yml'],
+        ['with a repeated-dot suffix', 'agents/memory/product-rules.yml..bak'],
+        ['with a dot-underscore suffix', 'agents/memory/product-rules.yml._bak'],
+        ['with a dot-tilde suffix', 'agents/memory/product-rules.yml.~1'],
     ])('a ref %s is not counted', (_label, prompt) => {
         processEnvelope(spawn(prompt), root);
         expect(ledgerLines()[0]).toMatchObject({ ref_count: 0, examined: 0 });
