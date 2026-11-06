@@ -246,6 +246,9 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   instruction files (367k chars), a 29k-char skill catalog listing 633 skills of which
   235 carry a description and 398 arrive as a bare name — and 346 chars of hook
   output on every prompt turn. Exit 2 when no transcript holds an instructions delivery.
+  Reading written up in `docs/benchmark.md` § Where the main session's default context
+  goes: rules are 91 % of the start-up load, and 21 domain and stack rules (~64k chars,
+  17 % of the instructions) load in every session on a repository that never uses them.
 - [ ] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
@@ -254,6 +257,9 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.
   verify: each candidate's interpretation record compares quality first and priced cost second
+  First candidate set from 3.1: the 21 domain and stack rules that load unconditionally
+  under the full profile (finance, legal, strategy, media, persistence packs, stack
+  routing; ~64k chars). Still gated on an effect from 1.4 or 2.5.
 - [ ] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
   one multi-session task family (decision recall, a superseded decision, a stale
   entry) run with and without memory on this harness. Recall itself stays with
