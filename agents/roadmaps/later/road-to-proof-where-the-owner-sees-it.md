@@ -235,11 +235,17 @@ Evidence (read): `docs/benchmark.md:76` · `src/scripts/preamble_byte_census.ts`
 The full install cost 5.5–7.9× vanilla in tokens; the one significant arm before
 (kernel + `downstream-changes`) cost 2.9×.
 
-- [ ] **3.1** Default-context byte census per asset: extend
+- [x] **3.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/main_session_census.ts --> Default-context byte census per asset: extend
   `src/scripts/preamble_byte_census.ts` from subagent cold start to the main-session
   projection, one bucket per rule, hook output and catalog entry; 303 *listed*
   skills is not 303 *loaded*.
   verify: `./scripts-run src/scripts/preamble_byte_census --main-session` -> 0
+  Done 2026-11-06: measured from what the host recorded delivering (transcript
+  `instructions`, `skill_listing` and hook attachments), not modelled from files. On
+  this repo's session that day: ~401k chars (~100k tokens) at start-up — 119
+  instruction files (367k chars), a 29k-char skill catalog listing 633 skills of which
+  235 carry a description and 398 arrive as a bare name — and 346 chars of hook
+  output on every prompt turn. Exit 2 when no transcript holds an instructions delivery.
 - [ ] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
