@@ -24,9 +24,7 @@
  * measured and already shipped — the ADR-236 one-rule-one-layer partition. See
  * {@link partitionCredit}.
  *
- * ## Which file moved the bucket
- *
- * Below the bucket table the report lists every always-loaded asset whose loaded
+ * Below the bucket table the report also lists every always-loaded asset whose loaded
  * size changed (`_lib/standing_asset_delta.ts`), so a reviewer sees the delta of
  * the rule or skill description the change touched, not only of its bucket.
  *
