@@ -19,6 +19,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { withGitVisibleScopeAsync } from '../../../src/scripts/_lib/git_visible_files.js';
 import { buildFromRepo } from '../../../src/scripts/code_graph/build.js';
 import { diffHunks, RISK_BAND_CUTS, RISK_TERMS, RISK_WEIGHTS, reviewRisk, type RiskTerm } from '../../../src/scripts/code_graph/review_risk.js';
 import { isTestFile } from '../../../src/scripts/code_graph/scope.js';
@@ -296,7 +297,8 @@ async function cmdExtract(o: Record<string, string>): Promise<number> {
         const effort = numstat.reduce((s, l) => s + (Number(l.split('\t')[0]) || 0) + (Number(l.split('\t')[1]) || 0), 0);
         const row: Unit = { sha: c.sha, parent: c.parent, date: c.date, subject, effort, counts: {}, unknown: [], untested: 0 };
         if (effort > 0) {
-            const graph = (await buildFromRepo(dir, cache, { update: true })).graph;
+            // The same build the shipped `build` verb runs: lanes on, inside the git-visible scope.
+            const graph = (await withGitVisibleScopeAsync(() => buildFromRepo(dir, cache, { update: true, lanes: true }))).graph;
             const hunks = diffHunks(dir, c.parent) ?? [];
             const r = reviewRisk(dir, graph, c.parent, hunks, RISK_WEIGHTS);
             for (const t of r.terms) {

@@ -124,4 +124,20 @@ dec39702c4309ef2cd1a4da3c3852927798a79b4f2e14a3ecfee1ea638783b27  src/scripts/co
 
 ## Addenda
 
-None yet.
+**A1 (2026-11-06): the first feature extraction was defective; it was redone, and the
+defective evaluation is published, not hidden.** This addendum comes **after** a first
+evaluation, against the registration's own condition that a runner change precede the
+labels, and says so plainly. The first evaluation ran on features from a build that did not
+match the shipped `build` verb: lanes were off (so `entry points`, `flows`, `columns`,
+`operations` and `pipelines` could not fire) and history reads ran on blob-less clones (so
+`missing partners` read zero where the shipped path counts partners — measured on unit
+`d40628fe`: 0 against 5). Seven of eight terms "never fired" in that run — an artefact, not a
+finding. It proposed no change. The runner now builds exactly as the verb does (`lanes: true`
+inside the git-visible scope); three `unopim` units were checked to give term counts identical
+to `build` + `review-risk --json`; every clone was completed; all features were re-extracted.
+**No decision rule, threshold, split, seed or label changed**; the labels depend only on the
+unit set, which is unchanged. Both evaluations are in the report; the second is the result.
+Labels were audited before either evaluation was read: `self` 10 of 20 sampled links plausible
+(4 unclear, 6 implausible) — exactly at the usability floor, so usable; `unopim` 13 of 20 (4
+unclear, 3 implausible). New runner hash:
+`8fb184b14d907d1da354de2861cf5f2768ab57e81c3ad9805196a7b5c4c31cc5  internal/bench/code-graph/risk_calibration.ts`.
