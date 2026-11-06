@@ -1,5 +1,5 @@
 /**
- * Proof-where 3.1: the main-session default context, measured per asset from what
+ * The main-session default context, measured per asset from what
  * the host recorded it delivered — instruction files, the skill catalog entry by
  * entry, and hook output — not modelled from the source tree.
  */

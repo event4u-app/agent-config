@@ -249,10 +249,13 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   Reading written up in `docs/benchmark.md` § Where the main session's default context
   goes: rules are 91 % of the start-up load, and 21 domain and stack rules (~64k chars,
   17 % of the instructions) load in every session on a repository that never uses them.
-- [ ] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
+- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts --> A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
   verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> /^1$/
+  Done 2026-11-06: four plain sentences (smallest change, update what it affects,
+  read before asking, test before done), injected with this package scoped away and
+  no package vocabulary. Not yet run; its first reading rides with the next paid sweep.
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.

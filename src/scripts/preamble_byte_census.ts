@@ -38,7 +38,7 @@
  *   ./scripts-run src/scripts/preamble_byte_census --main-session [--format text|json]
  *     [--transcript <path>] [--cwd <path>] [--root <path>]
  *
- * `--main-session` (proof-where 3.1) measures the MAIN session's default context
+ * `--main-session` measures the MAIN session's default context
  * per asset from what the host recorded delivering — see
  * `_lib/main_session_census.ts`. Exit 2 (INDETERMINATE) when no transcript of the
  * working directory holds an instructions delivery: a census that read nothing

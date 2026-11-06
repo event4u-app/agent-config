@@ -1,6 +1,6 @@
 /**
- * Child process for the render-similarity check of the image → SVG task
- * (proof-where 2.4). Draws the produced SVG and the source raster onto two
+ * Child process for the render-similarity check of the image → SVG task.
+ * Draws the produced SVG and the source raster onto two
  * canvases of the same size in headless Chromium and prints one JSON line.
  *
  * Score: colour agreement over the union of foreground pixels — a pixel counts

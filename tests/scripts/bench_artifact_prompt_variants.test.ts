@@ -1,5 +1,5 @@
 /**
- * Proof-where 2.1: terse and expert prompt variants on the artifact corpus, so the
+ * Terse and expert prompt variants on the artifact corpus, so the
  * 2×2 (vanilla|package × terse|expert) runs from one corpus.
  */
 import * as path from 'node:path';

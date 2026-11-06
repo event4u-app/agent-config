@@ -147,7 +147,7 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
     const token = sweep_token(a.args.account ?? null);
     const pack = a.arms.some((arm) => (ARMS[arm] as ArmSpec).setting_sources === null) ? pack_once(out, a.repo_root) : null;
     for (const t of a.tasks as unknown as ArtifactTask[]) {
-        // Set by `--prompt-variant` (proof-where 2.1); absent, the record carries null.
+        // Set by `--prompt-variant`; absent, the record carries null.
         const prompt_variant = (t as unknown as Record<string, unknown>)['prompt_variant'] ?? null;
         const vtag = prompt_variant ? `-${String(prompt_variant)}` : '';
         for (const arm of a.arms) {
