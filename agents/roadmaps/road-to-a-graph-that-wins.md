@@ -379,7 +379,7 @@ obligation inference in any pack/selection verb · K7 no external flow-analyzer 
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-05 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
