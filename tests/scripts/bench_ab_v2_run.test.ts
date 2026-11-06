@@ -822,3 +822,45 @@ describe('kernel leave-one-out arms', () => {
         expect(injected_text('kernel-minus:scope-control', 0)).toBe(rules_subset_text('rules-kernel-dc', 'scope-control'));
     });
 });
+
+describe('kernel wording-variant arms', () => {
+    it('swaps exactly one rule body for the candidate text, in place', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const full = rules_subset_text('rules-kernel-dc').split('\n\n---\n\n');
+        const swapped = rules_subset_text('rules-kernel-dc', null, { id: 'ask-when-uncertain', text: 'CANDIDATE BODY' }).split('\n\n---\n\n');
+        expect(swapped).toHaveLength(full.length);
+        const at = full.findIndex((b) => b.includes('# Ask When Uncertain'));
+        expect(at).toBeGreaterThanOrEqual(0);
+        expect(swapped[at]).toBe('CANDIDATE BODY');
+        expect(swapped.filter((_, i) => i !== at)).toEqual(full.filter((_, i) => i !== at));
+    });
+
+    it('refuses to swap a rule that is not in the set', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(() => rules_subset_text('rules-kernel-dc', null, { id: 'no-such-rule', text: 'x' })).toThrow(/not in rules-kernel-dc/);
+    });
+
+    it('resolves a kernel-variant arm name to a text-injection control arm', async () => {
+        const { ablation_arm } = await import('../../src/scripts/_lib/bench_ab_arms.js');
+        expect(ablation_arm('kernel-variant-ask-when-uncertain.look-first')).toEqual({
+            setting_sources: 'project,local',
+            inject: 'kernel-variant:ask-when-uncertain.look-first',
+        });
+        expect(ablation_arm('kernel-variant-ask-when-uncertain')).toBeNull();
+        expect(ablation_arm('kernel-variant-')).toBeNull();
+    });
+
+    it('injects the committed candidate in place of the rule it names', async () => {
+        const { injected_text, rules_subset_text, variant_candidate_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const candidate = variant_candidate_text('ask-when-uncertain.look-first');
+        expect(candidate.length).toBeGreaterThan(0);
+        expect(injected_text('kernel-variant:ask-when-uncertain.look-first', 0)).toBe(
+            rules_subset_text('rules-kernel-dc', null, { id: 'ask-when-uncertain', text: candidate }),
+        );
+    });
+
+    it('refuses a candidate stem that could leave the candidates directory', async () => {
+        const { variant_candidate_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(() => variant_candidate_text('../ask-when-uncertain.x')).toThrow(/candidate/);
+    });
+});
