@@ -173,11 +173,15 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
 
 Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` tasks, no drag-and-drop task) · `taskfiles/bench-ui.yml:14-16`
 
-- [ ] **2.1** 2×2 prompt arms on the nine `art-*` tasks in
+- [x] **2.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_corpus.ts --> 2×2 prompt arms on the nine `art-*` tasks in
   `internal/bench/corpora/ab-artifact-v2.yaml`: vanilla + terse, AC + terse,
   vanilla + expert, AC + expert. "AC with a terse prompt reaches what vanilla
   needs an expert prompt for" is the owner's claim, stated as a testable one.
   verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^18$/
+  Done 2026-11-06: each task carries `terse` (its prompt) and `expert` (the prompt plus
+  its pre-registered `informed` ladder); `--prompt-variant both --arms vanilla,package`
+  runs the 2×2 and tags every record `prompt_variant` (`internal/bench/corpora/SCHEMA-v2.md`).
+  The run itself is 2.5's and waits on `b-owner-spend`.
 - [ ] **2.2** Add the missing UI task: drag & drop with keyboard and touch,
   responsive breakpoints, one custom component; graded by Playwright actions and
   axe, no model in scoring (the `taskfiles/bench-ui.yml` grader pattern).
