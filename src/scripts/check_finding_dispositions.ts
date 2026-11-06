@@ -259,6 +259,20 @@ export function merge_ingest(
     return { ledger, added, carried, reasoned };
 }
 
+/**
+ * An artifact the ledger must never take, with the reason; null when it may be
+ * ingested. The code-graph checks report (`graph_checks_report.ts`) sits beside
+ * the self-review's artifact and is advisory by construction — ingesting it
+ * would turn graph rows into review findings a release must disposition.
+ */
+export function refusesIngest(artifact: Record<string, unknown>): string | null {
+    const schema = artifact['schema'];
+    if (typeof schema === 'string' && schema.startsWith('graph-checks-report/')) {
+        return 'a code-graph checks report is advisory and is not a self-review findings artifact';
+    }
+    return null;
+}
+
 /** The `no_findings_reason` an ingest of a zero-findings artifact writes. */
 function _clean_review_reason(artifact: Record<string, unknown>): string {
     const cov = artifact['coverage'] as Record<string, unknown> | undefined;
@@ -866,6 +880,11 @@ function main(argv: readonly string[]): number {
             process.stderr.write(
                 `❌  ${ingest}: not readable as JSON (${e instanceof Error ? e.message : String(e)})\n`,
             );
+            return 2;
+        }
+        const refused = refusesIngest(artifact);
+        if (refused) {
+            process.stderr.write(`❌  ${ingest}: ${refused}\n`);
             return 2;
         }
         // Run the incoming findings through the parser the committed ledger goes
