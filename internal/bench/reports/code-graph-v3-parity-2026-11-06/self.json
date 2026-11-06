@@ -59,7 +59,7 @@
         "precision_symbol": 1,
         "oracle_pairs_covered": 24
       },
-      "extracted:references": {
+      "extracted:uses": {
         "graph_edges": 913,
         "scored": 904,
         "confirmed_file": 904,
@@ -89,7 +89,7 @@
         "precision_symbol": null,
         "oracle_pairs_covered": 0
       },
-      "inferred:references": {
+      "inferred:uses": {
         "graph_edges": 12,
         "scored": 0,
         "confirmed_file": 0,

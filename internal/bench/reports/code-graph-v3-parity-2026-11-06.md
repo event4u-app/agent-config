@@ -21,18 +21,23 @@ the edge shape `edge_oracle.ts` reads (`tests/scripts/code_graph/parity_graph_ad
 - **Mechanism.** The tool has no `resolved_via`. Each edge is keyed on the tool's own
   confidence tag joined to the relation family — `extracted:calls`, `inferred:imports`, … —
   so its stated/guessed split is read off its own claim, as the native split is.
-- **Relations.** Folded onto the scored families: `calls`, `indirect_call` → calls;
-  `imports`, `imports_from`, `re_exports`, `dynamic_import`, `includes` → imports;
-  `references`, `references_constant`, `uses_static_prop` → references; `inherits`,
-  `extends`, `implements`, `mixes_in` → inherits. Left out, as the native graph's are:
-  containment (`contains`, `method`, `defines`, `declares`, `case_of`), documentation
-  (`cites`, `rationale_for`) and framework bindings (`bound_to`, `uses_config`).
+- **Relations.** Read through the shipped foreign-relation map
+  (`FOREIGN_RELATION_MAP`, `src/scripts/code_graph/foreign.ts`), so the bench and the
+  product cannot disagree: `imports_from`, `re_exports`, `dynamic_import`, `includes` →
+  imports; `references`, `references_constant`, `uses_static_prop`, `mixes_in` (trait use,
+  which the native PHP extractor also records as `uses`) → uses; `extends`, `implements` →
+  inherits. One measurement-only fold: `indirect_call` → calls, which the product map leaves
+  unmapped as merely similar but the tool tags as its own inferred call. Left out, as the
+  native graph's are: containment (`contains`, `method`, `defines`, `declares`, `case_of`),
+  documentation (`cites`, `rationale_for`) and framework bindings (`bound_to`, `uses_config`).
+  The run found the product map missing six of these relations; they are added in the same
+  change (`tests/scripts/code_graph_foreign.test.ts`).
 - **Symbols.** The tool's nodes carry a start line, not a range. Each endpoint is mapped onto
   the native node declared in the same file on the same line (the label decides between
   several), and the native nodes are carried over, so both graphs are scored against the
   same symbol ranges. An endpoint with no native declaration on its line falls back to its
   file — scored at file level, not at symbol level. Unmapped symbols: self 3,082,
-  unopim 4,459, larasend 470. The tool's symbol-level recall is therefore a **lower bound**.
+  unopim 4,583, larasend 472. The tool's symbol-level recall is therefore a **lower bound**.
 - **Unresolved.** A target with no file (an external module) becomes an unresolved target,
   excluded exactly as the native graph's `symbol:` targets are.
 

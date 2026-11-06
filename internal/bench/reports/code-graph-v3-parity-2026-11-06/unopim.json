@@ -50,7 +50,7 @@
         "oracle_pairs_covered": 427
       },
       "extracted:inherits": {
-        "graph_edges": 742,
+        "graph_edges": 617,
         "scored": 0,
         "confirmed_file": 0,
         "precision_file": null,
@@ -59,8 +59,8 @@
         "precision_symbol": null,
         "oracle_pairs_covered": 0
       },
-      "extracted:references": {
-        "graph_edges": 2753,
+      "extracted:uses": {
+        "graph_edges": 2878,
         "scored": 0,
         "confirmed_file": 0,
         "precision_file": null,
@@ -79,7 +79,7 @@
         "precision_symbol": 0.9910714285714286,
         "oracle_pairs_covered": 0
       },
-      "inferred:references": {
+      "inferred:uses": {
         "graph_edges": 20,
         "scored": 0,
         "confirmed_file": 0,
@@ -236,24 +236,24 @@
         "oracle_pairs_covered": 5229
       },
       "extracted:inherits": {
-        "graph_edges": 742,
-        "scored": 742,
-        "confirmed_file": 742,
+        "graph_edges": 617,
+        "scored": 617,
+        "confirmed_file": 617,
         "precision_file": 1,
-        "symbol_scored": 742,
-        "confirmed_symbol": 742,
+        "symbol_scored": 617,
+        "confirmed_symbol": 617,
         "precision_symbol": 1,
-        "oracle_pairs_covered": 738
+        "oracle_pairs_covered": 613
       },
-      "extracted:references": {
-        "graph_edges": 2745,
-        "scored": 2561,
-        "confirmed_file": 2558,
-        "precision_file": 0.9988285825849278,
-        "symbol_scored": 2561,
-        "confirmed_symbol": 2553,
-        "precision_symbol": 0.996876220226474,
-        "oracle_pairs_covered": 1351
+      "extracted:uses": {
+        "graph_edges": 2870,
+        "scored": 2686,
+        "confirmed_file": 2683,
+        "precision_file": 0.9988830975428146,
+        "symbol_scored": 2686,
+        "confirmed_symbol": 2678,
+        "precision_symbol": 0.9970215934475056,
+        "oracle_pairs_covered": 1476
       },
       "inferred:calls": {
         "graph_edges": 3758,

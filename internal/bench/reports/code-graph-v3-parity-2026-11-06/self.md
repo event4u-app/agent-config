@@ -13,10 +13,10 @@ Census (same graph): name_lookup_calls 0, name_lookup_multi 0, name_collision_ed
 | `extracted:calls` | 30334 | 28694 | 28693 | 100.0 % | 28561 | 28256 | 98.9 % | 3301 |
 | `extracted:imports` | 15026 | 14336 | 14333 | 100.0 % | 9596 | 9488 | 98.9 % | 4554 |
 | `extracted:inherits` | 122 | 120 | 120 | 100.0 % | 106 | 106 | 100.0 % | 24 |
-| `extracted:references` | 913 | 904 | 904 | 100.0 % | 891 | 891 | 100.0 % | 531 |
+| `extracted:uses` | 913 | 904 | 904 | 100.0 % | 891 | 891 | 100.0 % | 531 |
 | `inferred:calls` | 1432 | 1399 | 1374 | 98.2 % | 1104 | 1078 | 97.6 % | 194 |
 | `inferred:imports` | 3 | 0 | 0 | — | 0 | 0 | — | 0 |
-| `inferred:references` | 12 | 0 | 0 | — | 0 | 0 | — | 0 |
+| `inferred:uses` | 12 | 0 | 0 | — | 0 | 0 | — | 0 |
 
 Oracle: 2083 documents, 4667 cross-file pairs, 10682 cross-file symbol pairs.
 Recall (file): 97.6 % · recall (symbol): 92.6 %.

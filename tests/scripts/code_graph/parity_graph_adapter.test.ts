@@ -56,12 +56,12 @@ describe('adaptNodeLinkGraph', () => {
         expect(find('src/b.ts#B', 'src/a.ts#run')[0]?.resolved_via).toBe('extracted:inherits');
     });
 
-    it('folds the PHP reference relations onto their families and leaves framework bindings out', () => {
+    it('reads relations through the shipped foreign map, plus the indirect-call fold, and leaves framework bindings out', () => {
         const php = adaptNodeLinkGraph(
-            { nodes: foreign.nodes, links: [l('b_b', 'a_run', 'mixes_in'), l('a_run', 'b_b', 'references_constant'), l('a', 'b', 'includes'), l('a_run', 'b_b', 'bound_to')] },
+            { nodes: foreign.nodes, links: [l('b_b', 'a_run', 'mixes_in'), l('a_run', 'b_b', 'references'), l('a', 'b', 'includes'), l('a_run', 'b_b', 'bound_to')] },
             native,
         );
-        expect(php.edges.map((e) => e.resolved_via)).toEqual(['extracted:inherits', 'extracted:references', 'extracted:imports']);
+        expect(php.edges.map((e) => e.resolved_via)).toEqual(['extracted:uses', 'extracted:uses', 'extracted:imports']);
         expect(php.stats.dropped_relation).toEqual({ bound_to: 1 });
     });
 

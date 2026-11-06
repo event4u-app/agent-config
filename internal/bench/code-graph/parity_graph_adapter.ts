@@ -7,7 +7,7 @@
  *       --native <native graph.json> --out <adapted graph.json>
  *
  * The external graph has no `resolved_via`; the mechanism is its own per-edge
- * confidence tag joined to the scored relation family (`extracted:calls`,
+ * confidence tag joined to the relation family (`extracted:calls`,
  * `inferred:imports`, …), so its stated/guessed split is read off its own claim.
  *
  * Its nodes carry only a start line, no range, so each endpoint is mapped onto the
@@ -21,6 +21,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { FOREIGN_RELATION_MAP } from '../../../src/scripts/code_graph/foreign.js';
 
 export interface NodeLinkGraph {
     nodes: Array<{ id: string; label?: string | undefined; source_file?: string | undefined; source_location?: string | undefined }>;
@@ -51,23 +53,18 @@ export interface AdaptStats {
     dropped_relation: Record<string, number>;
 }
 
-/** The external relation vocabulary, folded onto the families the scorer reads. */
-export const RELATION_FAMILY: Readonly<Record<string, string>> = {
-    calls: 'calls',
-    indirect_call: 'calls',
-    imports: 'imports',
-    imports_from: 'imports',
-    re_exports: 'imports',
-    dynamic_import: 'imports',
-    includes: 'imports',
-    references: 'references',
-    references_constant: 'references',
-    uses_static_prop: 'references',
-    inherits: 'inherits',
-    extends: 'inherits',
-    implements: 'inherits',
-    mixes_in: 'inherits',
-};
+/**
+ * The shipped foreign-relation map, so the bench and the product cannot disagree
+ * about what an external relation means, plus one measurement-only fold: the
+ * product leaves `indirect_call` unmapped as merely similar to a call, but the
+ * tool tags it as its own inferred call and a parity run must score that claim.
+ * Containment (`member`) asserts nothing a reference index can confirm.
+ */
+export function relationFamily(relation: string): string | undefined {
+    const key = relation.toLowerCase();
+    const family = key === 'indirect_call' ? 'calls' : FOREIGN_RELATION_MAP[key];
+    return family === 'member' ? undefined : family;
+}
 
 const bare = (label: string): string => label.replace(/^\./, '').replace(/\(\)$/, '');
 const lineOf = (loc: string | undefined): number | null => {
@@ -113,7 +110,7 @@ export function adaptNodeLinkGraph<N extends NativeNode>(
     const edges: AdaptedEdge[] = [];
     const counted = new Set<string>();
     for (const link of foreign.links) {
-        const family = RELATION_FAMILY[link.relation];
+        const family = relationFamily(link.relation);
         if (family === undefined) {
             stats.dropped_relation[link.relation] = (stats.dropped_relation[link.relation] ?? 0) + 1;
             continue;
