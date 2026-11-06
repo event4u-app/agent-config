@@ -22,3 +22,12 @@ would accept — a separate, non-required reporting job — which is a change to
 **Disposition.** The wiring is withdrawn from this change; the gate is untouched. AC-8 stays
 open. Narrowing it to "a separate, non-required job reports the checks beside the gate" weakens
 a recorded criterion, which is the owner's decision, not the council's or the agent's.
+
+**Round 6, after the owner's narrowing** (`graph-checks-job-r6-20261106.question.md`): the
+separate `graph-checks` job. Both seats accepted the placement and refused the first
+implementation — a silent merge-base fallback, unresolved revisions and the synthetic merge
+commit as head, no proof that graph and quoted commit are one snapshot, a failed build still
+reading as analysed, the cap applied after the exhibit reads, required-ness claimed from
+`continue-on-error`, and no ingester-side refusal or end-to-end test. The shipped version
+addresses each (see `graph_checks_report.ts` and its test); it has not had a review round of
+its own.

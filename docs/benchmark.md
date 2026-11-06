@@ -184,6 +184,16 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 - `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
 - The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
 
+### The minimal-prompt baseline (frozen 2026-11-06, before its first run) {#minimal-prompt-baseline}
+
+The scope result above has `package` and `rules-kernel-dc` at 10 of 10 and 8 of 10 on Haiku, and `vanilla` at 1 of 10. The arm `minimal-prompt` asks whether one plain instruction does the same as the rules. It injects the text below and nothing else, with this package scoped away. The text is frozen here before the arm's first run, so a result cannot be bought by rewording the floor afterwards. `tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` fails when this block and `FIXED_INJECTIONS.minimal` in `src/scripts/_lib/bench_ab_arms.ts` disagree.
+
+```text
+Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.
+```
+
+When the arm is in a run, the report adds three comparisons: `package` vs `minimal-prompt`, `rules-kernel-dc` vs `minimal-prompt`, and `minimal-prompt` vs `vanilla`. A report without the arm renders as before.
+
 ### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
 
 Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:
@@ -201,6 +211,36 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
 
+
+## Where the main session's default context goes (2026-11-06) {#main-session-census}
+
+Measured with `./scripts-run src/scripts/preamble_byte_census --main-session`. The figures come from what the host recorded delivering in one Claude Code session on this repository, not from a model of the tree. The setup was a user-global install with the full rule set, plus the repository's own project rules. Characters are as delivered; tokens are approximately characters / 4. This is one session on one machine, a reading and not a distribution.
+
+**Start-up load: ~397k characters (~99k tokens).**
+
+| Bucket | Files | Characters | Share |
+|---|---|---|---|
+| User-global rules (`~/.claude/rules`) | 100 | 328,985 | 83 % |
+| This repository's project rules (`dist/agent-src/rules`) | 15 | 32,984 | 8 % |
+| Skill catalog (633 listed) | — | 29,356 | 7 % |
+| Start-up hook output | 1 | 1,505 | < 1 % |
+| CLAUDE.md files and imports, auto-memory | 4 | 4,544 | 1 % |
+
+What the reading shows:
+
+- **The rules are the load.** 115 rule files make up 91 % of the start-up context. 32 of them carry half of the instruction characters, and the 19 files over 5,000 characters carry 128k on their own. No rule is loaded twice: the user-global and project sets do not overlap by name. 2 of the 102 user-global rule files have a path trigger and stayed out; all the others load in every session.
+- **About 64k characters (~16k tokens, 17 % of the instruction load) are domain and stack rules this repository never exercises:**
+
+  | Rules | Files | Characters |
+  |---|---|---|
+  | Finance, legal and strategy floors, advisory disclaimer, PII and retention | 6 | 30,208 |
+  | Media and brand: likeness, screenshots, brand, icons, design fidelity | 6 | 23,022 |
+  | Persistence packs: scale, history | 2 | 7,682 |
+  | Stack routing: Laravel, Symfony, PHP, Docker, devcontainer, Copilot | 7 | 2,914 |
+
+  Several of these say in their own header that they activate when their pack is installed. They load here because the full profile installs them unconditionally. This is the first concrete candidate set for 3.3. Whether a narrower default loses quality is a measurement, and 3.3 runs it only on tasks where a lift was shown.
+- **Listed is not loaded.** The catalog names 633 skills. Only 235 arrive with a description (22k characters); 398 arrive as a bare name (7k characters). A skill without a description can only be found by name, which is the gap `missing-skill-recovery` exists for.
+- **The recurring cost sits in tool-call hooks, not in prompt turns.** Every prompt turn adds about 360 characters of hook output. Every `Bash` call adds about 1,050 characters through the `PostToolUse` hook, which came to 21k characters over the 20 calls of this session. Every compaction re-delivers about 4,100 characters at `SessionStart:compact`. None of this is in the start-up figure above.
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 

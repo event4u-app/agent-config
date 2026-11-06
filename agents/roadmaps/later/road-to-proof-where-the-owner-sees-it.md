@@ -246,17 +246,30 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   instruction files (367k chars), a 29k-char skill catalog listing 633 skills of which
   235 carry a description and 398 arrive as a bare name — and 346 chars of hook
   output on every prompt turn. Exit 2 when no transcript holds an instructions delivery.
-- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_ab_arms.ts --> A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
+  Reading written up in `docs/benchmark.md` § Where the main session's default context
+  goes: rules are 91 % of the start-up load, and 21 domain and stack rules (~64k chars,
+  17 % of the instructions) load in every session on a repository that never uses them.
+- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_stats.ts --> A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
   verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> /^1$/
+  verify: a synthetic report with `vanilla`, `minimal-prompt` and `package` renders the `package` vs `minimal-prompt` comparison (`npx vitest run tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` -> 0)
   Done 2026-11-06: four plain sentences (smallest change, update what it affects,
   read before asking, test before done), injected with this package scoped away and
   no package vocabulary. Not yet run; its first reading rides with the next paid sweep.
+  Re-verified 2026-11-06 under the sharper verify: the report compares `package` and
+  `rules-kernel-dc` against the arm and the arm against `vanilla`, and the injected text
+  is frozen in `docs/benchmark.md` § The minimal-prompt baseline before its first run.
+  Open, not blocking: `minimal-prompt` in `CODEX_VALID_ARMS` (needed only for a Codex
+  run), and before 2.5 is released a single-trial probe that checks the context size
+  the arm actually loads, not only the skill count.
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.
   verify: each candidate's interpretation record compares quality first and priced cost second
+  First candidate set from 3.1: the 21 domain and stack rules that load unconditionally
+  under the full profile (finance, legal, strategy, media, persistence packs, stack
+  routing; ~64k chars). Still gated on an effect from 1.4 or 2.5.
 - [ ] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
   one multi-session task family (decision recall, a superseded decision, a stale
   entry) run with and without memory on this harness. Recall itself stays with

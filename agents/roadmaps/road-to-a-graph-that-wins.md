@@ -375,19 +375,21 @@ Added 2026-11-06 from AC-3 (`internal/bench/reports/code-graph-detector-labels-2
 on `unopim` the graph-backed silent-catch reading never fired in 40 sampled catches, while an
 independent reader found a route path for 24 of them (paired verdict `regression`, 2 / 11).
 Two reach gaps account for what the run could trace.
-- [ ] 6.1 **Package route files.** A Laravel package registers routes from its own files
+- [x] 6.1 **Package route files.** A Laravel package registers routes from its own files
       (`Routes/admin.php`, loaded by a service provider's `loadRoutesFrom`); the route lane reads
       none of them, so an action reached only through a package route has no entry point.
       Example: `POST catalog/passports/reinstate/{publication}` → `PublicationController::reinstate`.
       verify: a fixture package whose provider calls `loadRoutesFrom(__DIR__.'/../Routes/admin.php')`
       yields a route node with a stated `routes-to` edge to its action, and `entryPathReading`
       fires on a catch inside that action.
+      > note: done 2026-11-06 — `routeFileSet` (`providers/laravel.ts`) adds files loaded by `loadRoutesFrom` / `group(__DIR__ …)` and their `require`s; `Route::controller(C::class)` groups resolve bare method-name handlers (unopim's package routes use both). `npx vitest run tests/scripts/code_graph_laravel_package_routes.test.ts` -> 0.
 - [ ] 6.2 **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
       indexed declaration encloses the line, so the reading cannot start. Measure which constructs
       they are (closures, arrow functions, class constants, compiled templates) and index the
       enclosing one where the extractor can.
       verify: the 27 rows of `code-graph-detector-labels-2026-11-06/unopim.catch.jsonl` re-read
       after the change, with the share still unanswered reported per construct.
+      > note: 2026-11-06 — measured on the recorded rows: 12 inline script in Blade templates (11 labelled reachable), 12 compiled bundles under `public/**/build` (2), 3 test code (0). Extractor side landed: views resolve by namespace (`loadViewsFrom`, `anonymousComponentPath`), and the entry-path reading starts at a template the graph states is rendered or included and walks `renders` / `includes` (fixture tests in the same file; compiled bundles stay unanswered by design). Open: the re-read of the 27 rows itself, which is 6.3's run.
 - [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
       the same labels (no relabelling) and publish the paired verdict beside the original.
       verify: `ls internal/bench/reports/code-graph-detector-labels-*.md | wc -l` -> /^\s*[2-9]/
@@ -430,4 +432,5 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
       verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
 - [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
-      > note: 2026-11-06 — the first two hold (5.2). Wiring the checks into `self_review_gate.ts` went through five council rounds (`agents/evidence/council/graph-checks-self-review-20261106.md`); both seats refused every placement on the gate's required path, and the last round named a separate, non-required reporting job as the version it would accept. That narrows the criterion, which is the owner's call; the wiring was withdrawn and the gate is unchanged. Open: owner decision between narrowing AC-8 to a non-required job beside the gate, or another council-reviewed placement.
+      > note: 2026-11-06 — the first two hold (5.2). Wiring the checks into `self_review_gate.ts` went through five council rounds (`agents/evidence/council/graph-checks-self-review-20261106.md`); both seats refused every placement on the gate's required path, and the last round named a separate, non-required reporting job as the version it would accept. That narrows the criterion, which is the owner's call; the wiring was withdrawn and the gate is unchanged. Owner decision 2026-11-06: narrowed to a separate, non-required job beside the gate.
+      > note: 2026-11-06 — the `graph-checks` job in `self-review-gate.yml` runs `graph_checks_report.ts` (graph built from the PR's clean real head, resolved SHAs, per-check status, artifact refused by the dispositions ledger). Council round 6 (`agents/evidence/council/graph-checks-job-r6-20261106.question.md`) accepted the placement and refused the first implementation; every required change it named is in the shipped version, which no council round has reviewed yet. Open: that review round.

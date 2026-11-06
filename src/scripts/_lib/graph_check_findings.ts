@@ -10,8 +10,9 @@
  * finding of its own, never silence: "no analysis" must not read as "nothing
  * found".
  *
- * Not wired into `self_review_gate.ts` here — that is a gate change and needs
- * its own ratification artifact.
+ * Not wired into `self_review_gate.ts`: an AI-council review (five rounds,
+ * 2026-11-06) refused every placement on the gate's required path. The checks
+ * are reported by a separate, non-required job instead — `graph_checks_report.ts`.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -28,23 +29,31 @@ const TITLE: Readonly<Record<ReviewCheck['id'], string>> = {
     'touched-entry-point': 'diff reaches an entry point or flow',
 };
 
-function presenceAt(root: string, witness: string, commit: string): PresenceExhibit | null {
+/** One line of `file` (1-based), or undefined when it cannot be read. */
+export type LineReader = (file: string, line: number) => string | undefined;
+
+/** The working tree. A caller quoting a commit passes a reader over that commit's blobs instead. */
+export function workingTreeReader(root: string): LineReader {
+    return (file, line) => {
+        try {
+            return fs.readFileSync(path.join(root, file), 'utf-8').split('\n')[line - 1];
+        } catch {
+            return undefined;
+        }
+    };
+}
+
+function presenceAt(read: LineReader, witness: string, commit: string): PresenceExhibit | null {
     const m = /^(.+):(\d+)$/.exec(witness);
     if (!m) return null;
     const file = m[1] as string;
     const line = Number(m[2]);
-    let text: string | undefined;
-    try {
-        text = fs.readFileSync(path.join(root, file), 'utf-8').split('\n')[line - 1];
-    } catch {
-        return null;
-    }
-    const quote = (text ?? '').trim().slice(0, MAX_QUOTE_CHARS);
+    const quote = (read(file, line) ?? '').trim().slice(0, MAX_QUOTE_CHARS);
     return quote ? { type: 'presence', path: file, line, quote, commit } : null;
 }
 
 /** One finding per flagged item, one per check that could not run; a passing check yields none. */
-export function graphCheckFindings(checks: readonly ReviewCheck[], root: string, commit: string): GraphCheckFinding[] {
+export function graphCheckFindings(checks: readonly ReviewCheck[], root: string, commit: string, read: LineReader = workingTreeReader(root)): GraphCheckFinding[] {
     const out: GraphCheckFinding[] = [];
     for (const c of checks) {
         const base = { severity: 'low', kind: 'correctness', disposition: 'advisory', source: 'code-graph', check: c.id } as const;
@@ -55,7 +64,7 @@ export function graphCheckFindings(checks: readonly ReviewCheck[], root: string,
         if (c.status !== 'finding') continue;
         for (const i of c.items) {
             if (c.id === 'untested-change' && i.verdict !== 'untested') continue;
-            const ex = i.witness ? presenceAt(root, i.witness, commit) : null;
+            const ex = i.witness ? presenceAt(read, i.witness, commit) : null;
             const loc = i.witness ? /^(.+):(\d+)$/.exec(i.witness) : null;
             out.push({
                 ...base,
