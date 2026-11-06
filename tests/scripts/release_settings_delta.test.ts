@@ -319,7 +319,12 @@ describe('release settings delta — the released surface', () => {
             // repository's shallow flag: a grafted local clone can be shallow
             // and still hold every commit this check reads.
             git(['cat-file', '-e', `${offender}^^{commit}`]);
-            log = git(['log', '--format=%H', '--diff-filter=M', '--', SETTINGS_SURFACE_FIXTURE_REL]);
+            // `--full-history`: the offender and its repair cancel out, so
+            // default history simplification prunes the side branches that
+            // carry them — and, behind a merge that is TREESAME on the file,
+            // every older cut as well. The check would then pass by not
+            // looking.
+            log = git(['log', '--full-history', '--format=%H', '--diff-filter=M', '--', SETTINGS_SURFACE_FIXTURE_REL]);
         } catch (e) {
             // History does not reach back that far (an exported tree, a
             // shallow fetch). The writer-set assertion above still holds;
