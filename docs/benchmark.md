@@ -171,6 +171,23 @@ So `ask-when-uncertain` makes Haiku ask before it has looked. Asking after a loo
 - `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
 - The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
 
+### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
+
+Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:
+
+- A: one agent.
+- B: one agent with one effort step more, the same-compute arm.
+- C: a fresh tester writes edge-case tests from the requirement, then the author implements against them.
+
+The reviewer arm D did not run, because its slim-reviewer gate failed.
+
+- **Primary, C vs B:** capability 7/48 vs 5/48, discordant 7–5, one-sided sign test p = 0.39. **Not detected at this size**, not "no effect". 48 pairs had 80 % power only for a discordance of about 0.15. Per cluster: headroom 5–5, hold-out 2–0. B alone solves `capH-debug-08` (5/8) and C alone solves `hdrH-done-01` (5/8), so the two arms win on different task shapes.
+- **Safety, C's own tests rejecting the reference fix:** 19/48 = **39.6 %** against a 25 % ceiling, so the bar fails. Without the one task where the test asserts an error message the requirement does not fix, the rate is 30 %. The tester works from the requirement only and misses constraints stated elsewhere, for example a README saying `--limit 0` means unlimited.
+- **Cost per run, p50 / p95:** A $0.24 / $0.63, B $0.27 / $0.69, C $0.59 / $1.36. **Net value of C vs B:** −$0.067 per run, with `D` = 10× and `C_FP` = 1× A's p50.
+- **Spend:** $65.47 sweep + $1.94 harness smoke = $67.41 of the $150 release.
+
+No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
+
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
