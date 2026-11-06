@@ -24,6 +24,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 
 import * as v1 from '../bench_ab_task_runner.js';
+import { store_after_sweep } from '../bench_evidence_store.js';
 import { ARMS, type ArmSpec } from './bench_ab_arms.js';
 import { container_env, read_token_pool, select_account } from './bench_ab_container.js';
 import { LADDER_NAMES, type ArtifactTask } from './bench_artifact_corpus.js';
@@ -151,6 +152,7 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
                 for (const ladder of LADDER_NAMES) {
                     if (cap !== null && spent >= cap) {
                         process.stdout.write(`bench_ab_v2: sweep cap $${cap} reached ($${spent.toFixed(2)} reported) — stopping; later runs were not started → ${path.relative(a.repo_root, out)}\n`);
+                        store_if_written(out);
                         return 0;
                     }
                     const iso = isolate_arm(arm, t.id, t.network, { repo_root: a.repo_root });
@@ -181,7 +183,13 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
         }
     }
     process.stdout.write(`bench_ab_v2: artifact runs → ${path.relative(a.repo_root, out)}\n`);
+    store_if_written(out);
     return 0;
+}
+
+/** Durable copy of the sweep's lines and transcripts (roadmap 6.2); a sweep that wrote no line has nothing to keep. */
+function store_if_written(out: string): void {
+    if (fs.existsSync(out)) store_after_sweep(out);
 }
 
 /** Packs the checkout once per sweep, beside a shared npm cache, under the system temp dir. */
