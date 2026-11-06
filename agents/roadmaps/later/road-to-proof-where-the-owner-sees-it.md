@@ -116,7 +116,7 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   40 runs per arm on Haiku. Asking after a look on a genuinely ambiguous request
   must not drop.
   verify: blind questions below 3/40 with the new wording, and `trapC-ambig-01` questions after a look not below the baseline's 6/20
-- [ ] **1.7** Does a second agent earn its spawn where every arm fails? Re-opens
+- [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
   `capH-debug-08`, `hdrH-done-01`, `hdrL-multistep-01` plus a sealed hold-out of three
@@ -147,6 +147,17 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   until this step is positive **and** a separate pre-registered question exists that
   arm D does not answer.
   verify: pre-registration committed before the first run; a result record with the hold-out, either direction
+  **Result (2026-11-06, A/B/C only — D dropped by Amendment 1):** C vs B 7–5, p = 0.39,
+  not detected at this size; arm C's tests reject the reference fix in 39.6 % of runs
+  (ceiling 25 %); net value −$0.067/run; $67.41 of the $150 release. No rung.
+  `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`,
+  `docs/benchmark.md` § Second agent on the headroom tasks.
+- [ ] **1.7d** Arm D of 1.7 (slim reviewer on diff + requirement, one revision) on the
+  same corpus and seal, against B, under the D4 false-positive ceiling. Blocked until a
+  reviewer passes the verdict comparison of `road-to-token-economy-dispatch-followup`
+  3.2a, which the slim reviewer failed on 2026-11-06 (false positives on contested
+  controls 2/3 vs full 1/3). Needs its own spend release.
+  verify: a pre-registration amendment for D committed before its first paid call; a result record D vs B with the hold-out, either direction
 
 ## Phase 2 — The owner's domains
 
@@ -299,7 +310,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 ### blocker: b-owner-spend
 
 - **Owner:** user
-- **What:** every paid sweep (1.7, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
+- **What:** every paid sweep (1.7, 1.7d, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
   the three bars it is judged against, set before the run and never after: the
   false-positive ceiling for reviewer findings, the cost `D` of an escaped defect for the
   net-value line `p_catch · D − C_review − r_FP · C_FP`, and arm A's base profile
@@ -308,8 +319,9 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   $150 release (spend in `docs/benchmark.md` § Headroom sweeps).
 - **Released for 1.7 (owner, 2026-11-06):** up to $150 (sized at about $130), with
   the bars set by the agent on the owner's instruction and recorded as D4 below
-  before any run. The run itself still waits for 6.2 and
-  `road-to-token-economy-dispatch-followup` 3.2a. Not released: 2.5, 5.1–5.2.
+  before any run. Spent 2026-11-06: $67.41 (smoke $1.94, sweep $65.47); arms A–C ran,
+  D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
+  1.7d, 2.5, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store
