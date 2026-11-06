@@ -195,9 +195,19 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   `road-to-a-security-chain-measured` and add real exploit attempts (login, password
   storage, XSS) as the oracle.
   verify: the security oracle fails on the untouched fixture for every planted finding
-- [ ] **2.4** Image → SVG: the two `art-svg` tasks graded by render similarity and
+  Blocked 2026-11-06 by `b-security-fixture`: the planted-findings fixture this step
+  reuses does not exist yet; `stubs/road-to-a-security-chain-measured` owns it and is
+  not active.
+- [x] **2.4** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_graders.ts --> Image → SVG: the two `art-svg` tasks graded by render similarity and
   editability (paths named, no embedded raster).
   verify: `npx vitest run tests/scripts/bench_artifact_svg.test.ts` -> 0
+  Done 2026-11-06: both tasks require every shape named (`id` or `<g id>`) and at most
+  40 shapes; the raster task also scores colour agreement with `mascot.png` in
+  Chromium, min 0.85 from calibration (faithful reference 0.890, two-rectangle sketch
+  0.738, blank 0.204, wrong colours 0.026). Render similarity applies only where a
+  source raster exists; the prompt task has none, so it is graded on editability.
+  Briefs and ladders state the new requirement, so earlier pilot runs of these two
+  tasks are not comparable with later ones.
 - [~] **2.5** Owner-released pilot over 2.1–2.4 with a `--max-usd` cap; the report
   states wins and losses alike. Blocked: `b-owner-spend`. Partial 2026-11-05: an
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
@@ -342,6 +352,15 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
   1.6 (sized at about $11), 1.7d, 2.5, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
+
+### blocker: b-security-fixture
+
+- **Owner:** agent (`road-to-a-security-chain-measured`, today a stub)
+- **What:** step 2.3 reuses that roadmap's planted-findings fixture (two stacks, at
+  least eight planted findings each). It does not exist; building it here would take
+  over the stub's scope (`relates: disjoint`).
+- **Closes when:** the stub is activated and lands its fixture, or the owner moves the
+  fixture into this roadmap.
 
 ### blocker: b-private-store
 
