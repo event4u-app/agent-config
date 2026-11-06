@@ -177,15 +177,20 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   `internal/bench/corpora/ab-artifact-v2.yaml`: vanilla + terse, AC + terse,
   vanilla + expert, AC + expert. "AC with a terse prompt reaches what vanilla
   needs an expert prompt for" is the owner's claim, stated as a testable one.
-  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^18$/
+  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^20$/ (18 for the nine tasks, 2 for `art-dnd-01` added by 2.2)
   Done 2026-11-06: each task carries `terse` (its prompt) and `expert` (the prompt plus
   its pre-registered `informed` ladder); `--prompt-variant both --arms vanilla,package`
   runs the 2×2 and tags every record `prompt_variant` (`internal/bench/corpora/SCHEMA-v2.md`).
   The run itself is 2.5's and waits on `b-owner-spend`.
-- [ ] **2.2** Add the missing UI task: drag & drop with keyboard and touch,
+- [x] **2.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_browser_worker.ts --> Add the missing UI task: drag & drop with keyboard and touch,
   responsive breakpoints, one custom component; graded by Playwright actions and
   axe, no model in scoring (the `taskfiles/bench-ui.yml` grader pattern).
   verify: the artifact selftest passes the reference and fails the untouched fixture for the new task
+  Done 2026-11-06: `art-dnd-01` (reorderable list: mouse, touch, keyboard, two
+  breakpoints, a custom switch) graded by the new `browser-acceptance` grader in
+  headless Chromium. Selftest: reference 8/8, a draggable-only page 4/8, `--swap` red,
+  the untouched fixture fails on the missing deliverable. The axe column reads
+  `unknown` until `axe-core` is installed, as for the DOM grader.
 - [ ] **2.3** Web security: reuse the planted-findings fixture of
   `road-to-a-security-chain-measured` and add real exploit attempts (login, password
   storage, XSS) as the oracle.
