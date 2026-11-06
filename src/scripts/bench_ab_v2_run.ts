@@ -80,6 +80,7 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
+const CANDIDATES_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'candidates');
 const REPORTS_DIR = path.join(primary_checkout_root(REPO_ROOT), 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
 // One id per process, so every kept trial stream of a sweep sorts together.
@@ -158,7 +159,11 @@ export function hardened_blocks_text(): string {
  * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
  * - 'rules-balanced'   → kernel + tier_1 (the size-cut `balanced` profile, retired 2026-07-07).
  */
-export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced', without: string | null = null): string {
+export function rules_subset_text(
+    subset: 'rules-kernel-dc' | 'rules-balanced',
+    without: string | null = null,
+    swap: { id: string; text: string } | null = null,
+): string {
     const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
         kernel: string[];
         tier_1: { id: string }[];
@@ -169,13 +174,25 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced', 
     } else {
         ids.push(...router.tier_1.map((t) => t.id));
     }
-    if (without !== null) {
-        const at = ids.indexOf(without);
-        if (at < 0) throw new Error(`rule "${without}" is not in ${subset}: ${ids.join(', ')}`);
-        ids.splice(at, 1);
+    for (const id of [without, swap?.id]) {
+        if (id != null && !ids.includes(id)) throw new Error(`rule "${id}" is not in ${subset}: ${ids.join(', ')}`);
     }
-    const bodies = ids.map((id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim());
+    if (without !== null) ids.splice(ids.indexOf(without), 1);
+    const bodies = ids.map((id) =>
+        id === swap?.id ? swap.text.trim() : fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim(),
+    );
     return bodies.join('\n\n---\n\n');
+}
+
+/**
+ * A candidate wording for one kernel rule, read from
+ * `internal/bench/candidates/<rule>.<label>.md`. Kept outside any `rules/`
+ * directory on purpose: a candidate is measured before it may replace the rule,
+ * and the rule file itself stays owner-edited.
+ */
+export function variant_candidate_text(stem: string): string {
+    if (!/^[a-z0-9-]+\.[a-z0-9-]+$/.test(stem)) throw new Error(`invalid candidate stem "${stem}": expected <rule>.<label>`);
+    return fs.readFileSync(path.join(CANDIDATES_DIR, `${stem}.md`), 'utf-8');
 }
 
 /**
@@ -260,6 +277,11 @@ export function injected_text(inject: string | null, placebo_chars: number): str
         return rules_subset_text(inject);
     }
     if (inject?.startsWith('kernel-minus:')) return rules_subset_text('rules-kernel-dc', inject.slice('kernel-minus:'.length));
+    if (inject?.startsWith('kernel-variant:')) {
+        const stem = inject.slice('kernel-variant:'.length);
+        const text = variant_candidate_text(stem);
+        return rules_subset_text('rules-kernel-dc', null, { id: stem.slice(0, stem.indexOf('.')), text });
+    }
     if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
 }

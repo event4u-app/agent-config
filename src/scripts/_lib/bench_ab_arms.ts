@@ -208,8 +208,13 @@ export function profile_rules_text(profile: string, routerPath: string, rulesDir
  * the kernel-dc text with that one rule dropped, as a control-scope text
  * injection. Resolved on demand rather than listed in `ARMS`, so ablating a rule
  * needs no harness change; an id outside the set fails when the text is built.
+ *
+ * `kernel-variant-<rule>.<label>` is the same arm with that one rule's body
+ * replaced by the candidate `internal/bench/candidates/<rule>.<label>.md`.
  */
 export function ablation_arm(name: string): ArmSpec | null {
     const m = /^kernel-minus-(.+)$/.exec(name);
-    return m ? { setting_sources: 'project,local', inject: `kernel-minus:${m[1]}` } : null;
+    if (m) return { setting_sources: 'project,local', inject: `kernel-minus:${m[1]}` };
+    const v = /^kernel-variant-([a-z0-9-]+\.[a-z0-9-]+)$/.exec(name);
+    return v ? { setting_sources: 'project,local', inject: `kernel-variant:${v[1]}` } : null;
 }

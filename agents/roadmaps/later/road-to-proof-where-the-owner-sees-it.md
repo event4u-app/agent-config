@@ -116,6 +116,11 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   40 runs per arm on Haiku. Asking after a look on a genuinely ambiguous request
   must not drop.
   verify: blind questions below 3/40 with the new wording, and `trapC-ambig-01` questions after a look not below the baseline's 6/20
+  Measured 2026-11-06 (report `2026-11-06T08-13-53Z`, `docs/benchmark.md` § Headroom sweeps): the candidate
+  `internal/bench/candidates/ask-when-uncertain.look-first.md` asked blind in 3/40 runs (same-day control 5/40),
+  and after a look in 6/20 on `trapC-ambig-01` (control 11/20). The bar is missed, and the difference is
+  within noise (p = 0.36). Open: the bar needs a sample size that can separate single-digit rates (`bench:ab:power`)
+  before another wording is measured; the rule stays unchanged.
 - [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on

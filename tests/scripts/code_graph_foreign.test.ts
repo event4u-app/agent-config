@@ -114,6 +114,17 @@ describe('adaptForeignGraph (3.1)', () => {
         expect(r?.unmapped_relations).toStrictEqual({ depends_on_somehow: 1 });
     });
 
+    it('maps the reference relations a node-link exporter actually writes, not only the bare verbs', () => {
+        const rels = ['imports_from', 're_exports', 'dynamic_import', 'includes', 'references_constant', 'uses_static_prop', 'mixes_in', 'indirect_call'];
+        const r = adaptForeignGraph({
+            nodes: [{ id: 'a' }, { id: 'b' }],
+            links: rels.map((relation) => ({ source: 'a', target: 'b', relation })),
+        });
+        // trait use is `uses` in our own PHP extractor; an indirect call is only similar to a call
+        expect(r?.unmapped_relations).toStrictEqual({ indirect_call: 1 });
+        expect(r?.graph.edges.map((e) => e.relation)).toStrictEqual(['imports', 'imports', 'imports', 'imports', 'uses', 'uses', 'uses']);
+    });
+
     it('counts an edge with a missing endpoint rather than dropping it silently', () => {
         const r = adaptForeignGraph({
             nodes: [{ id: 'a' }],

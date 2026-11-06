@@ -46,16 +46,24 @@ export interface ForeignLoadResult {
  * This is a list of OUR relation names and their obvious synonyms, not a table
  * of any particular tool's schema.
  */
-const RELATION_MAP: Readonly<Record<string, Relation>> = {
+export const FOREIGN_RELATION_MAP: Readonly<Record<string, Relation>> = {
     calls: 'calls',
     call: 'calls',
     invokes: 'calls',
     imports: 'imports',
     import: 'imports',
     requires: 'imports',
+    imports_from: 'imports',
+    re_exports: 'imports',
+    dynamic_import: 'imports',
+    includes: 'imports',
     uses: 'uses',
     use: 'uses',
     references: 'uses',
+    references_constant: 'uses',
+    uses_static_prop: 'uses',
+    // our PHP extractor records trait use as `uses` (extract.ts, use_declaration)
+    mixes_in: 'uses',
     inherits: 'inherits',
     extends: 'inherits',
     implements: 'inherits',
@@ -142,7 +150,7 @@ export function adaptForeignGraph(doc: unknown): ForeignLoadResult | null {
             continue;
         }
         const rawRelation = typeof e['relation'] === 'string' ? e['relation'] : '';
-        const relation = RELATION_MAP[rawRelation.toLowerCase()];
+        const relation = FOREIGN_RELATION_MAP[rawRelation.toLowerCase()];
         if (relation === undefined) {
             const key = rawRelation === '' ? '(none)' : rawRelation;
             unmapped[key] = (unmapped[key] ?? 0) + 1;

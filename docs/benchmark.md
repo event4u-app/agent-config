@@ -163,6 +163,17 @@ The PHP graders now run without PHP on the host. `BENCH_PHP_BIN=internal/bench/c
 
 So `ask-when-uncertain` makes Haiku ask before it has looked. Asking after a look on `trapC-ambig-01`, where two config files fit the request, is the behavior the task's discipline oracle accepts, and that rule is not implicated in it. Nothing is changed on this result alone: the rule is a kernel rule, and the next step is a wording that puts looking before asking, measured against this baseline (roadmap `road-to-proof-where-the-owner-sees-it` 1.6).
 
+**A look-first wording, measured before it may replace the rule.** The candidate is `internal/bench/candidates/ask-when-uncertain.look-first.md`. It is the shipped rule with four changes: the opening line says "look, then ask", the trigger list starts after a look, a vague request means "read the code it names, then ask", and the self-check gains a step 0, "have I looked?". The arm `kernel-variant-<rule>.<label>` injects `rules-kernel-dc` with that one body swapped. The rule file itself is unchanged; kernel rules are owner-edited. Report `2026-11-06T08-13-53Z`, Haiku, 2 tasks × 20 seeds, with a same-day `rules-kernel-dc` control, 80 runs, $1.85:
+
+| Arm | Blind questions (of 40) | `trapC-ambig-01` questions after a look (of 20) | `trapC-ambig-01` joint pass (of 20) |
+|---|---|---|---|
+| `rules-kernel-dc` (same day) | 5 | 11 | 9 |
+| look-first candidate | 3 | 6 | 13 |
+
+The roadmap's bar is not met: blind questions had to fall below 3 of 40, and they landed at exactly 3. The same-day control asked blind in 5 of 40 runs, not the 7 of the day before, so at this size the difference is noise (Fisher one-sided p = 0.36). The candidate also asks after looking less often (6 against 11 of 20, p = 0.10), while `trapC-ambig-01` passes slightly more often (13 against 9, p = 0.17). That sits exactly on the bar's floor of 6. No run errored and no activation check flagged. The same-day control used a different `bench-base` image id (CLI 2.1.316 in both), recorded by hand because another session was using the images at the time. Counting rule: a question is a run that changed no file and whose last text asks one; *blind* means no tool call came before it. On the 2026-11-05 report this rule gives 7 of 40 blind and 19 of 40 asks in all (the earlier count said 18).
+
+Verdict: the wording does not earn a kernel change on this evidence. Blind questions in the low single digits cannot be separated at 40 runs per arm. Testing more wordings at this size would mean picking the luckiest draw, not measuring.
+
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 
 - The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.
