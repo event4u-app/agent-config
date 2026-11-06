@@ -141,7 +141,7 @@ function run_browser_worker(name: string, spec: unknown, timeout_ms: number, loa
     }
 }
 
-/** Proof-where 2.4: colour agreement of the SVG with its source raster, in Chromium; `unknown` without one. */
+/** Colour agreement of the SVG with its source raster, in Chromium; `unknown` without one. */
 export function svg_similarity_check(workspace: string, task: ArtifactTask, sim: { source: string; min: number }, opts: GradeOpts = {}): GateCheck {
     const id = 'render-similarity';
     if (opts.browser === false) return { id, status: 'unknown', detail: 'no playwright chromium installed' };

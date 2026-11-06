@@ -115,7 +115,7 @@ function points_box(n: number[]): Box {
 }
 
 /**
- * Editability (proof-where 2.4): a designer can find and change each part. Every
+ * Editability: a designer can find and change each part. Every
  * drawable shape carries an id, or sits inside a group that does; and the drawing
  * stays within a shape budget, which is what stops a pixel-per-rect trace.
  */

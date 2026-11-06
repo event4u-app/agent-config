@@ -1,5 +1,5 @@
 /**
- * Main-session default-context census (proof-where 3.1).
+ * Main-session default-context census.
  *
  * The subagent census in `preamble_byte_census.ts` models a cold start from files
  * on disk. A main session is measurable instead: the host records what it
