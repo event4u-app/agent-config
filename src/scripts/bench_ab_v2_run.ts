@@ -277,7 +277,8 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject?.startsWith('kernel-minus:')) return rules_subset_text('rules-kernel-dc', inject.slice('kernel-minus:'.length));
     if (inject?.startsWith('kernel-variant:')) {
         const stem = inject.slice('kernel-variant:'.length);
-        return rules_subset_text('rules-kernel-dc', null, { id: stem.split('.')[0], text: variant_candidate_text(stem) });
+        const text = variant_candidate_text(stem);
+        return rules_subset_text('rules-kernel-dc', null, { id: stem.slice(0, stem.indexOf('.')), text });
     }
     if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
