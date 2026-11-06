@@ -70,6 +70,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   reference edges: `imports_from`, `re_exports`, `dynamic_import` and `includes`
   load as imports, and `references_constant`, `uses_static_prop` and `mixes_in`
   (trait use) as uses. They were dropped as unmapped relations before.
+* **code-graph:** `review-risk` no longer reads a lane-backed term as `0` when its
+  lane never ran (a `--no-lanes` build, an older or a foreign graph): a term that
+  counted nothing then reads `unknown (lane not run)` and the band reads `unknown`.
+  Facts the graph does carry still count.
 
 Twenty entries that had accumulated here were drained to
 [`docs/archive/CHANGELOG-unreleased-drain-2026-10.md`](docs/archive/CHANGELOG-unreleased-drain-2026-10.md)
