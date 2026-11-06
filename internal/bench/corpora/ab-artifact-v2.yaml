@@ -31,10 +31,12 @@ tasks:
     variants:
       - prompt_variant: terse
       - prompt_variant: expert
-        prompt: "Read BRIEF.md and create out/logo.svg as described there. Before you finish, make sure of the following. The file must be pure vector: remove any <image>, <script>, <foreignObject> and on* event attributes. Remove every external reference: href or url() may only point at in-document #ids. Every shape must lie inside viewBox 0 0 256 256, and at least one shape must have a visible fill or stroke. Check that the file is well-formed XML with a single <svg> root carrying the viewBox."
+        prompt: "Read BRIEF.md and create out/logo.svg as described there. Before you finish, make sure of the following. The file must be pure vector: remove any <image>, <script>, <foreignObject> and on* event attributes. Remove every external reference: href or url() may only point at in-document #ids. Every shape must lie inside viewBox 0 0 256 256, and at least one shape must have a visible fill or stroke. Check that the file is well-formed XML with a single <svg> root carrying the viewBox. Name every shape: each path, rect or circle carries an id that says what it is, or sits in a <g id> that does; use at most 40 shapes."
     deliverable: { path: out/logo.svg, type: svg }
     graders:
-      - { id: svg-render-gate, role: primary }
+      - id: svg-render-gate
+        role: primary
+        args: { editability: { max_shapes: 40 } }
       - { id: lint_svg_asset, role: secondary }
     parity_bar: 1.0
     network: none
@@ -48,6 +50,7 @@ tasks:
         - "Remove every external reference: href or url() may only point at in-document #ids."
         - "Every shape must lie inside viewBox 0 0 256 256, and at least one shape must have a visible fill or stroke."
         - "Check that the file is well-formed XML with a single <svg> root carrying the viewBox."
+        - "Name every shape: each path, rect or circle carries an id that says what it is, or sits in a <g id> that does; use at most 40 shapes."
 
   - id: art-svg-raster-01
     kind: artifact
@@ -57,12 +60,12 @@ tasks:
     variants:
       - prompt_variant: terse
       - prompt_variant: expert
-        prompt: "Read BRIEF.md and trace mascot.png into out/mascot.svg as described there. Before you finish, make sure of the following. Do not embed the PNG: the SVG may not contain <image>; draw the bear with shapes. Use the three source colours exactly: #f2a93b body, #3b2a1a eyes, #fff4e0 belly. Keep viewBox 0 0 48 48 and keep every shape inside it. Remove any script, event attribute or external reference."
+        prompt: "Read BRIEF.md and trace mascot.png into out/mascot.svg as described there. Before you finish, make sure of the following. Do not embed the PNG: the SVG may not contain <image>; draw the bear with shapes. Use the three source colours exactly: #f2a93b body, #3b2a1a eyes, #fff4e0 belly. Keep viewBox 0 0 48 48 and keep every shape inside it. Remove any script, event attribute or external reference. Name every shape: each path, rect or circle carries an id that says what it is, or sits in a <g id> that does; use at most 40 shapes, and match the original's shapes closely enough that the two look the same side by side."
     deliverable: { path: out/mascot.svg, type: svg }
     graders:
       - id: svg-render-gate
         role: primary
-        args: { palette: ["#f2a93b", "#3b2a1a", "#fff4e0"], palette_min: 3 }
+        args: { palette: ["#f2a93b", "#3b2a1a", "#fff4e0"], palette_min: 3, editability: { max_shapes: 40 }, similarity: { source: fixtures-artifact/art-svg-raster-01/mascot.png, min: 0.85 } }
       - { id: lint_svg_asset, role: secondary }
     parity_bar: 1.0
     network: none
@@ -76,6 +79,7 @@ tasks:
         - "Use the three source colours exactly: #f2a93b body, #3b2a1a eyes, #fff4e0 belly."
         - "Keep viewBox 0 0 48 48 and keep every shape inside it."
         - "Remove any script, event attribute or external reference."
+        - "Name every shape: each path, rect or circle carries an id that says what it is, or sits in a <g id> that does; use at most 40 shapes, and match the original's shapes closely enough that the two look the same side by side."
 
   - id: art-landing-01
     kind: artifact

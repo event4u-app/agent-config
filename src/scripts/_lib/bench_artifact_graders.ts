@@ -116,6 +116,50 @@ export function grade_dom(workspace: string, task: ArtifactTask, args: Record<st
 }
 
 /**
+ * Run a Chromium worker in a child process with a temp HOME. Playwright's browser
+ * cache is resolved against the real HOME first, or the child would look for
+ * Chromium in the empty temp one. Returns the worker's last JSON line, or
+ * `{ worker_error }` when it printed none.
+ */
+function run_browser_worker(name: string, spec: unknown, timeout_ms: number, loader: string): Record<string, unknown> {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-browser-'));
+    const spec_path = path.join(tmp, 'spec.json');
+    fs.writeFileSync(spec_path, JSON.stringify(spec));
+    const worker = path.join(path.dirname(HERE), `${name}${path.extname(HERE)}`);
+    const browsers = process.env['PLAYWRIGHT_BROWSERS_PATH'] ?? path.join(os.homedir(), process.platform === 'darwin' ? 'Library/Caches' : '.cache', 'ms-playwright');
+    const r = spawnSync(process.execPath, ['--no-warnings', '--import', loader, worker, spec_path], {
+        encoding: 'utf-8',
+        timeout: timeout_ms,
+        cwd: tmp,
+        env: { ...process.env, HOME: tmp, TZ: FROZEN_RENDER.timezone, LANG: 'en_US.UTF-8', PLAYWRIGHT_BROWSERS_PATH: browsers },
+    });
+    fs.rmSync(tmp, { recursive: true, force: true });
+    try {
+        return JSON.parse((r.stdout ?? '').trim().split('\n').pop() ?? '') as Record<string, unknown>;
+    } catch {
+        return { worker_error: r.error ? String(r.error.message) : `worker exit ${r.status}` };
+    }
+}
+
+/** Proof-where 2.4: colour agreement of the SVG with its source raster, in Chromium; `unknown` without one. */
+export function svg_similarity_check(workspace: string, task: ArtifactTask, sim: { source: string; min: number }, opts: GradeOpts = {}): GateCheck {
+    const id = 'render-similarity';
+    if (opts.browser === false) return { id, status: 'unknown', detail: 'no playwright chromium installed' };
+    const loader = tsx_loader();
+    if (loader === null) return { id, status: 'unknown', detail: 'tsx loader not resolvable' };
+    const out = run_browser_worker(
+        'bench_artifact_svg_similarity_worker',
+        { svg_path: path.join(workspace, task.deliverable.path), png_path: path.join(AB_ROOT, sim.source), scale: 4, tolerance: 40 },
+        opts.timeout_ms ?? 60_000,
+        loader,
+    );
+    if (typeof out['unavailable'] === 'string') return { id, status: 'unknown', detail: out['unavailable'] };
+    if (typeof out['similarity'] !== 'number') return { id, status: 'fail', detail: String(out['worker_error'] ?? out['error'] ?? 'no score') };
+    const v = out['similarity'];
+    return { id, status: v >= sim.min ? 'pass' : 'fail', detail: `${v.toFixed(3)} (min ${sim.min})` };
+}
+
+/**
  * Held-back acceptance tests that need layout and trusted input (drag by mouse and
  * touch, breakpoints, overflow), run in headless Chromium in a child process. The
  * page runs inside the browser, not in node, so the node hardening flags of the DOM
@@ -130,24 +174,13 @@ export function grade_browser(workspace: string, task: ArtifactTask, args: Recor
     const loader = tsx_loader();
     if (loader === null) return fold(id, 'primary', [{ id: 'browser', status: 'unknown', detail: 'tsx loader not resolvable' }]);
     const tests = (JSON.parse(fs.readFileSync(path.join(AB_ROOT, String(args['spec'])), 'utf-8')) as { tests: unknown[] }).tests;
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-browser-'));
-    const spec_path = path.join(tmp, 'spec.json');
-    fs.writeFileSync(spec_path, JSON.stringify({ html_path, tests, render: { ...FROZEN_RENDER.viewport, locale: FROZEN_RENDER.locale } }));
-    const worker = path.join(path.dirname(HERE), `bench_artifact_browser_worker${path.extname(HERE)}`);
-    const browsers = process.env['PLAYWRIGHT_BROWSERS_PATH'] ?? path.join(os.homedir(), process.platform === 'darwin' ? 'Library/Caches' : '.cache', 'ms-playwright');
-    const r = spawnSync(process.execPath, ['--no-warnings', '--import', loader, worker, spec_path], {
-        encoding: 'utf-8',
-        timeout: opts.timeout_ms ?? 120_000,
-        cwd: tmp,
-        env: { ...process.env, HOME: tmp, TZ: FROZEN_RENDER.timezone, LANG: 'en_US.UTF-8', PLAYWRIGHT_BROWSERS_PATH: browsers },
-    });
-    fs.rmSync(tmp, { recursive: true, force: true });
-    let parsed: { results?: { name: string; status: GateStatus; detail?: string }[]; unavailable?: string; axe?: string } = {};
-    try {
-        parsed = JSON.parse((r.stdout ?? '').trim().split('\n').pop() ?? '') as typeof parsed;
-    } catch {
-        return fold(id, 'primary', [{ id: 'worker', status: 'fail', detail: r.error ? String(r.error.message) : `worker exit ${r.status}` }]);
-    }
+    const parsed = run_browser_worker('bench_artifact_browser_worker', { html_path, tests, render: { ...FROZEN_RENDER.viewport, locale: FROZEN_RENDER.locale } }, opts.timeout_ms ?? 120_000, loader) as {
+        results?: { name: string; status: GateStatus; detail?: string }[];
+        unavailable?: string;
+        axe?: string;
+        worker_error?: string;
+    };
+    if (parsed.worker_error) return fold(id, 'primary', [{ id: 'worker', status: 'fail', detail: parsed.worker_error }]);
     if (parsed.unavailable) return fold(id, 'primary', [{ id: 'browser', status: 'unknown', detail: parsed.unavailable }]);
     const checks = (parsed.results ?? []).map((x) => ({ id: x.name, status: x.status, ...(x.detail ? { detail: x.detail } : {}) }));
     return fold(id, 'primary', checks.length > 0 ? checks : [{ id: 'worker', status: 'fail', detail: 'no results' }], { axe: parsed.axe ?? 'unknown(not reported)' });
@@ -218,7 +251,9 @@ export async function grade_primary(workspace: string, task: ArtifactTask, opts:
         case 'svg-render-gate': {
             const file = path.join(workspace, task.deliverable.path);
             if (!fs.existsSync(file)) return fold(ref.id, 'primary', [{ id: 'deliverable-exists', status: 'fail' }]);
-            return fold(ref.id, 'primary', svg_render_gate(fs.readFileSync(file, 'utf-8'), args as { palette?: string[]; palette_min?: number }));
+            const checks = svg_render_gate(fs.readFileSync(file, 'utf-8'), args as { palette?: string[]; palette_min?: number; editability?: { max_shapes: number } });
+            const sim = args['similarity'] as { source: string; min: number } | undefined;
+            return fold(ref.id, 'primary', sim ? [...checks, svg_similarity_check(workspace, task, sim, opts)] : checks);
         }
         case 'acceptance+axe':
             return grade_dom(workspace, task, args, opts);

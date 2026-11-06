@@ -195,9 +195,19 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   `road-to-a-security-chain-measured` and add real exploit attempts (login, password
   storage, XSS) as the oracle.
   verify: the security oracle fails on the untouched fixture for every planted finding
-- [ ] **2.4** Image → SVG: the two `art-svg` tasks graded by render similarity and
+  Waiting 2026-11-06: the planted-findings fixture this step reuses does not exist yet.
+  `stubs/road-to-a-security-chain-measured` owns it (see `relates`) and is not active;
+  building it here would take over that scope. Resumes when the stub lands its fixture.
+- [x] **2.4** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_graders.ts --> Image → SVG: the two `art-svg` tasks graded by render similarity and
   editability (paths named, no embedded raster).
   verify: `npx vitest run tests/scripts/bench_artifact_svg.test.ts` -> 0
+  Done 2026-11-06: both tasks require every shape named (`id` or `<g id>`) and at most
+  40 shapes; the raster task also scores colour agreement with `mascot.png` in
+  Chromium, min 0.85 from calibration (faithful reference 0.890, two-rectangle sketch
+  0.738, blank 0.204, wrong colours 0.026). Render similarity applies only where a
+  source raster exists; the prompt task has none, so it is graded on editability.
+  Briefs and ladders state the new requirement, so earlier pilot runs of these two
+  tasks are not comparable with later ones.
 - [~] **2.5** Owner-released pilot over 2.1–2.4 with a `--max-usd` cap; the report
   states wins and losses alike. Blocked: `b-owner-spend`. Partial 2026-11-05: an
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
