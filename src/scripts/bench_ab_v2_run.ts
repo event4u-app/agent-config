@@ -51,7 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
-import * as headroom from './_lib/bench_headroom_arms.js';
+import { run_orchestrated_arm } from './_lib/bench_headroom_run.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { plugin_scope, preserve_stream, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
@@ -339,8 +339,7 @@ interface RunOneOpts {
     seed?: number;
     /** `--isolation container`: run in the arm's image instead of on the host. */
     container?: ContainerCtx | null;
-    /** Proof-where 1.7 arm D: the slim 3.2a reviewer, one fresh call per review. */
-    reviewer?: ((prompt: string) => Dict) | null;
+    reviewer?: ((prompt: string) => Dict) | null; // proof-where 1.7 arm D: the slim 3.2a reviewer, one call per review
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -628,55 +627,10 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     };
 }
 
-/**
- * Proof-where 1.7 orchestrated arms. Every step is its own host call in the same
- * clone with the arm's package setup; the reviewer of `review` is the slim
- * 3.2a reviewer (`opts.reviewer`). The score is the final clone's.
- */
+/** Proof-where 1.7 orchestrated arms; the steps run in `_lib/bench_headroom_run.ts`. */
 export function run_one_orchestrated(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const spec = ARMS[arm] as ArmSpec;
-    const in_container = Boolean(opts.container) && !spec.host_only;
-    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, in_container ? undefined : plugin_scope(spec));
-    const author_call = (prompt: string): Dict =>
-        v1.run_live({ ...task, prompt }, clone, opts.timeout, {
-            setting_sources: spec.setting_sources,
-            max_budget: opts.max_budget,
-            model: opts.model,
-            effort: spec.effort ?? null,
-            no_session_persistence: true,
-            container: in_container ? trial_container(opts.container as ContainerCtx, spec) : null,
-        }) as unknown as Dict;
-    const requirement = String(task['prompt'] ?? '');
-    const score_now = (): scoring.ScoreResultV2 =>
-        scoring.score_task_v2(task, { fixture_root: fixture, clone_root: clone, transcript: '' });
-    let res: headroom.OrchestratedResult;
-    if (spec.orchestration === 'test-first') {
-        const patch = path.join(path.dirname(path.dirname(fixture)), 'oracle-v2', `${String(task['id'])}.patch`);
-        res = headroom.run_test_first({
-            requirement,
-            clone,
-            call: (s) => author_call(s.prompt),
-            exec: (command, cwd) => spawnSync('sh', ['-c', command], { cwd, timeout: 60_000 }).status ?? -1,
-            tests_pass_on_reference: (src) => headroom.tests_pass_on_reference(fixture, patch, src),
-        });
-    } else {
-        const reviewer = opts.reviewer;
-        if (!reviewer) throw new Error(`${arm} needs the slim reviewer (opts.reviewer)`);
-        res = headroom.run_review({
-            requirement,
-            clone,
-            call: (s) => (s.role === 'reviewer' ? reviewer(s.prompt) : author_call(s.prompt)),
-            diff: () => headroom.fixture_diff(fixture, clone),
-            passes_now: () => score_now().capability_pass,
-        });
-    }
-    const run: Dict = {
-        ...res.final_run,
-        errored: res.errored,
-        tokens: res.tokens,
-        tokens_breakdown: res.tokens_breakdown,
-        wall_time_seconds: res.wall_time_seconds,
-    };
+    const { res, run, fixture, clone } = run_orchestrated_arm(task, arm, spec, opts);
     const score = scoring.score_task_v2(task, { fixture_root: fixture, clone_root: clone, transcript: String(res.final_run['transcript'] ?? '') });
     const { final_run: _final, steps, ...orchestration } = res;
     return {
