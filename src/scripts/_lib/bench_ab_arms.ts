@@ -112,8 +112,8 @@ export const ARMS: Record<string, ArmSpec> = {
     'package-ladder': { setting_sources: null, inject: 'ladder' },
     'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
     // The three shipped discipline profiles as text arms (post-repair rerun,
-    // 2026-11-04). On Claude nothing reads `discipline_profile` at runtime, so an
-    // installed-profile arm would equal `package`; these measure the rule set
+    // 2026-11-04). The profile acts at install time only (`rule_scope.ts`), and
+    // the `package` arm installs the full set; these measure the rule set
     // each profile names in `dist/router.json` `profiles`. `profile-minimal` is
     // kernel only — too small a surface for the footprint-lift audit.
     'profile-minimal': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },

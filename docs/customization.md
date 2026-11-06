@@ -228,8 +228,21 @@ minimal→off, balanced→essential, full→full). The kernel (always-loaded
 Iron-Law floor, ≤ 26k chars across 9 rules) ships in every profile. Tier-1
 and tier-2 trigger routing stays active under every profile (trigger
 semantics are configuration-independent, ADR-040); the profile names the
-always-honoured surface, resolved at session start from `dist/router.json`
-(compiled by `scripts/compile_router.ts`).
+always-honoured surface from `dist/router.json` (compiled by
+`scripts/compile_router.ts`).
+
+**What the installer does with it.** An explicit `essential` or `off` in the
+global settings file decides which rule files the global install writes:
+`essential` writes the kernel plus `downstream-changes`, `off` the kernel
+alone, and a re-install removes the rules the profile no longer selects.
+`full`, `auto`, `custom` and an absent key install every rule — `auto` needs a
+model id the installer does not have, and the shipped default stays the full
+set until it is re-measured on a second task family. On hosts that load every
+installed rule (Claude Code), this is the only place the profile takes effect.
+Under `essential` the non-kernel safety rules (`security-sensitive-stop`,
+`secret-vcs-guard`, `untrusted-input-defense`, …) are not installed; that is
+the configuration the benchmark measured, and choosing it is a deliberate
+trade.
 
 | Profile | Always-honoured surface | Token footprint | Best for |
 |---|---|---|---|

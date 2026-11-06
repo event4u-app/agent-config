@@ -72,6 +72,10 @@ profile:
 # — unmeasured Claude-family hosts -> essential (the measured-lift class);
 # measured-null hosts and unmeasured non-Claude hosts -> off
 # (vendor-granular unknown_defaults in src/config/host-capabilities.yml).
+#
+# Install effect: an explicit `essential` / `off` narrows the rule files the
+# global install writes (kernel + downstream-changes / kernel only); full,
+# auto and custom install every rule. Re-run the install after a change.
 discipline_profile: __DISCIPLINE_PROFILE__
 
 # OPT-IN PRESET — the measured-lift configuration, shown but NOT shipped.
