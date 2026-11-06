@@ -399,7 +399,7 @@ function ledgerTotal(file: string): number {
 }
 
 interface Opts {
-    mode: 'dry-run' | 'probe' | 'run';
+    mode: 'dry-run' | 'probe' | 'run' | 'score-raw';
     model: string;
     capUsd: number;
     perCallUsd: number;
@@ -428,6 +428,7 @@ function parseArgs(argv: readonly string[]): Opts | string {
         if (a === '--dry-run') o.mode = 'dry-run';
         else if (a === '--probe') o.mode = 'probe';
         else if (a === '--run') o.mode = 'run';
+        else if (a === '--score-raw') o.mode = 'score-raw';
         else if (a === '--model') o.model = next();
         else if (a === '--cap-usd') o.capUsd = Math.min(Number(next()), HARD_CAP_USD);
         else if (a === '--per-call-usd') o.perCallUsd = Number(next());
@@ -497,7 +498,10 @@ export function main(argv: readonly string[]): number {
     }
     const o = parsed;
     let fixtures = loadFixtures();
-    if (o.only) fixtures = fixtures.filter((f) => o.only?.includes(f.id));
+    if (o.only) {
+        const byId = new Map(fixtures.map((f) => [f.id, f]));
+        fixtures = o.only.map((id) => byId.get(id)).filter((f): f is SlimFixture => f !== undefined);
+    }
     renderArtefacts(o, fixtures);
     const [pricing] = load_pricing(path.join(ROOT, 'internal/bench/pricing.yaml'));
     const rates = pricing[o.model];
@@ -506,6 +510,34 @@ export function main(argv: readonly string[]): number {
         return 2;
     }
     const ledger = path.join(o.out, 'ledger.jsonl');
+
+    if (o.mode === 'score-raw') {
+        // A capped run can end in several invocations; the raw calls are the record,
+        // so the verdict is recomputed from every fixture whose two arms both exist.
+        const rows: ScoredFixture[] = [];
+        const skipped: string[] = [];
+        for (const fx of loadFixtures()) {
+            const read = (arm: ArmId): CallResult | null => {
+                const p = path.join(o.out, 'raw', `${fx.id}.${arm}.s1.json`);
+                return fs.existsSync(p) ? (JSON.parse(fs.readFileSync(p, 'utf8')) as CallResult) : null;
+            };
+            const slim = read('slim');
+            const full = read('full');
+            if (!slim || !full) {
+                skipped.push(fx.id);
+                continue;
+            }
+            const toOutcome = (r: CallResult) => ({ text: r.text, usd: Math.max(r.usd_envelope, r.usd_priced), errored: r.errored });
+            const meta: SlimFixtureMeta = { id: fx.id, kind: fx.kind, contested: fx.contested, planted_file: fx.planted_file };
+            rows.push({ meta, slim: scoreFixture(fx, toOutcome(slim)), full: scoreFixture(fx, toOutcome(full)) });
+        }
+        const summary = summarize(rows);
+        const bar = evaluateBar(summary, AGREEMENT_BAR);
+        const report = { model: o.model, scored: rows.length, not_run: skipped, ledger_total_usd: ledgerTotal(ledger), summary, bar, rows };
+        writeFile(path.join(o.out, 'results.json'), JSON.stringify(report, null, 2) + '\n');
+        process.stdout.write(JSON.stringify({ scored: rows.length, not_run: skipped, ledger_total_usd: report.ledger_total_usd, summary, bar }, null, 2) + '\n');
+        return 0;
+    }
 
     if (o.mode === 'dry-run') {
         const calls = fixtures.length * 2 * o.seeds;

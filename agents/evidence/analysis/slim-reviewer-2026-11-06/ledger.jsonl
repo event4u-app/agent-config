@@ -4,3 +4,8 @@
 {"at":"2026-11-06T07:19:35.476Z","kind":"probe","fixture":"probe","arm":"slim","seed":0,"usd":0.104757}
 {"at":"2026-11-06T07:21:17.004Z","kind":"probe","fixture":"probe","arm":"full","seed":0,"usd":1.04127165}
 {"at":"2026-11-06T07:21:28.048Z","kind":"probe","fixture":"probe","arm":"slim","seed":0,"usd":0.6691183500000001}
+{"at":"2026-11-06T07:22:53.286Z","kind":"run","fixture":"pv-01-hollow","arm":"full","seed":1,"usd":1.0845507}
+{"at":"2026-11-06T07:23:11.872Z","kind":"run","fixture":"pv-01-hollow","arm":"slim","seed":1,"usd":0.6849807}
+{"at":"2026-11-06T07:23:25.249Z","kind":"run","fixture":"pv-02-control","arm":"slim","seed":1,"usd":0.6798133500000001}
+{"at":"2026-11-06T07:23:40.134Z","kind":"run","fixture":"pv-02-control","arm":"full","seed":1,"usd":0.47255759999999997}
+{"at":"2026-11-06T07:24:17.368Z","kind":"run","fixture":"df-logic-01","arm":"full","seed":1,"usd":1.03836255}

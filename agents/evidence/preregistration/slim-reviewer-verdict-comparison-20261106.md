@@ -156,3 +156,38 @@ Two harness parameters change; nothing else does:
    measure becomes the host's own `<usage>subagent_tokens` footer on the
    hand-back. Criterion otherwise as in Amendment 1: slim lower than full by at
    least 10k, and the slim subagent answers NO. Probe v3 re-measures both arms.
+
+**Probe v3:** full subagent 100,716 tokens, marker YES; slim 10,675, marker NO.
+Check passed; the run started.
+
+## Amendment 3 — 2026-11-06, budget-forced fixture order, before any verdict was read
+
+**What happened.** The first five run calls (pv-01 both arms, pv-02 both arms,
+df-logic-01 full) cost $3.96; ledger total $6.88. Every call re-writes the
+parent session's ~100k-token prefix cold (billed at the 1h-TTL write rate), in
+both arms — something in the session-scoped context differs per session, so
+the prompt cache does not carry it across calls. The full reviewer subagent's
+own prefix is sometimes reused, sometimes not. A fixture costs $1.2–1.7, so the
+remaining $13.12 covers about 8–10 of the 15 fixtures left, not all of them.
+The runner was stopped by its own guard (a temporary reservation line in the
+ledger, removed afterwards; the ledger total above is the real spend). The
+df-logic-01 full call is kept as `raw/df-logic-01.full.s1.unpaired.json`, booked
+in the ledger, and not scored.
+
+**No verdict had been read** when this order was fixed — only costs and token
+counts were inspected.
+
+**The amendment.** The remaining fixtures run in this order, until the
+unchanged guard stops the run:
+
+`ac-clean-01, ac-clean-02, ac-clean-03, df-logic-01, df-ctl-01, df-race-01,
+df-secsmell-01, df-empty-01, df-offbyone-01, df-ctl-02, df-logic-02,
+df-race-02, df-secsmell-02, df-empty-02, df-offbyone-02`
+
+The contested controls come first because half of the bar reads them; the
+defect fixtures follow, one per defect class before any class repeats, with the
+second control in the middle. Results are scored over every fixture whose two
+arms both completed (`--score-raw`), and the record states how many of the 17
+that is. **The agreement bar is applied to the scored set, and the result names
+the set size.** A run that scores fewer than 17 fixtures is reported as partial
+coverage, never as a 17-fixture result.
