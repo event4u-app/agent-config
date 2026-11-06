@@ -141,3 +141,11 @@ Labels were audited before either evaluation was read: `self` 10 of 20 sampled l
 (4 unclear, 6 implausible) — exactly at the usability floor, so usable; `unopim` 13 of 20 (4
 unclear, 3 implausible). New runner hash:
 `8fb184b14d907d1da354de2861cf5f2768ab57e81c3ad9805196a7b5c4c31cc5  internal/bench/code-graph/risk_calibration.ts`.
+
+**A2 (2026-11-06): the defect behind A1, fixed in the product.** A1's zero partners were not
+an artefact of this runner alone: `review-risk` read a lane-backed term as `0` whenever its
+lane had no run record, which is what a `--no-lanes` build (and an older or foreign graph)
+produces — the silent zero AC-7 forbids. It now reads `unknown (lane not run)` when such a term
+counted nothing (`tests/scripts/code_graph_review_risk.test.ts`, seen red first). On a build
+with lanes on — every unit of this run — every lane has a run record, so no feature changes.
+New hash: `f7bcef0af7a509de44a289194b6ce88cecfc9fc52a41e03a03d8101e1f029071  src/scripts/code_graph/review_risk.ts`.
