@@ -49,7 +49,7 @@ export interface SubjectSpec {
 }
 
 export const SUBJECTS: Readonly<Record<string, SubjectSpec>> = {
-    self: { repo: 'event4u-app/agent-config', lang: 'ts', prefix: 'src/scripts/', scipArgs: ['scip-typescript', 'index', 'tsconfig.scripts.json', '--output', '/subject/.oracle/index.scip'], depDir: 'node_modules' },
+    self: { repo: 'event4u-app/agent-config', lang: 'ts', prefix: 'src/scripts/', scipArgs: ['env', 'NODE_OPTIONS=--max-old-space-size=8192', 'scip-typescript', 'index', 'tsconfig.scripts.json', '--output', '/subject/.oracle/index.scip'], depDir: 'node_modules' },
     unopim: { repo: 'unopim/unopim', lang: 'php', prefix: '', depDir: 'vendor' },
     larasend: { repo: 'savvyagents/larasend', lang: 'php', prefix: '', depDir: 'vendor' },
 };
@@ -460,7 +460,10 @@ async function cmdFreeze(o: Record<string, string>): Promise<number> {
             taken++;
             process.stdout.write(`freeze: took ${id} (|T| = ${String(truth.length)}) — ${String(taken)}/${String(quota)}\n`);
         } catch (err) {
-            skip('oracle or build failed', { error: String(err).slice(0, 500) });
+            // A tool failure is not an eligibility outcome: skipping would silently bias the set
+            // toward PRs the tooling happens to handle, so the freeze stops and is resumed after the fix.
+            process.stderr.write(`freeze: ${subject} PR ${String(pr.number)}: build or oracle failed — stopping\n${String(err).slice(0, 2000)}\n`);
+            return 5;
         } finally {
             dropCheckout(clone, dir);
         }

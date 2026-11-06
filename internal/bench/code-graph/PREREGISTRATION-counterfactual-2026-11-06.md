@@ -153,4 +153,11 @@ the first reviewer call, names the change and its reason.
 
 ## Addenda
 
-None yet.
+**A1 (2026-11-06, before any reviewer call): runner fixes found by the freeze.** Two
+changes, no rule changed. (1) scip-typescript ran out of heap inside the oracle image on
+every `self` parent (exit 133); it now runs with `NODE_OPTIONS=--max-old-space-size=8192`.
+(2) A build or oracle failure was logged as a skip, which would have biased the set toward
+PRs the tooling handles; it now stops the freeze, which resumes after the fix. The seven
+`self` rows written as such failures were removed from the log and re-evaluated in order.
+The `unopim` and `larasend` logs held none. New runner hash:
+`1fc118b937bed9dae33cce2f8b7a19a67394ccb6afc59c28a0952d0f333a0ff8  internal/bench/code-graph/counterfactual_review.ts`.
