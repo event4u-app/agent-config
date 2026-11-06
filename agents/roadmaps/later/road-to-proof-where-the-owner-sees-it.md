@@ -345,9 +345,14 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
 
 Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispatch-policy.json`
 
-- [ ] **7.1** Wire the existing `PolicyChange` diff (`src/scripts/_lib/dispatch_policy.ts:187`)
+- [x] **7.1** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/dispatch-policy.json --> Wire the existing `PolicyChange` diff (`src/scripts/_lib/dispatch_policy.ts:187`)
   into `check_claims`: a new default knob without a policy row fails.
   verify: a fixture adding a default knob without a policy row makes `check_claims` exit non-zero
+  Done 2026-11-06, by enumeration rather than by the release delta: `knobsIn` reads
+  every dispatch default from the places the table already binds (subagent
+  `model_tier` / `omit_project_instructions`, the template's `subagents:` section, the
+  council's round defaults), and `check_claims` fails on one with no row. The six
+  that predate the check sit in `known_unbound`, a baseline that may only shrink.
 - [ ] **7.2** A changed always-loaded asset reports its byte delta (3.1) in the PR;
   a behaviour claim names the tier of evidence it rests on.
   verify: a PR touching an always-loaded asset prints its byte delta
