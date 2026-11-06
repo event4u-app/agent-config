@@ -94,6 +94,17 @@ A weak or negative result is a question about the measurement first. `task bench
 
 Both 2026-11-05 sweeps read `ceiling` + `underpowered` + `cost-overhead`. Construct (did the tasks measure what the asset is for), adherence and real-world use stay open in every record, because no report can answer them. The record has no removal field: **a benchmark result alone never supports removing an asset.** What a removal needs is set out in `agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md` Phase 4.
 
+### Where sweep evidence is kept {#evidence-store}
+
+Reports land in the gitignored `internal/bench/reports/`, which a clean of untracked files, a worktree removal or a fresh clone deletes. Every live paired sweep and every artifact sweep therefore also copies its evidence into a bundle outside any checkout: `<config-home>/bench-evidence/<report-name>/`, where `<config-home>` is `$EVENT4U_CONFIG_HOME` or `~/.event4u/agent-config/`. A paired bundle holds the report, the sweep's checkpoint, the `pricing.yaml` it was priced with, `reference.json` (the statistics, gate and interpretation computed with the live code at store time) and `manifest.json` with each file's sha256. A selftest report is never stored. A failed store prints a loud error with the retry command and leaves the report where it was.
+
+```bash
+task bench:ab:evidence -- store internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
+task bench:ab:evidence -- verify ~/.event4u/agent-config/bench-evidence/<stamp>-ab-v2-paired
+```
+
+`verify` checks every hash, then re-scores the stored records offline with the same `bench_ab_v2_stats` and `bench_ab_interpret` code and compares the result to `reference.json` field by field; any difference exits non-zero. The per-task `nop` floor is not in the reference, because it reads the current task corpus rather than the report. Artifact bundles keep their transcripts and are verified by hash only, since no aggregation stage exists for them yet. Both 2026-11-05 paired reports (`15-15-11Z`, `20-21-44Z`) were stored this way and re-scored to the same numbers.
+
 ### Headroom sweeps on harder tasks (2026-11-05) {#headroom-sweeps}
 
 The first container sweeps read `ceiling`. These runs use the harder task set: 14 Track-B tasks (the four new `hdr*` tasks, the hardest `capH` and `trap*` tasks) and the artifact corpus. Five arms per Track-B sweep, five seeds, container isolation, one subscription account. The activation audit passed on both Track-B reports after the per-turn fix below.
