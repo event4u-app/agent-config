@@ -2,3 +2,5 @@
 {"at":"2026-11-06T07:16:23.309Z","kind":"probe","fixture":"probe","arm":"slim","seed":0,"usd":0.048986400000000006}
 {"at":"2026-11-06T07:19:21.944Z","kind":"probe","fixture":"probe","arm":"full","seed":0,"usd":1.0091931}
 {"at":"2026-11-06T07:19:35.476Z","kind":"probe","fixture":"probe","arm":"slim","seed":0,"usd":0.104757}
+{"at":"2026-11-06T07:21:17.004Z","kind":"probe","fixture":"probe","arm":"full","seed":0,"usd":1.04127165}
+{"at":"2026-11-06T07:21:28.048Z","kind":"probe","fixture":"probe","arm":"slim","seed":0,"usd":0.6691183500000001}

@@ -440,9 +440,15 @@ function parseArgs(argv: readonly string[]): Opts | string {
     return o;
 }
 
+/**
+ * One fixed directory, cleared per fixture: the working directory is part of the
+ * host's system prompt, so a per-fixture path would defeat the prompt cache on the
+ * ~100k-token hierarchy and multiply the full arm's cost by its cold-write price.
+ */
 function materialize(fx: SlimFixture): string {
-    fs.mkdirSync(RUN_BASE, { recursive: true });
-    const dir = fs.mkdtempSync(path.join(RUN_BASE, `${fx.id}-`));
+    const dir = path.join(RUN_BASE, 'fixture');
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(dir, { recursive: true });
     for (const f of fx.files) {
         const p = path.join(dir, f.path);
         fs.mkdirSync(path.dirname(p), { recursive: true });
