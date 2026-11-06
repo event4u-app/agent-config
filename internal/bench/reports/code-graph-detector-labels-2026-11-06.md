@@ -40,7 +40,7 @@ graph answered `quiet` on all 15 it could read.
   package registers from its own files (`Routes/admin.php`, loaded by a service provider) are
   not read, so a catch one call below such a route has no entry point; and 27 of 40 catches sit
   where no indexed declaration encloses the line, so the reading cannot start. Both are carried
-  in `agents/roadmaps/road-to-catch-reachability-on-php.md`.
+  in Phase 6 of `road-to-a-graph-that-wins`.
 - **The disagreement the council recorded on `underpowered`** (registration § Council revisions)
   turned out moot for PHP: both PHP verdicts are decisive.
 

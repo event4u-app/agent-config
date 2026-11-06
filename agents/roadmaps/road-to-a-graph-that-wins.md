@@ -370,6 +370,29 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       > note: the pre-3.5 half landed 2026-10-27 — `riskBand` (`review_risk.ts`) bands low / medium / high / unknown with reason lines, no decimal, no gate, and the map says so. Open: the calibration against forward-in-time split data waits for 3.5.
       > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-risk-calibration-2026-11-06.md` after an AI-council design review (report-first, validation/test split, removal only on a confirmed non-inferior proposal agreed across subjects), runner `risk_calibration.ts` (`npx vitest run tests/scripts/code_graph/risk_calibration.test.ts` -> 0). Report: `internal/bench/reports/review-risk-calibration-2026-11-06.md`. 400 units each of `self` and `unopim`, SZZ labels (45 / 107 defect-inducing), audited. **Nothing changes:** the four lane terms were dispensable on validation, but the joint removal failed non-inferiority on the test split in both subjects; `columns` never fired; the test gap did not help. The first evaluation ran on defective features (lanes off) — published beside the result, and the product defect behind it (`review-risk` read a never-run lane as `0`) is fixed in this change. Open for a later weight calibration: ManualUp beats the shipped ranking on `unopim` (Popt 0.805 vs 0.593).
 
+## Phase 6 — catch reachability on PHP
+Added 2026-11-06 from AC-3 (`internal/bench/reports/code-graph-detector-labels-2026-11-06.md`):
+on `unopim` the graph-backed silent-catch reading never fired in 40 sampled catches, while an
+independent reader found a route path for 24 of them (paired verdict `regression`, 2 / 11).
+Two reach gaps account for what the run could trace.
+- [ ] 6.1 **Package route files.** A Laravel package registers routes from its own files
+      (`Routes/admin.php`, loaded by a service provider's `loadRoutesFrom`); the route lane reads
+      none of them, so an action reached only through a package route has no entry point.
+      Example: `POST catalog/passports/reinstate/{publication}` → `PublicationController::reinstate`.
+      verify: a fixture package whose provider calls `loadRoutesFrom(__DIR__.'/../Routes/admin.php')`
+      yields a route node with a stated `routes-to` edge to its action, and `entryPathReading`
+      fires on a catch inside that action.
+- [ ] 6.2 **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
+      indexed declaration encloses the line, so the reading cannot start. Measure which constructs
+      they are (closures, arrow functions, class constants, compiled templates) and index the
+      enclosing one where the extractor can.
+      verify: the 27 rows of `code-graph-detector-labels-2026-11-06/unopim.catch.jsonl` re-read
+      after the change, with the share still unanswered reported per construct.
+- [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
+      the same labels (no relabelling) and publish the paired verdict beside the original.
+      verify: `tsx internal/bench/code-graph/detector_labels.ts report` over the re-read rows,
+      committed as a new dated report.
+
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
 the skill says which classes did not win; Phase 3 still completes, because the gate
@@ -399,7 +422,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [x] AC-2 The report publishes every class in both directions with the calibration diagnostic.
       > note: 2026-11-06 — the 2.5 report carried every class's verdict but not the overconfidence rate it computed; `run_bench_v3.ts` now renders it (`calibrationSection`, `npx vitest run tests/scripts/code_graph/bench_v3_calibration.test.ts` -> 0), and the published report's section was rendered from that run's own `summary.json` — same run, nothing re-measured.
 - [x] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
-      > note: 2026-11-06 — labelled rows registered in `internal/bench/code-graph/PREREGISTRATION-detector-labels-2026-11-06.md` (council-reviewed: predicate-conformance labels, per-subject verdicts), runner `detector_labels.ts` (`npx vitest run tests/scripts/code_graph/detector_labels.test.ts` -> 0). Report: `internal/bench/reports/code-graph-detector-labels-2026-11-06.md`. On PHP: deleted-test reading `pass` (6 / 0, p 0.016); silent-catch reading `regression` (2 / 11, p 0.011) — it never fired while an independent reader found a route path for 24 of 40. The two reach gaps behind that are carried in `road-to-catch-reachability-on-php`. Every row records the edges the reading used. Neither reading moves an exit code.
+      > note: 2026-11-06 — labelled rows registered in `internal/bench/code-graph/PREREGISTRATION-detector-labels-2026-11-06.md` (council-reviewed: predicate-conformance labels, per-subject verdicts), runner `detector_labels.ts` (`npx vitest run tests/scripts/code_graph/detector_labels.test.ts` -> 0). Report: `internal/bench/reports/code-graph-detector-labels-2026-11-06.md`. On PHP: deleted-test reading `pass` (6 / 0, p 0.016); silent-catch reading `regression` (2 / 11, p 0.011) — it never fired while an independent reader found a route path for 24 of 40. The two reach gaps behind that are carried in Phase 6. Every row records the edges the reading used. Neither reading moves an exit code.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
 - [x] AC-5 The counterfactual review is published with deterministic miss scoring.
       > note: 2026-11-06 — `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`, scored by set comparison against oracle truth (no LLM judge, K3).
