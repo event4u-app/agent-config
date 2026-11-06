@@ -160,12 +160,17 @@ function totals(steps: StepRecord[]): Pick<OrchestratedResult, 'tokens_breakdown
     };
 }
 
-/** Relative paths of regular files under `root`, skipping VCS and dependency dirs. */
+/**
+ * Relative paths of the task's own files under `root`. Skips VCS and dependency
+ * dirs, dot-dirs, and the installed package's runtime state under `agents/`,
+ * which its hooks write on every call and which is not the tester's work.
+ */
 function list_files(root: string): string[] {
     const out: string[] = [];
     const walk = (dir: string): void => {
         for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-            if (e.name === '.git' || e.name === 'node_modules') continue;
+            if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+            if (dir === root && e.name === 'agents') continue;
             const full = path.join(dir, e.name);
             if (e.isDirectory()) walk(full);
             else if (e.isFile()) out.push(path.relative(root, full));

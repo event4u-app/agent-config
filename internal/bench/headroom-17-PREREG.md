@@ -112,3 +112,20 @@ paid call:
 
 Tasks, seal, arms A–C, the C false-positive ceiling and the cost definitions
 are unchanged.
+
+## Amendment 2 — size after a harness smoke (2026-11-06)
+
+A live smoke (`hdhS-sentinel-01`, arms A and C, 1 seed, report
+`2026-11-06T07-56-10Z`, $1.94) checked the multi-step path in containers. It is
+not part of the analysis. It showed two things, and only the harness and the
+size change in response; prompts, tasks, definitions and the seal do not:
+
+- The tester-restore step deleted the installed package's runtime state under
+  `agents/`. Fixed: the restore now covers the task's own files only.
+- A run costs about $0.63 (A) and $1.31 (C) on these tasks, not the $0.26 the
+  14-task sweep averaged. 11 seeds would cost about $180.
+
+New size: **8 seeds**, 48 pairs. `bench_ab_power` gives 80 % power at
+α = 0.05 for a discordance of about 0.15 (44 pairs needed) with B at the floor.
+Expected spend about $134; sweep cap `--max-usd 145`, inside the $150 release
+including the smoke.

@@ -212,3 +212,16 @@ describe('the 1.7 corpus', () => {
         }
     });
 });
+
+describe('restore_outside_tests ignores the package runtime state', () => {
+    it('leaves files the installed hooks write under agents/ and dot-dirs alone', () => {
+        const clone = scratchClone();
+        const before = new Map([['src/a.mjs', 'export const a = 1;\n']]);
+        fs.mkdirSync(path.join(clone, 'agents', 'runtime'), { recursive: true });
+        fs.writeFileSync(path.join(clone, 'agents', 'runtime', 'x.json'), '{}');
+        fs.mkdirSync(path.join(clone, '.cache'));
+        fs.writeFileSync(path.join(clone, '.cache', 'y'), 'y');
+        expect(restore_outside_tests(clone, before)).toEqual([]);
+        expect(fs.existsSync(path.join(clone, 'agents', 'runtime', 'x.json'))).toBe(true);
+    });
+});
