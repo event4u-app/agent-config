@@ -19,6 +19,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { load as yamlLoad } from 'js-yaml';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const TRACK = path.resolve(__dirname, '../../src/scripts/cost/track.mjs');
@@ -156,5 +157,61 @@ describe('cost/track.mjs — rate_missing does not cry wolf', () => {
     it('a message with real tokens and an unknown model still IS flagged', () => {
         const { summary } = runTrack(['some-unpriced-model']);
         expect(summary['rate_missing']).toBe(true);
+    });
+});
+
+// ── per-model rates (road-to-a-session-cost-priced-by-model) ─────────
+// The family rows price a former generation; pricing.yaml carries per-model rows
+// for the current ones. The rows are read from pricing.yaml itself, so a rate
+// bumped there and not mirrored in track.mjs turns this red instead of drifting.
+describe('cost/track.mjs — per-model rates from pricing.yaml', () => {
+    const PRICING_YAML = path.resolve(__dirname, '../../internal/bench/pricing.yaml');
+    type Row = { model?: string; input: number; output: number };
+    const rows = ((yamlLoad(fs.readFileSync(PRICING_YAML, 'utf8')) as { models: Row[] }).models)
+        .filter((r): r is Row & { model: string } => typeof r.model === 'string');
+
+    function runOne(model: string): number {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'track-rate-'));
+        tmps.push(home);
+        const trackCwd = '/work/proj';
+        const dir = path.join(home, '.claude', 'projects', encodeProjectPath(trackCwd));
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 's.jsonl'),
+            JSON.stringify({
+                type: 'assistant', sessionId: 's', cwd: trackCwd,
+                timestamp: '2026-11-06T10:00:00.000Z', requestId: 'r0',
+                message: { id: 'm0', model, usage: { input_tokens: 1_000_000, output_tokens: 1_000_000 } },
+            }) + '\n',
+            'utf8',
+        );
+        const out = path.join(home, 'summary.json');
+        const r = spawnSync(process.execPath, [TRACK], {
+            env: { ...process.env, HOME: home, TRACK_CWD: trackCwd, TRACK_OUT: out, TRACK_DRY_RUN: '1', TRACK_QUIET: '1' },
+            encoding: 'utf8',
+        });
+        if (r.status !== 0) throw new Error(`track.mjs exited ${r.status}: ${r.stderr}`);
+        return (JSON.parse(fs.readFileSync(out, 'utf8')) as { total_cost_usd: number }).total_cost_usd;
+    }
+
+    it('pricing.yaml carries per-model rows to check', () => {
+        expect(rows.length).toBeGreaterThan(0);
+    });
+
+    for (const row of rows) {
+        it(`prices ${row.model} at its own row (${row.input} / ${row.output})`, () => {
+            expect(runOne(row.model)).toBeCloseTo(row.input + row.output, 6);
+        });
+    }
+
+    it('a date-suffixed id prices like its base id', () => {
+        const base = rows.find((r) => r.model === 'claude-haiku-4-5')!;
+        expect(runOne('claude-haiku-4-5-20251001')).toBeCloseTo(base.input + base.output, 6);
+    });
+
+    it('an id that only shares a prefix keeps the family row', () => {
+        // `claude-opus-4-60` is not `claude-opus-4-6`; it falls back to the opus family row.
+        const sixRow = rows.find((r) => r.model === 'claude-opus-4-6')!;
+        expect(runOne('claude-opus-4-60')).not.toBeCloseTo(sixRow.input + sixRow.output, 6);
     });
 });
