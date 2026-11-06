@@ -1,0 +1,42 @@
+{
+ "id": "unopim-677",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 677,
+ "title": "fix(publication): keep document index rows of superseded versions",
+ "merged_at": "2026-10-22T16:02:49Z",
+ "merge": "ceadcad4a23971b07949431526f412e25ca6e2df",
+ "parent": "01ae4357066e916f13d9f8602b184bc2889a730c",
+ "changed_lines": 99,
+ "diff_files": [
+  "packages/Webkul/Publication/src/Database/Migrations/2026_07_23_000004_create_publication_version_documents_table.php",
+  "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php",
+  "packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php",
+  "packages/Webkul/Publication/tests/Feature/PublicationAssetTest.php",
+  "packages/Webkul/Publication/tests/PublicationTestCase.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/Publication/src/Database/Migrations/2026_07_23_000004_create_publication_version_documents_table.php#up",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php#PublicationAssetController",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php#PublicationAssetController::isReferenced",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php#SyncPublicationVersionDocuments::handle",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Publication/src/Providers/PublicationServiceProvider.php",
+   "test": false
+  }
+ ]
+}

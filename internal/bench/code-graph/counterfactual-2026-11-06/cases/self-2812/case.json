@@ -1,0 +1,43 @@
+{
+ "id": "self-2812",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2812,
+ "title": "fix(design-pass): read the dispatcher envelope, and scan CSS blocks in one pass",
+ "merged_at": "2026-11-03T02:19:12Z",
+ "merge": "7576ef385fec7409c18b4ea5cb0ba53881cdd036",
+ "parent": "b234d084807080265908ff1b38dcf172d9d4e5dd",
+ "changed_lines": 191,
+ "diff_files": [
+  "src/scripts/check_suppression_hygiene.ts",
+  "src/scripts/design_slop_rules.ts",
+  "src/scripts/hooks/design_pass_hook.ts",
+  "tests/hooks/design_pass.test.ts",
+  "tests/hooks/design_pass_dispatch.test.ts",
+  "tests/scripts/design_slop_css_blocks_linear.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/check_suppression_hygiene.ts#SUPPRESSION_INVENTORY",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/design_slop_rules.ts#cssBlocks",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/hooks/design_pass_hook.ts#main",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/hooks/concern_registry.ts",
+   "test": false
+  },
+  {
+   "path": "tests/scripts/check_suppression_hygiene.test.ts",
+   "test": true
+  }
+ ]
+}

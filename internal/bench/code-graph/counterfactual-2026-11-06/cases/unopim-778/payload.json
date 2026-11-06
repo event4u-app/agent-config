@@ -1,0 +1,419 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "MagicAIController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php:29"
+    },
+    {
+     "label": "saveAllTranslatedAttributes",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php:544"
+    },
+    {
+     "label": "saveTranslatedData",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php:438"
+    },
+    {
+     "label": "SystemSettings",
+     "verdict": "tested",
+     "witness": "packages/Webkul/Admin/src/SystemSettings.php:7"
+    },
+    {
+     "label": "configGroupOwners",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Admin/src/SystemSettings.php:131"
+    },
+    {
+     "label": "appliedRollbackChangeset",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Admin/tests/Feature/Acl/AiAgentWritePathAclTest.php:9"
+    },
+    {
+     "label": "CreateAttribute",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php:15"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php:46"
+    },
+    {
+     "label": "register",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php:17"
+    },
+    {
+     "label": "ManageFamilies",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php:15"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php:42"
+    },
+    {
+     "label": "register",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php:17"
+    },
+    {
+     "label": "ManageOptions",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php:14"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php:41"
+    },
+    {
+     "label": "register",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php:16"
+    },
+    {
+     "label": "RememberFact",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php:12"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php:37"
+    },
+    {
+     "label": "register",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php:14"
+    },
+    {
+     "label": "DashboardController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php:13"
+    },
+    {
+     "label": "rollback",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php:98"
+    },
+    {
+     "label": "rememberFactContext",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Unit/Tools/RememberFactScopeTest.php:11"
+    },
+    {
+     "label": "runTaxonomyTool",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Unit/Tools/TaxonomyToolWritePermissionTest.php:39"
+    },
+    {
+     "label": "taxonomyToolContext",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Unit/Tools/TaxonomyToolWritePermissionTest.php:15"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "finding",
+   "items": [
+    {
+     "label": "IndexProductEmbeddings",
+     "witness": "packages/Webkul/AiAgent/src/Console/Commands/IndexProductEmbeddings.php:18"
+    },
+    {
+     "label": "cli IndexProductEmbeddings",
+     "witness": "packages/Webkul/AiAgent/src/Console/Commands/IndexProductEmbeddings.php:18"
+    }
+   ]
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/Admin/src/SystemSettings.php",
+   "lines": [
+    7,
+    46
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+   "lines": [
+    15,
+    54
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+   "lines": [
+    15,
+    54
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php",
+   "lines": [
+    12,
+    51
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php",
+   "lines": [
+    29,
+    68
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/Acl/AiAgentWritePathAclTest.php",
+   "lines": [
+    9,
+    23
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    13,
+    52
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/Tools/RememberFactScopeTest.php",
+   "lines": [
+    11,
+    33
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/Tools/TaxonomyToolWritePermissionTest.php",
+   "lines": [
+    15,
+    37
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/SystemSettings.php",
+   "lines": [
+    131,
+    152
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php",
+   "lines": [
+    438,
+    452
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/Tools/TaxonomyToolWritePermissionTest.php",
+   "lines": [
+    39,
+    42
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/SystemSettings.php",
+   "lines": [
+    84,
+    99
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/SystemSettings.php",
+   "lines": [
+    47,
+    173
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+   "lines": [
+    55,
+    105
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+   "lines": [
+    55,
+    124
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+   "lines": [
+    54,
+    118
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php",
+   "lines": [
+    52,
+    78
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php",
+   "lines": [
+    69,
+    669
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    53,
+    173
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+   "lines": [
+    57,
+    104
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+   "lines": [
+    17,
+    56
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+   "lines": [
+    57,
+    123
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+   "lines": [
+    17,
+    56
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+   "lines": [
+    56,
+    117
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+   "lines": [
+    16,
+    55
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php",
+   "lines": [
+    54,
+    77
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    98,
+    133
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+   "lines": [
+    86,
+    102
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+   "lines": [
+    46,
+    85
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+   "lines": [
+    82,
+    121
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+   "lines": [
+    42,
+    81
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+   "lines": [
+    81,
+    115
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+   "lines": [
+    41,
+    80
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php",
+   "lines": [
+    37,
+    75
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php",
+   "lines": [
+    544,
+    557
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/SystemSettings.php",
+   "lines": [
+    104,
+    123
+   ]
+  }
+ ]
+}

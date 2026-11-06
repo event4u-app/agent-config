@@ -1,0 +1,51 @@
+{
+ "id": "unopim-728",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 728,
+ "title": "fix(magic-ai): omit temperature for Claude models that reject it",
+ "merged_at": "2026-09-24T16:42:18Z",
+ "merge": "b0b45e815dd95461655d0ee24ff954e184870ed3",
+ "parent": "ca688ab4de9401c8411a8a04404e4f34a382cc64",
+ "changed_lines": 122,
+ "diff_files": [
+  "packages/Webkul/Admin/tests/Feature/MagicAi/ReasoningModelTemperatureTest.php",
+  "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php#LaravelAiAdapter",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php#LaravelAiAdapter::contentAgent",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/GenerationTokenCeilingTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/LaravelAiAdapterImageTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/ReasoningModelTemperatureTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/StructuredTranslationTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/MagicAI.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+   "test": true
+  }
+ ]
+}

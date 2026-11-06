@@ -1,0 +1,27 @@
+{
+ "id": "self-2842",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2842,
+ "title": "fix(release): keep the showcase section inside the PR-only region",
+ "merged_at": "2026-11-04T08:42:01Z",
+ "merge": "24d49689cc52ee888b809d8a0169543382d654b9",
+ "parent": "b06428236ad108a2ace9a50202ac709196babfcd",
+ "changed_lines": 26,
+ "diff_files": [
+  "src/scripts/release_publication.ts",
+  "tests/scripts/release.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/release_publication.ts#release_pr_body",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/release.ts",
+   "test": false
+  }
+ ]
+}

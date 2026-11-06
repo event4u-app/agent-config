@@ -238,7 +238,7 @@ tracked.
       rows naming a path/symbol → code/test nodes.
       verify: `npx vitest run tests/scripts/code_graph/coverage.test.ts` -> 0
       > note: `code_graph/coverage.ts`, reached through `ask` (intent `coverage`, no new verb per ADR-041); accepted `tests` edges only, every unmatched ref listed under `unresolved` with its reason.
-- [ ] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
+- [x] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
       arms plain vs graph-fed reviewer; a miss counts only if the oracle confirms the edge;
       `paired_verdict` decides direction. Bar: oracle-confirmed miss on ≥ 40 % of PRs,
       ≤ 1 false miss per 10 PRs.
@@ -248,6 +248,7 @@ tracked.
       pasted beside a diff degrading reviews across eight models, so the hypothesis is
       B1 > A ≥ B2; without B2 the run cannot tell whether the form or the graph acted.
       K3 holds for all three arms.
+      > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-counterfactual-2026-11-06.md` after an AI-council design review (2/2 seats; claim narrowed to assisted dependency retrieval, arm G added, majority set over 3 runs, invalid-vs-null rules), runner `counterfactual_review.ts` (`npx vitest run tests/scripts/code_graph/counterfactual_review.test.ts` -> 0). Report: `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`. 30 PRs (self 15, unopim 11, larasend 4), 270 reviewer calls, none invalid. **Bar (i) PASS** (B1 catches an oracle-confirmed file A misses on 13 of 30 PRs), **B1 > A PASS** (13 / 0), **bar (ii) FAIL** (38 unsupported names against 3 allowed) — so the Phase 5 checks **stay advisory**. Mean recall A 6.7 %, B1 38.0 %, B2 40.0 %, G (read list alone, no model) 34.5 %: the packet carries the retrieval, the rendering form made no measurable difference (B1 vs B2 underpowered, 2 discordant), so B1 > A ≥ B2 holds in its first half only.
 - [x] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
       `resolved_via` histogram, 3.5 record, staleness state) from
       `internal/bench/scorecard.yaml` (row → metric → artefact → bar → expiry).
@@ -359,7 +360,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       `review-risk --format markdown`. Depends on 4.2.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'markdown no analysis is not low risk'` -> 0
       > note: `review-risk --format markdown` renders the sticky comment (marker `REVIEW_RISK_COMMENT_MARKER`, band, checks, `omitted`, "no analysis" status); the consumer workflow template (`fetch-depth: 0`, gate off) is not added — a new workflow lands with its own ratification artifact.
-- [ ] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
+- [x] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
       with no test-gap term (`review_risk.ts` `RISK_WEIGHTS`), and the map prints that
       it names no levels yet (`map_viewer/area_agent.js`). Until 3.5 runs: band only
       `low` / `medium` / `high` / `unknown` with reason lines, no decimal, no default
@@ -367,6 +368,30 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       effort-aware); a term that contributes nothing is removed.
       verify: `ls internal/bench/reports/review-risk-calibration-*.md` -> 0
       > note: the pre-3.5 half landed 2026-10-27 — `riskBand` (`review_risk.ts`) bands low / medium / high / unknown with reason lines, no decimal, no gate, and the map says so. Open: the calibration against forward-in-time split data waits for 3.5.
+      > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-risk-calibration-2026-11-06.md` after an AI-council design review (report-first, validation/test split, removal only on a confirmed non-inferior proposal agreed across subjects), runner `risk_calibration.ts` (`npx vitest run tests/scripts/code_graph/risk_calibration.test.ts` -> 0). Report: `internal/bench/reports/review-risk-calibration-2026-11-06.md`. 400 units each of `self` and `unopim`, SZZ labels (45 / 107 defect-inducing), audited. **Nothing changes:** the four lane terms were dispensable on validation, but the joint removal failed non-inferiority on the test split in both subjects; `columns` never fired; the test gap did not help. The first evaluation ran on defective features (lanes off) — published beside the result, and the product defect behind it (`review-risk` read a never-run lane as `0`) is fixed in this change. Open for a later weight calibration: ManualUp beats the shipped ranking on `unopim` (Popt 0.805 vs 0.593).
+
+## Phase 6 — catch reachability on PHP
+Added 2026-11-06 from AC-3 (`internal/bench/reports/code-graph-detector-labels-2026-11-06.md`):
+on `unopim` the graph-backed silent-catch reading never fired in 40 sampled catches, while an
+independent reader found a route path for 24 of them (paired verdict `regression`, 2 / 11).
+Two reach gaps account for what the run could trace.
+- [ ] 6.1 **Package route files.** A Laravel package registers routes from its own files
+      (`Routes/admin.php`, loaded by a service provider's `loadRoutesFrom`); the route lane reads
+      none of them, so an action reached only through a package route has no entry point.
+      Example: `POST catalog/passports/reinstate/{publication}` → `PublicationController::reinstate`.
+      verify: a fixture package whose provider calls `loadRoutesFrom(__DIR__.'/../Routes/admin.php')`
+      yields a route node with a stated `routes-to` edge to its action, and `entryPathReading`
+      fires on a catch inside that action.
+- [ ] 6.2 **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
+      indexed declaration encloses the line, so the reading cannot start. Measure which constructs
+      they are (closures, arrow functions, class constants, compiled templates) and index the
+      enclosing one where the extractor can.
+      verify: the 27 rows of `code-graph-detector-labels-2026-11-06/unopim.catch.jsonl` re-read
+      after the change, with the share still unanswered reported per construct.
+- [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
+      the same labels (no relabelling) and publish the paired verdict beside the original.
+      verify: `ls internal/bench/reports/code-graph-detector-labels-*.md | wc -l` -> /^\s*[2-9]/
+      (a second dated report, written by the runner's report command over the re-read rows).
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
@@ -394,11 +419,15 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Acceptance Criteria
 - [x] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
-- [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
-- [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
+- [x] AC-2 The report publishes every class in both directions with the calibration diagnostic.
+      > note: 2026-11-06 — the 2.5 report carried every class's verdict but not the overconfidence rate it computed; `run_bench_v3.ts` now renders it (`calibrationSection`, `npx vitest run tests/scripts/code_graph/bench_v3_calibration.test.ts` -> 0), and the published report's section was rendered from that run's own `summary.json` — same run, nothing re-measured.
+- [x] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
+      > note: 2026-11-06 — labelled rows registered in `internal/bench/code-graph/PREREGISTRATION-detector-labels-2026-11-06.md` (council-reviewed: predicate-conformance labels, per-subject verdicts), runner `detector_labels.ts` (`npx vitest run tests/scripts/code_graph/detector_labels.test.ts` -> 0). Report: `internal/bench/reports/code-graph-detector-labels-2026-11-06.md`. On PHP: deleted-test reading `pass` (6 / 0, p 0.016); silent-catch reading `regression` (2 / 11, p 0.011) — it never fired while an independent reader found a route path for 24 of 40. The two reach gaps behind that are carried in Phase 6. Every row records the edges the reading used. Neither reading moves an exit code.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
-- [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
+- [x] AC-5 The counterfactual review is published with deterministic miss scoring.
+      > note: 2026-11-06 — `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`, scored by set comparison against oracle truth (no LLM judge, K3).
 - [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
 - [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
       verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
 - [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
+      > note: 2026-11-06 — the first two hold (5.2). Wiring the checks into `self_review_gate.ts` went through five council rounds (`agents/evidence/council/graph-checks-self-review-20261106.md`); both seats refused every placement on the gate's required path, and the last round named a separate, non-required reporting job as the version it would accept. That narrows the criterion, which is the owner's call; the wiring was withdrawn and the gate is unchanged. Open: owner decision between narrowing AC-8 to a non-required job beside the gate, or another council-reviewed placement.

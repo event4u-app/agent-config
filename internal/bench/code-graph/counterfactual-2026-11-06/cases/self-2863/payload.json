@@ -1,0 +1,198 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "LEDGER_RETENTION_MONTHS",
+     "verdict": "tested",
+     "witness": "src/scripts/hooks/subagent_ledger_hook.ts:512"
+    },
+    {
+     "label": "MONTH_RE",
+     "verdict": "untested",
+     "witness": "src/scripts/hooks/subagent_ledger_hook.ts:514"
+    },
+    {
+     "label": "appendLedgerLine",
+     "verdict": "tested",
+     "witness": "src/scripts/hooks/subagent_ledger_hook.ts:497"
+    },
+    {
+     "label": "pruneLedgerMonths",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/hooks/subagent_ledger_hook.ts:521"
+    },
+    {
+     "label": "dir",
+     "verdict": "untested",
+     "witness": "tests/scripts/hooks/subagent_ledger_retention.test.ts:14"
+    },
+    {
+     "label": "root",
+     "verdict": "untested",
+     "witness": "tests/scripts/hooks/subagent_ledger_retention.test.ts:13"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+     "witness": "src/scripts/hooks/spawn_guard_shadow_hook.ts:1"
+    },
+    {
+     "label": "tests/hooks/spawn_guard_shadow.test.ts",
+     "witness": "src/scripts/hooks/subagent_ledger_hook.ts:1"
+    },
+    {
+     "label": "tests/hooks/subagent_ledger.test.ts",
+     "witness": "src/scripts/hooks/subagent_ledger_hook.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    497,
+    504
+   ]
+  },
+  {
+   "path": "tests/scripts/hooks/subagent_ledger_retention.test.ts",
+   "lines": [
+    13,
+    13
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/memory_audience_shadow_hook.ts",
+   "lines": [
+    220,
+    257
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+   "lines": [
+    150,
+    160
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    512,
+    512
+   ]
+  },
+  {
+   "path": "tests/scripts/hooks/subagent_ledger_retention.test.ts",
+   "lines": [
+    14,
+    14
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/memory_audience_shadow_hook.ts",
+   "lines": [
+    259,
+    267
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+   "lines": [
+    249,
+    288
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    521,
+    536
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+   "lines": [
+    344,
+    353
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    514,
+    514
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    727,
+    754
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    757,
+    768
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    770,
+    809
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    814,
+    853
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+   "lines": [
+    289,
+    336
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    810,
+    812
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    854,
+    868
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/subagent_ledger_hook.ts",
+   "lines": [
+    871,
+    890
+   ]
+  }
+ ]
+}

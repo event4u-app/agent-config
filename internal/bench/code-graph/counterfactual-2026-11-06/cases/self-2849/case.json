@@ -1,0 +1,76 @@
+{
+ "id": "self-2849",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2849,
+ "title": "docs(bench): benchmark claims that name their scorer (inbox-2026-11-bn)",
+ "merged_at": "2026-11-04T18:06:19Z",
+ "merge": "498636529c061a9ed7dea180912e1ffe11568de5",
+ "parent": "b9e3d6301ce806889383191662620a0d7c248a52",
+ "changed_lines": 549,
+ "diff_files": [
+  "agents/evidence/analysis/benchmark-coverage-2026-11-04.md",
+  "agents/owner-questions.md",
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/archive/road-to-benchmark-claims-that-name-their-scorer.md",
+  "agents/roadmaps/stubs/road-to-a-rerun-on-the-repaired-scorer.md",
+  "agents/roadmaps/stubs/road-to-assurance-benchmark.md",
+  "agents/roadmaps/stubs/road-to-bench-gate-capability-non-inferiority.md",
+  "dist/agent-src/templates/agent-settings.md",
+  "dist/install/install.mjs",
+  "docs/CLAIMS.md",
+  "docs/benchmark.md",
+  "docs/benchmark.pinned.yml",
+  "docs/contracts/cost-profile-defaults.md",
+  "docs/getting-started.md",
+  "docs/maintainers/doc-path-inventory.md",
+  "docs/proof.md",
+  "docs/settings-reference.md",
+  "src/agent-src/templates/agent-settings.md",
+  "src/config/agent-settings.template.yml",
+  "src/scripts/_lib/bench_ab_arms.ts",
+  "src/scripts/_lib/bench_ab_scoring_v2.ts",
+  "src/scripts/_lib/bench_task_validity.ts",
+  "src/scripts/_lib/claims_scorer_epoch.ts",
+  "src/scripts/bench_ab_v2_run.ts",
+  "src/scripts/check_claims.ts",
+  "src/server/schemas/settings.ts",
+  "tests/scripts/bench_ab_final_diff.test.ts",
+  "tests/scripts/check_bench_task_validity.test.ts",
+  "tests/scripts/check_claims.test.ts",
+  "tests/scripts/check_claims_retired_phrasings.test.ts",
+  "tests/scripts/check_claims_scorer_epoch.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/bench_task_validity.ts#SYNTHETIC_ARMS",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/_lib/bench_task_validity.ts#_prepare",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#run_one",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#selftest_run",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/check_claims.ts#main",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/check_claims.ts#selfTest",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "tests/scripts/bench_ab_v2_run.test.ts",
+   "test": true
+  }
+ ]
+}

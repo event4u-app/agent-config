@@ -1,0 +1,43 @@
+{
+ "id": "self-2824",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2824,
+ "title": "feat(web-launch): read a lazy-loaded data-src as a first-paint load",
+ "merged_at": "2026-11-03T12:23:54Z",
+ "merge": "f9054d0f102057c611d125627f7c953d90d0666c",
+ "parent": "01df0c161aaaefa6b8a6af08ee4f1c7de6fd7637",
+ "changed_lines": 72,
+ "diff_files": [
+  "agents/evidence/ratifications/web-launch-write-time-20261102.md",
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/archive/road-to-a-page-check-at-write-time.md",
+  "agents/roadmaps/later/road-to-a-page-check-at-write-time.md",
+  "src/scripts/web_launch_third_party.ts",
+  "tests/scripts/web_launch_write_time.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/web_launch_third_party.ts#GATE_RE",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/web_launch_third_party.ts#classifyLoads",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/web_launch_third_party.ts#extractLoads",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/check_web_launch_readiness.ts",
+   "test": false
+  },
+  {
+   "path": "tests/scripts/web_launch_linear.test.ts",
+   "test": true
+  }
+ ]
+}

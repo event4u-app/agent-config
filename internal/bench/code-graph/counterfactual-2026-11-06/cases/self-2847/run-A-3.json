@@ -1,0 +1,45 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "docs/contracts/reconstruction-obligations.md",
+  "src/scripts/_lib/agent_settings.ts",
+  "src/scripts/lint_settings_classes.ts",
+  "tests/scripts/reconstruction_ledger.test.ts"
+ ],
+ "reply": "{\"files\": [\"src/scripts/_lib/agent_settings.ts\", \"tests/scripts/reconstruction_ledger.test.ts\", \"src/scripts/lint_settings_classes.ts\", \"docs/contracts/reconstruction-obligations.md\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 344,
+  "cache_read_input_tokens": 19302,
+  "output_tokens": 91,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 344,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 91,
+    "cache_read_input_tokens": 19302,
+    "cache_creation_input_tokens": 344,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 344
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

@@ -1,0 +1,111 @@
+{
+ "id": "unopim-743",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 743,
+ "title": "feat(ai-agent): cache chat instructions and tools, track cached tokens",
+ "merged_at": "2026-10-22T16:01:54Z",
+ "merge": "01ae4357066e916f13d9f8602b184bc2889a730c",
+ "parent": "88ebd184b31cdda83029be710212d7f7a1fdd888",
+ "changed_lines": 456,
+ "diff_files": [
+  "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+  "packages/Webkul/AiAgent/src/Chat/BoundedAgent.php",
+  "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+  "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+  "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+  "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php",
+  "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php",
+  "packages/Webkul/AiAgent/tests/Feature/TokenUsageRecorderCachedTokensTest.php",
+  "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+  "packages/Webkul/AiAgent/tests/Unit/PromptBuilderCacheOrderingTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php#AgentRunner::recordStreamingTokens",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php#AgentRunner::run",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php#AgentRunner::runStreaming",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php#AiApiClient",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php#AiApiClient::buildChatBody",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php#ChatController::recordTokenUsage",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php#ChatController::send",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php#DashboardController::analytics",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php#TokenUsageRecorder",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/AnalyzeImage.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/GenerateContent.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/CredentialController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Jobs/AutoEnrichProductJob.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Pipelines/Stages/CallAiProviderStage.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Pipelines/Stages/Image/EnrichmentStep.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Services/EnrichmentService.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Services/ImageToProductService.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Services/VisionService.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerPartialResultTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/ChatImageHandlingTest.php",
+   "test": true
+  }
+ ]
+}
