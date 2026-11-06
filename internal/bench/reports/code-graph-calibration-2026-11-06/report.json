@@ -1,0 +1,235 @@
+{
+ "proposal": {
+  "name": "P (removes: entry points, flows, area crossings, pipelines)",
+  "weights": {
+   "callers": 1,
+   "missing partners": 2,
+   "columns": 2,
+   "operations": 3
+  },
+  "gap": 0
+ },
+ "apply": false,
+ "evals": [
+  {
+   "subject": "self",
+   "units": 399,
+   "defective": 45,
+   "validation": 239,
+   "test": 160,
+   "term": {
+    "callers": {
+     "verdict": "contributes",
+     "popt_delta": -0.12365700691958292,
+     "lower": -0.20738767279366055,
+     "fires": 122,
+     "unknown_share": 0
+    },
+    "entry points": {
+     "verdict": "dispensable",
+     "popt_delta": -0.00021521492570653056,
+     "lower": -0.0012894384641490841,
+     "fires": 1,
+     "unknown_share": 0
+    },
+    "flows": {
+     "verdict": "dispensable",
+     "popt_delta": 0,
+     "lower": 0,
+     "fires": 1,
+     "unknown_share": 0
+    },
+    "missing partners": {
+     "verdict": "contributes",
+     "popt_delta": 0.02251484155730954,
+     "lower": -0.020996560438867107,
+     "fires": 108,
+     "unknown_share": 0.008368200836820083
+    },
+    "area crossings": {
+     "verdict": "dispensable",
+     "popt_delta": 0.00007169555629904512,
+     "lower": -0.010043619640008439,
+     "fires": 57,
+     "unknown_share": 0
+    },
+    "columns": {
+     "verdict": "no evidence",
+     "popt_delta": null,
+     "lower": null,
+     "fires": 0,
+     "unknown_share": 0
+    },
+    "operations": {
+     "verdict": "no evidence",
+     "popt_delta": null,
+     "lower": null,
+     "fires": 0,
+     "unknown_share": 0
+    },
+    "pipelines": {
+     "verdict": "dispensable",
+     "popt_delta": 0.006952288595263423,
+     "lower": -0.005503500927416249,
+     "fires": 36,
+     "unknown_share": 0
+    }
+   },
+   "gap": {
+    "popt_delta": -0.023440855719170095,
+    "lower": -0.10925369603627555,
+    "helps": false
+   }
+  },
+  {
+   "subject": "unopim",
+   "units": 393,
+   "defective": 107,
+   "validation": 235,
+   "test": 158,
+   "term": {
+    "callers": {
+     "verdict": "contributes",
+     "popt_delta": -0.09830019950250724,
+     "lower": -0.18953625600748392,
+     "fires": 141,
+     "unknown_share": 0
+    },
+    "entry points": {
+     "verdict": "dispensable",
+     "popt_delta": -0.0034306814697302457,
+     "lower": -0.014517092011913646,
+     "fires": 55,
+     "unknown_share": 0
+    },
+    "flows": {
+     "verdict": "dispensable",
+     "popt_delta": 0.0013984217138272026,
+     "lower": -0.0036776132710056864,
+     "fires": 55,
+     "unknown_share": 0
+    },
+    "missing partners": {
+     "verdict": "contributes",
+     "popt_delta": -0.01826103920240163,
+     "lower": -0.0426678965336964,
+     "fires": 61,
+     "unknown_share": 0
+    },
+    "area crossings": {
+     "verdict": "dispensable",
+     "popt_delta": -0.0011579186343915193,
+     "lower": -0.007497968297250801,
+     "fires": 71,
+     "unknown_share": 0
+    },
+    "columns": {
+     "verdict": "no evidence",
+     "popt_delta": null,
+     "lower": null,
+     "fires": 0,
+     "unknown_share": 0
+    },
+    "operations": {
+     "verdict": "dispensable",
+     "popt_delta": 0.002599514606537956,
+     "lower": -4.012210225168289e-7,
+     "fires": 18,
+     "unknown_share": 0
+    },
+    "pipelines": {
+     "verdict": "dispensable",
+     "popt_delta": -0.0003996488859682179,
+     "lower": -0.006949970053525267,
+     "fires": 31,
+     "unknown_share": 0
+    }
+   },
+   "gap": {
+    "popt_delta": 0.027613756496633557,
+    "lower": -0.029791864610032803,
+    "helps": false
+   }
+  }
+ ],
+ "confirm": [
+  {
+   "subject": "self",
+   "popt_s0": 0.7763145241399239,
+   "popt_p": 0.7667312962392892,
+   "popt_manualup": 0.7488920836563466,
+   "acc20_s0": 0.45,
+   "acc20_p": 0.45,
+   "lower": -0.026309636284486126,
+   "noninferior": false,
+   "bands_s0": {
+    "low": {
+     "units": 88,
+     "defective": 3
+    },
+    "medium": {
+     "units": 37,
+     "defective": 7
+    },
+    "high": {
+     "units": 35,
+     "defective": 10
+    }
+   },
+   "bands_p": {
+    "low": {
+     "units": 95,
+     "defective": 4
+    },
+    "medium": {
+     "units": 32,
+     "defective": 7
+    },
+    "high": {
+     "units": 33,
+     "defective": 9
+    }
+   },
+   "moved": 9
+  },
+  {
+   "subject": "unopim",
+   "popt_s0": 0.5932435074061442,
+   "popt_p": 0.5984216015992304,
+   "popt_manualup": 0.8045208800334448,
+   "acc20_s0": 0.42857142857142855,
+   "acc20_p": 0.38095238095238093,
+   "lower": -0.0390293776497882,
+   "noninferior": false,
+   "bands_s0": {
+    "low": {
+     "units": 111,
+     "defective": 9
+    },
+    "medium": {
+     "units": 24,
+     "defective": 6
+    },
+    "high": {
+     "units": 23,
+     "defective": 6
+    }
+   },
+   "bands_p": {
+    "low": {
+     "units": 117,
+     "defective": 9
+    },
+    "medium": {
+     "units": 22,
+     "defective": 6
+    },
+    "high": {
+     "units": 19,
+     "defective": 6
+    }
+   },
+   "moved": 7
+  }
+ ]
+}
