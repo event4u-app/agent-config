@@ -199,6 +199,7 @@ describe('report-only contract', () => {
             rank_basis: 'y',
             buckets: [],
             rows: [],
+            assets: [],
             total_debit: 0,
             total_credit: 0,
             net: 0,
