@@ -67,6 +67,7 @@ import {
     type TokensBreakdown,
 } from './_lib/bench_ab_activation.js';
 import { sweepRates } from './_lib/price_freshness.js';
+import { store_after_sweep } from './bench_evidence_store.js';
 import { PyFloat, append_checkpoint, checkpoint_key, load_checkpoint, run_key, type CheckpointIO } from './_lib/bench_ab_checkpoint.js';
 export { PyFloat, append_checkpoint, checkpoint_key, freeze_result, load_checkpoint, run_key, thaw_result, type CheckpointIO } from './_lib/bench_ab_checkpoint.js';
 
@@ -1076,6 +1077,10 @@ export function main(argv: string[] | null = null): number {
     };
     const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired${selftest ? '-selftest' : ''}.json`);
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
+    // Durable copy outside the checkout (roadmap 6.2), taken BEFORE the
+    // checkpoint below is retired so the bundle carries it. A selftest report is
+    // synthetic and never becomes evidence.
+    if (!selftest) store_after_sweep(out, ckpt ? [ckpt.path] : []);
     // The paired report now holds everything — retire the checkpoint so a
     // finished sweep leaves no residue and a later identical sweep starts fresh.
     if (ckpt && !aborted && fs.existsSync(ckpt.path)) {

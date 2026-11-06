@@ -270,7 +270,7 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
   `files[]` ships `src/scripts/`, and 80 bench files currently ship to consumers.
   `agent-config benchmark` (the user command) stays.
   verify: `npm pack --dry-run` -> /^(?![\s\S]*scripts\/bench_)/
-- [ ] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest
+- [x] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_sweep.ts -->
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
   verify: offline re-scoring of a stored bundle reproduces the report's numbers
