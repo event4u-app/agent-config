@@ -93,11 +93,23 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   from 1/10 to 10/10 and the placebo does not reproduce it (`docs/benchmark.md`
   § Headroom sweeps).
   verify: report under `internal/bench/reports/ab-v2/` with an A/A pair and `bench_ab_interpret` labels for every comparison
-- [ ] **1.5** Find why `package` makes Haiku ask the user for code in about 14% of
+- [x] **1.5** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts --> Find why `package` makes Haiku ask the user for code in about 14% of
   runs instead of reading the repository (`trapC-ambig-01`, `hdrE-scope-large-01`
   in the 2026-11-05 Haiku sweep). Name the asset that triggers it from the
   transcripts before changing anything.
+  Done 2026-11-05: a kernel leave-one-out, then 40 runs per candidate, names
+  `ask-when-uncertain`: blind questions (no tool call first) 7/40 with the kernel,
+  1/40 without it (p = 0.028, ≈ 0.085 corrected for three candidates). Kept
+  streams under `reports/ab-v2/streams/` carry the evidence (`docs/benchmark.md`
+  § Which rule makes Haiku ask without looking).
   verify: the transcripts of the asking runs name the asset; a rerun of the two tasks on Haiku shows the asking rate
+- [ ] **1.6** A wording of `ask-when-uncertain` that puts looking before asking
+  ("read what the workspace already answers, then ask"), in its own PR under the
+  kernel-rule soak. Measure it against the 2026-11-05 baseline before it merges:
+  `rules-kernel-dc` with the new text on `trapC-ambig-01` and `hdrH-done-01`,
+  40 runs per arm on Haiku. Asking after a look on a genuinely ambiguous request
+  must not drop.
+  verify: blind questions below 3/40 with the new wording, and `trapC-ambig-01` questions after a look not below the baseline's 6/20
 
 ## Phase 2 — The owner's domains
 
@@ -124,12 +136,18 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
   three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
   the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
-- [ ] **2.6** Two faults the Sonnet artifact pilot exposed, both before any paid
+- [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
   rerun: every `package` run stopped at the per-call budget on its first turn ($1
   and $3, against $0.14 for `vanilla`), with the cause unknown because the
   workspaces are disposed; and the three PHP tasks end `indeterminate` because the
   artifact path runs on a host without PHP. Keep the transcript of an errored run,
   find what the first turn spends, and run the PHP tasks where PHP exists.
+  Done 2026-11-05: the arm loaded the repository's `agents/` tree as subagents via
+  `--plugin-dir` (~370k tokens); it now installs the packed checkout with the public
+  installer and is load-checked. Installed, `art-form-01` reaches parity on Sonnet
+  at $0.96 per run (vanilla $0.14). PHP grading runs through
+  `internal/bench/containers/php-in-docker.sh`; the self-test separates all three
+  PHP tasks (`docs/benchmark.md` § Headroom sweeps).
   verify: one `package` run of `art-form-01` on Sonnet reaches an outcome other than `errored`, and the PHP tasks score on the untouched fixture
   verify: the report names wins and losses per domain with priced cost
 

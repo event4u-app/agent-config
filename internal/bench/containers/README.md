@@ -54,3 +54,17 @@ Each trial runs in a fresh `docker run --rm` with the clone mounted at `/work`. 
 Reports are written to `internal/bench/reports/ab-v2/` in the **primary** checkout, also when the runner runs in a worktree.
 
 `--mode selftest --isolation container` runs the whole pipeline without network, token or images.
+
+## Artifact sweeps
+
+`--corpus artifact` does not run in a container: each arm gets a temp HOME and a workspace outside the repository. The `package` arm packs the checkout once per sweep and installs it into that HOME with the public installer, the same command `Dockerfile.ac` runs; a `package` run without installed skills, or a control run with any, is recorded as `load_mismatch` and never reaches the host. Each run's session transcript is kept beside the report in `<report>-transcripts/`.
+
+The PHP tasks (`art-login-plain-01`, `art-login-framework-01`, `art-php-endpoint-01`) need `php` for grading. On a host without it:
+
+```bash
+docker pull php:8.3-cli
+BENCH_PHP_BIN="$PWD/internal/bench/containers/php-in-docker.sh" \
+  ./scripts-run src/scripts/bench_ab_v2_run --corpus artifact --tasks art-login-plain-01 ...
+```
+
+`BENCH_PHP_BIN=… ./scripts-run src/scripts/bench_artifact_selftest --task <id>` checks the grader first, at no cost.
