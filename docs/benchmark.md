@@ -202,6 +202,36 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
 
 
+## Where the main session's default context goes (2026-11-06) {#main-session-census}
+
+Measured with `./scripts-run src/scripts/preamble_byte_census --main-session`. The figures come from what the host recorded delivering in one Claude Code session on this repository, not from a model of the tree. The setup was a user-global install with the full rule set, plus the repository's own project rules. Characters are as delivered; tokens are approximately characters / 4. This is one session on one machine, a reading and not a distribution.
+
+**Start-up load: ~397k characters (~99k tokens).**
+
+| Bucket | Files | Characters | Share |
+|---|---|---|---|
+| User-global rules (`~/.claude/rules`) | 100 | 328,985 | 83 % |
+| This repository's project rules (`dist/agent-src/rules`) | 15 | 32,984 | 8 % |
+| Skill catalog (633 listed) | — | 29,356 | 7 % |
+| Start-up hook output | 1 | 1,505 | < 1 % |
+| CLAUDE.md files and imports, auto-memory | 4 | 4,544 | 1 % |
+
+What the reading shows:
+
+- **The rules are the load.** 115 rule files make up 91 % of the start-up context. 32 of them carry half of the instruction characters, and the 19 files over 5,000 characters carry 128k on their own. No rule is loaded twice: the user-global and project sets do not overlap by name. 2 of the 102 user-global rule files have a path trigger and stayed out; all the others load in every session.
+- **About 64k characters (~16k tokens, 17 % of the instruction load) are domain and stack rules this repository never exercises:**
+
+  | Rules | Files | Characters |
+  |---|---|---|
+  | Finance, legal and strategy floors, advisory disclaimer, PII and retention | 6 | 30,208 |
+  | Media and brand: likeness, screenshots, brand, icons, design fidelity | 6 | 23,022 |
+  | Persistence packs: scale, history | 2 | 7,682 |
+  | Stack routing: Laravel, Symfony, PHP, Docker, devcontainer, Copilot | 7 | 2,914 |
+
+  Several of these say in their own header that they activate when their pack is installed. They load here because the full profile installs them unconditionally. This is the first concrete candidate set for 3.3. Whether a narrower default loses quality is a measurement, and 3.3 runs it only on tasks where a lift was shown.
+- **Listed is not loaded.** The catalog names 633 skills. Only 235 arrive with a description (22k characters); 398 arrive as a bare name (7k characters). A skill without a description can only be found by name, which is the gap `missing-skill-recovery` exists for.
+- **The recurring cost sits in tool-call hooks, not in prompt turns.** Every prompt turn adds about 360 characters of hook output. Every `Bash` call adds about 1,050 characters through the `PostToolUse` hook, which came to 21k characters over the 20 calls of this session. Every compaction re-delivers about 4,100 characters at `SessionStart:compact`. None of this is in the start-up figure above.
+
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
 > Every number in this section was scored by the repaired scorer (task-validity
