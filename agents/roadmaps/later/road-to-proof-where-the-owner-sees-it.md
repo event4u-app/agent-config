@@ -306,6 +306,10 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   (`essential` or `package`). The first 2026-11-05 sweeps spent
   $17.85 of a $30 release; the headroom sweeps the same day ran under a separate
   $150 release (spend in `docs/benchmark.md` § Headroom sweeps).
+- **Released for 1.7 (owner, 2026-11-06):** up to $150 (sized at about $130), with
+  the bars set by the agent on the owner's instruction and recorded as D4 below
+  before any run. The run itself still waits for 6.2 and
+  `road-to-token-economy-dispatch-followup` 3.2a. Not released: 2.5, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store
@@ -324,6 +328,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 | D1 | Two packages the owner listed in turn 4 are not merged into one silently | the plans did that without saying so; Phase 5 starts with one rival and asks before treating two as the same (names under `b-private-store`) | the owner names the package |
 | D2 | A catalogue on the owner's list is not a rival arm | it is a list of packages, not an installable package (v10 §P1.5) | — |
 | D3 | No numeric cost target yet | v10 §P1.4: set after a pilot and a power calculation; lift-v8's ≤ 2× is a proposal without data | Phase 3 has a measured pilot |
+| D4 | Bars for 1.7, fixed before the first run (2026-11-06, owner released the budget and delegated the values): **false-positive ceiling** — at most 25 % of arm D's reviewer findings, pooled over the headroom tasks and the hold-out, may be unconfirmed by the hidden verifier; for arm C a test that fails on the reference fix counts as a false positive under the same ceiling. **Escaped-defect cost** `D` = 10 × arm A's p50 priced cost per run, and `C_FP` = 1 × that cost, so the net-value line is priced in the run's own currency. **Base profile** of arm A = `package` (the shipped full set), not `essential` | the question is whether a second agent pays over what consumers actually run; `essential` is opt-in and its default status waits on its own measurement. 25 % keeps one bogus finding in four, beyond which a reviewer costs the author more re-work than its catches save at `D` = 10× | the 6.2/3.2a gates change the arm design, or the default profile changes before the run |
 
 ## Risk Register
 
