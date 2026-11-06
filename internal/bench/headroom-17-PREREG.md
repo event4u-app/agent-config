@@ -93,3 +93,22 @@ Expected spend about $120–130; sweep cap `--max-usd 150`, per-call budget as t
 Pair/driver-navigator, a PO agent and an expert huddle stay parked. A positive
 result proposes a shadow `would_choose` beside the judgment ladder, never a second
 classifier and never a default change.
+
+## Amendment 1 — arm D dropped before any paid call (2026-11-06)
+
+The gate for arm D failed: in `road-to-token-economy-dispatch-followup` 3.2a
+the slim reviewer flagged 2 of 3 correct controls against the full reviewer's 1
+(`agents/evidence/analysis/slim-reviewer-verdict-comparison-2026-11-06.md`).
+The owner chose to run A, B and C only. Changes, all made before the first
+paid call:
+
+- `h17-d` does not run. The D false-positive ceiling and the D endpoint are void
+  for this run; D stays open in the roadmap until a reviewer passes 3.2a.
+- The primary analysis is one comparison, C vs B, one-sided exact sign test at
+  α = 0.05. With 66 pairs that gives 80 % power at a discordance of about 0.12
+  when B sits at the floor.
+- Expected spend about $85; sweep cap `--max-usd 110`, per-call budget $1 as on
+  2026-11-05.
+
+Tasks, seal, arms A–C, the C false-positive ceiling and the cost definitions
+are unchanged.
