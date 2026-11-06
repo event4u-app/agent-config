@@ -54,7 +54,7 @@ const _HERE = fileURLToPath(import.meta.url);
 // bench_ab_v2_stats.ts → parents[2] is repo root (script lives in src/scripts/).
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
-const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
+export const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 import { addPair, newPairedSample, searchClaimSection, searchClaimVerdict } from './_lib/bench_ab_search_adherence.js';
 import {
@@ -597,7 +597,12 @@ export function bucket_rates(records: Dict[], arms: string[]): Dict {
     return out;
 }
 
-export function analyse(payload: Dict): Dict {
+/**
+ * `pricingPath` defaults to the checkout's `pricing.yaml`; the evidence store
+ * passes the copy it sealed into a bundle, so an offline re-score prices a
+ * stored report with the prices it was first scored with.
+ */
+export function analyse(payload: Dict, pricingPath: string = PRICING_PATH): Dict {
     const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
     const arms = Array.isArray(payload['arms']) ? (payload['arms'] as string[]) : [];
     const comps: Dict[] = [];
@@ -621,7 +626,7 @@ export function analyse(payload: Dict): Dict {
         search_claims: comps.map((c) => searchClaimVerdict(c)), // separate on purpose — see the T5 lib
         status_buckets: bucket_rates(records, arms),
         mean_tokens: mean_tokens_by_arm(records, arms),
-        cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
+        cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, pricingPath),
     };
 }
 
