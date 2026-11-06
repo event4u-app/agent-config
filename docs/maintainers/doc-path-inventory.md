@@ -9,7 +9,7 @@ entry for that page in the same change, then regenerates this file;
 
 Scanned: `src/scripts/`, `tests/`, `.github/`, `src/config/gate-coverage.yml`.
 
-- 272 existing doc path(s) named
+- 273 existing doc path(s) named
 - 23 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
 - 4 absent ADR-shaped path(s) named outside tests — counted, not listed: `adr_cite_check` owns ADR references
 
