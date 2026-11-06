@@ -17,7 +17,9 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { PRICING_PATH, cost_by_arm } from './bench_ab_v2_stats.js';
+import { cost_usd, type TierRates } from './_lib/bench_ab_activation.js';
+import { load_pricing } from './_lib/bench_cost.js';
+import { PRICING_PATH, cost_by_arm, price_row_for } from './bench_ab_v2_stats.js';
 
 type Dict = Record<string, unknown>;
 
@@ -90,11 +92,63 @@ export function c_false_positive_rate(records: Dict[]): { with_tests: number; fp
     return { with_tests, fp, rate: with_tests === 0 ? null : fp / with_tests };
 }
 
+/** Nearest-rank percentile; null on an empty sample. */
+export function percentile(values: number[], q: number): number | null {
+    if (values.length === 0) return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.max(0, Math.ceil(q * sorted.length) - 1)] as number;
+}
+
+/**
+ * Priced cost per run, p50 and p95 per arm. Unlike `cost_by_arm`, an errored run
+ * is kept: the registered endpoint is what a run costs, and a budget stop spent
+ * its budget.
+ */
+export function cost_percentiles(records: Dict[], arms: string[], rates: TierRates): Dict {
+    const out: Dict = {};
+    for (const arm of arms) {
+        const costs: number[] = [];
+        let errored = 0;
+        for (const rec of records) {
+            for (const run of ((rec['arms'] ?? {}) as Record<string, Dict[]>)[arm] ?? []) {
+                costs.push(cost_usd((run['tokens_breakdown'] ?? {}) as never, rates));
+                errored += run['errored'] ? 1 : 0;
+            }
+        }
+        out[arm] = { n: costs.length, p50_usd: percentile(costs, 0.5), p95_usd: percentile(costs, 0.95), errored };
+    }
+    return out;
+}
+
+/** D4 net value of a treatment against B, per run: p_catch·D − C_extra − r_FP·C_FP. */
+export function net_value(i: { p_catch: number; r_fp: number; p50_a: number; p50_b: number; p50_t: number }): {
+    D: number;
+    C_FP: number;
+    C_extra: number;
+    net_usd_per_run: number;
+} {
+    const D = 10 * i.p50_a;
+    const C_FP = i.p50_a;
+    const C_extra = i.p50_t - i.p50_b;
+    return { D, C_FP, C_extra, net_usd_per_run: i.p_catch * D - C_extra - i.r_fp * C_FP };
+}
+
 export function analyse_17(payload: Dict, pricingPath: string = PRICING_PATH): Dict {
     const records = (payload['records'] ?? []) as Dict[];
     const arms = ((payload['arms'] ?? []) as string[]).filter((a) => a.startsWith('h17-'));
     const primary = paired(records, 'h17-c', 'h17-b');
     const fp = c_false_positive_rate(records);
+    const [rates] = load_pricing(pricingPath);
+    const model = (payload['model'] as string | null) ?? null;
+    const row = model ? price_row_for(model, rates) : { tier: null, priced_by: null };
+    const tierRates = row.priced_by !== null && row.tier ? (rates[row.tier] as TierRates) : null;
+    const per_run = tierRates ? cost_percentiles(records, arms, tierRates) : null;
+    const p50 = (arm: string): number | null => ((per_run?.[arm] as Dict | undefined)?.['p50_usd'] as number | null) ?? null;
+    const [pa, pb, pc] = [p50('h17-a'), p50('h17-b'), p50('h17-c')];
+    const net =
+        pa !== null && pb !== null && pc !== null && fp.rate !== null && primary.pairs > 0
+            ? net_value({ p_catch: primary.t_only / primary.pairs, r_fp: fp.rate, p50_a: pa, p50_b: pb, p50_t: pc })
+            : null;
     return {
         report: payload['stamp'] ?? null,
         model: payload['model'] ?? null,
@@ -106,7 +160,9 @@ export function analyse_17(payload: Dict, pricingPath: string = PRICING_PATH): D
         descriptive_b_vs_a: paired(records, 'h17-b', 'h17-a'),
         descriptive_c_vs_a: paired(records, 'h17-c', 'h17-a'),
         c_false_positives: { ...fp, ceiling: FP_CEILING, holds: fp.rate === null ? null : fp.rate <= FP_CEILING },
-        cost: cost_by_arm(records, arms, (payload['model'] as string | null) ?? null, pricingPath),
+        cost: cost_by_arm(records, arms, model, pricingPath),
+        cost_per_run: per_run,
+        net_value_c_vs_b: net,
     };
 }
 
