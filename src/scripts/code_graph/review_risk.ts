@@ -424,7 +424,10 @@ export function reviewRisk(
     const laneState = new Map((src.lanesRun ?? []).map((l) => [l.lane, l.skipped_reason ?? (l.error !== undefined ? `lane failed: ${l.error}` : null)] as const));
     const terms = RISK_TERMS.map((term) => {
         const lane = TERM_LANE[term];
-        const unknown = lane ? (laneState.get(lane) ?? null) : null;
+        // A lane with no run record (a `--no-lanes` build, an older or foreign graph) cannot vouch
+        // for a zero; facts it did carry still count.
+        const notRun = lane !== undefined && !laneState.has(lane) && lists[term].length === 0 ? 'lane not run' : null;
+        const unknown = lane ? (laneState.get(lane) ?? notRun) : null;
         return { term, weight: weights[term], items: unknown ? [] : lists[term], contribution: unknown ? 0 : lists[term].length * weights[term], unknown };
     });
     const span = (id: string, risk: number): ReadRegion | null => {

@@ -1,0 +1,72 @@
+{
+ "id": "self-2877",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2877,
+ "title": "feat(install): let discipline_profile select the installed rules; release the 1.7 budget",
+ "merged_at": "2026-11-06T06:44:51Z",
+ "merge": "07815632d8d967c99439f891be60c8b2afb26277",
+ "parent": "b03257b0e40ab114be7653c68d0f24e627f5ecfb",
+ "changed_lines": 653,
+ "diff_files": [
+  "agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md",
+  "agents/roadmaps/stubs/road-to-a-discipline-profile-that-loads.md",
+  "dist/agent-src/templates/agent-settings.md",
+  "dist/install/install.mjs",
+  "dist/install/rule_scope.js",
+  "dist/install/rule_scope.js.map",
+  "docs/customization.md",
+  "src/agent-src/templates/agent-settings.md",
+  "src/config/agent-settings.template.yml",
+  "src/install/rule_scope.ts",
+  "src/scripts/_lib/bench_ab_arms.ts",
+  "src/scripts/compile_router.ts",
+  "src/shared/disciplineProfiles.ts",
+  "tests/install/discipline_profile_scope.test.ts",
+  "tests/install/rule_scoping_global_deploy.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/bench_ab_arms.ts#ARMS",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/compile_router.ts#build",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/_lib/bench_ab_delivery_preflight.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/bench_matrix.ts",
+   "test": false
+  },
+  {
+   "path": "tests/scripts/bench_ab_profile_arms.test.ts",
+   "test": true
+  },
+  {
+   "path": "tests/scripts/bench_ab_v2_run.test.ts",
+   "test": true
+  },
+  {
+   "path": "tests/scripts/compile_router.test.ts",
+   "test": true
+  },
+  {
+   "path": "tests/scripts/router_agent_authority_triggers.test.ts",
+   "test": true
+  }
+ ]
+}

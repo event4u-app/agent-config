@@ -41,6 +41,22 @@ The same answers against the truth without its two-voice and faked files (regist
 | change-impact | all | P 0.637 / R 0.363 | P 0.199 / R 0.511 | ABSENT | NULL |
 | change-impact-xplane | all | P 0 / R 0 | P 0 / R 0 | ABSENT | TIE |
 
+## Calibration diagnostic (no bar)
+
+Overconfidence rate: the share of returned items carrying the arm's highest confidence label (`EXTRACTED`) that are not in the truth. It decides nothing.
+Rendered 2026-11-06 from this run's own `summary.json` (`code-graph-v3-traces-2026-11-05-scored/`); the run computed these figures and the original renderer did not print them. Same run, same numbers — nothing was re-measured.
+
+
+| Class | Subject | grep | native | foreign |
+|---|---|---|---|---|
+| precise-semantics | all | no label | 0.455 | ABSENT |
+| route-trace | unopim | no label | 0.692 | ABSENT |
+| route-trace | larasend | no label | 0.143 | ABSENT |
+| model-table | all | no label | 0.143 | ABSENT |
+| tests-for | all | no label | no EXTRACTED item | ABSENT |
+| change-impact | all | no label | 0.587 | ABSENT |
+| change-impact-xplane | all | no label | 1 | ABSENT |
+
 ## Per language (scored classes, no bar)
 
 | Language | n | grep | native | foreign |

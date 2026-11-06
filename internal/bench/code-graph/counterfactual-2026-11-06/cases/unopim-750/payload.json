@@ -1,0 +1,208 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "CategoryTree",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:16"
+    },
+    {
+     "label": "assembleTree",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:371"
+    },
+    {
+     "label": "description",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:67"
+    },
+    {
+     "label": "familyCategoryCodes",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:340"
+    },
+    {
+     "label": "fetchFirstLevel",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:179"
+    },
+    {
+     "label": "fetchRankedChildren",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:214"
+    },
+    {
+     "label": "fetchRelevantChildren",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:244"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:90"
+    },
+    {
+     "label": "rankByRelevance",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:265"
+    },
+    {
+     "label": "register",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:22"
+    },
+    {
+     "label": "relevanceCandidateLimit",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:308"
+    },
+    {
+     "label": "schema",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:79"
+    },
+    {
+     "label": "scopeToFamily",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php:317"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "finding",
+   "items": [
+    {
+     "label": "IndexProductEmbeddings",
+     "witness": "packages/Webkul/AiAgent/src/Console/Commands/IndexProductEmbeddings.php:18"
+    },
+    {
+     "label": "cli IndexProductEmbeddings",
+     "witness": "packages/Webkul/AiAgent/src/Console/Commands/IndexProductEmbeddings.php:18"
+    }
+   ]
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    317,
+    329
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    214,
+    232
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    265,
+    303
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    179,
+    201
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    244,
+    258
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    308,
+    311
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    340,
+    362
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    67,
+    77
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    79,
+    88
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    371,
+    410
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    56,
+    448
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    16,
+    55
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    62,
+    447
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    22,
+    61
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    130,
+    172
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php",
+   "lines": [
+    90,
+    129
+   ]
+  }
+ ]
+}

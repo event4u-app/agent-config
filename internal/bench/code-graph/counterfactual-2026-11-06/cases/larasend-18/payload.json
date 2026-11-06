@@ -1,0 +1,479 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "ActivityController",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/ActivityController.php:27"
+    },
+    {
+     "label": "__invoke",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/ActivityController.php:48"
+    },
+    {
+     "label": "activityEmailsQuery",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/ActivityController.php:437"
+    },
+    {
+     "label": "emailStatusCounts",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/ActivityController.php:494"
+    },
+    {
+     "label": "selectedEmailStatus",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/ActivityController.php:480"
+    },
+    {
+     "label": "EmailLogQuery",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1569"
+    },
+    {
+     "label": "applySearch",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1620"
+    },
+    {
+     "label": "clearEmailFilters",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1634"
+    },
+    {
+     "label": "emailLogQuery",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1588"
+    },
+    {
+     "label": "emailRefreshHref",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:719"
+    },
+    {
+     "label": "props",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:181"
+    },
+    {
+     "label": "sectionHref",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:738"
+    },
+    {
+     "label": "selectedFilter",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:445"
+    },
+    {
+     "label": "setRange",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1624"
+    },
+    {
+     "label": "setStatusFilter",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1629"
+    },
+    {
+     "label": "showNextEmailPage",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1652"
+    },
+    {
+     "label": "showPreviousEmailPage",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1640"
+    },
+    {
+     "label": "statusFilterCounts",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:597"
+    },
+    {
+     "label": "statusFilterLabel",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1576"
+    },
+    {
+     "label": "statusFilterValue",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1584"
+    },
+    {
+     "label": "visitEmailLog",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Activity.vue:1608"
+    },
+    {
+     "label": "showNextThreadPage",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:233"
+    },
+    {
+     "label": "showPreviousThreadPage",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:223"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "app/Http/Controllers/DashboardActionController.php",
+     "witness": "app/Http/Controllers/ActivityController.php:1"
+    },
+    {
+     "label": "resources/js/components/GlobalRail.vue",
+     "witness": "app/Http/Controllers/ActivityController.php:1"
+    },
+    {
+     "label": "routes/web.php",
+     "witness": "app/Http/Controllers/ActivityController.php:1"
+    },
+    {
+     "label": "app/Http/Controllers/InboxController.php",
+     "witness": "app/Http/Controllers/InboxController.php:1"
+    },
+    {
+     "label": "app/Http/Controllers/ThreadActionController.php",
+     "witness": "app/Http/Controllers/ThreadActionController.php:1"
+    },
+    {
+     "label": "tests/Feature/InboxTest.php",
+     "witness": "resources/js/pages/Inbox.vue:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "finding",
+   "items": [
+    {
+     "label": "GET /activity",
+     "witness": "routes/web.php:86"
+    },
+    {
+     "label": "route GET /activity",
+     "witness": "routes/web.php:86"
+    }
+   ]
+  }
+ ],
+ "reads": [
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    48,
+    87
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1608,
+    1618
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    223,
+    231
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    35,
+    35
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    437,
+    476
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1584,
+    1586
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    233,
+    238
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    81,
+    81
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    27,
+    66
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1588,
+    1606
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    86,
+    86
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    480,
+    489
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    738,
+    743
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    88,
+    88
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    494,
+    505
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1576,
+    1582
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    89,
+    89
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1620,
+    1622
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    90,
+    90
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    181,
+    220
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    92,
+    92
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    445,
+    445
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    93,
+    93
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    597,
+    607
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    94,
+    94
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    719,
+    724
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    96,
+    96
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1569,
+    1574
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    97,
+    97
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1624,
+    1627
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    98,
+    98
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1629,
+    1632
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    99,
+    99
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1634,
+    1638
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    100,
+    100
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1640,
+    1650
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    101,
+    101
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    1652,
+    1654
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    102,
+    102
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    88,
+    271
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    477,
+    478
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    67,
+    996
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/ActivityController.php",
+   "lines": [
+    572,
+    595
+   ]
+  },
+  {
+   "path": "resources/js/pages/Activity.vue",
+   "lines": [
+    221,
+    410
+   ]
+  }
+ ]
+}

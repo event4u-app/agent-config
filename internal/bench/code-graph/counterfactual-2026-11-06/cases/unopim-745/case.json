@@ -1,0 +1,94 @@
+{
+ "id": "unopim-745",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 745,
+ "title": "fix(api): validate option payloads and scope option updates to their attribute",
+ "merged_at": "2026-10-12T07:34:46Z",
+ "merge": "e8d22bc77e8b300762e12e72de373596f3020476",
+ "parent": "158a1d749b92110dbd1f06feb97894379376817f",
+ "changed_lines": 244,
+ "diff_files": [
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+  "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiAttributeTest.php",
+  "packages/Webkul/AdminApi/tests/Feature/Catalog/ApiCategoryFieldOptionUpdateTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php#ApiController",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php#AttributeController::normalizeOptionsPayload",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php#AttributeController::storeOption",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php#AttributeController::updateOption",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php#CategoryFieldController::normalizeOptionsPayload",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php#CategoryFieldController::storeOption",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php#CategoryFieldController::updateOption",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AssociationTypeController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeFamilyController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeGroupController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/MediaFileController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/PassportController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/VariantStructureController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/ChannelController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/CurrencyController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/LocaleController.php",
+   "test": false
+  }
+ ]
+}

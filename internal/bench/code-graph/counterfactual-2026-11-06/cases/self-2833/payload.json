@@ -1,0 +1,125 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "pass",
+   "items": [
+    {
+     "label": "execute",
+     "verdict": "tested",
+     "witness": "src/scripts/release.ts:854"
+    },
+    {
+     "label": "release_pr_body",
+     "verdict": "tested",
+     "witness": "src/scripts/release_publication.ts:1006"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "src/scripts/_lib/release_highlights.ts",
+     "witness": "src/scripts/_lib/release_highlights.ts:1"
+    },
+    {
+     "label": "src/scripts/release_drill.ts",
+     "witness": "src/scripts/release_drill.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/release_publication.ts",
+   "lines": [
+    1006,
+    1013
+   ]
+  },
+  {
+   "path": "src/scripts/release.ts",
+   "lines": [
+    854,
+    893
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/release_surface_check.ts",
+   "lines": [
+    62,
+    65
+   ]
+  },
+  {
+   "path": "src/scripts/release_drill.ts",
+   "lines": [
+    1246,
+    1285
+   ]
+  },
+  {
+   "path": "src/scripts/release_publication.ts",
+   "lines": [
+    1015,
+    1028
+   ]
+  },
+  {
+   "path": "src/scripts/release.ts",
+   "lines": [
+    1430,
+    1469
+   ]
+  },
+  {
+   "path": "src/scripts/release_drill.ts",
+   "lines": [
+    1307,
+    1330
+   ]
+  },
+  {
+   "path": "src/scripts/release_publication.ts",
+   "lines": [
+    1030,
+    1069
+   ]
+  },
+  {
+   "path": "src/scripts/release.ts",
+   "lines": [
+    894,
+    1143
+   ]
+  },
+  {
+   "path": "src/scripts/release_drill.ts",
+   "lines": [
+    1286,
+    1305
+   ]
+  },
+  {
+   "path": "src/scripts/release.ts",
+   "lines": [
+    1470,
+    1599
+   ]
+  },
+  {
+   "path": "src/scripts/release_publication.ts",
+   "lines": [
+    1070,
+    1079
+   ]
+  }
+ ]
+}

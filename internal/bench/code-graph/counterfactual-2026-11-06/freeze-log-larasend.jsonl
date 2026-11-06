@@ -1,0 +1,16 @@
+{"pr":18,"merged_at":"2026-08-15T18:20:53Z","verdict":"take","id":"larasend-18","truth":1}
+{"pr":17,"merged_at":"2026-08-14T23:35:42Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":16,"merged_at":"2026-08-10T17:04:27Z","verdict":"take","id":"larasend-16","truth":1}
+{"pr":15,"merged_at":"2026-08-08T16:29:50Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":14,"merged_at":"2026-08-06T18:16:59Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":5806}
+{"pr":13,"merged_at":"2026-08-04T15:26:55Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":12,"merged_at":"2026-08-03T22:29:15Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":1604}
+{"pr":11,"merged_at":"2026-07-27T13:49:53Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":3161}
+{"pr":9,"merged_at":"2026-07-14T23:09:47Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":7,"merged_at":"2026-07-13T05:38:22Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":1639}
+{"pr":8,"merged_at":"2026-07-13T00:06:25Z","verdict":"skip","reason":"no oracle reference from outside the diff","changed_symbols":1}
+{"pr":5,"merged_at":"2026-07-12T03:36:26Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":4,"merged_at":"2026-07-12T03:17:20Z","verdict":"take","id":"larasend-4","truth":1}
+{"pr":6,"merged_at":"2026-07-12T03:17:19Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":8770}
+{"pr":3,"merged_at":"2026-07-09T05:46:19Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":4954}
+{"pr":2,"merged_at":"2026-07-08T19:08:00Z","verdict":"take","id":"larasend-2","truth":4}

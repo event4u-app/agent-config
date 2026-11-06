@@ -1,0 +1,36 @@
+{
+ "id": "self-2838",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2838,
+ "title": "fix(release): do not re-dispatch tag workflows the tag push already started",
+ "merged_at": "2026-11-04T06:56:33Z",
+ "merge": "3ce16e569e0e64cc2c0b1aa71efc6112d90a6453",
+ "parent": "ba83f4684fedc3049b660d0472ee45930f45ce0c",
+ "changed_lines": 160,
+ "diff_files": [
+  "src/scripts/_lib/release_tag_dispatch.ts",
+  "src/scripts/release.ts",
+  "tests/scripts/release_tag_dispatch.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/release_tag_dispatch.ts#TagDispatchDeps",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/release_tag_dispatch.ts#dispatchTagWorkflows",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/release.ts#execute",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/release_drill.ts",
+   "test": false
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  ".github/workflows/standing-payload-delta.yml",
+  "tests/scripts/standing_bound_ratchet.test.ts"
+ ],
+ "reply": "{\"files\": [\"tests/scripts/standing_bound_ratchet.test.ts\", \".github/workflows/standing-payload-delta.yml\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 344,
+  "cache_read_input_tokens": 11748,
+  "output_tokens": 53,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 344,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 53,
+    "cache_read_input_tokens": 11748,
+    "cache_creation_input_tokens": 344,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 344
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}
