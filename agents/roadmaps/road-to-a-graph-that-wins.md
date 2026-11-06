@@ -172,16 +172,16 @@ tracked.
       trigger as fired or not. Then, and only then, rewrite the skill description as a
       **class list** (which classes are graph-first, which stay grep-routine).
       > note: 2026-11-05 — suites A–E ran against the strata truth: `internal/bench/reports/code-graph-v3-2026-11-05-scored.md` (traces beside it). **Zero of six classes won** — precise-semantics and change-impact NULL (precision floor), route-trace, model-table, tests-for, change-impact-xplane TIE; suite A tied all four classes. Null path: graph-first wording withheld; the `code-intelligence` description now reads as the class list (graph-first: none). ADR-246's second trigger (a post-repair measurement that beats grep on graph-shaped questions): **not fired**. ADR-259: a benchmark result is not a trigger by its own text. Suite F: **GATED** (`internal/bench/reports/code-graph-v3-suite-f-2026-11-05.md`) — the run's own stream holds at most 48 dispatches (24 tasks × 2 arms), below the capture claim's 50-dispatch power floor, so the gate cannot open for this registration; no arm was run. Install-wide capture reads 98.0 % (1,084 / 1,106, 2026-10-06 → 2026-11-05) as context, not as the gate. Opening F needs a new, dated registration with a powered gate.
-- [ ] 2.6 Edge precision and recall per `resolved_via`, against the 2.2 oracle, on
+- [x] 2.6 Edge precision and recall per `resolved_via`, against the 2.2 oracle, on
       `src/scripts/` and both subjects. The oracle index is produced by an indexer the
       maintainer installs (`scip-typescript` first; PHP per 2.2), never fetched at
-      runtime (ADR-259); without one the runner exits naming it. A same-roots parity
-      run against the external tool the `inbox-2026-10-bb` round compared runs on the
-      maintainer's machine, recorded without the tool's name. Census baseline:
+      runtime (ADR-259); without one the runner exits naming it. The same-roots parity
+      run moved to 2.8. Census baseline:
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
       > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
       > note: 2026-11-05, later — the indexer blocker is gone: `internal/bench/code-graph/oracle/oracle.sh run <dir> scip-typescript index --output /subject/.oracle/index.scip` produces the index `edge_oracle.ts --scip` reads, inside the pinned image with no network, and the 2.1 registration is committed. Still open: the measurement itself, and PHP edges — the PHP oracle is Psalm, whose references `edge_oracle.ts` does not read yet (it reads SCIP only).
       > note: 2026-11-06 — measured: `internal/bench/reports/code-graph-v3-edges-2026-11-06.md` (raw output beside it). PHP is read through `php_edge_oracle.ts` (one Psalm analysis, every graph declaration mapped by `enclosing.php`) and scored by `edge_oracle.ts --php-oracle` (`npx vitest run tests/scripts/code_graph/php_edge_oracle.test.ts tests/scripts/code_graph/edge_oracle.test.ts` -> 0). Every stated mechanism reads ≥ 99.9 % file-level precision wherever it scored more than ten edges, except `same-file` on unopim JavaScript (92.8 %, 49 unclassified); the guesses `name-lookup` / `dynamic` read 14.7–100 % and stay outside the gate. Three defects the oracle surfaced are fixed test-first in this change: `parent::m()` resolved to the calling method; a bare `f()` bound to a same-file method in receiver languages; SCIP lines drifted past U+2028/U+2029/lone CR (`alignScipLines`). Oracle limits named rather than read as graph defects: SCIP `local` symbols, constructor naming, Psalm recording no function-call locations, the indexer's Vue blind spot. **Still open: the same-roots parity run** — the external tool is not installed on the maintainer machine, and this runner installs no external code (ADR-259).
+      > note: done 2026-11-06 — the owner closed 2.6 on the oracle measurement and split the parity run into 2.8, so the measurement does not wait on an install only the owner can decide.
 - [x] 2.7 **Close the check v2.1 residuals before 2.5 scores an arm.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/run_bench_v3.ts --> The limits are named in
       `internal/bench/code-graph/check-v3-v21-2026-11-05/REPORT.md` § Known limits; each fix
       lands as a new dated truth file under a registration addendum committed before its first
@@ -198,6 +198,12 @@ tracked.
       Done when `run_bench_v3.ts --truth` reads the new file and each of (a)–(c) is resolved
       or carried as a named stratum in the report.
       > note: done 2026-11-05 — registration § Residual strata, committed before any arm was scored; `truth-v3-2026-11-05-strata.yaml` carries the sealed file sets unchanged plus (a) 135 `two_voice_files` (no fourth provider is configured, so marked, not re-judged), (b) `lower_bound` on `uo-e-01` and `uo-e-03` (recall-only in the scorer), (c) 55 `faked_files` (a deliberately broad rule: any queue/bus/event fake or mock in the test — itself an overcount, stated). `run_bench_v3.ts --truth` reads it and reports a strict stratum per class (`tests/scripts/code_graph/bench_v3_strata.test.ts`). The strict stratum turns no verdict.
+- [ ] 2.8 Same-roots parity run against the external tool the `inbox-2026-10-bb` round
+      compared, on `src/scripts/` and both subjects, scored per `resolved_via` with the 2.6
+      runner. It runs on the maintainer's machine and is recorded without the tool's name.
+      Blocked on the owner: the tool is not installed, and this suite installs no external
+      code (ADR-259). Done when the owner has installed it and the run is recorded beside
+      `internal/bench/reports/code-graph-v3-edges-2026-11-06.md`.
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
