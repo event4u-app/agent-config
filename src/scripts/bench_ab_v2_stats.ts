@@ -95,6 +95,11 @@ const COMPARISONS: Array<[string, string, string]> = [
     // container baseline against the host one. Arm-guarded like every row above.
     ['vanilla-b', 'vanilla', 'A/A control (vanilla vs vanilla)'],
     ['vanilla', 'vanilla-host', 'container vs host baseline'],
+    // The minimal prompt is the floor an asset has to beat, not only vanilla:
+    // whether one plain instruction does what the rules do. Arm-guarded like above.
+    ['package', 'minimal-prompt', 'package over the minimal prompt'],
+    ['rules-kernel-dc', 'minimal-prompt', 'kernel+downstream rules over the minimal prompt'],
+    ['minimal-prompt', 'vanilla', 'minimal prompt lift'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────
