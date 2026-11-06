@@ -126,6 +126,9 @@ export const ARMS: Record<string, ArmSpec> = {
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
     'package-ladder': { setting_sources: null, inject: 'ladder' },
     'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
+    // Proof-where 3.2: the shortest instruction that carries the behaviours the
+    // discipline corpus scores. An asset has to beat this, not only vanilla.
+    'minimal-prompt': { setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null },
     // The three shipped discipline profiles as text arms (post-repair rerun,
     // 2026-11-04). The profile acts at install time only (`rule_scope.ts`), and
     // the `package` arm installs the full set; these measure the rule set
@@ -218,3 +221,15 @@ export function ablation_arm(name: string): ArmSpec | null {
     const v = /^kernel-variant-([a-z0-9-]+\.[a-z0-9-]+)$/.exec(name);
     return v ? { setting_sources: 'project,local', inject: `kernel-variant:${v[1]}` } : null;
 }
+
+/**
+ * Injected texts that are fixed strings rather than reads of the projection.
+ * Authored here, in plain words, with no vocabulary of this package: the arms
+ * exist to measure what the package adds over a sentence anyone could write.
+ */
+export const FIXED_INJECTIONS: Readonly<Record<string, string>> = {
+    'bare-principle': 'Prefer the smallest solution that fully solves the stated problem; do not add what was not asked for.',
+    minimal:
+        'Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. ' +
+        'If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.',
+};
