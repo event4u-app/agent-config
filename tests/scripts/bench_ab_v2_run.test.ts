@@ -184,11 +184,8 @@ describe('bench_ab_v2_run — pure helpers', () => {
         });
     });
 
-    // ── proof-where 3.2 — the minimal-prompt arm ────────────────────────────
-    //
-    // An asset must beat the shortest instruction that carries the intended
-    // behaviour, not only vanilla. Asserted on purpose, not on wording: short,
-    // no package vocabulary, and the four behaviours the discipline corpus scores.
+    // Asserted on purpose, not on wording: the arm is the floor an asset must beat,
+    // so it has to stay short, carry no package vocabulary, and name the behaviours scored.
     it('minimal-prompt: a few plain sentences that carry the scored behaviours and nothing of the package', () => {
         const text = injected_text('minimal', 2000) as string;
         expect(text.length).toBeGreaterThan(0);

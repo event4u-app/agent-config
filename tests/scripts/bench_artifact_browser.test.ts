@@ -1,5 +1,5 @@
 /**
- * Proof-where 2.2: the browser-acceptance grader and the art-dnd-01 task. The
+ * The browser-acceptance grader and the art-dnd-01 task. The
  * browser run itself is proven by `bench_artifact_selftest` (good separates from
  * bad, `--swap` goes red); these cases need no Chromium.
  */

@@ -338,7 +338,7 @@ interface RunOneOpts {
     seed?: number;
     /** `--isolation container`: run in the arm's image instead of on the host. */
     container?: ContainerCtx | null;
-    reviewer?: ((prompt: string) => Dict) | null; // proof-where 1.7 arm D: the slim 3.2a reviewer, one call per review
+    reviewer?: ((prompt: string) => Dict) | null; // arm D's reviewer, one fresh call per review
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -626,7 +626,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     };
 }
 
-/** Proof-where 1.7 orchestrated arms; the steps run in `_lib/bench_headroom_run.ts`. */
+/** The orchestrated arms (test-first, review); the steps run in `_lib/bench_headroom_run.ts`. */
 export function run_one_orchestrated(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const spec = ARMS[arm] as ArmSpec;
     const { res, run, fixture, clone } = run_orchestrated_arm(task, arm, spec, opts);

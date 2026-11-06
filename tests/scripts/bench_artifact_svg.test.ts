@@ -1,5 +1,5 @@
 /**
- * Proof-where 2.4: the image → SVG tasks are graded on editability (every shape
+ * The image → SVG tasks are graded on editability (every shape
  * named, a shape budget) and, where a source raster exists, on render similarity.
  * Similarity needs Chromium and is proven by the artifact selftest; editability is
  * pure and pinned here.

@@ -1,7 +1,7 @@
 /**
  * Control flow and false-positive accounting of the 1.7 orchestrated arms, with
  * scripted calls — no live model. The definitions pinned here are the
- * pre-registered ones (proof-where 1.7, D4).
+ * pre-registered ones (`internal/bench/headroom-17-PREREG.md`).
  */
 import * as fs from 'node:fs';
 import * as os from 'node:os';

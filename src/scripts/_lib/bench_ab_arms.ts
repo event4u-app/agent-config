@@ -11,7 +11,7 @@ export interface ArmSpec {
     inject: string | null; // None | "rdp" | "placebo"
     recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
     /**
-     * Proof-where 1.7: a harness-orchestrated multi-step arm
+     * A harness-orchestrated multi-step arm
      * (`_lib/bench_headroom_arms.ts`). `test-first` = tester call, then author;
      * `review` = author, slim reviewer, one revision.
      */
@@ -113,7 +113,7 @@ export const ARMS: Record<string, ArmSpec> = {
     // a meaningful activation check for this arm.
     placebo: { setting_sources: 'project,local', inject: 'placebo', min_lift_ratio: null },
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
-    // Proof-where 1.7 (pre-registered 2026-11-06, D4): base profile `package`,
+    // Pre-registered in `internal/bench/headroom-17-PREREG.md`: base profile `package`,
     // effort pinned so B is exactly one step above A. B is the same-cost arm C and
     // D are compared against; A is descriptive only.
     'h17-a': { setting_sources: null, inject: null, effort: 'medium' },
@@ -126,7 +126,7 @@ export const ARMS: Record<string, ArmSpec> = {
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
     'package-ladder': { setting_sources: null, inject: 'ladder' },
     'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
-    // Proof-where 3.2: the shortest instruction that carries the behaviours the
+    // The shortest instruction that carries the behaviours the
     // discipline corpus scores. An asset has to beat this, not only vanilla.
     'minimal-prompt': { setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null },
     // The three shipped discipline profiles as text arms (post-repair rerun,
