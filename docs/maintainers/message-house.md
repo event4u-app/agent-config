@@ -47,9 +47,11 @@ something before it claims done.
   exact file and line on a planted hollow implementation and READY with no
   spurious findings on a clean one. Two planted cases on Claude Code, not a
   hit rate. <!-- claim:wedge-hollow-detection -->
-- On a weaker model (Claude Haiku) the package produced a significant,
-  placebo-controlled gain in discipline; on a strong model the same
-  measurement was a published null. <!-- claim:discipline-lift-weak-host -->
+- Re-measured on 2026-11-04 after the scorer repair: the installed package's
+  discipline gain on Claude Haiku was not significant (p=0.181) and Claude
+  Sonnet showed none; the earlier significant Haiku gain is a pre-repair
+  figure. [Post-repair rerun](../benchmark.md#post-repair).
+  <!-- claim:discipline-lift-weak-host -->
 - Where the tool lets the package block, blocking removed the measured
   violation classes; instructions alone reduced them but did not remove them.
   Blocking is available on Claude Code only.
@@ -89,11 +91,10 @@ rest of your setup untouched.
 These sit next to the install, never in a footnote.
 
 - **It costs more tokens.** The extra tokens are mostly the verification
-  turns themselves. Measured on Claude Haiku only: the default discipline
-  setting costs 3.3× a run with no rules on the task family where it helps
-  and about 1.7× over the full 30-task corpus; loading everything costs 11.7×.
-  See [cost-factor sweep](../benchmark.md#cost-factor-sweep-claude-haiku-4-5--lift-per-loaded-context-cost)
-  and [full-corpus gate](../benchmark.md#full-corpus-p1-gate-claude-haiku-4-5-all-30-tasks--family-scoped-pass).
+  turns themselves. Measured on Claude Haiku, two scope tasks, 2026-11-04: the
+  install as shipped costs 7.8× a run with no rules; the core rules alone
+  (kernel plus `downstream-changes`) cost 2.9× and carry the only significant
+  gain. See [post-repair rerun](../benchmark.md#post-repair-weak).
   <!-- claim:essential-tier-cost-factor --> Do not generalise past Haiku:
   the strong-host run was a null and the non-Claude replication failed.
 - **Blocking only on Claude Code.** Everywhere else the rules are
@@ -217,12 +218,13 @@ setting, and has no separate measurement.
 | Install profile | Discipline setting | Measured cost (Claude Haiku) |
 |---|---|---|
 | `minimal` | `off` — the nine always-on rules only | Not measured as its own arm. |
-| `balanced` (default) | `auto` — the lift-carrying cut on Claude models without a measured null; `off` on Claude Sonnet 4.6 (measured null) and on non-Claude models | 3.3× on the task family where it helps, about 1.7× over the full 30-task corpus ([sweep](../benchmark.md#cost-factor-sweep-claude-haiku-4-5--lift-per-loaded-context-cost), [corpus](../benchmark.md#full-corpus-p1-gate-claude-haiku-4-5-all-30-tasks--family-scoped-pass)) <!-- claim:essential-tier-cost-factor --> |
-| `full` | `full` — every rule tier; experimental, opt-in only | 11.7× ([sweep](../benchmark.md#cost-factor-sweep-claude-haiku-4-5--lift-per-loaded-context-cost)) |
+| `balanced` (default) | `auto` — the lift-carrying cut on Claude models without a measured null; `off` on Claude Sonnet 4.6 (measured null) and on non-Claude models | The core set as text: 2.9× ([post-repair](../benchmark.md#post-repair-weak)). On Claude the setting does not change what loads, so an install costs 7.8× (`agents/roadmaps/stubs/road-to-a-discipline-profile-that-loads.md`) <!-- claim:essential-tier-cost-factor --> |
+| `full` | `full` — every rule tier; experimental, opt-in only | 7.1× as text ([post-repair](../benchmark.md#post-repair-weak)) |
 
 Scope caveat, always printed with the table: every figure is from Claude Haiku
-with rules pasted as text, not the full plugin; on Claude Sonnet the gain was
-a null ([strong host](../benchmark.md#strong-host-sonnet-full-30-task-corpus--gate-verdict-honest-null))
+on two scope tasks, with rules pasted as text except the 7.8× install figure;
+on Claude Sonnet the installed package showed no gain
+([post-repair](../benchmark.md#post-repair))
 and the non-Claude replication failed
 ([second host](../benchmark.md#p2-gate--non-claude-weak-host-gpt-5-mini-via-codex--replication-failed)).
 <!-- claim:essential-tier-cost-factor -->
@@ -240,12 +242,12 @@ and the non-Claude replication failed
    installs without one. `install` is the same wizard under another name
    (ruling 0.6).
 4. **Where does it write?** The install-scope sentence above, verbatim.
-5. **Does it cost more tokens?** Yes. On Claude Haiku the default costs 3.3×
-   on the task family where it helps and about 1.7× over the full corpus; the
-   full load costs 11.7×. <!-- claim:essential-tier-cost-factor --> Table and
+5. **Does it cost more tokens?** Yes. On Claude Haiku the install costs 7.8×
+   a run with no rules on two scope tasks; the core rules alone cost 2.9×. <!-- claim:essential-tier-cost-factor --> Table and
    caveat: § What does it cost?
-6. **Does it make my model smarter?** No. It gave a weaker model measurably
-   better discipline; on a strong model the same test was a null.
+6. **Does it make my model smarter?** No. After the 2026-11 scorer repair,
+   only the core rule set gave Claude Haiku a significant discipline gain; the
+   full install did not reach significance, and Claude Sonnet showed none.
    <!-- claim:discipline-lift-weak-host -->
 7. **Is it enforced or just prompts?** Blocking on Claude Code only; on every
    other tool the rules are instructions the model is asked to follow.

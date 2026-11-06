@@ -234,6 +234,24 @@ describe('CLI global deploy — upgrade reaps newly-excluded rules', () => {
         expect(narrower).toEqual(plannedRuleBasenames(ruleScopeFromSettings(SCOPED_SETTINGS, REPO)));
     });
 
+    it('switching discipline_profile to essential leaves only kernel + downstream-changes on disk, and back restores', () => {
+        writeGlobalSettings({ ...SCOPED_SETTINGS, discipline_profile: 'full' });
+        runDeploy();
+        const full = deployedRuleBasenames();
+
+        writeGlobalSettings({ ...SCOPED_SETTINGS, discipline_profile: 'essential' });
+        runDeploy();
+        const essential = deployedRuleBasenames();
+        expect(essential).toContain('downstream-changes.md');
+        expect(essential).toContain('non-destructive-by-default.md');
+        expect(essential.length).toBe(10);
+        expect(essential.length).toBeLessThan(full.length);
+
+        writeGlobalSettings({ ...SCOPED_SETTINGS, discipline_profile: 'full' });
+        runDeploy();
+        expect(deployedRuleBasenames()).toEqual(full);
+    });
+
     it('is idempotent — a second scoped install changes nothing', () => {
         writeGlobalSettings(SCOPED_SETTINGS);
         runDeploy();

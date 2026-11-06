@@ -52,6 +52,30 @@ const PRICING = {
   opus:   { input: 15.00, output: 75.00, cache_write_5m: 18.75, cache_write_1h: 30.00, cache_read: 1.50 },
 };
 
+// Per-model rows mirror the `model:` rows of internal/bench/pricing.yaml; the
+// family rows above price a former generation (Haiku 4.5 at a quarter of its
+// rate, Opus 4.6+ at three times). tests/scripts/cost_track.test.ts reads the
+// YAML rows, so a rate bumped there and not here fails CI.
+const MODEL_PRICING = {
+  'claude-haiku-4-5':  { input: 1.00, output: 5.00,  cache_write_5m: 1.25, cache_write_1h: 2.00,  cache_read: 0.10 },
+  'claude-haiku-5-5':  { input: 0.10, output: 0.50,  cache_write_5m: 0.125, cache_write_1h: 0.20, cache_read: 0.01 },
+  'claude-sonnet-4-6': { input: 3.00, output: 15.00, cache_write_5m: 3.75, cache_write_1h: 6.00,  cache_read: 0.30 },
+  'claude-sonnet-5-5': { input: 2.00, output: 10.00, cache_write_5m: 2.50, cache_write_1h: 4.00,  cache_read: 0.10 },
+  'claude-opus-4-6':   { input: 5.00, output: 25.00, cache_write_5m: 6.25, cache_write_1h: 10.00, cache_read: 0.50 },
+  'claude-opus-4-7':   { input: 5.00, output: 25.00, cache_write_5m: 6.25, cache_write_1h: 10.00, cache_read: 0.50 },
+  'claude-opus-4-8':   { input: 5.00, output: 25.00, cache_write_5m: 6.25, cache_write_1h: 10.00, cache_read: 0.50 },
+};
+
+// The served id may carry a date suffix (`-20251001`) or a context tag (`[1m]`);
+// `claude-opus-4-60` must not match `claude-opus-4-6`, hence the boundary.
+function ratesFor(model, tier) {
+  const m = String(model || '').toLowerCase();
+  for (const id of Object.keys(MODEL_PRICING)) {
+    if (m === id || m.startsWith(id + '-') || m.startsWith(id + '[')) return MODEL_PRICING[id];
+  }
+  return PRICING[tier];
+}
+
 function modelTier(model) {
   if (!model) return 'unknown';
   const m = String(model).toLowerCase();
@@ -79,8 +103,7 @@ function billableTokens(u) {
        + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);
 }
 
-function costForUsage(tier, u) {
-  const p = PRICING[tier];
+function costForUsage(p, u) {
   if (!p || !u) return 0;
   const knownSplit = (u.ephemeral_5m_input_tokens || 0) + (u.ephemeral_1h_input_tokens || 0);
   const unaccounted = Math.max(0, (u.cache_creation_input_tokens || 0) - knownSplit);
@@ -215,7 +238,7 @@ function summarizeSession(files) {
       const model = m.message.model || 'unknown';
       const tier = modelTier(model);
       const u = usageTokens(m.message.usage);
-      const cost = costForUsage(tier, u);
+      const cost = costForUsage(ratesFor(model, tier), u);
       // Key on the ACTUAL zero condition — `!PRICING[tier]`, what
       // costForUsage returns 0 on — not on `tier === 'unknown'`. The two
       // coincide only because `unknown` is today the sole tier modelTier()

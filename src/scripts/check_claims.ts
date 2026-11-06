@@ -46,7 +46,7 @@ import {
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
 import { asOf, localIsoDate } from './_lib/as_of.js';
-import { POLICY_REL, checkPolicy, loadPolicy, readSink } from './_lib/dispatch_policy.js';
+import { POLICY_REL, tableFindings } from './_lib/dispatch_policy.js';
 import { staleVerifiedVerdict } from './_lib/claims_stale_verified.js';
 import { scorer_epoch_findings } from './_lib/claims_scorer_epoch.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
@@ -507,6 +507,11 @@ function parse_args(argv: string[]): Args {
     return out;
 }
 
+/** The dispatch-policy findings for the tree under `root`; see `tableFindings`. */
+export function policy_findings(root: string, ledger: Map<string, LedgerEntry>): string[] {
+    return tableFindings(root, (id) => ledger.get(id)?.status, (id) => ledger.get(id)?.review_by);
+}
+
 /** Parse docs/CLAIMS.md — one entry per `### claim: <id>` block. */
 function load_ledger(): Map<string, LedgerEntry> {
     const ledger = new Map<string, LedgerEntry>();
@@ -702,17 +707,8 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
 
-    // Every dispatch default is bound to its sinks and to the claim behind it
-    // (road-to-a-policy-the-measurements-write 1.2). Absent table, nothing to bind.
-    if (fs.existsSync(path.join(REPO, POLICY_REL))) {
-        const policyFindings = checkPolicy(loadPolicy(REPO), {
-            readSink: (_row, sink) => readSink(REPO, sink),
-            claimStatus: (id) => ledger.get(id)?.status,
-            claimReviewBy: (id) => ledger.get(id)?.review_by,
-        });
-        for (const reason of policyFindings) {
-            findings.push({ id: 'dispatch-policy', file: POLICY_REL, reason });
-        }
+    for (const reason of policy_findings(REPO, ledger)) {
+        findings.push({ id: 'dispatch-policy', file: POLICY_REL, reason });
     }
 
     // 1. Every markered claim must map to a backed, resolvable ledger entry.

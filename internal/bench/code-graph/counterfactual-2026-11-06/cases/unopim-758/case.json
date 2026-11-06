@@ -1,0 +1,57 @@
+{
+ "id": "unopim-758",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 758,
+ "title": "chore(deps): upgrade laravel/ai to ^1.1",
+ "merged_at": "2026-10-07T07:23:43Z",
+ "merge": "ab75e4b8b7c9c5c1f0c628c1cc43cd5fec112053",
+ "parent": "f4af18d4ba4dac3975e6946e116ade425a5faeab",
+ "changed_lines": 576,
+ "diff_files": [
+  "composer.json",
+  "composer.lock",
+  "packages/Webkul/Admin/tests/Feature/MagicAi/GenerationTokenCeilingTest.php",
+  "packages/Webkul/Admin/tests/Feature/MagicAi/LaravelAiAdapterImageTest.php",
+  "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+  "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php",
+  "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+  "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php#AgentRunner::run",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php#AgentRunner::runStreaming",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php#OpenAiImageGateway",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php#OpenAiImageGateway::sendImageGenerationRequest",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/LaravelAiAdapterImageTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/ChatImageHandlingTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Providers/MagicAIServiceProvider.php",
+   "test": false
+  }
+ ]
+}

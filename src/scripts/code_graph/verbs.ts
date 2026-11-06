@@ -584,6 +584,19 @@ export interface DeadResult extends VerbReport {
     dead: string[];
     /** Entry points excluded from `dead` — the audit trail for the exclusion. */
     excluded: string[];
+    /** Files that parsed with errors anywhere in the graph: a call from one may be missing. */
+    partial_files: string[];
+    /** False while any file is partial or the verb refused: `dead` is then a candidate set, not proof. */
+    complete: boolean;
+}
+
+/** The answering body of `dead`'s text rendering: exclusions, partial files, the list. */
+export function deadBodyLines(res: DeadResult): string[] {
+    const lines = [`excluded as declared entry points: ${res.excluded.length}`];
+    if (res.partial_files.length) lines.push(`partial files (parsed with errors, a call from them may be missing — not complete): ${res.partial_files.join(', ')}`);
+    lines.push(`dead (${res.dead.length}${res.complete ? '' : ', candidates, not proof'}):`);
+    for (const d of res.dead) lines.push(`  ${d}`);
+    return lines;
 }
 
 /**
@@ -625,6 +638,8 @@ export function dead(
         source: g.source,
         state,
         sources: [...sources],
+        partial_files: [] as string[],
+        complete: false,
     };
     // Checked BEFORE the entry-point sources: on an all-foreign graph every
     // in-edge is a guess, so every symbol would report dead — the confident
@@ -687,8 +702,13 @@ export function dead(
         candidates.push(id);
     }
     const list = candidates.sort();
+    // Graph-wide, not per candidate: an unresolved call from a file that parsed
+    // with errors names no target, so any candidate may be its callee.
+    const partial = g.partialFileIds();
     return {
         ...base,
+        partial_files: partial,
+        complete: partial.length === 0,
         accepted_via: viaHistogram(accepted),
         rejected_via: viaHistogram(rejected),
         refusal: null,

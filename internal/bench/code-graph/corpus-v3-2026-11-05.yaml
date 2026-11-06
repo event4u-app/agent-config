@@ -1,0 +1,795 @@
+# Code-graph benchmark corpus, v3 -- third-party subjects (suites B, C, D, E).
+#
+# Registered 2026-11-05 by PREREGISTRATION-v3-2026-11-05.md, BEFORE the code-graph
+# engine has seen either subject. Suite A is not in this file: it is the v2 corpus,
+# unchanged, bound by path and SHA-256 in the registration document. Suite F lives in
+# suite-f-tasks-v3-2026-11-05.yaml.
+#
+# HOW THIS FILE WAS BUILT. The subjects were cloned at the pins below and read with
+# git, grep, find and sed only. No graph build, no `code-graph` verb, no `map`, no
+# `ask`, and no `src/scripts/code_graph/*` entry point was run on either clone. Every
+# question names a symbol, route, model or file the author verified exists at the pin;
+# the `basis` field cites where (paths are relative to the subject root, lines are at
+# the pin).
+#
+# TRUTH IS NOT IN THIS FILE. Every scored question carries `truth: pending-oracle`.
+# Truth is produced AFTER registration by the step-2.2 oracle arm (tsserver /
+# scip-typescript references for TS and Vue script blocks; Psalm
+# `--find-references-to` or a PHP language server for PHP), at symbol level, then
+# projected to files. The 20 % human-checked sample is drawn by the rule fixed in the
+# registration document. Truth is never derived from the graph under test. A `basis`
+# line is the author's evidence that the question is well-formed; it is NOT truth and
+# is never scored -- the oracle may find more sites, or fewer.
+#
+# Conventions, applied to every question, fixed before any run:
+#   - `probe` is the bare token (or route) both arms receive verbatim. Path questions
+#     carry `probe` (start) and `probe_to` (goal), as in v2.
+#   - `declared_in`, where present, names the declaration the question is about. It
+#     disambiguates for the ORACLE and the human checker only; neither arm receives it.
+#     This is what makes class 1 a precise-semantics class: the token collides, the
+#     declaration does not.
+#   - A mention inside a comment, docblock or string literal is never an answer, as in
+#     v2. Known instances are listed under `distractors`.
+#   - Answers are scored at file level after symbol-level oracle truth is projected to
+#     files. Paths are relative to the subject root.
+#   - Excluded from every root: `vendor/`, `node_modules/`, `public/**/build/`,
+#     `storage/`, `bootstrap/cache/`, lockfiles. Tests are IN scope.
+#   - `hop_stratum` is the author's estimate of the shortest relation chain from probe
+#     to the furthest answer (1, 2, or ">=3"). The oracle re-derives it; when the two
+#     disagree the oracle's stratum is reported, and the disagreement count is
+#     published.
+#   - Class 5 (suite D) questions carry `expected: empty` instead of pending truth. If
+#     the oracle finds a non-empty answer for one, that question is VOID -- removed from
+#     the clean-rate and listed by id -- never flipped into a positive question.
+#
+# Classes (numbering fixed here and used by the registration document):
+#   1 precise-semantics   (suite B)   scored
+#   2 route-trace         (suite C)   scored, reported PER SUBJECT, never pooled
+#   3 model-table         (suite C)   scored
+#   4 tests-for           (suite C)   scored
+#   5 negative-control    (suite D)   clean-rate only, no bar
+#   6 change-impact       (suite E)   scored
+#   7 change-impact-xplane (suite E)  scored
+
+corpus_version: 3
+generated: "2026-11-05"
+
+subjects:
+  - name: unopim
+    repo: event4u-app/unopim
+    upstream: unopim/unopim
+    pin: 56071226255ff8e0f5dc40dafa72eab0f2751d54
+    languages: [php, blade, js]
+  - name: larasend
+    repo: event4u-app/larasend
+    upstream: savvyagents/larasend
+    pin: da5c06c725f51f537fd8e238e436263665f475d2
+    languages: [php, ts, vue]
+
+questions:
+
+  # ── class 1 precise-semantics (suite B) ────────────────────────────────────
+
+  - id: ls-b-01
+    suite: B
+    class: precise-semantics
+    shape: callers
+    subject: larasend
+    language: php
+    question: "Which files call ThreadResolver::attachOutbound?"
+    probe: attachOutbound
+    declared_in: app/Services/ThreadResolver.php:49
+    hop_stratum: 1
+    basis:
+      - "app/Services/EmailSendService.php:113 -- $this->threads->attachOutbound($email)"
+      - "app/Console/Commands/ThreadBackfillCommand.php:30 -- $threads->attachOutbound(...)"
+    truth: pending-oracle
+
+  - id: ls-b-02
+    suite: B
+    class: precise-semantics
+    shape: callers
+    subject: larasend
+    language: php
+    question: "Which files call SuppressionRemovalService::remove (and no other method named remove)?"
+    probe: remove
+    declared_in: app/Services/SuppressionRemovalService.php:20
+    hop_stratum: 1
+    basis:
+      - "app/Http/Controllers/DashboardActionController.php:331 -- $removalService->remove($suppression)"
+      - "app/Http/Controllers/Api/SuppressionController.php:28 -- $removalService->remove($suppression)"
+    note: "`remove` is a high-collision token (framework, JS, collection methods); the question is about one declaration."
+    truth: pending-oracle
+
+  - id: ls-b-03
+    suite: B
+    class: precise-semantics
+    shape: references
+    subject: larasend
+    language: php
+    question: "Which files reference the class ThreadResolver (type hints, imports, instantiation), excluding comments?"
+    probe: ThreadResolver
+    declared_in: app/Services/ThreadResolver.php:17
+    hop_stratum: 1
+    basis:
+      - "app/Services/EmailSendService.php:27 -- constructor property ThreadResolver $threads"
+      - "app/Services/InboundEmailIngestor.php:26 -- constructor property ThreadResolver $threads"
+      - "app/Console/Commands/ThreadBackfillCommand.php:7,16 -- import and handle() parameter"
+    distractors:
+      - path: app/Http/Controllers/ThreadActionController.php
+        why: ":373 is a comment ('see ThreadResolver::applyActivity'), not a reference"
+    truth: pending-oracle
+
+  - id: ls-b-04
+    suite: B
+    class: precise-semantics
+    shape: callers
+    subject: larasend
+    language: ts
+    question: "Which files call the toUrl helper declared in resources/js/lib/utils.ts?"
+    probe: toUrl
+    declared_in: resources/js/lib/utils.ts:10
+    hop_stratum: 1
+    basis:
+      - "resources/js/composables/useCurrentUrl.ts:5,43 -- import and call"
+      - "resources/js/components/NavFooter.vue:9,32 -- import and template call"
+      - "resources/js/components/AppHeader.vue:37,131,218 -- import and template calls"
+    truth: pending-oracle
+
+  - id: ls-b-05
+    suite: B
+    class: precise-semantics
+    shape: callers-transitive
+    subject: larasend
+    language: ts
+    question: "Which files reach updateTheme within two call hops?"
+    probe: updateTheme
+    declared_in: resources/js/composables/useAppearance.ts:13
+    hop_stratum: 2
+    basis:
+      - "resources/js/composables/useAppearance.ts:80 -- initializeTheme() calls updateTheme"
+      - "resources/js/app.ts:2,36 -- imports and calls initializeTheme (second hop)"
+    truth: pending-oracle
+
+  - id: ls-b-06
+    suite: B
+    class: precise-semantics
+    shape: callers-transitive
+    subject: larasend
+    language: vue
+    question: "Which files reach toUrl through any chain of calls or component usage (three or more hops)?"
+    probe: toUrl
+    declared_in: resources/js/lib/utils.ts:10
+    hop_stratum: ">=3"
+    basis:
+      - "resources/js/composables/useCurrentUrl.ts:43 -- calls toUrl (hop 1)"
+      - "resources/js/components/NavMain.vue:10,17 and resources/js/layouts/settings/Layout.vue:7,49 -- call useCurrentUrl (hop 2)"
+      - "components that render NavMain / settings Layout, and pages that render those (hop 3+), resolved by the oracle"
+    truth: pending-oracle
+
+  - id: uo-b-01
+    suite: B
+    class: precise-semantics
+    shape: callers
+    subject: unopim
+    language: php
+    question: "Which files call the static method SafeWebhookUrl::validate (and no other method named validate)?"
+    probe: validate
+    declared_in: packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php:31
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/Webhook/src/Http/Requests/WebhookForm.php:51"
+      - "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:146"
+      - "packages/Webkul/Webhook/src/Services/WebhookService.php:189"
+      - "packages/Webkul/MagicAI/src/Validator/PlatformValidator.php:147"
+      - "packages/Webkul/AiAgent/src/Http/Requests/CredentialForm.php:33"
+      - "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php:8 and packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php:19"
+    note: "`validate` collides with e.g. $this->valuesValidator->validate (packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php:92) and every FormRequest."
+    truth: pending-oracle
+
+  - id: uo-b-02
+    suite: B
+    class: precise-semantics
+    shape: callers-transitive
+    subject: unopim
+    language: php
+    question: "Which files reach SafeWebhookUrl::httpOptions within two call hops?"
+    probe: httpOptions
+    declared_in: packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php:93
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:154 (hop 1)"
+      - "packages/Webkul/Webhook/src/Services/WebhookService.php:205 inside deliver() (hop 1)"
+      - "packages/Webkul/MagicAI/src/Enums/AiProvider.php:422 (hop 1)"
+      - "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php:131 (hop 1)"
+      - "callers of WebhookService::deliver, AiProvider and AiApiClient (hop 2), resolved by the oracle"
+    distractors:
+      - path: packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php
+        why: ":14 is a docblock listing call sites"
+      - path: packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php
+        why: ":42 mentions httpOptions inside a test-name string; :50 is a real call and counts"
+    truth: pending-oracle
+
+  - id: uo-b-03
+    suite: B
+    class: precise-semantics
+    shape: references
+    subject: unopim
+    language: php
+    question: "Which files reference the INTERFACE Webkul\\Product\\Contracts\\VariantStructurePlanner (not the concrete class of the same short name)?"
+    probe: VariantStructurePlanner
+    declared_in: packages/Webkul/Product/src/Contracts/VariantStructurePlanner.php:8
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/Admin/src/Http/Requests/VariantNodeForm.php:8"
+      - "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:40"
+      - "packages/Webkul/Product/src/Type/Configurable.php:9"
+      - "packages/Webkul/Completeness/src/Jobs/ProductCompletenessJob.php:14"
+      - "packages/Webkul/Product/src/Providers/ProductServiceProvider.php:9,98 -- binding"
+    note: "Two declarations share the short name; uo-b-04 asks the same probe about the other one. A tool that cannot tell them apart scores the union on both."
+    truth: pending-oracle
+
+  - id: uo-b-04
+    suite: B
+    class: precise-semantics
+    shape: references
+    subject: unopim
+    language: php
+    question: "Which files reference the CONCRETE class Webkul\\Product\\Services\\VariantStructurePlanner (not the interface of the same short name)?"
+    probe: VariantStructurePlanner
+    declared_in: packages/Webkul/Product/src/Services/VariantStructurePlanner.php:12
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/AdminApi/src/ApiDataSource/Catalog/VariantStructureDataSource.php:11"
+      - "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ConfigurableProductController.php:19"
+      - "packages/Webkul/Product/src/Validator/RequiredAttributesValidator.php:10"
+      - "packages/Webkul/Product/src/Repositories/ProductRepository.php:15,233"
+      - "packages/Webkul/Product/src/Providers/ProductServiceProvider.php:48,98 -- binding"
+    distractors:
+      - path: packages/Webkul/DataTransfer/src/Jobs/System/BulkProductUpdate.php
+        why: ":617 is a {@see} docblock to the concrete class; the file's code references the interface (:20)"
+    truth: pending-oracle
+
+  - id: uo-b-05
+    suite: B
+    class: precise-semantics
+    shape: callers
+    subject: unopim
+    language: js
+    question: "Which JavaScript files call or import sanitizeCode?"
+    probe: sanitizeCode
+    declared_in: packages/Webkul/Admin/src/Resources/assets/js/utils/code.js:1
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/Admin/src/Resources/assets/js/directives/code.js:1 -- import"
+      - "packages/Webkul/Admin/src/Resources/assets/js/app.js:245,300 -- import, exposed as $sanitizeCode"
+      - "packages/Webkul/Admin/src/Resources/assets/js/utils/code.js:12 -- generateCode calls it"
+    note: "JS-only question; the Blade consumers of $sanitizeCode belong to uo-e-x-01."
+    truth: pending-oracle
+
+  - id: uo-b-06
+    suite: B
+    class: precise-semantics
+    shape: callers-transitive
+    subject: unopim
+    language: php
+    question: "Which files reach WebhookService::sendBatchByIds through any chain, including string-named event listeners?"
+    probe: sendBatchByIds
+    declared_in: packages/Webkul/Webhook/src/Services/WebhookService.php:54
+    hop_stratum: ">=3"
+    basis:
+      - "packages/Webkul/Webhook/src/Jobs/SendBulkProductWebhook.php:41 -- handle() calls it (hop 1)"
+      - "packages/Webkul/Webhook/src/Listeners/Product.php:74 -- dispatches SendBulkProductWebhook (hop 2)"
+      - "packages/Webkul/Webhook/src/Providers/EventServiceProvider.php:34,36 -- binds string events to the listener"
+      - "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php:1973,1979 -- dispatches those string events (hop 3+)"
+    truth: pending-oracle
+
+  # ── class 2 route-trace (suite C) -- reported per subject ──────────────────
+
+  - id: ls-c-route-01
+    suite: C
+    class: route-trace
+    subject: larasend
+    language: php
+    question: "Through which files does POST /api/emails reach the Email model?"
+    probe: "POST /api/emails"
+    probe_to: Email
+    hop_stratum: ">=3"
+    basis:
+      - "routes/api.php:13 -- Route::post('emails', [EmailController::class, 'store'])"
+      - "app/Http/Controllers/Api/EmailController.php:40,80 -- store() calls EmailSendService::send"
+      - "app/Services/EmailSendService.php:72 -- Email::create([...])"
+      - "tests/Feature/ApiEmailTest.php uses the /api/ prefix (route file loaded under api)"
+    truth: pending-oracle
+
+  - id: ls-c-route-02
+    suite: C
+    class: route-trace
+    subject: larasend
+    language: php
+    question: "Through which files does POST /api/webhooks/inbound/cloudflare/{token} reach the Thread model?"
+    probe: "POST /api/webhooks/inbound/cloudflare/{token}"
+    probe_to: Thread
+    hop_stratum: ">=3"
+    basis:
+      - "routes/api.php:22 -- invokable CloudflareInboundController"
+      - "app/Http/Controllers/Webhooks/CloudflareInboundController.php:28,87 -- InboundEmailIngestor::ingest"
+      - "app/Services/InboundEmailIngestor.php:77 -- $this->threads->attachInbound($inbound)"
+      - "app/Services/ThreadResolver.php:25 -- attachInbound returns Thread"
+    truth: pending-oracle
+
+  - id: ls-c-route-03
+    suite: C
+    class: route-trace
+    subject: larasend
+    language: php
+    question: "Through which files does DELETE /api/suppressions/{suppression} reach the Suppression model?"
+    probe: "DELETE /api/suppressions/{suppression}"
+    probe_to: Suppression
+    hop_stratum: ">=3"
+    basis:
+      - "routes/api.php:15 -- SuppressionController::destroy"
+      - "app/Http/Controllers/Api/SuppressionController.php:17,28 -- calls SuppressionRemovalService::remove"
+      - "app/Services/SuppressionRemovalService.php:20,25 -- $suppression->delete()"
+    truth: pending-oracle
+
+  - id: uo-c-route-01
+    suite: C
+    class: route-trace
+    subject: unopim
+    language: php
+    question: "Through which files does POST /api/v1/rest/products reach the Product model?"
+    probe: "POST /api/v1/rest/products"
+    probe_to: Product
+    hop_stratum: ">=3"
+    basis:
+      - "packages/Webkul/AdminApi/src/Providers/AdminApiServiceProvider.php:184-186 -- 'api' prefix, loads Routes/admin-api.php"
+      - "packages/Webkul/AdminApi/src/Routes/admin-api.php:5-6,24 -- 'v1/rest' prefix, require 'V1/catalog-routes.php'"
+      - "packages/Webkul/AdminApi/src/Routes/V1/catalog-routes.php:127,130 -- SimpleProductController::store"
+      - "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/SimpleProductController.php:70,111 -- productRepository->create"
+      - "packages/Webkul/Product/src/Repositories/ProductRepository.php:43-47 -- resolves the type class, calls its create()"
+      - "packages/Webkul/Product/src/Type/AbstractType.php:109 -- create()"
+    note: "Route declared outside routes/, three prefix layers deep, behind a `require`; the repository's model() returns a contract, not the class."
+    truth: pending-oracle
+
+  - id: uo-c-route-02
+    suite: C
+    class: route-trace
+    subject: unopim
+    language: php
+    question: "Through which files does the route named admin.catalog.products.copy reach the Product model?"
+    probe: admin.catalog.products.copy
+    probe_to: Product
+    hop_stratum: ">=3"
+    basis:
+      - "packages/Webkul/Admin/src/Routes/catalog-routes.php:187,200 -- ProductController::copy"
+      - "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1362,1365 -- productRepository->copy($id)"
+      - "packages/Webkul/Product/src/Repositories/ProductRepository.php:161,171 -- getTypeInstance()->copy()"
+      - "packages/Webkul/Product/src/Models/Product.php:123 and packages/Webkul/Product/src/Type/AbstractType.php:578"
+    truth: pending-oracle
+
+  - id: uo-c-route-03
+    suite: C
+    class: route-trace
+    subject: unopim
+    language: php
+    question: "Through which files does the route named webhook.test reach SafeWebhookUrl::httpOptions?"
+    probe: webhook.test
+    probe_to: httpOptions
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Webhook/src/Providers/WebhookServiceProvider.php:19 -- loads Routes/web.php"
+      - "packages/Webkul/Webhook/src/Routes/web.php:16 -- WebhookController::test"
+      - "packages/Webkul/Webhook/src/Http/Controllers/WebhookController.php:140,154 -- SafeWebhookUrl::httpOptions"
+    truth: pending-oracle
+
+  # ── class 3 model-table (suite C) ──────────────────────────────────────────
+
+  - id: ls-c-model-01
+    suite: C
+    class: model-table
+    subject: larasend
+    language: php
+    question: "Which table does the WebhookDelivery model persist to, and which migration files define or alter it?"
+    probe: WebhookDelivery
+    hop_stratum: 1
+    basis:
+      - "app/Models/WebhookDelivery.php -- no $table override (conventional name)"
+      - "database/migrations/2026_05_11_120741_create_webhook_deliveries_table.php:14 -- Schema::create('webhook_deliveries')"
+    truth: pending-oracle
+
+  - id: ls-c-model-02
+    suite: C
+    class: model-table
+    subject: larasend
+    language: php
+    question: "Which table does the Thread model persist to, and which migration files define or alter it?"
+    probe: Thread
+    hop_stratum: 1
+    basis:
+      - "database/migrations/2026_07_11_001656_create_threads_table.php:15 -- Schema::create('threads')"
+      - "database/migrations/2026_07_12_034640_add_team_workflow_to_threads_table.php -- alters threads"
+    truth: pending-oracle
+
+  - id: ls-c-model-03
+    suite: C
+    class: model-table
+    subject: larasend
+    language: php
+    question: "Which table does the ApiKey model persist to, and which migration files define or alter it?"
+    probe: ApiKey
+    hop_stratum: 1
+    basis:
+      - "database/migrations/2026_05_11_033056_create_larasend_core_tables.php:78 -- Schema::create('api_keys') inside a multi-table migration"
+      - "database/migrations/2026_06_24_141106_add_governance_fields_to_api_keys_table.php -- alters api_keys"
+    truth: pending-oracle
+
+  - id: uo-c-model-01
+    suite: C
+    class: model-table
+    subject: unopim
+    language: php
+    question: "Which table does the Apikey model persist to, and which migration files define or alter it?"
+    probe: Apikey
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/AdminApi/src/Models/Apikey.php:25 -- explicit protected $table = 'api_keys' (convention would give a different name)"
+      - "packages/Webkul/AdminApi/src/Database/Migrations/2024_07_10_112208_api_keys.php:14 -- Schema::create('api_keys')"
+    truth: pending-oracle
+
+  - id: uo-c-model-02
+    suite: C
+    class: model-table
+    subject: unopim
+    language: php
+    question: "Which table does the VariantStructureAxis model persist to, and which migration files define or alter it?"
+    probe: VariantStructureAxis
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/Product/src/Models/VariantStructureAxis.php:18 -- no $table override; irregular plural (axis -> axes)"
+      - "packages/Webkul/Product/src/Database/Migrations/2026_07_11_000001_create_variant_structures_tables.php:23 -- Schema::create('variant_structure_axes') inside a multi-table migration"
+    truth: pending-oracle
+
+  - id: uo-c-model-03
+    suite: C
+    class: model-table
+    subject: unopim
+    language: php
+    question: "Which table does the Webhook package's WebhookLog model persist to, and which migration files define or alter it?"
+    probe: WebhookLog
+    hop_stratum: 1
+    basis:
+      - "packages/Webkul/Webhook/src/Models/WebhookLog.php:19"
+      - "packages/Webkul/Webhook/src/Database/Migrations/2025_09_20_101519_webhook_logs.php:11 -- Schema::create('webhook_logs')"
+      - "packages/Webkul/Webhook/src/Database/Migrations/2026_05_12_120000_make_user_nullable_on_webhook_logs.php and 2026_07_20_120100_add_webhook_columns_to_webhook_logs.php -- alter it"
+    truth: pending-oracle
+
+  # ── class 4 tests-for (suite C) ────────────────────────────────────────────
+
+  - id: ls-c-tests-01
+    suite: C
+    class: tests-for
+    subject: larasend
+    language: php
+    question: "Which test files exercise ThreadResolver, directly or through a route or service that calls it?"
+    probe: ThreadResolver
+    hop_stratum: 2
+    basis:
+      - "tests/Feature/ThreadingTest.php, tests/Feature/InboxTest.php, tests/Feature/InboundEmailTest.php -- post to the Cloudflare inbound route, which reaches ThreadResolver"
+    truth: pending-oracle
+
+  - id: ls-c-tests-02
+    suite: C
+    class: tests-for
+    subject: larasend
+    language: php
+    question: "Which test files exercise SuppressionRemovalService, directly or through a route that calls it?"
+    probe: SuppressionRemovalService
+    hop_stratum: 2
+    basis:
+      - "tests/Feature/SuppressionManagementTest.php -- dashboard and API suppression removal"
+    truth: pending-oracle
+
+  - id: uo-c-tests-01
+    suite: C
+    class: tests-for
+    subject: unopim
+    language: php
+    question: "Which test files exercise SafeWebhookUrl, directly or through a caller?"
+    probe: SafeWebhookUrl
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Webhook/tests/Unit/SafeWebhookUrlTest.php -- direct"
+      - "packages/Webkul/Admin/tests/Feature/MagicAI/FetchModelsSsrfTest.php and PlatformExtrasSsrfTest.php -- import it"
+    truth: pending-oracle
+
+  - id: uo-c-tests-02
+    suite: C
+    class: tests-for
+    subject: unopim
+    language: php
+    question: "Which test files exercise WebhookService::sendBatchForBulkEdit, directly or through the job that calls it?"
+    probe: sendBatchForBulkEdit
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Webhook/tests/Feature/BatchLogSliceTest.php:26 -- direct"
+      - "packages/Webkul/Webhook/tests/Feature/BatchChunkTest.php:31 -- calls it on a subclass (ChunkedWebhookService)"
+      - "packages/Webkul/Webhook/src/Jobs/SendBulkEditProductWebhook.php:31 -- the job; tests that push it are hop 2"
+    truth: pending-oracle
+
+  - id: uo-c-tests-03
+    suite: C
+    class: tests-for
+    subject: unopim
+    language: php
+    question: "Which test files exercise ProductRepository::isUniqueVariantForProduct, directly or through a caller?"
+    probe: isUniqueVariantForProduct
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryTest.php:160 -- direct"
+      - "packages/Webkul/Product/tests/Unit/Repositories/ProductRepositoryVariantUniquenessTest.php:31 -- direct"
+      - "callers: packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1280,1585; AdminApi ProductController.php:487,589; ConfigurableProductController.php:216; DataTransfer Importer.php:3139"
+    truth: pending-oracle
+
+  # ── class 5 negative-control (suite D) -- clean-rate, no bar ───────────────
+  # Path questions anchor their sink on threats.csv row 24 ("SSRF via user-supplied
+  # URL"), src/skills/threat-modeling/data/threats.csv, sha256 bound in the
+  # registration document. Correct answer for every item: the empty set.
+
+  - id: ls-d-01
+    suite: D
+    class: negative-control
+    shape: path
+    subject: larasend
+    language: php
+    question: "Is there an accepted path from SesWebhookController to the outbound-HTTP job DeliverInboundWebhook?"
+    probe: SesWebhookController
+    probe_to: DeliverInboundWebhook
+    threat_row: "threats.csv:24 SSRF via user-supplied URL"
+    hop_stratum: ">=3"
+    expected: empty
+    reason: >-
+      The SES path ends in WebhookDeliveryService, which dispatches DeliverWebhook only
+      (app/Services/WebhookDeliveryService.php:23). DeliverInboundWebhook is dispatched only
+      from app/Services/InboundEmailIngestor.php:40,87, which is referenced only by
+      app/Http/Controllers/Webhooks/CloudflareInboundController.php. The SES event
+      EmailActivityUpdated is broadcast-only (app/Events/EmailActivityUpdated.php:12).
+
+  - id: ls-d-02
+    suite: D
+    class: negative-control
+    shape: path
+    subject: larasend
+    language: ts
+    question: "Is there an accepted path from the getInitials display helper to the outbound-HTTP job DeliverWebhook?"
+    probe: getInitials
+    probe_to: DeliverWebhook
+    threat_row: "threats.csv:24 SSRF via user-supplied URL"
+    hop_stratum: ">=3"
+    expected: empty
+    reason: >-
+      getInitials (resources/js/composables/useInitials.ts:5) is a pure string helper rendered
+      in AppHeader.vue:259 and UserInfo.vue:28; it calls nothing. DeliverWebhook is a queued
+      PHP job reached only from WebhookDeliveryService.
+
+  - id: ls-d-03
+    suite: D
+    class: negative-control
+    shape: symbol
+    subject: larasend
+    language: php
+    question: "Which files call attachForwarded?"
+    probe: attachForwarded
+    hop_stratum: 1
+    expected: empty
+    reason: >-
+      Near-miss of attachInbound / attachOutbound (app/Services/ThreadResolver.php:25,49).
+      Verified absent from the whole clone with a word-boundary search at construction time.
+
+  - id: uo-d-01
+    suite: D
+    class: negative-control
+    shape: path
+    subject: unopim
+    language: php
+    question: "Is there an accepted path from the PruneWebhookLogs console command to WebhookService::deliver?"
+    probe: PruneWebhookLogs
+    probe_to: deliver
+    probe_to_declared_in: packages/Webkul/Webhook/src/Services/WebhookService.php:187
+    threat_row: "threats.csv:24 SSRF via user-supplied URL"
+    hop_stratum: ">=3"
+    expected: empty
+    reason: >-
+      packages/Webkul/Webhook/src/Console/Commands/PruneWebhookLogs.php imports only the console
+      attributes, Command and the DB facade (:5-8) and has one method, handle() (:14). The
+      outbound HTTP call sits in WebhookService::deliver (:187, :205).
+
+  - id: uo-d-02
+    suite: D
+    class: negative-control
+    shape: path
+    subject: unopim
+    language: php
+    question: "Is there an accepted path from ProductGridViewController to WebhookService::deliver?"
+    probe: ProductGridViewController
+    probe_to: deliver
+    probe_to_declared_in: packages/Webkul/Webhook/src/Services/WebhookService.php:187
+    threat_row: "threats.csv:24 SSRF via user-supplied URL"
+    hop_stratum: ">=3"
+    expected: empty
+    reason: >-
+      packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductGridViewController.php uses only
+      ProductGridViewRepository (:8, :25, :42, :69). Webhook delivery is driven by the
+      catalog.product.* and data_transfer.* events bound in
+      packages/Webkul/Webhook/src/Providers/EventServiceProvider.php:28-38; saving a grid view
+      fires none of them.
+
+  - id: uo-d-03
+    suite: D
+    class: negative-control
+    shape: symbol
+    subject: unopim
+    language: php
+    question: "Which files call sendBatchBySku?"
+    probe: sendBatchBySku
+    hop_stratum: 1
+    expected: empty
+    reason: >-
+      Near-miss of sendBatchBySkus (packages/Webkul/Webhook/src/Services/WebhookService.php:72).
+      Verified absent from the whole clone with a word-boundary search at construction time.
+
+  # ── class 6 change-impact (suite E) ────────────────────────────────────────
+
+  - id: ls-e-01
+    suite: E
+    class: change-impact
+    subject: larasend
+    language: php
+    question: "If WebhookUrlGuard::isSafe changes its contract, which files must be re-read?"
+    probe: isSafe
+    declared_in: app/Services/WebhookUrlGuard.php:11
+    hop_stratum: 2
+    basis:
+      - "app/Rules/PublicWebhookUrl.php:21 (hop 1) -- used by app/Http/Requests/StoreWebhookEndpointRequest.php and StoreOnboardingRequest.php (hop 2)"
+      - "app/Jobs/DeliverWebhook.php:45 and app/Jobs/DeliverInboundWebhook.php:54,85 (hop 1)"
+      - "tests/Pest.php:23 and tests/Unit/WebhookUrlGuardTest.php -- subclass it"
+    truth: pending-oracle
+
+  - id: ls-e-02
+    suite: E
+    class: change-impact
+    subject: larasend
+    language: php
+    question: "If Suppression::normalizeEmail changes its contract, which files must be re-read?"
+    probe: normalizeEmail
+    declared_in: app/Models/Suppression.php:44
+    hop_stratum: 2
+    basis:
+      - "direct users: app/Services/EmailSendService.php, SuppressionRemovalService.php, SesEventNormalizer.php, CloudflareApiClient.php, app/Jobs/SyncCloudflareSourceSuppressions.php"
+      - "their callers (hop 2), resolved by the oracle"
+    distractors:
+      - path: app/Models/Suppression.php
+        why: ":121 declares normalizeEmails (plural), a different symbol; the file counts only for its own calls of normalizeEmail"
+    truth: pending-oracle
+
+  - id: ls-e-03
+    suite: E
+    class: change-impact
+    subject: larasend
+    language: php
+    question: "If MimeMessageBuilder::splitAddress changes its contract, which files must be re-read (full closure)?"
+    probe: splitAddress
+    declared_in: app/Services/MimeMessageBuilder.php:84
+    hop_stratum: ">=3"
+    basis:
+      - "app/Services/EmailSendService.php:70,96,142,197,242 (hop 1)"
+      - "EmailSendService is called from app/Http/Controllers/Api/EmailController.php:80 and the dashboard send path (hop 2), which are reached from routes/api.php and routes/web.php (hop 3)"
+    truth: pending-oracle
+
+  - id: uo-e-01
+    suite: E
+    class: change-impact
+    subject: unopim
+    language: php
+    question: "If SafeWebhookUrl::httpOptions changes its contract, which files must be re-read (full closure, across packages)?"
+    probe: httpOptions
+    declared_in: packages/Webkul/Webhook/src/Validators/SafeWebhookUrl.php:93
+    hop_stratum: ">=3"
+    basis:
+      - "hop 1: WebhookController.php:154, WebhookService.php:205, MagicAI AiProvider.php:422, AiAgent AiApiClient.php:131"
+      - "hop 2+: the jobs, listeners and controllers that reach those, across the Webhook, MagicAI and AiAgent packages"
+    truth: pending-oracle
+
+  - id: uo-e-02
+    suite: E
+    class: change-impact
+    subject: unopim
+    language: php
+    question: "If ProductRepository::isUniqueVariantForProduct changes its contract, which files must be re-read?"
+    probe: isUniqueVariantForProduct
+    declared_in: packages/Webkul/Product/src/Repositories/ProductRepository.php:184
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Product/src/Repositories/ProductRepository.php:301 (self-call)"
+      - "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductController.php:1280,1585"
+      - "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php:487,589 and ConfigurableProductController.php:216"
+      - "packages/Webkul/DataTransfer/src/Helpers/Importers/Product/Importer.php:3139"
+    note: "Two controllers named ProductController in different packages; the oracle resolves both."
+    truth: pending-oracle
+
+  - id: uo-e-03
+    suite: E
+    class: change-impact
+    subject: unopim
+    language: php
+    question: "If WebhookService::getProductChangesForWebhook changes its contract, which files must be re-read?"
+    probe: getProductChangesForWebhook
+    declared_in: packages/Webkul/Webhook/src/Services/WebhookService.php:366
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Webhook/src/Listeners/Product.php:34,49 (hop 1)"
+      - "packages/Webkul/Webhook/src/Services/WebhookService.php:152 (self-call inside sendBatch)"
+      - "packages/Webkul/Webhook/tests/Unit/ProductWebhookChangeResolutionTest.php:13"
+    truth: pending-oracle
+
+  # ── class 7 change-impact-xplane (suite E) ─────────────────────────────────
+  # Cross-plane: the change is in one language and the impact lands in another.
+
+  - id: ls-e-x-01
+    suite: E
+    class: change-impact-xplane
+    subject: larasend
+    language: php
+    target_language: vue
+    question: "If the props InboxController passes to its page change, which frontend files must be re-read?"
+    probe: InboxController
+    hop_stratum: 1
+    basis:
+      - "app/Http/Controllers/InboxController.php:51 -- Inertia::render('Inbox', [...])"
+      - "resources/js/pages/Inbox.vue -- the page component that receives those props"
+    note: "Wayfinder route helpers (resources/js/actions, routes, wayfinder) are gitignored generated code and are absent at the pin; no arm runs code generation."
+    truth: pending-oracle
+
+  - id: ls-e-x-02
+    suite: E
+    class: change-impact-xplane
+    subject: larasend
+    language: php
+    target_language: vue
+    question: "If the props ActivityController passes to its page change, which frontend files must be re-read (page and the components it passes them to)?"
+    probe: ActivityController
+    hop_stratum: 2
+    basis:
+      - "app/Http/Controllers/ActivityController.php:127 -- Inertia::render('Activity', [...])"
+      - "resources/js/pages/Activity.vue -- receives the props (hop 1); child components it forwards them to (hop 2)"
+    truth: pending-oracle
+
+  - id: uo-e-x-01
+    suite: E
+    class: change-impact-xplane
+    subject: unopim
+    language: js
+    target_language: blade
+    question: "If sanitizeCode changes, which Blade templates must be re-read (via the v-code directive or the $sanitizeCode global)?"
+    probe: sanitizeCode
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Admin/src/Resources/assets/js/directives/code.js:1 -- the v-code directive uses it; registered at app.js:294"
+      - "packages/Webkul/Admin/src/Resources/assets/js/app.js:300 -- exposed as the $sanitizeCode global"
+      - "Blade users of v-code, e.g. packages/Webkul/Admin/src/Resources/views/catalog/attributes/create.blade.php and catalog/categories/create.blade.php"
+    truth: pending-oracle
+
+  - id: uo-e-x-02
+    suite: E
+    class: change-impact-xplane
+    subject: unopim
+    language: js
+    target_language: blade
+    question: "If generateCode changes, which Blade templates must be re-read (via the v-code-generator directive or the $generateCode global)?"
+    probe: generateCode
+    hop_stratum: 2
+    basis:
+      - "packages/Webkul/Admin/src/Resources/assets/js/directives/code-generator.js:1 -- registered at app.js:295"
+      - "packages/Webkul/Admin/src/Resources/assets/js/app.js:299 -- exposed as the $generateCode global"
+      - "Blade users of v-code-generator, e.g. packages/Webkul/Admin/src/Resources/views/catalog/attributes/edit.blade.php and components/catalog/quick-create-modal.blade.php"
+    truth: pending-oracle

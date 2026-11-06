@@ -153,6 +153,38 @@ export function readCorpus(skillsRoot: string): LabelledQuery[] {
     return out;
 }
 
+/** Tools a fixture may add to a case; anything that can reach past the workspace stays out. */
+export const FIXTURE_TOOLS: readonly string[] = ['Edit', 'Write'];
+
+/** The workspace a case's prompt refers to, seeded by the host's `--scaffold` before the run. */
+export interface WorkspaceFixture {
+    script: string;
+    /** First 8 hex of the script's sha256 — the case version, carried as a `fixture:` tag. */
+    sha8: string;
+    extraTools: string[];
+}
+
+/**
+ * `<fixturesRoot>/<skill>/<id>/scaffold.sh`, plus an optional `fixture.json`
+ * declaring `extra_tools`. Fixtures live outside `src/skills/` so no shell
+ * script is projected into a consumer install.
+ */
+export function readFixture(fixturesRoot: string, skill: string, id: string): WorkspaceFixture | null {
+    const dir = path.join(fixturesRoot, skill, id);
+    const file = path.join(dir, 'scaffold.sh');
+    if (!fs.existsSync(file)) return null;
+    const script = fs.readFileSync(file, 'utf8');
+    let extraTools: string[] = [];
+    const meta = path.join(dir, 'fixture.json');
+    if (fs.existsSync(meta)) {
+        const doc = JSON.parse(fs.readFileSync(meta, 'utf8')) as { extra_tools?: unknown };
+        extraTools = Array.isArray(doc.extra_tools) ? doc.extra_tools.filter((t): t is string => typeof t === 'string') : [];
+        const bad = extraTools.filter((t) => !FIXTURE_TOOLS.includes(t));
+        if (bad.length > 0) throw new Error(`compile_trigger_evals: ${skill}/${id} fixture declares ${bad.join(', ')}; allowed: ${FIXTURE_TOOLS.join(', ')}`);
+    }
+    return { script, sha8: createHash('sha256').update(script).digest('hex').slice(0, 8), extraTools };
+}
+
 /** One emitted case: where it was written and what it is tagged with. */
 export interface CompiledCase {
     skill: string;
@@ -264,7 +296,7 @@ export function compileQueries(
     queries: readonly LabelledQuery[],
     outDir: string,
     dirOf: (q: LabelledQuery, i: number) => string = (q) => path.join(slug(q.skill), slug(q.id)),
-    opts: { grader?: (q: LabelledQuery) => string; extraTools?: readonly string[] } = {},
+    opts: { grader?: (q: LabelledQuery) => string; extraTools?: readonly string[]; fixturesRoot?: string } = {},
 ): CompiledCase[] {
     refuseTrackedOutput(outDir);
     const cases: CompiledCase[] = [];
@@ -278,9 +310,18 @@ export function compileQueries(
         owner.set(dir, `${q.skill}/${q.id}`);
         const tags = [`skill:${q.skill}`, `partition:${partitionOf(q.skill)}`];
         if (q.cls !== null) tags.push(`class:${q.cls}`);
+        const fixture = opts.fixturesRoot === undefined ? null : readFixture(opts.fixturesRoot, q.skill, q.id);
+        if (fixture !== null) tags.push(`fixture:${fixture.sha8}`);
         const abs = path.join(outDir, dir);
         fs.mkdirSync(path.join(abs, 'graders'), { recursive: true });
-        fs.writeFileSync(path.join(abs, 'prompt.md'), promptBody(q.query, tags, opts.extraTools));
+        fs.writeFileSync(path.join(abs, 'prompt.md'), promptBody(q.query, tags, [...(opts.extraTools ?? []), ...(fixture?.extraTools ?? [])]));
+        if (fixture !== null) {
+            fs.writeFileSync(path.join(abs, 'scaffold.sh'), fixture.script, { mode: 0o755 });
+            fs.writeFileSync(
+                path.join(abs, 'case.yaml'),
+                ['schema_version: "1.1"', `name: ${path.basename(dir)}`, 'context:', '  scaffold_script: scaffold.sh', ''].join('\n'),
+            );
+        }
         fs.writeFileSync(
             path.join(abs, 'graders', 'criteria.md'),
             opts.grader === undefined ? graderBody(q.skill, q.trigger) : opts.grader(q),
@@ -356,6 +397,8 @@ export interface PlanRow {
     query_sha256: string;
     /** sha256 of the unit's SKILL.md in the catalogue the target carries. */
     skill_sha256: string;
+    /** The case's workspace-fixture version, where the case carries one. */
+    fixture_sha8?: string;
 }
 
 export interface BaselinePlan {
@@ -394,18 +437,27 @@ export function buildBaselinePlugin(opts: {
     plugin: string;
     units: number;
     perUnit: number;
+    /** Workspace fixtures, opt-in: without it the series is the unfixtured one. */
+    fixturesRoot?: string;
+    /** Keep only these units; every kept case keeps its rank-prefixed name from the full selection. */
+    only?: readonly string[];
 }): BaselinePlan {
     refuseTrackedOutput(opts.pluginRoot);
-    const picked = selectBaseline(readCorpus(opts.skillsRoot), opts.units, opts.perUnit);
+    const all = selectBaseline(readCorpus(opts.skillsRoot), opts.units, opts.perUnit);
+    const width = String(all.length).length;
+    const rank = new Map(all.map((q, i) => [q, i]));
+    const picked = opts.only === undefined ? all : all.filter((q) => opts.only?.includes(q.skill));
     fs.mkdirSync(path.join(opts.pluginRoot, '.claude-plugin'), { recursive: true });
     fs.writeFileSync(
         path.join(opts.pluginRoot, '.claude-plugin', 'plugin.json'),
         JSON.stringify({ name: opts.plugin, version: '0.0.0', description: 'routing baseline target' }, null, 2) + '\n',
     );
     fs.cpSync(opts.catalogueRoot, path.join(opts.pluginRoot, 'skills'), { recursive: true });
-    const width = String(picked.length).length;
-    const cases = compileQueries(picked, path.join(opts.pluginRoot, 'evals'), (q, i) =>
-        `${String(i + 1).padStart(width, '0')}-${slug(q.skill)}-${slug(q.id)}`,
+    const cases = compileQueries(
+        picked,
+        path.join(opts.pluginRoot, 'evals'),
+        (q) => `${String((rank.get(q) as number) + 1).padStart(width, '0')}-${slug(q.skill)}-${slug(q.id)}`,
+        opts.fixturesRoot === undefined ? {} : { fixturesRoot: opts.fixturesRoot },
     );
     const skillHash = (skill: string): string => {
         const f = path.join(opts.catalogueRoot, skill, 'SKILL.md');
@@ -423,6 +475,9 @@ export function buildBaselinePlugin(opts: {
             id: c.id,
             query_sha256: sha256((picked[i] as LabelledQuery).query),
             skill_sha256: skillHash(c.skill),
+            ...(c.tags.find((t) => t.startsWith('fixture:')) === undefined
+                ? {}
+                : { fixture_sha8: (c.tags.find((t) => t.startsWith('fixture:')) as string).slice('fixture:'.length) }),
         })),
     };
     fs.writeFileSync(path.join(opts.pluginRoot, 'plan.json'), JSON.stringify(plan, null, 2) + '\n');
@@ -489,7 +544,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 '           --runs N --max-cost-usd N --model ID --ablation none|with-without \\\n' +
                 '           --protocol PATH\n' +
                 '       compile_trigger_evals --baseline-plan --plugin-root DIR --units N [--per-unit N]\n' +
-                '           [--plugin NAME] [--catalogue DIR]\n' +
+                '           [--plugin NAME] [--catalogue DIR] [--fixtures DIR] [--only SKILL,...]\n' +
                 '       compile_trigger_evals --ingest AGGREGATE.json --plan PLAN.json --protocol PATH \\\n' +
                 '           --model ID --commit SHA --artifact OUT.json\n' +
                 '       compile_trigger_evals --derive-floors BASELINE.json --tolerance T --floors OUT.json\n' +
@@ -514,6 +569,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             plugin: arg(argv, 'plugin') ?? 'ac',
             units,
             perUnit: Number(arg(argv, 'per-unit') ?? 1),
+            ...(arg(argv, 'fixtures') === null ? {} : { fixturesRoot: arg(argv, 'fixtures') as string }),
+            ...(arg(argv, 'only') === null ? {} : { only: (arg(argv, 'only') as string).split(',').filter(Boolean) }),
         });
         process.stdout.write(
             `compile_trigger_evals: ${String(plan.rows.length)} baseline case(s) -> ${pluginRoot}/evals ` +

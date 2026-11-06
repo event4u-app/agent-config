@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "id": "uo-c-model-03",
+      "files": [
+        {
+          "path": "packages/Webkul/Webhook/src/Database/Migrations/2026_07_20_120200_seed_default_webhook.php",
+          "verdict": "OUT",
+          "reason": "Seeder migration that contains no probe token and does not define or alter the webhook_logs table."
+        },
+        {
+          "path": "packages/Webkul/Webhook/src/Models/WebhookLog.php",
+          "verdict": "IN",
+          "reason": "Defines the WebhookLog model and specifies its persistence table as 'webhook_logs' via Table attribute on line 18."
+        },
+        {
+          "path": "packages/Webkul/Webhook/src/Database/Migrations/2026_05_12_120000_make_user_nullable_on_webhook_logs.php",
+          "verdict": "IN",
+          "reason": "Alters the 'webhook_logs' table to make the user column nullable on lines 11-13."
+        },
+        {
+          "path": "packages/Webkul/Webhook/src/Database/Migrations/2026_07_20_120100_add_webhook_columns_to_webhook_logs.php",
+          "verdict": "IN",
+          "reason": "Alters the 'webhook_logs' table by adding webhook_id, event, and http_code columns on lines 12-15."
+        },
+        {
+          "path": "packages/Webkul/Webhook/src/Database/Migrations/2025_09_20_101519_webhook_logs.php",
+          "verdict": "IN",
+          "reason": "Defines the initial schema creation for the 'webhook_logs' table on lines 11-14."
+        }
+      ],
+      "missing": [],
+      "item_note": ""
+    }
+  ]
+}

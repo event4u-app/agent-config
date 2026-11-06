@@ -6918,14 +6918,14 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs41 = this.flowScalar(this.type);
+              const fs42 = this.flowScalar(this.type);
               if (atNextItem || it.value) {
-                map.items.push({ start, key: fs41, sep: [] });
+                map.items.push({ start, key: fs42, sep: [] });
                 this.onKeyLine = true;
               } else if (it.sep) {
-                this.stack.push(fs41);
+                this.stack.push(fs42);
               } else {
-                Object.assign(it, { key: fs41, sep: [] });
+                Object.assign(it, { key: fs42, sep: [] });
                 this.onKeyLine = true;
               }
               return;
@@ -7053,13 +7053,13 @@ var require_parser = __commonJS({
             case "scalar":
             case "single-quoted-scalar":
             case "double-quoted-scalar": {
-              const fs41 = this.flowScalar(this.type);
+              const fs42 = this.flowScalar(this.type);
               if (!it || it.value)
-                fc.items.push({ start: [], key: fs41, sep: [] });
+                fc.items.push({ start: [], key: fs42, sep: [] });
               else if (it.sep)
-                this.stack.push(fs41);
+                this.stack.push(fs42);
               else
-                Object.assign(it, { key: fs41, sep: [] });
+                Object.assign(it, { key: fs42, sep: [] });
               return;
             }
             case "flow-map-end":
@@ -7370,7 +7370,7 @@ var require_dist = __commonJS({
 // src/scripts/install.ts
 import { spawn, spawnSync as spawnSync4 } from "node:child_process";
 import * as crypto5 from "node:crypto";
-import * as fs40 from "node:fs";
+import * as fs41 from "node:fs";
 import * as os14 from "node:os";
 import * as path39 from "node:path";
 import process4 from "node:process";
@@ -13349,7 +13349,14 @@ function legacyProjectionPin(merged, emit) {
 }
 
 // src/install/rule_scope.ts
+import * as fs28 from "node:fs";
 import * as path26 from "node:path";
+
+// src/shared/disciplineProfiles.ts
+var DISCIPLINE_PROFILE_RULES = {
+  off: [],
+  essential: ["downstream-changes"]
+};
 
 // src/install/ruleInScope.ts
 var YAML5 = __toESM(require_dist(), 1);
@@ -13412,6 +13419,13 @@ function rule_in_scope(source_path, scope, pack_scope = null, role_scope = null)
 
 // src/install/rule_scope.ts
 var COMPAT_ALWAYS_EXCLUDED = ["source-of-truth.md"];
+function disciplineProfileRules(settings) {
+  const value = settings["discipline_profile"];
+  if (value === "essential" || value === "off") {
+    return DISCIPLINE_PROFILE_RULES[value];
+  }
+  return null;
+}
 var LEGACY_ALL = { workspaces: null, packs: null };
 function _list(value) {
   if (Array.isArray(value) && value.length > 0) {
@@ -13438,7 +13452,8 @@ function ruleScopeFromSettings(settings, packageRoot) {
     // list must ship more than it should, never less.
     workspaces: derivedWorkspaces,
     packs,
-    roles: _list(p["rule_roles"])
+    roles: _list(p["rule_roles"]),
+    profileRules: disciplineProfileRules(settings)
   };
 }
 function _runtimeActivePacks(settings) {
@@ -13453,16 +13468,27 @@ function ruleFileArrives(sourcePath, scope) {
   if (COMPAT_ALWAYS_EXCLUDED.includes(basename10)) {
     return false;
   }
-  return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
+  if (!rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null)) {
+    return false;
+  }
+  const profileRules = scope.profileRules ?? null;
+  if (profileRules === null) {
+    return true;
+  }
+  const [meta2] = parseFrontmatter(fs28.readFileSync(sourcePath, "utf-8"));
+  if (meta2["type"] === "always" || meta2["alwaysApply"] === true) {
+    return true;
+  }
+  return profileRules.includes(basename10.replace(/\.md$/, ""));
 }
 
 // src/install/partitionEligibility.ts
-import * as fs29 from "node:fs";
+import * as fs30 from "node:fs";
 import * as os9 from "node:os";
 
 // src/install/hostLayerFingerprint.ts
 import { createHash as createHash9 } from "node:crypto";
-import * as fs28 from "node:fs";
+import * as fs29 from "node:fs";
 import * as path27 from "node:path";
 var FINGERPRINT_SCHEMA = 1;
 function collectFiles(dir) {
@@ -13470,7 +13496,7 @@ function collectFiles(dir) {
   const walk = (d) => {
     let entries;
     try {
-      entries = fs28.readdirSync(d, { withFileTypes: true });
+      entries = fs29.readdirSync(d, { withFileTypes: true });
     } catch {
       return;
     }
@@ -13496,7 +13522,7 @@ function fingerprintLayers(layers) {
       h.update(path27.relative(layer.root, file));
       h.update("\0");
       try {
-        h.update(fs28.readFileSync(file));
+        h.update(fs29.readFileSync(file));
       } catch {
         h.update("\0unreadable\0");
       }
@@ -13519,7 +13545,7 @@ var MAINTAINER_WORKSPACE2 = "agent-config-maintainer";
 function isExclusivelyPackageOnly(source_path) {
   let meta2;
   try {
-    [meta2] = parseFrontmatter(fs29.readFileSync(source_path, "utf-8"));
+    [meta2] = parseFrontmatter(fs30.readFileSync(source_path, "utf-8"));
   } catch {
     return false;
   }
@@ -13550,7 +13576,7 @@ function stampHostLayerFingerprint(installedVersion, tools, lockfilePath, skip2,
 }
 
 // src/install/claudeRuleRewrite.ts
-import * as fs30 from "node:fs";
+import * as fs31 from "node:fs";
 import * as path28 from "node:path";
 
 // src/install/claudePathsPlan.ts
@@ -13720,7 +13746,7 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set(), onW
   const result = { rewritten: 0, scoped: [], dropped: [], failed: [] };
   let entries;
   try {
-    entries = fs30.readdirSync(rulesDir);
+    entries = fs31.readdirSync(rulesDir);
   } catch {
     return result;
   }
@@ -13729,14 +13755,14 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set(), onW
     if (preserved.has(path28.resolve(full))) continue;
     let stat;
     try {
-      stat = fs30.lstatSync(full);
+      stat = fs31.lstatSync(full);
     } catch {
       continue;
     }
     if (!stat.isFile() || stat.isSymbolicLink()) continue;
     let text;
     try {
-      text = fs30.readFileSync(full, "utf-8");
+      text = fs31.readFileSync(full, "utf-8");
     } catch {
       continue;
     }
@@ -13746,7 +13772,7 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set(), onW
     const withOwnership = _withPreservedKeys(rendered.text, text);
     if (withOwnership !== text) {
       try {
-        fs30.writeFileSync(full, withOwnership, "utf-8");
+        fs31.writeFileSync(full, withOwnership, "utf-8");
       } catch (e) {
         result.failed.push({
           rule: name.slice(0, -3),
@@ -13767,12 +13793,12 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set(), onW
 }
 
 // src/install/installThinLayer.ts
-import * as fs34 from "node:fs";
+import * as fs35 from "node:fs";
 import * as path33 from "node:path";
 import * as os12 from "node:os";
 
 // src/scripts/_lib/installed_layer.ts
-import * as fs31 from "node:fs";
+import * as fs32 from "node:fs";
 import * as os11 from "node:os";
 import * as path30 from "node:path";
 
@@ -13886,7 +13912,7 @@ function readLayer(host, scope, dir, recorded) {
   };
   let names;
   try {
-    names = fs31.readdirSync(dir);
+    names = fs32.readdirSync(dir);
   } catch {
     return { host, scope, dir, present: false, ...empty };
   }
@@ -13896,9 +13922,9 @@ function readLayer(host, scope, dir, recorded) {
     const abs = path30.join(dir, name);
     let text;
     try {
-      const st = fs31.statSync(abs);
+      const st = fs32.statSync(abs);
       if (!st.isFile()) continue;
-      text = fs31.readFileSync(abs, "utf-8");
+      text = fs32.readFileSync(abs, "utf-8");
     } catch {
       continue;
     }
@@ -13960,7 +13986,7 @@ function loadHostInstructionLimits(file = defaultHostLimitsPath()) {
   const out = /* @__PURE__ */ new Map();
   let raw;
   try {
-    raw = JSON.parse(fs31.readFileSync(file, "utf-8"));
+    raw = JSON.parse(fs32.readFileSync(file, "utf-8"));
   } catch {
     return out;
   }
@@ -14018,7 +14044,7 @@ function defaultInventoryPath(home) {
   try {
     const real = (q) => {
       try {
-        return fs31.realpathSync(q);
+        return fs32.realpathSync(q);
       } catch {
         return path30.resolve(q);
       }
@@ -14053,14 +14079,14 @@ function resolveLayerOwnership(opts) {
       if (!recorded.has(abs)) fromDeploy += 1;
       recorded.set(abs, null);
       try {
-        recorded.set(fs31.realpathSync(abs), null);
+        recorded.set(fs32.realpathSync(abs), null);
       } catch {
       }
     }
   }
   if (fromDeploy > 0) sources.push("this-deploy");
   const manifestPath = opts.manifestPath ?? null;
-  if (manifestPath !== null && fs31.existsSync(manifestPath)) {
+  if (manifestPath !== null && fs32.existsSync(manifestPath)) {
     let n = 0;
     let recordedHashes;
     try {
@@ -14121,16 +14147,16 @@ function renderHostLimitRows(rows) {
 
 // src/scripts/_lib/thin_rules.ts
 import { createHash as createHash10 } from "node:crypto";
-import * as fs33 from "node:fs";
+import * as fs34 from "node:fs";
 import * as path32 from "node:path";
 import { fileURLToPath as fileURLToPath4 } from "node:url";
 
 // src/scripts/_lib/rule_consequence_class.ts
-import * as fs32 from "node:fs";
+import * as fs33 from "node:fs";
 import * as path31 from "node:path";
 var CLASS_CONFIG_REL = "src/config/rule-consequence-class.json";
 function readConsequenceClass(repoRoot) {
-  const raw = JSON.parse(fs32.readFileSync(path31.join(repoRoot, CLASS_CONFIG_REL), "utf-8"));
+  const raw = JSON.parse(fs33.readFileSync(path31.join(repoRoot, CLASS_CONFIG_REL), "utf-8"));
   return {
     criterion_ref: raw.criterion_ref ?? "",
     members: raw.members ?? {},
@@ -14182,7 +14208,7 @@ var ROUTER = path32.join(REPO_ROOT, "dist", "router.json");
 function _globSortedMd(dir) {
   let names;
   try {
-    names = fs33.readdirSync(dir);
+    names = fs34.readdirSync(dir);
   } catch {
     return [];
   }
@@ -14191,7 +14217,7 @@ function _globSortedMd(dir) {
   return out;
 }
 function kernel_ids(routerPath = ROUTER) {
-  const data = JSON.parse(fs33.readFileSync(routerPath, "utf-8"));
+  const data = JSON.parse(fs34.readFileSync(routerPath, "utf-8"));
   const kernel = data.kernel;
   if (Array.isArray(kernel)) {
     return new Set(kernel.map((x) => String(x)));
@@ -14199,7 +14225,7 @@ function kernel_ids(routerPath = ROUTER) {
   return /* @__PURE__ */ new Set();
 }
 function _router(routerPath = ROUTER) {
-  return JSON.parse(fs33.readFileSync(routerPath, "utf-8"));
+  return JSON.parse(fs34.readFileSync(routerPath, "utf-8"));
 }
 function path_only_ids(routerPath = ROUTER) {
   return pathOnlyRuleIds(_router(routerPath));
@@ -14208,7 +14234,7 @@ function no_trigger_ids(routerPath = ROUTER) {
   return new Set(triggerlessRuleIds(_router(routerPath)));
 }
 function rule_workspaces_map(routerPath = ROUTER) {
-  const data = JSON.parse(fs33.readFileSync(routerPath, "utf-8"));
+  const data = JSON.parse(fs34.readFileSync(routerPath, "utf-8"));
   const map = /* @__PURE__ */ new Map();
   for (const tier of ["tier_1", "tier_2"]) {
     const entries = data[tier];
@@ -14338,7 +14364,7 @@ function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, con
   const wsMap = scope !== null ? rule_workspaces_map(routerPath) : /* @__PURE__ */ new Map();
   const out = /* @__PURE__ */ new Map();
   for (const p of _globSortedMd(rules_dir)) {
-    const text = fs33.readFileSync(p, "utf-8");
+    const text = fs34.readFileSync(p, "utf-8");
     const stem = path32.basename(p).replace(/\.md$/, "");
     if (!id_in_scope(stem, scope, kernel, wsMap, fm_workspaces(text))) {
       continue;
@@ -14390,7 +14416,7 @@ function thinInstalledRuleLayer(opts) {
     const target = path33.join(opts.rulesDir, name);
     let installed;
     try {
-      installed = fs34.readFileSync(target, "utf-8");
+      installed = fs35.readFileSync(target, "utf-8");
     } catch (e) {
       if (e.code === "ENOENT") absent.push(name);
       else failed.push({ rule: name, reason: String(e) });
@@ -14398,7 +14424,7 @@ function thinInstalledRuleLayer(opts) {
     }
     let sourceText;
     try {
-      sourceText = fs34.readFileSync(path33.join(bodySourceDir, name), "utf-8");
+      sourceText = fs35.readFileSync(path33.join(bodySourceDir, name), "utf-8");
     } catch {
       sourceText = null;
     }
@@ -14427,7 +14453,7 @@ function thinInstalledRuleLayer(opts) {
     const next = `${frontmatter}${stubText}`;
     try {
       if (next !== installed) {
-        fs34.writeFileSync(target, next, "utf-8");
+        fs35.writeFileSync(target, next, "utf-8");
         opts.onWrite?.(target);
         rewritten += 1;
       }
@@ -14558,19 +14584,19 @@ function resolveGlobalRuleScope(inputs) {
 // src/install/stagedRuntime.ts
 import { spawnSync as spawnSync2 } from "node:child_process";
 import { randomBytes as randomBytes6 } from "node:crypto";
-import * as fs36 from "node:fs";
+import * as fs37 from "node:fs";
 import { createRequire as createRequire3 } from "node:module";
 import * as os13 from "node:os";
 import * as path35 from "node:path";
 
 // src/install/userPin.ts
-import * as fs35 from "node:fs";
+import * as fs36 from "node:fs";
 import * as path34 from "node:path";
 var RECEIPT_FILE = "carrier.json";
 var USER_PIN_FIELD = "user_pin";
 function readReceipt(runtimeRoot) {
   try {
-    const raw = JSON.parse(fs35.readFileSync(path34.join(runtimeRoot, RECEIPT_FILE), "utf8"));
+    const raw = JSON.parse(fs36.readFileSync(path34.join(runtimeRoot, RECEIPT_FILE), "utf8"));
     return typeof raw === "object" && raw !== null && !Array.isArray(raw) ? raw : {};
   } catch {
     return {};
@@ -14583,11 +14609,11 @@ function readUserPin(runtimeRoot) {
   return { form: "full", set_at: typeof o["set_at"] === "string" ? o["set_at"] : "unknown" };
 }
 function writeUserPin(runtimeRoot, now = /* @__PURE__ */ new Date()) {
-  fs35.mkdirSync(runtimeRoot, { recursive: true });
+  fs36.mkdirSync(runtimeRoot, { recursive: true });
   const receipt = readReceipt(runtimeRoot);
   const pin = { form: "full", set_at: now.toISOString().slice(0, 10) };
   receipt[USER_PIN_FIELD] = pin;
-  fs35.writeFileSync(path34.join(runtimeRoot, RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}
+  fs36.writeFileSync(path34.join(runtimeRoot, RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}
 `);
   return pin;
 }
@@ -14602,11 +14628,11 @@ function readEnrolment(runtimeRoot) {
   return { set_at: typeof o["set_at"] === "string" ? o["set_at"] : "unknown" };
 }
 function writeEnrolment(runtimeRoot, now = /* @__PURE__ */ new Date()) {
-  fs35.mkdirSync(runtimeRoot, { recursive: true });
+  fs36.mkdirSync(runtimeRoot, { recursive: true });
   const receipt = readReceipt(runtimeRoot);
   const e = { set_at: now.toISOString().slice(0, 10) };
   receipt[ENROLMENT_FIELD] = e;
-  fs35.writeFileSync(path34.join(runtimeRoot, RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}
+  fs36.writeFileSync(path34.join(runtimeRoot, RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}
 `);
   return e;
 }
@@ -14645,7 +14671,7 @@ function stageRuntimeDeps(packageRoot, stage) {
     } catch {
       continue;
     }
-    fs36.cpSync(path35.dirname(manifest), path35.join(stage, "node_modules", dep), { recursive: true, dereference: true });
+    fs37.cpSync(path35.dirname(manifest), path35.join(stage, "node_modules", dep), { recursive: true, dereference: true });
   }
 }
 function stagedFilter(src) {
@@ -14660,17 +14686,17 @@ function currentRuntimeDir(runtimeRoot) {
 }
 function readVersion(packageRoot) {
   try {
-    const pkg = JSON.parse(fs36.readFileSync(path35.join(packageRoot, "package.json"), "utf8"));
+    const pkg = JSON.parse(fs37.readFileSync(path35.join(packageRoot, "package.json"), "utf8"));
     return typeof pkg.version === "string" ? pkg.version : "unknown";
   } catch {
     return "unknown";
   }
 }
 function snapshotStampedLayer(rulesDir, dest) {
-  fs36.mkdirSync(dest, { recursive: true });
+  fs37.mkdirSync(dest, { recursive: true });
   let names;
   try {
-    names = fs36.readdirSync(rulesDir);
+    names = fs37.readdirSync(rulesDir);
   } catch {
     return;
   }
@@ -14679,34 +14705,34 @@ function snapshotStampedLayer(rulesDir, dest) {
     const src = path35.join(rulesDir, name);
     let text;
     try {
-      if (!fs36.statSync(src).isFile()) continue;
-      text = fs36.readFileSync(src, "utf8");
+      if (!fs37.statSync(src).isFile()) continue;
+      text = fs37.readFileSync(src, "utf8");
     } catch {
       continue;
     }
     if (!text.split(/\r?\n/).includes(PACKAGE_STAMP_LINE)) continue;
-    fs36.writeFileSync(path35.join(dest, name), text);
+    fs37.writeFileSync(path35.join(dest, name), text);
   }
 }
 function sweepStale(runtimeRoot, keep) {
-  for (const name of fs36.readdirSync(runtimeRoot)) {
+  for (const name of fs37.readdirSync(runtimeRoot)) {
     const stale = name.startsWith("v-") && name !== keep || name.startsWith(".stage-") || name.startsWith(".current-");
-    if (stale) fs36.rmSync(path35.join(runtimeRoot, name), { recursive: true, force: true });
+    if (stale) fs37.rmSync(path35.join(runtimeRoot, name), { recursive: true, force: true });
   }
 }
 function stageRuntime(opts) {
   const runtimeRoot = path35.resolve(opts.runtimeRoot);
   const packageRoot = path35.resolve(opts.packageRoot);
-  fs36.mkdirSync(runtimeRoot, { recursive: true });
+  fs37.mkdirSync(runtimeRoot, { recursive: true });
   const version2 = readVersion(packageRoot);
   const nonce = `${process.pid}-${randomBytes6(4).toString("hex")}`;
   const stage = path35.join(runtimeRoot, `.stage-${nonce}`);
-  fs36.mkdirSync(stage);
+  fs37.mkdirSync(stage);
   let copied = 0;
   for (const rel of STAGED_ENTRIES) {
     const src = path35.join(packageRoot, rel);
-    if (!fs36.existsSync(src)) continue;
-    fs36.cpSync(src, path35.join(stage, rel), { recursive: true, dereference: true, filter: stagedFilter });
+    if (!fs37.existsSync(src)) continue;
+    fs37.cpSync(src, path35.join(stage, rel), { recursive: true, dereference: true, filter: stagedFilter });
     copied += 1;
     if (opts._failAfterEntries !== void 0 && copied >= opts._failAfterEntries) {
       throw new Error("stageRuntime: injected fault");
@@ -14714,39 +14740,39 @@ function stageRuntime(opts) {
   }
   stageRuntimeDeps(packageRoot, stage);
   if (opts.claudeRulesDir) snapshotStampedLayer(opts.claudeRulesDir, path35.join(stage, CLAUDE_LAYER_DIRNAME));
-  fs36.writeFileSync(path35.join(stage, "node"), `${opts.nodePath}
+  fs37.writeFileSync(path35.join(stage, "node"), `${opts.nodePath}
 `);
   const versionDir = `v-${version2.replace(/[^A-Za-z0-9._-]/g, "_")}-${nonce}`;
-  fs36.renameSync(stage, path35.join(runtimeRoot, versionDir));
+  fs37.renameSync(stage, path35.join(runtimeRoot, versionDir));
   const current = currentRuntimeDir(runtimeRoot);
   const link = path35.join(runtimeRoot, `.current-${nonce}`);
   if (process.platform === "win32") {
-    fs36.symlinkSync(path35.join(runtimeRoot, versionDir), link, "junction");
-    fs36.rmSync(current, { recursive: true, force: true });
+    fs37.symlinkSync(path35.join(runtimeRoot, versionDir), link, "junction");
+    fs37.rmSync(current, { recursive: true, force: true });
   } else {
-    fs36.symlinkSync(versionDir, link);
+    fs37.symlinkSync(versionDir, link);
   }
-  fs36.renameSync(link, current);
+  fs37.renameSync(link, current);
   sweepStale(runtimeRoot, versionDir);
   return {
     currentDir: current,
     version: version2,
-    dispatcher: fs36.existsSync(path35.join(current, "dist", "hooks", "dispatch.js"))
+    dispatcher: fs37.existsSync(path35.join(current, "dist", "hooks", "dispatch.js"))
   };
 }
 function markClaudeLayer(runtimeRoot, opts) {
-  fs36.mkdirSync(runtimeRoot, { recursive: true });
+  fs37.mkdirSync(runtimeRoot, { recursive: true });
   const marker = path35.join(runtimeRoot, THINNED_MARKER);
-  fs36.rmSync(path35.join(runtimeRoot, DEMOTED_MARKER), { force: true });
-  if (opts.thinned) fs36.writeFileSync(marker, `${path35.resolve(opts.rulesDir)}
+  fs37.rmSync(path35.join(runtimeRoot, DEMOTED_MARKER), { force: true });
+  if (opts.thinned) fs37.writeFileSync(marker, `${path35.resolve(opts.rulesDir)}
 `);
-  else fs36.rmSync(marker, { force: true });
+  else fs37.rmSync(marker, { force: true });
 }
 function readCarrierState(runtimeRoot) {
-  const layer = fs36.existsSync(path35.join(runtimeRoot, DEMOTED_MARKER)) ? "demoted" : fs36.existsSync(path35.join(runtimeRoot, THINNED_MARKER)) ? "thinned" : "full";
+  const layer = fs37.existsSync(path35.join(runtimeRoot, DEMOTED_MARKER)) ? "demoted" : fs37.existsSync(path35.join(runtimeRoot, THINNED_MARKER)) ? "thinned" : "full";
   let probe = null;
   try {
-    const raw = JSON.parse(fs36.readFileSync(path35.join(runtimeRoot, CARRIER_RECORD), "utf8"));
+    const raw = JSON.parse(fs37.readFileSync(path35.join(runtimeRoot, CARRIER_RECORD), "utf8"));
     probe = raw.hosts?.["claude"] ?? null;
   } catch {
     probe = null;
@@ -14761,10 +14787,10 @@ function layerAfterInstall(state2, opts) {
 var STRIPPED_PATH = "/usr/bin:/bin";
 function probeHookCommand(command, env = process.env) {
   const probeCommand = command.replace(/--min-version (\d+)/g, "--min-version $1 --read-exit");
-  const project = fs36.mkdtempSync(path35.join(os13.tmpdir(), "ac-carrier-probe-"));
+  const project = fs37.mkdtempSync(path35.join(os13.tmpdir(), "ac-carrier-probe-"));
   const stdinPath = path35.join(project, "stdin.json");
-  fs36.writeFileSync(stdinPath, "{}");
-  const fd = fs36.openSync(stdinPath, "r");
+  fs37.writeFileSync(stdinPath, "{}");
+  const fd = fs37.openSync(stdinPath, "r");
   try {
     const childEnv = {
       PATH: STRIPPED_PATH,
@@ -14785,16 +14811,16 @@ function probeHookCommand(command, env = process.env) {
   } catch {
     return "not-reached";
   } finally {
-    fs36.closeSync(fd);
-    fs36.rmSync(project, { recursive: true, force: true });
+    fs37.closeSync(fd);
+    fs37.rmSync(project, { recursive: true, force: true });
   }
 }
 function recordCarrierProbe(runtimeRoot, host, outcome, version2, now = /* @__PURE__ */ new Date()) {
-  fs36.mkdirSync(runtimeRoot, { recursive: true });
+  fs37.mkdirSync(runtimeRoot, { recursive: true });
   const file = path35.join(runtimeRoot, CARRIER_RECORD);
   let receipt = {};
   try {
-    receipt = JSON.parse(fs36.readFileSync(file, "utf8"));
+    receipt = JSON.parse(fs37.readFileSync(file, "utf8"));
   } catch {
     receipt = {};
   }
@@ -14804,7 +14830,7 @@ function recordCarrierProbe(runtimeRoot, host, outcome, version2, now = /* @__PU
   const since = previous !== void 0 && previous.outcome === outcome ? previous.since ?? previous.date : date2;
   const record = { host, outcome, date: date2, version: version2, since };
   hosts[host] = record;
-  fs36.writeFileSync(file, `${JSON.stringify({ ...receipt, hosts }, null, 2)}
+  fs37.writeFileSync(file, `${JSON.stringify({ ...receipt, hosts }, null, 2)}
 `);
   return record;
 }
@@ -21883,7 +21909,7 @@ function toJsonSchema7(schema, name) {
 }
 
 // src/scripts/_lib/module_detection.ts
-import * as fs37 from "node:fs";
+import * as fs38 from "node:fs";
 import * as path37 from "node:path";
 var _SKIP_DIRS = /* @__PURE__ */ new Set([".module-template", ".example"]);
 var _RULES = [
@@ -21898,14 +21924,14 @@ var _RULES = [
 ];
 function _isDir2(p) {
   try {
-    return fs37.statSync(p).isDirectory();
+    return fs38.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function _isFile2(p) {
   try {
-    return fs37.statSync(p).isFile();
+    return fs38.statSync(p).isFile();
   } catch {
     return false;
   }
@@ -21919,7 +21945,7 @@ function _isUpperChar(ch) {
 function _list_module_subdirs(root) {
   let entries;
   try {
-    entries = fs37.readdirSync(root).sort();
+    entries = fs38.readdirSync(root).sort();
   } catch {
     return [];
   }
@@ -21985,7 +22011,7 @@ function detect_module_roots(project_root) {
 }
 
 // src/scripts/_lib/model_tier.ts
-import fs38 from "node:fs";
+import fs39 from "node:fs";
 var TIER_TO_CLAUDE_MODEL = {
   frontier: "fable",
   high: "opus",
@@ -21994,8 +22020,8 @@ var TIER_TO_CLAUDE_MODEL = {
 };
 var MODEL_TIER_RE = /^model_tier:\s*"?([a-z]+)"?\s*$/m;
 function read_model_tier(skill_md) {
-  if (!fs38.existsSync(skill_md)) return null;
-  const text = fs38.readFileSync(skill_md).toString("utf-8");
+  if (!fs39.existsSync(skill_md)) return null;
+  const text = fs39.readFileSync(skill_md).toString("utf-8");
   if (!text.startsWith("---\n")) return null;
   const end = text.indexOf("\n---\n", 4);
   if (end === -1) return null;
@@ -22012,7 +22038,7 @@ function render_native_model_md(text, tier) {
 
 // src/scripts/_cli/cmd_migrate.ts
 import { spawnSync as spawnSync3 } from "node:child_process";
-import * as fs39 from "node:fs";
+import * as fs40 from "node:fs";
 import * as path38 from "node:path";
 import process3 from "node:process";
 import { fileURLToPath as fileURLToPath5, pathToFileURL } from "node:url";
@@ -22132,38 +22158,38 @@ function _jsonDumpsIndentAscii(value, indent) {
 }
 function _isFile3(p) {
   try {
-    return fs39.statSync(p).isFile();
+    return fs40.statSync(p).isFile();
   } catch {
     return false;
   }
 }
 function _isDir3(p) {
   try {
-    return fs39.statSync(p).isDirectory();
+    return fs40.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function _isSymlink(p) {
   try {
-    return fs39.lstatSync(p).isSymbolicLink();
+    return fs40.lstatSync(p).isSymbolicLink();
   } catch {
     return false;
   }
 }
 function _exists2(p) {
   try {
-    fs39.lstatSync(p);
+    fs40.lstatSync(p);
     return true;
   } catch {
     return false;
   }
 }
 function _readText(p) {
-  return fs39.readFileSync(p, { encoding: "utf-8" });
+  return fs40.readFileSync(p, { encoding: "utf-8" });
 }
 function _writeText(p, text) {
-  fs39.writeFileSync(p, text, { encoding: "utf-8" });
+  fs40.writeFileSync(p, text, { encoding: "utf-8" });
 }
 function _jsonLoadFile(p) {
   return JSON.parse(_readText(p));
@@ -22219,7 +22245,7 @@ function _classify_symlink(link) {
   }
   let target;
   try {
-    target = fs39.readlinkSync(link);
+    target = fs40.readlinkSync(link);
   } catch {
     return null;
   }
@@ -22252,7 +22278,7 @@ function _detect_empty_shell(project) {
     return false;
   }
   try {
-    return fs39.readdirSync(shell).length === 0;
+    return fs40.readdirSync(shell).length === 0;
   } catch {
     return false;
   }
@@ -22340,7 +22366,7 @@ function _purge_legacy_symlinks(project) {
     const kind = _classify_symlink(link);
     if (kind === "legacy") {
       try {
-        fs39.unlinkSync(link);
+        fs40.unlinkSync(link);
         removed.push(name);
       } catch {
         preserved.push(name);
@@ -22359,7 +22385,7 @@ function _migrate_state_file(project) {
   const target = path38.join(project, LEGACY_STATE_V1_FILENAME);
   if (_exists2(target)) {
     try {
-      fs39.unlinkSync(source);
+      fs40.unlinkSync(source);
       return `removed stale ${LEGACY_STATE_FILENAME} (v1 already present)`;
     } catch {
       return null;
@@ -22383,7 +22409,7 @@ function _load_state_migrator() {
     "v0_to_v1.ts"
   );
   const driver = [path38.join(pkg_root, "dist", rel), path38.join(pkg_root, "src", rel)].find(
-    (p) => fs39.existsSync(p)
+    (p) => fs40.existsSync(p)
   ) ?? null;
   if (driver === null) {
     return null;
@@ -22392,7 +22418,7 @@ function _load_state_migrator() {
   let tsxBin = null;
   for (let dir = pkg_root; ; ) {
     const cand = path38.join(dir, "node_modules", ".bin", binName);
-    if (fs39.existsSync(cand)) {
+    if (fs40.existsSync(cand)) {
       tsxBin = cand;
       break;
     }
@@ -22423,7 +22449,7 @@ function _delete_legacy_settings(project) {
   const removed = [];
   for (const p of _detect_legacy_settings(project)) {
     try {
-      fs39.unlinkSync(p);
+      fs40.unlinkSync(p);
       removed.push(path38.relative(project, p));
     } catch {
       continue;
@@ -22432,8 +22458,8 @@ function _delete_legacy_settings(project) {
   const settings_dir = path38.join(project, "settings");
   if (_isDir3(settings_dir) && !_isSymlink(settings_dir)) {
     try {
-      if (fs39.readdirSync(settings_dir).length === 0) {
-        fs39.rmdirSync(settings_dir);
+      if (fs40.readdirSync(settings_dir).length === 0) {
+        fs40.rmdirSync(settings_dir);
         removed.push("settings/");
       }
     } catch {
@@ -22447,7 +22473,7 @@ function _remove_empty_shell(project) {
     return false;
   }
   try {
-    fs39.rmdirSync(shell);
+    fs40.rmdirSync(shell);
   } catch {
     return false;
   }
@@ -22700,8 +22726,8 @@ function _isCliEntry() {
     return true;
   }
   try {
-    const here = fs39.realpathSync(fileURLToPath5(import.meta.url));
-    const argv = fs39.realpathSync(path38.resolve(process3.argv[1]));
+    const here = fs40.realpathSync(fileURLToPath5(import.meta.url));
+    const argv = fs40.realpathSync(path38.resolve(process3.argv[1]));
     return here === argv;
   } catch {
     return false;
@@ -22745,7 +22771,7 @@ var SCOPE_DETECT_AI_DIRS = [
 
 // src/install/txlog.ts
 import { createGzip } from "node:zlib";
-import { createReadStream, createWriteStream, existsSync as existsSync19, readFileSync as readFileSync37, renameSync as renameSync8, statSync as statSync14, unlinkSync as unlinkSync8 } from "node:fs";
+import { createReadStream, createWriteStream, existsSync as existsSync19, readFileSync as readFileSync38, renameSync as renameSync8, statSync as statSync15, unlinkSync as unlinkSync8 } from "node:fs";
 import { pipeline } from "node:stream/promises";
 var ROTATION_MAX_BYTES = 10 * 1024 * 1024;
 var ROTATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1e3;
@@ -22761,7 +22787,7 @@ function shouldRotate(logPath, now = /* @__PURE__ */ new Date()) {
   }
   let size = 0;
   try {
-    size = statSync14(logPath).size;
+    size = statSync15(logPath).size;
   } catch {
     return false;
   }
@@ -22794,7 +22820,7 @@ async function gzipInPlace(source) {
 }
 function readFirstTimestamp(logPath) {
   try {
-    const raw = readFileSync37(logPath, "utf8");
+    const raw = readFileSync38(logPath, "utf8");
     const firstLine = raw.split("\n", 1)[0] ?? "";
     const parsed = tryParseEntry(firstLine);
     if (parsed === null) return null;
@@ -22841,35 +22867,35 @@ function expanduser8(p) {
 }
 function isFile(p) {
   try {
-    return fs40.statSync(p).isFile();
+    return fs41.statSync(p).isFile();
   } catch {
     return false;
   }
 }
 function isDir(p) {
   try {
-    return fs40.statSync(p).isDirectory();
+    return fs41.statSync(p).isDirectory();
   } catch {
     return false;
   }
 }
 function isSymlink(p) {
   try {
-    return fs40.lstatSync(p).isSymbolicLink();
+    return fs41.lstatSync(p).isSymbolicLink();
   } catch {
     return false;
   }
 }
 function readText(p) {
-  return fs40.readFileSync(p, "utf-8");
+  return fs41.readFileSync(p, "utf-8");
 }
 function writeText(p, content) {
-  fs40.writeFileSync(p, content, "utf-8");
+  fs41.writeFileSync(p, content, "utf-8");
 }
 function sortedGlobStems(directory, suffix) {
   let entries;
   try {
-    entries = fs40.readdirSync(directory);
+    entries = fs41.readdirSync(directory);
   } catch {
     return [];
   }
@@ -22889,7 +22915,7 @@ function sortedGlobStems(directory, suffix) {
 function countZips(directory) {
   if (!isDir(directory)) return 0;
   let n = 0;
-  for (const name of fs40.readdirSync(directory)) {
+  for (const name of fs41.readdirSync(directory)) {
     if (name.endsWith(".zip")) n += 1;
   }
   return n;
@@ -22902,21 +22928,21 @@ function atomicWrite0644(target, body, prefix) {
   );
   let fd = null;
   try {
-    fd = fs40.openSync(tmpName, "wx", 420);
-    fs40.writeFileSync(fd, body, "utf-8");
-    fs40.closeSync(fd);
+    fd = fs41.openSync(tmpName, "wx", 420);
+    fs41.writeFileSync(fd, body, "utf-8");
+    fs41.closeSync(fd);
     fd = null;
-    fs40.chmodSync(tmpName, 420);
-    fs40.renameSync(tmpName, target);
+    fs41.chmodSync(tmpName, 420);
+    fs41.renameSync(tmpName, target);
   } catch (err) {
     if (fd !== null) {
       try {
-        fs40.closeSync(fd);
+        fs41.closeSync(fd);
       } catch {
       }
     }
     try {
-      fs40.unlinkSync(tmpName);
+      fs41.unlinkSync(tmpName);
     } catch {
     }
     throw err;
@@ -23190,7 +23216,7 @@ function _migrate_legacy_if_present(project_root, template_body) {
   rendered = _append_unknown_legacy(rendered, values, unknown2);
   const backup_target = path39.join(project_root, LEGACY_BACKUP_FILE);
   writeText(backup_target, legacy_text);
-  fs40.unlinkSync(legacy_target);
+  fs41.unlinkSync(legacy_target);
   info(`Migrated legacy ${LEGACY_SETTINGS_FILE} \u2192 ${SETTINGS_FILE}`);
   info(`Backup saved to ${LEGACY_BACKUP_FILE}`);
   if (unknown2.length > 0) {
@@ -23307,7 +23333,7 @@ function ensure_agent_settings(project_root, package_root, profile, force, user_
   if (isFile(legacy_root) && !pathExists(target)) {
     mkdirp(path39.dirname(target));
     writeText(target, readText(legacy_root));
-    fs40.unlinkSync(legacy_root);
+    fs41.unlinkSync(legacy_root);
     success(`Migrated ${SETTINGS_FILE} \u2192 agents/settings/${SETTINGS_FILE} (ADR-038)`);
     return;
   }
@@ -23378,7 +23404,7 @@ function _deploy_augment_trampoline(package_root, name, force) {
     skip(`~/.augment/hooks/${name} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs40.chmodSync(dst, 493);
+    fs41.chmodSync(dst, 493);
     success(`~/.augment/hooks/${name} installed`);
   }
   return dst;
@@ -23388,7 +23414,7 @@ function _remove_legacy_augment_trampolines() {
     const legacy = path39.join(AUGMENT_USER_HOOKS_DIR, name);
     try {
       if (isFile(legacy)) {
-        fs40.unlinkSync(legacy);
+        fs41.unlinkSync(legacy);
         skip(`removed legacy ~/.augment/hooks/${name}`);
       }
     } catch (err) {
@@ -23472,7 +23498,7 @@ function ensure_cursor_user_hooks(package_root, force) {
     skip(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs40.chmodSync(dst, 493);
+    fs41.chmodSync(dst, 493);
     success(`~/.cursor/hooks/${CURSOR_DISPATCHER_TRAMPOLINE} installed`);
   }
   const hooks = {};
@@ -23531,7 +23557,7 @@ function ensure_cline_bridge(project_root, force) {
       continue;
     }
     writeText(target, body);
-    fs40.chmodSync(target, 493);
+    fs41.chmodSync(target, 493);
     written += 1;
   }
   if (written) {
@@ -23555,7 +23581,7 @@ function ensure_cline_user_hooks(package_root, force) {
     skip(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(trampoline, src_text);
-    fs40.chmodSync(trampoline, 493);
+    fs41.chmodSync(trampoline, 493);
     success(`~/Documents/Cline/Hooks/${CLINE_DISPATCHER_TRAMPOLINE} installed`);
   }
   const trampoline_quoted = shlexQuote(trampoline);
@@ -23570,7 +23596,7 @@ exec ${trampoline_quoted} ${slot} ${native}
       continue;
     }
     writeText(wrapper, body);
-    fs40.chmodSync(wrapper, 493);
+    fs41.chmodSync(wrapper, 493);
   }
 }
 function _windsurf_dispatch_command(ac_event, native) {
@@ -23608,7 +23634,7 @@ function ensure_windsurf_user_hooks(package_root, force) {
     skip(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs40.chmodSync(dst, 493);
+    fs41.chmodSync(dst, 493);
     success(`~/.codeium/windsurf/hooks/${WINDSURF_DISPATCHER_TRAMPOLINE} installed`);
   }
   const hooks = {};
@@ -23664,7 +23690,7 @@ function ensure_gemini_user_hooks(package_root, force) {
     skip(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} already up to date`);
   } else {
     writeText(dst, src_text);
-    fs40.chmodSync(dst, 493);
+    fs41.chmodSync(dst, 493);
     success(`~/.gemini/hooks/${GEMINI_DISPATCHER_TRAMPOLINE} installed`);
   }
   const settings_patch = {
@@ -23951,7 +23977,7 @@ var SMOKE_BRIDGE_PATHS = {
 };
 function dirHasEntries(p) {
   try {
-    return fs40.readdirSync(p).length > 0;
+    return fs41.readdirSync(p).length > 0;
   } catch {
     return false;
   }
@@ -24208,7 +24234,7 @@ function _suppress_rule_layer(project_root, suppress_dir) {
   if (existing === null) return;
   let real_dir = suppress_dir;
   try {
-    real_dir = fs40.realpathSync(suppress_dir);
+    real_dir = fs41.realpathSync(suppress_dir);
   } catch {
     real_dir = suppress_dir;
   }
@@ -24327,7 +24353,7 @@ function readLineSyncRaw(promptText) {
   for (; ; ) {
     let n;
     try {
-      n = fs40.readSync(0, buf, 0, 1, null);
+      n = fs41.readSync(0, buf, 0, 1, null);
     } catch (err) {
       const code = err.code;
       if (code === "EAGAIN") {
@@ -24454,7 +24480,7 @@ function _is_agent_config_source_repo(project_root) {
   }
   const packages_dir = path39.join(project_root, "packages");
   if (isDir(packages_dir)) {
-    for (const child of fs40.readdirSync(packages_dir)) {
+    for (const child of fs41.readdirSync(packages_dir)) {
       if (isDir(path39.join(packages_dir, child, ".agent-src.uncondensed"))) {
         return [true, `packages/${child}/.agent-src.uncondensed/`];
       }
@@ -24539,7 +24565,7 @@ function _remove_legacy_consumer_bridge_marker(project_root, env = null) {
   const target = path39.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
   if (!isFile(target)) return null;
   try {
-    fs40.rmSync(target);
+    fs41.rmSync(target);
   } catch {
     return null;
   }
@@ -24645,7 +24671,7 @@ function _escapes_package_root(resolved, package_root) {
   if (package_root === null) return false;
   let root;
   try {
-    root = fs40.realpathSync(package_root);
+    root = fs41.realpathSync(package_root);
   } catch {
     return false;
   }
@@ -24671,7 +24697,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
     let resolved_src = src;
     try {
-      resolved_src = fs40.realpathSync(src);
+      resolved_src = fs41.realpathSync(src);
     } catch {
       resolved_src = src;
     }
@@ -24686,7 +24712,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
       _log_tx_entry("skip", dest);
       return [0, 1, written_paths];
     }
-    fs40.copyFileSync(src, dest);
+    fs41.copyFileSync(src, dest);
     _inject_package_tag(dest, src, package_root);
     _log_tx_entry("write", dest);
     written_paths.push(dest);
@@ -24695,11 +24721,11 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
   mkdirp(dest);
   const walk = (node2) => {
     const acc = [];
-    const names = fs40.readdirSync(node2).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const names = fs41.readdirSync(node2).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
     for (const name of names) {
       const entry = path39.join(node2, name);
       acc.push(entry);
-      const lst = fs40.lstatSync(entry);
+      const lst = fs41.lstatSync(entry);
       if (lst.isDirectory() && !lst.isSymbolicLink()) {
         acc.push(...walk(entry));
       }
@@ -24709,7 +24735,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
   for (const entry of walk(src)) {
     const rel = path39.relative(src, entry);
     const target = path39.join(dest, rel);
-    const lst = fs40.lstatSync(entry);
+    const lst = fs41.lstatSync(entry);
     if (lst.isDirectory() && !lst.isSymbolicLink()) {
       mkdirp(target);
       continue;
@@ -24717,8 +24743,8 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     let resolvedIsDir = false;
     let resolved = entry;
     try {
-      resolved = fs40.realpathSync(entry);
-      resolvedIsDir = fs40.statSync(entry).isDirectory();
+      resolved = fs41.realpathSync(entry);
+      resolvedIsDir = fs41.statSync(entry).isDirectory();
     } catch {
       resolvedIsDir = false;
     }
@@ -24751,7 +24777,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
       continue;
     }
     mkdirp(path39.dirname(target));
-    fs40.copyFileSync(resolved, target);
+    fs41.copyFileSync(resolved, target);
     _inject_package_tag(target, resolved, package_root);
     _log_tx_entry("write", target);
     written += 1;
@@ -24793,7 +24819,7 @@ function _apply_claude_flat_command_wrappers(anchor2, package_root, current_file
   const eligible = new Set(_CLAUDE_FLAT_WRAPPER_EXTRA);
   try {
     const manifest = JSON.parse(
-      fs40.readFileSync(path39.join(package_root, "dist", "discovery", "discovery-manifest.json"), "utf8")
+      fs41.readFileSync(path39.join(package_root, "dist", "discovery", "discovery-manifest.json"), "utf8")
     );
     for (const a of manifest.artefacts ?? []) {
       if (a.category !== "command" || typeof a.slug !== "string") continue;
@@ -24805,21 +24831,21 @@ function _apply_claude_flat_command_wrappers(anchor2, package_root, current_file
   for (const slug of [...eligible].sort()) {
     const flat_rel = `commands/${slug}.md`;
     const flat_abs = path39.join(anchor2, "commands", `${slug}.md`);
-    if (!fs40.existsSync(flat_abs)) continue;
+    if (!fs41.existsSync(flat_abs)) continue;
     const skill_dir = path39.join(anchor2, "skills", slug);
-    if (fs40.existsSync(skill_dir)) {
+    if (fs41.existsSync(skill_dir)) {
       collisions.push(slug);
       continue;
     }
-    let body = fs40.readFileSync(flat_abs, "utf8");
+    let body = fs41.readFileSync(flat_abs, "utf8");
     if (body.startsWith("---\n") && !/^name:/m.test(body.split("\n---")[0] ?? "")) {
       body = body.replace("---\n", `---
 name: ${slug}
 `);
     }
-    fs40.mkdirSync(skill_dir, { recursive: true });
-    fs40.writeFileSync(path39.join(skill_dir, "SKILL.md"), body, "utf8");
-    fs40.rmSync(flat_abs, { force: true });
+    fs41.mkdirSync(skill_dir, { recursive: true });
+    fs41.writeFileSync(path39.join(skill_dir, "SKILL.md"), body, "utf8");
+    fs41.rmSync(flat_abs, { force: true });
     current_files.delete(flat_rel);
     current_files.add(`skills/${slug}/SKILL.md`);
     wrapped.push(slug);
@@ -25017,7 +25043,7 @@ function _verify_deploy_targets(anchor2, plan) {
       continue;
     }
     try {
-      const entries = fs40.readdirSync(target);
+      const entries = fs41.readdirSync(target);
       if (entries.length === 0) missing.push(label);
     } catch {
       missing.push(label);
@@ -25295,15 +25321,15 @@ function _write_settings_surface_snapshot(installed_version) {
   const next = _current_settings_surface(installed_version);
   let previous = null;
   try {
-    const parsed = JSON.parse(fs40.readFileSync(surface_path, "utf8"));
+    const parsed = JSON.parse(fs41.readFileSync(surface_path, "utf8"));
     if (parsed !== null && typeof parsed === "object" && parsed.entries !== void 0) previous = parsed;
   } catch {
   }
   if (previous !== null && previous.version !== next.version) {
     const delta = computeSurfaceDelta(previous, next);
     if (delta.changes.length > 0) {
-      fs40.mkdirSync(path39.dirname(delta_path), { recursive: true, mode: 448 });
-      fs40.writeFileSync(delta_path, `${JSON.stringify(delta, null, 2)}
+      fs41.mkdirSync(path39.dirname(delta_path), { recursive: true, mode: 448 });
+      fs41.writeFileSync(delta_path, `${JSON.stringify(delta, null, 2)}
 `, { mode: 384 });
       if (!state.QUIET) {
         const counts = {};
@@ -25315,8 +25341,8 @@ function _write_settings_surface_snapshot(installed_version) {
       }
     }
   }
-  fs40.mkdirSync(path39.dirname(surface_path), { recursive: true, mode: 448 });
-  fs40.writeFileSync(surface_path, `${JSON.stringify(next, null, 2)}
+  fs41.mkdirSync(path39.dirname(surface_path), { recursive: true, mode: 448 });
+  fs41.writeFileSync(surface_path, `${JSON.stringify(next, null, 2)}
 `, { mode: 384 });
 }
 function arrayStrEqual(a, b) {
@@ -25753,7 +25779,7 @@ function _pid_is_agent_config(pid) {
 }
 function unlinkMissingOk(p) {
   try {
-    fs40.unlinkSync(p);
+    fs41.unlinkSync(p);
   } catch {
   }
 }
@@ -25838,7 +25864,7 @@ function _wizard_run_sync(cmd, env, cli) {
   let child;
   let log_fd = null;
   try {
-    log_fd = fs40.openSync(log_path, "w");
+    log_fd = fs41.openSync(log_path, "w");
     child = spawn(cmd[0], cmd.slice(1), {
       env,
       detached: true,
@@ -25856,7 +25882,7 @@ function _wizard_run_sync(cmd, env, cli) {
   } finally {
     if (log_fd !== null) {
       try {
-        fs40.closeSync(log_fd);
+        fs41.closeSync(log_fd);
       } catch {
       }
     }
@@ -26210,7 +26236,7 @@ function finalize_claude_model_tiers(project_root) {
   if (!isDir(claude_skills) || !isDir(augment_skills)) return 0;
   if (_read_consumer_auto_switch(project_root) !== "auto") return 0;
   let rendered = 0;
-  const entries = fs40.readdirSync(claude_skills).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  const entries = fs41.readdirSync(claude_skills).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   for (const name of entries) {
     const entry = path39.join(claude_skills, name);
     const src_dir = path39.join(augment_skills, name);
@@ -26223,12 +26249,12 @@ function finalize_claude_model_tiers(project_root) {
     }
     if (tier === null || !(tier in TIER_TO_CLAUDE_MODEL) || !isDir(src_dir)) continue;
     if (isSymlink(entry) || isFile(entry)) {
-      fs40.unlinkSync(entry);
+      fs41.unlinkSync(entry);
     } else if (isDir(entry)) {
-      fs40.rmSync(entry, { recursive: true, force: true });
+      fs41.rmSync(entry, { recursive: true, force: true });
     }
     mkdirp(entry);
-    const srcFiles = fs40.readdirSync(src_dir).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const srcFiles = fs41.readdirSync(src_dir).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
     for (const fname of srcFiles) {
       if (fname === "SKILL.md") {
         writeText(
@@ -26236,7 +26262,7 @@ function finalize_claude_model_tiers(project_root) {
           render_native_model_md(readText(src_md), tier)
         );
       } else {
-        fs40.symlinkSync(
+        fs41.symlinkSync(
           path39.join("../../../.augment/skills", name, fname),
           path39.join(entry, fname)
         );
@@ -26398,7 +26424,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
 function _resolvedArgv1() {
   if (process4.argv[1] === void 0) return void 0;
   try {
-    return fs40.realpathSync(path39.resolve(process4.argv[1]));
+    return fs41.realpathSync(path39.resolve(process4.argv[1]));
   } catch {
     return path39.resolve(process4.argv[1]);
   }

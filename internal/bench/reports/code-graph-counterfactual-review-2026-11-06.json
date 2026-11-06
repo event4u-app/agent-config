@@ -1,0 +1,949 @@
+{
+ "model": "claude-sonnet-5-5",
+ "runs": 3,
+ "invalid_cases": 0,
+ "bars": {
+  "cases": 30,
+  "bar_i_prs": 13,
+  "bar_i_needed": 12,
+  "bar_i": true,
+  "bar_ii_total": 38,
+  "bar_ii_allowed": 3,
+  "bar_ii": false,
+  "b1_vs_a": {
+   "kind": "pass",
+   "discordant": 13,
+   "wins": 13,
+   "losses": 0,
+   "p": 0.0001220703125,
+   "magnitude_mean": 0.31342592592592594,
+   "at_floor": false,
+   "reason": "13/13 discordant trials favour the treatment (one-sided exact p=0.0001)."
+  },
+  "a_vs_b2": {
+   "kind": "regression",
+   "discordant": 14,
+   "wins": 0,
+   "losses": 14,
+   "p": 0.00006103515625,
+   "magnitude_mean": -0.33287037037037037,
+   "at_floor": false,
+   "reason": "0/14 discordant trials favour the control (one-sided exact p=0.0001)."
+  },
+  "b1_vs_b2": {
+   "kind": "underpowered",
+   "discordant": 2,
+   "wins": 0,
+   "losses": 2,
+   "p": 1,
+   "magnitude_mean": -0.01944444444444444,
+   "at_floor": false,
+   "reason": "2 discordant trial(s) is below the derived floor of 5: the smallest attainable one-sided p is 0.2500, so no result here can clear 0.05. This is NOT a null result — it is an absent measurement, and it belongs in no pass-rate denominator."
+  },
+  "advisory_lifted": false
+ },
+ "scores": [
+  {
+   "id": "larasend-16",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 0
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 2,
+   "invalid_arms": []
+  },
+  {
+   "id": "larasend-18",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 4,
+    "B2": 5,
+    "G": 0
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 4,
+   "invalid_arms": []
+  },
+  {
+   "id": "larasend-2",
+   "truth": 4,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "larasend-4",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2812",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 1,
+    "B1": 2,
+    "B2": 3,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 1,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2822",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 2,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2824",
+   "truth": 2,
+   "hits": {
+    "A": 2,
+    "B1": 2,
+    "B2": 2,
+    "G": 1
+   },
+   "recall": {
+    "A": 1,
+    "B1": 1,
+    "B2": 1,
+    "G": 0.5
+   },
+   "extra": {
+    "A": 2,
+    "B1": 2,
+    "B2": 2,
+    "G": 1
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2833",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 1
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 2,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2838",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2841",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0.5,
+    "G": 0.5
+   },
+   "extra": {
+    "A": 1,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2842",
+   "truth": 1,
+   "hits": {
+    "A": 1,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 1,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 3,
+    "B2": 3,
+    "G": 2
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 3,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2847",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2848",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 3,
+    "B1": 4,
+    "B2": 4,
+    "G": 2
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 3,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2849",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "extra": {
+    "A": 4,
+    "B1": 1,
+    "B2": 10,
+    "G": 0
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2852",
+   "truth": 9,
+   "hits": {
+    "A": 0,
+    "B1": 4,
+    "B2": 4,
+    "G": 4
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0.4444444444444444,
+    "B2": 0.4444444444444444,
+    "G": 0.4444444444444444
+   },
+   "extra": {
+    "A": 0,
+    "B1": 3,
+    "B2": 3,
+    "G": 3
+   },
+   "b1_catches": 4,
+   "b1_unsupported": 3,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2853",
+   "truth": 3,
+   "hits": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 2
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0.6666666666666666,
+    "B2": 0.6666666666666666,
+    "G": 0.6666666666666666
+   },
+   "extra": {
+    "A": 0,
+    "B1": 1,
+    "B2": 2,
+    "G": 0
+   },
+   "b1_catches": 2,
+   "b1_unsupported": 1,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2863",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 2
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 0
+   },
+   "b1_catches": 2,
+   "b1_unsupported": 2,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2874",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 2,
+    "B1": 2,
+    "B2": 8,
+    "G": 1
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "self-2877",
+   "truth": 8,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0.125,
+    "B2": 0.125,
+    "G": 0
+   },
+   "extra": {
+    "A": 1,
+    "B1": 8,
+    "B2": 8,
+    "G": 7
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 7,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-677",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-728",
+   "truth": 6,
+   "hits": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 2
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0.3333333333333333,
+    "B2": 0.3333333333333333,
+    "G": 0.3333333333333333
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 2,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-729",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 1,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-740",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 1,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-743",
+   "truth": 12,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 2
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 2,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-745",
+   "truth": 11,
+   "hits": {
+    "A": 0,
+    "B1": 11,
+    "B2": 11,
+    "G": 11
+   },
+   "recall": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 11,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-750",
+   "truth": 2,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 1,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-758",
+   "truth": 4,
+   "hits": {
+    "A": 0,
+    "B1": 1,
+    "B2": 1,
+    "G": 1
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0.25,
+    "B2": 0.25,
+    "G": 0.25
+   },
+   "extra": {
+    "A": 1,
+    "B1": 1,
+    "B2": 2,
+    "G": 1
+   },
+   "b1_catches": 1,
+   "b1_unsupported": 1,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-761",
+   "truth": 12,
+   "hits": {
+    "A": 0,
+    "B1": 7,
+    "B2": 8,
+    "G": 8
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0.5833333333333334,
+    "B2": 0.6666666666666666,
+    "G": 0.6666666666666666
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "b1_catches": 7,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-778",
+   "truth": 3,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 0,
+    "B2": 1,
+    "G": 0
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 0,
+   "invalid_arms": []
+  },
+  {
+   "id": "unopim-793",
+   "truth": 1,
+   "hits": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "recall": {
+    "A": 0,
+    "B1": 0,
+    "B2": 0,
+    "G": 0
+   },
+   "extra": {
+    "A": 0,
+    "B1": 2,
+    "B2": 2,
+    "G": 2
+   },
+   "b1_catches": 0,
+   "b1_unsupported": 2,
+   "invalid_arms": []
+  }
+ ],
+ "strata": {
+  "larasend-16": {
+   "test": 0,
+   "prod": 1,
+   "sig": true
+  },
+  "larasend-18": {
+   "test": 0,
+   "prod": 1,
+   "sig": false
+  },
+  "larasend-2": {
+   "test": 1,
+   "prod": 3,
+   "sig": true
+  },
+  "larasend-4": {
+   "test": 0,
+   "prod": 1,
+   "sig": true
+  },
+  "self-2812": {
+   "test": 1,
+   "prod": 1,
+   "sig": false
+  },
+  "self-2822": {
+   "test": 1,
+   "prod": 0,
+   "sig": false
+  },
+  "self-2824": {
+   "test": 1,
+   "prod": 1,
+   "sig": true
+  },
+  "self-2833": {
+   "test": 0,
+   "prod": 1,
+   "sig": true
+  },
+  "self-2838": {
+   "test": 0,
+   "prod": 1,
+   "sig": false
+  },
+  "self-2841": {
+   "test": 2,
+   "prod": 0,
+   "sig": false
+  },
+  "self-2842": {
+   "test": 0,
+   "prod": 1,
+   "sig": false
+  },
+  "self-2847": {
+   "test": 2,
+   "prod": 0,
+   "sig": true
+  },
+  "self-2848": {
+   "test": 0,
+   "prod": 1,
+   "sig": true
+  },
+  "self-2849": {
+   "test": 1,
+   "prod": 0,
+   "sig": true
+  },
+  "self-2852": {
+   "test": 4,
+   "prod": 5,
+   "sig": true
+  },
+  "self-2853": {
+   "test": 1,
+   "prod": 2,
+   "sig": true
+  },
+  "self-2863": {
+   "test": 0,
+   "prod": 2,
+   "sig": false
+  },
+  "self-2874": {
+   "test": 2,
+   "prod": 0,
+   "sig": true
+  },
+  "self-2877": {
+   "test": 4,
+   "prod": 4,
+   "sig": false
+  },
+  "unopim-677": {
+   "test": 0,
+   "prod": 1,
+   "sig": false
+  },
+  "unopim-728": {
+   "test": 5,
+   "prod": 1,
+   "sig": false
+  },
+  "unopim-729": {
+   "test": 0,
+   "prod": 2,
+   "sig": false
+  },
+  "unopim-740": {
+   "test": 0,
+   "prod": 2,
+   "sig": false
+  },
+  "unopim-743": {
+   "test": 3,
+   "prod": 9,
+   "sig": true
+  },
+  "unopim-745": {
+   "test": 0,
+   "prod": 11,
+   "sig": true
+  },
+  "unopim-750": {
+   "test": 2,
+   "prod": 0,
+   "sig": true
+  },
+  "unopim-758": {
+   "test": 2,
+   "prod": 2,
+   "sig": false
+  },
+  "unopim-761": {
+   "test": 0,
+   "prod": 12,
+   "sig": false
+  },
+  "unopim-778": {
+   "test": 1,
+   "prod": 2,
+   "sig": false
+  },
+  "unopim-793": {
+   "test": 1,
+   "prod": 0,
+   "sig": true
+  }
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "id": "larasend-4",
+ "subject": "larasend",
+ "repo": "savvyagents/larasend",
+ "pr": 4,
+ "title": "Add inbound email receiving for Cloudflare sources",
+ "merged_at": "2026-07-12T03:17:20Z",
+ "merge": "4f26f3283461bcf86b2ae77301fc8e78a8debaf3",
+ "parent": "ea76002b33c73823d0d28608d80bdf8cf96511e7",
+ "changed_lines": 99,
+ "diff_files": [
+  "app/Services/Providers/CloudflareInboundProvisioner.php",
+  "tests/Feature/InboundProvisioningTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "app/Services/Providers/CloudflareInboundProvisioner.php#CloudflareInboundProvisioner",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Services/Providers/CloudflareInboundProvisioner.php#CloudflareInboundProvisioner::__construct",
+   "signature_touched": true
+  },
+  {
+   "id": "app/Services/Providers/CloudflareInboundProvisioner.php#CloudflareInboundProvisioner::enable",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "app/Http/Controllers/DashboardActionController.php",
+   "test": false
+  }
+ ]
+}

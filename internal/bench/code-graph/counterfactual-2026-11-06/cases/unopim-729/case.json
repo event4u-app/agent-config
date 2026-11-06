@@ -1,0 +1,33 @@
+{
+ "id": "unopim-729",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 729,
+ "title": "docs(changelog): cut 3.1.2",
+ "merged_at": "2026-09-24T16:42:35Z",
+ "merge": "4819f65d7016c1944fa98681c9fd4453cb3d9f1b",
+ "parent": "b0b45e815dd95461655d0ee24ff954e184870ed3",
+ "changed_lines": 30,
+ "diff_files": [
+  "CHANGELOG.md",
+  "UPGRADE.md",
+  "package.json",
+  "packages/Webkul/Core/src/Core.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/Core/src/Core.php#Core",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Core/src/Http/helpers.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/Core/src/Providers/CoreServiceProvider.php",
+   "test": false
+  }
+ ]
+}

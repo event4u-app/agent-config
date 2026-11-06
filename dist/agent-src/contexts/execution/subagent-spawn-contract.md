@@ -54,6 +54,13 @@ private-data leg stays narrow: the composer rejects inline bodies (multi-line /
 oversized entries), accepts only ref-like tokens, and caps the count. Anything
 dropped is recorded in `warnings` and surfaced — never silently widened.
 
+## Memory audience
+
+What each spawn audience — orchestrator, non-fork, fork, judge-seat, unpaid,
+cheap-paid — receives of the shared memory in `knowledge_refs`, and which
+writers are refused, is one table:
+[`memory-audience`](memory-audience.md).
+
 ## Per-worker token stop-loss (L0b) — hard budget, structured escalation
 
 ```

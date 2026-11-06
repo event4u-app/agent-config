@@ -48,7 +48,7 @@ pin because the detector needs the write paths the turn snapshot does not carry
       and threat-model pass rather than line edits under review pressure.
       Dissent: none recorded — the OpenAI seat failed both runs (`exit_1`, CLI
       transport), so quorum came from one seat. Destination:
-      `agents/roadmaps/road-to-a-noted-that-is-a-write-carried.md` step 1.1.
+      `agents/roadmaps/archive/road-to-a-noted-that-is-a-write-carried.md` step 1.1.
       Closes when that step lands with its read boundary decided.
 - [x] **1.2 Subject-count index.** A derived `_subject-index.json` beside the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/source-registry.json -->
       target index in `self_repair_store.ts`.

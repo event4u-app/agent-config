@@ -32,6 +32,323 @@
 
 Per-task artifact comparisons with and without agent-config, including the cost of parity: [docs/examples/bench/](examples/bench/index.md).
 
+## Container isolation (2026-11-05) {#container-isolation}
+
+Every result on this page so far ran on the **host path**: the operator's own CLI, with arms separated by CLI flags. That path has two confounds:
+
+- The `package` arm runs without `--setting-sources`, so it loads the operator's whole user scope: other plugins, the user `CLAUDE.md`, hooks and personal skills. "With agent-config" therefore means "with agent-config plus that setup".
+- `vanilla` and `package` pass different flags, and the CLI, Node and PHP versions are whatever the machine had that day.
+
+`bench_ab_v2_run --isolation container` removes both:
+
+| Held identical across arms | Differs between arms |
+|---|---|
+| Base image (Node 22, pinned digest), CLI version, toolchain, non-root user | The image only: `bench-base`, or `bench-ac` = `bench-base` + agent-config installed by its public installer from the commit under test |
+| Every CLI argument; no `--setting-sources` on any arm | — |
+| Model, per-run budget, task prompt, fixture | — |
+
+Every container trial reads the CLI's `system/init` event. A `bench-ac` trial with no package skill loaded, or a `bench-base` trial with any, is marked errored with a `load_mismatch:` reason before it reaches the statistics. The report records the isolation mode, both image ids, the CLI version and the package version (`images` in the report, built by `src/scripts/bench_ab_images.ts`).
+
+What a container does **not** remove:
+
+- settings the provider applies per account,
+- model nondeterminism, handled with seeds and paired tests,
+- the subscription's usage limits: three runs in a row that did no work stop the sweep,
+- network variance.
+
+Operator guide: `internal/bench/containers/README.md`.
+
+### First container measurement (2026-11-05) {#container-first}
+
+These are the first sweeps through the container path. Every run used one subscription account, images built from commit `974eeb6451`, CLI 2.1.316 and package 20.1.0. Spend was $17.85 at list rates. There were 174 runs, and the load check passed on every container trial: 0 package skills in `bench-base`, 303 in `bench-ac`. The activation audit found no violations. The figures are **not** a replacement for the host-path results above. The arms changed: `package` no longer carries the operator's setup. The Sonnet sweep also covers 15 of the 34 tasks.
+
+| Sweep | Report | Arms | Pairs | Capability | Discipline (Wilcoxon) | Priced cost factor ($ per run) | Token factor |
+|---|---|---|---|---|---|---|---|
+| Controls, `claude-haiku-4-5`, `trapE-scope-01/02` × 6 seeds | `2026-11-05T09-44-11Z` | `vanilla` → `vanilla-b` (A/A) | 12 | 100% → 100% | 0.500 → 0.667, p=0.37 (2 discordant) | — | — |
+| | | `vanilla-host` → `vanilla` (host → container) | 12 | 100% → 100% | 0.667 → 0.500, p=0.37 (2 discordant) | — | — |
+| Weak host, `claude-haiku-4-5`, `trapE-scope-01/02` × 12 seeds | `2026-11-05T10-05-05Z` | `package` vs `vanilla` | 24 | 100% → 100% | 0.833 → 1.000, p=0.10 (4 discordant, all for `package`) | 6.0× ($0.024 → $0.145) | 7.9× |
+| Strong host, `claude-sonnet-4-6`, the first 15 tasks × 3 seeds | `2026-11-05T10-29-04Z` | `package` vs `vanilla` | 45 | 87% → 91%, McNemar p=0.63 | 0.944 → 0.978, p=0.36 (4 discordant) | 6.6× ($0.038 → $0.249) | 5.5× |
+
+The priced factor prices each usage bucket at the served model's own list rate (`internal/bench/pricing.yaml`); the token factor counts tokens, which differ in price by 50× between buckets on both models (output against cache read). The two move in opposite directions on the two hosts, so neither stands in for the other.
+
+What these runs show:
+
+- **The controls are clean.** The A/A pair shows no significant difference. Neither does the container baseline against the host baseline. The noise floor of this setup is two discordant pairs out of 12 at these sample sizes, in either direction. A container sweep at this size cannot resolve a lift smaller than that.
+- **No significant lift on either host**, which matches the post-repair host-path rerun. On Haiku every discordant pair favours the package, as on the host path (p=0.10 here, p=0.181 there). Sonnet leans positive on these 15 tasks. On the full host corpus it leaned negative (p=0.059); the task sets differ, so the two do not contradict each other.
+- **The cost factor survives isolation**: 7.9× on Haiku and 5.5× on Sonnet, against 7.8× and 5.1× on the host path. Most of the host path's token load was therefore the package itself, not the operator's other installed tools.
+
+Raw reports are kept under `internal/bench/reports/ab-v2/` in the primary checkout (gitignored).
+
+**Size a paid sweep before running it.** `task bench:ab:power -- --aa 2/12 --share 0.9` computes the pairs per arm a sweep needs to reach 80 % power, with the same one-sided exact sign test `paired_verdict` decides with. At the A/A discordance measured here (2 of 12) it needs 39 pairs per arm if every discordant pair favours one arm, 63 at a 90 % share and 111 at 80 %. The 24-pair Haiku sweep above was below the smallest of these. A share at or below one half has no size: the planner says so instead of printing a number.
+
+### Reading a bad result {#reading-a-bad-result}
+
+A weak or negative result is a question about the measurement first. `task bench:ab:interpret -- <paired-report.json>` writes an interpretation record per comparison with the labels the data itself supports:
+
+| Label | When | Do instead |
+|---|---|---|
+| `ceiling` | control capability or discipline ≥ 0.90 | use tasks where the control fails more often |
+| `underpowered` | discordant pairs below the sign-test floor of 5 on both axes | size the next sweep with `task bench:ab:power` |
+| `not-delivered` | treatment trials failed the load check | fix delivery before reading any effect |
+| `cost-overhead` | priced cost factor above 2× | break the cost down by bucket and by loaded asset |
+
+Both 2026-11-05 sweeps read `ceiling` + `underpowered` + `cost-overhead`. Construct (did the tasks measure what the asset is for), adherence and real-world use stay open in every record, because no report can answer them. The record has no removal field: **a benchmark result alone never supports removing an asset.** What a removal needs is set out in `agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md` Phase 4.
+
+### Where sweep evidence is kept {#evidence-store}
+
+Reports land in the gitignored `internal/bench/reports/`, which a clean of untracked files, a worktree removal or a fresh clone deletes. Every live paired sweep and every artifact sweep therefore also copies its evidence into a bundle outside any checkout: `<config-home>/bench-evidence/<report-name>/`, where `<config-home>` is `$EVENT4U_CONFIG_HOME` or `~/.event4u/agent-config/`. A paired bundle holds the report, the sweep's checkpoint, the `pricing.yaml` it was priced with, `reference.json` (the statistics, gate and interpretation computed with the live code at store time) and `manifest.json` with each file's sha256. A selftest report is never stored. A failed store prints a loud error with the retry command and leaves the report where it was.
+
+```bash
+task bench:ab:evidence -- store internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
+task bench:ab:evidence -- verify ~/.event4u/agent-config/bench-evidence/<stamp>-ab-v2-paired
+```
+
+`verify` checks every hash, then re-scores the stored records offline with the same `bench_ab_v2_stats` and `bench_ab_interpret` code and compares the result to `reference.json` field by field; any difference exits non-zero. The per-task `nop` floor is not in the reference, because it reads the current task corpus rather than the report. Artifact bundles keep their transcripts and are verified by hash only, since no aggregation stage exists for them yet. Both 2026-11-05 paired reports (`15-15-11Z`, `20-21-44Z`) were stored this way and re-scored to the same numbers.
+
+### Headroom sweeps on harder tasks (2026-11-05) {#headroom-sweeps}
+
+The first container sweeps read `ceiling`. These runs use the harder task set: 14 Track-B tasks (the four new `hdr*` tasks, the hardest `capH` and `trap*` tasks) and the artifact corpus. Five arms per Track-B sweep, five seeds, container isolation, one subscription account. The activation audit passed on both Track-B reports after the per-turn fix below.
+
+| Sweep | Report | Runs | Spend |
+|---|---|---|---|
+| Track B, `claude-haiku-4-5`, 14 tasks × 5 arms × 5 seeds | `2026-11-05T15-15-11Z` | 350 | $17.05 |
+| Track B, `claude-sonnet-4-6`, same tasks | `2026-11-05T20-21-44Z` | 350 | $34.30 |
+| Artifact, `claude-haiku-4-5`, `vanilla` + `package` | `artifact-2026-11-05T15-29-36-217Z` | 35 of 108 (cap) | $20.26 |
+| Artifact, `claude-sonnet-4-6`, 6 unmeasured tasks × 2 seeds, `--budget 1` | `artifact-2026-11-05T20-23-30-767Z` | 48 | $28.74 |
+| Artifact, `claude-sonnet-4-6`, `package` only, 3 UI tasks, `--budget 3` | `artifact-2026-11-05T20-49-10-005Z` | 6 | $19.31 |
+| Artifact, `claude-sonnet-4-6`, `package` only, `art-form-01`: diagnosis, then the installed package at `--budget 1` and `--budget 3` | `artifact-2026-11-05T21-46-57-655Z`, `…T21-50-29-992Z`, `…T21-53-49-676Z` | 6 | $6.21 |
+
+**Track B, pooled.** No comparison is significant on either host.
+
+| Comparison | Haiku capability | Haiku discipline (Wilcoxon) | Sonnet capability | Sonnet discipline (Wilcoxon) |
+|---|---|---|---|---|
+| `package` vs `vanilla` | 64% → 60%, p=0.25 | 0.771 → 0.821, p=0.36 | 58% → 61%, p=0.50 | 0.949 → 0.927, p=0.48 |
+| `package` vs `placebo` | 66% → 60%, p=0.13 | 0.793 → 0.821, p=0.47 | 58% → 61%, p=0.50 | 0.949 → 0.927, p=0.45 |
+| `rules-kernel-dc` vs `vanilla` | 64% → 61%, p=0.63 | 0.771 → 0.857, p=0.056 | 59% → 57%, p=1.0 | 0.950 → 0.921, p=0.22 |
+| `vanilla-b` vs `vanilla` (A/A) | 64% → 66%, p=1.0 | 0.771 → 0.807, p=0.14 | 59% → 60%, p=1.0 | 0.950 → 0.929, p=0.42 |
+
+Priced cost: `package` costs $0.121 per run against $0.026 on Haiku (4.6×) and $0.264 against $0.052 on Sonnet (5.1×). Sonnet's control discipline is 0.95, so `bench_ab_interpret` labels every Sonnet comparison `ceiling`.
+
+**Track B, per task.** The pooled numbers hide the one place the package moves the result:
+
+- **Scope discipline on Haiku.** On `trapE-scope-01` and `trapE-scope-laravel-01`, `package` and `rules-kernel-dc` pass capability and discipline together in 10 of 10 and 8 of 10 runs; `vanilla` and `placebo` manage 1 of 10. A placebo of the same length does not reproduce it, so the effect comes from the rule content. On Sonnet the control already passes these tasks 10 of 10; there is nothing left to lift.
+- **A cost on Haiku.** In 12 of 70 `package` runs and 6 of 70 `rules-kernel-dc` runs, Haiku ends after one or two turns without changing a file, with a question to the user. That happened in 1 of 70 `vanilla` runs and in no `placebo` run. Some of these questions follow a look at the repository. Others come with no tool call at all ("I don't see any code in your message"). It lowers `package` on `trapC-ambig-01` (2 of 5 joint against 5 of 5) and costs runs on `hdrH-done-01` and `hdrE-scope-large-01`. The cause is below (§ Which rule makes Haiku ask without looking).
+- **Hard for every arm.** `capH-debug-08`, `hdrH-done-01` and `hdrL-multistep-01` fail capability in almost every run on both hosts, in every arm. Replaying the runs' final files against the hidden verifiers shows real misses, not a broken oracle: a negative exponent returns `NaN`, a price cache is left stale after a price change, a zero limit is treated as a cap. These tasks have headroom, and no arm uses it. `trapC-ambig-02` scores 0 everywhere because no run asks before choosing a function name.
+
+**Artifact, Haiku.** The cap stopped the sweep after the first three tasks (`art-svg-prompt-01`, `art-svg-raster-01`, `art-landing-01`). `vanilla` reached parity on the first prompt in almost every run, at $0.03–0.06 per run. `package` cost about $0.50 per run and ended censored (budget reached before parity) three times, but that arm did not run the package as installed (see the correction below), so its numbers are void. These three tasks sit at the ceiling for a short prompt; they cannot show a benefit.
+
+**Artifact, Sonnet.** No `package` result exists; the sweeps measured a cost, not a quality difference:
+
+- `vanilla` reached parity on the first prompt in all 12 runs of `art-form-01`, `art-page-copy-01` and `art-app-copy-01`, at $0.11–0.15 per run. These tasks are at the ceiling on Sonnet too.
+- Every `package` run stopped on its **first** turn at the per-call budget (`error_max_budget_usd`): at $1.02 with `--budget 1`, and again at $3.20–3.24 with `--budget 3`. The same task costs `vanilla` $0.14.
+- `art-login-framework-01`, `art-login-plain-01` and `art-php-endpoint-01` ended `indeterminate` in every run: the artifact path runs on the host, and the host has no PHP. Web security is therefore still unmeasured.
+
+**Correction: the artifact `package` arm did not measure the package.** A kept transcript (the sweep now keeps one per run) showed why every `package` run above was expensive. The arm pointed the host at the repository with `--plugin-dir`. That loaded the repository's entire `agents/` tree (roadmaps, decisions, evidence) as subagent definitions, an attachment of 1.5 MB, about 370k tokens, before the first reply. Its hooks also fell through to the `agent-config` binary on the operator's PATH. Every artifact `package` number on this page, Haiku and Sonnet, is therefore void. The arm now installs the packed checkout into its isolated HOME with the public installer, the command `Dockerfile.ac` runs, and a run with no installed skills is refused before the host starts.
+
+Measured with the installed package on Sonnet (`artifact-2026-11-05T21-53-49-676Z`, `art-form-01`, 1 seed, both ladders): parity on the first prompt with score 1 in both runs, at $0.96 and $0.97 per run. `vanilla` reaches the same at $0.14, so the cost is about 7× for the same result. The cost comes from the always-loaded rule layer: the installer itself reports 342k characters, 228% of the limit it publishes. With `--budget 1` the same run stopped just short of parity at $1.02.
+
+The PHP graders now run without PHP on the host. `BENCH_PHP_BIN=internal/bench/containers/php-in-docker.sh` serves each check from the official PHP image, and the grader self-test separates the planted good and bad references on all three PHP tasks (logins 1.00 against 0.29, endpoint 1.00 against 0.00). With `--swap` it goes red. No paid run of these tasks has happened yet.
+
+**Which rule makes Haiku ask without looking.** Three Haiku container sweeps on `trapC-ambig-01` and `hdrH-done-01` traced the question above to one kernel rule. Every trial's full event stream is now kept under `reports/ab-v2/streams/`, so a question can be split into *blind* (no tool call before it) and *after looking*.
+
+| Sweep | Report | Runs | Spend |
+|---|---|---|---|
+| Rerun, `vanilla` · `placebo` · `rules-kernel-dc` · `package`, 3 tasks × 5 seeds | `2026-11-05T22-35-29Z` | 60 | $3.07 |
+| Leave-one-out over the 10 `rules-kernel-dc` rules (`kernel-minus-<rule>`), 2 tasks × 4 seeds | `2026-11-05T22-55-46Z` | 88 | $2.19 |
+| The three candidates the leave-one-out pointed at, 2 tasks × 20 seeds | `2026-11-05T23-28-04Z` | 160 | $3.31 |
+
+- In the rerun, no `vanilla` or `placebo` run asked; `package` and `rules-kernel-dc` did. A placebo of the same length does not, so the cause is rule content.
+- No single rule removed the questions in the leave-one-out. Dropping `ask-when-uncertain`, `no-cheap-questions` or `downstream-changes` lowered them from 6 of 8 to 2 of 8, which is not separable from noise at that size.
+- At 40 runs per arm, only `ask-when-uncertain` moves the **blind** questions: 7 of 40 with the full kernel, 1 of 40 without it (Fisher one-sided p = 0.028; p ≈ 0.085 after correcting for the three candidates tested). All questions together fall from 18 to 13 of 40 (p = 0.18). Dropping `no-cheap-questions` (9 of 40 blind) or `downstream-changes` (7 of 40) changes nothing.
+
+So `ask-when-uncertain` makes Haiku ask before it has looked. Asking after a look on `trapC-ambig-01`, where two config files fit the request, is the behavior the task's discipline oracle accepts, and that rule is not implicated in it. Nothing is changed on this result alone: the rule is a kernel rule, and the next step is a wording that puts looking before asking, measured against this baseline (roadmap `road-to-proof-where-the-owner-sees-it` 1.6).
+
+**A look-first wording, measured before it may replace the rule.** The candidate is `internal/bench/candidates/ask-when-uncertain.look-first.md`. It is the shipped rule with four changes: the opening line says "look, then ask", the trigger list starts after a look, a vague request means "read the code it names, then ask", and the self-check gains a step 0, "have I looked?". The arm `kernel-variant-<rule>.<label>` injects `rules-kernel-dc` with that one body swapped. The rule file itself is unchanged; kernel rules are owner-edited. Report `2026-11-06T08-13-53Z`, Haiku, 2 tasks × 20 seeds, with a same-day `rules-kernel-dc` control, 80 runs, $1.85:
+
+| Arm | Blind questions (of 40) | `trapC-ambig-01` questions after a look (of 20) | `trapC-ambig-01` joint pass (of 20) |
+|---|---|---|---|
+| `rules-kernel-dc` (same day) | 5 | 11 | 9 |
+| look-first candidate | 3 | 6 | 13 |
+
+The roadmap's bar is not met: blind questions had to fall below 3 of 40, and they landed at exactly 3. The same-day control asked blind in 5 of 40 runs, not the 7 of the day before, so at this size the difference is noise (Fisher one-sided p = 0.36). The candidate also asks after looking less often (6 against 11 of 20, p = 0.10), while `trapC-ambig-01` passes slightly more often (13 against 9, p = 0.17). That sits exactly on the bar's floor of 6. No run errored and no activation check flagged. The same-day control used a different `bench-base` image id (CLI 2.1.316 in both), recorded by hand because another session was using the images at the time. Counting rule: a question is a run that changed no file and whose last text asks one; *blind* means no tool call came before it. On the 2026-11-05 report this rule gives 7 of 40 blind and 19 of 40 asks in all (the earlier count said 18).
+
+Verdict: the wording does not earn a kernel change on this evidence. Blind questions in the low single digits cannot be separated at 40 runs per arm. Testing more wordings at this size would mean picking the luckiest draw, not measuring.
+
+**Size for the next wording (2026-11-06).** `bench_ab_power` with the paired sign test at α 0.05 and 80 % power, assuming independent per-run blind rates: separating the bar's own distance, a control at 15 % against a candidate at 7.5 %, needs 240 pairs per arm. A candidate at 5 % needs 124, one at 2.5 % needs 57. At the measured $0.023 per Haiku run, 240 pairs per arm is 480 runs and about $11. The next wording is measured at that size or not at all.
+
+**Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
+
+- The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.
+- The artifact isolation's blackhole proxy also blocked the model API. The no-proxy list now admits `api.anthropic.com` only.
+- A host error with an empty result was logged as a bare `host error`. It now carries the envelope's subtype, which is how the budget stop above was identified.
+- `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
+- The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
+
+### The minimal-prompt baseline (frozen 2026-11-06, before its first run) {#minimal-prompt-baseline}
+
+The scope result above has `package` and `rules-kernel-dc` at 10 of 10 and 8 of 10 on Haiku, and `vanilla` at 1 of 10. The arm `minimal-prompt` asks whether one plain instruction does the same as the rules. It injects the text below and nothing else, with this package scoped away. The text is frozen here before the arm's first run, so a result cannot be bought by rewording the floor afterwards. `tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` fails when this block and `FIXED_INJECTIONS.minimal` in `src/scripts/_lib/bench_ab_arms.ts` disagree.
+
+```text
+Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.
+```
+
+When the arm is in a run, the report adds three comparisons: `package` vs `minimal-prompt`, `rules-kernel-dc` vs `minimal-prompt`, and `minimal-prompt` vs `vanilla`. A report without the arm renders as before.
+
+### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
+
+Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:
+
+- A: one agent.
+- B: one agent with one effort step more, the same-compute arm.
+- C: a fresh tester writes edge-case tests from the requirement, then the author implements against them.
+
+The reviewer arm D did not run, because its slim-reviewer gate failed.
+
+- **Primary, C vs B:** capability 7/48 vs 5/48, discordant 7–5, one-sided sign test p = 0.39. **Not detected at this size**, not "no effect". 48 pairs had 80 % power only for a discordance of about 0.15. Per cluster: headroom 5–5, hold-out 2–0. B alone solves `capH-debug-08` (5/8) and C alone solves `hdrH-done-01` (5/8), so the two arms win on different task shapes.
+- **Safety, C's own tests rejecting the reference fix:** 19/48 = **39.6 %** against a 25 % ceiling, so the bar fails. Without the one task where the test asserts an error message the requirement does not fix, the rate is 30 %. The tester works from the requirement only and misses constraints stated elsewhere, for example a README saying `--limit 0` means unlimited.
+- **Cost per run, p50 / p95:** A $0.24 / $0.63, B $0.27 / $0.69, C $0.59 / $1.36. **Net value of C vs B:** −$0.067 per run, with `D` = 10× and `C_FP` = 1× A's p50.
+- **Spend:** $65.47 sweep + $1.94 harness smoke = $67.41 of the $150 release.
+
+No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
+
+
+## Where the main session's default context goes (2026-11-06) {#main-session-census}
+
+Measured with `./scripts-run src/scripts/preamble_byte_census --main-session`. The figures come from what the host recorded delivering in one Claude Code session on this repository, not from a model of the tree. The setup was a user-global install with the full rule set, plus the repository's own project rules. Characters are as delivered; tokens are approximately characters / 4. This is one session on one machine, a reading and not a distribution.
+
+**Start-up load: ~397k characters (~99k tokens).**
+
+| Bucket | Files | Characters | Share |
+|---|---|---|---|
+| User-global rules (`~/.claude/rules`) | 100 | 328,985 | 83 % |
+| This repository's project rules (`dist/agent-src/rules`) | 15 | 32,984 | 8 % |
+| Skill catalog (633 listed) | — | 29,356 | 7 % |
+| Start-up hook output | 1 | 1,505 | < 1 % |
+| CLAUDE.md files and imports, auto-memory | 4 | 4,544 | 1 % |
+
+What the reading shows:
+
+- **The rules are the load.** 115 rule files make up 91 % of the start-up context. 32 of them carry half of the instruction characters, and the 19 files over 5,000 characters carry 128k on their own. No rule is loaded twice: the user-global and project sets do not overlap by name. 2 of the 102 user-global rule files have a path trigger and stayed out; all the others load in every session.
+- **About 64k characters (~16k tokens, 17 % of the instruction load) are domain and stack rules this repository never exercises:**
+
+  | Rules | Files | Characters |
+  |---|---|---|
+  | Finance, legal and strategy floors, advisory disclaimer, PII and retention | 6 | 30,208 |
+  | Media and brand: likeness, screenshots, brand, icons, design fidelity | 6 | 23,022 |
+  | Persistence packs: scale, history | 2 | 7,682 |
+  | Stack routing: Laravel, Symfony, PHP, Docker, devcontainer, Copilot | 7 | 2,914 |
+
+  Several of these say in their own header that they activate when their pack is installed. They load here because the full profile installs them unconditionally. This is the first concrete candidate set for 3.3. Whether a narrower default loses quality is a measurement, and 3.3 runs it only on tasks where a lift was shown.
+- **Listed is not loaded.** The catalog names 633 skills. Only 235 arrive with a description (22k characters); 398 arrive as a bare name (7k characters). A skill without a description can only be found by name, which is the gap `missing-skill-recovery` exists for.
+- **The recurring cost sits in tool-call hooks, not in prompt turns.** Every prompt turn adds about 360 characters of hook output. Every `Bash` call adds about 1,050 characters through the `PostToolUse` hook, which came to 21k characters over the 20 calls of this session. Every compaction re-delivers about 4,100 characters at `SessionStart:compact`. None of this is in the start-up figure above.
+
+## Post-repair rerun (2026-11-04) {#post-repair}
+
+> Every number in this section was scored by the repaired scorer (task-validity
+> epoch 2026-10-28). The pre-repair sections below stay as published, with their
+> own label. **No delta is computed between the two**: the scorer, the `package`
+> install and the vanilla baseline all moved, so a subtraction would mix three
+> changes. Owner cap for both sweeps: $100 (OQ-64).
+
+> **The four raw report files cited below are lost.** They lived only in the
+> gitignored `internal/bench/reports/ab-v2/` of the worktree that ran the sweeps,
+> and were deleted with it on 2026-11-05 before being copied out. The figures in
+> this section were transcribed from them before deletion and are not
+> re-checkable against the raw files; per-run token counts and cost cannot be
+> recovered. What survives is the per-trial workspaces and transcripts, kept
+> locally under `internal/bench/reports/ab-v2/2026-11-04-rerun-workspaces/`
+> (also gitignored). Workspaces are keyed `task|arm|seed`, so each holds the
+> LAST sweep that wrote that key: report C overwrote B′ on its six tasks, and the
+> Sonnet sweeps overwrote the Haiku runs wherever the keys coincide.
+
+### Weak host (`claude-haiku-4-5`, 2 tasks × 12 seeds) {#post-repair-weak}
+
+Two reports, $22.08 in total at list rates (the runs were subscription-authed).
+
+- **Report A** — `internal/bench/reports/ab-v2/2026-11-04T21-26-13Z-ab-v2-paired.json`,
+  seven arms, 168 runs, $14.77. Its activation audit failed, and the failure
+  was in the harness:
+  - 16 `package` pairs: clones live under the OS temp dir, where the
+    operator's `~/.claude/rules` never loads, so the arm carried the skill
+    listing only (1.2× vanilla tokens). Its `package` arm is superseded by
+    report B. The harness now copies the rules above the plugin clones.
+  - 19 `placebo` pairs: a ~1.7k-token inert surface cannot clear a 1.2×
+    whole-run lift over a baseline whose spread is turn count. Council (both
+    seats) narrowed `placebo` to the text direction, which held on 24/24 runs
+    (`agents/evidence/council/council-placebo-lift-audit-2026-11-04.*`).
+  - 1 `rules-balanced` pair at 0.81×, against the longest vanilla run.
+- **Report B** — `internal/bench/reports/ab-v2/2026-11-04T21-50-27Z-ab-v2-paired.json`,
+  `vanilla` + `package` with the rules staged, 48 runs, $7.04, audit 0/24.
+
+| arm | loaded content | injected chars | mean tokens/run | cost factor | mean discipline | vs `vanilla` (Wilcoxon) |
+|---|---|---|---|---|---|---|
+| `vanilla` (A) | none | 0 | 130,717 | 1.0× | 0.750 | — |
+| `profile-minimal` (A) | kernel (9 rules) | 29,109 | 274,503 | 2.1× | 0.750 | +0.000, p=1.0 |
+| `rules-kernel-dc` (A) | kernel + `downstream-changes` = `essential` | 36,430 | 377,686 | 2.9× | 1.000 | **+0.261, p=0.036** (6/6 discordant) |
+| `rules-balanced` (A) | kernel + tier 1 | 108,841 | 436,206 | 3.3× | 0.917 | +0.167, p=0.173 |
+| `profile-full` (A) | kernel + tier 1 + tier 2 | 472,044 | 929,122 | 7.1× | 0.625 | −0.125, p=0.353 |
+| `placebo` (A) | inert prose | 6,709 | 147,877 | 1.1× | 0.708 | — |
+| `vanilla` (B) | none | 0 | 152,065 | 1.0× | 0.833 | — |
+| `package` (B) | installed plugin + rules | 0 | 1,186,213 | 7.8× | 0.958 | +0.125, p=0.181 (3/3 discordant) |
+
+Capability stayed at 23–24 of 24 on every arm. Gate verdict on both reports:
+**FALSIFIED-OR-INCONCLUSIVE**.
+
+What the repaired scorer shows on this host:
+
+- **The lift sits in `downstream-changes`.** Adding it to the kernel moves
+  discipline 0.739 → 1.000 on the 23 complete pairs (p=0.036, one run
+  errored); the kernel alone moves nothing.
+- **The full package no longer shows a significant lift.** The direction holds
+  (3 of 3 discordant pairs favour it), but vanilla now scores 0.833, so there
+  is little headroom on these two tasks.
+- **More rules did not help.** `profile-full` loads 7× the tokens and scores
+  below vanilla (not significant).
+- `package` vs `placebo` is not reported: the two arms sit in different
+  reports, and report A's `package` arm is invalid.
+
+### Strong host (`claude-sonnet-4-6`, full corpus × 3 seeds) {#post-repair-strong}
+
+Two reports, $67.81 in total at list rates (subscription-authed). Spend for
+both post-repair sweeps: $89.89 of the $100 owner cap.
+
+- **Report B′** — `internal/bench/reports/ab-v2/2026-11-04T22-57-15Z-ab-v2-paired.json`,
+  `vanilla` + `package`, 34 tasks, 204 runs, $52.50, audit 0 violations on 83
+  checked pairs. The last 37 runs hit the operator's subscription usage limit
+  and returned zero tokens (`validation_failed`, 0 turns of work): six tasks on
+  every seed of both arms (`agL-debug-03`, `trapE-scope-laravel-01`,
+  `safeF-guard-01..03`, `trapA-pinned-click-01`) plus `agL-debug-02` package
+  seed 2. They are excluded as errored, not scored.
+- **Report C** — `internal/bench/reports/ab-v2/2026-11-05T03-11-36Z-ab-v2-paired.json`,
+  the six fully lost tasks re-run, 36 runs, $15.31, audit 0/18. The
+  `agL-debug-02` seed-2 pair is not re-run.
+
+| report | pairs | capability (vanilla → package) | discipline (vanilla → package) | Wilcoxon | discordant |
+|---|---|---|---|---|---|
+| B′ | 83 | 90% → 89% (McNemar p=1.0) | 0.958 → 0.916, Δ −0.042 | p=0.059 | 8 (1 favours package) |
+| C | 18 | 100% → 100% | 0.889 → 0.889, Δ 0 | p=1.0 | 0 |
+| B′ + C | 101 | 92.1% → 91.1% | 0.946 → 0.911 | — | 8 |
+
+Package cost factor over the 101 valid pairs: **5.1×** vanilla tokens. Gate
+verdict on both reports: **FALSIFIED-OR-INCONCLUSIVE**. The shadow axis
+(discipline given capability) reads 0.879 → 0.837 on B′, p=0.036, against the
+package.
+
+What the repaired scorer shows on this host:
+
+- **No lift, and a small negative on the discipline axis.** Seven of the eight
+  discordant pairs favour vanilla; the full-axis test misses significance
+  (p=0.059), the shadow axis reaches it.
+- **Four of those seven are two reproducible artifacts, not noise.**
+  `capH-debug-05` seeds 1–2: the package wrote vanilla's fix plus one
+  explanatory comment line, exceeding the oracle's 5-line budget
+  (`agents/roadmaps/stubs/road-to-a-line-budget-that-does-not-tax-a-why-comment.md`).
+  `capH-debug-06` seeds 0 and 2: the package rewrote a loop where vanilla moved
+  one declaration, a `minimal-safe-diff` violation with that rule loaded
+  (`agents/roadmaps/stubs/road-to-a-minimal-diff-that-holds-under-load.md`).
+- The remaining three (`trapA-overeng-03`, `trapC-ambig-01/02`) are single
+  seeds without a repeated pattern and carry no roadmap.
+
 ## Weak host (`claude-haiku-4-5`) — Gate verdict: **PASS**
 
 <!-- pinned:weak-stats -->

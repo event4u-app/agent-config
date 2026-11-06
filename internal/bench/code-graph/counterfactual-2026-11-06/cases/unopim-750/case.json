@@ -1,0 +1,93 @@
+{
+ "id": "unopim-750",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 750,
+ "title": "feat(ai-agent): family scope and deep relevance ranking for category tree",
+ "merged_at": "2026-10-21T07:35:27Z",
+ "merge": "1b54e5c5890b6d885a27fe839d23a2b67178e527",
+ "parent": "b79694c2719155df177bd42c661724a511eba4a2",
+ "changed_lines": 570,
+ "diff_files": [
+  "packages/Webkul/Admin/tests/Feature/MagicAi/CategoryTreeHierarchicalTest.php",
+  "packages/Webkul/AiAgent/Config/ai-agent.php",
+  "packages/Webkul/AiAgent/Resources/lang/ar_AE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ca_ES/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/da_DK/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/de_DE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_AU/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_GB/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_NZ/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_US/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/es_ES/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/es_VE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/fi_FI/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/fr_FR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/hi_IN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/hr_HR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/id_ID/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/it_IT/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ja_JP/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ko_KR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/mn_MN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/nl_NL/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/no_NO/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/pl_PL/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/pt_BR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/pt_PT/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ro_RO/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ru_RU/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/sv_SE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/tl_PH/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/tr_TR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/uk_UA/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/vi_VN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/zh_CN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/zh_TW/app.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::assembleTree",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::description",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::fetchFirstLevel",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::fetchRankedChildren",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::pruneByRelevance",
+   "signature_touched": true
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::register",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CategoryTree.php#CategoryTree::schema",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/CategoryTreeHierarchicalTest.php",
+   "test": true
+  },
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/VectorStoreWiringTest.php",
+   "test": true
+  }
+ ]
+}

@@ -1,0 +1,90 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "SUPPRESSION_INVENTORY",
+     "verdict": "tested",
+     "witness": "src/scripts/check_suppression_hygiene.ts:149"
+    },
+    {
+     "label": "encode",
+     "verdict": "untested",
+     "witness": "tests/fixtures/media/generate.ts:79"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "src/scripts/media_bundle.ts",
+     "witness": "src/scripts/media_bundle.ts:1"
+    },
+    {
+     "label": "tests/scripts/media_bundle.test.ts",
+     "witness": "tests/fixtures/media/generate.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "tests/fixtures/media/generate.ts",
+   "lines": [
+    79,
+    88
+   ]
+  },
+  {
+   "path": "src/scripts/check_suppression_hygiene.ts",
+   "lines": [
+    149,
+    188
+   ]
+  },
+  {
+   "path": "tests/scripts/media_video_qa.test.ts",
+   "lines": [
+    80,
+    80
+   ]
+  },
+  {
+   "path": "tests/fixtures/media/generate.ts",
+   "lines": [
+    109,
+    140
+   ]
+  },
+  {
+   "path": "tests/fixtures/media/generate.ts",
+   "lines": [
+    146,
+    163
+   ]
+  },
+  {
+   "path": "tests/fixtures/media/generate.ts",
+   "lines": [
+    173,
+    182
+   ]
+  },
+  {
+   "path": "src/scripts/check_suppression_hygiene.ts",
+   "lines": [
+    189,
+    296
+   ]
+  }
+ ]
+}

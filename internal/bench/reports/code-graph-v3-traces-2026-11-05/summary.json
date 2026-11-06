@@ -1,0 +1,2206 @@
+{
+  "benchmark": "code-graph-v3-suites-B-E",
+  "date": "2026-11-05",
+  "registration": "internal/bench/code-graph/PREREGISTRATION-v3-2026-11-05.md",
+  "corpus_sha256": "e89a68cc998ea94a3fcd11556cd1398085b2a9ab1e994e444490ac07fba813dc",
+  "measured_commit": "4d4abf36cfc49abfe8fad139629c09f7eeff4f96",
+  "engine_tree": "0cf008bdf460e594fa09966e3331aba9051fada7",
+  "engine_tree_note": "tree of src/scripts/code_graph at HEAD; an uncommitted engine edit would not show here",
+  "subjects": [
+    {
+      "name": "unopim",
+      "repo": "event4u-app/unopim",
+      "pin": "56071226255ff8e0f5dc40dafa72eab0f2751d54"
+    },
+    {
+      "name": "larasend",
+      "repo": "event4u-app/larasend",
+      "pin": "da5c06c725f51f537fd8e238e436263665f475d2"
+    }
+  ],
+  "arms": {
+    "native": {
+      "unopim": {
+        "build_ms": 4225,
+        "files": 3595,
+        "nodes": 12354,
+        "edges": 62159,
+        "graph_sha256": "c860cbbae7fb56704123101fc0ce53c1e8537394a57b07da578db20f7130ac3f"
+      },
+      "larasend": {
+        "build_ms": 577,
+        "files": 427,
+        "nodes": 2462,
+        "edges": 9963,
+        "graph_sha256": "d1f229f9b0566fc716dbf579cf64c2b351b619465ecb00cab800e070d54c3a37"
+      }
+    },
+    "foreign": {
+      "unopim": {
+        "status": "ABSENT",
+        "reason": "no foreign graph.json passed for this subject"
+      },
+      "larasend": {
+        "status": "ABSENT",
+        "reason": "no foreign graph.json passed for this subject"
+      }
+    }
+  },
+  "questions": 45,
+  "pending_truth": 39,
+  "answers_per_arm": {
+    "grep": 45,
+    "native": 45,
+    "foreign": 0
+  },
+  "non_empty_answers_per_arm": {
+    "grep": 43,
+    "native": 39,
+    "foreign": 0
+  },
+  "questions_per_language": {
+    "php": 38,
+    "ts": 3,
+    "vue": 1,
+    "js": 3
+  },
+  "per_class": [
+    {
+      "class": "precise-semantics",
+      "subject": "all",
+      "arms": {
+        "grep": {
+          "n": 12,
+          "pending": 12,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 12,
+          "pending": 12,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": true
+    },
+    {
+      "class": "route-trace",
+      "subject": "unopim",
+      "arms": {
+        "grep": {
+          "n": 3,
+          "pending": 3,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 3,
+          "pending": 3,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": true
+    },
+    {
+      "class": "route-trace",
+      "subject": "larasend",
+      "arms": {
+        "grep": {
+          "n": 3,
+          "pending": 3,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 3,
+          "pending": 3,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": false
+    },
+    {
+      "class": "model-table",
+      "subject": "all",
+      "arms": {
+        "grep": {
+          "n": 6,
+          "pending": 6,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 6,
+          "pending": 6,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": true
+    },
+    {
+      "class": "tests-for",
+      "subject": "all",
+      "arms": {
+        "grep": {
+          "n": 5,
+          "pending": 5,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 5,
+          "pending": 5,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": true
+    },
+    {
+      "class": "change-impact",
+      "subject": "all",
+      "arms": {
+        "grep": {
+          "n": 6,
+          "pending": 6,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 6,
+          "pending": 6,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": true
+    },
+    {
+      "class": "change-impact-xplane",
+      "subject": "all",
+      "arms": {
+        "grep": {
+          "n": 4,
+          "pending": 4,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "native": {
+          "n": 4,
+          "pending": 4,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "PENDING"
+        },
+        "foreign": {
+          "n": 0,
+          "pending": 0,
+          "precision": null,
+          "recall": null,
+          "clean_rate": null,
+          "overconfidence_rate": null,
+          "status": "ABSENT"
+        }
+      },
+      "native_verdict": "PENDING",
+      "foreign_verdict": "ABSENT",
+      "verdict_bearing": true
+    }
+  ],
+  "suite_d": {
+    "grep": {
+      "n": 6,
+      "pending": 0,
+      "precision": null,
+      "recall": null,
+      "clean_rate": 0.333,
+      "overconfidence_rate": null,
+      "status": "CLEAN-RATE"
+    },
+    "native": {
+      "n": 6,
+      "pending": 0,
+      "precision": null,
+      "recall": null,
+      "clean_rate": 0.333,
+      "overconfidence_rate": null,
+      "status": "CLEAN-RATE"
+    },
+    "foreign": {
+      "n": 0,
+      "pending": 0,
+      "precision": null,
+      "recall": null,
+      "clean_rate": null,
+      "overconfidence_rate": null,
+      "status": "ABSENT"
+    }
+  },
+  "native_classes_won": [],
+  "null_path": "PENDING — truth has not landed",
+  "suite_a": "v2 runner, unchanged; `--suite-a` spawns it under its own report stem",
+  "suite_f": "agentic arms; not run by this runner",
+  "rows": [
+    {
+      "id": "ls-b-01",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-b-02",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 12,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-b-03",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 6,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-b-04",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "larasend",
+      "language": "ts",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-b-05",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "larasend",
+      "language": "ts",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-b-06",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "larasend",
+      "language": "vue",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-b-01",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 196,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 5,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-b-02",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-b-03",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 24,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 10,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-b-04",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 24,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 10,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-b-05",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "unopim",
+      "language": "js",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-b-06",
+      "suite": "B",
+      "class": "precise-semantics",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "affected+query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-route-01",
+      "suite": "C",
+      "class": "route-trace",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "path",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 136,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-route-02",
+      "suite": "C",
+      "class": "route-trace",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "path",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 123,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-route-03",
+      "suite": "C",
+      "class": "route-trace",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "path",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 94,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-route-01",
+      "suite": "C",
+      "class": "route-trace",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "path",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1396,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-route-02",
+      "suite": "C",
+      "class": "route-trace",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "path",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 657,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-route-03",
+      "suite": "C",
+      "class": "route-trace",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "path",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 10,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-model-01",
+      "suite": "C",
+      "class": "model-table",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-model-02",
+      "suite": "C",
+      "class": "model-table",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 16,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-model-03",
+      "suite": "C",
+      "class": "model-table",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 14,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-model-01",
+      "suite": "C",
+      "class": "model-table",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 21,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-model-02",
+      "suite": "C",
+      "class": "model-table",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 32,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-model-03",
+      "suite": "C",
+      "class": "model-table",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "query",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 1,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-tests-01",
+      "suite": "C",
+      "class": "tests-for",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "tests-for",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 6,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-c-tests-02",
+      "suite": "C",
+      "class": "tests-for",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "tests-for",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-tests-01",
+      "suite": "C",
+      "class": "tests-for",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "tests-for",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 14,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-tests-02",
+      "suite": "C",
+      "class": "tests-for",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "tests-for",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-c-tests-03",
+      "suite": "C",
+      "class": "tests-for",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "tests-for",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-d-01",
+      "suite": "D",
+      "class": "negative-control",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "expected-empty",
+      "verb": "path",
+      "grep": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 5,
+        "missed": [],
+        "wrong": [
+          "app/Http/Controllers/Webhooks/SesWebhookController.php",
+          "app/Jobs/DeliverInboundWebhook.php",
+          "app/Services/InboundEmailIngestor.php",
+          "routes/api.php",
+          "tests/Feature/InboundEmailTest.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [
+          "app/Http/Controllers/Webhooks/SesWebhookController.php",
+          "app/Jobs/DeliverInboundWebhook.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-d-02",
+      "suite": "D",
+      "class": "negative-control",
+      "subject": "larasend",
+      "language": "ts",
+      "hop_stratum": ">=3",
+      "truth": "expected-empty",
+      "verb": "path",
+      "grep": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 5,
+        "missed": [],
+        "wrong": [
+          "app/Jobs/DeliverWebhook.php",
+          "app/Services/WebhookDeliveryService.php",
+          "resources/js/components/AppHeader.vue",
+          "resources/js/components/UserInfo.vue",
+          "resources/js/composables/useInitials.ts"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 10,
+        "missed": [],
+        "wrong": [
+          "app/Console/Commands/DoctorCommand.php",
+          "app/Jobs/DeliverWebhook.php",
+          "app/Jobs/RecheckPendingDomains.php",
+          "app/Models/Domain.php",
+          "config/app.php",
+          "resources/js/app.ts",
+          "resources/js/components/AppHeader.vue",
+          "resources/js/composables/useInitials.ts",
+          "resources/js/layouts/settings/Layout.vue",
+          "resources/views/app.blade.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-d-03",
+      "suite": "D",
+      "class": "negative-control",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "expected-empty",
+      "verb": "affected+query",
+      "grep": {
+        "status": "CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-d-01",
+      "suite": "D",
+      "class": "negative-control",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "expected-empty",
+      "verb": "path",
+      "grep": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [
+          "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+          "packages/Webkul/Webhook/src/Console/Commands/PruneWebhookLogs.php",
+          "packages/Webkul/Webhook/src/Providers/WebhookServiceProvider.php",
+          "packages/Webkul/Webhook/src/Services/WebhookService.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [
+          "packages/Webkul/ElasticSearch/src/Console/Command/CategoryIndexer.php",
+          "packages/Webkul/Webhook/src/Console/Commands/PruneWebhookLogs.php",
+          "packages/Webkul/Webhook/src/Services/WebhookService.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-d-02",
+      "suite": "D",
+      "class": "negative-control",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "expected-empty",
+      "verb": "path",
+      "grep": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 4,
+        "missed": [],
+        "wrong": [
+          "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductGridViewController.php",
+          "packages/Webkul/Admin/src/Routes/catalog-routes.php",
+          "packages/Webkul/Admin/tests/Feature/Webhook/WebhookFanOutTest.php",
+          "packages/Webkul/Webhook/src/Services/WebhookService.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "NOT-CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 5,
+        "missed": [],
+        "wrong": [
+          "packages/Webkul/Admin/src/Http/Controllers/Catalog/ProductGridViewController.php",
+          "packages/Webkul/Admin/src/Http/Controllers/Controller.php",
+          "packages/Webkul/Admin/src/Http/Controllers/Settings/DataTransfer/ExportFilterController.php",
+          "packages/Webkul/Webhook/src/Models/Webhook.php",
+          "packages/Webkul/Webhook/src/Services/WebhookService.php"
+        ],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-d-03",
+      "suite": "D",
+      "class": "negative-control",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 1,
+      "truth": "expected-empty",
+      "verb": "affected+query",
+      "grep": {
+        "status": "CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "CLEAN",
+        "precision": null,
+        "recall": null,
+        "answered": 0,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-e-01",
+      "suite": "E",
+      "class": "change-impact",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 6,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-e-02",
+      "suite": "E",
+      "class": "change-impact",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 6,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 17,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-e-03",
+      "suite": "E",
+      "class": "change-impact",
+      "subject": "larasend",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-e-01",
+      "suite": "E",
+      "class": "change-impact",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": ">=3",
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 38,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-e-02",
+      "suite": "E",
+      "class": "change-impact",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 111,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-e-03",
+      "suite": "E",
+      "class": "change-impact",
+      "subject": "unopim",
+      "language": "php",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 14,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-e-x-01",
+      "suite": "E",
+      "class": "change-impact-xplane",
+      "subject": "larasend",
+      "language": "php",
+      "target_language": "vue",
+      "hop_stratum": 1,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "ls-e-x-02",
+      "suite": "E",
+      "class": "change-impact-xplane",
+      "subject": "larasend",
+      "language": "php",
+      "target_language": "vue",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 2,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-e-x-01",
+      "suite": "E",
+      "class": "change-impact-xplane",
+      "subject": "unopim",
+      "language": "js",
+      "target_language": "blade",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 7,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    },
+    {
+      "id": "uo-e-x-02",
+      "suite": "E",
+      "class": "change-impact-xplane",
+      "subject": "unopim",
+      "language": "js",
+      "target_language": "blade",
+      "hop_stratum": 2,
+      "truth": "pending",
+      "verb": "impact",
+      "grep": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 3,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "native": {
+        "status": "PENDING",
+        "precision": null,
+        "recall": null,
+        "answered": 6,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      },
+      "foreign": {
+        "status": "ABSENT",
+        "precision": null,
+        "recall": null,
+        "answered": null,
+        "missed": [],
+        "wrong": [],
+        "top_label_items": null,
+        "top_label_wrong": null
+      }
+    }
+  ]
+}

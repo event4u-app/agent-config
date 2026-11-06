@@ -19,6 +19,8 @@ export interface GateCheck {
 interface Node {
     name: string;
     attrs: Record<string, string>;
+    /** Index of the enclosing element in the node list; -1 for the root. */
+    parent: number;
 }
 
 const SHAPES = new Set(['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline', 'line', 'text']);
@@ -28,6 +30,7 @@ const ATTR_RE = /([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)')/g;
 export function parse_svg(src: string): { nodes: Node[]; error: string | null } {
     const nodes: Node[] = [];
     const stack: string[] = [];
+    const open: number[] = [];
     const body = src.replace(/<!--[\s\S]*?-->/g, '').replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '');
     const tag = /<(\/?)([A-Za-z_][-A-Za-z0-9_:.]*)((?:\s+[^<>]*?)?)\s*(\/?)>|<\?[\s\S]*?\?>|<!DOCTYPE[^>]*>|</g;
     let m: RegExpExecArray | null;
@@ -38,6 +41,7 @@ export function parse_svg(src: string): { nodes: Node[]; error: string | null } 
         const [, close, name, rawAttrs, selfClose] = m as unknown as [string, string, string, string, string];
         if (close) {
             if (stack.pop() !== name) return { nodes, error: `mismatched </${name}>` };
+            open.pop();
             continue;
         }
         if (stack.length === 0 && seenRoot) return { nodes, error: 'more than one root element' };
@@ -48,8 +52,11 @@ export function parse_svg(src: string): { nodes: Node[]; error: string | null } 
             return '';
         });
         if (leftover.trim() !== '') return { nodes, error: `malformed attributes on <${name}>` };
-        nodes.push({ name, attrs });
-        if (!selfClose) stack.push(name);
+        nodes.push({ name, attrs, parent: open.length > 0 ? (open[open.length - 1] as number) : -1 });
+        if (!selfClose) {
+            stack.push(name);
+            open.push(nodes.length - 1);
+        }
     }
     if (stack.length > 0) return { nodes, error: `unclosed <${stack[stack.length - 1]}>` };
     return { nodes, error: nodes.length === 0 ? 'no elements' : null };
@@ -107,8 +114,30 @@ function points_box(n: number[]): Box {
     return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 }
 
+/**
+ * Editability: a designer can find and change each part. Every
+ * drawable shape carries an id, or sits inside a group that does; and the drawing
+ * stays within a shape budget, which is what stops a pixel-per-rect trace.
+ */
+export function editability_checks(src: string, opts: { max_shapes: number }): GateCheck[] {
+    const { nodes, error } = parse_svg(src);
+    if (error !== null) return [{ id: 'shapes-named', status: 'fail', detail: error }];
+    const shapes = nodes.filter((n) => SHAPES.has(local(n.name)) && local(n.name) !== 'text');
+    const named = (n: Node): boolean => {
+        for (let cur: Node | undefined = n; cur !== undefined; cur = cur.parent >= 0 ? nodes[cur.parent] : undefined) {
+            if ((cur === n || local(cur.name) === 'g') && (cur.attrs['id'] ?? '').trim() !== '') return true;
+        }
+        return false;
+    };
+    const unnamed = shapes.filter((n) => !named(n)).length;
+    return [
+        { id: 'shapes-named', status: shapes.length > 0 && unnamed === 0 ? 'pass' : 'fail', detail: `${unnamed} of ${shapes.length} shape(s) unnamed` },
+        { id: 'shape-budget', status: shapes.length <= opts.max_shapes ? 'pass' : 'fail', detail: `${shapes.length} shape(s), budget ${opts.max_shapes}` },
+    ];
+}
+
 /** Run every gate check. `palette`, when given, requires ≥ `palette_min` of its colours to appear. */
-export function svg_render_gate(src: string, opts: { palette?: string[]; palette_min?: number } = {}): GateCheck[] {
+export function svg_render_gate(src: string, opts: { palette?: string[]; palette_min?: number; editability?: { max_shapes: number } } = {}): GateCheck[] {
     const checks: GateCheck[] = [];
     const { nodes, error } = parse_svg(src);
     checks.push({ id: 'parses', status: error === null ? 'pass' : 'fail', ...(error ? { detail: error } : {}) });
@@ -153,5 +182,6 @@ export function svg_render_gate(src: string, opts: { palette?: string[]; palette
         const min = opts.palette_min ?? opts.palette.length;
         checks.push({ id: 'palette', status: hits.length >= min ? 'pass' : 'fail', detail: `${hits.length}/${opts.palette.length} source colours` });
     }
+    if (opts.editability) checks.push(...editability_checks(src, opts.editability));
     return checks;
 }

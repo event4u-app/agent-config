@@ -39,6 +39,7 @@ const IDS = [
     'art-php-endpoint-01',
     'art-page-copy-01',
     'art-app-copy-01',
+    'art-dnd-01',
 ];
 
 const tasks = load_artifact_corpus(CORPUS);
@@ -51,7 +52,7 @@ afterEach(() => {
 describe('2.1 kind: artifact — loader', () => {
     const base = (): Record<string, unknown> => JSON.parse(JSON.stringify(task('art-svg-prompt-01'))) as Record<string, unknown>;
 
-    it('parses the corpus: nine artifact tasks, each with a deliverable, one primary grader and a network mode', () => {
+    it('parses the corpus: ten artifact tasks, each with a deliverable, one primary grader and a network mode', () => {
         expect(tasks.map((t) => t.id)).toEqual(IDS);
         for (const t of tasks) {
             expect(t.kind).toBe('artifact');
@@ -102,13 +103,13 @@ describe('2.1 kind: artifact — loader', () => {
 });
 
 describe('2.2 seed tasks — dry run', () => {
-    it('lists all nine tasks for both arms', () => {
+    it('lists all ten tasks for both arms', () => {
         const r = spawnSync(TSX, ['src/scripts/bench_ab_v2_run.ts', '--corpus', 'artifact', '--arms', 'vanilla,package', '--mode', 'dry-run', '--seeds', '1'], {
             cwd: REPO,
             encoding: 'utf-8',
         });
         expect(r.status).toBe(0);
-        expect(r.stdout).toContain('9 tasks × 2 arms');
+        expect(r.stdout).toContain('10 tasks × 2 arms');
         for (const id of IDS) {
             for (const arm of ['vanilla', 'package']) expect(r.stdout).toMatch(new RegExp(`${id}\\s+arm=${arm}\\s`));
         }
@@ -351,7 +352,10 @@ describe('3.2 grader self-test', () => {
     it('every runnable grader separates its planted pair; toolchain-less ones are skipped, not passed', async () => {
         for (const t of tasks) {
             const row = await selftest_task(t, { php: null, browser: false });
-            if (t.graders.some((g) => g.role === 'primary' && ['functional+exploits', 'hidden-tests', 'bench-ui'].includes(g.id))) {
+            // A grader needing PHP or Chromium is skipped here; so is the SVG gate once it scores render similarity (2.4).
+            const needs_toolchain = (g: { id: string; role: string; args?: Record<string, unknown> }): boolean =>
+                g.role === 'primary' && (['functional+exploits', 'hidden-tests', 'bench-ui', 'browser-acceptance'].includes(g.id) || g.args?.['similarity'] !== undefined);
+            if (t.graders.some(needs_toolchain)) {
                 expect(row.verdict).toBe('skipped');
                 expect(row.reason).toMatch(/php not installed|no playwright chromium/);
             } else {
@@ -431,5 +435,124 @@ describe('4.2 parity loop', () => {
         const noSession: ArtifactHost = { start: async () => ({ session_id: null, errored: false, tokens: null, turns: null }), resume: async () => ({ session_id: null, errored: false, tokens: null, turns: null }) };
         const errored = await parity_loop({ task: t5(), arm: 'vanilla', ladder: 'naive', host: noSession, grade: f.grade });
         expect(errored).toMatchObject({ outcome: 'errored', tokens_total: null });
+    });
+});
+
+describe('artifact host credentials', () => {
+    it('hands the isolated host the account token and strips credentials that would override it', async () => {
+        const { host_env } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const env = host_env(
+            { PATH: '/bin', ANTHROPIC_API_KEY: 'sk-x', ANTHROPIC_BASE_URL: 'http://x' },
+            { HOME: '/tmp/h', CLAUDE_CONFIG_DIR: '/tmp/h/.claude' },
+            'tok-1',
+        );
+        expect(env['CLAUDE_CODE_OAUTH_TOKEN']).toBe('tok-1');
+        expect(env['HOME']).toBe('/tmp/h');
+        expect(env['PATH']).toBe('/bin');
+        expect(env).not.toHaveProperty('ANTHROPIC_API_KEY');
+        expect(env).not.toHaveProperty('ANTHROPIC_BASE_URL');
+    });
+
+    it('without a token keeps the inherited environment unchanged under the isolation', async () => {
+        const { host_env } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const env = host_env({ PATH: '/bin', ANTHROPIC_API_KEY: 'sk-x' }, { HOME: '/tmp/h' }, null);
+        expect(env['ANTHROPIC_API_KEY']).toBe('sk-x');
+        expect(env['HOME']).toBe('/tmp/h');
+        expect(env).not.toHaveProperty('CLAUDE_CODE_OAUTH_TOKEN');
+    });
+
+    it('names the host failure instead of a bare "host error"', async () => {
+        const { host_turn_from_envelope } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const t = host_turn_from_envelope({ is_error: true, result: 'Not logged in · Please run /login' }, 1);
+        expect(t.errored).toBe(true);
+        expect(t.reason).toBe('host error: Not logged in · Please run /login');
+    });
+
+    it('names the envelope subtype when the host error carries no message', async () => {
+        const { host_turn_from_envelope } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const t = host_turn_from_envelope({ is_error: true, subtype: 'error_max_budget_usd', result: '' }, 1);
+        expect(t.reason).toBe('host error (error_max_budget_usd)');
+        const bare = host_turn_from_envelope({ is_error: true }, 1);
+        expect(bare.reason).toBe('host error');
+    });
+});
+
+describe('artifact network isolation', () => {
+    it('blackholes the network except the model API the host itself needs', async () => {
+        const { network_env, BLACKHOLE_PROXY: bh } = await import('../../src/scripts/_lib/bench_artifact_isolation.js');
+        const env = network_env('none');
+        expect(env['HTTPS_PROXY']).toBe(bh);
+        expect(env['NO_PROXY']).toBe('api.anthropic.com');
+        expect(env['no_proxy']).toBe('api.anthropic.com');
+    });
+});
+
+describe('artifact transcripts', () => {
+    it('copies every session transcript out of the config dir before it is disposed', async () => {
+        const { keep_transcripts } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'kt-src-'));
+        const dest = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'kt-dst-')), 'run');
+        fs.mkdirSync(path.join(src, 'projects', '-ws-a'), { recursive: true });
+        fs.writeFileSync(path.join(src, 'projects', '-ws-a', 's1.jsonl'), '{"a":1}\n');
+        fs.mkdirSync(path.join(src, 'projects', '-ws-a', 's1', 'subagents'), { recursive: true });
+        fs.writeFileSync(path.join(src, 'projects', '-ws-a', 's1', 'subagents', 'x.jsonl'), '{"b":2}\n');
+        fs.writeFileSync(path.join(src, 'settings.json'), '{}');
+        expect(keep_transcripts(src, dest)).toBe(2);
+        expect(fs.readFileSync(path.join(dest, '-ws-a', 's1.jsonl'), 'utf8')).toBe('{"a":1}\n');
+        expect(fs.existsSync(path.join(dest, '-ws-a', 's1', 'subagents', 'x.jsonl'))).toBe(true);
+        expect(fs.existsSync(path.join(dest, 'settings.json'))).toBe(false);
+    });
+
+    it('keeps nothing and creates nothing when the run left no transcript', async () => {
+        const { keep_transcripts } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'kt-empty-'));
+        const dest = path.join(os.tmpdir(), `kt-none-${process.pid}`);
+        expect(keep_transcripts(src, dest)).toBe(0);
+        expect(fs.existsSync(dest)).toBe(false);
+    });
+});
+
+describe('artifact package install', () => {
+    it('installs with the arm home but without the network blackhole, and shares one npm cache', async () => {
+        const { install_env } = await import('../../src/scripts/_lib/bench_artifact_install.js');
+        const iso_env = { HOME: '/t/home', CLAUDE_CONFIG_DIR: '/t/home/.claude', HTTPS_PROXY: 'http://127.0.0.1:9', https_proxy: 'x', HTTP_PROXY: 'x', http_proxy: 'x', ALL_PROXY: 'x', NO_PROXY: 'a', no_proxy: 'a', npm_config_offline: 'true', PIP_NO_INDEX: '1', COMPOSER_DISABLE_NETWORK: '1' };
+        const env = install_env({ PATH: '/bin', HTTPS_PROXY: 'http://corp:3128' }, iso_env, '/t/cache');
+        expect(env['HOME']).toBe('/t/home');
+        expect(env['CLAUDE_CONFIG_DIR']).toBe('/t/home/.claude');
+        expect(env['npm_config_cache']).toBe('/t/cache');
+        expect(env['PATH']).toBe('/bin');
+        expect(env['HTTPS_PROXY']).toBe('http://corp:3128');
+        for (const k of ['https_proxy', 'HTTP_PROXY', 'ALL_PROXY', 'npm_config_offline', 'PIP_NO_INDEX', 'COMPOSER_DISABLE_NETWORK']) expect(env).not.toHaveProperty(k);
+    });
+
+    it('counts the skills an install put into the config dir', async () => {
+        const { installed_skill_count } = await import('../../src/scripts/_lib/bench_artifact_install.js');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skills-'));
+        expect(installed_skill_count(dir)).toBe(0);
+        for (const n of ['a', 'b']) {
+            fs.mkdirSync(path.join(dir, 'skills', n), { recursive: true });
+            fs.writeFileSync(path.join(dir, 'skills', n, 'SKILL.md'), '---\n---\n');
+        }
+        fs.mkdirSync(path.join(dir, 'skills', 'empty'), { recursive: true });
+        expect(installed_skill_count(dir)).toBe(2);
+    });
+
+    it('refuses a package arm with nothing installed and a control arm with something installed', async () => {
+        const { load_check } = await import('../../src/scripts/_lib/bench_artifact_install.js');
+        expect(load_check(true, 321).ok).toBe(true);
+        expect(load_check(false, 0).ok).toBe(true);
+        expect(load_check(true, 0)).toEqual({ ok: false, reason: 'load_mismatch: package arm has 0 installed skills' });
+        expect(load_check(false, 3)).toEqual({ ok: false, reason: 'load_mismatch: control arm has 3 installed skills' });
+    });
+
+    it('never points the host at the repository as a plugin dir', async () => {
+        const { host_cmd } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const cmd = host_cmd('go', { setting_sources: null, inject: null }, { model: 'm', budget: 1 }, ['--disallowedTools', 'WebFetch'], null);
+        expect(cmd).not.toContain('--plugin-dir');
+        expect(cmd).not.toContain('--setting-sources');
+        const ctl = host_cmd('go', { setting_sources: 'project,local', inject: null }, { model: 'm', budget: 1 }, [], 'sid');
+        expect(ctl).toContain('--setting-sources');
+        expect(ctl.slice(ctl.indexOf('--resume'), ctl.indexOf('--resume') + 2)).toEqual(['--resume', 'sid']);
+        expect(ctl.indexOf('--resume')).toBeLessThan(ctl.indexOf('--'));
     });
 });

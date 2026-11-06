@@ -9,12 +9,10 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-a-fill-the-session-sees-coming | active | ready | The fill state is visible outside the reply too (status line, doctor), and the continuity record no longer depends on … |
 | road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
+| road-to-a-linear-time-test-that-holds-on-ci | active | ready | Road to a linear-time test that holds on CI |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
-| road-to-a-memory-each-worker-is-handed | active | ready | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
-| road-to-a-noted-that-is-a-write-carried | active | ready | A correction the host's own auto-memory already recorded counts as an earlier arrival of that subject in the self-repair subject … |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
@@ -32,8 +30,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-lead-the-user-can-reach-carried | later | parked | Road to a lead the user can reach — carried |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
 | road-to-a-library-the-agent-can-vouch-for | later | later | In a PHP project that needs DTOs, mapping, accessors or filters, AC writes code against the data-helpers version in the … |
+| road-to-a-link-with-agent-switch | later | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-engine-that-never-writes-through-a-symlink | later | later | Road to a map engine that never writes through a symlink |
 | road-to-a-mark-render-readings | later | later | A mark that only works in colour, on light, or above 64 px is reported by a render reading measured … |
+| road-to-a-memory-each-worker-is-handed | later | later | A dispatched worker receives a bounded set of memory references cut for its audience, and what a worker writes back … |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-prompt-that-deepens-not-widens-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
@@ -136,6 +136,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-policy-evaluation-core | later | blocked-for-later | Road to policy-evaluation core — deterministic Class-A slice of the rejected resident enforcement plane |
 | road-to-post-pr-promotion-workflow | later | later | Road to post-PR promotion workflow |
 | road-to-product-bets | later | later | Road to product bets — simple/expert mode, explainability, connectors |
+| road-to-proof-where-the-owner-sees-it | later | later | Benefit is measured where the owner sees it. |
 | road-to-reach-cost-primary-bench | later | ready | Reach — test the cost thesis properly (the signal the capability bench was not built to decide) |
 | road-to-reach-headless | later | ready | Reach — headless browser for JS-only platforms |
 | road-to-reach-reddit-approved-api | later | ready | Reach — Reddit approved Data API access (the durable path) |
@@ -181,15 +182,17 @@ and keep the full search — this file only adds candidates to it.
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
 | orchestrator-spawn-injection | stubs | — | orchestrator-side spawn injection |
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
+| road-to-a-discipline-profile-that-loads | stubs | — | a discipline profile that changes what loads |
 | road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
+| road-to-a-line-budget-that-does-not-tax-a-why-comment | stubs | — | a line budget that does not tax a why-comment |
 | road-to-a-lineage-gate-that-sees-the-folder | stubs | — | road to a lineage gate that sees the whole inbox folder |
+| road-to-a-minimal-diff-that-holds-under-load | stubs | — | a minimal diff that holds with the package loaded |
 | road-to-a-name-no-host-already-owns-later | stubs | — | Rename leftovers. |
 | road-to-a-page-check-on-by-default | stubs | — | road to a page check on by default |
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
 | road-to-a-quota-notice-that-earned-its-bands | stubs | — | road to a quota notice that earned its bands |
-| road-to-a-rerun-on-the-repaired-scorer | stubs | — | Road to a rerun on the repaired scorer — stub |
 | road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
 | road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
@@ -206,6 +209,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-artefact-family-registry | stubs | — | a declared artefact-family registry |
 | road-to-assurance-benchmark | stubs | — | Road to an assurance benchmark — stub |
 | road-to-batch-elicitation-kernel-delta | stubs | — | road to the batch-elicitation kernel delta |
+| road-to-bench-accounts-through-agent-switch | stubs | — | bench accounts through agent-switch |
 | road-to-bench-gate-capability-non-inferiority | stubs | — | the bench gate requires capability non-inferiority |
 | road-to-blocker-parse-visibility | stubs | — | road to a blocker the parser can actually see |
 | road-to-bracket-live-measurements | stubs | — | live bracket measurements |

@@ -1,0 +1,46 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md",
+  "src/scripts/_lib/self_repair.ts",
+  "src/scripts/self_repair_cli.ts",
+  "src/scripts/self_repair_hook.ts",
+  "tests/scripts/self_repair.test.ts"
+ ],
+ "reply": "{\"files\": [\"src/scripts/self_repair_cli.ts\", \"src/scripts/self_repair_hook.ts\", \"tests/scripts/self_repair.test.ts\", \"src/scripts/_lib/self_repair.ts\", \"agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 11084,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 114,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 11084,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 114,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 11084,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 11084
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

@@ -1,0 +1,380 @@
+[
+ {
+  "id": "ls-b-04",
+  "question": {
+   "id": "ls-b-04",
+   "suite": "B",
+   "class": "precise-semantics",
+   "shape": "callers",
+   "subject": "larasend",
+   "language": "ts",
+   "question": "Which files call the toUrl helper declared in resources/js/lib/utils.ts?",
+   "probe": "toUrl",
+   "declared_in": "resources/js/lib/utils.ts:10",
+   "hop_stratum": 1,
+   "basis": [
+    "resources/js/composables/useCurrentUrl.ts:5,43 -- import and call",
+    "resources/js/components/NavFooter.vue:9,32 -- import and template call",
+    "resources/js/components/AppHeader.vue:37,131,218 -- import and template calls"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-b-04",
+   "hop_stratum_corpus": 1,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "scip-typescript npm larasend HEAD resources/js/lib/`utils.ts`/toUrl().",
+   "files": [
+    "resources/js/composables/useCurrentUrl.ts"
+   ],
+   "hop_stratum_oracle": 1,
+   "open": [
+    "scip-typescript does not index .vue single-file components; Vue call sites need the human reading"
+   ]
+  }
+ },
+ {
+  "id": "ls-b-05",
+  "question": {
+   "id": "ls-b-05",
+   "suite": "B",
+   "class": "precise-semantics",
+   "shape": "callers-transitive",
+   "subject": "larasend",
+   "language": "ts",
+   "question": "Which files reach updateTheme within two call hops?",
+   "probe": "updateTheme",
+   "declared_in": "resources/js/composables/useAppearance.ts:13",
+   "hop_stratum": 2,
+   "basis": [
+    "resources/js/composables/useAppearance.ts:80 -- initializeTheme() calls updateTheme",
+    "resources/js/app.ts:2,36 -- imports and calls initializeTheme (second hop)"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-b-05",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "scip-typescript npm larasend HEAD resources/js/composables/`useAppearance.ts`/updateTheme().",
+   "files": [
+    "resources/js/composables/useAppearance.ts"
+   ],
+   "hop_stratum_oracle": 1,
+   "open": [
+    "scip-typescript does not index .vue single-file components; Vue call sites need the human reading"
+   ]
+  }
+ },
+ {
+  "id": "ls-b-06",
+  "question": {
+   "id": "ls-b-06",
+   "suite": "B",
+   "class": "precise-semantics",
+   "shape": "callers-transitive",
+   "subject": "larasend",
+   "language": "vue",
+   "question": "Which files reach toUrl through any chain of calls or component usage (three or more hops)?",
+   "probe": "toUrl",
+   "declared_in": "resources/js/lib/utils.ts:10",
+   "hop_stratum": ">=3",
+   "basis": [
+    "resources/js/composables/useCurrentUrl.ts:43 -- calls toUrl (hop 1)",
+    "resources/js/components/NavMain.vue:10,17 and resources/js/layouts/settings/Layout.vue:7,49 -- call useCurrentUrl (hop 2)",
+    "components that render NavMain / settings Layout, and pages that render those (hop 3+), resolved by the oracle"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-b-06",
+   "hop_stratum_corpus": ">=3",
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "scip-typescript npm larasend HEAD resources/js/lib/`utils.ts`/toUrl().",
+   "files": [
+    "resources/js/composables/useCurrentUrl.ts"
+   ],
+   "hop_stratum_oracle": 1,
+   "open": [
+    "scip-typescript does not index .vue single-file components; Vue call sites need the human reading"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-tests-01",
+  "question": {
+   "id": "ls-c-tests-01",
+   "suite": "C",
+   "class": "tests-for",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Which test files exercise ThreadResolver, directly or through a route or service that calls it?",
+   "probe": "ThreadResolver",
+   "hop_stratum": 2,
+   "basis": [
+    "tests/Feature/ThreadingTest.php, tests/Feature/InboxTest.php, tests/Feature/InboundEmailTest.php -- post to the Cloudflare inbound route, which reaches ThreadResolver"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-tests-01",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "App\\Services\\ThreadResolver",
+   "files": [
+    "tests/Feature/ApiEmailTest.php",
+    "tests/Feature/DatabaseSeederSafetyTest.php",
+    "tests/Feature/InboundEmailTest.php",
+    "tests/Feature/ThreadingTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "route hops not followed from 9 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: App\\Console\\Commands\\ThreadBackfillCommand::handle, App\\Services\\EmailSendService::__construct, App\\Services\\InboundEmailIngestor::__construct, Database\\Seeders\\InboxDemoSeeder::__construct, Database\\Seeders\\InboxDemoSeeder::run"
+   ]
+  }
+ },
+ {
+  "id": "ls-c-tests-02",
+  "question": {
+   "id": "ls-c-tests-02",
+   "suite": "C",
+   "class": "tests-for",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Which test files exercise SuppressionRemovalService, directly or through a route that calls it?",
+   "probe": "SuppressionRemovalService",
+   "hop_stratum": 2,
+   "basis": [
+    "tests/Feature/SuppressionManagementTest.php -- dashboard and API suppression removal"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-c-tests-02",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "App\\Services\\SuppressionRemovalService",
+   "files": [],
+   "open": [
+    "route hops not followed from 3 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: App\\Services\\SuppressionRemovalService::__construct"
+   ]
+  }
+ },
+ {
+  "id": "ls-d-01",
+  "question": {
+   "id": "ls-d-01",
+   "suite": "D",
+   "class": "negative-control",
+   "shape": "path",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Is there an accepted path from SesWebhookController to the outbound-HTTP job DeliverInboundWebhook?",
+   "probe": "SesWebhookController",
+   "probe_to": "DeliverInboundWebhook",
+   "threat_row": "threats.csv:24 SSRF via user-supplied URL",
+   "hop_stratum": ">=3",
+   "expected": "empty",
+   "reason": "The SES path ends in WebhookDeliveryService, which dispatches DeliverWebhook only (app/Services/WebhookDeliveryService.php:23). DeliverInboundWebhook is dispatched only from app/Services/InboundEmailIngestor.php:40,87, which is referenced only by app/Http/Controllers/Webhooks/CloudflareInboundController.php. The SES event EmailActivityUpdated is broadcast-only (app/Events/EmailActivityUpdated.php:12)."
+  },
+  "oracle": {
+   "id": "ls-d-01",
+   "hop_stratum_corpus": ">=3",
+   "status": "confirms-empty",
+   "truth_via": "oracle",
+   "files": [],
+   "open": [
+    "engine-only: route, queue and event dispatch hops are not followed"
+   ]
+  }
+ },
+ {
+  "id": "ls-d-02",
+  "question": {
+   "id": "ls-d-02",
+   "suite": "D",
+   "class": "negative-control",
+   "shape": "path",
+   "subject": "larasend",
+   "language": "ts",
+   "question": "Is there an accepted path from the getInitials display helper to the outbound-HTTP job DeliverWebhook?",
+   "probe": "getInitials",
+   "probe_to": "DeliverWebhook",
+   "threat_row": "threats.csv:24 SSRF via user-supplied URL",
+   "hop_stratum": ">=3",
+   "expected": "empty",
+   "reason": "getInitials (resources/js/composables/useInitials.ts:5) is a pure string helper rendered in AppHeader.vue:259 and UserInfo.vue:28; it calls nothing. DeliverWebhook is a queued PHP job reached only from WebhookDeliveryService."
+  },
+  "oracle": {
+   "id": "ls-d-02",
+   "hop_stratum_corpus": ">=3",
+   "status": "unresolved",
+   "truth_via": "oracle",
+   "files": [],
+   "open": [
+    "declaration not found in the scip index"
+   ]
+  }
+ },
+ {
+  "id": "ls-d-03",
+  "question": {
+   "id": "ls-d-03",
+   "suite": "D",
+   "class": "negative-control",
+   "shape": "symbol",
+   "subject": "larasend",
+   "language": "php",
+   "question": "Which files call attachForwarded?",
+   "probe": "attachForwarded",
+   "hop_stratum": 1,
+   "expected": "empty",
+   "reason": "Near-miss of attachInbound / attachOutbound (app/Services/ThreadResolver.php:25,49). Verified absent from the whole clone with a word-boundary search at construction time."
+  },
+  "oracle": {
+   "id": "ls-d-03",
+   "hop_stratum_corpus": 1,
+   "status": "confirms-empty",
+   "truth_via": "oracle",
+   "files": [],
+   "open": [
+    "no declaration of the probe exists at the pin"
+   ]
+  }
+ },
+ {
+  "id": "ls-e-01",
+  "question": {
+   "id": "ls-e-01",
+   "suite": "E",
+   "class": "change-impact",
+   "subject": "larasend",
+   "language": "php",
+   "question": "If WebhookUrlGuard::isSafe changes its contract, which files must be re-read?",
+   "probe": "isSafe",
+   "declared_in": "app/Services/WebhookUrlGuard.php:11",
+   "hop_stratum": 2,
+   "basis": [
+    "app/Rules/PublicWebhookUrl.php:21 (hop 1) -- used by app/Http/Requests/StoreWebhookEndpointRequest.php and StoreOnboardingRequest.php (hop 2)",
+    "app/Jobs/DeliverWebhook.php:45 and app/Jobs/DeliverInboundWebhook.php:54,85 (hop 1)",
+    "tests/Pest.php:23 and tests/Unit/WebhookUrlGuardTest.php -- subclass it"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-e-01",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "App\\Services\\WebhookUrlGuard::isSafe",
+   "files": [
+    "app/Rules/PublicWebhookUrl.php",
+    "tests/Unit/WebhookUrlGuardTest.php"
+   ],
+   "hop_stratum_oracle": 1,
+   "open": [
+    "framework-invoked entry point(s) not followed: App\\Rules\\PublicWebhookUrl::validate"
+   ]
+  }
+ },
+ {
+  "id": "ls-e-02",
+  "question": {
+   "id": "ls-e-02",
+   "suite": "E",
+   "class": "change-impact",
+   "subject": "larasend",
+   "language": "php",
+   "question": "If Suppression::normalizeEmail changes its contract, which files must be re-read?",
+   "probe": "normalizeEmail",
+   "declared_in": "app/Models/Suppression.php:44",
+   "hop_stratum": 2,
+   "basis": [
+    "direct users: app/Services/EmailSendService.php, SuppressionRemovalService.php, SesEventNormalizer.php, CloudflareApiClient.php, app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "their callers (hop 2), resolved by the oracle"
+   ],
+   "distractors": [
+    {
+     "path": "app/Models/Suppression.php",
+     "why": ":121 declares normalizeEmails (plural), a different symbol; the file counts only for its own calls of normalizeEmail"
+    }
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-e-02",
+   "hop_stratum_corpus": 2,
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "App\\Models\\Suppression::normalizeEmail",
+   "files": [
+    "app/Http/Controllers/Api/EmailController.php",
+    "app/Http/Controllers/Api/SuppressionController.php",
+    "app/Http/Controllers/DashboardActionController.php",
+    "app/Http/Controllers/ThreadActionController.php",
+    "app/Http/Controllers/Webhooks/SesWebhookController.php",
+    "app/Jobs/SyncCloudflareSourceSuppressions.php",
+    "app/Models/Suppression.php",
+    "app/Services/CloudflareApiClient.php",
+    "app/Services/EmailSendService.php",
+    "app/Services/SesEventNormalizer.php",
+    "app/Services/SuppressionRemovalService.php",
+    "tests/Feature/ApiEmailTest.php",
+    "tests/Feature/CloudflareSuppressionSyncTest.php",
+    "tests/Feature/SesWebhookTest.php",
+    "tests/Feature/SuppressionEmailNormalizationMigrationTest.php",
+    "tests/Feature/ThreadingTest.php"
+   ],
+   "hop_stratum_oracle": ">=3",
+   "open": [
+    "route hops not followed from 12 controller entry point(s)",
+    "framework-invoked entry point(s) not followed: App\\Models\\Suppression::email, App\\Models\\Suppression::scopeWhereNormalizedEmail, runCloudflareSuppressionSourceSync, App\\Models\\Suppression::scopeWhereNormalizedEmailIn, App\\Models\\Suppression::scopeWhereNormalizedEmailNotIn"
+   ]
+  }
+ },
+ {
+  "id": "ls-e-03",
+  "question": {
+   "id": "ls-e-03",
+   "suite": "E",
+   "class": "change-impact",
+   "subject": "larasend",
+   "language": "php",
+   "question": "If MimeMessageBuilder::splitAddress changes its contract, which files must be re-read (full closure)?",
+   "probe": "splitAddress",
+   "declared_in": "app/Services/MimeMessageBuilder.php:84",
+   "hop_stratum": ">=3",
+   "basis": [
+    "app/Services/EmailSendService.php:70,96,142,197,242 (hop 1)",
+    "EmailSendService is called from app/Http/Controllers/Api/EmailController.php:80 and the dashboard send path (hop 2), which are reached from routes/api.php and routes/web.php (hop 3)"
+   ],
+   "truth": "pending-oracle"
+  },
+  "oracle": {
+   "id": "ls-e-03",
+   "hop_stratum_corpus": ">=3",
+   "status": "oracle-partial",
+   "truth_via": "oracle",
+   "symbol": "App\\Services\\MimeMessageBuilder::splitAddress",
+   "files": [
+    "app/Http/Controllers/Api/EmailController.php",
+    "app/Http/Controllers/DashboardActionController.php",
+    "app/Http/Controllers/ThreadActionController.php",
+    "app/Services/EmailSendService.php",
+    "tests/Feature/ApiEmailTest.php",
+    "tests/Feature/ThreadingTest.php"
+   ],
+   "hop_stratum_oracle": 2,
+   "open": [
+    "route hops not followed from 8 controller entry point(s)"
+   ]
+  }
+ }
+]

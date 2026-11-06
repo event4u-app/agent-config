@@ -1,0 +1,269 @@
+[
+  {
+    "id": "ls-b-04",
+    "answer_files": [
+      {"path": "resources/js/composables/useCurrentUrl.ts", "evidence": ["resources/js/composables/useCurrentUrl.ts:5", "resources/js/composables/useCurrentUrl.ts:43"], "reason": "imports toUrl and calls it inside isCurrentUrl"},
+      {"path": "resources/js/components/NavFooter.vue", "evidence": ["resources/js/components/NavFooter.vue:9", "resources/js/components/NavFooter.vue:32"], "reason": "imports toUrl and calls it in the template :href binding"},
+      {"path": "resources/js/components/AppHeader.vue", "evidence": ["resources/js/components/AppHeader.vue:37", "resources/js/components/AppHeader.vue:131", "resources/js/components/AppHeader.vue:218"], "reason": "imports toUrl and calls it in two template :href bindings"}
+    ],
+    "oracle_files": [
+      {"path": "resources/js/composables/useCurrentUrl.ts", "verdict": "keep", "reason": "direct call at :43"}
+    ],
+    "excluded": [
+      {"path": "resources/js/lib/utils.ts", "reason": "declaring file (:10); no self-call of toUrl"},
+      {"path": "resources/js/components/NavMain.vue", "reason": "uses useCurrentUrl (indirect, hop 2), never calls toUrl itself"},
+      {"path": "resources/js/layouts/settings/Layout.vue", "reason": "uses useCurrentUrl (indirect, hop 2), never calls toUrl itself"}
+    ],
+    "open_followed": "Vue SFCs read by hand: exactly two .vue files reference toUrl (NavFooter.vue, AppHeader.vue). A word-boundary grep over resources, app, routes, tests finds no other occurrence.",
+    "answerable_as_registered": true,
+    "notes": "Oracle missed both Vue callers because scip-typescript does not index .vue files.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-b-05",
+    "answer_files": [
+      {"path": "resources/js/composables/useAppearance.ts", "evidence": ["resources/js/composables/useAppearance.ts:70", "resources/js/composables/useAppearance.ts:80", "resources/js/composables/useAppearance.ts:116"], "reason": "hop 1: handleSystemThemeChange, initializeTheme and updateAppearance (inside useAppearance) all call updateTheme"},
+      {"path": "resources/js/app.ts", "evidence": ["resources/js/app.ts:2", "resources/js/app.ts:36"], "reason": "hop 2: calls initializeTheme, which calls updateTheme"},
+      {"path": "resources/js/components/AppearanceTabs.vue", "evidence": ["resources/js/components/AppearanceTabs.vue:5", "resources/js/components/AppearanceTabs.vue:21"], "reason": "hop 2: @click calls updateAppearance, which calls updateTheme at useAppearance.ts:116"}
+    ],
+    "oracle_files": [
+      {"path": "resources/js/composables/useAppearance.ts", "verdict": "keep", "reason": "declares and internally calls updateTheme (hop 1)"}
+    ],
+    "excluded": [
+      {"path": "resources/js/components/TwoFactorSetupModal.vue", "reason": "calls useAppearance() (:32) but only reads resolvedAppearance; useAppearance itself does not invoke updateTheme on call, so updateTheme is never reached"},
+      {"path": "resources/js/components/ui/sonner/Sonner.vue", "reason": "calls useAppearance() (:6) but only reads appearance; never calls updateAppearance"},
+      {"path": "resources/js/pages/settings/Appearance.vue", "reason": "renders AppearanceTabs, which is hop 3, outside the two-hop bound"}
+    ],
+    "open_followed": "Vue SFCs read by hand: AppearanceTabs.vue is the only .vue file that invokes a function reaching updateTheme (updateAppearance). The other two useAppearance consumers only read reactive state.",
+    "answerable_as_registered": true,
+    "notes": "The corpus basis lists useAppearance.ts and app.ts. It misses AppearanceTabs.vue, which is a two-hop caller through updateAppearance. Reading 'reach' as 'calls the composable that defines a caller' would add TwoFactorSetupModal.vue and Sonner.vue, but neither executes a path that reaches updateTheme.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-b-06",
+    "answer_files": [
+      {"path": "resources/js/composables/useCurrentUrl.ts", "evidence": ["resources/js/composables/useCurrentUrl.ts:43"], "reason": "hop 1: calls toUrl"},
+      {"path": "resources/js/components/NavFooter.vue", "evidence": ["resources/js/components/NavFooter.vue:32"], "reason": "hop 1: template calls toUrl"},
+      {"path": "resources/js/components/AppHeader.vue", "evidence": ["resources/js/components/AppHeader.vue:131", "resources/js/components/AppHeader.vue:51"], "reason": "hop 1: calls toUrl directly, and also uses useCurrentUrl"},
+      {"path": "resources/js/components/NavMain.vue", "evidence": ["resources/js/components/NavMain.vue:10", "resources/js/components/NavMain.vue:17"], "reason": "hop 2: uses useCurrentUrl"},
+      {"path": "resources/js/layouts/settings/Layout.vue", "evidence": ["resources/js/layouts/settings/Layout.vue:7", "resources/js/layouts/settings/Layout.vue:49"], "reason": "hop 2: uses useCurrentUrl"},
+      {"path": "resources/js/components/AppSidebar.vue", "evidence": ["resources/js/components/AppSidebar.vue:5", "resources/js/components/AppSidebar.vue:6", "resources/js/components/AppSidebar.vue:57", "resources/js/components/AppSidebar.vue:61"], "reason": "hop 2: renders NavMain and NavFooter"},
+      {"path": "resources/js/layouts/app/AppHeaderLayout.vue", "evidence": ["resources/js/layouts/app/AppHeaderLayout.vue:3", "resources/js/layouts/app/AppHeaderLayout.vue:19"], "reason": "hop 2: renders AppHeader. Nothing in the tree imports this layout."},
+      {"path": "resources/js/layouts/app/AppSidebarLayout.vue", "evidence": ["resources/js/layouts/app/AppSidebarLayout.vue:4", "resources/js/layouts/app/AppSidebarLayout.vue:20"], "reason": "hop 3: renders AppSidebar"},
+      {"path": "resources/js/layouts/AppLayout.vue", "evidence": ["resources/js/layouts/AppLayout.vue:2", "resources/js/layouts/AppLayout.vue:11"], "reason": "hop 4: renders AppSidebarLayout"},
+      {"path": "resources/js/app.ts", "evidence": ["resources/js/app.ts:3", "resources/js/app.ts:5", "resources/js/app.ts:25", "resources/js/app.ts:27"], "reason": "hop 3 via settings Layout and hop 5 via AppLayout: the Inertia layout resolver returns SettingsLayout and AppLayout"}
+    ],
+    "oracle_files": [
+      {"path": "resources/js/composables/useCurrentUrl.ts", "verdict": "keep", "reason": "direct caller"}
+    ],
+    "excluded": [
+      {"path": "resources/js/pages/Dashboard.vue", "reason": "Gets AppLayout only through the app.ts resolver default branch (app.ts:27). The page never imports or renders a layout itself; its defineOptions layout (:7) only passes breadcrumbs. Include it if resolver-assigned layouts count as component usage."},
+      {"path": "resources/js/pages/settings/Appearance.vue", "reason": "Same as Dashboard.vue: SettingsLayout comes only through the app.ts resolver (app.ts:24-25). Include under the resolver reading."},
+      {"path": "resources/js/pages/settings/Profile.vue", "reason": "same as settings/Appearance.vue"},
+      {"path": "resources/js/pages/settings/Security.vue", "reason": "same as settings/Appearance.vue"},
+      {"path": "resources/js/pages/Welcome.vue, Activity.vue, Inbox.vue, Onboarding.vue", "reason": "the resolver returns null layout for these (app.ts:14-21), and none imports a component on the chain"},
+      {"path": "resources/js/pages/auth/*.vue", "reason": "get AuthLayout (AuthSimpleLayout), which renders no chain component"},
+      {"path": "resources/js/layouts/AuthLayout.vue, layouts/auth/*.vue", "reason": "no toUrl or useCurrentUrl chain; only AppLogoIcon"},
+      {"path": "resources/js/components/NavUser.vue, UserMenuContent.vue, UserInfo.vue, Breadcrumbs.vue, AppLogo.vue", "reason": "these are siblings rendered by chain components, not consumers of the chain"}
+    ],
+    "open_followed": "Vue component usage traced by hand from import plus template tags. Chain: toUrl <- {useCurrentUrl.ts, NavFooter.vue, AppHeader.vue} <- {NavMain.vue, settings/Layout.vue, AppSidebar.vue, AppHeaderLayout.vue} <- AppSidebarLayout.vue <- AppLayout.vue <- app.ts (layout resolver). app.ts also reaches settings/Layout.vue directly. Pages reach layouts only through the resolver. There are no relative imports of chain components.",
+    "answerable_as_registered": true,
+    "notes": "The question has two readings. Reading A, every file at any depth (hop 1 up to the top): the 10 answer_files. Reading B, only files whose shortest distance is 3 or more hops: AppSidebarLayout.vue (3), AppLayout.vue (4), app.ts (3). Under the resolver-as-usage reading, both readings also add Dashboard.vue and the three settings pages. The corpus basis expects 'pages that render those'. No page renders NavMain or settings Layout itself; pages get them only through app.ts.",
+    "confidence": "medium"
+  },
+  {
+    "id": "ls-c-tests-01",
+    "answer_files": [
+      {"path": "tests/Feature/ThreadingTest.php", "evidence": ["tests/Feature/ThreadingTest.php:62", "tests/Feature/ThreadingTest.php:93", "tests/Feature/ThreadingTest.php:149"], "reason": "posts to the Cloudflare inbound route (InboundEmailIngestor -> attachInbound), calls EmailSendService::send directly (attachOutbound), and runs larasend:thread-backfill (ThreadBackfillCommand::handle(ThreadResolver))"},
+      {"path": "tests/Feature/InboxTest.php", "evidence": ["tests/Feature/InboxTest.php:52"], "reason": "posts to the Cloudflare inbound route -> CloudflareInboundController -> InboundEmailIngestor::ingest -> ThreadResolver::attachInbound (InboundEmailIngestor.php:77)"},
+      {"path": "tests/Feature/InboundEmailTest.php", "evidence": ["tests/Feature/InboundEmailTest.php:102", "tests/Feature/InboundEmailTest.php:179"], "reason": "posts to the inbound route and calls InboundEmailIngestor::ingest directly"},
+      {"path": "tests/Feature/ApiEmailTest.php", "evidence": ["tests/Feature/ApiEmailTest.php:122", "tests/Feature/ApiEmailTest.php:186", "tests/Feature/ApiEmailTest.php:474"], "reason": "calls EmailSendService::send directly and posts to /api/emails (EmailController::store -> send -> attachOutbound at EmailSendService.php:113)"},
+      {"path": "tests/Feature/CloudflareSendTest.php", "evidence": ["tests/Feature/CloudflareSendTest.php:97", "tests/Feature/CloudflareSendTest.php:139", "tests/Feature/CloudflareSendTest.php:175"], "reason": "posts to /api/emails -> EmailSendService::send -> attachOutbound"},
+      {"path": "tests/Feature/DashboardActionsTest.php", "evidence": ["tests/Feature/DashboardActionsTest.php:601", "tests/Feature/DashboardActionsTest.php:667", "tests/Feature/DashboardActionsTest.php:698", "tests/Feature/DashboardActionsTest.php:747"], "reason": "posts to the /send, resend and retry-soft routes -> DashboardActionController -> EmailSendService::send"},
+      {"path": "tests/Feature/InboxReplyTest.php", "evidence": ["tests/Feature/InboxReplyTest.php:112", "tests/Feature/InboxReplyTest.php:141", "tests/Feature/InboxReplyTest.php:202"], "reason": "posts to inbox compose, thread reply and forward -> ThreadActionController (:71,:132,:198) -> EmailSendService::send"},
+      {"path": "tests/Feature/DatabaseSeederSafetyTest.php", "evidence": ["tests/Feature/DatabaseSeederSafetyTest.php:24", "database/seeders/DatabaseSeeder.php:78", "database/seeders/InboxDemoSeeder.php:161"], "reason": "seeds DatabaseSeeder -> InboxDemoSeeder::seed -> ThreadResolver attachInbound and attachOutbound"},
+      {"path": "tests/Feature/CloudflareSuppressionSyncTest.php", "evidence": ["tests/Feature/CloudflareSuppressionSyncTest.php:421"], "reason": "posts to /api/emails, which statically reaches EmailSendService::send. This test expects a 422 on 'to', so attachOutbound is likely not executed at runtime."}
+    ],
+    "oracle_files": [
+      {"path": "tests/Feature/ApiEmailTest.php", "verdict": "keep", "reason": "direct EmailSendService::send calls plus the /api/emails route"},
+      {"path": "tests/Feature/DatabaseSeederSafetyTest.php", "verdict": "keep", "reason": "seeder chain reaches InboxDemoSeeder, which calls ThreadResolver"},
+      {"path": "tests/Feature/InboundEmailTest.php", "verdict": "keep", "reason": "inbound route plus a direct ingestor call"},
+      {"path": "tests/Feature/ThreadingTest.php", "verdict": "keep", "reason": "inbound route, direct send, backfill command"}
+    ],
+    "excluded": [
+      {"path": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php", "reason": "only reads EmailSendService.php as a string (:426) and does not execute it"},
+      {"path": "tests/Feature/SesWebhookTest.php, tests/Feature/OutboundWebhookDeliveryTest.php", "reason": "SES webhook path (SesEventNormalizer) never touches ThreadResolver"},
+      {"path": "tests/Feature/LarasendLaravelPackageTest.php", "reason": "fakes outbound HTTP to an external /api/emails URL; no app route is hit"},
+      {"path": "tests/Feature/ActivityDashboardTest.php", "reason": "only GETs /send (the ActivityController page), never POSTs to the send route"}
+    ],
+    "open_followed": "Route hops followed: ThreadResolver is constructor-injected into EmailSendService (:27, used at :113) and InboundEmailIngestor (:26, used at :77). It is method-injected into ThreadBackfillCommand::handle and InboxDemoSeeder. ThreadActionController mentions ThreadResolver only in a comment (:373) and reaches it through EmailSendService in reply, compose and forward. Entry routes: api.php:13 (emails.store), api.php:22 (cloudflare inbound), web.php:62-64, 70-71, 76, 114-116.",
+    "answerable_as_registered": true,
+    "notes": "The corpus basis lists 3 files, and the oracle finds 4. Following the routes and the send path gives 9. CloudflareSuppressionSyncTest is statically reached but probably does not run attachOutbound, so drop it under a runtime reading (8 files).",
+    "confidence": "medium"
+  },
+  {
+    "id": "ls-c-tests-02",
+    "answer_files": [
+      {"path": "tests/Feature/SuppressionManagementTest.php", "evidence": ["tests/Feature/SuppressionManagementTest.php:79", "tests/Feature/SuppressionManagementTest.php:112", "tests/Feature/SuppressionManagementTest.php:315"], "reason": "sends DELETE to the project and global suppression routes (DashboardActionController::destroyProjectSuppression and destroySuppression -> deleteSuppression -> SuppressionRemovalService::remove at :331) and to /api/suppressions (Api\\SuppressionController::destroy)"}
+    ],
+    "oracle_files": [],
+    "excluded": [
+      {"path": "tests/Feature/CloudflareSuppressionSyncTest.php", "reason": "exercises the suppression sync job and CloudflareApiClient, not the removal service or its routes"},
+      {"path": "tests/Feature/DashboardActionsTest.php", "reason": "has DELETE calls only for domains and api-keys routes, none to suppressions"}
+    ],
+    "open_followed": "Route hops followed: routes/web.php:59,95 -> DashboardActionController (:308,:316 -> deleteSuppression :323-331), and routes/api.php:15 -> Api\\SuppressionController::destroy (:17-20). A grep of tests for suppressions/ URLs and route names finds only SuppressionManagementTest.",
+    "answerable_as_registered": true,
+    "notes": "The oracle set is empty because it does not follow route hops.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-d-01",
+    "answer_files": [],
+    "oracle_files": [],
+    "excluded": [
+      {"path": "app/Services/SesEventNormalizer.php", "reason": "SES path: dispatches EmailActivityUpdated (:36,:77) and calls WebhookDeliveryService::dispatchFor (:39,:80)"},
+      {"path": "app/Services/WebhookDeliveryService.php", "reason": "dispatches DeliverWebhook only (:23)"},
+      {"path": "app/Events/EmailActivityUpdated.php", "reason": "ShouldBroadcast (:12); no listeners. There is no app/Listeners directory and no Event::listen or observer registration in app/ or bootstrap/."},
+      {"path": "app/Services/InboundEmailIngestor.php", "reason": "the only dispatcher of DeliverInboundWebhook (:40,:87), referenced only by CloudflareInboundController.php:9,28"}
+    ],
+    "open_followed": "Followed route, queue and event hops by hand. SesWebhookController uses SesEventNormalizer and SnsSignatureVerifier, and Http::get only for the SNS SubscribeURL (:46). None of these reaches InboundEmailIngestor or DeliverInboundWebhook.",
+    "answerable_as_registered": true,
+    "notes": "The registered negative control holds: no accepted path exists.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-d-02",
+    "answer_files": [],
+    "oracle_files": [],
+    "excluded": [
+      {"path": "resources/js/composables/useInitials.ts", "reason": "getInitials (:5-22) is pure string manipulation that calls nothing outside String methods"},
+      {"path": "resources/js/components/AppHeader.vue, resources/js/components/UserInfo.vue", "reason": "these call getInitials (AppHeader.vue:259, UserInfo.vue:28), which are callers, not callees"}
+    ],
+    "open_followed": "The oracle reported 'declaration not found in the scip index', but the declaration exists at resources/js/composables/useInitials.ts:5. Read by hand, getInitials has no outgoing calls. DeliverWebhook is a PHP job dispatched only from app/Services/WebhookDeliveryService.php:23.",
+    "answerable_as_registered": true,
+    "notes": "No accepted path exists, so the expected-empty answer is confirmed. The oracle's 'unresolved' status is an indexing gap, not evidence.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-d-03",
+    "answer_files": [],
+    "oracle_files": [],
+    "excluded": [
+      {"path": "app/Services/ThreadResolver.php", "reason": "declares attachInbound (:25) and attachOutbound (:49), the near-misses; no attachForwarded"}
+    ],
+    "open_followed": "A word-boundary grep for attachForwarded across the subject (excluding vendor and node_modules) returns zero matches.",
+    "answerable_as_registered": true,
+    "notes": "The symbol does not exist at the pin, so the empty answer is correct.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-e-01",
+    "answer_files": [
+      {"path": "app/Rules/PublicWebhookUrl.php", "evidence": ["app/Rules/PublicWebhookUrl.php:21"], "reason": "hop 1: calls isSafe in validate()"},
+      {"path": "tests/Unit/WebhookUrlGuardTest.php", "evidence": ["tests/Unit/WebhookUrlGuardTest.php:8", "tests/Unit/WebhookUrlGuardTest.php:27", "tests/Unit/WebhookUrlGuardTest.php:59"], "reason": "hop 1: calls isSafe directly and asserts its contract"},
+      {"path": "app/Http/Requests/StoreWebhookEndpointRequest.php", "evidence": ["app/Http/Requests/StoreWebhookEndpointRequest.php:28"], "reason": "hop 2: uses the PublicWebhookUrl rule"},
+      {"path": "app/Http/Requests/StoreOnboardingRequest.php", "evidence": ["app/Http/Requests/StoreOnboardingRequest.php:49"], "reason": "hop 2: uses the PublicWebhookUrl rule"}
+    ],
+    "oracle_files": [
+      {"path": "app/Rules/PublicWebhookUrl.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "tests/Unit/WebhookUrlGuardTest.php", "verdict": "keep", "reason": "direct caller"}
+    ],
+    "excluded": [
+      {"path": "app/Jobs/DeliverWebhook.php", "reason": "calls requestOptions (:65), not isSafe. isSafe wraps requestOptions, so the job is beside isSafe, not downstream of it. The corpus basis claim (:45) is the handle signature, not an isSafe call."},
+      {"path": "app/Jobs/DeliverInboundWebhook.php", "reason": "calls requestOptions (:92), not isSafe. Lines :54 and :85 are signatures that take a WebhookUrlGuard."},
+      {"path": "tests/Pest.php", "reason": "binds an anonymous subclass that overrides resolveHost only (:23-28). It neither calls nor overrides isSafe, so it is not a dependency on isSafe's contract."},
+      {"path": "app/Services/WebhookUrlGuard.php", "reason": "declaring file; no other method calls isSafe"}
+    ],
+    "open_followed": "PublicWebhookUrl::validate is framework-invoked through Laravel validation. It is instantiated in StoreWebhookEndpointRequest.php:28 and StoreOnboardingRequest.php:49, and these are the hop-2 files. Feature tests that post webhook URLs through those requests would be hop 3+.",
+    "answerable_as_registered": true,
+    "notes": "The corpus basis over-claims. Both jobs and Pest.php use WebhookUrlGuard but not isSafe. Under a whole-class reading ('any change to WebhookUrlGuard'), DeliverWebhook.php, DeliverInboundWebhook.php and tests/Pest.php would join.",
+    "confidence": "high"
+  },
+  {
+    "id": "ls-e-02",
+    "answer_files": [
+      {"path": "app/Models/Suppression.php", "evidence": ["app/Models/Suppression.php:40", "app/Models/Suppression.php:58", "app/Models/Suppression.php:124"], "reason": "hop 1: the email mutator, scopeWhereNormalizedEmail and normalizeEmails (plural, which feeds the In and NotIn scopes) all call normalizeEmail"},
+      {"path": "app/Services/EmailSendService.php", "evidence": ["app/Services/EmailSendService.php:241", "app/Services/EmailSendService.php:256", "app/Services/EmailSendService.php:254"], "reason": "hop 1: direct calls in ensureRecipientsAreSendable, plus whereNormalizedEmailIn"},
+      {"path": "app/Services/SuppressionRemovalService.php", "evidence": ["app/Services/SuppressionRemovalService.php:61", "app/Services/SuppressionRemovalService.php:64"], "reason": "hop 1"},
+      {"path": "app/Services/SesEventNormalizer.php", "evidence": ["app/Services/SesEventNormalizer.php:159", "app/Services/SesEventNormalizer.php:199"], "reason": "hop 1: in recordSuppression and upsertSqlServerSuppression"},
+      {"path": "app/Services/CloudflareApiClient.php", "evidence": ["app/Services/CloudflareApiClient.php:128", "app/Services/CloudflareApiClient.php:107"], "reason": "hop 1: in normalizeSuppressionSnapshot, which listStableSuppressions uses"},
+      {"path": "app/Jobs/SyncCloudflareSourceSuppressions.php", "evidence": ["app/Jobs/SyncCloudflareSourceSuppressions.php:61", "app/Jobs/SyncCloudflareSourceSuppressions.php:114", "app/Jobs/SyncCloudflareSourceSuppressions.php:164"], "reason": "hop 1 direct call, plus the scopes (hop 2)"},
+      {"path": "app/Http/Controllers/Api/EmailController.php", "evidence": ["app/Http/Controllers/Api/EmailController.php:80"], "reason": "hop 2: calls EmailSendService::send"},
+      {"path": "app/Http/Controllers/DashboardActionController.php", "evidence": ["app/Http/Controllers/DashboardActionController.php:387", "app/Http/Controllers/DashboardActionController.php:331"], "reason": "hop 2: calls send and SuppressionRemovalService::remove"},
+      {"path": "app/Http/Controllers/ThreadActionController.php", "evidence": ["app/Http/Controllers/ThreadActionController.php:71", "app/Http/Controllers/ThreadActionController.php:132", "app/Http/Controllers/ThreadActionController.php:198"], "reason": "hop 2: calls EmailSendService::send"},
+      {"path": "app/Http/Controllers/Api/SuppressionController.php", "evidence": ["app/Http/Controllers/Api/SuppressionController.php:20"], "reason": "hop 2: injects and uses SuppressionRemovalService"},
+      {"path": "app/Http/Controllers/Webhooks/SesWebhookController.php", "evidence": ["app/Http/Controllers/Webhooks/SesWebhookController.php:61"], "reason": "hop 2: calls SesEventNormalizer::record"},
+      {"path": "tests/Feature/ApiEmailTest.php", "evidence": ["tests/Feature/ApiEmailTest.php:122", "tests/Feature/ApiEmailTest.php:438"], "reason": "hop 2: calls EmailSendService::send directly, and Suppression::create triggers the email mutator"},
+      {"path": "tests/Feature/ThreadingTest.php", "evidence": ["tests/Feature/ThreadingTest.php:93"], "reason": "hop 2: calls EmailSendService::send directly"},
+      {"path": "tests/Feature/SesWebhookTest.php", "evidence": ["tests/Feature/SesWebhookTest.php:195", "tests/Feature/SesWebhookTest.php:305", "tests/Feature/SesWebhookTest.php:273"], "reason": "hop 2: calls SesEventNormalizer::record directly, plus Suppression::create through the mutator"},
+      {"path": "tests/Feature/CloudflareSuppressionSyncTest.php", "evidence": ["tests/Feature/CloudflareSuppressionSyncTest.php:41", "tests/Feature/CloudflareSuppressionSyncTest.php:135"], "reason": "hop 2: runs SyncCloudflareSourceSuppressions::handle directly (runCloudflareSuppressionSourceSync), plus Suppression::create through the mutator"},
+      {"path": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php", "evidence": ["tests/Feature/SuppressionEmailNormalizationMigrationTest.php:156", "tests/Feature/SuppressionEmailNormalizationMigrationTest.php:295", "tests/Feature/SuppressionEmailNormalizationMigrationTest.php:430"], "reason": "hop 2: calls record and the sync job directly, calls whereNormalizedEmailIn, and creates Suppressions through the mutator"},
+      {"path": "tests/Feature/ActivityDashboardTest.php", "evidence": ["tests/Feature/ActivityDashboardTest.php:74"], "reason": "hop 2 through framework indirection: Suppression::query()->create(['email' => ...]) invokes the email mutator, which calls normalizeEmail"},
+      {"path": "tests/Feature/SuppressionManagementTest.php", "evidence": ["tests/Feature/SuppressionManagementTest.php:50"], "reason": "hop 2 through framework indirection: Suppression::create(['email' => ...]) invokes the mutator. Its route calls to SuppressionRemovalService are hop 3."}
+    ],
+    "oracle_files": [
+      {"path": "app/Http/Controllers/Api/EmailController.php", "verdict": "keep", "reason": "send caller"},
+      {"path": "app/Http/Controllers/Api/SuppressionController.php", "verdict": "keep", "reason": "removal service caller"},
+      {"path": "app/Http/Controllers/DashboardActionController.php", "verdict": "keep", "reason": "send and removal caller"},
+      {"path": "app/Http/Controllers/ThreadActionController.php", "verdict": "keep", "reason": "send caller"},
+      {"path": "app/Http/Controllers/Webhooks/SesWebhookController.php", "verdict": "keep", "reason": "record caller"},
+      {"path": "app/Jobs/SyncCloudflareSourceSuppressions.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "app/Models/Suppression.php", "verdict": "keep", "reason": "self-calls at :40, :58, :124. The distractor normalizeEmails is a different symbol, but the file also calls the probe directly."},
+      {"path": "app/Services/CloudflareApiClient.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "app/Services/EmailSendService.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "app/Services/SesEventNormalizer.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "app/Services/SuppressionRemovalService.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "tests/Feature/ApiEmailTest.php", "verdict": "keep", "reason": "direct send calls"},
+      {"path": "tests/Feature/CloudflareSuppressionSyncTest.php", "verdict": "keep", "reason": "runs the sync job's handle directly"},
+      {"path": "tests/Feature/SesWebhookTest.php", "verdict": "keep", "reason": "direct record calls"},
+      {"path": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php", "verdict": "keep", "reason": "direct record, job and scope calls"},
+      {"path": "tests/Feature/ThreadingTest.php", "verdict": "keep", "reason": "direct send call"}
+    ],
+    "excluded": [
+      {"path": "app/Jobs/SyncCloudflareSuppressions.php", "reason": "Only dispatches SyncCloudflareSourceSuppressions to the queue (:40) and never calls handle. It is hop 2 only if queue hops count."},
+      {"path": "tests/Feature/DashboardActionsTest.php, CloudflareSendTest.php, InboxReplyTest.php", "reason": "they reach EmailSendService through routes, which is hop 3"},
+      {"path": "routes/web.php, routes/api.php", "reason": "register hop-2 controllers, which puts them at hop 3"},
+      {"path": "app/Http/Controllers/ActivityController.php, ActivityExportController.php", "reason": "query suppressions() and active() only, never a normalizing scope or email write"}
+    ],
+    "open_followed": "Framework-invoked entry points followed by hand. The email mutator (Suppression.php:37-41) fires on every Eloquent write of 'email', which adds ActivityDashboardTest and SuppressionManagementTest. The scope users are EmailSendService:254, SyncCloudflareSourceSuppressions:114 and :164, and SuppressionEmailNormalizationMigrationTest:430. runCloudflareSuppressionSourceSync is a test helper in CloudflareSuppressionSyncTest.php:39. Route hops are hop 3 and fall outside the bound.",
+    "answerable_as_registered": true,
+    "notes": "The oracle's 16 are all correct. Adding the two mutator-only tests gives 18. Drop those two if framework-invoked mutators do not count as call hops.",
+    "confidence": "medium"
+  },
+  {
+    "id": "ls-e-03",
+    "answer_files": [
+      {"path": "app/Services/EmailSendService.php", "evidence": ["app/Services/EmailSendService.php:70", "app/Services/EmailSendService.php:96", "app/Services/EmailSendService.php:142", "app/Services/EmailSendService.php:197", "app/Services/EmailSendService.php:242"], "reason": "hop 1: the only caller of splitAddress"},
+      {"path": "app/Http/Controllers/Api/EmailController.php", "evidence": ["app/Http/Controllers/Api/EmailController.php:80"], "reason": "hop 2: calls send"},
+      {"path": "app/Http/Controllers/DashboardActionController.php", "evidence": ["app/Http/Controllers/DashboardActionController.php:387", "app/Http/Controllers/DashboardActionController.php:421", "app/Http/Controllers/DashboardActionController.php:457"], "reason": "hop 2: send, resend and retrySoftBounces"},
+      {"path": "app/Http/Controllers/ThreadActionController.php", "evidence": ["app/Http/Controllers/ThreadActionController.php:71", "app/Http/Controllers/ThreadActionController.php:132", "app/Http/Controllers/ThreadActionController.php:198"], "reason": "hop 2: reply, compose and forward"},
+      {"path": "tests/Feature/ApiEmailTest.php", "evidence": ["tests/Feature/ApiEmailTest.php:122", "tests/Feature/ApiEmailTest.php:186"], "reason": "hop 2: direct send, and the /api/emails route (hop 3)"},
+      {"path": "tests/Feature/ThreadingTest.php", "evidence": ["tests/Feature/ThreadingTest.php:93"], "reason": "hop 2: direct send"},
+      {"path": "routes/api.php", "evidence": ["routes/api.php:13"], "reason": "hop 3: registers EmailController::store"},
+      {"path": "routes/web.php", "evidence": ["routes/web.php:62", "routes/web.php:64", "routes/web.php:70", "routes/web.php:71", "routes/web.php:76", "routes/web.php:114", "routes/web.php:116"], "reason": "hop 3: registers the send, resend, retry, reply, forward and compose routes"},
+      {"path": "tests/Feature/CloudflareSendTest.php", "evidence": ["tests/Feature/CloudflareSendTest.php:97"], "reason": "hop 3: POST /api/emails"},
+      {"path": "tests/Feature/CloudflareSuppressionSyncTest.php", "evidence": ["tests/Feature/CloudflareSuppressionSyncTest.php:421"], "reason": "hop 3: POST /api/emails"},
+      {"path": "tests/Feature/DashboardActionsTest.php", "evidence": ["tests/Feature/DashboardActionsTest.php:601", "tests/Feature/DashboardActionsTest.php:667", "tests/Feature/DashboardActionsTest.php:747"], "reason": "hop 3: send, resend and retry-soft routes"},
+      {"path": "tests/Feature/InboxReplyTest.php", "evidence": ["tests/Feature/InboxReplyTest.php:112", "tests/Feature/InboxReplyTest.php:141", "tests/Feature/InboxReplyTest.php:202"], "reason": "hop 3: compose, reply and forward routes"}
+    ],
+    "oracle_files": [
+      {"path": "app/Http/Controllers/Api/EmailController.php", "verdict": "keep", "reason": "send caller"},
+      {"path": "app/Http/Controllers/DashboardActionController.php", "verdict": "keep", "reason": "send caller"},
+      {"path": "app/Http/Controllers/ThreadActionController.php", "verdict": "keep", "reason": "send caller"},
+      {"path": "app/Services/EmailSendService.php", "verdict": "keep", "reason": "direct caller"},
+      {"path": "tests/Feature/ApiEmailTest.php", "verdict": "keep", "reason": "direct send"},
+      {"path": "tests/Feature/ThreadingTest.php", "verdict": "keep", "reason": "direct send"}
+    ],
+    "excluded": [
+      {"path": "app/Services/MimeMessageBuilder.php", "reason": "declaring file; it has no internal call of splitAddress"},
+      {"path": "app/Services/Providers/CloudflareEmailProvider.php", "reason": "uses MimeMessageBuilder but never calls splitAddress"},
+      {"path": "tests/Feature/SuppressionEmailNormalizationMigrationTest.php", "reason": "reads EmailSendService.php only as a string (:426)"},
+      {"path": "resources/js/pages/Inbox.vue, Activity.vue", "reason": "post to the send and thread routes over HTTP from the browser, so they are not a code-call closure. The Wayfinder actions and routes are generated and gitignored, and absent at the pin."},
+      {"path": "tests/Feature/ActivityDashboardTest.php", "reason": "only GETs /send (ActivityController)"}
+    ],
+    "open_followed": "Route hops followed from the three controllers to the routes files and to the tests that call those routes. No artisan command, job or listener calls EmailSendService::send.",
+    "answerable_as_registered": true,
+    "notes": "The full closure, counting the routes files and route-level tests, is 12 files. Without routes and route-level tests, it is the oracle's 6. In ApiEmailTest, one test mocks EmailSendService (:234-258), but other tests in the file call the real service.",
+    "confidence": "medium"
+  }
+]

@@ -21,6 +21,9 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { container_fields, is_quota_exhausted, quota_brake, trial_container } from '../../src/scripts/_lib/bench_ab_container.js';
+import { primary_checkout_root } from '../../src/scripts/_lib/bench_ab_workspace.js';
+
 import {
     placebo_prose,
     status_bucket,
@@ -181,6 +184,22 @@ describe('bench_ab_v2_run — pure helpers', () => {
         });
     });
 
+    // Asserted on purpose, not on wording: the arm is the floor an asset must beat,
+    // so it has to stay short, carry no package vocabulary, and name the behaviours scored.
+    it('minimal-prompt: a few plain sentences that carry the scored behaviours and nothing of the package', () => {
+        const text = injected_text('minimal', 2000) as string;
+        expect(text.length).toBeGreaterThan(0);
+        expect(text.length).toBeLessThan(400);
+        for (const behaviour of [/smallest change/i, /callers|everything it affects/i, /read .* before asking/i, /tests? before/i]) {
+            expect(text).toMatch(behaviour);
+        }
+        for (const pkg of ['Iron Law', 'HARD CONSTRAINT', 'agent-config', 'skill', 'rule', 'downstream-changes', 'scope-control']) {
+            expect(text).not.toContain(pkg);
+        }
+        expect(ARMS['minimal-prompt']).toEqual({ setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null });
+        expect(injected_text('bare-principle', 2000)).toBe(bare_principle_text());
+    });
+
     it('ARMS: the neighbour arm scopes this package away and loads a plugin from a directory', () => {
         expect(ARMS['neighbour']).toEqual({
             setting_sources: 'project,local',
@@ -215,7 +234,7 @@ describe('bench_ab_v2_run — pure helpers', () => {
         fs.rmSync(dir, { recursive: true, force: true });
     });
 
-    it('lift_audit_arms: excludes the tiny-treatment arm, keeps every real lift arm', () => {
+    it('lift_audit_arms: excludes the tiny-treatment arms, keeps every real lift arm', () => {
         const selected = lift_audit_arms(['vanilla', 'package', 'package-ladder', 'bare-principle', 'placebo']);
 
         // Baseline is never its own lift arm.
@@ -227,7 +246,15 @@ describe('bench_ab_v2_run — pure helpers', () => {
         // half that must not silently shrink.
         expect(selected).toContain('package');
         expect(selected).toContain('package-ladder');
-        expect(selected).toContain('placebo');
+        // `placebo` left the lift set on the council's 2026-11-04 verdict: its
+        // ~1.7k-token surface sits inside the turn-count spread of the baseline.
+        // Its text direction is still checked both ways.
+        expect(selected).not.toContain('placebo');
+        expect(lift_audit_arms(['vanilla', 'rules-kernel-dc', 'rules-balanced', 'profile-full'])).toEqual([
+            'rules-kernel-dc',
+            'rules-balanced',
+            'profile-full',
+        ]);
 
         // An unknown arm name is not silently promoted into the audit set.
         expect(lift_audit_arms(['no-such-arm'])).toEqual([]);
@@ -514,6 +541,15 @@ describe('bench_ab_v2_run — measurement integrity', () => {
         expect(r.status).toBe(0);
     });
 
+    it('refuses --max-usd when only a stale family row would price the model', () => {
+        // The haiku family row (2026-05-14) priced claude-haiku-4-5 at a quarter of
+        // its rate, so a "$100" cap admitted ~$330 of real spend. Opus has no
+        // model row, only that same-era family row.
+        const r = runTs(['--model', 'claude-opus-4-1', '--max-usd', '10', '--limit', '1', '--mode', 'dry-run']);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('days old');
+    });
+
     it('leaves an unpriceable model alone when no cap was asked for', () => {
         // The refusal is about an unenforceable CAP, not about the model.
         const r = runTs(['--model', 'some-unpriced-model-9', '--limit', '1', '--mode', 'dry-run']);
@@ -623,7 +659,7 @@ describe('bench_ab_v2_run — selftest mode', () => {
         // measured one, and the payload says the same thing independently.
         const m = /internal\/bench\/reports\/ab-v2\/([^\s]+\.json)/.exec(r.stdout);
         expect(m).not.toBeNull();
-        const file = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2', (m as RegExpExecArray)[1] as string);
+        const file = path.join(primary_checkout_root(REPO_ROOT), 'internal', 'bench', 'reports', 'ab-v2', (m as RegExpExecArray)[1] as string);
         expect(path.basename(file)).toContain('-selftest');
 
         const payload = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
@@ -703,5 +739,144 @@ describe('bench_ab_v2_run — selftest mode', () => {
         expect(audit.violations).toHaveLength(1);
         expect(audit.violations[0]?.kind).toBe('collapsed-to-baseline');
         expect(audit.violations[0]?.arm).toBe('package');
+    });
+});
+
+describe('container isolation', () => {
+    const ctx = { base_image: 'sha256:base', ac_image: 'sha256:ac', token: 't', package_skills: new Set(['laravel']) };
+    const init = (skills: string[]): string => JSON.stringify({ type: 'system', subtype: 'init', skills, plugins: [] });
+
+    it('isolation: package-loading arms run on bench-ac, every other arm on bench-base', () => {
+        expect(trial_container(ctx, ARMS['package']!).image).toBe('sha256:ac');
+        expect(trial_container(ctx, ARMS['vanilla']!).image).toBe('sha256:base');
+        expect(trial_container(ctx, ARMS['rules-kernel-dc']!).image).toBe('sha256:base');
+    });
+
+    it('isolation: a load mismatch turns the trial into an errored one with the reason', () => {
+        const run = { errored: false, stream: init(['init']) };
+        expect(container_fields(run, ARMS['package']!, ctx)).toMatchObject({ errored: true, reason: expect.stringMatching(/^load_mismatch:/) });
+        expect(container_fields({ errored: false, stream: init(['laravel']) }, ARMS['package']!, ctx)).not.toHaveProperty('errored');
+    });
+
+    it('isolation: a container sweep never resumes a host checkpoint, and host keys are unchanged', () => {
+        const cfg = { corpus: 'trackb', model: 'm', seeds: 1, arms: ['vanilla'], budget: 1, timeout: 1, host: 'claude', task_ids: ['t'] };
+        expect(checkpoint_key(cfg)).toBe(checkpoint_key({ ...cfg }));
+        expect(checkpoint_key({ ...cfg, isolation: 'container' })).not.toBe(checkpoint_key(cfg));
+    });
+
+    it('brake: three runs in a row that did no work stop the sweep and keep what ran', () => {
+        const dead = { errored: true, reason: 'exit 1', tokens_breakdown: {} };
+        const brake = quota_brake(3);
+        const out = collect_records([{ id: 'a' }, { id: 'b' }], ['vanilla'], 3, () => ({ ...dead }), null, () => undefined, brake);
+        expect(out.executed).toBe(3);
+        expect(out.aborted).toMatch(/3 consecutive runs did no work/);
+    });
+
+    it('report dir: a linked worktree resolves to the primary checkout', () => {
+        const main = fs.mkdtempSync(path.join(os.tmpdir(), 'primary-'));
+        const git = (cwd: string, ...a: string[]): void => {
+            const r = spawnSync('git', a, { cwd, encoding: 'utf-8' });
+            if (r.status !== 0) throw new Error(r.stderr);
+        };
+        git(main, 'init', '-q');
+        git(main, '-c', 'user.email=a@b.c', '-c', 'user.name=a', 'commit', '-q', '--allow-empty', '-m', 'x');
+        const wt = path.join(main, '.claude', 'worktrees', 'w');
+        git(main, 'worktree', 'add', '-q', wt);
+        expect(fs.realpathSync(primary_checkout_root(wt))).toBe(fs.realpathSync(main));
+        expect(fs.realpathSync(primary_checkout_root(main))).toBe(fs.realpathSync(main));
+    });
+});
+
+describe('container controls', () => {
+    it('isolation: vanilla-b and vanilla-host are vanilla under other names, and only vanilla-host stays on the host', () => {
+        const { host_only: _h, ...hostSpec } = ARMS['vanilla-host']!;
+        expect(ARMS['vanilla-b']).toEqual(ARMS['vanilla']);
+        expect(hostSpec).toEqual(ARMS['vanilla']);
+        expect(ARMS['vanilla-host']?.host_only).toBe(true);
+        expect(lift_audit_arms(['vanilla', 'vanilla-b', 'vanilla-host'])).toEqual([]);
+    });
+});
+
+describe('brake and resume', () => {
+    it('brake: a run that did no work is not checkpointed, so a resume re-runs it', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ckpt-'));
+        const ckpt = { path: path.join(dir, 'c.jsonl'), completed: new Map() };
+        const dead = { errored: true, reason: 'error', transcript: "You've hit your weekly limit", tokens_breakdown: {} };
+        const live = { errored: false, tokens_breakdown: { input_tokens: 10 } };
+        let n = 0;
+        collect_records([{ id: 't' }], ['vanilla'], 4, () => ({ ...(n++ === 0 ? live : dead) }), ckpt, () => undefined, quota_brake(3), (r) => !is_quota_exhausted(r));
+        expect(load_checkpoint(ckpt.path).size).toBe(1);
+    });
+});
+
+describe('kernel leave-one-out arms', () => {
+    it('drops exactly the named rule from the kernel-dc text', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const full = rules_subset_text('rules-kernel-dc');
+        const minus = rules_subset_text('rules-kernel-dc', 'ask-when-uncertain');
+        expect(full.split('\n\n---\n\n')).toHaveLength(10);
+        expect(minus.split('\n\n---\n\n')).toHaveLength(9);
+        expect(full).toContain('# Ask When Uncertain');
+        expect(minus).not.toContain('# Ask When Uncertain');
+        expect(minus).toContain('# Downstream Changes');
+    });
+
+    it('refuses to drop a rule that is not in the set', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(() => rules_subset_text('rules-kernel-dc', 'no-such-rule')).toThrow(/not in rules-kernel-dc/);
+    });
+
+    it('resolves a kernel-minus arm name to a text-injection control arm, and nothing else', async () => {
+        const { ablation_arm } = await import('../../src/scripts/_lib/bench_ab_arms.js');
+        expect(ablation_arm('kernel-minus-direct-answers')).toEqual({ setting_sources: 'project,local', inject: 'kernel-minus:direct-answers' });
+        expect(ablation_arm('kernel-minus-')).toBeNull();
+        expect(ablation_arm('package')).toBeNull();
+    });
+
+    it('injects the leave-one-out text for a kernel-minus arm', async () => {
+        const { injected_text, rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(injected_text('kernel-minus:scope-control', 0)).toBe(rules_subset_text('rules-kernel-dc', 'scope-control'));
+    });
+});
+
+describe('kernel wording-variant arms', () => {
+    it('swaps exactly one rule body for the candidate text, in place', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const full = rules_subset_text('rules-kernel-dc').split('\n\n---\n\n');
+        const swapped = rules_subset_text('rules-kernel-dc', null, { id: 'ask-when-uncertain', text: 'CANDIDATE BODY' }).split('\n\n---\n\n');
+        expect(swapped).toHaveLength(full.length);
+        const at = full.findIndex((b) => b.includes('# Ask When Uncertain'));
+        expect(at).toBeGreaterThanOrEqual(0);
+        expect(swapped[at]).toBe('CANDIDATE BODY');
+        expect(swapped.filter((_, i) => i !== at)).toEqual(full.filter((_, i) => i !== at));
+    });
+
+    it('refuses to swap a rule that is not in the set', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(() => rules_subset_text('rules-kernel-dc', null, { id: 'no-such-rule', text: 'x' })).toThrow(/not in rules-kernel-dc/);
+    });
+
+    it('resolves a kernel-variant arm name to a text-injection control arm', async () => {
+        const { ablation_arm } = await import('../../src/scripts/_lib/bench_ab_arms.js');
+        expect(ablation_arm('kernel-variant-ask-when-uncertain.look-first')).toEqual({
+            setting_sources: 'project,local',
+            inject: 'kernel-variant:ask-when-uncertain.look-first',
+        });
+        expect(ablation_arm('kernel-variant-ask-when-uncertain')).toBeNull();
+        expect(ablation_arm('kernel-variant-')).toBeNull();
+    });
+
+    it('injects the committed candidate in place of the rule it names', async () => {
+        const { injected_text, rules_subset_text, variant_candidate_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const candidate = variant_candidate_text('ask-when-uncertain.look-first');
+        expect(candidate.length).toBeGreaterThan(0);
+        expect(injected_text('kernel-variant:ask-when-uncertain.look-first', 0)).toBe(
+            rules_subset_text('rules-kernel-dc', null, { id: 'ask-when-uncertain', text: candidate }),
+        );
+    });
+
+    it('refuses a candidate stem that could leave the candidates directory', async () => {
+        const { variant_candidate_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(() => variant_candidate_text('../ask-when-uncertain.x')).toThrow(/candidate/);
     });
 });

@@ -1,5 +1,5 @@
 {
-  "$comment": "One row per dispatch default AC ships (road-to-a-policy-the-measurements-write Phase 1). `claim` names the closed claim that backs the value, or is \"unmeasured\" with a `review_by` date by which it must be measured. `measures` names the open claim a measurement would settle. `local: fixed` rows are floors no local learner may move. tests/scripts/dispatch_policy.test.ts fails when a sink disagrees with its row.",
+  "$comment": "One row per dispatch default AC ships (road-to-a-policy-the-measurements-write Phase 1). `claim` names the closed claim that backs the value, or is \"unmeasured\" with a `review_by` date by which it must be measured. `measures` names the open claim a measurement would settle. `local: fixed` rows are floors no local learner may move. tests/scripts/dispatch_policy.test.ts fails when a sink disagrees with its row. `known_unbound` lists default knobs that predate the knob check and have no row yet; check_claims fails on a knob outside rows and baseline, and on a baseline entry that is now bound or gone.",
   "rows": [
     {
       "id": "ac-worker-tier",
@@ -137,5 +137,13 @@
       "local": "learnable",
       "note": "Unmeasured, as council-min-rounds."
     }
+  ],
+  "known_unbound": [
+    "src/subagents/production-validator.md:model_tier",
+    "src/config/agent-settings.template.yml:subagents.quota_arbitrage",
+    "src/config/agent-settings.template.yml:subagents.implementer_model",
+    "src/config/agent-settings.template.yml:subagents.judge_model",
+    "src/config/agent-settings.template.yml:subagents.model_ceiling",
+    "agents/templates/.ai-council.yml.example:defaults.debate_max_rounds"
   ]
 }

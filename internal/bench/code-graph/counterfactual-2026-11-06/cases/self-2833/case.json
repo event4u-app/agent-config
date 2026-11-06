@@ -1,0 +1,32 @@
+{
+ "id": "self-2833",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2833,
+ "title": "fix(release): reserve the showcase section inside the PR-body cap",
+ "merged_at": "2026-11-04T02:42:18Z",
+ "merge": "07e4c192496246523a56e0ee1db124a2a4a1bf92",
+ "parent": "01a746417d885d03a283e9caa1c96087785de1b3",
+ "changed_lines": 22,
+ "diff_files": [
+  "src/scripts/release.ts",
+  "src/scripts/release_publication.ts",
+  "tests/scripts/release.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/release.ts#execute",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/release_publication.ts#release_pr_body",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/release_drill.ts",
+   "test": false
+  }
+ ]
+}

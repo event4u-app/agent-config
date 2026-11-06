@@ -63,6 +63,10 @@ made by the user directly or by the agent on request, following the
 # The installer fills it per preset: minimal->off, balanced->auto,
 # full->full (P2-verdict council 2026-07-07 — the non-Claude replication
 # failed, so auto enables the lift only where measured).
+#
+# Install effect: an explicit `essential` / `off` here narrows the rule files
+# the global install writes (kernel + downstream-changes / kernel only);
+# full, auto and custom install every rule. Re-run the install after a change.
 discipline_profile: auto
 
 # --- Cost profile (legacy knob — superseded by discipline_profile) ---

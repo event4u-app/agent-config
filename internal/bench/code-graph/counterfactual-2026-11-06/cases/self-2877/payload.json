@@ -1,0 +1,374 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "RuleScope",
+     "verdict": "tested",
+     "witness": "src/install/rule_scope.ts:51"
+    },
+    {
+     "label": "disciplineProfileRules",
+     "verdict": "tested",
+     "witness": "src/install/rule_scope.ts:70"
+    },
+    {
+     "label": "ruleFileArrives",
+     "verdict": "tested",
+     "witness": "src/install/rule_scope.ts:148"
+    },
+    {
+     "label": "ruleScopeFromSettings",
+     "verdict": "tested",
+     "witness": "src/install/rule_scope.ts:93"
+    },
+    {
+     "label": "ARMS",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_ab_arms.ts:94"
+    },
+    {
+     "label": "build",
+     "verdict": "tested",
+     "witness": "src/scripts/compile_router.ts:265"
+    },
+    {
+     "label": "DISCIPLINE_PROFILE_RULES",
+     "verdict": "tested",
+     "witness": "src/shared/disciplineProfiles.ts:13"
+    },
+    {
+     "label": "NarrowingDisciplineProfile",
+     "verdict": "untested",
+     "witness": "src/shared/disciplineProfiles.ts:18"
+    },
+    {
+     "label": "DIST_RULES",
+     "verdict": "untested",
+     "witness": "tests/install/discipline_profile_scope.test.ts:20"
+    },
+    {
+     "label": "REPO_ROOT",
+     "verdict": "untested",
+     "witness": "tests/install/discipline_profile_scope.test.ts:19"
+    },
+    {
+     "label": "ROUTER",
+     "verdict": "untested",
+     "witness": "tests/install/discipline_profile_scope.test.ts:21"
+    },
+    {
+     "label": "TMP",
+     "verdict": "untested",
+     "witness": "tests/install/discipline_profile_scope.test.ts:26"
+    },
+    {
+     "label": "arrivingRuleIds",
+     "verdict": "untested",
+     "witness": "tests/install/discipline_profile_scope.test.ts:35"
+    },
+    {
+     "label": "fixture",
+     "verdict": "untested",
+     "witness": "tests/install/discipline_profile_scope.test.ts:29"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "tests/install/rule_packs_auto.test.ts",
+     "witness": "src/install/rule_scope.ts:1"
+    },
+    {
+     "label": "tests/scripts/compile_router.test.ts",
+     "witness": "src/scripts/compile_router.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/install/rule_scope.ts",
+   "lines": [
+    93,
+    130
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_ab_arms.ts",
+   "lines": [
+    94,
+    129
+   ]
+  },
+  {
+   "path": "src/scripts/compile_router.ts",
+   "lines": [
+    265,
+    290
+   ]
+  },
+  {
+   "path": "src/shared/disciplineProfiles.ts",
+   "lines": [
+    13,
+    16
+   ]
+  },
+  {
+   "path": "tests/install/discipline_profile_scope.test.ts",
+   "lines": [
+    29,
+    33
+   ]
+  },
+  {
+   "path": "src/install/globalRuleScope.ts",
+   "lines": [
+    59,
+    98
+   ]
+  },
+  {
+   "path": "src/install/rule_scope_cli.ts",
+   "lines": [
+    25,
+    61
+   ]
+  },
+  {
+   "path": "src/install/wizard-plan.ts",
+   "lines": [
+    216,
+    243
+   ]
+  },
+  {
+   "path": "src/scripts/_cli/cmd_doctor.ts",
+   "lines": [
+    1514,
+    1553
+   ]
+  },
+  {
+   "path": "src/scripts/check_consumer_scope_flip.ts",
+   "lines": [
+    65,
+    104
+   ]
+  },
+  {
+   "path": "src/scripts/install.ts",
+   "lines": [
+    2891,
+    2930
+   ]
+  },
+  {
+   "path": "src/server/routes/install.ts",
+   "lines": [
+    223,
+    236
+   ]
+  },
+  {
+   "path": "src/install/rule_scope.ts",
+   "lines": [
+    148,
+    168
+   ]
+  },
+  {
+   "path": "src/shared/disciplineProfiles.ts",
+   "lines": [
+    18,
+    18
+   ]
+  },
+  {
+   "path": "tests/install/discipline_profile_scope.test.ts",
+   "lines": [
+    35,
+    43
+   ]
+  },
+  {
+   "path": "src/install/wizard-plan.ts",
+   "lines": [
+    219,
+    219
+   ]
+  },
+  {
+   "path": "src/server/routes/install.ts",
+   "lines": [
+    244,
+    250
+   ]
+  },
+  {
+   "path": "src/install/rule_scope.ts",
+   "lines": [
+    51,
+    60
+   ]
+  },
+  {
+   "path": "tests/install/discipline_profile_scope.test.ts",
+   "lines": [
+    19,
+    19
+   ]
+  },
+  {
+   "path": "tests/install/discipline_profile_scope.test.ts",
+   "lines": [
+    20,
+    20
+   ]
+  },
+  {
+   "path": "tests/install/discipline_profile_scope.test.ts",
+   "lines": [
+    26,
+    26
+   ]
+  },
+  {
+   "path": "src/install/globalRuleScope.ts",
+   "lines": [
+    99,
+    109
+   ]
+  },
+  {
+   "path": "src/scripts/_cli/cmd_doctor.ts",
+   "lines": [
+    1554,
+    1606
+   ]
+  },
+  {
+   "path": "src/scripts/check_consumer_scope_flip.ts",
+   "lines": [
+    105,
+    110
+   ]
+  },
+  {
+   "path": "src/scripts/install.ts",
+   "lines": [
+    2931,
+    3039
+   ]
+  },
+  {
+   "path": "src/scripts/compile_router.ts",
+   "lines": [
+    294,
+    326
+   ]
+  },
+  {
+   "path": "src/scripts/_cli/cmd_doctor.ts",
+   "lines": [
+    2707,
+    2719
+   ]
+  },
+  {
+   "path": "src/scripts/_cli/cmd_doctor.ts",
+   "lines": [
+    2667,
+    2706
+   ]
+  },
+  {
+   "path": "src/scripts/check_consumer_scope_flip.ts",
+   "lines": [
+    152,
+    212
+   ]
+  },
+  {
+   "path": "src/scripts/check_consumer_scope_flip.ts",
+   "lines": [
+    112,
+    151
+   ]
+  },
+  {
+   "path": "src/scripts/install.ts",
+   "lines": [
+    3087,
+    3096
+   ]
+  },
+  {
+   "path": "src/scripts/install.ts",
+   "lines": [
+    3047,
+    3086
+   ]
+  },
+  {
+   "path": "src/scripts/_cli/cmd_doctor.ts",
+   "lines": [
+    2761,
+    2771
+   ]
+  },
+  {
+   "path": "src/scripts/_cli/cmd_doctor.ts",
+   "lines": [
+    2721,
+    2760
+   ]
+  },
+  {
+   "path": "src/scripts/install.ts",
+   "lines": [
+    3197,
+    3206
+   ]
+  },
+  {
+   "path": "src/install/rule_scope.ts",
+   "lines": [
+    70,
+    76
+   ]
+  },
+  {
+   "path": "src/scripts/install.ts",
+   "lines": [
+    3216,
+    3223
+   ]
+  },
+  {
+   "path": "src/install/rule_scope.ts",
+   "lines": [
+    174,
+    199
+   ]
+  },
+  {
+   "path": "tests/install/discipline_profile_scope.test.ts",
+   "lines": [
+    21,
+    24
+   ]
+  }
+ ]
+}

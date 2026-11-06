@@ -20,6 +20,8 @@ export type LadderName = (typeof LADDER_NAMES)[number];
 export const NETWORK_MODES = ['none', 'registry'] as const;
 export type NetworkMode = (typeof NETWORK_MODES)[number];
 export const LADDER_MIN_STEPS = 3;
+export const PROMPT_VARIANTS = ['terse', 'expert'] as const;
+export type PromptVariant = (typeof PROMPT_VARIANTS)[number];
 export const LADDER_MAX_STEPS = 5;
 
 export interface GraderRef {
@@ -40,19 +42,24 @@ export interface ArtifactTask {
     feedback_ladder: Record<LadderName, string[]>;
     network: NetworkMode;
     notes?: string;
+    /** terse = the task prompt as is; expert = the task prompt plus what an expert user would spell out. */
+    variants?: Array<{ prompt_variant: PromptVariant; prompt?: string }>;
 }
 
 export interface CorpusSelection {
     name: string;
     path: string;
     kind: 'discipline' | 'artifact';
+    /** `--prompt-variant terse|expert|both`; empty runs each task's own prompt, untagged. */
+    prompt_variants: PromptVariant[];
 }
 
 const NAMED: Record<string, { file: string; kind: CorpusSelection['kind'] }> = {
     'ab-trackb-v2': { file: 'ab-trackb-v2.yaml', kind: 'discipline' },
     'ab-artifact-v2': { file: 'ab-artifact-v2.yaml', kind: 'artifact' },
+    'ab-headroom-17': { file: 'ab-headroom-17.yaml', kind: 'discipline' },
 };
-const ALIASES: Record<string, string> = { trackb: 'ab-trackb-v2', artifact: 'ab-artifact-v2' };
+const ALIASES: Record<string, string> = { trackb: 'ab-trackb-v2', artifact: 'ab-artifact-v2', headroom17: 'ab-headroom-17' };
 
 /**
  * Strip `--corpus <name>` / `--corpus=<name>` out of argv before the runner's own
@@ -62,9 +69,15 @@ const ALIASES: Record<string, string> = { trackb: 'ab-trackb-v2', artifact: 'ab-
 export function select_corpus(argv: readonly string[], repo_root: string): [string[], CorpusSelection] {
     const rest: string[] = [];
     let want = 'ab-trackb-v2';
+    let variant: string | null = null;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
-        if (a === '--corpus' && i + 1 < argv.length) {
+        if (a === '--prompt-variant' && i + 1 < argv.length) {
+            variant = argv[i + 1] as string;
+            i += 1;
+        } else if (a.startsWith('--prompt-variant=')) {
+            variant = a.slice('--prompt-variant='.length);
+        } else if (a === '--corpus' && i + 1 < argv.length) {
             want = argv[i + 1] as string;
             i += 1;
         } else if (a.startsWith('--corpus=')) {
@@ -79,7 +92,13 @@ export function select_corpus(argv: readonly string[], repo_root: string): [stri
         process.stderr.write(`bench_ab_v2: unknown --corpus "${want}" (known: ${Object.keys(ALIASES).join(', ')})\n`);
         process.exit(2);
     }
-    return [rest, { name, kind: known.kind, path: path.join(repo_root, 'internal', 'bench', 'corpora', known.file) }];
+    const prompt_variants: PromptVariant[] =
+        variant === null ? [] : variant === 'both' ? [...PROMPT_VARIANTS] : (PROMPT_VARIANTS as readonly string[]).includes(variant) ? [variant as PromptVariant] : [];
+    if (variant !== null && prompt_variants.length === 0) {
+        process.stderr.write(`bench_ab_v2: unknown --prompt-variant "${variant}" (known: ${PROMPT_VARIANTS.join(', ')}, both)\n`);
+        process.exit(2);
+    }
+    return [rest, { name, kind: known.kind, path: path.join(repo_root, 'internal', 'bench', 'corpora', known.file), prompt_variants }];
 }
 
 function isDict(v: unknown): v is Dict {
@@ -130,7 +149,41 @@ export function validate_artifact_task(t: unknown): string[] {
         const extra = Object.keys(ladder).filter((k) => !(LADDER_NAMES as readonly string[]).includes(k));
         if (extra.length > 0) errs.push(`${id}: unknown ladder(s) ${extra.join(', ')}`);
     }
+    if (t['variants'] !== undefined) errs.push(...validate_variants(id, t['variants'], String(t['prompt'] ?? '')));
     return errs;
+}
+
+function validate_variants(id: string, variants: unknown, prompt: string): string[] {
+    if (!Array.isArray(variants) || !variants.every(isDict)) return [`${id}: variants must be a list of {prompt_variant, prompt?}`];
+    const errs: string[] = [];
+    for (const v of variants) {
+        const name = String(v['prompt_variant']);
+        if (!(PROMPT_VARIANTS as readonly string[]).includes(name)) errs.push(`${id}: unknown prompt_variant "${name}"`);
+        if (name === 'terse' && v['prompt'] !== undefined) errs.push(`${id}: the terse variant is the task prompt and carries no prompt of its own`);
+        if (name === 'expert') {
+            const p = v['prompt'];
+            if (typeof p !== 'string' || !p.startsWith(prompt) || p.trim().length <= prompt.trim().length) {
+                errs.push(`${id}: the expert prompt must start with the task prompt and add to it`);
+            }
+        }
+    }
+    const names = variants.map((v) => String(v['prompt_variant']));
+    if (errs.length === 0 && (names.length !== 2 || !PROMPT_VARIANTS.every((n) => names.includes(n)))) {
+        errs.push(`${id}: variants needs exactly one terse and one expert entry`);
+    }
+    return errs;
+}
+
+/** One task per requested variant, prompt swapped and tagged `prompt_variant`; no variants requested → unchanged. */
+export function expand_prompt_variants(tasks: readonly ArtifactTask[], wanted: readonly PromptVariant[]): Dict[] {
+    if (wanted.length === 0) return [...tasks] as unknown as Dict[];
+    return tasks.flatMap((t) => {
+        if (!t.variants) throw new Error(`${t.id} has no prompt variants`);
+        return wanted.map((w) => {
+            const v = t.variants?.find((x) => x.prompt_variant === w);
+            return { ...t, prompt: v?.prompt ?? t.prompt, prompt_variant: w } as unknown as Dict;
+        });
+    });
 }
 
 /** Parse and validate an artifact corpus; throws listing every invalid entry. */
@@ -154,7 +207,7 @@ export function load_artifact_corpus(file: string): ArtifactTask[] {
 export function load_v2_tasks(sel: CorpusSelection): Dict[] {
     if (sel.kind === 'artifact') {
         try {
-            return load_artifact_corpus(sel.path) as unknown as Dict[];
+            return expand_prompt_variants(load_artifact_corpus(sel.path), sel.prompt_variants);
         } catch (e) {
             process.stderr.write(`bench_ab_v2: ${(e as Error).message}\n`);
             process.exit(2);
@@ -172,7 +225,7 @@ export function dry_run_listing(sel: CorpusSelection, tasks: readonly Dict[], ar
         const primary = (t['graders'] as GraderRef[]).find((g) => g.role === 'primary')?.id ?? '?';
         for (const a of arms) {
             lines.push(
-                `  ${String(t['id'])}  arm=${a}  deliverable=${(t['deliverable'] as Dict)['path']}  ` +
+                `  ${String(t['id'])}${t['prompt_variant'] ? ` variant=${String(t['prompt_variant'])}` : ''}  arm=${a}  deliverable=${(t['deliverable'] as Dict)['path']}  ` +
                     `primary=${primary}  parity_bar=${String(t['parity_bar'])}  network=${String(t['network'])}  ` +
                     `ladders=${LADDER_NAMES.join('+')}\n`,
             );

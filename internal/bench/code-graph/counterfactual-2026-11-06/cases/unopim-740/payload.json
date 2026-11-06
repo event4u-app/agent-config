@@ -1,0 +1,46 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "Core",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Core/src/Core.php:19"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "packages/Webkul/Installer/src/Console/Commands/Upgrade.php",
+     "witness": "UPGRADE.md:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/Core/src/Core.php",
+   "lines": [
+    19,
+    58
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Core.php",
+   "lines": [
+    59,
+    1031
+   ]
+  }
+ ]
+}

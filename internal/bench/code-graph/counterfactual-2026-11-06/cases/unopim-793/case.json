@@ -1,0 +1,78 @@
+{
+ "id": "unopim-793",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 793,
+ "title": "fix(ai-agent): create products in strict confirm mode (#779)",
+ "merged_at": "2026-10-22T16:45:54Z",
+ "merge": "56071226255ff8e0f5dc40dafa72eab0f2751d54",
+ "parent": "968632dc22b239dcf83c3cf8e811d3ef68070880",
+ "changed_lines": 264,
+ "diff_files": [
+  "packages/Webkul/AiAgent/Config/acl.php",
+  "packages/Webkul/AiAgent/Resources/lang/ar_AE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ca_ES/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/da_DK/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/de_DE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_AU/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_GB/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_NZ/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/en_US/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/es_ES/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/es_VE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/fi_FI/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/fr_FR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/hi_IN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/hr_HR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/id_ID/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/it_IT/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ja_JP/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ko_KR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/mn_MN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/nl_NL/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/no_NO/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/pl_PL/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/pt_BR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/pt_PT/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ro_RO/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/ru_RU/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/sv_SE/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/tl_PH/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/tr_TR/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/uk_UA/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/vi_VN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/zh_CN/app.php",
+  "packages/Webkul/AiAgent/Resources/lang/zh_TW/app.php",
+  "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+  "packages/Webkul/AiAgent/src/Chat/Concerns/QueuesForApproval.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+  "packages/Webkul/AiAgent/src/Http/Controllers/ApprovalController.php",
+  "packages/Webkul/AiAgent/tests/Unit/AiAgentRouteConstraintTest.php",
+  "packages/Webkul/AiAgent/tests/Unit/ToolRegistryExtensibilityTest.php",
+  "packages/Webkul/AiAgent/tests/Unit/Tools/CreateProductStrictConfirmTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php#AgentRunner::buildSystemPrompt",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php#CreateProduct::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php#CreateProduct::register",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Controllers/ApprovalController.php#ApprovalController::__construct",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/MagicAI/PimFlexibilityToolsTest.php",
+   "test": true
+  }
+ ]
+}

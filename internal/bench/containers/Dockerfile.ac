@@ -1,0 +1,18 @@
+# bench-base plus agent-config, installed the way a consumer installs it.
+# The install runs once at build time; every trial starts from this layer.
+ARG BASE_IMAGE=bench-base
+FROM ${BASE_IMAGE}
+
+ARG PACKAGE_TARBALL=agent-config.tgz
+COPY --chown=node:node ${PACKAGE_TARBALL} /tmp/agent-config.tgz
+
+USER node
+RUN cd /tmp \
+ && npx -y --package=/tmp/agent-config.tgz agent-config init --yes --no-ui --offline --tools=claude-code \
+ && rm /tmp/agent-config.tgz
+
+USER root
+RUN mkdir -p /opt/bench \
+ && find /home/node -type f -not -path '*/.npm/*' | sort > /opt/bench/install-manifest.txt
+USER node
+LABEL org.event4u.bench.role=agent-config

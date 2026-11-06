@@ -54,7 +54,7 @@ const _HERE = fileURLToPath(import.meta.url);
 // bench_ab_v2_stats.ts → parents[2] is repo root (script lives in src/scripts/).
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
-const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
+export const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 import { addPair, newPairedSample, searchClaimSection, searchClaimVerdict } from './_lib/bench_ab_search_adherence.js';
 import {
@@ -82,10 +82,24 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['rules-kernel-dc', 'vanilla', 'kernel+downstream rules lift'],
     ['rules-balanced', 'vanilla', 'balanced-profile rules lift'],
     ['package', 'rules-kernel-dc', 'full package residual over kernel+downstream'],
+    // Post-repair rerun (2026-11): the rule sets the discipline profiles name.
+    // `profile-essential` equals `rules-kernel-dc`, so it has no row of its own.
+    ['profile-minimal', 'vanilla', 'minimal-profile (kernel) rules lift'],
+    ['profile-full', 'vanilla', 'full-profile rules lift'],
+    ['rules-kernel-dc', 'profile-minimal', 'downstream-changes over the kernel'],
     // Phase-3 T1: the size claim is `package-ladder` vs `package`, and it is a
     // metric PAIR — see `size_claim_verdict`. Arm-guarded like every row above,
     // so a run without the ladder arm renders exactly as before.
     ['package-ladder', 'package', 'ladder size claim (T1/T2 pair)'],
+    // Container controls (2026-11): an A/A pair that must show nothing, and the
+    // container baseline against the host one. Arm-guarded like every row above.
+    ['vanilla-b', 'vanilla', 'A/A control (vanilla vs vanilla)'],
+    ['vanilla', 'vanilla-host', 'container vs host baseline'],
+    // The minimal prompt is the floor an asset has to beat, not only vanilla:
+    // whether one plain instruction does what the rules do. Arm-guarded like above.
+    ['package', 'minimal-prompt', 'package over the minimal prompt'],
+    ['rules-kernel-dc', 'minimal-prompt', 'kernel+downstream rules over the minimal prompt'],
+    ['minimal-prompt', 'vanilla', 'minimal prompt lift'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────
@@ -471,11 +485,35 @@ export function mean_tokens_by_arm(records: Dict[], arms: string[]): Dict {
 // `tier_for_model` (both delta #4). What was missing was wiring them into the
 // REPORT, so the cost axis was priceable per run and unpriced per arm.
 
+/**
+ * The price row for a served model: its own row when pricing.yaml carries one
+ * (a dated snapshot id resolves to its base id), else the family row. Family
+ * rows price former generations — Haiku 4.5 at a quarter of its rate — so a
+ * report must say which kind priced it.
+ */
+export function price_row_for(
+    model: string,
+    rates: Record<string, TierRates>,
+): { tier: string | null; priced_by: 'model' | 'family' | null } {
+    // A provider prefix (`us.anthropic.`) and a context suffix (`[1m]`) do not
+    // change the list price; both are dropped before matching.
+    const raw = model.toLowerCase().replace(/\[[^\]]*\]$/, '');
+    const at = raw.indexOf('claude-');
+    const m = at > 0 ? raw.slice(at) : raw;
+    const own = Object.keys(rates)
+        .filter((k) => k.startsWith('claude-') && (m === k || m.startsWith(`${k}-`)))
+        .sort((a, b) => b.length - a.length)[0];
+    if (own !== undefined) return { tier: own, priced_by: 'model' };
+    const family = tier_for_model(m);
+    return family && rates[family] ? { tier: family, priced_by: 'family' } : { tier: family, priced_by: null };
+}
+
 /** Per-arm cost, priced bucket-by-bucket, plus the provenance of the prices. */
 export function cost_by_arm(records: Dict[], arms: string[], model: string | null, pricingPath: string): Dict {
     const [rates, sourced_on] = load_pricing(pricingPath);
-    const tier = model ? tier_for_model(model) : null;
-    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+    const row = model ? price_row_for(model, rates) : { tier: null, priced_by: null };
+    const tier = row.tier;
+    const tier_rates: TierRates | null = row.priced_by !== null && tier ? (rates[tier] as TierRates) : null;
 
     const per_arm: Dict = {};
     for (const arm of arms) {
@@ -515,6 +553,7 @@ export function cost_by_arm(records: Dict[], arms: string[], model: string | nul
     return {
         tier: tier ?? 'unknown',
         priced: tier_rates !== null,
+        priced_by: row.priced_by,
         pricing_sourced_on: sourced_on,
         per_arm,
     };
@@ -563,7 +602,12 @@ export function bucket_rates(records: Dict[], arms: string[]): Dict {
     return out;
 }
 
-export function analyse(payload: Dict): Dict {
+/**
+ * `pricingPath` defaults to the checkout's `pricing.yaml`; the evidence store
+ * passes the copy it sealed into a bundle, so an offline re-score prices a
+ * stored report with the prices it was first scored with.
+ */
+export function analyse(payload: Dict, pricingPath: string = PRICING_PATH): Dict {
     const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
     const arms = Array.isArray(payload['arms']) ? (payload['arms'] as string[]) : [];
     const comps: Dict[] = [];
@@ -587,7 +631,7 @@ export function analyse(payload: Dict): Dict {
         search_claims: comps.map((c) => searchClaimVerdict(c)), // separate on purpose — see the T5 lib
         status_buckets: bucket_rates(records, arms),
         mean_tokens: mean_tokens_by_arm(records, arms),
-        cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
+        cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, pricingPath),
     };
 }
 

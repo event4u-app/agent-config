@@ -1,0 +1,138 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "LAZY_RE",
+     "verdict": "untested",
+     "witness": "src/scripts/web_launch_third_party.ts:100"
+    },
+    {
+     "label": "classifyLoads",
+     "verdict": "tested",
+     "witness": "src/scripts/web_launch_third_party.ts:273"
+    },
+    {
+     "label": "extractLoads",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/web_launch_third_party.ts:193"
+    },
+    {
+     "label": "classify",
+     "verdict": "untested",
+     "witness": "tests/scripts/web_launch_write_time.test.ts:59"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "tests/scripts/web_launch_linear.test.ts",
+     "witness": "src/scripts/web_launch_third_party.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    273,
+    312
+   ]
+  },
+  {
+   "path": "tests/scripts/web_launch_write_time.test.ts",
+   "lines": [
+    59,
+    62
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/web_launch_rows.ts",
+   "lines": [
+    14,
+    23
+   ]
+  },
+  {
+   "path": "tests/scripts/web_launch_linear.test.ts",
+   "lines": [
+    26,
+    27
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    193,
+    232
+   ]
+  },
+  {
+   "path": "tests/scripts/web_launch_write_time.test.ts",
+   "lines": [
+    16,
+    17
+   ]
+  },
+  {
+   "path": "tests/scripts/web_launch_linear.test.ts",
+   "lines": [
+    28,
+    29
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    100,
+    100
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    405,
+    432
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    435,
+    464
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    476,
+    491
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    313,
+    323
+   ]
+  },
+  {
+   "path": "src/scripts/web_launch_third_party.ts",
+   "lines": [
+    233,
+    255
+   ]
+  }
+ ]
+}

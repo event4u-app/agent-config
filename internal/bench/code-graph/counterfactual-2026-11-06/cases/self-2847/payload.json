@@ -1,0 +1,264 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "LedgerContext",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:141"
+    },
+    {
+     "label": "OBSERVATION_KINDS",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:60"
+    },
+    {
+     "label": "ObservationKind",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:61"
+    },
+    {
+     "label": "ObservationProvider",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:64"
+    },
+    {
+     "label": "PROVIDER_VERIFIABLE_TIERS",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:58"
+    },
+    {
+     "label": "PROVIDER_VERIFIER_PREFIX",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:56"
+    },
+    {
+     "label": "isProviderVerifier",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:90"
+    },
+    {
+     "label": "parseObservationProviders",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:70"
+    },
+    {
+     "label": "resolveObligation",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:148"
+    },
+    {
+     "label": "validateObligation",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/reconstruction_ledger.ts:94"
+    },
+    {
+     "label": "main",
+     "verdict": "tested",
+     "witness": "src/scripts/reconstruction_ledger.ts:82"
+    },
+    {
+     "label": "providers",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/reconstruction_ledger.ts:68"
+    },
+    {
+     "label": "readProviderSlot",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/reconstruction_ledger.ts:45"
+    },
+    {
+     "label": "settingsSchema",
+     "verdict": "tested",
+     "witness": "src/server/schemas/settings.ts:36"
+    },
+    {
+     "label": "behaviorRow",
+     "verdict": "untested",
+     "witness": "tests/scripts/reconstruction_observation_provider.test.ts:21"
+    },
+    {
+     "label": "capture",
+     "verdict": "untested",
+     "witness": "tests/scripts/reconstruction_observation_provider.test.ts:130"
+    },
+    {
+     "label": "slot",
+     "verdict": "untested",
+     "witness": "tests/scripts/reconstruction_observation_provider.test.ts:19"
+    },
+    {
+     "label": "userGlobal",
+     "verdict": "untested",
+     "witness": "tests/scripts/reconstruction_observation_provider.test.ts:121"
+    },
+    {
+     "label": "write",
+     "verdict": "untested",
+     "witness": "tests/scripts/reconstruction_observation_provider.test.ts:187"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/server/schemas/settings.ts",
+   "lines": [
+    36,
+    75
+   ]
+  },
+  {
+   "path": "src/scripts/reconstruction_ledger.ts",
+   "lines": [
+    82,
+    120
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    70,
+    88
+   ]
+  },
+  {
+   "path": "tests/scripts/reconstruction_observation_provider.test.ts",
+   "lines": [
+    21,
+    33
+   ]
+  },
+  {
+   "path": "src/scripts/reconstruction_ledger.ts",
+   "lines": [
+    45,
+    61
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    94,
+    109
+   ]
+  },
+  {
+   "path": "tests/scripts/reconstruction_observation_provider.test.ts",
+   "lines": [
+    121,
+    124
+   ]
+  },
+  {
+   "path": "src/scripts/reconstruction_ledger.ts",
+   "lines": [
+    68,
+    80
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    58,
+    58
+   ]
+  },
+  {
+   "path": "tests/scripts/reconstruction_observation_provider.test.ts",
+   "lines": [
+    187,
+    188
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    60,
+    60
+   ]
+  },
+  {
+   "path": "tests/scripts/reconstruction_observation_provider.test.ts",
+   "lines": [
+    19,
+    19
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    90,
+    92
+   ]
+  },
+  {
+   "path": "tests/scripts/reconstruction_observation_provider.test.ts",
+   "lines": [
+    130,
+    133
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    64,
+    67
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    148,
+    164
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    56,
+    56
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    61,
+    61
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    141,
+    145
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/reconstruction_ledger.ts",
+   "lines": [
+    166,
+    178
+   ]
+  },
+  {
+   "path": "src/server/schemas/settings.ts",
+   "lines": [
+    76,
+    581
+   ]
+  }
+ ]
+}

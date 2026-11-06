@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { readScipIndex } from '../../src/scripts/code_graph/scip_reader.js';
+import { alignScipLines, readScipIndex } from '../../src/scripts/code_graph/scip_reader.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
 /** Minimal protobuf writer for the SCIP subset the reader consumes. */
@@ -94,6 +94,47 @@ describe('the SCIP reader (6.2)', () => {
         // The dynamic guess `obj.save()` the native pass made is superseded.
         expect(fromRun.filter((e) => e.resolved_via === 'dynamic')).toEqual([]);
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
+    });
+
+    it('reads index lines in the graph line numbering when a file holds a TypeScript-only line break', async () => {
+        // TypeScript, and so scip-typescript, ends a line at U+2028, U+2029 and a
+        // lone CR as well as at LF; the native extractor counts LF only. Found by
+        // the 2.6 oracle run: a literal U+2028 in a string shifted every later
+        // definition and the reference landed on the file instead of the method.
+        const root = repo();
+        const ls = String.fromCharCode(0x2028);
+        fs.writeFileSync(path.join(root, 'src', 'store.ts'), `export const SEP = '${ls}';\nexport class Store {\n    save(): void {}\n}\n`);
+        const sym = 'scip-typescript npm x 1.0 src/`store.ts`/Store#save().';
+        fs.writeFileSync(
+            path.join(root, 'index.scip'),
+            scipIndex([
+                { path: 'src/store.ts', occ: [occurrence(3, sym, true)] },
+                { path: 'src/app.ts', occ: [occurrence(1, sym, false)] },
+            ]),
+        );
+        const { graph } = await buildFromRepo(root, null);
+        expect(graph.edges.filter((e) => e.source === 'src/app.ts#run' && e.provider === 'scip').map((e) => e.target)).toEqual([
+            'src/store.ts#Store::save',
+        ]);
+    });
+
+    it('maps each TypeScript line to its LF line, leaving CRLF as one break', () => {
+        const ls = String.fromCharCode(0x2028);
+        const ps = String.fromCharCode(0x2029);
+        const docs = [
+            {
+                path: 'a.ts',
+                occurrences: [0, 1, 2, 3, 4, 5].map((line) => ({ line, symbol: `s${line}`, definition: true })),
+            },
+        ];
+        // TS lines: 0 `a` · 1 `b` · 2 `c` · 3 `d` · 4 `e` · 5 `f`
+        // LF lines: 0 `a⏎b` · 1 `c` · 2 `d␍e¶f`   (⏎ = LS, ␍ = lone CR, ¶ = PS)
+        const text = `a${ls}b\r\nc\nd\re${ps}f\n`;
+        const out = alignScipLines(docs, (p) => (p === 'a.ts' ? text : null));
+        expect(out[0]?.occurrences.map((o) => o.line)).toEqual([0, 0, 1, 2, 2, 2]);
+        // Unreadable or plain-LF files are returned unchanged.
+        expect(alignScipLines(docs, () => null)).toEqual(docs);
+        expect(alignScipLines(docs, () => 'a\nb\r\nc\n')).toEqual(docs);
     });
 
     it('changes the graph checksum when the index changes', async () => {

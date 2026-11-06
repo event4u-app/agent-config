@@ -1,0 +1,78 @@
+{
+ "id": "unopim-778",
+ "subject": "unopim",
+ "repo": "unopim/unopim",
+ "pr": 778,
+ "title": "fix(ai-agent): require write permissions on ai and magic ai write paths",
+ "merged_at": "2026-10-19T06:21:21Z",
+ "merge": "751b6b09a851cfa35bc4753ba38a1a1d708c962c",
+ "parent": "98b0f7e529b2cfbd1ee5eee9a235036b950e4b02",
+ "changed_lines": 328,
+ "diff_files": [
+  "packages/Webkul/Admin/src/Config/acl.php",
+  "packages/Webkul/Admin/src/Config/system.php",
+  "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php",
+  "packages/Webkul/Admin/src/SystemSettings.php",
+  "packages/Webkul/Admin/tests/Feature/Acl/AiAgentWritePathAclTest.php",
+  "packages/Webkul/AiAgent/Config/ai-agent.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php",
+  "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+  "packages/Webkul/AiAgent/tests/Unit/Tools/RememberFactScopeTest.php",
+  "packages/Webkul/AiAgent/tests/Unit/Tools/TaxonomyToolWritePermissionTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php#MagicAIController::saveAllTranslatedAttributes",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/Admin/src/Http/Controllers/MagicAI/MagicAIController.php#MagicAIController::saveTranslatedData",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/Admin/src/SystemSettings.php#SystemSettings",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/Admin/src/SystemSettings.php#SystemSettings::configGroupOwners",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/CreateAttribute.php#CreateAttribute::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/ManageFamilies.php#ManageFamilies::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/ManageOptions.php#ManageOptions::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Chat/Tools/RememberFact.php#RememberFact::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php#DashboardController::rollback",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/ConfigurationController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/SystemSettingsController.php",
+   "test": false
+  },
+  {
+   "path": "packages/Webkul/Admin/tests/Feature/SystemSettings/RegistryTest.php",
+   "test": true
+  }
+ ]
+}

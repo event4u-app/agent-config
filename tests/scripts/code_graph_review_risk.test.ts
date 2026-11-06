@@ -12,6 +12,8 @@ import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
 import { graphHome } from '../../src/scripts/code_graph/graph_home.js';
 import {
     diffHunks,
+    indexRiskSource,
+    loadRiskSource,
     parseUnifiedZero,
     renderReviewRisk,
     renderReviewRiskMarkdown,
@@ -22,6 +24,7 @@ import {
     reviewRisk,
     riskBand,
 } from '../../src/scripts/code_graph/review_risk.js';
+import { type GraphIndex, openGraphIndex } from '../../src/scripts/code_graph/sqlite_store.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
@@ -105,6 +108,46 @@ describe('review-risk on a planted diff', () => {
         expect(reviewRisk(root, graph, 'HEAD', diffHunks(root, 'HEAD')!, { ...RISK_WEIGHTS, pipelines: 0 }).total).toBe(r.total - r.terms.find((t) => t.term === 'pipelines')!.contribution);
     });
 
+    it('reads through the index: the same answer as the JSON, without the whole-graph parse', () => {
+        const cache = graphHome(root).cachePath;
+        const before = process.env['AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES'];
+        process.env['AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES'] = '0';
+        let parses = 0;
+        const loaded = loadRiskSource(cache, () => {
+            parses++;
+            return graph;
+        });
+        try {
+            expect(loaded.via).toBe('index');
+            const viaIndex = reviewRisk(root, loaded.source, 'HEAD', diffHunks(root, 'HEAD')!);
+            expect(viaIndex).toEqual(r);
+            expect(parses).toBe(0);
+        } finally {
+            loaded.close();
+            if (before === undefined) delete process.env['AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES'];
+            else process.env['AGENT_CONFIG_GRAPH_INDEXED_MIN_EDGES'] = before;
+        }
+        // Below the threshold the parsed graph answers, through the injected loader.
+        const small = loadRiskSource(cache, () => {
+            parses++;
+            return graph;
+        });
+        small.close();
+        expect(small.via).toBe('json');
+        expect(parses).toBe(1);
+    });
+
+    it('reads through the index only when the twin carries the graph-level facts', () => {
+        const index = openGraphIndex(graphHome(root).cachePath)!;
+        try {
+            const predating: GraphIndex = { ...index, meta: (key) => (key === 'lanes_run' ? undefined : index.meta(key)) };
+            expect(indexRiskSource(predating)).toBeNull();
+            expect(indexRiskSource(index)).not.toBeNull();
+        } finally {
+            index.close();
+        }
+    });
+
     it('answers through graph_impact in review_risk mode', async () => {
         const out = (await GRAPH_TOOLS['graph_impact']!.handler({ diff: 'HEAD', review_risk: true }, root)) as { status: string; total: number };
         expect(out.status).toBe('ok');
@@ -158,6 +201,21 @@ describe('4.2 — a skipped lane reads unknown, never 0', () => {
         } finally {
             fs.rmSync(shallow, { recursive: true, force: true });
         }
+    });
+
+    it('a lane that never ran reads unknown when it counted nothing, and keeps what it did count', async () => {
+        // Built with lanes off: no lane record at all, so a zero from a lane-backed term is unmeasured.
+        const { graph: bare } = await buildFromRepo(root, null, {});
+        expect(bare.lanes_run).toBeUndefined();
+        const r = reviewRisk(root, bare, 'HEAD', [{ file: 'app/Services/PartnerClient.php', from: 1, to: 400 }]);
+        for (const term of ['entry points', 'flows', 'missing partners', 'columns', 'operations', 'pipelines'] as const) {
+            const t = r.terms.find((x) => x.term === term)!;
+            if (t.items.length === 0) expect(t.unknown, term).toBe('lane not run');
+        }
+        expect(r.terms.find((t) => t.term === 'missing partners')!.unknown).toBe('lane not run');
+        expect(r.terms.find((t) => t.term === 'callers')!.unknown).toBeNull();
+        expect(renderReviewRisk(r).join('\n')).toContain('missing partners unknown (lane not run)');
+        expect(riskBand(r).band).toBe('unknown');
     });
 });
 

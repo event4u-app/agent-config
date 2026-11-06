@@ -17,7 +17,9 @@ import { type LoadedGraph, loadGraph, resolveSeeds, tree } from './query.js';
 import { repoIdentity } from './repo_identity.js';
 import { gitProbe } from '../_lib/spawn_env.js';
 import { testsForModule } from './answer_correctness.js';
+import { coverageSources } from './coverage.js';
 import { correctionSignals, foldSignals, readUserSignals, reviewChecklist } from '../_lib/learning_inputs.js';
+import type { LaneRunRecord } from './types.js';
 
 const TOKENS_PER_LINE = 10;
 const SNIPPET_LINES = 40;
@@ -85,7 +87,9 @@ export function graphSources(g: LoadedGraph, repoId: string, root: string | null
         intents: [intent],
         rows: (q) => {
             const seeds = words(q).flatMap((w) => resolveSeeds(g, w, 5));
-            const ids = new Set(seeds.flatMap((s) => tree(g, s, { direction: 'in', depth, limit: 200 }).items.map((i) => i.id)));
+            // No walk limit: the envelope caps by budget and counts what it drops,
+            // where a limit here dropped callers before anything could count them.
+            const ids = new Set(seeds.flatMap((s) => tree(g, s, { direction: 'in', depth, limit: Number.MAX_SAFE_INTEGER }).items.map((i) => i.id)));
             for (const s of seeds) ids.delete(s);
             return [...ids].map(rowOf).filter((r): r is AskRow => r !== null);
         },
@@ -99,6 +103,17 @@ export function graphSources(g: LoadedGraph, repoId: string, root: string | null
         lookup: symbols.lookup,
     };
     return [symbols, reaching('callers', 'usage', 1), reaching('dependents', 'affected', 2), tests];
+}
+
+/** What `ask` must know about the graph to say what it does not know: the lane record and each row's partial file. */
+export function askGraphOptions(g: LoadedGraph): { lanes: readonly LaneRunRecord[] | undefined; partialFile: (id: string) => string | null } {
+    return {
+        lanes: g.lanesRun(),
+        partialFile: (id) => {
+            const file = g.byId.get(id)?.source_file;
+            return file && g.byId.get(file)?.partial === true ? file : null;
+        },
+    };
 }
 
 export function askMain(argv: string[]): number {
@@ -123,7 +138,7 @@ export function askMain(argv: string[]): number {
     const scope: Scope = { repoId: repoIdentity(root).repoId, branch: git(['rev-parse', '--abbrev-ref', 'HEAD']), worktree: root, user: process.env['USER'] ?? '' };
     const g = loadGraph(cache, 'native');
     try {
-        const sources = [...graphSources(g, scope.repoId, root), ...reviewSources(root, g, scope)];
+        const sources = [...graphSources(g, scope.repoId, root), ...reviewSources(root, g, scope), ...coverageSources(g, scope.repoId, root)];
         const id = flag(argv, '--fetch');
         if (id) {
             const r = fetchById(id, sources, scope);
@@ -135,7 +150,7 @@ export function askMain(argv: string[]): number {
             process.stderr.write('usage: code_graph/cli.ts ask "<question>" [--format hint|concise|detailed] [--fetch <id>] [--json]\n');
             return 2;
         }
-        const r = ask(question, sources, { ...scope }, { format: fmt, commit: git(['rev-parse', '--short=12', 'HEAD']) || null, lanes: g.graph?.lanes_run });
+        const r = ask(question, sources, { ...scope }, { format: fmt, commit: git(['rev-parse', '--short=12', 'HEAD']) || null, ...askGraphOptions(g) });
         if (argv.includes('--json')) process.stdout.write(`${JSON.stringify(r, null, 1)}\n`);
         else {
             process.stdout.write(`intent: ${r.intent} · ${r.envelope.counts.shown}/${r.envelope.counts.total} shown${r.envelope.notice ? ` — ${r.envelope.notice}` : ''}\n`);

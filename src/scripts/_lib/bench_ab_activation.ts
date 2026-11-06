@@ -190,33 +190,46 @@ export function audit_activation(
             }
         }
 
-        const baseBySeed = new Map<number, number>();
+        const baseBySeed = new Map<number, { pt: number; turns: number }>();
         for (const run of _list(arms[opts.baseline_arm])) {
             const pt = _runPromptTokens(run);
             if (!_truthy(run['errored']) && pt > 0) {
-                baseBySeed.set(_int(run['seed']), pt);
+                baseBySeed.set(_int(run['seed']), { pt, turns: _runTurns(run) });
             }
         }
 
         for (const arm of opts.lift_arms) {
             for (const run of _list(arms[arm])) {
                 const seed = _int(run['seed']);
-                const basePt = baseBySeed.get(seed);
+                const base = baseBySeed.get(seed);
                 const armPt = _runPromptTokens(run);
-                if (_truthy(run['errored']) || basePt === undefined || armPt === 0) {
+                if (_truthy(run['errored']) || base === undefined || armPt === 0) {
                     skipped += 1;
                     continue;
                 }
                 checked += 1;
-                if (armPt < basePt * minRatio) {
+                // The footprint is cumulative over turns, so a treatment run that
+                // ends early (e.g. asks one question) undershoots a long baseline
+                // while its surface did reach the model; per turn, a fixed
+                // injection is diluted over a long run instead. A collapse is
+                // therefore called only when the run is below the ratio on BOTH
+                // readings — a missing surface leaves both near 1.
+                const armTurns = _runTurns(run);
+                const perTurn = armTurns > 0 && base.turns > 0;
+                const totalLow = armPt < base.pt * minRatio;
+                const turnLow = !perTurn || armPt / armTurns < (base.pt / base.turns) * minRatio;
+                const a = perTurn ? armPt / armTurns : armPt;
+                const b = perTurn ? base.pt / base.turns : base.pt;
+                if (totalLow && turnLow) {
+                    const unit = perTurn ? ' per turn' : '';
                     violations.push({
                         task_id: taskId,
                         seed,
                         arm,
                         kind: 'collapsed-to-baseline',
                         detail:
-                            `prompt footprint ${armPt} vs baseline ${basePt} ` +
-                            `(ratio ${(armPt / basePt).toFixed(2)} < ${minRatio}) — ` +
+                            `prompt footprint ${Math.round(a)} vs baseline ${Math.round(b)}${unit} ` +
+                            `(ratio ${(a / b).toFixed(2)} < ${minRatio}) — ` +
                             'the treatment surface may not have reached the model',
                     });
                 }
@@ -355,6 +368,11 @@ function _list(v: unknown): Record<string, unknown>[] {
 
 function _truthy(v: unknown): boolean {
     return Boolean(v);
+}
+
+/** Model turns of one trial record, from its metrics block; 0 when not recorded. */
+function _runTurns(run: Record<string, unknown>): number {
+    return _int(_dict(run['metrics'])['num_turns']);
 }
 
 /**

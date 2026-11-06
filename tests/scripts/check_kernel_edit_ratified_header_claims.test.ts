@@ -33,6 +33,10 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * its `verdictFor` for both paths and asserts no refusal. `metered-spawn-ask`
  * (bound 2026-10-25) is advisory and filtered to `Agent`/`Task` by its manifest
  * `tools:`, so an edit of either path never reaches it, and it only ever asks.
+ * `memory-audience-shadow` (bound 2026-11-05) is advisory, `fail_closed: false`,
+ * and returns allow on every path (its own tests pin each branch), so it cannot
+ * refuse an edit of either path; it records a line only for writes under
+ * `agents/memory/`.
  *
  * When the last case fails because a concern was bound: if it can deny (its
  * manifest `severity` is `blocking`), send an edit of both paths through the
@@ -51,6 +55,7 @@ const REVIEWED_PRE_TOOL_USE = [
     'code-graph-context',
     'design-slop',
     'evidence-independence',
+    'memory-audience-shadow',
     'memory-recall',
     'metered-spawn-ask',
     'one-question-per-ask',

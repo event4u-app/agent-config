@@ -1,0 +1,36 @@
+{
+ "id": "larasend-16",
+ "subject": "larasend",
+ "repo": "savvyagents/larasend",
+ "pr": 16,
+ "title": "Fix inbox pagination navigation",
+ "merged_at": "2026-08-10T17:04:27Z",
+ "merge": "d0bb92820ce6b068e315d683f1b92afa48993872",
+ "parent": "e6f59068f9801dae1e6391a167da80f02ffcafc8",
+ "changed_lines": 140,
+ "diff_files": [
+  "app/Http/Controllers/InboxController.php",
+  "resources/js/pages/Inbox.vue",
+  "tests/Feature/InboxTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "app/Http/Controllers/InboxController.php#InboxController",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Http/Controllers/InboxController.php#InboxController::__invoke",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Http/Controllers/InboxController.php#InboxController::threadsFor",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "routes/web.php",
+   "test": false
+  }
+ ]
+}

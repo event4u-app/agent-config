@@ -508,7 +508,7 @@ export function basis_ref_kind(ref: string): 'url' | 'claim' | 'path' {
 }
 
 /** Strip a trailing `(note)` and a `:LINE[-LINE]` anchor off a path-shaped ref. */
-function basis_ref_path(ref: string): string {
+export function basis_ref_path(ref: string): string {
     return ref
         .trim()
         .replace(/\s*\([^)]*\)\s*$/, '')

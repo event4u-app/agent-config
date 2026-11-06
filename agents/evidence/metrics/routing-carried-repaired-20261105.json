@@ -1,0 +1,217 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-11-05T08:48:10.828Z",
+  "commit": "099c714a01b4bcbe7376b2597393dc0b169a5c71",
+  "host_version": "2.1.316",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-baseline-protocol-20261027.md",
+    "sha256": "38326fb3684777b2f31363970dae60605076c7f00441899b53161965d7935c1a"
+  },
+  "catalogue_sha256": "fe4298b378d560fc5f44a2b9ab6df5f4339504eb25e0ada9fbe46d6eae76e180",
+  "cost_usd": 2.5748873999999997,
+  "partial": false,
+  "cases": [
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "not-fired",
+      "cost_usd": 0.1491976,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "ffd004cff2157fa683019d25ae57a9ab7139074dc96a13600a6fafc56d3ca10d"
+    },
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "not-fired",
+      "cost_usd": 0.1453338,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "ffd004cff2157fa683019d25ae57a9ab7139074dc96a13600a6fafc56d3ca10d"
+    },
+    {
+      "case": "061-type-design-q5",
+      "skill": "type-design",
+      "query_sha256": "00f4d46883654eb6a64c3d13dceb5e5a9f532744b618ca972f798bcae818f330",
+      "verdict": "not-fired",
+      "cost_usd": 0.1423158,
+      "invoked": [],
+      "id": "q5",
+      "skill_sha256": "ffd004cff2157fa683019d25ae57a9ab7139074dc96a13600a6fafc56d3ca10d"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "fired",
+      "cost_usd": 0.22733980000000004,
+      "invoked": [
+        "react-shadcn-ui"
+      ],
+      "id": "rsu-e2",
+      "skill_sha256": "f0ec83fd302528189e77274d653964ec4abb3f3a9b3c361389deee6cb8c62cef"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "fired",
+      "cost_usd": 0.2334136,
+      "invoked": [
+        "react-shadcn-ui"
+      ],
+      "id": "rsu-e2",
+      "skill_sha256": "f0ec83fd302528189e77274d653964ec4abb3f3a9b3c361389deee6cb8c62cef"
+    },
+    {
+      "case": "066-react-shadcn-ui-rsu-e2",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "9f1472e03b44b4560b328ac7d60671d4f905102e52bf60b7d262d532052b43c5",
+      "verdict": "not-fired",
+      "cost_usd": 0.14501260000000002,
+      "invoked": [],
+      "id": "rsu-e2",
+      "skill_sha256": "f0ec83fd302528189e77274d653964ec4abb3f3a9b3c361389deee6cb8c62cef"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "not-fired",
+      "cost_usd": 0.1554086,
+      "invoked": [],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.22322179999999997,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "079-dependency-upgrade-q2",
+      "skill": "dependency-upgrade",
+      "query_sha256": "a65abcd1fe88d57848c199e2377abadf079d09cbffead1e3d62763ade3f0321a",
+      "verdict": "fired",
+      "cost_usd": 0.2190466,
+      "invoked": [
+        "dependency-upgrade"
+      ],
+      "id": "q2",
+      "skill_sha256": "8d44c96c58980031b1782659a456e87a68961b4e4cab29a651cbb688a3eb721a"
+    },
+    {
+      "case": "122-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "fired",
+      "cost_usd": 0.16398120000000002,
+      "invoked": [
+        "wireframe"
+      ],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "122-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "fired",
+      "cost_usd": 0.162093,
+      "invoked": [
+        "wireframe"
+      ],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "122-wireframe-q3",
+      "skill": "wireframe",
+      "query_sha256": "d8dd55807b05c9371d486178b7b13c9a701e1975d715693e12acaf4631576933",
+      "verdict": "fired",
+      "cost_usd": 0.1651186,
+      "invoked": [
+        "wireframe"
+      ],
+      "id": "q3",
+      "skill_sha256": "d8f2301c42cbac5198508c3aec35876a4065b176ec695b71a103d7b6c32219d9"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.1419974,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "1cef6461b7a371ef9ad7d78f50ded3aa0410c82e105c4c4706c0f1c5b83055bb"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.1513164,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "1cef6461b7a371ef9ad7d78f50ded3aa0410c82e105c4c4706c0f1c5b83055bb"
+    },
+    {
+      "case": "147-project-analysis-core-q1",
+      "skill": "project-analysis-core",
+      "query_sha256": "181aa5f3c1f6986f929931ac12127b823ee32262805c7051451011838119c894",
+      "verdict": "not-fired",
+      "cost_usd": 0.1500906,
+      "invoked": [],
+      "id": "q1",
+      "skill_sha256": "1cef6461b7a371ef9ad7d78f50ded3aa0410c82e105c4c4706c0f1c5b83055bb"
+    }
+  ],
+  "units": [
+    {
+      "unit": "dependency-upgrade",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "unit": "project-analysis-core",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "react-shadcn-ui",
+      "n": 3,
+      "fired": 2,
+      "unknown": 0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "unit": "type-design",
+      "n": 3,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    },
+    {
+      "unit": "wireframe",
+      "n": 3,
+      "fired": 3,
+      "unknown": 0,
+      "recall": 1
+    }
+  ]
+}

@@ -234,14 +234,14 @@
    "path": "host-owned (for example ~/.claude/projects/<project>/memory)",
    "format": "host-defined",
    "writer": [],
-   "readers": [],
+   "readers": ["src/scripts/_lib/host_memory_reader.ts"],
    "privacy": "personal",
    "owner": "user",
    "delete_path": "the host's own memory controls",
    "hosts": "per host",
    "status": "active",
    "read_only": true,
-   "note": "host-owned, read-only for this package"
+   "note": "host-owned, read-only for this package; read for the current project only (AI council 2026-11-04), type: feedback files, counts into the self-repair subject index"
   }
  ]
 }

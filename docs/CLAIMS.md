@@ -384,20 +384,23 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-10-19
 
 ### claim: discipline-lift-weak-host
-- claim: On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence.
+- claim: Post-repair (2026-11-04, ab-v2 scorer after the 2026-10-28 task-validity repair), the installed package does NOT produce a significant discipline lift on either host. Weak host (claude-haiku-4-5, trapE-scope-01/02, 12 seeds): 0.833 → 0.958, Δ +0.125, p=0.181, at 7.8× vanilla tokens. Strong host (claude-sonnet-4-6, 34 tasks, 3 seeds, 101 valid pairs over two reports): discipline 0.946 → 0.911, capability 92.1% → 91.1%; the 83-pair main report reads Δ −0.042, p=0.059, the 18 re-run pairs are identical, at 5.1× vanilla tokens. The pre-repair claim — a significant, placebo-controlled weak-host lift — is not reproduced and is narrowed to its run (docs/benchmark.md § Weak host), which stays published with its pre-repair label.
 - kind: quant
-- evidence: docs/benchmark.md#weak-host-specific
+- evidence: docs/benchmark.md#post-repair-weak
+- note: The raw report files named in measured_on were deleted on 2026-11-05 before being preserved (docs/benchmark.md § Post-repair rerun); the figures here were transcribed from them and cannot be re-checked against the raw files.
+- non_inference: The weak-host sweep covers two scope traps only; a non-significant lift there is not a measured absence of effect on other task families, and no package-vs-placebo comparison was run post-repair.
 - status: backed
-- last_verified: 2026-07-05
-- measured_on: ab-v2 scorer before the 2026-10-28 task-validity repair (docs/benchmark.md § Task validity); not re-scored, and the pinned reports keep no per-run diff, so they cannot be re-scored offline
+- last_verified: 2026-11-05
+- measured_on: ab-v2 scorer after the 2026-10-28 task-validity repair; reports 2026-11-04T21-50-27Z (weak, package), 2026-11-04T22-57-15Z and 2026-11-05T03-11-36Z (strong)
 
 ### claim: essential-tier-cost-factor
-- claim: The lift-carrying essential cut (kernel + downstream-changes) keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed.
+- claim: Post-repair (2026-11-04, claude-haiku-4-5, trapE-scope-01/02, 12 seeds), the essential cut (kernel + downstream-changes, injected as `rules-kernel-dc`) is the only arm with a significant weak-host discipline lift: 0.739 → 1.000 on the 23 complete pairs, Δ +0.261, p=0.036, at 2.9× vanilla tokens, against 7.1× for the full tier (−0.125, p=0.353) and 7.8× for the installed package (p=0.181). It is an injected rule set — on Claude `discipline_profile` changes nothing at runtime (agents/roadmaps/stubs/road-to-a-discipline-profile-that-loads.md). PRE-REPAIR (kept, not re-scored): the essential cut keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed.
 - kind: quant
-- evidence: docs/benchmark.md#REPLICATION FAILED
+- evidence: docs/benchmark.md#post-repair-weak
+- note: The raw report files named in measured_on were deleted on 2026-11-05 before being preserved (docs/benchmark.md § Post-repair rerun); the figures here were transcribed from them and cannot be re-checked against the raw files.
 - status: backed
-- last_verified: 2026-07-07
-- measured_on: ab-v2 scorer before the 2026-10-28 task-validity repair (docs/benchmark.md § Task validity); not re-scored, and the pinned reports keep no per-run diff, so they cannot be re-scored offline
+- last_verified: 2026-11-05
+- measured_on: post-repair figures from report 2026-11-04T21-26-13Z (ab-v2 scorer after the 2026-10-28 repair); the PRE-REPAIR part was scored before that repair, is not re-scored, and the pinned reports keep no per-run diff
 
 ### claim: downshift-cost-reduction
 - claim: On the READ-ONLY FAN-OUT slice family, tier-downshifted subagent dispatch (lite/haiku vs session-tier-proxy sonnet) nets a ≥30% USD-weighted token-cost reduction at held quality — measured 2026-07-08 (n=10 paired live dispatches, 20 telemetry lines): 10/10 exact-match on BOTH arms, 29.4% fewer raw tokens, 76.5% USD-weighted cost reduction at the 3x haiku↔sonnet price ratio. FAMILY-SCOPED — the mechanical-edit family is unmeasured and its downshift (incl. the deferred tier downgrades of existing units) stays gated. Negative control held: an open-ended synthesis/unknown slice never resolves below the session tier (inferSliceTier → medium/inherit, never lite).

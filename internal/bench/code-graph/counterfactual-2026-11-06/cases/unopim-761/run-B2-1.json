@@ -1,0 +1,49 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "packages/Webkul/Admin/src/Http/Controllers/MediaController.php",
+  "packages/Webkul/Attribute/src/Models/Attribute.php",
+  "packages/Webkul/Category/src/Models/CategoryField.php",
+  "packages/Webkul/Product/src/Models/AssociationTypeField.php",
+  "packages/Webkul/Product/src/Validator/ChannelLocaleValuesValidator.php",
+  "packages/Webkul/Product/src/Validator/ChannelValuesValidator.php",
+  "packages/Webkul/Product/src/Validator/CommonValuesValidator.php",
+  "packages/Webkul/Product/src/Validator/LocaleValuesValidator.php"
+ ],
+ "reply": "{\"files\": [\"packages/Webkul/Admin/src/Http/Controllers/MediaController.php\", \"packages/Webkul/Attribute/src/Models/Attribute.php\", \"packages/Webkul/Category/src/Models/CategoryField.php\", \"packages/Webkul/Product/src/Models/AssociationTypeField.php\", \"packages/Webkul/Product/src/Validator/ChannelLocaleValuesValidator.php\", \"packages/Webkul/Product/src/Validator/ChannelValuesValidator.php\", \"packages/Webkul/Product/src/Validator/CommonValuesValidator.php\", \"packages/Webkul/Product/src/Validator/LocaleValuesValidator.php\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 10815,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 245,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 10815,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 245,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 10815,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 10815
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

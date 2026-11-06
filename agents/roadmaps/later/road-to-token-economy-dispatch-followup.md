@@ -6,7 +6,7 @@ parent_roadmap: road-to-token-economy-dispatch
 
 # Roadmap: Follow-up to road-to-token-economy-dispatch — the data-window and blocker-gated remainder
 
-> **Arrivals:** 1 — `inbox-2026-10-cb` (2026-10-31): the host now forks by default, and a fork inherits the author's conversation — the re-entry argument for a typed reviewer (3.2). The doctrine half (a judge is never a fork) landed in `road-to-a-split-the-task-earns` 1.1.
+> **Arrivals:** 2 — latest `inbox-2026-11-na` (2026-11-06): the end reviewer `production-validator` still loads the full hierarchy (no `omit_project_instructions`); landed as 3.2a/3.2b. Earlier: `inbox-2026-10-cb` (2026-10-31): the host now forks by default, and a fork inherits the author's conversation — the re-entry argument for a typed reviewer (3.2). The doctrine half (a judge is never a fork) landed in `road-to-a-split-the-task-earns` 1.1.
 
 > The worker/reviewer thin projection ships from measured `rules_used` data,
 > the reviewer tier default gets its quality-floor comparison, and the four
@@ -57,6 +57,28 @@ stronger-than-ordering fork doctrine) and `reviewer-tier-quality-floor`
       suite-owned spawn wrapper exists (Agent-tool spawns cannot be marked
       on this host — probe on record in the parent). <!-- carried from
       parent 3.2; the reviewer enum value is reserved and fail-open -->
+- [x] 3.2a A slim end-reviewer **arm**, not a default: `production-validator` with
+      `omit_project_instructions: true` plus a review digest (the generated floor, review
+      contexts, acceptance block and the `dispatch_r2_reviewer.ts` packet). Verdict
+      comparison slim vs full on fixtures that exist: the `wedge-hollow-detection` pair,
+      the 12-fixture defect corpus, and the three correct-but-contested controls of the
+      adversarial-council run. Endpoints: verdict agreement, missed planted defects,
+      false positives on the contested controls, priced cost. Bar: agreement at or above
+      the owner's bar **and** slim false positives at or below full. Under $20; paid, so it
+      waits on an owner release. The reviewer prompt stays neutral per
+      `evaluator-independence` — a sceptic stance flagged 3 of 3 correct controls
+      (`docs/benchmark.md` § adversarial council).
+      <!-- verify: `ls agents/evidence/analysis/ | grep -c slim-reviewer` -> /^[1-9]/ -->
+      **Done 2026-11-06 — bar FAILS** (`agents/evidence/analysis/slim-reviewer-verdict-comparison-2026-11-06.md`):
+      11 of 17 fixtures inside the $20 cap ($18.13 spent). Agreement 10/11 (90.9 %), 0 missed
+      planted defects in either arm. Slim false positives on the contested controls are 2/3
+      against full's 1/3, so the false-positive half fails. Reviewer context is 14.8k vs 104k
+      tokens. The slim arm does not ship as a substitute on this evidence.
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/slim_reviewer_score.ts -->
+- [ ] 3.2b A probe that a judge never runs as a fork: the host forks by default and a
+      fork inherits the author's conversation (Arrivals line above). Typed subagent,
+      `reuse: never`.
+      <!-- verify: `npx vitest run tests/scripts/reviewer_never_fork.test.ts` -> 0 -->
 - [ ] 3.3 Escape hatch, envelope-carried: a worker that hits a wall
       (`needs_context: <rule-id>`) records the miss in its CHECKPOINT
       envelope; the orchestrator may re-dispatch with the widened

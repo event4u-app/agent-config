@@ -11,6 +11,14 @@ export interface ArmSpec {
     inject: string | null; // None | "rdp" | "placebo"
     recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
     /**
+     * A harness-orchestrated multi-step arm
+     * (`_lib/bench_headroom_arms.ts`). `test-first` = tester call, then author;
+     * `review` = author, slim reviewer, one revision.
+     */
+    orchestration?: 'test-first' | 'review';
+    /** `--effort` for every host call of this arm; `null`/absent = host default. */
+    effort?: string | null;
+    /**
      * Per-arm override for the footprint-lift audit, or `null` to declare that
      * lift is **not a valid signal** for this arm.
      *
@@ -43,6 +51,8 @@ export interface ArmSpec {
      * off or redirected without naming it here.
      */
     isolate_neighbour?: boolean;
+    /** Runs on the host CLI even in a `--isolation container` sweep — the host-vs-container control. */
+    host_only?: boolean;
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
@@ -92,15 +102,41 @@ export interface ArmSpec {
 export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
+    // Controls for the container path: `vanilla-b` is `vanilla` under a second
+    // name (an A/A pair), `vanilla-host` is `vanilla` kept on the host CLI when the
+    // rest of the sweep runs in containers.
+    'vanilla-b': { setting_sources: 'project,local', inject: null },
+    'vanilla-host': { setting_sources: 'project,local', inject: null, host_only: true },
     'package-rdp': { setting_sources: null, inject: 'rdp' },
-    placebo: { setting_sources: 'project,local', inject: 'placebo' },
+    // ~1.7k inert tokens per turn cannot clear a 1.2x whole-run lift over a
+    // 72k-235k baseline whose spread is turn count, so only the text direction is
+    // a meaningful activation check for this arm.
+    placebo: { setting_sources: 'project,local', inject: 'placebo', min_lift_ratio: null },
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
+    // Pre-registered in `internal/bench/headroom-17-PREREG.md`: base profile `package`,
+    // effort pinned so B is exactly one step above A. B is the same-cost arm C and
+    // D are compared against; A is descriptive only.
+    'h17-a': { setting_sources: null, inject: null, effort: 'medium' },
+    'h17-b': { setting_sources: null, inject: null, effort: 'high' },
+    'h17-c': { setting_sources: null, inject: null, effort: 'medium', orchestration: 'test-first' },
+    'h17-d': { setting_sources: null, inject: null, effort: 'medium', orchestration: 'review' },
     hardened: { setting_sources: null, inject: 'hardened' },
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
     'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
     'package-ladder': { setting_sources: null, inject: 'ladder' },
     'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
+    // The shortest instruction that carries the behaviours the
+    // discipline corpus scores. An asset has to beat this, not only vanilla.
+    'minimal-prompt': { setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null },
+    // The three shipped discipline profiles as text arms (post-repair rerun,
+    // 2026-11-04). The profile acts at install time only (`rule_scope.ts`), and
+    // the `package` arm installs the full set; these measure the rule set
+    // each profile names in `dist/router.json` `profiles`. `profile-minimal` is
+    // kernel only — too small a surface for the footprint-lift audit.
+    'profile-minimal': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },
+    'profile-essential': { setting_sources: 'project,local', inject: 'profile-essential' },
+    'profile-full': { setting_sources: 'project,local', inject: 'profile-full' },
     neighbour: {
         setting_sources: 'project,local',
         inject: null,
@@ -146,3 +182,54 @@ export function neighbour_plugin_dir(spec: ArmSpec, env: NodeJS.ProcessEnv = pro
     }
     return dir;
 }
+
+/**
+ * The rule bodies a shipped discipline profile names, joined like
+ * `rules_subset_text`. Expanded from the router's own `profiles` table, so a
+ * profile redefinition changes the arm without touching the harness.
+ */
+export function profile_rules_text(profile: string, routerPath: string, rulesDir: string): string {
+    const router = JSON.parse(fs.readFileSync(routerPath, 'utf-8')) as {
+        kernel: string[];
+        tier_1: { id: string }[];
+        tier_2: { id: string }[];
+        profiles?: Record<string, string[]>;
+    };
+    const members = router.profiles?.[profile];
+    if (!members) throw new Error(`router has no profile "${profile}"`);
+    const expand: Record<string, string[]> = {
+        __kernel__: router.kernel,
+        __tier_1__: router.tier_1.map((t) => t.id),
+        __tier_2__: router.tier_2.map((t) => t.id),
+    };
+    const ids = members.flatMap((m) => expand[m] ?? [m]);
+    return ids.map((id) => fs.readFileSync(`${rulesDir}/${id}.md`, 'utf-8').trim()).join('\n\n---\n\n');
+}
+
+/**
+ * A leave-one-out arm over `rules-kernel-dc`, named `kernel-minus-<rule id>`:
+ * the kernel-dc text with that one rule dropped, as a control-scope text
+ * injection. Resolved on demand rather than listed in `ARMS`, so ablating a rule
+ * needs no harness change; an id outside the set fails when the text is built.
+ *
+ * `kernel-variant-<rule>.<label>` is the same arm with that one rule's body
+ * replaced by the candidate `internal/bench/candidates/<rule>.<label>.md`.
+ */
+export function ablation_arm(name: string): ArmSpec | null {
+    const m = /^kernel-minus-(.+)$/.exec(name);
+    if (m) return { setting_sources: 'project,local', inject: `kernel-minus:${m[1]}` };
+    const v = /^kernel-variant-([a-z0-9-]+\.[a-z0-9-]+)$/.exec(name);
+    return v ? { setting_sources: 'project,local', inject: `kernel-variant:${v[1]}` } : null;
+}
+
+/**
+ * Injected texts that are fixed strings rather than reads of the projection.
+ * Authored here, in plain words, with no vocabulary of this package: the arms
+ * exist to measure what the package adds over a sentence anyone could write.
+ */
+export const FIXED_INJECTIONS: Readonly<Record<string, string>> = {
+    'bare-principle': 'Prefer the smallest solution that fully solves the stated problem; do not add what was not asked for.',
+    minimal:
+        'Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. ' +
+        'If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.',
+};

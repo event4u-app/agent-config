@@ -210,6 +210,31 @@ describe('audit_activation — the paired plugin direction', () => {
         expect(a.violations[0]!.seed).toBe(1);
     });
 
+    it('compares per turn: a treatment run that ended after one turn is not a collapse', () => {
+        // 2026-11-05 Haiku sweep: the package arm answered in one turn (117k
+        // footprint) while vanilla explored for nine (205k cumulative). The
+        // surface reached the model; the run was simply shorter.
+        const short = [
+            record('t1', {
+                vanilla: [run({ tokens_breakdown: tb({ input_tokens: 205_000 }), metrics: { num_turns: 9 } })],
+                package: [run({ tokens_breakdown: tb({ input_tokens: 117_000 }), metrics: { num_turns: 1 } })],
+            }),
+        ];
+        expect(audit_activation(short, { baseline_arm: 'vanilla', lift_arms: ['package'] }).violations).toEqual([]);
+    });
+
+    it('still flags a per-turn collapse when both runs carry turn counts', () => {
+        const collapsed = [
+            record('t1', {
+                vanilla: [run({ tokens_breakdown: tb({ input_tokens: 90_000 }), metrics: { num_turns: 9 } })],
+                package: [run({ tokens_breakdown: tb({ input_tokens: 100_000 }), metrics: { num_turns: 10 } })],
+            }),
+        ];
+        const a = audit_activation(collapsed, { baseline_arm: 'vanilla', lift_arms: ['package'] });
+        expect(a.violations).toHaveLength(1);
+        expect(a.violations[0]!.detail).toContain('per turn');
+    });
+
     it('surfaces a stamped per-trial violation from the record', () => {
         const stamped = [
             record('t1', {

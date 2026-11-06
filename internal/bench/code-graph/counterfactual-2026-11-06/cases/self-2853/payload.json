@@ -1,0 +1,295 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "HOST_MEMORY_MAX_BYTES",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:22"
+    },
+    {
+     "label": "HOST_MEMORY_MAX_FILES",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:24"
+    },
+    {
+     "label": "HostFeedback",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:29"
+    },
+    {
+     "label": "INDEX_FILE",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:27"
+    },
+    {
+     "label": "escapeRegExp",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:74"
+    },
+    {
+     "label": "feedbackType",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:39"
+    },
+    {
+     "label": "hostMemoryArrivals",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:82"
+    },
+    {
+     "label": "hostMemoryDir",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:35"
+    },
+    {
+     "label": "readHostFeedback",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/host_memory_reader.ts:46"
+    },
+    {
+     "label": "SubjectCount",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/self_repair_store.ts:416"
+    },
+    {
+     "label": "subjectCounts",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/self_repair_store.ts:435"
+    },
+    {
+     "label": "writeSubjectIndex",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/self_repair_store.ts:460"
+    },
+    {
+     "label": "NOW",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:22"
+    },
+    {
+     "label": "memoryFile",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:24"
+    },
+    {
+     "label": "projects",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:30"
+    },
+    {
+     "label": "root",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:29"
+    },
+    {
+     "label": "seedMemory",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:49"
+    },
+    {
+     "label": "snapshot",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:54"
+    },
+    {
+     "label": "tmp",
+     "verdict": "untested",
+     "witness": "tests/scripts/host_memory_reader.test.ts:28"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "src/scripts/_lib/self_repair.ts",
+     "witness": "src/scripts/_lib/self_repair.ts:1"
+    },
+    {
+     "label": "src/scripts/self_repair_cli.ts",
+     "witness": "src/scripts/_lib/self_repair_store.ts:1"
+    },
+    {
+     "label": "src/scripts/self_repair_hook.ts",
+     "witness": "src/scripts/_lib/self_repair_store.ts:1"
+    },
+    {
+     "label": "tests/scripts/self_repair.test.ts",
+     "witness": "src/scripts/_lib/self_repair_store.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/_lib/self_repair_store.ts",
+   "lines": [
+    460,
+    465
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    46,
+    72
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    24,
+    26
+   ]
+  },
+  {
+   "path": "src/scripts/self_repair_cli.ts",
+   "lines": [
+    994,
+    1007
+   ]
+  },
+  {
+   "path": "src/scripts/self_repair_hook.ts",
+   "lines": [
+    181,
+    220
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/self_repair_store.ts",
+   "lines": [
+    435,
+    457
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    82,
+    90
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    49,
+    52
+   ]
+  },
+  {
+   "path": "src/scripts/self_repair_cli.ts",
+   "lines": [
+    1009,
+    1025
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/self_repair_store.ts",
+   "lines": [
+    416,
+    428
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    35,
+    37
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    54,
+    63
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    22,
+    22
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    22,
+    22
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    39,
+    43
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    28,
+    28
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    74,
+    76
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    29,
+    29
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    24,
+    24
+   ]
+  },
+  {
+   "path": "tests/scripts/host_memory_reader.test.ts",
+   "lines": [
+    30,
+    30
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    27,
+    27
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/host_memory_reader.ts",
+   "lines": [
+    29,
+    32
+   ]
+  },
+  {
+   "path": "src/scripts/self_repair_hook.ts",
+   "lines": [
+    221,
+    277
+   ]
+  }
+ ]
+}

@@ -63,13 +63,13 @@ export const GRAPH_STORE_VERSION = 7;
 /**
  * Edge count at or above which the indexed read path replaces the blob path.
  *
- * A DECLARED threshold, not a measured crossover — nothing establishes that
- * 50k is where the two paths actually cross. Below it, building the in-memory
- * Maps is cheap enough that the extra SQL round-trips per hop are not worth
- * paying; above it, `JSON.parse` plus two `Map`s over every edge is the
- * dominant cost and it is paid before the first question is answered.
+ * The measured crossover (internal/bench/reports/code-graph-index-crossover-2026-11-05.md):
+ * per invocation, a two-hop query is faster on the index from ~1k edges and
+ * review-risk from ~10k, where both paths took 8-9 ms. The later of the two is
+ * the threshold, so no reader is slower on the index than on the parse. It
+ * replaced a declared 50k, at which the parse already cost 127 ms against 1 ms.
  */
-export const INDEXED_READ_MIN_EDGES = 50_000;
+export const INDEXED_READ_MIN_EDGES = 10_000;
 
 /** Derived twin path for a JSON cache path.
  * cache-invalidation: versioned via PRAGMA user_version (GRAPH_STORE_VERSION), not the filename. */
@@ -126,6 +126,10 @@ export function emitSqliteTwin(graph: CodeGraph, jsonPath: string): boolean {
             // read at all.
             meta.run('node_count', String(graph.nodes.length));
             meta.run('edge_count', String(graph.edges.length));
+            // Two graph-level facts the row tables cannot carry; review-risk reads them,
+            // and a twin without these keys predates them and is not used for it.
+            meta.run('lanes_run', JSON.stringify(graph.lanes_run ?? null));
+            meta.run('partial', JSON.stringify(graph.nodes.filter((n) => n.partial).map((n) => n.id)));
             const insNode = db.prepare(
                 'INSERT INTO nodes (id, label, kind, source_file, l0, l1, l2, l3, fact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             );
@@ -255,8 +259,22 @@ export interface GraphIndex {
      * exists because a BM25 fallback genuinely needs the corpus. Callers reach
      * it only after an exact id AND an exact label both missed. */
     lexicalCorpus(): { id: string; text: string }[];
+    /** A `meta` value, or undefined when the twin predates the key. */
+    meta(key: string): string | undefined;
+    /** Nodes, in graph order, whose kind, declaring file or fact owner is one of `values`. */
+    nodesBy(column: NodeColumn, values: readonly string[]): CodeNode[];
+    /** Edges of one relation with an end in `touching`, in graph order. */
+    edgesOfRelation(relation: string, touching: readonly string[]): CodeEdge[];
     close(): void;
 }
+
+export type NodeColumn = 'kind' | 'source_file' | 'owner';
+
+const NODE_COLUMN_SQL: Record<NodeColumn, string> = {
+    kind: 'kind',
+    source_file: 'source_file',
+    owner: "json_extract(fact, '$.owner')",
+};
 
 export interface NodeRow {
     id: string;
@@ -364,6 +382,22 @@ export function openGraphIndex(jsonPath: string): GraphIndex | null {
                 return null;
             }
 
+            // Rows carry their rowid so chunked reads can be put back in insertion
+            // order, which is graph order: callers keep first-seen-wins semantics.
+            const inGraphOrder = <T>(
+                values: readonly string[],
+                sql: (marks: string) => string,
+                map: (r: unknown) => T,
+                params: (slice: string[]) => string[] = (slice) => slice,
+            ): T[] => {
+                const rows = new Map<number, T>();
+                for (let i = 0; i < values.length; i += 400) {
+                    const slice = values.slice(i, i + 400);
+                    const stmt = db.prepare(sql(slice.map(() => '?').join(',')));
+                    for (const r of stmt.all(...params(slice)) as { _r: number }[]) rows.set(r._r, map(r));
+                }
+                return [...rows.keys()].sort((a, b) => a - b).map((k) => rows.get(k) as T);
+            };
             const qNode = db.prepare('SELECT * FROM nodes WHERE id = ?');
             const qFrom = db.prepare('SELECT * FROM edges WHERE source = ?');
             const qTo = db.prepare('SELECT * FROM edges WHERE target = ?');
@@ -413,6 +447,13 @@ export function openGraphIndex(jsonPath: string): GraphIndex | null {
                     return (db.prepare('SELECT id FROM nodes ORDER BY id').all() as { id: string }[]).map(
                         (r) => r.id,
                     );
+                },
+                meta: (key) => meta.get(key),
+                nodesBy(column, values) {
+                    return inGraphOrder(values, (marks) => `SELECT rowid AS _r, * FROM nodes WHERE ${NODE_COLUMN_SQL[column]} IN (${marks})`, (r) => toNode(r as NodeRow));
+                },
+                edgesOfRelation(relation, touching) {
+                    return inGraphOrder(touching, (marks) => `SELECT rowid AS _r, * FROM edges WHERE relation = ? AND (source IN (${marks}) OR target IN (${marks}))`, (r) => toEdge(r as EdgeRow), (slice) => [relation, ...slice, ...slice]);
                 },
                 lexicalCorpus() {
                     return (db.prepare('SELECT id, label FROM nodes').all() as { id: string; label: string }[]).map(

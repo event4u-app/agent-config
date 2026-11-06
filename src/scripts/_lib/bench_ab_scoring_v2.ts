@@ -628,29 +628,50 @@ function _runShell(
     return { ok: true, reason: `exit=${code}` };
 }
 
-/** Files a verifier command names that exist in the pristine fixture. */
-function _commandFiles(cmd: string, fixture_root: string): string[] {
-    return cmd
-        .split(/\s+/)
-        .filter((tok) => /\.(?:m?js|cjs|ts|py|php|sh)$/.test(tok) && fs.existsSync(path.join(fixture_root, tok)));
+const _SCRIPT_TOKEN = /\.(?:m?js|cjs|ts|py|php|sh)$/;
+
+/**
+ * Where a fixture's verifiers live: `<ab>/verifiers-v2/<id>` beside
+ * `<ab>/fixtures-v2/<id>`, or null when the fixture has none. A verifier inside
+ * the fixture is copied into the agent's working copy, where the agent under
+ * test can read and run its own grader.
+ */
+export function oracleRootFor(fixture_root: string): string | null {
+    const parent = path.dirname(fixture_root);
+    if (path.basename(parent) !== 'fixtures-v2') return null;
+    const root = path.join(path.dirname(parent), 'verifiers-v2', path.basename(fixture_root));
+    return fs.existsSync(root) ? root : null;
+}
+
+/** Files a verifier command names that exist under `root`. */
+function _commandFiles(cmd: string, root: string | null): string[] {
+    if (root === null) return [];
+    return cmd.split(/\s+/).filter((tok) => _SCRIPT_TOKEN.test(tok) && fs.existsSync(path.join(root, tok)));
 }
 
 /**
- * Run a verifier against the pristine copy of every file its command names.
- * When the clone's copy differs, the run happens in a scratch copy of the clone
- * with those files restored — the clone itself stays the evidence it was.
+ * Run a verifier against the pristine copy of every file its command names:
+ * oracle files come from the oracle root, fixture files from the fixture. When
+ * any must be supplied, the run happens in a scratch copy of the clone — the
+ * clone itself stays the evidence it was.
  */
 function _runVerifier(
     cmd: string,
     fixture_root: string,
     clone_root: string,
     reports: string[],
+    oracle_root: string | null = oracleRootFor(fixture_root),
 ): { ok: boolean; reason: string } {
+    const oracle = _commandFiles(cmd, oracle_root);
+    for (const rel of oracle) {
+        if (fs.existsSync(path.join(clone_root, rel))) reports.push(`verifier-planted:${rel}`);
+    }
     const touched = _commandFiles(cmd, fixture_root).filter(
-        (rel) => _read(path.join(fixture_root, rel)) !== _read(path.join(clone_root, rel)) ||
-            !fs.existsSync(path.join(clone_root, rel)),
+        (rel) => !oracle.includes(rel) &&
+            (_read(path.join(fixture_root, rel)) !== _read(path.join(clone_root, rel)) ||
+                !fs.existsSync(path.join(clone_root, rel))),
     );
-    if (touched.length === 0) {
+    if (touched.length === 0 && oracle.length === 0) {
         return _runShell(cmd, clone_root, 60);
     }
     for (const rel of touched) {
@@ -660,9 +681,13 @@ function _runVerifier(
     try {
         const ws = path.join(scratch, 'ws');
         fs.cpSync(clone_root, ws, { recursive: true });
-        for (const rel of touched) {
+        const supply: Array<[string, string]> = [
+            ...touched.map((rel): [string, string] => [fixture_root, rel]),
+            ...oracle.map((rel): [string, string] => [oracle_root as string, rel]),
+        ];
+        for (const [root, rel] of supply) {
             fs.mkdirSync(path.dirname(path.join(ws, rel)), { recursive: true });
-            fs.copyFileSync(path.join(fixture_root, rel), path.join(ws, rel));
+            fs.copyFileSync(path.join(root, rel), path.join(ws, rel));
         }
         return _runShell(cmd, ws, 60);
     } finally {

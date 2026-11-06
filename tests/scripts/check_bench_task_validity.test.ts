@@ -19,6 +19,7 @@ import {
     scoreArm,
     scoreReference,
     verifierFiles,
+    verifierPath,
 } from '../../src/scripts/_lib/bench_task_validity.js';
 import { runTs } from './_bench_wave8d.js';
 
@@ -52,10 +53,16 @@ describe('synthetic arms — every arm on one task', () => {
         });
     }
 
-    it('verifier-delete: removing every verifier the task names cannot pass', () => {
+    it('verifier-delete: not applicable when the verifier never reaches the workspace', () => {
         expect(ALL_ARMS).toContain('verifier-delete');
         const task = byId('capH-debug-01');
         const r = scoreArm(task, fixtureRootFor(task) as string, 'verifier-delete');
+        expect(r.applicable).toBe(false);
+    });
+
+    it('verifier-exit: a planted verifier cannot pass', () => {
+        const task = byId('capH-debug-01');
+        const r = scoreArm(task, fixtureRootFor(task) as string, 'verifier-exit');
         expect(r.applicable).toBe(true);
         expect(r.capability_pass).toBe(false);
     });
@@ -89,13 +96,14 @@ describe('verifier completion (1.2)', () => {
         expect(r.reports).toContain('verifier-bypass-suspect:src/window.mjs');
     });
 
-    it('a rewritten verifier is restored from the fixture, reported, and the clone is left as it was', () => {
+    it('a planted verifier is replaced from the oracle root, reported, and the clone is left as it was', () => {
         const { task, fx, ws } = stage('capH-debug-01');
         const v = path.join(ws, 'tests', 'solve.check.mjs');
+        fs.mkdirSync(path.dirname(v), { recursive: true });
         fs.writeFileSync(v, 'process.exit(0);\n');
         const r = score_task_v2(task, { fixture_root: fx, clone_root: ws });
         expect(r.capability_pass).toBe(false);
-        expect(r.reports).toContain('verifier-touched:tests/solve.check.mjs');
+        expect(r.reports).toContain('verifier-planted:tests/solve.check.mjs');
         expect(fs.readFileSync(v, 'utf8')).toBe('process.exit(0);\n');
     });
 
@@ -103,7 +111,7 @@ describe('verifier completion (1.2)', () => {
         for (const task of FIXTURE_TASKS) {
             const fx = fixtureRootFor(task) as string;
             for (const rel of verifierFiles(task, fx)) {
-                const lines = fs.readFileSync(path.join(fx, rel), 'utf8').trimEnd().split('\n');
+                const lines = fs.readFileSync(verifierPath(fx, rel), 'utf8').trimEnd().split('\n');
                 expect(lines[lines.length - 1], `${String(task['id'])}/${rel}`).toBe(
                     "console.log(process.env.BENCH_VERIFIER_NONCE ?? 'ok');",
                 );
@@ -114,7 +122,7 @@ describe('verifier completion (1.2)', () => {
 
 describe('reference solutions (1.3)', () => {
     it('one reference per fixture task, each capability-green, none touching a verifier', () => {
-        expect(FIXTURE_TASKS.length).toBe(33);
+        expect(FIXTURE_TASKS.length).toBe(37);
         for (const task of FIXTURE_TASKS) {
             const fx = fixtureRootFor(task) as string;
             const patch = fs.readFileSync(path.join(AB_ROOT, 'oracle-v2', `${String(task['id'])}.patch`), 'utf8');
@@ -169,7 +177,7 @@ describe('CLI and --gate (0.1, 1.5)', () => {
         expect(b.stdout).toBe(a.stdout);
         const g = runTs('check_bench_task_validity.ts', ['--gate']);
         expect(g.status, g.stderr).toBe(0);
-        expect(g.stdout).toContain('scanned: 33');
+        expect(g.stdout).toContain('scanned: 37');
     }, 180_000);
 
     function seededCorpus(task: Record<string, unknown>, withReference: boolean): string[] {

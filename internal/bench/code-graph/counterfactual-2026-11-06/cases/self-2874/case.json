@@ -1,0 +1,78 @@
+{
+ "id": "self-2874",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2874,
+ "title": "fix(bench): measure the installed package on artifact tasks and trace Haiku's blind questions",
+ "merged_at": "2026-11-06T00:07:40Z",
+ "merge": "80864005c59796665e0022c0ead9dbb0250ee050",
+ "parent": "8206cc0274e1a9ad13b0652365cc28773640885f",
+ "changed_lines": 451,
+ "diff_files": [
+  "agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md",
+  "docs/benchmark.md",
+  "internal/bench/containers/README.md",
+  "internal/bench/containers/php-in-docker.sh",
+  "src/scripts/_lib/bench_ab_arms.ts",
+  "src/scripts/_lib/bench_ab_workspace.ts",
+  "src/scripts/_lib/bench_artifact_install.ts",
+  "src/scripts/_lib/bench_artifact_php.ts",
+  "src/scripts/_lib/bench_artifact_sweep.ts",
+  "src/scripts/bench_ab_v2_run.ts",
+  "tests/scripts/bench_ab_stream_keep.test.ts",
+  "tests/scripts/bench_ab_v2_run.test.ts",
+  "tests/scripts/bench_artifact.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/bench_ab_arms.ts#profile_rules_text",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/bench_artifact_php.ts#stop",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/bench_artifact_sweep.ts#call",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/bench_artifact_sweep.ts#claude_host",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/_lib/bench_artifact_sweep.ts#run_artifact_sweep",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#CHECKPOINTS_DIR",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#injected_text",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#main",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#rules_subset_text",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/bench_ab_v2_run.ts#run_one",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "tests/scripts/bench_ab_profile_arms.test.ts",
+   "test": true
+  },
+  {
+   "path": "tests/scripts/bench_ab_v2_codex_host.test.ts",
+   "test": true
+  }
+ ]
+}

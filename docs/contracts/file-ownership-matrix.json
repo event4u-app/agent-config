@@ -237,6 +237,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/execution/memory-audience.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/execution/non-interactive-contract.md": {
       "kind": "context",
       "rule_type": null,
@@ -5079,6 +5085,27 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/contexts/execution/memory-audience.md",
+      "target": ".agent-src.uncondensed/contexts/execution/memory-audience.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/memory-audience.md",
+      "target": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/memory-audience.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/execution/non-interactive-contract.md",
       "target": ".agent-src.uncondensed/contexts/execution/non-interactive-contract.md",
       "type": "WRITE",
@@ -6047,6 +6074,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
       "target": ".agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/subagent-spawn-contract.md",
+      "target": ".agent-src.uncondensed/contexts/execution/memory-audience.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -19823,6 +19857,13 @@
     {
       "source": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/subagent-orchestration/prompts/README.md",
+      "target": ".agent-src.uncondensed/contexts/execution/memory-audience.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

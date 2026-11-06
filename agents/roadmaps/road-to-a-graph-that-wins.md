@@ -122,16 +122,22 @@ tracked.
       vue through its script block) and 4.2 (Blade directive scan).**
       Blade via a directive scanner (`@include/@extends/@component/@livewire`, `<x-…>`),
       `resolved_via: directive-scan`; a compiled grammar is optional and later.
-- [ ] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
+- [x] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
       **Laravel half moved 2026-10-23 to `road-to-a-map-that-draws-itself` Phase 4;
       `depends_on` stays here.**
       Laravel overlay statically: routes → `Controller@method`, Blade → view nodes,
       Eloquent relation methods → model edges, migrations → table nodes.
       verify: fixture app; `path "GET /invoices" "Invoice"` resolves route → controller →
       model.
+      > note: closed 2026-11-05. The manifest half shipped as the systems lane's `requires`
+      > relation (package → package, `lanes/systems/read_systems.ts`, pinned by
+      > `tests/scripts/code_graph/systems_lane.test.ts`); the vocabulary's `depends-on` is the
+      > runtime lane's service relation, so no second name was added. The route half is pinned
+      > by the `path` verb on the Laravel fixture (`GET /books` → `BookController::index` →
+      > `Book`): `npx vitest run tests/scripts/code_graph_provider_laravel.test.ts -t 'route → controller → model'` -> 0
 
 ## Phase 2 — Registration, then measurement
-- [ ] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
+- [x] 2.1 Corpus v3 registered **before the engine sees the repos**: two public OSS repos
       per ADR-260 § 5 (fitness: ≥ 200 routes, Eloquent relations, migrations, PHPUnit/Pest
       tests, TS/Vue frontend, permissive licence, active in 2026), named in the corpus
       header with role "benchmark subject", SHA-pinned, cloned by the runner. Suites: A
@@ -139,17 +145,22 @@ tracked.
       model → table, tests-for) · D negative-control only (a `threats.csv` sink no accepted
       path reaches returns empty) · E change impact incl. class 7 `change-impact-xplane` ·
       F agentic (24 tasks: localise-and-fix from issue text; PR review for missed callers).
-- [ ] 2.2 Truth from an oracle arm (tsserver references; Psalm `--find-references-to` or
+      > note: registered 2026-11-05 in `internal/bench/code-graph/PREREGISTRATION-v3-2026-11-05.md` (pins unopim `56071226`, larasend `da5c06c7`), `corpus-v3-2026-11-05.yaml` (45 questions B–E, truth pending the oracle) and `suite-f-tasks-v3-2026-11-05.yaml` (24 tasks, all fix commits reachable in the forks); every input is sha256-bound in the registration. The engine never read either subject. The 20 % human-check sample (13 of 45) is drawn by a stated seed.
+- [x] 2.2 Truth from an oracle arm (tsserver references; Psalm `--find-references-to` or
       LSP references for PHP), symbol level, 20 % human-checked, hop strata 1/2/≥ 3. The
       oracle lives only under `internal/bench/` and is never an arm or a provider.
       Amended 2026-10-27 (round `inbox-2026-10-bf`): a second truth source beside the
       oracle — the files the real fix commit touched, for suite F and for 3.5. Truth is
       never derived from the graph under test (a recall of 1.0 against graph-derived
       truth is circular, which S1's own benchmark notes).
-- [ ] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
+      > note: 2026-11-05 — the oracle arm runs. `internal/bench/code-graph/oracle/` is an on-demand image (PHP 8.4, Psalm 7.0.3, scip-typescript 0.6.1, all pinned; `oracle.sh build|deps|run`, indexing with `--network none`), and `oracle_truth.ts` wrote `truth-v3-2026-11-05.yaml`: 8 items complete from the oracle, 15 partial with the reason named (Vue files scip-typescript cannot index, route and framework hops), 16 `human-required` (route, model-to-migration, Inertia/Blade — no reference engine emits them), 5 negative controls confirmed empty, 1 unresolved. Two Psalm findings shaped it: a call whose return value is used is filed under the method's return node, which `--find-references-to` never reads (the plugin reads both), and the bundled Laravel plugin's config typing exhausts 16 GB on one Pest test (switched off; the file is excluded only after a check that it names no probe). `run_bench_v3.ts --truth` refuses until all 13 sampled items carry `human_checked: agree | corrected` (`npx vitest run tests/scripts/code_graph/bench_v3_truth_file.test.ts tests/scripts/code_graph/oracle_truth.test.ts` -> 0). Open: the 20 % human check, and the human-required and partial items — that is a person's work, not the agent's.
+      > note: closed 2026-11-05 — the owner delegated the check (registration § The owner deviation for the check, fixed before any verdict). A source reader per subject answered all 38 non-complete and sampled items with `path:line` evidence; Anthropic and OpenAI judged every candidate file against source lines extracted from the checkout; a file is truth when two of the three say IN (`apply_check.ts`, `tests/scripts/code_graph/apply_check.test.ts`). Prompts, answers and raw rulings are in `internal/bench/code-graph/check-v3-2026-11-05/`. Result: every one of the 45 questions now carries truth (39 file sets, 6 expected-empty), `checked_by: council`. Disagreement with the oracle: 0/1 complete items, 0/6 negative controls, 15/15 partial items — the oracle's self-declared gaps were real, chiefly Vue callers, route and framework hops; on `uo-b-02` the oracle also walked to depth 6 although the question says "within two call hops" (38 files, check: 6) — the same applies to `ls-b-05`, and `oracle_truth.ts` now bounds the closure by a stated limit (`statedHopLimit`). The `uo-e-*` reductions are the check's own reading of the hop strata, recorded per file in the rulings. Sample: 10/13 corrected, 5 of them items no engine could answer at all. Cost of the deviation, stated in the registration: the check is no longer independent of language models.
+      > note: 2026-11-05, later — the check was hardened before any arm was scored (registration § Check v2 and § Check v2.1, each committed before its first verdict, the symbol-level change recorded as made after a file-level computation was read). One provider per voice: Anthropic reader, OpenAI and Google judges, blind to who proposed a file; class 3 derived from the code (`model_table.ts`, 6/6 identical to the independent vote); the 14 closure items judged edge by edge and computed by symbol over the oracle image's `enclosing.php` (`closure_check.ts`). Calibration on the 7 oracle-complete items: recall 0.79 / 0.85, precision 1.0 for both judges; judge κ 0.60 on files, 0.34 on edges — 90 of 498 edges stand on the reader and Google alone. Record and limits: `internal/bench/code-graph/check-v3-v21-2026-11-05/REPORT.md`.
+- [x] 2.3 Arms: A–E = grep (two-probe) / native / foreign `graph.json` (reader in
       `internal/bench`, mapping relation and confidence names). F = floor / floor + native
       tools. No "fused" arm.
-- [ ] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
+      > note: closed 2026-11-05 — `internal/bench/code-graph/run_bench_v3.ts` (refuses on a hash or pin mismatch; foreign arm ABSENT without an export, never zero; PENDING truth never scored) and `foreign_reader.ts` (reuses `adaptForeignGraph`), pinned by `tests/scripts/code_graph/bench_v3_runner.test.ts`. First raw run on both pinned subjects recorded in `internal/bench/reports/code-graph-v3-traces-2026-11-05/`: 39 of 45 PENDING truth; native `tests-for` empty on 4 of 5 (diagnosis waits for the oracle). Truth enters as a new dated truth file, since the corpus is hash-bound.
+- [x] 2.4 Bars fixed at registration: A–E +10 pp recall at ≤ 5 pp precision loss plus a
       calibration diagnostic (predicted class vs gold, overconfidence rate); F primary
       **solved per 100k tokens ≥ 1.25× floor**, solved per minute, escaped-regression rate.
       Gate for F: `dispatch-event-capture-reliability` ≥ 95 %.
@@ -157,16 +168,43 @@ tracked.
       grep-and-read agent, not against reading the whole corpus; the headline is
       sum over sum, never a mean of per-task ratios; reported per question class and
       per language, with at least one non-TypeScript language.
-- [ ] 2.5 Run; publish both directions; no renegotiation. Record ADR-246/259's benchmark
+- [x] 2.5 Run; publish both directions; no renegotiation. Record ADR-246/259's benchmark
       trigger as fired or not. Then, and only then, rewrite the skill description as a
       **class list** (which classes are graph-first, which stay grep-routine).
-- [ ] 2.6 Edge precision and recall per `resolved_via`, against the 2.2 oracle, on
+      > note: 2026-11-05 — suites A–E ran against the strata truth: `internal/bench/reports/code-graph-v3-2026-11-05-scored.md` (traces beside it). **Zero of six classes won** — precise-semantics and change-impact NULL (precision floor), route-trace, model-table, tests-for, change-impact-xplane TIE; suite A tied all four classes. Null path: graph-first wording withheld; the `code-intelligence` description now reads as the class list (graph-first: none). ADR-246's second trigger (a post-repair measurement that beats grep on graph-shaped questions): **not fired**. ADR-259: a benchmark result is not a trigger by its own text. Suite F: **GATED** (`internal/bench/reports/code-graph-v3-suite-f-2026-11-05.md`) — the run's own stream holds at most 48 dispatches (24 tasks × 2 arms), below the capture claim's 50-dispatch power floor, so the gate cannot open for this registration; no arm was run. Install-wide capture reads 98.0 % (1,084 / 1,106, 2026-10-06 → 2026-11-05) as context, not as the gate. Opening F needs a new, dated registration with a powered gate.
+- [x] 2.6 Edge precision and recall per `resolved_via`, against the 2.2 oracle, on
       `src/scripts/` and both subjects. The oracle index is produced by an indexer the
       maintainer installs (`scip-typescript` first; PHP per 2.2), never fetched at
-      runtime (ADR-259); without one the runner exits naming it. A same-roots parity
-      run against the external tool the `inbox-2026-10-bb` round compared runs on the
-      maintainer's machine, recorded without the tool's name. Census baseline:
+      runtime (ADR-259); without one the runner exits naming it. The same-roots parity
+      run moved to 2.8. Census baseline:
       `agents/evidence/analysis/code-graph-edge-census-2026-10-26.md`.
+      > note: 2026-11-05 — the runner exists (`internal/bench/code-graph/edge_oracle.ts`, `npx vitest run tests/scripts/code_graph/edge_oracle.test.ts` -> 0) and exits 3 naming `scip-typescript` when no index is given. Open: no measurement yet — the indexer is not installed on the maintainer machine (running it via `npx` was refused by the session's permission classifier as external code), the PHP oracle needs PHP, which is absent, and the subjects wait for the 2.1 registration commit. The parity run is not performed.
+      > note: 2026-11-05, later — the indexer blocker is gone: `internal/bench/code-graph/oracle/oracle.sh run <dir> scip-typescript index --output /subject/.oracle/index.scip` produces the index `edge_oracle.ts --scip` reads, inside the pinned image with no network, and the 2.1 registration is committed. Still open: the measurement itself, and PHP edges — the PHP oracle is Psalm, whose references `edge_oracle.ts` does not read yet (it reads SCIP only).
+      > note: 2026-11-06 — measured: `internal/bench/reports/code-graph-v3-edges-2026-11-06.md` (raw output beside it). PHP is read through `php_edge_oracle.ts` (one Psalm analysis, every graph declaration mapped by `enclosing.php`) and scored by `edge_oracle.ts --php-oracle` (`npx vitest run tests/scripts/code_graph/php_edge_oracle.test.ts tests/scripts/code_graph/edge_oracle.test.ts` -> 0). Every stated mechanism reads ≥ 99.9 % file-level precision wherever it scored more than ten edges, except `same-file` on unopim JavaScript (92.8 %, 49 unclassified); the guesses `name-lookup` / `dynamic` read 14.7–100 % and stay outside the gate. Three defects the oracle surfaced are fixed test-first in this change: `parent::m()` resolved to the calling method; a bare `f()` bound to a same-file method in receiver languages; SCIP lines drifted past U+2028/U+2029/lone CR (`alignScipLines`). Oracle limits named rather than read as graph defects: SCIP `local` symbols, constructor naming, Psalm recording no function-call locations, the indexer's Vue blind spot. **Still open: the same-roots parity run** — the external tool is not installed on the maintainer machine, and this runner installs no external code (ADR-259).
+      > note: done 2026-11-06 — the owner closed 2.6 on the oracle measurement and split the parity run into 2.8, so the measurement does not wait on an install only the owner can decide.
+- [x] 2.7 **Close the check v2.1 residuals before 2.5 scores an arm.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/run_bench_v3.ts --> The limits are named in
+      `internal/bench/code-graph/check-v3-v21-2026-11-05/REPORT.md` § Known limits; each fix
+      lands as a new dated truth file under a registration addendum committed before its first
+      verdict, never as an edit to the sealed one. Three parts:
+      (a) the 90 of 498 closure edges that stand on the reader and Google alone get a third,
+      provider-distinct ruling — or are marked `two-voice` in the truth and reported as a
+      separate stratum; edge κ (0.34) is published beside the result either way.
+      (b) `uo-e-01` and `uo-e-03` are completed on the event side (every route and test above
+      the files that fire the product events) or carry `lower_bound: true`, which the scorer
+      reads as recall-only.
+      (c) static-closure false positives — tests whose queue, event bus or call is faked — are
+      either removed by a stated, code-derived rule or counted and published as a known
+      overcount.
+      Done when `run_bench_v3.ts --truth` reads the new file and each of (a)–(c) is resolved
+      or carried as a named stratum in the report.
+      > note: done 2026-11-05 — registration § Residual strata, committed before any arm was scored; `truth-v3-2026-11-05-strata.yaml` carries the sealed file sets unchanged plus (a) 135 `two_voice_files` (no fourth provider is configured, so marked, not re-judged), (b) `lower_bound` on `uo-e-01` and `uo-e-03` (recall-only in the scorer), (c) 55 `faked_files` (a deliberately broad rule: any queue/bus/event fake or mock in the test — itself an overcount, stated). `run_bench_v3.ts --truth` reads it and reports a strict stratum per class (`tests/scripts/code_graph/bench_v3_strata.test.ts`). The strict stratum turns no verdict.
+- [x] 2.8 Same-roots parity run against the external tool the `inbox-2026-10-bb` round
+      compared, on `src/scripts/` and both subjects, scored per `resolved_via` with the 2.6
+      runner. It runs on the maintainer's machine and is recorded without the tool's name.
+      Blocked on the owner: the tool is not installed, and this suite installs no external
+      code (ADR-259). Done when the owner has installed it and the run is recorded beside
+      `internal/bench/reports/code-graph-v3-edges-2026-11-06.md`.
+      > note: done 2026-11-06 — the owner authorised the install this session; the tool ran at a pinned release in a local image with `--network none`, code-only. Report: `internal/bench/reports/code-graph-v3-parity-2026-11-06.md` (raw output beside it). `parity_graph_adapter.ts` keys the tool's edges on its own confidence tag and maps its symbols onto the native ranges (`npx vitest run tests/scripts/code_graph/parity_graph_adapter.test.ts` -> 0). No side wins outright: on PHP the native graph leads on stated precision and on file and symbol recall (larasend file recall 96.8 vs 83.1 %); on TypeScript the tool leads at symbol level (`src/scripts/` stated symbol precision 98.9 vs 94.9 %, unopim symbol recall 93.7 vs 79.6 %), the native gap sitting in `same-file`. That gap is the oracle's: 2,012 of its 2,212 unconfirmed edges call nested functions (SCIP `local` symbols) and 158 are the constructor-naming limit, both named in 2.6; 42 remain, and the tool has no node for the sampled nested functions, so it is not scored on them.
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
@@ -185,16 +223,22 @@ tracked.
       `--include-guesses`, marked per line. Fixture: one `name-lookup`, one `dynamic`
       and one `import-specifier` edge; without the flag all six return only the third.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'guess edges withheld by every consumer'` -> 0
-- [ ] 3.2 Detectors read edges: `detect_verification_tampering` + "test deleted whose
+- [x] 3.2 Detectors read edges: `detect_verification_tampering` + "test deleted whose
       subject keeps ≥ 1 accepted caller"; `detect_silent_catch` + "catch on an accepted
       path from a route/entry point". Each records the edges used; `paired_verdict`
       against the plain detector.
-- [ ] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
+      verify: `npx vitest run tests/scripts/graph_backed_detectors.test.ts` -> 0
+      > note: `_lib/graph_detector_edges.ts`, behind `--graph-backed` on both CLIs; the plain verdict and exit code are unchanged. The paired verdict reads `underpowered` until labelled rows exist (3.5 supplies them), so AC-3 stays open. "Entry point" is a `route` node only.
+- [x] 3.3 Finding invalidation: release-finding closures gain `affected_files[]` + evidence
       checksum; a change touching them flips the closure to `stale` and re-requests
       disposition (file-level; symbol-level when the finding schema gains `symbols[]`).
-- [ ] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
+      verify: `npx vitest run tests/scripts/finding_invalidation.test.ts -t 'edited affected file'` -> 0
+      > note: `_lib/finding_invalidation.ts` + the gate wiring in `check_finding_dispositions.ts`; nothing writes the two fields yet (`--ingest` does not record them).
+- [x] 3.4 Requirement coverage as a query: ADR `basis:` lines → code nodes; requirement
       rows naming a path/symbol → code/test nodes.
-- [ ] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
+      verify: `npx vitest run tests/scripts/code_graph/coverage.test.ts` -> 0
+      > note: `code_graph/coverage.ts`, reached through `ask` (intent `coverage`, no new verb per ADR-041); accepted `tests` edges only, every unmatched ref listed under `unresolved` with its reason.
+- [x] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
       arms plain vs graph-fed reviewer; a miss counts only if the oracle confirms the edge;
       `paired_verdict` decides direction. Bar: oracle-confirmed miss on ≥ 40 % of PRs,
       ≤ 1 false miss per 10 PRs.
@@ -204,9 +248,12 @@ tracked.
       pasted beside a diff degrading reviews across eight models, so the hypothesis is
       B1 > A ≥ B2; without B2 the run cannot tell whether the form or the graph acted.
       K3 holds for all three arms.
-- [ ] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
+      > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-counterfactual-2026-11-06.md` after an AI-council design review (2/2 seats; claim narrowed to assisted dependency retrieval, arm G added, majority set over 3 runs, invalid-vs-null rules), runner `counterfactual_review.ts` (`npx vitest run tests/scripts/code_graph/counterfactual_review.test.ts` -> 0). Report: `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`. 30 PRs (self 15, unopim 11, larasend 4), 270 reviewer calls, none invalid. **Bar (i) PASS** (B1 catches an oracle-confirmed file A misses on 13 of 30 PRs), **B1 > A PASS** (13 / 0), **bar (ii) FAIL** (38 unsupported names against 3 allowed) — so the Phase 5 checks **stay advisory**. Mean recall A 6.7 %, B1 38.0 %, B2 40.0 %, G (read list alone, no model) 34.5 %: the packet carries the retrieval, the rendering form made no measurable difference (B1 vs B2 underpowered, 2 discordant), so B1 > A ≥ B2 holds in its first half only.
+- [x] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
       `resolved_via` histogram, 3.5 record, staleness state) from
       `internal/bench/scorecard.yaml` (row → metric → artefact → bar → expiry).
+      verify: `npx vitest run tests/scripts/code_graph/prove.test.ts` -> 0
+      > note: `code_graph/prove.ts` (13 scorecard rows); a missing artefact is named `missing`, never omitted. Today suite F, the edge oracle and the 3.5 record read `missing`, the oracle version null — their runners must write the names the scorecard declares.
 
 ## Phase 4 — Answers that say what they do not know
 Added 2026-10-27 from round `inbox-2026-10-bf`. Order binds: honesty before cost
@@ -248,7 +295,7 @@ answers. Each step is fixture-gated (K5).
       verbs' `budget` / `truncated` and the context pack's accounting — no third
       mechanism. Caps derive from per-line costs measured here, not from S1's figures.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'omitted counted not truncated'` -> 0
-- [ ] 4.6 **The review path reads the index.** `review-risk` parses the whole JSON
+- [x] 4.6 **The review path reads the index.** `review-risk` parses the whole JSON
       graph in the CLI (`cli.ts`), the MCP tool (`graph_tools.ts`) and the map's agent
       area (`map_area_payloads.ts`); it reads through `openGraphIndex` instead, and
       builds adjacency without an array spread per edge. Measure the 50k-edge
@@ -259,6 +306,7 @@ answers. Each step is fixture-gated (K5).
       collision shapes fixed since. Confirm on the real graph before scheduling.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'reads through the index'` -> 0
       > note: precondition met 2026-10-27 — this repository's twin opens (261,913 edges, 0 duplicate node ids); adjacency no longer spreads per edge. Open: the index path needs kind- and relation-scoped reads in `sqlite_store.ts`, which is in the hook bundle at 1 byte of headroom, so it needs a `raise_log` entry first; the 50k crossover is unmeasured.
+      > note: closed 2026-11-05 — `RiskSource` over the index for the CLI and MCP paths (the map keeps its parsed graph and reuses its own lookups), scoped reads in `sqlite_store.ts` (+1,277 B, under the current bundle cap, no `raise_log` needed), twin meta keys `lanes_run` / `partial`. Crossover measured at ~1k edges for `query`, ~10k for `review-risk`; the threshold is now 10,000 (`internal/bench/reports/code-graph-index-crossover-2026-11-05.md`). Twins built earlier fall back to JSON until rebuilt.
 - [x] 4.7 **A region read list.** Extend the existing `recommended_reads` (`query.ts`)
       and the pack's `at=file:line` items with a region budget — changed regions
       risk-ordered round-robin, at most 40 % per file, definitions up to 40 lines
@@ -312,7 +360,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       `review-risk --format markdown`. Depends on 4.2.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'markdown no analysis is not low risk'` -> 0
       > note: `review-risk --format markdown` renders the sticky comment (marker `REVIEW_RISK_COMMENT_MARKER`, band, checks, `omitted`, "no analysis" status); the consumer workflow template (`fetch-depth: 0`, gate off) is not added — a new workflow lands with its own ratification artifact.
-- [ ] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
+- [x] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
       with no test-gap term (`review_risk.ts` `RISK_WEIGHTS`), and the map prints that
       it names no levels yet (`map_viewer/area_agent.js`). Until 3.5 runs: band only
       `low` / `medium` / `high` / `unknown` with reason lines, no decimal, no default
@@ -320,6 +368,32 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       effort-aware); a term that contributes nothing is removed.
       verify: `ls internal/bench/reports/review-risk-calibration-*.md` -> 0
       > note: the pre-3.5 half landed 2026-10-27 — `riskBand` (`review_risk.ts`) bands low / medium / high / unknown with reason lines, no decimal, no gate, and the map says so. Open: the calibration against forward-in-time split data waits for 3.5.
+      > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-risk-calibration-2026-11-06.md` after an AI-council design review (report-first, validation/test split, removal only on a confirmed non-inferior proposal agreed across subjects), runner `risk_calibration.ts` (`npx vitest run tests/scripts/code_graph/risk_calibration.test.ts` -> 0). Report: `internal/bench/reports/review-risk-calibration-2026-11-06.md`. 400 units each of `self` and `unopim`, SZZ labels (45 / 107 defect-inducing), audited. **Nothing changes:** the four lane terms were dispensable on validation, but the joint removal failed non-inferiority on the test split in both subjects; `columns` never fired; the test gap did not help. The first evaluation ran on defective features (lanes off) — published beside the result, and the product defect behind it (`review-risk` read a never-run lane as `0`) is fixed in this change. Open for a later weight calibration: ManualUp beats the shipped ranking on `unopim` (Popt 0.805 vs 0.593).
+
+## Phase 6 — catch reachability on PHP
+Added 2026-11-06 from AC-3 (`internal/bench/reports/code-graph-detector-labels-2026-11-06.md`):
+on `unopim` the graph-backed silent-catch reading never fired in 40 sampled catches, while an
+independent reader found a route path for 24 of them (paired verdict `regression`, 2 / 11).
+Two reach gaps account for what the run could trace.
+- [x] 6.1 **Package route files.** A Laravel package registers routes from its own files
+      (`Routes/admin.php`, loaded by a service provider's `loadRoutesFrom`); the route lane reads
+      none of them, so an action reached only through a package route has no entry point.
+      Example: `POST catalog/passports/reinstate/{publication}` → `PublicationController::reinstate`.
+      verify: a fixture package whose provider calls `loadRoutesFrom(__DIR__.'/../Routes/admin.php')`
+      yields a route node with a stated `routes-to` edge to its action, and `entryPathReading`
+      fires on a catch inside that action.
+      > note: done 2026-11-06 — `routeFileSet` (`providers/laravel.ts`) adds files loaded by `loadRoutesFrom` / `group(__DIR__ …)` and their `require`s; `Route::controller(C::class)` groups resolve bare method-name handlers (unopim's package routes use both). `npx vitest run tests/scripts/code_graph_laravel_package_routes.test.ts` -> 0.
+- [ ] 6.2 **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
+      indexed declaration encloses the line, so the reading cannot start. Measure which constructs
+      they are (closures, arrow functions, class constants, compiled templates) and index the
+      enclosing one where the extractor can.
+      verify: the 27 rows of `code-graph-detector-labels-2026-11-06/unopim.catch.jsonl` re-read
+      after the change, with the share still unanswered reported per construct.
+      > note: 2026-11-06 — measured on the recorded rows: 12 inline script in Blade templates (11 labelled reachable), 12 compiled bundles under `public/**/build` (2), 3 test code (0). Extractor side landed: views resolve by namespace (`loadViewsFrom`, `anonymousComponentPath`), and the entry-path reading starts at a template the graph states is rendered or included and walks `renders` / `includes` (fixture tests in the same file; compiled bundles stay unanswered by design). Open: the re-read of the 27 rows itself, which is 6.3's run.
+- [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
+      the same labels (no relabelling) and publish the paired verdict beside the original.
+      verify: `ls internal/bench/reports/code-graph-detector-labels-*.md | wc -l` -> /^\s*[2-9]/
+      (a second dated report, written by the runner's report command over the re-read rows).
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
@@ -333,7 +407,7 @@ obligation inference in any pack/selection verb · K7 no external flow-analyzer 
 K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -343,13 +417,20 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 | 4 | Honesty changes break the answers consumers already read | implementation | `partial_files`, `unknown` terms and caps change output the map, the stop-gate feeder and the MCP tools consume today | Non-empty answers stay byte-identical (4.3); omitted items are counted, never cut (4.5); the map copy changes in the same step (4.2) | Phase 4 — Answers that say what they do not know |
 | 5 | The graph reaches the review as prose and makes it worse | product | A consumer pastes graph output into the review prompt, the form S3 measured as degrading | Checks and line-range read lists only (5.1, 5.2); prose exists only as arm B2 of 3.5; the self-review gate stays advisory until 3.5 shows B1 > A | Phase 5 — The review reaches the graph |
 | 6 | A lane gap reads as noise and is ignored | product | `ask` lists a failed lane under `degraded`; an agent reading only the answer rows misses it | The answer drops to low confidence, which the envelope surfaces first (4.8) | Phase 4 — Answers that say what they do not know |
+| 7 | The truth arrives without its human check | implementation | The oracle can be run by the agent once an indexer is installed, but the registered 20 % human-checked sample cannot; scoring on unchecked truth would break the registration | The runner reports PENDING until a dated truth file exists and refuses an unnamed checker; the owner delegated the check to a reader plus two provider-diverse judges (registration § The owner deviation for the check), and the result names `checked_by: council` | Phase 2 — Registration, then measurement |
 
 ## Acceptance Criteria
-- [ ] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
-- [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
-- [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
-- [ ] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
-- [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
-- [ ] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
-- [ ] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
+- [x] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
+- [x] AC-2 The report publishes every class in both directions with the calibration diagnostic.
+      > note: 2026-11-06 — the 2.5 report carried every class's verdict but not the overconfidence rate it computed; `run_bench_v3.ts` now renders it (`calibrationSection`, `npx vitest run tests/scripts/code_graph/bench_v3_calibration.test.ts` -> 0), and the published report's section was rendered from that run's own `summary.json` — same run, nothing re-measured.
+- [x] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
+      > note: 2026-11-06 — labelled rows registered in `internal/bench/code-graph/PREREGISTRATION-detector-labels-2026-11-06.md` (council-reviewed: predicate-conformance labels, per-subject verdicts), runner `detector_labels.ts` (`npx vitest run tests/scripts/code_graph/detector_labels.test.ts` -> 0). Report: `internal/bench/reports/code-graph-detector-labels-2026-11-06.md`. On PHP: deleted-test reading `pass` (6 / 0, p 0.016); silent-catch reading `regression` (2 / 11, p 0.011) — it never fired while an independent reader found a route path for 24 of 40. The two reach gaps behind that are carried in Phase 6. Every row records the edges the reading used. Neither reading moves an exit code.
+- [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
+- [x] AC-5 The counterfactual review is published with deterministic miss scoring.
+      > note: 2026-11-06 — `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`, scored by set comparison against oracle truth (no LLM judge, K3).
+- [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
+- [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
+      verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
 - [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
+      > note: 2026-11-06 — the first two hold (5.2). Wiring the checks into `self_review_gate.ts` went through five council rounds (`agents/evidence/council/graph-checks-self-review-20261106.md`); both seats refused every placement on the gate's required path, and the last round named a separate, non-required reporting job as the version it would accept. That narrows the criterion, which is the owner's call; the wiring was withdrawn and the gate is unchanged. Owner decision 2026-11-06: narrowed to a separate, non-required job beside the gate.
+      > note: 2026-11-06 — the `graph-checks` job in `self-review-gate.yml` runs `graph_checks_report.ts` (graph built from the PR's clean real head, resolved SHAs, per-check status, artifact refused by the dispositions ledger). Council round 6 (`agents/evidence/council/graph-checks-job-r6-20261106.question.md`) accepted the placement and refused the first implementation; every required change it named is in the shipped version, which no council round has reviewed yet. Open: that review round.

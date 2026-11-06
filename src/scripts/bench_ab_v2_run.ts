@@ -43,7 +43,6 @@
  * with --no-checkpoint; force a from-scratch run with --fresh.
  */
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -52,21 +51,26 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
+import { run_orchestrated_arm } from './_lib/bench_headroom_run.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
-import { preserve_transcript, reset_fixture } from './_lib/bench_ab_workspace.js';
+import { plugin_scope, preserve_stream, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
+import { container_fields, is_quota_exhausted, next_account_hint, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { container_context } from './bench_ab_images.js';
 import {
     SweepBudget,
     activation_verdict,
     audit_activation,
     expected_injection,
     is_bare_alias,
-    tier_for_model,
     verify_model_id,
     type TierRates,
     type TokensBreakdown,
 } from './_lib/bench_ab_activation.js';
-import { load_pricing } from './_lib/bench_cost.js';
+import { sweepRates } from './_lib/price_freshness.js';
+import { store_after_sweep } from './bench_evidence_store.js';
+import { PyFloat, append_checkpoint, checkpoint_key, load_checkpoint, run_key, type CheckpointIO } from './_lib/bench_ab_checkpoint.js';
+export { PyFloat, append_checkpoint, checkpoint_key, freeze_result, load_checkpoint, run_key, thaw_result, type CheckpointIO } from './_lib/bench_ab_checkpoint.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -76,8 +80,12 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
-const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
+const CANDIDATES_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'candidates');
+const REPORTS_DIR = path.join(primary_checkout_root(REPO_ROOT), 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
+// One id per process, so every kept trial stream of a sweep sorts together.
+const STREAMS_DIR = path.join(REPORTS_DIR, 'streams');
+const SWEEP_ID = new Date().toISOString().replace(/[:.]/g, '-');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 // CRITICAL (2026-06-15): clones MUST live OUTSIDE the agent-config repo. A clone
 // under the repo lets Claude discover the repo's own project surface (CLAUDE.md /
@@ -90,7 +98,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-import { ARMS, neighbour_env, neighbour_plugin_dir, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { ablation_arm, ARMS, FIXED_INJECTIONS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
@@ -151,7 +159,11 @@ export function hardened_blocks_text(): string {
  * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
  * - 'rules-balanced'   → kernel + tier_1 (the size-cut `balanced` profile, retired 2026-07-07).
  */
-export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
+export function rules_subset_text(
+    subset: 'rules-kernel-dc' | 'rules-balanced',
+    without: string | null = null,
+    swap: { id: string; text: string } | null = null,
+): string {
     const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
         kernel: string[];
         tier_1: { id: string }[];
@@ -162,8 +174,25 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'):
     } else {
         ids.push(...router.tier_1.map((t) => t.id));
     }
-    const bodies = ids.map((id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim());
+    for (const id of [without, swap?.id]) {
+        if (id != null && !ids.includes(id)) throw new Error(`rule "${id}" is not in ${subset}: ${ids.join(', ')}`);
+    }
+    if (without !== null) ids.splice(ids.indexOf(without), 1);
+    const bodies = ids.map((id) =>
+        id === swap?.id ? swap.text.trim() : fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim(),
+    );
     return bodies.join('\n\n---\n\n');
+}
+
+/**
+ * A candidate wording for one kernel rule, read from
+ * `internal/bench/candidates/<rule>.<label>.md`. Kept outside any `rules/`
+ * directory on purpose: a candidate is measured before it may replace the rule,
+ * and the rule file itself stays owner-edited.
+ */
+export function variant_candidate_text(stem: string): string {
+    if (!/^[a-z0-9-]+\.[a-z0-9-]+$/.test(stem)) throw new Error(`invalid candidate stem "${stem}": expected <rule>.<label>`);
+    return fs.readFileSync(path.join(CANDIDATES_DIR, `${stem}.md`), 'utf-8');
 }
 
 /**
@@ -182,7 +211,7 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'):
  * Deterministic (no interpolation) so the injected bytes are stable per checkout.
  */
 export function bare_principle_text(): string {
-    return 'Prefer the smallest solution that fully solves the stated problem; do not add what was not asked for.';
+    return FIXED_INJECTIONS['bare-principle'] as string;
 }
 
 /**
@@ -225,9 +254,8 @@ export function lift_audit_arms(arms: readonly string[]): string[] {
 }
 
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
-    if (inject === 'bare-principle') {
-        return bare_principle_text();
-    }
+    const fixed = inject === null ? undefined : FIXED_INJECTIONS[inject];
+    if (fixed !== undefined) return fixed;
     if (inject === 'ladder') {
         return ladder_rule_text();
     }
@@ -247,6 +275,13 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject === 'rules-kernel-dc' || inject === 'rules-balanced') {
         return rules_subset_text(inject);
     }
+    if (inject?.startsWith('kernel-minus:')) return rules_subset_text('rules-kernel-dc', inject.slice('kernel-minus:'.length));
+    if (inject?.startsWith('kernel-variant:')) {
+        const stem = inject.slice('kernel-variant:'.length);
+        const text = variant_candidate_text(stem);
+        return rules_subset_text('rules-kernel-dc', null, { id: stem.slice(0, stem.indexOf('.')), text });
+    }
+    if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
 }
 
@@ -301,6 +336,9 @@ interface RunOneOpts {
      * task-only collision.
      */
     seed?: number;
+    /** `--isolation container`: run in the arm's image instead of on the host. */
+    container?: ContainerCtx | null;
+    reviewer?: ((prompt: string) => Dict) | null; // arm D's reviewer, one fresh call per review
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -532,10 +570,14 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     if (spec.recursive) {
         return run_one_recursive(task, opts);
     }
+    if (spec.orchestration) {
+        return run_one_orchestrated(task, arm, opts);
+    }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0);
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec));
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
+    let cf: Dict = {};
     if (host === 'codex') {
         run = run_live_codex(task, clone, opts.timeout, {
             model: opts.model,
@@ -552,10 +594,13 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
             model: opts.model,
+            effort: spec.effort ?? null,
             plugin_dir: neighbour_plugin_dir(spec),
             strict_mcp: spec.isolate_neighbour === true, no_session_persistence: true,
             env: spec.isolate_neighbour ? neighbour_env(fs.mkdtempSync(path.join(os.tmpdir(), 'bench-neighbour-'))) : null,
+            container: opts.container && !spec.host_only ? trial_container(opts.container, spec) : null,
         }) as unknown as Dict;
+        cf = opts.container && !spec.host_only ? container_fields(run, spec, opts.container) : {};
     }
     const score = scoring.score_task_v2(task, {
         fixture_root: fixture,
@@ -575,7 +620,29 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // sweep actually used instead of re-deriving a key that may have changed.
         ...scoring.workspace_fields(fixture, clone),
         transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
+        stream_path: preserve_stream(STREAMS_DIR, `${String(task['id'])}|${arm}|${opts.seed ?? 0}`, String(run['stream'] ?? ''), SWEEP_ID),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
+        ...cf,
+    };
+}
+
+/** The orchestrated arms (test-first, review); the steps run in `_lib/bench_headroom_run.ts`. */
+export function run_one_orchestrated(task: Dict, arm: string, opts: RunOneOpts): Dict {
+    const spec = ARMS[arm] as ArmSpec;
+    const { res, run, fixture, clone } = run_orchestrated_arm(task, arm, spec, opts);
+    const score = scoring.score_task_v2(task, { fixture_root: fixture, clone_root: clone, transcript: String(res.final_run['transcript'] ?? '') });
+    const { final_run: _final, steps, ...orchestration } = res;
+    return {
+        errored: _pyBool(run['errored']),
+        reason: run['reason'] ?? null,
+        capability_pass: score.capability_pass,
+        discipline_score: new PyFloat(score.discipline_score),
+        discipline_pass: score.discipline_pass,
+        metrics: trajectory_metrics(run, score),
+        injected_chars: 0,
+        ...scoring.workspace_fields(fixture, clone),
+        orchestration: { ...orchestration, steps: steps.map((st) => ({ role: st.role, errored: st.errored, tokens: st.tokens })) },
+        ...integrity_fields(run, spec, 0, opts.model),
     };
 }
 
@@ -706,7 +773,7 @@ export function run_one_recursive(
         ((depth: number, priorVerdict: string | null): RecursiveAttempt => {
             // Each correction round gets its own preserved workspace too — a
             // depth-2 attempt must not overwrite the depth-1 evidence.
-            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0);
+            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0, plugin_scope(ARMS['package']!));
             let sp_file: string | null = null;
             if (priorVerdict) {
                 sp_file = path.join(opts.sp_dir, `.sp-recursive-${depth}.txt`);
@@ -793,139 +860,6 @@ export function run_one_recursive(
     };
 }
 
-// ── checkpoint / resume ─────────────────────────────────────────────────────
-//
-// A sweep of tasks × arms × seeds can run for hours; without a checkpoint, a
-// kill (manual stop, harness timeout, machine sleep) loses EVERY completed run
-// because results only exist in memory until the single final report write.
-// The checkpoint is a JSONL file (one line per completed run) so each write is
-// a single atomic-enough append and a truncated tail line (killed mid-write)
-// is simply skipped on load. The file is keyed by a hash of the run config —
-// a restart with different flags gets a different checkpoint and never mixes
-// results from an incompatible sweep.
-
-/** Stable id key for one run inside a sweep. */
-export function run_key(task_id: string, arm: string, seed: number): string {
-    return `${task_id}|${arm}|${seed}`;
-}
-
-/**
- * Hash of the sweep configuration — everything that changes what a run means.
- * Same flags → same key → resume; any config change → fresh checkpoint file.
- */
-export function checkpoint_key(cfg: {
-    corpus: string;
-    model: string;
-    seeds: number;
-    arms: string[];
-    budget: number;
-    timeout: number;
-    host: string;
-    task_ids: string[];
-}): string {
-    const stable = JSON.stringify([
-        cfg.corpus,
-        cfg.model,
-        cfg.seeds,
-        cfg.arms,
-        cfg.budget,
-        cfg.timeout,
-        cfg.host,
-        cfg.task_ids,
-    ]);
-    return createHash('sha256').update(stable).digest('hex').slice(0, 16);
-}
-
-/**
- * JSON round-trip loses the PyFloat wrapper (1.0 parses back as 1), which
- * would break the byte-parity float rendering of the final report on resume.
- * freeze/thaw make the checkpoint lossless: PyFloat → {"__pyfloat__": n} on
- * write, restored to PyFloat on load.
- */
-export function freeze_result(v: unknown): unknown {
-    if (v instanceof PyFloat) {
-        return { __pyfloat__: v.value };
-    }
-    if (Array.isArray(v)) {
-        return v.map((x) => freeze_result(x));
-    }
-    if (v && typeof v === 'object') {
-        const out: Record<string, unknown> = {};
-        for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-            out[k] = freeze_result(val);
-        }
-        return out;
-    }
-    return v;
-}
-
-export function thaw_result(v: unknown): unknown {
-    if (Array.isArray(v)) {
-        return v.map((x) => thaw_result(x));
-    }
-    if (v && typeof v === 'object') {
-        const o = v as Record<string, unknown>;
-        const keys = Object.keys(o);
-        if (keys.length === 1 && keys[0] === '__pyfloat__' && typeof o['__pyfloat__'] === 'number') {
-            return new PyFloat(o['__pyfloat__']);
-        }
-        const out: Record<string, unknown> = {};
-        for (const [k, val] of Object.entries(o)) {
-            out[k] = thaw_result(val);
-        }
-        return out;
-    }
-    return v;
-}
-
-/**
- * Load completed runs from a checkpoint file. Tolerant by design: a missing
- * file → empty map; an unparseable line (truncated tail from a mid-write
- * kill) → skipped; a duplicate key → last line wins.
- */
-export function load_checkpoint(file: string): Map<string, Dict> {
-    const map = new Map<string, Dict>();
-    let raw: string;
-    try {
-        raw = fs.readFileSync(file, 'utf-8');
-    } catch {
-        return map;
-    }
-    for (const line of raw.split('\n')) {
-        const trimmed = line.trim();
-        if (!trimmed) {
-            continue;
-        }
-        let entry: unknown;
-        try {
-            entry = JSON.parse(trimmed);
-        } catch {
-            continue; // truncated tail — the run it held simply re-executes
-        }
-        if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
-            const e = entry as Record<string, unknown>;
-            if (typeof e['key'] === 'string' && e['result'] && typeof e['result'] === 'object') {
-                map.set(e['key'], thaw_result(e['result']) as Dict);
-            }
-        }
-    }
-    return map;
-}
-
-/** Append one completed run to the checkpoint (single-line atomic append). */
-export function append_checkpoint(file: string, key: string, result: Dict): void {
-    fs.appendFileSync(file, JSON.stringify({ key, result: freeze_result(result) }) + '\n', {
-        encoding: 'utf-8',
-    });
-}
-
-export interface CheckpointIO {
-    /** Checkpoint file to append completed runs to (created on first append). */
-    path: string;
-    /** Runs already completed by a prior (killed) sweep — reused, not re-run. */
-    completed: Map<string, Dict>;
-}
-
 /**
  * The sweep loop, extracted from main() with an injectable run function so the
  * resume behaviour is testable without live model calls. Semantics with no
@@ -946,6 +880,8 @@ export function collect_records(
      * abort costs no completed work.
      */
     guard: ((record: Dict) => string | null) | null = null,
+    /** A run this rejects is reported but not checkpointed, so a resume re-runs it. */
+    keep: (record: Dict) => boolean = () => true,
 ): { records: Dict[]; executed: number; reused: number; aborted: string | null } {
     const total = tasks.length * arms.length * seeds;
     let done = 0;
@@ -973,7 +909,7 @@ export function collect_records(
                 const r = run_fn(task, arm, seed);
                 r['seed'] = seed;
                 executed += 1;
-                if (ckpt) {
+                if (ckpt && keep(r)) {
                     append_checkpoint(ckpt.path, key, r);
                 }
                 seed_runs.push(r);
@@ -1014,6 +950,8 @@ export function main(argv: string[] | null = null): number {
         .map((a) => a.trim())
         .filter((a) => a.length > 0);
     for (const a of arms) {
+        const ablation = a in ARMS ? null : ablation_arm(a);
+        if (ablation) ARMS[a] = ablation;
         if (!(a in ARMS)) {
             process.stderr.write(`unknown arm: ${a}\n`);
             return 1;
@@ -1055,13 +993,12 @@ export function main(argv: string[] | null = null): number {
     // bad argument must be reported whether or not the host CLI is installed.
     // Behind the CLI-presence check it was unreachable on any machine without
     // `claude` — including CI.
-    const [rates] = load_pricing(PRICING_PATH);
-    const tier = tier_for_model(args.model);
-    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+    const priced = sweepRates(fs.existsSync(PRICING_PATH) ? fs.readFileSync(PRICING_PATH, 'utf-8') : '', args.model, new Date());
+    const tier_rates: TierRates | null = priced.rates;
     if (args.max_usd !== null && tier_rates === null) {
         process.stderr.write(
-            `bench_ab_v2: --max-usd given but no pricing row matches model "${args.model}" ` +
-                `(${_relToRootPosix(PRICING_PATH)}) — the sweep cap cannot be enforced.\n`,
+            `bench_ab_v2: --max-usd given but no fresh pricing row prices model "${args.model}" ` +
+                `(${_relToRootPosix(PRICING_PATH)}: ${priced.why}) — the sweep cap cannot be enforced.\n`,
         );
         return 2;
     }
@@ -1080,7 +1017,8 @@ export function main(argv: string[] | null = null): number {
 
     const selftest = args.mode === 'selftest';
 
-    const host_gate = preflight_exit(arms, { selftest, host: args.host, model: args.model, budget: args.budget });
+    // A container trial proves its own load from `system/init`; the host probe would check the wrong install.
+    const host_gate = args.isolation === 'container' ? null : preflight_exit(arms, { selftest, host: args.host, model: args.model, budget: args.budget });
     if (host_gate !== null) return host_gate;
 
     fs.mkdirSync(REPORTS_DIR, { recursive: true });
@@ -1102,6 +1040,7 @@ export function main(argv: string[] | null = null): number {
             budget: args.budget,
             timeout: args.timeout,
             host: args.host,
+            ...(args.isolation === 'host' ? {} : { isolation: args.isolation }),
             task_ids: tasks.map((t) => String(t['id'])),
         });
         const ckpt_path = path.join(CHECKPOINTS_DIR, `${key}.jsonl`);
@@ -1120,6 +1059,8 @@ export function main(argv: string[] | null = null): number {
     }
 
     const budget = new SweepBudget(args.max_usd, tier_rates);
+    const brake = quota_brake(3);
+    const ctr = args.isolation === 'container' ? container_context({ selftest, account: args.account }) : null;
 
     const { records, aborted } = collect_records(
         tasks,
@@ -1134,12 +1075,15 @@ export function main(argv: string[] | null = null): number {
                 sp_dir,
                 host: args.host,
                 seed: _seed,
+                container: ctr?.ctx ?? null,
             };
-            return selftest ? selftest_run(task, _arm, runOpts) : run_one(task, _arm, runOpts);
+            if (selftest) return selftest_run(task, _arm, runOpts);
+            return run_one(task, _arm, runOpts);
         },
         ckpt,
         undefined,
-        (r) => budget.add(r['tokens_breakdown'] as TokensBreakdown | undefined),
+        (r) => budget.add(r['tokens_breakdown'] as TokensBreakdown | undefined) ?? brake(r),
+        (r) => !is_quota_exhausted(r),
     );
 
     // Delta #1 — the activation audit. Runs BEFORE the report is judged usable:
@@ -1161,6 +1105,9 @@ export function main(argv: string[] | null = null): number {
         placebo_chars,
         corpus: sel.name,
         host: args.host,
+        isolation: args.isolation,
+        account: ctr?.ctx.account ?? null,
+        images: (ctr?.images ?? null) as unknown as Json,
         // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
         // one. Both the tier marker and the filename say so, because a number is
         // only ever allowed to render from a report and this report's numbers are
@@ -1177,9 +1124,13 @@ export function main(argv: string[] | null = null): number {
     };
     const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired${selftest ? '-selftest' : ''}.json`);
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
+    // Durable copy outside the checkout (roadmap 6.2), taken BEFORE the
+    // checkpoint below is retired so the bundle carries it. A selftest report is
+    // synthetic and never becomes evidence.
+    if (!selftest) store_after_sweep(out, ckpt ? [ckpt.path] : []);
     // The paired report now holds everything — retire the checkpoint so a
     // finished sweep leaves no residue and a later identical sweep starts fresh.
-    if (ckpt && fs.existsSync(ckpt.path)) {
+    if (ckpt && !aborted && fs.existsSync(ckpt.path)) {
         fs.rmSync(ckpt.path);
     }
     process.stdout.write(
@@ -1195,6 +1146,7 @@ export function main(argv: string[] | null = null): number {
     // a publishable one.
     if (aborted) {
         process.stderr.write(`bench_ab_v2: ${aborted}\n`);
+        if (ctr?.ctx.pool && ctr.ctx.account) process.stderr.write(`bench_ab_v2: ${next_account_hint(ctr.ctx.pool, ctr.ctx.account)}\n`);
         return 2;
     }
     if (audit.violations.length > 0) {
@@ -1229,6 +1181,9 @@ interface ParsedArgs {
     host: string;
     checkpoint: boolean;
     fresh: boolean;
+    isolation: string;
+    /** Container sweeps: which configured account to run on (default: the first). */
+    account: string | null;
 }
 
 class ArgExit extends Error {}
@@ -1248,8 +1203,10 @@ function parse_args(argv: string[]): ParsedArgs {
         host: 'claude',
         checkpoint: true,
         fresh: false,
+        isolation: 'host',
+        account: null,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--account NAME] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1317,6 +1274,12 @@ function parse_args(argv: string[]): ParsedArgs {
             out.host = _choice(a.slice('--host='.length), '--host', ['claude', 'codex'], argErr);
         } else if (a.startsWith('--mode=')) {
             out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run', 'selftest'], argErr);
+        } else if (a === '--isolation' || a.startsWith('--isolation=')) {
+            out.isolation = _choice(a === '--isolation' ? need(i, '--isolation') : a.slice('--isolation='.length), '--isolation', ['host', 'container'], argErr);
+            if (a === '--isolation') i += 1;
+        } else if (a === '--account' || a.startsWith('--account=')) {
+            out.account = a === '--account' ? need(i, '--account') : a.slice('--account='.length);
+            if (a === '--account') i += 1;
         } else if (a === '--no-checkpoint') {
             out.checkpoint = false;
         } else if (a === '--fresh') {
@@ -1413,10 +1376,6 @@ function _pyNumStr(x: number): string {
 }
 
 // ── JSON byte-parity (json.dumps(payload, indent=2)) ──────────────────────
-
-export class PyFloat {
-    constructor(readonly value: number) {}
-}
 
 type Json = null | boolean | number | string | PyFloat | Json[] | { [k: string]: Json };
 

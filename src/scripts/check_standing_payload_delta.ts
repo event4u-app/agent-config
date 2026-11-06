@@ -24,6 +24,10 @@
  * measured and already shipped — the ADR-236 one-rule-one-layer partition. See
  * {@link partitionCredit}.
  *
+ * Below the bucket table the report also lists every always-loaded asset whose loaded
+ * size changed (`_lib/standing_asset_delta.ts`), so a reviewer sees the delta of
+ * the rule or skill description the change touched, not only of its bucket.
+ *
  * ## Parity with the gate it reports beside
  *
  * The bucket definitions are IMPORTED from `preamble_byte_census`, never
@@ -54,6 +58,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
+import { assetDeltas, renderAssetDeltas, type AssetDelta } from './_lib/standing_asset_delta.js';
 import { gpt_tokens, method_note } from './_lib/token_count.js';
 import { measureDeterministicPayload } from './check_preamble_payload_budget.js';
 import { censusRuleDir } from './preamble_byte_census.js';
@@ -304,6 +309,8 @@ export interface Report {
     readonly rank_basis: string;
     readonly buckets: Bucket[];
     readonly rows: DeltaRow[];
+    /** Every always-loaded asset whose loaded size changed against the base; empty without a base. */
+    readonly assets: AssetDelta[];
     readonly total_debit: number;
     readonly total_credit: number;
     readonly net: number;
@@ -314,10 +321,12 @@ export interface Report {
 export function buildReport(opts: { base: string | null; rank: boolean }): Report {
     const head = measureBuckets(REPO_ROOT);
     let rows: DeltaRow[] = [];
+    let assets: AssetDelta[] = [];
     if (opts.base !== null) {
         const dir = checkoutRefTree(opts.base);
         try {
             rows = diffBuckets(measureBuckets(dir), head);
+            assets = assetDeltas(dir, REPO_ROOT);
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
         }
@@ -329,6 +338,7 @@ export function buildReport(opts: { base: string | null; rank: boolean }): Repor
         rank_basis: method_note(),
         buckets: head,
         rows,
+        assets,
         total_debit: rows.reduce((s, r) => s + r.debit, 0),
         total_credit: rows.reduce((s, r) => s + r.credit, 0),
         net: rows.reduce((s, r) => s + r.debit - r.credit, 0),
@@ -359,6 +369,7 @@ export function renderMarkdown(r: Report): string {
             '',
             `**Net:** \`${sign(r.net)}\` tok on the gated per-spawn payload.`,
             '',
+            renderAssetDeltas(r.assets),
         );
     }
     out.push('### Credit side (standing bookings)', '');

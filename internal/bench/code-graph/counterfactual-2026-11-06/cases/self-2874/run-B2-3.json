@@ -1,0 +1,48 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "src/scripts/_lib/bench_ab_container.ts",
+  "src/scripts/_lib/bench_artifact_corpus.ts",
+  "src/scripts/_lib/bench_artifact_graders.ts",
+  "src/scripts/_lib/bench_artifact_isolation.ts",
+  "src/scripts/_lib/bench_artifact_parity.ts",
+  "src/scripts/bench_ab_task_runner.ts",
+  "src/scripts/bench_artifact_selftest.ts"
+ ],
+ "reply": "{\"files\": [\"src/scripts/_lib/bench_artifact_graders.ts\", \"src/scripts/_lib/bench_artifact_isolation.ts\", \"src/scripts/_lib/bench_artifact_parity.ts\", \"src/scripts/_lib/bench_artifact_corpus.ts\", \"src/scripts/bench_artifact_selftest.ts\", \"src/scripts/bench_ab_task_runner.ts\", \"src/scripts/_lib/bench_ab_container.ts\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 344,
+  "cache_read_input_tokens": 24209,
+  "output_tokens": 171,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 344,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 171,
+    "cache_read_input_tokens": 24209,
+    "cache_creation_input_tokens": 344,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 344
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

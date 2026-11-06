@@ -1,0 +1,440 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "REGEX_AFTER",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:203"
+    },
+    {
+     "label": "blank",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:221"
+    },
+    {
+     "label": "deep",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:226"
+    },
+    {
+     "label": "definedComponents",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:160"
+    },
+    {
+     "label": "moduleCode",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:219"
+    },
+    {
+     "label": "pop",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:232"
+    },
+    {
+     "label": "push",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:228"
+    },
+    {
+     "label": "regexAt",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/control_roles.ts:206"
+    },
+    {
+     "label": "COMPARED",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:100"
+    },
+    {
+     "label": "ConsistencyFinding",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:87"
+    },
+    {
+     "label": "ControlRoleMap",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:85"
+    },
+    {
+     "label": "SHADOW_REL",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:19"
+    },
+    {
+     "label": "SHADOW_TOLERANCES_PX",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:26"
+    },
+    {
+     "label": "ShadowFinding",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:29"
+    },
+    {
+     "label": "ShadowRecord",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:37"
+    },
+    {
+     "label": "around",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:78"
+    },
+    {
+     "label": "canRender",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:111"
+    },
+    {
+     "label": "consistencyFindings",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:126"
+    },
+    {
+     "label": "isProductUi",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:118"
+    },
+    {
+     "label": "shadowRecord",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:54"
+    },
+    {
+     "label": "want",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/design_consistency_rules.ts:168"
+    },
+    {
+     "label": "main",
+     "verdict": "untested",
+     "witness": "src/scripts/hooks/design_pass_hook.ts:666"
+    },
+    {
+     "label": "AUDIT_ARTEFACT_REL",
+     "verdict": "untested",
+     "witness": "src/scripts/lint_design_consistency.ts:66"
+    },
+    {
+     "label": "settingsSchema",
+     "verdict": "tested",
+     "witness": "src/server/schemas/settings.ts:36"
+    },
+    {
+     "label": "defs",
+     "verdict": "untested",
+     "witness": "tests/scripts/control_roles_definitions.test.ts:5"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "tests/cli/uiAudit_control_roles.test.ts",
+     "witness": "src/scripts/_lib/control_roles.ts:1"
+    },
+    {
+     "label": "tests/scripts/lint_design_consistency.test.ts",
+     "witness": "src/scripts/_lib/control_roles.ts:1"
+    },
+    {
+     "label": "tests/hooks/design_pass.test.ts",
+     "witness": "src/scripts/hooks/design_pass_hook.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/server/schemas/settings.ts",
+   "lines": [
+    36,
+    75
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    126,
+    165
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    160,
+    187
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/design_pass_hook.ts",
+   "lines": [
+    666,
+    705
+   ]
+  },
+  {
+   "path": "tests/scripts/control_roles_definitions.test.ts",
+   "lines": [
+    5,
+    5
+   ]
+  },
+  {
+   "path": "src/scripts/lint_design_consistency.ts",
+   "lines": [
+    66,
+    66
+   ]
+  },
+  {
+   "path": "src/cli/commands/uiAudit.ts",
+   "lines": [
+    256,
+    295
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_pass.ts",
+   "lines": [
+    44,
+    77
+   ]
+  },
+  {
+   "path": "tests/scripts/lint_design_consistency.test.ts",
+   "lines": [
+    291,
+    292
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    54,
+    75
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    226,
+    226
+   ]
+  },
+  {
+   "path": "src/scripts/lint_design_consistency.ts",
+   "lines": [
+    398,
+    437
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_pass.ts",
+   "lines": [
+    79,
+    83
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    26,
+    26
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    206,
+    211
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_pass.ts",
+   "lines": [
+    108,
+    133
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    19,
+    19
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    219,
+    258
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_pass.ts",
+   "lines": [
+    135,
+    147
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    29,
+    35
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    228,
+    231
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    232,
+    238
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    203,
+    203
+   ]
+  },
+  {
+   "path": "src/server/schemas/settings.ts",
+   "lines": [
+    76,
+    581
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    166,
+    196
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/design_pass_hook.ts",
+   "lines": [
+    706,
+    818
+   ]
+  },
+  {
+   "path": "src/cli/commands/uiAudit.ts",
+   "lines": [
+    296,
+    334
+   ]
+  },
+  {
+   "path": "src/scripts/lint_design_consistency.ts",
+   "lines": [
+    438,
+    454
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    259,
+    282
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    37,
+    51
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    78,
+    83
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    85,
+    85
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    221,
+    223
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    87,
+    98
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    405,
+    450
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/control_roles.ts",
+   "lines": [
+    365,
+    404
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    111,
+    115
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    118,
+    120
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    168,
+    172
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/design_consistency_rules.ts",
+   "lines": [
+    100,
+    104
+   ]
+  }
+ ]
+}
