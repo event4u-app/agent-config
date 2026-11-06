@@ -121,6 +121,11 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   and after a look in 6/20 on `trapC-ambig-01` (control 11/20). The bar is missed, and the difference is
   within noise (p = 0.36). Open: the bar needs a sample size that can separate single-digit rates (`bench:ab:power`)
   before another wording is measured; the rule stays unchanged.
+  Sized 2026-11-06 (`bench_ab_power`, paired sign test, α 0.05, power 0.8, independent
+  per-run rates): the bar's own distance (control 15 % → candidate 7.5 % blind) needs
+  **240 pairs per arm**; a candidate at 5 % needs 124, at 2.5 % needs 57. At the measured
+  $0.023 per Haiku run, 240 pairs per arm is 480 runs, about $11. The next measurement
+  runs at that size or not at all, and waits on `b-owner-spend`.
 - [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
@@ -168,15 +173,24 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
 
 Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` tasks, no drag-and-drop task) · `taskfiles/bench-ui.yml:14-16`
 
-- [ ] **2.1** 2×2 prompt arms on the nine `art-*` tasks in
+- [x] **2.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_corpus.ts --> 2×2 prompt arms on the nine `art-*` tasks in
   `internal/bench/corpora/ab-artifact-v2.yaml`: vanilla + terse, AC + terse,
   vanilla + expert, AC + expert. "AC with a terse prompt reaches what vanilla
   needs an expert prompt for" is the owner's claim, stated as a testable one.
-  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^18$/
-- [ ] **2.2** Add the missing UI task: drag & drop with keyboard and touch,
+  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^20$/ (18 for the nine tasks, 2 for `art-dnd-01` added by 2.2)
+  Done 2026-11-06: each task carries `terse` (its prompt) and `expert` (the prompt plus
+  its pre-registered `informed` ladder); `--prompt-variant both --arms vanilla,package`
+  runs the 2×2 and tags every record `prompt_variant` (`internal/bench/corpora/SCHEMA-v2.md`).
+  The run itself is 2.5's and waits on `b-owner-spend`.
+- [x] **2.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_browser_worker.ts --> Add the missing UI task: drag & drop with keyboard and touch,
   responsive breakpoints, one custom component; graded by Playwright actions and
   axe, no model in scoring (the `taskfiles/bench-ui.yml` grader pattern).
   verify: the artifact selftest passes the reference and fails the untouched fixture for the new task
+  Done 2026-11-06: `art-dnd-01` (reorderable list: mouse, touch, keyboard, two
+  breakpoints, a custom switch) graded by the new `browser-acceptance` grader in
+  headless Chromium. Selftest: reference 8/8, a draggable-only page 4/8, `--swap` red,
+  the untouched fixture fails on the missing deliverable. The axe column reads
+  `unknown` until `axe-core` is installed, as for the DOM grader.
 - [ ] **2.3** Web security: reuse the planted-findings fixture of
   `road-to-a-security-chain-measured` and add real exploit attempts (login, password
   storage, XSS) as the oracle.
@@ -315,7 +329,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 ### blocker: b-owner-spend
 
 - **Owner:** user
-- **What:** every paid sweep (1.7, 1.7d, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
+- **What:** every paid sweep (1.6, 1.7, 1.7d, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
   the three bars it is judged against, set before the run and never after: the
   false-positive ceiling for reviewer findings, the cost `D` of an escaped defect for the
   net-value line `p_catch · D − C_review − r_FP · C_FP`, and arm A's base profile
@@ -326,7 +340,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   the bars set by the agent on the owner's instruction and recorded as D4 below
   before any run. Spent 2026-11-06: $67.41 (smoke $1.94, sweep $65.47); arms A–C ran,
   D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
-  1.7d, 2.5, 5.1–5.2.
+  1.6 (sized at about $11), 1.7d, 2.5, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store

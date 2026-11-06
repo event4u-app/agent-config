@@ -174,6 +174,8 @@ The roadmap's bar is not met: blind questions had to fall below 3 of 40, and the
 
 Verdict: the wording does not earn a kernel change on this evidence. Blind questions in the low single digits cannot be separated at 40 runs per arm. Testing more wordings at this size would mean picking the luckiest draw, not measuring.
 
+**Size for the next wording (2026-11-06).** `bench_ab_power` with the paired sign test at α 0.05 and 80 % power, assuming independent per-run blind rates: separating the bar's own distance, a control at 15 % against a candidate at 7.5 %, needs 240 pairs per arm. A candidate at 5 % needs 124, one at 2.5 % needs 57. At the measured $0.023 per Haiku run, 240 pairs per arm is 480 runs and about $11. The next wording is measured at that size or not at all.
+
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 
 - The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.

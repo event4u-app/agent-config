@@ -147,6 +147,9 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
     const token = sweep_token(a.args.account ?? null);
     const pack = a.arms.some((arm) => (ARMS[arm] as ArmSpec).setting_sources === null) ? pack_once(out, a.repo_root) : null;
     for (const t of a.tasks as unknown as ArtifactTask[]) {
+        // Set by `--prompt-variant` (proof-where 2.1); absent, the record carries null.
+        const prompt_variant = (t as unknown as Record<string, unknown>)['prompt_variant'] ?? null;
+        const vtag = prompt_variant ? `-${String(prompt_variant)}` : '';
         for (const arm of a.arms) {
             for (let seed = 0; seed < a.args.seeds; seed += 1) {
                 for (const ladder of LADDER_NAMES) {
@@ -163,18 +166,18 @@ export async function run_artifact_sweep(a: SweepArgs): Promise<number> {
                         const installed = is_package && pack !== null ? install_package(iso, pack.tarball, pack.npm_cache) : { ok: true, reason: 'not installed' };
                         const loaded = installed.ok ? load_check(is_package, installed_skill_count(iso.config_dir)) : installed;
                         if (!loaded.ok) {
-                            fs.appendFileSync(out, JSON.stringify({ task: t.id, arm, ladder, outcome: 'errored', reason: loaded.reason, usd_total: 0, seed, model: a.args.model }) + '\n');
+                            fs.appendFileSync(out, JSON.stringify({ task: t.id, arm, ladder, prompt_variant, outcome: 'errored', reason: loaded.reason, usd_total: 0, seed, model: a.args.model }) + '\n');
                             process.stdout.write(`  ${t.id} ${arm} seed=${seed} ladder=${ladder}: errored (${loaded.reason})\n`);
                             continue;
                         }
                         const host = claude_host(iso, spec, { ...a.args, token });
                         const run = await parity_loop({ task: t, arm, ladder, host, grade: () => grade_primary(iso.workspace, t) });
                         spent += run.usd_total ?? 0;
-                        const tdir = path.join(transcripts, `${t.id}-${arm}-s${seed}-${ladder}`);
+                        const tdir = path.join(transcripts, `${t.id}${vtag}-${arm}-s${seed}-${ladder}`);
                         const kept = keep_transcripts(iso.config_dir, tdir);
                         const transcript_dir = kept > 0 ? path.relative(a.repo_root, tdir) : null;
-                        fs.appendFileSync(out, JSON.stringify({ ...run, seed, model: a.args.model, transcript_dir }) + '\n');
-                        process.stdout.write(`  ${t.id} ${arm} seed=${seed} ladder=${ladder}: ${run.outcome}\n`);
+                        fs.appendFileSync(out, JSON.stringify({ ...run, prompt_variant, seed, model: a.args.model, transcript_dir }) + '\n');
+                        process.stdout.write(`  ${t.id}${vtag} ${arm} seed=${seed} ladder=${ladder}: ${run.outcome}\n`);
                     } finally {
                         dispose(iso);
                     }

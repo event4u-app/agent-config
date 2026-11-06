@@ -39,6 +39,7 @@ const IDS = [
     'art-php-endpoint-01',
     'art-page-copy-01',
     'art-app-copy-01',
+    'art-dnd-01',
 ];
 
 const tasks = load_artifact_corpus(CORPUS);
@@ -51,7 +52,7 @@ afterEach(() => {
 describe('2.1 kind: artifact — loader', () => {
     const base = (): Record<string, unknown> => JSON.parse(JSON.stringify(task('art-svg-prompt-01'))) as Record<string, unknown>;
 
-    it('parses the corpus: nine artifact tasks, each with a deliverable, one primary grader and a network mode', () => {
+    it('parses the corpus: ten artifact tasks, each with a deliverable, one primary grader and a network mode', () => {
         expect(tasks.map((t) => t.id)).toEqual(IDS);
         for (const t of tasks) {
             expect(t.kind).toBe('artifact');
@@ -102,13 +103,13 @@ describe('2.1 kind: artifact — loader', () => {
 });
 
 describe('2.2 seed tasks — dry run', () => {
-    it('lists all nine tasks for both arms', () => {
+    it('lists all ten tasks for both arms', () => {
         const r = spawnSync(TSX, ['src/scripts/bench_ab_v2_run.ts', '--corpus', 'artifact', '--arms', 'vanilla,package', '--mode', 'dry-run', '--seeds', '1'], {
             cwd: REPO,
             encoding: 'utf-8',
         });
         expect(r.status).toBe(0);
-        expect(r.stdout).toContain('9 tasks × 2 arms');
+        expect(r.stdout).toContain('10 tasks × 2 arms');
         for (const id of IDS) {
             for (const arm of ['vanilla', 'package']) expect(r.stdout).toMatch(new RegExp(`${id}\\s+arm=${arm}\\s`));
         }
@@ -351,7 +352,7 @@ describe('3.2 grader self-test', () => {
     it('every runnable grader separates its planted pair; toolchain-less ones are skipped, not passed', async () => {
         for (const t of tasks) {
             const row = await selftest_task(t, { php: null, browser: false });
-            if (t.graders.some((g) => g.role === 'primary' && ['functional+exploits', 'hidden-tests', 'bench-ui'].includes(g.id))) {
+            if (t.graders.some((g) => g.role === 'primary' && ['functional+exploits', 'hidden-tests', 'bench-ui', 'browser-acceptance'].includes(g.id))) {
                 expect(row.verdict).toBe('skipped');
                 expect(row.reason).toMatch(/php not installed|no playwright chromium/);
             } else {

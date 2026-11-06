@@ -1,0 +1,49 @@
+{
+  "_note": "Held back from both arms; written from the brief before any run. Run by the browser-acceptance grader in headless Chromium.",
+  "tests": [
+    { "name": "initial-order-and-detail", "steps": [
+      { "expect": "order", "selector": "#tasks li.task", "attribute": "data-id", "equals": ["a", "b", "c", "d"] },
+      { "expect": "text", "selector": "#detail", "match": "Alpha" } ] },
+    { "name": "mouse-drag-inserts-before", "steps": [
+      { "do": "drag", "pointer": "mouse", "from": "#tasks li[data-id=d]", "to": "#tasks li[data-id=a]" },
+      { "expect": "order", "selector": "#tasks li.task", "attribute": "data-id", "equals": ["d", "a", "b", "c"] },
+      { "expect": "text", "selector": "#detail", "match": "Delta" } ] },
+    { "name": "touch-drag-inserts-before", "steps": [
+      { "do": "viewport", "width": 390, "height": 844 },
+      { "do": "drag", "pointer": "touch", "from": "#tasks li[data-id=c]", "to": "#tasks li[data-id=a]" },
+      { "expect": "order", "selector": "#tasks li.task", "attribute": "data-id", "equals": ["c", "a", "b", "d"] } ] },
+    { "name": "keyboard-move-up-and-announce", "steps": [
+      { "do": "focus", "selector": "#tasks li[data-id=c]" },
+      { "do": "press", "selector": "#tasks li[data-id=c]", "key": "Space" },
+      { "do": "press", "selector": "#tasks li[data-id=c]", "key": "ArrowUp" },
+      { "do": "press", "selector": "#tasks li[data-id=c]", "key": "ArrowUp" },
+      { "do": "press", "selector": "#tasks li[data-id=c]", "key": "Space" },
+      { "expect": "order", "selector": "#tasks li.task", "attribute": "data-id", "equals": ["c", "a", "b", "d"] },
+      { "expect": "focused", "selector": "#tasks li[data-id=c]" },
+      { "expect": "attr", "selector": "#announce", "attribute": "aria-live", "match": "^polite$" },
+      { "expect": "text", "selector": "#announce", "match": "Gamma" },
+      { "expect": "text", "selector": "#detail", "match": "Gamma" } ] },
+    { "name": "keyboard-escape-cancels", "steps": [
+      { "do": "focus", "selector": "#tasks li[data-id=b]" },
+      { "do": "press", "selector": "#tasks li[data-id=b]", "key": "Space" },
+      { "do": "press", "selector": "#tasks li[data-id=b]", "key": "ArrowDown" },
+      { "do": "press", "selector": "#tasks li[data-id=b]", "key": "ArrowDown" },
+      { "do": "press", "selector": "#tasks li[data-id=b]", "key": "Escape" },
+      { "expect": "order", "selector": "#tasks li.task", "attribute": "data-id", "equals": ["a", "b", "c", "d"] } ] },
+    { "name": "switch-click-and-space", "steps": [
+      { "expect": "attr", "selector": "#compact", "attribute": "role", "match": "^switch$" },
+      { "expect": "attr", "selector": "#compact", "attribute": "aria-checked", "match": "^false$" },
+      { "do": "click", "selector": "#compact" },
+      { "expect": "attr", "selector": "#compact", "attribute": "aria-checked", "match": "^true$" },
+      { "do": "focus", "selector": "#compact" },
+      { "do": "press", "selector": "#compact", "key": "Space" },
+      { "expect": "attr", "selector": "#compact", "attribute": "aria-checked", "match": "^false$" } ] },
+    { "name": "wide-detail-beside-list", "steps": [
+      { "do": "viewport", "width": 1280, "height": 800 },
+      { "expect": "layout", "a": "#tasks", "b": "#detail", "relation": "right-of" } ] },
+    { "name": "narrow-detail-below-no-overflow", "steps": [
+      { "do": "viewport", "width": 375, "height": 812 },
+      { "expect": "layout", "a": "#tasks", "b": "#detail", "relation": "below" },
+      { "expect": "no-overflow" } ] }
+  ]
+}

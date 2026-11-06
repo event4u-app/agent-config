@@ -157,12 +157,24 @@ discipline corpus above stays the default. Roadmap:
   feedback_ladder:                    # both required, 3-5 steps each
     naive: ["...", "...", "..."]
     informed: ["...", "...", "..."]
+  variants:                           # optional; exactly one terse and one expert
+    - prompt_variant: terse           # the task prompt as is, no prompt of its own
+    - prompt_variant: expert
+      prompt: "<the task prompt>, then what an expert user would spell out"
 ```
+
+`--prompt-variant terse|expert|both` runs each task once per named variant, with
+the variant's prompt and the record field `prompt_variant`; without the flag a
+task runs its own `prompt` and the field is `null`. `both` is the 2×2 of
+proof-where 2.1 when the arms are `vanilla,package`. In `ab-artifact-v2.yaml` the
+expert prompt is the task prompt followed by the task's `informed` ladder.
 
 The loader (`src/scripts/_lib/bench_artifact_corpus.ts`) rejects a task
 without `parity_bar`, without either ladder, with a ladder outside 3-5 steps,
 with an unknown ladder, with a `network` other than `none`/`registry`, or with
-anything but exactly one primary grader.
+anything but exactly one primary grader. It also rejects `variants` that are not
+exactly one `terse` and one `expert`, a `terse` entry with its own prompt, or an
+`expert` prompt that does not start with the task prompt and add to it.
 
 ### Layout
 
@@ -182,6 +194,7 @@ brand or asset (the raster mascot is drawn programmatically).
 | `svg-render-gate` | T1a, T1b | parses; one `<svg>` root with a viewBox; no `<image>`/`<script>`/`<foreignObject>`, no `on*` handler, no external `href`/`url()`; a visible shape; every shape in the viewBox; optional source palette | pure node, always runs |
 | `acceptance+axe` | T2, T3, T7 | the held-back acceptance file, run on the page with its scripts in happy-dom (child process, frozen viewport and locale, reduced motion); axe column | `unknown` without happy-dom; axe is `unknown` until `axe-core` is installed |
 | `functional+exploits` | T4a, T4b | login works, rejects a wrong password, then scripted exploits → `sec_pass`: enumeration, no throttle, session fixation, plaintext / fast hash, missing CSRF token | `unknown` without `php` — never `pass` |
+| `browser-acceptance` | `art-dnd-01` | the held-back acceptance file in headless Chromium (Playwright): drag by mouse and by touch, keyboard, viewport changes, layout relations, horizontal overflow; network aborted; axe column | `unknown` without `@playwright/test` or its Chromium; axe is `unknown` until `axe-core` is installed |
 | `hidden-tests` | T5 | the held-back HTTP scenario: auth, validation, CRUD, cross-user access | `unknown` without `php` |
 | `bench-ui` | T6 | `internal/bench/ui/run.ts` against the SHA-pinned frozen page; refuses a deliverable that frames or links the original | `unknown` without a Playwright chromium |
 
