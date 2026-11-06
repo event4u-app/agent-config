@@ -109,9 +109,9 @@ function labelsFor(comp: Dict, records: Dict[], cost: Dict): Label[] {
     return out;
 }
 
-export function interpret(payload: Dict): Dict {
+export function interpret(payload: Dict, pricingPath?: string): Dict {
     const records = Array.isArray(payload['records']) ? (payload['records'] as Dict[]) : [];
-    const analysis = analyse(payload);
+    const analysis = pricingPath === undefined ? analyse(payload) : analyse(payload, pricingPath);
     const cost = dict(analysis['cost']);
     const comparisons = (Array.isArray(analysis['comparisons']) ? (analysis['comparisons'] as Dict[]) : []).map((c) => ({
         label: c['label'],

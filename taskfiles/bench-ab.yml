@@ -216,6 +216,16 @@ tasks:
         task bench:ab:interpret -- internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
     cmd: ./scripts-run src/scripts/bench_ab_interpret {{.CLI_ARGS}}
 
+  bench:ab:evidence:
+    silent: true
+    desc: |
+      Durable sweep evidence outside the checkout (<config-home>/bench-evidence/).
+      store copies a report (+ checkpoint) and seals a sha256 manifest; verify
+      checks the hashes and re-scores the records offline. Cost-free:
+        task bench:ab:evidence -- store internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
+        task bench:ab:evidence -- verify ~/.event4u/agent-config/bench-evidence/<stamp>-ab-v2-paired
+    cmd: ./scripts-run src/scripts/bench_evidence_store {{.CLI_ARGS}}
+
   bench:showcase:replay:
     silent: true
     desc: |

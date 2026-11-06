@@ -11,6 +11,14 @@ export interface ArmSpec {
     inject: string | null; // None | "rdp" | "placebo"
     recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
     /**
+     * Proof-where 1.7: a harness-orchestrated multi-step arm
+     * (`_lib/bench_headroom_arms.ts`). `test-first` = tester call, then author;
+     * `review` = author, slim reviewer, one revision.
+     */
+    orchestration?: 'test-first' | 'review';
+    /** `--effort` for every host call of this arm; `null`/absent = host default. */
+    effort?: string | null;
+    /**
      * Per-arm override for the footprint-lift audit, or `null` to declare that
      * lift is **not a valid signal** for this arm.
      *
@@ -105,6 +113,13 @@ export const ARMS: Record<string, ArmSpec> = {
     // a meaningful activation check for this arm.
     placebo: { setting_sources: 'project,local', inject: 'placebo', min_lift_ratio: null },
     'package-recursive': { setting_sources: null, inject: null, recursive: true },
+    // Proof-where 1.7 (pre-registered 2026-11-06, D4): base profile `package`,
+    // effort pinned so B is exactly one step above A. B is the same-cost arm C and
+    // D are compared against; A is descriptive only.
+    'h17-a': { setting_sources: null, inject: null, effort: 'medium' },
+    'h17-b': { setting_sources: null, inject: null, effort: 'high' },
+    'h17-c': { setting_sources: null, inject: null, effort: 'medium', orchestration: 'test-first' },
+    'h17-d': { setting_sources: null, inject: null, effort: 'medium', orchestration: 'review' },
     hardened: { setting_sources: null, inject: 'hardened' },
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
     'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },

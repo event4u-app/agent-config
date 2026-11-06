@@ -1,0 +1,39 @@
+diff --git a/src/api/links.mjs b/src/api/links.mjs
+index 5e8b0b8..921f421 100644
+--- a/src/api/links.mjs
++++ b/src/api/links.mjs
+@@ -1,6 +1,8 @@
++import { pageCount } from '../paging/pages.mjs';
++
+ // Navigation links for a listing response.
+ export function pageLinks(total, page, size) {
+-  const last = Math.floor(total / size) + 1;
++  const last = pageCount(total, size);
+   return {
+     first: 1,
+     prev: page > 1 ? page - 1 : null,
+diff --git a/src/api/listing.mjs b/src/api/listing.mjs
+index 74b5a68..b54b1a7 100644
+--- a/src/api/listing.mjs
++++ b/src/api/listing.mjs
+@@ -7,6 +7,6 @@ export function listPage(items, page, size) {
+     page,
+     items: slice,
+     // Cheaper than counting pages on every request.
+-    hasNext: page * size <= items.length,
++    hasNext: page * size < items.length,
+   };
+ }
+diff --git a/src/paging/pages.mjs b/src/paging/pages.mjs
+index d77ca90..0fa46eb 100644
+--- a/src/paging/pages.mjs
++++ b/src/paging/pages.mjs
+@@ -4,7 +4,7 @@ export function pageCount(total, size) {
+   if (!Number.isInteger(size) || size <= 0) {
+     throw new Error(`invalid page size ${size}`);
+   }
+-  return Math.floor(total / size) + 1;
++  return Math.ceil(total / size);
+ }
+ 
+ export function pageSlice(items, page, size) {

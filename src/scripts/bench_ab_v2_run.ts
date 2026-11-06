@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
+import { run_orchestrated_arm } from './_lib/bench_headroom_run.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { plugin_scope, preserve_stream, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
@@ -67,6 +68,7 @@ import {
     type TokensBreakdown,
 } from './_lib/bench_ab_activation.js';
 import { sweepRates } from './_lib/price_freshness.js';
+import { store_after_sweep } from './bench_evidence_store.js';
 import { PyFloat, append_checkpoint, checkpoint_key, load_checkpoint, run_key, type CheckpointIO } from './_lib/bench_ab_checkpoint.js';
 export { PyFloat, append_checkpoint, checkpoint_key, freeze_result, load_checkpoint, run_key, thaw_result, type CheckpointIO } from './_lib/bench_ab_checkpoint.js';
 
@@ -337,6 +339,7 @@ interface RunOneOpts {
     seed?: number;
     /** `--isolation container`: run in the arm's image instead of on the host. */
     container?: ContainerCtx | null;
+    reviewer?: ((prompt: string) => Dict) | null; // proof-where 1.7 arm D: the slim 3.2a reviewer, one call per review
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -568,6 +571,9 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     if (spec.recursive) {
         return run_one_recursive(task, opts);
     }
+    if (spec.orchestration) {
+        return run_one_orchestrated(task, arm, opts);
+    }
     const host = opts.host ?? 'claude';
     const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec));
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
@@ -589,6 +595,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
             setting_sources: spec.setting_sources,
             max_budget: opts.max_budget,
             model: opts.model,
+            effort: spec.effort ?? null,
             plugin_dir: neighbour_plugin_dir(spec),
             strict_mcp: spec.isolate_neighbour === true, no_session_persistence: true,
             env: spec.isolate_neighbour ? neighbour_env(fs.mkdtempSync(path.join(os.tmpdir(), 'bench-neighbour-'))) : null,
@@ -617,6 +624,26 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         stream_path: preserve_stream(STREAMS_DIR, `${String(task['id'])}|${arm}|${opts.seed ?? 0}`, String(run['stream'] ?? ''), SWEEP_ID),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
         ...cf,
+    };
+}
+
+/** Proof-where 1.7 orchestrated arms; the steps run in `_lib/bench_headroom_run.ts`. */
+export function run_one_orchestrated(task: Dict, arm: string, opts: RunOneOpts): Dict {
+    const spec = ARMS[arm] as ArmSpec;
+    const { res, run, fixture, clone } = run_orchestrated_arm(task, arm, spec, opts);
+    const score = scoring.score_task_v2(task, { fixture_root: fixture, clone_root: clone, transcript: String(res.final_run['transcript'] ?? '') });
+    const { final_run: _final, steps, ...orchestration } = res;
+    return {
+        errored: _pyBool(run['errored']),
+        reason: run['reason'] ?? null,
+        capability_pass: score.capability_pass,
+        discipline_score: new PyFloat(score.discipline_score),
+        discipline_pass: score.discipline_pass,
+        metrics: trajectory_metrics(run, score),
+        injected_chars: 0,
+        ...scoring.workspace_fields(fixture, clone),
+        orchestration: { ...orchestration, steps: steps.map((st) => ({ role: st.role, errored: st.errored, tokens: st.tokens })) },
+        ...integrity_fields(run, spec, 0, opts.model),
     };
 }
 
@@ -1098,6 +1125,10 @@ export function main(argv: string[] | null = null): number {
     };
     const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired${selftest ? '-selftest' : ''}.json`);
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
+    // Durable copy outside the checkout (roadmap 6.2), taken BEFORE the
+    // checkpoint below is retired so the bundle carries it. A selftest report is
+    // synthetic and never becomes evidence.
+    if (!selftest) store_after_sweep(out, ckpt ? [ckpt.path] : []);
     // The paired report now holds everything — retire the checkpoint so a
     // finished sweep leaves no residue and a later identical sweep starts fresh.
     if (ckpt && !aborted && fs.existsSync(ckpt.path)) {

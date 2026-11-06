@@ -67,6 +67,7 @@ lab_modules:
   - bench_ab_v2_run      # V2 benchmark runner
   - bench_ab_power       # sweep sizing (pairs before spend)
   - bench_ab_interpret   # interpretation record (labels, never a removal)
+  - bench_evidence_store # durable sweep bundles + offline re-score (outside the checkout)
   - cost_by_conversation # cost analytics
   - cost_summary         # cost summary
   - build_cloud_bundle   # Claude.ai cloud-bundle builder (pilot distribution)

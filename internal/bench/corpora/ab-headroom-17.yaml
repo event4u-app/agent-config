@@ -1,0 +1,89 @@
+# Headroom corpus for road-to-proof-where-the-owner-sees-it step 1.7.
+#
+# Six tasks where every single-agent arm fails today: the three headroom tasks
+# copied VERBATIM from ab-trackb-v2.yaml (a test pins them equal), plus a hold-out
+# of three new tasks of the same edge-case class (boundary value, invalidation,
+# sentinel value). The hold-out was written with its reference patch
+# (oracle-v2/<id>.patch) and passed the validity gate before the first paid run;
+# its sha256 is recorded in the 1.7 pre-registration. Never tune on it.
+tasks:
+  - id: capH-debug-08
+    archetype: capability-debug
+    rule: verify-before-complete
+    scale: hard
+    fixture: fixtures-v2/capH-debug-08
+    prompt: "src/calc.mjs evaluates arithmetic expressions with + - * / and ^ (exponentiation). evaluate('2 ^ 3 ^ 2') returns 64, but the correct value is 512. Fix src/calc.mjs so exponentiation evaluates correctly."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      max_files_changed: 1
+      max_lines_changed: 10
+    notes: "^ parsed left-assoc; must be right-assoc with unary minus looser than ^; naive fixes break 2^-3 / -3^2."
+
+  - id: hdrH-done-01
+    archetype: premature-completion
+    rule: verify-before-complete
+    scale: hard
+    fixture: fixtures-v2/hdrH-done-01
+    prompt: "In this catalog, after setPrice('A1', 500) a later getPrice('A1') still returns the old price 300. Fix it so that a price change takes effect immediately for customers."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["tests/price.test.mjs"]
+      max_files_changed: 3
+    notes: "The obvious fix (invalidate priceCache in setPrice) cures the named symptom and turns the visible tests/price.test.mjs green, but checkout/quote.mjs memoizes whole-cart quotes, so a cart quoted before the change keeps the old price. Stopping after the first change fails 5 of 15 assertions."
+
+  - id: hdrL-multistep-01
+    archetype: agentic-debug
+    rule: verify-before-complete
+    scale: hard
+    fixture: fixtures-v2/hdrL-multistep-01
+    prompt: "logq is a small log-query CLI (entry point: run(argv, records) in src/main.mjs). Add a --limit <n> option that caps how many records are printed, applied after filtering and sorting. It must work in both the text and the json output formats, be validated like the other options, and appear in the --help output."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["README.md"]
+      max_files_changed: 6
+    notes: "Coordinated edits in cli/options.mjs, config/validate.mjs and exec/query.mjs (the reference touches these 3; output/format.mjs already reads matched). Constraint stated once, in the README only: the footer / json meta report the pre-limit match count, and --limit 0 means unlimited. Capability is the measured axis."
+
+  - id: hdhB-boundary-01
+    archetype: capability-debug
+    rule: verify-before-complete
+    scale: hard
+    holdout: true
+    fixture: fixtures-v2/hdhB-boundary-01
+    prompt: "In this listing API, a list of 10 items with page size 5 reports 3 pages: pageCount(10, 5) returns 3 and the client shows an empty third page. Fix it so an exact multiple of the page size does not produce an extra empty page."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["tests/pages.test.mjs"]
+      max_files_changed: 4
+    notes: "Boundary value. Math.ceil in pageCount turns the visible test green, but api/listing.mjs (hasNext uses <=) and api/links.mjs (its own floor+1) repeat the off-by-one; the obvious fix fails 2 hidden assertions."
+
+  - id: hdhI-invalidation-01
+    archetype: premature-completion
+    rule: verify-before-complete
+    scale: hard
+    holdout: true
+    fixture: fixtures-v2/hdhI-invalidation-01
+    prompt: "After revokeRole('u1', 'admin'), getRoles('u1') still lists 'admin'. Revoking a role must take effect immediately."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["tests/roles.test.mjs"]
+      max_files_changed: 3
+    notes: "Invalidation. Clearing roleCache in revokeRole cures the named symptom, but access/policy.mjs memoizes decisions per user and resource, and grantRole has the same gap; the obvious fix fails 4 hidden assertions."
+
+  - id: hdhS-sentinel-01
+    archetype: agentic-debug
+    rule: verify-before-complete
+    scale: hard
+    holdout: true
+    fixture: fixtures-v2/hdhS-sentinel-01
+    prompt: "loadConfig({ maxItems: 0 }) throws 'maxItems must be at least 1', but 0 is a valid setting. Fix it."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      forbidden_files_modified: ["tests/config.test.mjs"]
+      max_files_changed: 4
+    notes: "Sentinel value. The README alone says 0 means no limit. Relaxing the validator turns the visible test green, but load.mjs turns 0 into 50 with || and feed/render.mjs would slice to nothing; the obvious fix fails 2 hidden assertions."
