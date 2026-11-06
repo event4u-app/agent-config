@@ -1053,6 +1053,9 @@ function evaluate(input: EvalInput): Violation[] {
 
 /** Every review-artefact version committed at `rel`, read for {@link countReviewPasses}. */
 export function recordedReviewPasses(repo: string, rel: string): RecordedPasses {
+    // Default history simplification on purpose, not `--full-history`: a pass
+    // recorded on a side branch and reverted before the merge is not a pass the
+    // path records, and counting it would demand a round that never happened.
     const log = gitTry(repo, ['log', '--format=%H', '--', rel]);
     const shas = log.stdout.split('\n').map((l) => l.trim()).filter(Boolean);
     return countReviewPasses(
