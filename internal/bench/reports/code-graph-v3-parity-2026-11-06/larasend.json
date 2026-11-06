@@ -1,0 +1,389 @@
+{
+  "meta": {
+    "root": "<scratch>/bench-subjects/larasend",
+    "graph": "<scratch>/parity/larasend.adapted.json",
+    "prefix": "",
+    "census": {
+      "name_lookup_calls": 0,
+      "name_lookup_multi": 0,
+      "top_multi_labels": [],
+      "symbol_targets": 1286,
+      "symbol_targets_ambiguous": 0,
+      "name_collision_edges": 0,
+      "suppressed_edge_counts": {}
+    },
+    "scip": {
+      "path": "<scratch>/oracle-work/larasend/.oracle/index.scip",
+      "indexer": "supplied with --scip"
+    },
+    "php_oracle": "<scratch>/edge-oracle/larasend.php-oracle.json",
+    "reference_relations": [
+      "calls",
+      "imports",
+      "uses",
+      "inherits",
+      "references",
+      "injects",
+      "tests"
+    ]
+  },
+  "typescript": {
+    "by_mechanism": {
+      "extracted:calls": {
+        "graph_edges": 861,
+        "scored": 12,
+        "confirmed_file": 12,
+        "precision_file": 1,
+        "symbol_scored": 12,
+        "confirmed_symbol": 10,
+        "precision_symbol": 0.8333333333333334,
+        "oracle_pairs_covered": 1
+      },
+      "extracted:imports": {
+        "graph_edges": 1556,
+        "scored": 22,
+        "confirmed_file": 22,
+        "precision_file": 1,
+        "symbol_scored": 7,
+        "confirmed_symbol": 7,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 11
+      },
+      "extracted:inherits": {
+        "graph_edges": 21,
+        "scored": 0,
+        "confirmed_file": 0,
+        "precision_file": null,
+        "symbol_scored": 0,
+        "confirmed_symbol": 0,
+        "precision_symbol": null,
+        "oracle_pairs_covered": 0
+      },
+      "extracted:uses": {
+        "graph_edges": 516,
+        "scored": 1,
+        "confirmed_file": 1,
+        "precision_file": 1,
+        "symbol_scored": 1,
+        "confirmed_symbol": 1,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 1
+      },
+      "inferred:calls": {
+        "graph_edges": 305,
+        "scored": 6,
+        "confirmed_file": 6,
+        "precision_file": 1,
+        "symbol_scored": 6,
+        "confirmed_symbol": 2,
+        "precision_symbol": 0.3333333333333333,
+        "oracle_pairs_covered": 0
+      },
+      "inferred:uses": {
+        "graph_edges": 21,
+        "scored": 0,
+        "confirmed_file": 0,
+        "precision_file": null,
+        "symbol_scored": 0,
+        "confirmed_symbol": 0,
+        "precision_symbol": null,
+        "oracle_pairs_covered": 0
+      }
+    },
+    "excluded": {
+      "unresolved_target": 1286,
+      "out_of_root": 0,
+      "outside_prefix": 0,
+      "not_reference_relation": 0,
+      "outside_oracle_coverage": 3239
+    },
+    "oracle": {
+      "documents": 36,
+      "file_pairs": 40,
+      "symbol_pairs": 34
+    },
+    "recall_file": 0.275,
+    "recall_symbol": 0.20588235294117646,
+    "missing_by_kind": {
+      "namespace": 29,
+      "term": 23
+    },
+    "missing_examples": [
+      {
+        "source_file": "resources/js/app.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/app.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/alert/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/alert/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/avatar/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/avatar/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/badge/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/badge/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/breadcrumb/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/breadcrumb/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/button/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/button/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/card/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/card/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/checkbox/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/checkbox/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/collapsible/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/collapsible/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      },
+      {
+        "source_file": "resources/js/components/ui/dialog/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "namespace"
+      },
+      {
+        "source_file": "resources/js/components/ui/dialog/index.ts",
+        "target_file": "resources/js/types/vue-shims.d.ts",
+        "kind": "term"
+      }
+    ]
+  },
+  "php": {
+    "by_mechanism": {
+      "extracted:calls": {
+        "graph_edges": 757,
+        "scored": 506,
+        "confirmed_file": 500,
+        "precision_file": 0.9881422924901185,
+        "symbol_scored": 506,
+        "confirmed_symbol": 489,
+        "precision_symbol": 0.9664031620553359,
+        "oracle_pairs_covered": 52
+      },
+      "extracted:imports": {
+        "graph_edges": 500,
+        "scored": 485,
+        "confirmed_file": 485,
+        "precision_file": 1,
+        "symbol_scored": 485,
+        "confirmed_symbol": 485,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 485
+      },
+      "extracted:inherits": {
+        "graph_edges": 21,
+        "scored": 21,
+        "confirmed_file": 21,
+        "precision_file": 1,
+        "symbol_scored": 21,
+        "confirmed_symbol": 21,
+        "precision_symbol": 1,
+        "oracle_pairs_covered": 21
+      },
+      "extracted:uses": {
+        "graph_edges": 512,
+        "scored": 504,
+        "confirmed_file": 503,
+        "precision_file": 0.998015873015873,
+        "symbol_scored": 504,
+        "confirmed_symbol": 503,
+        "precision_symbol": 0.998015873015873,
+        "oracle_pairs_covered": 213
+      },
+      "inferred:calls": {
+        "graph_edges": 291,
+        "scored": 271,
+        "confirmed_file": 266,
+        "precision_file": 0.981549815498155,
+        "symbol_scored": 271,
+        "confirmed_symbol": 266,
+        "precision_symbol": 0.981549815498155,
+        "oracle_pairs_covered": 91
+      }
+    },
+    "excluded": {
+      "unresolved_target": 1286,
+      "out_of_root": 0,
+      "outside_prefix": 0,
+      "not_reference_relation": 0,
+      "outside_oracle_coverage": 294
+    },
+    "oracle": {
+      "documents": 218,
+      "file_pairs": 622,
+      "symbol_pairs": 1048
+    },
+    "recall_file": 0.8311897106109325,
+    "recall_symbol": 0.6803435114503816,
+    "missing_by_kind": {
+      "method": 44,
+      "class": 89,
+      "interface": 8
+    },
+    "missing_examples": [
+      {
+        "source_file": "app/Actions/BuildProjectDashboard.php",
+        "target_file": "app/Enums/SourceProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Actions/BuildProjectDashboard.php",
+        "target_file": "app/Models/Workspace.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "app/Actions/BuildProjectDashboard.php",
+        "target_file": "app/Models/Workspace.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Console/Commands/DoctorCommand.php",
+        "target_file": "app/Enums/SourceProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Console/Commands/DoctorCommand.php",
+        "target_file": "app/Services/Providers/EmailProvider.php",
+        "kind": "interface"
+      },
+      {
+        "source_file": "app/Console/Commands/DoctorCommand.php",
+        "target_file": "app/Services/Providers/EmailProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/ActivityController.php",
+        "target_file": "app/Enums/SourceProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/ActivityController.php",
+        "target_file": "app/Models/Workspace.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "app/Http/Controllers/ActivityController.php",
+        "target_file": "app/Models/Workspace.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/ActivityController.php",
+        "target_file": "app/Services/Providers/EmailProvider.php",
+        "kind": "interface"
+      },
+      {
+        "source_file": "app/Http/Controllers/ActivityController.php",
+        "target_file": "app/Services/Providers/EmailProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/DashboardActionController.php",
+        "target_file": "app/Enums/SourceProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/DashboardActionController.php",
+        "target_file": "app/Models/Workspace.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "app/Http/Controllers/DashboardActionController.php",
+        "target_file": "app/Models/Workspace.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/DashboardActionController.php",
+        "target_file": "app/Services/Providers/EmailProvider.php",
+        "kind": "interface"
+      },
+      {
+        "source_file": "app/Http/Controllers/DashboardActionController.php",
+        "target_file": "app/Services/Providers/EmailProvider.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/EmailMimeController.php",
+        "target_file": "app/Models/User.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "app/Http/Controllers/EmailMimeController.php",
+        "target_file": "app/Models/User.php",
+        "kind": "method"
+      },
+      {
+        "source_file": "app/Http/Controllers/EmailPreviewController.php",
+        "target_file": "app/Models/User.php",
+        "kind": "class"
+      },
+      {
+        "source_file": "app/Http/Controllers/EmailPreviewController.php",
+        "target_file": "app/Models/User.php",
+        "kind": "method"
+      }
+    ]
+  }
+}
