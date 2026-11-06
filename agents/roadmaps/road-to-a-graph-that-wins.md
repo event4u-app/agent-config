@@ -360,7 +360,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       `review-risk --format markdown`. Depends on 4.2.
       verify: `npx vitest run tests/scripts/code_graph_review_risk.test.ts -t 'markdown no analysis is not low risk'` -> 0
       > note: `review-risk --format markdown` renders the sticky comment (marker `REVIEW_RISK_COMMENT_MARKER`, band, checks, `omitted`, "no analysis" status); the consumer workflow template (`fetch-depth: 0`, gate off) is not added — a new workflow lands with its own ratification artifact.
-- [ ] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
+- [x] 5.6 **Calibrate the risk band.** The score is an unnormed sum of hand-set weights
       with no test-gap term (`review_risk.ts` `RISK_WEIGHTS`), and the map prints that
       it names no levels yet (`map_viewer/area_agent.js`). Until 3.5 runs: band only
       `low` / `medium` / `high` / `unknown` with reason lines, no decimal, no default
@@ -368,6 +368,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       effort-aware); a term that contributes nothing is removed.
       verify: `ls internal/bench/reports/review-risk-calibration-*.md` -> 0
       > note: the pre-3.5 half landed 2026-10-27 — `riskBand` (`review_risk.ts`) bands low / medium / high / unknown with reason lines, no decimal, no gate, and the map says so. Open: the calibration against forward-in-time split data waits for 3.5.
+      > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-risk-calibration-2026-11-06.md` after an AI-council design review (report-first, validation/test split, removal only on a confirmed non-inferior proposal agreed across subjects), runner `risk_calibration.ts` (`npx vitest run tests/scripts/code_graph/risk_calibration.test.ts` -> 0). Report: `internal/bench/reports/review-risk-calibration-2026-11-06.md`. 400 units each of `self` and `unopim`, SZZ labels (45 / 107 defect-inducing), audited. **Nothing changes:** the four lane terms were dispensable on validation, but the joint removal failed non-inferiority on the test split in both subjects; `columns` never fired; the test gap did not help. The first evaluation ran on defective features (lanes off) — published beside the result, and the product defect behind it (`review-risk` read a never-run lane as `0`) is fixed in this change. Open for a later weight calibration: ManualUp beats the shipped ranking on `unopim` (Popt 0.805 vs 0.593).
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
@@ -395,10 +396,12 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 
 ## Acceptance Criteria
 - [x] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
-- [ ] AC-2 The report publishes every class in both directions with the calibration diagnostic.
+- [x] AC-2 The report publishes every class in both directions with the calibration diagnostic.
+      > note: 2026-11-06 — the 2.5 report carried every class's verdict but not the overconfidence rate it computed; `run_bench_v3.ts` now renders it (`calibrationSection`, `npx vitest run tests/scripts/code_graph/bench_v3_calibration.test.ts` -> 0), and the published report's section was rendered from that run's own `summary.json` — same run, nothing re-measured.
 - [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
-- [ ] AC-5 The counterfactual review is published with deterministic miss scoring.
+- [x] AC-5 The counterfactual review is published with deterministic miss scoring.
+      > note: 2026-11-06 — `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`, scored by set comparison against oracle truth (no LLM judge, K3).
 - [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
 - [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
       verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
