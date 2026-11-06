@@ -35,6 +35,14 @@
  *     [--repo-root <path>] [--user-home <path>] [--user-rules-dir <path>]
  *     [--project-rules-dir <path>] [--skills-dir <path>]
  *     [--root <path>] [--max-age-days <n>]
+ *   ./scripts-run src/scripts/preamble_byte_census --main-session [--format text|json]
+ *     [--transcript <path>] [--cwd <path>] [--root <path>]
+ *
+ * `--main-session` (proof-where 3.1) measures the MAIN session's default context
+ * per asset from what the host recorded delivering — see
+ * `_lib/main_session_census.ts`. Exit 2 (INDETERMINATE) when no transcript of the
+ * working directory holds an instructions delivery: a census that read nothing
+ * has not measured anything.
  */
 import * as fs from 'node:fs';
 import { homedir } from 'node:os';
@@ -45,8 +53,9 @@ import * as YAML from 'yaml';
 
 import { resolveGlobalProfilePath } from './_lib/agent_user_profile.js';
 import { censusRuleDir, type RuleDirCensus } from './_lib/carrier_divergence.js';
-import { DEFAULT_PROJECTS_ROOT, scanTranscripts } from './_lib/cc_transcript.js';
+import { DEFAULT_PROJECTS_ROOT, projectStoreDir, scanTranscripts } from './_lib/cc_transcript.js';
 import { censusDuplicateScope } from './_lib/duplicate_scope_census.js';
+import { censusMainSession, newestTranscript, renderMainSession } from './_lib/main_session_census.js';
 import { computeColdStarts } from './cache_realization_report.js';
 import type { EvidenceBasis } from './_lib/evidence_basis.js';
 
@@ -383,6 +392,9 @@ export interface Options {
     skillsDir: string;
     root: string;
     maxAgeDays: number;
+    mainSession: boolean;
+    transcript: string | null;
+    cwd: string;
 }
 
 function defaultOptions(): Options {
@@ -396,6 +408,9 @@ function defaultOptions(): Options {
         skillsDir: path.join(REPO_ROOT, 'dist', 'agent-src', 'skills'),
         root: DEFAULT_PROJECTS_ROOT,
         maxAgeDays: 14,
+        mainSession: false,
+        transcript: null,
+        cwd: process.cwd(),
     };
 }
 
@@ -420,6 +435,11 @@ export function parseArgs(argv: string[]): Options {
         else if (a.startsWith('--root=')) opts.root = a.slice('--root='.length);
         else if (a === '--max-age-days') opts.maxAgeDays = Number(argv[++i]) || opts.maxAgeDays;
         else if (a.startsWith('--max-age-days=')) opts.maxAgeDays = Number(a.slice('--max-age-days='.length)) || opts.maxAgeDays;
+        else if (a === '--main-session') opts.mainSession = true;
+        else if (a === '--transcript') opts.transcript = argv[++i] ?? null;
+        else if (a.startsWith('--transcript=')) opts.transcript = a.slice('--transcript='.length);
+        else if (a === '--cwd') opts.cwd = argv[++i] ?? opts.cwd;
+        else if (a.startsWith('--cwd=')) opts.cwd = a.slice('--cwd='.length);
     }
     if (opts.format !== 'text' && opts.format !== 'json') opts.format = 'text';
     return opts;
@@ -675,8 +695,21 @@ export function renderText(r: ByteCensus): string {
     return out.join('\n');
 }
 
+function mainSession(opts: Options): number {
+    const file = opts.transcript ?? newestTranscript(projectStoreDir(path.resolve(opts.cwd), opts.root));
+    const census = file === null ? null : censusMainSession(fs.readFileSync(file, 'utf-8').split('\n'), { home: opts.userHome, repo: path.resolve(opts.cwd) });
+    if (census === null) {
+        process.stderr.write(`preamble_byte_census --main-session: INDETERMINATE — no transcript with an instructions delivery for ${opts.cwd}${file ? ` (read ${path.basename(file)})` : ''}\n`);
+        return 2;
+    }
+    const name = path.basename(file as string);
+    process.stdout.write(opts.format === 'json' ? JSON.stringify({ transcript: name, ...census }, null, 2) + '\n' : renderMainSession(census, name) + '\n');
+    return 0;
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const opts = parseArgs(argv);
+    if (opts.mainSession) return mainSession(opts);
     const report = buildReport(opts);
     if (opts.format === 'json') {
         process.stdout.write(JSON.stringify(report, null, 2) + '\n');
