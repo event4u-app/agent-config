@@ -156,6 +156,12 @@ ci_only:
   - id: ci_platform_scope
     class: matrix
     reason: "chooses the tests.yml OS matrix for a pull request from its diff; it has no verdict to give a working tree and nothing to gate locally"
+  # docs/contracts/ci-test-selection.md. Unit-tested
+  # (tests/scripts/ci_select_tests.test.ts) and reachable on demand:
+  # `./scripts-run src/scripts/ci_select_tests --base origin/main`.
+  - id: ci_select_tests
+    class: matrix
+    reason: "chooses which Vitest files and jobs tests.yml runs from the diff against a base; it has no verdict to give a working tree and nothing to gate locally"
   # road-to-ci-time-that-counts-the-queue 3.1. Reads a week of the Actions API;
   # reachable on demand: `./scripts-run src/scripts/ci_time_to_green --days 7`.
   - id: ci_time_to_green
