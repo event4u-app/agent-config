@@ -134,6 +134,9 @@ export const ARMS: Record<string, ArmSpec> = {
     'profile-minimal': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },
     'profile-essential': { setting_sources: 'project,local', inject: 'profile-essential' },
     'profile-full': { setting_sources: 'project,local', inject: 'profile-full' },
+    // Proof-where 3.2: plugin off, `minimal_prompt_text` injected. The bar every
+    // asset has to clear besides vanilla — far too small for the footprint-lift audit.
+    'minimal-prompt': { setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null },
     neighbour: {
         setting_sources: 'project,local',
         inject: null,
@@ -142,6 +145,22 @@ export const ARMS: Record<string, ArmSpec> = {
         min_lift_ratio: null,
     },
 };
+
+/**
+ * The shortest instruction that asks for the behaviour the package is built to
+ * produce: read first, smallest complete change, downstream updates, verified
+ * before claimed, asks only on real ambiguity, no git side effects. Unlike
+ * `bare-principle`, which states one principle, this states the whole target
+ * behaviour, so an asset that does not beat it adds length, not behaviour.
+ * Authored here; deterministic so the injected bytes are stable per checkout.
+ */
+export function minimal_prompt_text(): string {
+    return (
+        'Understand the code before you change it. Make the smallest change that fully solves the task, ' +
+        'and update every caller, test and doc it affects. Run the relevant tests before you say it works. ' +
+        'Ask only when the request is genuinely ambiguous. Do not commit or push.'
+    );
+}
 
 /**
  * The environment an isolated neighbour run gets. The operator supplies it as a

@@ -98,7 +98,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-import { ablation_arm, ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { ablation_arm, ARMS, minimal_prompt_text, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
@@ -254,9 +254,8 @@ export function lift_audit_arms(arms: readonly string[]): string[] {
 }
 
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
-    if (inject === 'bare-principle') {
-        return bare_principle_text();
-    }
+    if (inject === 'bare-principle') return bare_principle_text();
+    if (inject === 'minimal') return minimal_prompt_text();
     if (inject === 'ladder') {
         return ladder_rule_text();
     }
@@ -369,6 +368,7 @@ export const CODEX_VALID_ARMS: readonly string[] = [
     // plugin-bearing sibling `package-ladder` deliberately is NOT here — it
     // depends on the real plugin, which this host cannot load.
     'bare-principle',
+    'minimal-prompt',
 ];
 
 export function codex_executable(): string | null {
