@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priorities</title>
+<style>
+  body { margin: 0; font: 16px/1.4 system-ui, sans-serif; }
+  main { display: flex; gap: 24px; padding: 16px; width: 960px; }
+  #tasks { list-style: none; margin: 0; padding: 0; width: 600px; }
+  .task { padding: 16px; margin-bottom: 8px; border: 1px solid #bbb; background: #fff; }
+  body.compact .task { padding: 6px; }
+  #detail { width: 300px; padding: 16px; border: 1px solid #bbb; }
+  .switch { width: 40px; height: 22px; border-radius: 11px; background: #ccc; cursor: pointer; }
+  .switch[aria-checked="true"] { background: #36c; }
+</style>
+</head>
+<body>
+<main>
+  <ul id="tasks">
+    <li class="task" data-id="a" draggable="true">Alpha</li>
+    <li class="task" data-id="b" draggable="true">Beta</li>
+    <li class="task" data-id="c" draggable="true">Gamma</li>
+    <li class="task" data-id="d" draggable="true">Delta</li>
+  </ul>
+  <aside id="detail">
+    <p id="top">Top priority: Alpha</p>
+    <div id="compact" class="switch" role="switch" aria-checked="false" aria-label="Compact mode"></div>
+  </aside>
+</main>
+<div id="announce" aria-live="polite"></div>
+<script>
+  const list = document.getElementById('tasks');
+  let dragged = null;
+  list.addEventListener('dragstart', (e) => { dragged = e.target; });
+  list.addEventListener('dragover', (e) => e.preventDefault());
+  list.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const target = e.target.closest('li');
+    if (dragged && target && target !== dragged) list.insertBefore(dragged, target);
+    document.getElementById('top').textContent = 'Top priority: ' + list.querySelector('li').textContent;
+  });
+  const sw = document.getElementById('compact');
+  sw.addEventListener('click', () => {
+    const on = sw.getAttribute('aria-checked') !== 'true';
+    sw.setAttribute('aria-checked', String(on));
+    document.body.classList.toggle('compact', on);
+  });
+</script>
+</body>
+</html>

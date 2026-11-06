@@ -194,6 +194,7 @@ brand or asset (the raster mascot is drawn programmatically).
 | `svg-render-gate` | T1a, T1b | parses; one `<svg>` root with a viewBox; no `<image>`/`<script>`/`<foreignObject>`, no `on*` handler, no external `href`/`url()`; a visible shape; every shape in the viewBox; optional source palette | pure node, always runs |
 | `acceptance+axe` | T2, T3, T7 | the held-back acceptance file, run on the page with its scripts in happy-dom (child process, frozen viewport and locale, reduced motion); axe column | `unknown` without happy-dom; axe is `unknown` until `axe-core` is installed |
 | `functional+exploits` | T4a, T4b | login works, rejects a wrong password, then scripted exploits → `sec_pass`: enumeration, no throttle, session fixation, plaintext / fast hash, missing CSRF token | `unknown` without `php` — never `pass` |
+| `browser-acceptance` | `art-dnd-01` | the held-back acceptance file in headless Chromium (Playwright): drag by mouse and by touch, keyboard, viewport changes, layout relations, horizontal overflow; network aborted; axe column | `unknown` without `@playwright/test` or its Chromium; axe is `unknown` until `axe-core` is installed |
 | `hidden-tests` | T5 | the held-back HTTP scenario: auth, validation, CRUD, cross-user access | `unknown` without `php` |
 | `bench-ui` | T6 | `internal/bench/ui/run.ts` against the SHA-pinned frozen page; refuses a deliverable that frames or links the original | `unknown` without a Playwright chromium |
 

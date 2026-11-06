@@ -291,3 +291,34 @@ tasks:
         - "[data-filter=all|open|done] render only the matching li.todo items in #list."
         - "Ignore empty or whitespace-only input; each li.todo has input.toggle (adds class done) and button.delete."
         - "Keep it to one file: no <script src> and no external stylesheet."
+
+  - id: art-dnd-01
+    kind: artifact
+    family: ui-interaction
+    fixture: fixtures-artifact/art-dnd-01
+    prompt: "Read BRIEF.md and build out/index.html as described there."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and build out/index.html as described there. Before you finish, make sure of the following. Reordering must work with mouse AND touch: use pointer events (or touch events) with touch-action: none, not HTML5 draggable alone, and a drop onto an item inserts the dragged item before it. Every li.task is focusable; Space picks up, Arrow Up/Down move one position, Space drops, Escape restores the original position, and the moved item keeps focus. #announce is a polite live region that names the moved item and its new position; #detail names the item at the top after every change. #compact is a custom switch: role=switch, aria-checked, an accessible name, and it toggles on click and on Space. From 900px #detail sits right of #tasks; below 600px it sits below, and the page never scrolls sideways (no fixed widths)."
+    deliverable: { path: out/index.html, type: html }
+    graders:
+      - id: browser-acceptance
+        role: primary
+        args: { spec: hidden-artifact/art-dnd-01/acceptance.json }
+      - { id: lint_design_slop, role: secondary }
+    parity_bar: 1.0
+    network: none
+    notes: "Proof-where 2.2: drag and drop by mouse, touch and keyboard, two breakpoints and one custom component, graded in headless Chromium (Playwright input, axe column) with no model in scoring."
+    feedback_ladder:
+      naive:
+        - "I can't reorder anything on my phone."
+        - "I can't move items with the keyboard at all."
+        - "The compact switch doesn't react when I tab to it and press Space."
+        - "On my phone the page scrolls sideways and the panel is squeezed next to the list."
+      informed:
+        - "Reordering must work with mouse AND touch: use pointer events (or touch events) with touch-action: none, not HTML5 draggable alone, and a drop onto an item inserts the dragged item before it."
+        - "Every li.task is focusable; Space picks up, Arrow Up/Down move one position, Space drops, Escape restores the original position, and the moved item keeps focus."
+        - "#announce is a polite live region that names the moved item and its new position; #detail names the item at the top after every change."
+        - "#compact is a custom switch: role=switch, aria-checked, an accessible name, and it toggles on click and on Space."
+        - "From 900px #detail sits right of #tasks; below 600px it sits below, and the page never scrolls sideways (no fixed widths)."

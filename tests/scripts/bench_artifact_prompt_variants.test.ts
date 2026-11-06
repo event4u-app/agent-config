@@ -68,9 +68,9 @@ describe('prompt variants', () => {
         expect(select_corpus(['--prompt-variant=expert'], REPO)[1].prompt_variants).toEqual(['expert']);
         expect(select_corpus([], REPO)[1].prompt_variants).toEqual([]);
     });
-    it('the shipped corpus carries both variants on all nine tasks', () => {
+    it('the shipped corpus carries both variants on every task (nine from 2.1, art-dnd-01 from 2.2)', () => {
         const tasks = load_artifact_corpus(CORPUS);
-        expect(tasks).toHaveLength(9);
-        expect(expand_prompt_variants(tasks, ['terse', 'expert'])).toHaveLength(18);
+        expect(tasks).toHaveLength(10);
+        expect(expand_prompt_variants(tasks, ['terse', 'expert'])).toHaveLength(20);
     });
 });

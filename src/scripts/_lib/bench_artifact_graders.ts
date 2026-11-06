@@ -3,7 +3,7 @@
  * labelled secondary column.
  *
  * Primary graders are ones agent-config does not own: an XML
- * render gate, held-back DOM acceptance tests, scripted HTTP exploits, a hidden
+ * render gate, held-back DOM and browser acceptance tests, scripted HTTP exploits, a hidden
  * test scenario and the reference-fidelity UI bench. Agent-config's own linters
  * run only as `secondary`, are reported under that label, and never feed the
  * primary score or the parity decision.
@@ -115,6 +115,43 @@ export function grade_dom(workspace: string, task: ArtifactTask, args: Record<st
     return fold('acceptance+axe', 'primary', (parsed.results ?? []).map((x) => ({ id: x.name, status: x.status, ...(x.detail ? { detail: x.detail } : {}) })), columns);
 }
 
+/**
+ * Held-back acceptance tests that need layout and trusted input (drag by mouse and
+ * touch, breakpoints, overflow), run in headless Chromium in a child process. The
+ * page runs inside the browser, not in node, so the node hardening flags of the DOM
+ * worker do not apply; network is aborted inside the worker. Playwright's browser
+ * cache is resolved against the real HOME before the child gets the temp one.
+ */
+export function grade_browser(workspace: string, task: ArtifactTask, args: Record<string, unknown>, opts: GradeOpts = {}): GraderResult {
+    const id = 'browser-acceptance';
+    const html_path = path.join(workspace, task.deliverable.path);
+    if (!fs.existsSync(html_path)) return fold(id, 'primary', [{ id: 'deliverable-exists', status: 'fail', detail: task.deliverable.path }], { axe: 'unknown(no page)' });
+    const loader = tsx_loader();
+    if (loader === null) return fold(id, 'primary', [{ id: 'browser', status: 'unknown', detail: 'tsx loader not resolvable' }]);
+    const tests = (JSON.parse(fs.readFileSync(path.join(AB_ROOT, String(args['spec'])), 'utf-8')) as { tests: unknown[] }).tests;
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bench-browser-'));
+    const spec_path = path.join(tmp, 'spec.json');
+    fs.writeFileSync(spec_path, JSON.stringify({ html_path, tests, render: { ...FROZEN_RENDER.viewport, locale: FROZEN_RENDER.locale } }));
+    const worker = path.join(path.dirname(HERE), `bench_artifact_browser_worker${path.extname(HERE)}`);
+    const browsers = process.env['PLAYWRIGHT_BROWSERS_PATH'] ?? path.join(os.homedir(), process.platform === 'darwin' ? 'Library/Caches' : '.cache', 'ms-playwright');
+    const r = spawnSync(process.execPath, ['--no-warnings', '--import', loader, worker, spec_path], {
+        encoding: 'utf-8',
+        timeout: opts.timeout_ms ?? 120_000,
+        cwd: tmp,
+        env: { ...process.env, HOME: tmp, TZ: FROZEN_RENDER.timezone, LANG: 'en_US.UTF-8', PLAYWRIGHT_BROWSERS_PATH: browsers },
+    });
+    fs.rmSync(tmp, { recursive: true, force: true });
+    let parsed: { results?: { name: string; status: GateStatus; detail?: string }[]; unavailable?: string; axe?: string } = {};
+    try {
+        parsed = JSON.parse((r.stdout ?? '').trim().split('\n').pop() ?? '') as typeof parsed;
+    } catch {
+        return fold(id, 'primary', [{ id: 'worker', status: 'fail', detail: r.error ? String(r.error.message) : `worker exit ${r.status}` }]);
+    }
+    if (parsed.unavailable) return fold(id, 'primary', [{ id: 'browser', status: 'unknown', detail: parsed.unavailable }]);
+    const checks = (parsed.results ?? []).map((x) => ({ id: x.name, status: x.status, ...(x.detail ? { detail: x.detail } : {}) }));
+    return fold(id, 'primary', checks.length > 0 ? checks : [{ id: 'worker', status: 'fail', detail: 'no results' }], { axe: parsed.axe ?? 'unknown(not reported)' });
+}
+
 export function browser_available(): boolean {
     const r = spawnSync(process.execPath, ['-e', "import('@playwright/test').then(m=>process.exit(require('fs').existsSync(m.chromium.executablePath())?0:1),()=>process.exit(1))"], {
         cwd: REPO_ROOT,
@@ -184,6 +221,8 @@ export async function grade_primary(workspace: string, task: ArtifactTask, opts:
         }
         case 'acceptance+axe':
             return grade_dom(workspace, task, args, opts);
+        case 'browser-acceptance':
+            return grade_browser(workspace, task, args, opts);
         case 'functional+exploits': {
             const checks = await grade_login(workspace, args as unknown as LoginContract, opts.php === undefined ? undefined : opts.php);
             const sec = checks.filter((c) => SEC_CHECKS.has(c.id));
