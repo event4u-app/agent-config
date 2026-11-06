@@ -240,10 +240,16 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   projection, one bucket per rule, hook output and catalog entry; 303 *listed*
   skills is not 303 *loaded*.
   verify: `./scripts-run src/scripts/preamble_byte_census --main-session` -> 0
-- [ ] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
+- [x] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
   verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> /^1$/
+  Done 2026-11-06: plugin off, `minimal_prompt_text` injected (265 chars: read
+  first, smallest complete change, callers/tests/docs, test before claiming, ask
+  only on real ambiguity, no commit/push); also valid on the codex host. The stats
+  report renders `package` and `rules-kernel-dc` vs `minimal-prompt` when present
+  (`docs/benchmark.md` § The minimal-prompt baseline). Not yet run; a sweep needs
+  `b-owner-spend`.
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.

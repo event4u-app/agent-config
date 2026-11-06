@@ -201,6 +201,10 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
 
+### The minimal-prompt baseline (built, not yet run) {#minimal-prompt}
+
+Beating `vanilla` shows that an asset does something. It does not show that the asset does more than one short paragraph asking for the same behaviour. The `minimal-prompt` arm is that paragraph: plugin off, about 270 characters (`minimal_prompt_text` in `src/scripts/_lib/bench_ab_arms.ts`) asking the model to read first, make the smallest complete change, update callers, tests and docs, run the tests before claiming success, ask only on real ambiguity, and not commit or push. `bare-principle` states one principle; this arm states the whole target behaviour. The stats report adds `package` vs `minimal-prompt` and `rules-kernel-dc` vs `minimal-prompt` whenever the arm is in the run. An asset that does not beat it adds tokens, not behaviour. Like `bare-principle`, it is exempt from the footprint-lift audit (`min_lift_ratio: null`), and the per-run text check still applies. No sweep has run it yet; `--arms vanilla,minimal-prompt,rules-kernel-dc,package`.
+
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
