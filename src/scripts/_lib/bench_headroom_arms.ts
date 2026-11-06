@@ -1,5 +1,5 @@
 /**
- * Harness-orchestrated arms for road-to-proof-where-the-owner-sees-it step 1.7:
+ * Harness-orchestrated arms for the headroom run (`internal/bench/headroom-17-PREREG.md`):
  * does a second agent earn its spawn on tasks where every single agent fails?
  *
  * Each step is a SEPARATE host call driven by the harness, so the run measures

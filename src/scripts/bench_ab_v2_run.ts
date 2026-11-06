@@ -98,7 +98,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-import { ablation_arm, ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { ablation_arm, ARMS, FIXED_INJECTIONS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
@@ -211,7 +211,7 @@ export function variant_candidate_text(stem: string): string {
  * Deterministic (no interpolation) so the injected bytes are stable per checkout.
  */
 export function bare_principle_text(): string {
-    return 'Prefer the smallest solution that fully solves the stated problem; do not add what was not asked for.';
+    return FIXED_INJECTIONS['bare-principle'] as string;
 }
 
 /**
@@ -254,9 +254,8 @@ export function lift_audit_arms(arms: readonly string[]): string[] {
 }
 
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
-    if (inject === 'bare-principle') {
-        return bare_principle_text();
-    }
+    const fixed = inject === null ? undefined : FIXED_INJECTIONS[inject];
+    if (fixed !== undefined) return fixed;
     if (inject === 'ladder') {
         return ladder_rule_text();
     }
@@ -339,7 +338,7 @@ interface RunOneOpts {
     seed?: number;
     /** `--isolation container`: run in the arm's image instead of on the host. */
     container?: ContainerCtx | null;
-    reviewer?: ((prompt: string) => Dict) | null; // proof-where 1.7 arm D: the slim 3.2a reviewer, one call per review
+    reviewer?: ((prompt: string) => Dict) | null; // arm D's reviewer, one fresh call per review
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -627,7 +626,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     };
 }
 
-/** Proof-where 1.7 orchestrated arms; the steps run in `_lib/bench_headroom_run.ts`. */
+/** The orchestrated arms (test-first, review); the steps run in `_lib/bench_headroom_run.ts`. */
 export function run_one_orchestrated(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const spec = ARMS[arm] as ArmSpec;
     const { res, run, fixture, clone } = run_orchestrated_arm(task, arm, spec, opts);
