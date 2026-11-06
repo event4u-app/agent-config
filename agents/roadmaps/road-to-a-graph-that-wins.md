@@ -398,7 +398,8 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [x] AC-1 Corpus v3 and the F task suite are tracked in-tree with hashes before the engine sees the subject repos.
 - [x] AC-2 The report publishes every class in both directions with the calibration diagnostic.
       > note: 2026-11-06 — the 2.5 report carried every class's verdict but not the overconfidence rate it computed; `run_bench_v3.ts` now renders it (`calibrationSection`, `npx vitest run tests/scripts/code_graph/bench_v3_calibration.test.ts` -> 0), and the published report's section was rendered from that run's own `summary.json` — same run, nothing re-measured.
-- [ ] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
+- [x] AC-3 Both detectors consume accepted edges and record them; paired verdicts exist.
+      > note: 2026-11-06 — labelled rows registered in `internal/bench/code-graph/PREREGISTRATION-detector-labels-2026-11-06.md` (council-reviewed: predicate-conformance labels, per-subject verdicts), runner `detector_labels.ts` (`npx vitest run tests/scripts/code_graph/detector_labels.test.ts` -> 0). Report: `internal/bench/reports/code-graph-detector-labels-2026-11-06.md`. On PHP: deleted-test reading `pass` (6 / 0, p 0.016); silent-catch reading `regression` (2 / 11, p 0.011) — it never fired while an independent reader found a route path for 24 of 40. The two reach gaps behind that are carried in `road-to-catch-reachability-on-php`. Every row records the edges the reading used. Neither reading moves an exit code.
 - [x] AC-4 A closed finding flips to `stale` in a fixture when its affected file changes.
 - [x] AC-5 The counterfactual review is published with deterministic miss scoring.
       > note: 2026-11-06 — `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`, scored by set comparison against oracle truth (no LLM judge, K3).
