@@ -94,6 +94,17 @@ A weak or negative result is a question about the measurement first. `task bench
 
 Both 2026-11-05 sweeps read `ceiling` + `underpowered` + `cost-overhead`. Construct (did the tasks measure what the asset is for), adherence and real-world use stay open in every record, because no report can answer them. The record has no removal field: **a benchmark result alone never supports removing an asset.** What a removal needs is set out in `agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md` Phase 4.
 
+### Where sweep evidence is kept {#evidence-store}
+
+Reports land in the gitignored `internal/bench/reports/`, which a clean of untracked files, a worktree removal or a fresh clone deletes. Every live paired sweep and every artifact sweep therefore also copies its evidence into a bundle outside any checkout: `<config-home>/bench-evidence/<report-name>/`, where `<config-home>` is `$EVENT4U_CONFIG_HOME` or `~/.event4u/agent-config/`. A paired bundle holds the report, the sweep's checkpoint, the `pricing.yaml` it was priced with, `reference.json` (the statistics, gate and interpretation computed with the live code at store time) and `manifest.json` with each file's sha256. A selftest report is never stored. A failed store prints a loud error with the retry command and leaves the report where it was.
+
+```bash
+task bench:ab:evidence -- store internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
+task bench:ab:evidence -- verify ~/.event4u/agent-config/bench-evidence/<stamp>-ab-v2-paired
+```
+
+`verify` checks every hash, then re-scores the stored records offline with the same `bench_ab_v2_stats` and `bench_ab_interpret` code and compares the result to `reference.json` field by field; any difference exits non-zero. The per-task `nop` floor is not in the reference, because it reads the current task corpus rather than the report. Artifact bundles keep their transcripts and are verified by hash only, since no aggregation stage exists for them yet. Both 2026-11-05 paired reports (`15-15-11Z`, `20-21-44Z`) were stored this way and re-scored to the same numbers.
+
 ### Headroom sweeps on harder tasks (2026-11-05) {#headroom-sweeps}
 
 The first container sweeps read `ceiling`. These runs use the harder task set: 14 Track-B tasks (the four new `hdr*` tasks, the hardest `capH` and `trap*` tasks) and the artifact corpus. Five arms per Track-B sweep, five seeds, container isolation, one subscription account. The activation audit passed on both Track-B reports after the per-turn fix below.
@@ -170,6 +181,23 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 - A host error with an empty result was logged as a bare `host error`. It now carries the envelope's subtype, which is how the budget stop above was identified.
 - `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
 - The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
+
+### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
+
+Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:
+
+- A: one agent.
+- B: one agent with one effort step more, the same-compute arm.
+- C: a fresh tester writes edge-case tests from the requirement, then the author implements against them.
+
+The reviewer arm D did not run, because its slim-reviewer gate failed.
+
+- **Primary, C vs B:** capability 7/48 vs 5/48, discordant 7–5, one-sided sign test p = 0.39. **Not detected at this size**, not "no effect". 48 pairs had 80 % power only for a discordance of about 0.15. Per cluster: headroom 5–5, hold-out 2–0. B alone solves `capH-debug-08` (5/8) and C alone solves `hdrH-done-01` (5/8), so the two arms win on different task shapes.
+- **Safety, C's own tests rejecting the reference fix:** 19/48 = **39.6 %** against a 25 % ceiling, so the bar fails. Without the one task where the test asserts an error message the requirement does not fix, the rate is 30 %. The tester works from the requirement only and misses constraints stated elsewhere, for example a README saying `--limit 0` means unlimited.
+- **Cost per run, p50 / p95:** A $0.24 / $0.63, B $0.27 / $0.69, C $0.59 / $1.36. **Net value of C vs B:** −$0.067 per run, with `D` = 10× and `C_FP` = 1× A's p50.
+- **Spend:** $65.47 sweep + $1.94 harness smoke = $67.41 of the $150 release.
+
+No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
 
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
