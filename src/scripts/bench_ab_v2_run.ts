@@ -53,7 +53,7 @@ import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
-import { plugin_scope, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
+import { plugin_scope, preserve_stream, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
 import { container_fields, is_quota_exhausted, next_account_hint, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
 import { container_context } from './bench_ab_images.js';
 import {
@@ -80,6 +80,9 @@ const ROUTER_PATH = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 const REPORTS_DIR = path.join(primary_checkout_root(REPO_ROOT), 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
+// One id per process, so every kept trial stream of a sweep sorts together.
+const STREAMS_DIR = path.join(REPORTS_DIR, 'streams');
+const SWEEP_ID = new Date().toISOString().replace(/[:.]/g, '-');
 const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 // CRITICAL (2026-06-15): clones MUST live OUTSIDE the agent-config repo. A clone
 // under the repo lets Claude discover the repo's own project surface (CLAUDE.md /
@@ -92,7 +95,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
-import { ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
+import { ablation_arm, ARMS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
 
@@ -153,7 +156,7 @@ export function hardened_blocks_text(): string {
  * - 'rules-kernel-dc'  → kernel (9 rules) + `downstream-changes`.
  * - 'rules-balanced'   → kernel + tier_1 (the size-cut `balanced` profile, retired 2026-07-07).
  */
-export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'): string {
+export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced', without: string | null = null): string {
     const router = JSON.parse(fs.readFileSync(ROUTER_PATH, 'utf-8')) as {
         kernel: string[];
         tier_1: { id: string }[];
@@ -163,6 +166,11 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'):
         ids.push('downstream-changes');
     } else {
         ids.push(...router.tier_1.map((t) => t.id));
+    }
+    if (without !== null) {
+        const at = ids.indexOf(without);
+        if (at < 0) throw new Error(`rule "${without}" is not in ${subset}: ${ids.join(', ')}`);
+        ids.splice(at, 1);
     }
     const bodies = ids.map((id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8').trim());
     return bodies.join('\n\n---\n\n');
@@ -249,6 +257,7 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     if (inject === 'rules-kernel-dc' || inject === 'rules-balanced') {
         return rules_subset_text(inject);
     }
+    if (inject?.startsWith('kernel-minus:')) return rules_subset_text('rules-kernel-dc', inject.slice('kernel-minus:'.length));
     if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
 }
@@ -583,6 +592,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         // sweep actually used instead of re-deriving a key that may have changed.
         ...scoring.workspace_fields(fixture, clone),
         transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
+        stream_path: preserve_stream(STREAMS_DIR, `${String(task['id'])}|${arm}|${opts.seed ?? 0}`, String(run['stream'] ?? ''), SWEEP_ID),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
         ...cf,
     };
@@ -892,6 +902,8 @@ export function main(argv: string[] | null = null): number {
         .map((a) => a.trim())
         .filter((a) => a.length > 0);
     for (const a of arms) {
+        const ablation = a in ARMS ? null : ablation_arm(a);
+        if (ablation) ARMS[a] = ablation;
         if (!(a in ARMS)) {
             process.stderr.write(`unknown arm: ${a}\n`);
             return 1;

@@ -792,3 +792,33 @@ describe('brake and resume', () => {
         expect(load_checkpoint(ckpt.path).size).toBe(1);
     });
 });
+
+describe('kernel leave-one-out arms', () => {
+    it('drops exactly the named rule from the kernel-dc text', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const full = rules_subset_text('rules-kernel-dc');
+        const minus = rules_subset_text('rules-kernel-dc', 'ask-when-uncertain');
+        expect(full.split('\n\n---\n\n')).toHaveLength(10);
+        expect(minus.split('\n\n---\n\n')).toHaveLength(9);
+        expect(full).toContain('# Ask When Uncertain');
+        expect(minus).not.toContain('# Ask When Uncertain');
+        expect(minus).toContain('# Downstream Changes');
+    });
+
+    it('refuses to drop a rule that is not in the set', async () => {
+        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(() => rules_subset_text('rules-kernel-dc', 'no-such-rule')).toThrow(/not in rules-kernel-dc/);
+    });
+
+    it('resolves a kernel-minus arm name to a text-injection control arm, and nothing else', async () => {
+        const { ablation_arm } = await import('../../src/scripts/_lib/bench_ab_arms.js');
+        expect(ablation_arm('kernel-minus-direct-answers')).toEqual({ setting_sources: 'project,local', inject: 'kernel-minus:direct-answers' });
+        expect(ablation_arm('kernel-minus-')).toBeNull();
+        expect(ablation_arm('package')).toBeNull();
+    });
+
+    it('injects the leave-one-out text for a kernel-minus arm', async () => {
+        const { injected_text, rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        expect(injected_text('kernel-minus:scope-control', 0)).toBe(rules_subset_text('rules-kernel-dc', 'scope-control'));
+    });
+});

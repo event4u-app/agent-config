@@ -482,3 +482,73 @@ describe('artifact network isolation', () => {
         expect(env['no_proxy']).toBe('api.anthropic.com');
     });
 });
+
+describe('artifact transcripts', () => {
+    it('copies every session transcript out of the config dir before it is disposed', async () => {
+        const { keep_transcripts } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'kt-src-'));
+        const dest = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'kt-dst-')), 'run');
+        fs.mkdirSync(path.join(src, 'projects', '-ws-a'), { recursive: true });
+        fs.writeFileSync(path.join(src, 'projects', '-ws-a', 's1.jsonl'), '{"a":1}\n');
+        fs.mkdirSync(path.join(src, 'projects', '-ws-a', 's1', 'subagents'), { recursive: true });
+        fs.writeFileSync(path.join(src, 'projects', '-ws-a', 's1', 'subagents', 'x.jsonl'), '{"b":2}\n');
+        fs.writeFileSync(path.join(src, 'settings.json'), '{}');
+        expect(keep_transcripts(src, dest)).toBe(2);
+        expect(fs.readFileSync(path.join(dest, '-ws-a', 's1.jsonl'), 'utf8')).toBe('{"a":1}\n');
+        expect(fs.existsSync(path.join(dest, '-ws-a', 's1', 'subagents', 'x.jsonl'))).toBe(true);
+        expect(fs.existsSync(path.join(dest, 'settings.json'))).toBe(false);
+    });
+
+    it('keeps nothing and creates nothing when the run left no transcript', async () => {
+        const { keep_transcripts } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const src = fs.mkdtempSync(path.join(os.tmpdir(), 'kt-empty-'));
+        const dest = path.join(os.tmpdir(), `kt-none-${process.pid}`);
+        expect(keep_transcripts(src, dest)).toBe(0);
+        expect(fs.existsSync(dest)).toBe(false);
+    });
+});
+
+describe('artifact package install', () => {
+    it('installs with the arm home but without the network blackhole, and shares one npm cache', async () => {
+        const { install_env } = await import('../../src/scripts/_lib/bench_artifact_install.js');
+        const iso_env = { HOME: '/t/home', CLAUDE_CONFIG_DIR: '/t/home/.claude', HTTPS_PROXY: 'http://127.0.0.1:9', https_proxy: 'x', HTTP_PROXY: 'x', http_proxy: 'x', ALL_PROXY: 'x', NO_PROXY: 'a', no_proxy: 'a', npm_config_offline: 'true', PIP_NO_INDEX: '1', COMPOSER_DISABLE_NETWORK: '1' };
+        const env = install_env({ PATH: '/bin', HTTPS_PROXY: 'http://corp:3128' }, iso_env, '/t/cache');
+        expect(env['HOME']).toBe('/t/home');
+        expect(env['CLAUDE_CONFIG_DIR']).toBe('/t/home/.claude');
+        expect(env['npm_config_cache']).toBe('/t/cache');
+        expect(env['PATH']).toBe('/bin');
+        expect(env['HTTPS_PROXY']).toBe('http://corp:3128');
+        for (const k of ['https_proxy', 'HTTP_PROXY', 'ALL_PROXY', 'npm_config_offline', 'PIP_NO_INDEX', 'COMPOSER_DISABLE_NETWORK']) expect(env).not.toHaveProperty(k);
+    });
+
+    it('counts the skills an install put into the config dir', async () => {
+        const { installed_skill_count } = await import('../../src/scripts/_lib/bench_artifact_install.js');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'skills-'));
+        expect(installed_skill_count(dir)).toBe(0);
+        for (const n of ['a', 'b']) {
+            fs.mkdirSync(path.join(dir, 'skills', n), { recursive: true });
+            fs.writeFileSync(path.join(dir, 'skills', n, 'SKILL.md'), '---\n---\n');
+        }
+        fs.mkdirSync(path.join(dir, 'skills', 'empty'), { recursive: true });
+        expect(installed_skill_count(dir)).toBe(2);
+    });
+
+    it('refuses a package arm with nothing installed and a control arm with something installed', async () => {
+        const { load_check } = await import('../../src/scripts/_lib/bench_artifact_install.js');
+        expect(load_check(true, 321).ok).toBe(true);
+        expect(load_check(false, 0).ok).toBe(true);
+        expect(load_check(true, 0)).toEqual({ ok: false, reason: 'load_mismatch: package arm has 0 installed skills' });
+        expect(load_check(false, 3)).toEqual({ ok: false, reason: 'load_mismatch: control arm has 3 installed skills' });
+    });
+
+    it('never points the host at the repository as a plugin dir', async () => {
+        const { host_cmd } = await import('../../src/scripts/_lib/bench_artifact_sweep.js');
+        const cmd = host_cmd('go', { setting_sources: null, inject: null }, { model: 'm', budget: 1 }, ['--disallowedTools', 'WebFetch'], null);
+        expect(cmd).not.toContain('--plugin-dir');
+        expect(cmd).not.toContain('--setting-sources');
+        const ctl = host_cmd('go', { setting_sources: 'project,local', inject: null }, { model: 'm', budget: 1 }, [], 'sid');
+        expect(ctl).toContain('--setting-sources');
+        expect(ctl.slice(ctl.indexOf('--resume'), ctl.indexOf('--resume') + 2)).toEqual(['--resume', 'sid']);
+        expect(ctl.indexOf('--resume')).toBeLessThan(ctl.indexOf('--'));
+    });
+});

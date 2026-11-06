@@ -105,6 +105,7 @@ The first container sweeps read `ceiling`. These runs use the harder task set: 1
 | Artifact, `claude-haiku-4-5`, `vanilla` + `package` | `artifact-2026-11-05T15-29-36-217Z` | 35 of 108 (cap) | $20.26 |
 | Artifact, `claude-sonnet-4-6`, 6 unmeasured tasks × 2 seeds, `--budget 1` | `artifact-2026-11-05T20-23-30-767Z` | 48 | $28.74 |
 | Artifact, `claude-sonnet-4-6`, `package` only, 3 UI tasks, `--budget 3` | `artifact-2026-11-05T20-49-10-005Z` | 6 | $19.31 |
+| Artifact, `claude-sonnet-4-6`, `package` only, `art-form-01`: diagnosis, then the installed package at `--budget 1` and `--budget 3` | `artifact-2026-11-05T21-46-57-655Z`, `…T21-50-29-992Z`, `…T21-53-49-676Z` | 6 | $6.21 |
 
 **Track B, pooled.** No comparison is significant on either host.
 
@@ -120,16 +121,36 @@ Priced cost: `package` costs $0.121 per run against $0.026 on Haiku (4.6×) and 
 **Track B, per task.** The pooled numbers hide the one place the package moves the result:
 
 - **Scope discipline on Haiku.** On `trapE-scope-01` and `trapE-scope-laravel-01`, `package` and `rules-kernel-dc` pass capability and discipline together in 10 of 10 and 8 of 10 runs; `vanilla` and `placebo` manage 1 of 10. A placebo of the same length does not reproduce it, so the effect comes from the rule content. On Sonnet the control already passes these tasks 10 of 10; there is nothing left to lift.
-- **A cost on Haiku.** In about 14% of `package` runs Haiku asks the user for code instead of reading the repository. That lowers `package` on `trapC-ambig-01` (2 of 5 joint against 5 of 5) and `hdrE-scope-large-01` (4 of 5 against 5 of 5).
+- **A cost on Haiku.** In 12 of 70 `package` runs and 6 of 70 `rules-kernel-dc` runs, Haiku ends after one or two turns without changing a file, with a question to the user. That happened in 1 of 70 `vanilla` runs and in no `placebo` run. Some of these questions follow a look at the repository. Others come with no tool call at all ("I don't see any code in your message"). It lowers `package` on `trapC-ambig-01` (2 of 5 joint against 5 of 5) and costs runs on `hdrH-done-01` and `hdrE-scope-large-01`. The cause is below (§ Which rule makes Haiku ask without looking).
 - **Hard for every arm.** `capH-debug-08`, `hdrH-done-01` and `hdrL-multistep-01` fail capability in almost every run on both hosts, in every arm. Replaying the runs' final files against the hidden verifiers shows real misses, not a broken oracle: a negative exponent returns `NaN`, a price cache is left stale after a price change, a zero limit is treated as a cap. These tasks have headroom, and no arm uses it. `trapC-ambig-02` scores 0 everywhere because no run asks before choosing a function name.
 
-**Artifact, Haiku.** The cap stopped the sweep after the first three tasks (`art-svg-prompt-01`, `art-svg-raster-01`, `art-landing-01`). `vanilla` reached parity on the first prompt in almost every run, at $0.03–0.06 per run. `package` cost about $0.50 per run and ended censored (budget reached before parity) three times. These three tasks sit at the ceiling for a short prompt; they cannot show a benefit.
+**Artifact, Haiku.** The cap stopped the sweep after the first three tasks (`art-svg-prompt-01`, `art-svg-raster-01`, `art-landing-01`). `vanilla` reached parity on the first prompt in almost every run, at $0.03–0.06 per run. `package` cost about $0.50 per run and ended censored (budget reached before parity) three times, but that arm did not run the package as installed (see the correction below), so its numbers are void. These three tasks sit at the ceiling for a short prompt; they cannot show a benefit.
 
 **Artifact, Sonnet.** No `package` result exists; the sweeps measured a cost, not a quality difference:
 
 - `vanilla` reached parity on the first prompt in all 12 runs of `art-form-01`, `art-page-copy-01` and `art-app-copy-01`, at $0.11–0.15 per run. These tasks are at the ceiling on Sonnet too.
-- Every `package` run stopped on its **first** turn at the per-call budget (`error_max_budget_usd`): at $1.02 with `--budget 1`, and again at $3.20–3.24 with `--budget 3`. The same task costs `vanilla` $0.14. The isolated workspaces are disposed after each run, so the cause (context size, a loop, or something the `--plugin-dir` load pulls in) is not established. On Haiku the same arm stayed near $0.50 per run.
+- Every `package` run stopped on its **first** turn at the per-call budget (`error_max_budget_usd`): at $1.02 with `--budget 1`, and again at $3.20–3.24 with `--budget 3`. The same task costs `vanilla` $0.14.
 - `art-login-framework-01`, `art-login-plain-01` and `art-php-endpoint-01` ended `indeterminate` in every run: the artifact path runs on the host, and the host has no PHP. Web security is therefore still unmeasured.
+
+**Correction: the artifact `package` arm did not measure the package.** A kept transcript (the sweep now keeps one per run) showed why every `package` run above was expensive. The arm pointed the host at the repository with `--plugin-dir`. That loaded the repository's entire `agents/` tree (roadmaps, decisions, evidence) as subagent definitions, an attachment of 1.5 MB, about 370k tokens, before the first reply. Its hooks also fell through to the `agent-config` binary on the operator's PATH. Every artifact `package` number on this page, Haiku and Sonnet, is therefore void. The arm now installs the packed checkout into its isolated HOME with the public installer, the command `Dockerfile.ac` runs, and a run with no installed skills is refused before the host starts.
+
+Measured with the installed package on Sonnet (`artifact-2026-11-05T21-53-49-676Z`, `art-form-01`, 1 seed, both ladders): parity on the first prompt with score 1 in both runs, at $0.96 and $0.97 per run. `vanilla` reaches the same at $0.14, so the cost is about 7× for the same result. The cost comes from the always-loaded rule layer: the installer itself reports 342k characters, 228% of the limit it publishes. With `--budget 1` the same run stopped just short of parity at $1.02.
+
+The PHP graders now run without PHP on the host. `BENCH_PHP_BIN=internal/bench/containers/php-in-docker.sh` serves each check from the official PHP image, and the grader self-test separates the planted good and bad references on all three PHP tasks (logins 1.00 against 0.29, endpoint 1.00 against 0.00). With `--swap` it goes red. No paid run of these tasks has happened yet.
+
+**Which rule makes Haiku ask without looking.** Three Haiku container sweeps on `trapC-ambig-01` and `hdrH-done-01` traced the question above to one kernel rule. Every trial's full event stream is now kept under `reports/ab-v2/streams/`, so a question can be split into *blind* (no tool call before it) and *after looking*.
+
+| Sweep | Report | Runs | Spend |
+|---|---|---|---|
+| Rerun, `vanilla` · `placebo` · `rules-kernel-dc` · `package`, 3 tasks × 5 seeds | `2026-11-05T22-35-29Z` | 60 | $3.07 |
+| Leave-one-out over the 10 `rules-kernel-dc` rules (`kernel-minus-<rule>`), 2 tasks × 4 seeds | `2026-11-05T22-55-46Z` | 88 | $2.19 |
+| The three candidates the leave-one-out pointed at, 2 tasks × 20 seeds | `2026-11-05T23-28-04Z` | 160 | $3.31 |
+
+- In the rerun, no `vanilla` or `placebo` run asked; `package` and `rules-kernel-dc` did. A placebo of the same length does not, so the cause is rule content.
+- No single rule removed the questions in the leave-one-out. Dropping `ask-when-uncertain`, `no-cheap-questions` or `downstream-changes` lowered them from 6 of 8 to 2 of 8, which is not separable from noise at that size.
+- At 40 runs per arm, only `ask-when-uncertain` moves the **blind** questions: 7 of 40 with the full kernel, 1 of 40 without it (Fisher one-sided p = 0.028; p ≈ 0.085 after correcting for the three candidates tested). All questions together fall from 18 to 13 of 40 (p = 0.18). Dropping `no-cheap-questions` (9 of 40 blind) or `downstream-changes` (7 of 40) changes nothing.
+
+So `ask-when-uncertain` makes Haiku ask before it has looked. Asking after a look on `trapC-ambig-01`, where two config files fit the request, is the behavior the task's discipline oracle accepts, and that rule is not implicated in it. Nothing is changed on this result alone: the rule is a kernel rule, and the next step is a wording that puts looking before asking, measured against this baseline (roadmap `road-to-proof-where-the-owner-sees-it` 1.6).
 
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 

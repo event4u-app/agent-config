@@ -51,7 +51,10 @@ export async function start_php(php: string, workspace: string, docroot: string,
     const child: ChildProcess = spawn(php, args, { cwd: root, stdio: 'ignore', env: { ...process.env, HOME: root } });
     const base = `http://127.0.0.1:${port}`;
     const stop = (): void => {
-        child.kill('SIGKILL');
+        // SIGTERM first: a `php` that is a container wrapper forwards it and the
+        // container ends; SIGKILL would only end the CLI and leave the server up.
+        child.kill('SIGTERM');
+        setTimeout(() => child.kill('SIGKILL'), 2000).unref();
         fs.rmSync(root, { recursive: true, force: true });
     };
     for (let i = 0; i < 50; i += 1) {
