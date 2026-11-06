@@ -238,7 +238,7 @@ tracked.
       rows naming a path/symbol → code/test nodes.
       verify: `npx vitest run tests/scripts/code_graph/coverage.test.ts` -> 0
       > note: `code_graph/coverage.ts`, reached through `ask` (intent `coverage`, no new verb per ADR-041); accepted `tests` edges only, every unmatched ref listed under `unresolved` with its reason.
-- [ ] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
+- [x] 3.5 **Counterfactual review.** Frozen 30-PR set (15 own, 15 from the subject repos);
       arms plain vs graph-fed reviewer; a miss counts only if the oracle confirms the edge;
       `paired_verdict` decides direction. Bar: oracle-confirmed miss on ≥ 40 % of PRs,
       ≤ 1 false miss per 10 PRs.
@@ -248,6 +248,7 @@ tracked.
       pasted beside a diff degrading reviews across eight models, so the hypothesis is
       B1 > A ≥ B2; without B2 the run cannot tell whether the form or the graph acted.
       K3 holds for all three arms.
+      > note: done 2026-11-06 — registered in `internal/bench/code-graph/PREREGISTRATION-counterfactual-2026-11-06.md` after an AI-council design review (2/2 seats; claim narrowed to assisted dependency retrieval, arm G added, majority set over 3 runs, invalid-vs-null rules), runner `counterfactual_review.ts` (`npx vitest run tests/scripts/code_graph/counterfactual_review.test.ts` -> 0). Report: `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md`. 30 PRs (self 15, unopim 11, larasend 4), 270 reviewer calls, none invalid. **Bar (i) PASS** (B1 catches an oracle-confirmed file A misses on 13 of 30 PRs), **B1 > A PASS** (13 / 0), **bar (ii) FAIL** (38 unsupported names against 3 allowed) — so the Phase 5 checks **stay advisory**. Mean recall A 6.7 %, B1 38.0 %, B2 40.0 %, G (read list alone, no model) 34.5 %: the packet carries the retrieval, the rendering form made no measurable difference (B1 vs B2 underpowered, 2 discordant), so B1 > A ≥ B2 holds in its first half only.
 - [x] 3.6 `code-graph prove` emits the bundle (corpus SHA, both reports, oracle version,
       `resolved_via` histogram, 3.5 record, staleness state) from
       `internal/bench/scorecard.yaml` (row → metric → artefact → bar → expiry).

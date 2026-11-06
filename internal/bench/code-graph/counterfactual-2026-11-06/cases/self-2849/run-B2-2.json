@@ -1,0 +1,55 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "src/scripts/bench_ab_diff.ts",
+  "src/scripts/build_proof.ts",
+  "src/scripts/check_bench_task_validity.ts",
+  "src/scripts/compile_router.ts",
+  "src/scripts/lint_bench_ab.ts",
+  "src/scripts/render_benchmark_composite.ts",
+  "src/scripts/render_benchmark_md.ts",
+  "tests/lib/agent_settings.test.ts",
+  "tests/scripts/bench_ab_v2_run.test.ts",
+  "tests/scripts/build_proof.test.ts",
+  "tests/scripts/check_bench_task_validity.test.ts",
+  "tests/scripts/check_claims.test.ts",
+  "tests/scripts/check_claims_retired_phrasings.test.ts",
+  "tests/scripts/render_benchmark_md.test.ts"
+ ],
+ "reply": "{\"files\": [\"tests/scripts/bench_ab_v2_run.test.ts\", \"tests/scripts/check_bench_task_validity.test.ts\", \"src/scripts/check_bench_task_validity.ts\", \"src/scripts/compile_router.ts\", \"tests/scripts/check_claims.test.ts\", \"tests/scripts/check_claims_retired_phrasings.test.ts\", \"tests/lib/agent_settings.test.ts\", \"src/scripts/render_benchmark_composite.ts\", \"src/scripts/render_benchmark_md.ts\", \"tests/scripts/render_benchmark_md.test.ts\", \"src/scripts/build_proof.ts\", \"tests/scripts/build_proof.test.ts\", \"src/scripts/bench_ab_diff.ts\", \"src/scripts/lint_bench_ab.ts\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 343,
+  "cache_read_input_tokens": 42645,
+  "output_tokens": 285,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 343,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 285,
+    "cache_read_input_tokens": 42645,
+    "cache_creation_input_tokens": 343,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 343
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

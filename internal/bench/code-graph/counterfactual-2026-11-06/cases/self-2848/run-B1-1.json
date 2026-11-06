@@ -1,0 +1,46 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "src/cli/commands/uiAudit.ts",
+  "src/scripts/hooks/design_pass_hook.ts",
+  "tests/cli/uiAudit_control_roles.test.ts",
+  "tests/hooks/design_pass.test.ts",
+  "tests/scripts/lint_design_consistency.test.ts"
+ ],
+ "reply": "{\"files\": [\"tests/cli/uiAudit_control_roles.test.ts\", \"tests/scripts/lint_design_consistency.test.ts\", \"tests/hooks/design_pass.test.ts\", \"src/cli/commands/uiAudit.ts\", \"src/scripts/hooks/design_pass_hook.ts\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 27679,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 112,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 27679,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 112,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 27679,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 27679
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

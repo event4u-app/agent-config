@@ -1,0 +1,53 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "packages/Webkul/Admin/src/Config/menu.php",
+  "packages/Webkul/Admin/src/Http/Controllers/ConfigurationController.php",
+  "packages/Webkul/Admin/src/Http/Controllers/Settings/DataTransfer/ExportController.php",
+  "packages/Webkul/Admin/src/Resources/lang/en_US/app.php",
+  "packages/Webkul/Admin/src/Routes/Admin/magic-ai-routes.php",
+  "packages/Webkul/AiAgent/src/Chat/ChatContext.php",
+  "packages/Webkul/AiAgent/src/Chat/ToolRegistry.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/AbstractTool.php",
+  "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+  "packages/Webkul/AiAgent/src/Routes/web.php",
+  "packages/Webkul/MagicAI/src/Jobs/SaveTranslatedAllAttributesJob.php",
+  "packages/Webkul/MagicAI/src/Jobs/SaveTranslatedDataJob.php"
+ ],
+ "reply": "{\"files\": [\"packages/Webkul/AiAgent/src/Chat/ToolRegistry.php\", \"packages/Webkul/AiAgent/src/Chat/Tools/AbstractTool.php\", \"packages/Webkul/AiAgent/src/Chat/ChatContext.php\", \"packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php\", \"packages/Webkul/AiAgent/src/Routes/web.php\", \"packages/Webkul/Admin/src/Routes/Admin/magic-ai-routes.php\", \"packages/Webkul/Admin/src/Http/Controllers/ConfigurationController.php\", \"packages/Webkul/Admin/src/Http/Controllers/Settings/DataTransfer/ExportController.php\", \"packages/Webkul/MagicAI/src/Jobs/SaveTranslatedDataJob.php\", \"packages/Webkul/MagicAI/src/Jobs/SaveTranslatedAllAttributesJob.php\", \"packages/Webkul/Admin/src/Config/menu.php\", \"packages/Webkul/Admin/src/Resources/lang/en_US/app.php\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 13248,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 402,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 13248,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 402,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 13248,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 13248
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}
