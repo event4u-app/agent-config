@@ -353,9 +353,15 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   `model_tier` / `omit_project_instructions`, the template's `subagents:` section, the
   council's round defaults), and `check_claims` fails on one with no row. The six
   that predate the check sit in `known_unbound`, a baseline that may only shrink.
-- [ ] **7.2** A changed always-loaded asset reports its byte delta (3.1) in the PR;
+- [x] **7.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/standing_asset_delta.ts --> A changed always-loaded asset reports its byte delta (3.1) in the PR;
   a behaviour claim names the tier of evidence it rests on.
   verify: a PR touching an always-loaded asset prints its byte delta
+  Done 2026-11-07. The bucket half already existed: `standing-payload-delta.yml` posts
+  `check_standing_payload_delta` as a sticky PR comment (#2845 showed +4 tok on project
+  rules). Added: a per-asset table of every always-loaded asset whose loaded size
+  changed (projected rule, skill catalog entry, CLAUDE.md), and a PR-template field that
+  names a behaviour claim's evidence tier from `docs/contracts/evidence-basis.md`. The
+  tier field is a prompt to the author; no gate reads it.
 - [ ] **7.3** A roadmap that changed a default asset closes only with the
   measurement it ran, or one line naming why none was possible (owner turn 5:
   "after a roadmap, run tests for those areas").
