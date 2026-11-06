@@ -60,7 +60,7 @@ describe('the two SVG tasks', () => {
             fs.rmSync(ws, { recursive: true, force: true });
         }
     });
-    it.skipIf(!browser_available())('similarity passes the faithful reference and fails a two-rectangle sketch (needs Chromium)', () => {
+    it('similarity passes the faithful reference and fails a two-rectangle sketch; without Chromium both are unmeasured', () => {
         const sim = args('art-svg-raster-01')['similarity'] as { source: string; min: number };
         const run = (svg_src: string): string => {
             const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'svg-sim-'));
@@ -72,7 +72,9 @@ describe('the two SVG tasks', () => {
                 fs.rmSync(ws, { recursive: true, force: true });
             }
         };
-        expect(run(fs.readFileSync(path.join(AB_ROOT, 'oracle-artifact', 'art-svg-raster-01', 'good', 'out', 'mascot.svg'), 'utf-8'))).toBe('pass');
-        expect(run(svg('<rect id="body" x="8" y="8" width="32" height="34" fill="#f2a93b"/><rect id="belly" x="18" y="26" width="12" height="12" fill="#fff4e0"/>'))).toBe('fail');
+        const measured = browser_available();
+        const good = run(fs.readFileSync(path.join(AB_ROOT, 'oracle-artifact', 'art-svg-raster-01', 'good', 'out', 'mascot.svg'), 'utf-8'));
+        const sketch = run(svg('<rect id="body" x="8" y="8" width="32" height="34" fill="#f2a93b"/><rect id="belly" x="18" y="26" width="12" height="12" fill="#fff4e0"/>'));
+        expect([good, sketch]).toEqual(measured ? ['pass', 'fail'] : ['unknown', 'unknown']);
     }, 120_000);
 });
