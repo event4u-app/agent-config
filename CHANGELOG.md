@@ -66,6 +66,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `redirect()` inside a controller's `redirect()` was a self-edge. A merged
   `index.scip` now lands on the right node in a file holding U+2028, U+2029 or a
   lone CR, which end a line for TypeScript but not for the graph.
+* **code-graph:** a consumer's node-link graph export keeps its import and
+  reference edges: `imports_from`, `re_exports`, `dynamic_import` and `includes`
+  load as imports, and `references_constant`, `uses_static_prop` and `mixes_in`
+  (trait use) as uses. They were dropped as unmapped relations before.
 
 Twenty entries that had accumulated here were drained to
 [`docs/archive/CHANGELOG-unreleased-drain-2026-10.md`](docs/archive/CHANGELOG-unreleased-drain-2026-10.md)
