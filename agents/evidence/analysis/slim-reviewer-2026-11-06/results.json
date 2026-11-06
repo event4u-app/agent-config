@@ -1,0 +1,422 @@
+{
+  "model": "claude-sonnet-4-6",
+  "scored": 11,
+  "not_run": [
+    "df-logic-02",
+    "df-offbyone-02",
+    "df-race-02",
+    "df-empty-02",
+    "df-secsmell-02",
+    "df-ctl-02"
+  ],
+  "ledger_total_usd": 18.13403865,
+  "summary": {
+    "fixtures": 11,
+    "agreement": 10,
+    "agreement_rate": 0.9090909090909091,
+    "disagreements": [
+      "ac-clean-01"
+    ],
+    "planted": 6,
+    "missed": {
+      "slim": [],
+      "full": []
+    },
+    "contested_controls": 3,
+    "contested_fp": {
+      "slim": [
+        "ac-clean-01",
+        "ac-clean-03"
+      ],
+      "full": [
+        "ac-clean-03"
+      ]
+    },
+    "all_controls": 5,
+    "all_control_fp": {
+      "slim": [
+        "ac-clean-01",
+        "ac-clean-03"
+      ],
+      "full": [
+        "ac-clean-03"
+      ]
+    },
+    "usd": {
+      "slim": 4.466792849999999,
+      "full": 8.927954849999999
+    }
+  },
+  "bar": {
+    "bar": 0.9,
+    "agreement_pass": true,
+    "fp_pass": false,
+    "pass": false
+  },
+  "rows": [
+    {
+      "meta": {
+        "id": "pv-01-hollow",
+        "kind": "planted",
+        "contested": false,
+        "planted_file": "src/charge.ts"
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/charge.ts",
+            "severity": "blocker"
+          },
+          {
+            "file": "src/charge.ts",
+            "severity": "blocker"
+          },
+          {
+            "file": "tests/charge.test.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.6849807
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/charge.ts",
+            "severity": "blocker"
+          },
+          {
+            "file": "src/charge.ts",
+            "severity": "blocker"
+          },
+          {
+            "file": "tests/charge.test.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 1.0845507
+      }
+    },
+    {
+      "meta": {
+        "id": "pv-02-control",
+        "kind": "control",
+        "contested": false,
+        "planted_file": null
+      },
+      "slim": {
+        "verdict": "READY",
+        "findings": [],
+        "caught": false,
+        "false_positive": false,
+        "usd": 0.6798133500000001
+      },
+      "full": {
+        "verdict": "READY",
+        "findings": [],
+        "caught": false,
+        "false_positive": false,
+        "usd": 0.47255759999999997
+      }
+    },
+    {
+      "meta": {
+        "id": "df-logic-01",
+        "kind": "planted",
+        "contested": false,
+        "planted_file": "src/access/canView.ts"
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/access/canView.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.1340025
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/access/canView.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.46610175
+      }
+    },
+    {
+      "meta": {
+        "id": "df-offbyone-01",
+        "kind": "planted",
+        "contested": false,
+        "planted_file": "src/util/lastN.ts"
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/util/lastN.ts",
+            "severity": "critical"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.11892420000000001
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/util/lastN.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 1.0398949499999999
+      }
+    },
+    {
+      "meta": {
+        "id": "df-race-01",
+        "kind": "planted",
+        "contested": false,
+        "planted_file": "src/counter/increment.ts"
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/counter/increment.ts",
+            "severity": "blocker"
+          },
+          {
+            "file": "src/counter/increment.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.71520465
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/counter/increment.ts",
+            "severity": "blocker"
+          },
+          {
+            "file": "src/counter/increment.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.4594971
+      }
+    },
+    {
+      "meta": {
+        "id": "df-empty-01",
+        "kind": "planted",
+        "contested": false,
+        "planted_file": "src/ui/Avg.tsx"
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/ui/Avg.tsx",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.6802423499999999
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/ui/Avg.tsx",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.44742345
+      }
+    },
+    {
+      "meta": {
+        "id": "df-secsmell-01",
+        "kind": "planted",
+        "contested": false,
+        "planted_file": "src/search/find.ts"
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/search/find.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 0.10349100000000001
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/search/find.ts",
+            "severity": "blocker"
+          }
+        ],
+        "caught": true,
+        "false_positive": false,
+        "usd": 1.0491362999999998
+      }
+    },
+    {
+      "meta": {
+        "id": "df-ctl-01",
+        "kind": "control",
+        "contested": false,
+        "planted_file": null
+      },
+      "slim": {
+        "verdict": "READY",
+        "findings": [
+          {
+            "file": "src/util/clamp.ts",
+            "severity": "note"
+          }
+        ],
+        "caught": false,
+        "false_positive": false,
+        "usd": 0.1672881
+      },
+      "full": {
+        "verdict": "READY",
+        "findings": [],
+        "caught": false,
+        "false_positive": false,
+        "usd": 1.05575025
+      }
+    },
+    {
+      "meta": {
+        "id": "ac-clean-01",
+        "kind": "control",
+        "contested": true,
+        "planted_file": null
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/resolve-config.ts",
+            "severity": "high"
+          }
+        ],
+        "caught": false,
+        "false_positive": true,
+        "usd": 0.149049
+      },
+      "full": {
+        "verdict": "READY",
+        "findings": [],
+        "caught": false,
+        "false_positive": false,
+        "usd": 1.0578294
+      }
+    },
+    {
+      "meta": {
+        "id": "ac-clean-02",
+        "kind": "control",
+        "contested": true,
+        "planted_file": null
+      },
+      "slim": {
+        "verdict": "READY",
+        "findings": [
+          {
+            "file": "/Users/mathiasberg/.cache/slim-reviewer-runs/fixture/src/ring-buffer.ts",
+            "severity": "low"
+          }
+        ],
+        "caught": false,
+        "false_positive": false,
+        "usd": 0.8680228499999999
+      },
+      "full": {
+        "verdict": "READY",
+        "findings": [
+          {
+            "file": "/Users/mathiasberg/.cache/slim-reviewer-runs/fixture/src/ring-buffer.ts",
+            "severity": "note"
+          }
+        ],
+        "caught": false,
+        "false_positive": false,
+        "usd": 0.7133259
+      }
+    },
+    {
+      "meta": {
+        "id": "ac-clean-03",
+        "kind": "control",
+        "contested": true,
+        "planted_file": null
+      },
+      "slim": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/workspace.ts",
+            "severity": "high"
+          },
+          {
+            "file": "src/workspace.ts",
+            "severity": "high"
+          }
+        ],
+        "caught": false,
+        "false_positive": true,
+        "usd": 0.16577415
+      },
+      "full": {
+        "verdict": "NOT READY",
+        "findings": [
+          {
+            "file": "src/workspace.ts",
+            "severity": "must-fix"
+          },
+          {
+            "file": "src/workspace.ts",
+            "severity": "must-fix"
+          }
+        ],
+        "caught": false,
+        "false_positive": true,
+        "usd": 1.0818874499999998
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "text": "",
+  "errored": true,
+  "reason": "error_max_budget_usd",
+  "dispatched": true,
+  "usd_envelope": 1.0091931,
+  "usd_priced": 0.76986735,
+  "tokens": {
+    "input": 6,
+    "output": 217,
+    "cache_write": 202925,
+    "cache_read": 18752
+  },
+  "subagent_first_input": 0,
+  "subagent_requests": 0,
+  "models": [
+    "claude-sonnet-4-6"
+  ],
+  "num_turns": 1,
+  "wall_s": 11.459
+}

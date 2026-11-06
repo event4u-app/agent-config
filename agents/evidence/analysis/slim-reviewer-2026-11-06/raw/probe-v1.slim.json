@@ -1,0 +1,18 @@
+{
+  "text": "OK.\nYES",
+  "errored": false,
+  "reason": "ok",
+  "usd_envelope": 0.048986400000000006,
+  "usd_priced": 0.0311259,
+  "tokens": {
+    "input": 3,
+    "output": 7,
+    "cache_write": 7938,
+    "cache_read": 4148
+  },
+  "models": [
+    "claude-sonnet-4-6"
+  ],
+  "num_turns": 1,
+  "wall_s": 5.367
+}
