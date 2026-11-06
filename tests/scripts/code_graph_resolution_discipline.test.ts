@@ -27,6 +27,42 @@ async function build(files: SourceFile[]): Promise<CodeGraph> {
 
 const callsFrom = (g: CodeGraph, source: string) => g.edges.filter((e) => e.source === source && e.relation === 'calls');
 
+describe('a free call never lands on a method where the language needs a receiver (2.6 oracle run)', () => {
+    // Found against Psalm: `redirect()`, `current()`, `view()` — global helpers —
+    // were bound to a same-named method of the class they were called in.
+    it('PHP: a free call is not bound to a method declared in the same file', async () => {
+        const g = await build([{ path: 'S.php', source: '<?php\nclass S {\n    public function redirect() { return redirect(); }\n}\n' }]);
+        expect(callsFrom(g, 'S.php#S::redirect').map((e) => e.target)).not.toContain('S.php#S::redirect');
+    });
+
+    it('TypeScript: a free call is not bound to a method of a class in the same file', async () => {
+        const g = await build([{ path: 's.ts', source: 'export class S {\n  save(): number { return 1; }\n  run(): number { return save(); }\n}\n' }]);
+        expect(callsFrom(g, 's.ts#S::run').map((e) => e.target)).not.toContain('s.ts#S::save');
+    });
+
+    it('a free call still binds to a function declared in the same file', async () => {
+        const g = await build([{ path: 'f.php', source: '<?php\nfunction helper() { return 1; }\nfunction run() { return helper(); }\n' }]);
+        expect(callsFrom(g, 'f.php#run').map((e) => e.target)).toEqual(['f.php#helper']);
+    });
+});
+
+describe('parent:: starts the walk at the parent (2.6 oracle run)', () => {
+    // Found against Psalm on a benchmark subject: `parent::share()` inside
+    // `share()` resolved to the method it was written in, a stated self-edge.
+    it('resolves parent::m() to the in-repo parent method, never to the caller', async () => {
+        const g = await build([
+            { path: 'A.php', source: '<?php\nclass A {\n    public function m() { return 1; }\n}\n' },
+            { path: 'B.php', source: '<?php\nclass B extends A {\n    public function m() { return parent::m(); }\n}\n' },
+        ]);
+        expect(callsFrom(g, 'B.php#B::m').map((e) => e.target)).toEqual(['A.php#A::m']);
+    });
+
+    it('emits no edge onto the caller when the parent lives outside the repository', async () => {
+        const g = await build([{ path: 'C.php', source: '<?php\nclass C extends \\Vendor\\Base {\n    public function m() { return parent::m(); }\n}\n' }]);
+        expect(callsFrom(g, 'C.php#C::m').filter((e) => e.target === 'C.php#C::m')).toEqual([]);
+    });
+});
+
 describe('closure local (1.1)', () => {
     const FILES = [
         {

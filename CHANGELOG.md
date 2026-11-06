@@ -60,6 +60,12 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   stays whole); a three-digit decimal such as "2.125 seconds" is no longer read
   as a thousands group in English text; range dashes ("12–14") are no longer
   counted.
+* **code-graph:** `parent::m()` (and C# `base.m()`) resolves to the parent's
+  method instead of the method it is written in, and a bare `f()` in PHP,
+  TypeScript, JavaScript, Python or Go no longer binds to a same-named method —
+  `redirect()` inside a controller's `redirect()` was a self-edge. A merged
+  `index.scip` now lands on the right node in a file holding U+2028, U+2029 or a
+  lone CR, which end a line for TypeScript but not for the graph.
 
 Twenty entries that had accumulated here were drained to
 [`docs/archive/CHANGELOG-unreleased-drain-2026-10.md`](docs/archive/CHANGELOG-unreleased-drain-2026-10.md)

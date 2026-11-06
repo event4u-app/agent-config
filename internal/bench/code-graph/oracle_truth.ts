@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 import * as yaml from 'js-yaml';
 
-import { readScipIndex, type ScipDocument } from '../../../src/scripts/code_graph/scip_reader.js';
+import { alignScipLinesUnder, readScipIndex, type ScipDocument } from '../../../src/scripts/code_graph/scip_reader.js';
 import { checkRegisteredHashes } from './run_bench_v3.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -128,7 +128,7 @@ export function pendingSymbols(seed: string, refs: Refs, enclosing: Enclosing, m
     return callerClosure(seed, refs, enclosing, maxDepth).missing;
 }
 
-function oracle(subjectDir: string, args: string[], input?: string): string {
+export function oracle(subjectDir: string, args: string[], input?: string): string {
     const res = spawnSync(ORACLE_SH, ['run', subjectDir, ...args], { encoding: 'utf8', input, maxBuffer: 1 << 28 });
     if (res.status !== 0) throw new Error(`oracle.sh run ${args.join(' ')} exited ${res.status}: ${(res.stderr || '').slice(-800)}`);
     return res.stdout;
@@ -139,7 +139,7 @@ function oracle(subjectDir: string, args: string[], input?: string): string {
  * reference (checked per run, below) and Psalm's inference over a 300 KB nested array
  * exhausts a 16 GB VM, so they are left out of the analysis and named in the output.
  */
-function dataOnlyDirs(dir: string): string[] {
+export function dataOnlyDirs(dir: string): string[] {
     const files = spawnSync('git', ['ls-files', '*.php'], { cwd: dir, encoding: 'utf8' }).stdout.split('\n');
     const dirs = [...new Set(files.map((f) => /^(.*?(?:^|\/)lang)\//.exec(f)?.[1]).filter((d): d is string => !!d))].sort();
     if (dirs.length === 0) return [];
@@ -161,7 +161,7 @@ export function exclusionConflicts(text: string, probes: readonly string[]): str
     return probes.filter((p) => new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text));
 }
 
-function writePsalmConfig(dir: string, excluded: string[], files: string[]): void {
+export function writePsalmConfig(dir: string, excluded: string[], files: string[]): void {
     const extra = excluded.map((d) => `\n            <directory name="${d}" />`).join('') + files.map((f) => `\n            <file name="${f}" />`).join('');
     fs.writeFileSync(path.join(dir, 'psalm-oracle.xml'), `<?xml version="1.0"?>
 <psalm errorLevel="8" findUnusedCode="false" findUnusedBaselineEntry="false" cacheDirectory="/subject/.oracle/psalm-cache">
@@ -185,7 +185,7 @@ function writePsalmConfig(dir: string, excluded: string[], files: string[]): voi
 }
 
 /** One Psalm analysis answering every symbol; results merge into `refs`. */
-function psalmRound(dir: string, symbols: string[], refs: Refs): void {
+export function psalmRound(dir: string, symbols: string[], refs: Refs): void {
     if (symbols.length === 0) return;
     fs.writeFileSync(path.join(dir, '.oracle', 'symbols.txt'), symbols.join('\n') + '\n');
     oracle(dir, ['psalm', '--config=psalm-oracle.xml', '--monochrome', '--no-progress', '--threads=1', `--find-references-to=${symbols[0]}`]);
@@ -196,7 +196,7 @@ function psalmRound(dir: string, symbols: string[], refs: Refs): void {
     }
 }
 
-function resolveEnclosing(dir: string, sites: string[], enclosing: Enclosing): void {
+export function resolveEnclosing(dir: string, sites: string[], enclosing: Enclosing): void {
     const todo = [...new Set(sites)].filter((s) => !enclosing.has(s));
     if (todo.length === 0) return;
     for (const line of oracle(dir, ['php', '/opt/oracle/enclosing.php'], todo.join('\n') + '\n').split('\n')) {
@@ -320,7 +320,7 @@ export function main(argv: string[]): number {
                 }, null, 2));
             }
             oracle(dir, ['scip-typescript', 'index', '--output', '/subject/.oracle/index.scip']);
-            docs = readScipIndex(fs.readFileSync(path.join(dir, '.oracle', 'index.scip')));
+            docs = alignScipLinesUnder(readScipIndex(fs.readFileSync(path.join(dir, '.oracle', 'index.scip'))), dir);
         }
 
         for (const q of qs) items.push(truthFor(q, seeds, refs, enclosing, docs, hasVue, maxDepth));

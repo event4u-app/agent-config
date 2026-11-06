@@ -166,7 +166,9 @@ describe('runEdgeOracle', () => {
             { pathEnv: '', stderr: () => undefined, stdout: (s) => out.push(s) },
         );
         expect(code).toBe(0);
-        expect(JSON.parse(out.join('')).by_mechanism['import-specifier'].precision_file).toBe(1);
+        const json = JSON.parse(out.join(''));
+        expect(json.typescript.by_mechanism['import-specifier'].precision_file).toBe(1);
+        expect(json.php).toBeNull();
         const md = fs.readFileSync(path.join(root, 'report.md'), 'utf8');
         expect(md).toContain('| `name-lookup` |');
         expect(md).toContain('never an arm or a provider');
