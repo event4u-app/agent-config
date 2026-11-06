@@ -3,6 +3,7 @@
  * the PHP extractor cannot see because no import or call states them.
  *
  *   routes/*.php   Route::get('/x', [C::class, 'm'])   → route node --routes-to--> C::m
+ *                  (also a package's route files: loadRoutesFrom / group(__DIR__ …) and their requires)
  *   C::m           view('a.b')                         --renders-->   resources/views/a/b.blade.php
  *   a.blade.php    @include('c') · <x-d>               --includes-->  the included view file
  *   any PHP        __('file.key') · config('app.x')    --reads-->     lang/* /file.php · config/app.php
@@ -258,6 +259,72 @@ function relationShape(call: string, own: string, target: string, method: string
     }
 }
 
+/** `__DIR__ . '/x'` or `dirname(__DIR__) . '/x'` written in `file`, as a tree path. */
+function dirRelative(file: string, base: string, rel: string): string {
+    const dir = path.posix.dirname(file);
+    return path.posix.normalize(path.posix.join(base === '__DIR__' ? dir : path.posix.dirname(dir), rel));
+}
+
+/**
+ * The files the route table is read from: everything under `<prefix>routes/`,
+ * every file a provider hands to `loadRoutesFrom(...)` or to a route
+ * `group(...)` by a `__DIR__`-relative path, and every file one of those
+ * `require`s or `include`s. A path built at runtime is not followed, and a
+ * file absent from the tree is never added.
+ */
+export function routeFileSet(php: readonly SourceFile[], fileIds: ReadonlySet<string>, prefix: string): Set<string> {
+    const out = new Set(php.filter((f) => f.path.startsWith(`${prefix}routes/`)).map((f) => f.path));
+    const loader = /(?:loadRoutesFrom|\bgroup)\(\s*(__DIR__|dirname\(\s*__DIR__\s*\))\s*\.\s*(['"])([^'"]+\.php)\2\s*\)/g;
+    for (const f of php) {
+        if (!f.source.includes('__DIR__')) continue;
+        for (const m of f.source.matchAll(loader)) {
+            const target = dirRelative(f.path, (m[1] as string).startsWith('dirname') ? 'dirname' : '__DIR__', m[3] as string);
+            if (fileIds.has(target)) out.add(target);
+        }
+    }
+    const byPath = new Map(php.map((f) => [f.path, f] as const));
+    const queue = [...out];
+    const include = /\b(?:require|require_once|include|include_once)\s*\(?\s*(?:(__DIR__)\s*\.\s*)?(['"])([^'"]+\.php)\2/g;
+    while (queue.length > 0) {
+        const file = queue.shift() as string;
+        for (const m of byPath.get(file)?.source.matchAll(include) ?? []) {
+            const rel = m[3] as string;
+            if (!m[1] && rel.startsWith('/')) continue;
+            const target = dirRelative(file, '__DIR__', rel);
+            if (fileIds.has(target) && !out.has(target)) {
+                out.add(target);
+                queue.push(target);
+            }
+        }
+    }
+    return out;
+}
+
+/**
+ * View namespaces a package registers: `loadViewsFrom(__DIR__ . '/x', 'ns')` for
+ * `view('ns::a.b')` and `@include('ns::…')`, and
+ * `Blade::anonymousComponentPath(__DIR__ . '/x', 'ns')` for `<x-ns::a.b>`.
+ * Each maps to directories with a trailing slash; only `__DIR__`-relative
+ * literal paths are read.
+ */
+export function viewNamespaces(php: readonly SourceFile[]): { views: Map<string, string[]>; components: Map<string, string[]> } {
+    const views = new Map<string, string[]>();
+    const components = new Map<string, string[]>();
+    const re = /(loadViewsFrom|anonymousComponentPath)\(\s*(__DIR__|dirname\(\s*__DIR__\s*\))\s*\.\s*(['"])([^'"]+)\3\s*,\s*(['"])([\w-]+)\5\s*\)/g;
+    for (const f of php) {
+        if (!f.source.includes('__DIR__')) continue;
+        for (const m of f.source.matchAll(re)) {
+            const dir = `${dirRelative(f.path, (m[2] as string).startsWith('dirname') ? 'dirname' : '__DIR__', m[4] as string).replace(/\/$/, '')}/`;
+            const into = m[1] === 'loadViewsFrom' ? views : components;
+            const ns = m[6] as string;
+            const list = into.get(ns) ?? [];
+            if (!list.includes(dir)) list.push(dir);
+            into.set(ns, list);
+        }
+    }
+    return { views, components };
+}
+
 export function buildLaravelOverlay(
     files: readonly SourceFile[],
     baseNodes: readonly CodeNode[],
@@ -314,30 +381,54 @@ export function buildLaravelOverlay(
 
     const php = files.filter((f) => f.path.endsWith('.php'));
     const blade = (p: string): boolean => p.endsWith('.blade.php');
-    const viewFile = (name: string): string | null => {
-        if (name.includes('::')) return null;
-        const rel = name.replace(/\./g, '/');
-        const views = `${prefix}resources/views/`;
-        for (const c of [`${views}${rel}.blade.php`, `${views}${rel}.php`, `${views}${rel}/index.blade.php`]) {
-            if (fileIds.has(c)) return c;
+    const namespaces = viewNamespaces(php);
+    const firstIn = (dirs: readonly string[], rel: string): string | null => {
+        for (const d of dirs) {
+            for (const c of [`${d}${rel}.blade.php`, `${d}${rel}.php`, `${d}${rel}/index.blade.php`]) {
+                if (fileIds.has(c)) return c;
+            }
         }
         return null;
+    };
+    // `ns::a.b` resolves against the directories a provider registered for `ns`; an unregistered namespace is not guessed.
+    const viewFile = (name: string): string | null => {
+        const ns = /^([\w-]+)::(.+)$/.exec(name);
+        if (ns) return firstIn(namespaces.views.get(ns[1] as string) ?? [], (ns[2] as string).replace(/\./g, '/'));
+        if (name.includes('::')) return null;
+        return firstIn([`${prefix}resources/views/`], name.replace(/\./g, '/'));
+    };
+    const componentFile = (tag: string): string | null => {
+        const ns = /^([\w-]+)::(.+)$/.exec(tag);
+        if (!ns) return viewFile(`components.${tag}`);
+        const rel = (ns[2] as string).replace(/\./g, '/');
+        const anonymous = namespaces.components.get(ns[1] as string) ?? [];
+        return firstIn(anonymous, rel) ?? firstIn((namespaces.views.get(ns[1] as string) ?? []).map((d) => `${d}components/`), rel);
     };
     const classFile = (fq: string): string | null => resolvePsr4(fq, resolution, fileIds);
 
     // Routes.
+    const routeFiles = routeFileSet(php, fileIds, prefix);
     let routeOrdinal = new Map<string, number>();
-    for (const f of php.filter((x) => x.path.startsWith(`${prefix}routes/`))) {
+    for (const f of php.filter((x) => routeFiles.has(x.path))) {
         const src = f.source;
         const at = lineIndex(src);
         const scope = phpScope(src);
         routeOrdinal = new Map();
-        const groups: Array<{ start: number; end: number; prefix: string }> = [];
-        for (const m of src.matchAll(/Route::((?:\w+\((?:[^()]|\([^()]*\))*\)\s*->\s*)*)group\(\s*(?:static\s+)?function\s*\([^)]*\)\s*(?:use\s*\([^)]*\)\s*)?\{/g)) {
+        const groups: Array<{ start: number; end: number; prefix: string; controller: string | null }> = [];
+        for (const m of src.matchAll(/Route::((?:\w+\((?:[^()]|\([^()]*\))*\)\s*->\s*)*)group\(\s*(?:static\s+)?function\s*\([^)]*\)\s*(?::\s*\??\w+\s*)?(?:use\s*\([^)]*\)\s*)?\{/g)) {
             const open = (m.index as number) + m[0].length - 1;
             const prefix = /prefix\(\s*['"]([^'"]*)['"]\s*\)/.exec(m[1] ?? '')?.[1] ?? '';
-            groups.push({ start: open, end: matchingBrace(src, open), prefix });
+            const controller = /controller\(\s*([\\\w]+)::class\s*\)/.exec(m[1] ?? '')?.[1] ?? null;
+            groups.push({ start: open, end: matchingBrace(src, open), prefix, controller });
         }
+        // `Route::controller(C::class)->group(...)`: a bare method-name handler inside names C's method.
+        const controllerAt = (i: number): string | null => {
+            let best: { start: number; controller: string } | null = null;
+            for (const g of groups) {
+                if (g.controller && g.start < i && i < g.end && (!best || g.start > best.start)) best = { start: g.start, controller: g.controller };
+            }
+            return best?.controller ?? null;
+        };
         const prefixAt = (i: number): string =>
             groups
                 .filter((g) => g.start < i && i < g.end)
@@ -379,6 +470,9 @@ export function buildLaravelOverlay(
             else if (/^(?:static\s+)?(?:function|fn)\b/.test(rest)) {
                 stats.routeClosures += 1;
                 addRoute(verb, uri, m.index as number, null);
+            } else if (/^(['"])\w+\1/.test(rest) && controllerAt(m.index as number)) {
+                const name = /^(['"])(\w+)\1/.exec(rest)?.[2] as string;
+                addRoute(verb, uri, m.index as number, { fq: qualify(controllerAt(m.index as number) as string, scope), method: name });
             } else if (/^['"]/.test(rest)) {
                 stats.routeStringHandlers += 1;
                 addRoute(verb, uri, m.index as number, null);
@@ -405,8 +499,8 @@ export function buildLaravelOverlay(
         const at = lineIndex(f.source);
         if (blade(f.path)) {
             const directives = [
-                ...f.source.matchAll(/@(?:extends|include|includeIf|includeUnless|includeFirst|each|component)\(\s*(['"])([\w.\-/]+)\1/g),
-                ...f.source.matchAll(/@includeWhen\([^,]+,\s*(['"])([\w.\-/]+)\1/g),
+                ...f.source.matchAll(/@(?:extends|include|includeIf|includeUnless|includeFirst|each|component)\(\s*(['"])((?:[\w-]+::)?[\w.\-/]+)\1/g),
+                ...f.source.matchAll(/@includeWhen\([^,]+,\s*(['"])((?:[\w-]+::)?[\w.\-/]+)\1/g),
             ];
             for (const m of directives) {
                 stats.includes += 1;
@@ -416,9 +510,9 @@ export function buildLaravelOverlay(
                     stats.includesResolved += 1;
                 }
             }
-            for (const m of f.source.matchAll(/<x-([\w\-.]+)/g)) {
+            for (const m of f.source.matchAll(/<x-((?:[\w-]+::)?[\w\-.]+)/g)) {
                 stats.includes += 1;
-                const target = viewFile(`components.${m[1] as string}`);
+                const target = componentFile(m[1] as string);
                 if (target && target !== f.path) {
                     emit(f.path, target, 'includes', 'directive-scan');
                     stats.includesResolved += 1;
@@ -645,7 +739,6 @@ export function buildLaravelOverlay(
         }
     }
 
-    const routesFiles = new Set(php.filter((x) => x.path.startsWith(`${prefix}routes/`)).map((x) => x.path));
     const dropEdge = (e: CodeEdge): boolean => {
         if (e.relation !== 'calls' || e.resolved_via === 'same-file') return false;
         const src = nodeById.get(e.source);
@@ -656,7 +749,7 @@ export function buildLaravelOverlay(
             stats.builderCallsDropped += 1;
             return true;
         }
-        if (!routesFiles.has(src.source_file)) return false;
+        if (!routeFiles.has(src.source_file)) return false;
         const target = nodeById.get(e.target);
         const name = target ? target.label : e.target.replace(/^symbol:/, '');
         if (!ROUTE_BUILDER_METHODS.has(name)) return false;

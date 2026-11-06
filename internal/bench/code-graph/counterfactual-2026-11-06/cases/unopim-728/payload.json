@@ -1,0 +1,114 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "LaravelAiAdapter",
+     "verdict": "tested",
+     "witness": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php:25"
+    },
+    {
+     "label": "contentAgent",
+     "verdict": "untested",
+     "witness": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php:168"
+    },
+    {
+     "label": "rejectsSamplingParameters",
+     "verdict": "untested",
+     "witness": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php:202"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php",
+   "lines": [
+    25,
+    64
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/MagicAI.php",
+   "lines": [
+    182,
+    189
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/tests/Unit/AiProviderMatrixTest.php",
+   "lines": [
+    186,
+    191
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php",
+   "lines": [
+    168,
+    177
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/MagicAI.php",
+   "lines": [
+    191,
+    194
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php",
+   "lines": [
+    202,
+    211
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/MagicAI.php",
+   "lines": [
+    202,
+    209
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php",
+   "lines": [
+    89,
+    92
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/MagicAI.php",
+   "lines": [
+    211,
+    236
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php",
+   "lines": [
+    98,
+    115
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Services/LaravelAiAdapter.php",
+   "lines": [
+    65,
+    259
+   ]
+  }
+ ]
+}

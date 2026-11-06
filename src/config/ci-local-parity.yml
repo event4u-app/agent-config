@@ -170,6 +170,15 @@ ci_only:
   - id: check_static_parity
     class: benchmark
     reason: "two full runs of the dispatcher-reaching suite, compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
+  # road-to-a-graph-that-wins AC-8. The `graph-checks` job in self-review-gate.yml
+  # reports the code graph's three review checks beside the gate. It is a REPORT
+  # (`continue-on-error`, exits 0 on every analysis outcome) about a pull
+  # request's range from its merge-base, and it refuses a dirty checkout — so in
+  # a working tree mid-change it answers "no analysis" by design.
+  # Reachable on demand: `./scripts-run src/scripts/graph_checks_report --base origin/main --out <dir>`.
+  - id: graph_checks_report
+    class: benchmark
+    reason: "an advisory pull-request report that builds the code graph (~25 s) and reads the PR's range from its merge-base; it cannot red the build, refuses a dirty working tree by design, and is reachable on demand"
   # road-to-supervised-telemetry-collector step 5.2. What is CI-only is this
   # WRAPPER, whose whole job is to write
   # `internal/reports/supervision-lifecycle.json` stamped with

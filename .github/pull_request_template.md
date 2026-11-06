@@ -47,6 +47,14 @@
 - Claim (docs/CLAIMS.md):
 - Report (pinned to a commit of this PR):
 
+<!-- A change to an always-loaded asset (a rule, a skill description, CLAUDE.md)
+     shows its byte delta in the "Standing payload" comment. If the change claims
+     a behaviour, name the claim and the evidence it rests on: measured ·
+     estimated · inferred · provider-reported · model-judged · unknown
+     (docs/contracts/evidence-basis.md). Otherwise write: none. -->
+
+- Behaviour claim and its evidence tier:
+
 ## Testing
 
 <!-- How was this tested? -->

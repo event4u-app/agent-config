@@ -1,0 +1,67 @@
+{"pr": 2879, "merged_at": "2026-11-06T08:45:52Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 1630}
+{"pr": 2878, "merged_at": "2026-11-06T07:52:35Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2876, "merged_at": "2026-11-06T06:00:59Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 2127}
+{"pr": 2875, "merged_at": "2026-11-06T00:33:15Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2873, "merged_at": "2026-11-05T21:47:29Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2872, "merged_at": "2026-11-05T21:42:08Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 1369}
+{"pr": 2871, "merged_at": "2026-11-05T15:00:16Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 14514}
+{"pr": 2869, "merged_at": "2026-11-05T14:25:03Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2870, "merged_at": "2026-11-05T13:51:43Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2868, "merged_at": "2026-11-05T13:41:34Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2866, "merged_at": "2026-11-05T12:55:59Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 38364}
+{"pr": 2867, "merged_at": "2026-11-05T12:55:38Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 1390}
+{"pr": 2864, "merged_at": "2026-11-05T11:07:38Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 1459}
+{"pr": 2862, "merged_at": "2026-11-05T10:36:54Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 893}
+{"pr": 2861, "merged_at": "2026-11-05T10:02:02Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 9580}
+{"pr": 2858, "merged_at": "2026-11-05T09:49:51Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 11884}
+{"pr": 2860, "merged_at": "2026-11-05T09:26:01Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2859, "merged_at": "2026-11-05T09:00:05Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2857, "merged_at": "2026-11-05T08:00:45Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 1555}
+{"pr": 2856, "merged_at": "2026-11-05T08:00:19Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr": 2855, "merged_at": "2026-11-05T06:04:23Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 8478}
+{"pr": 2854, "merged_at": "2026-11-05T05:33:09Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 926}
+{"pr": 2844, "merged_at": "2026-11-04T20:06:49Z", "verdict": "skip", "reason": "more than the registered changed-line cap", "changed_lines": 1157}
+{"pr": 2850, "merged_at": "2026-11-04T19:50:56Z", "verdict": "skip", "reason": "no existing source file of the subject language modified"}
+{"pr":2880,"merged_at":"2026-11-06T08:35:39Z","verdict":"skip","reason":"no oracle reference from outside the diff","changed_symbols":4}
+{"pr":2877,"merged_at":"2026-11-06T06:44:51Z","verdict":"take","id":"self-2877","truth":8}
+{"pr":2874,"merged_at":"2026-11-06T00:07:40Z","verdict":"take","id":"self-2874","truth":2}
+{"pr":2863,"merged_at":"2026-11-05T10:26:34Z","verdict":"take","id":"self-2863","truth":2}
+{"pr":2853,"merged_at":"2026-11-04T21:35:20Z","verdict":"take","id":"self-2853","truth":3}
+{"pr":2852,"merged_at":"2026-11-04T20:54:23Z","verdict":"take","id":"self-2852","truth":9}
+{"pr":2848,"merged_at":"2026-11-04T19:28:35Z","verdict":"take","id":"self-2848","truth":1}
+{"pr":2847,"merged_at":"2026-11-04T19:27:33Z","verdict":"take","id":"self-2847","truth":2}
+{"pr":2849,"merged_at":"2026-11-04T18:06:19Z","verdict":"take","id":"self-2849","truth":1}
+{"pr":2834,"merged_at":"2026-11-04T17:09:19Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":1035}
+{"pr":2845,"merged_at":"2026-11-04T15:58:05Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":2673}
+{"pr":2846,"merged_at":"2026-11-04T14:47:15Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":1432}
+{"pr":2841,"merged_at":"2026-11-04T12:05:13Z","verdict":"take","id":"self-2841","truth":2}
+{"pr":2843,"merged_at":"2026-11-04T09:32:39Z","verdict":"skip","reason":"no oracle reference from outside the diff","changed_symbols":1}
+{"pr":2840,"merged_at":"2026-11-04T09:19:22Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":1817}
+{"pr":2842,"merged_at":"2026-11-04T08:42:01Z","verdict":"take","id":"self-2842","truth":1}
+{"pr":2839,"merged_at":"2026-11-04T07:18:27Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2838,"merged_at":"2026-11-04T06:56:33Z","verdict":"take","id":"self-2838","truth":1}
+{"pr":2836,"merged_at":"2026-11-04T03:57:34Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2837,"merged_at":"2026-11-04T03:40:32Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2835,"merged_at":"2026-11-04T03:31:52Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":17149}
+{"pr":2833,"merged_at":"2026-11-04T02:42:18Z","verdict":"take","id":"self-2833","truth":1}
+{"pr":2831,"merged_at":"2026-11-04T02:05:58Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2832,"merged_at":"2026-11-04T01:53:53Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2830,"merged_at":"2026-11-04T01:25:21Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2829,"merged_at":"2026-11-03T22:22:51Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":7609}
+{"pr":2828,"merged_at":"2026-11-03T20:14:38Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2825,"merged_at":"2026-11-03T19:49:34Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":6911}
+{"pr":2826,"merged_at":"2026-11-03T15:35:05Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":1131}
+{"pr":2827,"merged_at":"2026-11-03T14:41:15Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2820,"merged_at":"2026-11-03T13:39:33Z","verdict":"skip","reason":"no oracle reference from outside the diff","changed_symbols":3}
+{"pr":2824,"merged_at":"2026-11-03T12:23:54Z","verdict":"take","id":"self-2824","truth":2}
+{"pr":2823,"merged_at":"2026-11-03T12:02:51Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2822,"merged_at":"2026-11-03T11:44:09Z","verdict":"take","id":"self-2822","truth":1}
+{"pr":2816,"merged_at":"2026-11-03T11:11:07Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":7592}
+{"pr":2817,"merged_at":"2026-11-03T10:22:55Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":15209}
+{"pr":2819,"merged_at":"2026-11-03T09:03:05Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":2478}
+{"pr":2818,"merged_at":"2026-11-03T08:35:35Z","verdict":"skip","reason":"no oracle reference from outside the diff","changed_symbols":1}
+{"pr":2815,"merged_at":"2026-11-03T05:14:50Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":5232}
+{"pr":2814,"merged_at":"2026-11-03T03:04:27Z","verdict":"skip","reason":"no existing source file of the subject language modified"}
+{"pr":2811,"merged_at":"2026-11-03T02:58:43Z","verdict":"skip","reason":"no oracle reference from outside the diff","changed_symbols":3}
+{"pr":2813,"merged_at":"2026-11-03T02:45:53Z","verdict":"skip","reason":"more than the registered changed-line cap","changed_lines":5584}
+{"pr":2812,"merged_at":"2026-11-03T02:19:12Z","verdict":"take","id":"self-2812","truth":2}

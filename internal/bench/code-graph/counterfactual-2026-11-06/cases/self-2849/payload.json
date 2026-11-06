@@ -1,0 +1,352 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "FINAL_FILES_CAP_BYTES",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/bench_ab_scoring_v2.ts:392"
+    },
+    {
+     "label": "final_files",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_ab_scoring_v2.ts:399"
+    },
+    {
+     "label": "workspace_fields",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/bench_ab_scoring_v2.ts:418"
+    },
+    {
+     "label": "SYNTHETIC_ARMS",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/bench_task_validity.ts:29"
+    },
+    {
+     "label": "_prepare",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/_lib/bench_task_validity.ts:175"
+    },
+    {
+     "label": "EpochEntry",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/claims_scorer_epoch.ts:7"
+    },
+    {
+     "label": "scorer_epoch_findings",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/claims_scorer_epoch.ts:15"
+    },
+    {
+     "label": "run_one",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:530"
+    },
+    {
+     "label": "selftest_run",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:653"
+    },
+    {
+     "label": "main",
+     "verdict": "untested",
+     "witness": "src/scripts/check_claims.ts:656"
+    },
+    {
+     "label": "selfTest",
+     "verdict": "untested",
+     "witness": "src/scripts/check_claims.ts:1246"
+    },
+    {
+     "label": "settingsSchema",
+     "verdict": "tested",
+     "witness": "src/server/schemas/settings.ts:36"
+    },
+    {
+     "label": "dirs",
+     "verdict": "untested",
+     "witness": "tests/scripts/bench_ab_final_diff.test.ts:13"
+    },
+    {
+     "label": "rebuild",
+     "verdict": "untested",
+     "witness": "tests/scripts/bench_ab_final_diff.test.ts:27"
+    },
+    {
+     "label": "tree",
+     "verdict": "untested",
+     "witness": "tests/scripts/bench_ab_final_diff.test.ts:14"
+    },
+    {
+     "label": "LIB_SRCS",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_claims.test.ts:32"
+    },
+    {
+     "label": "LIB_SRCS",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_claims_retired_phrasings.test.ts:33"
+    },
+    {
+     "label": "entry",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_claims_scorer_epoch.test.ts:10"
+    },
+    {
+     "label": "ids",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_claims_scorer_epoch.test.ts:30"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "README.md",
+     "witness": "README.md:1"
+    },
+    {
+     "label": "agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md",
+     "witness": "agents/roadmaps/stubs/road-to-assurance-benchmark.md:1"
+    },
+    {
+     "label": "agents/roadmaps/stubs/road-to-consumer-capability-share.md",
+     "witness": "agents/roadmaps/stubs/road-to-assurance-benchmark.md:1"
+    },
+    {
+     "label": "docs/architecture.md",
+     "witness": "docs/architecture.md:1"
+    },
+    {
+     "label": "docs/getting-started-by-role.md",
+     "witness": "docs/getting-started-by-role.md:1"
+    },
+    {
+     "label": "tests/scripts/bench_ab_v2_run.test.ts",
+     "witness": "src/scripts/bench_ab_v2_run.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/server/schemas/settings.ts",
+   "lines": [
+    36,
+    75
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/claims_scorer_epoch.ts",
+   "lines": [
+    15,
+    27
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_ab_scoring_v2.ts",
+   "lines": [
+    399,
+    415
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    653,
+    692
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_task_validity.ts",
+   "lines": [
+    175,
+    214
+   ]
+  },
+  {
+   "path": "src/scripts/check_claims.ts",
+   "lines": [
+    656,
+    695
+   ]
+  },
+  {
+   "path": "tests/scripts/bench_ab_final_diff.test.ts",
+   "lines": [
+    14,
+    22
+   ]
+  },
+  {
+   "path": "tests/scripts/check_claims_scorer_epoch.test.ts",
+   "lines": [
+    10,
+    28
+   ]
+  },
+  {
+   "path": "tests/scripts/check_claims.test.ts",
+   "lines": [
+    32,
+    34
+   ]
+  },
+  {
+   "path": "tests/scripts/check_claims_retired_phrasings.test.ts",
+   "lines": [
+    33,
+    35
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/claims_scorer_epoch.ts",
+   "lines": [
+    7,
+    13
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_ab_scoring_v2.ts",
+   "lines": [
+    392,
+    392
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    530,
+    569
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_task_validity.ts",
+   "lines": [
+    29,
+    29
+   ]
+  },
+  {
+   "path": "src/scripts/check_claims.ts",
+   "lines": [
+    1246,
+    1285
+   ]
+  },
+  {
+   "path": "tests/scripts/bench_ab_final_diff.test.ts",
+   "lines": [
+    27,
+    40
+   ]
+  },
+  {
+   "path": "tests/scripts/check_claims_scorer_epoch.test.ts",
+   "lines": [
+    30,
+    32
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_ab_scoring_v2.ts",
+   "lines": [
+    418,
+    424
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    997,
+    1036
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_task_validity.ts",
+   "lines": [
+    236,
+    246
+   ]
+  },
+  {
+   "path": "tests/scripts/bench_ab_final_diff.test.ts",
+   "lines": [
+    13,
+    13
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_task_validity.ts",
+   "lines": [
+    283,
+    289
+   ]
+  },
+  {
+   "path": "src/server/schemas/settings.ts",
+   "lines": [
+    76,
+    573
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    693,
+    695
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_task_validity.ts",
+   "lines": [
+    215,
+    227
+   ]
+  },
+  {
+   "path": "src/scripts/check_claims.ts",
+   "lines": [
+    696,
+    1214
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    570,
+    580
+   ]
+  },
+  {
+   "path": "src/scripts/check_claims.ts",
+   "lines": [
+    1286,
+    1459
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    1037,
+    1214
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_task_validity.ts",
+   "lines": [
+    292,
+    300
+   ]
+  }
+ ]
+}

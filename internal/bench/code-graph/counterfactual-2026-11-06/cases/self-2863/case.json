@@ -1,0 +1,32 @@
+{
+ "id": "self-2863",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2863,
+ "title": "chore: keep six months of the subagent ledger; tighten the wake-condition ratchet",
+ "merged_at": "2026-11-05T10:26:34Z",
+ "merge": "a8a5591521f36f1aa63db27e9ac22c25aeb8d532",
+ "parent": "06a661f271c43593619f7246684c6d1f5c093579",
+ "changed_lines": 98,
+ "diff_files": [
+  "src/config/gate-violation-baselines.json",
+  "src/scripts/hooks/subagent_ledger_hook.ts",
+  "tests/scripts/hooks/subagent_ledger_retention.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/hooks/subagent_ledger_hook.ts#appendLedgerLine",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/hooks/memory_audience_shadow_hook.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+   "test": false
+  }
+ ]
+}

@@ -352,6 +352,29 @@ export function classSummary(rows: readonly Scored[]): ClassSummary {
     };
 }
 
+/**
+ * Registration § Bars, the calibration diagnostic (no bar): per class and arm, the share of
+ * items carrying the arm's highest confidence label (EXTRACTED) that are not in the truth.
+ * grep carries no label, so it has no rate rather than a zero.
+ */
+export function calibrationSection(cells: ReadonlyArray<{ class: string; subject: string; arms: Record<string, ClassSummary> }>): string[] {
+    const rate = (arm: string, c: ClassSummary | undefined): string => {
+        if (!c || c.status === 'ABSENT' || c.status === 'PENDING' || c.status === 'EMPTY') return c?.status ?? '—';
+        if (arm === 'grep') return 'no label';
+        return c.overconfidence_rate === null ? 'no EXTRACTED item' : String(c.overconfidence_rate);
+    };
+    return [
+        '## Calibration diagnostic (no bar)',
+        '',
+        'Overconfidence rate: the share of returned items carrying the arm\'s highest confidence label (`EXTRACTED`) that are not in the truth. It decides nothing.',
+        '',
+        '| Class | Subject | grep | native | foreign |',
+        '|---|---|---|---|---|',
+        ...cells.map((c) => `| ${c.class} | ${c.subject} | ${rate('grep', c.arms['grep'])} | ${rate('native', c.arms['native'])} | ${rate('foreign', c.arms['foreign'])} |`),
+        '',
+    ];
+}
+
 /** Registration § Bars: `arm` against grep. */
 export function classVerdict(arm: ClassSummary, grep: ClassSummary): string {
     if (arm.status === 'ABSENT') return 'ABSENT';
@@ -801,6 +824,7 @@ export async function main(argv: string[]): Promise<number> {
         for (const c of cells) if (c.strict) md.push(`| ${c.class} | ${c.subject} | ${cell(c.strict.grep)} | ${cell(c.strict.native)} | ${cell(c.strict.foreign)} | ${classVerdict(c.strict.native, c.strict.grep)} |`);
         md.push('');
     }
+    md.push(...calibrationSection(cells));
     md.push('## Per language (scored classes, no bar)', '', '| Language | n | grep | native | foreign |', '|---|---|---|---|---|');
     for (const l of perLanguage) md.push(`| ${l.language} | ${l.n} | ${cell(l.arms.grep)} | ${cell(l.arms.native)} | ${cell(l.arms.foreign)} |`);
     md.push('');

@@ -1,0 +1,76 @@
+{
+ "id": "self-2852",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2852,
+ "title": "feat(chat-history): store credential placeholders, never the value",
+ "merged_at": "2026-11-04T20:54:23Z",
+ "merge": "af61c3c88c3650a38f660beb7047fbdcdb8e5021",
+ "parent": "08e85c06986bdf3fe09ed54b72cfa475c8867293",
+ "changed_lines": 203,
+ "diff_files": [
+  "agents/owner-questions.md",
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/archive/road-to-a-fill-the-session-sees-coming.md",
+  "agents/roadmaps/road-to-a-fill-the-session-sees-coming.md",
+  "docs/contracts/egress-placeholders-v1.md",
+  "src/scripts/_lib/chat_history_redact.ts",
+  "src/scripts/_lib/egress_drift_matrix.test.ts",
+  "src/scripts/_lib/egress_token.ts",
+  "src/scripts/chat_history.ts",
+  "tests/scripts/chat_history_credential_engine_missing.test.ts",
+  "tests/scripts/chat_history_credential_placeholders.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/egress_token.ts#replaceValues",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/chat_history.ts#_normalize_entries",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/chat_history.ts#append",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/_lib/egress_engine.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/_lib/egress_normalize.test.ts",
+   "test": true
+  },
+  {
+   "path": "src/scripts/_lib/egress_replacement_e2e.test.ts",
+   "test": true
+  },
+  {
+   "path": "src/scripts/_lib/egress_session_table.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/_lib/egress_text.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/_lib/egress_token.test.ts",
+   "test": true
+  },
+  {
+   "path": "src/scripts/check_egress_mutations.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/mcp_server/tools.ts",
+   "test": false
+  },
+  {
+   "path": "tests/scripts/chat_history.test.ts",
+   "test": true
+  }
+ ]
+}

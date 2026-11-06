@@ -1,0 +1,54 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md",
+  "agents/roadmaps/stubs/road-to-consumer-capability-share.md",
+  "src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts",
+  "src/scripts/check_bench_task_validity.ts",
+  "src/scripts/compile_router.ts",
+  "src/scripts/lint_bench_ab.ts",
+  "src/scripts/render_benchmark_composite.ts",
+  "src/scripts/render_benchmark_md.ts",
+  "tests/lib/agent_settings.test.ts",
+  "tests/scripts/bench_ab_v2_run.test.ts",
+  "tests/scripts/check_bench_task_validity.test.ts",
+  "tests/scripts/lint_bench_ab.test.ts",
+  "tests/scripts/render_benchmark_md.test.ts"
+ ],
+ "reply": "{\"files\": [\"tests/scripts/bench_ab_v2_run.test.ts\", \"tests/scripts/check_bench_task_validity.test.ts\", \"src/scripts/check_bench_task_validity.ts\", \"src/scripts/render_benchmark_md.ts\", \"src/scripts/compile_router.ts\", \"src/scripts/lint_bench_ab.ts\", \"src/scripts/render_benchmark_composite.ts\", \"tests/scripts/render_benchmark_md.test.ts\", \"tests/scripts/lint_bench_ab.test.ts\", \"tests/lib/agent_settings.test.ts\", \"src/agent-src/templates/scripts/work_engine/_lib/agent_settings.ts\", \"agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md\", \"agents/roadmaps/stubs/road-to-consumer-capability-share.md\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 345,
+  "cache_read_input_tokens": 42645,
+  "output_tokens": 307,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 345,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 307,
+    "cache_read_input_tokens": 42645,
+    "cache_creation_input_tokens": 345,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 345
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

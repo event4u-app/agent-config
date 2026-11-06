@@ -1,0 +1,184 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "AgentRunner",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:33"
+    },
+    {
+     "label": "run",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:56"
+    },
+    {
+     "label": "runStreaming",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:96"
+    },
+    {
+     "label": "disableOutputBuffering",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php:97"
+    },
+    {
+     "label": "openAiCompletedResponse",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php:45"
+    },
+    {
+     "label": "openAiUsage",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php:32"
+    },
+    {
+     "label": "tokenUsageContext",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php:60"
+    },
+    {
+     "label": "blockingActionResult",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php:31"
+    },
+    {
+     "label": "OpenAiImageGateway",
+     "verdict": "untested",
+     "witness": "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php:8"
+    },
+    {
+     "label": "sendImageGenerationRequest",
+     "verdict": "untested",
+     "witness": "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php:20"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    33,
+    72
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php",
+   "lines": [
+    8,
+    39
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php",
+   "lines": [
+    32,
+    40
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+   "lines": [
+    31,
+    42
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentScopeGuardrailTest.php",
+   "lines": [
+    13,
+    35
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Providers/MagicAIServiceProvider.php",
+   "lines": [
+    24,
+    41
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    56,
+    87
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Gateways/OpenAiImageGateway.php",
+   "lines": [
+    20,
+    38
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php",
+   "lines": [
+    45,
+    58
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+   "lines": [
+    48,
+    60
+   ]
+  },
+  {
+   "path": "packages/Webkul/MagicAI/src/Providers/MagicAIServiceProvider.php",
+   "lines": [
+    43,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    96,
+    135
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php",
+   "lines": [
+    60,
+    74
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/AgentRunnerTokenUsageTest.php",
+   "lines": [
+    97,
+    97
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    73,
+    758
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    136,
+    210
+   ]
+  }
+ ]
+}

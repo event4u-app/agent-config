@@ -184,6 +184,22 @@ describe('bench_ab_v2_run — pure helpers', () => {
         });
     });
 
+    // Asserted on purpose, not on wording: the arm is the floor an asset must beat,
+    // so it has to stay short, carry no package vocabulary, and name the behaviours scored.
+    it('minimal-prompt: a few plain sentences that carry the scored behaviours and nothing of the package', () => {
+        const text = injected_text('minimal', 2000) as string;
+        expect(text.length).toBeGreaterThan(0);
+        expect(text.length).toBeLessThan(400);
+        for (const behaviour of [/smallest change/i, /callers|everything it affects/i, /read .* before asking/i, /tests? before/i]) {
+            expect(text).toMatch(behaviour);
+        }
+        for (const pkg of ['Iron Law', 'HARD CONSTRAINT', 'agent-config', 'skill', 'rule', 'downstream-changes', 'scope-control']) {
+            expect(text).not.toContain(pkg);
+        }
+        expect(ARMS['minimal-prompt']).toEqual({ setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null });
+        expect(injected_text('bare-principle', 2000)).toBe(bare_principle_text());
+    });
+
     it('ARMS: the neighbour arm scopes this package away and loads a plugin from a directory', () => {
         expect(ARMS['neighbour']).toEqual({
             setting_sources: 'project,local',

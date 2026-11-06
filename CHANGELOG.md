@@ -32,6 +32,21 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
+* **code-graph (Laravel):** the route lane reads a package's own route files —
+  those a provider loads with `loadRoutesFrom(__DIR__ …)` or `group(__DIR__ …)`,
+  and the files they `require` — and resolves `Route::controller(C::class)`
+  groups with bare method-name handlers. Views resolve by namespace
+  (`loadViewsFrom`, `Blade::anonymousComponentPath`) for `view('ns::…')`,
+  `@include('ns::…')` and `<x-ns::…>`.
+* **detectors:** the silent-catch entry-path reading starts at a template the
+  graph states is rendered or included, and walks `renders` / `includes` edges,
+  so inline script in a routed page is read instead of left unanswered.
+* **self-review gate workflow:** a separate, advisory `graph-checks` job reports
+  the code graph's three review checks beside the gate (job summary and a
+  `code-graph-checks` artifact, never a PR comment). It is not a required check;
+  the dispositions ledger refuses its artifact. Off switch: repository variable
+  `GRAPH_CHECKS_JOB=off`.
+
 * **skills:** `/mcp` and `/code-review` open Claude Code's own commands again.
   The package skills that shadowed them are renamed `mcp-tool-use` and
   `code-review-lens`; `user-invocable: false` had only hidden them from the
@@ -70,6 +85,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   reference edges: `imports_from`, `re_exports`, `dynamic_import` and `includes`
   load as imports, and `references_constant`, `uses_static_prop` and `mixes_in`
   (trait use) as uses. They were dropped as unmapped relations before.
+* **code-graph:** `review-risk` no longer reads a lane-backed term as `0` when its
+  lane never ran (a `--no-lanes` build, an older or a foreign graph): a term that
+  counted nothing then reads `unknown (lane not run)` and the band reads `unknown`.
+  Facts the graph does carry still count.
 
 Twenty entries that had accumulated here were drained to
 [`docs/archive/CHANGELOG-unreleased-drain-2026-10.md`](docs/archive/CHANGELOG-unreleased-drain-2026-10.md)

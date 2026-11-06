@@ -1,0 +1,355 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "AgentRunner",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:33"
+    },
+    {
+     "label": "recordStreamingTokens",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:278"
+    },
+    {
+     "label": "run",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:56"
+    },
+    {
+     "label": "runStreaming",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:97"
+    },
+    {
+     "label": "BoundedAgent",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/BoundedAgent.php:24"
+    },
+    {
+     "label": "AiApiClient",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php:16"
+    },
+    {
+     "label": "buildAnthropicSystemBlocks",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php:288"
+    },
+    {
+     "label": "buildChatBody",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php:203"
+    },
+    {
+     "label": "ChatController",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php:31"
+    },
+    {
+     "label": "recordTokenUsage",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php:263"
+    },
+    {
+     "label": "send",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php:42"
+    },
+    {
+     "label": "DashboardController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php:14"
+    },
+    {
+     "label": "analytics",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php:28"
+    },
+    {
+     "label": "TokenUsageRecorder",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php:14"
+    },
+    {
+     "label": "tracksCachedTokens",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php:96"
+    },
+    {
+     "label": "cachingChatContext",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php:26"
+    },
+    {
+     "label": "fakeAnthropicReply",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php:51"
+    },
+    {
+     "label": "run",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php:134"
+    },
+    {
+     "label": "todayUsageRow",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/tests/Feature/TokenUsageRecorderCachedTokensTest.php:14"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    33,
+    72
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+   "lines": [
+    16,
+    55
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/BoundedAgent.php",
+   "lines": [
+    24,
+    46
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+   "lines": [
+    31,
+    70
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php",
+   "lines": [
+    26,
+    49
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/TokenUsageRecorderCachedTokensTest.php",
+   "lines": [
+    14,
+    20
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+   "lines": [
+    31,
+    42
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentScopeGuardrailTest.php",
+   "lines": [
+    13,
+    35
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+   "lines": [
+    10,
+    24
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    278,
+    281
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+   "lines": [
+    203,
+    233
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php",
+   "lines": [
+    96,
+    99
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+   "lines": [
+    263,
+    266
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    28,
+    67
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+   "lines": [
+    48,
+    60
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    73,
+    772
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+   "lines": [
+    56,
+    464
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Services/TokenUsageRecorder.php",
+   "lines": [
+    54,
+    108
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+   "lines": [
+    71,
+    386
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    54,
+    177
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/DashboardController.php",
+   "lines": [
+    68,
+    78
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php",
+   "lines": [
+    51,
+    67
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AiApiClientPromptCachingTest.php",
+   "lines": [
+    26,
+    40
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    56,
+    88
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+   "lines": [
+    288,
+    307
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+   "lines": [
+    82,
+    91
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Controllers/ChatController.php",
+   "lines": [
+    42,
+    81
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Feature/ChatPromptCachingTest.php",
+   "lines": [
+    134,
+    141
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    137,
+    227
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    97,
+    136
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+   "lines": [
+    88,
+    99
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Http/Client/AiApiClient.php",
+   "lines": [
+    106,
+    118
+   ]
+  }
+ ]
+}

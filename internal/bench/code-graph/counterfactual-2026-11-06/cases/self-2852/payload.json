@@ -1,0 +1,462 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "Entry",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/chat_history_redact.ts:3"
+    },
+    {
+     "label": "isPlainObject",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/chat_history_redact.ts:5"
+    },
+    {
+     "label": "leaf",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/chat_history_redact.ts:19"
+    },
+    {
+     "label": "redact_credentials",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/chat_history_redact.ts:16"
+    },
+    {
+     "label": "walk",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/chat_history_redact.ts:27"
+    },
+    {
+     "label": "PATTERN_GRADE",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/egress_drift_matrix.test.ts:74"
+    },
+    {
+     "label": "replaceValues",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/egress_token.ts:246"
+    },
+    {
+     "label": "_normalize_entries",
+     "verdict": "tested",
+     "witness": "src/scripts/chat_history.ts:618"
+    },
+    {
+     "label": "append",
+     "verdict": "tested",
+     "witness": "src/scripts/chat_history.ts:569"
+    },
+    {
+     "label": "ALNUM",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:16"
+    },
+    {
+     "label": "EMAIL",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:21"
+    },
+    {
+     "label": "GITHUB_PAT",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:19"
+    },
+    {
+     "label": "RSA",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:22"
+    },
+    {
+     "label": "STRIPE_KEY",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:20"
+    },
+    {
+     "label": "dirs",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:24"
+    },
+    {
+     "label": "historyFile",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:25"
+    },
+    {
+     "label": "onDisk",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:37"
+    },
+    {
+     "label": "run",
+     "verdict": "untested",
+     "witness": "tests/scripts/chat_history_credential_placeholders.test.ts:17"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/_lib/egress_token.ts",
+   "lines": [
+    246,
+    257
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/chat_history_redact.ts",
+   "lines": [
+    16,
+    36
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    569,
+    593
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    17,
+    17
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/egress_drift_matrix.test.ts",
+   "lines": [
+    74,
+    82
+   ]
+  },
+  {
+   "path": "internal/bench/egress-engine/run.ts",
+   "lines": [
+    125,
+    132
+   ]
+  },
+  {
+   "path": "internal/bench/egress-paired-quality/run.ts",
+   "lines": [
+    61,
+    71
+   ]
+  },
+  {
+   "path": "internal/bench/egress-roundtrip/scorer.ts",
+   "lines": [
+    37,
+    37
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/egress_replacement_e2e.test.ts",
+   "lines": [
+    116,
+    123
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/egress_session_table.ts",
+   "lines": [
+    293,
+    295
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/egress_text.ts",
+   "lines": [
+    42,
+    51
+   ]
+  },
+  {
+   "path": "src/scripts/mcp_server/tools.ts",
+   "lines": [
+    208,
+    214
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/chat_history_redact.ts",
+   "lines": [
+    27,
+    32
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    618,
+    634
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    19,
+    19
+   ]
+  },
+  {
+   "path": "internal/bench/egress-engine/run.ts",
+   "lines": [
+    157,
+    175
+   ]
+  },
+  {
+   "path": "internal/bench/egress-paired-quality/run.ts",
+   "lines": [
+    144,
+    183
+   ]
+  },
+  {
+   "path": "internal/bench/egress-roundtrip/scorer.ts",
+   "lines": [
+    108,
+    111
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/egress_text.ts",
+   "lines": [
+    59,
+    65
+   ]
+  },
+  {
+   "path": "src/scripts/mcp_server/tools.ts",
+   "lines": [
+    287,
+    326
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/chat_history_redact.ts",
+   "lines": [
+    5,
+    7
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    636,
+    651
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    20,
+    20
+   ]
+  },
+  {
+   "path": "internal/bench/egress-engine/run.ts",
+   "lines": [
+    177,
+    208
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/chat_history_redact.ts",
+   "lines": [
+    19,
+    26
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    653,
+    667
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    25,
+    31
+   ]
+  },
+  {
+   "path": "internal/bench/egress-engine/run.ts",
+   "lines": [
+    179,
+    179
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/chat_history_redact.ts",
+   "lines": [
+    3,
+    3
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1271,
+    1310
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    37,
+    37
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    16,
+    16
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    21,
+    21
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    22,
+    22
+   ]
+  },
+  {
+   "path": "tests/scripts/chat_history_credential_placeholders.test.ts",
+   "lines": [
+    24,
+    24
+   ]
+  },
+  {
+   "path": "internal/bench/egress-paired-quality/run.ts",
+   "lines": [
+    184,
+    206
+   ]
+  },
+  {
+   "path": "src/scripts/mcp_server/tools.ts",
+   "lines": [
+    327,
+    353
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1311,
+    1314
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1360,
+    1445
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1320,
+    1359
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1728,
+    1781
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1688,
+    1727
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1920,
+    1957
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    1880,
+    1919
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    2021,
+    2052
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    2073,
+    2111
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    2140,
+    2164
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    2275,
+    2301
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    2347,
+    2349
+   ]
+  },
+  {
+   "path": "src/scripts/chat_history.ts",
+   "lines": [
+    2307,
+    2346
+   ]
+  }
+ ]
+}

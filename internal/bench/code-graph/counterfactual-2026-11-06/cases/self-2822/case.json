@@ -1,0 +1,33 @@
+{
+ "id": "self-2822",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2822,
+ "title": "fix(media): a steady ROI freeze reading on every runner",
+ "merged_at": "2026-11-03T11:44:09Z",
+ "merge": "9278cd01088b71d399dd7224d8572296d7d0b2e8",
+ "parent": "1ac7eebe04000ee2d95364f59a8cc483ecbb5abd",
+ "changed_lines": 126,
+ "diff_files": [
+  "agents/evidence/ratifications/fix-steady-roi-freeze.md",
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/stubs/road-to-a-steady-roi-freeze.md",
+  "src/config/hook-bundle-budget.json",
+  "src/scripts/check_suppression_hygiene.ts",
+  "src/scripts/media/lib/video-qa.sh",
+  "tests/fixtures/media/generate.ts",
+  "tests/scripts/media_video_qa.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/check_suppression_hygiene.ts#SUPPRESSION_INVENTORY",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "tests/scripts/check_suppression_hygiene.test.ts",
+   "test": true
+  }
+ ]
+}

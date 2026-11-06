@@ -90,8 +90,8 @@ the **reported check names** — the strings a required-check list must match.
 | `standing-payload-delta.yml` | `Standing payload delta + budget gate` **(required — the second of two since 2026-09-11; ruleset read 2026-10-07)** — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it was pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
 | `rule-backstops.yml` | `Rule backstops` |
 | `no-python-in-src.yml` | `no-python-in-src` |
-| `commit-subjects.yml` | `lint commit subjects` |
-| evaluator / originality | `originality-gate` · `gate-dry-run` · `live-advisory` |
+| `commit-subjects.yml` | `lint commit subjects` **(required — the third; ruleset read 2026-11-06)** |
+| evaluator / originality | `originality-gate` · `gate-dry-run` · `live-advisory` · `graph-checks` (advisory, `continue-on-error`, not in the ruleset) |
 | `glama-mcp-smoke.yml` | `glama MCP smoke` |
 | `deploy-mcp-worker.yml` | `MCP worker deploy dry-run` |
 | `consumer-matrix.yml` | `Plugin bootstrap integrity` · `Packed-artifact evaluation (clean container)` |

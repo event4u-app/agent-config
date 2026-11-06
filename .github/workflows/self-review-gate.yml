@@ -138,3 +138,72 @@ jobs:
           path: /tmp/self-review-findings.json
           retention-days: 30
           if-no-files-found: ignore
+
+
+  # The code graph's three review checks (untested change, missing co-change
+  # partner, touched entry point), reported BESIDE the gate, never by it —
+  # roadmap `road-to-a-graph-that-wins` AC-8 as the owner narrowed it on
+  # 2026-11-06, after five AI-council rounds refused every placement on the
+  # gate's required path (`agents/evidence/council/graph-checks-*`).
+  #
+  # Optional because the branch ruleset does not list it (read 2026-11-06:
+  # three required checks, none from this workflow). `continue-on-error` only
+  # keeps a red here from failing the workflow run; it does not make a check
+  # optional, the ruleset does. No step here is a dependency of the gate's jobs.
+  #
+  # Read-only token (`contents: read`, no PR comment) — which limits the token,
+  # not what `npm ci` may do to the workspace; that is why the report refuses
+  # a checkout that differs from its commit. It checks out the PR's REAL head,
+  # never the synthetic merge commit, so every SHA it records exists.
+  #
+  # Artifact `code-graph-checks` holds `graph_findings`, never `findings`, and
+  # the dispositions ledger refuses to ingest it. "No analysis" and "no report"
+  # are both stated as such, never as a pass.
+  #
+  # Off switch: repository variable GRAPH_CHECKS_JOB=off. Turn it off when it
+  # times out on consecutive PRs, reports rows that misstate the diff, or
+  # contends with the required checks for runners; the maintainer decides.
+  graph-checks:
+    if: github.event_name == 'pull_request' && vars.GRAPH_CHECKS_JOB != 'off'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          # Full history: the merge-base, and the co-change check's history.
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund --prefer-offline
+      # Builds the graph itself, from this clean checkout, then reports. Seven
+      # minutes (measured: about 25 s to build this repository) so the summary
+      # and the upload below always keep time to run.
+      - name: Build the graph and report its checks (advisory)
+        timeout-minutes: 7
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: ./node_modules/.bin/tsx src/scripts/graph_checks_report.ts --base "origin/$BASE_REF" --out "$RUNNER_TEMP/graph-checks"
+      - name: Job summary
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/graph-checks"
+          if [ -f "$RUNNER_TEMP/graph-checks/summary.md" ]; then
+            cat "$RUNNER_TEMP/graph-checks/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Code-graph review checks: no report was written (the job failed before the report step finished). No analysis is not a pass." >> "$GITHUB_STEP_SUMMARY"
+            echo '{"schema":"graph-checks-report/1","advisory":true,"status":"no-report","reason":"the job failed before the report step finished"}' > "$RUNNER_TEMP/graph-checks/graph-checks.json"
+          fi
+      - name: Upload the graph-checks artifact
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: code-graph-checks
+          path: ${{ runner.temp }}/graph-checks/graph-checks.json
+          retention-days: 30
+          if-no-files-found: ignore

@@ -1,5 +1,5 @@
 /**
- * The pre-registered analysis of proof-where 1.7 (`internal/bench/headroom-17-PREREG.md`).
+ * The pre-registered analysis in `internal/bench/headroom-17-PREREG.md`.
  *
  * Reads one paired report and prints the endpoints exactly as registered:
  * capability C vs B, paired by (task, seed), one-sided exact sign test on the

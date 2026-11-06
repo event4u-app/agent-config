@@ -1,0 +1,44 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  ".github/workflows/standing-payload-delta.yml",
+  "src/scripts/_lib/standing_bound_ratchet.ts",
+  "tests/scripts/standing_bound_ratchet.test.ts"
+ ],
+ "reply": "{\"files\": [\".github/workflows/standing-payload-delta.yml\", \"tests/scripts/standing_bound_ratchet.test.ts\", \"src/scripts/_lib/standing_bound_ratchet.ts\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 10761,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 77,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 10761,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 77,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 10761,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 10761
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

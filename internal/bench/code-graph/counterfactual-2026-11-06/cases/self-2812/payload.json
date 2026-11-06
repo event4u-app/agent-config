@@ -1,0 +1,237 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "SUPPRESSION_INVENTORY",
+     "verdict": "tested",
+     "witness": "src/scripts/check_suppression_hygiene.ts:149"
+    },
+    {
+     "label": "blankComments",
+     "verdict": "reached-by-tested-caller",
+     "witness": "src/scripts/design_slop_rules.ts:128"
+    },
+    {
+     "label": "cssBlocks",
+     "verdict": "tested",
+     "witness": "src/scripts/design_slop_rules.ts:108"
+    },
+    {
+     "label": "main",
+     "verdict": "untested",
+     "witness": "src/scripts/hooks/design_pass_hook.ts:628"
+    },
+    {
+     "label": "BUNDLE",
+     "verdict": "untested",
+     "witness": "tests/hooks/design_pass_dispatch.test.ts:13"
+    },
+    {
+     "label": "GRADIENT_TEXT",
+     "verdict": "untested",
+     "witness": "tests/hooks/design_pass_dispatch.test.ts:20"
+    },
+    {
+     "label": "REPO_ROOT",
+     "verdict": "untested",
+     "witness": "tests/hooks/design_pass_dispatch.test.ts:12"
+    },
+    {
+     "label": "dispatchWrite",
+     "verdict": "untested",
+     "witness": "tests/hooks/design_pass_dispatch.test.ts:22"
+    },
+    {
+     "label": "tmpDirs",
+     "verdict": "untested",
+     "witness": "tests/hooks/design_pass_dispatch.test.ts:15"
+    },
+    {
+     "label": "EVENT_P95_MS",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:13"
+    },
+    {
+     "label": "REMOVED",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:20"
+    },
+    {
+     "label": "REPO",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:12"
+    },
+    {
+     "label": "files",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:40"
+    },
+    {
+     "label": "lineOf",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:24"
+    },
+    {
+     "label": "next",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:57"
+    },
+    {
+     "label": "timed",
+     "verdict": "untested",
+     "witness": "tests/scripts/design_slop_css_blocks_linear.test.ts:33"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "docs/guidelines/design-antipatterns.md",
+     "witness": "docs/guidelines/design-antipatterns.md:1"
+    },
+    {
+     "label": "src/scripts/design_slop_rules.test.ts",
+     "witness": "src/scripts/design_slop_rules.test.ts:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/design_slop_rules.ts",
+   "lines": [
+    108,
+    125
+   ]
+  },
+  {
+   "path": "src/scripts/check_suppression_hygiene.ts",
+   "lines": [
+    149,
+    188
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    40,
+    44
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/design_pass_hook.ts",
+   "lines": [
+    628,
+    667
+   ]
+  },
+  {
+   "path": "tests/hooks/design_pass_dispatch.test.ts",
+   "lines": [
+    22,
+    38
+   ]
+  },
+  {
+   "path": "src/scripts/design_slop_rules.ts",
+   "lines": [
+    128,
+    135
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    20,
+    31
+   ]
+  },
+  {
+   "path": "tests/hooks/design_pass_dispatch.test.ts",
+   "lines": [
+    12,
+    12
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    24,
+    24
+   ]
+  },
+  {
+   "path": "tests/hooks/design_pass_dispatch.test.ts",
+   "lines": [
+    13,
+    13
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    33,
+    37
+   ]
+  },
+  {
+   "path": "tests/hooks/design_pass_dispatch.test.ts",
+   "lines": [
+    15,
+    15
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    57,
+    57
+   ]
+  },
+  {
+   "path": "tests/hooks/design_pass_dispatch.test.ts",
+   "lines": [
+    20,
+    20
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    12,
+    12
+   ]
+  },
+  {
+   "path": "tests/scripts/design_slop_css_blocks_linear.test.ts",
+   "lines": [
+    13,
+    17
+   ]
+  },
+  {
+   "path": "src/scripts/check_suppression_hygiene.ts",
+   "lines": [
+    189,
+    287
+   ]
+  },
+  {
+   "path": "src/scripts/hooks/design_pass_hook.ts",
+   "lines": [
+    668,
+    751
+   ]
+  }
+ ]
+}

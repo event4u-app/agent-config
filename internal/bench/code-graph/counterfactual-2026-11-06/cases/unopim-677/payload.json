@@ -1,0 +1,127 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "up",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/src/Database/Migrations/2026_07_23_000004_create_publication_version_documents_table.php:9"
+    },
+    {
+     "label": "PublicationAssetController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php:14"
+    },
+    {
+     "label": "isReferenced",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php:110"
+    },
+    {
+     "label": "SyncPublicationVersionDocuments",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php:19"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php:21"
+    },
+    {
+     "label": "PublicationTestCase",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/tests/PublicationTestCase.php:24"
+    },
+    {
+     "label": "republishWithDocument",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Publication/tests/PublicationTestCase.php:162"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php",
+   "lines": [
+    19,
+    37
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/tests/PublicationTestCase.php",
+   "lines": [
+    24,
+    63
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/src/Database/Migrations/2026_07_23_000004_create_publication_version_documents_table.php",
+   "lines": [
+    9,
+    31
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php",
+   "lines": [
+    110,
+    119
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/src/Listeners/SyncPublicationVersionDocuments.php",
+   "lines": [
+    21,
+    36
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/tests/PublicationTestCase.php",
+   "lines": [
+    162,
+    180
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php",
+   "lines": [
+    36,
+    73
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/src/Http/Controllers/PublicationAssetController.php",
+   "lines": [
+    54,
+    120
+   ]
+  },
+  {
+   "path": "packages/Webkul/Publication/tests/PublicationTestCase.php",
+   "lines": [
+    64,
+    181
+   ]
+  }
+ ]
+}

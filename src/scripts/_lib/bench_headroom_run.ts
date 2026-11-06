@@ -1,5 +1,5 @@
 /**
- * Live execution of the proof-where 1.7 orchestrated arms: one clone, every step a
+ * Live execution of the orchestrated arms (test-first, review): one clone, every step a
  * separate host call with the arm's package setup. The record shape stays in
  * `bench_ab_v2_run.ts`; this module only runs the steps.
  */
