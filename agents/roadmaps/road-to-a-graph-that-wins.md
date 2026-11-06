@@ -198,12 +198,13 @@ tracked.
       Done when `run_bench_v3.ts --truth` reads the new file and each of (a)–(c) is resolved
       or carried as a named stratum in the report.
       > note: done 2026-11-05 — registration § Residual strata, committed before any arm was scored; `truth-v3-2026-11-05-strata.yaml` carries the sealed file sets unchanged plus (a) 135 `two_voice_files` (no fourth provider is configured, so marked, not re-judged), (b) `lower_bound` on `uo-e-01` and `uo-e-03` (recall-only in the scorer), (c) 55 `faked_files` (a deliberately broad rule: any queue/bus/event fake or mock in the test — itself an overcount, stated). `run_bench_v3.ts --truth` reads it and reports a strict stratum per class (`tests/scripts/code_graph/bench_v3_strata.test.ts`). The strict stratum turns no verdict.
-- [ ] 2.8 Same-roots parity run against the external tool the `inbox-2026-10-bb` round
+- [x] 2.8 Same-roots parity run against the external tool the `inbox-2026-10-bb` round
       compared, on `src/scripts/` and both subjects, scored per `resolved_via` with the 2.6
       runner. It runs on the maintainer's machine and is recorded without the tool's name.
       Blocked on the owner: the tool is not installed, and this suite installs no external
       code (ADR-259). Done when the owner has installed it and the run is recorded beside
       `internal/bench/reports/code-graph-v3-edges-2026-11-06.md`.
+      > note: done 2026-11-06 — the owner authorised the install this session; the tool ran at a pinned release in a local image with `--network none`, code-only. Report: `internal/bench/reports/code-graph-v3-parity-2026-11-06.md` (raw output beside it). `parity_graph_adapter.ts` keys the tool's edges on its own confidence tag and maps its symbols onto the native ranges (`npx vitest run tests/scripts/code_graph/parity_graph_adapter.test.ts` -> 0). No side wins outright: on PHP the native graph leads on stated precision and on file and symbol recall (larasend file recall 96.8 vs 83.1 %); on TypeScript the tool leads at symbol level (`src/scripts/` stated symbol precision 98.9 vs 94.9 %, unopim symbol recall 93.7 vs 79.6 %), the native gap sitting in `same-file`. That gap is the oracle's: 2,012 of its 2,212 unconfirmed edges call nested functions (SCIP `local` symbols) and 158 are the constructor-naming limit, both named in 2.6; 42 remain, and the tool has no node for the sampled nested functions, so it is not scored on them.
 
 ## Phase 3 — The gate feeder
 - [x] 3.1 Enforce the edge acceptance policy in every consumer. Corrected 2026-10-27
