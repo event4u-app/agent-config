@@ -390,8 +390,8 @@ Two reach gaps account for what the run could trace.
       after the change, with the share still unanswered reported per construct.
 - [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
       the same labels (no relabelling) and publish the paired verdict beside the original.
-      verify: `tsx internal/bench/code-graph/detector_labels.ts report` over the re-read rows,
-      committed as a new dated report.
+      verify: `ls internal/bench/reports/code-graph-detector-labels-*.md | wc -l` -> /^\s*[2-9]/
+      (a second dated report, written by the runner's report command over the re-read rows).
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
