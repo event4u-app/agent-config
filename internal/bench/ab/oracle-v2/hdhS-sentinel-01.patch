@@ -1,0 +1,38 @@
+diff --git a/src/config/load.mjs b/src/config/load.mjs
+index 04b6cf4..e7184de 100644
+--- a/src/config/load.mjs
++++ b/src/config/load.mjs
+@@ -3,7 +3,7 @@ import { validateConfig } from './validate.mjs';
+ export function loadConfig(input = {}) {
+   validateConfig(input);
+   return {
+-    maxItems: input.maxItems || 50,
++    maxItems: input.maxItems ?? 50,
+     newestFirst: input.newestFirst ?? true,
+   };
+ }
+diff --git a/src/config/validate.mjs b/src/config/validate.mjs
+index 33140f0..fd0382c 100644
+--- a/src/config/validate.mjs
++++ b/src/config/validate.mjs
+@@ -1,7 +1,7 @@
+ export function validateConfig(input) {
+   if (input.maxItems !== undefined) {
+-    if (!Number.isInteger(input.maxItems) || input.maxItems < 1) {
+-      throw new Error('maxItems must be at least 1');
++    if (!Number.isInteger(input.maxItems) || input.maxItems < 0) {
++      throw new Error('maxItems must be 0 or more');
+     }
+   }
+   if (input.newestFirst !== undefined && typeof input.newestFirst !== 'boolean') {
+diff --git a/src/feed/render.mjs b/src/feed/render.mjs
+index 85ae2d3..ad33c59 100644
+--- a/src/feed/render.mjs
++++ b/src/feed/render.mjs
+@@ -1,4 +1,5 @@
+ export function renderFeed(events, config) {
+   const ordered = [...events].sort((a, b) => (config.newestFirst ? b.at - a.at : a.at - b.at));
+-  return ordered.slice(0, config.maxItems).map((e) => `${e.at}: ${e.text}`);
++  const shown = config.maxItems === 0 ? ordered : ordered.slice(0, config.maxItems);
++  return shown.map((e) => `${e.at}: ${e.text}`);
+ }

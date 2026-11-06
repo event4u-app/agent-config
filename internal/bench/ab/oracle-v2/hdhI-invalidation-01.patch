@@ -1,0 +1,55 @@
+diff --git a/src/access/policy.mjs b/src/access/policy.mjs
+index 78bac61..51f98f6 100644
+--- a/src/access/policy.mjs
++++ b/src/access/policy.mjs
+@@ -1,4 +1,4 @@
+-import { getRoles } from '../auth/roles.mjs';
++import { getRoleVersion, getRoles } from '../auth/roles.mjs';
+ 
+ const RULES = {
+   'admin-panel': ['admin'],
+@@ -9,8 +9,13 @@ const RULES = {
+ // Access decisions are evaluated on every render of every widget; a user's
+ // decision for a resource is stable for the lifetime of their session.
+ const decisions = new Map();
++let decisionsVersion = getRoleVersion();
+ 
+ export function canAccess(userId, resource) {
++  if (decisionsVersion !== getRoleVersion()) {
++    decisions.clear();
++    decisionsVersion = getRoleVersion();
++  }
+   const key = `${userId}|${resource}`;
+   if (decisions.has(key)) return decisions.get(key);
+   const allowed = (RULES[resource] ?? []).some((r) => getRoles(userId).includes(r));
+diff --git a/src/auth/roles.mjs b/src/auth/roles.mjs
+index 2e0993d..78a4cd2 100644
+--- a/src/auth/roles.mjs
++++ b/src/auth/roles.mjs
+@@ -6,6 +6,13 @@ const assignments = new Map([
+ // Role lookups happen on every request, so they are cached per user.
+ const roleCache = new Map();
+ 
++// Bumped on every role change so derived caches can tell they are stale.
++let roleVersion = 0;
++
++export function getRoleVersion() {
++  return roleVersion;
++}
++
+ export function getRoles(userId) {
+   if (roleCache.has(userId)) return roleCache.get(userId);
+   const roles = [...(assignments.get(userId) ?? [])].sort();
+@@ -16,8 +23,12 @@ export function getRoles(userId) {
+ export function grantRole(userId, role) {
+   if (!assignments.has(userId)) assignments.set(userId, new Set());
+   assignments.get(userId).add(role);
++  roleCache.delete(userId);
++  roleVersion += 1;
+ }
+ 
+ export function revokeRole(userId, role) {
+   assignments.get(userId)?.delete(role);
++  roleCache.delete(userId);
++  roleVersion += 1;
+ }
