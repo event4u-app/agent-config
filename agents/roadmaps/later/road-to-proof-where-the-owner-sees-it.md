@@ -121,6 +121,11 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   and after a look in 6/20 on `trapC-ambig-01` (control 11/20). The bar is missed, and the difference is
   within noise (p = 0.36). Open: the bar needs a sample size that can separate single-digit rates (`bench:ab:power`)
   before another wording is measured; the rule stays unchanged.
+  Sized 2026-11-06 (`bench_ab_power`, paired sign test, α 0.05, power 0.8, independent
+  per-run rates): the bar's own distance (control 15 % → candidate 7.5 % blind) needs
+  **240 pairs per arm**; a candidate at 5 % needs 124, at 2.5 % needs 57. At the measured
+  $0.023 per Haiku run, 240 pairs per arm is 480 runs, about $11. The next measurement
+  runs at that size or not at all, and waits on `b-owner-spend`.
 - [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
@@ -315,7 +320,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 ### blocker: b-owner-spend
 
 - **Owner:** user
-- **What:** every paid sweep (1.7, 1.7d, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
+- **What:** every paid sweep (1.6, 1.7, 1.7d, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
   the three bars it is judged against, set before the run and never after: the
   false-positive ceiling for reviewer findings, the cost `D` of an escaped defect for the
   net-value line `p_catch · D − C_review − r_FP · C_FP`, and arm A's base profile
@@ -326,7 +331,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   the bars set by the agent on the owner's instruction and recorded as D4 below
   before any run. Spent 2026-11-06: $67.41 (smoke $1.94, sweep $65.47); arms A–C ran,
   D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
-  1.7d, 2.5, 5.1–5.2.
+  1.6 (sized at about $11), 1.7d, 2.5, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store
