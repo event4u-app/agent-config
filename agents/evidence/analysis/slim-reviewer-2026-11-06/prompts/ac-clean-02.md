@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/ring-buffer.ts
 Change: the files in scope, as they stand in the working directory.
 Requirement: the code under review behaves correctly for every input its signature admits.

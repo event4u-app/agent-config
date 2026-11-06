@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/parse/toInt.ts
 Change (also in `change.diff` in the working directory):
 ```diff

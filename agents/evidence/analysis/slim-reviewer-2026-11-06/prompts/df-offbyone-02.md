@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/pager/pageRange.ts
 Change (also in `change.diff` in the working directory):
 ```diff

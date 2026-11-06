@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/util/lastN.ts
 Change (also in `change.diff` in the working directory):
 ```diff

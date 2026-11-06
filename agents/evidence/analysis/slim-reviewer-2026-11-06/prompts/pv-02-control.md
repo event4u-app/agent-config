@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/slugify.ts
 Change: the files in scope, as they stand in the working directory.
 Requirement: the `slugify` function in src/slugify.ts is implemented.

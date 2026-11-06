@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/util/clamp.ts
 Change (also in `change.diff` in the working directory):
 ```diff

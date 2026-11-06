@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 Scope: src/auth/login.ts
 Change (also in `change.diff` in the working directory):
 ```diff
