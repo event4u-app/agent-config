@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Review, round 2: the self-review gate consumes the code graph's review checks
 
 Round 1 (both seats) refused the first version. This revision answers its findings:

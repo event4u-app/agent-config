@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Review, round 3: the self-review gate consumes the code graph's review checks
 
 Round 2: anthropic `confirmed-non-expanding` with required changes, openai `refused`. Each convergent requirement, and where it is now met:

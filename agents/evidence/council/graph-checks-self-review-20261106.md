@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council review — wiring the code graph's review checks into the self-review gate (AC-8), 2026-11-06
 
 Five rounds, two seats (anthropic, openai), design lens, invoked as owner-directed council

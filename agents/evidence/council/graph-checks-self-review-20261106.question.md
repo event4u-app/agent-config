@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Review: the self-review gate starts consuming the code graph's three review checks
 
 The diff below makes `self_review_gate.ts` append the code graph's three deterministic review checks (`untested-change`, `missing-co-change`, `touched-entry-point`) to the model reviewer's findings, through a new helper `graphChecksForRange` in `_lib/graph_check_findings.ts`. Each appended finding is `severity: low`, `kind: correctness`, `disposition: advisory`. The gate's blocking rule (`classifyBlocking`) blocks only security/claim findings of critical/high severity. When no graph is built, the base does not resolve, or reading fails, the helper returns one advisory finding saying the checks did not run.

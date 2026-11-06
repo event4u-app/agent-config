@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Review, round 4: the self-review gate consumes the code graph's review checks
 
 Round 3: both seats `refused`. Each requirement, and where it is now met:

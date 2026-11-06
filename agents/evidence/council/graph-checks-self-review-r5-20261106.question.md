@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Review, round 5: the self-review gate reports the code graph's review checks — separated from the model review
 
 Round 4: both seats `refused`; the shared reporting path was the boundary (graph data entering the model's artifact, its ingestion and the PR comment; control characters and comment markers; write failures; graph work before the model result was secured). This round changes the design instead of patching it:
