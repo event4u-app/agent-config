@@ -31,12 +31,28 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { RULE_PACKS_AUTO, consumerRuleWorkspaces, resolve_rule_pack_scope } from '../scripts/_lib/scoped_projection.js';
-import { rule_in_scope } from './ruleInScope.js';
+import { DISCIPLINE_PROFILE_RULES } from '../shared/disciplineProfiles.js';
+import { parseFrontmatter, rule_in_scope } from './ruleInScope.js';
 /**
  * Rules excluded from EVERY consumer install path regardless of scope —
  * same treatment on project and global (see module doc for the decision).
  */
 export const COMPAT_ALWAYS_EXCLUDED = ['source-of-truth.md'];
+/**
+ * The rule set an EXPLICIT `discipline_profile` narrows the install to.
+ *
+ * Only `essential` and `off` narrow. `full`, `auto`, `custom`, an unrendered
+ * placeholder and an absent key return `null` and ship every rule: `auto`
+ * resolves per session against a model id the installer does not have, and
+ * the shipped default stays the full set until it is re-measured.
+ */
+export function disciplineProfileRules(settings) {
+    const value = settings['discipline_profile'];
+    if (value === 'essential' || value === 'off') {
+        return DISCIPLINE_PROFILE_RULES[value];
+    }
+    return null;
+}
 export const LEGACY_ALL = { workspaces: null, packs: null };
 /** Non-empty string-array extraction; anything else → null (legacy-all). */
 export function _list(value) {
@@ -81,6 +97,7 @@ export function ruleScopeFromSettings(settings, packageRoot) {
         workspaces: derivedWorkspaces,
         packs,
         roles: _list(p['rule_roles']),
+        profileRules: disciplineProfileRules(settings),
     };
 }
 /** `runtime.active_packs` overlay from an already-parsed settings object. */
@@ -106,7 +123,18 @@ export function ruleFileArrives(sourcePath, scope) {
     if (COMPAT_ALWAYS_EXCLUDED.includes(basename)) {
         return false;
     }
-    return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
+    if (!rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null)) {
+        return false;
+    }
+    const profileRules = scope.profileRules ?? null;
+    if (profileRules === null) {
+        return true;
+    }
+    const [meta] = parseFrontmatter(fs.readFileSync(sourcePath, 'utf-8'));
+    if (meta['type'] === 'always' || meta['alwaysApply'] === true) {
+        return true;
+    }
+    return profileRules.includes(basename.replace(/\.md$/, ''));
 }
 /**
  * Basenames from `rulesDir` that are EXCLUDED under `scope` — the shape the

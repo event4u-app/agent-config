@@ -46,18 +46,29 @@ seeds:
 On this task family the profile the settings text recommends is also the best
 measured configuration. The setting cannot select it.
 
-## Scope
+## Owner decision (2026-11-06) and what shipped
 
-Either make the profile select what a Claude install loads (a projection the
-installer or a session hook applies), or correct the settings text and
-`docs/customization.md` so neither promises a runtime effect. One of the two;
-the first needs its own measurement on a non-trap task family before it
-becomes a default.
+The owner chose the first scope: make the profile select. Shipped: an explicit
+`essential` or `off` in the global settings narrows the rule files the global
+install writes (`src/install/rule_scope.ts`, list in
+`src/shared/disciplineProfiles.ts`, the same constant `compile_router.ts`
+compiles into `dist/router.json`), and a re-install reaps the rules the profile
+no longer selects. `full`, `auto`, `custom` and an absent key still install
+every rule, so no existing install changes. Tests:
+`tests/install/discipline_profile_scope.test.ts` and the switch-and-back case
+in `tests/install/rule_scoping_global_deploy.test.ts`.
+
+## Remaining scope
+
+The default stays the full set until `essential` is measured on a non-trap
+task family (the 2026-11-04 rerun used two tasks, one host). Then the owner
+decides whether the shipped presets (`balanced` → `auto`) should resolve to
+`essential` at install time.
 
 ## Trigger
 
-An owner decision between the two scopes above, or a consumer report that the
-setting had no effect.
+A measured `essential` vs `package` comparison on a second task family, or a
+consumer report that `essential` dropped a guard they needed.
 
 ## Kill criteria
 

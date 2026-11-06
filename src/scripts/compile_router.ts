@@ -56,6 +56,7 @@ export const SCHEMA_VERSION = 2;
 // file, and the host reads the file (docs/adrs/telegraph/0002 § part 1).
 // Re-exported here because tests and downstream consumers pin this name.
 import { COMPILE_TIME_TOGGLES, rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
+import { DISCIPLINE_PROFILE_RULES } from '../shared/disciplineProfiles.js';
 
 export { COMPILE_TIME_TOGGLES };
 
@@ -281,8 +282,8 @@ export function build(): JsonObject {
         // `rule_loading_tier: balanced` settings map to `essential` via
         // resolve_discipline_profile().
         profiles: {
-            minimal: ['__kernel__'],
-            essential: ['__kernel__', 'downstream-changes'],
+            minimal: ['__kernel__', ...DISCIPLINE_PROFILE_RULES.off],
+            essential: ['__kernel__', ...DISCIPLINE_PROFILE_RULES.essential],
             full: ['__kernel__', '__tier_1__', '__tier_2__'],
         },
     };
