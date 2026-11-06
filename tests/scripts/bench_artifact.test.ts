@@ -352,7 +352,7 @@ describe('3.2 grader self-test', () => {
     it('every runnable grader separates its planted pair; toolchain-less ones are skipped, not passed', async () => {
         for (const t of tasks) {
             const row = await selftest_task(t, { php: null, browser: false });
-            if (t.graders.some((g) => g.role === 'primary' && ['functional+exploits', 'hidden-tests', 'bench-ui'].includes(g.id))) {
+            if (t.graders.some((g) => g.role === 'primary' && ['functional+exploits', 'hidden-tests', 'bench-ui', 'browser-acceptance'].includes(g.id))) {
                 expect(row.verdict).toBe('skipped');
                 expect(row.reason).toMatch(/php not installed|no playwright chromium/);
             } else {

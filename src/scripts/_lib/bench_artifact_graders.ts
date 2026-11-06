@@ -126,6 +126,7 @@ export function grade_browser(workspace: string, task: ArtifactTask, args: Recor
     const id = 'browser-acceptance';
     const html_path = path.join(workspace, task.deliverable.path);
     if (!fs.existsSync(html_path)) return fold(id, 'primary', [{ id: 'deliverable-exists', status: 'fail', detail: task.deliverable.path }], { axe: 'unknown(no page)' });
+    if (opts.browser === false) return fold(id, 'primary', [{ id: 'browser', status: 'unknown', detail: 'no playwright chromium installed' }]);
     const loader = tsx_loader();
     if (loader === null) return fold(id, 'primary', [{ id: 'browser', status: 'unknown', detail: 'tsx loader not resolvable' }]);
     const tests = (JSON.parse(fs.readFileSync(path.join(AB_ROOT, String(args['spec'])), 'utf-8')) as { tests: unknown[] }).tests;
