@@ -50,6 +50,8 @@ export interface PolicyRow {
 
 export interface PolicyTable {
     rows: PolicyRow[];
+    /** `file:key` of default knobs that predate the knob check and carry no row yet; may only shrink. */
+    known_unbound?: string[];
 }
 
 export const UNMEASURED = 'unmeasured';
@@ -62,8 +64,8 @@ export function loadPolicy(root: string): PolicyTable {
 }
 
 export function parsePolicy(text: string): PolicyTable {
-    const raw = JSON.parse(text) as { rows?: PolicyRow[] };
-    return { rows: Array.isArray(raw.rows) ? raw.rows : [] };
+    const raw = JSON.parse(text) as { rows?: PolicyRow[]; known_unbound?: string[] };
+    return { rows: Array.isArray(raw.rows) ? raw.rows : [], ...(Array.isArray(raw.known_unbound) ? { known_unbound: raw.known_unbound } : {}) };
 }
 
 /** A YAML scalar as the sinks write them: number, boolean, or a bare / quoted string. */
@@ -309,3 +311,65 @@ export function measuredSection(cwd: string, prev: string | null, today: string)
         return [];
     }
 }
+
+/** Frontmatter keys of a shipped subagent that set how it is dispatched. */
+const DISPATCH_FRONTMATTER_KEYS = ['model_tier', 'omit_project_instructions'];
+const SUBAGENTS_DIR = 'src/subagents';
+const SETTINGS_TEMPLATE = 'src/config/agent-settings.template.yml';
+const COUNCIL_EXAMPLE = 'agents/templates/.ai-council.yml.example';
+
+export interface KnobRef {
+    file: string;
+    key: string;
+}
+
+/** Scalar keys one indent under a top-level `section:`; a key that opens a nested mapping is not a knob. */
+function sectionScalars(text: string, section: string, keep: (key: string) => boolean): string[] {
+    const out: string[] = [];
+    let inSection = false;
+    for (const line of text.split('\n')) {
+        if (/^\S/.test(line)) {
+            inSection = line.startsWith(`${section}:`);
+            continue;
+        }
+        const m = /^ {2}([a-z_][a-z0-9_]*):(.*)$/.exec(line);
+        if (inSection && m && m[2]!.replace(/\s+#.*$/, '').trim() !== '' && keep(m[1]!)) out.push(`${section}.${m[1]}`);
+    }
+    return out;
+}
+
+/**
+ * Every dispatch default the tree ships, from the three places the table binds
+ * today: a shipped subagent's dispatch keys, the `subagents:` section of the
+ * settings template, and the council's round defaults in the example config.
+ */
+export function knobsIn(root: string): KnobRef[] {
+    const out: KnobRef[] = [];
+    const dir = path.join(root, SUBAGENTS_DIR);
+    const agents = fs.existsSync(dir) ? fs.readdirSync(dir).filter((n) => n.endsWith('.md') && !n.startsWith('_')).sort() : [];
+    for (const name of agents) {
+        const fm = /^---\n([\s\S]*?)\n---/.exec(fs.readFileSync(path.join(dir, name), 'utf8'))?.[1] ?? '';
+        for (const key of DISPATCH_FRONTMATTER_KEYS) {
+            if (new RegExp(`^${key}:`, 'm').test(fm)) out.push({ file: `${SUBAGENTS_DIR}/${name}`, key });
+        }
+    }
+    const read = (rel: string): string => (fs.existsSync(path.join(root, rel)) ? fs.readFileSync(path.join(root, rel), 'utf8') : '');
+    for (const key of sectionScalars(read(SETTINGS_TEMPLATE), 'subagents', () => true)) out.push({ file: SETTINGS_TEMPLATE, key });
+    for (const key of sectionScalars(read(COUNCIL_EXAMPLE), 'defaults', (k) => k.endsWith('rounds'))) out.push({ file: COUNCIL_EXAMPLE, key });
+    return out;
+}
+
+/** A knob with no row fails; so does a baseline entry that is now bound or gone. */
+export function unboundKnobFindings(root: string, table: PolicyTable): string[] {
+    const bound = new Set(table.rows.flatMap((r) => [r.sink, ...(r.also ?? [])].map((s) => `${s.file}:${s.key}`)));
+    const baseline = new Set(table.known_unbound ?? []);
+    const knobs = knobsIn(root).map((k) => `${k.file}:${k.key}`);
+    const findings = knobs
+        .filter((k) => !bound.has(k) && !baseline.has(k))
+        .map((k) => `${k} is a default knob with no row in ${POLICY_REL} — add a row (claim or \`unmeasured\` + review_by)`);
+    for (const k of baseline) {
+        if (bound.has(k) || !knobs.includes(k)) findings.push(`known_unbound lists ${k}, which is bound or gone — remove it from the baseline`);
+    }
+    return findings;
+}
+
