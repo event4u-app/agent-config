@@ -16,6 +16,11 @@
 # from an arm's output (K8). `naive` is what a user who only sees the result
 # would say; `informed` is what a reviewer who knows the rubric would say. Both
 # arms receive the same ladder after a miss.
+#
+# Prompt variants (proof-where 2.1, `--prompt-variant terse|expert|both`): `terse`
+# is the task prompt as is; `expert` is the task prompt followed by the task's
+# `informed` ladder, i.e. what a user who knows the rubric would say up front.
+# It is derived from the ladder, never from an arm's output, for the same reason.
 
 tasks:
   - id: art-svg-prompt-01
@@ -23,6 +28,10 @@ tasks:
     family: svg
     fixture: fixtures-artifact/art-svg-prompt-01
     prompt: "Read BRIEF.md and create out/logo.svg as described there."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and create out/logo.svg as described there. Before you finish, make sure of the following. The file must be pure vector: remove any <image>, <script>, <foreignObject> and on* event attributes. Remove every external reference: href or url() may only point at in-document #ids. Every shape must lie inside viewBox 0 0 256 256, and at least one shape must have a visible fill or stroke. Check that the file is well-formed XML with a single <svg> root carrying the viewBox."
     deliverable: { path: out/logo.svg, type: svg }
     graders:
       - { id: svg-render-gate, role: primary }
@@ -45,6 +54,10 @@ tasks:
     family: svg
     fixture: fixtures-artifact/art-svg-raster-01
     prompt: "Read BRIEF.md and trace mascot.png into out/mascot.svg as described there."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and trace mascot.png into out/mascot.svg as described there. Before you finish, make sure of the following. Do not embed the PNG: the SVG may not contain <image>; draw the bear with shapes. Use the three source colours exactly: #f2a93b body, #3b2a1a eyes, #fff4e0 belly. Keep viewBox 0 0 48 48 and keep every shape inside it. Remove any script, event attribute or external reference."
     deliverable: { path: out/mascot.svg, type: svg }
     graders:
       - id: svg-render-gate
@@ -69,6 +82,10 @@ tasks:
     family: page
     fixture: fixtures-artifact/art-landing-01
     prompt: "Read BRIEF.md and tokens.json and build out/index.html as described in the brief."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and tokens.json and build out/index.html as described in the brief. Before you finish, make sure of the following. Use the brand colours from tokens.json in the CSS, at least primary #1f5f8b and accent #f2a93b. Add exactly one <h1> naming Quillpine and a primary CTA with class cta inviting a free trial. Add at least three <section> elements: features, how it works, pricing. Set <html lang=\"en\"> and one viewport meta tag; remove every external URL, @import and raster image."
     deliverable: { path: out/index.html, type: html }
     graders:
       - id: acceptance+axe
@@ -94,6 +111,10 @@ tasks:
     family: form
     fixture: fixtures-artifact/art-form-01
     prompt: "Read BRIEF.md and build out/index.html as described there."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and build out/index.html as described there. Before you finish, make sure of the following. Only the current step may be visible; the other two steps carry the hidden attribute. Start on #step-1. #next-1 must reject an invalid email or a password under 8 characters and show the problem in a visible role=alert element; #next-2 must reject an empty #name. #back-2 returns to step 1 with the typed values intact; #summary on step 3 shows the email and the chosen plan. Submitting shows #done containing the person's name; every input and select has a <label for>."
     deliverable: { path: out/index.html, type: html }
     graders:
       - id: acceptance+axe
@@ -119,6 +140,10 @@ tasks:
     family: login
     fixture: fixtures-artifact/art-login-framework-01
     prompt: "Read BRIEF.md and add the login it describes."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and add the login it describes. Before you finish, make sure of the following. Store only password_hash() output under data/ and check with password_verify(); never md5/sha1 or plaintext. Return the same status and message for an unknown email and a wrong password, and refuse further attempts for an email after 5 failures in 15 minutes. Call session_regenerate_id(true) on successful login so the session id changes. Put a per-session CSRF token in a hidden _token field and reject a POST /login without a matching token."
     deliverable: { path: config/routes.php, type: php-app }
     graders:
       - id: functional+exploits
@@ -149,6 +174,10 @@ tasks:
     family: login
     fixture: fixtures-artifact/art-login-plain-01
     prompt: "Read BRIEF.md and add the login it describes."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and add the login it describes. Before you finish, make sure of the following. Store only password_hash() output under data/ and check with password_verify(); never md5/sha1 or plaintext. Return the same status and message for an unknown email and a wrong password, and refuse further attempts for an email after 5 failures in 15 minutes. Call session_regenerate_id(true) on successful login so the session id changes. Put a per-session CSRF token in a hidden _token field and reject a POST /login without a matching token."
     deliverable: { path: public/index.php, type: php-app }
     graders:
       - id: functional+exploits
@@ -179,6 +208,10 @@ tasks:
     family: endpoint
     fixture: fixtures-artifact/art-php-endpoint-01
     prompt: "Read BRIEF.md and implement the /items API it describes."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and implement the /items API it describes. Before you finish, make sure of the following. Reject a missing or unknown bearer token with 401 on every /items route. Validate title as a string of 1-120 characters and done as a boolean, on POST and on PATCH; answer 422 with an errors object. Scope every read, update and delete to the caller; another user's item must answer 403 or 404 and stay unchanged. POST answers 201 with {id, title, done, owner}; DELETE answers 204; an unknown id answers 404."
     deliverable: { path: public/index.php, type: php-app }
     graders:
       - id: hidden-tests
@@ -203,6 +236,10 @@ tasks:
     family: page-copy
     fixture: fixtures-artifact/art-page-copy-01
     prompt: "Read BRIEF.md and reproduce page/index.html as out/index.html."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and reproduce page/index.html as out/index.html. Before you finish, make sure of the following. Match the structure: header, section nav with three links, a grid of three cards, a recording-notes section and a footer. Use the original colours #4f7a4a, #c56b3d, #22303c, #f7f4ec and its spacing values (16px gap, 10px radius, 24px padding). Match the type: Georgia serif for body text, system-ui for nav, tags and footer, with the original sizes. Check the layout at 375, 768 and 1280 px; the cards must reflow like the original grid."
     deliverable: { path: out/index.html, type: html }
     graders:
       - id: bench-ui
@@ -230,6 +267,10 @@ tasks:
     family: app-copy
     fixture: fixtures-artifact/art-app-copy-01
     prompt: "Read BRIEF.md and port the app as described there."
+    variants:
+      - prompt_variant: terse
+      - prompt_variant: expert
+        prompt: "Read BRIEF.md and port the app as described there. Before you finish, make sure of the following. Persist items in localStorage under tally.todos and restore them on load. #count reads 'N items left', and '1 item left' for one open item. [data-filter=all|open|done] render only the matching li.todo items in #list. Ignore empty or whitespace-only input; each li.todo has input.toggle (adds class done) and button.delete. Keep it to one file: no <script src> and no external stylesheet."
     deliverable: { path: out/index.html, type: html }
     graders:
       - id: acceptance+axe

@@ -157,12 +157,24 @@ discipline corpus above stays the default. Roadmap:
   feedback_ladder:                    # both required, 3-5 steps each
     naive: ["...", "...", "..."]
     informed: ["...", "...", "..."]
+  variants:                           # optional; exactly one terse and one expert
+    - prompt_variant: terse           # the task prompt as is, no prompt of its own
+    - prompt_variant: expert
+      prompt: "<the task prompt>, then what an expert user would spell out"
 ```
+
+`--prompt-variant terse|expert|both` runs each task once per named variant, with
+the variant's prompt and the record field `prompt_variant`; without the flag a
+task runs its own `prompt` and the field is `null`. `both` is the 2×2 of
+proof-where 2.1 when the arms are `vanilla,package`. In `ab-artifact-v2.yaml` the
+expert prompt is the task prompt followed by the task's `informed` ladder.
 
 The loader (`src/scripts/_lib/bench_artifact_corpus.ts`) rejects a task
 without `parity_bar`, without either ladder, with a ladder outside 3-5 steps,
 with an unknown ladder, with a `network` other than `none`/`registry`, or with
-anything but exactly one primary grader.
+anything but exactly one primary grader. It also rejects `variants` that are not
+exactly one `terse` and one `expert`, a `terse` entry with its own prompt, or an
+`expert` prompt that does not start with the task prompt and add to it.
 
 ### Layout
 
