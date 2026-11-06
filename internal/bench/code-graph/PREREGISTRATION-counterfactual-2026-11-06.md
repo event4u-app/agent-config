@@ -172,3 +172,14 @@ environment. Every clone was then completed (all missing objects fetched; none r
 those two packets were rebuilt from the same frozen case; no other packet carried the
 failure. A reviewer of those PRs would have held full history, so the rebuilt packets are
 the faithful ones.
+
+**A3 (2026-11-06, before any valid reviewer answer): the prompt tells a tool-less reviewer
+it has no tools.** The first reviewer call (`larasend-16`, arm A) answered by writing tool
+calls as text (`<invoke name="Grep">…`) on both attempts — the model acts as an agent unless
+told it cannot. The review was stopped and its two invalid runs deleted. One sentence was
+added to `PROMPT_HEAD`, identically for every arm: "You have no tools and no access to the
+repository: do not call, emit or describe any tool use. Answer only from the text in this
+message." Packets were re-rendered from the frozen payloads and diffs (no graph was rebuilt).
+Two smoke calls checked the answers now parse; they are not scored runs. The reviewer is now
+spawned asynchronously, so the registered concurrency is real. New runner hash:
+`163bd88617648df101e1e6fc706775c889c41d52b733601bd424bfae8692860c  internal/bench/code-graph/counterfactual_review.ts`.
