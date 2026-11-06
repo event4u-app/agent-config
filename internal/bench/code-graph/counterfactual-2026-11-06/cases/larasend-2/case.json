@@ -1,0 +1,52 @@
+{
+ "id": "larasend-2",
+ "subject": "larasend",
+ "repo": "savvyagents/larasend",
+ "pr": 2,
+ "title": "Fix silent Bcc drop by passing explicit Destination to SES v2",
+ "merged_at": "2026-07-08T19:08:00Z",
+ "merge": "182bbf2f093ffde75318648a8ea3b520aa354761",
+ "parent": "ca87155899e2ce622396463e7efe73a1b828eb43",
+ "changed_lines": 81,
+ "diff_files": [
+  "app/Jobs/SendQueuedEmail.php",
+  "app/Services/SesV2Client.php",
+  "tests/Feature/ApiEmailTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "app/Jobs/SendQueuedEmail.php#SendQueuedEmail",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Jobs/SendQueuedEmail.php#SendQueuedEmail::handle",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Services/SesV2Client.php#SesV2Client",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Services/SesV2Client.php#SesV2Client::sendRawEmail",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "app/Http/Controllers/DashboardActionController.php",
+   "test": false
+  },
+  {
+   "path": "app/Http/Controllers/OnboardingController.php",
+   "test": false
+  },
+  {
+   "path": "app/Services/EmailSendService.php",
+   "test": false
+  },
+  {
+   "path": "tests/Feature/DashboardActionsTest.php",
+   "test": true
+  }
+ ]
+}

@@ -1,0 +1,49 @@
+{
+ "id": "self-2853",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2853,
+ "title": "feat(self-repair): read host feedback memory as a subject arrival",
+ "merged_at": "2026-11-04T21:35:20Z",
+ "merge": "9df962dc2af590eeb6cec2278f266d7df20fd813",
+ "parent": "af61c3c88c3650a38f660beb7047fbdcdb8e5021",
+ "changed_lines": 290,
+ "diff_files": [
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/archive/road-to-a-noted-that-is-a-write-carried.md",
+  "agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md",
+  "agents/roadmaps/road-to-a-noted-that-is-a-write-carried.md",
+  "src/config/source-registry.json",
+  "src/scripts/_lib/host_memory_reader.ts",
+  "src/scripts/_lib/self_repair_store.ts",
+  "tests/scripts/host_memory_reader.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/self_repair_store.ts#SubjectCount",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/self_repair_store.ts#subjectCounts",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/_lib/self_repair_store.ts#writeSubjectIndex",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/self_repair_cli.ts",
+   "test": false
+  },
+  {
+   "path": "src/scripts/self_repair_hook.ts",
+   "test": false
+  },
+  {
+   "path": "tests/scripts/self_repair_noted.test.ts",
+   "test": true
+  }
+ ]
+}

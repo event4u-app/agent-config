@@ -1,0 +1,368 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "ablation_arm",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_ab_arms.ts:197"
+    },
+    {
+     "label": "preserve_stream",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_ab_workspace.ts:71"
+    },
+    {
+     "label": "NETWORK_BLOCK_KEYS",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_install.ts:20"
+    },
+    {
+     "label": "install_env",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_install.ts:47"
+    },
+    {
+     "label": "install_package",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_install.ts:56"
+    },
+    {
+     "label": "installed_skill_count",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_install.ts:67"
+    },
+    {
+     "label": "load_check",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_install.ts:74"
+    },
+    {
+     "label": "pack_package",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_install.ts:34"
+    },
+    {
+     "label": "start_php",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/bench_artifact_php.ts:46"
+    },
+    {
+     "label": "stop",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/bench_artifact_php.ts:53"
+    },
+    {
+     "label": "call",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:120"
+    },
+    {
+     "label": "claude_host",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:119"
+    },
+    {
+     "label": "host_cmd",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:107"
+    },
+    {
+     "label": "keep_transcripts",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:82"
+    },
+    {
+     "label": "pack_once",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:188"
+    },
+    {
+     "label": "run_artifact_sweep",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:134"
+    },
+    {
+     "label": "walk",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/bench_artifact_sweep.ts:86"
+    },
+    {
+     "label": "STREAMS_DIR",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:84"
+    },
+    {
+     "label": "SWEEP_ID",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:85"
+    },
+    {
+     "label": "injected_text",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:237"
+    },
+    {
+     "label": "main",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:885"
+    },
+    {
+     "label": "rules_subset_text",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:159"
+    },
+    {
+     "label": "run_one",
+     "verdict": "tested",
+     "witness": "src/scripts/bench_ab_v2_run.ts:544"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    237,
+    263
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_ab_workspace.ts",
+   "lines": [
+    71,
+    82
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_ab_arms.ts",
+   "lines": [
+    197,
+    200
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_install.ts",
+   "lines": [
+    34,
+    40
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_php.ts",
+   "lines": [
+    46,
+    70
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    86,
+    97
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_graders.ts",
+   "lines": [
+    176,
+    200
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    159,
+    177
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_install.ts",
+   "lines": [
+    56,
+    64
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_php.ts",
+   "lines": [
+    53,
+    59
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    82,
+    100
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    544,
+    583
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_install.ts",
+   "lines": [
+    67,
+    71
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_php.ts",
+   "lines": [
+    141,
+    144
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    107,
+    116
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    885,
+    924
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_install.ts",
+   "lines": [
+    74,
+    78
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_php.ts",
+   "lines": [
+    248,
+    252
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    119,
+    132
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    84,
+    84
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_install.ts",
+   "lines": [
+    47,
+    53
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    120,
+    130
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    85,
+    85
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_install.ts",
+   "lines": [
+    20,
+    31
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    134,
+    173
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    652,
+    662
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    188,
+    193
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    213,
+    224
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    584,
+    599
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    925,
+    1114
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/bench_artifact_sweep.ts",
+   "lines": [
+    174,
+    185
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    712,
+    714
+   ]
+  },
+  {
+   "path": "src/scripts/bench_ab_v2_run.ts",
+   "lines": [
+    672,
+    711
+   ]
+  }
+ ]
+}

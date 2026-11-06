@@ -1,0 +1,125 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "SendQueuedEmail",
+     "verdict": "tested",
+     "witness": "app/Jobs/SendQueuedEmail.php:13"
+    },
+    {
+     "label": "destination",
+     "verdict": "untested",
+     "witness": "app/Jobs/SendQueuedEmail.php:82"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "app/Jobs/SendQueuedEmail.php:31"
+    },
+    {
+     "label": "SesV2Client",
+     "verdict": "tested",
+     "witness": "app/Services/SesV2Client.php:12"
+    },
+    {
+     "label": "sendRawEmail",
+     "verdict": "untested",
+     "witness": "app/Services/SesV2Client.php:97"
+    },
+    {
+     "label": "sendRawEmail",
+     "verdict": "untested",
+     "witness": "tests/Feature/ApiEmailTest.php:171"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "unknown",
+   "reason": "1 commit(s) over 50 files skipped",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "finding",
+   "items": [
+    {
+     "label": "SendQueuedEmail",
+     "witness": "app/Jobs/SendQueuedEmail.php:13"
+    },
+    {
+     "label": "job SendQueuedEmail",
+     "witness": "app/Jobs/SendQueuedEmail.php:13"
+    }
+   ]
+  }
+ ],
+ "reads": [
+  {
+   "path": "app/Jobs/SendQueuedEmail.php",
+   "lines": [
+    13,
+    52
+   ]
+  },
+  {
+   "path": "app/Services/SesV2Client.php",
+   "lines": [
+    12,
+    51
+   ]
+  },
+  {
+   "path": "tests/Feature/ApiEmailTest.php",
+   "lines": [
+    171,
+    176
+   ]
+  },
+  {
+   "path": "app/Jobs/SendQueuedEmail.php",
+   "lines": [
+    82,
+    91
+   ]
+  },
+  {
+   "path": "app/Services/SesV2Client.php",
+   "lines": [
+    97,
+    129
+   ]
+  },
+  {
+   "path": "app/Jobs/SendQueuedEmail.php",
+   "lines": [
+    31,
+    70
+   ]
+  },
+  {
+   "path": "app/Jobs/SendQueuedEmail.php",
+   "lines": [
+    53,
+    112
+   ]
+  },
+  {
+   "path": "app/Services/SesV2Client.php",
+   "lines": [
+    52,
+    263
+   ]
+  },
+  {
+   "path": "app/Jobs/SendQueuedEmail.php",
+   "lines": [
+    71,
+    77
+   ]
+  }
+ ]
+}

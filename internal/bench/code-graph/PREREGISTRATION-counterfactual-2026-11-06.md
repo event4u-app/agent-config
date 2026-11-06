@@ -161,3 +161,14 @@ PRs the tooling handles; it now stops the freeze, which resumes after the fix. T
 `self` rows written as such failures were removed from the log and re-evaluated in order.
 The `unopim` and `larasend` logs held none. New runner hash:
 `1fc118b937bed9dae33cce2f8b7a19a67394ccb6afc59c28a0952d0f333a0ff8  internal/bench/code-graph/counterfactual_review.ts`.
+
+**A2 (2026-11-06, before any reviewer call): the frozen set, and two packets rebuilt.**
+The set is frozen: 30 cases — `self` 15, `unopim` 11, `larasend` 4 (the small subject
+yielded 4, so 3 came from `unopim` by the shortfall rule). Cases, payloads and the freeze logs
+with every skip reason are in `counterfactual-2026-11-06/`. Two packets (`self-2877`,
+`unopim-677`) first carried `missing-co-change: unknown (git log failed)`: the clones were
+blob-less, and the history read could not fetch a missing blob from inside the hardened git
+environment. Every clone was then completed (all missing objects fetched; none remain) and
+those two packets were rebuilt from the same frozen case; no other packet carried the
+failure. A reviewer of those PRs would have held full history, so the rebuilt packets are
+the faithful ones.

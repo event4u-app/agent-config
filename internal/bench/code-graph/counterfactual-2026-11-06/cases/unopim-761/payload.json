@@ -1,0 +1,334 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "CategoryRequestValidator",
+     "verdict": "tested",
+     "witness": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php:13"
+    },
+    {
+     "label": "allowStoredMediaPaths",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php:95"
+    },
+    {
+     "label": "inputFieldValidate",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php:46"
+    },
+    {
+     "label": "categoryWithData",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Category/tests/Unit/StoredMediaPathValidationTest.php:22"
+    },
+    {
+     "label": "validateCategoryData",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Category/tests/Unit/StoredMediaPathValidationTest.php:32"
+    },
+    {
+     "label": "FileOrImageValidValue",
+     "verdict": "tested",
+     "witness": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php:15"
+    },
+    {
+     "label": "allowStoredPaths",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php:82"
+    },
+    {
+     "label": "hasAllowedPathPrefix",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php:192"
+    },
+    {
+     "label": "AttributeValueRule",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php:15"
+    },
+    {
+     "label": "storedMediaPaths",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php:80"
+    },
+    {
+     "label": "validate",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php:34"
+    },
+    {
+     "label": "productWithValues",
+     "verdict": "untested",
+     "witness": "packages/Webkul/Product/tests/Unit/Validator/StoredMediaPathValidationTest.php:37"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    15,
+    54
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php",
+   "lines": [
+    15,
+    54
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php",
+   "lines": [
+    13,
+    52
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/tests/Unit/StoredMediaPathValidationTest.php",
+   "lines": [
+    22,
+    30
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/tests/Unit/Validator/StoredMediaPathValidationTest.php",
+   "lines": [
+    37,
+    45
+   ]
+  },
+  {
+   "path": "packages/Webkul/Admin/src/Http/Controllers/MediaController.php",
+   "lines": [
+    26,
+    45
+   ]
+  },
+  {
+   "path": "packages/Webkul/Attribute/src/Models/Attribute.php",
+   "lines": [
+    196,
+    235
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Models/CategoryField.php",
+   "lines": [
+    168,
+    200
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Models/AssociationTypeField.php",
+   "lines": [
+    199,
+    227
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/ChannelLocaleValuesValidator.php",
+   "lines": [
+    28,
+    47
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/ChannelValuesValidator.php",
+   "lines": [
+    28,
+    37
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/CommonValuesValidator.php",
+   "lines": [
+    22,
+    27
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/LocaleValuesValidator.php",
+   "lines": [
+    28,
+    43
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    192,
+    203
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php",
+   "lines": [
+    80,
+    99
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php",
+   "lines": [
+    95,
+    122
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/tests/Unit/StoredMediaPathValidationTest.php",
+   "lines": [
+    32,
+    38
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/ChannelLocaleValuesValidator.php",
+   "lines": [
+    52,
+    58
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/ChannelValuesValidator.php",
+   "lines": [
+    42,
+    48
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/LocaleValuesValidator.php",
+   "lines": [
+    48,
+    54
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    55,
+    254
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php",
+   "lines": [
+    55,
+    203
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php",
+   "lines": [
+    53,
+    146
+   ]
+  },
+  {
+   "path": "packages/Webkul/Attribute/src/Models/Attribute.php",
+   "lines": [
+    236,
+    243
+   ]
+  },
+  {
+   "path": "packages/Webkul/Attribute/src/Models/Attribute.php",
+   "lines": [
+    288,
+    299
+   ]
+  },
+  {
+   "path": "packages/Webkul/Attribute/src/Models/Attribute.php",
+   "lines": [
+    248,
+    287
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    82,
+    87
+   ]
+  },
+  {
+   "path": "packages/Webkul/Product/src/Validator/Rule/AttributeValueRule.php",
+   "lines": [
+    34,
+    70
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php",
+   "lines": [
+    86,
+    86
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php",
+   "lines": [
+    46,
+    85
+   ]
+  },
+  {
+   "path": "packages/Webkul/Attribute/src/Models/Attribute.php",
+   "lines": [
+    517,
+    551
+   ]
+  },
+  {
+   "path": "packages/Webkul/Attribute/src/Models/Attribute.php",
+   "lines": [
+    477,
+    516
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    132,
+    142
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    92,
+    131
+   ]
+  },
+  {
+   "path": "packages/Webkul/Category/src/Validator/Catalog/CategoryRequestValidator.php",
+   "lines": [
+    124,
+    145
+   ]
+  },
+  {
+   "path": "packages/Webkul/Core/src/Rules/FileOrImageValidValue.php",
+   "lines": [
+    144,
+    173
+   ]
+  }
+ ]
+}

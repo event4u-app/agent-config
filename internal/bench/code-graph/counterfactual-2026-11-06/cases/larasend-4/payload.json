@@ -1,0 +1,89 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "CloudflareInboundProvisioner",
+     "verdict": "untested",
+     "witness": "app/Services/Providers/CloudflareInboundProvisioner.php:20"
+    },
+    {
+     "label": "__construct",
+     "verdict": "untested",
+     "witness": "app/Services/Providers/CloudflareInboundProvisioner.php:33"
+    },
+    {
+     "label": "enable",
+     "verdict": "untested",
+     "witness": "app/Services/Providers/CloudflareInboundProvisioner.php:38"
+    },
+    {
+     "label": "ensureRoutingDns",
+     "verdict": "untested",
+     "witness": "app/Services/Providers/CloudflareInboundProvisioner.php:82"
+    },
+    {
+     "label": "routingMxPresent",
+     "verdict": "untested",
+     "witness": "app/Services/Providers/CloudflareInboundProvisioner.php:113"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "app/Services/Providers/CloudflareInboundProvisioner.php",
+   "lines": [
+    20,
+    59
+   ]
+  },
+  {
+   "path": "app/Services/Providers/CloudflareInboundProvisioner.php",
+   "lines": [
+    82,
+    111
+   ]
+  },
+  {
+   "path": "app/Services/Providers/CloudflareInboundProvisioner.php",
+   "lines": [
+    113,
+    120
+   ]
+  },
+  {
+   "path": "app/Services/Providers/CloudflareInboundProvisioner.php",
+   "lines": [
+    33,
+    36
+   ]
+  },
+  {
+   "path": "app/Services/Providers/CloudflareInboundProvisioner.php",
+   "lines": [
+    38,
+    73
+   ]
+  },
+  {
+   "path": "app/Services/Providers/CloudflareInboundProvisioner.php",
+   "lines": [
+    60,
+    126
+   ]
+  }
+ ]
+}
