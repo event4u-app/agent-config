@@ -46,7 +46,7 @@ import {
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
 import { asOf, localIsoDate } from './_lib/as_of.js';
-import { POLICY_REL, checkPolicy, loadPolicy, readSink, unboundKnobFindings } from './_lib/dispatch_policy.js';
+import { POLICY_REL, tableFindings } from './_lib/dispatch_policy.js';
 import { staleVerifiedVerdict } from './_lib/claims_stale_verified.js';
 import { scorer_epoch_findings } from './_lib/claims_scorer_epoch.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
@@ -507,21 +507,9 @@ function parse_args(argv: string[]): Args {
     return out;
 }
 
-/**
- * Every dispatch default is bound to its sinks and to the claim behind it, and
- * every default knob the tree ships has a row. Absent table, nothing to bind.
- */
+/** The dispatch-policy findings for the tree under `root`; see `tableFindings`. */
 export function policy_findings(root: string, ledger: Map<string, LedgerEntry>): string[] {
-    if (!fs.existsSync(path.join(root, POLICY_REL))) return [];
-    const table = loadPolicy(root);
-    return [
-        ...checkPolicy(table, {
-            readSink: (_row, sink) => readSink(root, sink),
-            claimStatus: (id) => ledger.get(id)?.status,
-            claimReviewBy: (id) => ledger.get(id)?.review_by,
-        }),
-        ...unboundKnobFindings(root, table),
-    ];
+    return tableFindings(root, (id) => ledger.get(id)?.status, (id) => ledger.get(id)?.review_by);
 }
 
 /** Parse docs/CLAIMS.md — one entry per `### claim: <id>` block. */

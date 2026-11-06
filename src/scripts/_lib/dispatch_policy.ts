@@ -373,3 +373,12 @@ export function unboundKnobFindings(root: string, table: PolicyTable): string[] 
     return findings;
 }
 
+/**
+ * Every dispatch default is bound to its sinks and to the claim behind it, and
+ * every default knob the tree ships has a row. Absent table, nothing to bind.
+ */
+export function tableFindings(root: string, claimStatus: (id: string) => string | undefined, claimReviewBy: (id: string) => string | undefined): string[] {
+    if (!fs.existsSync(path.join(root, POLICY_REL))) return [];
+    const table = loadPolicy(root);
+    return [...checkPolicy(table, { readSink: (_row, sink) => readSink(root, sink), claimStatus, claimReviewBy }), ...unboundKnobFindings(root, table)];
+}
