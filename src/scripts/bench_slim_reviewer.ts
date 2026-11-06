@@ -51,6 +51,10 @@ const ROOT = path.resolve(HERE, '..', '..');
 const HARD_CAP_USD = 20;
 const AGREEMENT_BAR = 0.9;
 const AGENT_NAME = 'production-validator';
+// Under the home directory, outside any repository: the host loads the user-level
+// instruction hierarchy (ancestor `.claude/rules`) as it would for a real review,
+// and no ground-truth file is reachable from the fixture's parent directories.
+const RUN_BASE = path.join(os.homedir(), '.cache', 'slim-reviewer-runs');
 
 export type ArmId = 'slim' | 'full';
 
@@ -229,11 +233,23 @@ export function agentsJson(arm: ArmId, model: string, root = ROOT): string {
     return JSON.stringify({ [AGENT_NAME]: def });
 }
 
+/** The parent session's only job: dispatch the reviewer once, verbatim, and add nothing. */
+export function parentPrompt(reviewPrompt: string): string {
+    return [
+        `Dispatch the \`${AGENT_NAME}\` subagent exactly once with the text between the markers as its prompt, verbatim.`,
+        'Do not read, review or judge anything yourself. When it returns, reply with only the word DONE.',
+        '<<<PROMPT',
+        reviewPrompt,
+        'PROMPT>>>',
+    ].join('\n');
+}
+
 export function cliArgs(prompt: string, agentsFile: string, model: string, perCallUsd: number): string[] {
     return [
         '--print',
         '--output-format',
-        'json',
+        'stream-json',
+        '--verbose',
         '--model',
         model,
         '--max-budget-usd',
@@ -243,20 +259,31 @@ export function cliArgs(prompt: string, agentsFile: string, model: string, perCa
         '--no-session-persistence',
         '--agents',
         agentsFile,
-        '--agent',
-        AGENT_NAME,
         '--',
-        prompt,
+        parentPrompt(prompt),
     ];
 }
 
-interface CallResult {
+interface Tokens {
+    input: number;
+    output: number;
+    cache_write: number;
+    cache_read: number;
+}
+
+export interface CallResult {
+    /** The subagent's final message — what is scored. */
     text: string;
     errored: boolean;
     reason: string;
+    dispatched: boolean;
     usd_envelope: number;
     usd_priced: number;
-    tokens: { input: number; output: number; cache_write: number; cache_read: number };
+    /** Whole call: parent + subagent. */
+    tokens: Tokens;
+    /** Billed input of the subagent's first request: its loaded context. */
+    subagent_first_input: number;
+    subagent_requests: number;
     models: string[];
     num_turns: number;
     wall_s: number;
@@ -266,26 +293,60 @@ function num(v: unknown): number {
     return typeof v === 'number' && Number.isFinite(v) ? v : 0;
 }
 
-export function parseEnvelope(stdout: string, rates: Parameters<typeof cost_usd>[1]): Omit<CallResult, 'wall_s'> {
-    let obj: Record<string, unknown> = {};
-    try {
-        obj = JSON.parse(stdout) as Record<string, unknown>;
-    } catch {
-        return {
-            text: stdout,
-            errored: true,
-            reason: 'unparseable envelope',
-            usd_envelope: 0,
-            usd_priced: 0,
-            tokens: { input: 0, output: 0, cache_write: 0, cache_read: 0 },
-            models: [],
-            num_turns: 0,
-        };
+function obj(v: unknown): Record<string, unknown> {
+    return v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+}
+
+function parts(e: Record<string, unknown>): Record<string, unknown>[] {
+    const c = obj(e['message'])['content'];
+    return Array.isArray(c) ? c.map(obj) : [];
+}
+
+function contentText(c: unknown): string {
+    if (typeof c === 'string') return c;
+    if (Array.isArray(c)) return c.map((p) => (typeof obj(p)['text'] === 'string' ? (obj(p)['text'] as string) : '')).join('\n');
+    return '';
+}
+
+export function parseStream(stdout: string, rates: Parameters<typeof cost_usd>[1]): Omit<CallResult, 'wall_s'> {
+    const events: Record<string, unknown>[] = [];
+    for (const line of stdout.split('\n')) {
+        if (!line.trim().startsWith('{')) continue;
+        try {
+            events.push(obj(JSON.parse(line)));
+        } catch {
+            continue;
+        }
     }
-    const mu = (obj['modelUsage'] ?? {}) as Record<string, Record<string, unknown>>;
-    const tokens = { input: 0, output: 0, cache_write: 0, cache_read: 0 };
+    let dispatchId: string | null = null;
+    for (const e of events) {
+        if (e['type'] !== 'assistant' || e['parent_tool_use_id'] || dispatchId !== null) continue;
+        const call = parts(e).find((p) => p['type'] === 'tool_use' && obj(p['input'])['subagent_type'] === AGENT_NAME);
+        if (call) dispatchId = String(call['id']);
+    }
+    let text = '';
+    let firstInput = 0;
+    let requests = 0;
+    for (const e of events) {
+        if (dispatchId === null) break;
+        if (e['type'] === 'user') {
+            const res = parts(e).find((p) => p['type'] === 'tool_result' && p['tool_use_id'] === dispatchId);
+            if (res) text = contentText(res['content']);
+        }
+        if (e['type'] === 'assistant' && e['parent_tool_use_id'] === dispatchId) {
+            const u = obj(obj(e['message'])['usage']);
+            if (requests === 0) {
+                firstInput = num(u['input_tokens']) + num(u['cache_creation_input_tokens']) + num(u['cache_read_input_tokens']);
+            }
+            requests++;
+        }
+    }
+    const result = events.filter((e) => e['type'] === 'result').pop() ?? {};
+    const mu = obj(result['modelUsage']);
+    const tokens: Tokens = { input: 0, output: 0, cache_write: 0, cache_read: 0 };
     let usdPriced = 0;
-    for (const s of Object.values(mu)) {
+    for (const sRaw of Object.values(mu)) {
+        const s = obj(sRaw);
         const b = {
             input_tokens: num(s['inputTokens']),
             output_tokens: num(s['outputTokens']),
@@ -298,16 +359,21 @@ export function parseEnvelope(stdout: string, rates: Parameters<typeof cost_usd>
         tokens.cache_read += b.cache_read_input_tokens;
         usdPriced += cost_usd(b, rates);
     }
-    const isError = Boolean(obj['is_error']);
+    const noEvents = events.length === 0;
+    const isError = noEvents || Boolean(result['is_error']);
+    const reason = noEvents ? 'no events' : isError ? String(result['subtype'] ?? 'error') : dispatchId === null ? 'no dispatch' : 'ok';
     return {
-        text: typeof obj['result'] === 'string' ? (obj['result'] as string) : '',
-        errored: isError,
-        reason: isError ? String(obj['subtype'] ?? 'error') : 'ok',
-        usd_envelope: num(obj['total_cost_usd']),
+        text,
+        errored: isError || dispatchId === null,
+        reason,
+        dispatched: dispatchId !== null,
+        usd_envelope: num(result['total_cost_usd']),
         usd_priced: usdPriced,
         tokens,
+        subagent_first_input: firstInput,
+        subagent_requests: requests,
         models: Object.keys(mu),
-        num_turns: num(obj['num_turns']),
+        num_turns: num(result['num_turns']),
     };
 }
 
@@ -372,7 +438,8 @@ function parseArgs(argv: readonly string[]): Opts | string {
 }
 
 function materialize(fx: SlimFixture): string {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), `slim-rev-${fx.id}-`));
+    fs.mkdirSync(RUN_BASE, { recursive: true });
+    const dir = fs.mkdtempSync(path.join(RUN_BASE, `${fx.id}-`));
     for (const f of fx.files) {
         const p = path.join(dir, f.path);
         fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -384,7 +451,7 @@ function materialize(fx: SlimFixture): string {
 function callArm(arm: ArmId, prompt: string, cwd: string, o: Opts, rates: Parameters<typeof cost_usd>[1]): CallResult {
     const bin = claude_executable();
     if (bin === null) throw new Error('claude CLI not found');
-    const agentsFile = path.join(cwd, `.agents-${arm}.json`);
+    const agentsFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'slim-rev-agents-')), `${arm}.json`);
     fs.writeFileSync(agentsFile, agentsJson(arm, o.model));
     const t0 = Date.now();
     const r = spawnSync(bin, cliArgs(prompt, agentsFile, o.model, o.perCallUsd), {
@@ -393,8 +460,8 @@ function callArm(arm: ArmId, prompt: string, cwd: string, o: Opts, rates: Parame
         timeout: 600_000,
         maxBuffer: 64 * 1024 * 1024,
     });
-    fs.rmSync(agentsFile, { force: true });
-    const env = parseEnvelope(r.stdout ?? '', rates);
+    fs.rmSync(path.dirname(agentsFile), { recursive: true, force: true });
+    const env = parseStream(r.stdout ?? '', rates);
     if (r.status !== 0 && !env.errored) {
         env.errored = true;
         env.reason = `exit ${r.status}: ${(r.stderr ?? '').slice(0, 200)}`;
@@ -457,7 +524,8 @@ export function main(argv: readonly string[]): number {
     };
 
     if (o.mode === 'probe') {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'slim-rev-probe-'));
+        fs.mkdirSync(RUN_BASE, { recursive: true });
+        const dir = fs.mkdtempSync(path.join(RUN_BASE, 'probe-'));
         const probe =
             'Reply with two lines and nothing else. Line 1: OK. Line 2: YES if any instruction text in your context ' +
             "contains the phrase 'Rust Token Killer', otherwise NO.";
@@ -466,9 +534,9 @@ export function main(argv: readonly string[]): number {
             const r = callArm(arm, probe, dir, o, rates);
             const usd = Math.max(r.usd_envelope, r.usd_priced);
             record({ kind: 'probe', fixture: 'probe', arm, seed: 0, usd });
-            writeFile(path.join(o.out, 'raw', `probe.${arm}.json`), JSON.stringify(r, null, 2) + '\n');
+            writeFile(path.join(o.out, 'raw', `probe-v2.${arm}.json`), JSON.stringify(r, null, 2) + '\n');
             process.stdout.write(
-                `${arm}: ${r.reason} · models ${r.models.join(',')} · in ${r.tokens.input} cw ${r.tokens.cache_write} cr ${r.tokens.cache_read} out ${r.tokens.output} · $${usd.toFixed(4)} · ${JSON.stringify(r.text.trim())}\n`,
+                `${arm}: ${r.reason} · dispatched ${r.dispatched} · subagent first input ${r.subagent_first_input} over ${r.subagent_requests} req · models ${r.models.join(',')} · in ${r.tokens.input} cw ${r.tokens.cache_write} cr ${r.tokens.cache_read} out ${r.tokens.output} · $${usd.toFixed(4)} · ${JSON.stringify(r.text.trim())}\n`,
             );
         }
         return 0;

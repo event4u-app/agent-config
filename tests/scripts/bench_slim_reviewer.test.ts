@@ -2,7 +2,7 @@
 // definitions and the per-call spend flag. No CLI call is made here.
 import { describe, expect, it } from 'vitest';
 
-import { agentsJson, cliArgs, loadFixtures, parseEnvelope, userPrompt } from '../../src/scripts/bench_slim_reviewer.js';
+import { agentsJson, cliArgs, loadFixtures, parseStream, userPrompt } from '../../src/scripts/bench_slim_reviewer.js';
 
 const rates = { input: 3, output: 15, cache_write: 3.75, cache_read: 0.3 };
 
@@ -40,19 +40,46 @@ describe('bench_slim_reviewer', () => {
         const a = cliArgs('q', '/tmp/a.json', 'claude-sonnet-4-6', 0.75);
         expect(a[a.indexOf('--max-budget-usd') + 1]).toBe('0.75');
         expect(a[a.indexOf('--model') + 1]).toBe('claude-sonnet-4-6');
+        expect(a).not.toContain('--agent');
+        expect(a[a.length - 1]).toContain('<<<PROMPT\nq\nPROMPT>>>');
     });
 
-    it('prices an envelope from modelUsage and keeps the reported cost', () => {
-        const env = parseEnvelope(
-            JSON.stringify({
-                result: 'VERDICT: READY',
-                total_cost_usd: 0.05,
-                modelUsage: { 'claude-sonnet-4-6': { inputTokens: 1000, outputTokens: 100, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 } },
-            }),
-            rates,
-        );
-        expect(env.usd_envelope).toBe(0.05);
-        expect(env.usd_priced).toBeCloseTo(0.0045);
-        expect(parseEnvelope('not json', rates).errored).toBe(true);
+    const ev = (o: unknown): string => JSON.stringify(o);
+    const stream = [
+        ev({ type: 'system', subtype: 'init' }),
+        ev({
+            type: 'assistant',
+            parent_tool_use_id: null,
+            message: { content: [{ type: 'tool_use', id: 't1', name: 'Agent', input: { subagent_type: 'production-validator', prompt: 'q' } }] },
+        }),
+        ev({ type: 'assistant', parent_tool_use_id: 't1', message: { usage: { input_tokens: 5, cache_creation_input_tokens: 900, cache_read_input_tokens: 100 }, content: [] } }),
+        ev({ type: 'assistant', parent_tool_use_id: 't1', message: { usage: { input_tokens: 9, cache_read_input_tokens: 1000 }, content: [] } }),
+        ev({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 't1', content: [{ type: 'text', text: 'VERDICT: READY' }] }] } }),
+        ev({ type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'text', text: 'DONE' }] } }),
+        ev({
+            type: 'result',
+            is_error: false,
+            result: 'DONE',
+            total_cost_usd: 0.05,
+            num_turns: 2,
+            modelUsage: { 'claude-sonnet-4-6': { inputTokens: 1000, outputTokens: 100, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 } },
+        }),
+    ].join('\n');
+
+    it('scores the subagent return, not the parent relay, and prices the whole call', () => {
+        const r = parseStream(stream, rates);
+        expect(r.dispatched).toBe(true);
+        expect(r.errored).toBe(false);
+        expect(r.text).toBe('VERDICT: READY');
+        expect(r.subagent_first_input).toBe(1005);
+        expect(r.subagent_requests).toBe(2);
+        expect(r.usd_envelope).toBe(0.05);
+        expect(r.usd_priced).toBeCloseTo(0.0045);
+    });
+
+    it('marks a call errored when the parent never dispatched the reviewer or the stream is empty', () => {
+        const noDispatch = stream.split('\n').filter((l) => !l.includes('tool_use')).join('\n');
+        expect(parseStream(noDispatch, rates)).toMatchObject({ dispatched: false, errored: true, reason: 'no dispatch' });
+        expect(parseStream('not json', rates)).toMatchObject({ errored: true, reason: 'no events' });
     });
 });

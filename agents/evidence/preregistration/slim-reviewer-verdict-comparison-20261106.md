@@ -98,3 +98,40 @@ prompts, digest and scoring are not tuned and the run is not repeated.
   consumer repo, which biases its context cost downward.
 - The `pv-hollow` fixture's own source comments name the planted hollow path; it
   is the existing wedge fixture and is used unchanged in both arms.
+
+## Amendment 1 — 2026-11-06, after the mechanism probe, before any fixture call
+
+**What the probe showed.** Probe v1 (`raw/probe-v1.*.json`, $0.100 booked):
+full arm 8,505 billed input tokens, slim arm 12,089. Both answered YES to the
+`Rust Token Killer` marker, a phrase that lives only in the user-level
+`CLAUDE.md` import. The pre-registered check therefore **failed**: run as the
+*session* agent (`--agent`), the host does not honour `omitClaudeMd`, so slim
+and full loaded the same hierarchy and differed only by the digest. Per the
+check as written, the run was not started on that harness.
+
+**Second defect in the harness, found in the same reading.** The fixture
+directory was under the system temp directory, so the full arm saw the
+user-level `CLAUDE.md` but none of the ancestor `.claude/rules` hierarchy a real
+review in this account loads — its 8.5k is not the full context the step means.
+
+**The amendment — harness only.** Endpoints, definitions, bar, seeds, fixtures,
+prompts and the $20 cap are unchanged.
+
+1. `production-validator` is dispatched as a **subagent** by a parent session
+   (`--agents <file>`, no `--agent`), which is the only place `omitClaudeMd` is
+   defined to act. The parent prompt only wraps the committed review prompt
+   between markers and tells the parent to dispatch once and reply DONE; the
+   parent prompt is identical for both arms. What is scored is the subagent's
+   own final message, read from the `tool_result` of the dispatch in the
+   `stream-json` output — never the parent's relay. A call whose parent does not
+   dispatch counts as errored (UNPARSED).
+2. Fixture directories move to `~/.cache/slim-reviewer-runs/`: under the home
+   directory, so the user-level hierarchy loads; outside any repository, so no
+   ground-truth file is reachable from a parent directory.
+3. Booked cost is the whole call, parent included, in both arms.
+
+**Mechanism check, restated for the new harness.** One probe call per arm
+(probe v2). The run starts only if the subagent's first-request billed input in
+the slim arm is lower than the full arm's by at least 10k tokens **and** the
+slim subagent answers NO to the marker question. Otherwise the run is not
+started and the result records that.
