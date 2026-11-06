@@ -54,7 +54,7 @@ describe('bench_slim_reviewer', () => {
         }),
         ev({ type: 'assistant', parent_tool_use_id: 't1', message: { usage: { input_tokens: 5, cache_creation_input_tokens: 900, cache_read_input_tokens: 100 }, content: [] } }),
         ev({ type: 'assistant', parent_tool_use_id: 't1', message: { usage: { input_tokens: 9, cache_read_input_tokens: 1000 }, content: [] } }),
-        ev({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 't1', content: [{ type: 'text', text: 'VERDICT: READY' }] }] } }),
+        ev({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 't1', content: [{ type: 'text', text: '  VERDICT: READY\n<usage>subagent_tokens: 10675\ntool_uses: 0</usage>' }] }] } }),
         ev({ type: 'assistant', parent_tool_use_id: null, message: { content: [{ type: 'text', text: 'DONE' }] } }),
         ev({
             type: 'result',
@@ -70,7 +70,8 @@ describe('bench_slim_reviewer', () => {
         const r = parseStream(stream, rates);
         expect(r.dispatched).toBe(true);
         expect(r.errored).toBe(false);
-        expect(r.text).toBe('VERDICT: READY');
+        expect(r.text).toContain('VERDICT: READY');
+        expect(r.subagent_tokens).toBe(10675);
         expect(r.subagent_first_input).toBe(1005);
         expect(r.subagent_requests).toBe(2);
         expect(r.usd_envelope).toBe(0.05);

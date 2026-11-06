@@ -135,3 +135,24 @@ prompts and the $20 cap are unchanged.
 the slim arm is lower than the full arm's by at least 10k tokens **and** the
 slim subagent answers NO to the marker question. Otherwise the run is not
 started and the result records that.
+
+## Amendment 2 — 2026-11-06, after probe v2, before any fixture call
+
+**Probe v2** (`raw/probe-v2.*.json`, $1.114 booked; ledger total $1.214): the
+subagent harness dispatches in both arms. The slim subagent answered `NO` to the
+marker question and its hand-back footer reports `subagent_tokens: 10675`. The
+full call hit the $1 per-call cap before its subagent returned (203k tokens of
+cold cache write — parent and subagent each carry the ~100k user-level
+hierarchy), so the full side of the check was not measured.
+
+Two harness parameters change; nothing else does:
+
+1. **Per-call cap $1 → $2.** A $1 cap truncates the full arm's cold call, which
+   would score as UNPARSED and manufacture disagreements that are budget
+   artefacts, not verdicts. The $20 total cap and its guard are unchanged (a
+   call is refused when ledger + $2 would exceed $20).
+2. **Context measure.** The `stream-json` output carries no per-request events
+   for the subagent, so "first-request billed input" is not observable. The
+   measure becomes the host's own `<usage>subagent_tokens` footer on the
+   hand-back. Criterion otherwise as in Amendment 1: slim lower than full by at
+   least 10k, and the slim subagent answers NO. Probe v3 re-measures both arms.

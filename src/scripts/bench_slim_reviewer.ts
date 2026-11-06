@@ -284,6 +284,8 @@ export interface CallResult {
     /** Billed input of the subagent's first request: its loaded context. */
     subagent_first_input: number;
     subagent_requests: number;
+    /** The host's own `<usage>subagent_tokens` footer on the hand-back: the subagent's whole token use. */
+    subagent_tokens: number;
     models: string[];
     num_turns: number;
     wall_s: number;
@@ -371,6 +373,7 @@ export function parseStream(stdout: string, rates: Parameters<typeof cost_usd>[1
         usd_priced: usdPriced,
         tokens,
         subagent_first_input: firstInput,
+        subagent_tokens: Number(/subagent_tokens:\s*(\d+)/.exec(text)?.[1] ?? 0),
         subagent_requests: requests,
         models: Object.keys(mu),
         num_turns: num(result['num_turns']),
@@ -410,7 +413,7 @@ function parseArgs(argv: readonly string[]): Opts | string {
         mode: 'dry-run',
         model: 'claude-sonnet-4-6',
         capUsd: HARD_CAP_USD,
-        perCallUsd: 1,
+        perCallUsd: 2,
         seeds: 1,
         out: path.join(ROOT, 'agents/evidence/analysis/slim-reviewer-2026-11-06'),
         only: null,
@@ -534,9 +537,9 @@ export function main(argv: readonly string[]): number {
             const r = callArm(arm, probe, dir, o, rates);
             const usd = Math.max(r.usd_envelope, r.usd_priced);
             record({ kind: 'probe', fixture: 'probe', arm, seed: 0, usd });
-            writeFile(path.join(o.out, 'raw', `probe-v2.${arm}.json`), JSON.stringify(r, null, 2) + '\n');
+            writeFile(path.join(o.out, 'raw', `probe-v3.${arm}.json`), JSON.stringify(r, null, 2) + '\n');
             process.stdout.write(
-                `${arm}: ${r.reason} · dispatched ${r.dispatched} · subagent first input ${r.subagent_first_input} over ${r.subagent_requests} req · models ${r.models.join(',')} · in ${r.tokens.input} cw ${r.tokens.cache_write} cr ${r.tokens.cache_read} out ${r.tokens.output} · $${usd.toFixed(4)} · ${JSON.stringify(r.text.trim())}\n`,
+                `${arm}: ${r.reason} · dispatched ${r.dispatched} · subagent_tokens ${r.subagent_tokens} · models ${r.models.join(',')} · in ${r.tokens.input} cw ${r.tokens.cache_write} cr ${r.tokens.cache_read} out ${r.tokens.output} · $${usd.toFixed(4)} · ${JSON.stringify(r.text.trim())}\n`,
             );
         }
         return 0;
