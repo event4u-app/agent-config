@@ -184,6 +184,16 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 - `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
 - The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
 
+### The minimal-prompt baseline (frozen 2026-11-06, before its first run) {#minimal-prompt-baseline}
+
+The scope result above has `package` and `rules-kernel-dc` at 10 of 10 and 8 of 10 on Haiku, and `vanilla` at 1 of 10. The arm `minimal-prompt` asks whether one plain instruction does the same as the rules. It injects the text below and nothing else, with this package scoped away. The text is frozen here before the arm's first run, so a result cannot be bought by rewording the floor afterwards. `tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` fails when this block and `FIXED_INJECTIONS.minimal` in `src/scripts/_lib/bench_ab_arms.ts` disagree.
+
+```text
+Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.
+```
+
+When the arm is in a run, the report adds three comparisons: `package` vs `minimal-prompt`, `rules-kernel-dc` vs `minimal-prompt`, and `minimal-prompt` vs `vanilla`. A report without the arm renders as before.
+
 ### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
 
 Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:
