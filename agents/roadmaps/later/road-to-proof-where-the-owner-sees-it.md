@@ -327,7 +327,7 @@ and their install recipes do not go into this tree (`source-confidentiality`).
 
 Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/scripts/surface-tiers.yml:8-10`
 
-- [x] **6.1** <!-- receipt: pending --> Move the bench engine (`src/scripts/bench_*`, `src/scripts/_lib/bench_*`)
+- [x] **6.1** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml --> Move the bench engine (`src/scripts/bench_*`, `src/scripts/_lib/bench_*`)
   to `internal/bench/core/`, the `internal/bench/ui/` precedent: `package.json`
   `files[]` ships `src/scripts/`, and 80 bench files currently ship to consumers.
   `agent-config benchmark` (the user command) stays.
