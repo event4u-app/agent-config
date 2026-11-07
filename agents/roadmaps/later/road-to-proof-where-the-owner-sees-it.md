@@ -435,6 +435,9 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   before any run. Spent 2026-11-06: $67.41 (smoke $1.94, sweep $65.47); arms A–C ran,
   D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
   1.6 (sized at about $11), 1.7d, 2.5, 5.1–5.2.
+- **Spent 2026-11-07 under `/roadmap:process-full` (no budget window configured):** 1.6 $11.46,
+  3.4 $5.77, the arm probe $0.17, the 2.5 pilot $73.92 (partial). Still open: the rest of 2.5,
+  sized at about $600–700, and 1.7d, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store
