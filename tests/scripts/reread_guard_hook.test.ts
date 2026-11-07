@@ -373,9 +373,14 @@ describe('reread_guard_hook E2E', () => {
 // ── Reference-duty fitness (road-to-a-reference-that-arrives-before-the-act 2.2) ──
 
 describe('wholeFileCatPath — a Bash read the ledger can count', () => {
-    it('takes a plain `cat <file>` and nothing broader', () => {
-        expect(wholeFileCatPath('cat src/a.ts')).toBe('src/a.ts');
-        expect(wholeFileCatPath('  cat "docs/x y.md" ')).toBe('docs/x y.md');
+    it('takes a plain `cat <absolute file>` and nothing broader', () => {
+        expect(wholeFileCatPath('cat /w/src/a.ts')).toBe('/w/src/a.ts');
+        expect(wholeFileCatPath('  cat "/w/docs/x y.md" ')).toBe('/w/docs/x y.md');
+        // A relative path resolves against the shell's cwd, which the hook cannot see.
+        expect(wholeFileCatPath('cat src/a.ts')).toBeNull();
+        expect(wholeFileCatPath('cat ~/a.ts')).toBeNull();
+        expect(wholeFileCatPath('cat /w/$F')).toBeNull();
+        expect(wholeFileCatPath('cat /w/*.md')).toBeNull();
         expect(wholeFileCatPath('cat a.ts | head')).toBeNull();
         expect(wholeFileCatPath('cat a.ts b.ts')).toBeNull();
         expect(wholeFileCatPath('cat -n a.ts')).toBeNull();

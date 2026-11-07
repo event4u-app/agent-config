@@ -12,7 +12,10 @@ import type { Router } from './router_match.js';
 
 export interface Duty {
     rule: string;
+    /** As the rule writes it — relative to the rule file, e.g. `../contexts/x.md`. */
     reference: string;
+    /** Workspace-relative path the reference resolves to, the form ledger keys take. */
+    resolved: string;
 }
 
 export type DutyState = 'read' | 'required-pending';
@@ -62,18 +65,17 @@ export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
         if (!hit) continue;
         const dir = sources.dirs.find((d) => fs.existsSync(path.join(d, `${rule.id}.md`)));
         if (dir === undefined) continue;
-        for (const reference of loadContextOf(path.join(dir, `${rule.id}.md`))) out.push({ rule: rule.id, reference });
+        for (const reference of loadContextOf(path.join(dir, `${rule.id}.md`))) {
+            const resolved = path.relative(workspaceRoot, path.resolve(dir, reference));
+            out.push({ rule: rule.id, reference, resolved });
+        }
     }
     return out;
 }
 
-/** `read` when a full read of the reference sits in the ledger, by path suffix. */
+/** `read` when the ledger holds a full read of the path the reference resolves to. */
 export function dutyStates(duties: readonly Duty[], reads: Readonly<Record<string, unknown>>): Record<string, DutyState> {
-    const keys = Object.keys(reads);
     const states: Record<string, DutyState> = {};
-    for (const d of duties) {
-        const seen = keys.some((k) => k === d.reference || k.endsWith(`/${d.reference}`));
-        states[`${d.rule}::${d.reference}`] = seen ? 'read' : 'required-pending';
-    }
+    for (const d of duties) states[`${d.rule}::${d.reference}`] = Object.hasOwn(reads, d.resolved) ? 'read' : 'required-pending';
     return states;
 }

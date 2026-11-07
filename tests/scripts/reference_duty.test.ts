@@ -22,7 +22,9 @@ afterEach(() => {
     for (const t of tmps.splice(0)) fs.rmSync(t, { recursive: true, force: true });
 });
 
-const REF = 'contexts/sot-mechanics.md';
+// Real rules write references relative to the rule file: `../contexts/...`.
+const REF = '../contexts/sot-mechanics.md';
+const RESOLVED = 'dist/agent-src/contexts/sot-mechanics.md';
 
 function workspace(): string {
     const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'ref-duty-'));
@@ -30,12 +32,12 @@ function workspace(): string {
     const rules = path.join(root, 'dist', 'agent-src', 'rules');
     fs.mkdirSync(rules, { recursive: true });
     fs.mkdirSync(path.join(root, 'dist', 'agent-src', 'contexts'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'dist', 'agent-src', REF), 'mechanics\n');
+    fs.writeFileSync(path.join(root, RESOLVED), 'mechanics\n');
     fs.writeFileSync(
         path.join(root, 'dist', 'router.json'),
         JSON.stringify({
             kernel: [],
-            tier_1: [{ id: 'sot', triggers: [{ path_prefix: '.claude/' }, { keyword: 'source' }] }],
+            tier_1: [{ id: 'sot', triggers: [{ path_prefix: '.claude/' }, { path_prefix: 'dist/agent-src/' }, { keyword: 'source' }] }],
             tier_2: [
                 { id: 'ui', triggers: [{ file_pattern: '*.vue' }] },
                 { id: 'talk', triggers: [{ keyword: 'ask' }] },
@@ -70,7 +72,7 @@ describe('globMatches', () => {
 describe('dutyForPath', () => {
     it('names the references of rules whose path or file trigger matches, and only those', () => {
         const root = workspace();
-        expect(dutyForPath('.claude/settings.json', root)).toEqual([{ rule: 'sot', reference: REF }]);
+        expect(dutyForPath('.claude/settings.json', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
         expect(dutyForPath('src/App.vue', root)).toEqual([]);
         expect(dutyForPath('src/a.ts', root)).toEqual([]);
     });
@@ -78,9 +80,10 @@ describe('dutyForPath', () => {
 
 describe('dutyStates', () => {
     it('is read only when the ledger holds a full read of the reference', () => {
-        const d = [{ rule: 'sot', reference: REF }];
+        const d = [{ rule: 'sot', reference: REF, resolved: RESOLVED }];
         expect(dutyStates(d, {})).toEqual({ [`sot::${REF}`]: 'required-pending' });
-        expect(dutyStates(d, { [`dist/agent-src/${REF}`]: {} })).toEqual({ [`sot::${REF}`]: 'read' });
+        expect(dutyStates(d, { [RESOLVED]: {} })).toEqual({ [`sot::${REF}`]: 'read' });
+        expect(dutyStates(d, { 'elsewhere/contexts/sot-mechanics.md': {} })).toEqual({ [`sot::${REF}`]: 'required-pending' });
     });
 });
 
@@ -90,8 +93,13 @@ describe('E2E: the hook records the duty and changes nothing else', () => {
         const target = path.join(root, '.claude', 'x.md');
         run(root, { tool_name: 'Write', tool_input: { file_path: target, content: 'x' } });
         expect(duty(root)[`sot::${REF}`]?.state).toBe('required-pending');
-        run(root, { tool_name: 'Read', tool_input: { file_path: path.join(root, 'dist', 'agent-src', REF) } });
+        run(root, { tool_name: 'Read', tool_input: { file_path: path.join(root, RESOLVED) } });
         run(root, { tool_name: 'Edit', tool_input: { file_path: target, old_string: 'x', new_string: 'y' } });
         expect(duty(root)[`sot::${REF}`]?.state).toBe('read');
+    });
+    it('records the duty for a write under an exempt path such as dist/agent-src/', () => {
+        const root = workspace();
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, 'dist', 'agent-src', 'rules', 'new.md'), content: 'x' } });
+        expect(duty(root)[`sot::${REF}`]?.state).toBe('required-pending');
     });
 });

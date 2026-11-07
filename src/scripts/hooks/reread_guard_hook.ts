@@ -264,18 +264,20 @@ export function isRangedRead(toolInput: JsonObject): boolean {
     return false;
 }
 
-/** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
 /**
- * The file a plain `cat <file>` reads whole, or null. Anything broader — a pipe,
- * a redirect, a flag, a second file — is not a whole-file read of one path.
+ * The file a plain `cat <absolute file>` reads whole, or null. A relative path
+ * resolves against the shell's cwd, which the hook cannot see; a pipe, a
+ * redirect, a flag, a second file or a shell expansion is not a whole-file read
+ * of one known path.
  */
 export function wholeFileCatPath(command: string): string | null {
     const m = /^\s*cat\s+(?:"([^"]+)"|'([^']+)'|([^\s|&;<>'"]+))\s*$/.exec(command);
     if (m === null) return null;
     const p = m[1] ?? m[2] ?? m[3] ?? '';
-    return p.startsWith('-') ? null : p;
+    return p.startsWith('/') && !/[$*?~`]/.test(p) ? p : null;
 }
 
+/** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
 export function buildDuplicateReadLine(relPath: string, earlierTs: number, compared: CompareBasis): string {
     const when = new Date(earlierTs).toISOString();
     const basis =
@@ -294,6 +296,14 @@ export function buildPostEditReadLine(relPath: string): string {
         `for content you already have; a ranged Read (offset/limit) over the edited hunk ` +
         `is enough to verify the change.`
     );
+}
+
+function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
+    const states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads);
+    if (Object.keys(states).length === 0) return;
+    const ts = Date.now();
+    ledger.duty = { ...(ledger.duty ?? {}) };
+    for (const [k, state] of Object.entries(states)) ledger.duty[k] = { state, ts };
 }
 
 export function main(): number {
@@ -323,7 +333,6 @@ export function main(): number {
         const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(workspaceRoot, filePath);
         const relPath = path.relative(workspaceRoot, absPath);
         const exempt = isExemptPath(relPath) || isExemptPath(absPath);
-        if (exempt && !isRead) return EXIT_ALLOW;
 
         const sessionKey = deriveSessionKey(envelope, payload);
         const ledger = readLedger(workspaceRoot, sessionKey);
@@ -331,6 +340,13 @@ export function main(): number {
         // absolute-vs-relative host payloads), absolute otherwise.
         const key = relPath.startsWith('..') ? absPath : relPath;
 
+        if (exempt && isWrite) {
+            // No 6.2 bookkeeping on an exempt path, but the duty is observed:
+            // `dist/agent-src/` is itself a trigger prefix.
+            recordDuty(ledger, key, workspaceRoot);
+            writeLedger(workspaceRoot, sessionKey, ledger);
+            return EXIT_ALLOW;
+        }
         if (exempt) {
             // No advisory on an exempt path, but the read is recorded: a projected
             // rule reference lives under dist/, and the reference duty asks whether
@@ -352,12 +368,7 @@ export function main(): number {
             // not happened yet, but for every later comparison "about to write"
             // and "wrote" are equivalent.
             ledger.writes[key] = Date.now();
-            const states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads);
-            if (Object.keys(states).length > 0) {
-                const ts = Date.now();
-                ledger.duty = { ...(ledger.duty ?? {}) };
-                for (const [k, state] of Object.entries(states)) ledger.duty[k] = { state, ts };
-            }
+            recordDuty(ledger, key, workspaceRoot);
             writeLedger(workspaceRoot, sessionKey, ledger);
             return EXIT_ALLOW;
         }
