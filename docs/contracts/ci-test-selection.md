@@ -151,8 +151,15 @@ decisions (see `branch-protection-policy.md` and the open stub
 3. **Enable the merge queue** (merge method as today; "only merge non-failing
    pull requests"). The queue builds the PR on top of the current `main`, fires
    `merge_group`, `Select tests` diffs against the queue's base SHA, and the PR
-   lands only if `Tests result` is green. `tests.yml`, `consistency.yml` and
-   `standing-payload-delta.yml` already declare `merge_group`.
+   lands only if `Tests result` is green. Every workflow carrying a required
+   check declares `merge_group` — `tests.yml`, `consistency.yml`,
+   `standing-payload-delta.yml` and `commit-subjects.yml` — which the queue
+   needs: a required check that never reports on the queue entry blocks `main`
+   with no failure to read. `tests/scripts/workflow_merge_group_concurrency.test.ts`
+   pins the four.
+
+Live state 2026-11-07: step 1 is already in place (the ruleset carries a
+`pull_request` rule); steps 2 and 3 are not.
 
 Read back with `gh api repos/event4u-app/agent-config/rulesets/17749383`, then
 update the live-state table in `branch-protection-policy.md` from that JSON.
