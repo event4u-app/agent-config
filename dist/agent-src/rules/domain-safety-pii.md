@@ -171,3 +171,11 @@ PreToolUse hook — see `agents/settings/contexts/legal-privilege-probe.md`.
 - `domain-safety-disclaimer` — companion advisory rule.
 - `domain-safety-retention` — companion retention rule.
 - `doc-screenshot-hygiene` — the visual sibling: PII inside a **screenshot** shipped into docs (this rule covers text drafts / logs / exports, not images).
+
+## Startup contract
+
+- **When:** drafts, log code, exports w/ personal data; privileged-doc egress.
+- **Must:** redact at generation time: PII → placeholders BEFORE drafting · logs: allowlisted fields only · prefer log types unable to hold free text, else logger scrubs email/phone/name/token/card · scrub exception bodies (before_send) · exports: drop or salted-hash name/email/phone/address · drop national IDs (never hash) + card/IBAN · scrub or drop free text.
+- **Never:** raw direct identifier in AI draft, log line or export · demographics in recruiting drafts · user/request blobs or credentials in auth logs; refuse `Log::info($user)`, show allowlisted version.
+- **Except:** marketing real names/quotes only if prompt cites dated reference agreement/quote approval or press-release URL; else redact.
+- **Stop:** 3+ quasi-IDs per row → flag re-identification risk, ask re bucketing · recipient unknown → ask recipient first · partner w/o DPA → refuse, require DPA, route to legal · email cleanup under SEC probe → hard refuse, flag spoliation, route to counsel · privilege marker outbound → block pending explicit user confirmation, not redact · internal on-prem NDA: pseudonymized · internal cloud/BYO: + aggregated · partner w/ DPA: pseudonymized, min columns · public: aggregated, k ≥ 5, no quasi-ID combos; k ≥ 50 to call metric anonymous.

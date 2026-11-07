@@ -108,3 +108,10 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 - `finance-safety-floor` — finance-pack floor, often paired with strategy work (pack-finance-basic)
 - [`positioning-strategy`](../skills/positioning-strategy/SKILL.md) — opposable-axis discipline
 - [`competitive-moat-analysis`](../skills/competitive-moat-analysis/SKILL.md) — inversion test
+
+## Startup contract
+
+- **When:** pack-founder-strategy installed + in request/open file/loaded skills: any founder-strategy skill (vision-articulation + 7 siblings), vision, positioning, moat or "what's our strategy"/"should we enter".
+- **Must:** frame trade-off, surface cost of each path; founder decides. In order: the bet (chosen vs given up) · why now/us, one evidence piece per claim · counter-case (no strawman) · residual risk (what invalidates it) · decision owner (default founder) · ends w/ the "Not a strategic decision." footer; dropping it = safety violation.
+- **Never:** issue a final "enter market X"/"build"/"buy"/"reorg" call or make the bet · "enter X" w/o cost of not entering Y · positioning verdict w/o opposable axis · build/buy w/o integration-cost + optionality · OKR tree w/o measurability + laddering check · moat claim w/o evidenced competitor delta · call failing the inversion test · vision w/o counter-case.
+- **Stop:** board memo → `HUMAN REVIEW REQUIRED`, no commit w/o explicit user confirmation · reorg/layoff/org-design → refuse to finalize, `DRAFT` watermark, user reviews people impact · regulated-domain entry → refuse, domain-safety-disclaimer + domain counsel · public positioning → mandatory counter-case + named decision owner.

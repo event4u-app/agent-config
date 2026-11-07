@@ -91,3 +91,11 @@ Verify against the customer's privacy notice, regulatory regime, and contractual
 - `skill:privacy-review` — regulatory-regime read.
 - `domain-safety-disclaimer` — companion advisory disclaimer (financial track).
 - `domain-safety-pii` — companion for PII in drafts/logs/exports.
+
+## Startup contract
+
+- **When:** retention/deletion of records/tickets/CRM/customer data · DSAR · right to be forgotten.
+- **Must:** name jurisdiction gap, then cite a primary source · default to longest applicable floor; document chosen floor · append financial-disclaimer footer to every finance-retention answer · support/CRM two-track: raw ticket body + attachments (PII) short retention w/ DSR honoring on regime's response clock (GDPR Art. 12(3)); de-identified aggregates persist · consent expiry → deletion job that must run · require DSR readiness; DSR-readiness is a floor, not a ceiling · backups purge on same DSR clock or documented + rotated.
+- **Never:** recommend deletion under audit/litigation hold or regulatory inquiry, nor open tax audit, pending litigation, contractual record-keeping clause, criminal investigation.
+- **Bounds:** cite default support floors then qualify: raw ticket 12-24 mo from close · PII attachments 6-12 mo · aggregates indefinite · QA 30-90 days; verify against customer's privacy notice + DPAs.
+- **Stop:** invoice purge w/o jurisdiction → refuse + ask jurisdiction · cleanup under investigation → hard refuse, flag spoliation risk, redirect to counsel · "purge the CRM" w/o DSR/consent → refuse + walk through two-track policy.

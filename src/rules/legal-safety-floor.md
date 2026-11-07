@@ -137,3 +137,10 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 - `lethal-trifecta-guard` — egress gate the privilege-outbound block builds on
 - [`contracts-cognition`](../skills/contracts-cognition/SKILL.md) — contract reasoning anchor
 - [`privacy-review`](../skills/privacy-review/SKILL.md) — GDPR/CCPA regime read (DPA anchor)
+
+## Startup contract
+
+- **When:** legal-review-prep pack installed + request/open file/loaded skills touch legal-pack skills or NDA/DPA/contract/redline/clause/GDPR/privilege.
+- **Must:** output = draft/research aid for licensed attorney; surface analysis + open question; attorney decides · body (not footnote) carries "Attorney review required on material use. This is a draft for a licensed attorney, not legal advice and not a legal conclusion." · Jurisdiction: tag EU or DE on every output.
+- **Never:** binding legal conclusion · GREEN as clearance; non-lawyer → attorney gate, never self-approval · examine concrete individual case/predict its outcome · single-model legal work-product if require_council (default true) · stale-guidance guess outside EU/DE.
+- **Stop:** legal_review_prep.acknowledged not true → refuse, point to setup wizard (fail-closed) · no council → refuse, no output, not bad output · individual case → STOP: needs a lawyer (RDG § 2(1)), name Rechtsanwaltskammer + Beratungshilfe, offer general concept + template; ends only that branch, not the chat · out-of-scope jurisdiction → refuse + "consult licensed local counsel" · disclaimer or consent never cures RDG line.

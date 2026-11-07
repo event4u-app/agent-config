@@ -104,3 +104,10 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 - [`runway-cognition`](../skills/runway-cognition/SKILL.md) — operational depth on runway shape
 - `dcf-modeling` — valuation depth (pack-finance-advanced)
 - `scenario-modeling` — base / upside / downside construction (pack-finance-advanced)
+
+## Startup contract
+
+- **When:** finance-pack artefacts (pack-finance-basic/advanced installed): runway, burn, valuation, DCF, LTV/CAC, scenarios, fundraise, ARR or finance-pack skill.
+- **Never:** final "invest"/"don't invest"/"raise"/"don't raise" call → surface trade-off, name risk, human decides · single-point valuation/runway w/o sensitivity; runway as one number (optimistic/base/downside); DCF/valuation w/o discount-rate sweep; "you should …" w/o assumption set; accuracy claim w/o retro-loop ref; deal comparison w/o comparability gap; raise/cut/layoff w/o human-decision owner.
+- **Must:** deliverable ends w/ footer (fixed text): not investment/tax/legal advice, model output not assured, assumptions stated, human review before commit/raise/spend; drop it = safety violation · surface in order: assumptions (inputs sourced or marked assumption) → sensitivity (≥1 variable swept ±20% or ±1 σ) → confidence high/medium/low + reason → counter-case (one sentence).
+- **Stop:** board-pack figure → HUMAN REVIEW REQUIRED banner, no commit w/o explicit user OK; investor/lender/auditor use → refuse to finalize, DRAFT watermark; tax/accounting → refuse, route domain-safety-disclaimer, defer to CPA/Steuerberater; ≥ €100k single-decision exposure → sensitivity, counter-case, named risk owner.

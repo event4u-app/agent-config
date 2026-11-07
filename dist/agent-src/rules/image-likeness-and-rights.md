@@ -71,3 +71,10 @@ and stops the job until checked:
 - [`media-governance-routing`](media-governance-routing.md) — parent routing rule loading all media policies.
 - [`provider-lifecycle-discipline`](provider-lifecycle-discipline.md) — adapter-tier gate for live generation.
 - [`image-provider-routing`](../skills/image-provider-routing/SKILL.md) — provider selection before prompt authoring.
+
+## Startup contract
+
+- **When:** AI image gen/edit (or editing `scripts/ai-image/adapters/`) w/ real person's face/body, 3rd-party trademark/brand, living artist's style or license-restricted model.
+- **Must:** (policy files under `agents/settings/policies/`) surface rights question; real person → likeness consent (`media/{likeness,public-figures}.md`); style → `media/style.md` license check; check model card, surface restricted output license; apply, don't duplicate, `media/{brand-impersonation,disclosure}.md` (mandatory AI disclosure).
+- **Never:** generate real likeness, trademark or living artist's style w/o explicit rights/consent; logo "inspired by [Brand]" uncleared; skip check as "just testing" (scaffold/dry-run adapter) or "only a banner".
+- **Stop:** halt job until policy check passes; trademark w/o rights → refuse; REFUSE-AND-SURFACE OVER GENERATE.

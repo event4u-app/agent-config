@@ -26,6 +26,6 @@ token_passport:
   catalog_tokens: 4857
   commands_tokens: 1858
   other_tokens: 0
-  rules_tokens: 38665
-  total_tokens: 45380
+  rules_tokens: 40859
+  total_tokens: 47574
 trust_level_default: core

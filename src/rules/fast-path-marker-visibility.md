@@ -83,3 +83,10 @@ this rule does not constrain their output.
 - `docs/contracts/ai-council-config.md` § Low-impact council opt-in
 - [`direct-answers`](direct-answers.md) — invented-facts Iron Law (provenance kin).
 - `scripts/ai_council/low_impact.ts` — marker source.
+
+## Startup contract
+
+- **When:** decision resolves via low-impact council fast-path (corpus/fuzzy/other `classes.low_impact` route).
+- **Must:** EVERY FAST-PATH REPLY OPENS WITH THE EXACT MARKER: first non-whitespace line, once, verdict explained after; case, punctuation, leading `> ` normative. Per outcome: `> Resolved via low-impact council fast-path: <verdict>.` · `> Low-impact council unavailable (no opted-in members) — escalating to user.` · `> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):` · `> Low-impact council aborted (token cap) — escalating to user:`
+- **Never:** paraphrase, swallow, substitute own verdict; text before it; translate it (language mirroring only for prose after it); emoji, same-line rationale, extra indent; merge into numbered options.
+- **Except:** `high_impact`/`user_required` never reach fast-path, no marker.
