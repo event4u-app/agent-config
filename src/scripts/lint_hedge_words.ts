@@ -69,7 +69,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { HEDGE_WORDS } from './bench_honesty_score.js';
+import { HEDGE_WORDS } from '../../internal/bench/core/bench_honesty_score.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { readStdinText } from './_lib/stdin.js';
 

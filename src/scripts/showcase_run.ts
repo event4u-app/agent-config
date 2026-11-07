@@ -17,8 +17,8 @@ import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import process from 'node:process';
 
-import { load_artifact_corpus } from './_lib/bench_artifact_corpus.js';
-import { REPO_ROOT } from './_lib/bench_artifact_graders.js';
+import { load_artifact_corpus } from '../../internal/bench/core/_lib/bench_artifact_corpus.js';
+import { REPO_ROOT } from '../../internal/bench/core/_lib/bench_artifact_graders.js';
 import { planShowcase, renderPlan, type ShowcaseTier } from './_lib/showcase_plan.js';
 
 const USAGE = 'usage: showcase_run --tier quick|full --max-usd <usd> [--model <id>] [--plan] [--dry-run]\n';
@@ -65,7 +65,7 @@ export function main(argv: string[] = process.argv.slice(2), env: NodeJS.Process
     }
     process.stdout.write(renderPlan(r.plan));
     if (planOnly) return 0;
-    const res = spawnSync(path.join(REPO_ROOT, 'scripts-run'), ['src/scripts/bench_ab_v2_run', ...r.plan.argv], { cwd: REPO_ROOT, stdio: 'inherit', env });
+    const res = spawnSync(path.join(REPO_ROOT, 'scripts-run'), ['internal/bench/core/bench_ab_v2_run', ...r.plan.argv], { cwd: REPO_ROOT, stdio: 'inherit', env });
     return res.status ?? 2;
 }
 

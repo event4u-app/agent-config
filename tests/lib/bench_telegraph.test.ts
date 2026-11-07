@@ -1,6 +1,6 @@
 /**
  * Vitest twin suite for the telegraph bench core
- * (`src/scripts/_lib/bench_telegraph.ts`). Focused unit suite over
+ * (`internal/bench/core/_lib/bench_telegraph.ts`). Focused unit suite over
  * carve-out detection, three-arm aggregation, cost math, the savings
  * properties, corpus loading, and the orchestrator on shared synthetic
  * data (ADR-088 py2ts Phase 2 / Wave 2a).
@@ -25,7 +25,7 @@ import {
     run_telegraph_bench,
     type BenchClient,
     type ArmResponse,
-} from '../../src/scripts/_lib/bench_telegraph.js';
+} from '../../internal/bench/core/_lib/bench_telegraph.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO_ROOT = path.resolve(HERE, '..', '..');

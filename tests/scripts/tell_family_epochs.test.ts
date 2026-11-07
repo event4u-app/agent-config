@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { analyzeText } from "../../src/scripts/detect_ai_tells.js";
 import { ALL_TELL_RULES } from "../../src/scripts/ai_tells_rules.js";
-import { loadCleanCorpus, measure } from "../../src/scripts/bench_prose_tells_fp.js";
+import { loadCleanCorpus, measure } from "../../internal/bench/core/bench_prose_tells_fp.js";
 
 const ROOT = join(__dirname, "..", "..");
 const LEDGER = readFileSync(
@@ -188,7 +188,7 @@ describe("the promotion gate refuses, and names the file", () => {
     // is only ever seen green.
     const r = spawnSync(
       "npx",
-      ["tsx", join(ROOT, "src", "scripts", "bench_prose_tells_fp.ts"), "--gate", "tell-de-connector-stack"],
+      ["tsx", join(ROOT, "internal", "bench", "core", "bench_prose_tells_fp.ts"), "--gate", "tell-de-connector-stack"],
       { cwd: ROOT, encoding: "utf8" },
     );
     expect(r.status).toBe(1);
@@ -199,7 +199,7 @@ describe("the promotion gate refuses, and names the file", () => {
   it("exits 0 for a promoted family", () => {
     const r = spawnSync(
       "npx",
-      ["tsx", join(ROOT, "src", "scripts", "bench_prose_tells_fp.ts"), "--gate", "tell-vague-declarative"],
+      ["tsx", join(ROOT, "internal", "bench", "core", "bench_prose_tells_fp.ts"), "--gate", "tell-vague-declarative"],
       { cwd: ROOT, encoding: "utf8" },
     );
     expect(r.status).toBe(0);

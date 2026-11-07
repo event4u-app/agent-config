@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import * as run from '../../src/scripts/bench_ab_v2_run';
+import * as run from '../../internal/bench/core/bench_ab_v2_run';
 
 // CI runners have no codex binary; codex_executable() checks the CODEX_CLI
 // env FIRST, so pointing it at the node executable (exists everywhere)

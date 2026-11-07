@@ -11,7 +11,7 @@ import type { SpawnSyncReturns } from 'node:child_process';
 
 import { describe, expect, it } from 'vitest';
 
-import { dispatchFailure } from '../../src/scripts/bench_hook_latency.js';
+import { dispatchFailure } from '../../internal/bench/core/bench_hook_latency.js';
 
 function proc(error: (Error & { code?: string }) | undefined, status: number | null): SpawnSyncReturns<string> {
     const base = { pid: 1, output: [], stdout: '', stderr: '', status, signal: null };

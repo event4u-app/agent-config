@@ -77,9 +77,9 @@ name: Standing Payload Delta
 # The filtering moved INSIDE the job, to the `scope` step below, which always
 # reports a conclusion. That is the shape the contract prescribes.
 on:
-  # The merge queue is on since 2026-11-07. PR-only steps are guarded by
-  # `github.event_name == 'pull_request'`; the merge-base comes from
-  # `merge_group.base_sha` (see `Resolve merge-base`).
+  # PR-only steps are guarded by `github.event_name == 'pull_request'`; the
+  # merge-base comes from `merge_group.base_sha` here, since `github.base_ref`
+  # is empty on this event.
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -469,7 +469,7 @@ jobs:
         run: |
           rc=0
           ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs || rc=1
-          ./scripts-run src/scripts/bench_hook_injection || rc=1
+          ./scripts-run internal/bench/core/bench_hook_injection || rc=1
           ./scripts-run src/scripts/audit_skill_overlap --quiet --print-table --strict || rc=1
           ./scripts-run src/scripts/memory_replay --check || rc=1
           exit "$rc"

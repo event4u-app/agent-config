@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { ARMS, profile_rules_text } from '../../src/scripts/_lib/bench_ab_arms.js';
+import { ARMS, profile_rules_text } from '../../internal/bench/core/_lib/bench_ab_arms.js';
 
 function fixture(profiles: Record<string, string[]>): { router: string; rules: string } {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'profile-arms-'));

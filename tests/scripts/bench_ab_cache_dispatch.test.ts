@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_cache_dispatch.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_ab_cache_dispatch.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists. The happy path shells out to the underlying .py
 // runner (a full, cost-/time-bearing bench run), so it is NOT golden-diffed
@@ -19,7 +19,7 @@ describe('bench_ab_cache_dispatch — decision message format', () => {
     // The dispatch's own stdout line is built from the bench_ab_cache lookup
     // (validated in its own wave). Re-derive it here to lock the exact wording.
     it('emits the cache-miss / cache-stale "running both arms" line shape', async () => {
-        const cache = await import('../../src/scripts/_lib/bench_ab_cache.js');
+        const cache = await import('../../internal/bench/core/_lib/bench_ab_cache.js');
         const corpusPath = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-trackb.yaml');
         const lk = cache.lookup(corpusPath);
         // Reproduce the two message templates the dispatch uses.

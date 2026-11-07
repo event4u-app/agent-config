@@ -31,6 +31,9 @@ import { describe, expect, it } from "vitest";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(here, "..", "..");
+// A gate lives in src/scripts, or in internal/bench/core when it is part of the bench engine.
+const SCRIPT_ROOTS = ["src/scripts", "internal/bench/core"];
+const gateExists = (gate: string): boolean => SCRIPT_ROOTS.some((r) => existsSync(path.join(repoRoot, r, `${gate}.ts`)));
 
 function runGate(script: string, args: string[]): { code: number; out: string } {
   try {
@@ -460,7 +463,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     // twenty-first gate added to the job would have gone unnoticed, which is
     // the direction the council's bound actually cares about.
     const actual = new Set(
-      [...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
+      [...job.matchAll(/(?:src\/scripts|internal\/bench\/core)\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
     );
 
     const expected = [
@@ -496,7 +499,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     expect(actual.size, "the council bounded this batch at twenty").toBe(20);
 
     for (const gate of expected) {
-      expect(existsSync(path.join(repoRoot, "src", "scripts", `${gate}.ts`)), `${gate}.ts does not exist`).toBe(true);
+      expect(gateExists(gate), `${gate}.ts does not exist`).toBe(true);
     }
   });
 
@@ -510,7 +513,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     const job = drainBatch(workflow, DRAIN_STEP_2_2_BATCH_A_MARKER);
 
     const actual = new Set(
-      [...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
+      [...job.matchAll(/(?:src\/scripts|internal\/bench\/core)\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
     );
     const expected = [
       "audit_mcp_tools",
@@ -552,7 +555,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
       expect(workflow.indexOf(batch.marker), `the batch-${batch.id} block is missing`).toBeGreaterThan(0);
       const job = drainBatch(workflow, batch.marker);
 
-      const actual = new Set([...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string));
+      const actual = new Set([...job.matchAll(/(?:src\/scripts|internal\/bench\/core)\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string));
       const missing = batch.gates.filter((g) => !actual.has(g));
       const extra = [...actual].filter((g) => !batch.gates.includes(g)).sort();
       expect(missing, `batch-${batch.id} gates with no caller in the drain job`).toEqual([]);
@@ -562,7 +565,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
       expect(actual.size).toBeLessThanOrEqual(20);
 
       for (const gate of batch.gates) {
-        expect(existsSync(path.join(repoRoot, "src", "scripts", `${gate}.ts`)), `${gate}.ts does not exist`).toBe(true);
+        expect(gateExists(gate), `${gate}.ts does not exist`).toBe(true);
       }
       for (const gen of batch.check) {
         expect(job, `${gen} must run its --check variant`).toMatch(new RegExp(`src/scripts/${gen} --check\\b`));
@@ -576,7 +579,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     "hands %s a base the CI checkout has",
     (gate) => {
       const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
-      const calls = [...workflow.matchAll(new RegExp(`src/scripts/${gate}\\b[^\\n]*`, "g"))].map((m) => m[0]);
+      const calls = [...workflow.matchAll(new RegExp(`(?:src/scripts|internal/bench/core)/${gate}\\b[^\\n]*`, "g"))].map((m) => m[0]);
       expect(calls.length, `${gate} has a caller in the drain job`).toBeGreaterThan(0);
       for (const call of calls) expect(call).toMatch(/--baseline origin\/main\b/);
     },
@@ -601,7 +604,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     const uncalled = rows
       .filter((m) => m[2] === "wire")
       .map((m) => m[1] as string)
-      .filter((gate) => !workflows.includes(`src/scripts/${gate}`));
+      .filter((gate) => !SCRIPT_ROOTS.some((r) => workflows.includes(`${r}/${gate}`)));
     expect(uncalled, "`wire`-class gates with no workflow caller").toEqual([]);
   });
 
@@ -640,7 +643,7 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     // that batch's exact-set case and cost a second startup for no reading.
     const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
     const drain = workflow.slice(workflow.indexOf("The local-only drain — batch 1"));
-    const calls = [...drain.matchAll(/^\s*\.\/scripts-run src\/scripts\/([A-Za-z0-9_]+)/gm)].map((m) => m[1] as string);
+    const calls = [...drain.matchAll(/^\s*\.\/scripts-run (?:src\/scripts|internal\/bench\/core)\/([A-Za-z0-9_]+)/gm)].map((m) => m[1] as string);
     const dupes = calls.filter((g, i) => calls.indexOf(g) !== i);
     expect(dupes, "gates called more than once in the drain").toEqual([]);
   });

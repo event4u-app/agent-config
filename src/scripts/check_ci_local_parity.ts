@@ -105,7 +105,8 @@ export function load_manifest(file = MANIFEST): Manifest {
 /** Gate ids invoked anywhere in a blob of shell/YAML text. */
 export function extract_gates(text: string): Set<string> {
     const out = new Set<string>();
-    // ./scripts-run src/scripts/<name>  |  npx tsx src/scripts/<name>.ts  |  .sh
+    // ./scripts-run src/scripts/<name>  |  npx tsx src/scripts/<name>.ts  |  .sh, and the
+    // same under internal/bench/core/, where the bench engine lives outside the package.
     //
     // The negative lookahead rejects a DIRECTORY segment: `src/scripts/_lib/x.ts`
     // must not register `_lib` as a gate. Without it the first run reported 23
@@ -114,7 +115,7 @@ export function extract_gates(text: string): Set<string> {
     // real finding then sits in a pile of noise. The backslash in the class is not
     // decoration: the pre-push hook greps an escaped path (`pack_dependency_allowlist\.json`),
     // and without it that JSON file registered as a local-only gate.
-    for (const m of text.matchAll(/src\/scripts\/([a-z0-9_]+)(?:\.(?:ts|sh))?(?![\w/.\\-])/g)) {
+    for (const m of text.matchAll(/(?:src\/scripts|internal\/bench\/core)\/([a-z0-9_]+)(?:\.(?:ts|sh))?(?![\w/.\\-])/g)) {
         out.add(m[1] as string);
     }
     return out;

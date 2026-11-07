@@ -17,7 +17,7 @@ import {
     familyTaskIds,
     parseMatrixSpec,
     planLines,
-} from '../../src/scripts/bench_matrix.js';
+} from '../../internal/bench/core/bench_matrix.js';
 import {
     CompositeConfigError,
     REPO_ROOT,

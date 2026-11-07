@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_MAP_ARMS, install_into_clone, MAP_ARMS, MAP_CONFIRM_TEXT } from '../../src/scripts/bench_map_task_set.js';
+import { DEFAULT_MAP_ARMS, install_into_clone, MAP_ARMS, MAP_CONFIRM_TEXT } from '../../internal/bench/core/bench_map_task_set.js';
 
 const REPO = path.resolve(__dirname, '../..');
 
@@ -39,7 +39,7 @@ describe('arms that separate payload from map (5.3, H29)', () => {
     });
 
     it('prints the arms', () => {
-        const r = spawnSync(path.join(REPO, 'scripts-run'), ['src/scripts/bench_map_task_set', '--dry-run', '--print-arms'], { cwd: REPO, encoding: 'utf-8' });
+        const r = spawnSync(path.join(REPO, 'scripts-run'), ['internal/bench/core/bench_map_task_set', '--dry-run', '--print-arms'], { cwd: REPO, encoding: 'utf-8' });
         expect(r.status).toBe(0);
         expect(r.stdout).toMatch(/5 arms/);
     }, 60_000);

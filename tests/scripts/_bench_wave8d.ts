@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 export const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
+export const BENCH_CORE = path.join(REPO_ROOT, 'internal', 'bench', 'core');
 export const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -24,7 +25,8 @@ export interface RunOut {
 }
 
 export function runTs(script: string, args: string[]): RunOut {
-    const r = spawnSync(TSX_BIN, [path.join(SCRIPTS, script), ...args], {
+    const inCore = path.join(BENCH_CORE, script);
+    const r = spawnSync(TSX_BIN, [fs.existsSync(inCore) ? inCore : path.join(SCRIPTS, script), ...args], {
         encoding: 'utf8',
         cwd: REPO_ROOT,
         maxBuffer: 16 * 1024 * 1024,

@@ -9,8 +9,8 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { load_artifact_corpus } from '../../src/scripts/_lib/bench_artifact_corpus.js';
-import { AB_ROOT, REPO_ROOT, grade_primary } from '../../src/scripts/_lib/bench_artifact_graders.js';
+import { load_artifact_corpus } from '../../internal/bench/core/_lib/bench_artifact_corpus.js';
+import { AB_ROOT, REPO_ROOT, grade_primary } from '../../internal/bench/core/_lib/bench_artifact_graders.js';
 
 const tmps: string[] = [];
 afterEach(() => {

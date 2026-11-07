@@ -27,7 +27,7 @@ tasks:
              task bench -- --corpus dev --agent-output outputs.json
       Step-4 Phase 2 deliverable; schema in
       docs/contracts/benchmark-report-schema.md.
-    cmd: ./scripts-run src/scripts/bench_run {{.CLI_ARGS}}
+    cmd: ./scripts-run internal/bench/core/bench_run {{.CLI_ARGS}}
 
   bench:baseline:
     silent: true
@@ -36,7 +36,7 @@ tasks:
       (scripts/bench_runner.py). Use when you only need top-K hit
       ratios without cost or quality scoring.
       Usage: task bench:baseline -- --corpus dev --json
-    cmd: ./scripts-run src/scripts/bench_runner {{.CLI_ARGS}}
+    cmd: ./scripts-run internal/bench/core/bench_runner {{.CLI_ARGS}}
 
   bench:drift:
     silent: true
@@ -47,7 +47,7 @@ tasks:
       not a merge gate until baseline closes).
       Usage: task bench:drift
              task bench:drift -- --corpus dev --window 5 --json
-    cmd: ./scripts-run src/scripts/bench_drift_check {{.CLI_ARGS}}
+    cmd: ./scripts-run internal/bench/core/bench_drift_check {{.CLI_ARGS}}
 
   bench:baseline-ready:
     silent: true
@@ -57,7 +57,7 @@ tasks:
       report_count ≥ 30. Read by P2 enforcement roadmaps (step-99 G1).
       Usage: task bench:baseline-ready
              task bench:baseline-ready -- --json
-    cmd: ./scripts-run src/scripts/bench_baseline_ready {{.CLI_ARGS}}
+    cmd: ./scripts-run internal/bench/core/bench_baseline_ready {{.CLI_ARGS}}
 
   bench:projection:
     silent: true
@@ -72,7 +72,7 @@ tasks:
       Usage: task bench:projection
              task bench:projection -- --corpus dev --write-report
              task bench:projection -- --threshold 0.85 --json
-    cmd: ./scripts-run src/scripts/bench_per_tool {{.CLI_ARGS}}
+    cmd: ./scripts-run internal/bench/core/bench_per_tool {{.CLI_ARGS}}
 
   test:
     silent: true
@@ -166,12 +166,12 @@ tasks:
   bench-rule-load-latency:
     silent: true
     desc: "Measure on-demand (non-kernel) rule-load latency p50/p95/p99 (token-saving Phase 0). Mechanical resolve+read cost of `dist/agent-src/rules/<id>.md`; measurement only, never gates. `--write` → internal/bench/reports/rule-load-latency.json."
-    cmd: ./scripts-run src/scripts/bench_rule_load_latency
+    cmd: ./scripts-run internal/bench/core/bench_rule_load_latency
 
   bench-quality-run:
     silent: true
     desc: "Produce internal/bench/reports/quality-run.json — the thin-vs-eager length-controlled judge run that activates the check-quality-regression gate (Phase 0 EXIT). API-GATED: a live run needs an Anthropic key + costs $ (golden tasks × 2 arms + 2 judge calls). `--dry-run` proves the pipeline with no API; `--limit N` bounds a live run; then run `check-quality-regression`."
-    cmd: ./scripts-run src/scripts/bench_quality_run {{.CLI_ARGS}}
+    cmd: ./scripts-run internal/bench/core/bench_quality_run {{.CLI_ARGS}}
 
   check-quality-regression:
     silent: true

@@ -20,13 +20,13 @@ import {
     CANDIDATE_PREFIX as CLONE_PREFIX,
     CANDIDATE_RECORD_FILE,
     WITH_SURFACES,
-} from '../../src/scripts/bench_ab_clone.js';
+} from '../../internal/bench/core/bench_ab_clone.js';
 import {
     ALLOWED_DELTA_FILES,
     ALLOWED_DELTA_PATHS,
     CANDIDATE_PREFIX as INTEGRITY_PREFIX,
     is_under_allowed_path,
-} from '../../src/scripts/bench_ab_integrity.js';
+} from '../../internal/bench/core/bench_ab_integrity.js';
 import { CANDIDATE_OWNED_PATHS } from '../../src/scripts/_lib/candidate_record.js';
 
 describe('candidate surface parity', () => {

@@ -14,7 +14,7 @@ import {
     evaluate_hidden_check,
     load_map_tasks,
     type MapTask,
-} from '../../src/scripts/_lib/bench_map_metrics.js';
+} from '../../internal/bench/core/_lib/bench_map_metrics.js';
 
 const tasks = load_map_tasks();
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'map-task-set-'));

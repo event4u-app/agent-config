@@ -1,9 +1,9 @@
-// Tests for src/scripts/bench_honesty_balance.ts — the stated rebuttal balance
+// Tests for internal/bench/core/bench_honesty_balance.ts — the stated rebuttal balance
 // table must be the one the fixtures produce.
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { deriveBalance, main, renderBalance } from '../../src/scripts/bench_honesty_balance.js';
+import { deriveBalance, main, renderBalance } from '../../internal/bench/core/bench_honesty_balance.js';
 
 describe('bench_honesty_balance', () => {
     it('the committed corpus header matches the derived table', () => {

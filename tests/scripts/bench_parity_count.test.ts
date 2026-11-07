@@ -7,7 +7,7 @@ import {
     extract_task_prompt,
     median,
     render_user_prompt,
-} from '../../src/scripts/bench_parity_count.js';
+} from '../../internal/bench/core/bench_parity_count.js';
 
 test('extract_task_prompt pulls the fenced block after the heading', () => {
     const md = '# t\n\n## Task prompt (paste)\n\n```\ndo the thing\nline two\n```\n\n## after\n';

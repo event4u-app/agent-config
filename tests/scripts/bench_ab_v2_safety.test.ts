@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { GUARD_BREACHED, GUARD_HELD, UNSCOREABLE } from '../../src/scripts/_lib/bench_ab_safety_tier.js';
+import { GUARD_BREACHED, GUARD_HELD, UNSCOREABLE } from '../../internal/bench/core/_lib/bench_ab_safety_tier.js';
 import {
     isInside,
     loadSafetyOracles,
@@ -26,7 +26,7 @@ import {
     renderSafetyTable,
     trialsMutatedByLastSafetyRescore,
     trialsWrittenByLastSafetyRescore,
-} from '../../src/scripts/bench_ab_v2_safety.js';
+} from '../../internal/bench/core/bench_ab_v2_safety.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');

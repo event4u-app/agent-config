@@ -214,17 +214,33 @@ hosts:
         # THIRD FINDING FROM THE 2026-09-29 READ. `docs.windsurf.com` now
         # redirects to `docs.devin.ai`; the redirect target is recorded so the
         # digest is reproducible.
+        #
+        # TWO SLOTS WITHDRAWN 2026-11-07 (issue #2805). The cited hooks page now
+        # redirects to a general "Devin Local" customizations page. Windsurf's
+        # agent is documented as "Cascade (legacy)" inside Devin Desktop, and
+        # that page — the one cited below — names `post_setup_worktree` in
+        # `.windsurf/hooks.json` and nothing else. `pre_user_prompt` and
+        # `post_cascade_response` appear on no live page in the docs.devin.ai or
+        # docs.windsurf.com indexes, so `user_prompt_submit` and `stop` are no
+        # longer bound: the table stopped claiming what no source establishes.
+        # This does NOT establish that legacy Cascade stopped running them — no
+        # probe has ever run on this host (neither Windsurf nor Devin Desktop was
+        # installed for the reading) — and restoring them needs fresh evidence
+        # and its own ratification. On upgrade the installer removes the two
+        # withdrawn entries it wrote and keeps foreign ones (`host_hook_merge`).
+        # Devin Local's own contract (`.devin/hooks.v1.json`, Claude-style
+        # events) is a different host and is not bound here. Still open, also
+        # raised by the council: whether `post_setup_worktree` (fires per new
+        # worktree) fits what `session_start` consumers assume.
         verified:
-          docs_at: 2026-10-26
-          docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
-          docs_digest: 2871edb5ba442a7ecf87b46e09196e2aaf9f0ef47127394bf91231f553d62de8
+          docs_at: 2026-11-07
+          docs_url: https://docs.devin.ai/desktop/cascade.md
+          docs_digest: 2384bd5acf11f3b90c627e0bd544d209dc44bdd4cd39184c060919ad99b55fae
           probe_at: null
           host_version: null
-          expires: 2027-10-26
+          expires: 2027-11-07
         slots:
-          session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-09-29 }
-          user_prompt_submit: { native: pre_user_prompt,       block_exit: null, answered_at: 2026-09-29 }
-          stop:               { native: post_cascade_response, block_exit: null, answered_at: 2026-09-29 }
+          session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-11-07 }
 
   gemini:
     surfaces:
@@ -342,13 +358,20 @@ hosts:
         # statement about the old page, not about the host. It arms nothing:
         # this package still binds no slot here and has still probed nothing,
         # and the codex lesson above says a documented exit 2 is not a binding.
+        #
+        # RE-READ 2026-11-07 after the digest watch flagged a changed body. The
+        # page still documents the eight events above and the same `preToolUse`
+        # exit-code table (exit 2, a crash or other non-zero denies; a timeout
+        # fails open). It now also states that exit 2 on any other event is only
+        # a warning, and lists further events (`subagentStart`, `preCompact`,
+        # `userPromptTransformed`, …). Re-dated only; nothing is armed.
         verified:
-          docs_at: 2026-10-26
+          docs_at: 2026-11-07
           docs_url: https://docs.github.com/en/copilot/reference/hooks-reference.md
-          docs_digest: 7ad7c168f319ce390802289ededf8dead2742959b18b5ccf6f41c2342cbf1c97
+          docs_digest: c139227723d63a785dc09ef59bdad59468f08647ce9e05fe545fae05284777dc
           probe_at: null
           host_version: null
-          expires: 2027-10-26
+          expires: 2027-11-07
         slots: {}
 
   codex:
@@ -404,11 +427,18 @@ hosts:
         # The practical consequence is that a docs-only reading would have
         # armed a refusal this tree cannot demonstrate. The row records the
         # negative instead.
+        #
+        # MOVED 2026-11-07. `developers.openai.com/codex/hooks.md` now redirects
+        # to the URL below, so the redirect target is recorded (as the sibling
+        # `codex-skills` page row already does). The page still documents all
+        # twelve events listed above, `~/.codex/hooks.json`, and exit 2 with the
+        # reason on stderr; it adds `PreModelRequest` / `PostModelRequest`.
+        # Re-dated only: the probe above is unchanged and still the gate.
         verified:
-          docs_at: 2026-10-14
-          docs_url: https://developers.openai.com/codex/hooks.md
-          docs_digest: 57166ef03e7059732dd90925d5c42dd4d187eb2625d66cc154d0fbd2edb65f92
+          docs_at: 2026-11-07
+          docs_url: https://learn.chatgpt.com/docs/hooks.md
+          docs_digest: a50c60b697d8df62e2f907adbb18b2f5a1a25cd3360e7b843cde25f18ab6d782
           probe_at: 2026-10-01
           host_version: 0.148.0
-          expires: 2027-10-14
+          expires: 2027-11-07
         slots: {}

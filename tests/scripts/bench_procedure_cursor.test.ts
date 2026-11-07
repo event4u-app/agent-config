@@ -17,7 +17,7 @@ import {
     scoreRun,
     validatePool,
     type Case,
-} from '../../src/scripts/bench_procedure_cursor.js';
+} from '../../internal/bench/core/bench_procedure_cursor.js';
 
 const tmp: string[] = [];
 function dir(files: Record<string, string> = {}): string {

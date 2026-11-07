@@ -31,6 +31,8 @@ import * as path from 'node:path';
 
 export const LIB_DIR_REL = 'src/scripts/_lib';
 export const SCRIPTS_DIR_REL = 'src/scripts';
+/** The bench engine: outside the package, still an importer and a namer of `_lib` modules. */
+export const BENCH_CORE_REL = 'internal/bench/core';
 export const ROADMAPS_DIR_REL = 'agents/roadmaps';
 export const TASKFILES_DIR_REL = 'taskfiles';
 export const ROOT_TASKFILE_REL = 'Taskfile.yml';
@@ -42,6 +44,7 @@ export const CONTRACTS_TESTS_DIR_REL = 'tests/contracts';
 /** Roots the GENEROUS name-occurrence reading scans — per the roadmap's own list. */
 export const NAME_SCAN_ROOTS: readonly string[] = [
     'src',
+    BENCH_CORE_REL,
     TASKFILES_DIR_REL,
     ROOT_TASKFILE_REL,
     '.github',
@@ -138,7 +141,7 @@ function resolveImport(root: string, importerRel: string, specifier: string): st
 /** Directed import edges: importer (non-test `.ts` file) → every `.ts` file it resolves to. */
 export function buildImportGraph(root: string): Map<string, Set<string>> {
     const graph = new Map<string, Set<string>>();
-    const files = listFiles(root, ['src']).filter(
+    const files = listFiles(root, ['src', BENCH_CORE_REL]).filter(
         (f) => (f.endsWith('.ts') || f.endsWith('.tsx')) && !isTestFile(f),
     );
     for (const rel of files) {

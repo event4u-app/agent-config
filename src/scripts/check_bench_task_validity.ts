@@ -27,7 +27,7 @@ import {
     renderTable,
     summarise,
     type TaskRow,
-} from './_lib/bench_task_validity.js';
+} from '../../internal/bench/core/_lib/bench_task_validity.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 

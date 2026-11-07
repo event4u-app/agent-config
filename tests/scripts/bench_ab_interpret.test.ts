@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { interpret, REMOVAL_SENTENCE, renderRecord } from '../../src/scripts/bench_ab_interpret.js';
+import { interpret, REMOVAL_SENTENCE, renderRecord } from '../../internal/bench/core/bench_ab_interpret.js';
 
 type Dict = Record<string, unknown>;
 
