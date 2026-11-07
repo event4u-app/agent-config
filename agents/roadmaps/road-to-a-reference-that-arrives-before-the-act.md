@@ -115,7 +115,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       verify: a fixture session records one `required-pending` for `git commit` with no
       prior read, and `read` after a whole-file read.
 
-- [ ] **2.4 Classify the unreachable and the oversized references.** For each of the 17
+- [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> For each of the 17
       rules whose `load_context` no act reaches, record one of: prompt-only by design
       (the obligation is a disposition, no act shows it) · needs an act trigger (name
       the trigger kind, including a shell-command kind that does not exist yet) ·
@@ -124,6 +124,10 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       verify: a committed table under `agents/evidence/analysis/` with one row for each
       of the 17 rules and each of the 10 references the requires table names, each with
       its disposition and the file:line it rests on.
+      > note: done 2026-11-07 — prompt-only 6 · covered by a gate or carrier 6 · needs an
+      > act trigger 5 (3 need a shell-command kind that does not exist: commit-policy,
+      > non-destructive-by-default, scope-control). Oversized: read-on-demand 6 · split 3 ·
+      > law line plus pointer 1. `agents/evidence/analysis/rule-reference-reachability-2026-11-07.md`.
 
 ## Phase 3 — Deliver or block, only measured
 
