@@ -5,7 +5,8 @@
 - **Date:** 2026-11-07
 - **Delegated by:** the repository owner, in chat: "entscheide das im ai council".
 - **Prompt:** `windsurf-hooks-row-20261107.question.md` (this directory), sent once. It
-  states the three options without a recommendation.
+  states the three options without a recommendation. Its `evidence-type` comment line
+  was added after the run; nothing else differs.
 - **Members:** anthropic (Claude CLI), openai (Codex CLI). Subscription transport, USD 0.00.
 - **Verdict:** `option-2` — unanimous (2/2): withdraw the two undocumented slots
   (`pre_user_prompt`, `post_cascade_response`), keep `post_setup_worktree` cited from the

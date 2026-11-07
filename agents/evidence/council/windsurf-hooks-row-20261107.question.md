@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council question — the `windsurf` row of `host_lowering.yaml` after the vendor dropped its hooks page (issue #2805)
 
 The owner delegated this decision to the council on 2026-11-07.
