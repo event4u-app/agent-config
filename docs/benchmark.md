@@ -240,7 +240,7 @@ What the reading shows:
 
   Several of these say in their own header that they activate when their pack is installed. They load here because the full profile installs them unconditionally. This is the first concrete candidate set for 3.3. Whether a narrower default loses quality is a measurement, and 3.3 runs it only on tasks where a lift was shown.
 - **Listed is not loaded.** The catalog names 633 skills. Only 235 arrive with a description (22k characters); 398 arrive as a bare name (7k characters). A skill without a description can only be found by name, which is the gap `missing-skill-recovery` exists for.
-- **The recurring cost sits in tool-call hooks, not in prompt turns.** Every prompt turn adds about 360 characters of hook output. Every `Bash` call adds about 1,050 characters through the `PostToolUse` hook, which came to 21k characters over the 20 calls of this session. Every compaction re-delivers about 4,100 characters at `SessionStart:compact`. None of this is in the start-up figure above.
+- **The recurring cost sits in tool-call hooks, not in prompt turns.** Every prompt turn adds about 360 characters of hook output. Every `Bash` call adds about 1,050 characters through the `PostToolUse` hook, which came to 21k characters over the 20 calls of this session. Every compaction re-delivers about 4,100 characters at `SessionStart:compact`. None of this is in the start-up figure above. The `Bash` figure merged the hook's plain stdout with its additional context; the census now reports them apart and marks stdout from tool hooks `(stdout, not model-visible)`, so how much of the 1,050 characters reaches the model is open until the census is re-run.
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 

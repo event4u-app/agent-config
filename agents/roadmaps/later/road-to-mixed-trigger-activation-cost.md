@@ -1,6 +1,7 @@
 ---
 complexity: structural
 status: later
+estate_growth_exempt: "+2 open_blockers: Phase 5 (reference duty, arrived inbox-2026-11-z) lands here instead of a new roadmap, and its hook-side and paid steps wait on hook-bundle headroom and an owner spend release."
 execution:
   mode: phase-checkpoints
 ---
@@ -14,6 +15,13 @@ execution:
 > were proposal IDs; § 1 below records which of its claims survived verification,
 > which were overtaken, and the one that is refuted as written.
 
+> **Arrivals (latest):** `inbox-2026-11-z` (2026-11-07) proposes a new "action" delivery
+> path — rule bodies at `PreToolUse` by tool, path or command. The file-path half was
+> built and unbound by owner ruling E2 (gate-open p90 19,649 B against the 2,048 B slot
+> cap), so it reopens E2 here (step 2.3) rather than adding a feature. The command half
+> (`git commit` → commit rules) is new and not owned elsewhere; its reference arithmetic
+> is computed by Phase 5 step 5.3 below.
+>
 > **Arrivals:** re-measured 2026-10-01 by the same command: `eager-all` in
 > **50** consumed rounds, `lean_projection` in **48**, plus `inbox-2026-10-c`
 > (2026-10-01). That round's roadmaps take this file's blocker instrument
@@ -492,6 +500,100 @@ and a census gap. That is the surface this phase closes.
   follows the same discipline as `preamble-payload-budget` — the baseline walks
   down only, and raising it needs a PR with a stated reason.
 
+### Phase 5 — Reference duty, measured before any gate (arrived `inbox-2026-11-z`)
+
+> **Source:** `agents/tmp.old/inbox-2026-11-z/` — owner transcript plus three supplied
+> plans, 2026-11-07, drafted against `9e6e0f0`; claims re-verified at `c9556b655a`.
+> Landed here, not in a new file: the owner search found no other owner, and this file
+> already owns action-time delivery (step 2.3), which the reference duty measures.
+
+The owner's question, turn 2 of the transcript: *can we collect rule references and
+ensure with a gate that they were read or used?* Done for this phase means: for every
+act a rule's triggers name, the package can say which references were required, which
+reached the context (delivered by a hook, or read whole by the model), and which did not
+— and no default changes until that record says a gate is worth its cost. Constraint
+carried from the round: **AC must not get worse on any host to get lighter on one**;
+every step is observe-only or measurement-only unless it says otherwise. Compliance
+("used") is never a receipt — it stays with outcome checkers (`turn-end-gate`;
+`obligation-settle` in shadow), because ADR-202 closed the evaluator route.
+
+#### What the round established (verified, not copied)
+
+- The read ledger exists but cannot carry the duty yet. `reread_guard_hook.ts` records
+  `Read` calls with path and sha256 and **skips ranged reads**; it keys on `session_id`
+  only (`deriveSessionKey`), is **not reset on compaction**, and does **not see `cat`
+  through Bash**. The transcript states all three as present; none is.
+- "Used" cannot be proved by a receipt. A model's line "I read and applied rule X" proves
+  only that the model wrote it; ADR-202 closed the evaluator route (κ 0.472 vs 0.800).
+  Compliance is an outcome check — `turn-end-gate` blocks today, `obligation-settle` runs
+  in shadow.
+- The census cannot yet say whether the per-`Bash` cost is model-visible.
+  `_lib/main_session_census.ts:101-110` merges `hook_success` (dispatcher stdout) and
+  `hook_additional_context` (what the model receives) into one bucket keyed by
+  `hookName`, so the ~1,050 chars per `Bash` call in `docs/benchmark.md` may be largely
+  output the model never sees.
+- The bench has no evidence that hooks fire inside its own arms. A general probe exists
+  (`agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md`, hooks fire under
+  `claude -p`), but the bench passes `--setting-sources` per arm and nothing in
+  `internal/bench` reads a hook event.
+
+#### 5.A — Two instruments, at zero model cost
+
+- [x] **5.1 Split the census hook buckets by visibility.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/main_session_census.ts --> Key the hook buckets in
+      `main_session_census.ts` by attachment type as well as event and hook, and report
+      `model_visible_chars` (from `hook_additional_context`) apart from
+      `stdout_chars` (from `hook_success`).
+      verify: a fixture transcript carrying both types yields two buckets with the
+      right totals; the existing census tests stay green.
+      > note: done 2026-11-07 — buckets keyed by attachment type, `model_visible`
+      > true for additional context and for `SessionStart` / `UserPromptSubmit` stdout;
+      > tool-hook stdout renders `(stdout, not model-visible)`. `docs/benchmark.md`
+      > now says the 1,050-char `Bash` figure is open until the census is re-run.
+- [~] **5.2 Prove hooks fire in each bench arm.** Add a per-trial invariant that reads
+      the stream-json events and marks an AC arm `instrument-invalid` when no hook event
+      arrived. The event shape is not in the tree; one cheap observed run pins it.
+      human-gated: spend (one Haiku trial, cents) — `b-owner-spend`.
+      verify: unit test over the pinned fixture stream; one real trial shows ≥ 1 hook
+      event per bound event type for the package arm and 0 for `vanilla`.
+
+#### 5.B — Reference duty, observe-only
+
+- [x] **5.3 Compile the requires table.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/rule_reference_requires.ts --> A pure script derives, from each rule's
+      `triggers` (`command`, `path_prefix`, `file_pattern`) and `load_context`, the
+      references an action requires, marked `required` · `conditional` ·
+      `informational`, with the referenced file's size in chars and whether it fits the
+      8,000-char inject budget. Rule text is never copied into the table.
+      verify: test over fixture rules — a `path_prefix` / `file_pattern` / `command`
+      trigger maps to its `load_context` file; a keyword-only rule maps to no act; an
+      oversized reference is flagged `omitted-budget`; a missing file is reported, not
+      dropped.
+      > note: done 2026-11-07 — `src/scripts/rule_reference_requires.ts` + 7 tests. First
+      > reading at `c9556b655a`: 20 rules carry `load_context`, 12 act rows
+      > (path_prefix 6 · file_pattern 2 · command 4), **17 of the 20 are reachable by no
+      > act**, and 10 references exceed the 8,000-char inject budget. Every `command`
+      > trigger in `src/rules/` names a slash command; none names a shell command, so
+      > "`git commit` delivers the commit rules" has no frontmatter to derive from today —
+      > that half needs a trigger kind first (step 2.3 above).
+- [~] **5.4 Make the read ledger fit for the duty.** Key by `agent_id` when present,
+      clear on `pre_compact`, and count a whole-file read through Bash (`cat <file>`).
+      blocked: `hook-bundle-headroom` (1 B left; `road-to-a-map-that-knows-what-happened`).
+      verify: tests for subagent separation, compaction reset and a `cat` read.
+- [~] **5.5 Observe the duty.** At `pre_tool_use`, compare the 5.3 table with the
+      ledger and record `required-pending` · `delivered` · `read` · `omitted-budget`
+      per action, writing nothing into context and blocking nothing.
+      blocked: `hook-bundle-headroom`.
+      verify: a fixture session records one `required-pending` for `git commit` with no
+      prior read, and `read` after a whole-file read.
+
+#### 5.C — Deliver or block, only measured
+
+- [~] **5.6 Choose the policy by measurement.** Four arms on the same tasks: deliver,
+      read-gate (block once per reference), nothing, full layer. Compare violation rate,
+      extra turns and cost.
+      human-gated: spend and owner ratification of any blocking default, with a
+      false-positive ceiling registered before the run.
+      verify: pre-registration committed before the first trial.
+
 ## Blockers
 
 ### blocker: b-matrix-semantics-amendment
@@ -569,6 +671,16 @@ and a census gap. That is the surface this phase closes.
   the honest-null consequence below becomes unreachable.
 - **Resolved when:** a budget is named at this blocker, or the step is re-dated
   against the ledger mechanism with that dependency stated.
+
+### blocker: hook-bundle-headroom
+
+Owner: whoever lands the next hook shrink or `raise_log` entry. The hook bundle has 1 B of
+headroom (`road-to-a-map-that-knows-what-happened`, step at line 255). Steps 5.4 and 5.5
+add hook bytes and wait for it.
+
+### blocker: b-owner-spend
+
+Owner: user. Paid trials are owner-released; 5.2 needs cents, 5.6 needs a budget line.
 
 ## Risk Register
 

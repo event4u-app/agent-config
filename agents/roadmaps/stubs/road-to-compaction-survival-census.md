@@ -5,7 +5,10 @@ review_by: 2026-12-24
 
 # Stub: road to a compaction-survival census
 
-> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 2 — latest `inbox-2026-11-z` (2026-11-07): asks to re-deliver laws and
+> active bodies after `/compact`; `rule-inject` is already bound on `pre_compact` and on
+> `session_start` for the compact source, so the open question stays the census, not the
+> wiring. Earlier: `inbox-2026-09-ab` (2026-09-29).
 
 > **Stub — not active work.** Transferred out of
 > [`road-to-context-fidelity.md`](../road-to-context-fidelity.md) Phase 0 and
