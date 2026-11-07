@@ -25,8 +25,16 @@ that combined tree, and **intentionally PR-only** when the invariant is a proper
 diff, so a combined-tree re-run has nothing additional to judge.
 
 Not inventoried: steps that skip through an empty `github.base_ref` rather than this guard
-(`standing-payload-delta.yml:147` emits an empty merge base and measures in full, and `tests.yml:89` falls back to the full macOS scope).
-They run under `merge_group`; whether their fallback base is right there is a separate question.
+(`tests.yml:89` falls back to the full macOS scope). They run under `merge_group`; whether their
+fallback base is right there is a separate question.
+
+**Corrected 2026-11-07, by the first live queue runs.** This paragraph also listed
+`standing-payload-delta.yml`'s merge-base step as "emits an empty merge base and measures in
+full". It did emit an empty base, but nothing measured in full: `Measure standing-payload delta`
+ran `git archive ''` and exited 2, and `Verify exception approvals` could not see the owner
+directives at an empty base, so the budget gate refused. Every queue entry failed the required
+check. The step now takes `github.event.merge_group.base_sha` on `merge_group`, pinned by
+`tests/scripts/standing_payload_delta_resolve_base.test.ts`.
 
 ## Inventory
 
