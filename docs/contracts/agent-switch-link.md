@@ -214,8 +214,12 @@ the link over the CLI verbs below, never the MCP client.
 - **Relay.** While the raised request is not terminal, each prompt reads it
   (`switch show`). A decision made outside the session (`by` not `ac:`) is
   reported once; `done` and `failed` are reported once, `resume` and
-  `detail` as one line of at most 160 characters; `done` with `ok: false` is
-  reported as a failure. A terminal request is then forgotten.
+  `detail` as one line of at most 160 characters; a move is reported only on
+  `ok: true`, `done` with `ok: false` as a failure and `done` without an
+  outcome as such. A reply whose `id` is not the one asked for, whose `state`
+  or decision `kind` is not one of this contract's, is not read; a decision
+  `target` that is not an account and a `reason.window` that is not a window
+  name are dropped. A terminal request is then forgotten.
 - **Hand over.** At the end of each turn the `session-eol` Stop hook reads
   the request once it is `approved` or `executing` and leaves the run
   checkpoint (a session inside a claimed run only), once it was written;

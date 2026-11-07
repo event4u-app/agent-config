@@ -26,6 +26,9 @@ const CALL_TIMEOUT_MS = 5000;
 const ID_RE = /^[0-9a-f]{16}$/;
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const TERMINAL = new Set(['done', 'failed', 'declined', 'snoozed', 'expired']);
+const STATES = new Set([...TERMINAL, 'open', 'approved', 'executing']);
+const KINDS = new Set(['approve', 'decline', 'snooze']);
+const WINDOW_RE = /^[a-z0-9_]{1,32}$/;
 const HOWS = new Set(['after-turn', 'now', 'handoff']);
 /** What a request may put in front of the user or the model: three candidates, one short line per text. */
 const MAX_CANDIDATES = 3;
@@ -71,7 +74,7 @@ function parseSwitchRequest(raw: unknown): SwitchRequest | null {
     const r = obj(raw);
     const id = str(r?.['id']);
     const state = str(r?.['state']);
-    if (r === null || r['v'] !== 1 || id === null || !ID_RE.test(id) || state === null) return null;
+    if (r === null || r['v'] !== 1 || id === null || !ID_RE.test(id) || state === null || !STATES.has(state)) return null;
     const candidates = (Array.isArray(r['candidates']) ? r['candidates'] : [])
         .map((c): SwitchCandidate | null => {
             const o = obj(c);
@@ -81,18 +84,21 @@ function parseSwitchRequest(raw: unknown): SwitchRequest | null {
             return { target, fill: num(o['fill']), how };
         })
         .filter((c): c is SwitchCandidate => c !== null);
-    const d = obj(r['decision']);
-    const o = obj(r['outcome']);
     const reason = obj(r['reason']);
+    const d = obj(r['decision']);
+    const kind = str(d?.['kind']);
+    const target = str(d?.['target']);
+    const win = str(reason?.['window']);
+    const o = obj(r['outcome']);
     return {
         id,
         state,
-        window: str(reason?.['window']),
+        window: win !== null && WINDOW_RE.test(win) ? win : null,
         fill: num(reason?.['fill']),
         candidates,
         decision:
-            d !== null && str(d['kind']) !== null
-                ? { kind: d['kind'] as string, target: str(d['target']), how: str(d['how']), by: str(d['by']) ?? '' }
+            d !== null && kind !== null && KINDS.has(kind)
+                ? { kind, target: isAccount(target) ? target : null, how: HOWS.has(str(d['how']) ?? '') ? str(d['how']) : null, by: str(d['by']) ?? '' }
                 : null,
         outcome: o !== null && typeof o['ok'] === 'boolean' ? { ok: o['ok'], detail: str(o['detail']), resume: str(o['resume']) } : null,
     };
@@ -123,7 +129,9 @@ export function raiseSwitch(account: string, sessionId: string, opts: LinkOption
 }
 
 export function showSwitch(id: string, opts: LinkOptions = {}): SwitchRequest | null {
-    return ID_RE.test(id) ? parseSwitchRequest(callJson(['switch', 'show', id, '--json'], opts)) : null;
+    if (!ID_RE.test(id)) return null;
+    const req = parseSwitchRequest(callJson(['switch', 'show', id, '--json'], opts));
+    return req?.id === id ? req : null;
 }
 
 /** What AC raised for one session, and what of it the session has been told. */
@@ -203,11 +211,12 @@ export function relayLine(req: SwitchRequest, rec: SwitchRecord): string | null 
     const d = req.decision;
     if (req.state === 'done' || req.state === 'failed') {
         const to = d?.target ?? 'the other account';
-        // `done` with `ok: false` contradicts itself; it is never reported as a move.
-        if (req.state === 'done' && req.outcome?.ok !== false) {
+        // A move is reported only on a positive outcome; `done` that says otherwise, or nothing, is not one.
+        if (req.state === 'done' && req.outcome?.ok === true) {
             const resume = clip(req.outcome?.resume);
             return `AC: agent-switch moved this work to ${to}.` + (resume !== null ? ` Resume it with: ${resume}` : '');
         }
+        if (req.state === 'done' && req.outcome === null) return `AC: agent-switch marked the move to ${to} done but reported no outcome.`;
         const detail = clip(req.outcome?.detail);
         return `AC: agent-switch could not move this work to ${to}` + (detail !== null ? `: ${detail}` : '.');
     }
@@ -223,8 +232,13 @@ export function isTerminal(req: SwitchRequest): boolean {
     return TERMINAL.has(req.state);
 }
 
-function isApproved(req: SwitchRequest): boolean {
-    return req.state === 'approved' || req.state === 'executing';
+/**
+ * The state of request `id` and nothing else — all the Stop path needs. It ships
+ * in the dispatch bundle, so it reads no candidate, decision or text at all.
+ */
+function stateOf(id: string, opts: LinkOptions): string | null {
+    const r = obj(callJson(['switch', 'show', id, '--json'], opts));
+    return r !== null && r['v'] === 1 && r['id'] === id && typeof r['state'] === 'string' ? r['state'] : null;
 }
 
 /**
@@ -242,8 +256,8 @@ export function checkpointBeforeMove(
 ): boolean {
     const rec = readSwitchRecord(sessionHash, stateEnv);
     if (rec === null || rec.checkpointed) return false;
-    const req = showSwitch(rec.id, opts);
-    if (req === null || !isApproved(req)) return false;
+    const state = stateOf(rec.id, opts);
+    if (state !== 'approved' && state !== 'executing') return false;
     if (!write()) return false;
     writeSwitchRecord(sessionHash, { ...rec, checkpointed: true }, stateEnv);
     return true;
