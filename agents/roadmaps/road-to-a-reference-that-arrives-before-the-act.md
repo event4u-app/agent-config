@@ -12,7 +12,7 @@ relates:
     relation: disjoint
     note: Owns the session-start size budget, the law form and the inactive-pack floors.
 estate_offset_exempt: "Extracted from road-to-mixed-trigger-activation-cost Phase 5 by owner decision of 2026-11-07, recorded in agents/evidence/owner-directives/2026-11-07-wip-cap-25.md, which names road-to-a-reference-that-arrives-before-the-act; no other roadmap owns the reference duty (owner search over active, later/, stubs/, skipped/ and archive/ in round inbox-2026-11-z)."
-estate_growth_exempt: "+1 active_roadmaps: the owner extracted the reference duty into its own active roadmap on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md); its blocker moves with it from road-to-mixed-trigger-activation-cost."
+estate_growth_exempt: "+1 open_blockers: hook-binding-ratification, discovered doing step 2.2 — binding the concern on Bash and pre_compact is hook plumbing that six council rounds refused; 2.2 waits on its ratification."
 ---
 # Road to a reference that arrives before the act
 
