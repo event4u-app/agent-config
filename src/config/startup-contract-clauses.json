@@ -424,7 +424,7 @@
           "source": "SUGGEST. NEVER INVOKE. THE USER PICKS, ALWAYS.",
           "in_law": true,
           "response": "refuse",
-          "witness": "SUGGEST. NEVER INVOKE.",
+          "witness": "invoke a command because it matched",
           "unresolved_ref": null
         },
         {
@@ -1210,7 +1210,7 @@
           "source": "## Disclaimer templates (append verbatim or translated)",
           "in_law": false,
           "response": "act",
-          "witness": "verbatim or translated",
+          "witness": "its EN text, or its DE text",
           "unresolved_ref": null
         },
         {
