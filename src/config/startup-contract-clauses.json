@@ -5493,7 +5493,7 @@
           "source": "- **Prefer scoped-grant syntax over bare tool names** where the host supports",
           "in_law": false,
           "response": "act",
-          "witness": "prefer scoped grants (Bash(npm test:*))",
+          "witness": "prefer scoped grants (Bash(<cmd>:*))",
           "unresolved_ref": null
         },
         {

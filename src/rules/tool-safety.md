@@ -82,5 +82,5 @@ If a skill needs a tool that is not in the registry:
 ## Startup contract
 
 - **When:** skill declares allowed_tools, calls external APIs or runtime reaches external services; not internal capabilities (file read, code analysis), MCP config (mcp-tool-use), credential management.
-- **Must:** least agency: narrowest tools/scopes/actions · deny by default: no tool unless in allowed_tools · names MUST match tool registry (static, not reachable MCP servers) · read-first; writes need explicit approval · prefer scoped grants (Bash(npm test:*)) · refuse disallowed_tools match even if allowed · keep usage logged · falsifiable numeric thresholds in descriptions.
+- **Must:** least agency: narrowest tools/scopes/actions · deny by default: no tool unless in allowed_tools · names MUST match tool registry (static, not reachable MCP servers) · read-first; writes need explicit approval · prefer scoped grants (Bash(<cmd>:*)) · refuse disallowed_tools match even if allowed · keep usage logged · falsifiable numeric thresholds in descriptions.
 - **Never:** API keys/tokens in skill files · arbitrary execution (adapters = fixed interfaces) · in doubt deny and ask, don't grant and hope · tool not in registry → do NOT use it; flag registry-extension; add before use.
