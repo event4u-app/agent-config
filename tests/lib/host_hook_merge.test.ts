@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     HOOK_SIGNATURES,
+    WITHDRAWN_EVENTS,
     entryCommands,
     isManagedEntry,
     mergeEventEntries,
@@ -88,40 +89,52 @@ describe('mergeEventEntries', () => {
 });
 
 describe('mergeHookEvents', () => {
-    it('leaves a foreign entry on an event the patch never mentions alone', () => {
-        const existing = { afterFileEdit: [FOREIGN_CURSOR] };
+    it('leaves an event the patch never mentions completely alone — ours included', () => {
+        const existing = { afterFileEdit: [FOREIGN_CURSOR], stop: [ourCursorEntry()] };
         const merged = mergeHookEvents(existing, { beforeShellExecution: [ourCursorEntry()] }, CURSOR_SIG);
         expect(merged['afterFileEdit']).toStrictEqual([FOREIGN_CURSOR]);
+        expect(merged['stop']).toStrictEqual([ourCursorEntry()]);
     });
 
-    it('drops our entry from an event the patch no longer binds — an upgrade withdraws a binding', () => {
+    describe('a withdrawn event', () => {
         const ours = (event: string, native: string): Record<string, unknown> => ({
             command:
                 '[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook ' +
                 `--platform windsurf --event ${event} --native-event ${native}`,
         });
-        const sig = HOOK_SIGNATURES['.windsurf/hooks.json'] ?? '';
-        const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
-        const existing = {
-            post_setup_worktree: [ours('session_start', 'post_setup_worktree')],
-            pre_user_prompt: [foreign, ours('user_prompt_submit', 'pre_user_prompt')],
-            post_cascade_response: [ours('stop', 'post_cascade_response')],
-        };
-        const merged = mergeHookEvents(
-            existing,
-            { post_setup_worktree: [ours('session_start', 'post_setup_worktree')] },
-            sig,
-        );
-        expect(merged['post_setup_worktree']).toHaveLength(1);
-        expect(merged['pre_user_prompt']).toStrictEqual([foreign]);
-        expect('post_cascade_response' in merged).toBe(false);
-    });
+        const label = '.windsurf/hooks.json';
+        const sig = HOOK_SIGNATURES[label] ?? '';
+        const withdrawn = WITHDRAWN_EVENTS[label] ?? [];
+        const patch = { post_setup_worktree: [ours('session_start', 'post_setup_worktree')] };
 
-    it('keeps a foreign-only event the patch no longer binds byte-identical', () => {
-        const existing = { afterFileEdit: [FOREIGN_CURSOR], stop: [] as unknown[] };
-        const merged = mergeHookEvents(existing, { beforeShellExecution: [ourCursorEntry()] }, CURSOR_SIG);
-        expect(merged['afterFileEdit']).toStrictEqual([FOREIGN_CURSOR]);
-        expect(merged['stop']).toStrictEqual([]);
+        it('lists exactly the two windsurf events host_lowering withdrew, for both writers', () => {
+            expect(withdrawn).toStrictEqual(['pre_user_prompt', 'post_cascade_response']);
+            expect(WITHDRAWN_EVENTS['~/.codeium/windsurf/hooks.json']).toStrictEqual(withdrawn);
+        });
+
+        it('loses our entry, keeps the foreign one, and drops a key left empty', () => {
+            const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
+            const existing = {
+                post_setup_worktree: [ours('session_start', 'post_setup_worktree')],
+                pre_user_prompt: [foreign, ours('user_prompt_submit', 'pre_user_prompt')],
+                post_cascade_response: [ours('stop', 'post_cascade_response')],
+            };
+            const merged = mergeHookEvents(existing, patch, sig, withdrawn);
+            expect(merged['post_setup_worktree']).toHaveLength(1);
+            expect(merged['pre_user_prompt']).toStrictEqual([foreign]);
+            expect('post_cascade_response' in merged).toBe(false);
+        });
+
+        it('keeps a group that mixes our command with a foreign one whole', () => {
+            const mixed = {
+                hooks: [
+                    { type: 'command', command: ours('stop', 'post_cascade_response')['command'] },
+                    { type: 'command', command: 'user-audit.sh' },
+                ],
+            };
+            const merged = mergeHookEvents({ post_cascade_response: [mixed] }, patch, sig, withdrawn);
+            expect(merged['post_cascade_response']).toStrictEqual([mixed]);
+        });
     });
 
     it('treats an absent hooks object as nothing to preserve', () => {

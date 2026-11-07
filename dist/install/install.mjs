@@ -7454,7 +7454,7 @@ function mergeEventEntries(existing, incoming, signature) {
   const kept = existing.filter((entry) => !isManagedEntry(entry, signature));
   return [...kept.map((e) => deepcopy(e)), ...incoming.map((e) => deepcopy(e))];
 }
-function mergeHookEvents(existingHooks, patchHooks, signature) {
+function mergeHookEvents(existingHooks, patchHooks, signature, withdrawn = []) {
   if (!isPlainObject(existingHooks)) return deepcopy(patchHooks);
   const out = deepcopy(existingHooks);
   for (const event of Object.keys(patchHooks)) {
@@ -7466,21 +7466,31 @@ function mergeHookEvents(existingHooks, patchHooks, signature) {
     }
     out[event] = mergeEventEntries(Array.isArray(current) ? current : [], incoming, signature);
   }
-  for (const event of Object.keys(out)) {
+  for (const event of withdrawn) {
     if (event in patchHooks) continue;
     const current = out[event];
-    if (!Array.isArray(current) || !current.some((e) => isManagedEntry(e, signature))) continue;
-    const kept = current.filter((e) => !isManagedEntry(e, signature));
+    if (!Array.isArray(current)) continue;
+    const kept = current.filter((e) => !isWhollyManagedEntry(e, signature));
+    if (kept.length === current.length) continue;
     if (kept.length === 0) delete out[event];
     else out[event] = kept;
   }
   return out;
 }
-function mergeHostConfig(existing, patch, signature, deepMergeFn) {
+var WITHDRAWN_EVENTS = {
+  ".windsurf/hooks.json": ["pre_user_prompt", "post_cascade_response"],
+  "~/.codeium/windsurf/hooks.json": ["pre_user_prompt", "post_cascade_response"]
+};
+function isWhollyManagedEntry(entry, signature) {
+  if (signature === "") return false;
+  const cmds = entryCommands(entry);
+  return cmds.length > 0 && cmds.every((cmd) => cmd.includes(signature));
+}
+function mergeHostConfig(existing, patch, signature, deepMergeFn, withdrawn = []) {
   const merged = deepMergeFn(existing, patch);
   const patchHooks = patch["hooks"];
   if (signature === "" || !isPlainObject(patchHooks)) return merged;
-  merged["hooks"] = mergeHookEvents(existing["hooks"], patchHooks, signature);
+  merged["hooks"] = mergeHookEvents(existing["hooks"], patchHooks, signature, withdrawn);
   return merged;
 }
 
@@ -23108,7 +23118,7 @@ function write_json_file(p, data) {
 }
 function merge_json_file(p, new_data, _force, label) {
   const new_entries = build_merge_entries(label, new_data);
-  const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) => mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? "", deepMerge), { write: write_file });
+  const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) => mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? "", deepMerge, WITHDRAWN_EVENTS[label] ?? []), { write: write_file });
   if (outcome.status === "created" || outcome.status === "updated") success(`${label} ${outcome.status}`);
   else if (outcome.status === "unchanged") skip(`${label} unchanged (already configured)`);
   else {
