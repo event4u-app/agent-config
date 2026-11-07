@@ -197,7 +197,7 @@ absence for that call.
 ## Absence rules
 
 Every AC reader returns `null` instead of guessing, and `null` means today's
-behaviour — the limit notice without a request, seat placement without a
+behavior — the limit notice without a request, seat placement without a
 limits pre-check:
 
 - `agent-switch` not on `PATH`, or the discovery call times out or exits

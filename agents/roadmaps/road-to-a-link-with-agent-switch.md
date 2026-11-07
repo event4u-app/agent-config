@@ -55,10 +55,12 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       (`limits_get`, `switch_*`, `session_whoami`, `link_status`), request
       states, first-decision-wins, contract version `1`, and the absence rules.
       verify: `./scripts-run src/scripts/check_references` -> 0
+      <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 - [x] **1.2 Guide update.** `docs/guides/works-with-agent-switch.md` § "What AC
       never does" keeps moving/automatic switching and adds what AC now does
       (read limits, ask, relay).
       verify: `./scripts-run src/scripts/check_references` -> 0
+      <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 2 — Automatic connection
 
