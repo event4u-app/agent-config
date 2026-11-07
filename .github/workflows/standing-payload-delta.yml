@@ -77,10 +77,9 @@ name: Standing Payload Delta
 # The filtering moved INSIDE the job, to the `scope` step below, which always
 # reports a conclusion. That is the shape the contract prescribes.
 on:
-  # Merge-queue ready, not merge-queue enabled: inert until an admin turns a
-  # queue on (stubs/road-to-main-protection-ruleset-changes). PR-only steps are
-  # already guarded by `github.event_name == 'pull_request'` or an empty
-  # `github.base_ref`, the same path workflow_dispatch takes.
+  # The merge queue is on since 2026-11-07. PR-only steps are guarded by
+  # `github.event_name == 'pull_request'`; the merge-base comes from
+  # `merge_group.base_sha` (see `Resolve merge-base`).
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -136,16 +135,28 @@ jobs:
 
       - name: Resolve merge-base
         id: base
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          QUEUE_BASE_SHA: ${{ github.event.merge_group.base_sha }}
         run: |
           set -euo pipefail
+          # A merge-queue entry has no `base_ref`; its base is the `main` tip the
+          # queue built on, which is an ancestor of the queue head and therefore
+          # the merge-base. Without it the measure step ran `git archive ''` and
+          # the approval check could not see the owner directives, so every
+          # queue entry failed this required check (first queue runs, 2026-11-07).
+          #
           # `github.base_ref` is empty on workflow_dispatch, where there is no
           # base to resolve. Emit an empty merge_base rather than failing the
           # step: the scope step below reads empty as "cannot narrow" and runs
           # the full measurement, which is the safe direction. Before this the
           # step died on `set -e` and took the whole job with it.
           base=""
-          if [ -n "${{ github.base_ref }}" ]; then
-            base="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            base="$QUEUE_BASE_SHA"
+          elif [ -n "$BASE_REF" ]; then
+            base="$(git merge-base "origin/$BASE_REF" HEAD)"
           fi
           echo "merge_base=$base" >> "$GITHUB_OUTPUT"
           echo "merge-base: ${base:-<none — not a pull request>}"
