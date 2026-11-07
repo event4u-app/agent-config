@@ -7,22 +7,13 @@ on:
   # `github.base_ref`, the same path workflow_dispatch takes.
   merge_group:
     types: [checks_requested]
+  # No `paths:` on pull_request: `Tests result` must REPORT on every PR to be
+  # requirable (docs/contracts/branch-protection-policy.md § The path-filter
+  # trap). The same path list now lives in src/scripts/ci_select_tests.ts
+  # (`CODE_PATHS`) and gates the jobs from inside, so a docs-only PR still costs
+  # one selection job, not the matrix.
   pull_request:
     branches: [main, master]
-    paths:
-      - "src/scripts/**"
-      - "tests/**"
-      - "src/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "vite.config.ts"
-      - "vitest.config.ts"
-      - "eslint.config.js"
-      - "Taskfile.yml"
-      - "taskfiles/**"
-      - "setup.sh"
-      - ".github/workflows/tests.yml"
   push:
     branches: [main, master]
     paths:
@@ -106,6 +97,48 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+  select-tests:
+    # Which Vitest files can this diff reach? (src/scripts/ci_select_tests.ts;
+    # contract: docs/contracts/ci-test-selection.md). A pull request is measured
+    # against its base branch, a merge-queue entry against the queue's base SHA —
+    # the merge gate runs only what the change can reach. `push: main`,
+    # workflow_dispatch and the label `ci:full-tests` run the whole suite: the
+    # post-merge run is the net that catches what selection misses.
+    name: Select tests
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.select.outputs.mode }}
+      node_files: ${{ steps.select.outputs.node_files }}
+      node_shards: ${{ steps.select.outputs.node_shards }}
+      node_shard_total: ${{ steps.select.outputs.node_shard_total }}
+      code: ${{ steps.select.outputs.code }}
+      golden: ${{ steps.select.outputs.golden }}
+      workspace: ${{ steps.select.outputs.workspace }}
+      browser: ${{ steps.select.outputs.browser }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+      - name: Select the reachable test files
+        id: select
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          QUEUE_BASE: ${{ github.event.merge_group.base_sha }}
+          FULL_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ci:full-tests') }}
+        run: |
+          args=(--full)
+          if [ "$EVENT" = "pull_request" ] && [ "$FULL_LABEL" != "true" ]; then
+            args=(--base "origin/$BASE_REF")
+          elif [ "$EVENT" = "merge_group" ] && [ -n "$QUEUE_BASE" ]; then
+            args=(--base "$QUEUE_BASE")
+          fi
+          node --experimental-strip-types src/scripts/ci_select_tests.ts "${args[@]}" > /dev/null
+
   install-tests:
     # test_install.sh runs each of 35 tests in its own mktemp dir,
     # invoking install.sh which symlinks hundreds of skill/rule/command
@@ -132,7 +165,8 @@ jobs:
     # went stale once already. release-validation.yml
     # is the kept surface for release PRs; push: main + workflow_dispatch
     # stay unconditional.
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    needs: select-tests
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.code == 'true' }}
     name: Install Script Tests (${{ matrix.os }}, ${{ matrix.slice }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -173,7 +207,8 @@ jobs:
     #
     # Release-PR skip per docs/contracts/release-pr-gating.md — release
     # PRs don't touch the orchestrator, key installers, or setup.sh.
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    needs: select-tests
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.code == 'true' }}
     name: Install Aux Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -278,8 +313,8 @@ jobs:
     # install-bundle, hooks, mcp-bundle, cli-delegate, ui — so the previous
     # explicit build:cli + build:ui + build triple was a no-op duplicate;
     # collapsed to a single build invocation.
-    name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
-    needs: platform-scope
+    name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }})
+    needs: [platform-scope, select-tests]
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface.
     # The allowlist DOES admit five paths under src/ — pack and domain
@@ -287,7 +322,8 @@ jobs:
     # and no test source, so ESLint, tsc, vitest and prepack-check have
     # nothing new to prove. The contract's enumeration is the list; it is
     # deliberately not copied here.
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    # Skipped outright when select-tests reached no node-sharded file.
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.node_shards != '[]' }}
     strategy:
       fail-fast: false
       matrix:
@@ -300,7 +336,9 @@ jobs:
         # would otherwise clump the golden files into one > 2 min bucket.
         # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
         os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
-        shard: [1, 2, 3, 4]
+        # 1-4 shards: four on a full run, fewer when the selection is small
+        # enough that a shard's fixed setup cost outweighs the parallelism.
+        shard: ${{ fromJSON(needs.select-tests.outputs.node_shards) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -360,7 +398,7 @@ jobs:
         # dist/cli/agent-config.js.
         run: npm run build --silent
 
-      - name: Vitest (shard ${{ matrix.shard }}/4, heavy suites excluded)
+      - name: Vitest (shard ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }}, heavy suites excluded)
         # `--` forwards flags to vitest; each runner executes a deterministic
         # quarter of the file set. The subprocess-heavy clusters (golden +
         # workspace) hash-clump into one over-budget shard regardless of shard
@@ -386,15 +424,23 @@ jobs:
         # macOS; every file still runs in exactly one shard. First CI run with it
         # (PR #2577, run 39709319417): ubuntu node-test jobs 5m14s-6m12s, ratio
         # 1.19 against the 2.3 recorded above.
+        #
+        # On a targeted run NODE_FILES carries the selected paths (positional
+        # filters, word-split on purpose); on a full run it is empty and the
+        # whole file set runs exactly as before.
         env:
           VITEST_BALANCED_SHARDS: '1'
-        run: >-
-          npm run test:ts --silent --
-          --shard=${{ matrix.shard }}/4
-          --exclude 'tests/golden/**'
-          --exclude 'tests/server/workspace.test.ts'
-          --exclude 'tests/scripts/collector_lifecycle.test.ts'
-          --exclude 'tests/scripts/cli/python/**'
+          SHARD: ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }}
+          NODE_FILES: ${{ needs.select-tests.outputs.mode == 'targeted' && needs.select-tests.outputs.node_files || '' }}
+        run: |
+          # shellcheck disable=SC2086
+          npm run test:ts --silent -- \
+            --shard="$SHARD" \
+            --exclude 'tests/golden/**' \
+            --exclude 'tests/server/workspace.test.ts' \
+            --exclude 'tests/scripts/collector_lifecycle.test.ts' \
+            --exclude 'tests/scripts/cli/python/**' \
+            $NODE_FILES
 
   static-checks:
     # Whole-tree gates that have nothing to shard: ESLint, tsc --noEmit, and
@@ -403,7 +449,8 @@ jobs:
     # shard's wall clock carries their ~40s and the check dedups across OSes.
     name: Static Checks (ESLint · typecheck · prepack)
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    needs: select-tests
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.code == 'true' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -622,9 +669,9 @@ jobs:
     # clusters in one job oversubscribed the fork pool and produced flaky
     # spawn-timeout failures — each cluster gets its own runner.
     name: Golden Tests (${{ matrix.os }})
-    needs: platform-scope
+    needs: [platform-scope, select-tests]
     runs-on: ${{ matrix.os }}
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.golden == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -670,9 +717,9 @@ jobs:
     # pass — is covered by `absent-path-reads-unverified`, which needs no
     # browser and therefore stays in the sharded matrix with everything else.
     name: SVG Witness Tests (${{ matrix.os }})
-    needs: platform-scope
+    needs: [platform-scope, select-tests]
     runs-on: ${{ matrix.os }}
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.browser == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -752,7 +799,8 @@ jobs:
     # dispatcher-reaching suite twice for the parity comparison; a hang here
     # would otherwise sit at the runner default (R2 round-2 finding 2).
     timeout-minutes: 20
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    needs: select-tests
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.code == 'true' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -862,8 +910,9 @@ jobs:
     # (~12 s local, ~40 s CI). Separate from `golden-tests` to avoid
     # over-subscribing the fork pool (see the flaky-spawn note there).
     name: Workspace Tests (${{ matrix.os }})
+    needs: select-tests
     runs-on: ${{ matrix.os }}
-    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.workspace == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -918,6 +967,7 @@ jobs:
       all_skipped: ${{ steps.aggregate.outputs.all_skipped }}
     needs:
       - platform-scope
+      - select-tests
       - install-tests
       - install-aux-tests
       - node-tests
