@@ -41,7 +41,12 @@ compare:
 | 1 MB | 0.15 ms | 0.28 ms |
 | 2 MB (the cap) | 0.23 ms | 0.45 ms |
 
-Hook bundle after this change: 1,584,309 / 1,585,000 B — 691 B of headroom left.
+The loop checks a 50 ms deadline between chunks and gives no credit past it; a
+single blocked system call is not preemptible in-process, true of every filesystem
+call a hook makes. After the read the path must still name the inode that was read.
+
+Hook bundle after this change: 1,584,855 / 1,585,000 B — 145 B of headroom left; the
+next hook-touching change needs a shrink or a `raise_log` entry first.
 
 ## State bounds
 

@@ -32,6 +32,7 @@ import {
     isExemptPath,
     isRangedRead,
     ledgerFile,
+    _readRegularFileBounded,
     wholeFileCatPath,
 } from '../../src/scripts/hooks/reread_guard_hook.js';
 
@@ -420,7 +421,8 @@ describe('E2E: the ledger as the reference duty needs it', () => {
     it('gives no credit for a cat of a FIFO, and returns instead of blocking on it', () => {
         const { root } = makeWorkspace();
         const fifo = path.join(root, 'pipe');
-        spawnSync('mkfifo', [fifo]);
+        expect(spawnSync('mkfifo', [fifo]).status).toBe(0);
+        expect(fs.statSync(fifo).isFIFO()).toBe(true);
         const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd: root, input: postBash(root, `cat ${fifo}`, { stdout: '', stderr: '', interrupted: false }), timeout: 15000 });
         expect(r.status).toBe(0);
         expect(reads(root)).toEqual([]);
@@ -444,5 +446,27 @@ describe('E2E: the ledger as the reference duty needs it', () => {
         expect(Object.keys(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads)).toHaveLength(1);
         run(JSON.stringify({ schema_version: 1, platform: 'claude', event: 'pre_compact', session_id: 'sess-1', workspace_root: root, payload: {} }), root);
         expect(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads).toEqual({});
+    });
+});
+
+describe('_readRegularFileBounded — the verification read', () => {
+    it('reads a regular file within the limit', () => {
+        const { abs } = makeWorkspace();
+        expect(_readRegularFileBounded(abs, 1024)?.bytes.toString('utf8')).toBe(fs.readFileSync(abs, 'utf8'));
+    });
+    it('refuses a file over the limit', () => {
+        const { abs } = makeWorkspace();
+        expect(_readRegularFileBounded(abs, 3)).toBeNull();
+    });
+    it('refuses when the deadline passes before the read completes', () => {
+        const { abs } = makeWorkspace();
+        let t = 0;
+        expect(_readRegularFileBounded(abs, 1024, { deadlineMs: 50, now: () => (t += 100) })).toBeNull();
+    });
+    it('refuses when the path was replaced while it was read', () => {
+        const { root, abs } = makeWorkspace();
+        const other = path.join(root, 'other.ts');
+        fs.writeFileSync(other, fs.readFileSync(abs));
+        expect(_readRegularFileBounded(abs, 1024, { afterRead: () => fs.renameSync(other, abs) })).toBeNull();
     });
 });

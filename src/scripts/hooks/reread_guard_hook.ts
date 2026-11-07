@@ -71,6 +71,7 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
@@ -127,6 +128,9 @@ export interface ReadRecord {
  * hash is a full read of the file on the pre_tool_use path.
  */
 export const HASH_BOUND_BYTES = 2 * 1024 * 1024;
+
+/** How long the post-execution `cat` verification may spend reading, between chunks. */
+export const CAT_VERIFY_DEADLINE_MS = 50;
 
 /**
  * What the content key could say about one read. Only `over-bound` — the stat
@@ -365,12 +369,22 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
 }
 
 /**
- * One regular file read through one descriptor, never blocking: opened
- * non-blocking (a FIFO or device returns instead of hanging the hook), refused
- * unless it is a regular file within `limit` bytes, and refused when its size or
- * mtime moved while it was read. Null on any of those, or on any error.
+ * One regular file read through one descriptor: opened non-blocking (a FIFO or
+ * device returns instead of hanging the hook), refused unless it is a regular file
+ * within `limit` bytes, refused when its size or mtime moved during the read, when
+ * the path no longer names the inode that was read, or when `deadlineMs` passes
+ * between chunks. Null on any of those, or on any error. A single system call is
+ * not preemptible in-process — true of every filesystem call a hook makes — so the
+ * deadline bounds the loop, not one blocked syscall. `now` and `afterRead` are
+ * testing seams.
  */
-function readRegularFileBounded(file: string, limit: number): { bytes: Buffer; stat: fs.Stats } | null {
+export function _readRegularFileBounded(
+    file: string,
+    limit: number,
+    opts: { deadlineMs?: number; now?: () => number; afterRead?: () => void } = {},
+): { bytes: Buffer; stat: fs.Stats } | null {
+    const now = opts.now ?? ((): number => performance.now());
+    const deadline = now() + (opts.deadlineMs ?? CAT_VERIFY_DEADLINE_MS);
     let fd: number | null = null;
     try {
         fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
@@ -379,13 +393,17 @@ function readRegularFileBounded(file: string, limit: number): { bytes: Buffer; s
         const buf = Buffer.alloc(before.size + 1);
         let got = 0;
         for (;;) {
+            if (now() > deadline) return null;
             const n = fs.readSync(fd, buf, got, buf.length - got, null);
             if (n === 0) break;
             got += n;
             if (got > before.size) return null;
         }
+        opts.afterRead?.();
         const after = fs.fstatSync(fd);
         if (got !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs) return null;
+        const named = fs.statSync(file);
+        if (named.ino !== after.ino || named.dev !== after.dev) return null;
         return { bytes: buf.subarray(0, got), stat: after };
     } catch {
         return null;
@@ -412,8 +430,9 @@ function recordCompletedCat(envelope: JsonObject, payload: JsonObject): void {
     const exit = resp['exit_code'] ?? resp['exitCode'] ?? resp['returnCode'];
     if (exit !== undefined && exit !== null && exit !== 0) return;
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
-    const snap = readRegularFileBounded(catPath, HASH_BOUND_BYTES);
-    if (snap === null) return;
+    if (Buffer.byteLength(stdout, 'utf8') > HASH_BOUND_BYTES) return;
+    const snap = _readRegularFileBounded(catPath, HASH_BOUND_BYTES);
+    if (snap === null || Buffer.byteLength(stdout, 'utf8') !== snap.bytes.length) return;
     const st = snap.stat;
     // The bytes returned must be the file as it is now: a length match alone
     // would credit an equal-length replacement made after the cat ran.
