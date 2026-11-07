@@ -67,6 +67,7 @@ import {
 } from './update_roadmap_progress.js';
 import { BLOCK_END_RE, DEFERRED_RESOLUTION_RE, DEFERRED_STEP_RE, planCarry, type CarryPlan, type OwnerDecision } from './deferral_carry.js';
 import { guardedBaselineProblems, parseGuardedBaselines } from './guarded_baseline.js';
+import { measurementLineProblem } from './measurement_line.js';
 
 import { isCliEntry } from './_cli_entry.js';
 
@@ -712,6 +713,13 @@ function archive_completed(
                     `blocker(s) still open (${ids}) — not archived. Resolve them, ` +
                     'or record the decision, then re-run the sweep.\n',
             );
+            continue;
+        }
+        // A roadmap that changed what loads in every session closes with the
+        // measurement it ran, or a line saying why none was possible.
+        const unmeasured = measurementLineProblem(roadmapText);
+        if (unmeasured !== null) {
+            process.stderr.write(`  ⚠️  ${stats.rel}: ${unmeasured} Not archived.\n`);
             continue;
         }
         if (changed_only && !(touched as Set<string>).has(old_rel)) {

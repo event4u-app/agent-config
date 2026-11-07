@@ -368,10 +368,15 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   changed (projected rule, skill catalog entry, CLAUDE.md), and a PR-template field that
   names a behaviour claim's evidence tier from `docs/contracts/evidence-basis.md`. The
   tier field is a prompt to the author; no gate reads it.
-- [ ] **7.3** A roadmap that changed a default asset closes only with the
+- [x] **7.3** A roadmap that changed a default asset closes only with the
   measurement it ran, or one line naming why none was possible (owner turn 5:
   "after a roadmap, run tests for those areas").
   verify: a closing roadmap that changed a default asset carries a measurement line
+  Done 2026-11-07: the archival sweep (`archive_completed_roadmaps`) refuses a complete
+  roadmap whose closed steps name a rule, a skill's `SKILL.md`, `CLAUDE.md` or
+  `AGENTS.md` until it carries `Measurement: …` or `Measurement: none possible — …`
+  (`src/agent-src/scripts/measurement_line.ts`, `tests/scripts/measurement_line.test.ts`).
+  "Changed" is read from the roadmap's own steps and receipts; a false positive costs one line.
 
 ## Blockers
 
