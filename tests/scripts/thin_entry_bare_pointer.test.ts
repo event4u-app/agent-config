@@ -21,6 +21,12 @@ import { describe, expect, it } from 'vitest';
 import { evaluate_demotion } from '../../src/scripts/probe_host_compliance.js';
 import {
     has_body_pointer,
+    INSTALLED_STUB_SHAPE,
+    is_thin_entry,
+    lawDigest,
+    STUB_CONTRACT_CLOSE,
+    STUB_CONTRACT_OPEN,
+    thin_entry_with_contract,
     THIN_BODY_POINTER_PREFIX,
     THIN_BODY_POINTER_RE,
     THIN_ENTRY_MARKER,
@@ -139,5 +145,34 @@ describe('the stub pointer is a bare path', () => {
         // was rewritten.
         const old = `## Some Rule\n${THIN_ENTRY_MARKER} Body: [\`x\`](rules/x.md)\n`;
         expect(has_body_pointer(old)).toBe(false);
+    });
+});
+
+// road-to-a-session-start-under-the-host-limit Phase 3 — the INSTALLED shape.
+describe('the installed stub shape', () => {
+    it('drops the `Fires on:` hint and keeps marker, description and pointer', () => {
+        const projected = thin_entry('some-rule', sourceRule('some-rule'), '');
+        const installed = thin_entry('some-rule', sourceRule('some-rule'), '', INSTALLED_STUB_SHAPE);
+        expect(projected).toContain(`Fires on: ${KEYWORD}`);
+        expect(installed).not.toContain('Fires on:');
+        expect(installed).toContain(THIN_ENTRY_MARKER);
+        expect(installed).toContain('A one-line summary that does not name the rule');
+        expect(THIN_BODY_POINTER_RE.exec(installed)?.[1]).toBe('some-rule.md');
+        expect(is_thin_entry(installed)).toBe(true);
+    });
+
+    it('carries the contract without its own heading, digested over exactly what it carries', () => {
+        const contract = '## Startup contract\n\n- **When:** a probe.\n- **Must:** stop.';
+        const text = `---\ndescription: "x"\n---\n\n# Some rule\n\n${contract}\n\n## Rest\n\nbody\n`;
+        const projected = thin_entry_with_contract('some-rule', text, '');
+        const installed = thin_entry_with_contract('some-rule', text, '', INSTALLED_STUB_SHAPE);
+        expect(projected).toContain('## Startup contract');
+        expect(installed).not.toContain('## Startup contract');
+        expect(installed).toContain(THIN_ENTRY_MARKER);
+        const open = installed.indexOf(STUB_CONTRACT_OPEN);
+        const digest = installed.slice(open + STUB_CONTRACT_OPEN.length).split(' ')[0] as string;
+        const carried = installed.slice(installed.indexOf('\n', open) + 1, installed.indexOf(`\n${STUB_CONTRACT_CLOSE}`));
+        expect(carried).toBe('- **When:** a probe.\n- **Must:** stop.');
+        expect(lawDigest(carried)).toBe(digest);
     });
 });
