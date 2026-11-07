@@ -65,7 +65,7 @@ function loadContextOf(ruleFile: string): string[] {
 
 /** The router's tier rules, or a source error when the shape is not the router's. */
 function tierRules(router: unknown, file: string): Array<{ id: string; triggers: Trigger[] }> {
-    if (typeof router !== 'object' || router === null) throw new DutySourceError(`router is not an object: ${file}`);
+    if (typeof router !== 'object' || router === null || Array.isArray(router)) throw new DutySourceError(`router is not an object: ${file}`);
     const out: Array<{ id: string; triggers: Trigger[] }> = [];
     for (const tier of ['tier_1', 'tier_2']) {
         const list = (router as Record<string, unknown>)[tier];

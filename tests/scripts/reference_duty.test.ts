@@ -174,8 +174,19 @@ describe('council round 3: every matched rule yields duties or a counted error',
     });
     it('keeps the duty counts and errors across a compaction, clearing only reads', () => {
         const root = workspace();
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
         run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        fs.writeFileSync(path.join(root, 'dist', 'router.json'), '{ broken');
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'y.md'), content: 'y' } });
+        const ledgerPath = ledgerFile(root, key);
+        const before = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) as Record<string, unknown>;
+        before['fired'] = { 'src/a.ts': true };
+        fs.writeFileSync(ledgerPath, JSON.stringify(before));
         run(root, {}, 'pre_compact');
+        const after = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) as Record<string, unknown>;
+        expect(after['reads']).toEqual({});
+        expect(after['duty_errors']).toBe(1);
+        expect(after['fired']).toEqual({ 'src/a.ts': true });
         expect(duty(root)[`sot::${REF}`]).toMatchObject({ pending: 1 });
     });
     it('reads an inline load_context list the way YAML does', () => {
@@ -186,6 +197,7 @@ describe('council round 3: every matched rule yields duties or a counted error',
     it.each([
         ['a null tier entry', { tier_1: [null] }],
         ['a trigger that is not an object', { tier_1: [{ id: 'sot', triggers: [5] }] }],
+        ['a router that is an array', [{ id: 'sot', triggers: [{ path_prefix: '.claude/' }] }]],
     ])('counts %s, and the hook still exits 0', (_name, router) => {
         const root = workspace();
         fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(router));
