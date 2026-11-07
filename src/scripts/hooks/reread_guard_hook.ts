@@ -403,7 +403,7 @@ export function _readRegularFileBounded(
         const after = fs.fstatSync(fd);
         if (got !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs) return null;
         const named = fs.statSync(file);
-        if (named.ino !== after.ino || named.dev !== after.dev) return null;
+        if (named.ino !== after.ino || named.dev !== after.dev || now() > deadline) return null;
         return { bytes: buf.subarray(0, got), stat: after };
     } catch {
         return null;

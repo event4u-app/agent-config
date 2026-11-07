@@ -463,6 +463,12 @@ describe('_readRegularFileBounded — the verification read', () => {
         let t = 0;
         expect(_readRegularFileBounded(abs, 1024, { deadlineMs: 50, now: () => (t += 100) })).toBeNull();
     });
+    it('refuses when the deadline expires after reading began', () => {
+        const { abs } = makeWorkspace();
+        let calls = 0;
+        const now = (): number => (calls++ < 3 ? 0 : 100);
+        expect(_readRegularFileBounded(abs, 1024, { deadlineMs: 50, now })).toBeNull();
+    });
     it('refuses when the path was replaced while it was read', () => {
         const { root, abs } = makeWorkspace();
         const other = path.join(root, 'other.ts');
