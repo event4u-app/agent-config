@@ -51,6 +51,12 @@ After the last step of a roadmap is done, check completion status:
    | 0 | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work, all cancelled |
    | ≥ 0 | ≥ 1 | ≥ 0 | ≥ 0 | **Ask the user** — open work remains (step 4a) |
 
+   **Measurement line.** A roadmap whose closed steps name a default asset — a
+   rule, a skill's `SKILL.md`, `CLAUDE.md` or `AGENTS.md` — is not archived until
+   it carries `Measurement: <report or result>` or `Measurement: none possible —
+   <reason>` (body line or `measurement:` frontmatter). The sweep names the
+   assets it found and skips the roadmap.
+
    Show on auto-move:
 
    - Archive: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`

@@ -1,0 +1,17 @@
+diff --git a/src/api/handlers.mjs b/src/api/handlers.mjs
+index 1b6f9f2..f8530cf 100644
+--- a/src/api/handlers.mjs
++++ b/src/api/handlers.mjs
+@@ -1,4 +1,11 @@
++import { isCustomerId } from '../customers/ids.mjs';
++import { customerById } from '../customers/store.mjs';
++
+ // GET /customers/:id — params.id is the raw route parameter string.
+ export function getCustomerHandler(params) {
+-  return { status: 404 };
++  if (!isCustomerId(params.id)) {
++    return { status: 400 };
++  }
++  const customer = customerById(params.id);
++  return customer ? { status: 200, body: customer } : { status: 404 };
+ }

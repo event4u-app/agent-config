@@ -2178,6 +2178,11 @@ tasks:
     desc: Verify README/AGENTS.md/docs/getting-started.md command counts match the cluster registry (active vs. shim split)
     cmd: ./scripts-run src/scripts/check_command_count_messaging {{.QUIET_FLAG}}
 
+  check-default-asset-removal:
+    silent: true
+    desc: Fail when a rule or skill is deleted without a removal record that answers interpretation, census, margin, safety fixture and prior hiding
+    cmd: ./scripts-run src/scripts/check_default_asset_removal {{.QUIET_FLAG}}
+
   lint-no-new-atomic-commands:
     silent: true
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)

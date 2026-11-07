@@ -126,6 +126,12 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   **240 pairs per arm**; a candidate at 5 % needs 124, at 2.5 % needs 57. At the measured
   $0.023 per Haiku run, 240 pairs per arm is 480 runs, about $11. The next measurement
   runs at that size or not at all, and waits on `b-owner-spend`.
+  Measured 2026-11-07 at that size (report `2026-11-07T09-54-45Z`, 480 runs, $11.46): blind 17/240
+  (7.1 %, bar met) against 22/240 for the same-day control (p = 0.25); after a look on
+  `trapC-ambig-01` 56/120 (floor met); joint pass on `trapC-ambig-01` 73 against 53 of 120
+  (p = 0.007). Both verify bars hold. Open: the rule edit itself — `ask-when-uncertain` is a
+  kernel rule, agent writes to it are refused by `block-kernel-rule-writes`, so the PR that
+  adopts `internal/bench/candidates/ask-when-uncertain.look-first.md` is the owner's.
 - [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
@@ -213,6 +219,12 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
   three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
   the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
+  Run 2026-11-07 (report `artifact-2026-11-07T09-56-16-929Z`, $73.92, stopped at its $70 cap
+  after 3 of 10 tasks): where both arms have data `package` never does better and costs 5–11× as
+  much; 22 of 40 ladders hung on the host's second API call, now re-run once by `host_call`.
+  The full pilot is about $600–700 (two ladders × up to five resumed prompts at ~100k tokens each
+  for `package`), so the remaining seven tasks wait on a release of that size under
+  `b-owner-spend` (`docs/benchmark.md` § Artifact pilot over the owner's domains).
 - [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
   rerun: every `package` run stopped at the per-call budget on its first turn ($1
   and $3, against $0.14 for `vanilla`), with the cause unknown because the
@@ -260,9 +272,10 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   Re-verified 2026-11-06 under the sharper verify: the report compares `package` and
   `rules-kernel-dc` against the arm and the arm against `vanilla`, and the injected text
   is frozen in `docs/benchmark.md` § The minimal-prompt baseline before its first run.
-  Open, not blocking: `minimal-prompt` in `CODEX_VALID_ARMS` (needed only for a Codex
-  run), and before 2.5 is released a single-trial probe that checks the context size
-  the arm actually loads, not only the skill count.
+  `minimal-prompt` is in `CODEX_VALID_ARMS` since 2026-11-07 (pure injection, like
+  `bare-principle`). Probed 2026-11-07 before 2.5 (report `2026-11-07T08-01-00Z`): first-turn
+  context 7,963 tokens against 7,826 for `vanilla` and 99,370 for `package`
+  (`docs/benchmark.md` § The minimal-prompt baseline).
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.
@@ -270,11 +283,16 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   First candidate set from 3.1: the 21 domain and stack rules that load unconditionally
   under the full profile (finance, legal, strategy, media, persistence packs, stack
   routing; ~64k chars). Still gated on an effect from 1.4 or 2.5.
-- [ ] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
+- [x] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_arms.ts -->
   one multi-session task family (decision recall, a superseded decision, a stale
   entry) run with and without memory on this harness. Recall itself stays with
   `later/road-to-a-memory-the-consumer-owns`; this step only adds the task outcome.
   verify: a with/without-memory report over the multi-session family
+  Done 2026-11-07: three tasks (`memA-recall-01`, `memB-supersede-01`, `memC-stale-01`) and the
+  arms `package-memory` / `package-no-memory` (`strip_paths`); report `2026-11-07T08-54-56Z`, Haiku,
+  90 runs, $5.77. NULL: 0/10 on memA and memB in every arm, 10/10 on memC in every arm, and no
+  run opened the store (`docs/benchmark.md` § Memory as a task outcome). Delivery is the gap;
+  recall stays with `later/road-to-a-memory-the-consumer-owns`.
 
 ## Phase 4 — Before anything is removed
 
@@ -283,24 +301,40 @@ Evidence (read): `docs/decisions/ADR-202-anchor-scoring-as-thin-quality-instrume
 The owner, turn 7: track real use before removing; check that the right benefit was
 measured. A removal needs all of:
 
-- [ ] **4.1** An interpretation record (sibling Phase 4) whose open questions are
+- [x] **4.1** An interpretation record (sibling Phase 4) whose open questions are <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
   answered: construct matched the asset's purpose, the asset was delivered and
   followed, the cost is priced.
   verify: the record for the asset has no open construct, delivery or cost question
-- [ ] **4.2** Real-use evidence: rerun the skill census over every project store,
+  Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
+  local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
+  needs `agents/evidence/removals/<name>.md`, whose frontmatter answers an interpretation record with no `construct|delivery|cost: open` line.
+- [x] **4.2** Real-use evidence: rerun the skill census over every project store, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_skill_activation.ts -->
   counting Read events on `SKILL.md` as well as `Skill` calls (stub
   `road-to-a-census-that-refuses-a-partial-store`), and record the result per asset.
   The 2026-10-26 "8 of 301" counted one repository and direct calls only.
   verify: the census report lists every store read and counts Read events on SKILL.md
-- [ ] **4.3** A per-family non-inferiority margin declared before the deciding run;
+  Done 2026-11-07: `report_skill_activation --all-stores --per-skill` reads every store
+  under both projects roots (1640 stores, 4072 sessions; names withheld) and counts
+  `Read` of a `SKILL.md`. 36 of 303 shipped skills were reached, 34 only by a direct
+  read. Per-asset table: `agents/evidence/metrics/skill-use-census-all-stores-2026-11-07.md`.
+- [x] **4.3** A per-family non-inferiority margin declared before the deciding run; <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
   no universal 3 pp.
   verify: the margin is committed before the deciding report's timestamp
+  Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
+  local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
+  needs `agents/evidence/removals/<name>.md`, whose frontmatter answers `margin`, `margin_commit` and `deciding_report`, the margin commit older than the report.
 - [ ] **4.4** Security and safety assets are tested with adversarial fixtures, never
   judged by how often they fire.
   verify: each safety asset has an adversarial fixture that fails without it
-- [ ] **4.5** Hide-from-default before delete: the first step of a removal is
+  Partly enforced 2026-11-07: the removal gate refuses a record with `safety: true` and no
+  existing `adversarial_fixture`. Open: the fixtures themselves — one per security or safety
+  asset that fails without it — are a measurement per asset, not a gate.
+- [x] **4.5** Hide-from-default before delete: the first step of a removal is <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
   lazy-load or route, reversible in one release.
   verify: the removal PR changes routing or loading, not file existence
+  Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
+  local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
+  needs `agents/evidence/removals/<name>.md`, whose frontmatter answers `hidden_in`, an earlier base commit where the asset was already out of the default (rule `type: manual`, skill `disable-model-invocation: true`).
 
 ## Phase 5 — Against the packages AC is compared with
 
@@ -342,10 +376,16 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
   verify: offline re-scoring of a stored bundle reproduces the report's numbers
-- [ ] **6.3** The extraction gate stays as the companion plan wrote it: an app only
+- [x] **6.3** The extraction gate stays as the companion plan wrote it: an app only <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_extraction_gate.ts -->
   when at least two of external demand, rival-dominated engine work, a licence
   conflict, CI burden, or an owner-wanted public ranking hold — and the owner agrees.
   verify: the T3 report carries the gate table with each criterion's current state
+  Done 2026-11-07: `internal/bench/core/bench_extraction_gate.ts` renders the table —
+  G2 (rival share of engine commits) and G4 (bench share of failed CI runs) measured
+  over 90 days, G1/G3/G5 from `internal/bench/extraction-gate.json`, unmeasurable reads
+  `unknown`. First reading in `docs/benchmark.md` § Extraction gate: 0 of 5 hold
+  (0 of 197 engine commits, 0 of 52 failed runs) — the bench stays. No T3 report exists
+  yet; the first one (Phase 5) carries this table.
 
 ## Phase 7 — Measurement rides with change
 
@@ -368,10 +408,15 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   changed (projected rule, skill catalog entry, CLAUDE.md), and a PR-template field that
   names a behaviour claim's evidence tier from `docs/contracts/evidence-basis.md`. The
   tier field is a prompt to the author; no gate reads it.
-- [ ] **7.3** A roadmap that changed a default asset closes only with the
+- [x] **7.3** A roadmap that changed a default asset closes only with the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/scripts/measurement_line.ts -->
   measurement it ran, or one line naming why none was possible (owner turn 5:
   "after a roadmap, run tests for those areas").
   verify: a closing roadmap that changed a default asset carries a measurement line
+  Done 2026-11-07: the archival sweep (`archive_completed_roadmaps`) refuses a complete
+  roadmap whose closed steps name a rule, a skill's `SKILL.md`, `CLAUDE.md` or
+  `AGENTS.md` until it carries `Measurement: …` or `Measurement: none possible — …`
+  (`src/agent-src/scripts/measurement_line.ts`, `tests/scripts/measurement_line.test.ts`).
+  "Changed" is read from the roadmap's own steps and receipts; a false positive costs one line.
 
 ## Blockers
 
@@ -390,6 +435,9 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   before any run. Spent 2026-11-06: $67.41 (smoke $1.94, sweep $65.47); arms A–C ran,
   D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
   1.6 (sized at about $11), 1.7d, 2.5, 5.1–5.2.
+- **Spent 2026-11-07 under `/roadmap:process-full` (no budget window configured):** 1.6 $11.46,
+  3.4 $5.77, the arm probe $0.17, the 2.5 pilot $73.92 (partial). Still open: the rest of 2.5,
+  sized at about $600–700, and 1.7d, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store

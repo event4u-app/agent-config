@@ -1,0 +1,40 @@
+version: 1
+entries:
+  - id: money-as-integer-cents
+    status: active
+    confidence: high
+    source:
+      - adr://0012-money-representation
+    owner: billing-team
+    last_validated: 2026-08-19
+    review_after_days: 730
+    rule: >
+      Monetary amounts are integer cents at every layer below the formatter.
+    paths:
+      - src/billing/**
+    enforcement:
+      - review: billing-team
+    guardrail: >
+      Never store a float amount; convert at the formatter only.
+  - id: customer-id-integer
+    status: active
+    confidence: high
+    source:
+      - adr://0009-customer-ids
+    owner: platform-team
+    last_validated: 2026-05-12
+    review_after_days: 365
+    verified_at_commit: 3f9a2c1
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-05-12
+    rule: >
+      Customer ids are positive integers. A route parameter is converted with
+      Number() and answered with 400 unless the result is an integer above
+      zero; a valid id with no customer behind it is a 404.
+    paths:
+      - src/api/**
+      - src/customers/**
+    enforcement:
+      - review: platform-team
+    guardrail: >
+      Convert the id once at the route boundary and pass the number on.

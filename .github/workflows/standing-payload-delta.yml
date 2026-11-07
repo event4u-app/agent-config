@@ -412,6 +412,12 @@ jobs:
         if: always()
         run: rm -rf .payload-gate-at-base
 
+      # A rule or skill is removed only through a removal record that answers
+      # the five Phase-4 conditions; hiding it from the default stays free.
+      - name: Default-asset removal record
+        if: always()
+        run: ./scripts-run src/scripts/check_default_asset_removal --baseline origin/main --quiet
+
       # ----------------------------------------------------------------------
       # The local-only drain — batch 1. Phase 2.1 of
       # road-to-local-gates-wired-while-they-are-green.

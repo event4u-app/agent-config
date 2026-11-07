@@ -133,6 +133,44 @@ during a sweep would put a hang on the metered side.
 
 N=15 pilot = 3 tasks per archetype. Headline N=30 = 6 per archetype (Phase 5).
 
+## Multi-session memory tasks (`memA` / `memB` / `memC`)
+
+Three fixture tasks ask whether memory changes the **task outcome**, not whether
+a recall query finds an entry (recall quality is measured elsewhere).
+
+**How a second session is modelled.** No session is actually run twice. The
+fixture carries the memory a prior session would have written, at
+`agents/memory/`, in the consumer's real on-disk format (curated YAML, the shape
+`check_memory` validates and `memory:lookup` reads). The fact the task turns on
+is in that store and nowhere in the code, so a run without the store can only
+guess it. That is checked by test, not asserted: each task's deciding fact is
+matched in the store and must not match anywhere else in the fixture.
+
+| id | Class | The store holds | Right outcome |
+|---|---|---|---|
+| `memA-recall-01` | decision recall | the invoice rounding mode chosen earlier | apply the recorded mode |
+| `memB-supersede-01` | superseded decision | an older decision (`status: superseded`) and the newer one that replaces it | the newer wins |
+| `memC-stale-01` | stale entry | an active entry, inside its review window, that the code has since contradicted | the code wins |
+
+`memC` is the one where memory can only cost: a run that follows the entry
+answers every real request wrongly, and the no-memory arm cannot.
+
+**With and without, in one sweep.** The arm pair `package-memory` /
+`package-no-memory` runs the same plugin configuration. `package-no-memory`
+declares `strip_paths: ['agents/memory']`, which removes the store from the
+trial's pristine copy **and** its clone before the run — from both, because the
+scorer diffs one against the other and a store removed from the clone alone
+would be scored as files the run deleted. The stripped pristine copy sits beside
+the clone with the task's verifier copied next to it, so the verifier lookup is
+unchanged. Every trial of the stripped arm records `stripped_paths`, and the
+stats report renders a `package-memory` vs `package-no-memory` row when both
+arms ran. Both arms are plugin arms, so the activation audit's footprint lift
+applies to each of them against `vanilla` as usual; the memory store adds no
+injection, so neither arm can trip the text direction.
+
+Each task has a reference patch under `oracle-v2/` that passes its verifier with
+and without the store, and an untouched fixture that fails it.
+
 ## Artifact tasks (`kind: artifact`)
 
 A second corpus, `ab-artifact-v2.yaml`, asks for a deliverable instead of a
