@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 668 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 32710 chars.**
+**28 rules · 673 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 32827 chars.**
 
 ## Per rule
 
@@ -16,8 +16,8 @@ the config is the record.
 |---|---:|---:|---:|---:|
 | `autonomous-execution` | 31 | 0 | 1 | 1442 |
 | `broken-access-control` | 14 | 7 | 0 | 797 |
-| `command-suggestion-policy` | 20 | 13 | 1 | 1058 |
-| `decision-revisit-gate` | 42 | 5 | 1 | 1729 |
+| `command-suggestion-policy` | 21 | 13 | 1 | 1085 |
+| `decision-revisit-gate` | 43 | 5 | 1 | 1757 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
 | `domain-safety-pii` | 32 | 2 | 1 | 1528 |
@@ -25,12 +25,12 @@ the config is the record.
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
 | `fast-path-marker-visibility` | 19 | 2 | 0 | 935 |
-| `finance-safety-floor` | 28 | 2 | 1 | 1629 |
+| `finance-safety-floor` | 28 | 2 | 1 | 1630 |
 | `git-history-discipline` | 25 | 13 | 0 | 1264 |
 | `image-likeness-and-rights` | 14 | 3 | 0 | 871 |
-| `legal-safety-floor` | 26 | 6 | 0 | 1358 |
+| `legal-safety-floor` | 28 | 6 | 0 | 1379 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
-| `low-impact-corpus-privacy-floor` | 24 | 10 | 1 | 973 |
+| `low-impact-corpus-privacy-floor` | 25 | 10 | 1 | 996 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
 | `runtime-safety` | 18 | 0 | 0 | 701 |
 | `secret-vcs-guard` | 26 | 5 | 0 | 1283 |
@@ -39,7 +39,7 @@ the config is the record.
 | `settings-ask-protocol` | 32 | 6 | 0 | 1452 |
 | `source-confidentiality` | 20 | 3 | 0 | 1154 |
 | `strategy-safety-floor` | 31 | 4 | 2 | 1564 |
-| `tool-safety` | 22 | 0 | 0 | 840 |
+| `tool-safety` | 22 | 0 | 0 | 857 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 861 |
 
@@ -112,6 +112,7 @@ the config is the record.
 | `command-suggestion-policy` | c18 | precedence | none | no | ['role-mode-adherence'](role-mode-adherence.md) — active role-mode | role contract wins |  |
 | `command-suggestion-policy` | c19 | precedence | none | no | - Any active engine halt ('/implement-ticket', '/work'). | engine halt (/implement-ticket |  |
 | `command-suggestion-policy` | c20 | stop | stop | no | On any conflict → suggestion stays silent. | any conflict → stay silent |  |
+| `command-suggestion-policy` | c21 | bound | surface | no | reverts to block-always) has **no instrument yet**. The rate is unmeasured, not | (rate unmeasured, not low) |  |
 | `decision-revisit-gate` | c1 | trigger | surface | yes | BENEFIT BLOCKED BY A LOCK → SURFACE + OFFER RE-EVALUATION. | good change blocked by recorded decision |  |
 | `decision-revisit-gate` | c2 | trigger | none | no | Full catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs, | structural cap) |  |
 | `decision-revisit-gate` | c3 | prohibition | surface | yes | NEVER SILENT COMPLIANCE. NEVER SILENT DROP OF A GOOD CHANGE. | silent compliance or good-change drop |  |
@@ -154,6 +155,7 @@ the config is the record.
 | `decision-revisit-gate` | c40 | exception | act | no | council investigation and reversible experiments are | council investigation |  |
 | `decision-revisit-gate` | c41 | escalation | ask | no | a declared non-negotiable outcome \| Any mechanism | declared non-negotiable outcome |  |
 | `decision-revisit-gate` | c42 | ordering | act | no | Step 2 reads, in order: **effective state** (status · amendments · successors) → | read in order: state, provenance |  |
+| `decision-revisit-gate` | c43 | escalation | ask | no | does the proposed transition weaken an | only owner weakens an owner-reserved invariant |  |
 | `doc-screenshot-hygiene` | c1 | prohibition | refuse | yes | IRREVERSIBLE PUBLISHED EGRESS. NEVER SHIP ONE. | ship screenshot w/ unredacted sensitive data |  |
 | `doc-screenshot-hygiene` | c2 | obligation | act | yes | ANONYMIZE BEFORE IT SHIPS — REAL NAMES, ADDRESSES, BIRTHDATES, TOKENS, | anonymize before it ships |  |
 | `doc-screenshot-hygiene` | c3 | prohibition | refuse | yes | DETECTION IS A HELPER, NEVER A CLEARANCE. THE GATE IS HUMAN CONFIRMATION. | detection as clearance (gate = human confirmation) |  |
@@ -339,7 +341,7 @@ the config is the record.
 | `finance-safety-floor` | c5 | obligation | surface | yes | SURFACE THE TRADE-OFF. NAME THE RISK. THE HUMAN DECIDES. | surface trade-off, name risk, human decides |  |
 | `finance-safety-floor` | c6 | precedence | none | no | Holds for every finance-pack skill ('runway-cognition', 'dcf-modeling' | finance-pack artefacts |  |
 | `finance-safety-floor` | c7 | prohibition | refuse | no | Finance output is decision support, never the decision. | **Never:** final |  |
-| `finance-safety-floor` | c8 | obligation | act | no | Every finance-pack deliverable (memo, valuation, forecast, runway analysis) ends with: | deliverable ends w/ footer |  |
+| `finance-safety-floor` | c8 | obligation | act | no | Every finance-pack deliverable (memo, valuation, forecast, runway analysis) ends with: | deliverable ends w/ the body's footer copied verbatim |  |
 | `finance-safety-floor` | c9 | obligation | act | no | The footer is non-optional. Drop it → safety violation. | drop it = safety violation |  |
 | `finance-safety-floor` | c10 | ordering | surface | no | Each finance deliverable surfaces, in this order: | surface in order |  |
 | `finance-safety-floor` | c11 | obligation | surface | no | **Assumptions block** — every input value the model uses, sourced or marked 'assumption'. | every input sourced or marked assumption |  |
@@ -353,7 +355,7 @@ the config is the record.
 | `finance-safety-floor` | c19 | escalation | refuse | no | Refuse; route to 'domain-safety-disclaimer' and explicitly defer to a CPA / Steuerberater. | defer to CPA/Steuerberater |  |
 | `finance-safety-floor` | c20 | prohibition | refuse | no | "Based on this model, you should …" without surfacing the assumption set | "you should …" w/o assumption set |  |
 | `finance-safety-floor` | c21 | prohibition | refuse | no | DCF or valuation output without a discount-rate sensitivity sweep | DCF/valuation w/o discount-rate sweep |  |
-| `finance-safety-floor` | c22 | prohibition | refuse | no | Runway figure as a single number (must be a shape: optimistic / base / downside) | runway as one number (optimistic/base/downside) |  |
+| `finance-safety-floor` | c22 | prohibition | refuse | no | Runway figure as a single number (must be a shape: optimistic / base / downside) | runway as one number (give optimistic/base/downside) |  |
 | `finance-safety-floor` | c23 | prohibition | refuse | no | Forecast accuracy claim without retro-loop reference | accuracy claim w/o retro-loop ref |  |
 | `finance-safety-floor` | c24 | prohibition | refuse | no | Comparing two companies / deals without naming the comparability gap | company/deal comparison w/o named comparability gap |  |
 | `finance-safety-floor` | c25 | prohibition | refuse | no | Suggesting capital actions (raise, cut, layoff) without naming the human-decision owner | raise/cut/layoff w/o named human-decision owner |  |
@@ -425,6 +427,8 @@ the config is the record.
 | `legal-safety-floor` | c24 | trigger | none | no | Active whenever any of these are in the request, the open file, or the loaded skill set: | request/open file/loaded skills touch |  |
 | `legal-safety-floor` | c25 | trigger | none | no | GDPR, Art. 28, controller, processor, privilege, work product, privacy | Art. 28/controller/processor |  |
 | `legal-safety-floor` | c26 | trigger | none | no | "is this a legal problem" | or "is this a legal problem" |  |
+| `legal-safety-floor` | c27 | obligation | act | no | > ⚠️ Attorney review required on material use. This is a draft for a licensed | "⚠️ Attorney review required on material use. |  |
+| `legal-safety-floor` | c28 | stop | refuse | no | WHEN legal_review_prep.require_council IS TRUE (DEFAULT), A LEGAL WORK-PRODUCT | require_council + no council → refuse |  |
 | `lethal-trifecta-guard` | c1 | trigger | none | yes | A SKILL / COMMAND / TOOL THAT COMBINES ALL THREE LEGS — | combining all three legs |  |
 | `lethal-trifecta-guard` | c2 | obligation | act | yes | MUST BREAK ONE LEG, OR GATE THE EGRESS BEHIND HUMAN-IN-THE-LOOP. | break one leg or gate the egress |  |
 | `lethal-trifecta-guard` | c3 | prohibition | refuse | yes | NEVER SHIP THE FULL TRIFECTA ON AN AUTONOMOUS PATH. | ship the full trifecta on an autonomous path |  |
@@ -464,6 +468,7 @@ the config is the record.
 | `low-impact-corpus-privacy-floor` | c22 | obligation | surface | no | > Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip. | Low-impact corpus refused |  |
 | `low-impact-corpus-privacy-floor` | c23 | stop | stop | no | Then the agent stops the intake / upstream flow. No silent retry, no | stop intake/upstream flow |  |
 | `low-impact-corpus-privacy-floor` | c24 | prohibition | stop | no | No silent retry, no | silently retry |  |
+| `low-impact-corpus-privacy-floor` | c25 | prohibition | refuse | no | + inline 'api_key:' shape | inline api_key: shape |  |
 | `question-not-instruction` | c1 | trigger | act | no | A QUESTION ASKS FOR AN ANSWER. IT IS NOT AUTHORIZATION TO ACT. | never authorization to act |  |
 | `question-not-instruction` | c2 | prohibition | refuse | no | → ANSWER FIRST. NEVER BUILD, CHANGE, COMMIT, OR EXECUTE ON A QUESTION. | build, change, commit or execute on a question |  |
 | `question-not-instruction` | c3 | prohibition | refuse | no | RUNNING OFF ON A QUESTION IS A RULE VIOLATION, NOT INITIATIVE. | rule violation, not initiative |  |
@@ -668,7 +673,7 @@ the config is the record.
 | `tool-safety` | c10 | obligation | act | no | - **Audit trail** — tool usage should be observable and logged | keep usage logged |  |
 | `tool-safety` | c11 | obligation | act | no | - **Prefer scoped-grant syntax over bare tool names** where the host supports | prefer scoped grants (Bash(<cmd>:*)) |  |
 | `tool-safety` | c12 | precedence | refuse | no | a tool matching the | refuse disallowed_tools match even if allowed |  |
-| `tool-safety` | c13 | obligation | act | no | - **Falsifiable numeric activation thresholds** belong in descriptions where | falsifiable numeric thresholds in descriptions |  |
+| `tool-safety` | c13 | obligation | act | no | - **Falsifiable numeric activation thresholds** belong in descriptions where | numeric thresholds in descriptions where they apply |  |
 | `tool-safety` | c14 | trigger | none | no | - Skills that declare 'allowed_tools' in their execution block | skill declares allowed_tools |  |
 | `tool-safety` | c15 | trigger | none | no | - Skills that reference external APIs (GitHub, Jira, etc.) | calls external APIs |  |
 | `tool-safety` | c16 | trigger | none | no | - Any runtime execution that accesses external services | runtime reaches external services |  |

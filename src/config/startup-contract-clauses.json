@@ -597,6 +597,15 @@
           "response": "stop",
           "witness": "any conflict → stay silent",
           "unresolved_ref": null
+        },
+        {
+          "id": "c21",
+          "kind": "bound",
+          "source": "reverts to block-always) has **no instrument yet**. The rate is unmeasured, not",
+          "in_law": false,
+          "response": "surface",
+          "witness": "(rate unmeasured, not low)",
+          "unresolved_ref": null
         }
       ]
     },
@@ -978,6 +987,15 @@
           "in_law": false,
           "response": "act",
           "witness": "read in order: state, provenance",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c43",
+          "kind": "escalation",
+          "source": "does the proposed transition weaken an",
+          "in_law": false,
+          "response": "ask",
+          "witness": "only owner weakens an owner-reserved invariant",
           "unresolved_ref": null
         }
       ]
@@ -2683,7 +2701,7 @@
           "source": "Every finance-pack deliverable (memo, valuation, forecast, runway analysis) ends with:",
           "in_law": false,
           "response": "act",
-          "witness": "deliverable ends w/ footer",
+          "witness": "deliverable ends w/ the body's footer copied verbatim",
           "unresolved_ref": null
         },
         {
@@ -2809,7 +2827,7 @@
           "source": "Runway figure as a single number (must be a shape: optimistic / base / downside)",
           "in_law": false,
           "response": "refuse",
-          "witness": "runway as one number (optimistic/base/downside)",
+          "witness": "runway as one number (give optimistic/base/downside)",
           "unresolved_ref": null
         },
         {
@@ -3462,6 +3480,24 @@
           "response": "none",
           "witness": "or \"is this a legal problem\"",
           "unresolved_ref": null
+        },
+        {
+          "id": "c27",
+          "kind": "obligation",
+          "source": "> ⚠️ Attorney review required on material use. This is a draft for a licensed",
+          "in_law": false,
+          "response": "act",
+          "witness": "\"⚠️ Attorney review required on material use.",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c28",
+          "kind": "stop",
+          "source": "WHEN legal_review_prep.require_council IS TRUE (DEFAULT), A LEGAL WORK-PRODUCT",
+          "in_law": false,
+          "response": "refuse",
+          "witness": "require_council + no council → refuse",
+          "unresolved_ref": null
         }
       ]
     },
@@ -3820,6 +3856,15 @@
           "in_law": false,
           "response": "stop",
           "witness": "silently retry",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c25",
+          "kind": "prohibition",
+          "source": "+ inline `api_key:` shape",
+          "in_law": false,
+          "response": "refuse",
+          "witness": "inline api_key: shape",
           "unresolved_ref": null
         }
       ]
@@ -5700,7 +5745,7 @@
           "source": "- **Falsifiable numeric activation thresholds** belong in descriptions where",
           "in_law": false,
           "response": "act",
-          "witness": "falsifiable numeric thresholds in descriptions",
+          "witness": "numeric thresholds in descriptions where they apply",
           "unresolved_ref": null
         },
         {

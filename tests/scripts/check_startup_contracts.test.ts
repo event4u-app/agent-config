@@ -130,6 +130,14 @@ describe('committed tree', () => {
         expect(all.get('domain-safety-disclaimer')?.contract).toContain('High (verifiable from cited data)/Medium (reasoned, unverified)');
         expect(all.get('domain-safety-disclaimer')?.contract).toContain('AI-generated strategic analysis footer, copied likewise');
         expect(all.get('domain-safety-disclaimer')?.contract).toContain('financial only: bookkeeping/');
+        expect(all.get('decision-revisit-gate')?.contract).toContain('only owner weakens an owner-reserved invariant');
+        expect(all.get('tool-safety')?.contract).toContain('numeric thresholds in descriptions where they apply');
+        expect(all.get('legal-safety-floor')?.contract).toContain('"⚠️ Attorney review required on material use.');
+        expect(all.get('legal-safety-floor')?.contract).toContain('require_council + no council → refuse');
+        expect(all.get('finance-safety-floor')?.contract).toContain("the body's footer copied verbatim (gist only:");
+        expect(all.get('finance-safety-floor')?.contract).toContain('runway as one number (give optimistic/base/downside)');
+        expect(all.get('command-suggestion-policy')?.contract).toContain('block-always (rate unmeasured, not low)');
+        expect(all.get('low-impact-corpus-privacy-floor')?.contract).toContain('secrets (raw-key prefixes, inline api_key: shape)');
     });
 
     it('the reply-opening duties share one order: marker, greeting, answer', () => {
