@@ -402,12 +402,30 @@ describe('deriveSessionKey separates a subagent from its parent', () => {
 });
 
 describe('E2E: the ledger as the reference duty needs it', () => {
-    it('records a whole-file `cat` through Bash as a full read', () => {
+    function postBash(root: string, command: string, response: object): string {
+        return JSON.stringify({ schema_version: 1, platform: 'claude', event: 'post_tool_use', session_id: 'sess-1', workspace_root: root, payload: { tool_name: 'Bash', tool_input: { command }, tool_response: response } });
+    }
+    function reads(root: string): string[] {
+        const p = ledgerFile(root, deriveSessionKey({ session_id: 'sess-1' }, {}));
+        return fs.existsSync(p) ? Object.keys(JSON.parse(fs.readFileSync(p, 'utf8')).reads) : [];
+    }
+    it('credits a whole-file `cat` only after it ran, and only when the whole file came back', () => {
         const { root, abs } = makeWorkspace();
+        const body = fs.readFileSync(abs, 'utf8');
         run(envelope(root, { tool_name: 'Bash', tool_input: { command: `cat ${abs}` } }), root);
-        const key = deriveSessionKey({ session_id: 'sess-1' }, {});
-        const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8'));
-        expect(Object.keys(ledger.reads)).toEqual([path.relative(root, abs)]);
+        expect(reads(root)).toEqual([]);
+        run(postBash(root, `cat ${abs}`, { stdout: body, stderr: '', interrupted: false }), root);
+        expect(reads(root)).toEqual([path.relative(root, abs)]);
+    });
+    it.each([
+        ['a truncated output', (b: string) => ({ stdout: b.slice(0, 5), stderr: '', interrupted: false })],
+        ['an interrupted call', (b: string) => ({ stdout: b, stderr: '', interrupted: true })],
+        ['a call that wrote to stderr', (b: string) => ({ stdout: b, stderr: 'cat: boom', interrupted: false })],
+        ['a response without stdout', () => ({ stderr: '', interrupted: false })],
+    ])('gives no read credit for %s', (_name, response) => {
+        const { root, abs } = makeWorkspace();
+        run(postBash(root, `cat ${abs}`, response(fs.readFileSync(abs, 'utf8'))), root);
+        expect(reads(root)).toEqual([]);
     });
     it('clears the recorded reads on pre_compact, so a duty applies again', () => {
         const { root, abs } = makeWorkspace();

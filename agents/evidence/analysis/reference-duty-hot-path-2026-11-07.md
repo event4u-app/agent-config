@@ -23,9 +23,11 @@ this is under 0.5 % of it.
 
 ## Cost per Bash call
 
-The concern reaches its ledger only for a plain `cat <absolute file>`. Every other
-Bash command is one anchored regex (`wholeFileCatPath`) and an early return, before
-any filesystem access.
+On `pre_tool_use` a Bash call returns at once: a `cat` is never credited there. On
+claude `post_tool_use` every other Bash command is one anchored regex
+(`wholeFileCatPath`) and an early return; a plain `cat <absolute file>` adds one
+`stat` and one ledger write, and is credited only when the call was not interrupted,
+wrote nothing to stderr, and returned exactly the file's byte count.
 
 ## State bounds
 

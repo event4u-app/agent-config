@@ -4,9 +4,9 @@
  * (road-to-token-economy-cache Phase 6.1/6.2). A subagent's reads are keyed
  * apart from its parent's (`agent_id`).
  *
- * Also bound on Bash, where a plain `cat <absolute file>` counts as a full read,
- * and on claude `pre_compact`, where it clears the recorded reads: compaction
- * drops what was read.
+ * Also bound on claude `post_tool_use`, where a completed Bash `cat <absolute
+ * file>` that returned the whole file counts as a full read, and on claude
+ * `pre_compact`, where it clears the recorded reads: compaction drops what was read.
  *
  * Two signals, one session-scoped read ledger:
  *
@@ -233,7 +233,11 @@ function boundedDuty(parsed: JsonObject): Pick<Ledger, 'duty' | 'duty_overflow'>
     if (!isObject(parsed['duty'])) return prior > 0 ? { duty_overflow: prior } : {};
     const entries = Object.entries(parsed['duty'] as unknown as Record<string, DutyRecord>);
     if (entries.length <= MAX_DUTY_KEYS) return { duty: Object.fromEntries(entries), ...(prior > 0 ? { duty_overflow: prior } : {}) };
-    entries.sort((a, b) => (Number(b[1]?.ts) || 0) - (Number(a[1]?.ts) || 0));
+    const ts = (r: unknown): number => {
+        const v = isObject(r as JsonValue) ? (r as Record<string, unknown>)['ts'] : undefined;
+        return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+    };
+    entries.sort((a, b) => ts(b[1]) - ts(a[1]));
     return { duty: Object.fromEntries(entries.slice(0, MAX_DUTY_KEYS)), duty_overflow: prior + entries.length - MAX_DUTY_KEYS };
 }
 
@@ -360,6 +364,34 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
     }
 }
 
+/**
+ * A Bash `cat <absolute file>` earns read credit only after it ran, and only when
+ * the whole file came back: not interrupted, nothing on stderr, and stdout exactly
+ * as many bytes as the file holds. A pre_tool_use cannot know any of that, which is
+ * why a `cat` is never credited there.
+ */
+function recordCompletedCat(envelope: JsonObject, payload: JsonObject): void {
+    if (extractToolName(payload) !== 'Bash') return;
+    const catPath = wholeFileCatPath(str(extractToolInput(payload)['command']));
+    if (catPath === null) return;
+    const resp = payload['tool_response'] ?? payload['toolResponse'];
+    if (!isObject(resp)) return;
+    const stdout = resp['stdout'];
+    if (typeof stdout !== 'string' || resp['interrupted'] === true || str(resp['stderr'] as JsonValue | undefined) !== '') return;
+    const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
+    let st: fs.Stats;
+    try {
+        st = fs.statSync(catPath);
+    } catch {
+        return;
+    }
+    if (Buffer.byteLength(stdout, 'utf8') !== st.size) return;
+    const sessionKey = deriveSessionKey(envelope, payload);
+    const ledger = readLedger(workspaceRoot, sessionKey);
+    ledger.reads[ledgerKey(workspaceRoot, catPath)] = { mtime: st.mtimeMs, size: st.size, ts: Date.now() };
+    writeLedger(workspaceRoot, sessionKey, ledger);
+}
+
 export function main(): number {
     try {
         const [envelope, payload] = unwrap(readHookStdin(), 'claude');
@@ -378,16 +410,19 @@ export function main(): number {
             });
             return EXIT_ALLOW;
         }
+        if (event === 'post_tool_use') {
+            recordCompletedCat(envelope, payload);
+            return EXIT_ALLOW;
+        }
         if (event !== '' && event !== 'pre_tool_use') return EXIT_ALLOW;
 
         const toolName = extractToolName(payload);
         const toolInput = extractToolInput(payload);
-        const catPath = toolName === 'Bash' ? wholeFileCatPath(str(toolInput['command'])) : null;
-        const isRead = READ_TOOLS.has(toolName) || catPath !== null;
+        const isRead = READ_TOOLS.has(toolName);
         const isWrite = WRITE_TOOLS.has(toolName);
         if (!isRead && !isWrite) return EXIT_ALLOW;
 
-        const filePath = catPath ?? extractFilePath(toolInput);
+        const filePath = extractFilePath(toolInput);
         if (!filePath) return EXIT_ALLOW;
 
         const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();

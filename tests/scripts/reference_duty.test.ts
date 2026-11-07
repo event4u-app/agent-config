@@ -256,6 +256,11 @@ describe('the shipped manifest routes the read ledger where the duty needs it', 
     it('runs reread-guard on claude pre_compact', () => {
         expect(_resolve_concerns(manifest, 'claude', 'pre_compact').map((c) => c.name)).toContain('reread-guard');
     });
+    it('runs reread-guard on a claude Bash post_tool_use, where a completed cat is credited', () => {
+        const concern = _resolve_concerns(manifest, 'claude', 'post_tool_use').find((c) => c.name === 'reread-guard');
+        expect(concern).toBeDefined();
+        expect(_concern_matches_tool(concern as unknown as Record<string, never>, 'Bash')).toBe(true);
+    });
     it('runs reread-guard on a claude Bash pre_tool_use, and on Read', () => {
         const concern = _resolve_concerns(manifest, 'claude', 'pre_tool_use').find((c) => c.name === 'reread-guard');
         expect(concern).toBeDefined();
