@@ -72,12 +72,16 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > true for additional context and for `SessionStart` / `UserPromptSubmit` stdout;
       > tool-hook stdout renders `(stdout, not model-visible)`. `docs/benchmark.md`
       > now says the 1,050-char `Bash` figure is open until the census is re-run.
-- [ ] **1.2 Prove hooks fire in each bench arm.** Add a per-trial invariant that reads
+- [x] **1.2 Prove hooks fire in each bench arm.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_task_runner.ts --> Add a per-trial invariant that reads
       the stream-json events and marks an AC arm `instrument-invalid` when no hook event
       arrived. The event shape is not in the tree; one cheap observed run pins it.
       spend released 2026-11-07 (`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`).
       verify: unit test over the pinned fixture stream; one real trial shows ≥ 1 hook
       event per bound event type for the package arm and 0 for `vanilla`.
+      > note: done 2026-11-07 — event shape pinned; package arm SessionStart × 4, `without`
+      > arm none, $0.0052. Only SessionStart surfaces in the stream, so the per-event
+      > clause is unanswerable from it; the invariant asks for any hook.
+      > `agents/evidence/analysis/bench-hook-fire-probe-2026-11-07.md`.
 
 - [x] **1.3 Re-run the main-session census on the split buckets.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> One fresh main
       session, `preamble_byte_census --main-session`, and report the `PostToolUse:Bash`

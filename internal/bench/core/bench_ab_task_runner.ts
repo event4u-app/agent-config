@@ -206,6 +206,49 @@ interface RunResult {
     subtype?: string;
     /** The raw stream-json events, present only when the run asked for `stream`. */
     stream?: string;
+    /** Responded hooks per host event, read from `stream`; absent without one. */
+    hook_events?: Record<string, number>;
+    /** Whether the hooks seen match what the arm's setting sources load. */
+    hook_instrument?: HookInstrument;
+}
+
+export type HookInstrument = 'ok' | 'no-hook-event' | 'unexpected-hook-event';
+
+/**
+ * Responded hooks per host event in a stream-json run. A hook surfaces as a
+ * `system` event, `hook_started` then `hook_response`; the response is counted
+ * whatever its outcome, because the question is whether the hook ran.
+ */
+export function hookEventsFromStream(stdout: string): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const line of stdout.split('\n')) {
+        if (!line.includes('"hook_response"')) continue;
+        let ev: unknown;
+        try {
+            ev = JSON.parse(line);
+        } catch {
+            continue;
+        }
+        if (typeof ev !== 'object' || ev === null) continue;
+        const e = ev as Record<string, unknown>;
+        if (e['type'] !== 'system' || e['subtype'] !== 'hook_response') continue;
+        const name = typeof e['hook_event'] === 'string' ? e['hook_event'] : '?';
+        counts[name] = (counts[name] ?? 0) + 1;
+    }
+    return counts;
+}
+
+/**
+ * An arm that loads user settings (`setting_sources` null) carries the package's
+ * hooks, so a run of it with no hook event measured the arm without its hooks.
+ * An arm restricted to `project,local` should see none. Only `SessionStart`
+ * hooks are known to surface in the stream; the other events are not evidence
+ * either way, which is why the check is "any hook" rather than "every event".
+ */
+export function hookInstrument(events: Record<string, number>, settingSources: string | null): HookInstrument {
+    const seen = Object.values(events).some((n) => n > 0);
+    if (settingSources === null) return seen ? 'ok' : 'no-hook-event';
+    return seen ? 'unexpected-hook-event' : 'ok';
 }
 
 export interface RunLiveOpts {
@@ -454,8 +497,13 @@ export function run_live(
         errored: isError || returncode !== 0,
         num_turns: numTurns,
         subtype,
-        ...(opts.stream ? { stream: stdout } : {}),
+        ...(opts.stream ? streamFields(stdout, opts.setting_sources ?? null) : {}),
     };
+}
+
+function streamFields(stdout: string, settingSources: string | null): Pick<RunResult, 'stream' | 'hook_events' | 'hook_instrument'> {
+    const hook_events = hookEventsFromStream(stdout);
+    return { stream: stdout, hook_events, hook_instrument: hookInstrument(hook_events, settingSources) };
 }
 
 /** Record what would have run; produce a deterministic stub transcript. */
