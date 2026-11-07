@@ -70,13 +70,14 @@ describe('report_required_checks_drift', () => {
     });
 
     it('reads every required_status_checks rule, not only the first', () => {
+        const checks = (names: readonly string[]) => ({
+            type: 'required_status_checks',
+            parameters: { required_status_checks: names.map((context) => ({ context })) },
+        });
         const body = {
             id: 1,
             name: 'main protection',
-            rules: [
-                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[0] }] } },
-                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[1] }] } },
-            ],
+            rules: [checks(ENFORCED_CHECKS.slice(0, 1)), checks(ENFORCED_CHECKS.slice(1))],
         };
         const r = run(body);
         expect(r.code, r.out).toBe(0);
