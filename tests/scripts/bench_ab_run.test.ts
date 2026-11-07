@@ -13,7 +13,7 @@
 // validated manually during the port and is documented as divergence-free; it
 // is intentionally not asserted here to keep the shared dir untouched under
 // default file-parallelism.
-import { spawnSync } from 'node:child_process';
+
 import { describe, expect, it } from 'vitest';
 
 import { runTs } from './_bench_wave8d.js';

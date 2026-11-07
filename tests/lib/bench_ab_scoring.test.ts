@@ -17,7 +17,6 @@ import { fileURLToPath } from "node:url";
 import { score_task } from "../../internal/bench/core/_lib/bench_ab_scoring.js";
 
 const __dirname_ts = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname_ts, "..", "..");
 
 let clone_root: string;
 
@@ -251,86 +250,4 @@ describe("score_task — individual criteria", () => {
   });
 });
 
-interface Fixture {
-  name: string;
-  task: Record<string, unknown>;
-  pre_snapshot: Record<string, string>;
-  post_snapshot: Record<string, string>;
-  transcript: string;
-  files: Record<string, string>;
-}
 
-const FIXTURES: Fixture[] = [
-  {
-    name: "regex + api + new test",
-    task: {
-      success_criteria: {
-        target_file_modified: "app/svc.ts",
-        regex_in_target: "class\\s+Svc",
-        preserves_public_api: ["Svc", "handle"],
-        new_test_file_exists: "tests/svc.test.ts",
-        min_test_count: 2,
-      },
-    },
-    pre_snapshot: { "app/svc.ts": "old" },
-    post_snapshot: {
-      "app/svc.ts": "new",
-      "tests/svc.test.ts": "test x",
-    },
-    transcript: "",
-    files: {
-      "app/svc.ts": "export class Svc { handle() {} }",
-      "tests/svc.test.ts": "test('a', () => {}); it('b', () => {});",
-    },
-  },
-  {
-    name: "regex_in_any over modified files only",
-    task: { success_criteria: { regex_in_any: "TODO|FIXME" } },
-    pre_snapshot: { "a.ts": "x", "b.ts": "// FIXME" },
-    post_snapshot: { "a.ts": "// TODO added", "b.ts": "// FIXME" },
-    transcript: "",
-    files: { "a.ts": "// TODO added", "b.ts": "// FIXME" },
-  },
-  {
-    name: "audit-before-write heuristic + transcript match",
-    task: {
-      success_criteria: {
-        no_file_write_before_audit: true,
-        transcript_contains_one_of: ["existing-ui-audit"],
-      },
-    },
-    pre_snapshot: {},
-    post_snapshot: {},
-    transcript: "step 1: existing-ui-audit\nstep 2: save-file foo",
-    files: {},
-  },
-  {
-    name: "missing api names + unchanged target → both fail",
-    task: {
-      success_criteria: {
-        target_file_modified: "api.ts",
-        preserves_public_api: ["alpha", "beta"],
-        no_existing_test_removed: ["testKeep"],
-      },
-    },
-    pre_snapshot: { "api.ts": "same" },
-    post_snapshot: { "api.ts": "same" },
-    transcript: "",
-    files: { "api.ts": "export const alpha = 1;" },
-  },
-];
-
-/** Recursively sort object keys so structural compare ignores field order. */
-function canonical(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(canonical);
-  }
-  if (value !== null && typeof value === "object") {
-    const out: Record<string, unknown> = {};
-    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
-      out[key] = canonical((value as Record<string, unknown>)[key]);
-    }
-    return out;
-  }
-  return value;
-}

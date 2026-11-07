@@ -1,14 +1,8 @@
 
-import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { aggregate, chars_to_tokens, render_md } from '../../internal/bench/core/bench_condense_memory.js';
+import { aggregate, chars_to_tokens } from '../../internal/bench/core/bench_condense_memory.js';
 
-const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
-const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const TS_SCRIPT = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_condense_memory.ts');
-const REPORT_JSON = join(REPO_ROOT, 'internal', 'bench', 'reports', 'telegraph-v2.json');
-const REPORT_MD = join(REPO_ROOT, 'internal', 'bench', 'reports', 'telegraph-v2.md');
 
 describe('bench_condense_memory.ts — pure helpers', () => {
     it('chars_to_tokens uses banker rounding (round(n/4))', () => {
@@ -69,20 +63,3 @@ function mkRow(p: string, cat: string, before: number, after: number): OkRow {
     };
 }
 
-function roundAll(agg: Record<string, unknown>): Record<string, unknown> {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(agg)) {
-        if (typeof v === 'number') {
-            out[k] = Math.round(v * 1e6) / 1e6;
-        } else if (v && typeof v === 'object' && !Array.isArray(v)) {
-            const inner: Record<string, number> = {};
-            for (const [ik, iv] of Object.entries(v as Record<string, number>)) {
-                inner[ik] = Math.round(iv * 1e6) / 1e6;
-            }
-            out[k] = inner;
-        } else {
-            out[k] = v;
-        }
-    }
-    return out;
-}

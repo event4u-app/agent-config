@@ -38,7 +38,6 @@ import {
 import { searchClaimVerdict as search_claim_verdict } from '../../internal/bench/core/_lib/bench_ab_search_adherence.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
 const TS_SCRIPT = path.join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_v2_stats.ts');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 

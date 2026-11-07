@@ -24,7 +24,6 @@ import {
 } from "../../internal/bench/core/_lib/bench_cost.js";
 
 const __dirname_ts = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname_ts, "..", "..");
 
 let tmp: string;
 
@@ -199,85 +198,4 @@ describe("aggregate_sessions", () => {
   });
 });
 
-interface CostFixture {
-  name: string;
-  sessions: object[];
-}
 
-const FIXTURES: CostFixture[] = [
-  {
-    name: "mixed tiers, trusted cost",
-    sessions: [
-      {
-        byModel: {
-          a: { tier: "haiku", input_tokens: 1234, output_tokens: 56, messages: 2, cost_usd: 0.001234 },
-          b: { tier: "sonnet", input_tokens: 9000, output_tokens: 800, messages: 5, cost_usd: 0.045678 },
-        },
-      },
-      {
-        byModel: {
-          c: { tier: "opus", input_tokens: 100, messages: 1, cost_usd: 0.009999 },
-        },
-      },
-    ],
-  },
-  {
-    name: "zero cost recompute from rates",
-    sessions: [
-      {
-        byModel: {
-          a: {
-            tier: "haiku",
-            input_tokens: 333333,
-            output_tokens: 77777,
-            cache_creation_input_tokens: 11111,
-            cache_read_input_tokens: 222222,
-            messages: 3,
-            cost_usd: 0,
-          },
-          b: {
-            tier: "sonnet",
-            input_tokens: 50000,
-            output_tokens: 20000,
-            messages: 2,
-            cost_usd: 0,
-          },
-        },
-      },
-    ],
-  },
-  {
-    name: "unknown + missing tier coalescing",
-    sessions: [
-      { byModel: { x: { tier: "gpt-9", input_tokens: 10, messages: 1, cost_usd: 0.5 } } },
-      { byModel: { y: { input_tokens: 20, messages: 4, cost_usd: 0.25 } } },
-    ],
-  },
-  {
-    name: "rounding-sensitive accumulation",
-    sessions: [
-      { byModel: { a: { tier: "haiku", messages: 1, cost_usd: 0.1111115 } } },
-      { byModel: { b: { tier: "haiku", messages: 1, cost_usd: 0.1111115 } } },
-      { byModel: { c: { tier: "haiku", messages: 1, cost_usd: 0.0000005 } } },
-    ],
-  },
-];
-
-function slug(s: string): string {
-  return s.replace(/[^a-z0-9]+/gi, "-");
-}
-
-/** Recursively sort object keys so structural compare ignores field order. */
-function canonical(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(canonical);
-  }
-  if (value !== null && typeof value === "object") {
-    const out: Record<string, unknown> = {};
-    for (const key of Object.keys(value as Record<string, unknown>).sort()) {
-      out[key] = canonical((value as Record<string, unknown>)[key]);
-    }
-    return out;
-  }
-  return value;
-}
