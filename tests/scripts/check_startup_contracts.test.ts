@@ -112,6 +112,7 @@ describe('committed tree', () => {
         expect(all.get('autonomous-execution')?.contract).toContain('new strategy from the escalation');
         expect(all.get('git-history-discipline')?.contract).toContain('conflict resolution forced by a user-invoked');
         expect(all.get('legal-safety-floor')?.contract).toContain('body unreadable → still stop, name the path');
+        expect(all.get('strategy-safety-floor')?.contract).toContain('counter-case (one paragraph:');
     });
 
     it('the reply-opening duties share one order: marker, greeting, answer', () => {
