@@ -1,7 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
 tree_pin: c9556b655a
+entry_condition:
+  what: "hook-bundle headroom for steps 2.2/2.3, or an owner spend release for 1.2/3.1, and a free slot under the owner WIP limit (2026-10-24)"
+  when: "when a hook shrink or raise_log entry lands, or the owner releases spend"
+  who: owner
 execution:
   mode: phase-checkpoints
 relates:
@@ -17,8 +21,8 @@ relates:
   - slug: road-to-a-map-that-knows-what-happened
     relation: blocked-by
     note: Holds the last byte of hook-bundle headroom; every hook-side step here waits on a shrink or a raise_log entry.
-estate_offset_exempt: "Owner search over agents/roadmaps/*.md, later/, stubs/, skipped/ and archive/ for the required-reference gate (`reread_guard`, `read receipt`, `requires`, `load_context` delivery) returned no live owner: only an external suggestion in later/road-to-governed-evidence-production.md:23 and adjacent reread_guard wiring in road-to-a-map-that-knows-what-happened. Active because the invocation carried --process (operator asked for active execution, owner directive 2026-10-24 exception)."
-estate_growth_exempt: "+1 active_roadmaps and +2 open_blockers: the inbox invocation carried --process, which executes the emitted roadmap in the same run, so it cannot park in later/; its two blockers (hook-bundle headroom, owner spend) hold the hook-side and paid steps the run will not execute."
+estate_offset_exempt: "Owner search over agents/roadmaps/*.md, later/, stubs/, skipped/ and archive/ for the required-reference gate (`reread_guard`, `read receipt`, `requires`, `load_context` delivery) returned no live owner: only an external suggestion in later/road-to-governed-evidence-production.md:23 and adjacent reread_guard wiring in road-to-a-map-that-knows-what-happened. Parked in later/ because six roadmaps are already active against the owner WIP limit of five; the run executed only its two zero-cost, hook-free steps (1.1, 2.1)."
+estate_growth_exempt: "+1 later_roadmaps and +2 open_blockers: a new owner-less subject parked on arrival under the WIP limit; its two blockers (hook-bundle headroom, owner spend) hold the hook-side and paid steps the run could not execute."
 ---
 # Road to a reference that arrives before the act
 
