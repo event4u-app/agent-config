@@ -24,8 +24,9 @@
   skipped when a diff cannot reach them and the shard total varies, so a
   pinned shard name would never report and would lock the merge. The
   aggregate fails if any of them fails, macOS twins included.)
-  **Applied 2026-11-07** by owner decision, together with the merge queue:
-  `Tests result` is required, so macOS failures now block a merge, where the
+  **Applied 2026-11-07** by owner decision (a merge queue was tried the same
+  day and removed for good): `Tests result` is required, so macOS failures now
+  block a merge, where the
   2026-07-12 core pinned only `ubuntu-latest` legs. Live values:
   [`branch-protection-policy`](../contracts/branch-protection-policy.md).
 - **Enforce for admins: yes** (otherwise the protection is decorative).
