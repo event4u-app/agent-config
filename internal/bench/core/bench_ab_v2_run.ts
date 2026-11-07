@@ -368,6 +368,7 @@ export const CODEX_VALID_ARMS: readonly string[] = [
     // plugin-bearing sibling `package-ladder` deliberately is NOT here — it
     // depends on the real plugin, which this host cannot load.
     'bare-principle',
+    'minimal-prompt',
 ];
 
 export function codex_executable(): string | null {

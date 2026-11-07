@@ -93,6 +93,7 @@ describe('--host codex arm validation', () => {
     it('CODEX_VALID_ARMS excludes plugin-dependent arms', () => {
         expect(run.CODEX_VALID_ARMS).toContain('vanilla');
         expect(run.CODEX_VALID_ARMS).toContain('rules-kernel-dc');
+        expect(run.CODEX_VALID_ARMS).toContain('minimal-prompt');
         expect(run.CODEX_VALID_ARMS).not.toContain('package');
         expect(run.CODEX_VALID_ARMS).not.toContain('package-rdp');
         expect(run.CODEX_VALID_ARMS).not.toContain('package-recursive');
