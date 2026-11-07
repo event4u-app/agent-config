@@ -97,6 +97,18 @@ describe('committed tree', () => {
         expect(contractProblems(required, sabotaged, cfg).some((m) => m.startsWith(`${id}#${c.id}:`))).toBe(true);
     });
 
+    it('a contract whose literal lives in the body fails closed when the body is unreadable', () => {
+        for (const id of ['finance-safety-floor', 'strategy-safety-floor', 'domain-safety-disclaimer']) {
+            expect(all.get(id)?.contract, id).toContain("body unreadable → don't deliver, name the missing path");
+        }
+    });
+
+    it('the reply-opening duties share one order: marker, greeting, answer', () => {
+        expect(all.get('fast-path-marker-visibility')?.contract).toContain('order: marker, greeting, answer');
+        expect(all.get('session-canary')?.contract).toContain('after any fast-path marker, before the answer');
+        expect(all.get('question-not-instruction')?.contract).toContain('after any fast-path marker and canary greeting');
+    });
+
     it('with no pack active, the D14 floors still arrive, and arrive as their contract only (step 2.3)', () => {
         const stubs = build_thin(path.join(REPO, 'dist', 'agent-src', 'rules'), null, null, null, { packageRoot: REPO });
         for (const id of ['legal-safety-floor', 'finance-safety-floor', 'strategy-safety-floor', 'image-likeness-and-rights']) {

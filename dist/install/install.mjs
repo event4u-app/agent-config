@@ -14596,11 +14596,16 @@ function thin_entry_with_contract(rule_id, text, bodyLinkPrefix = BODY_LINK_PREF
     );
   }
   const title = _title(rule_id.replace(/-/g, " "));
-  const carried = shape.contractHeading === false ? contract.replace(/^#{1,6}[^\n]*\n+/, "") : contract;
-  return `## ${title}
+  const head = `## ${title}
 ${THIN_ENTRY_MARKER} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md
-${shape.contractHeading === false ? "" : "\n"}${STUB_CONTRACT_OPEN}${lawDigest(carried)} -->
-${carried}
+`;
+  if (shape.contractHeading === false) {
+    return `${head}${contract.replace(/^#{1,6}[^\n]*\n+/, "")}
+`;
+  }
+  return `${head}
+${STUB_CONTRACT_OPEN}${lawDigest(contract)} -->
+${contract}
 ${STUB_CONTRACT_CLOSE}
 `;
 }

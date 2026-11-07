@@ -161,7 +161,7 @@ describe('the installed stub shape', () => {
         expect(is_thin_entry(installed)).toBe(true);
     });
 
-    it('carries the contract without its own heading, digested over exactly what it carries', () => {
+    it('carries the contract bare when installed: no heading, no digest markers', () => {
         const contract = '## Startup contract\n\n- **When:** a probe.\n- **Must:** stop.';
         const text = `---\ndescription: "x"\n---\n\n# Some rule\n\n${contract}\n\n## Rest\n\nbody\n`;
         const projected = thin_entry_with_contract('some-rule', text, '');
@@ -169,10 +169,9 @@ describe('the installed stub shape', () => {
         expect(projected).toContain('## Startup contract');
         expect(installed).not.toContain('## Startup contract');
         expect(installed).toContain(THIN_ENTRY_MARKER);
-        const open = installed.indexOf(STUB_CONTRACT_OPEN);
-        const digest = installed.slice(open + STUB_CONTRACT_OPEN.length).split(' ')[0] as string;
-        const carried = installed.slice(installed.indexOf('\n', open) + 1, installed.indexOf(`\n${STUB_CONTRACT_CLOSE}`));
-        expect(carried).toBe('- **When:** a probe.\n- **Must:** stop.');
-        expect(lawDigest(carried)).toBe(digest);
+        expect(installed).not.toContain(STUB_CONTRACT_OPEN);
+        expect(installed).not.toContain(STUB_CONTRACT_CLOSE);
+        expect(installed.endsWith('\n- **When:** a probe.\n- **Must:** stop.\n')).toBe(true);
+        expect(projected).toContain(STUB_CONTRACT_OPEN + lawDigest(contract));
     });
 });

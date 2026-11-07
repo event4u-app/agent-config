@@ -590,14 +590,14 @@ export function thin_entry_with_contract(
     // No description and no `Fires on:` hint: the contract's own **When:** line
     // states the activation, and repeating it would be paid on every session start.
     const title = _title(rule_id.replace(/-/g, ' '));
-    // What the stub carries between the markers, and what the digest is over.
-    const carried = shape.contractHeading === false ? contract.replace(/^#{1,6}[^\n]*\n+/, '') : contract;
-    return (
-        `## ${title}\n${THIN_ENTRY_MARKER} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md\n` +
-        `${shape.contractHeading === false ? '' : '\n'}${STUB_CONTRACT_OPEN}${lawDigest(carried)} -->\n` +
-        `${carried}\n` +
-        `${STUB_CONTRACT_CLOSE}\n`
-    );
+    const head = `## ${title}\n${THIN_ENTRY_MARKER} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md\n`;
+    if (shape.contractHeading === false) {
+        // The installed form carries the contract bare: no heading and no digest
+        // markers, because nothing reads them there and every byte is paid at each
+        // session start. The source copy is what `check_startup_contracts` verifies.
+        return `${head}${contract.replace(/^#{1,6}[^\n]*\n+/, '')}\n`;
+    }
+    return `${head}\n${STUB_CONTRACT_OPEN}${lawDigest(contract)} -->\n${contract}\n${STUB_CONTRACT_CLOSE}\n`;
 }
 
 /**

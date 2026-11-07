@@ -21,7 +21,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { measureSessionStartLayer, projectDefaultInstall } from '../../src/scripts/check_session_start_budget.js';
 import { KERNEL_RULE_ID_SET } from '../../src/scripts/_lib/kernel_rules.js';
-import { STUB_CONTRACT_OPEN, THIN_BODY_POINTER_RE, build_thin, is_thin_entry } from '../../src/scripts/_lib/thin_rules.js';
+import { THIN_BODY_POINTER_RE, build_thin, is_thin_entry } from '../../src/scripts/_lib/thin_rules.js';
 import { USER_PIN_FIELD } from '../../src/install/userPin.js';
 import { RULE_BODIES_INDEX, resolveBodyPointer } from '../../src/install/installThinLayer.js';
 
@@ -93,7 +93,7 @@ describe('an upgrade over a full layer writes the reduced layer', () => {
                 expect(is_thin_entry(text), name).toBe(false);
                 continue;
             }
-            if (text.includes(STUB_CONTRACT_OPEN)) contracts += 1;
+            if (is_thin_entry(text) && /^- \*\*When:\*\*/m.test(text)) contracts += 1;
         }
         expect(contracts).toBeGreaterThan(0);
         expect([...afterUpgrade.values()].filter((t) => is_thin_entry(t)).length).toBeGreaterThan(50);
