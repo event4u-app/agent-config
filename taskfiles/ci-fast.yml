@@ -1034,7 +1034,7 @@ tasks:
 
   report-rule-requires:
     silent: true
-    desc: "Requires table — for each act a rule's triggers name (path_prefix, file_pattern, command), the load_context references it needs, marked required/conditional/informational, with the inject-budget fit. A REPORT, not a gate (road-to-mixed-trigger-activation-cost 5.3)."
+    desc: "Requires table — for each act a rule's triggers name (path_prefix, file_pattern, command), the load_context references it needs, marked required/conditional/informational, with the inject-budget fit. A REPORT, not a gate (road-to-a-reference-that-arrives-before-the-act 2.1)."
     cmd: ./scripts-run src/scripts/rule_reference_requires {{.CLI_ARGS}}
 
   check-static-layer-stability:
