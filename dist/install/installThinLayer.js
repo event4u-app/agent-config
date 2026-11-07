@@ -72,7 +72,7 @@ export const RULE_BODIES_INDEX = 'agent-config-rule-bodies.md';
 /** The index text for a bodies directory (absolute, trailing separator optional). */
 export function ruleBodiesIndexText(bodiesDir) {
     const dir = bodiesDir.replace(/[\\/]+$/, '');
-    return ('---\npackage: event4u/agent-config\n---\n\n# Rule bodies\n\n' +
+    return ('---\npackage: event4u/agent-config\n---\n\n' +
         'Stubs in this directory name their rule body as `Body: <id>.md`. ' +
         `The bodies are in \`${dir}/\`: read \`${dir}/<id>.md\` when a stub matches.\n`);
 }

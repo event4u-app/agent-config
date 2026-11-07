@@ -212,8 +212,13 @@ export function defaultInstallEnv(home: string, base: NodeJS.ProcessEnv = proces
 export function projectDefaultInstall(packageRoot: string, home: string, extraArgs: readonly string[] = []): ProjectionResult {
     const env = defaultInstallEnv(home);
     const args = [path.join(packageRoot, 'src', 'scripts', 'install'), '--global', '--tools=claude-code', '--yes', '--quiet', ...extraArgs];
+    // From an empty project under the scratch HOME, not the checkout: a checkout
+    // carrying its own `.claude/rules` trips the installer's layer-overlap stop,
+    // and HOME itself would be its own project layer.
+    const cwd = path.join(home, 'project');
+    fs.mkdirSync(cwd, { recursive: true });
     const r = spawnSync('bash', args, {
-        cwd: packageRoot,
+        cwd,
         encoding: 'utf8',
         timeout: 300_000,
         env,

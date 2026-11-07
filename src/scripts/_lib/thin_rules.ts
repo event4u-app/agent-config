@@ -594,7 +594,7 @@ export function thin_entry_with_contract(
     const carried = shape.contractHeading === false ? contract.replace(/^#{1,6}[^\n]*\n+/, '') : contract;
     return (
         `## ${title}\n${THIN_ENTRY_MARKER} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md\n` +
-        `\n${STUB_CONTRACT_OPEN}${lawDigest(carried)} -->\n` +
+        `${shape.contractHeading === false ? '' : '\n'}${STUB_CONTRACT_OPEN}${lawDigest(carried)} -->\n` +
         `${carried}\n` +
         `${STUB_CONTRACT_CLOSE}\n`
     );

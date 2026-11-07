@@ -14599,8 +14599,7 @@ function thin_entry_with_contract(rule_id, text, bodyLinkPrefix = BODY_LINK_PREF
   const carried = shape.contractHeading === false ? contract.replace(/^#{1,6}[^\n]*\n+/, "") : contract;
   return `## ${title}
 ${THIN_ENTRY_MARKER} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md
-
-${STUB_CONTRACT_OPEN}${lawDigest(carried)} -->
+${shape.contractHeading === false ? "" : "\n"}${STUB_CONTRACT_OPEN}${lawDigest(carried)} -->
 ${carried}
 ${STUB_CONTRACT_CLOSE}
 `;
@@ -14665,8 +14664,6 @@ function ruleBodiesIndexText(bodiesDir) {
   return `---
 package: event4u/agent-config
 ---
-
-# Rule bodies
 
 Stubs in this directory name their rule body as \`Body: <id>.md\`. The bodies are in \`${dir}/\`: read \`${dir}/<id>.md\` when a stub matches.
 `;
