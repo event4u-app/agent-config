@@ -24,6 +24,7 @@ import {
     INSTALLED_STUB_SHAPE,
     is_thin_entry,
     lawDigest,
+    shortDescription,
     STUB_CONTRACT_CLOSE,
     STUB_CONTRACT_OPEN,
     thin_entry_with_contract,
@@ -173,5 +174,17 @@ describe('the installed stub shape', () => {
         expect(installed).not.toContain(STUB_CONTRACT_CLOSE);
         expect(installed.endsWith('\n- **When:** a probe.\n- **Must:** stop.\n')).toBe(true);
         expect(projected).toContain(STUB_CONTRACT_OPEN + lawDigest(contract));
+    });
+
+    it('keeps the first sentence of the description in the installed stub, cut at a word boundary', () => {
+        const long = 'A skill exists in the tree but not in the catalogue — ask for it by TASK, never conclude it does not exist. More.';
+        expect(shortDescription('Short one. Second.', 90)).toBe('Short one.');
+        const cut = shortDescription(long, 60);
+        expect(cut.length).toBeLessThanOrEqual(60);
+        expect(cut.endsWith('…')).toBe(true);
+        expect(long.startsWith(cut.slice(0, -1))).toBe(true);
+        const text = `---\ndescription: "${long}"\n---\n\n# R\n\nbody\n`;
+        expect(thin_entry('r', text, '', INSTALLED_STUB_SHAPE)).toContain(shortDescription(long, 90));
+        expect(thin_entry('r', text, '')).toContain(long);
     });
 });

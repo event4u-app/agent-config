@@ -442,16 +442,32 @@ export function absoluteBodyLinkPrefix(packageRoot: string): string {
  *
  * `contractHeading: false` drops the contract's own `## Startup contract` line;
  * the stub's `## <Title>` already heads it. The digest is then taken over the
- * heading-less text, i.e. over exactly the bytes between the markers, so a
- * reader re-hashing what the stub carries checks it honestly.
+ * heading-less text; the installed form carries the contract bare.
+ *
+ * `descriptionMax` keeps the description's first sentence, cut at a word
+ * boundary to at most that many characters. Same reason as the hint: on a
+ * reached carrier the concern delivers the body on a trigger, so the
+ * description only has to tell the model what the rule is about when it
+ * decides to load a body itself, and the full text cost ~9,000 chars at every
+ * session start over the default layer (measured 2026-11-07).
  */
 export interface StubShape {
     readonly firesOn?: boolean;
     readonly contractHeading?: boolean;
+    readonly descriptionMax?: number;
 }
 
 /** The shape `thinInstalledRuleLayer` writes. */
-export const INSTALLED_STUB_SHAPE: StubShape = { firesOn: false, contractHeading: false };
+export const INSTALLED_STUB_SHAPE: StubShape = { firesOn: false, contractHeading: false, descriptionMax: 90 };
+
+/** The first sentence of `desc`, cut at a word boundary to at most `max` chars. */
+export function shortDescription(desc: string, max: number): string {
+    const first = (desc.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? desc).trim();
+    if (first.length <= max) return first;
+    const cut = first.slice(0, max - 1);
+    const space = cut.lastIndexOf(' ');
+    return `${(space > 0 ? cut.slice(0, space) : cut).replace(/[\s,;:—-]+$/, '')}…`;
+}
 
 /** Build the minimal progressive-disclosure pointer for a non-kernel rule. */
 export function thin_entry(
@@ -461,7 +477,8 @@ export function thin_entry(
     shape: StubShape = {},
 ): string {
     const [fm] = split_frontmatter(text);
-    const desc = _description(fm);
+    const full = _description(fm);
+    const desc = shape.descriptionMax === undefined ? full : shortDescription(full, shape.descriptionMax);
     const hint = shape.firesOn === false ? '' : _trigger_hint(fm);
     const title = _title(rule_id.replace(/-/g, ' '));
     const fires = hint ? ` Fires on: ${hint}.` : '';

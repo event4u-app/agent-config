@@ -14536,10 +14536,18 @@ var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
 function absoluteBodyLinkPrefix(packageRoot) {
   return `${path33.join(path33.resolve(packageRoot), "dist", "agent-src", "rules")}${path33.sep}`;
 }
-var INSTALLED_STUB_SHAPE = { firesOn: false, contractHeading: false };
+var INSTALLED_STUB_SHAPE = { firesOn: false, contractHeading: false, descriptionMax: 90 };
+function shortDescription(desc, max) {
+  const first = (desc.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? desc).trim();
+  if (first.length <= max) return first;
+  const cut = first.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > 0 ? cut.slice(0, space) : cut).replace(/[\s,;:—-]+$/, "")}\u2026`;
+}
 function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX, shape = {}) {
   const [fm] = split_frontmatter(text);
-  const desc = _description(fm);
+  const full = _description(fm);
+  const desc = shape.descriptionMax === void 0 ? full : shortDescription(full, shape.descriptionMax);
   const hint = shape.firesOn === false ? "" : _trigger_hint(fm);
   const title = _title(rule_id.replace(/-/g, " "));
   const fires = hint ? ` Fires on: ${hint}.` : "";
