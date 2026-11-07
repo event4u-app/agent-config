@@ -2324,7 +2324,7 @@
           "source": "council:status`'s live provider count, never assumed.",
           "in_law": false,
           "response": "act",
-          "witness": "per council:status, never assumed",
+          "witness": "reports 2+ providers, never assumed",
           "unresolved_ref": null
         },
         {
@@ -5381,7 +5381,7 @@
           "source": "- Moat claim without a competitor delta (named, with evidence)",
           "in_law": false,
           "response": "refuse",
-          "witness": "moat claim w/o evidenced competitor delta",
+          "witness": "moat claim w/o named competitor + evidenced delta",
           "unresolved_ref": null
         },
         {

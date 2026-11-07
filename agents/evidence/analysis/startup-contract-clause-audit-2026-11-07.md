@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 648 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 30976 chars.**
+**28 rules · 648 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 31040 chars.**
 
 ## Per rule
 
@@ -17,13 +17,13 @@ the config is the record.
 | `autonomous-execution` | 30 | 0 | 1 | 1377 |
 | `broken-access-control` | 14 | 7 | 0 | 797 |
 | `command-suggestion-policy` | 20 | 13 | 1 | 1058 |
-| `decision-revisit-gate` | 41 | 5 | 1 | 1532 |
+| `decision-revisit-gate` | 41 | 5 | 1 | 1568 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1031 |
 | `domain-safety-disclaimer` | 23 | 4 | 0 | 1223 |
 | `domain-safety-pii` | 29 | 2 | 1 | 1404 |
 | `domain-safety-retention` | 26 | 5 | 0 | 1370 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1317 |
-| `evaluator-independence` | 27 | 8 | 0 | 1224 |
+| `evaluator-independence` | 27 | 8 | 0 | 1244 |
 | `fast-path-marker-visibility` | 18 | 2 | 0 | 904 |
 | `finance-safety-floor` | 25 | 2 | 1 | 1386 |
 | `git-history-discipline` | 24 | 13 | 0 | 1250 |
@@ -38,7 +38,7 @@ the config is the record.
 | `session-canary` | 18 | 4 | 1 | 975 |
 | `settings-ask-protocol` | 28 | 6 | 0 | 1304 |
 | `source-confidentiality` | 20 | 3 | 0 | 1118 |
-| `strategy-safety-floor` | 29 | 4 | 2 | 1358 |
+| `strategy-safety-floor` | 29 | 4 | 2 | 1366 |
 | `tool-safety` | 22 | 0 | 0 | 855 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 865 |
@@ -300,7 +300,7 @@ the config is the record.
 | `evaluator-independence` | c19 | precedence | stop | no | → CHANGE ONLY AFTER AN INDEPENDENT VERDICT. THE OWNER IS NOT THE ARBITER. | change only after independent verdict; owner isn't arbiter |  |
 | `evaluator-independence` | c20 | bound | none | no | L0 same agent — **fallback only** | same-agent = fallback only |  |
 | `evaluator-independence` | c21 | obligation | act | no | Critical behavior — security, authority, data loss, merge control — targets | critical behavior (security/authority/data loss/merge) |  |
-| `evaluator-independence` | c22 | obligation | act | no | council:status''s live provider count, never assumed. | per council:status, never assumed |  |
+| `evaluator-independence` | c22 | obligation | act | no | council:status''s live provider count, never assumed. | reports 2+ providers, never assumed |  |
 | `evaluator-independence` | c23 | exception | none | no | - **Ordinary parallel fan-out.** Dispatching subagents to read, map, search or | fan-out (read/map/search/implement) |  |
 | `evaluator-independence` | c24 | exception | none | no | - A review **a human** commissioned or whose prompt a human wrote. | human-commissioned/prompted review |  |
 | `evaluator-independence` | c25 | exception | none | no | - A deterministic checker (linter, test suite, CI gate) — no prompt to steer. | deterministic checker |  |
@@ -633,7 +633,7 @@ the config is the record.
 | `strategy-safety-floor` | c24 | prohibition | refuse | no | - Positioning verdict without an opposable axis | positioning verdict w/o opposable axis |  |
 | `strategy-safety-floor` | c25 | prohibition | refuse | no | - Build-vs-buy recommendation without integration-cost and optionality analysis | build/buy w/o integration-cost + optionality |  |
 | `strategy-safety-floor` | c26 | prohibition | refuse | no | - OKR tree without measurability + laddering check | OKR tree w/o measurability + laddering check |  |
-| `strategy-safety-floor` | c27 | prohibition | refuse | no | - Moat claim without a competitor delta (named, with evidence) | moat claim w/o evidenced competitor delta |  |
+| `strategy-safety-floor` | c27 | prohibition | refuse | no | - Moat claim without a competitor delta (named, with evidence) | moat claim w/o named competitor + evidenced delta |  |
 | `strategy-safety-floor` | c28 | prohibition | refuse | no | - Strategic call that fails the inversion test | call failing the inversion test |  |
 | `strategy-safety-floor` | c29 | prohibition | refuse | no | - Vision statement without a stated counter-case | vision w/o counter-case |  |
 | `tool-safety` | c1 | obligation | act | no | Tools are permissions, not abilities. Every tool access must be declared and reviewable. | deny by default |  |
