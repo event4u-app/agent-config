@@ -11,13 +11,16 @@ keep-beta-until: 2027-01-31
 > (`src/link/mcp.ts`, `src/link/requests.ts`, `src/link/limits.ts`,
 > `src/commands/link.ts`). The AC side: `src/scripts/_lib/agent_switch_link.ts`
 > (discovery), `src/scripts/_lib/agent_switch_client.ts` (MCP client and CLI
-> fallback), `src/scripts/_lib/agent_switch_limits.ts` (the limits read) and
+> fallback), `src/scripts/_lib/agent_switch_limits.ts` (the limits read),
+> `src/scripts/_lib/switch_relay.ts` (raise, relay, checkpoint before a move,
+> used by the `quota-notice` and `session-eol` hooks) and
 > `src/scripts/_lib/mcp_bridge.ts` (`.mcp.json` entry), pinned by
 > `tests/scripts/agent_switch_link.test.ts`,
 > `tests/scripts/agent_switch_client.test.ts`,
-> `tests/scripts/agent_switch_limits.test.ts` and
-> `tests/scripts/agent_switch_link_install.test.ts`. No AC feature calls a link
-> tool yet; the readers that use them come next.
+> `tests/scripts/agent_switch_limits.test.ts`,
+> `tests/scripts/agent_switch_ask.test.ts` and
+> `tests/scripts/agent_switch_link_install.test.ts`. The limits read has no
+> caller yet; the seat placement that uses it comes next.
 
 ## Purpose
 
@@ -188,6 +191,36 @@ A decision is applied only while the request is `open`. Every later decision —
 from either tool — returns `applied: false` and the request with the decision
 that already counts. AC reports that existing decision; it never retries to
 overwrite it. This is what makes "answered in one tool" true in both.
+
+## What AC does with a request
+
+The `quota-notice` hook runs on every prompt and is synchronous, so it reaches
+the link over the CLI verbs below, never the MCP client.
+
+- **Raise.** When a plan window of the session's account is `hot` or
+  `exhausted`, AC raises once per `(account, window, resets_at)` on the
+  machine, for this session (`--session provider/name/<sessionId>`). The
+  account is the label the status-line tap wrote on this session's own quota
+  snapshots; a session outside any profile raises nothing. A request is named
+  in the user's notice (id, up to three candidates, "answer here or in
+  agent-switch"), and the model is given the id, the candidates and the
+  instruction to call `switch_decide` only after the user answered.
+- **Decide.** Only the agent, on the user's answer, through the `agent-switch`
+  MCP server the install registered. `lint_mcp_config_security` fails an
+  `autoApprove` / `alwaysAllow` / `permissions.allow` entry naming
+  `switch_decide`, `mcp__agent-switch__switch_decide`, `mcp__agent-switch__*`
+  or the whole `mcp__agent-switch` server.
+- **Relay.** While the raised request is not terminal, each prompt reads it
+  (`switch show`). A decision made outside the session (`by` not `ac:`) is
+  reported once; `done` and `failed` are reported once, `resume` verbatim;
+  a terminal request is then forgotten.
+- **Hand over.** At the end of each turn the `session-eol` Stop hook reads
+  the request once it is `approved` or `executing` and leaves the run
+  checkpoint (a session inside a claimed run only), once. agent-switch moves
+  after the turn at the earliest, so this Stop is the last point the session
+  can leave it.
+- **One record per session** under the user-global quota state holds the
+  request id and what was told; it is the only state AC keeps about a request.
 
 ## CLI fallback
 
