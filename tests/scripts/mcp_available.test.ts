@@ -18,6 +18,7 @@ import {
     resolveOnPath,
     runMcpAvailable,
 } from '../../src/scripts/_cli/cmd_mcp_available.js';
+import type { LinkProbe } from '../../src/scripts/_lib/agent_switch_link.js';
 
 function scratch(): string {
     return mkdtempSync(join(tmpdir(), 'mcp-available-'));
@@ -136,21 +137,20 @@ describe('mcp:available report', () => {
 });
 
 describe('agent-switch link row (road-to-a-link-with-agent-switch 2.4)', () => {
-    const present = () =>
-        ({
-            state: 'present',
-            status: { enabled: true, version: '2.13.0', contract: 1, mcp: { command: 'agent-switch', args: ['mcp', 'serve'] } },
-        }) as const;
+    const present = (): LinkProbe => ({
+        state: 'present',
+        status: { enabled: true, version: '2.13.0', contract: 1, mcp: { command: 'agent-switch', args: ['mcp', 'serve'] } },
+    });
 
     it('names each link state in the text report', () => {
         const root = scratch();
-        const cases = [
+        const cases: [() => LinkProbe, string][] = [
             [present, 'present — agent-switch 2.13.0, link contract 1'],
-            [() => ({ state: 'disabled', detail: 'x' }) as const, 'off in agent-switch'],
-            [() => ({ state: 'incompatible', detail: 'speaks link contract 2' }) as const, 'not usable — speaks link contract 2'],
-            [() => ({ state: 'absent', detail: 'x' }) as const, 'not installed'],
-            [() => ({ state: 'failed', detail: 'exited 1' }) as const, 'no answer — exited 1'],
-        ] as const;
+            [() => ({ state: 'disabled', detail: 'x' }), 'off in agent-switch'],
+            [() => ({ state: 'incompatible', detail: 'speaks link contract 2' }), 'not usable — speaks link contract 2'],
+            [() => ({ state: 'absent', detail: 'x' }), 'not installed'],
+            [() => ({ state: 'failed', detail: 'exited 1' }), 'no answer — exited 1'],
+        ];
         for (const [probe, expected] of cases) {
             const text = runMcpAvailable({ cwd: root, json: false, pathEnv: '', linkProbe: probe }).out.join('\n');
             expect(text).toContain('agent-switch link');
