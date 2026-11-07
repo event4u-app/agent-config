@@ -124,12 +124,12 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Decisions
 
-| # | Decision | Class |
-|---|---|---|
-| D1 | No automatic move; the user decides, in either tool | owner, 2026-11-05 |
-| D2 | agent-switch executes; AC reads, asks, relays | owner + fences K2/K4 |
-| D3 | Connection is automatic, switched off only in agent-switch | owner |
-| D4 | Seat account may change on limits; seat model never does | council 2026-11-05 (openai), host verdict accept |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | product-owned | owner | No automatic move; the user decides, in either tool | owner directive 2026-11-05 | a host offers its own cross-account continuation |
+| D2 | product-owned | owner | agent-switch executes; AC reads, asks, relays | owner directive 2026-11-05; fences K2/K4 | agent-switch drops contract v1 |
+| D3 | product-owned | owner | Connection is automatic, switched off only in agent-switch | owner directive 2026-11-05 (default on) | the link is found to expose more than limits and requests |
+| D4 | reversible-technical | council:2026-11-05 | Seat account may change on limits; seat model never does | council 2026-11-05 (openai), host verdict accept | a seat's account change is shown to change its verdicts |
 
 revisit-if: agent-switch drops contract v1, or a host offers its own
 cross-account continuation.
