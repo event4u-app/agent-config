@@ -8,6 +8,9 @@
  * install — never a stale duplicate from a previous version's command string.
  */
 
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -105,8 +108,9 @@ describe('mergeHookEvents', () => {
                 `--platform windsurf --event ${event} --native-event ${native}`,
             show_output: false,
         });
+        const trampoline = path.join(os.homedir(), '.codeium', 'windsurf', 'hooks', 'windsurf-dispatcher.sh');
         const user = (event: string, native: string): Record<string, unknown> => ({
-            command: `/Users/someone/.codeium/windsurf/hooks/windsurf-dispatcher.sh ${event} ${native}`,
+            command: `${trampoline} ${event} ${native}`,
             show_output: false,
         });
         const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
@@ -144,6 +148,20 @@ describe('mergeHookEvents', () => {
                 expect(hooks['pre_user_prompt']).toStrictEqual([foreign]);
                 expect(hooks['post_cascade_response']).toStrictEqual([appended]);
                 expect(install(once)).toStrictEqual(once);
+            });
+
+            it(`${label}: keeps a prefixed command and another tool's dispatcher of the same name`, () => {
+                const generated = String(ours('stop', 'post_cascade_response')['command']);
+                const prefixed = { command: `/tmp/user-audit.sh;${generated}`, show_output: false };
+                const lookalike = {
+                    command: '/opt/other-tool/windsurf-dispatcher.sh stop post_cascade_response',
+                    show_output: false,
+                };
+                const after = install({ hooks: { post_cascade_response: [prefixed, lookalike] } });
+                expect((after['hooks'] as Record<string, unknown[]>)['post_cascade_response']).toStrictEqual([
+                    prefixed,
+                    lookalike,
+                ]);
             });
 
             it(`${label}: deletes an event key left with nothing in it`, () => {

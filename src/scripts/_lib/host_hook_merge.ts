@@ -52,6 +52,9 @@
  * kept, never deleted — the asymmetry is deliberate.
  */
 
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { deepcopy, isPlainObject } from './json_merge.js';
 
 /**
@@ -146,7 +149,7 @@ export function mergeHookEvents(
         if (event in patchHooks) continue;
         const current = out[event];
         if (!Array.isArray(current)) continue;
-        const kept = current.filter((e) => !isUnmodifiedGeneratedEntry(e, withdrawn!.generated));
+        const kept = current.filter((e) => !isUnmodifiedGeneratedEntry(e, withdrawn!.commands));
         if (kept.length === current.length) continue;
         if (kept.length === 0) delete out[event];
         else out[event] = kept;
@@ -154,39 +157,50 @@ export function mergeHookEvents(
     return out;
 }
 
-/** Events a release stopped binding, and the exact command forms it generated for them. */
+/** Events a release stopped binding, and the exact command strings it wrote for them. */
 export interface WithdrawnBindings {
     readonly events: readonly string[];
-    readonly generated: RegExp;
+    readonly commands: readonly string[];
 }
+
+const WINDSURF_WITHDRAWN: ReadonlyArray<readonly [slot: string, native: string]> = [
+    ['user_prompt_submit', 'pre_user_prompt'],
+    ['stop', 'post_cascade_response'],
+];
+
+/** The user-level trampoline path `install.ts` writes into `~/.codeium/windsurf/hooks.json`. */
+const WINDSURF_USER_TRAMPOLINE = path.join(os.homedir(), '.codeium', 'windsurf', 'hooks', 'windsurf-dispatcher.sh');
 
 /**
  * Bindings a release withdrew, per writer label — removed from an existing file
  * on the next install so a withdrawn slot stops firing. Listed explicitly rather
  * than inferred from what a patch omits, so cleanup reaches only the events a
- * ratified change withdrew. `generated` is anchored on both ends: a command a
- * user edited or appended to no longer matches and is kept, because a stale
- * entry of ours is a cheaper failure than a deleted user command.
+ * ratified change withdrew. Ownership is exact string equality with what the
+ * installer wrote: a command a user edited, prefixed or appended to, or another
+ * tool's dispatcher of the same name, is kept — a stale entry of ours is a
+ * cheaper failure than a deleted user command.
  *
  * windsurf (2026-11-07, issue #2805): `pre_user_prompt` / `post_cascade_response`
  * are documented on no live vendor page; `host_lowering.yaml` withdrew them.
  */
 export const WITHDRAWN_EVENTS: Readonly<Record<string, WithdrawnBindings>> = {
     '.windsurf/hooks.json': {
-        events: ['pre_user_prompt', 'post_cascade_response'],
-        generated:
-            /^\[ -x \.\/agent-config \] \|\| exit 0; \.\/agent-config dispatch:hook --platform windsurf --event (?:user_prompt_submit --native-event pre_user_prompt|stop --native-event post_cascade_response)$/,
+        events: WINDSURF_WITHDRAWN.map(([, native]) => native),
+        commands: WINDSURF_WITHDRAWN.map(
+            ([slot, native]) =>
+                `[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform windsurf --event ${slot} --native-event ${native}`,
+        ),
     },
     '~/.codeium/windsurf/hooks.json': {
-        events: ['pre_user_prompt', 'post_cascade_response'],
-        generated: /^\/\S*\/windsurf-dispatcher\.sh (?:user_prompt_submit pre_user_prompt|stop post_cascade_response)$/,
+        events: WINDSURF_WITHDRAWN.map(([, native]) => native),
+        commands: WINDSURF_WITHDRAWN.map(([slot, native]) => `${WINDSURF_USER_TRAMPOLINE} ${slot} ${native}`),
     },
 };
 
-/** True when every command in `entry` is one this package generated, unmodified. */
-function isUnmodifiedGeneratedEntry(entry: unknown, generated: RegExp): boolean {
+/** True when every command in `entry` is, byte for byte, one this package wrote. */
+function isUnmodifiedGeneratedEntry(entry: unknown, commands: readonly string[]): boolean {
     const cmds = entryCommands(entry);
-    return cmds.length > 0 && cmds.every((cmd) => generated.test(cmd));
+    return cmds.length > 0 && cmds.every((cmd) => commands.includes(cmd));
 }
 
 /**
