@@ -11,6 +11,7 @@ import {
     screenEstate,
     sheetIds,
     screenRoadmap,
+    WIP_CAP,
     type ClaimView,
     type RoadmapScreen,
 } from '../../src/scripts/roadmap_drain_queue.js';
@@ -419,18 +420,18 @@ describe('owner directive 2026-10-24 — timebox, WIP cap, session cap, owner sh
         expect(buildQueue([s], NO_CLAIMS, TODAY).timeboxed).toEqual([]);
     });
 
-    it('does not start a sixth roadmap while five are started', () => {
-        const startedOnes = [1, 2, 3, 4, 5].map((n) =>
-            screen(`road-to-s${String(n)}`, roadmap({ done: 1, open: ['- [ ] **2.1 Owner.** <!-- blocked-by: needs-owner -->'], blockers: OWNER_BLOCKER })),
+    it('does not start one more roadmap while the cap is started', () => {
+        const startedOnes = Array.from({ length: WIP_CAP }, (_, i) =>
+            screen(`road-to-s${String(i + 1)}`, roadmap({ done: 1, open: ['- [ ] **2.1 Owner.** <!-- blocked-by: needs-owner -->'], blockers: OWNER_BLOCKER })),
         );
         const fresh = screen('road-to-new', roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
-        const five = buildQueue([...startedOnes, fresh], NO_CLAIMS, TODAY);
-        expect(five.started).toBe(5);
-        expect(five.queue.find((e) => e.slug === 'road-to-new')?.dispatchable).toBe(false);
-        expect(five.next).toBeNull();
-        expect(five.dispatch_hold).toMatch(/^WIP cap \(5\)/);
-        const four = buildQueue([...startedOnes.slice(0, 4), fresh], NO_CLAIMS, TODAY);
-        expect(four.next?.slug).toBe('road-to-new');
+        const full = buildQueue([...startedOnes, fresh], NO_CLAIMS, TODAY);
+        expect(full.started).toBe(WIP_CAP);
+        expect(full.queue.find((e) => e.slug === 'road-to-new')?.dispatchable).toBe(false);
+        expect(full.next).toBeNull();
+        expect(full.dispatch_hold).toMatch(new RegExp(`^WIP cap \\(${String(WIP_CAP)}\\)`));
+        const below = buildQueue([...startedOnes.slice(0, WIP_CAP - 1), fresh], NO_CLAIMS, TODAY);
+        expect(below.next?.slug).toBe('road-to-new');
     });
 
     it('dispatches nothing with three other live sessions, and does with two', () => {

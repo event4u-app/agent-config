@@ -129,6 +129,25 @@ pre-registered; and a sweep run **before 2026-08-17** preserved no transcript, s
 every trial in an older report reports that boundary explicitly instead of
 scoring zero.
 
+## With and without memory
+
+The multi-session family (`memA-recall-01`, `memB-supersede-01`,
+`memC-stale-01`; modelling in `corpora/SCHEMA-v2.md`) runs on the arm pair
+`package-memory` / `package-no-memory`, which differ only in whether the
+fixture's `agents/memory/` store reaches the run. Keep `vanilla` in the sweep: it
+is the baseline the activation audit checks both plugin arms against.
+
+```bash
+./scripts-run internal/bench/core/bench_ab_v2_run --mode selftest \
+  --arms vanilla,package-memory,package-no-memory \
+  --tasks memA-recall-01,memB-supersede-01,memC-stale-01 --seeds 2 \
+  --model claude-haiku-4-5 --no-checkpoint
+```
+
+The report's `memory task outcome (with vs without memory)` row is the result.
+Read `memC` on its own as well: there the right answer is the one the stale
+entry argues against, so a with-memory loss on it is the finding, not noise.
+
 ## Resume
 
 Checkpointing is on by default. The key is derived from corpus, model, seeds,

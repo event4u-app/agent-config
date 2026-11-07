@@ -139,3 +139,39 @@ describe('live_args — session persistence', () => {
         expect(args).not.toContain('--disable-slash-commands');
     });
 });
+
+describe('hook events in a stream-json run', () => {
+    // Shape pinned from one observed `claude -p --output-format stream-json --verbose`
+    // run (2026-11-07): hooks surface as system events, started then responded.
+    const ev = (subtype: string, hookEvent: string, extra: Record<string, unknown> = {}): string =>
+        JSON.stringify({ type: 'system', subtype, hook_id: `${hookEvent}-${subtype}`, hook_name: `${hookEvent}:startup`, hook_event: hookEvent, ...extra });
+    const stream = [
+        JSON.stringify({ type: 'system', subtype: 'init' }),
+        ev('hook_started', 'SessionStart'),
+        ev('hook_response', 'SessionStart', { exit_code: 0, outcome: 'success' }),
+        ev('hook_started', 'SessionStart'),
+        ev('hook_response', 'SessionStart', { exit_code: 2, outcome: 'error' }),
+        'not json',
+        JSON.stringify({ type: 'result', subtype: 'success' }),
+    ].join('\n');
+
+    it('counts responded hooks per event, whatever their outcome', () => {
+        expect(runner.hookEventsFromStream(stream)).toEqual({ SessionStart: 2 });
+    });
+    it('counts nothing in a stream without hook events', () => {
+        expect(runner.hookEventsFromStream(JSON.stringify({ type: 'result' }))).toEqual({});
+    });
+    it('flags an arm expected to carry hooks that saw none', () => {
+        expect(runner.hookInstrument({}, true)).toBe('no-hook-event');
+        expect(runner.hookInstrument({ SessionStart: 1 }, true)).toBe('ok');
+    });
+    it('flags an arm expected to be hook-free that saw some', () => {
+        expect(runner.hookInstrument({}, false)).toBe('ok');
+        expect(runner.hookInstrument({ SessionStart: 1 }, false)).toBe('unexpected-hook-event');
+    });
+    it('expects hooks from user settings, or from an explicit flag for an arm that installs them', () => {
+        expect(runner.expectsHooks({ setting_sources: null })).toBe(true);
+        expect(runner.expectsHooks({ setting_sources: 'project,local' })).toBe(false);
+        expect(runner.expectsHooks({ setting_sources: 'project,local', expect_hooks: true })).toBe(true);
+    });
+});

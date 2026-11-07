@@ -14,6 +14,8 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
+| road-to-a-reference-that-arrives-before-the-act | active | ready | Rule references an act requires, measured as delivered, read or missing. |
+| road-to-a-session-start-under-the-host-limit | active | ready | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
@@ -46,7 +48,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-run-that-knows-its-skills | later | later | A run — a command, a `/work` run, or a roadmap lane — determines its base skills once at its … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
 | road-to-a-sealed-lineage | later | later | Sealed. |
-| road-to-a-session-start-under-the-host-limit | later | later | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
@@ -199,6 +200,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-showcase-the-owner-paid-for | stubs | — | the first paid showcase run |
 | road-to-a-stall-the-replay-measures | stubs | — | a stall the replay measures |
 | road-to-a-strike-that-speaks | stubs | — | a strike that speaks |
+| road-to-a-test-selection-measured-in-minutes | stubs | — | road to a test selection measured in minutes |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
 | road-to-adapter-traces-before-the-window | stubs | — | road to adapter traces before the window |

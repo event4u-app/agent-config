@@ -1255,8 +1255,9 @@ the repetition tally in either direction.
 
 ### Phase 6 — Emit, and consume the inbox file
 
-**Work in progress is capped at five** (owner directive 2026-10-24,
-`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`). A
+**Work in progress is capped at 25 active roadmaps** (owner directive 2026-10-24,
+`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`, cap raised
+from five by `agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`). A
 surviving finding first lands on the roadmap that owns it (Phase 5). One with no
 owner is written to `agents/roadmaps/later/` and is pulled when an active roadmap
 closes — an inbox round creates no active roadmap. The one exception is an

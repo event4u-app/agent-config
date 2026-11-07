@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 /**
  * Re-read guard + post-edit scope hint — `pre_tool_use` concern
- * (road-to-token-economy-cache Phase 6.1/6.2).
+ * (road-to-token-economy-cache Phase 6.1/6.2). A subagent's reads are keyed
+ * apart from its parent's (`agent_id`).
+ *
+ * The concern also handles a `pre_compact` envelope (clears the recorded reads)
+ * and a Bash `cat <absolute file>` (a full read), but the manifest binds it to
+ * neither yet: that binding is hook plumbing and lands with its own
+ * ratification.
  *
  * Two signals, one session-scoped read ledger:
  *
@@ -72,6 +78,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
+import { dutyStates, ledgerKey, scanDuties, type DutyState } from '../_lib/reference_duty.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -191,6 +198,10 @@ export interface Ledger {
     writes: Record<string, number>;
     /** Per-path once-per-session advisory latch. */
     fired: Record<string, boolean>;
+    /** Reference duty observed at file acts, `rule::reference` → counts and latest state. */
+    duty?: Record<string, DutyRecord>;
+    /** File acts whose duty could not be computed (an unreadable router). */
+    duty_errors?: number;
 }
 
 function emptyLedger(): Ledger {
@@ -202,7 +213,9 @@ export function deriveSessionKey(envelope: JsonObject, payload: JsonObject): str
     const raw =
         str(envelope['session_id'] as JsonValue | undefined) ||
         str((payload['session_id'] ?? payload['sessionId']) as JsonValue | undefined);
-    const material = raw || 'unknown-session';
+    const agent = str((payload['agent_id'] ?? payload['agentId']) as JsonValue | undefined);
+    // A subagent reads into its own context, so its reads never satisfy the parent's.
+    const material = `${raw || 'unknown-session'}${agent ? `::${agent}` : ''}`;
     return crypto.createHash('sha256').update(material).digest('hex');
 }
 
@@ -218,6 +231,8 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
             reads: isObject(parsed['reads']) ? (parsed['reads'] as unknown as Record<string, ReadRecord>) : {},
             writes: isObject(parsed['writes']) ? (parsed['writes'] as Record<string, number>) : {},
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
+            ...(isObject(parsed['duty']) ? { duty: parsed['duty'] as unknown as NonNullable<Ledger['duty']> } : {}),
+            ...(typeof parsed['duty_errors'] === 'number' ? { duty_errors: parsed['duty_errors'] } : {}),
         };
     } catch {
         return emptyLedger(); // missing/corrupt ledger → fresh; never a crash
@@ -254,6 +269,19 @@ export function isRangedRead(toolInput: JsonObject): boolean {
     return false;
 }
 
+/**
+ * The file a plain `cat <absolute file>` reads whole, or null. A relative path
+ * resolves against the shell's cwd, which the hook cannot see; a pipe, a
+ * redirect, a flag, a second file or a shell expansion is not a whole-file read
+ * of one known path.
+ */
+export function wholeFileCatPath(command: string): string | null {
+    const m = /^[ \t]*cat[ \t]+(?:"([^"\n]+)"|'([^'\n]+)'|([^\s|&;<>'"]+))[ \t]*$/.exec(command);
+    if (m === null) return null;
+    const p = m[1] ?? m[2] ?? m[3] ?? '';
+    return p.startsWith('/') && !/[$*?~`\\{}[\]]/.test(p) ? p : null;
+}
+
 /** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
 export function buildDuplicateReadLine(relPath: string, earlierTs: number, compared: CompareBasis): string {
     const when = new Date(earlierTs).toISOString();
@@ -275,38 +303,106 @@ export function buildPostEditReadLine(relPath: string): string {
     );
 }
 
+export interface DutyRecord {
+    state: DutyState;
+    pending: number;
+    read: number;
+    ts: number;
+}
+
+function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
+    let states: Record<string, DutyState>;
+    try {
+        const scan = scanDuties(key, workspaceRoot);
+        // Each matched rule whose duties could not be read is one unobserved duty.
+        if (scan.errors.length > 0) ledger.duty_errors = (ledger.duty_errors ?? 0) + scan.errors.length;
+        states = dutyStates(scan.duties, ledger.reads, workspaceRoot);
+    } catch {
+        ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
+        return;
+    }
+    if (Object.keys(states).length === 0) return;
+    const ts = Date.now();
+    ledger.duty = { ...(ledger.duty ?? {}) };
+    for (const [k, state] of Object.entries(states)) {
+        const prior = ledger.duty[k] ?? { state, pending: 0, read: 0, ts };
+        ledger.duty[k] = {
+            state,
+            pending: prior.pending + (state === 'required-pending' ? 1 : 0),
+            read: prior.read + (state === 'read' ? 1 : 0),
+            ts,
+        };
+    }
+}
+
 export function main(): number {
     try {
         const [envelope, payload] = unwrap(readHookStdin(), 'claude');
 
         const event = str(envelope['event'] as JsonValue | undefined);
+        if (event === 'pre_compact') {
+            // Compaction drops what was read, so recorded reads must not outlive it.
+            // Everything else — own writes, advisory latches, the duty counts that
+            // are this observation's measurement — is not a read and is kept.
+            const root = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
+            const sk = deriveSessionKey(envelope, payload);
+            const prior = readLedger(root, sk);
+            writeLedger(root, sk, {
+                ...prior,
+                reads: {},
+            });
+            return EXIT_ALLOW;
+        }
         if (event !== '' && event !== 'pre_tool_use') return EXIT_ALLOW;
 
         const toolName = extractToolName(payload);
-        const isRead = READ_TOOLS.has(toolName);
+        const toolInput = extractToolInput(payload);
+        const catPath = toolName === 'Bash' ? wholeFileCatPath(str(toolInput['command'])) : null;
+        const isRead = READ_TOOLS.has(toolName) || catPath !== null;
         const isWrite = WRITE_TOOLS.has(toolName);
         if (!isRead && !isWrite) return EXIT_ALLOW;
 
-        const toolInput = extractToolInput(payload);
-        const filePath = extractFilePath(toolInput);
+        const filePath = catPath ?? extractFilePath(toolInput);
         if (!filePath) return EXIT_ALLOW;
 
         const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
         const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(workspaceRoot, filePath);
         const relPath = path.relative(workspaceRoot, absPath);
-        if (isExemptPath(relPath) || isExemptPath(absPath)) return EXIT_ALLOW;
+        const exempt = isExemptPath(relPath) || isExemptPath(absPath);
 
         const sessionKey = deriveSessionKey(envelope, payload);
         const ledger = readLedger(workspaceRoot, sessionKey);
-        // Ledger keys are workspace-relative where possible (stable across
-        // absolute-vs-relative host payloads), absolute otherwise.
-        const key = relPath.startsWith('..') ? absPath : relPath;
+        const key = ledgerKey(workspaceRoot, absPath);
+
+        if (exempt && isWrite) {
+            // No 6.2 bookkeeping on an exempt path, but the duty is observed:
+            // `dist/agent-src/` is itself a trigger prefix.
+            recordDuty(ledger, key, workspaceRoot);
+            writeLedger(workspaceRoot, sessionKey, ledger);
+            return EXIT_ALLOW;
+        }
+        if (exempt) {
+            // No advisory on an exempt path, but the read is recorded: a projected
+            // rule reference lives under dist/, and the reference duty asks whether
+            // it was read.
+            if (!isRangedRead(toolInput)) {
+                try {
+                    const st = fs.statSync(absPath);
+                    ledger.reads[key] = { mtime: st.mtimeMs, size: st.size, ts: Date.now() };
+                    writeLedger(workspaceRoot, sessionKey, ledger);
+                } catch {
+                    // unreadable target — nothing to record
+                }
+            }
+            return EXIT_ALLOW;
+        }
 
         if (isWrite) {
             // 6.2 bookkeeping: remember this session's own write. The write has
             // not happened yet, but for every later comparison "about to write"
             // and "wrote" are equivalent.
             ledger.writes[key] = Date.now();
+            recordDuty(ledger, key, workspaceRoot);
             writeLedger(workspaceRoot, sessionKey, ledger);
             return EXIT_ALLOW;
         }

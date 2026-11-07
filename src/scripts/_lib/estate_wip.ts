@@ -1,10 +1,11 @@
 /**
- * The five-roadmap work-in-progress cap of the 2026-10-24 owner directive, and
- * the one way past it: an owner record the change did not write itself.
+ * The work-in-progress cap on active roadmaps, and the one way past it: an owner
+ * record the change did not write itself. 25, not five: a blocker can hold an
+ * active roadmap still, and a small cap then stops all other work.
  */
 import { spawnSync } from 'node:child_process';
 
-export const WIP_CAP = 5;
+export const WIP_CAP = 25;
 
 const OWNER_RECORD_RE = /agents\/evidence\/owner-directives\/([A-Za-z0-9._-]+\.md)/g;
 

@@ -1,0 +1,40 @@
+version: 1
+entries:
+  - id: retry-fixed-1s
+    status: superseded
+    confidence: high
+    source:
+      - adr://0018-http-retries
+    owner: platform-team
+    last_validated: 2026-06-03
+    review_after_days: 365
+    version: "1.0"
+    rule: >
+      Failed outbound HTTP calls are retried with a fixed delay of 1000 ms
+      before every retry. Simple and predictable for the support team to
+      reason about when they read the request logs.
+    applies_to:
+      paths: [src/http/**]
+    enforcement:
+      - function: retryDelays in src/http/retry.mjs
+    error_contract: {}
+  - id: retry-exponential-250
+    status: active
+    confidence: high
+    source:
+      - adr://0034-http-retries-backoff
+    owner: platform-team
+    last_validated: 2026-10-21
+    review_after_days: 365
+    version: "2.0"
+    rule: >
+      Supersedes retry-fixed-1s. Failed outbound HTTP calls are retried with
+      exponential backoff: the first retry waits 250 ms, every next retry
+      waits twice as long as the one before, and no single wait exceeds
+      4000 ms (it stays at 4000 ms from then on). Changed because the
+      upstream rate limiter started rejecting the burst of fixed-delay retries.
+    applies_to:
+      paths: [src/http/**]
+    enforcement:
+      - function: retryDelays in src/http/retry.mjs
+    error_contract: {}

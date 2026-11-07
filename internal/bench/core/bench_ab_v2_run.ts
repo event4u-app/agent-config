@@ -368,6 +368,7 @@ export const CODEX_VALID_ARMS: readonly string[] = [
     // plugin-bearing sibling `package-ladder` deliberately is NOT here — it
     // depends on the real plugin, which this host cannot load.
     'bare-principle',
+    'minimal-prompt',
 ];
 
 export function codex_executable(): string | null {
@@ -565,6 +566,11 @@ export function integrity_fields(run: Dict, spec: ArmSpec, injected_chars: numbe
     };
 }
 
+/** What a trial ran without, on the record, so a report states it instead of a reader inferring it from the arm name. */
+function stripped_fields(spec: ArmSpec): Dict {
+    return spec.strip_paths?.length ? { stripped_paths: [...spec.strip_paths] } : {};
+}
+
 export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const spec = ARMS[arm] as ArmSpec;
     if (spec.recursive) {
@@ -574,7 +580,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         return run_one_orchestrated(task, arm, opts);
     }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec));
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec), spec.strip_paths);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     let cf: Dict = {};
@@ -622,6 +628,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         transcript_path: preserve_transcript(clone, String(run['transcript'] ?? '')),
         stream_path: preserve_stream(STREAMS_DIR, `${String(task['id'])}|${arm}|${opts.seed ?? 0}`, String(run['stream'] ?? ''), SWEEP_ID),
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
+        ...stripped_fields(spec),
         ...cf,
     };
 }
@@ -726,7 +733,7 @@ export function selftest_run(
     const spec = ARMS[arm] as ArmSpec;
     const seed = opts.seed ?? 0;
     // Real fixture clone — this is also what exercises delta #7's per-trial key.
-    const [clone, fixture] = reset_fixture(task, arm, seed);
+    const [clone, fixture] = reset_fixture(task, arm, seed, undefined, spec.strip_paths);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     const run: Dict = {
         errored: false,
@@ -758,6 +765,7 @@ export function selftest_run(
         ...scoring.workspace_fields(fixture, clone),
         // No transcript_path — a synthetic transcript would give T5 a score of the harness.
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
+        ...stripped_fields(spec),
     };
 }
 

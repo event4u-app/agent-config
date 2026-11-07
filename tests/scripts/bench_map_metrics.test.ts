@@ -249,7 +249,10 @@ describe('dry-run plumbing', () => {
     it('a stubbed sweep scores as its behaviours imply, and a broken score is reported', () => {
         const records = tasks.flatMap((t) =>
             Object.keys(MAP_ARMS).map((arm) =>
-                run_trial(t, arm, { seed: 0, model: null, max_budget: null, timeout: 1, rates: null, sp_dir: tmp, dry_run: true, map_build: false }),
+                // Its own seed: clones live under one shared tmp root keyed by
+                // task, arm and seed, and bench_map_trace runs the same tasks at
+                // seed 0 in a parallel worker.
+                run_trial(t, arm, { seed: 7301, model: null, max_budget: null, timeout: 1, rates: null, sp_dir: tmp, dry_run: true, map_build: false }),
             ),
         );
         const sums = Object.fromEntries(Object.keys(MAP_ARMS).map((arm) => [arm, summarise_arm(arm, records, 300_000)]));

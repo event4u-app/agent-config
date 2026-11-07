@@ -1,0 +1,6 @@
+{
+  "owner_agrees": false,
+  "G1": { "holds": false, "note": "no external request recorded" },
+  "G3": { "holds": false, "note": "no needed part is under a license this repository cannot hold (no rival code is vendored yet)" },
+  "G5": { "holds": false, "note": "no owner decision for a public ranking recorded" }
+}
