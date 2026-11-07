@@ -287,11 +287,15 @@ measured. A removal needs all of:
   answered: construct matched the asset's purpose, the asset was delivered and
   followed, the cost is priced.
   verify: the record for the asset has no open construct, delivery or cost question
-- [ ] **4.2** Real-use evidence: rerun the skill census over every project store,
+- [x] **4.2** Real-use evidence: rerun the skill census over every project store,
   counting Read events on `SKILL.md` as well as `Skill` calls (stub
   `road-to-a-census-that-refuses-a-partial-store`), and record the result per asset.
   The 2026-10-26 "8 of 301" counted one repository and direct calls only.
   verify: the census report lists every store read and counts Read events on SKILL.md
+  Done 2026-11-07: `report_skill_activation --all-stores --per-skill` reads every store
+  under both projects roots (1640 stores, 4072 sessions; names withheld) and counts
+  `Read` of a `SKILL.md`. 36 of 303 shipped skills were reached, 34 only by a direct
+  read. Per-asset table: `agents/evidence/metrics/skill-use-census-all-stores-2026-11-07.md`.
 - [ ] **4.3** A per-family non-inferiority margin declared before the deciding run;
   no universal 3 pp.
   verify: the margin is committed before the deciding report's timestamp

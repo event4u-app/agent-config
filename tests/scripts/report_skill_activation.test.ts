@@ -11,6 +11,8 @@ import { describe, expect, it } from "vitest";
 import {
   censusSkills,
   measureUsage,
+  allStores,
+  renderPerSkill,
   render,
   SKILLS_ROOT,
   defaultStore,
@@ -98,6 +100,37 @@ describe("measureUsage", () => {
     expect(u.bySkill).toEqual({ "ai-council": 2 });
   });
 
+  it("counts a Read of a SKILL.md as a read of that skill, and no other Read", () => {
+    const store = fs.mkdtempSync(path.join(os.tmpdir(), "sa-read-"));
+    const read = (file_path: string) => ({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: { file_path } }] } });
+    const rows = [
+      read("/repo/.claude/skills/code-review-lens/SKILL.md"),
+      read("/repo/src/skills/code-review-lens/SKILL.md"),
+      read("/repo/src/skills/code-review-lens/references/a.md"),
+      read("/repo/README.md"),
+    ];
+    fs.writeFileSync(path.join(store, "s1.jsonl"), rows.map((r) => JSON.stringify(r)).join("\n"), "utf8");
+    const u = measureUsage(store, 30);
+    expect(u.skillReads).toBe(2);
+    expect(u.readsBySkill).toEqual({ "code-review-lens": 2 });
+    expect(u.invocations).toBe(0);
+  });
+
+  it("lists every store directory under each projects root, once", () => {
+    const a = fs.mkdtempSync(path.join(os.tmpdir(), "sa-roots-a-"));
+    const b = fs.mkdtempSync(path.join(os.tmpdir(), "sa-roots-b-"));
+    for (const d of ["-x", "-y"]) fs.mkdirSync(path.join(a, d));
+    fs.mkdirSync(path.join(b, "-z"));
+    fs.writeFileSync(path.join(a, "not-a-store.txt"), "", "utf8");
+    expect(allStores([a, b, a, path.join(b, "absent")])).toEqual([path.join(a, "-x"), path.join(a, "-y"), path.join(b, "-z")]);
+  });
+
+  it("tabulates calls and reads per shipped skill, a plugin prefix folded in", () => {
+    const u = { store: "/x", sessions: 1, assistantTurns: 1, invocations: 2, bySkill: { "a": 1, "pkg:b": 1 }, skillReads: 3, readsBySkill: { "b": 3 } };
+    const md = renderPerSkill(["a", "b", "c"], [u]);
+    expect(md.split("\n").slice(2)).toEqual(["| `b` | 1 | 3 |", "| `a` | 1 | 0 |", "| `c` | 0 | 0 |"]);
+  });
+
   it("survives a malformed line instead of aborting the session", () => {
     const store = fs.mkdtempSync(path.join(os.tmpdir(), "sa-bad-"));
     fs.writeFileSync(
@@ -123,7 +156,7 @@ describe("render", () => {
   it("prints the unmeasurable verdict while no skill declares a trigger, and never a rate", () => {
     const out = render(
       { total: 288, withTriggerKey: [], withTriggerCorpus: [], withDeterministicObligation: ["a"] },
-      [{ store: "/x/store", sessions: 1, assistantTurns: 10, invocations: 1, bySkill: { a: 1 } }],
+      [{ store: "/x/store", sessions: 1, assistantTurns: 10, invocations: 1, bySkill: { a: 1 }, skillReads: 0, readsBySkill: {} }],
     );
     expect(out).toContain("not measurable as a rate");
     expect(out).toContain("NOT MEASURED");
@@ -136,7 +169,7 @@ describe("render", () => {
   it("drops the verdict once triggers exist, because then a detector is buildable", () => {
     const out = render(
       { total: 2, withTriggerKey: ["a"], withTriggerCorpus: ["b"], withDeterministicObligation: [] },
-      [{ store: "/x", sessions: 0, assistantTurns: 0, invocations: 0, bySkill: {} }],
+      [{ store: "/x", sessions: 0, assistantTurns: 0, invocations: 0, bySkill: {}, skillReads: 0, readsBySkill: {} }],
     );
     expect(out).not.toContain("not measurable as a rate");
   });
