@@ -53,7 +53,7 @@ import {
 } from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
 import { clock, exhaustedResetAt } from './_lib/pressure.js';
-import { readQuotaLedger } from './_lib/quota_ledger.js';
+import { accountFromEnv, forAccount, readQuotaLedger } from './_lib/quota_ledger.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { findQuotaParked, type QuotaParkedMarker } from './_lib/quota_parked.js';
 import {
@@ -286,10 +286,10 @@ export function classify(
     };
 }
 
-/** The freshest exhausted window's reset in the quota ledger the status-line tap writes, or null. */
+/** The freshest exhausted window's reset of this account's plan in the quota ledger the status-line tap writes, or null. */
 function ledgerResetAt(env: EnvMap | null, now: Date): number | null {
     try {
-        return exhaustedResetAt(readQuotaLedger(env, now.getTime()));
+        return exhaustedResetAt(forAccount(readQuotaLedger(env, now.getTime()), accountFromEnv(env ?? process.env)));
     } catch {
         return null;
     }

@@ -79,20 +79,31 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       verify: tests with a fake server and with the CLI fallback.
       built, not wired: `_lib/agent_switch_client.ts` and
       `tests/scripts/agent_switch_client.test.ts` land with Phase 2, the stale
-      comment is fixed; the first production caller is 3.2 `agentSwitchLimits()`,
-      which ticks this step.
+      comment is fixed. 3.2 `agentSwitchLimits()` calls it but is unwired
+      itself; the first production caller is 4.1 (`switch_request` from
+      quota-notice) or 5.1 (the limits read for seats), which ticks this step.
 - [x] **2.4 `mcp:available` / doctor row** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_mcp_available.ts --> showing the link state.
       verify: `tests/scripts/mcp_available.test.ts` (the verb's existing test file).
 
 ## Phase 3 — Limits that know their account
 
-- [ ] **3.1 Account on snapshots.** `quota_ledger.ts` gains optional
+- [x] **3.1 Account on snapshots.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/quota_ledger.ts --> `quota_ledger.ts` gains optional
       `account` (from `agentSwitchProfile`), so two logins no longer share one
       pressure verdict; `pressure.ts` classifies per account.
-      verify: ledger/pressure tests with two accounts interleaved.
+      verify: ledger/pressure tests with two accounts interleaved —
+      `tests/scripts/_lib/quota_account.test.ts`. The tap labels each snapshot
+      `provider/name` (refused unless it is a plain label); the plan readers
+      (status-line segment, pressure state, council bar, quota notice, the
+      parked-run reset) read the account their process runs under, and a
+      snapshot without one is the default login's bucket `''`.
 - [ ] **3.2 Limits read.** `agentSwitchLimits()` via the client; stale or
       absent → `null`, never a guess.
       verify: unit tests.
+      built, not wired: `_lib/agent_switch_limits.ts` and
+      `tests/scripts/agent_switch_limits.test.ts` land with Phase 3 — a stale
+      account and a window without a fill are left out, anything that is not a
+      version-1 report is `null`. Its first production caller is 4.1 or 5.1,
+      which ticks this step.
 
 ## Phase 4 — Inform and ask
 

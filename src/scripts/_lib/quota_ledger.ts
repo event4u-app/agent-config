@@ -9,14 +9,20 @@
  * fill, and absent on hosts or logins that do not report it.
  *
  * PII-exclusion-by-construction: a snapshot holds numbers, a timestamp, a model
- * id and a hashed session id. No field can carry a prompt, a path or a
- * credential, so there is no scrubbing pass here that could fail.
+ * id, a hashed session id and an agent-switch account label. No field can carry
+ * a prompt, a path or a credential, so there is no scrubbing pass here that
+ * could fail: the label is refused unless it matches `ACCOUNT_RE`.
+ *
+ * Two logins on one machine draw on two plans, so the account is part of every
+ * reading: a pressure verdict is computed per account, and a snapshot written
+ * without a profile belongs to the default bucket `''`.
  */
 
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { detectAgentSwitchProfile } from '../../install/agentSwitchProfile.js';
 import { write_atomic } from './fs_atomic.js';
 import type { CacheReading } from './prompt_cache_reading.js';
 import { write_target, type EnvMap } from './user_global_paths.js';
@@ -41,6 +47,27 @@ export interface QuotaSnapshot {
     readonly cache?: CacheReading;
     /** Median first-request tokens of this project's recent sessions, measured by the tap (`prompt_cache_reading.ts`). */
     readonly clear_start?: number;
+    /** The agent-switch account `provider/name` the tap ran under; absent for the default login. */
+    readonly account?: string;
+}
+
+/** `provider/name` as agent-switch names a profile: a short lowercase provider, a plain label. */
+const ACCOUNT_RE = /^[a-z][a-z0-9-]{0,31}\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+export function isAccount(x: unknown): x is string {
+    return typeof x === 'string' && ACCOUNT_RE.test(x);
+}
+
+/** The account this process runs under, or `''` (the default bucket) when no profile can be named. */
+export function accountFromEnv(env: EnvMap = process.env): string {
+    const p = detectAgentSwitchProfile(env);
+    const label = p.active && p.provider !== null && p.profile !== null ? `${p.provider}/${p.profile}` : '';
+    return isAccount(label) ? label : '';
+}
+
+/** The snapshots of one account; `''` selects those written without one. */
+export function forAccount(snapshots: readonly QuotaSnapshot[], account: string): QuotaSnapshot[] {
+    return snapshots.filter((s) => (s.account ?? '') === account);
 }
 
 /** Snapshots older than this are dropped on the next prune: a five-hour window is the longest one read for a rate. */
@@ -95,7 +122,7 @@ function readWindow(raw: unknown): QuotaWindow | undefined {
  * subscriber-only and appears after the first response, and each window may be
  * absent on its own.
  */
-export function snapshotFromStatusPayload(payload: unknown, now: number = Date.now()): QuotaSnapshot | null {
+export function snapshotFromStatusPayload(payload: unknown, now: number = Date.now(), account: string = ''): QuotaSnapshot | null {
     if (payload === null || typeof payload !== 'object') return null;
     const p = payload as Record<string, unknown>;
     const limits = (p['rate_limits'] ?? null) as Record<string, unknown> | null;
@@ -115,6 +142,7 @@ export function snapshotFromStatusPayload(payload: unknown, now: number = Date.n
         ...(context_used_pct !== undefined ? { context_used_pct } : {}),
         ...(context_size !== undefined ? { context_size } : {}),
         ...(typeof modelId === 'string' && modelId.length <= 80 ? { model: modelId } : {}),
+        ...(isAccount(account) ? { account } : {}),
     };
 }
 
