@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { dutyStates, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
-import { ledgerFile } from '../../src/scripts/hooks/reread_guard_hook.js';
+import { ledgerFile, MAX_DUTY_KEYS } from '../../src/scripts/hooks/reread_guard_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'reread_guard_hook.ts');
@@ -231,5 +231,21 @@ describe('council round 6', () => {
         const scan = scanDuties('.claude/a.md', root);
         expect(scan.duties).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
         expect(scan.errors).toHaveLength(1);
+    });
+});
+
+describe('ratification entry questions: bounded state', () => {
+    it('caps distinct duty keys and counts what it drops', () => {
+        const root = workspace();
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        const ledgerPath = ledgerFile(root, key);
+        fs.mkdirSync(path.dirname(ledgerPath), { recursive: true });
+        const duty: Record<string, unknown> = {};
+        for (let i = 0; i < MAX_DUTY_KEYS; i++) duty[`r${String(i)}::x`] = { state: 'read', pending: 0, read: 1, ts: 1 };
+        fs.writeFileSync(ledgerPath, JSON.stringify({ reads: {}, writes: {}, fired: {}, duty }));
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        const after = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) as { duty: Record<string, unknown>; duty_overflow?: number };
+        expect(Object.keys(after.duty)).toHaveLength(MAX_DUTY_KEYS);
+        expect(after.duty_overflow).toBe(1);
     });
 });

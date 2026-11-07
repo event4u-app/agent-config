@@ -4,10 +4,9 @@
  * (road-to-token-economy-cache Phase 6.1/6.2). A subagent's reads are keyed
  * apart from its parent's (`agent_id`).
  *
- * The concern also handles a `pre_compact` envelope (clears the recorded reads)
- * and a Bash `cat <absolute file>` (a full read), but the manifest binds it to
- * neither yet: that binding is hook plumbing and lands with its own
- * ratification.
+ * Also bound on Bash, where a plain `cat <absolute file>` counts as a full read,
+ * and on claude `pre_compact`, where it clears the recorded reads: compaction
+ * drops what was read.
  *
  * Two signals, one session-scoped read ledger:
  *
@@ -202,6 +201,8 @@ export interface Ledger {
     duty?: Record<string, DutyRecord>;
     /** File acts whose duty could not be computed (an unreadable router). */
     duty_errors?: number;
+    /** Duty keys dropped at {@link MAX_DUTY_KEYS}. */
+    duty_overflow?: number;
 }
 
 function emptyLedger(): Ledger {
@@ -233,6 +234,7 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
             ...(isObject(parsed['duty']) ? { duty: parsed['duty'] as unknown as NonNullable<Ledger['duty']> } : {}),
             ...(typeof parsed['duty_errors'] === 'number' ? { duty_errors: parsed['duty_errors'] } : {}),
+            ...(typeof parsed['duty_overflow'] === 'number' ? { duty_overflow: parsed['duty_overflow'] } : {}),
         };
     } catch {
         return emptyLedger(); // missing/corrupt ledger → fresh; never a crash
@@ -303,6 +305,13 @@ export function buildPostEditReadLine(relPath: string): string {
     );
 }
 
+/**
+ * Distinct `rule::reference` keys a ledger keeps. The real bound is the router's
+ * path- and file-triggered references (a handful); the cap only stops a corrupt
+ * or hostile router from growing the file, and a dropped key is counted.
+ */
+export const MAX_DUTY_KEYS = 256;
+
 export interface DutyRecord {
     state: DutyState;
     pending: number;
@@ -325,6 +334,10 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
     const ts = Date.now();
     ledger.duty = { ...(ledger.duty ?? {}) };
     for (const [k, state] of Object.entries(states)) {
+        if (ledger.duty[k] === undefined && Object.keys(ledger.duty).length >= MAX_DUTY_KEYS) {
+            ledger.duty_overflow = (ledger.duty_overflow ?? 0) + 1;
+            continue;
+        }
         const prior = ledger.duty[k] ?? { state, pending: 0, read: 0, ts };
         ledger.duty[k] = {
             state,
