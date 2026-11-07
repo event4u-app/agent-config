@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 const REPO_ROOT = resolve(__dirname, '..', '..');
-const WORKFLOWS = ['consistency.yml', 'standing-payload-delta.yml', 'tests.yml'] as const;
+const WORKFLOWS = ['commit-subjects.yml', 'consistency.yml', 'standing-payload-delta.yml', 'tests.yml'] as const;
 const INVENTORY = join(REPO_ROOT, 'agents', 'evidence', 'analysis', 'merge-group-pr-only-steps-2026-11.md');
 const PR_GUARD = /github\.event_name\s*==\s*'pull_request'/;
 

@@ -10,9 +10,10 @@
 
 ## Method
 
-Every step in `consistency.yml`, `standing-payload-delta.yml` and `tests.yml` whose `if:`
-contains `github.event_name == 'pull_request'` (no job in the three files carries that guard at
-job level). Under `merge_group` the condition is false, so the step does not run on the queue
+Every step in `commit-subjects.yml`, `consistency.yml`, `standing-payload-delta.yml` and
+`tests.yml` whose `if:` contains `github.event_name == 'pull_request'` (no job in the four files
+carries that guard at job level). `commit-subjects.yml` joined on 2026-11-07, when its
+`lint commit subjects` check had become required without a `merge_group` trigger. Under `merge_group` the condition is false, so the step does not run on the queue
 entry; it still runs on the PR itself. `tests/scripts/merge_group_pr_only_inventory.test.ts`
 re-derives the set from the workflow YAML and fails when a guarded step has no row here or a row
 names a step that is gone or no longer guarded.
@@ -38,12 +39,17 @@ They run under `merge_group`; whether their fallback base is right there is a se
 | `consistency.yml` | Lint workflow files (actionlint) | no changed workflow file is schema-invalid | intentionally PR-only — scoped to the workflow files the PR changed (`consistency.yml:868`); a merge cannot make a valid workflow file invalid without a textual change one PR made |
 | `consistency.yml` | Check kernel-rule bundle (one rule per PR; label override) | one PR touches at most one kernel rule | intentionally PR-only — the invariant is per PR by definition (`consistency.yml:905`); a queue batch of two single-rule PRs is the slow rollout working, not a bundle |
 | `consistency.yml` | Kernel / governance-hook edits carry a ratification artifact | a kernel or governance-hook edit ships with its ratification | intentionally PR-only — judged by the base revision's gate over the PR's diff (`consistency.yml:942`); the artefact belongs to the PR that made the edit |
+| `commit-subjects.yml` | Fetch base ref | setup for the commit-subject lint | intentionally PR-only — fetches `pull_request.base.ref`, which a queue entry does not carry; serves only the two lints below |
+| `commit-subjects.yml` | Set up Node | setup for the commit-subject lint | intentionally PR-only — toolchain for the two lints below, nothing else in the job needs it |
+| `commit-subjects.yml` | Install Node deps | setup for the commit-subject lint | intentionally PR-only — dependencies for the two lints below, nothing else in the job needs them |
+| `commit-subjects.yml` | Run commit-subject lint | every commit subject and the PR title follow the convention | intentionally PR-only — judges the PR's own commits and title, which the queue entry does not change; a title or body edit re-runs it through the `edited` trigger |
+| `commit-subjects.yml` | Golden scenarios changed with a stated intent | a changed golden scenario carries a `Golden-Intent:` line | intentionally PR-only — reads the PR's commit range and PR body; a queue entry has no PR body to read and adds no commit to the PR's range |
 | `standing-payload-delta.yml` | Post / update PR comment | the delta report reaches the PR thread | intentionally PR-only — a comment needs a PR to land on (`standing-payload-delta.yml:225`); the blocking step `Preamble payload budget (blocking, measured ceiling)` (`standing-payload-delta.yml:386`) carries no event guard, and with no `base_ref` the scope step cannot narrow and measures in full (`standing-payload-delta.yml:141-150`), so the invariant it reports is enforced elsewhere on the queue tree |
 
 ## Reading
 
 No row loses an invariant a queue entry would otherwise have re-checked on the combined tree:
-six are per-PR by definition, and the two whose subject is a combined-tree number (packed payload
+eleven are per-PR by definition (five of them `commit-subjects.yml`, added 2026-11-07), and the two whose subject is a combined-tree number (packed payload
 size, standing payload) already have an unguarded blocking sibling in the same job. The
 precondition the 2026-10-22 condition names is therefore met in-repo; enabling the queue, and the
 required-check set, stay owner decisions in the stub.

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 const REPO_ROOT = resolve(__dirname, '..', '..');
-const WORKFLOWS = ['tests.yml', 'consistency.yml', 'standing-payload-delta.yml'] as const;
+const WORKFLOWS = ['tests.yml', 'consistency.yml', 'standing-payload-delta.yml', 'commit-subjects.yml'] as const;
 
 const GROUP = "${{ github.workflow }}-${{ github.event_name == 'merge_group' && github.run_id || github.ref }}";
 const CANCEL = "${{ github.event_name != 'merge_group' }}";
