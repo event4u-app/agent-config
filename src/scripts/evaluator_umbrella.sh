@@ -110,7 +110,7 @@ fi
 
 # ------------------------------------------------------ 5. hook-latency bench
 step "hook-latency bench (pre-registered budget gate)"
-./scripts-run src/scripts/bench_hook_latency --gate
+./scripts-run internal/bench/core/bench_hook_latency --gate
 
 # ----------------------------------------------- 6-8. measured budget metrics
 step "cold-start + size + surface measurements"

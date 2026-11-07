@@ -48,7 +48,7 @@ left to read as finished.
 - **Question:** repair the 17 after-files of `tests/fixtures/ai-tells/` as a new epoch, drop "same content" from the judge prompt and narrow `humanizer-tell-reduction` to what is measured — yes / no? It changes the instrument behind a backed, pre-registered claim, and a judged rerun is billable.
 - **Recommendation:** (a) yes — the corpus already fails the skill's own fact check (16 of 20 pairs), so the claim currently rests on an instrument that rewards supplied facts.
 - **If you do nothing:** the claim stays broader than its instrument; `check_claims` keeps listing it under the stale-`last_verified` baseline on every run.
-- **What to do:** (a) yes — land the corpus epoch under `tests/fixtures/ai-tells/`, drop "same content" from `src/scripts/bench_humanizer_eval.ts`, narrow the row in `docs/CLAIMS.md`, then run `./scripts-run src/scripts/bench_humanizer_eval --judge --confirm-spend`; (b) no — mark step 1.1 `[-]` with the answer quoted.
+- **What to do:** (a) yes — land the corpus epoch under `tests/fixtures/ai-tells/`, drop "same content" from `internal/bench/core/bench_humanizer_eval.ts`, narrow the row in `docs/CLAIMS.md`, then run `./scripts-run internal/bench/core/bench_humanizer_eval --judge --confirm-spend`; (b) no — mark step 1.1 `[-]` with the answer quoted.
 - **Resolved when:** the owner answers; on no, step 1.1 becomes `[-]` with the answer quoted.
 
 ### blocker: kernel-edit-own-pr

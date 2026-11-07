@@ -7,7 +7,7 @@ import {
   corpusPin,
   loadCleanCorpus,
   measure,
-} from "../../src/scripts/bench_prose_tells_fp.js";
+} from "../../internal/bench/core/bench_prose_tells_fp.js";
 
 function tempCorpus(): string {
   const dir = mkdtempSync(join(tmpdir(), "prose-fp-"));

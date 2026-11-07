@@ -2,11 +2,11 @@
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { aggregate, chars_to_tokens, render_md } from '../../src/scripts/bench_condense_memory.js';
+import { aggregate, chars_to_tokens, render_md } from '../../internal/bench/core/bench_condense_memory.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_condense_memory.ts');
+const TS_SCRIPT = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_condense_memory.ts');
 const REPORT_JSON = join(REPO_ROOT, 'internal', 'bench', 'reports', 'telegraph-v2.json');
 const REPORT_MD = join(REPO_ROOT, 'internal', 'bench', 'reports', 'telegraph-v2.md');
 

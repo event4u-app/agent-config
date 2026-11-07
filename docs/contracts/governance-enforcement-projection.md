@@ -124,8 +124,8 @@ rate, it is prompt-engineering theatre and we say so rather than ship it.
 Recon (2026-06-25) found the discipline-axis benchmark already built:
 `internal/bench/corpora/ab-trackb-v2.yaml` (5 trap archetypes, per-task fixtures
 under `internal/bench/ab/fixtures-v2/`), paired + length-controlled arms in
-`src/scripts/bench_ab_v2_run.ts` (a `package` arm vs a length-matched `placebo`
-arm), and a **deterministic** scorer (`src/scripts/_lib/bench_ab_scoring_v2.ts`, no LLM judge).
+`internal/bench/core/bench_ab_v2_run.ts` (a `package` arm vs a length-matched `placebo`
+arm), and a **deterministic** scorer (`internal/bench/core/_lib/bench_ab_scoring_v2.ts`, no LLM judge).
 It already covers **2 of the 3** hardened rules:
 
 - `trapD` (destructive-op-needs-confirm) → **non-destructive-by-default** ✓

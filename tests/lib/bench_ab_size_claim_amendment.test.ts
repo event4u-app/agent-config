@@ -22,7 +22,7 @@ import {
     evaluateSizeClaim,
     type PairedContinuous,
     type PairedRate,
-} from '../../src/scripts/_lib/bench_ab_size_claim.js';
+} from '../../internal/bench/core/_lib/bench_ab_size_claim.js';
 
 const size = (over: Partial<PairedContinuous> = {}): PairedContinuous => ({
     measured: true,

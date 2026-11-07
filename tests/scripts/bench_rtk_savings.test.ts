@@ -2,11 +2,11 @@
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { aggregate } from '../../src/scripts/bench_rtk_savings.js';
+import { aggregate } from '../../internal/bench/core/bench_rtk_savings.js';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_rtk_savings.ts');
+const TS_SCRIPT = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_rtk_savings.ts');
 const DEFAULT_CORPUS = join(REPO_ROOT, 'internal', 'bench', 'corpora', 'rtk', 'commands.yaml');
 // Scratch under the repo so report-relative-path logic stays inside REPO_ROOT.
 const SCRATCH_ROOT = join(REPO_ROOT, 'internal', 'bench', 'reports', 'rtk', '_p2ts_scratch');

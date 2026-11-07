@@ -1,5 +1,5 @@
 /**
- * Tests for `src/scripts/_lib/bench_ab_scoring.ts`.
+ * Tests for `internal/bench/core/_lib/bench_ab_scoring.ts`.
  *
  * The Python module `src/scripts/_lib/bench_ab_scoring.py` has no dedicated
  * pytest suite, so this is a focused differential suite (ADR-088 Phase 2 /
@@ -14,7 +14,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { score_task } from "../../src/scripts/_lib/bench_ab_scoring.js";
+import { score_task } from "../../internal/bench/core/_lib/bench_ab_scoring.js";
 
 const __dirname_ts = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname_ts, "..", "..");

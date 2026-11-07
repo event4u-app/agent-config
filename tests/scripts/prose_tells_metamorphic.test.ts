@@ -7,7 +7,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { loadCleanCorpus } from "../../src/scripts/bench_prose_tells_fp.js";
+import { loadCleanCorpus } from "../../internal/bench/core/bench_prose_tells_fp.js";
 import { analyzeText } from "../../src/scripts/detect_ai_tells.js";
 
 const PAIRS = join("tests", "fixtures", "ai-tells");

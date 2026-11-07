@@ -25,7 +25,7 @@
 
 import * as crypto from 'node:crypto';
 
-import { WITH_SURFACES, target_shape_hash } from '../bench_ab_clone.js';
+import { WITH_SURFACES, target_shape_hash } from '../../../internal/bench/core/bench_ab_clone.js';
 import { CASCADE_STAGES } from './evaluation_cascade.js';
 import { PROMOTION_EVIDENCE_FIELDS } from './promotion_evidence.js';
 import type { ExperimentSpec } from './experiment_freeze.js';

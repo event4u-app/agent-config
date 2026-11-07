@@ -67,7 +67,7 @@ Constraints carried verbatim in intent:
 
 ## Phase 1 — Tasks with room to show a lift
 
-Evidence (read): `docs/benchmark.md:63-76` · `src/scripts/_lib/bench_ab_arms.ts:100-110`
+Evidence (read): `docs/benchmark.md:63-76` · `internal/bench/core/_lib/bench_ab_arms.ts:100-110`
 
 The 2026-11-05 sweeps had control capability 87–100 % and discipline 0.83–0.94;
 a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
@@ -92,14 +92,14 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   (stubs `road-to-a-line-budget-that-does-not-tax-a-why-comment`,
   `road-to-a-minimal-diff-that-holds-under-load`).
   verify: both task ids present in `internal/bench/corpora/ab-trackb-v2.yaml` with their recorded `final_files`
-- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_sweep.ts -->
+- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_sweep.ts -->
   `package`, `rules-kernel-dc`, `placebo` and an A/A pair on the headroom tasks.
   Separates "which rule" from "how much context". Done 2026-11-05 on Haiku and
   Sonnet, 70 pairs per comparison: no pooled lift; scope discipline on Haiku lifts
   from 1/10 to 10/10 and the placebo does not reproduce it (`docs/benchmark.md`
   § Headroom sweeps).
   verify: report under `internal/bench/reports/ab-v2/` with an A/A pair and `bench_ab_interpret` labels for every comparison
-- [x] **1.5** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts --> Find why `package` makes Haiku ask the user for code in about 14% of
+- [x] **1.5** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_v2_run.ts --> Find why `package` makes Haiku ask the user for code in about 14% of
   runs instead of reading the repository (`trapC-ambig-01`, `hdrE-scope-large-01`
   in the 2026-11-05 Haiku sweep). Name the asset that triggers it from the
   transcripts before changing anything.
@@ -173,7 +173,7 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
 
 Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` tasks, no drag-and-drop task) · `taskfiles/bench-ui.yml:14-16`
 
-- [x] **2.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_corpus.ts --> 2×2 prompt arms on the nine `art-*` tasks in
+- [x] **2.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_corpus.ts --> 2×2 prompt arms on the nine `art-*` tasks in
   `internal/bench/corpora/ab-artifact-v2.yaml`: vanilla + terse, AC + terse,
   vanilla + expert, AC + expert. "AC with a terse prompt reaches what vanilla
   needs an expert prompt for" is the owner's claim, stated as a testable one.
@@ -182,7 +182,7 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   its pre-registered `informed` ladder); `--prompt-variant both --arms vanilla,package`
   runs the 2×2 and tags every record `prompt_variant` (`internal/bench/corpora/SCHEMA-v2.md`).
   The run itself is 2.5's and waits on `b-owner-spend`.
-- [x] **2.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_browser_worker.ts --> Add the missing UI task: drag & drop with keyboard and touch,
+- [x] **2.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_browser_worker.ts --> Add the missing UI task: drag & drop with keyboard and touch,
   responsive breakpoints, one custom component; graded by Playwright actions and
   axe, no model in scoring (the `taskfiles/bench-ui.yml` grader pattern).
   verify: the artifact selftest passes the reference and fails the untouched fixture for the new task
@@ -198,7 +198,7 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   Waiting 2026-11-06: the planted-findings fixture this step reuses does not exist yet.
   `stubs/road-to-a-security-chain-measured` owns it (see `relates`) and is not active;
   building it here would take over that scope. Resumes when the stub lands its fixture.
-- [x] **2.4** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_graders.ts --> Image → SVG: the two `art-svg` tasks graded by render similarity and
+- [x] **2.4** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_graders.ts --> Image → SVG: the two `art-svg` tasks graded by render similarity and
   editability (paths named, no embedded raster).
   verify: `npx vitest run tests/scripts/bench_artifact_svg.test.ts` -> 0
   Done 2026-11-06: both tasks require every shape named (`id` or `<g id>`) and at most
@@ -213,7 +213,7 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
   three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
   the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
-- [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
+- [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
   rerun: every `package` run stopped at the per-call budget on its first turn ($1
   and $3, against $0.14 for `vanilla`), with the cause unknown because the
   workspaces are disposed; and the three PHP tasks end `indeterminate` because the
@@ -249,10 +249,10 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   Reading written up in `docs/benchmark.md` § Where the main session's default context
   goes: rules are 91 % of the start-up load, and 21 domain and stack rules (~64k chars,
   17 % of the instructions) load in every session on a repository that never uses them.
-- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_stats.ts --> A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
+- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_v2_stats.ts --> A `minimal-prompt` arm in `internal/bench/core/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
-  verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> /^1$/
+  verify: `grep -c "'minimal-prompt'" internal/bench/core/_lib/bench_ab_arms.ts` -> /^1$/
   verify: a synthetic report with `vanilla`, `minimal-prompt` and `package` renders the `package` vs `minimal-prompt` comparison (`npx vitest run tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` -> 0)
   Done 2026-11-06: four plain sentences (smallest change, update what it affects,
   read before asking, test before done), injected with this package scoped away and
@@ -332,7 +332,7 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
   `files[]` ships `src/scripts/`, and 80 bench files currently ship to consumers.
   `agent-config benchmark` (the user command) stays.
   verify: `npm pack --dry-run` -> /^(?![\s\S]*scripts\/bench_)/
-- [x] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_sweep.ts -->
+- [x] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_sweep.ts -->
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
   verify: offline re-scoring of a stored bundle reproduces the report's numbers

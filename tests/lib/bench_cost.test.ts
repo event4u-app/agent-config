@@ -1,5 +1,5 @@
 /**
- * Tests for `src/scripts/_lib/bench_cost.ts`.
+ * Tests for `internal/bench/core/_lib/bench_cost.ts`.
  *
  * The Python module `src/scripts/_lib/bench_cost.py` has no dedicated pytest
  * suite, so this is a focused differential suite (ADR-088 Phase 2 / Wave 2a):
@@ -21,7 +21,7 @@ import {
   aggregate_sessions,
   load_pricing,
   unavailable_block,
-} from "../../src/scripts/_lib/bench_cost.js";
+} from "../../internal/bench/core/_lib/bench_cost.js";
 
 const __dirname_ts = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname_ts, "..", "..");

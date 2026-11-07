@@ -34,7 +34,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { MANAGED_SIGNATURE } from '../../src/scripts/_lib/claude_settings_hooks.js';
-import { EVENTS, NATIVE_EVENT, hooksJsonCommand } from '../../src/scripts/bench_hook_latency.js';
+import { EVENTS, NATIVE_EVENT, hooksJsonCommand } from '../../internal/bench/core/bench_hook_latency.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const ORCHESTRATOR = path.join(REPO_ROOT, 'src', 'scripts', 'install');

@@ -200,7 +200,7 @@ refuses.
       published beside the recall page; the number becomes a stated precondition of
       3.4 in that step's text.
       verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
-      STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
+      STATE 2026-10-06: measured by `internal/bench/core/bench_graph_feeder_latency.ts` and
       published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
       generated fixture the feeder adds p50 ≈ 34 ms / p95 ≈ 47 ms (200 modules) to a
       stop whose own work is under 1 ms at p50 (at most 2.19 ms in any round); over this repository's real 59 MB index the

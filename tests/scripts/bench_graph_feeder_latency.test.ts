@@ -14,7 +14,7 @@ import {
     ORDERS,
     parseArgs,
     percentile,
-} from '../../src/scripts/bench_graph_feeder_latency.js';
+} from '../../internal/bench/core/bench_graph_feeder_latency.js';
 import { graphHome } from '../../src/scripts/code_graph/graph_home.js';
 import { sqliteTwinPath } from '../../src/scripts/code_graph/sqlite_store.js';
 
@@ -157,7 +157,7 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         // Re-import under the stubbed env, so a module-level env snapshot sees it too.
         vi.resetModules();
         try {
-            const mod = await import('../../src/scripts/bench_graph_feeder_latency.js');
+            const mod = await import('../../internal/bench/core/bench_graph_feeder_latency.js');
             const dir = await mod.makeFixture(root, 1, false);
             expect(vgit('rev-parse', 'HEAD')).toBe(head);
             expect(fs.existsSync(path.join(dir, '.git'))).toBe(true);

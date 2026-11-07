@@ -15,7 +15,7 @@ parent_roadmap: road-to-token-economy-cache
 > follow-up ready + blocked).** Every open step below is gated on the same
 > external trigger: one instrumented week of real sessions. **Resume when:**
 > `agents/runtime/state/injection-census.jsonl` covers ≥ 7 days of real
-> sessions (record mode: `./scripts-run src/scripts/bench_hook_injection --record`
+> sessions (record mode: `./scripts-run internal/bench/core/bench_hook_injection --record`
 > per session, or the equivalent standing wiring). The registered review date
 > for all metric verdicts is **2026-11-10**
 > (`src/config/hook-token-budget.json`).

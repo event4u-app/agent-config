@@ -45,7 +45,7 @@ import { CANDIDATE_RECORD_VERSION, LIFECYCLE_SPINE } from '../../src/scripts/_li
 import { PROMOTION_EVIDENCE_FIELDS } from '../../src/scripts/_lib/promotion_evidence.js';
 
 const LAB_TS = join(REPO_ROOT, 'src', 'scripts', 'evolution_lab.ts');
-const CLONE_TS = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
+const CLONE_TS = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_clone.ts');
 const HAVE_FIXTURE = existsSync(FIXTURE);
 
 const scratch = mkdtempSync(join(tmpdir(), 'ac-lab-'));

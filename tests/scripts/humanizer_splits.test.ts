@@ -2,7 +2,7 @@ import { readdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadPairs, loadSplits } from "../../src/scripts/bench_humanizer_eval.js";
+import { loadPairs, loadSplits } from "../../internal/bench/core/bench_humanizer_eval.js";
 
 const FIXTURES = join(__dirname, "..", "fixtures", "ai-tells");
 
