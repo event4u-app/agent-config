@@ -118,9 +118,9 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       the trigger kind, including a shell-command kind that does not exist yet) ·
       covered by an existing gate (name it). For each of the 10 references over the
       8,000-char budget: split, law-line plus pointer, or accept as read-on-demand.
-      verify: `task report-rule-requires -- --json` plus a committed table under
-      `agents/evidence/analysis/` with one row per rule and per reference, each with its
-      disposition and the file:line it rests on.
+      verify: a committed table under `agents/evidence/analysis/` with one row for each
+      of the 17 rules and each of the 10 references the requires table names, each with
+      its disposition and the file:line it rests on.
 
 ## Phase 3 — Deliver or block, only measured
 
