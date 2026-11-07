@@ -23,6 +23,11 @@ estate_growth_exempt: "+1 active_roadmaps: the owner extracted the reference dut
 > plans, 2026-11-07, drafted against `9e6e0f0`. Landed first as Phase 5 of
 > `road-to-mixed-trigger-activation-cost` (PR #2905); extracted by the owner the same day.
 
+> **Arrivals:** 2 — latest `inbox-2026-11-za` (2026-11-07): two reviews of #2905 rank
+> the 17 unreachable references and the 10 oversized ones as the P0 gap, and ask that
+> the ~1,050 chars per `Bash` call not be used as a saving until the census is re-run
+> (steps 1.3 and 2.4). Earlier: `inbox-2026-11-z`.
+
 ## Goal
 
 Rule references an act requires, measured as delivered, read or missing. The owner's question, turn 2 of the transcript: *can we collect rule references and
@@ -74,6 +79,12 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       verify: unit test over the pinned fixture stream; one real trial shows ≥ 1 hook
       event per bound event type for the package arm and 0 for `vanilla`.
 
+- [ ] **1.3 Re-run the main-session census on the split buckets.** One fresh main
+      session, `preamble_byte_census --main-session`, and report the `PostToolUse:Bash`
+      figure as model-visible and stdout separately.
+      verify: the census table shows both rows; `docs/benchmark.md` replaces the open
+      1,050-char sentence with the measured visible figure.
+
 ## Phase 2 — Reference duty, observe-only
 
 - [x] **2.1 Compile the requires table.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/rule_reference_requires.ts --> A pure script derives, from each rule's
@@ -100,6 +111,16 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       blocked: `hook-bundle-headroom`.
       verify: a fixture session records one `required-pending` for `git commit` with no
       prior read, and `read` after a whole-file read.
+
+- [ ] **2.4 Classify the unreachable and the oversized references.** For each of the 17
+      rules whose `load_context` no act reaches, record one of: prompt-only by design
+      (the obligation is a disposition, no act shows it) · needs an act trigger (name
+      the trigger kind, including a shell-command kind that does not exist yet) ·
+      covered by an existing gate (name it). For each of the 10 references over the
+      8,000-char budget: split, law-line plus pointer, or accept as read-on-demand.
+      verify: a committed table under `agents/evidence/analysis/` with one row for each
+      of the 17 rules and each of the 10 references the requires table names, each with
+      its disposition and the file:line it rests on.
 
 ## Phase 3 — Deliver or block, only measured
 
