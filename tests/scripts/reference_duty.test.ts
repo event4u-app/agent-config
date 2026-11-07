@@ -144,3 +144,24 @@ describe('council round 1 findings', () => {
         expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
     });
 });
+
+describe('council round 2: one canonical key for reads and duties', () => {
+    it('credits a read of a reference that lives outside the workspace, in the user-level package', () => {
+        const pkg = workspace();
+        const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'ref-duty-ws-'));
+        tmps.push(root);
+        const target = path.join(root, '.claude', 'x.md');
+        const env = { AGENT_CONFIG_PACKAGE_ROOT: pkg };
+        runEnv(root, { tool_name: 'Write', tool_input: { file_path: target, content: 'x' } }, env);
+        expect(duty(root)[`sot::${REF}`]?.state).toBe('required-pending');
+        runEnv(root, { tool_name: 'Read', tool_input: { file_path: path.join(pkg, RESOLVED) } }, env);
+        runEnv(root, { tool_name: 'Edit', tool_input: { file_path: target, old_string: 'x', new_string: 'y' } }, env);
+        expect(duty(root)[`sot::${REF}`]?.state).toBe('read');
+    });
+});
+
+function runEnv(root: string, payload: object, env: Record<string, string>): void {
+    const input = JSON.stringify({ schema_version: 1, platform: 'claude', event: 'pre_tool_use', session_id: 's1', workspace_root: root, payload });
+    const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd: root, input, env: { ...process.env, ...env } });
+    expect(r.status).not.toBeNull();
+}

@@ -76,7 +76,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
-import { DutySourceError, dutyForPath, dutyStates, type DutyState } from '../_lib/reference_duty.js';
+import { DutySourceError, dutyForPath, dutyStates, ledgerKey, type DutyState } from '../_lib/reference_duty.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -364,9 +364,7 @@ export function main(): number {
 
         const sessionKey = deriveSessionKey(envelope, payload);
         const ledger = readLedger(workspaceRoot, sessionKey);
-        // Ledger keys are workspace-relative where possible (stable across
-        // absolute-vs-relative host payloads), absolute otherwise.
-        const key = relPath.startsWith('..') ? absPath : relPath;
+        const key = ledgerKey(workspaceRoot, absPath);
 
         if (exempt && isWrite) {
             // No 6.2 bookkeeping on an exempt path, but the duty is observed:

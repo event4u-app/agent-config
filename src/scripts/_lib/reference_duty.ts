@@ -10,11 +10,21 @@ import * as path from 'node:path';
 import { allTierRules, ruleSources } from './rule_injection.js';
 import type { Router } from './router_match.js';
 
+/**
+ * The one key both the read ledger and the duty use for a file: relative to the
+ * workspace when the file is inside it, absolute otherwise. Two derivations of
+ * this key would silently disagree for every reference outside the workspace.
+ */
+export function ledgerKey(workspaceRoot: string, absPath: string): string {
+    const rel = path.relative(workspaceRoot, absPath);
+    return rel === '' || rel.startsWith('..') || path.isAbsolute(rel) ? absPath : rel;
+}
+
 export interface Duty {
     rule: string;
     /** As the rule writes it — relative to the rule file, e.g. `../contexts/x.md`. */
     reference: string;
-    /** Workspace-relative path the reference resolves to, the form ledger keys take. */
+    /** The reference's {@link ledgerKey} — the form read-ledger keys take. */
     resolved: string;
 }
 
@@ -26,12 +36,14 @@ export function globMatches(pattern: string, relPath: string): boolean {
     return new RegExp(`^${escaped}$`).test(path.basename(relPath));
 }
 
+export class DutySourceError extends Error {}
+
 function loadContextOf(ruleFile: string): string[] {
     let text: string;
     try {
         text = fs.readFileSync(ruleFile, 'utf8');
-    } catch {
-        return [];
+    } catch (e) {
+        throw new DutySourceError(`rule unreadable: ${ruleFile}: ${(e as Error).message}`);
     }
     if (!text.startsWith('---')) return [];
     const end = text.indexOf('\n---', 3);
@@ -43,8 +55,6 @@ function loadContextOf(ruleFile: string): string[] {
         .map((l) => l.replace(/^\s*-\s*/, '').trim().replace(/^["']|["']$/g, ''))
         .filter((l) => l !== '');
 }
-
-export class DutySourceError extends Error {}
 
 /**
  * References required by the rules whose path or file trigger matches `relPath`.
@@ -72,7 +82,7 @@ export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
         const dir = sources.dirs.find((d) => fs.existsSync(path.join(d, `${rule.id}.md`)));
         if (dir === undefined) continue;
         for (const reference of loadContextOf(path.join(dir, `${rule.id}.md`))) {
-            const resolved = path.relative(workspaceRoot, path.resolve(dir, reference));
+            const resolved = ledgerKey(workspaceRoot, path.resolve(dir, reference));
             out.push({ rule: rule.id, reference, resolved });
         }
     }
@@ -97,7 +107,7 @@ export function dutyStates(
         let current = false;
         if (rec !== undefined) {
             try {
-                const st = fs.statSync(path.join(workspaceRoot, d.resolved));
+                const st = fs.statSync(path.isAbsolute(d.resolved) ? d.resolved : path.join(workspaceRoot, d.resolved));
                 current = rec.mtime === st.mtimeMs && rec.size === st.size;
             } catch {
                 current = false;
