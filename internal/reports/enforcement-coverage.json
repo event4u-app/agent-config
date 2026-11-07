@@ -1,24 +1,33 @@
 {
   "_doc": "Enforcement-coverage baseline. `blocking` counts rules whose strongest enforced_by resolves to something that can fail a build. `frequency_gap` counts rules whose carrier does not fire often enough to cover their declared obligation on some hook-capable platform — a rule can be blocking and in that bucket at once. Coverage is a ratchet: --check fails when blocking falls, or unwired / local_only / missing / frequency_gap rises. Regenerate intentionally with --write-baseline when the change is the point. READ `undeclared` WITH ITS THREE CLASSES, never bare: `kernel_denied` cannot carry an enforced_by field at all (block_kernel_rule_writes refuses the write, no agent-accessible override), `observer` has a carrier that fires and cannot block by design, and `carrier_less` has no machine carrier of any kind. The reachable population is the observer set, not `undeclared` — a floor set against the full number would stall in its second release.",
   "summary": {
-    "total": 120,
-    "declared": 39,
+    "total": 122,
+    "declared": 43,
     "blocking": 16,
     "local_only": 0,
     "observer": 10,
     "unwired": 0,
     "missing": 0,
-    "undeclared": 81,
-    "blocking_pct": 13.3,
-    "frequency_gap": 9,
+    "undeclared": 79,
+    "blocking_pct": 13.1,
+    "frequency_gap": 10,
     "frequency_unclassified": 9,
     "kernel_denied": 9,
     "carrier_less": 1,
     "frames": {
-      "in_scope": 120,
-      "governed_total": 120,
+      "in_scope": 122,
+      "governed_total": 122,
       "agree": true,
       "source": "src/rules/*.md"
+    },
+    "obligations": {
+      "total": 294,
+      "blocking": 18,
+      "observer": 0,
+      "not_bound": 276,
+      "rules_with_unbound_entries": 11,
+      "kernel_rules": 9,
+      "rules_without_ids": 0
     }
   }
 }

@@ -38,7 +38,7 @@ tasks:
       frugality reuse the existing surfaces).
     cmds:
       - ./scripts-run src/scripts/measure_frugality_savings
-      - ./scripts-run src/scripts/bench_rtk_savings {{.QUIET_FLAG}}
+      - ./scripts-run internal/bench/core/bench_rtk_savings {{.QUIET_FLAG}}
       - task: value
 
   value:behaviour:
@@ -53,7 +53,7 @@ tasks:
       bounded at all — it took the runner's own default and there was no
       flag an operator could pass.
     cmds:
-      - ./scripts-run src/scripts/bench_ab_task_runner --variant both --mode live {{.CLI_ARGS}}
+      - ./scripts-run internal/bench/core/bench_ab_task_runner --variant both --mode live {{.CLI_ARGS}}
       - task: value
 
   value:lint:

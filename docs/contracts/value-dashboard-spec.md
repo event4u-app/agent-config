@@ -60,7 +60,7 @@ machine-readable source of truth.
 |---|---|
 | Rung normalisation (raw report → `value-v1` rung) | `src/scripts/_lib/value_ladder.ts` |
 | `value-v1` JSON assembly | `src/scripts/_lib/value_report.ts` |
-| rtk savings measurement (new) | `src/scripts/bench_rtk_savings.ts` + `internal/bench/corpora/rtk/commands.yaml` |
+| rtk savings measurement (new) | `internal/bench/core/bench_rtk_savings.ts` + `internal/bench/corpora/rtk/commands.yaml` |
 | Rendered dashboard | `src/scripts/render_value_md.ts` → `docs/value.md` |
 | Dashboard linter | `src/scripts/lint_value_dashboard.ts` |
 | Task orchestration | `taskfiles/value.yml` (`task value*`) |
@@ -110,7 +110,7 @@ Rung order:
    caveat surfaces as a footnote, not a hidden exclusion.
 4. **+ rtk** — output-side savings on verbose CLI output that the
    agent would otherwise pipe into its context. New measurement:
-   `src/scripts/bench_rtk_savings.ts` against
+   `internal/bench/core/bench_rtk_savings.ts` against
    `internal/bench/corpora/rtk/commands.yaml`. `pending` when `rtk`
    is not installed (with install hint per `missing-tool-handling`).
 5. **+ terse (telegraph)** — output-side carve-out from
@@ -363,7 +363,7 @@ measure agent behaviour, not token footprint).
 | A/B Track B | `—` — no `live` run on record | Closed in Phase 3 Step 1 |
 | Telegraph input-side (condense) | median **+3.52%** savings (Thin-Root files net **−3.92% to −4.84%**) | Aggregated to a single rung in Phase 2 Step 2; Thin-Root surfaced as footnote |
 | Telegraph output-side (`vs_terse`) | median **−9.27%** | Rendered honestly per § "Terse rung honesty" above |
-| rtk savings | **not measured anywhere** | Closed in Phase 2 Step 3 (new `src/scripts/bench_rtk_savings.ts`) |
+| rtk savings | **not measured anywhere** | Closed in Phase 2 Step 3 (new `internal/bench/core/bench_rtk_savings.ts`) |
 | Right-skill selection (Track A vs. Track B coverage) | exists in the dev corpus; not surfaced as `with` vs. `without` | Closed in Phase 3 Step 2 |
 | Destructive-op stops | 5 prompts exist in the corpus spec; not measured | Closed in Phase 3 Step 3 |
 

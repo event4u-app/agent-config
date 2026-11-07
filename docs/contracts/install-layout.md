@@ -188,7 +188,7 @@ leaves; sibling keys owned by other tools survive. The exceptions are noted.
 | `.claude/settings.json` | `/enabledPlugins/agent-config@event4u-agent-config` | deep_merge |
 | `~/.claude/settings.json` | `/skillOverrides/<package-owned skill>` (global install only) | per key, `name-only`, never over an existing value; ownership recorded in `~/.event4u/agent-config/skill-overrides.json`, uninstall removes exactly the recorded keys whose value is unchanged |
 | `.cursor/hooks.json`, `~/.cursor/hooks.json` | `/hooks/{sessionStart,sessionEnd,stop,beforeSubmitPrompt,postToolUse}` | deep_merge |
-| `.windsurf/hooks.json`, `~/.codeium/windsurf/hooks.json` | `/hooks/{post_setup_worktree,pre_user_prompt,post_cascade_response}` | deep_merge |
+| `.windsurf/hooks.json`, `~/.codeium/windsurf/hooks.json` | `/hooks/post_setup_worktree`; `/hooks/{pre_user_prompt,post_cascade_response}` are written by installs before 2026-11-07 only and removed by the next install | deep_merge |
 | `.gemini/settings.json`, `~/.gemini/settings.json` | `/hooks/{SessionStart,SessionEnd,AfterAgent,BeforeAgent,AfterTool}` | deep_merge |
 | `.github/plugin/marketplace.json` | `/marketplace/name`, `/marketplace/plugins/0` | **whole-file write** |
 | `.vscode/settings.json` | `/chat.pluginLocations/<~1-escaped path>` | deep_merge (recorded under `augment`) |

@@ -140,7 +140,7 @@ labelled unmeasured until the precision claim passes.
 - **Status:** resolved — 2026-10-27, the owner funded every run (OQ-24, `## Answered`); raised the same day by the inbox round that planned Phase 4.
 - **Owner:** the owner (`agents/owner-questions.md` OQ-24) — spend is owner-reserved.
 - **Blocks:** 4.1 and 4.2, and through 4.2 the default-on half of 5.2.
-- **What to do:** pick exactly one — (a) fund one run per arm on the ledger corpus with one producer, estimate printed by `./scripts-run src/scripts/bench_adversarial_council --estimate` before any call; or (b) decline, and admissibility stays a label permanently.
+- **What to do:** pick exactly one — (a) fund one run per arm on the ledger corpus with one producer, estimate printed by `./scripts-run internal/bench/core/bench_adversarial_council --estimate` before any call; or (b) decline, and admissibility stays a label permanently.
 - **Resolved when:** OQ-24 moves to `## Answered` in `agents/owner-questions.md`.
 - **Recommendation:** (a), after Phase 3.1, so the paid run's findings can be re-asked later without paying again.
 - **If you do nothing:** exhibits are recorded and checked but never filter anything; that is a valid end state.

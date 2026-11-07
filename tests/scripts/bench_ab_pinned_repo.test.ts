@@ -18,8 +18,8 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
-import { changed_files, score_task_v2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
-import { reset_fixture } from '../../src/scripts/_lib/bench_ab_workspace.js';
+import { changed_files, score_task_v2 } from '../../internal/bench/core/_lib/bench_ab_scoring_v2.js';
+import { reset_fixture } from '../../internal/bench/core/_lib/bench_ab_workspace.js';
 
 import {
     ensure_pinned_tree,
@@ -28,7 +28,7 @@ import {
     pinnedSpecFor,
     pinned_tree_dir,
     pristine_tree_for,
-} from '../../src/scripts/_lib/bench_ab_pinned_repo.js';
+} from '../../internal/bench/core/_lib/bench_ab_pinned_repo.js';
 
 const SHA = 'e1fd5946ab26aaf372009eaff1acf947140b40fb';
 const REPO = 'https://github.com/pallets/click.git';

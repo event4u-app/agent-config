@@ -1887,13 +1887,13 @@ platforms:
   # Windsurf — verify-before-complete tracks lifecycle only (no post_tool_use
   # surface to record verification commands; documented limitation).
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
+  # 2026-11-07 (issue #2805): `stop` and `user_prompt_submit` are no longer
+  # bound — `pre_user_prompt` / `post_cascade_response` are documented on no
+  # live vendor page, so `host_lowering.yaml` withdrew both slots. Only the
+  # documented `post_setup_worktree` → `session_start` binding remains.
   windsurf:
     ask:              text
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe, session-register, code-graph-refresh]
-    stop:               [chat-history, verify-before-complete, self-repair, session-register, design-pass-stop, code-graph-refresh]
-    # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
-    # user_prompt_submit slot, which Windsurf has.
-    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, self-repair, session-register, intake-pass]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
@@ -2004,7 +2004,9 @@ native_event_aliases:
   # Windsurf (Cascade) — snake_case event names per
   # docs.windsurf.com/windsurf/cascade/hooks. post_cascade_response is
   # async (off the critical path) so the per-turn append safely lands
-  # in the `stop` slot rather than `session_end`.
+  # in the `stop` slot rather than `session_end`. The first two are no longer
+  # bound (2026-11-07); their aliases stay so an entry an older install wrote
+  # still resolves until the next install prunes it.
   windsurf:
     pre_user_prompt:        user_prompt_submit
     post_cascade_response:  stop

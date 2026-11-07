@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { evidence_root, main, sha256_file, store_bundle, verify_bundle } from '../../src/scripts/bench_evidence_store.js';
+import { evidence_root, main, sha256_file, store_bundle, verify_bundle } from '../../internal/bench/core/bench_evidence_store.js';
 
 type Dict = Record<string, unknown>;
 

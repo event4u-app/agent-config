@@ -16,7 +16,7 @@
 import * as path from 'node:path';
 import process from 'node:process';
 
-import { REPO_ROOT } from './_lib/bench_artifact_graders.js';
+import { REPO_ROOT } from '../../internal/bench/core/_lib/bench_artifact_graders.js';
 import { renderReplay, replayBundles, type ReplayOptions } from './_lib/showcase_replay.js';
 
 export function defaultReplayOptions(): ReplayOptions {

@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { bench } from '../../src/scripts/bench_hook_injection.js';
+import { bench } from '../../internal/bench/core/bench_hook_injection.js';
 
 let tmp: string;
 

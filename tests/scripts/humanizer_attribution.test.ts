@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { analyzeText } from "../../src/scripts/detect_ai_tells.js";
-import { familyDelta, loadPairs } from "../../src/scripts/bench_humanizer_eval.js";
+import { familyDelta, loadPairs } from "../../internal/bench/core/bench_humanizer_eval.js";
 
 const SEEDED =
   "In today's fast-paced landscape, the platform delves into the tapestry of " +

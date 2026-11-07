@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { build_images, parse_cli_version, read_images, type Exec } from '../../src/scripts/bench_ab_images.js';
+import { build_images, parse_cli_version, read_images, type Exec } from '../../internal/bench/core/bench_ab_images.js';
 
 interface Call {
     cmd: string;

@@ -545,7 +545,7 @@ tasks:
       - ./scripts-run src/scripts/lint_bench_ab {{.QUIET_FLAG}}
       - ./scripts-run src/scripts/check_bench_task_validity --gate {{.QUIET_FLAG}}
       - ./scripts-run src/scripts/render_showcase --check
-      - ./scripts-run src/scripts/bench_artifact_selftest
+      - ./scripts-run internal/bench/core/bench_artifact_selftest
 
   lint-skills-regression:
     silent: true
@@ -1040,7 +1040,7 @@ tasks:
   bench-hook-injection:
     silent: true
     desc: "Hook-injection byte budget gate — every concern's emitted reason/additional_context/context bytes vs src/config/hook-token-budget.json (the latency budget's twin); an emitting concern over its row is a red build (road-to-token-economy-cache 3.2)"
-    cmd: ./scripts-run src/scripts/bench_hook_injection
+    cmd: ./scripts-run internal/bench/core/bench_hook_injection
 
   check-memory-replay:
     silent: true

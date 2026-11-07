@@ -8,10 +8,14 @@
  * install — never a stale duplicate from a previous version's command string.
  */
 
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
     HOOK_SIGNATURES,
+    WITHDRAWN_EVENTS,
     entryCommands,
     isManagedEntry,
     mergeEventEntries,
@@ -88,10 +92,107 @@ describe('mergeEventEntries', () => {
 });
 
 describe('mergeHookEvents', () => {
-    it('leaves an event the patch never mentions completely alone', () => {
-        const existing = { afterFileEdit: [FOREIGN_CURSOR] };
+    it('leaves an event the patch never mentions completely alone — ours included', () => {
+        const existing = { afterFileEdit: [FOREIGN_CURSOR], stop: [ourCursorEntry()] };
         const merged = mergeHookEvents(existing, { beforeShellExecution: [ourCursorEntry()] }, CURSOR_SIG);
         expect(merged['afterFileEdit']).toStrictEqual([FOREIGN_CURSOR]);
+        expect(merged['stop']).toStrictEqual([ourCursorEntry()]);
+    });
+
+    describe('a withdrawn windsurf binding, through mergeHostConfig', () => {
+        // The command strings installs before 2026-11-07 wrote, as the bridge
+        // golden recorded them; a test of a deletion must use the real form.
+        const project = (event: string, native: string): Record<string, unknown> => ({
+            command:
+                '[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook ' +
+                `--platform windsurf --event ${event} --native-event ${native}`,
+            show_output: false,
+        });
+        const trampoline = path.join(os.homedir(), '.codeium', 'windsurf', 'hooks', 'windsurf-dispatcher.sh');
+        const user = (event: string, native: string): Record<string, unknown> => ({
+            command: `${trampoline} ${event} ${native}`,
+            show_output: false,
+        });
+        const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
+
+        const writers = [
+            ['.windsurf/hooks.json', project],
+            ['~/.codeium/windsurf/hooks.json', user],
+        ] as const;
+
+        for (const [label, ours] of writers) {
+            const install = (file: Record<string, unknown>): Record<string, unknown> =>
+                mergeHostConfig(
+                    file,
+                    { hooks: { post_setup_worktree: [ours('session_start', 'post_setup_worktree')] } },
+                    HOOK_SIGNATURES[label] ?? '',
+                    deepMerge,
+                    WITHDRAWN_EVENTS[label],
+                );
+
+            it(`${label}: removes our unmodified entries, keeps foreign and user-edited ones, idempotently`, () => {
+                const appended = {
+                    command: `${String(ours('stop', 'post_cascade_response')['command'])}; user-audit.sh`,
+                    show_output: false,
+                };
+                const before = {
+                    hooks: {
+                        post_setup_worktree: [ours('session_start', 'post_setup_worktree')],
+                        pre_user_prompt: [foreign, ours('user_prompt_submit', 'pre_user_prompt')],
+                        post_cascade_response: [ours('stop', 'post_cascade_response'), appended],
+                    },
+                };
+                const once = install(before);
+                const hooks = once['hooks'] as Record<string, unknown[]>;
+                expect(hooks['post_setup_worktree']).toStrictEqual([ours('session_start', 'post_setup_worktree')]);
+                expect(hooks['pre_user_prompt']).toStrictEqual([foreign]);
+                expect(hooks['post_cascade_response']).toStrictEqual([appended]);
+                expect(install(once)).toStrictEqual(once);
+            });
+
+            it(`${label}: keeps a prefixed command and another tool's dispatcher of the same name`, () => {
+                const generated = String(ours('stop', 'post_cascade_response')['command']);
+                const prefixed = { command: `/tmp/user-audit.sh;${generated}`, show_output: false };
+                const lookalike = {
+                    command: '/opt/other-tool/windsurf-dispatcher.sh stop post_cascade_response',
+                    show_output: false,
+                };
+                const after = install({ hooks: { post_cascade_response: [prefixed, lookalike] } });
+                expect((after['hooks'] as Record<string, unknown[]>)['post_cascade_response']).toStrictEqual([
+                    prefixed,
+                    lookalike,
+                ]);
+            });
+
+            it(`${label}: deletes an event key left with nothing in it`, () => {
+                const after = install({ hooks: { post_cascade_response: [ours('stop', 'post_cascade_response')] } });
+                expect('post_cascade_response' in (after['hooks'] as Record<string, unknown>)).toBe(false);
+            });
+
+            it(`${label}: keeps a group that mixes our command with a foreign one whole`, () => {
+                const mixed = {
+                    hooks: [
+                        { type: 'command', command: ours('stop', 'post_cascade_response')['command'] },
+                        { type: 'command', command: 'user-audit.sh' },
+                    ],
+                };
+                const after = install({ hooks: { post_cascade_response: [mixed] } });
+                expect((after['hooks'] as Record<string, unknown[]>)['post_cascade_response']).toStrictEqual([mixed]);
+            });
+        }
+
+        it('is inert for a writer with no withdrawn bindings', () => {
+            expect(WITHDRAWN_EVENTS[CURSOR_LABEL]).toBeUndefined();
+            const file = { hooks: { stop: [ourCursorEntry()] } };
+            const after = mergeHostConfig(
+                file,
+                { hooks: { beforeShellExecution: [ourCursorEntry()] } },
+                CURSOR_SIG,
+                deepMerge,
+                WITHDRAWN_EVENTS[CURSOR_LABEL],
+            );
+            expect((after['hooks'] as Record<string, unknown[]>)['stop']).toStrictEqual([ourCursorEntry()]);
+        });
     });
 
     it('treats an absent hooks object as nothing to preserve', () => {

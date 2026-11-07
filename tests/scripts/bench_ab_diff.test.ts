@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_diff.ts (Phase 2 Step 4 A/B report diff).
+// Tests for internal/bench/core/bench_ab_diff.ts (Phase 2 Step 4 A/B report diff).
 //
 // The Python original has no dedicated test suite, so this is a focused
 // differential suite (ADR-094 parity contract): the pure transform layer
@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { PyFloat, compute_track_a_diff, compute_track_b_diff, render_markdown } from '../../src/scripts/bench_ab_diff.js';
+import { PyFloat, compute_track_a_diff, compute_track_b_diff, render_markdown } from '../../internal/bench/core/bench_ab_diff.js';
 
 // Fixtures + outputs live under the repo (so Python's relative_to(REPO_ROOT)
 // succeeds) but in SCRATCH dirs separate from the tracked `ab/diff/` tree —

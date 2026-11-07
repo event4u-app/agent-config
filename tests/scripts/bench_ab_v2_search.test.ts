@@ -19,12 +19,12 @@ import {
     rescoreSearch,
     trialsMutatedByLastSearchRescore,
     trialsWrittenByLastSearchRescore,
-} from '../../src/scripts/bench_ab_v2_search.js';
+} from '../../internal/bench/core/bench_ab_v2_search.js';
 import {
     searchAdherencePrompt,
     transcriptFromPrompt,
     type AskFn,
-} from '../../src/scripts/_lib/bench_ab_search_adherence.js';
+} from '../../internal/bench/core/_lib/bench_ab_search_adherence.js';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
