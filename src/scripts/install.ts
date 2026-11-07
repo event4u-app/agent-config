@@ -77,7 +77,7 @@ import type * as YamlModule from 'yaml';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
 import { deepMerge as deep_merge, isPlainObject as _isPlainObject } from './_lib/json_merge.js';
-import { mergeHostConfig, HOOK_SIGNATURES } from './_lib/host_hook_merge.js';
+import { mergeHostConfig, HOOK_SIGNATURES, WITHDRAWN_EVENTS } from './_lib/host_hook_merge.js';
 import { sweepReservedNames } from './_lib/reserved_name_sweep.js';
 import { withHostEnv } from './_lib/host_env_write.js';
 import { jsonDumpsCompact, jsonDumpsIndent } from './_lib/json_python_parity.js';
@@ -498,7 +498,7 @@ function merge_json_file(
     // Hook arrays are shared with whatever else the consumer installed, so the
     // `hooks` key merges per event by signature instead of being replaced.
     const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) =>
-        mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? '', deep_merge), { write: write_file });
+        mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? '', deep_merge, WITHDRAWN_EVENTS[label]), { write: write_file });
     if (outcome.status === 'created' || outcome.status === 'updated') success(`${label} ${outcome.status}`);
     else if (outcome.status === 'unchanged') skip(`${label} unchanged (already configured)`);
     else {

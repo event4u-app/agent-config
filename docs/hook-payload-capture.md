@@ -112,18 +112,13 @@ archive conversations.
 - **Install:** `npx @event4u/agent-config install --windsurf` (project) or
   `--windsurf-user-hooks` (user-scope at `~/.codeium/windsurf/hooks.json`).
 - **Restart:** quit Cascade fully, then relaunch from the shell with
-  the env exported. The `pre_user_prompt` event fires on every turn —
-  no full restart needed once Cascade is up, but the *first* turn after
-  launch must be the captured one.
-- **Trigger event:** ask Cascade one short question and let it answer.
-  Expected captures: `pre_user_prompt`,
-  `post_cascade_response_with_transcript`. The
-  `_with_transcript` variant is the more useful one to paste because it
-  carries the full response inline.
-- **File pattern:** `windsurf__post_cascade_response_with_transcript__<ts>__<pid>.json`.
-- **Async caveat:** `post_cascade_response` fires asynchronously off
-  the critical path. The capture file might land a second or two after
-  the response renders — wait briefly before running the redact step.
+  the env exported.
+- **Trigger event:** since 2026-11-07 the installer binds only
+  `post_setup_worktree` on Windsurf — `pre_user_prompt` and
+  `post_cascade_response` are documented on no live vendor page, so
+  they were withdrawn. Start a Cascade task in a new worktree to fire it.
+  Expected capture: `post_setup_worktree`.
+- **File pattern:** `windsurf__post_setup_worktree__<ts>__<pid>.json`.
 
 ### Gemini CLI (~5 min)
 
