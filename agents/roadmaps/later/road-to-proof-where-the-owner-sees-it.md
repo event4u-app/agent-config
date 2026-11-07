@@ -283,10 +283,13 @@ Evidence (read): `docs/decisions/ADR-202-anchor-scoring-as-thin-quality-instrume
 The owner, turn 7: track real use before removing; check that the right benefit was
 measured. A removal needs all of:
 
-- [ ] **4.1** An interpretation record (sibling Phase 4) whose open questions are
+- [x] **4.1** An interpretation record (sibling Phase 4) whose open questions are
   answered: construct matched the asset's purpose, the asset was delivered and
   followed, the cost is priced.
   verify: the record for the asset has no open construct, delivery or cost question
+  Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
+  local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
+  needs `agents/evidence/removals/<name>.md`, whose frontmatter answers an interpretation record with no `construct|delivery|cost: open` line.
 - [x] **4.2** Real-use evidence: rerun the skill census over every project store,
   counting Read events on `SKILL.md` as well as `Skill` calls (stub
   `road-to-a-census-that-refuses-a-partial-store`), and record the result per asset.
@@ -296,15 +299,24 @@ measured. A removal needs all of:
   under both projects roots (1640 stores, 4072 sessions; names withheld) and counts
   `Read` of a `SKILL.md`. 36 of 303 shipped skills were reached, 34 only by a direct
   read. Per-asset table: `agents/evidence/metrics/skill-use-census-all-stores-2026-11-07.md`.
-- [ ] **4.3** A per-family non-inferiority margin declared before the deciding run;
+- [x] **4.3** A per-family non-inferiority margin declared before the deciding run;
   no universal 3 pp.
   verify: the margin is committed before the deciding report's timestamp
+  Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
+  local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
+  needs `agents/evidence/removals/<name>.md`, whose frontmatter answers `margin`, `margin_commit` and `deciding_report`, the margin commit older than the report.
 - [ ] **4.4** Security and safety assets are tested with adversarial fixtures, never
   judged by how often they fire.
   verify: each safety asset has an adversarial fixture that fails without it
-- [ ] **4.5** Hide-from-default before delete: the first step of a removal is
+  Partly enforced 2026-11-07: the removal gate refuses a record with `safety: true` and no
+  existing `adversarial_fixture`. Open: the fixtures themselves — one per security or safety
+  asset that fails without it — are a measurement per asset, not a gate.
+- [x] **4.5** Hide-from-default before delete: the first step of a removal is
   lazy-load or route, reversible in one release.
   verify: the removal PR changes routing or loading, not file existence
+  Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
+  local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
+  needs `agents/evidence/removals/<name>.md`, whose frontmatter answers `hidden_in`, an earlier base commit where the asset was already out of the default (rule `type: manual`, skill `disable-model-invocation: true`).
 
 ## Phase 5 — Against the packages AC is compared with
 
