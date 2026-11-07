@@ -224,6 +224,19 @@ export function ledgerFile(workspaceRoot: string, sessionKey: string): string {
     return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'reread-guard', `${sessionKey}.json`);
 }
 
+/**
+ * The duty map as loaded, held to {@link MAX_DUTY_KEYS}: a ledger written before
+ * the cap, or by hand, keeps its most recent keys and counts the rest.
+ */
+function boundedDuty(parsed: JsonObject): Pick<Ledger, 'duty' | 'duty_overflow'> {
+    const prior = typeof parsed['duty_overflow'] === 'number' ? parsed['duty_overflow'] : 0;
+    if (!isObject(parsed['duty'])) return prior > 0 ? { duty_overflow: prior } : {};
+    const entries = Object.entries(parsed['duty'] as unknown as Record<string, DutyRecord>);
+    if (entries.length <= MAX_DUTY_KEYS) return { duty: Object.fromEntries(entries), ...(prior > 0 ? { duty_overflow: prior } : {}) };
+    entries.sort((a, b) => (Number(b[1]?.ts) || 0) - (Number(a[1]?.ts) || 0));
+    return { duty: Object.fromEntries(entries.slice(0, MAX_DUTY_KEYS)), duty_overflow: prior + entries.length - MAX_DUTY_KEYS };
+}
+
 export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
     try {
         const parsed = JSON.parse(fs.readFileSync(ledgerFile(workspaceRoot, sessionKey), 'utf8'));
@@ -232,9 +245,8 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
             reads: isObject(parsed['reads']) ? (parsed['reads'] as unknown as Record<string, ReadRecord>) : {},
             writes: isObject(parsed['writes']) ? (parsed['writes'] as Record<string, number>) : {},
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
-            ...(isObject(parsed['duty']) ? { duty: parsed['duty'] as unknown as NonNullable<Ledger['duty']> } : {}),
+            ...boundedDuty(parsed),
             ...(typeof parsed['duty_errors'] === 'number' ? { duty_errors: parsed['duty_errors'] } : {}),
-            ...(typeof parsed['duty_overflow'] === 'number' ? { duty_overflow: parsed['duty_overflow'] } : {}),
         };
     } catch {
         return emptyLedger(); // missing/corrupt ledger → fresh; never a crash
