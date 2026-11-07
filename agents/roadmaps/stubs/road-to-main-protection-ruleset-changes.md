@@ -36,17 +36,17 @@ review_by: 2026-09-25
 > cancel each other (`road-to-a-green-that-saw-what-it-certifies` 1.4). The ruleset
 > write stays here.
 
-> **2026-11-07 — Transfer 2 performed, Transfer 1 changed shape** (Transfer 2
-> reversed the same day — the queue was removed by owner order, see the banner
-> at the top; the `Tests result` part stands). The owner
-> enabled the merge queue and added `Tests result` to the required set on
-> ruleset `17749383` (read back the same day: required set `Sync + Generate Tools
-> Consistency` · `Standing payload delta + budget gate` · `lint commit subjects` ·
-> `Tests result`; the merge queue on, method `MERGE`, grouping `ALLGREEN`).
-> The ordering hazard below was live and was closed first: `lint commit subjects`
-> had become required without a `merge_group` trigger, fixed in PR #2897 before
-> the write. Transfer 2's step 4 — one queue run in which every required check
-> reports — is the queue run of the PR carrying this note. Transfer 1's seven
+> **2026-11-07 — Transfer 2 decided NO for good, Transfer 1 changed shape.** The
+> owner added `Tests result` to the required set on ruleset `17749383` (read back:
+> `Sync + Generate Tools Consistency` · `Standing payload delta + budget gate` ·
+> `lint commit subjects` · `Tests result`). The merge queue was enabled the same
+> day after the ordering hazard below was closed (`lint commit subjects` lacked a
+> `merge_group` trigger, PR #2897). Step 4's live validation then failed: every
+> queue entry failed `Standing payload delta + budget gate`, which had no
+> merge-base on `merge_group`, and every merge was blocked for about four hours.
+> The owner removed the queue rule and decided it **stays out permanently** — this
+> transfer is closed as declined, not pending. The workflow bug is fixed
+> regardless (PR #2902). Transfer 1's seven
 > recommended additions are **not** made; `Tests result` covers `Static Checks`,
 > and the Smoke, `skill-lint` and `Rule backstops` contexts stay advisory until
 > the owner decides otherwise. Live values: `docs/contracts/branch-protection-policy.md`.

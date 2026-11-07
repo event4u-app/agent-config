@@ -52,13 +52,15 @@ tooling pointed at it reads "unprotected" for a protected branch.
 | Stale reviews dismissed on push | yes |
 | Allowed merge methods | merge · squash · rebase |
 | Branch must be up to date | **no** (`strict_required_status_checks_policy: false`) — this row read `true` until 2026-09-10, when it was checked against the live ruleset while reasoning about a different question. The table's own "Read it" row is the authority; a hand-written value drifts silently because nothing compares them. |
-| **Required status checks** | **four, measured 2026-11-07 — `Sync + Generate Tools Consistency`, `Standing payload delta + budget gate`, `lint commit subjects`, `Tests result`.** Two (the first pair) from 2026-09-11, added by the ruleset edit ADR-276 records; `exactly one — Sync + Generate Tools Consistency` from 2026-08-02 until then. |
-| **Merge queue** | **none — owner decision 2026-11-07, do not re-enable or propose** (`agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`). A ruleset entry of type `merge_queue` was added that morning and removed the same day. |
+| **Required status checks** | **four, since 2026-11-07 — `Sync + Generate Tools Consistency`, `Standing payload delta + budget gate`, `lint commit subjects` and `Tests result`.** `Tests result` was added by owner decision on 2026-11-07 ([`ci-test-selection`](ci-test-selection.md) § Enabling the gate); it aggregates the macOS legs too, so a macOS failure now blocks a merge. Read back from the ruleset 2026-11-07. History: one (`Sync + Generate Tools Consistency`) from 2026-08-02, two from 2026-09-11 (ADR-276), three by 2026-11-06 (`lint commit subjects`). |
+| **Merge queue** | **off, permanently by owner decision of 2026-11-07** (`agents/evidence/owner-directives/2026-11-07-no-merge-queue.md` — do not re-enable or propose). It was on for about four hours that day; every queue entry failed `Standing payload delta + budget gate` (no merge-base on `merge_group`, fixed in the workflow since), which blocked every merge, and the owner removed the rule and decided it stays out. The `merge_group` triggers in the workflows remain and are inert. |
 | Bypass | **`RepositoryRole 5` (repository admin), `bypass_mode: pull_request`, standing since ruleset version `54668684`** by owner directive `agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md`; every use leaves a bypass record and owes its after-the-fact council review. Before that: none from 2026-09-10 — `bypass_actors: []`, `current_user_can_bypass: never`, re-measured 2026-09-13. Read `repository-admin role, always` until 2026-09-10, when `bypass_actors` was emptied. An `OrganizationAdmin` bypass with `bypass_mode: always` was re-added on 2026-09-11 (version `49393554`) and removed again on 2026-09-12 (version `49500777`), so a record describing that bypass in the present tense describes a one-day state. |
 
 Everything else in CI is **advisory at the branch-protection layer**: the
 checks run, a red one is visible on the PR, but only the four required contexts
-above mechanically block the merge button.
+above mechanically block the merge. They are judged on the PR run, against the
+base the PR last saw (`strict` is off); the full `Tests` run on `push: main` is the
+net for what a stale base or the test selection missed.
 
 The practical gate is therefore maintainer review of the checks tab. **Corrected
 2026-09-13:** this sentence used to end "plus the admin bypass being deliberately

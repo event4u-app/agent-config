@@ -3,16 +3,17 @@ stability: beta
 keep-beta-until: 2027-01-07
 keep-beta-reason: >-
   New on 2026-11-07. The selection rules are expected to move once the miss rate
-  is observed (a red push to main after a green PR run). The merge queue it was
-  first written for was rejected by the owner on 2026-11-07.
+  is observed (a red push to main after a green PR run); the required check went
+  live on 2026-11-07 and has no miss history yet.
 ---
 
 # CI test selection — run what a change can reach, at the merge gate
 
-> **Status:** in-repo half shipped. **No merge queue — owner decision 2026-11-07**
-> (`agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`): it was
-> enabled once and removed the same day. Do not re-enable or propose it; see
-> § Enabling the gate.
+> **Status:** live since 2026-11-07. The in-repo half shipped in PR #2894;
+> `Tests result` was made a required check on ruleset `17749383` by owner
+> decision on 2026-11-07 (§ Enabling the gate). A failing test now blocks the
+> merge on the PR. The merge queue is **off for good** (owner decision, same day:
+> `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`).
 
 ## What it does
 
@@ -25,7 +26,7 @@ change can reach. Every Vitest job then runs only those files, or is skipped.
 |---|---|---|
 | `pull_request` | `origin/<base branch>` (merge base) | selected files |
 | `pull_request` + label `ci:full-tests` | — | whole suite |
-| `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — inert: no queue is enabled (owner decision 2026-11-07) |
+| `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — inert: the queue is off for good since 2026-11-07, so the PR run is the one that gates the merge |
 | `push: main` | — | whole suite (post-merge net) |
 | `workflow_dispatch` | — | whole suite |
 
@@ -135,14 +136,17 @@ red after a green PR run; count those before tightening anything further.
 - Check names changed: `Node Tests (<os>, shard N/<1|2|4>)` instead of
   `… shard N/4`. Pin `Tests result`, never a shard name.
 
-## Enabling the gate (repository admin — done 2026-11-07)
+## Enabling the gate (repository admin — done 2026-11-07, without the queue)
 
-The goal — a change lands on `main` only if its tests pass, checked on the
-merged result — needs three settings on ruleset `17749383`. They are owner
-decisions; the owner took all three, and accepted with them that macOS failures
-block merges (`Tests result` aggregates the macOS legs — a departure from the
-council decision of 2026-07-12 recorded in `docs/maintainers/branch-protection.md`).
-The live values are in `branch-protection-policy.md`.
+The goal — a change lands on `main` only if its tests pass — was planned as three
+settings on ruleset `17749383`. They are owner decisions. The owner took 1 and 2,
+and accepted with 2 that macOS failures block merges (`Tests result` aggregates
+the macOS legs — a departure from the council decision of 2026-07-12 recorded in
+`docs/maintainers/branch-protection.md`). Step 3 was applied, broke every merge
+for about four hours, and was removed; the owner decided it stays out for good.
+What that gives up: the PR run is judged against the base the PR last saw, not
+against the merged result, and `push: main` is the net for the difference. The
+live values are in `branch-protection-policy.md`.
 
 1. **Require a pull request for every change to `main`.** GitHub cannot run a
    workflow on a direct push *before* the push lands, so "block a commit like a
@@ -151,20 +155,18 @@ The live values are in `branch-protection-policy.md`.
 2. **Add `Tests result` to the required status checks.** It is the one stable
    name over the whole matrix; it reports on every PR now that the trigger has
    no path filter.
-3. ~~**Enable the merge queue.**~~ **Rejected by the owner, 2026-11-07 — do not
-   enable, do not propose.** It was enabled that morning and removed the same
-   day: "Das bringt keinen Vorteil. Weg damit" — record:
-   `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`. The cost
-   accepted with it: a PR's green run is against its own merge base, so a break
-   that appears only on top of a newer `main` shows up in the full `push: main`
-   run after the merge. The `merge_group` triggers in `tests.yml`,
-   `consistency.yml`, `standing-payload-delta.yml` and `commit-subjects.yml`
-   stay — inert without a queue — and
-   `tests/scripts/workflow_merge_group_concurrency.test.ts` still pins them.
+3. ~~**Enable the merge queue.**~~ **Off for good** (owner decision 2026-11-07,
+   `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md` — do not
+   re-enable or propose).
+   Tried that day: every queue entry failed `Standing payload delta + budget
+   gate`, whose merge-base step had no base on `merge_group` (fixed since,
+   `tests/scripts/standing_payload_delta_resolve_base.test.ts`). The
+   `merge_group` triggers in `tests.yml`, `consistency.yml`,
+   `standing-payload-delta.yml` and `commit-subjects.yml` stay and are inert.
 
-Live state 2026-11-07: steps 1 and 2 are in place (the ruleset carries a
-`pull_request` rule and requires `Tests result`); step 3 is rejected and no
-ruleset entry of type `merge_queue` is configured.
+Live state, read back 2026-11-07 after the owner removed the queue: step 1
+predates this contract (the ruleset's `pull_request` rule); `Tests result` is the
+fourth required check; no `merge_queue` rule.
 
 Re-check with `gh api repos/event4u-app/agent-config/rulesets/17749383`; on any
 change, update the live-state table in `branch-protection-policy.md` from that JSON.
