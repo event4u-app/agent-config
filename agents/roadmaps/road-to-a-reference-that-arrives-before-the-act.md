@@ -82,7 +82,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > whose hooks broke that expectation `instrument-invalid`.
       > `agents/evidence/analysis/bench-hook-fire-probe-2026-11-07.md`.
 
-- [x] **1.3 Re-run the main-session census on the split buckets.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> One fresh main
+- [x] **1.3 Re-run the main-session census on the split buckets.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml --> One fresh main
       session, `preamble_byte_census --main-session`, and report the `PostToolUse:Bash`
       figure as model-visible and stdout separately.
       verify: the census table shows both rows; `docs/benchmark.md` replaces the open
@@ -131,7 +131,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > every Edit/Write re-reads `dist/router.json`; subagent-keyed ledgers are never
       > cleared.
 
-- [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> For each of the 17
+- [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml --> For each of the 17
       rules whose `load_context` no act reaches, record one of: prompt-only by design
       (the obligation is a disposition, no act shows it) · needs an act trigger (name
       the trigger kind, including a shell-command kind that does not exist yet) ·
