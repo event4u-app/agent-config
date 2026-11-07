@@ -301,6 +301,7 @@ tasks:
       - task: check-md-language
       - task: check-command-count
       - task: lint-no-new-atomic-commands
+      - task: check-default-asset-removal
       - task: lint-command-budget
       - task: lint-command-verbs
       - task: check-skill-admissions

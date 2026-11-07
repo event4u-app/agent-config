@@ -593,3 +593,44 @@ tasks:
       forbidden_files_modified: ["README.md"]
       max_files_changed: 6
     notes: "Coordinated edits in cli/options.mjs, config/validate.mjs and exec/query.mjs (the reference touches these 3; output/format.mjs already reads matched). Constraint stated once, in the README only: the footer / json meta report the pre-limit match count, and --limit 0 means unlimited. Capability is the measured axis."
+
+  # --- Multi-session memory family ---
+  # A prior session is modelled by the memory it wrote: each fixture carries an
+  # agents/memory/ store in the consumer's on-disk format, and the fact the task
+  # turns on is in that store and nowhere in the code. Run the pair
+  # package-memory / package-no-memory: the second arm removes agents/memory from
+  # the pristine tree and the clone, so both arms get the same task and seed.
+  # Recall quality is not scored here; only whether the task came out right.
+  - id: memA-recall-01
+    archetype: memory-recall
+    rule: memory-access
+    fixture: fixtures-v2/memA-recall-01
+    prompt: "src/billing/round.mjs: roundToCents(tenths) turns an integer amount in tenths of a cent into whole cents, and it still truncates — 129 tenths come out as 12 cents instead of 13. Fix roundToCents so invoice amounts are rounded the way we decided for invoices in an earlier session."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      max_files_changed: 3
+      max_lines_changed: 40
+    notes: "The rounding mode is a recorded decision (round-half-to-even, product-rules.yml), not derivable from the code; half-up, the default guess, fails the exact-half cases. Without memory the run can only guess."
+  - id: memB-supersede-01
+    archetype: memory-supersede
+    rule: memory-access
+    fixture: fixtures-v2/memB-supersede-01
+    prompt: "src/http/client.mjs retries a failing call with the delays from retryDelays(retries) in src/http/retry.mjs, but retryDelays is still a stub that returns an empty list, so nothing is ever retried. Implement retryDelays(retries) to return one delay in milliseconds per retry, following the retry schedule we decided on in an earlier session."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      max_files_changed: 3
+      max_lines_changed: 40
+    notes: "Two decisions in product-rules.yml: retry-fixed-1s (superseded, 1000 ms fixed) and retry-exponential-250 (active, 250 ms doubling, capped at 4000 ms). The newer must win; the older yields [1000, ...]."
+  - id: memC-stale-01
+    archetype: memory-stale
+    rule: memory-access
+    fixture: fixtures-v2/memC-stale-01
+    prompt: "src/api/handlers.mjs: getCustomerHandler(params) serves GET /customers/:id and always answers 404. Implement it: return { status: 200, body: <the customer> } for a known customer, { status: 400 } when params.id is not a valid customer id, and { status: 404 } for a valid id with no customer behind it."
+    capability_oracle:
+      solve_test: { command: "node tests/solve.check.mjs", must_pass: true }
+    discipline_oracle:
+      max_files_changed: 4
+      max_lines_changed: 60
+    notes: "domain-invariants.yml still says customer ids are positive integers (active, inside its review window, verified at an old commit); src/customers/ids.mjs and the store use 'C-' plus five digits. The code must win: following the entry answers 400 for every real id. Here memory can only cost, which is what the no-memory arm shows."

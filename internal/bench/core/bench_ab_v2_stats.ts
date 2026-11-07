@@ -100,6 +100,9 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['package', 'minimal-prompt', 'package over the minimal prompt'],
     ['rules-kernel-dc', 'minimal-prompt', 'kernel+downstream rules over the minimal prompt'],
     ['minimal-prompt', 'vanilla', 'minimal prompt lift'],
+    // Same plugin, same tasks and seeds; only the fixture's memory store differs.
+    // Arm-guarded like every row above.
+    ['package-memory', 'package-no-memory', 'memory task outcome (with vs without memory)'],
 ];
 
 // ── CPython math.erf / math.comb ports ────────────────────────────────────

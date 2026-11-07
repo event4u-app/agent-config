@@ -116,18 +116,43 @@ export function host_cmd(prompt: string, spec: ArmSpec, opts: { model: string; b
     return cmd;
 }
 
+const HANG_RETRIES = 1;
+
+interface SpawnResult {
+    status: number | null;
+    signal: NodeJS.Signals | null;
+    stdout: string | null;
+}
+
+/**
+ * One host call. A host that is killed by the timeout with nothing on stdout hung
+ * on the API, not on the task, so it is re-run instead of scored; a host that
+ * answered — even with an error — is never re-run.
+ */
+export function host_call(spawn: (args: string[]) => SpawnResult, args: string[], retries: number): HostTurn {
+    let last: SpawnResult = { status: null, signal: null, stdout: null };
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+        last = spawn(args);
+        const hung = (last.stdout ?? '').trim() === '' && (last.signal !== null || last.status === 143 || last.status === null);
+        if (!hung) break;
+    }
+    try {
+        return host_turn_from_envelope(JSON.parse(last.stdout ?? '') as Record<string, unknown>, last.status);
+    } catch {
+        const hung = (last.stdout ?? '').trim() === '';
+        const reason = hung ? `host timed out after ${retries + 1} attempts (exit ${String(last.status)})` : `unparseable host output (exit ${String(last.status)})`;
+        return { session_id: null, errored: true, reason, tokens: null, turns: null };
+    }
+}
+
 /** The claude CLI as an `ArtifactHost`: `--print` to start, `--resume <id>` to follow up. */
 export function claude_host(iso: ArmIsolation, spec: ArmSpec, opts: { model: string; budget: number; timeout: number; token?: string | null }): ArtifactHost {
     const call = (prompt: string, resume: string | null): HostTurn => {
         const binary = v1.claude_executable();
         if (binary === null) return { session_id: null, errored: true, reason: 'claude CLI not found', tokens: null, turns: null };
         const cmd = host_cmd(prompt, spec, opts, iso.host_flags, resume);
-        const r = spawnSync(binary, cmd, { cwd: iso.workspace, encoding: 'utf-8', timeout: opts.timeout * 1000, env: host_env(process.env, iso.env, opts.token ?? null) });
-        try {
-            return host_turn_from_envelope(JSON.parse(r.stdout ?? '') as Record<string, unknown>, r.status);
-        } catch {
-            return { session_id: null, errored: true, reason: `unparseable host output (exit ${r.status})`, tokens: null, turns: null };
-        }
+        const env = host_env(process.env, iso.env, opts.token ?? null);
+        return host_call((args) => spawnSync(binary, args, { cwd: iso.workspace, encoding: 'utf-8', timeout: opts.timeout * 1000, env }), cmd, HANG_RETRIES);
     };
     return { start: async (p) => call(p, null), resume: async (id, p) => call(p, id) };
 }

@@ -137,6 +137,8 @@ export interface UsageReport {
   assistantTurns: number;
   invocations: number;
   bySkill: Record<string, number>;
+  skillReads: number;
+  readsBySkill: Record<string, number>;
 }
 
 /** Default store for the current working directory, mangled the way the host does. */
@@ -148,8 +150,36 @@ export function defaultStore(cwd: string): string {
   return path.join(os.homedir(), '.claude', 'projects', projectStoreSlug(cwd));
 }
 
+const SKILL_FILE_RE = /\/skills\/([^/]+)\/SKILL\.md$/;
+
+/** Every store directory under the given projects roots, sorted, each once. */
+export function allStores(roots: readonly string[]): string[] {
+  const out = new Set<string>();
+  for (const r of roots) {
+    if (!fs.existsSync(r)) {
+      continue;
+    }
+    for (const e of fs.readdirSync(r, { withFileTypes: true })) {
+      if (e.isDirectory()) {
+        out.add(path.join(r, e.name));
+      }
+    }
+  }
+  return [...out].sort();
+}
+
+/** The host's projects roots: the configured one and the default, when they differ. */
+export function projectsRoots(): string[] {
+  const roots = [path.join(os.homedir(), '.claude', 'projects')];
+  const configured = process.env['CLAUDE_CONFIG_DIR'];
+  if (configured !== undefined && configured !== '') {
+    roots.unshift(path.join(configured, 'projects'));
+  }
+  return [...new Set(roots)];
+}
+
 export function measureUsage(store: string, limit: number): UsageReport {
-  const rep: UsageReport = { store, sessions: 0, assistantTurns: 0, invocations: 0, bySkill: {} };
+  const rep: UsageReport = { store, sessions: 0, assistantTurns: 0, invocations: 0, bySkill: {}, skillReads: 0, readsBySkill: {} };
   if (!fs.existsSync(store)) {
     return rep;
   }
@@ -185,6 +215,17 @@ export function measureUsage(store: string, limit: number): UsageReport {
           continue;
         }
         const p = part as Record<string, unknown>;
+        if (p['type'] === 'tool_use' && p['name'] === 'Read') {
+          // A skill whose body the agent opened directly was used, even without
+          // a Skill call; counting only Skill calls under-reads the surface.
+          const fp = (p['input'] as Record<string, unknown> | null)?.['file_path'];
+          const m = typeof fp === 'string' ? SKILL_FILE_RE.exec(fp) : null;
+          if (m !== null) {
+            rep.skillReads += 1;
+            rep.readsBySkill[m[1] as string] = (rep.readsBySkill[m[1] as string] ?? 0) + 1;
+          }
+          continue;
+        }
         if (p['type'] !== 'tool_use' || p['name'] !== 'Skill') {
           continue;
         }
@@ -381,7 +422,12 @@ export function claimProblems(rec: CensusRecord, fig: ClaimFigures): string[] {
   return out;
 }
 
-export function render(census: SkillCensus, usage: UsageReport[], published: CensusRecord | null = null): string {
+export function render(
+  census: SkillCensus,
+  usage: UsageReport[],
+  published: CensusRecord | null = null,
+  opts: { anonymous?: boolean } = {},
+): string {
   const lines: string[] = [];
   lines.push('skill activation census — advisory, gates on nothing');
   lines.push('');
@@ -413,12 +459,25 @@ export function render(census: SkillCensus, usage: UsageReport[], published: Cen
       distinct.add(k);
     }
     totalInv += u.invocations;
+    if (opts.anonymous === true) {
+      continue;
+    }
     lines.push(
-      `  ${path.basename(u.store).slice(-38).padEnd(38)} sessions=${String(u.sessions).padStart(3)} asst=${String(u.assistantTurns).padStart(6)} Skill calls=${String(u.invocations).padStart(3)}`,
+      `  ${path.basename(u.store).slice(-38).padEnd(38)} sessions=${String(u.sessions).padStart(3)} asst=${String(u.assistantTurns).padStart(6)} Skill calls=${String(u.invocations).padStart(3)} SKILL.md reads=${String(u.skillReads).padStart(3)}`,
     );
+  }
+  if (opts.anonymous === true) {
+    // Store names are other projects' paths; the aggregate is the finding.
+    const live = usage.filter((u) => u.sessions > 0).length;
+    lines.push(`  stores read                            ${usage.length} (${live} with sessions, names withheld)`);
+    lines.push(`  sessions read                          ${usage.reduce((a, u) => a + u.sessions, 0)}`);
   }
   lines.push('');
   lines.push(`  invocations total                      ${totalInv}`);
+  const reads = usage.reduce((a, u) => a + u.skillReads, 0);
+  const readSkills = new Set(usage.flatMap((u) => Object.keys(u.readsBySkill)));
+  lines.push(`  SKILL.md reads total                   ${reads}`);
+  lines.push(`  distinct skills read                   ${readSkills.size}`);
   lines.push(
     `  distinct skills invoked                ${distinct.size} of ${census.total} (${_pct(distinct.size, census.total)})`,
   );
@@ -499,13 +558,29 @@ export function render(census: SkillCensus, usage: UsageReport[], published: Cen
   return lines.join('\n');
 }
 
+/** One row per shipped skill: Skill calls and SKILL.md reads summed over every store read. */
+export function renderPerSkill(names: readonly string[], usage: UsageReport[]): string {
+  const calls: Record<string, number> = {};
+  const reads: Record<string, number> = {};
+  for (const u of usage) {
+    for (const [k, v] of Object.entries(u.bySkill)) calls[k.replace(/^.*:/, '')] = (calls[k.replace(/^.*:/, '')] ?? 0) + v;
+    for (const [k, v] of Object.entries(u.readsBySkill)) reads[k] = (reads[k] ?? 0) + v;
+  }
+  const rows = [...names]
+    .map((n) => ({ n, c: calls[n] ?? 0, r: reads[n] ?? 0 }))
+    .sort((a, b) => b.c + b.r - (a.c + a.r) || a.n.localeCompare(b.n));
+  return ['| Skill | Skill calls | SKILL.md reads |', '|---|---:|---:|', ...rows.map((x) => `| \`${x.n}\` | ${x.c} | ${x.r} |`)].join('\n');
+}
+
 const USAGE =
-  'usage: report_skill_activation [--root DIR] [--limit N] [--store PATH]... [--emit] [--allow-empty-store]\n';
+  'usage: report_skill_activation [--root DIR] [--limit N] [--store PATH]... [--all-stores] [--per-skill] [--emit] [--allow-empty-store]\n';
 
 function main(argv: string[]): number {
   let limit = 30;
   let emit = false;
   let allowEmpty = false;
+  let everyStore = false;
+  let perSkill = false;
   const rootIdx = argv.indexOf('--root');
   const root = rootIdx === -1 ? REPO_ROOT : (argv[rootIdx + 1] ?? REPO_ROOT);
   const stores: string[] = [];
@@ -521,6 +596,10 @@ function main(argv: string[]): number {
       i += 1;
     } else if (a === '--emit') {
       emit = true;
+    } else if (a === '--all-stores') {
+      everyStore = true;
+    } else if (a === '--per-skill') {
+      perSkill = true;
     } else if (a === '--allow-empty-store') {
       allowEmpty = true;
     } else if (a === '--help' || a === '-h') {
@@ -532,12 +611,20 @@ function main(argv: string[]): number {
     process.stderr.write('report_skill_activation: --limit must be a positive integer\n');
     return 1;
   }
+  if (everyStore) {
+    stores.push(...allStores(projectsRoots()));
+  }
   if (stores.length === 0) {
     stores.push(defaultStore(REPO_ROOT));
   }
   const census = censusSkills(path.join(root, SKILLS_ROOT));
   const usage = stores.map((s) => measureUsage(s, limit));
-  process.stdout.write(`${render(census, usage, readRecord(root))}\n`);
+  process.stdout.write(`${render(census, usage, readRecord(root), { anonymous: everyStore })}\n`);
+  if (perSkill) {
+    const skillsDir = path.join(root, SKILLS_ROOT);
+    const names = fs.readdirSync(skillsDir).filter((n) => fs.existsSync(path.join(skillsDir, n, 'SKILL.md')));
+    process.stdout.write(`${renderPerSkill(names, usage)}\n`);
+  }
   // The skills are the corpus this floor can hold: they are in the repository,
   // so the count is the same everywhere. The transcript half is path-scoped and
   // legitimately zero in CI, which is why it is reported above and not here — a

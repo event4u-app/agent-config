@@ -1,0 +1,14 @@
+diff --git a/src/http/retry.mjs b/src/http/retry.mjs
+index fa6c71f..0f6410f 100644
+--- a/src/http/retry.mjs
++++ b/src/http/retry.mjs
+@@ -1,4 +1,8 @@
+ // One delay in milliseconds per retry, in the order the retries happen.
+ export function retryDelays(retries) {
+-  return [];
++  const delays = [];
++  for (let i = 0; i < retries; i += 1) {
++    delays.push(Math.min(250 * 2 ** i, 4000));
++  }
++  return delays;
+ }
