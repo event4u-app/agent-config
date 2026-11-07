@@ -1740,7 +1740,7 @@
           "source": "must respect deletion requests on the regime's response clock (GDPR Art. 12(3))",
           "in_law": false,
           "response": "act",
-          "witness": "regime's response clock (GDPR Art. 12(3))",
+          "witness": "regime's response clock (GDPR Art. 12(3): 1 month)",
           "unresolved_ref": null
         },
         {
@@ -5448,7 +5448,7 @@
           "source": "a small static constant and is **not** the same thing as the MCP servers a",
           "in_law": false,
           "response": "none",
-          "witness": "(static, not reachable MCP servers)",
+          "witness": "(static, not reachable MCP servers;",
           "unresolved_ref": null
         },
         {

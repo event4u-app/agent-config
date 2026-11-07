@@ -123,7 +123,7 @@ Never — the disclaimer is non-negotiable on advisory-shaped drafts. If the use
 
 ## Startup contract
 
-- **When:** advisory-shaped draft · legal (briefs, contract redlines, ToS, privacy policies, MSAs, DPAs, reviews) · medical (symptoms, diagnosis, treatment, mental-health crisis) · financial (buy/sell/hold, valuations, tax positions, allocation) · strategic (board memos, exec summaries, GTM, consulting, org recs).
-- **Must:** append matching disclaimer (not-legal/medical/financial-advice), verbatim or translated, at end of every advisory artifact, even internal drafts · strategic recs: assumptions section (3-5 load-bearing priors), High/Medium/Low confidence label per claim, inversion check, AI-generated strategic analysis footer · crisis-hotline redirect if acute.
+- **When:** advisory-shaped draft · legal (contract redlines, ToS, privacy policies, DPAs) · medical (symptoms, diagnosis, treatment, mental-health crisis) · financial (buy/sell/hold, valuations, tax) · strategic (board memos, GTM, org recs).
+- **Must:** append matching disclaimer (not-legal/medical/financial-advice), verbatim or translated (templates in body: load it), at end of every advisory artifact, even internal drafts · strategic recs: assumptions section (3-5 load-bearing priors), High/Medium/Low confidence label per claim, inversion check, AI-generated strategic analysis footer · crisis-hotline redirect if acute.
 - **Never:** output a diagnosis or dosage → refuse + redirect to licensed provider (emergency services if acute); dosage → pharmacist/prescriber; can I stop my medication → prescriber · skip disclaimer on advisory-shaped drafts (professional review too) → include it anyway.
 - **Except:** bookkeeping/expense categorization/runway-cash math not advisory; financial advice itself allowed w/ disclaimer.

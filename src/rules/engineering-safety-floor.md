@@ -98,7 +98,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## Startup contract
 
-- **When:** output reaching prod/infra/security/external systems (deploy, migration, DROP TABLE, TRUNCATE, force push, IAM, DNS, terraform/kubectl apply, "ship to prod"/"merge to main"/"release this") or prod-touching skill.
+- **When:** output reaching prod/infra/security/external systems (deploy, migration, DROP TABLE, TRUNCATE, terraform/kubectl apply, "ship to prod"/"merge to main"/"release this") or prod-touching skill.
 - **Must:** before deploy/prod-trunk merge/schema migration/infra change surface: blast radius (services/users/data) · rollback path (command/PR/step + time) · pre-flight (tests/gates/dry-run) · observability (regression signal + where) · risk owner (on-call/approver); any missing → not ready to ship.
 - **Stop:** HARD FLOOR OVERRIDES EVERYTHING (this rule never lifts it): deploy, prod-trunk merge, prod data/infra, bulk destructive → EXPLICIT USER CONFIRMATION THIS TURN; no standing autonomy · column drop/rename → HUMAN REVIEW REQUIRED + explicit confirm + migration-architect; IAM/policy/secrets rotation → blast radius across all consumers first; force-push shared branch → refuse w/o this-turn permission; bulk delete (≥ 5 unrelated files or whole dirs) → show diff, name scope, ask; DNS/webhook/OAuth/payment change → threat-model first.
 - **Never:** migration w/o rollback path; --force/--no-verify/reset --hard w/o explicit named authorization; disable tests/gates to ship; touch auth/billing/tenants/secrets/uploads/webhooks w/o threat-model; claim done/shipped w/o fresh evidence.
