@@ -27,6 +27,9 @@ const ID_RE = /^[0-9a-f]{16}$/;
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const TERMINAL = new Set(['done', 'failed', 'declined', 'snoozed', 'expired']);
 const HOWS = new Set(['after-turn', 'now', 'handoff']);
+/** What a request may put in front of the user or the model: three candidates, one short line per text. */
+const MAX_CANDIDATES = 3;
+const MAX_TEXT = 160;
 
 export interface SwitchCandidate {
     readonly target: string;
@@ -50,6 +53,13 @@ function obj(x: unknown): Record<string, unknown> | null {
 
 function str(x: unknown): string | null {
     return typeof x === 'string' && x !== '' ? x : null;
+}
+
+/** agent-switch's free text, as one bounded line: it is data, never a second paragraph of instructions. */
+function clip(x: unknown): string | null {
+    const s = str(x)?.replace(/\s+/g, ' ').trim() ?? '';
+    if (s === '') return null;
+    return s.length > MAX_TEXT ? `${s.slice(0, MAX_TEXT - 1)}…` : s;
 }
 
 function num(x: unknown): number | null {
@@ -105,8 +115,11 @@ function callJson(argv: string[], opts: LinkOptions): unknown {
 export function raiseSwitch(account: string, sessionId: string, opts: LinkOptions = {}): SwitchRequest | null {
     if (!isAccount(account) || !SESSION_ID_RE.test(sessionId)) return null;
     if (probeLink(opts).state !== 'present') return null;
-    const res = obj(callJson(['switch', 'request', '--session', `${account}/${sessionId}`, '--by', 'ac', '--json'], opts));
-    return parseSwitchRequest(res?.['request']);
+    const session = `${account}/${sessionId}`;
+    const res = obj(callJson(['switch', 'request', '--session', session, '--by', 'ac', '--json'], opts));
+    const raw = obj(res?.['request']);
+    // A reply about another session is never this session's question.
+    return raw !== null && raw['session'] === session ? parseSwitchRequest(raw) : null;
 }
 
 export function showSwitch(id: string, opts: LinkOptions = {}): SwitchRequest | null {
@@ -151,13 +164,18 @@ export function writeSwitchRecord(sessionHash: string, rec: SwitchRecord | null,
     }
 }
 
+/** The candidates a notice or the model is shown: never more than three. */
+function shown(req: SwitchRequest): readonly SwitchCandidate[] {
+    return req.candidates.slice(0, MAX_CANDIDATES);
+}
+
 function describeCandidate(c: SwitchCandidate): string {
     return c.fill === null ? c.target : `${c.target} (${Math.round(c.fill)} %)`;
 }
 
 /** The user's line for a raised request. */
 export function raisedNotice(req: SwitchRequest): string {
-    const targets = req.candidates.slice(0, 3).map(describeCandidate).join(', ');
+    const targets = shown(req).map(describeCandidate).join(', ');
     return (
         `AC: agent-switch is asking whether to move this session (request ${req.id})` +
         (targets !== '' ? ` — to ${targets}` : '') +
@@ -167,7 +185,7 @@ export function raisedNotice(req: SwitchRequest): string {
 
 /** The model's half: the id, the candidates, and that only the user decides. */
 export function raisedContext(req: SwitchRequest): string {
-    const targets = req.candidates.map((c) => `${describeCandidate(c)} [${c.how.join('/')}]`).join(', ');
+    const targets = shown(req).map((c) => `${describeCandidate(c)} [${c.how.join('/')}]`).join(', ');
     return (
         `agent-switch switch request ${req.id} is open for this session` +
         (req.window !== null && req.fill !== null ? ` (${req.window} at ${Math.round(req.fill)} %)` : '') +
@@ -185,10 +203,13 @@ export function relayLine(req: SwitchRequest, rec: SwitchRecord): string | null 
     const d = req.decision;
     if (req.state === 'done' || req.state === 'failed') {
         const to = d?.target ?? 'the other account';
-        if (req.outcome?.ok === true || req.state === 'done') {
-            return `AC: agent-switch moved this work to ${to}.` + (req.outcome?.resume ? ` Resume it with: ${req.outcome.resume}` : '');
+        // `done` with `ok: false` contradicts itself; it is never reported as a move.
+        if (req.state === 'done' && req.outcome?.ok !== false) {
+            const resume = clip(req.outcome?.resume);
+            return `AC: agent-switch moved this work to ${to}.` + (resume !== null ? ` Resume it with: ${resume}` : '');
         }
-        return `AC: agent-switch could not move this work to ${to}` + (req.outcome?.detail ? `: ${req.outcome.detail}` : '.');
+        const detail = clip(req.outcome?.detail);
+        return `AC: agent-switch could not move this work to ${to}` + (detail !== null ? `: ${detail}` : '.');
     }
     if (rec.decision_told || d === null || d.by.startsWith('ac:')) return null;
     if (d.kind === 'approve') {
@@ -210,11 +231,12 @@ function isApproved(req: SwitchRequest): boolean {
  * The Stop path's half (4.4): when this session's request has been approved —
  * in agent-switch or here — and no checkpoint was left for it yet, call `write`
  * once. Agent-switch moves after the turn at the earliest, so the turn's own
- * Stop runs first. Returns whether a checkpoint was asked for.
+ * Stop runs first. `write` reports whether a checkpoint was written; one that
+ * was not is tried again on the next Stop. Returns whether one was written.
  */
 export function checkpointBeforeMove(
     sessionHash: string,
-    write: () => void,
+    write: () => boolean,
     stateEnv?: EnvMap | null,
     opts: LinkOptions = {},
 ): boolean {
@@ -222,7 +244,7 @@ export function checkpointBeforeMove(
     if (rec === null || rec.checkpointed) return false;
     const req = showSwitch(rec.id, opts);
     if (req === null || !isApproved(req)) return false;
-    write();
+    if (!write()) return false;
     writeSwitchRecord(sessionHash, { ...rec, checkpointed: true }, stateEnv);
     return true;
 }

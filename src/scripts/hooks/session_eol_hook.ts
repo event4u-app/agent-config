@@ -167,11 +167,12 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
 }
 
 /** The derived run checkpoint for a session inside a claimed run; silent outside one, and never throws. */
-export function leaveRunCheckpoint(workspaceRoot: string, runId: string): void {
+/** Whether a checkpoint was written; off, unclaimed or failed all read as `false`. */
+export function leaveRunCheckpoint(workspaceRoot: string, runId: string): boolean {
     try {
-        if (!run_checkpoints_enabled(workspaceRoot)) return;
+        if (!run_checkpoints_enabled(workspaceRoot)) return false;
         const slug = read_claimed_slug(workspaceRoot, runId);
-        if (slug === null) return;
+        if (slug === null) return false;
         // `road-to-wired-instruments` 2.1. The fingerprint was never
         // passed here, so `context_fingerprint` was null in every
         // checkpoint this package has ever written and the resume-time
@@ -183,9 +184,10 @@ export function leaveRunCheckpoint(workspaceRoot: string, runId: string): void {
         const cp = buildCheckpoint(workspaceRoot, eolSessionKey(runId), slug, {
             ...(observed !== null ? { contextFingerprint: observed } : {}),
         });
-        if (cp !== null) writeCheckpoint(workspaceRoot, cp);
+        return cp !== null && writeCheckpoint(workspaceRoot, cp) !== null;
     } catch {
         // never block the Stop path
+        return false;
     }
 }
 

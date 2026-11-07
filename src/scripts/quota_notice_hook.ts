@@ -171,7 +171,9 @@ function switchTurn(deps: QuotaNoticeDeps, session: string, account: string, hot
         if (!isTerminal(req)) return;
     }
     if (hot === undefined || account === '' || deps.sessionId === null) return;
-    if (!claimOnce(`switch|${account}|${hot.window}|${hot.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) return;
+    // Per session: a raise is about this session, so one that failed here never
+    // uses up another session's question on the same account.
+    if (!claimOnce(`switch|${session}|${account}|${hot.window}|${hot.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) return;
     const req = raiseSwitch(account, deps.sessionId, link);
     if (req === null || isTerminal(req)) return;
     writeSwitchRecord(session, { id: req.id, decision_told: false, checkpointed: false }, deps.stateEnv);

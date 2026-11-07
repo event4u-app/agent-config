@@ -156,7 +156,7 @@ host must confirm the call: AC never puts it on an auto-allow list.
 - `decision` and `outcome` are present only once set.
 - `outcome`: `{at, ok, detail, newSession?, resume?}`. `resume` is the command
   that opens the moved work when it could not open by itself; AC relays it
-  verbatim.
+  as one line of at most 160 characters.
 - `rev` increases on every write.
 
 ### States
@@ -198,13 +198,14 @@ The `quota-notice` hook runs on every prompt and is synchronous, so it reaches
 the link over the CLI verbs below, never the MCP client.
 
 - **Raise.** When a plan window of the session's account is `hot` or
-  `exhausted`, AC raises once per `(account, window, resets_at)` on the
-  machine, for this session (`--session provider/name/<sessionId>`). The
+  `exhausted`, AC raises once per `(session, account, window, resets_at)`
+  (`--session provider/name/<sessionId>`), and takes the reply only when its
+  `session` is the one asked for. The
   account is the label the status-line tap wrote on this session's own quota
   snapshots; a session outside any profile raises nothing. A request is named
   in the user's notice (id, up to three candidates, "answer here or in
-  agent-switch"), and the model is given the id, the candidates and the
-  instruction to call `switch_decide` only after the user answered.
+  agent-switch"), and the model is given the id, the same three candidates
+  and the instruction to call `switch_decide` only after the user answered.
 - **Decide.** Only the agent, on the user's answer, through the `agent-switch`
   MCP server the install registered. `lint_mcp_config_security` fails an
   `autoApprove` / `alwaysAllow` / `permissions.allow` entry naming
@@ -212,11 +213,13 @@ the link over the CLI verbs below, never the MCP client.
   or the whole `mcp__agent-switch` server.
 - **Relay.** While the raised request is not terminal, each prompt reads it
   (`switch show`). A decision made outside the session (`by` not `ac:`) is
-  reported once; `done` and `failed` are reported once, `resume` verbatim;
-  a terminal request is then forgotten.
+  reported once; `done` and `failed` are reported once, `resume` and
+  `detail` as one line of at most 160 characters; `done` with `ok: false` is
+  reported as a failure. A terminal request is then forgotten.
 - **Hand over.** At the end of each turn the `session-eol` Stop hook reads
   the request once it is `approved` or `executing` and leaves the run
-  checkpoint (a session inside a claimed run only), once. agent-switch moves
+  checkpoint (a session inside a claimed run only), once it was written;
+  a write that did not happen is tried again on the next Stop. agent-switch moves
   after the turn at the earliest, so this Stop is the last point the session
   can leave it.
 - **One record per session** under the user-global quota state holds the
