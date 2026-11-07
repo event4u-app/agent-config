@@ -1,16 +1,11 @@
 ---
 complexity: structural
-status: later
+status: ready
 tree_pin: fe05d121c7
-review_by: 2026-11-28
-entry_condition:
-  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24); this file is next in line, by owner choice of 2026-10-28"
-  when: "when one of the five active roadmaps completes, or earlier if the owner pulls it"
-  who: owner
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner choice of 2026-10-28 after the host's instruction-limit notice persisted past 19.0.0: the measured thinned form of the user layer is 180,903 chars, so no existing roadmap's done state removes the notice, and the owner rejected any opt-in path. Added straight into later/ because five roadmaps are active (owner WIP limit); it takes no active slot until pulled."
-estate_growth_exempt: "+1 later_roadmaps: a new file parked on arrival under the owner WIP limit of 2026-10-24 instead of taking a sixth active slot."
+estate_growth_exempt: "Pulled from later/ on 2026-11-07: the owner chose this file as next in line on 2026-10-28 and raised the active-roadmap cap to 25 on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md), so a slot is free; round inbox-2026-11-za asked for it to be active."
 relates:
   - slug: road-to-an-installed-layer-that-is-thinned
     relation: extends
@@ -26,7 +21,7 @@ relates:
 > persisted after 19.0.0, and the measurement and council round of the same day
 > recorded below.
 
-> **Arrivals:** 2 — latest `inbox-2026-11-z` (2026-11-07): a census of ~99k tokens at
+> **Arrivals:** 3 — latest `inbox-2026-11-za` (2026-11-07): asks for the D14 verdict (2.2) as the one decision between the package and ~16k tokens per session. Earlier: `inbox-2026-11-z` (2026-11-07): a census of ~99k tokens at
 > session start, 91 % rules, and a request to stop loading floors whose pack is inactive.
 > It widens 2.2 by three floors this file did not name (step 2.4).
 
