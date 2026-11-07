@@ -342,10 +342,16 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
   verify: offline re-scoring of a stored bundle reproduces the report's numbers
-- [ ] **6.3** The extraction gate stays as the companion plan wrote it: an app only
+- [x] **6.3** The extraction gate stays as the companion plan wrote it: an app only
   when at least two of external demand, rival-dominated engine work, a licence
   conflict, CI burden, or an owner-wanted public ranking hold — and the owner agrees.
   verify: the T3 report carries the gate table with each criterion's current state
+  Done 2026-11-07: `internal/bench/core/bench_extraction_gate.ts` renders the table —
+  G2 (rival share of engine commits) and G4 (bench share of failed CI runs) measured
+  over 90 days, G1/G3/G5 from `internal/bench/extraction-gate.json`, unmeasurable reads
+  `unknown`. First reading in `docs/benchmark.md` § Extraction gate: 0 of 5 hold
+  (0 of 197 engine commits, 0 of 52 failed runs) — the bench stays. No T3 report exists
+  yet; the first one (Phase 5) carries this table.
 
 ## Phase 7 — Measurement rides with change
 

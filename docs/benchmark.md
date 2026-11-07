@@ -212,6 +212,24 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run internal/bench/core/bench_headroom_17_report <report.json>`.
 
 
+## Extraction gate — the bench stays in this repository (2026-11-07) {#extraction-gate}
+
+The bench moves into its own app only when at least two of five criteria hold
+**and** the owner agrees. Every T3 (release, rival) report carries this table;
+`npx tsx internal/bench/core/bench_extraction_gate.ts` regenerates it. G2 and G4 are
+measured over the last 90 days (git log of `internal/bench`, `gh run list`); G1, G3
+and G5 are recorded facts in `internal/bench/extraction-gate.json`. A criterion that
+cannot be measured reads `unknown`, never `no`.
+
+| ID | Criterion | Current state | Holds |
+|---|---|---|---|
+| G1 | External demand: someone else wants their package measured or contributes | no external request recorded | no |
+| G2 | Rival-dominated engine: ≥ 50 % of engine commits in 90 days touch a rival | 0 of 197 engine commits (0 %) | no |
+| G3 | Licence conflict: a needed part may not live in this repository | no needed part is under a licence this repository cannot hold (no rival code is vendored yet) | no |
+| G4 | CI burden: ≥ 10 % of failed CI runs in 90 days come from a bench workflow | 0 of 52 failed runs (0 %) | no |
+| G5 | A public, neutral ranking is wanted (owner decision) | no owner decision for a public ranking recorded | no |
+
+**Verdict:** stay — 0 of 5 hold, 2 needed
 ## Where the main session's default context goes (2026-11-06) {#main-session-census}
 
 Measured with `./scripts-run src/scripts/preamble_byte_census --main-session`. The figures come from what the host recorded delivering in one Claude Code session on this repository, not from a model of the tree. The setup was a user-global install with the full rule set, plus the repository's own project rules. Characters are as delivered; tokens are approximately characters / 4. This is one session on one machine, a reading and not a distribution.
