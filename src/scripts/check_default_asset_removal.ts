@@ -28,6 +28,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
@@ -138,8 +139,15 @@ const realGit: RemovalGit = {
 };
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    const i = argv.indexOf('--baseline');
-    const base = i >= 0 ? argv[i + 1] : resolveBaseRef(REPO_ROOT);
+    const parsed = parseGateArgs('check_default_asset_removal', argv, {
+        baseline: { type: 'string' },
+        quiet: { type: 'boolean' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return USAGE_EXIT;
+    }
+    const base = parsed.values.baseline ?? resolveBaseRef(REPO_ROOT);
     if (base === undefined || base === null || !run(['rev-parse', '--verify', '--quiet', `${base}^{commit}`]).ok) {
         process.stderr.write('check_default_asset_removal: cannot resolve the base ref\n');
         return 2;
@@ -156,7 +164,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     });
     const problems = removalProblems(removed, base, realGit);
     for (const p of problems) process.stderr.write(`❌  ${p}\n`);
-    if (problems.length === 0 && !argv.includes('--quiet')) {
+    if (problems.length === 0 && parsed.values.quiet !== true) {
         process.stdout.write(`✅  check_default_asset_removal: ${removed.length} default asset(s) removed, each with a valid record.\n`);
     }
     return problems.length === 0 ? 0 : 1;
