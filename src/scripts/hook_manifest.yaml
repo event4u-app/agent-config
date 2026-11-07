@@ -1319,9 +1319,8 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: verification
-    # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS, plus Bash
-    # for a whole-file `cat <file>` (wholeFileCatPath), which is a read too.
-    tools: [Read, Edit, Write, Bash]
+    # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS.
+    tools: [Read, Edit, Write]
     needs_payload_bodies: [input]
   # Memory recall — delivers a memory the store ALREADY holds, at the moment
   # the tool call it is about would run. The finding: in one long autonomous
@@ -1790,7 +1789,7 @@ platforms:
     # Claude Code transcript fact. (It was the ONLY binding on this slot until
     # the entry below; that sentence is retired rather than left to rot.)
     #
-    pre_compact:      [language-mirror, rule-inject, journal-record, reread-guard]
+    pre_compact:      [language-mirror, rule-inject, journal-record]
     # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
     # platform where both native events were measured present on the installed
     # binary (2.1.229 — see the evidence page cited on the alias rows below).

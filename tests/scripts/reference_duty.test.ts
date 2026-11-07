@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { dutyForPath, dutyStates } from '../../src/scripts/_lib/reference_duty.js';
+import { dutyForPath, dutyStates, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
 import { ledgerFile } from '../../src/scripts/hooks/reread_guard_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -213,5 +213,23 @@ describe('council round 3: every matched rule yields duties or a counted error',
         run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
         const key = crypto.createHash('sha256').update('s1').digest('hex');
         expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
+    });
+});
+
+describe('council round 6', () => {
+    it('reads a frontmatter whose closing line is exactly ---, not a line that starts with it', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'), `---\ntype: "auto"\nnote: ---not-the-end\nload_context:\n  - ${REF}\n---\n\n# sot\n`);
+        expect(dutyForPath('.claude/a.md', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
+    });
+    it('keeps the duties of a healthy matched rule when another matched rule is broken', () => {
+        const root = workspace();
+        const routerPath = path.join(root, 'dist', 'router.json');
+        const router = JSON.parse(fs.readFileSync(routerPath, 'utf8')) as Record<string, unknown>;
+        router['tier_2'] = [...(router['tier_2'] as unknown[]), { id: 'ghost', triggers: [{ path_prefix: '.claude/' }] }];
+        fs.writeFileSync(routerPath, JSON.stringify(router));
+        const scan = scanDuties('.claude/a.md', root);
+        expect(scan.duties).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
+        expect(scan.errors).toHaveLength(1);
     });
 });

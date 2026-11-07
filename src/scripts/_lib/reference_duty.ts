@@ -44,12 +44,12 @@ function loadContextOf(ruleFile: string): string[] {
     } catch (e) {
         throw new DutySourceError(`rule unreadable: ${ruleFile}: ${(e as Error).message}`);
     }
-    if (!text.startsWith('---')) return [];
-    const end = text.indexOf('\n---', 3);
-    if (end === -1) throw new DutySourceError(`rule frontmatter unterminated: ${ruleFile}`);
+    if (!/^---[ \t]*\r?\n/.test(text)) return [];
+    const close = /\r?\n---[ \t]*(?:\r?\n|$)/.exec(text.slice(3));
+    if (close === null) throw new DutySourceError(`rule frontmatter unterminated: ${ruleFile}`);
     let fm: unknown;
     try {
-        fm = parseYaml(text.slice(3, end));
+        fm = parseYaml(text.slice(3, 3 + close.index));
     } catch (e) {
         throw new DutySourceError(`rule frontmatter unparsable: ${ruleFile}: ${(e as Error).message}`);
     }
@@ -92,26 +92,47 @@ function tierRules(router: unknown, file: string): Array<{ id: string; triggers:
  * matched by the router's own `trigger_matches`. Throws {@link DutySourceError}
  * when the router or a matched rule cannot be read; a missing router is no duty.
  */
+export interface DutyScan {
+    duties: Duty[];
+    /** One message per matched rule whose duties could not be read. */
+    errors: string[];
+}
+
 export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
+    const scan = scanDuties(relPath, workspaceRoot);
+    if (scan.errors.length > 0) throw new DutySourceError(scan.errors.join('; '));
+    return scan.duties;
+}
+
+/**
+ * Like {@link dutyForPath}, but a broken matched rule costs only its own duties:
+ * the other matched rules are still observed and the failure is listed.
+ */
+export function scanDuties(relPath: string, workspaceRoot: string): DutyScan {
     const sources = ruleSources(workspaceRoot);
-    if (sources.router === null) return [];
-    let router: unknown;
+    if (sources.router === null) return { duties: [], errors: [] };
+    let rules: Array<{ id: string; triggers: Trigger[] }>;
     try {
-        router = JSON.parse(fs.readFileSync(sources.router, 'utf8'));
+        rules = tierRules(JSON.parse(fs.readFileSync(sources.router, 'utf8')), sources.router);
     } catch (e) {
-        throw new DutySourceError(`router unreadable: ${sources.router}: ${(e as Error).message}`);
+        return { duties: [], errors: [`router unusable: ${sources.router}: ${(e as Error).message}`] };
     }
-    const out: Duty[] = [];
-    for (const rule of tierRules(router, sources.router)) {
+    const duties: Duty[] = [];
+    const errors: string[] = [];
+    for (const rule of rules) {
         const hit = rule.triggers.some((t) => ('path_prefix' in t || 'file_pattern' in t) && trigger_matches(t, '', [relPath]));
         if (!hit) continue;
         const dir = sources.dirs.find((d) => fs.existsSync(path.join(d, `${rule.id}.md`)));
-        if (dir === undefined) throw new DutySourceError(`matched rule has no file: ${rule.id}`);
-        for (const reference of loadContextOf(path.join(dir, `${rule.id}.md`))) {
-            out.push({ rule: rule.id, reference, resolved: ledgerKey(workspaceRoot, path.resolve(dir, reference)) });
+        try {
+            if (dir === undefined) throw new DutySourceError(`matched rule has no file: ${rule.id}`);
+            for (const reference of loadContextOf(path.join(dir, `${rule.id}.md`))) {
+                duties.push({ rule: rule.id, reference, resolved: ledgerKey(workspaceRoot, path.resolve(dir, reference)) });
+            }
+        } catch (e) {
+            errors.push((e as Error).message);
         }
     }
-    return out;
+    return { duties, errors };
 }
 
 /**

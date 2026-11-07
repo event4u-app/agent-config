@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
  * Re-read guard + post-edit scope hint — `pre_tool_use` concern
- * (road-to-token-economy-cache Phase 6.1/6.2), also bound on `pre_compact`,
- * where it clears the session's ledger: compaction drops what was read.
+ * (road-to-token-economy-cache Phase 6.1/6.2). A subagent's reads are keyed
+ * apart from its parent's (`agent_id`).
  *
- * A whole-file `cat <file>` through Bash counts as a full read, and a
- * subagent's reads are keyed apart from its parent's (`agent_id`).
+ * The concern also handles a `pre_compact` envelope (clears the recorded reads)
+ * and a Bash `cat <absolute file>` (a full read), but the manifest binds it to
+ * neither yet: that binding is hook plumbing and lands with its own
+ * ratification.
  *
  * Two signals, one session-scoped read ledger:
  *
@@ -76,7 +78,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
-import { dutyForPath, dutyStates, ledgerKey, type DutyState } from '../_lib/reference_duty.js';
+import { dutyStates, ledgerKey, scanDuties, type DutyState } from '../_lib/reference_duty.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -311,10 +313,11 @@ export interface DutyRecord {
 function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
     let states: Record<string, DutyState>;
     try {
-        states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads, workspaceRoot);
+        const scan = scanDuties(key, workspaceRoot);
+        // Each matched rule whose duties could not be read is one unobserved duty.
+        if (scan.errors.length > 0) ledger.duty_errors = (ledger.duty_errors ?? 0) + scan.errors.length;
+        states = dutyStates(scan.duties, ledger.reads, workspaceRoot);
     } catch {
-        // DutySourceError for a source that cannot be read, or anything else the
-        // computation throws: either way a duty went unobserved, so it is counted.
         ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
         return;
     }
