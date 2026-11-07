@@ -37,6 +37,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
+import { type LinkProbe, probeLink } from '../_lib/agent_switch_link.js';
 import { list_tools } from '../tool_registry.js';
 
 /** How a declared server is addressed. */
@@ -60,6 +61,22 @@ export interface McpAvailableOptions {
     json: boolean;
     /** `PATH` to search. Injected by the tests; defaults to the process value. */
     pathEnv: string;
+    /**
+     * The agent-switch link probe. Omitted, the link section is not printed;
+     * `main` passes the real `agent-switch link status --json` read.
+     */
+    linkProbe?: () => LinkProbe;
+}
+
+/** The link's one-line state, for the text report. */
+export function describeLink(p: LinkProbe): string {
+    if (p.state === 'present') {
+        return `present — agent-switch ${p.status.version}, link contract ${p.status.contract}, MCP server \`${[p.status.mcp.command, ...p.status.mcp.args].join(' ')}\``;
+    }
+    if (p.state === 'disabled') return 'off in agent-switch — `agent-switch link on` turns it on';
+    if (p.state === 'incompatible') return `not usable — ${p.detail}`;
+    if (p.state === 'absent') return 'not installed — `agent-switch` is not on PATH';
+    return `no answer — ${p.detail}`;
 }
 
 export interface McpAvailableResult {
@@ -169,6 +186,7 @@ export function runMcpAvailable(opts: McpAvailableOptions): McpAvailableResult {
     }
 
     const registryTools = list_tools().map((t) => t.name).sort();
+    const link = opts.linkProbe?.();
 
     if (opts.json) {
         out.push(
@@ -177,6 +195,7 @@ export function runMcpAvailable(opts: McpAvailableOptions): McpAvailableResult {
                     config: configExists ? configPath : null,
                     declared_servers: declared,
                     tool_registry: registryTools,
+                    ...(link !== undefined ? { agent_switch_link: link } : {}),
                     handshake_performed: false,
                 },
                 null,
@@ -205,6 +224,12 @@ export function runMcpAvailable(opts: McpAvailableOptions): McpAvailableResult {
     out.push('');
     out.push('tool registry      static allowlist for skill `allowed_tools` — NOT MCP, not probed');
     out.push(`  ${registryTools.length > 0 ? registryTools.join(', ') : 'none'}`);
+
+    if (link !== undefined) {
+        out.push('');
+        out.push('agent-switch link  read from `agent-switch link status --json`, not a handshake');
+        out.push(`  ${describeLink(link)}`);
+    }
 
     out.push('');
     out.push('⚠️  No MCP handshake was performed. "launchable" means the command resolves to an');
@@ -244,6 +269,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         cwd: process.cwd(),
         json: parsed.json === true,
         pathEnv: process.env['PATH'] ?? '',
+        linkProbe: () => probeLink(),
     });
     for (const line of result.out) process.stdout.write(`${line}\n`);
     for (const line of result.err) process.stderr.write(`${line}\n`);

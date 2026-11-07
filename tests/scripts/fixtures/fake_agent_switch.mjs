@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+// A stand-in `agent-switch` for the link tests. Behaviour is chosen by env:
+//   FAKE_AS_LINK = on | off | contract2 | garbled | exit1   (default on)
+//   FAKE_AS_MCP  = ok | broken                             (default ok)
+// `mcp serve` speaks line-delimited JSON-RPC like the real server; every other
+// verb echoes its argv so a test can assert the CLI fallback's mapping.
+import { createInterface } from 'node:readline';
+
+const argv = process.argv.slice(2);
+const link = process.env.FAKE_AS_LINK ?? 'on';
+const mcp = process.env.FAKE_AS_MCP ?? 'ok';
+const out = (v) => process.stdout.write(`${JSON.stringify(v)}\n`);
+
+if (argv[0] === 'link' && argv[1] === 'status') {
+    if (link === 'exit1') {
+        process.stderr.write('boom\n');
+        process.exit(1);
+    }
+    if (link === 'garbled') {
+        process.stdout.write('not json\n');
+        process.exit(0);
+    }
+    out({
+        enabled: link !== 'off',
+        version: '2.13.0',
+        contract: link === 'contract2' ? 2 : 1,
+        mcp: { command: 'agent-switch', args: ['mcp', 'serve'] },
+    });
+    process.exit(0);
+}
+
+if (argv[0] === 'mcp' && argv[1] === 'serve') {
+    if (mcp === 'broken') process.exit(3);
+    const rl = createInterface({ input: process.stdin });
+    rl.on('line', (line) => {
+        const msg = JSON.parse(line);
+        if (msg.id === undefined) return;
+        if (msg.method === 'initialize') {
+            out({
+                jsonrpc: '2.0',
+                id: msg.id,
+                result: {
+                    protocolVersion: msg.params.protocolVersion,
+                    capabilities: { tools: { listChanged: false } },
+                    serverInfo: { name: 'agent-switch', version: '2.13.0' },
+                },
+            });
+        } else if (msg.method === 'tools/call') {
+            const { name, arguments: args } = msg.params;
+            const result = name === 'switch_list' ? [{ id: 'r1', via: 'mcp' }] : { via: 'mcp', tool: name, args };
+            out({
+                jsonrpc: '2.0',
+                id: msg.id,
+                result: {
+                    content: [{ type: 'text', text: JSON.stringify(result) }],
+                    structuredContent: Array.isArray(result) ? { items: result } : result,
+                    isError: name === 'limits_get' && args?.provider === 'antigravity',
+                },
+            });
+        } else {
+            out({ jsonrpc: '2.0', id: msg.id, result: {} });
+        }
+    });
+} else {
+    out({ via: 'cli', argv });
+}
