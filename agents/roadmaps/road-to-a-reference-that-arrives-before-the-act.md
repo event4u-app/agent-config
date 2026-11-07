@@ -12,7 +12,7 @@ relates:
     relation: disjoint
     note: Owns the session-start size budget, the law form and the inactive-pack floors.
 estate_offset_exempt: "Extracted from road-to-mixed-trigger-activation-cost Phase 5 by owner decision of 2026-11-07, recorded in agents/evidence/owner-directives/2026-11-07-wip-cap-25.md, which names road-to-a-reference-that-arrives-before-the-act; no other roadmap owns the reference duty (owner search over active, later/, stubs/, skipped/ and archive/ in round inbox-2026-11-z)."
-estate_growth_exempt: "+1 open_blockers: hook-binding-ratification, discovered doing step 2.2 — binding the concern on Bash and pre_compact is hook plumbing that six council rounds refused; 2.2 waits on its ratification."
+estate_growth_exempt: "Resolves hook-binding-ratification; no new blocker or roadmap."
 ---
 # Road to a reference that arrives before the act
 
@@ -107,15 +107,14 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > trigger is a slash command, so no shell command (e.g. `git commit`) can derive
       > a reference today. Run: `task report-rule-requires`.
 
-- [ ] **2.2 Make the read ledger fit for the duty.** Key by `agent_id` when present,
+- [x] **2.2 Make the read ledger fit for the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json --> Key by `agent_id` when present,
       clear on `pre_compact`, and count a whole-file read through Bash (`cat <file>`).
       verify: tests for subagent separation, compaction reset and a `cat` read.
-      blocked: `hook-binding-ratification`.
-      > note: partial 2026-11-07 — the `agent_id` key ships wired (the concern's
-      > existing Read/Edit/Write binding); the `cat` recognizer and the compaction clear
-      > are built and tested, but binding the concern on Bash and `pre_compact` is hook
-      > plumbing, refused in six council rounds and moved out of the change.
-      > `agents/evidence/analysis/reference-duty-council-rounds-2026-11-07.md`.
+      > note: done 2026-11-07 — bound on claude `post_tool_use` (a completed `cat` is
+      > credited from the tool result: byte-identical to the file now on disk, read
+      > through one bounded non-blocking descriptor) and claude `pre_compact` (clears
+      > reads). Ratified by the council after 13 rounds:
+      > `agents/evidence/ratifications/reference-duty-binding-20261107.md`.
 
 - [x] **2.3 Observe the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/reread_guard_hook.ts --> At `pre_tool_use`, compare the 2.1 table with the
       ledger and record `required-pending` · `read` per file act, writing nothing into
@@ -168,21 +167,13 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 - **Resolved when:** `task report-rule-requires` shows act rows for those three rules.
 
 ### blocker: hook-binding-ratification
-- **Status:** open
-- **Owner:** agent, with a two-provider council ratification (ADR-268 § 4)
-- **Blocks:** 2.2
-- **What to do:** add `Bash` to the `reread-guard` `tools:` list and the concern to the
-  claude `pre_compact` binding in `src/scripts/hook_manifest.yaml`, recompile with
-  `./scripts-run src/scripts/compile_hook_manifest`, and take a modification review
-  whose prompt opens with round 6's open points: a bound on `duty` / `duty_errors`
-  growth and a measured per-Edit/Write cost.
-- **Recommendation:** measure the hot-path cost first (one router parse and the matched
-  rules' frontmatter per Edit/Write), then bound the counters, then ask; both seats'
-  last refusals were about exactly those two.
-- **If you do nothing:** reads through `cat` never count and compaction never resets
-  the duty, so 3.1 would measure a ledger that over-credits after a compaction.
-- **Resolved when:** a ratification record under `agents/evidence/ratifications/` with
-  a passing verdict lands with the binding.
+- **Status:** RESOLVED 2026-11-07 — ratified by two providers in round 13
+  (`agents/evidence/ratifications/reference-duty-binding-20261107.md`).
+- **Owner:** agent
+- **Blocks:** nothing now (held 2.2)
+- **What to do:** nothing; the hook bundle has 145 B of headroom left after it, so the
+  next hook-touching change needs a shrink or a `raise_log` entry first.
+- **Resolved when:** done.
 
 ### blocker: hook-bundle-headroom
 - **Status:** RESOLVED 2026-11-07 — the bundle ceiling was raised after this blocker was

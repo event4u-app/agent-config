@@ -32,6 +32,7 @@ import {
     isExemptPath,
     isRangedRead,
     ledgerFile,
+    _readRegularFileBounded,
     wholeFileCatPath,
 } from '../../src/scripts/hooks/reread_guard_hook.js';
 
@@ -402,12 +403,41 @@ describe('deriveSessionKey separates a subagent from its parent', () => {
 });
 
 describe('E2E: the ledger as the reference duty needs it', () => {
-    it('records a whole-file `cat` through Bash as a full read', () => {
+    function postBash(root: string, command: string, response: object): string {
+        return JSON.stringify({ schema_version: 1, platform: 'claude', event: 'post_tool_use', session_id: 'sess-1', workspace_root: root, payload: { tool_name: 'Bash', tool_input: { command }, tool_response: response } });
+    }
+    function reads(root: string): string[] {
+        const p = ledgerFile(root, deriveSessionKey({ session_id: 'sess-1' }, {}));
+        return fs.existsSync(p) ? Object.keys(JSON.parse(fs.readFileSync(p, 'utf8')).reads) : [];
+    }
+    it('credits a whole-file `cat` only after it ran, and only when the whole file came back', () => {
         const { root, abs } = makeWorkspace();
+        const body = fs.readFileSync(abs, 'utf8');
         run(envelope(root, { tool_name: 'Bash', tool_input: { command: `cat ${abs}` } }), root);
-        const key = deriveSessionKey({ session_id: 'sess-1' }, {});
-        const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8'));
-        expect(Object.keys(ledger.reads)).toEqual([path.relative(root, abs)]);
+        expect(reads(root)).toEqual([]);
+        run(postBash(root, `cat ${abs}`, { stdout: body, stderr: '', interrupted: false }), root);
+        expect(reads(root)).toEqual([path.relative(root, abs)]);
+    });
+    it('gives no credit for a cat of a FIFO, and returns instead of blocking on it', () => {
+        const { root } = makeWorkspace();
+        const fifo = path.join(root, 'pipe');
+        expect(spawnSync('mkfifo', [fifo]).status).toBe(0);
+        expect(fs.statSync(fifo).isFIFO()).toBe(true);
+        const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd: root, input: postBash(root, `cat ${fifo}`, { stdout: '', stderr: '', interrupted: false }), timeout: 15000 });
+        expect(r.status).toBe(0);
+        expect(reads(root)).toEqual([]);
+    });
+    it.each([
+        ['a truncated output', (b: string) => ({ stdout: b.slice(0, 5), stderr: '', interrupted: false })],
+        ['an interrupted call', (b: string) => ({ stdout: b, stderr: '', interrupted: true })],
+        ['a call that wrote to stderr', (b: string) => ({ stdout: b, stderr: 'cat: boom', interrupted: false })],
+        ['a response without stdout', () => ({ stderr: '', interrupted: false })],
+        ['a non-zero exit status', (b: string) => ({ stdout: b, stderr: '', interrupted: false, exit_code: 1 })],
+        ['an equal-length output that is not the file now on disk', (b: string) => ({ stdout: 'X'.repeat(Buffer.byteLength(b)), stderr: '', interrupted: false })],
+    ])('gives no read credit for %s', (_name, response) => {
+        const { root, abs } = makeWorkspace();
+        run(postBash(root, `cat ${abs}`, response(fs.readFileSync(abs, 'utf8'))), root);
+        expect(reads(root)).toEqual([]);
     });
     it('clears the recorded reads on pre_compact, so a duty applies again', () => {
         const { root, abs } = makeWorkspace();
@@ -416,5 +446,33 @@ describe('E2E: the ledger as the reference duty needs it', () => {
         expect(Object.keys(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads)).toHaveLength(1);
         run(JSON.stringify({ schema_version: 1, platform: 'claude', event: 'pre_compact', session_id: 'sess-1', workspace_root: root, payload: {} }), root);
         expect(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads).toEqual({});
+    });
+});
+
+describe('_readRegularFileBounded — the verification read', () => {
+    it('reads a regular file within the limit', () => {
+        const { abs } = makeWorkspace();
+        expect(_readRegularFileBounded(abs, 1024)?.bytes.toString('utf8')).toBe(fs.readFileSync(abs, 'utf8'));
+    });
+    it('refuses a file over the limit', () => {
+        const { abs } = makeWorkspace();
+        expect(_readRegularFileBounded(abs, 3)).toBeNull();
+    });
+    it('refuses when the deadline passes before the read completes', () => {
+        const { abs } = makeWorkspace();
+        let t = 0;
+        expect(_readRegularFileBounded(abs, 1024, { deadlineMs: 50, now: () => (t += 100) })).toBeNull();
+    });
+    it('refuses when the deadline expires after reading began', () => {
+        const { abs } = makeWorkspace();
+        let calls = 0;
+        const now = (): number => (calls++ < 3 ? 0 : 100);
+        expect(_readRegularFileBounded(abs, 1024, { deadlineMs: 50, now })).toBeNull();
+    });
+    it('refuses when the path was replaced while it was read', () => {
+        const { root, abs } = makeWorkspace();
+        const other = path.join(root, 'other.ts');
+        fs.writeFileSync(other, fs.readFileSync(abs));
+        expect(_readRegularFileBounded(abs, 1024, { afterRead: () => fs.renameSync(other, abs) })).toBeNull();
     });
 });
