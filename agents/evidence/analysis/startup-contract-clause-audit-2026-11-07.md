@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Startup-contract clause audit — 2026-11-07
 
 Step 1.1 of `road-to-a-session-start-under-the-host-limit`. Generated from

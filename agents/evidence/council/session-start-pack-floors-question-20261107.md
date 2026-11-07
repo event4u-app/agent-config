@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council question — inactive-pack safety floors at session start (2026-11-07)
 
 Roadmap: `road-to-a-session-start-under-the-host-limit`, steps 2.2 and 2.4.
