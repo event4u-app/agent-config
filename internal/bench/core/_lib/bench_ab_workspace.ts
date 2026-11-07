@@ -167,7 +167,13 @@ export function plugin_scope(spec: { setting_sources: string | null; plugin_dir_
  * repeated trial still starts pristine — the per-trial key changes *which*
  * directory that is, never whether it is clean.
  */
-export function reset_fixture(task: Dict, arm: string, seed: number, root: string = WORK_ROOT): [string, string] {
+export function reset_fixture(
+    task: Dict,
+    arm: string,
+    seed: number,
+    root: string = WORK_ROOT,
+    strip: readonly string[] = [],
+): [string, string] {
     // Delta #9: a task may pin an external repo at a SHA instead of naming an
     // in-repo fixture. `pristine_tree_for` returns the tree either way, so the
     // per-trial copy below — and every endpoint that diffs against the pristine
@@ -182,8 +188,37 @@ export function reset_fixture(task: Dict, arm: string, seed: number, root: strin
     }
     fs.rmSync(transcript_path_for(dest), { force: true });
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.cpSync(fixture, dest, { recursive: true });
-    return [dest, fixture];
+    const pristine = strip.length > 0 ? stripped_pristine(fixture, strip, `${dest}.pristine`) : fixture;
+    fs.cpSync(pristine, dest, { recursive: true });
+    return [dest, pristine];
+}
+
+/**
+ * A copy of `fixture` without `strip`, laid out as `<root>/<fixtures dir>/<id>`
+ * with the task's verifier copied to `<root>/verifiers-v2/<id>`, so the scorer
+ * finds the verifier beside it exactly as it does for the in-repo fixture.
+ *
+ * The removal has to happen in the pristine tree as well as the clone: the
+ * scorer diffs one against the other, and a store removed from the clone alone
+ * would be scored as files the run deleted. Kept beside the clone, never in it.
+ */
+export function stripped_pristine(fixture: string, strip: readonly string[], root: string): string {
+    const base = path.resolve(fixture);
+    for (const rel of strip) {
+        const abs = path.resolve(base, rel);
+        if (path.isAbsolute(rel) || !abs.startsWith(base + path.sep)) {
+            throw new Error(`strip path is outside the fixture: ${rel}`);
+        }
+    }
+    fs.rmSync(root, { recursive: true, force: true });
+    const id = path.basename(base);
+    const out = path.join(root, path.basename(path.dirname(base)), id);
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.cpSync(base, out, { recursive: true });
+    for (const rel of strip) fs.rmSync(path.join(out, rel), { recursive: true, force: true });
+    const verifier = path.join(path.dirname(path.dirname(base)), 'verifiers-v2', id);
+    if (fs.existsSync(verifier)) fs.cpSync(verifier, path.join(root, 'verifiers-v2', id), { recursive: true });
+    return out;
 }
 
 /**
