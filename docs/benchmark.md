@@ -194,6 +194,16 @@ Make the smallest change that fully solves the task. Then find and update everyt
 
 When the arm is in a run, the report adds three comparisons: `package` vs `minimal-prompt`, `rules-kernel-dc` vs `minimal-prompt`, and `minimal-prompt` vs `vanilla`. A report without the arm renders as before.
 
+**What each arm loads (probe, 2026-11-07).** One trial per arm on `trapC-ambig-01`, Haiku, container isolation, report `2026-11-07T08-01-00Z`, $0.17. The context a run starts with is the first turn's cache write:
+
+| Arm | Injected chars | First-turn context (cache write, tokens) | Package skills loaded |
+|---|---:|---:|---:|
+| `vanilla` | 0 | 7,826 | 0 |
+| `minimal-prompt` | 251 | 7,963 | 0 |
+| `package` | 0 | 99,370 | 303 |
+
+So the floor costs about 140 tokens per turn over `vanilla`, and the full install about 91,500: the comparison is between instructions of very different size, which is the point of the arm. One trial measures size, not behaviour.
+
 ### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
 
 Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:

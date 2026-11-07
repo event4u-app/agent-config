@@ -261,8 +261,9 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   `rules-kernel-dc` against the arm and the arm against `vanilla`, and the injected text
   is frozen in `docs/benchmark.md` § The minimal-prompt baseline before its first run.
   `minimal-prompt` is in `CODEX_VALID_ARMS` since 2026-11-07 (pure injection, like
-  `bare-principle`). Open, not blocking: before 2.5 is released a single-trial probe
-  that checks the context size the arm actually loads, not only the skill count.
+  `bare-principle`). Probed 2026-11-07 before 2.5 (report `2026-11-07T08-01-00Z`): first-turn
+  context 7,963 tokens against 7,826 for `vanilla` and 99,370 for `package`
+  (`docs/benchmark.md` § The minimal-prompt baseline).
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.
