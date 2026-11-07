@@ -130,19 +130,16 @@ if (hookBundleBytes !== null) {
 // ---------------------------------------------------------------------------
 import { readdirSync } from 'node:fs';
 
+import { shippedSet } from './_lib/shipped_set.mjs';
 import { stripCommentsMjs } from './_lib/strip_comments.mjs';
 import { dirname, join, relative, sep } from 'node:path';
 
 const pkg = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
-const shippedPrefixes = (pkg.files ?? [])
-    .filter((f) => f.endsWith('/'))
-    .map((f) => f.replace(/\/+$/, '') + '/');
-const shippedFiles = new Set((pkg.files ?? []).filter((f) => !f.endsWith('/')));
+const shipped = shippedSet(pkg.files ?? []);
+const shippedPrefixes = shipped.prefixes;
 
 function isShipped(relPath) {
-    const posix = relPath.split(sep).join('/');
-    if (shippedFiles.has(posix)) return true;
-    return shippedPrefixes.some((p) => posix.startsWith(p));
+    return shipped.isShipped(relPath.split(sep).join('/'));
 }
 
 function* walk(dir) {
@@ -182,6 +179,7 @@ const importErrors = [];
 const scanRoots = shippedPrefixes.filter((p) => p.startsWith('src/'));
 for (const root of scanRoots) {
     for (const file of walk(resolve(root))) {
+        if (!isShipped(relative(resolve('.'), file))) continue;
         const text = stripCommentsMjs(readFileSync(file, 'utf8'));
         for (const m of text.matchAll(IMPORT_RE)) {
             const spec = m[1];
