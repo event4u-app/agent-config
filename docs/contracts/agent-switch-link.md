@@ -9,8 +9,13 @@ keep-beta-until: 2027-01-31
 > agent-switch 2.13.0 and later, and the rules agent-config (AC) follows when
 > it consumes it. The serving side lives in `event4u-app/agent-switch`
 > (`src/link/mcp.ts`, `src/link/requests.ts`, `src/link/limits.ts`,
-> `src/commands/link.ts`). AC does not connect yet; until its client lands,
-> this page fixes what it will connect to.
+> `src/commands/link.ts`). The AC side: `src/scripts/_lib/agent_switch_link.ts`
+> (discovery), `src/scripts/_lib/agent_switch_client.ts` (MCP client and CLI
+> fallback) and `src/scripts/_lib/mcp_bridge.ts` (`.mcp.json` entry), pinned by
+> `tests/scripts/agent_switch_link.test.ts`,
+> `tests/scripts/agent_switch_client.test.ts` and
+> `tests/scripts/agent_switch_link_install.test.ts`. No AC feature calls a link
+> tool yet; the readers that use them come next.
 
 ## Purpose
 
@@ -207,9 +212,20 @@ limits pre-check:
   fallback also failed.
 - A limits account that is `stale`, or a window whose `fill` is `null`.
 
-With the link absent AC also removes its `agent-switch` entry from
-`.mcp.json` on the next install, and never re-adds it until discovery reports
-the link present again.
+### The `.mcp.json` entry
+
+Install (with `claude-code` selected) runs discovery once and acts on its answer:
+
+| Discovery | `.mcp.json` key `agent-switch` |
+|---|---|
+| present | written as `{command, args}` from `mcp`, recorded in `agents/installed-tools.lock` |
+| `enabled: false`, or `contract ≠ 1` | removed, when it is exactly the entry the link describes; a hand-written server under the key stays |
+| binary missing, timeout, non-zero exit, unparseable output | left as it is — no answer is not a reason to remove it; an existing entry stays recorded |
+
+The difference is deliberate: `enabled: false` and an unknown contract are
+answers from agent-switch, a missing binary is often a PATH that differs
+between the installer's shell and the host's. A host that then fails to start
+the server only loses the link, which every reader already treats as absent.
 
 ## What this contract does not allow
 

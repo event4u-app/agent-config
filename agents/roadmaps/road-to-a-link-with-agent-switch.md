@@ -62,11 +62,12 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Phase 2 — Automatic connection
 
-- [ ] **2.1 Link probe.** `_lib/agent_switch_link.ts` `linkStatus()`: runs
-      `agent-switch link status --json` (5 s timeout); absent binary, exit ≠ 0
-      or `enabled:false` → `null`.
+- [x] **2.1 Link probe.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_mcp_available.ts --> `_lib/agent_switch_link.ts` `probeLink()`: runs
+      `agent-switch link status --json` (5 s timeout) and returns
+      present / disabled / incompatible / absent / failed. The client's
+      `linkStatus()` (2.3) folds every state but present to `null`.
       verify: unit tests for present / disabled / missing / garbled output.
-- [ ] **2.2 MCP entry.** Next to `mcpBridgeEntry`, an `agent-switch` entry
+- [x] **2.2 MCP entry.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_mcp_available.ts --> Next to `mcpBridgeEntry`, an `agent-switch` entry
       (`{command:"agent-switch", args:["mcp","serve"]}`) written into
       `.mcp.json` by install when the probe is enabled, removed when it is not;
       recorded in `installed-tools.lock`.
@@ -76,8 +77,12 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       verbs, returning `null` on any failure. Fix the stale "SDK is NOT a
       dependency" comment at `mcp_server/server.ts:28`.
       verify: tests with a fake server and with the CLI fallback.
-- [ ] **2.4 `mcp:available` / doctor row** showing the link state.
-      verify: `tests/scripts/cmd_mcp_available.test.ts`.
+      built, not wired: `_lib/agent_switch_client.ts` and
+      `tests/scripts/agent_switch_client.test.ts` land with Phase 2, the stale
+      comment is fixed; the first production caller is 3.2 `agentSwitchLimits()`,
+      which ticks this step.
+- [x] **2.4 `mcp:available` / doctor row** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/cmd_mcp_available.ts --> showing the link state.
+      verify: `tests/scripts/mcp_available.test.ts` (the verb's existing test file).
 
 ## Phase 3 — Limits that know their account
 
