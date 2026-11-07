@@ -44,15 +44,21 @@ function loadContextOf(ruleFile: string): string[] {
         .filter((l) => l !== '');
 }
 
-/** References required by the rules whose path or file trigger matches `relPath`. */
+export class DutySourceError extends Error {}
+
+/**
+ * References required by the rules whose path or file trigger matches `relPath`.
+ * Throws {@link DutySourceError} when the router exists but cannot be read, so a
+ * broken source is not mistaken for "no duty"; a missing router is no duty.
+ */
 export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
     const sources = ruleSources(workspaceRoot);
     if (sources.router === null) return [];
     let router: Router;
     try {
         router = JSON.parse(fs.readFileSync(sources.router, 'utf8')) as Router;
-    } catch {
-        return [];
+    } catch (e) {
+        throw new DutySourceError(`router unreadable: ${sources.router}: ${(e as Error).message}`);
     }
     const out: Duty[] = [];
     for (const rule of allTierRules(router)) {
@@ -73,9 +79,31 @@ export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
     return out;
 }
 
-/** `read` when the ledger holds a full read of the path the reference resolves to. */
-export function dutyStates(duties: readonly Duty[], reads: Readonly<Record<string, unknown>>): Record<string, DutyState> {
+/**
+ * `read` when the ledger holds a full read of the path the reference resolves to
+ * AND the file still has the size and mtime recorded at that read: a reference
+ * edited since the read was not read in its current form. Credit is given at the
+ * pre_tool_use of the read, before the host returns the result — a read the host
+ * then refuses would still count, which this observation cannot see.
+ */
+export function dutyStates(
+    duties: readonly Duty[],
+    reads: Readonly<Record<string, unknown>>,
+    workspaceRoot: string,
+): Record<string, DutyState> {
     const states: Record<string, DutyState> = {};
-    for (const d of duties) states[`${d.rule}::${d.reference}`] = Object.hasOwn(reads, d.resolved) ? 'read' : 'required-pending';
+    for (const d of duties) {
+        const rec = reads[d.resolved] as { mtime?: unknown; size?: unknown } | undefined;
+        let current = false;
+        if (rec !== undefined) {
+            try {
+                const st = fs.statSync(path.join(workspaceRoot, d.resolved));
+                current = rec.mtime === st.mtimeMs && rec.size === st.size;
+            } catch {
+                current = false;
+            }
+        }
+        states[`${d.rule}::${d.reference}`] = current ? 'read' : 'required-pending';
+    }
     return states;
 }

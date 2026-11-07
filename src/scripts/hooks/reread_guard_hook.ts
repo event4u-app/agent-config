@@ -76,7 +76,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
-import { dutyForPath, dutyStates, type DutyState } from '../_lib/reference_duty.js';
+import { DutySourceError, dutyForPath, dutyStates, type DutyState } from '../_lib/reference_duty.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -196,8 +196,10 @@ export interface Ledger {
     writes: Record<string, number>;
     /** Per-path once-per-session advisory latch. */
     fired: Record<string, boolean>;
-    /** Reference duty observed at file acts, `rule::reference` → latest state. */
-    duty?: Record<string, { state: DutyState; ts: number }>;
+    /** Reference duty observed at file acts, `rule::reference` → counts and latest state. */
+    duty?: Record<string, DutyRecord>;
+    /** File acts whose duty could not be computed (an unreadable router). */
+    duty_errors?: number;
 }
 
 function emptyLedger(): Ledger {
@@ -228,6 +230,7 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
             writes: isObject(parsed['writes']) ? (parsed['writes'] as Record<string, number>) : {},
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
             ...(isObject(parsed['duty']) ? { duty: parsed['duty'] as unknown as NonNullable<Ledger['duty']> } : {}),
+            ...(typeof parsed['duty_errors'] === 'number' ? { duty_errors: parsed['duty_errors'] } : {}),
         };
     } catch {
         return emptyLedger(); // missing/corrupt ledger → fresh; never a crash
@@ -271,10 +274,10 @@ export function isRangedRead(toolInput: JsonObject): boolean {
  * of one known path.
  */
 export function wholeFileCatPath(command: string): string | null {
-    const m = /^\s*cat\s+(?:"([^"]+)"|'([^']+)'|([^\s|&;<>'"]+))\s*$/.exec(command);
+    const m = /^[ \t]*cat[ \t]+(?:"([^"\n]+)"|'([^'\n]+)'|([^\s|&;<>'"]+))[ \t]*$/.exec(command);
     if (m === null) return null;
     const p = m[1] ?? m[2] ?? m[3] ?? '';
-    return p.startsWith('/') && !/[$*?~`]/.test(p) ? p : null;
+    return p.startsWith('/') && !/[$*?~`\\{}[\]]/.test(p) ? p : null;
 }
 
 /** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
@@ -298,12 +301,34 @@ export function buildPostEditReadLine(relPath: string): string {
     );
 }
 
+export interface DutyRecord {
+    state: DutyState;
+    pending: number;
+    read: number;
+    ts: number;
+}
+
 function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
-    const states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads);
+    let states: Record<string, DutyState>;
+    try {
+        states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads, workspaceRoot);
+    } catch (e) {
+        if (!(e instanceof DutySourceError)) throw e;
+        ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
+        return;
+    }
     if (Object.keys(states).length === 0) return;
     const ts = Date.now();
     ledger.duty = { ...(ledger.duty ?? {}) };
-    for (const [k, state] of Object.entries(states)) ledger.duty[k] = { state, ts };
+    for (const [k, state] of Object.entries(states)) {
+        const prior = ledger.duty[k] ?? { state, pending: 0, read: 0, ts };
+        ledger.duty[k] = {
+            state,
+            pending: prior.pending + (state === 'required-pending' ? 1 : 0),
+            read: prior.read + (state === 'read' ? 1 : 0),
+            ts,
+        };
+    }
 }
 
 export function main(): number {
@@ -312,9 +337,12 @@ export function main(): number {
 
         const event = str(envelope['event'] as JsonValue | undefined);
         if (event === 'pre_compact') {
-            // Compaction drops what was read, so the ledger must not outlive it.
+            // Compaction drops what was read, so reads and the duty observed on them
+            // must not outlive it; own-write and advisory bookkeeping are not reads.
             const root = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
-            fs.rmSync(ledgerFile(root, deriveSessionKey(envelope, payload)), { force: true });
+            const sk = deriveSessionKey(envelope, payload);
+            const prior = readLedger(root, sk);
+            writeLedger(root, sk, { reads: {}, writes: prior.writes, fired: prior.fired });
             return EXIT_ALLOW;
         }
         if (event !== '' && event !== 'pre_tool_use') return EXIT_ALLOW;

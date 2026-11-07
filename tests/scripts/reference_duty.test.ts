@@ -81,9 +81,12 @@ describe('dutyForPath', () => {
 describe('dutyStates', () => {
     it('is read only when the ledger holds a full read of the reference', () => {
         const d = [{ rule: 'sot', reference: REF, resolved: RESOLVED }];
-        expect(dutyStates(d, {})).toEqual({ [`sot::${REF}`]: 'required-pending' });
-        expect(dutyStates(d, { [RESOLVED]: {} })).toEqual({ [`sot::${REF}`]: 'read' });
-        expect(dutyStates(d, { 'elsewhere/contexts/sot-mechanics.md': {} })).toEqual({ [`sot::${REF}`]: 'required-pending' });
+        const root = workspace();
+        const st = fs.statSync(path.join(root, RESOLVED));
+        const rec = { mtime: st.mtimeMs, size: st.size };
+        expect(dutyStates(d, {}, root)).toEqual({ [`sot::${REF}`]: 'required-pending' });
+        expect(dutyStates(d, { [RESOLVED]: rec }, root)).toEqual({ [`sot::${REF}`]: 'read' });
+        expect(dutyStates(d, { 'elsewhere/contexts/sot-mechanics.md': rec }, root)).toEqual({ [`sot::${REF}`]: 'required-pending' });
     });
 });
 
@@ -101,5 +104,43 @@ describe('E2E: the hook records the duty and changes nothing else', () => {
         const root = workspace();
         run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, 'dist', 'agent-src', 'rules', 'new.md'), content: 'x' } });
         expect(duty(root)[`sot::${REF}`]?.state).toBe('required-pending');
+    });
+});
+
+describe('council round 1 findings', () => {
+    it('does not credit a read of a reference that changed since', () => {
+        const root = workspace();
+        const ref = path.join(root, RESOLVED);
+        const st = fs.statSync(ref);
+        const d = [{ rule: 'sot', reference: REF, resolved: RESOLVED }];
+        expect(dutyStates(d, { [RESOLVED]: { mtime: st.mtimeMs, size: st.size } }, root)).toEqual({ [`sot::${REF}`]: 'read' });
+        expect(dutyStates(d, { [RESOLVED]: { mtime: st.mtimeMs, size: st.size + 1 } }, root)).toEqual({ [`sot::${REF}`]: 'required-pending' });
+    });
+    it('counts every observation instead of keeping only the last', () => {
+        const root = workspace();
+        const target = path.join(root, '.claude', 'x.md');
+        run(root, { tool_name: 'Write', tool_input: { file_path: target, content: 'x' } });
+        run(root, { tool_name: 'Read', tool_input: { file_path: path.join(root, RESOLVED) } });
+        run(root, { tool_name: 'Edit', tool_input: { file_path: target, old_string: 'x', new_string: 'y' } });
+        expect(duty(root)[`sot::${REF}`]).toMatchObject({ state: 'read', pending: 1, read: 1 });
+    });
+    it('keeps the write and advisory bookkeeping across a compaction, clearing only reads and duty', () => {
+        const root = workspace();
+        const target = path.join(root, '.claude', 'x.md');
+        run(root, { tool_name: 'Read', tool_input: { file_path: path.join(root, RESOLVED) } });
+        run(root, { tool_name: 'Write', tool_input: { file_path: target, content: 'x' } });
+        run(root, {}, 'pre_compact');
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as Record<string, Record<string, unknown>>;
+        expect(ledger['reads']).toEqual({});
+        expect(ledger['duty'] ?? {}).toEqual({});
+        expect(Object.keys(ledger['writes'] ?? {})).toEqual(['.claude/x.md']);
+    });
+    it('counts a file act whose router cannot be read, instead of reading it as no duty', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'router.json'), '{ not json');
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
     });
 });

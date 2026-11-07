@@ -381,6 +381,9 @@ describe('wholeFileCatPath — a Bash read the ledger can count', () => {
         expect(wholeFileCatPath('cat ~/a.ts')).toBeNull();
         expect(wholeFileCatPath('cat /w/$F')).toBeNull();
         expect(wholeFileCatPath('cat /w/*.md')).toBeNull();
+        expect(wholeFileCatPath('cat\n/w/a.md')).toBeNull();
+        expect(wholeFileCatPath('cat /w/{a,b}.md')).toBeNull();
+        expect(wholeFileCatPath('cat "/w/a\\b.md"')).toBeNull();
         expect(wholeFileCatPath('cat a.ts | head')).toBeNull();
         expect(wholeFileCatPath('cat a.ts b.ts')).toBeNull();
         expect(wholeFileCatPath('cat -n a.ts')).toBeNull();
@@ -406,12 +409,12 @@ describe('E2E: the ledger as the reference duty needs it', () => {
         const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8'));
         expect(Object.keys(ledger.reads)).toEqual([path.relative(root, abs)]);
     });
-    it('clears the session ledger on pre_compact, so a duty applies again', () => {
+    it('clears the recorded reads on pre_compact, so a duty applies again', () => {
         const { root, abs } = makeWorkspace();
         run(readEvent(root, abs), root);
         const key = deriveSessionKey({ session_id: 'sess-1' }, {});
-        expect(fs.existsSync(ledgerFile(root, key))).toBe(true);
+        expect(Object.keys(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads)).toHaveLength(1);
         run(JSON.stringify({ schema_version: 1, platform: 'claude', event: 'pre_compact', session_id: 'sess-1', workspace_root: root, payload: {} }), root);
-        expect(fs.existsSync(ledgerFile(root, key))).toBe(false);
+        expect(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads).toEqual({});
     });
 });
