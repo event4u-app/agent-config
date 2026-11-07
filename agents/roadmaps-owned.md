@@ -177,6 +177,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-trigger-evals-that-stay-fresh | later | later | `check-trigger-evals` is green on a fresh checkout and stays green without anyone hand-editing a date. |
 | road-to-typed-grants-that-persist | later | later | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
 | road-to-web-launch-readiness-benchmark | later | later | Road to web-launch-readiness — the benchmark and its verdict |
+| road-to-windsurf-hooks-after-the-cascade-move | later | later | Road to Windsurf hooks after the Cascade move |
 | road-to-worker-generation-recycling | later | later | On subagent-capable hosts, a worker that reaches 80 % of its tier budget emits a structured state capsule and is … |
 | road-to-workflows-that-cannot-exfiltrate | later | later | A workflow in this repository cannot send repository data or a token to a host nobody allow-listed, cannot run a … |
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
