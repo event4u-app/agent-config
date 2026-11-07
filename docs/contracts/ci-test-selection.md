@@ -3,15 +3,16 @@ stability: beta
 keep-beta-until: 2027-01-07
 keep-beta-reason: >-
   New on 2026-11-07. The selection rules are expected to move once the miss rate
-  is observed (a red push to main after a green queue run), and the merge queue
-  and required check it is written for are not enabled yet.
+  is observed (a red push to main after a green queue run); the merge queue and
+  the required check went live on 2026-11-07 and have no queue history yet.
 ---
 
 # CI test selection — run what a change can reach, at the merge gate
 
-> **Status:** in-repo half shipped on `feat/ci-targeted-tests`. The repository-admin
-> half — the merge queue and the required check — is **not** enabled; § Enabling
-> the gate lists the exact steps. Until then this changes cost, not enforcement.
+> **Status:** live since 2026-11-07. The in-repo half shipped in PR #2894; the
+> repository-admin half — `Tests result` required and the merge queue on — was
+> applied to ruleset `17749383` by owner decision on 2026-11-07 (§ Enabling the
+> gate). A failing test now blocks the merge on the PR and on the queue entry.
 
 ## What it does
 
@@ -134,12 +135,14 @@ red after a green queue run; count those before tightening anything further.
 - Check names changed: `Node Tests (<os>, shard N/<1|2|4>)` instead of
   `… shard N/4`. Pin `Tests result`, never a shard name.
 
-## Enabling the gate (repository admin — not done)
+## Enabling the gate (repository admin — done 2026-11-07)
 
 The goal — a change lands on `main` only if its tests pass, checked on the
 merged result — needs three settings on ruleset `17749383`. They are owner
-decisions (see `branch-protection-policy.md` and the open stub
-`road-to-main-protection-ruleset-changes`), so they are listed, not applied.
+decisions; the owner took all three, and accepted with them that macOS failures
+block merges (`Tests result` aggregates the macOS legs — a departure from the
+council decision of 2026-07-12 recorded in `docs/maintainers/branch-protection.md`).
+The live values are in `branch-protection-policy.md`.
 
 1. **Require a pull request for every change to `main`.** GitHub cannot run a
    workflow on a direct push *before* the push lands, so "block a commit like a
@@ -158,11 +161,14 @@ decisions (see `branch-protection-policy.md` and the open stub
    with no failure to read. `tests/scripts/workflow_merge_group_concurrency.test.ts`
    pins the four.
 
-Live state 2026-11-07: step 1 is already in place (the ruleset carries a
-`pull_request` rule); steps 2 and 3 are not.
+Live state, read back 2026-11-07: step 1 predates this contract (the ruleset's
+`pull_request` rule); steps 2 and 3 were applied that day — `Tests result` is the
+fourth required check, and the `merge_queue` rule merges with method `MERGE`,
+grouping `ALLGREEN`, with a 90-minute check timeout (the full matrix has run up
+to ~43 minutes on `push: main`).
 
-Read back with `gh api repos/event4u-app/agent-config/rulesets/17749383`, then
-update the live-state table in `branch-protection-policy.md` from that JSON.
+Re-check with `gh api repos/event4u-app/agent-config/rulesets/17749383`; on any
+change, update the live-state table in `branch-protection-policy.md` from that JSON.
 
 ## Revisit if
 
