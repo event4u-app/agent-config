@@ -206,6 +206,56 @@ interface RunResult {
     subtype?: string;
     /** The raw stream-json events, present only when the run asked for `stream`. */
     stream?: string;
+    /** Responded hooks per host event, read from `stream`; absent without one. */
+    hook_events?: Record<string, number>;
+    /** Whether the hooks seen match what the arm's setting sources load. */
+    hook_instrument?: HookInstrument;
+}
+
+export type HookInstrument = 'ok' | 'no-hook-event' | 'unexpected-hook-event';
+
+/**
+ * Responded hooks per host event in a stream-json run. A hook surfaces as a
+ * `system` event, `hook_started` then `hook_response`; the response is counted
+ * whatever its outcome, because the question is whether the hook ran.
+ */
+export function hookEventsFromStream(stdout: string): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const line of stdout.split('\n')) {
+        if (!line.includes('"hook_response"')) continue;
+        let ev: unknown;
+        try {
+            ev = JSON.parse(line);
+        } catch {
+            continue;
+        }
+        if (typeof ev !== 'object' || ev === null) continue;
+        const e = ev as Record<string, unknown>;
+        if (e['type'] !== 'system' || e['subtype'] !== 'hook_response') continue;
+        const name = typeof e['hook_event'] === 'string' ? e['hook_event'] : '?';
+        counts[name] = (counts[name] ?? 0) + 1;
+    }
+    return counts;
+}
+
+/**
+ * Whether an arm's hooks should fire: it loads user settings (`setting_sources`
+ * null), or it installs the package into its clone and says so with
+ * `expect_hooks`. Setting sources alone cannot tell a bare `project,local` arm
+ * from one whose clone carries project-level hooks.
+ */
+export function expectsHooks(opts: { setting_sources?: string | null; expect_hooks?: boolean }): boolean {
+    return opts.expect_hooks ?? (opts.setting_sources ?? null) === null;
+}
+
+/**
+ * Only `SessionStart` hooks are known to surface in the stream; the other
+ * events are not evidence either way, so the check is "any hook seen".
+ */
+export function hookInstrument(events: Record<string, number>, expectHooks: boolean): HookInstrument {
+    const seen = Object.values(events).some((n) => n > 0);
+    if (expectHooks) return seen ? 'ok' : 'no-hook-event';
+    return seen ? 'unexpected-hook-event' : 'ok';
 }
 
 export interface RunLiveOpts {
@@ -229,6 +279,8 @@ export interface RunLiveOpts {
     env?: Record<string, string> | null;
     /** `--output-format stream-json --verbose`: every event, kept as `stream` on the result for a trace. */
     stream?: boolean;
+    /** The arm installs hooks into its clone; overrides the setting-sources default. */
+    expect_hooks?: boolean;
     /** Run inside this image instead of on the host (`_lib/bench_ab_container.ts`); implies `stream`. */
     container?: (ContainerSpec & { token: string }) | null;
 }
@@ -454,8 +506,13 @@ export function run_live(
         errored: isError || returncode !== 0,
         num_turns: numTurns,
         subtype,
-        ...(opts.stream ? { stream: stdout } : {}),
+        ...(opts.stream ? streamFields(stdout, expectsHooks(opts)) : {}),
     };
+}
+
+function streamFields(stdout: string, expectHooks: boolean): Pick<RunResult, 'stream' | 'hook_events' | 'hook_instrument'> {
+    const hook_events = hookEventsFromStream(stdout);
+    return { stream: stdout, hook_events, hook_instrument: hookInstrument(hook_events, expectHooks) };
 }
 
 /** Record what would have run; produce a deterministic stub transcript. */

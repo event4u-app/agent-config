@@ -11,11 +11,8 @@ relates:
   - slug: road-to-a-session-start-under-the-host-limit
     relation: disjoint
     note: Owns the session-start size budget, the law form and the inactive-pack floors.
-  - slug: road-to-a-map-that-knows-what-happened
-    relation: disjoint
-    note: Holds the hook-bundle headroom that steps 2.2 and 2.3 need.
 estate_offset_exempt: "Extracted from road-to-mixed-trigger-activation-cost Phase 5 by owner decision of 2026-11-07, recorded in agents/evidence/owner-directives/2026-11-07-wip-cap-25.md, which names road-to-a-reference-that-arrives-before-the-act; no other roadmap owns the reference duty (owner search over active, later/, stubs/, skipped/ and archive/ in round inbox-2026-11-z)."
-estate_growth_exempt: "+1 active_roadmaps: the owner extracted the reference duty into its own active roadmap on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md); its blocker moves with it from road-to-mixed-trigger-activation-cost."
+estate_growth_exempt: "+1 open_blockers: hook-binding-ratification, discovered doing step 2.2 — binding the concern on Bash and pre_compact is hook plumbing that six council rounds refused; 2.2 waits on its ratification."
 ---
 # Road to a reference that arrives before the act
 
@@ -72,18 +69,27 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > true for additional context and for `SessionStart` / `UserPromptSubmit` stdout;
       > tool-hook stdout renders `(stdout, not model-visible)`. `docs/benchmark.md`
       > now says the 1,050-char `Bash` figure is open until the census is re-run.
-- [ ] **1.2 Prove hooks fire in each bench arm.** Add a per-trial invariant that reads
+- [x] **1.2 Prove hooks fire in each bench arm.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_task_runner.ts --> Add a per-trial invariant that reads
       the stream-json events and marks an AC arm `instrument-invalid` when no hook event
       arrived. The event shape is not in the tree; one cheap observed run pins it.
       spend released 2026-11-07 (`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`).
       verify: unit test over the pinned fixture stream; one real trial shows ≥ 1 hook
       event per bound event type for the package arm and 0 for `vanilla`.
+      > note: done 2026-11-07 — event shape pinned; package arm SessionStart × 4, `without`
+      > arm none, $0.0052. Only SessionStart surfaces in the stream, so the per-event
+      > clause is unanswerable from it; the invariant asks for any hook. Review fix: the
+      > expectation is per arm (`expect_hooks`), and `bench_map_task_set` marks a trial
+      > whose hooks broke that expectation `instrument-invalid`.
+      > `agents/evidence/analysis/bench-hook-fire-probe-2026-11-07.md`.
 
-- [ ] **1.3 Re-run the main-session census on the split buckets.** One fresh main
+- [x] **1.3 Re-run the main-session census on the split buckets.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml --> One fresh main
       session, `preamble_byte_census --main-session`, and report the `PostToolUse:Bash`
       figure as model-visible and stdout separately.
       verify: the census table shows both rows; `docs/benchmark.md` replaces the open
       1,050-char sentence with the measured visible figure.
+      > note: done 2026-11-07 — 219 `Bash` calls, hook output on 3 (mean 562 chars, all
+      > model-visible), ~8 chars per call; no tool-hook stdout recorded.
+      > `agents/evidence/analysis/main-session-census-split-2026-11-07.md`.
 
 ## Phase 2 — Reference duty, observe-only
 
@@ -101,18 +107,28 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > trigger is a slash command, so no shell command (e.g. `git commit`) can derive
       > a reference today. Run: `task report-rule-requires`.
 
-- [~] **2.2 Make the read ledger fit for the duty.** Key by `agent_id` when present,
+- [ ] **2.2 Make the read ledger fit for the duty.** Key by `agent_id` when present,
       clear on `pre_compact`, and count a whole-file read through Bash (`cat <file>`).
-      blocked: `hook-bundle-headroom` (1 B left; `road-to-a-map-that-knows-what-happened`).
       verify: tests for subagent separation, compaction reset and a `cat` read.
-- [~] **2.3 Observe the duty.** At `pre_tool_use`, compare the 2.1 table with the
-      ledger and record `required-pending` · `delivered` · `read` · `omitted-budget`
-      per action, writing nothing into context and blocking nothing.
-      blocked: `hook-bundle-headroom`.
-      verify: a fixture session records one `required-pending` for `git commit` with no
-      prior read, and `read` after a whole-file read.
+      blocked: `hook-binding-ratification`.
+      > note: partial 2026-11-07 — the `agent_id` key ships wired (the concern's
+      > existing Read/Edit/Write binding); the `cat` recognizer and the compaction clear
+      > are built and tested, but binding the concern on Bash and `pre_compact` is hook
+      > plumbing, refused in six council rounds and moved out of the change.
+      > `agents/evidence/analysis/reference-duty-council-rounds-2026-11-07.md`.
 
-- [ ] **2.4 Classify the unreachable and the oversized references.** For each of the 17
+- [x] **2.3 Observe the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/reread_guard_hook.ts --> At `pre_tool_use`, compare the 2.1 table with the
+      ledger and record `required-pending` · `read` per file act, writing nothing into
+      context and blocking nothing.
+      verify: a fixture session records `required-pending` for a write under a rule's
+      `path_prefix` with no prior read, and `read` after a whole-file read of the
+      reference. (corrected-from-reproduction: the draft named `git commit`, but no rule
+      trigger names a shell command — 2.4.)
+      > note: done 2026-11-07 — `_lib/reference_duty.ts` in `reread-guard` on Edit/Write,
+      > ledger `duty` counts and `duty_errors`; review and council fixes:
+      > `agents/evidence/analysis/reference-duty-council-rounds-2026-11-07.md`.
+
+- [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml --> For each of the 17
       rules whose `load_context` no act reaches, record one of: prompt-only by design
       (the obligation is a disposition, no act shows it) · needs an act trigger (name
       the trigger kind, including a shell-command kind that does not exist yet) ·
@@ -121,6 +137,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       verify: a committed table under `agents/evidence/analysis/` with one row for each
       of the 17 rules and each of the 10 references the requires table names, each with
       its disposition and the file:line it rests on.
+      > note: done 2026-11-07 — `agents/evidence/analysis/rule-reference-reachability-2026-11-07.md`.
 
 ## Phase 3 — Deliver or block, only measured
 
@@ -128,22 +145,61 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       read-gate (block once per reference), nothing, full layer. Compare violation rate,
       extra turns and cost.
       spend released 2026-11-07; any blocking default still needs owner ratification, with a
-      false-positive ceiling registered before the run. Needs 2.2 and 2.3 first.
+      false-positive ceiling registered before the run.
+      blocked: `shell-command-trigger-kind`.
       verify: pre-registration committed before the first trial.
 
 ## Blockers
 
+### blocker: shell-command-trigger-kind
+- **Status:** open
+- **Owner:** agent — `road-to-mixed-trigger-activation-cost` step 2.3 (action-time delivery)
+- **Blocks:** 3.1
+- **What to do:** add a trigger kind that names a shell command (`git commit`,
+  `gh pr create`, `git push`) and give `commit-policy`, `scope-control` and
+  `non-destructive-by-default` rows with it. Step 2.4 found that the only acts with a
+  duty today are writes under `.claude/`, `dist/agent-src/` and design files plus three
+  slash commands, so a four-arm comparison now would measure a duty almost no task meets.
+- **Recommendation:** build the trigger kind inside `road-to-mixed-trigger-activation-cost`
+  step 2.3, because that step already owns delivery at the tool call; a second carrier
+  here would split one mechanism across two roadmaps.
+- **If you do nothing:** 3.1 stays open, and the three always-loaded authority rules can
+  never leave the always-loaded layer, because no act would carry them.
+- **Resolved when:** `task report-rule-requires` shows act rows for those three rules.
+
+### blocker: hook-binding-ratification
+- **Status:** open
+- **Owner:** agent, with a two-provider council ratification (ADR-268 § 4)
+- **Blocks:** 2.2
+- **What to do:** add `Bash` to the `reread-guard` `tools:` list and the concern to the
+  claude `pre_compact` binding in `src/scripts/hook_manifest.yaml`, recompile with
+  `./scripts-run src/scripts/compile_hook_manifest`, and take a modification review
+  whose prompt opens with round 6's open points: a bound on `duty` / `duty_errors`
+  growth and a measured per-Edit/Write cost.
+- **Recommendation:** measure the hot-path cost first (one router parse and the matched
+  rules' frontmatter per Edit/Write), then bound the counters, then ask; both seats'
+  last refusals were about exactly those two.
+- **If you do nothing:** reads through `cat` never count and compaction never resets
+  the duty, so 3.1 would measure a ledger that over-credits after a compaction.
+- **Resolved when:** a ratification record under `agents/evidence/ratifications/` with
+  a passing verdict lands with the binding.
+
 ### blocker: hook-bundle-headroom
+- **Status:** RESOLVED 2026-11-07 — the bundle ceiling was raised after this blocker was
+  written; it measured 1,578,501 / 1,585,000 B after 2.2 and 2.3 landed.
+- **Owner:** agent
+- **Blocks:** nothing now (held 2.2 and 2.3)
+- **What to do:** re-measure with `./scripts-run src/scripts/check_hook_bundle_composition`
+  after each hook-touching step.
+- **Resolved when:** done.
 
-Owner: whoever lands the next hook shrink or `raise_log` entry. The hook bundle has 1 B of
-headroom (`road-to-a-map-that-knows-what-happened`, step at line 255). Steps 2.2 and 2.3
-add hook bytes and wait for it.
-
-### Resolved: b-owner-spend
-
-Released by the owner on 2026-11-07
-(`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`). Steps 1.2 and 3.1 may
-spend; pre-registration before a paid run stays mandatory.
+### blocker: b-owner-spend
+- **Status:** RESOLVED 2026-11-07 — released by the owner
+  (`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`).
+- **Owner:** user
+- **Blocks:** nothing now (held 1.2 and 3.1)
+- **What to do:** pre-register before any paid run.
+- **Resolved when:** done.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
