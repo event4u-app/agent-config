@@ -108,6 +108,8 @@ describe('committed tree', () => {
         expect(all.get('domain-safety-disclaimer')?.contract).toContain('"is this symptom serious?" → refuse');
         expect(all.get('strategy-safety-floor')?.contract).toContain('w/o named competitor + evidenced delta');
         expect(all.get('finance-safety-floor')?.contract).toContain('one sentence on what would invalidate the conclusion');
+        expect(all.get('domain-safety-retention')?.contract).toContain('name its expiry and the deletion job that must run');
+        expect(all.get('autonomous-execution')?.contract).toContain('new strategy from the escalation');
     });
 
     it('the reply-opening duties share one order: marker, greeting, answer', () => {
