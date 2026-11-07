@@ -1,0 +1,22 @@
+{
+    "hooks": {
+        "post_setup_worktree": [
+            {
+                "command": "[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform windsurf --event session_start --native-event post_setup_worktree",
+                "show_output": false
+            }
+        ],
+        "pre_user_prompt": [
+            {
+                "command": "[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform windsurf --event user_prompt_submit --native-event pre_user_prompt",
+                "show_output": false
+            }
+        ],
+        "post_cascade_response": [
+            {
+                "command": "[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform windsurf --event stop --native-event post_cascade_response",
+                "show_output": false
+            }
+        ]
+    }
+}
