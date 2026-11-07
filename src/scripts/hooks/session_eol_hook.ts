@@ -78,6 +78,7 @@ import {
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { CONTEXT_NOTICE_PCT, sessionContextFill } from '../_lib/pressure.js';
 import { hashSessionId, readQuotaLedger } from '../_lib/quota_ledger.js';
+import { checkpointBeforeMove } from '../_lib/switch_relay.js';
 import { current_branch } from '../_lib/git_common_dir.js';
 import { derive_session_tag } from '../_lib/session_tag.js';
 import { localDay, pruneStaleMarkers, pruneStalePointers, writeSessionPointer } from '../retro_queue.js';
@@ -163,6 +164,29 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
         str(payload['session_id'] as JsonValue | undefined) ||
         str(envelope['session_id'] as JsonValue | undefined)
     ).trim();
+}
+
+/** The derived run checkpoint for a session inside a claimed run; silent outside one, and never throws. */
+export function leaveRunCheckpoint(workspaceRoot: string, runId: string): void {
+    try {
+        if (!run_checkpoints_enabled(workspaceRoot)) return;
+        const slug = read_claimed_slug(workspaceRoot, runId);
+        if (slug === null) return;
+        // `road-to-wired-instruments` 2.1. The fingerprint was never
+        // passed here, so `context_fingerprint` was null in every
+        // checkpoint this package has ever written and the resume-time
+        // drift check it exists for could not fire. The value comes from
+        // the newest recorded probe rather than from a fresh one: this is
+        // the Stop path, and the probe costs a `gh` call. Absent stays
+        // absent, which reads as "not known" and never as "unchanged".
+        const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
+        const cp = buildCheckpoint(workspaceRoot, eolSessionKey(runId), slug, {
+            ...(observed !== null ? { contextFingerprint: observed } : {}),
+        });
+        if (cp !== null) writeCheckpoint(workspaceRoot, cp);
+    } catch {
+        // never block the Stop path
+    }
 }
 
 /** Load prior per-session state; any read/shape error reads as "fresh session". */
@@ -391,23 +415,13 @@ export function main(): number {
     // Best-effort throughout. A checkpoint is a recovery aid, and a
     // recovery aid that can fail a Stop is a liability.
     const checkpointRunId = payloadSessionId(payload, envelope);
-    if (crossedThresholdNow && checkpointRunId !== '' && run_checkpoints_enabled(workspaceRoot)) {
+    if (crossedThresholdNow && checkpointRunId !== '') leaveRunCheckpoint(workspaceRoot, checkpointRunId);
+    // road-to-a-link-with-agent-switch 4.4: a move agent-switch was told to make
+    // happens after this turn at the earliest, so this Stop is the last point the
+    // session can leave its checkpoint for the target session to resume from.
+    if (checkpointRunId !== '') {
         try {
-            const slug = read_claimed_slug(workspaceRoot, checkpointRunId);
-            if (slug !== null) {
-                // `road-to-wired-instruments` 2.1. The fingerprint was never
-                // passed here, so `context_fingerprint` was null in every
-                // checkpoint this package has ever written and the resume-time
-                // drift check it exists for could not fire. The value comes from
-                // the newest recorded probe rather than from a fresh one: this is
-                // the Stop path, and the probe costs a `gh` call. Absent stays
-                // absent, which reads as "not known" and never as "unchanged".
-                const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
-                const cp = buildCheckpoint(workspaceRoot, eolSessionKey(checkpointRunId), slug, {
-                    ...(observed !== null ? { contextFingerprint: observed } : {}),
-                });
-                if (cp !== null) writeCheckpoint(workspaceRoot, cp);
-            }
+            checkpointBeforeMove(hashSessionId(checkpointRunId), () => leaveRunCheckpoint(workspaceRoot, checkpointRunId));
         } catch {
             // never block the Stop path
         }
