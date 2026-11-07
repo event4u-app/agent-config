@@ -161,12 +161,17 @@ describe('hook events in a stream-json run', () => {
     it('counts nothing in a stream without hook events', () => {
         expect(runner.hookEventsFromStream(JSON.stringify({ type: 'result' }))).toEqual({});
     });
-    it('flags an arm that loads user settings yet saw no hook as an invalid instrument', () => {
-        expect(runner.hookInstrument({}, null)).toBe('no-hook-event');
-        expect(runner.hookInstrument({ SessionStart: 1 }, null)).toBe('ok');
+    it('flags an arm expected to carry hooks that saw none', () => {
+        expect(runner.hookInstrument({}, true)).toBe('no-hook-event');
+        expect(runner.hookInstrument({ SessionStart: 1 }, true)).toBe('ok');
     });
-    it('expects no hook on an arm that excludes user settings, and flags one that saw some', () => {
-        expect(runner.hookInstrument({}, 'project,local')).toBe('ok');
-        expect(runner.hookInstrument({ SessionStart: 1 }, 'project,local')).toBe('unexpected-hook-event');
+    it('flags an arm expected to be hook-free that saw some', () => {
+        expect(runner.hookInstrument({}, false)).toBe('ok');
+        expect(runner.hookInstrument({ SessionStart: 1 }, false)).toBe('unexpected-hook-event');
+    });
+    it('expects hooks from user settings, or from an explicit flag for an arm that installs them', () => {
+        expect(runner.expectsHooks({ setting_sources: null })).toBe(true);
+        expect(runner.expectsHooks({ setting_sources: 'project,local' })).toBe(false);
+        expect(runner.expectsHooks({ setting_sources: 'project,local', expect_hooks: true })).toBe(true);
     });
 });

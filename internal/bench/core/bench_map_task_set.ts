@@ -298,12 +298,18 @@ export function run_trial(task: MapTask, arm: string, opts: TrialOpts): MapTrial
             max_budget: opts.max_budget,
             model: opts.model,
             stream: true,
+            expect_hooks: spec.install !== null,
         }) as unknown as Dict;
         trace = parseTrace(String(run['stream'] ?? ''), { wall_s: Number(run['wall_time_seconds'] ?? 0), ac_version: acVersion(spec), payload: spec.inject, clone });
         transcript = String(run['transcript'] ?? '');
         breakdown = (run['tokens_breakdown'] ?? {}) as TokensBreakdown | Record<string, never>;
         errored = Boolean(run['errored']);
         reason = run['reason'] === undefined || run['reason'] === null ? null : String(run['reason']);
+        // A trial whose hooks did not do what its arm promises measured another arm.
+        if (run['hook_instrument'] !== undefined && run['hook_instrument'] !== 'ok') {
+            errored = true;
+            reason = `instrument-invalid: ${String(run['hook_instrument'])}`;
+        }
     }
     const check = evaluate_hidden_check(task, clone);
     return {

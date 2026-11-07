@@ -239,15 +239,22 @@ export function hookEventsFromStream(stdout: string): Record<string, number> {
 }
 
 /**
- * An arm that loads user settings (`setting_sources` null) carries the package's
- * hooks, so a run of it with no hook event measured the arm without its hooks.
- * An arm restricted to `project,local` should see none. Only `SessionStart`
- * hooks are known to surface in the stream; the other events are not evidence
- * either way, which is why the check is "any hook" rather than "every event".
+ * Whether an arm's hooks should fire: it loads user settings (`setting_sources`
+ * null), or it installs the package into its clone and says so with
+ * `expect_hooks`. Setting sources alone cannot tell a bare `project,local` arm
+ * from one whose clone carries project-level hooks.
  */
-export function hookInstrument(events: Record<string, number>, settingSources: string | null): HookInstrument {
+export function expectsHooks(opts: { setting_sources?: string | null; expect_hooks?: boolean }): boolean {
+    return opts.expect_hooks ?? (opts.setting_sources ?? null) === null;
+}
+
+/**
+ * Only `SessionStart` hooks are known to surface in the stream; the other
+ * events are not evidence either way, so the check is "any hook seen".
+ */
+export function hookInstrument(events: Record<string, number>, expectHooks: boolean): HookInstrument {
     const seen = Object.values(events).some((n) => n > 0);
-    if (settingSources === null) return seen ? 'ok' : 'no-hook-event';
+    if (expectHooks) return seen ? 'ok' : 'no-hook-event';
     return seen ? 'unexpected-hook-event' : 'ok';
 }
 
@@ -272,6 +279,8 @@ export interface RunLiveOpts {
     env?: Record<string, string> | null;
     /** `--output-format stream-json --verbose`: every event, kept as `stream` on the result for a trace. */
     stream?: boolean;
+    /** The arm installs hooks into its clone; overrides the setting-sources default. */
+    expect_hooks?: boolean;
     /** Run inside this image instead of on the host (`_lib/bench_ab_container.ts`); implies `stream`. */
     container?: (ContainerSpec & { token: string }) | null;
 }
@@ -497,13 +506,13 @@ export function run_live(
         errored: isError || returncode !== 0,
         num_turns: numTurns,
         subtype,
-        ...(opts.stream ? streamFields(stdout, opts.setting_sources ?? null) : {}),
+        ...(opts.stream ? streamFields(stdout, expectsHooks(opts)) : {}),
     };
 }
 
-function streamFields(stdout: string, settingSources: string | null): Pick<RunResult, 'stream' | 'hook_events' | 'hook_instrument'> {
+function streamFields(stdout: string, expectHooks: boolean): Pick<RunResult, 'stream' | 'hook_events' | 'hook_instrument'> {
     const hook_events = hookEventsFromStream(stdout);
-    return { stream: stdout, hook_events, hook_instrument: hookInstrument(hook_events, settingSources) };
+    return { stream: stdout, hook_events, hook_instrument: hookInstrument(hook_events, expectHooks) };
 }
 
 /** Record what would have run; produce a deterministic stub transcript. */
