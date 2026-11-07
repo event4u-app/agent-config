@@ -211,6 +211,15 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
   but no fresh host session has confirmed the notice is gone.
 - **Resolved when:** the observation is recorded under 4.1.
 
+### blocker: contract-ratification-non-convergent
+- **Status:** open
+- **Owner:** user — the ratification gate (ADR-268 § 4) needs a passing two-provider record or an owner decision; the agent may not ratify its own change
+- **Blocks:** merge of the PR carrying Phases 1–3
+- **State (2026-11-07):** eleven ratification rounds (anthropic + openai) and two full-body equivalence passes over four groups of seven rules. Every concrete finding was verified against the rule body and fixed or rejected with a reason; each restored qualifier is pinned in `tests/scripts/check_startup_contracts.test.ts`. The audit holds 673 clauses. Round 11: anthropic refused on one wording point (fixed after the round: the refusal snippet is masked); openai refused on the evidence boundary — no single council prompt (51,200-byte cap) can carry all 28 bodies beside their contracts, which is why the comparison ran in four groups. Prompts of every round are under `agents/evidence/council/session-start-contracts-*`.
+- **What to do:** decide one of: ratify as owner (the record names you as reviewer); run one more round against the current subject; or raise the council prompt cap so a single round can see every body.
+- **If you do nothing:** the PR stays open and red on `check_kernel_edit_ratified`; the session-start layer stays full for consumers.
+- **Resolved when:** a ratification record under `agents/evidence/ratifications/` with a passing verdict lands with the PR.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-28 | reviewer: claude/host -->
 
