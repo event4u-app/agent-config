@@ -7368,7 +7368,7 @@ var require_dist = __commonJS({
 });
 
 // src/scripts/install.ts
-import { spawn, spawnSync as spawnSync4 } from "node:child_process";
+import { spawn, spawnSync as spawnSync5 } from "node:child_process";
 import * as crypto5 from "node:crypto";
 import * as fs41 from "node:fs";
 import * as os14 from "node:os";
@@ -8456,6 +8456,130 @@ function current_package_version(repo_root) {
 import * as fs5 from "node:fs";
 import * as path5 from "node:path";
 
+// src/scripts/_lib/agent_switch_link.ts
+import { spawnSync } from "node:child_process";
+
+// src/scripts/_lib/spawn_env.ts
+var DENY_EXACT = /* @__PURE__ */ new Set([
+  // dynamic loader
+  "LD_PRELOAD",
+  "LD_LIBRARY_PATH",
+  "LD_AUDIT",
+  "DYLD_INSERT_LIBRARIES",
+  "DYLD_LIBRARY_PATH",
+  "DYLD_FRAMEWORK_PATH",
+  "GCONV_PATH",
+  // git command-injection
+  "GIT_EXTERNAL_DIFF",
+  "GIT_SSH",
+  "GIT_SSH_COMMAND",
+  "GIT_PROXY_COMMAND",
+  "GIT_PAGER",
+  "PAGER",
+  // git config-injection: GIT_ALTERNATE_OBJECT_DIRECTORIES can point git at
+  // attacker-controlled object stores; the GIT_CONFIG* family is handled by
+  // prefix below (it is a general arbitrary-config-injection primitive).
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  // git path-redirection: GIT_DIR / GIT_INDEX_FILE / GIT_NAMESPACE point a
+  // child's git at an attacker-controlled repo, index file, or ref namespace
+  // — ordinary git ops then read and write attacker state (low severity,
+  // same family as GIT_ALTERNATE_OBJECT_DIRECTORIES above).
+  "GIT_DIR",
+  "GIT_INDEX_FILE",
+  "GIT_NAMESPACE",
+  // resolver hijack: HOSTALIASES remaps hostnames via an attacker file,
+  // redirecting any network fetch the child performs (CWE-427-adjacent).
+  "HOSTALIASES",
+  // runtime auto-exec hooks
+  "NODE_OPTIONS",
+  "BASH_ENV",
+  "ENV",
+  "PYTHONPATH",
+  "PYTHONSTARTUP",
+  "PYTHONINSPECT",
+  "PERL5OPT",
+  "PERL5LIB",
+  "RUBYOPT",
+  // shell field-splitting
+  "IFS"
+]);
+function isDeniedByFamily(name) {
+  if (name.startsWith("LD_") || name.startsWith("DYLD_")) return true;
+  if (name.startsWith("GIT_") && name.endsWith("_COMMAND")) return true;
+  if (name === "GIT_CONFIG" || name.startsWith("GIT_CONFIG_")) return true;
+  return false;
+}
+function hardenedSpawnEnv(overrides = {}) {
+  const out = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value === void 0) continue;
+    if (DENY_EXACT.has(key)) continue;
+    if (isDeniedByFamily(key)) continue;
+    out[key] = value;
+  }
+  for (const [key, value] of Object.entries(overrides)) {
+    out[key] = value;
+  }
+  return out;
+}
+
+// src/scripts/_lib/agent_switch_link.ts
+var LINK_CONTRACT = 1;
+var AGENT_SWITCH_MCP_KEY = "agent-switch";
+var PROBE_TIMEOUT_MS = 5e3;
+function spawnEnv(opts) {
+  const out = {};
+  for (const [k, v] of Object.entries(hardenedSpawnEnv(opts.env ?? {}))) {
+    if (typeof v === "string") out[k] = v;
+  }
+  return out;
+}
+function runAgentSwitch(args, opts, timeout) {
+  const r = spawnSync("agent-switch", [...args], {
+    cwd: opts.cwd ?? process.cwd(),
+    encoding: "utf-8",
+    timeout,
+    env: spawnEnv(opts),
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  if (r.error) {
+    return { missing: r.error.code === "ENOENT", status: null, stdout: "" };
+  }
+  return { missing: false, status: r.status, stdout: String(r.stdout ?? "") };
+}
+function isStringArray(v) {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+function probeLink(opts = {}) {
+  const r = runAgentSwitch(["link", "status", "--json"], opts, PROBE_TIMEOUT_MS);
+  if (r.missing) return { state: "absent", detail: "`agent-switch` is not on PATH" };
+  if (r.status !== 0) {
+    return { state: "failed", detail: `\`agent-switch link status\` exited ${String(r.status ?? "without a status")}` };
+  }
+  let doc;
+  try {
+    doc = JSON.parse(r.stdout);
+  } catch {
+    return { state: "failed", detail: "`agent-switch link status --json` did not print JSON" };
+  }
+  if (doc === null || typeof doc !== "object") {
+    return { state: "failed", detail: "`agent-switch link status --json` printed no object" };
+  }
+  const d = doc;
+  if (d["enabled"] === false) return { state: "disabled", detail: "the link is off in agent-switch" };
+  if (d["contract"] !== LINK_CONTRACT) {
+    return { state: "incompatible", detail: `agent-switch speaks link contract ${JSON.stringify(d["contract"])}, this build speaks ${LINK_CONTRACT}` };
+  }
+  const mcp = d["mcp"];
+  if (d["enabled"] !== true || typeof d["version"] !== "string" || !mcp || typeof mcp["command"] !== "string" || mcp["command"] === "" || !isStringArray(mcp["args"])) {
+    return { state: "failed", detail: "`agent-switch link status --json` is missing a contract field" };
+  }
+  return {
+    state: "present",
+    status: { enabled: true, version: d["version"], contract: LINK_CONTRACT, mcp: { command: mcp["command"], args: mcp["args"] } }
+  };
+}
+
 // src/scripts/_lib/host_capability.ts
 import process2 from "node:process";
 var SAFE_DEFAULT = {
@@ -8615,7 +8739,7 @@ function makeEnsureMcpRegistrations(mergeJsonFile) {
 function readsProjectMcpConfig(hostId) {
   return probeHostCapabilities(hostId).reads_project_mcp_config;
 }
-function registerMcpHosts(mergeJsonFile, projectRoot, force, packageRoot, tools, into, readsConfig = readsProjectMcpConfig) {
+function registerMcpHosts(mergeJsonFile, projectRoot, force, packageRoot, tools, into, readsConfig = readsProjectMcpConfig, link = probeLink) {
   const ensure = makeEnsureMcpRegistrations(mergeJsonFile);
   const claude = MCP_PROJECT_CONFIG["claude-code"];
   if (tools.has("claude-code") && claude !== void 0) {
@@ -8623,12 +8747,55 @@ function registerMcpHosts(mergeJsonFile, projectRoot, force, packageRoot, tools,
       { toolId: "claude-code", hostId: claude.hostId, relPath: claude.relPath }
     ]);
     (into["claude-code"] ??= []).push(...merged["claude-code"] ?? []);
+    (into["claude-code"] ??= []).push(...registerAgentSwitchLink(mergeJsonFile, projectRoot, force, link()));
   }
   for (const [toolId, keys] of Object.entries(
     ensure(projectRoot, force, packageRoot, mcpRegistrationTargets(tools, readsConfig))
   )) {
     (into[toolId] ??= []).push(...keys);
   }
+}
+function registerAgentSwitchLink(mergeJsonFile, projectRoot, force, probe) {
+  const file = path5.join(projectRoot, ".mcp.json");
+  const label = ".mcp.json";
+  if (probe.state === "present") {
+    const entry = { command: probe.status.mcp.command, args: probe.status.mcp.args };
+    return mergeJsonFile(file, { mcpServers: { [AGENT_SWITCH_MCP_KEY]: entry } }, force, label);
+  }
+  const existing = readMcpServer(file, AGENT_SWITCH_MCP_KEY);
+  if (existing === void 0 || !isLinkEntry(existing)) return [];
+  if (probe.state === "disabled" || probe.state === "incompatible") {
+    removeMcpServer(file, AGENT_SWITCH_MCP_KEY);
+    return [];
+  }
+  return mergeJsonFile(file, { mcpServers: { [AGENT_SWITCH_MCP_KEY]: existing } }, force, label);
+}
+function isLinkEntry(entry) {
+  if (entry === null || typeof entry !== "object" || Array.isArray(entry)) return false;
+  const e = entry;
+  const keys = Object.keys(e).sort().join(",");
+  return keys === "args,command" && e["command"] === "agent-switch" && JSON.stringify(e["args"]) === JSON.stringify(["mcp", "serve"]);
+}
+function readMcpDoc(file) {
+  try {
+    const doc = JSON.parse(fs5.readFileSync(file, "utf-8"));
+    return doc !== null && typeof doc === "object" && !Array.isArray(doc) ? doc : null;
+  } catch {
+    return null;
+  }
+}
+function readMcpServer(file, key) {
+  const servers = readMcpDoc(file)?.["mcpServers"];
+  if (servers === null || typeof servers !== "object" || Array.isArray(servers)) return void 0;
+  return servers[key];
+}
+function removeMcpServer(file, key) {
+  const doc = readMcpDoc(file);
+  const servers = doc?.["mcpServers"];
+  if (doc === null || servers === null || typeof servers !== "object" || Array.isArray(servers)) return;
+  delete servers[key];
+  fs5.writeFileSync(file, `${JSON.stringify(doc, null, 2)}
+`, "utf-8");
 }
 function resolveTierB(packageRoot) {
   const p = path5.join(packageRoot, "agents", "runtime", "state", "skill-tiers.json");
@@ -11743,7 +11910,7 @@ function build_command_bundles(package_root, dest_dir, force = false, curation =
 
 // src/scripts/_lib/claude_settings_hooks.ts
 var YAML4 = __toESM(require_dist(), 1);
-import { spawnSync } from "node:child_process";
+import { spawnSync as spawnSync2 } from "node:child_process";
 import * as fs21 from "node:fs";
 import * as path20 from "node:path";
 
@@ -11828,7 +11995,7 @@ function parse_host_version(raw) {
   return m === null ? null : [Number(m[1]), Number(m[2]), Number(m[3])];
 }
 function claude_host_version() {
-  const res = spawnSync("claude", ["--version"], { encoding: "utf-8", timeout: 5e3, stdio: ["ignore", "pipe", "ignore"] });
+  const res = spawnSync2("claude", ["--version"], { encoding: "utf-8", timeout: 5e3, stdio: ["ignore", "pipe", "ignore"] });
   return res.status === 0 && typeof res.stdout === "string" && res.stdout.trim() !== "" ? res.stdout.trim() : null;
 }
 function _below(have, need) {
@@ -14582,7 +14749,7 @@ function resolveGlobalRuleScope(inputs) {
 }
 
 // src/install/stagedRuntime.ts
-import { spawnSync as spawnSync2 } from "node:child_process";
+import { spawnSync as spawnSync3 } from "node:child_process";
 import { randomBytes as randomBytes6 } from "node:crypto";
 import * as fs37 from "node:fs";
 import { createRequire as createRequire3 } from "node:module";
@@ -14800,7 +14967,7 @@ function probeHookCommand(command, env = process.env) {
     for (const key of ["HOME", "USERPROFILE", "EVENT4U_CONFIG_HOME"]) {
       if (env[key] !== void 0) childEnv[key] = env[key];
     }
-    const res = spawnSync2("/bin/sh", ["-c", probeCommand], {
+    const res = spawnSync3("/bin/sh", ["-c", probeCommand], {
       cwd: project,
       stdio: [fd, "pipe", "pipe"],
       encoding: "utf-8",
@@ -22037,7 +22204,7 @@ function render_native_model_md(text, tier) {
 }
 
 // src/scripts/_cli/cmd_migrate.ts
-import { spawnSync as spawnSync3 } from "node:child_process";
+import { spawnSync as spawnSync4 } from "node:child_process";
 import * as fs40 from "node:fs";
 import * as path38 from "node:path";
 import process3 from "node:process";
@@ -22436,7 +22603,7 @@ function _load_state_migrator() {
     if (opts.backup === false) {
       args.push("--no-backup");
     }
-    const r = spawnSync3(command, args, { encoding: "utf8" });
+    const r = spawnSync4(command, args, { encoding: "utf8" });
     if (r.status !== 0) {
       throw new Error(
         `v0\u2192v1 state migration failed (exit ${r.status ?? "null"}): ${(r.stderr ?? "").trim()}`
@@ -24027,7 +24194,7 @@ function _smoke_test_hooks(project_root, package_root) {
     const inv = _resolve_tsx_invocation(dispatcher, dispatcherArgs);
     let res;
     try {
-      res = spawnSync4(inv.command, inv.args, {
+      res = spawnSync5(inv.command, inv.args, {
         input: "{}",
         encoding: "utf-8",
         cwd: project_root,
@@ -25767,7 +25934,7 @@ function _server_info_path() {
 function _pid_is_agent_config(pid) {
   let res;
   try {
-    res = spawnSync4("ps", ["-p", String(pid), "-o", "command="], {
+    res = spawnSync5("ps", ["-p", String(pid), "-o", "command="], {
       encoding: "utf-8",
       timeout: 5e3
     });
@@ -25933,7 +26100,7 @@ function _wizard_run_sync(cmd, env, cli) {
 function _openBrowser(url) {
   try {
     const opener = process4.platform === "darwin" ? ["open", [url]] : process4.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : ["xdg-open", [url]];
-    spawnSync4(opener[0], opener[1], { stdio: "ignore" });
+    spawnSync5(opener[0], opener[1], { stdio: "ignore" });
   } catch {
   }
 }
