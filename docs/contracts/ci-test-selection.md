@@ -164,7 +164,7 @@ The live values are in `branch-protection-policy.md`.
 
 Live state 2026-11-07: steps 1 and 2 are in place (the ruleset carries a
 `pull_request` rule and requires `Tests result`); step 3 is rejected and no
-`merge_queue` rule is configured.
+ruleset entry of type `merge_queue` is configured.
 
 Re-check with `gh api repos/event4u-app/agent-config/rulesets/17749383`; on any
 change, update the live-state table in `branch-protection-policy.md` from that JSON.

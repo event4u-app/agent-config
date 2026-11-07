@@ -10,7 +10,7 @@ owner asked why it was enabled and then decided (verbatim, German):
 > schalte es ab und vermerke das, damit es nicht mehr passiert. Das bringt keinen
 > Vorteil. WEg damit
 
-The `merge_queue` rule was removed from the ruleset the same day; the other
+The ruleset entry of type `merge_queue` was removed the same day; the other
 four rules (`deletion`, `required_status_checks`, `non_fast_forward`,
 `pull_request`) are unchanged.
 
