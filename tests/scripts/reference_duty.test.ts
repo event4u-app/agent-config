@@ -183,4 +183,23 @@ describe('council round 3: every matched rule yields duties or a counted error',
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'), `---\ntype: "auto"\nload_context: ["${REF}"] # inline\n---\n\n# sot\n`);
         expect(dutyForPath('.claude/a.md', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
     });
+    it.each([
+        ['a null tier entry', { tier_1: [null] }],
+        ['a trigger that is not an object', { tier_1: [{ id: 'sot', triggers: [5] }] }],
+    ])('counts %s, and the hook still exits 0', (_name, router) => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(router));
+        const input = JSON.stringify({ schema_version: 1, platform: 'claude', event: 'pre_tool_use', session_id: 's1', workspace_root: root, payload: { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } } });
+        const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd: root, input, env: { ...process.env, AGENT_CONFIG_PACKAGE_ROOT: '' } });
+        expect(r.status).toBe(0);
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
+    });
+    it('counts a rule whose frontmatter is not a mapping', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'), '---\n- just\n- a list\n---\n\n# sot\n');
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
+    });
 });

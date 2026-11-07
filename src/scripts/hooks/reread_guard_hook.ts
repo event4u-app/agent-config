@@ -76,7 +76,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
-import { DutySourceError, dutyForPath, dutyStates, ledgerKey, type DutyState } from '../_lib/reference_duty.js';
+import { dutyForPath, dutyStates, ledgerKey, type DutyState } from '../_lib/reference_duty.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -312,8 +312,9 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
     let states: Record<string, DutyState>;
     try {
         states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads, workspaceRoot);
-    } catch (e) {
-        if (!(e instanceof DutySourceError)) throw e;
+    } catch {
+        // DutySourceError for a source that cannot be read, or anything else the
+        // computation throws: either way a duty went unobserved, so it is counted.
         ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
         return;
     }

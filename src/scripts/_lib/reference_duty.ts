@@ -53,7 +53,9 @@ function loadContextOf(ruleFile: string): string[] {
     } catch (e) {
         throw new DutySourceError(`rule frontmatter unparsable: ${ruleFile}: ${(e as Error).message}`);
     }
-    const lc = typeof fm === 'object' && fm !== null ? (fm as Record<string, unknown>)['load_context'] : undefined;
+    if (fm === null || fm === undefined) return [];
+    if (typeof fm !== 'object' || Array.isArray(fm)) throw new DutySourceError(`rule frontmatter is not a mapping: ${ruleFile}`);
+    const lc = (fm as Record<string, unknown>)['load_context'];
     if (lc === undefined || lc === null) return [];
     if (!Array.isArray(lc) || !lc.every((x) => typeof x === 'string')) {
         throw new DutySourceError(`rule load_context is not a list of paths: ${ruleFile}`);
@@ -70,11 +72,16 @@ function tierRules(router: unknown, file: string): Array<{ id: string; triggers:
         if (list === undefined) continue;
         if (!Array.isArray(list)) throw new DutySourceError(`router ${tier} is not a list: ${file}`);
         for (const r of list) {
+            if (typeof r !== 'object' || r === null || Array.isArray(r)) throw new DutySourceError(`router ${tier} entry is not an object: ${file}`);
             const e = r as Record<string, unknown>;
-            if (typeof e['id'] !== 'string' || !Array.isArray(e['triggers'])) {
+            const triggers = e['triggers'];
+            if (typeof e['id'] !== 'string' || !Array.isArray(triggers)) {
                 throw new DutySourceError(`router ${tier} entry without id and trigger list: ${file}`);
             }
-            out.push({ id: e['id'], triggers: e['triggers'] as Trigger[] });
+            if (!triggers.every((t) => typeof t === 'object' && t !== null && !Array.isArray(t))) {
+                throw new DutySourceError(`router ${tier} entry ${e['id']} has a trigger that is not an object: ${file}`);
+            }
+            out.push({ id: e['id'], triggers: triggers as Trigger[] });
         }
     }
     return out;
@@ -96,9 +103,7 @@ export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
     }
     const out: Duty[] = [];
     for (const rule of tierRules(router, sources.router)) {
-        const hit = rule.triggers.some(
-            (t) => typeof t === 'object' && t !== null && ('path_prefix' in t || 'file_pattern' in t) && trigger_matches(t, '', [relPath]),
-        );
+        const hit = rule.triggers.some((t) => ('path_prefix' in t || 'file_pattern' in t) && trigger_matches(t, '', [relPath]));
         if (!hit) continue;
         const dir = sources.dirs.find((d) => fs.existsSync(path.join(d, `${rule.id}.md`)));
         if (dir === undefined) throw new DutySourceError(`matched rule has no file: ${rule.id}`);
