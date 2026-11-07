@@ -327,11 +327,17 @@ and their install recipes do not go into this tree (`source-confidentiality`).
 
 Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/scripts/surface-tiers.yml:8-10`
 
-- [ ] **6.1** Move the bench engine (`src/scripts/bench_*`, `src/scripts/_lib/bench_*`)
+- [x] **6.1** <!-- receipt: pending --> Move the bench engine (`src/scripts/bench_*`, `src/scripts/_lib/bench_*`)
   to `internal/bench/core/`, the `internal/bench/ui/` precedent: `package.json`
   `files[]` ships `src/scripts/`, and 80 bench files currently ship to consumers.
   `agent-config benchmark` (the user command) stays.
   verify: `npm pack --dry-run` -> /^(?![\s\S]*scripts\/bench_)/
+  Done 2026-11-07: 88 files under `internal/bench/core/`, typechecked and linted
+  there; `npm pack` carries no bench file. Eleven maintainer-only scripts that import
+  the engine (showcase, evolution lab, bench linters, release and its drill,
+  llm_propose) stay in `src/scripts/` and are excluded from the package by name;
+  `prepack-check` now honours npm's negated `files` entries. Frozen records keep the
+  paths they were written with.
 - [x] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_sweep.ts -->
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
