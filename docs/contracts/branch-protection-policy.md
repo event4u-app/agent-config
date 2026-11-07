@@ -52,11 +52,12 @@ tooling pointed at it reads "unprotected" for a protected branch.
 | Stale reviews dismissed on push | yes |
 | Allowed merge methods | merge · squash · rebase |
 | Branch must be up to date | **no** (`strict_required_status_checks_policy: false`) — this row read `true` until 2026-09-10, when it was checked against the live ruleset while reasoning about a different question. The table's own "Read it" row is the authority; a hand-written value drifts silently because nothing compares them. |
-| **Required status checks** | **two, since 2026-09-11 — `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`.** Read `exactly one — Sync + Generate Tools Consistency` from 2026-08-02 until then; the second was added by the ruleset edit ADR-276 records. Re-measured 2026-09-13. |
+| **Required status checks** | **four, measured 2026-11-07 — `Sync + Generate Tools Consistency`, `Standing payload delta + budget gate`, `lint commit subjects`, `Tests result`.** Two (the first pair) from 2026-09-11, added by the ruleset edit ADR-276 records; `exactly one — Sync + Generate Tools Consistency` from 2026-08-02 until then. |
+| **Merge queue** | **none — owner decision 2026-11-07, do not re-enable or propose** (`agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`). A `merge_queue` rule was added that morning and removed the same day. |
 | Bypass | **`RepositoryRole 5` (repository admin), `bypass_mode: pull_request`, standing since ruleset version `54668684`** by owner directive `agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md`; every use leaves a bypass record and owes its after-the-fact council review. Before that: none from 2026-09-10 — `bypass_actors: []`, `current_user_can_bypass: never`, re-measured 2026-09-13. Read `repository-admin role, always` until 2026-09-10, when `bypass_actors` was emptied. An `OrganizationAdmin` bypass with `bypass_mode: always` was re-added on 2026-09-11 (version `49393554`) and removed again on 2026-09-12 (version `49500777`), so a record describing that bypass in the present tense describes a one-day state. |
 
 Everything else in CI is **advisory at the branch-protection layer**: the
-checks run, a red one is visible on the PR, but only the two required contexts
+checks run, a red one is visible on the PR, but only the four required contexts
 above mechanically block the merge button.
 
 The practical gate is therefore maintainer review of the checks tab. **Corrected
@@ -85,7 +86,7 @@ the **reported check names** — the strings a required-check list must match.
 | `consistency.yml` | `Sync + Generate Tools Consistency` **(required — one of two; ruleset read 2026-10-07)** |
 | `smoke.yml` | `Smoke — kernel` · `Smoke — router` · `Smoke — schema` · `Smoke — skills` |
 | `skill-lint.yml` | `skill-lint` (+ `skill-lint-strict`, release-gated) |
-| `tests.yml` | `Platform scope` · `Select tests` · `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests (ubuntu-latest, shard N/4)` · `Install Script Tests (macos-26, unsharded)` · `Install Aux Tests ({ubuntu-latest,macos-26})` · `Node Tests ({ubuntu-latest,macos-26}, shard N/{1,2,4})` — the shard total follows the selection ([`ci-test-selection`](ci-test-selection.md)) · `Golden Tests ({ubuntu-latest,macos-26})` · `Workspace Tests ({ubuntu-latest,macos-26})` · `Tests result` (always-run aggregate, not required; reports on every PR since the `pull_request` trigger lost its `paths:` filter) |
+| `tests.yml` | `Platform scope` · `Select tests` · `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests (ubuntu-latest, shard N/4)` · `Install Script Tests (macos-26, unsharded)` · `Install Aux Tests ({ubuntu-latest,macos-26})` · `Node Tests ({ubuntu-latest,macos-26}, shard N/{1,2,4})` — the shard total follows the selection ([`ci-test-selection`](ci-test-selection.md)) · `Golden Tests ({ubuntu-latest,macos-26})` · `Workspace Tests ({ubuntu-latest,macos-26})` · `Tests result` (always-run aggregate, **required** since 2026-11-07; reports on every PR since the `pull_request` trigger lost its `paths:` filter) |
 | `smoke-public-install.yml` | `{ubuntu,macos,windows}-latest · node {20,22}` · `tarball E2E · node {20,22}` · `npm publish dry-run · node {20,22}` |
 | `standing-payload-delta.yml` | `Standing payload delta + budget gate` **(required — the second of two since 2026-09-11; ruleset read 2026-10-07)** — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it was pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
 | `rule-backstops.yml` | `Rule backstops` |

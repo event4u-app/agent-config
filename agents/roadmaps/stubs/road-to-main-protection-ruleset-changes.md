@@ -5,6 +5,13 @@ review_by: 2026-09-25
 
 # Stub: road to the `main` protection-ruleset changes (required checks + merge queue)
 
+> **OWNER DECISION 2026-11-07 — NO MERGE QUEUE.** The queue was enabled that
+> morning and removed the same day by owner order ("Das bringt keinen Vorteil.
+> Weg damit"); record: `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`.
+> Transfer 2 below is **closed as rejected** — never promote, re-enable or propose
+> it; reopening is the owner's call only. `Tests result` and `lint commit subjects`
+> are required checks as of the same day.
+
 > **Arrivals:** 4 — latest `inbox-2026-10-w` (2026-10-21, CI-speed round); earlier:
 > `inbox-2026-10-f` (2026-10-06), two feedback rounds (9.10.0, test economy
 > 2026-08-10). Codenames only.
@@ -156,7 +163,7 @@ here — a second copy is a second thing to drift.
 
 ## Transfer 2 — `merge-queue-enablement`
 
-**Disposition:** B — transferred. **Outcome state:** transferred.
+**Disposition:** B — transferred. **Outcome state:** **rejected by the owner, 2026-11-07 — closed, do not promote** (see the banner at the top). Everything below is the historical plan, kept so the reasoning is not rediscovered.
 
 **Original `Resolved when` criterion, verbatim from the source roadmap:**
 

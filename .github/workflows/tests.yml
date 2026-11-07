@@ -1,8 +1,8 @@
 name: Tests
 
 on:
-  # Merge-queue ready, not merge-queue enabled: inert until an admin turns a
-  # queue on (stubs/road-to-main-protection-ruleset-changes). PR-only steps are
+  # Inert: the owner rejected a merge queue on 2026-11-07 — do not enable one
+  # (agents/evidence/owner-directives/2026-11-07-no-merge-queue.md). PR-only steps are
   # already guarded by `github.event_name == 'pull_request'` or an empty
   # `github.base_ref`, the same path workflow_dispatch takes.
   merge_group:
@@ -957,8 +957,7 @@ jobs:
     # One stable check name over the whole matrix. A required-set change can pin
     # this instead of shard/OS names, which a matrix edit renames silently
     # (docs/contracts/branch-protection-policy.md § why shard names are not
-    # required). Not required today; the ruleset write stays with
-    # stubs/road-to-main-protection-ruleset-changes. Skipped legs pass — they are
+    # required). Required since 2026-11-07 (ruleset 17749383). Skipped legs pass — they are
     # skipped by their own `if:` (release PRs), not lost.
     name: Tests result
     runs-on: ubuntu-latest

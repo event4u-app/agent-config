@@ -3,15 +3,16 @@ stability: beta
 keep-beta-until: 2027-01-07
 keep-beta-reason: >-
   New on 2026-11-07. The selection rules are expected to move once the miss rate
-  is observed (a red push to main after a green queue run), and the merge queue
-  and required check it is written for are not enabled yet.
+  is observed (a red push to main after a green PR run). The merge queue it was
+  first written for was rejected by the owner on 2026-11-07.
 ---
 
 # CI test selection — run what a change can reach, at the merge gate
 
-> **Status:** in-repo half shipped on `feat/ci-targeted-tests`. The repository-admin
-> half — the merge queue and the required check — is **not** enabled; § Enabling
-> the gate lists the exact steps. Until then this changes cost, not enforcement.
+> **Status:** in-repo half shipped. **No merge queue — owner decision 2026-11-07**
+> (`agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`): it was
+> enabled once and removed the same day. Do not re-enable or propose it; see
+> § Enabling the gate.
 
 ## What it does
 
@@ -24,7 +25,7 @@ change can reach. Every Vitest job then runs only those files, or is skipped.
 |---|---|---|
 | `pull_request` | `origin/<base branch>` (merge base) | selected files |
 | `pull_request` + label `ci:full-tests` | — | whole suite |
-| `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — this is the run that gates the merge |
+| `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — inert: no queue is enabled (owner decision 2026-11-07) |
 | `push: main` | — | whole suite (post-merge net) |
 | `workflow_dispatch` | — | whole suite |
 
@@ -148,25 +149,27 @@ decisions (see `branch-protection-policy.md` and the open stub
 2. **Add `Tests result` to the required status checks.** It is the one stable
    name over the whole matrix; it reports on every PR now that the trigger has
    no path filter.
-3. **Enable the merge queue** (merge method as today; "only merge non-failing
-   pull requests"). The queue builds the PR on top of the current `main`, fires
-   `merge_group`, `Select tests` diffs against the queue's base SHA, and the PR
-   lands only if `Tests result` is green. Every workflow carrying a required
-   check declares `merge_group` — `tests.yml`, `consistency.yml`,
-   `standing-payload-delta.yml` and `commit-subjects.yml` — which the queue
-   needs: a required check that never reports on the queue entry blocks `main`
-   with no failure to read. `tests/scripts/workflow_merge_group_concurrency.test.ts`
-   pins the four.
+3. ~~**Enable the merge queue.**~~ **Rejected by the owner, 2026-11-07 — do not
+   enable, do not propose.** It was enabled that morning and removed the same
+   day: "Das bringt keinen Vorteil. Weg damit" — record:
+   `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`. The cost
+   accepted with it: a PR's green run is against its own merge base, so a break
+   that appears only on top of a newer `main` shows up in the full `push: main`
+   run after the merge. The `merge_group` triggers in `tests.yml`,
+   `consistency.yml`, `standing-payload-delta.yml` and `commit-subjects.yml`
+   stay — inert without a queue — and
+   `tests/scripts/workflow_merge_group_concurrency.test.ts` still pins them.
 
-Live state 2026-11-07: step 1 is already in place (the ruleset carries a
-`pull_request` rule); steps 2 and 3 are not.
+Live state 2026-11-07: steps 1 and 2 are in place (the ruleset carries a
+`pull_request` rule and requires `Tests result`); step 3 is rejected and no
+`merge_queue` rule is configured.
 
 Read back with `gh api repos/event4u-app/agent-config/rulesets/17749383`, then
 update the live-state table in `branch-protection-policy.md` from that JSON.
 
 ## Revisit if
 
-- `push: main` goes red after a green queue run for a reason selection should
+- `push: main` goes red after a green PR run for a reason selection should
   have caught → add the missing edge kind, with a test in
   `tests/scripts/ci_select_tests.test.ts`;
 - the median selection stays above ~30 % of the suite → the next step is
