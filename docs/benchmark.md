@@ -231,6 +231,24 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run internal/bench/core/bench_headroom_17_report <report.json>`.
 
 
+## Artifact pilot over the owner's domains (2026-11-07) — PARTIAL, harness hang found {#artifact-pilot-2}
+
+The 2×2 of step 2.1 (`vanilla`/`package` × terse/expert prompt) on the artifact corpus, Sonnet 4.6, 2 seeds, both ladders, report `artifact-2026-11-07T09-56-16-929Z`. The sweep stopped at its $70 cap after 3 of 10 tasks ($73.92 reported). Two faults made it partial:
+
+- **Sizing was wrong by a factor of ten.** Each trial runs two ladders of up to five prompts, each resuming a session; a `package` ladder on Sonnet costs $8–10 because every prompt re-sends about 100k tokens of default context. The full pilot is about $600–700, not the $46 estimated from one prompt per run.
+- **Host calls hung.** 22 of 40 ladders ended `errored`: the CLI sent its second API request and never got an answer, until the timeout killed it (exit 143). The hang is intermittent — the same call run alone succeeds — and is not caused by the inherited session environment, the proxy allow-list or concurrent sweeps (each tested and excluded). `host_call` now re-runs a call that was killed with nothing on stdout, once, and never re-runs a host that answered.
+
+What the three covered tasks show, errored ladders excluded:
+
+| Task | Prompt | `vanilla` reached parity | `package` reached parity | `vanilla` $ | `package` $ |
+|---|---|---|---|---|---|
+| `art-landing-01` | terse | 2 of 2 (3 prompts each) | 1 of 4 | 2.42 | 27.66 |
+| `art-svg-raster-01` | terse | 0 of 2 | 0 of 2 | 3.24 | 17.92 |
+| `art-svg-raster-01` | expert | 0 of 2 | 0 of 2 | 3.52 | 16.85 |
+| `art-svg-prompt-01` | expert | 3 of 3 | — (all errored) | 2.01 | 0 |
+
+Nothing here supports "AC with a terse prompt reaches what vanilla needs an expert prompt for": where both arms have data, `package` never does better and costs five to eleven times as much. Three tasks with errored ladders are not a verdict; the remaining seven tasks are not measured.
+
 ## Memory as a task outcome (2026-11-07) — NULL: the store is never read {#memory-outcome}
 
 Three tasks whose decisive fact lives only in a prior session's memory store (`agents/memory/*.yml`, the package's curated format): recall a decision (`memA-recall-01`), take the newer of a superseded pair (`memB-supersede-01`), let the code beat a stale entry (`memC-stale-01`). `package-memory` runs the full install with the store present; `package-no-memory` strips it from fixture and clone. Haiku, container isolation, 10 seeds, report `2026-11-07T08-54-56Z`, 90 runs, $5.77. Modelling: `internal/bench/corpora/SCHEMA-v2.md`.

@@ -556,3 +556,31 @@ describe('artifact package install', () => {
         expect(ctl.indexOf('--resume')).toBeLessThan(ctl.indexOf('--'));
     });
 });
+
+describe('host_call — a hung host call is retried, not scored', () => {
+    const ok = { status: 0, signal: null, stdout: JSON.stringify({ session_id: 's', is_error: false, num_turns: 2, total_cost_usd: 0.1, usage: {} }) };
+    const hung = { status: 143, signal: null, stdout: '' };
+    it('retries once after a timeout and keeps the second answer', async () => {
+        const { host_call } = await import('../../internal/bench/core/_lib/bench_artifact_sweep.js');
+        const seen: string[][] = [];
+        const replies = [hung, ok];
+        const turn = host_call((args) => { seen.push([...args]); return replies.shift() as typeof ok; }, ['--print', 'go'], 1);
+        expect(turn.errored).toBe(false);
+        expect(turn.session_id).toBe('s');
+        expect(seen).toHaveLength(2);
+    });
+    it('reports the hang when every attempt hangs', async () => {
+        const { host_call } = await import('../../internal/bench/core/_lib/bench_artifact_sweep.js');
+        const turn = host_call(() => hung, ['--print', 'go'], 1);
+        expect(turn.errored).toBe(true);
+        expect(turn.reason).toContain('timed out after 2 attempts');
+    });
+    it('does not retry a host that answered with an error', async () => {
+        const { host_call } = await import('../../internal/bench/core/_lib/bench_artifact_sweep.js');
+        let calls = 0;
+        const turn = host_call(() => { calls += 1; return { status: 1, signal: null, stdout: JSON.stringify({ is_error: true, result: 'budget' }) }; }, ['--print', 'go'], 1);
+        expect(calls).toBe(1);
+        expect(turn.errored).toBe(true);
+    });
+});
+

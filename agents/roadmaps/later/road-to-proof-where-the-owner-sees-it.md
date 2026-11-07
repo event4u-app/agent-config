@@ -219,6 +219,12 @@ Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` task
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
   three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
   the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
+  Run 2026-11-07 (report `artifact-2026-11-07T09-56-16-929Z`, $73.92, stopped at its $70 cap
+  after 3 of 10 tasks): where both arms have data `package` never does better and costs 5–11× as
+  much; 22 of 40 ladders hung on the host's second API call, now re-run once by `host_call`.
+  The full pilot is about $600–700 (two ladders × up to five resumed prompts at ~100k tokens each
+  for `package`), so the remaining seven tasks wait on a release of that size under
+  `b-owner-spend` (`docs/benchmark.md` § Artifact pilot over the owner's domains).
 - [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
   rerun: every `package` run stopped at the per-call budget on its first turn ($1
   and $3, against $0.14 for `vanilla`), with the cause unknown because the
