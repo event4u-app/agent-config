@@ -15,6 +15,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { AGENT_SWITCH_MCP_KEY, type LinkProbe, probeLink } from './agent_switch_link.js';
 import { probeHostCapabilities } from './host_capability.js';
 
 /** `install.ts`'s deploy tuple: [written, skipped, status, paths]. */
@@ -233,6 +234,7 @@ export function registerMcpHosts(
     tools: ReadonlySet<string>,
     into: Record<string, Record<string, unknown>[]>,
     readsConfig: ReadsProjectMcpConfig = readsProjectMcpConfig,
+    link: () => LinkProbe = probeLink,
 ): void {
     const ensure = makeEnsureMcpRegistrations(mergeJsonFile);
     const claude = MCP_PROJECT_CONFIG['claude-code'];
@@ -241,12 +243,88 @@ export function registerMcpHosts(
             { toolId: 'claude-code', hostId: claude.hostId, relPath: claude.relPath },
         ]);
         (into['claude-code'] ??= []).push(...(merged['claude-code'] ?? []));
+        (into['claude-code'] ??= []).push(...registerAgentSwitchLink(mergeJsonFile, projectRoot, force, link()));
     }
     for (const [toolId, keys] of Object.entries(
         ensure(projectRoot, force, packageRoot, mcpRegistrationTargets(tools, readsConfig)),
     )) {
         (into[toolId] ??= []).push(...keys);
     }
+}
+
+/**
+ * The agent-switch link entry in `.mcp.json` (docs/contracts/agent-switch-link.md).
+ *
+ * The probe decides, and the three outcomes are deliberately different:
+ *
+ * - `present` — write exactly the command agent-switch advertised and record
+ *   the key, so uninstall subtracts it.
+ * - `disabled` / `incompatible` — agent-switch ANSWERED that AC may not, or
+ *   cannot, connect. Remove our entry, but only when it is byte-equal to one
+ *   the link describes: a server the consumer wrote under the same key by hand
+ *   is theirs.
+ * - `absent` / `failed` — no answer. A missing binary is often a PATH that
+ *   differs between the installer's shell and the host's, so the entry is left
+ *   as it is; an existing one is re-merged unchanged only so the lockfile keeps
+ *   recording it.
+ *
+ * Returns the merged-key records for `agents/installed-tools.lock`.
+ */
+export function registerAgentSwitchLink(
+    mergeJsonFile: MergeJsonFile,
+    projectRoot: string,
+    force: boolean,
+    probe: LinkProbe,
+): Record<string, unknown>[] {
+    const file = path.join(projectRoot, '.mcp.json');
+    const label = '.mcp.json';
+    if (probe.state === 'present') {
+        const entry = { command: probe.status.mcp.command, args: probe.status.mcp.args };
+        return mergeJsonFile(file, { mcpServers: { [AGENT_SWITCH_MCP_KEY]: entry } }, force, label);
+    }
+    const existing = readMcpServer(file, AGENT_SWITCH_MCP_KEY);
+    if (existing === undefined || !isLinkEntry(existing)) return [];
+    if (probe.state === 'disabled' || probe.state === 'incompatible') {
+        removeMcpServer(file, AGENT_SWITCH_MCP_KEY);
+        return [];
+    }
+    return mergeJsonFile(file, { mcpServers: { [AGENT_SWITCH_MCP_KEY]: existing } }, force, label);
+}
+
+/** An entry the link describes: the `agent-switch` command serving MCP. */
+function isLinkEntry(entry: unknown): boolean {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false;
+    const e = entry as Record<string, unknown>;
+    const keys = Object.keys(e).sort().join(',');
+    return (
+        keys === 'args,command' &&
+        e['command'] === 'agent-switch' &&
+        JSON.stringify(e['args']) === JSON.stringify(['mcp', 'serve'])
+    );
+}
+
+function readMcpDoc(file: string): Record<string, unknown> | null {
+    try {
+        const doc = JSON.parse(fs.readFileSync(file, 'utf-8')) as unknown;
+        return doc !== null && typeof doc === 'object' && !Array.isArray(doc) ? (doc as Record<string, unknown>) : null;
+    } catch {
+        return null;
+    }
+}
+
+function readMcpServer(file: string, key: string): unknown {
+    const servers = readMcpDoc(file)?.['mcpServers'];
+    if (servers === null || typeof servers !== 'object' || Array.isArray(servers)) return undefined;
+    return (servers as Record<string, unknown>)[key];
+}
+
+/** Delete one server key, touching nothing else in the file. */
+function removeMcpServer(file: string, key: string): void {
+    const doc = readMcpDoc(file);
+    const servers = doc?.['mcpServers'];
+    if (doc === null || servers === null || typeof servers !== 'object' || Array.isArray(servers)) return;
+    delete (servers as Record<string, unknown>)[key];
+    fs.writeFileSync(file, `${JSON.stringify(doc, null, 2)}\n`, 'utf-8');
 }
 
 /**

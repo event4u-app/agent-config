@@ -120,8 +120,12 @@ The link is on by default and switched off only in agent-switch
 With agent-switch absent, the link off, or a contract version AC does not know,
 AC behaves exactly as before: the limit notice without a request.
 
-AC's side of the link is being built in stages
-(`road-to-a-link-with-agent-switch`); until it ships, AC does not connect.
+`agent-config install` registers the link's MCP server in `.mcp.json` when
+agent-switch reports the link on, and removes that entry on the next install once you switch the
+link off. `agent-config mcp:available` shows the link's state. The readers
+that use it (limits, the switch question) are being built in stages
+(`road-to-a-link-with-agent-switch`); until they ship, the connection exists
+but nothing asks through it.
 
 ## What AC never does
 
