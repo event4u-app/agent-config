@@ -14,7 +14,7 @@ import * as path from 'node:path';
 
 import { k, overThreshold } from './cold_return.js';
 import { clock } from './pressure.js';
-import { hashSessionId, quotaStateDir, snapshotFromStatusPayload, type QuotaSnapshot } from './quota_ledger.js';
+import { accountFromEnv, hashSessionId, quotaStateDir, snapshotFromStatusPayload, type QuotaSnapshot } from './quota_ledger.js';
 import type { EnvMap } from './user_global_paths.js';
 
 export interface CacheReading {
@@ -55,14 +55,15 @@ export function readCache(raw: unknown): CacheReading | undefined {
  * quota nor cache.
  */
 export function snapshotWithCache(payload: unknown, now: number = Date.now(), env?: EnvMap | null): QuotaSnapshot | null {
-    const base = snapshotFromStatusPayload(payload, now);
+    const account = accountFromEnv(env ?? process.env);
+    const base = snapshotFromStatusPayload(payload, now, account);
     const p = payload !== null && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
     const cache = readCache(p['prompt_cache']);
     if (cache === undefined) return base;
     const transcript = p['transcript_path'];
     const start = typeof transcript === 'string' && transcript !== '' ? clearStart(path.dirname(transcript), now, env) : null;
     return {
-        ...(base ?? { ts: now, session: hashSessionId(p['session_id']) }),
+        ...(base ?? { ts: now, session: hashSessionId(p['session_id']), ...(account !== '' ? { account } : {}) }),
         cache,
         ...(start !== null ? { clear_start: start } : {}),
     };

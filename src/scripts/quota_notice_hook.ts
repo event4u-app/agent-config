@@ -42,7 +42,7 @@ import { hasBillingGrant } from './_lib/billing_grant.js';
 import { hostSettingsPaths, readBillingClass, type BillingClassReading } from './_lib/billing_class.js';
 import { coldLine } from './_lib/cold_return.js';
 import { atLeast, CONTEXT_NOTICE_PCT, contextFigure, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
-import { hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
+import { accountFromEnv, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
@@ -125,9 +125,10 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
         lines.push(meteredText(deps.billing));
     }
     const ledger = readQuotaLedger(deps.stateEnv, deps.now);
-    for (const w of planPressure(ledger, deps.now).windows) {
+    const account = accountFromEnv(deps.env);
+    for (const w of planPressure(ledger, deps.now, account).windows) {
         if (!atLeast(w.state, 'warm') || w.state === 'unknown') continue;
-        if (!claimOnce(`window|${w.window}|${w.state}|${w.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) continue;
+        if (!claimOnce(`window|${account}|${w.window}|${w.state}|${w.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) continue;
         const advice =
             w.state === 'exhausted'
                 ? 'Further turns may bill extra usage or wait for the reset.'
