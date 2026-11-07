@@ -271,11 +271,16 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   First candidate set from 3.1: the 21 domain and stack rules that load unconditionally
   under the full profile (finance, legal, strategy, media, persistence packs, stack
   routing; ~64k chars). Still gated on an effect from 1.4 or 2.5.
-- [ ] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
+- [x] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
   one multi-session task family (decision recall, a superseded decision, a stale
   entry) run with and without memory on this harness. Recall itself stays with
   `later/road-to-a-memory-the-consumer-owns`; this step only adds the task outcome.
   verify: a with/without-memory report over the multi-session family
+  Done 2026-11-07: three tasks (`memA-recall-01`, `memB-supersede-01`, `memC-stale-01`) and the
+  arms `package-memory` / `package-no-memory` (`strip_paths`); report `2026-11-07T08-54-56Z`, Haiku,
+  90 runs, $5.77. NULL: 0/10 on memA and memB in every arm, 10/10 on memC in every arm, and no
+  run opened the store (`docs/benchmark.md` § Memory as a task outcome). Delivery is the gap;
+  recall stays with `later/road-to-a-memory-the-consumer-owns`.
 
 ## Phase 4 — Before anything is removed
 

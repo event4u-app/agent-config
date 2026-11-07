@@ -222,6 +222,19 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run internal/bench/core/bench_headroom_17_report <report.json>`.
 
 
+## Memory as a task outcome (2026-11-07) — NULL: the store is never read {#memory-outcome}
+
+Three tasks whose decisive fact lives only in a prior session's memory store (`agents/memory/*.yml`, the package's curated format): recall a decision (`memA-recall-01`), take the newer of a superseded pair (`memB-supersede-01`), let the code beat a stale entry (`memC-stale-01`). `package-memory` runs the full install with the store present; `package-no-memory` strips it from fixture and clone. Haiku, container isolation, 10 seeds, report `2026-11-07T08-54-56Z`, 90 runs, $5.77. Modelling: `internal/bench/corpora/SCHEMA-v2.md`.
+
+| Task | `vanilla` | `package-memory` | `package-no-memory` |
+|---|---|---|---|
+| `memA-recall-01` (correct, of 10) | 0 | 0 | 0 |
+| `memB-supersede-01` | 0 | 0 | 0 |
+| `memC-stale-01` | 10 | 10 | 10 |
+| runs that opened the store | 0 of 30 | 0 of 30 | — |
+
+The memory never reached the work: no run read a file under `agents/memory/`, and no hook delivered an entry, so with and without memory are the same arm in effect. `memC` passes everywhere because following the code is what an agent does without memory. The finding is about delivery, not recall quality: a consumer's store is not consulted on a task that does not name it. Mean tokens per run: `package-memory` 0.33–1.08 M against `vanilla` 0.09–0.11 M, for the same outcome.
+
 ## Extraction gate — the bench stays in this repository (2026-11-07) {#extraction-gate}
 
 The bench moves into its own app only when at least two of five criteria hold
