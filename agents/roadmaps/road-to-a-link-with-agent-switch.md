@@ -5,18 +5,19 @@ tree_pin: 84ec63c93d
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-31
-estate_growth_exempt: "+1 later_roadmaps, +1 open_blockers, owner-directed 2026-11-05 (\"eine roadmap in ac anlegen und mergen\"; agents/evidence/owner-directives/2026-11-05-agent-switch-link.md): parked in later/ because the active estate is at the WIP cap of 5; its one blocker is agent-switch shipping contract v1."
+estate_growth_exempt: "+1 active_roadmaps, owner-promoted 2026-11-07 out of later/ per agents/evidence/owner-directives/2026-11-05-agent-switch-link.md (\"parked in later/ until the WIP cap allows it or the owner promotes it citing this record\"); its entry condition was met when agent-switch 2.13.0 shipped link contract 1, and the move takes it from later/ to active (-1 later_roadmaps, -1 open_blockers)."
 estate_offset_exempt: "New work requested by the owner, agents/evidence/owner-directives/2026-11-05-agent-switch-link.md; no parked or active roadmap covers an agent-switch link (grep -rlF for 'mcp serve', 'switch_request', 'agent-switch link' over agents/roadmaps, later, stubs at 84ec63c93d returned nothing), so nothing is archived to offset it."
 entry_condition:
   what: "agent-switch ships `mcp serve`, `limits --json` and `switch … --json` (contract v1) on its 2.x line"
   when: "the agent-switch release carrying road-to-the-agent-config-link phases 1–2"
   who: "owner"
+  met: "agent-switch 2.13.0 (npm @event4u/agent-switch, tag 2.13.0, 2026-11-06): `link status --json` answers `contract: 1`"
 relates:
   - slug: road-to-a-council-that-spreads-across-accounts
     relation: extends
     note: "Its per-seat `agent-switch dir` pick gains a limits pre-check; the pick itself stays agent-switch's."
   - slug: road-to-the-profile-the-session-runs-in
-    relation: refines
+    relation: extends
     note: "K2/K4/K5/K8 stay: AC never moves a session, never switches automatically, runs no daemon, never depends on agent-switch."
   - slug: road-to-a-limit-the-host-actually-signals
     relation: disjoint
@@ -50,11 +51,11 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Phase 1 — Contract
 
-- [ ] **1.1 `docs/contracts/agent-switch-link.md`.** Tools, JSON shapes
+- [x] **1.1 `docs/contracts/agent-switch-link.md`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Tools, JSON shapes
       (`limits_get`, `switch_*`, `session_whoami`, `link_status`), request
       states, first-decision-wins, contract version `1`, and the absence rules.
       verify: `./scripts-run src/scripts/check_references` -> 0
-- [ ] **1.2 Guide update.** `docs/guides/works-with-agent-switch.md` § "What AC
+- [x] **1.2 Guide update.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> `docs/guides/works-with-agent-switch.md` § "What AC
       never does" keeps moving/automatic switching and adds what AC now does
       (read limits, ask, relay).
       verify: `./scripts-run src/scripts/check_references` -> 0
@@ -123,30 +124,29 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Decisions
 
-| # | Decision | Class |
-|---|---|---|
-| D1 | No automatic move; the user decides, in either tool | owner, 2026-11-05 |
-| D2 | agent-switch executes; AC reads, asks, relays | owner + fences K2/K4 |
-| D3 | Connection is automatic, switched off only in agent-switch | owner |
-| D4 | Seat account may change on limits; seat model never does | council 2026-11-05 (openai), host verdict accept |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | product-owned | owner | No automatic move; the user decides, in either tool | owner directive 2026-11-05 | a host offers its own cross-account continuation |
+| D2 | product-owned | owner | agent-switch executes; AC reads, asks, relays | owner directive 2026-11-05; fences K2/K4 | agent-switch drops contract v1 |
+| D3 | product-owned | owner | Connection is automatic, switched off only in agent-switch | owner directive 2026-11-05 (default on) | the link is found to expose more than limits and requests |
+| D4 | reversible-technical | council:2026-11-05 | Seat account may change on limits; seat model never does | council 2026-11-05 (openai), host verdict accept | a seat's account change is shown to change its verdicts |
 
 revisit-if: agent-switch drops contract v1, or a host offers its own
 cross-account continuation.
 
 ## Risk Register
 
-| Risk | Mitigation |
-|---|---|
-| Agent decides without the user | `switch_decide` is host-confirmed; lint forbids auto-allow |
-| Stale limits route a seat badly | Observations carry `stale`; stale reads count as `null` |
-| agent-switch absent or link off | Every path returns `null` → today's behaviour (K8) |
-| Notice noise | One request per `(account, window, resets_at)`, dedup in agent-switch |
+<!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Agent decides without the user | product | An agent that records a switch decision on its own moves work the user never agreed to move | `switch_decide` is host-confirmed; lint forbids an auto-allow entry for it | Phase 4 — Inform and ask |
+| 2 | Stale limits route a seat badly | implementation | A cached limits read that is hours old can mark a full account usable and place a council seat on it | Observations carry `stale`; a stale read counts as `null`, never as usable | Phase 5 — Load distribution |
+| 3 | agent-switch absent or link off | implementation | A hard dependency would break AC for every user without agent-switch, against fence K8 | Every path returns `null` and falls back to today's behaviour | Phase 2 — Automatic connection |
+| 4 | Notice noise | product | Raising a request on every `hot` notice could flood both tools with duplicate questions | One request per `(account, window, resets_at)`, deduplicated in agent-switch | Phase 4 — Inform and ask |
 
 ## Blockers
 
-### blocker: agent-switch-contract-v1
-- what: agent-switch has no `mcp serve`, `limits --json` or `switch` verbs yet
-- evidence: `event4u-app/agent-switch` `src/commands/mcp.ts` lists configs only
-- owner: agent-switch road-to-the-agent-config-link phases 1–2
-- closes-when: a released agent-switch answers `link status --json` with `contract: 1`
-- since: 2026-11-05
+None open. `agent-switch-contract-v1` (since 2026-11-05) closed 2026-11-07:
+agent-switch 2.13.0 is published and `link status --json` answers
+`{"enabled":true,"version":"2.13.0","contract":1,"mcp":{"command":"agent-switch","args":["mcp","serve"]}}`.
