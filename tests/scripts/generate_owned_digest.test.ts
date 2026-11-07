@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { BUDGET_TOKENS, DIGEST, MAX_WORDS, collect, describe as describeRoadmap, main, overBudget, render } from '../../src/scripts/generate_owned_digest.js';
+import { DIGEST, MAX_WORDS, collect, describe as describeRoadmap, main, render } from '../../src/scripts/generate_owned_digest.js';
 import { REGISTRY } from '../../src/scripts/check_generator_sync.js';
 
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -91,21 +91,27 @@ describe('generate_owned_digest over a fixture tree', () => {
     it('carries no aggregate line two branches would both rewrite', () => {
         expect(render(collect(root))).not.toMatch(/\b\d+ active\b/);
     });
-});
 
-describe('the budget', () => {
-    it('reports over budget instead of truncating', () => {
-        const text = render([{ slug: 'road-to-x', dir: '', status: 'ready', owns: 'x '.repeat(50).trim() }]);
-        expect(overBudget(text, 10)).toMatch(/over its 10-token budget/);
-        expect(overBudget(text)).toBeNull();
+    it('writes every row however large the digest grows — no size budget, no truncation', () => {
+        const goal = (i: number): string => `Roadmap ${String(i)} owns a long enough goal sentence to make its row heavy on purpose.`;
+        const count = 600;
+        for (let i = 0; i < count; i++) {
+            write(`agents/roadmaps/later/road-to-bulk-${String(i).padStart(3, '0')}.md`, roadmap(goal(i), { status: 'later' }));
+        }
+        expect(main([], root)).toBe(0);
+        const written = fs.readFileSync(path.join(root, DIGEST), 'utf8');
+        expect(written.length).toBeGreaterThan(4 * 10_500);
+        for (let i = 0; i < count; i++) {
+            expect(written).toContain(`| road-to-bulk-${String(i).padStart(3, '0')} | later | later | ${goal(i)} |`);
+        }
+        expect(main(['--check'], root)).toBe(0);
     });
 });
 
 describe('the committed digest', () => {
-    it('is current and inside its budget', () => {
+    it('is current', () => {
         const committed = fs.readFileSync(path.join(ROOT, DIGEST), 'utf8');
         expect(committed).toBe(render(collect(ROOT)));
-        expect(overBudget(committed, BUDGET_TOKENS)).toBeNull();
     });
 
     it('is registered in check_generator_sync over the roadmap tree and the generator', () => {
