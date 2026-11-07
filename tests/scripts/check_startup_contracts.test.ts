@@ -98,7 +98,7 @@ describe('committed tree', () => {
     });
 
     it('a contract whose literal lives in the body fails closed when the body is unreadable', () => {
-        for (const id of ['finance-safety-floor', 'strategy-safety-floor', 'domain-safety-disclaimer']) {
+        for (const id of ['finance-safety-floor', 'strategy-safety-floor', 'domain-safety-disclaimer', 'domain-safety-retention']) {
             expect(all.get(id)?.contract, id).toContain("body unreadable → don't deliver, name the missing path");
         }
     });

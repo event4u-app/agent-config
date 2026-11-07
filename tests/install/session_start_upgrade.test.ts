@@ -23,6 +23,7 @@ import { measureSessionStartLayer, projectDefaultInstall } from '../../src/scrip
 import { KERNEL_RULE_ID_SET } from '../../src/scripts/_lib/kernel_rules.js';
 import { THIN_BODY_POINTER_RE, build_thin, is_thin_entry } from '../../src/scripts/_lib/thin_rules.js';
 import { USER_PIN_FIELD } from '../../src/install/userPin.js';
+import { ruleBody, startupContract } from '../../src/scripts/_lib/rule_law_section.js';
 import { RULE_BODIES_INDEX, resolveBodyPointer } from '../../src/install/installThinLayer.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -111,6 +112,22 @@ describe('an upgrade over a full layer writes the reduced layer', () => {
         const pointer = THIN_BODY_POINTER_RE.exec(stub)?.[1] as string;
         expect(path.isAbsolute(pointer)).toBe(false);
         expect(fs.existsSync(resolveBodyPointer(pointer, dir))).toBe(true);
+    });
+
+    it('every installed contract carries its verified source contract, only the heading removed', () => {
+        const index = afterUpgrade.get(RULE_BODIES_INDEX) as string;
+        const dir = /The bodies are in `([^`]+)\/`/.exec(index)?.[1] as string;
+        let checked = 0;
+        for (const name of fs.readdirSync(DIST_RULES).filter((n) => n.endsWith('.md'))) {
+            const contract = startupContract(ruleBody(fs.readFileSync(path.join(DIST_RULES, name), 'utf8')));
+            const installed = afterUpgrade.get(name);
+            if (contract === null || installed === undefined || name === edited) continue;
+            expect(installed, name).toContain(contract.replace(/^#{1,6}[^\n]*\n+/, ''));
+            const pointer = THIN_BODY_POINTER_RE.exec(installed)?.[1] as string;
+            expect(fs.existsSync(resolveBodyPointer(pointer, dir)), name).toBe(true);
+            checked += 1;
+        }
+        expect(checked).toBeGreaterThanOrEqual(20);
     });
 
     it('a second upgrade changes nothing', () => {
