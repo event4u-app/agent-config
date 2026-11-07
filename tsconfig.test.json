@@ -8,6 +8,6 @@
         "jsxImportSource": "preact",
         "types": ["node", "vitest/globals"]
     },
-    "include": ["src/**/*", "tests/**/*"],
+    "include": ["src/**/*", "tests/**/*", "internal/bench/core/**/*"],
     "exclude": ["node_modules", "dist"]
 }

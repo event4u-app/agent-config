@@ -1,6 +1,6 @@
 /**
  * Tests for the on-demand rule-load latency bench's pure helpers
- * (`src/scripts/bench_rule_load_latency.ts`).
+ * (`internal/bench/core/bench_rule_load_latency.ts`).
  */
 import { describe, expect, it } from "vitest";
 
@@ -8,7 +8,7 @@ import {
   on_demand_rule_ids,
   percentile,
   summarize,
-} from "../../src/scripts/bench_rule_load_latency.js";
+} from "../../internal/bench/core/bench_rule_load_latency.js";
 
 describe("on_demand_rule_ids", () => {
   it("excludes kernel; includes tier_1 + tier_2 (strings + objects)", () => {

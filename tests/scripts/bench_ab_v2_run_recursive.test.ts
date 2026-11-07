@@ -1,11 +1,11 @@
 // Control-flow tests for run_one_recursive (ADR-106 D₂ recursion arm) in
-// src/scripts/bench_ab_v2_run.ts. The model call is mocked via the injectable
+// internal/bench/core/bench_ab_v2_run.ts. The model call is mocked via the injectable
 // attemptFn seam — NO live spend, NO subprocess, NO filesystem. These assert the
 // LOOP control flow only (stop conditions, depth cap, verdict threading); whether
 // recursion actually lifts quality is the live `bench:ab` question, not tested here.
 import { describe, expect, it } from 'vitest';
 
-import { run_one_recursive, type RecursiveAttempt } from '../../src/scripts/bench_ab_v2_run.js';
+import { run_one_recursive, type RecursiveAttempt } from '../../internal/bench/core/bench_ab_v2_run.js';
 
 type Score = { capability_pass: boolean; discipline_pass: boolean; discipline_score: number; files_changed: never[] };
 

@@ -222,7 +222,7 @@ sentinel refused only by an unchanged line; and `date` exempt from argument insp
       verify: `npx vitest run tests/scripts/_lib/shell_segments.test.ts --reporter=verbose` -> /✓.*dynamic-sink-is-unverified/ <!-- ref-ignore -->
 - [ ] **1.7 Keyword quick-reject first.** A precomputed keyword set (every recogniser's
       executables and subcommands) is tested before segmenting; no hit, no parse.
-      verify: `./scripts-run src/scripts/bench_hook_latency --gate` -> 0
+      verify: `./scripts-run internal/bench/core/bench_hook_latency --gate` -> 0
 - [ ] **1.8 Migrate the guards that may be hardened; delete their old parsers.**
       `block_no_verify`, `block_plumbing_writes`, `category_a._argv`, `typed_op_watch` and
       `block_speaking_inbox_dir` consume `shell_segments`. D6 closes as a byproduct. The shlex

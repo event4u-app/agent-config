@@ -52,7 +52,7 @@ The council's replacement for the removed blocker, quoted exactly:
 > the full tier, and publish its report.
 
 **Satisfied in the parent, 2026-08-20** — the `repo` and `sha` corpus keys, and
-one task pinned to a repository SHA. `src/scripts/_lib/bench_ab_pinned_repo.ts`
+one task pinned to a repository SHA. `internal/bench/core/_lib/bench_ab_pinned_repo.ts`
 materialises a pin once per SHA and `trapA-pinned-click-01` pins
 `pallets/click@150d1071d69c5cdad7de78590013ffe56cf9e3bb`.
 
@@ -146,7 +146,7 @@ Each item is quoted exactly as it stands in the parent, where it now carries
 ```
 
 - **Producer:** the maintainer running
-  `./scripts-run src/scripts/bench_ab_v2_run --host claude --max-usd 250` in an
+  `./scripts-run internal/bench/core/bench_ab_v2_run --host claude --max-usd 250` in an
   environment carrying a credential, with a this-turn Hard-Floor confirmation.
   The `--max-usd` flag is not optional decoration: it is the `collect_records`
   abort that makes the granted ceiling enforceable rather than advisory.

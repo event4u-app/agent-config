@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_task_runner.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_ab_task_runner.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists. This is a focused differential suite over the pure
 // helpers (utc_stamp shape, count_ask_events, per_category_aggregate,
@@ -16,7 +16,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import * as runner from '../../src/scripts/bench_ab_task_runner.js';
+import * as runner from '../../internal/bench/core/bench_ab_task_runner.js';
 
 
 

@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
-import { loadTasks, oracleFindings } from './_lib/bench_task_validity.js';
+import { loadTasks, oracleFindings } from '../../internal/bench/core/_lib/bench_task_validity.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);

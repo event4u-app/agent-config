@@ -16,8 +16,8 @@ import {
     parse_init_event,
     probe_env,
     run_delivery_probe,
-} from '../../src/scripts/_lib/bench_ab_delivery_probe.js';
-import { delivery_preflight } from '../../src/scripts/_lib/bench_ab_delivery_preflight.js';
+} from '../../internal/bench/core/_lib/bench_ab_delivery_probe.js';
+import { delivery_preflight } from '../../internal/bench/core/_lib/bench_ab_delivery_preflight.js';
 
 const tmp: string[] = [];
 afterEach(() => {

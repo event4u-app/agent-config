@@ -278,7 +278,7 @@ describe('incident replay: each seeded rule fires on the real tool call', () => 
         const ws = makeRealCheckout();
         const store = makeStore();
         const r = run(
-            envelope(ws, bashPayload('./scripts-run src/scripts/bench_hook_latency --runs 50', ws)),
+            envelope(ws, bashPayload('./scripts-run internal/bench/core/bench_hook_latency --runs 50', ws)),
             ws,
             store,
         );
@@ -292,7 +292,7 @@ describe('incident replay: each seeded rule fires on the real tool call', () => 
     it('4b. NEAR MISS — an unrelated bench invocation is silent', () => {
         const ws = makeRealCheckout();
         const r = run(
-            envelope(ws, bashPayload('./scripts-run src/scripts/bench_hook_injection', ws)),
+            envelope(ws, bashPayload('./scripts-run internal/bench/core/bench_hook_injection', ws)),
             ws,
             makeStore(),
         );

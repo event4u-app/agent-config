@@ -42,15 +42,15 @@ import {
     CANDIDATE_PREFIX,
     CANDIDATE_RECORD_FILE,
     apply_candidate_mutations,
-} from '../../src/scripts/bench_ab_clone.js';
+} from '../../internal/bench/core/bench_ab_clone.js';
 import {
     CANDIDATE_RECORD_VERSION,
     MUTATION_DIMENSIONS,
     PathOwnershipError,
 } from '../../src/scripts/_lib/candidate_record.js';
 
-const CLONE_TS = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
-const INTEGRITY_TS = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_integrity.ts');
+const CLONE_TS = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_clone.ts');
+const INTEGRITY_TS = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_integrity.ts');
 const HAVE_FIXTURE = existsSync(FIXTURE);
 
 /** The four paths a candidate may write — the "original tree" this must not touch. */

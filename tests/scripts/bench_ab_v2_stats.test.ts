@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_v2_stats.ts (py2ts, ADR-096).
+// Tests for internal/bench/core/bench_ab_v2_stats.ts (py2ts, ADR-096).
 //
 // No pytest suite exists. This is a focused differential suite over the pure
 // statistics (mcnemar_exact, cohens_h, wilcoxon) plus an end-to-end CLI
@@ -34,12 +34,11 @@ import {
     pricing_age_days,
     gate_verdict,
     size_claim_verdict,
-} from '../../src/scripts/bench_ab_v2_stats.js';
-import { searchClaimVerdict as search_claim_verdict } from '../../src/scripts/_lib/bench_ab_search_adherence.js';
+} from '../../internal/bench/core/bench_ab_v2_stats.js';
+import { searchClaimVerdict as search_claim_verdict } from '../../internal/bench/core/_lib/bench_ab_search_adherence.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
-const TS_SCRIPT = path.join(SCRIPTS, 'bench_ab_v2_stats.ts');
+const TS_SCRIPT = path.join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_v2_stats.ts');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
 

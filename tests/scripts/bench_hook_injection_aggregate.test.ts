@@ -9,7 +9,7 @@ import * as path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { perTurnAggregate } from "../../src/scripts/bench_hook_injection.js";
+import { perTurnAggregate } from "../../internal/bench/core/bench_hook_injection.js";
 
 const CONFIG = path.resolve(
   __dirname,

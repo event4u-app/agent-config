@@ -3,12 +3,12 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { criticalWins, criticalWinsExact, planPower, parseAa } from '../../src/scripts/bench_ab_power.js';
+import { criticalWins, criticalWinsExact, planPower, parseAa } from '../../internal/bench/core/bench_ab_power.js';
 import { exactOneSidedP, MIN_DISCORDANT } from '../../src/scripts/_lib/paired_verdict.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
-const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'bench_ab_power.ts');
+const SCRIPT = path.join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_power.ts');
 
 describe('bench_ab_power', () => {
     it('at a fully one-directional share the discordant pairs required are the paired_verdict floor', () => {

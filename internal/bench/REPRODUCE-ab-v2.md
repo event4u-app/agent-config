@@ -8,7 +8,7 @@ not an afterthought written once someone asks.
 ## Start here — the run that costs nothing
 
 ```bash
-npx tsx src/scripts/bench_ab_v2_run.ts \
+npx tsx internal/bench/core/bench_ab_v2_run.ts \
   --mode selftest \
   --arms vanilla,package,package-ladder,bare-principle,placebo \
   --seeds 2 --limit 2 \
@@ -79,8 +79,8 @@ Two consequences worth knowing before you rely on it:
 The first endpoint to actually cash this in is the T1/T2 pair (delta #11):
 
 ```bash
-npx tsx src/scripts/bench_ab_v2_complexity.ts <report.json>          # print, touch nothing
-npx tsx src/scripts/bench_ab_v2_complexity.ts <report.json> --write  # write the endpoints back
+npx tsx internal/bench/core/bench_ab_v2_complexity.ts <report.json>          # print, touch nothing
+npx tsx internal/bench/core/bench_ab_v2_complexity.ts <report.json> --write  # write the endpoints back
 ```
 
 It writes `added_lines` and `median_cognitive_complexity` onto each trial's
@@ -103,8 +103,8 @@ Two more re-scorers follow the same shape (2026-08-17). **T4 — the safety tier
 free to run and deterministic:
 
 ```bash
-npx tsx src/scripts/bench_ab_v2_safety.ts <report.json>          # print, touch nothing
-npx tsx src/scripts/bench_ab_v2_safety.ts <report.json> --write  # write safety_tier_pass
+npx tsx internal/bench/core/bench_ab_v2_safety.ts <report.json>          # print, touch nothing
+npx tsx internal/bench/core/bench_ab_v2_safety.ts <report.json> --write  # write safety_tier_pass
 ```
 
 It runs each safety-tier task's adversarial probe against the trial's workspace
@@ -116,8 +116,8 @@ that into a failure would report every crashed trial as a dropped guard.
 **T5 — search adherence**, the one endpoint that costs money:
 
 ```bash
-npx tsx src/scripts/bench_ab_v2_search.ts <report.json>                  # mock judges, no spend
-npx tsx src/scripts/bench_ab_v2_search.ts <report.json> --live --write   # two real judges
+npx tsx internal/bench/core/bench_ab_v2_search.ts <report.json>                  # mock judges, no spend
+npx tsx internal/bench/core/bench_ab_v2_search.ts <report.json> --live --write   # two real judges
 ```
 
 It reads the transcript preserved beside each clone (`<workspace>.transcript.txt`)

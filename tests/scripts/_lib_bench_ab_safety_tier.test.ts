@@ -23,7 +23,7 @@ import {
     safetyOracleOf,
     safetyTierForWorkspace,
     type ProbeRunner,
-} from '../../src/scripts/_lib/bench_ab_safety_tier.js';
+} from '../../internal/bench/core/_lib/bench_ab_safety_tier.js';
 
 const held: ProbeRunner = () => ({ status: GUARD_HELD });
 const breached: ProbeRunner = () => ({ status: GUARD_BREACHED });

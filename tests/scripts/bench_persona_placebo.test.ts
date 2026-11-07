@@ -7,7 +7,7 @@ import {
     mean,
     parse_score,
     system_for,
-} from '../../src/scripts/bench_persona_placebo.js';
+} from '../../internal/bench/core/bench_persona_placebo.js';
 
 describe('fixtures', () => {
     it('12 option-shaped fixtures, each with a pre-registered rubric', () => {

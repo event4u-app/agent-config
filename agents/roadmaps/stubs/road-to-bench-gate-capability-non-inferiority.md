@@ -8,7 +8,7 @@ review_by: 2026-12-28
 > **Stub — not active work.** Carries decision D3 of
 > `road-to-a-bench-that-fails-when-nothing-was-done`: that roadmap prints a
 > capability non-inferiority gate beside the deciding `cap_sig || dis_sig`
-> gate (`src/scripts/bench_ab_v2_stats.ts`), in shadow. Flipping which gate
+> gate (`internal/bench/core/bench_ab_v2_stats.ts`), in shadow. Flipping which gate
 > decides is the question that waits here.
 >
 > **Arrivals:** 1 — `inbox-2026-11-bn` (2026-11-04): an owner-commissioned

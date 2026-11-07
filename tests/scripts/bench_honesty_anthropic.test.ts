@@ -1,9 +1,9 @@
-// Tests for src/scripts/_lib/bench_honesty_anthropic.ts — request shape and the
+// Tests for internal/bench/core/_lib/bench_honesty_anthropic.ts — request shape and the
 // retry path, with an injected fetch; nothing leaves the machine.
 
 import { describe, expect, it } from 'vitest';
 
-import { AnthropicBenchClient, buildBody } from '../../src/scripts/_lib/bench_honesty_anthropic.js';
+import { AnthropicBenchClient, buildBody } from '../../internal/bench/core/_lib/bench_honesty_anthropic.js';
 
 const opts = { model: 'm', temperature: 1, maxTokens: 64, keyPath: null };
 

@@ -4,7 +4,6 @@
   "src/install/layerPromotion.ts:3",
   "src/scripts/_cli/cmd_doctor.ts:3",
   "src/scripts/_cli/cmd_uninstall.ts:1",
-  "src/scripts/_lib/bench_artifact_isolation.ts:1",
   "src/scripts/_lib/claude_hook_scope.ts:1",
   "src/scripts/_lib/codex_resident_set.ts:1",
   "src/scripts/_lib/host_mod_census.ts:1",

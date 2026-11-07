@@ -14,8 +14,8 @@ import {
     read_oauth_token,
     redact,
     TOKEN_ENV,
-} from '../../src/scripts/_lib/bench_ab_container.js';
-import { live_args } from '../../src/scripts/bench_ab_task_runner.js';
+} from '../../internal/bench/core/_lib/bench_ab_container.js';
+import { live_args } from '../../internal/bench/core/bench_ab_task_runner.js';
 
 const IMAGE = `sha256:${'c'.repeat(64)}`;
 const TOKEN = 'sk-ant-oat01-abcdefghijklmnop';
@@ -142,7 +142,7 @@ describe('quota brake', () => {
 });
 
 describe('token pool', async () => {
-    const { next_account_hint, read_token_pool, select_account } = await import('../../src/scripts/_lib/bench_ab_container.js');
+    const { next_account_hint, read_token_pool, select_account } = await import('../../internal/bench/core/_lib/bench_ab_container.js');
     const dir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), 'pool-'));
     const put = (d: string, name: string, body: string, mode = 0o600): void => {
         fs.writeFileSync(path.join(d, name), body);

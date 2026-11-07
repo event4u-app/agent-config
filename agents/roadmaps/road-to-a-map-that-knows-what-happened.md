@@ -225,11 +225,11 @@ use it.
       `detailed` (ceiling 2,000) on the serialized envelope (O15).
       verify: `npx vitest run tests/scripts/answer_envelope_schema.test.ts` -> 0
       reach exempt: validateEnvelope is the schema oracle the test checks envelopes against; the envelope itself ships through makeEnvelope in code-graph ask.
-- [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_answer_size.ts -->
+- [x] **J.2 Budgets that hold** (H44). `recommended_reads` becomes a counted, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_answer_size.ts -->
       paged list; overflow falls back items → locations → per-file counts →
       summary with a "narrow your question" header; `graph_impact` gets a
       budget; ranked lists are packed by budget search.
-      verify: `./scripts-run src/scripts/bench_answer_size --probe affected-hubs` -> 0
+      verify: `./scripts-run internal/bench/core/bench_answer_size --probe affected-hubs` -> 0
 - [x] **J.3 Answers that are right** (H45). `pack` seeds from file, area and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/answer_correctness.ts -->
       symbol names, then FTS over I.2's index once it exists; `tests-for`
       resolves `.js` specifiers; `usage` covers symbols; "no entry" names the
@@ -272,10 +272,10 @@ use it.
       as an extension of `memory_recall_hook.ts`. Off unless D's gain branch
       fired. Blocked by `b-stage-d-measurement`.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
-- [x] **J.9 Measure the answers.** Per-verb output-size bench on the real graph <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_answer_size.ts -->
+- [x] **J.9 Measure the answers.** Per-verb output-size bench on the real graph <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_answer_size.ts -->
       in CI, a cost line per answer, p95 latency of `ask` recorded (no claim
       attached); D's arms use `ask`.
-      verify: `./scripts-run src/scripts/bench_answer_size --all` -> 0
+      verify: `./scripts-run internal/bench/core/bench_answer_size --all` -> 0
       > note: bench and probes ship (`--all` green locally: dearest probe 1,914 tok, ask p95 859 ms); running it in CI is a new workflow step that needs its ratification artifact — left as a follow-up.
 
 ## Phase 4 — Stage K: feedback that shapes the work

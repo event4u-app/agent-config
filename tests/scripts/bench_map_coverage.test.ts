@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { load_map_tasks } from '../../src/scripts/_lib/bench_map_metrics.js';
-import { coverageOf, coverageSummary } from '../../src/scripts/bench_map_task_set.js';
+import { load_map_tasks } from '../../internal/bench/core/_lib/bench_map_metrics.js';
+import { coverageOf, coverageSummary } from '../../internal/bench/core/bench_map_task_set.js';
 
 const REPO = path.resolve(__dirname, '../..');
 
@@ -25,7 +25,7 @@ describe('coverage gate before spend (5.4, K2)', () => {
     });
 
     it('`--dry-run --coverage` prints the covered share without a model call', () => {
-        const r = spawnSync(path.join(REPO, 'scripts-run'), ['src/scripts/bench_map_task_set', '--dry-run', '--coverage', '--tasks', '2'], { cwd: REPO, encoding: 'utf-8' });
+        const r = spawnSync(path.join(REPO, 'scripts-run'), ['internal/bench/core/bench_map_task_set', '--dry-run', '--coverage', '--tasks', '2'], { cwd: REPO, encoding: 'utf-8' });
         expect(r.status, r.stderr).toBe(0);
         expect(r.stdout).toMatch(/covered share \d\.\d+ \(\d+\/2 tasks, \d+\/\d+ places\)/);
     }, 300_000);

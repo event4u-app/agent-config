@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_integrity.ts (Phase 1 Step 3 A/B clone check).
+// Tests for internal/bench/core/bench_ab_integrity.ts (Phase 1 Step 3 A/B clone check).
 //
 // The Python original is deleted, so this is a python-free intent suite. The
 // script hardcodes the gitignored clones path `internal/bench/ab/clones/`. We:
@@ -24,10 +24,10 @@ import {
     removeClones,
     runScript,
 } from './_bench_ab.js';
-import { is_under_allowed_path } from '../../src/scripts/bench_ab_integrity.js';
+import { is_under_allowed_path } from '../../internal/bench/core/bench_ab_integrity.js';
 
-const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_integrity.ts');
-const CLONE_TS = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
+const TS_SCRIPT = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_integrity.ts');
+const CLONE_TS = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_clone.ts');
 const HAVE_FIXTURE = existsSync(FIXTURE);
 
 describe('bench_ab_integrity.ts — is_under_allowed_path', () => {

@@ -12,7 +12,7 @@ import {
     parse_artifact_corpus,
     select_corpus,
     validate_artifact_task,
-} from '../../src/scripts/_lib/bench_artifact_corpus.js';
+} from '../../internal/bench/core/_lib/bench_artifact_corpus.js';
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 const CORPUS = path.join(REPO, 'internal', 'bench', 'corpora', 'ab-artifact-v2.yaml');

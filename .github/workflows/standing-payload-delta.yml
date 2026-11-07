@@ -462,7 +462,7 @@ jobs:
         run: |
           rc=0
           ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs || rc=1
-          ./scripts-run src/scripts/bench_hook_injection || rc=1
+          ./scripts-run internal/bench/core/bench_hook_injection || rc=1
           ./scripts-run src/scripts/audit_skill_overlap --quiet --print-table --strict || rc=1
           ./scripts-run src/scripts/memory_replay --check || rc=1
           exit "$rc"

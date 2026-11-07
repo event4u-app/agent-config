@@ -22,7 +22,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { composeReadingRecord } from '../../src/scripts/bench_hook_latency.js';
+import { composeReadingRecord } from '../../internal/bench/core/bench_hook_latency.js';
 import {
     MIN_READINGS,
     MIN_SESSIONS,
