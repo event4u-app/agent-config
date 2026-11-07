@@ -79,11 +79,14 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       verify: unit test over the pinned fixture stream; one real trial shows ≥ 1 hook
       event per bound event type for the package arm and 0 for `vanilla`.
 
-- [ ] **1.3 Re-run the main-session census on the split buckets.** One fresh main
+- [x] **1.3 Re-run the main-session census on the split buckets.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> One fresh main
       session, `preamble_byte_census --main-session`, and report the `PostToolUse:Bash`
       figure as model-visible and stdout separately.
       verify: the census table shows both rows; `docs/benchmark.md` replaces the open
       1,050-char sentence with the measured visible figure.
+      > note: done 2026-11-07 — 219 `Bash` calls, hook output on 3 (mean 562 chars, all
+      > model-visible), ~8 chars per call; no tool-hook stdout recorded.
+      > `agents/evidence/analysis/main-session-census-split-2026-11-07.md`.
 
 ## Phase 2 — Reference duty, observe-only
 
