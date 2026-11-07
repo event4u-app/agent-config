@@ -5,18 +5,19 @@ tree_pin: 84ec63c93d
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-31
-estate_growth_exempt: "+1 later_roadmaps, +1 open_blockers, owner-directed 2026-11-05 (\"eine roadmap in ac anlegen und mergen\"; agents/evidence/owner-directives/2026-11-05-agent-switch-link.md): parked in later/ because the active estate is at the WIP cap of 5; its one blocker is agent-switch shipping contract v1."
+estate_growth_exempt: "+1 active_roadmaps, owner-promoted 2026-11-07 out of later/ per agents/evidence/owner-directives/2026-11-05-agent-switch-link.md (\"parked in later/ until the WIP cap allows it or the owner promotes it citing this record\"); its entry condition was met when agent-switch 2.13.0 shipped link contract 1, and the move takes it from later/ to active (-1 later_roadmaps, -1 open_blockers)."
 estate_offset_exempt: "New work requested by the owner, agents/evidence/owner-directives/2026-11-05-agent-switch-link.md; no parked or active roadmap covers an agent-switch link (grep -rlF for 'mcp serve', 'switch_request', 'agent-switch link' over agents/roadmaps, later, stubs at 84ec63c93d returned nothing), so nothing is archived to offset it."
 entry_condition:
   what: "agent-switch ships `mcp serve`, `limits --json` and `switch … --json` (contract v1) on its 2.x line"
   when: "the agent-switch release carrying road-to-the-agent-config-link phases 1–2"
   who: "owner"
+  met: "agent-switch 2.13.0 (npm @event4u/agent-switch, tag 2.13.0, 2026-11-06): `link status --json` answers `contract: 1`"
 relates:
   - slug: road-to-a-council-that-spreads-across-accounts
     relation: extends
     note: "Its per-seat `agent-switch dir` pick gains a limits pre-check; the pick itself stays agent-switch's."
   - slug: road-to-the-profile-the-session-runs-in
-    relation: refines
+    relation: extends
     note: "K2/K4/K5/K8 stay: AC never moves a session, never switches automatically, runs no daemon, never depends on agent-switch."
   - slug: road-to-a-limit-the-host-actually-signals
     relation: disjoint
@@ -50,11 +51,11 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Phase 1 — Contract
 
-- [ ] **1.1 `docs/contracts/agent-switch-link.md`.** Tools, JSON shapes
+- [x] **1.1 `docs/contracts/agent-switch-link.md`.** Tools, JSON shapes
       (`limits_get`, `switch_*`, `session_whoami`, `link_status`), request
       states, first-decision-wins, contract version `1`, and the absence rules.
       verify: `./scripts-run src/scripts/check_references` -> 0
-- [ ] **1.2 Guide update.** `docs/guides/works-with-agent-switch.md` § "What AC
+- [x] **1.2 Guide update.** `docs/guides/works-with-agent-switch.md` § "What AC
       never does" keeps moving/automatic switching and adds what AC now does
       (read limits, ask, relay).
       verify: `./scripts-run src/scripts/check_references` -> 0
@@ -144,9 +145,6 @@ cross-account continuation.
 
 ## Blockers
 
-### blocker: agent-switch-contract-v1
-- what: agent-switch has no `mcp serve`, `limits --json` or `switch` verbs yet
-- evidence: `event4u-app/agent-switch` `src/commands/mcp.ts` lists configs only
-- owner: agent-switch road-to-the-agent-config-link phases 1–2
-- closes-when: a released agent-switch answers `link status --json` with `contract: 1`
-- since: 2026-11-05
+None open. `agent-switch-contract-v1` (since 2026-11-05) closed 2026-11-07:
+agent-switch 2.13.0 is published and `link status --json` answers
+`{"enabled":true,"version":"2.13.0","contract":1,"mcp":{"command":"agent-switch","args":["mcp","serve"]}}`.
