@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { diffFacts } from '../../src/scripts/_lib/fact_diff.js';
-import { factAggregate, factConservation, loadPairs, renderFactSection } from '../../src/scripts/bench_humanizer_eval.js';
+import { factAggregate, factConservation, loadPairs, renderFactSection } from '../../internal/bench/core/bench_humanizer_eval.js';
 
 describe('bench fact conservation', () => {
     const pairs = loadPairs();

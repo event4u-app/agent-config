@@ -6,7 +6,7 @@ import {
     price_usd,
     spearman,
     within_band,
-} from '../../src/scripts/bench_quality_rerun.js';
+} from '../../internal/bench/core/bench_quality_rerun.js';
 
 describe('within_band (±15% output-token pairing)', () => {
     it('keeps matched pairs, drops divergent ones', () => {

@@ -53,7 +53,7 @@ export const ANTHROPIC_VERSION = '2023-06-01';
  * Dated model id per tier, or `null` where this tree pins none.
  *
  * The two dated ids are the ones already used elsewhere in this repository
- * (`src/scripts/rdp_gate_classify.ts:66`, `src/scripts/bench_ab_v2_run.ts`), so
+ * (`src/scripts/rdp_gate_classify.ts:66`, `internal/bench/core/bench_ab_v2_run.ts`), so
  * they are not invented here.
  */
 export const TIER_MODEL: Readonly<Record<ModelTier, string | null>> = {

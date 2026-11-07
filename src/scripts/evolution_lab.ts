@@ -60,8 +60,8 @@ import {
     CANDIDATE_RECORD_FILE,
     CLONES,
     clone_candidate,
-} from './bench_ab_clone.js';
-import { main as integrity_main } from './bench_ab_integrity.js';
+} from '../../internal/bench/core/bench_ab_clone.js';
+import { main as integrity_main } from '../../internal/bench/core/bench_ab_integrity.js';
 import {
     runCascade,
     CHEAPEST_STAGE,

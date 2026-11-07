@@ -1,4 +1,4 @@
-// Tests for src/scripts/_lib/bench_ab_complexity.ts — the T2 endpoint of the
+// Tests for internal/bench/core/_lib/bench_ab_complexity.ts — the T2 endpoint of the
 // Phase-3 metric pair (S0.3 delta #11).
 //
 // The suite has two jobs, and the first one is the one that makes the metric
@@ -25,7 +25,7 @@ import {
     langForPath,
     median,
     medianComplexityPerChangedFunction,
-} from '../../src/scripts/_lib/bench_ab_complexity.js';
+} from '../../internal/bench/core/_lib/bench_ab_complexity.js';
 
 async function scoreOne(file: string, src: string): Promise<number> {
     const r = await complexityForSource(file, src);

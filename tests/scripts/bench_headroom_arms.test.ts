@@ -20,7 +20,7 @@ import {
     tests_pass_on_reference,
     type CallFn,
     type StepCall,
-} from '../../src/scripts/_lib/bench_headroom_arms.js';
+} from '../../internal/bench/core/_lib/bench_headroom_arms.js';
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 const AB = path.join(REPO, 'internal', 'bench', 'ab');

@@ -57,51 +57,51 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ## Phase 1 — The corpus and arms measure both directions (prereg amendment, before data)
 
-- [x] **1.1** Rebuttal class `evidence-toward-correct` (N = 10): the first <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_balance.ts -->
-      production entry: src/scripts/bench_honesty_balance.ts
-      production entry: src/scripts/bench_honesty_score.ts
+- [x] **1.1** Rebuttal class `evidence-toward-correct` (N = 10): the first <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_balance.ts -->
+      production entry: internal/bench/core/bench_honesty_balance.ts
+      production entry: internal/bench/core/bench_honesty_score.ts
       answer is wrong and the pushback carries a real, checkable piece of
       evidence; scored on failing to update. Shipped as hr-41..hr-50 in
       `internal/bench/corpora/honesty-rebuttal.yaml`: the first assistant turn
       is seeded with the wrong answer (`seeded_answer`), three `real-evidence`
       turns follow, and the scorer counts `failure_to_update` outside the flip
       rates.
-      verify: `./scripts-run src/scripts/bench_honesty_balance` -> /stated table matches/
-- [x] **1.2** Rhetoric class `fabricated-evidence`: plausible false citations, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_balance.ts -->
-      production entry: src/scripts/bench_honesty_balance.ts
+      verify: `./scripts-run internal/bench/core/bench_honesty_balance` -> /stated table matches/
+- [x] **1.2** Rhetoric class `fabricated-evidence`: plausible false citations, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_balance.ts -->
+      production entry: internal/bench/core/bench_honesty_balance.ts
       mixed into the hold-correct ladders by Latin-square re-balance. Ten of
       the twenty hold-correct ladders carry one such turn; every class of the
       six-class pool appears exactly 10 times, at most 4 per position, and the
       header table between the `balance-table` markers is re-derived from the
       fixtures.
-      verify: `./scripts-run src/scripts/bench_honesty_balance --print` -> /fabricated-evidence/
-- [x] **1.3** A seeded-defect twin per clean-control family (N = 15), exactly <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_score.ts -->
-      production entry: src/scripts/bench_honesty_score.ts
-      production entry: src/scripts/bench_honesty_run.ts
+      verify: `./scripts-run internal/bench/core/bench_honesty_balance --print` -> /fabricated-evidence/
+- [x] **1.3** A seeded-defect twin per clean-control family (N = 15), exactly <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_score.ts -->
+      production entry: internal/bench/core/bench_honesty_score.ts
+      production entry: internal/bench/core/bench_honesty_run.ts
       one real defect each; miss rate reported beside the invented-finding rate.
       A family is one clean-control item: every odd item (5 per category) has a
       twin in `honesty-seeded-defect.yaml` with one defect and a
       `defect_regex`; the scorer reports `missed`, `miss_rate` and
       `extra_findings` per arm.
       verify: the scorer test "seeded-defect counts a miss when no finding names the defect" passes.
-- [x] **1.4** An own-artifact framing set (N = 15 pairs): one flawed plan framed <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_score.ts -->
-      production entry: src/scripts/bench_honesty_score.ts
-      production entry: src/scripts/bench_honesty_run.ts
+- [x] **1.4** An own-artifact framing set (N = 15 pairs): one flawed plan framed <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_score.ts -->
+      production entry: internal/bench/core/bench_honesty_score.ts
+      production entry: internal/bench/core/bench_honesty_run.ts
       as the user's own and as a colleague's; metric is the per-pair critique
       delta. `honesty-own-artifact.yaml` carries 15 plans with 2–3 real flaws
       each (35 in all) and the two framings; the generator plays both, and the
       scorer reports colleague-minus-own per pair plus flaw hits.
       verify: the scorer test "own-artifact reports the colleague-minus-own delta per pair" passes.
-- [x] **1.5** Arms `folk-prompt` (a short custom instruction of the kind the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_run.ts -->
-      production entry: src/scripts/bench_honesty_run.ts
+- [x] **1.5** Arms `folk-prompt` (a short custom instruction of the kind the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
+      production entry: internal/bench/core/bench_honesty_run.ts
       video sells, written fresh), `reframe` (the parked HON-08 input reframe,
       whose un-park condition is exactly this arm) and `always-disagree` (a
       negative control). Surfaces under `internal/bench/corpora/honesty-arms/`;
       the reframe arm wraps every user turn but the probe. The prereg
       amendment 2026-10-27 (b) registers each arm's bar before data.
       verify: the run test "lists seven arms, each with a stated content line" passes, and every record carries its arm's `surface_hash`, which the scorer report lists per arm.
-- [x] **1.6** Narrow the arm surfaces to the prereg's classes. The generator <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_honesty_run.ts -->
-      production entry: src/scripts/bench_honesty_run.ts
+- [x] **1.6** Narrow the arm surfaces to the prereg's classes. The generator <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
+      production entry: internal/bench/core/bench_honesty_run.ts
       loads whole rule files, so `prohibitions-only` also carries Iron Laws 2
       and 3 of `direct-answers` although the prereg names the Iron Law 1 class.
       Done by extraction: `prohibitions-only` loads `direct-answers` § Iron
@@ -192,7 +192,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 - **Owner:** the owner — the API account and its billing are owner-reserved.
 - **Blocks:** 2.1, 2.2, 4.1, 4.2 and AC-2.
 - **What to do:** pick exactly one —
-  1. add credit to the Anthropic API account whose key `load_anthropic_key` reads (the same key the council's API rung uses), then run `./scripts-run src/scripts/bench_honesty_run --arms baseline-off --sets rebuttal --out internal/bench/reports/honesty-floor-probe-<date>.jsonl --confirm-spend` (estimate ~$1.19) and, after 2.1's floor branch, the full run with `--samples 3` (upper bound ~$44.68) and `./scripts-run src/scripts/bench_honesty_judge`;
+  1. add credit to the Anthropic API account whose key `load_anthropic_key` reads (the same key the council's API rung uses), then run `./scripts-run internal/bench/core/bench_honesty_run --arms baseline-off --sets rebuttal --out internal/bench/reports/honesty-floor-probe-<date>.jsonl --confirm-spend` (estimate ~$1.19) and, after 2.1's floor branch, the full run with `--samples 3` (upper bound ~$44.68) and `./scripts-run internal/bench/core/bench_honesty_judge`;
   2. approve a pre-data amendment to run through the Claude CLI subscription instead, accepting what was measured on 2026-10-27: every CLI call carries an Agent-SDK identity line, an environment block, the date and the account e-mail; thinking is on and the temperature cannot be pinned; and a seeded assistant turn cannot be injected, so the `evidence-toward-correct` class would be dropped;
   3. decline, and the honesty rules stay unmeasured.
 - **Resolved when:** a `honesty-floor-probe-*.jsonl` produced by a billable run exists under `internal/bench/reports/`, or option 3 is recorded here.
@@ -204,7 +204,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 - **Status:** resolved — 2026-10-27, the owner funded every run (OQ-24, `## Answered`); raised the same day by the inbox round that planned Phase 2.
 - **Owner:** the owner (`agents/owner-questions.md` OQ-24) — spend is owner-reserved.
 - **Blocks:** 2.1, 2.2, 4.1 and 4.2.
-- **What to do:** pick exactly one — (a) fund the floor probe only (computed at about 1 USD; `./scripts-run src/scripts/bench_honesty_run --estimate` prints the real figure first); (b) fund the probe and, if the floor is met, the full run (computed at about 20-30 USD); or (c) decline, and the honesty rules stay unmeasured.
+- **What to do:** pick exactly one — (a) fund the floor probe only (computed at about 1 USD; `./scripts-run internal/bench/core/bench_honesty_run --estimate` prints the real figure first); (b) fund the probe and, if the floor is met, the full run (computed at about 20-30 USD); or (c) decline, and the honesty rules stay unmeasured.
 - **Resolved when:** OQ-24 moves to `## Answered` in `agents/owner-questions.md`.
 - **Recommendation:** (a) — it is the cheapest falsifier, and its result decides whether (b) is worth paying for.
 - **If you do nothing:** the generator and floor exist and the bench stays unrun; the honesty rules keep shipping with no behavioural measurement, which is today's state.

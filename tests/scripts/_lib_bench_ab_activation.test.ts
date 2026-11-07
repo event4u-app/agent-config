@@ -1,4 +1,4 @@
-// Tests for src/scripts/_lib/bench_ab_activation.ts — deltas #1–#4 of the S0.3
+// Tests for internal/bench/core/_lib/bench_ab_activation.ts — deltas #1–#4 of the S0.3
 // harness-feasibility spike (road-to-solution-minimalism Phase 3 prerequisites).
 //
 // The whole point of this module is to catch a sweep that LOOKS fine, so every
@@ -21,7 +21,7 @@ import {
     verify_model_id,
     type TierRates,
     type TokensBreakdown,
-} from '../../src/scripts/_lib/bench_ab_activation.js';
+} from '../../internal/bench/core/_lib/bench_ab_activation.js';
 
 const SONNET: TierRates = { input: 3.0, output: 15.0, cache_write: 3.75, cache_read: 0.3 };
 

@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_clone.ts (Phase 1 Step 2 A/B clone builder).
+// Tests for internal/bench/core/bench_ab_clone.ts (Phase 1 Step 2 A/B clone builder).
 //
 // The Python original is deleted, so this is a python-free intent suite over
 // the tsx CLI. The script hardcodes the gitignored clones path
@@ -26,9 +26,9 @@ import {
     removeClones,
     runScript,
 } from './_bench_ab.js';
-import { target_shape_hash } from '../../src/scripts/bench_ab_clone.js';
+import { target_shape_hash } from '../../internal/bench/core/bench_ab_clone.js';
 
-const TS_SCRIPT = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
+const TS_SCRIPT = join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_clone.ts');
 const HAVE_FIXTURE = existsSync(FIXTURE);
 
 describe('bench_ab_clone.ts — pure layer', () => {

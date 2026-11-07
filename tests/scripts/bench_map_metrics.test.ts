@@ -16,8 +16,8 @@ import {
     total_tokens,
     type AffectedItem,
     type MapRunRecord,
-} from '../../src/scripts/_lib/bench_map_metrics.js';
-import { DRY_RUN_STUB, MAP_ARMS, dry_run_problems, parse_args, run_trial, stub_transcript } from '../../src/scripts/bench_map_task_set.js';
+} from '../../internal/bench/core/_lib/bench_map_metrics.js';
+import { DRY_RUN_STUB, MAP_ARMS, dry_run_problems, parse_args, run_trial, stub_transcript } from '../../internal/bench/core/bench_map_task_set.js';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'map-metrics-'));
 afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));

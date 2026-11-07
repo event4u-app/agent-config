@@ -9,9 +9,9 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { FIXED_INJECTIONS } from '../../src/scripts/_lib/bench_ab_arms.js';
+import { FIXED_INJECTIONS } from '../../internal/bench/core/_lib/bench_ab_arms.js';
 
-import { analyse, to_markdown } from '../../src/scripts/bench_ab_v2_stats.js';
+import { analyse, to_markdown } from '../../internal/bench/core/bench_ab_v2_stats.js';
 
 const run = (cap: boolean, disc: number) => ({ capability_pass: cap, discipline_score: disc, discipline_pass: disc >= 1, errored: false });
 const rec = (id: string, arms: Record<string, [boolean, number]>) => ({

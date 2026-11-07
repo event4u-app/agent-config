@@ -17,9 +17,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { load_artifact_corpus, type ArtifactTask } from './bench_artifact_corpus.js';
-import { fold } from './bench_artifact_graders.js';
-import { svg_render_gate } from './bench_artifact_svg_gate.js';
+import { load_artifact_corpus, type ArtifactTask } from '../../../internal/bench/core/_lib/bench_artifact_corpus.js';
+import { fold } from '../../../internal/bench/core/_lib/bench_artifact_graders.js';
+import { svg_render_gate } from '../../../internal/bench/core/_lib/bench_artifact_svg_gate.js';
 import { loadBundle } from './showcase_bundle.js';
 
 export type ReplayRunStatus = 'reproduced' | 'mismatch' | 'not-regradable' | 'infra-error';

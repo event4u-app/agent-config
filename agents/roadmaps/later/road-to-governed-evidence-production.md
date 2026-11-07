@@ -782,7 +782,7 @@ protocol with the tuning pointing at nothing, and would burn the one-shot
 freeze the council ruled is entire or not at all.
 
 **The one committed evaluator a rule-body mutation COULD move** is the A/B
-bench: `bench_ab_clone --candidate-record` (`src/scripts/bench_ab_clone.ts:449`)
+bench: `bench_ab_clone --candidate-record` (`internal/bench/core/bench_ab_clone.ts:449`)
 materialises a candidate into a clone outside the repository, and
 `bench_ab_v2_stats.ts:315-345` measures per-task outcomes over it — the same
 population the tree's only live `decidePairedVerdict` caller uses. It is an

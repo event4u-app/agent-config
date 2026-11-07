@@ -219,7 +219,7 @@ there, which is what a `0` in this table has always meant.
 Projected from `src/scripts/hooks/host_lowering.yaml` — **configured behavior, not observed behavior.**
 A cell says what this package has written down about a host, never what the host does.
 
-**Configured: 3 of 32 host-slot pairs configure a refusal — `claude` on 3 of its 9 (`stop`, `user_prompt_submit`, `pre_tool_use`). 19 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 9 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
+**Configured: 3 of 30 host-slot pairs configure a refusal — `claude` on 3 of its 9 (`stop`, `user_prompt_submit`, `pre_tool_use`). 17 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 9 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
 
 | Host | Slot | Configured outcome | Backing | Answered |
 |---|---|---|---|---|
@@ -247,9 +247,7 @@ A cell says what this package has written down about a host, never what the host
 | `cline` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
 | `cline` | `user_prompt_submit` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
 | `cline` | `post_tool_use` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
-| `windsurf` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
-| `windsurf` | `user_prompt_submit` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
-| `windsurf` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `windsurf` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-11-07 |
 | `gemini` | `session_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
 | `gemini` | `session_end` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
 | `gemini` | `stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
@@ -421,7 +419,7 @@ the runtime resolver reads — on 2026-09-13:
 | `cursor` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
 | `cline` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
 | `gemini` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
-| `windsurf` | `manual-only` | no `pre_tool_use` slot (3 other slots bound) |
+| `windsurf` | `manual-only` | no `pre_tool_use` slot (3 other slots bound; 1 since 2026-11-07, issue #2805) |
 | `cowork` | `manual-only` | empty `slots:` map — no bindings at all |
 | `copilot` | `manual-only` | empty `slots:` map — no bindings at all |
 

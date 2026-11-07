@@ -72,6 +72,11 @@
 - **Capability gap:** none structural; just unwired. `post_cascade_response`
   is async, which is fine for all three rules (none are on the critical
   path).
+- **Superseded 2026-11-07:** the vendor's live docs now name only
+  `post_setup_worktree` (Cascade is "legacy" in Devin Desktop), so
+  `pre_user_prompt` and `post_cascade_response` were withdrawn from
+  `host_lowering.yaml`. The event list above is the pre-2026-11 reading;
+  do not wire against it without fresh evidence.
 
 ## Issue payloads (ready to file)
 

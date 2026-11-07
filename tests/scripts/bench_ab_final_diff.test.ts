@@ -8,7 +8,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { changed_files, final_files } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
+import { changed_files, final_files } from '../../internal/bench/core/_lib/bench_ab_scoring_v2.js';
 
 const dirs: string[] = [];
 function tree(files: Record<string, string>): string {
