@@ -41,8 +41,27 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { hasBillingGrant } from './_lib/billing_grant.js';
 import { hostSettingsPaths, readBillingClass, type BillingClassReading } from './_lib/billing_class.js';
 import { coldLine } from './_lib/cold_return.js';
-import { atLeast, CONTEXT_NOTICE_PCT, contextFigure, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
+import type { LinkOptions } from './_lib/agent_switch_link.js';
+import {
+    atLeast,
+    CONTEXT_NOTICE_PCT,
+    contextFigure,
+    describeWindow,
+    planPressure,
+    sessionContextFill,
+    type WindowPressure,
+} from './_lib/pressure.js';
 import { forAccount, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
+import {
+    isTerminal,
+    raisedContext,
+    raisedNotice,
+    raiseSwitch,
+    readSwitchRecord,
+    relayLine,
+    showSwitch,
+    writeSwitchRecord,
+} from './_lib/switch_relay.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
@@ -60,6 +79,14 @@ export interface QuotaNoticeDeps {
     readonly now: number;
     /** Identifies this prompt (host prompt id or a prompt hash); `null` disables the per-prompt dedup. */
     readonly promptKey?: string | null;
+    /** How agent-switch is spawned; production passes nothing, so it runs on the hardened environment. */
+    readonly link?: LinkOptions;
+}
+
+/** What one prompt shows: lines for the user, and the model's half of a switch request. */
+export interface NoticeReply {
+    readonly lines: string[];
+    readonly context: string[];
 }
 
 function claimDir(stateEnv?: EnvMap | null): string {
@@ -118,9 +145,45 @@ export function meteredText(b: BillingClassReading): string {
 
 /** The lines this turn shows, each claimed so it is shown once. */
 export function noticeLines(deps: QuotaNoticeDeps): string[] {
-    if (suppression(deps) !== null) return [];
+    return noticeReply(deps).lines;
+}
+
+/**
+ * The switch request of this session (Phase 4): relay what changed on the one
+ * AC raised, else raise one when a window of this account is hot. One open
+ * request per session at a time; the raise is claimed per (account, window,
+ * reset) on the machine, so a hot window raises once per cycle.
+ */
+function switchTurn(deps: QuotaNoticeDeps, session: string, account: string, hot: WindowPressure | undefined, out: NoticeReply): void {
+    const link = deps.link ?? {};
+    const rec = readSwitchRecord(session, deps.stateEnv);
+    if (rec !== null) {
+        const req = showSwitch(rec.id, link);
+        if (req === null) return;
+        let next = rec;
+        const line = relayLine(req, next);
+        if (line !== null) {
+            out.lines.push(line);
+            out.context.push(line.replace(/^AC: /, 'agent-switch request update: '));
+            next = { ...next, decision_told: true };
+        }
+        writeSwitchRecord(session, isTerminal(req) ? null : next, deps.stateEnv);
+        if (!isTerminal(req)) return;
+    }
+    if (hot === undefined || account === '' || deps.sessionId === null) return;
+    if (!claimOnce(`switch|${account}|${hot.window}|${hot.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) return;
+    const req = raiseSwitch(account, deps.sessionId, link);
+    if (req === null || isTerminal(req)) return;
+    writeSwitchRecord(session, { id: req.id, decision_told: false, checkpointed: false }, deps.stateEnv);
+    out.lines.push(raisedNotice(req));
+    out.context.push(raisedContext(req));
+}
+
+export function noticeReply(deps: QuotaNoticeDeps): NoticeReply {
+    const out: NoticeReply = { lines: [], context: [] };
+    if (suppression(deps) !== null) return out;
     const session = hashSessionId(deps.sessionId);
-    const lines: string[] = [];
+    const lines = out.lines;
     if (deps.billing.billing_class === 'metered' && claimOnce(`metered|${session}`, deps.stateEnv, deps.now)) {
         lines.push(meteredText(deps.billing));
     }
@@ -130,7 +193,8 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
     // hook reads it from there instead of carrying the profile detector in its
     // chunk. No snapshot of its own yet → the default login's bucket.
     const account = mine[0]?.account ?? '';
-    for (const w of planPressure(forAccount(ledger, account), deps.now).windows) {
+    const windows = planPressure(forAccount(ledger, account), deps.now).windows;
+    for (const w of windows) {
         if (!atLeast(w.state, 'warm') || w.state === 'unknown') continue;
         if (!claimOnce(`window|${account}|${w.window}|${w.state}|${w.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) continue;
         const advice =
@@ -139,6 +203,7 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
                 : 'AC is narrowing its own fan-out; /compact or fewer parallel sessions save the most.';
         lines.push(`AC: ${describeWindow(w)}. ${advice}`);
     }
+    switchTurn(deps, session, account, windows.find((w) => atLeast(w.state, 'hot')), out);
     const cache = mine.find((x) => x.cache);
     // Once per expiry. A host-started turn pays the re-write too, so the line is true there as well.
     const cold = coldLine(cache, deps.now);
@@ -153,7 +218,7 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
         const exp = cache?.cache?.expires_at;
         lines.push(contextLine(ctx, snap, exp !== undefined && deps.now >= exp));
     }
-    return lines;
+    return out;
 }
 
 /**
@@ -289,13 +354,18 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         }
         const prompt = field(payload, 'prompt');
         const promptKey = field(payload, 'prompt_id') ?? (prompt === null ? null : digest(prompt));
-        const lines = noticeLines({
+        const { lines, context } = noticeReply({
             ...base,
             promptKey,
         });
-        if (lines.length > 0) {
+        if (lines.length > 0 || context.length > 0) {
             const id = createHash('sha256').update(`${sessionId ?? ''}|${base.now}`).digest('hex').slice(0, 16);
-            process.stdout.write(JSON.stringify({ [USER_NOTICE_KEY]: lines.join('\n'), [USER_NOTICE_ID_KEY]: id }));
+            process.stdout.write(
+                JSON.stringify({
+                    ...(lines.length > 0 ? { [USER_NOTICE_KEY]: lines.join('\n'), [USER_NOTICE_ID_KEY]: id } : {}),
+                    ...(context.length > 0 ? { additional_context: context.join('\n\n') } : {}),
+                }),
+            );
         }
         return 0;
     } catch {
