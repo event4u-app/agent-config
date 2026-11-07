@@ -99,11 +99,36 @@ AC installs them to `~/.claude/` and `~/.codex/`, and agent-switch shares
 `rules/`. Whether the host reads `<profile>/rules` needs a run with real
 accounts first.
 
+## The link: limits and the switch question
+
+From agent-switch 2.13.0 the two tools can talk through a local MCP server,
+`agent-switch mcp serve` ([contract](../contracts/agent-switch-link.md)).
+The link is on by default and switched off only in agent-switch
+(`agent-switch link off`). Through it AC:
+
+- **Reads limits.** Every account's 5-hour and weekly fill, reset time, and
+  whether it can take work now. A stale reading counts as unknown, never as
+  usable.
+- **Asks.** When a session nears its limit, AC opens a switch request and names
+  it in the limit notice. The same question shows in the agent-switch app.
+- **Records your answer.** If you answer in the session, AC records it; the host
+  confirms that call with you first. The first answer counts in both tools,
+  whichever tool it came from.
+- **Relays.** A decision made in agent-switch, and the outcome of the move, are
+  reported once in the session.
+
+With agent-switch absent, the link off, or a contract version AC does not know,
+AC behaves exactly as before: the limit notice without a request.
+
+AC's side of the link is being built in stages
+(`road-to-a-link-with-agent-switch`); until it ships, AC does not connect.
+
 ## What AC never does
 
 - Add, log in, or refresh accounts, or keep an account store.
-- Move a session to another account, switch automatically, or route by
-  limits. Those are agent-switch's orchestrator and session protection.
+- Move a session to another account, pick the target for you, or switch
+  automatically. Through the link AC reads, asks and relays; agent-switch
+  carries out the move you approved.
 - Run a daemon for accounts. AC runs inside a session, not above it.
 - Write into a profile tree or agent-switch's share manifest.
 - Depend on agent-switch. Everything above also holds for variables you
