@@ -4,15 +4,24 @@ name: Commit subjects
 # commit subjects on PRs before they leak into the auto-generated
 # CHANGELOG.md via scripts/release.py. Runs on every PR regardless of
 # touched paths; the gate is the PR's commit range vs. the base ref.
+#
+# `lint commit subjects` is a required check, so it must also report on
+# `merge_group`: a merge queue treats a required check that never reports as
+# never satisfied and blocks `main` with no red X. Every check here judges the
+# PR's own commits, title and body, which the queue entry does not change, so
+# under `merge_group` the job reports green without re-running them
+# (agents/evidence/analysis/merge-group-pr-only-steps-2026-11.md).
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
+  merge_group:
 
-# Cancel queued runs on push so only the latest range is checked.
+# Cancel superseded PR runs; queue runs get a group of their own and are never
+# cancelled, so one queue entry cannot cancel another's required check.
 concurrency:
-  group: commit-subjects-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'merge_group' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 permissions:
   contents: read
@@ -23,7 +32,12 @@ jobs:
     name: lint commit subjects
     runs-on: ubuntu-latest
     steps:
+      - name: Queue entry — subjects, title and body were checked on the PR
+        if: github.event_name == 'merge_group'
+        run: echo "merge_group run - the PR run already linted this PR's commits, title and body."
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        if: github.event_name == 'pull_request'
         with:
           persist-credentials: false
           # Need the full history of the PR branch + the base ref so
@@ -32,18 +46,21 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch base ref
+        if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
 
       - name: Set up Node
+        if: github.event_name == 'pull_request'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps
+        if: github.event_name == 'pull_request'
         run: |
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
@@ -52,6 +69,7 @@ jobs:
       # PR title as the trunk commit subject. It goes through `env:`, never an
       # inline expansion — a title is untrusted, author-controlled text.
       - name: Run commit-subject lint
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -67,6 +85,7 @@ jobs:
       # range or in the PR body. The body is untrusted text, so it reaches the
       # gate through `env:` and a file, never an inline expansion.
       - name: Golden scenarios changed with a stated intent
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
