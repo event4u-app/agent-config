@@ -18,8 +18,10 @@
  *    version with a different command string);
  * 3. append the patch's entries for that event.
  *
- * Events the patch does not mention are left exactly as they are — a host file
- * may legitimately carry foreign events this package never binds.
+ * For an event the patch does not mention, only this package's own entries are
+ * removed (a binding a newer release withdrew); foreign entries stay
+ * byte-identical, and the key is deleted only when nothing foreign is left — a
+ * host file may legitimately carry foreign events this package never binds.
  *
  * Step 2 is what keeps an upgrade idempotent: a migration that changes our own
  * command string replaces the old entry rather than leaving a stale duplicate
@@ -137,6 +139,17 @@ export function mergeHookEvents(
             continue;
         }
         out[event] = mergeEventEntries(Array.isArray(current) ? current : [], incoming, signature);
+    }
+    // Every writer passes its full binding set, so a managed entry under an
+    // event the patch omits is a binding this release withdrew. Leaving it
+    // would keep firing a slot the table no longer claims.
+    for (const event of Object.keys(out)) {
+        if (event in patchHooks) continue;
+        const current = out[event];
+        if (!Array.isArray(current) || !current.some((e) => isManagedEntry(e, signature))) continue;
+        const kept = current.filter((e) => !isManagedEntry(e, signature));
+        if (kept.length === 0) delete out[event];
+        else out[event] = kept;
     }
     return out;
 }

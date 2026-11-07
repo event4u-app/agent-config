@@ -7466,6 +7466,14 @@ function mergeHookEvents(existingHooks, patchHooks, signature) {
     }
     out[event] = mergeEventEntries(Array.isArray(current) ? current : [], incoming, signature);
   }
+  for (const event of Object.keys(out)) {
+    if (event in patchHooks) continue;
+    const current = out[event];
+    if (!Array.isArray(current) || !current.some((e) => isManagedEntry(e, signature))) continue;
+    const kept = current.filter((e) => !isManagedEntry(e, signature));
+    if (kept.length === 0) delete out[event];
+    else out[event] = kept;
+  }
   return out;
 }
 function mergeHostConfig(existing, patch, signature, deepMergeFn) {

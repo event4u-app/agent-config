@@ -88,10 +88,40 @@ describe('mergeEventEntries', () => {
 });
 
 describe('mergeHookEvents', () => {
-    it('leaves an event the patch never mentions completely alone', () => {
+    it('leaves a foreign entry on an event the patch never mentions alone', () => {
         const existing = { afterFileEdit: [FOREIGN_CURSOR] };
         const merged = mergeHookEvents(existing, { beforeShellExecution: [ourCursorEntry()] }, CURSOR_SIG);
         expect(merged['afterFileEdit']).toStrictEqual([FOREIGN_CURSOR]);
+    });
+
+    it('drops our entry from an event the patch no longer binds — an upgrade withdraws a binding', () => {
+        const ours = (event: string, native: string): Record<string, unknown> => ({
+            command:
+                '[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook ' +
+                `--platform windsurf --event ${event} --native-event ${native}`,
+        });
+        const sig = HOOK_SIGNATURES['.windsurf/hooks.json'] ?? '';
+        const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
+        const existing = {
+            post_setup_worktree: [ours('session_start', 'post_setup_worktree')],
+            pre_user_prompt: [foreign, ours('user_prompt_submit', 'pre_user_prompt')],
+            post_cascade_response: [ours('stop', 'post_cascade_response')],
+        };
+        const merged = mergeHookEvents(
+            existing,
+            { post_setup_worktree: [ours('session_start', 'post_setup_worktree')] },
+            sig,
+        );
+        expect(merged['post_setup_worktree']).toHaveLength(1);
+        expect(merged['pre_user_prompt']).toStrictEqual([foreign]);
+        expect('post_cascade_response' in merged).toBe(false);
+    });
+
+    it('keeps a foreign-only event the patch no longer binds byte-identical', () => {
+        const existing = { afterFileEdit: [FOREIGN_CURSOR], stop: [] as unknown[] };
+        const merged = mergeHookEvents(existing, { beforeShellExecution: [ourCursorEntry()] }, CURSOR_SIG);
+        expect(merged['afterFileEdit']).toStrictEqual([FOREIGN_CURSOR]);
+        expect(merged['stop']).toStrictEqual([]);
     });
 
     it('treats an absent hooks object as nothing to preserve', () => {
