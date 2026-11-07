@@ -176,6 +176,15 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 
 **Size for the next wording (2026-11-06).** `bench_ab_power` with the paired sign test at α 0.05 and 80 % power, assuming independent per-run blind rates: separating the bar's own distance, a control at 15 % against a candidate at 7.5 %, needs 240 pairs per arm. A candidate at 5 % needs 124, one at 2.5 % needs 57. At the measured $0.023 per Haiku run, 240 pairs per arm is 480 runs and about $11. The next wording is measured at that size or not at all.
 
+**The same wording at the pre-registered size (2026-11-07).** Report `2026-11-07T09-54-45Z`, Haiku, 2 tasks × 120 seeds, 240 pairs per arm, same-day `rules-kernel-dc` control, 480 runs, $11.46, no errored run. Counted with the rule above, which reproduces the 2026-11-06 figures exactly (5 / 11 / 9 and 3 / 6 / 13):
+
+| Arm | Blind questions (of 240) | `trapC-ambig-01` questions after a look (of 120) | `trapC-ambig-01` joint pass (of 120) |
+|---|---|---|---|
+| `rules-kernel-dc` (same day) | 22 | 60 | 53 |
+| look-first candidate | 17 | 56 | 73 |
+
+Both bars are met: blind questions at 7.1 %, below the bar's 3 of 40 (7.5 %), and questions after a look on `trapC-ambig-01` at 47 %, above its floor of 30 %. The blind difference against the same-day control is not separable (Fisher one-sided p = 0.25): the control asked blind in 9.2 % of runs, not the 15 % the sample size was planned for. What is separable is the outcome on the ambiguous task: the candidate solves `trapC-ambig-01` correctly and within discipline in 73 of 120 runs against 53 (p = 0.007). `hdrH-done-01` is unchanged (1 and 0 of 120 joint passes, a floor for both). The rule file is a kernel rule and is not edited by an agent; adopting the wording is the owner's change, in its own PR under the kernel soak.
+
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 
 - The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.

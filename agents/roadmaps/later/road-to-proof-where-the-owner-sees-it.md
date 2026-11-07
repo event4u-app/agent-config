@@ -126,6 +126,12 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   **240 pairs per arm**; a candidate at 5 % needs 124, at 2.5 % needs 57. At the measured
   $0.023 per Haiku run, 240 pairs per arm is 480 runs, about $11. The next measurement
   runs at that size or not at all, and waits on `b-owner-spend`.
+  Measured 2026-11-07 at that size (report `2026-11-07T09-54-45Z`, 480 runs, $11.46): blind 17/240
+  (7.1 %, bar met) against 22/240 for the same-day control (p = 0.25); after a look on
+  `trapC-ambig-01` 56/120 (floor met); joint pass on `trapC-ambig-01` 73 against 53 of 120
+  (p = 0.007). Both verify bars hold. Open: the rule edit itself — `ask-when-uncertain` is a
+  kernel rule, agent writes to it are refused by `block-kernel-rule-writes`, so the PR that
+  adopts `internal/bench/candidates/ask-when-uncertain.look-first.md` is the owner's.
 - [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
