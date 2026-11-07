@@ -77,7 +77,9 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       event per bound event type for the package arm and 0 for `vanilla`.
       > note: done 2026-11-07 — event shape pinned; package arm SessionStart × 4, `without`
       > arm none, $0.0052. Only SessionStart surfaces in the stream, so the per-event
-      > clause is unanswerable from it; the invariant asks for any hook.
+      > clause is unanswerable from it; the invariant asks for any hook. Review fix: the
+      > expectation is per arm (`expect_hooks`), and `bench_map_task_set` marks a trial
+      > whose hooks broke that expectation `instrument-invalid`.
       > `agents/evidence/analysis/bench-hook-fire-probe-2026-11-07.md`.
 
 - [x] **1.3 Re-run the main-session census on the split buckets.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> One fresh main
@@ -122,7 +124,12 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > Edit/Write; ledger `duty` map. Reads under exempt paths (`dist/**`) are now
       > recorded without an advisory, because projected references live there — the
       > E2E test failed on exactly that before the fix. `delivered` and `omitted-budget`
-      > need a delivery path to observe and wait on 3.1.
+      > need a delivery path to observe and wait on 3.1. Review fixes, same day: a
+      > reference is resolved against its rule file (real rules write `../contexts/…`,
+      > which the first cut never matched), writes under exempt `dist/agent-src/` record
+      > the duty, and `cat` counts only with an absolute path. Known costs, not fixed:
+      > every Edit/Write re-reads `dist/router.json`; subagent-keyed ledgers are never
+      > cleared.
 
 - [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> For each of the 17
       rules whose `load_context` no act reaches, record one of: prompt-only by design
