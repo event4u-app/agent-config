@@ -1,3 +1,12 @@
+---
+stability: beta
+keep-beta-until: 2027-01-07
+keep-beta-reason: >-
+  New on 2026-11-07. The selection rules are expected to move once the miss rate
+  is observed (a red push to main after a green queue run), and the merge queue
+  and required check it is written for are not enabled yet.
+---
+
 # CI test selection — run what a change can reach, at the merge gate
 
 > **Status:** in-repo half shipped on `feat/ci-targeted-tests`. The repository-admin
