@@ -50,9 +50,9 @@ describe('censusMainSession', () => {
     });
     it('aggregates hook output per event and hook, with a per-occurrence mean, largest total first, and ignores empty output', () => {
         expect(c?.hooks).toEqual([
-            { event: 'SessionStart', hook: 'SessionStart:compact', occurrences: 1, total_chars: 5000, mean_chars: 5000 },
-            { event: 'SessionStart', hook: 'SessionStart:startup', occurrences: 1, total_chars: 100, mean_chars: 100 },
-            { event: 'UserPromptSubmit', hook: 'UserPromptSubmit', occurrences: 2, total_chars: 80, mean_chars: 40 },
+            { event: 'SessionStart', hook: 'SessionStart:compact', attachment: 'hook_success', model_visible: true, occurrences: 1, total_chars: 5000, mean_chars: 5000 },
+            { event: 'SessionStart', hook: 'SessionStart:startup', attachment: 'hook_success', model_visible: true, occurrences: 1, total_chars: 100, mean_chars: 100 },
+            { event: 'UserPromptSubmit', hook: 'UserPromptSubmit', attachment: 'hook_additional_context', model_visible: true, occurrences: 2, total_chars: 80, mean_chars: 40 },
         ]);
     });
     it('totals the session-start load: instructions + catalog + start-up hooks (not a compaction re-delivery), plus one prompt turn', () => {
@@ -65,6 +65,34 @@ describe('censusMainSession', () => {
         const text = renderMainSession(c!, 'session.jsonl');
         expect(text.indexOf('.claude/rules/a.md')).toBeLessThan(text.indexOf('~/.claude/CLAUDE.md'));
         expect(text).toMatch(/skills: 3 listed, 2 with a description, 1 name only/);
+    });
+});
+
+describe('hook output visibility', () => {
+    // A tool hook's plain stdout reaches the transcript, not the model; only its
+    // additionalContext does. SessionStart and UserPromptSubmit stdout is context.
+    const lines = [
+        LINES[1] as string,
+        att({ type: 'hook_success', hookEvent: 'PostToolUse', hookName: 'PostToolUse:Bash', content: 's'.repeat(1000) }),
+        att({ type: 'hook_success', hookEvent: 'PostToolUse', hookName: 'PostToolUse:Bash', content: 's'.repeat(1100) }),
+        att({ type: 'hook_additional_context', hookEvent: 'PostToolUse', hookName: 'PostToolUse:Bash', content: ['v'.repeat(60)] }),
+        att({ type: 'hook_success', hookEvent: 'UserPromptSubmit', hookName: 'UserPromptSubmit', content: 'u'.repeat(20) }),
+    ];
+    const c = censusMainSession(lines, { home: '/home/u', repo: '/repo' });
+
+    it('keeps stdout and additional context of the same hook in separate buckets', () => {
+        const bash = c?.hooks.filter((h) => h.hook === 'PostToolUse:Bash') ?? [];
+        expect(bash).toEqual([
+            { event: 'PostToolUse', hook: 'PostToolUse:Bash', attachment: 'hook_success', model_visible: false, occurrences: 2, total_chars: 2100, mean_chars: 1050 },
+            { event: 'PostToolUse', hook: 'PostToolUse:Bash', attachment: 'hook_additional_context', model_visible: true, occurrences: 1, total_chars: 60, mean_chars: 60 },
+        ]);
+    });
+    it('counts prompt-hook stdout as context in the per-turn total', () => {
+        expect(c?.hooks.find((h) => h.hook === 'UserPromptSubmit')?.model_visible).toBe(true);
+        expect(c?.totals.per_turn_chars).toBe(20);
+    });
+    it('marks transcript-only output in the rendered table', () => {
+        expect(renderMainSession(c!, 's.jsonl')).toMatch(/1050 chars × {3}2 {2}PostToolUse · PostToolUse:Bash {2}\(stdout, not model-visible\)/);
     });
 });
 

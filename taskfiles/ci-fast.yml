@@ -1032,6 +1032,11 @@ tasks:
     desc: "Per-PR standing-payload delta against the merge-base — the two-sided debit/credit ranking its sibling ratchet cannot show. A REPORT, not a gate: it never fails on the delta in either direction, only when it cannot measure. CORRECTED 2026-08-24 (road-to-standing-payload-truth AC-2): this used to justify itself with '(check-preamble-payload already fails on growth)', and that premise was FALSE -- that gate ran only in the local task chain and no workflow in .github/ invoked it, so nothing failed a pull request on preamble growth. It does now, behind a grace ceiling, as a step of standing-payload-delta.yml. Wired here so the number is reachable locally rather than discoverable only after a push (road-to-standing-payload-diet Phase 0.3-0.5)"
     cmd: ./scripts-run src/scripts/check_standing_payload_delta --base "$(git merge-base origin/main HEAD)" --rank
 
+  report-rule-requires:
+    silent: true
+    desc: "Requires table — for each act a rule's triggers name (path_prefix, file_pattern, command), the load_context references it needs, marked required/conditional/informational, with the inject-budget fit. A REPORT, not a gate (road-to-a-reference-that-arrives-before-the-act 2.1)."
+    cmd: ./scripts-run src/scripts/rule_reference_requires {{.CLI_ARGS}}
+
   check-static-layer-stability:
     silent: true
     desc: "Static-layer hygiene lint — machine-volatile markers (home paths, uuid-shaped ids) in the NON-kernel always-loaded layer; the kernel prefix keeps its own drift guard. Phase-1 null downgraded the cache-ordering phase to exactly this lint (road-to-token-economy-cache 2.2; spike: agents/settings/contexts/cache-injection-anatomy.md)"

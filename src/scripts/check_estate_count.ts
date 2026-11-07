@@ -948,11 +948,11 @@ function selfTest(): number {
         };
     };
     const wipCases: SelfTestCase[] = [
-        wipCase('exemption above the WIP cap without an owner record → reject', 'reject', 6, 'none'),
-        wipCase('exemption above the WIP cap citing a base-ref owner record that names it → accept', 'accept', 6, 'base'),
-        wipCase('exemption above the WIP cap citing a record written in the same change → reject', 'reject', 6, 'change'),
-        wipCase('exemption above the WIP cap citing a record that names no roadmap → reject', 'reject', 6, 'base', false),
-        wipCase('exemption at exactly five active roadmaps needs no record → accept', 'accept', 4, 'none'),
+        wipCase('exemption above the WIP cap without an owner record → reject', 'reject', WIP_CAP + 1, 'none'),
+        wipCase('exemption above the WIP cap citing a base-ref owner record that names it → accept', 'accept', WIP_CAP + 1, 'base'),
+        wipCase('exemption above the WIP cap citing a record written in the same change → reject', 'reject', WIP_CAP + 1, 'change'),
+        wipCase('exemption above the WIP cap citing a record that names no roadmap → reject', 'reject', WIP_CAP + 1, 'base', false),
+        wipCase('exemption at exactly the cap of active roadmaps needs no record → accept', 'accept', WIP_CAP - 1, 'none'),
     ];
     const cases: SelfTestCase[] = [
         {

@@ -494,8 +494,10 @@ rather than as a ninth roadmap.
 
 ## Phase 6 — Arrivals from inbox-2026-10-bg
 
-> **Arrivals:** 23 — latest `inbox-2026-10-bg` (2026-10-28); earlier: `inbox-2026-10-as`,
-> `inbox-2026-10-c` and at least twenty rounds this file's header counts.
+> **Arrivals:** 24 — latest `inbox-2026-11-z` (2026-11-07): the layer is still `full` on
+> the owner's machine, and the round asks again for `doctor` to name the reason (step 6.6)
+> and for arrival to be re-observed per host version (6.10); earlier: `inbox-2026-10-bg`,
+> `inbox-2026-10-as`, `inbox-2026-10-c` and at least twenty rounds this file's header counts.
 >
 > The round's thesis, verified against `main` @ `cf494b8ec`: the gate read the
 > wrong axis. The layer-form decision required the behavioural effect

@@ -18,7 +18,7 @@
 
 import { write_atomic } from './fs_atomic.js';
 import { pressureStatePath } from './pressure_state.js';
-import { readQuotaLedger, type QuotaSnapshot, type QuotaWindow } from './quota_ledger.js';
+import { accountFromEnv, forAccount, readQuotaLedger, type QuotaSnapshot, type QuotaWindow } from './quota_ledger.js';
 import type { EnvMap } from './user_global_paths.js';
 
 export type PressureState = 'ok' | 'warm' | 'hot' | 'exhausted' | 'unknown';
@@ -110,14 +110,20 @@ export interface PressureReport {
     readonly worst: WindowPressure;
 }
 
+/**
+ * The plan verdict over the snapshots given. Pass one account's snapshots
+ * (`forAccount`): two logins draw on two plans, and the newest line of the
+ * other login would otherwise decide.
+ */
 export function planPressure(snapshots: readonly QuotaSnapshot[], now: number): PressureReport {
     const windows = [windowPressure(snapshots, 'five_hour', now), windowPressure(snapshots, 'seven_day', now)];
     const worst = windows.reduce((a, b) => (STATE_RANK[b.state] > STATE_RANK[a.state] ? b : a));
     return { billing_class: 'plan', windows, worst };
 }
 
+/** The verdict for the account `env` runs under (`process.env` when none is given). */
 export function readPlanPressure(env?: EnvMap | null, now: number = Date.now()): PressureReport {
-    return planPressure(readQuotaLedger(env, now), now);
+    return planPressure(forAccount(readQuotaLedger(env, now), accountFromEnv(env ?? process.env)), now);
 }
 
 /**

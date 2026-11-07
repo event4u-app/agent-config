@@ -95,6 +95,11 @@ and no gate may treat it as one.
 > decision; the cap governs today. Recorded 2026-10-29 by council record
 > correction (`agents/evidence/council/records-that-match-their-code-20261029.responses.md`); the rest of this ADR
 > is untouched.
+>
+> **Cap raised to 25 on 2026-11-07 by the owner** —
+> `agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`: a roadmap held by a
+> blocker occupied one of the five slots, so five blocked roadmaps stopped all other
+> work. `WIP_CAP` now reads 25; the offset rule is unchanged.
 
 ### D2 — Parking is not an estate-management device
 

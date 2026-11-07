@@ -32,6 +32,7 @@ import {
     isExemptPath,
     isRangedRead,
     ledgerFile,
+    wholeFileCatPath,
 } from '../../src/scripts/hooks/reread_guard_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -366,5 +367,54 @@ describe('reread_guard_hook E2E', () => {
         // never a block: even the firing path exits 2 (warn), not 1
         expect(run(readEvent(root, abs), root).status).toBe(0);
         expect([0, 2]).toContain(run(readEvent(root, abs), root).status);
+    });
+});
+
+// ── Reference-duty fitness (road-to-a-reference-that-arrives-before-the-act 2.2) ──
+
+describe('wholeFileCatPath — a Bash read the ledger can count', () => {
+    it('takes a plain `cat <absolute file>` and nothing broader', () => {
+        expect(wholeFileCatPath('cat /w/src/a.ts')).toBe('/w/src/a.ts');
+        expect(wholeFileCatPath('  cat "/w/docs/x y.md" ')).toBe('/w/docs/x y.md');
+        // A relative path resolves against the shell's cwd, which the hook cannot see.
+        expect(wholeFileCatPath('cat src/a.ts')).toBeNull();
+        expect(wholeFileCatPath('cat ~/a.ts')).toBeNull();
+        expect(wholeFileCatPath('cat /w/$F')).toBeNull();
+        expect(wholeFileCatPath('cat /w/*.md')).toBeNull();
+        expect(wholeFileCatPath('cat\n/w/a.md')).toBeNull();
+        expect(wholeFileCatPath('cat /w/{a,b}.md')).toBeNull();
+        expect(wholeFileCatPath('cat "/w/a\\b.md"')).toBeNull();
+        expect(wholeFileCatPath('cat a.ts | head')).toBeNull();
+        expect(wholeFileCatPath('cat a.ts b.ts')).toBeNull();
+        expect(wholeFileCatPath('cat -n a.ts')).toBeNull();
+        expect(wholeFileCatPath('cat a.ts > b.ts')).toBeNull();
+        expect(wholeFileCatPath('grep x a.ts')).toBeNull();
+    });
+});
+
+describe('deriveSessionKey separates a subagent from its parent', () => {
+    it('keys on agent_id when the payload carries one', () => {
+        const env = { session_id: 's' };
+        expect(deriveSessionKey(env, { agent_id: 'a1' })).not.toBe(deriveSessionKey(env, {}));
+        expect(deriveSessionKey(env, { agent_id: 'a1' })).toBe(deriveSessionKey(env, { agent_id: 'a1' }));
+        expect(deriveSessionKey(env, { agent_id: 'a1' })).not.toBe(deriveSessionKey(env, { agent_id: 'a2' }));
+    });
+});
+
+describe('E2E: the ledger as the reference duty needs it', () => {
+    it('records a whole-file `cat` through Bash as a full read', () => {
+        const { root, abs } = makeWorkspace();
+        run(envelope(root, { tool_name: 'Bash', tool_input: { command: `cat ${abs}` } }), root);
+        const key = deriveSessionKey({ session_id: 'sess-1' }, {});
+        const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8'));
+        expect(Object.keys(ledger.reads)).toEqual([path.relative(root, abs)]);
+    });
+    it('clears the recorded reads on pre_compact, so a duty applies again', () => {
+        const { root, abs } = makeWorkspace();
+        run(readEvent(root, abs), root);
+        const key = deriveSessionKey({ session_id: 'sess-1' }, {});
+        expect(Object.keys(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads)).toHaveLength(1);
+        run(JSON.stringify({ schema_version: 1, platform: 'claude', event: 'pre_compact', session_id: 'sess-1', workspace_root: root, payload: {} }), root);
+        expect(JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')).reads).toEqual({});
     });
 });

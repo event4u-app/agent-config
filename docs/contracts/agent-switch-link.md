@@ -11,9 +11,11 @@ keep-beta-until: 2027-01-31
 > (`src/link/mcp.ts`, `src/link/requests.ts`, `src/link/limits.ts`,
 > `src/commands/link.ts`). The AC side: `src/scripts/_lib/agent_switch_link.ts`
 > (discovery), `src/scripts/_lib/agent_switch_client.ts` (MCP client and CLI
-> fallback) and `src/scripts/_lib/mcp_bridge.ts` (`.mcp.json` entry), pinned by
+> fallback), `src/scripts/_lib/agent_switch_limits.ts` (the limits read) and
+> `src/scripts/_lib/mcp_bridge.ts` (`.mcp.json` entry), pinned by
 > `tests/scripts/agent_switch_link.test.ts`,
-> `tests/scripts/agent_switch_client.test.ts` and
+> `tests/scripts/agent_switch_client.test.ts`,
+> `tests/scripts/agent_switch_limits.test.ts` and
 > `tests/scripts/agent_switch_link_install.test.ts`. No AC feature calls a link
 > tool yet; the readers that use them come next.
 
@@ -127,6 +129,10 @@ host must confirm the call: AC never puts it on an auto-allow list.
 - `fill` is `0`–`100`, or `null` when unknown or when the window has reset
   since it was read (`resetPassed: true`).
 - An account with no readout has `windows: []`, `observedAt: null`.
+- `id` is the label AC's own quota ledger writes: the status-line tap tags
+  each snapshot with the `provider/name` of the profile it runs under, and
+  AC's plan-pressure verdict is computed per label, so the two readings of one
+  account can be joined.
 
 ## Switch request
 

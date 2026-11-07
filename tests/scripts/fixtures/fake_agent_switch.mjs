@@ -2,6 +2,7 @@
 // A stand-in `agent-switch` for the link tests. Behaviour is chosen by env:
 //   FAKE_AS_LINK = on | off | contract2 | garbled | exit1   (default on)
 //   FAKE_AS_MCP  = ok | broken                             (default ok)
+//   FAKE_AS_LIMITS = <json>   the limits report, over MCP and over `limits --json`
 // `mcp serve` speaks line-delimited JSON-RPC like the real server; every other
 // verb echoes its argv so a test can assert the CLI fallback's mapping.
 import { createInterface } from 'node:readline';
@@ -9,6 +10,7 @@ import { createInterface } from 'node:readline';
 const argv = process.argv.slice(2);
 const link = process.env.FAKE_AS_LINK ?? 'on';
 const mcp = process.env.FAKE_AS_MCP ?? 'ok';
+const limits = process.env.FAKE_AS_LIMITS;
 const out = (v) => process.stdout.write(`${JSON.stringify(v)}\n`);
 
 if (argv[0] === 'link' && argv[1] === 'status') {
@@ -47,7 +49,12 @@ if (argv[0] === 'mcp' && argv[1] === 'serve') {
             });
         } else if (msg.method === 'tools/call') {
             const { name, arguments: args } = msg.params;
-            const result = name === 'switch_list' ? [{ id: 'r1', via: 'mcp' }] : { via: 'mcp', tool: name, args };
+            const result =
+                name === 'switch_list'
+                    ? [{ id: 'r1', via: 'mcp' }]
+                    : name === 'limits_get' && limits !== undefined
+                      ? JSON.parse(limits)
+                      : { via: 'mcp', tool: name, args };
             out({
                 jsonrpc: '2.0',
                 id: msg.id,
@@ -61,6 +68,8 @@ if (argv[0] === 'mcp' && argv[1] === 'serve') {
             out({ jsonrpc: '2.0', id: msg.id, result: {} });
         }
     });
+} else if (argv[0] === 'limits' && limits !== undefined) {
+    process.stdout.write(`${limits}\n`);
 } else {
     out({ via: 'cli', argv });
 }

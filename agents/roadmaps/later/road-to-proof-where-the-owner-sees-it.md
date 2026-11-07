@@ -41,7 +41,7 @@ relates:
 > six plan revisions and the 2026-11-05 container result, re-verified at
 > `main@630d97cb5b`. Sibling: `road-to-a-bench-that-can-tell` (the $0 foundation).
 
-> **Arrivals:** 1 — latest `inbox-2026-11-na` (2026-11-06): the owner's roles /
+> **Arrivals:** 2 — latest `inbox-2026-11-za` (2026-11-07): asks again for the 2.5 pilot (two-by-two terse/expert prompt, rough estimate 80–120 $) and 1.6 (~11 $), and for this file to be active; the owner released spend on 2026-11-07 only for the reference-duty steps, and pulling it needs the 150-word step split first. Earlier: `inbox-2026-11-na` (2026-11-06): the owner's roles /
 > second-agent / A/B thread, re-verified at `main@8206cc0`. It asks whether a reviewer
 > or tester step earns its spawn; the only place that can answer is the three tasks
 > every arm fails here, so it landed as step 1.7. It also re-raised 1.5 (the 14 %

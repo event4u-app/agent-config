@@ -66,6 +66,7 @@ import { fileURLToPath } from 'node:url';
 
 import { load_agent_settings } from './_lib/agent_settings.js';
 import { gitEnv } from './_lib/git_env.js';
+import { WIP_CAP } from './_lib/estate_wip.js';
 import { holder_is_live, read_holders, read_locks } from './_lib/roadmap_slug_lock.js';
 import { freshness, type RoadmapVerdict } from './_lib/roadmap_revalidation.js';
 import {
@@ -195,7 +196,7 @@ const PARTIAL_RE = /<!--[ \t]*partial:[ \t]*(\d+)/i;
 const STARTED_RE = /<!--[ \t]*started:[ \t]*(20\d\d-\d\d-\d\d)/i;
 const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*(?:#[a-z0-9-]+)?)`/g;
 
-export const WIP_CAP = 5;
+export { WIP_CAP };
 export const SESSION_CAP = 3;
 export const PARTIAL_CAP = 3;
 export const STARTED_DAYS_CAP = 2;

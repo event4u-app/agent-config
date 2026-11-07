@@ -14,6 +14,13 @@ execution:
 > were proposal IDs; § 1 below records which of its claims survived verification,
 > which were overtaken, and the one that is refuted as written.
 
+> **Arrivals (latest):** `inbox-2026-11-z` (2026-11-07) proposes a new "action" delivery
+> path — rule bodies at `PreToolUse` by tool, path or command. The file-path half was
+> built and unbound by owner ruling E2 (gate-open p90 19,649 B against the 2,048 B slot
+> cap), so it reopens E2 here (step 2.3) rather than adding a feature. The command half
+> (`git commit` → commit rules) is new and not owned elsewhere; its reference arithmetic
+> is computed by `road-to-a-reference-that-arrives-before-the-act` step 2.1 (extracted 2026-11-07 by owner decision).
+>
 > **Arrivals:** re-measured 2026-10-01 by the same command: `eager-all` in
 > **50** consumed rounds, `lean_projection` in **48**, plus `inbox-2026-10-c`
 > (2026-10-01). That round's roadmaps take this file's blocker instrument

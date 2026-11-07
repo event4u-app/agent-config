@@ -73,7 +73,7 @@ describe('snapshotFromStatusPayload', () => {
     });
 
     it('normalises an epoch-second expiry, drops an unknown ttl, and keeps a cache-only payload', () => {
-        const s = snapshotWithCache({ session_id: 'abc-123', prompt_cache: { warm: true, ttl: '10m', expires_at: 1_761_990_000 } }, 1000);
+        const s = snapshotWithCache({ session_id: 'abc-123', prompt_cache: { warm: true, ttl: '10m', expires_at: 1_761_990_000 } }, 1000, {});
         expect(s).toEqual({ ts: 1000, session: hashSessionId('abc-123'), cache: { warm: true, expires_at: 1_761_990_000_000 } });
     });
 
