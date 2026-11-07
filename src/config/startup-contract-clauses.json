@@ -806,7 +806,7 @@
           "source": "never overruled, and council agreement never raises `evidence.strength` —",
           "in_law": false,
           "response": "none",
-          "witness": "raise evidence strength",
+          "witness": "council agreement raise evidence strength",
           "unresolved_ref": null
         },
         {
@@ -1237,7 +1237,7 @@
           "source": "3. **Inversion check.** One paragraph:",
           "in_law": false,
           "response": "act",
-          "witness": "inversion check",
+          "witness": "inversion check (fails if X; early signal Y)",
           "unresolved_ref": null
         },
         {
@@ -1421,7 +1421,7 @@
           "source": "Real customer names / logos / quotes allowed only when the prompt cites one of:",
           "in_law": false,
           "response": "act",
-          "witness": "marketing real names/quotes only if prompt cites",
+          "witness": "marketing real names/logos/quotes only if prompt cites",
           "unresolved_ref": "the prompt cites one of:"
         },
         {
@@ -1475,7 +1475,7 @@
           "source": "**Logger-level redaction.** Configure the logger to scrub",
           "in_law": false,
           "response": "act",
-          "witness": "logger scrubs email/phone/name/token/card",
+          "witness": "logger recursively scrubs email/phone/name/address",
           "unresolved_ref": null
         },
         {
@@ -1511,7 +1511,7 @@
           "source": "NO DIRECT IDENTIFIER LEAVES THE SYSTEM IN AN EXPORT.",
           "in_law": false,
           "response": "refuse",
-          "witness": "drop or salted-hash name/email/phone/address",
+          "witness": "drop or tenant-salted hash name/email/phone/address",
           "unresolved_ref": null
         },
         {
@@ -1695,7 +1695,7 @@
           "source": "DSR-READINESS IS A FLOOR, NOT A CEILING.",
           "in_law": true,
           "response": "none",
-          "witness": "DSR-readiness is a floor, not a ceiling",
+          "witness": "DSR readiness (floor, not ceiling)",
           "unresolved_ref": null
         },
         {
@@ -1785,7 +1785,7 @@
           "source": "You must be able to honor a deletion request within [N] days.",
           "in_law": false,
           "response": "act",
-          "witness": "require DSR readiness",
+          "witness": "honor deletion in N days",
           "unresolved_ref": null
         },
         {
@@ -1794,7 +1794,7 @@
           "source": "Either purge on the same DSR clock or document that backups are inaccessible",
           "in_law": false,
           "response": "act",
-          "witness": "backups purge on same DSR clock",
+          "witness": "or documented inaccessible + rotated in N days",
           "unresolved_ref": null
         },
         {
@@ -1848,7 +1848,7 @@
           "source": "Verify against the customer's privacy notice, regulatory regime, and contractual",
           "in_law": false,
           "response": "act",
-          "witness": "verify against customer's privacy notice",
+          "witness": "verify against customer's privacy notice, regime + DPAs",
           "unresolved_ref": null
         },
         {
@@ -1969,7 +1969,7 @@
           "source": "**Blast radius** — what breaks if this goes wrong (services, tenants, users, data).",
           "in_law": false,
           "response": "surface",
-          "witness": "blast radius (services/users/data)",
+          "witness": "blast radius (services/tenants/users/data)",
           "unresolved_ref": null
         },
         {
@@ -1978,7 +1978,7 @@
           "source": "**Rollback path** — exact command / PR / step to revert; estimated time to rollback.",
           "in_law": false,
           "response": "surface",
-          "witness": "rollback path (command/PR/step + time)",
+          "witness": "rollback path (exact command/PR/step + time)",
           "unresolved_ref": null
         },
         {
@@ -2005,7 +2005,7 @@
           "source": "**Named risk owner** — who is on call, who approves the change.",
           "in_law": false,
           "response": "surface",
-          "witness": "risk owner (on-call/approver)",
+          "witness": "named risk owner (on-call/approver)",
           "unresolved_ref": null
         },
         {
@@ -2041,7 +2041,7 @@
           "source": "Refuse without explicit, this-turn permission per `git-history-discipline`.",
           "in_law": false,
           "response": "refuse",
-          "witness": "force-push shared branch → refuse w/o this-turn permission",
+          "witness": "force-push shared branch → refuse w/o explicit this-turn permission",
           "unresolved_ref": null
         },
         {
@@ -2638,7 +2638,7 @@
           "source": "**Assumptions block** — every input value the model uses, sourced or marked `assumption`.",
           "in_law": false,
           "response": "surface",
-          "witness": "inputs sourced or marked assumption",
+          "witness": "every input sourced or marked assumption",
           "unresolved_ref": null
         },
         {
@@ -2674,7 +2674,7 @@
           "source": "**Counter-case** — one sentence on what would invalidate the conclusion",
           "in_law": false,
           "response": "surface",
-          "witness": "counter-case (one sentence)",
+          "witness": "counter-case (one sentence on what would invalidate the conclusion)",
           "unresolved_ref": null
         },
         {
@@ -2755,7 +2755,7 @@
           "source": "Comparing two companies / deals without naming the comparability gap",
           "in_law": false,
           "response": "refuse",
-          "witness": "deal comparison w/o comparability gap",
+          "witness": "company/deal comparison w/o named comparability gap",
           "unresolved_ref": null
         },
         {
@@ -2764,7 +2764,7 @@
           "source": "Suggesting capital actions (raise, cut, layoff) without naming the human-decision owner",
           "in_law": false,
           "response": "refuse",
-          "witness": "raise/cut/layoff w/o human-decision owner",
+          "witness": "raise/cut/layoff w/o named human-decision owner",
           "unresolved_ref": null
         }
       ]
@@ -4047,7 +4047,7 @@
           "source": "NEVER WRITE A CREDENTIAL INTO A TRACKED (OR TO-BE-TRACKED) FILE, AND NEVER",
           "in_law": true,
           "response": "stop",
-          "witness": "write a credential into a tracked file",
+          "witness": "write a credential into a (to-be-)tracked file",
           "unresolved_ref": null
         },
         {
@@ -4146,7 +4146,7 @@
           "source": "gitignored `.env` + committed `.env.example`; team/prod → cloud secret manager",
           "in_law": false,
           "response": "act",
-          "witness": "committed `.env.example`",
+          "witness": "gitignored `.env` + committed `.env.example`",
           "unresolved_ref": null
         },
         {
@@ -4492,7 +4492,7 @@
           "source": "tooling output (lockfile, generated code) the user explicitly requested.",
           "in_law": false,
           "response": "none",
-          "witness": "tooling output (lockfile/codegen) user requested",
+          "witness": "tooling output (lockfile/codegen) user explicitly requested",
           "unresolved_ref": null
         },
         {
@@ -4963,7 +4963,7 @@
           "source": "Authoring or editing a skill, rule, command, guideline, context, ADR, doc,",
           "in_law": false,
           "response": "none",
-          "witness": "authoring or editing a skill, rule, command",
+          "witness": "command, guideline, context, ADR, doc, roadmap, changelog",
           "unresolved_ref": null
         },
         {
@@ -5255,7 +5255,7 @@
           "source": "1. **The bet** — one sentence naming what is being chosen and what is being given up.",
           "in_law": false,
           "response": "act",
-          "witness": "the bet (chosen vs given up)",
+          "witness": "the bet (one sentence: chosen vs given up)",
           "unresolved_ref": null
         },
         {
@@ -5264,7 +5264,7 @@
           "source": "with at least one piece of evidence per claim",
           "in_law": false,
           "response": "act",
-          "witness": "one evidence piece per claim",
+          "witness": "≥1 evidence per claim",
           "unresolved_ref": null
         },
         {
@@ -5273,7 +5273,7 @@
           "source": "one paragraph on the strongest argument against this path (not a strawman)",
           "in_law": false,
           "response": "act",
-          "witness": "counter-case (no strawman)",
+          "witness": "counter-case (strongest argument against, no strawman)",
           "unresolved_ref": null
         },
         {
@@ -5282,7 +5282,7 @@
           "source": "4. **Residual risk**",
           "in_law": false,
           "response": "act",
-          "witness": "residual risk (what invalidates it)",
+          "witness": "residual risk (unresolved + what invalidates it)",
           "unresolved_ref": null
         },
         {
@@ -5291,7 +5291,7 @@
           "source": "5. **Decision owner**",
           "in_law": false,
           "response": "act",
-          "witness": "decision owner (default founder)",
+          "witness": "named decision owner (default founder)",
           "unresolved_ref": null
         },
         {

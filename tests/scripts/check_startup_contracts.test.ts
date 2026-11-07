@@ -107,6 +107,7 @@ describe('committed tree', () => {
         expect(all.get('domain-safety-pii')?.contract).toContain('in any drafted artifact');
         expect(all.get('domain-safety-disclaimer')?.contract).toContain('"is this symptom serious?" → refuse');
         expect(all.get('strategy-safety-floor')?.contract).toContain('w/o named competitor + evidenced delta');
+        expect(all.get('finance-safety-floor')?.contract).toContain('one sentence on what would invalidate the conclusion');
     });
 
     it('the reply-opening duties share one order: marker, greeting, answer', () => {
