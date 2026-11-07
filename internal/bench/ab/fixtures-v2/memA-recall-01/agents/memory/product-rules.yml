@@ -1,0 +1,39 @@
+version: 1
+entries:
+  - id: invoice-number-format
+    status: active
+    confidence: high
+    source:
+      - adr://0027-invoice-numbering
+    owner: billing-team
+    last_validated: 2026-09-02
+    review_after_days: 365
+    version: "1.0"
+    rule: >
+      Invoice numbers are the year, a dash and a six-digit sequence that
+      restarts every January (2026-000123). The sequence never skips a value.
+    applies_to:
+      paths: [src/billing/**]
+    enforcement:
+      - review: billing-team
+    error_contract: {}
+  - id: invoice-rounding-half-even
+    status: active
+    confidence: high
+    source:
+      - adr://0031-invoice-rounding
+    owner: billing-team
+    last_validated: 2026-10-14
+    review_after_days: 365
+    version: "1.0"
+    rule: >
+      Invoice amounts are rounded to whole cents with round-half-to-even
+      (banker's rounding): an exact half cent goes to the even cent, and
+      credit notes (negative amounts) round the same way, mirrored. Chosen
+      over round-half-up because the monthly tax export sums the rounded
+      lines, and half-up pulled those sums above the ledger every month.
+    applies_to:
+      paths: [src/billing/**]
+    enforcement:
+      - function: roundToCents in src/billing/round.mjs
+    error_contract: {}
