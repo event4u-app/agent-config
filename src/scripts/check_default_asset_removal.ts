@@ -3,7 +3,7 @@
  * removal record that answers five conditions. A bad benchmark is a question,
  * not a removal.
  *
- * The record lives at `agents/evidence/removals/<name>.md` (rule file name, or
+ * The record is named after the asset (rule file name, or
  * skill directory name) and carries in its frontmatter:
  *
  *   asset:                 the removed path
