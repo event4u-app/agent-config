@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { dutyForPath, dutyStates, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
+import { dutyStates, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
 import { ledgerFile } from '../../src/scripts/hooks/reread_guard_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -61,12 +61,12 @@ function duty(root: string): Record<string, { state: string }> {
     return (JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty?: Record<string, { state: string }> }).duty ?? {};
 }
 
-describe('dutyForPath', () => {
+describe('scanDuties', () => {
     it('names the references of rules whose path or file trigger matches, and only those', () => {
         const root = workspace();
-        expect(dutyForPath('.claude/settings.json', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
-        expect(dutyForPath('src/App.vue', root)).toEqual([]);
-        expect(dutyForPath('src/a.ts', root)).toEqual([]);
+        expect(scanDuties('.claude/settings.json', root).duties).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
+        expect(scanDuties('src/App.vue', root).duties).toEqual([]);
+        expect(scanDuties('src/a.ts', root).duties).toEqual([]);
     });
 });
 
@@ -192,7 +192,7 @@ describe('council round 3: every matched rule yields duties or a counted error',
     it('reads an inline load_context list the way YAML does', () => {
         const root = workspace();
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'), `---\ntype: "auto"\nload_context: ["${REF}"] # inline\n---\n\n# sot\n`);
-        expect(dutyForPath('.claude/a.md', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
+        expect(scanDuties('.claude/a.md', root).duties).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
     });
     it.each([
         ['a null tier entry', { tier_1: [null] }],
@@ -220,7 +220,7 @@ describe('council round 6', () => {
     it('reads a frontmatter whose closing line is exactly ---, not a line that starts with it', () => {
         const root = workspace();
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'), `---\ntype: "auto"\nnote: ---not-the-end\nload_context:\n  - ${REF}\n---\n\n# sot\n`);
-        expect(dutyForPath('.claude/a.md', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
+        expect(scanDuties('.claude/a.md', root).duties).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
     });
     it('keeps the duties of a healthy matched rule when another matched rule is broken', () => {
         const root = workspace();

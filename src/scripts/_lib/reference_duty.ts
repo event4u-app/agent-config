@@ -87,26 +87,17 @@ function tierRules(router: unknown, file: string): Array<{ id: string; triggers:
     return out;
 }
 
-/**
- * References required by the rules whose path or file trigger matches `relPath`,
- * matched by the router's own `trigger_matches`. Throws {@link DutySourceError}
- * when the router or a matched rule cannot be read; a missing router is no duty.
- */
 export interface DutyScan {
     duties: Duty[];
     /** One message per matched rule whose duties could not be read. */
     errors: string[];
 }
 
-export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
-    const scan = scanDuties(relPath, workspaceRoot);
-    if (scan.errors.length > 0) throw new DutySourceError(scan.errors.join('; '));
-    return scan.duties;
-}
-
 /**
- * Like {@link dutyForPath}, but a broken matched rule costs only its own duties:
- * the other matched rules are still observed and the failure is listed.
+ * References required by the rules whose path or file trigger matches `relPath`,
+ * matched by the router's own `trigger_matches`. A broken matched rule costs only
+ * its own duties and is listed in `errors`; an unusable router is one error; a
+ * missing router is no duty.
  */
 export function scanDuties(relPath: string, workspaceRoot: string): DutyScan {
     const sources = ruleSources(workspaceRoot);
