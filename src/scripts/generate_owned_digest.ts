@@ -10,15 +10,16 @@
  * purpose: they churn with every edit and citation frequency is not ownership.
  *
  * The digest is a shortlist, never an owner decision: a reader confirms a
- * candidate by opening its roadmap. Over budget is a failure, never a
- * truncation, because a dropped tail row would hide an owner by sort order.
+ * candidate by opening its roadmap. It is never truncated, because a dropped
+ * tail row would hide an owner by sort order, and it carries no size budget:
+ * how many roadmaps exist is the owner's call (owner decision 2026-11-07).
  *
  * Usage:
  *     tsx src/scripts/generate_owned_digest.ts            # rewrite in place
- *     tsx src/scripts/generate_owned_digest.ts --check    # exit 1 when stale or over budget
+ *     tsx src/scripts/generate_owned_digest.ts --check    # exit 1 when stale
  *     tsx src/scripts/generate_owned_digest.ts --out PATH # write elsewhere
  *
- * Exit codes: 0 written / in sync · 1 stale or over budget · 2 usage.
+ * Exit codes: 0 written / in sync · 1 stale · 2 usage.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -26,7 +27,6 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { is_roadmap_candidate as isRoadmapCandidate, parse_frontmatter as parseFrontmatter } from '../agent-src/scripts/update_roadmap_progress.js';
-import { gpt_tokens } from './_lib/token_count.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -36,12 +36,6 @@ export const ROADMAPS = 'agents/roadmaps';
 /** `''` is the active top level. Order is the row order. */
 export const DIRS = ['', 'later', 'stubs'] as const;
 export const MAX_WORDS = 20;
-/**
- * The digest is a view: dropping or truncating a row to fit loses the owner it
- * exists to show. When it renders above 10,000 again, split it into a triage
- * index and a human summary rather than raising a second time.
- */
-export const BUDGET_TOKENS = 10_500;
 
 export type Dir = (typeof DIRS)[number];
 
@@ -120,11 +114,6 @@ export function render(entries: readonly Entry[]): string {
     ].join('\n');
 }
 
-export function overBudget(text: string, budget: number = BUDGET_TOKENS): string | null {
-    const t = gpt_tokens(text);
-    return t.tokens > budget ? `${DIGEST} is ${String(t.tokens)} tokens${t.exact ? '' : ' (estimated)'}, over its ${String(budget)}-token budget — shorten the goals or reopen the budget; the generator never truncates` : null;
-}
-
 export function main(argv: readonly string[] = process.argv.slice(2), root: string = REPO_ROOT): number {
     let check = false;
     let out: string | null = null;
@@ -137,11 +126,6 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         }
     }
     const text = render(collect(root));
-    const over = overBudget(text);
-    if (over !== null) {
-        process.stderr.write(`${over}\n`);
-        return 1;
-    }
     const file = path.join(root, DIGEST);
     if (check) {
         const current = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
