@@ -53,6 +53,8 @@ relates:
 > if not why not and what to improve. Landed as steps 1.6, 2.6, 4.5 and 5.5; they
 > read the plan-versus-use block of `road-to-a-plan-that-stays-true` Phase 4 and
 > start once that phase is on main.
+> A `/retro --session` of 2026-11-07 (owner-requested) could not see its own
+> session: landed as step 1.7.
 
 ## Goal
 
@@ -228,6 +230,21 @@ pre-registration in place, settings lint green with the new key.*
       session unit: planned, applied, waived (reason), missing, unplanned; rules
       `not-observable`. Waiver reasons are `UntrustedDatum`, like review text.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t plan-versus-use` -> 0 — a fixture block with one missing skill appears in the unit's facts and `missing` is never read as 0
+- [ ] **1.7 Every branch a session pushed, not one.** The session pointer of 1.3
+      records one branch (`retro_session_facts.ts:209`, `pointer.branch`) and
+      `sessionPr` (`:99`, called at `:215`) one PR. A session that works in its
+      own worktree — as the session-register collision protocol tells it to —
+      and pushes several PR branches is measured by the branch it started on.
+      Measured 2026-11-07: a session that merged four PRs from four branches in
+      its own worktree, and blocked `main` for about four hours through a
+      ruleset write, read `no push of <main-worktree branch> was recorded with a
+      PR` and triaged `skip:low-signal`, score 0; `retro record` then refused
+      the finding, because a skip unit takes none. The pointer records every
+      branch the session pushed (the push markers of 3.3 already exist per
+      push) and `pr` becomes a list. Counter-hypothesis: the pointer was stale or
+      named another session. Open alongside: a ruleset write leaves no PR fact
+      at all, so the triage cannot weigh it.
+      verify: `npx vitest run tests/scripts/retro_facts.test.ts -t session-with-two-pushed-branches` -> 0 — a session pushing two PR branches from a second worktree carries both PRs in its facts and is not triaged `skip:low-signal`
 
 ## Phase 2 — `/retro` by hand
 

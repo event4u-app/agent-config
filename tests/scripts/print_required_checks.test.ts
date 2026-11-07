@@ -50,7 +50,7 @@ describe('print_required_checks — CLI contract', () => {
             "docs-only": "Branch: docs/x
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Checks this PR will face (17):
+          Checks this PR will face (18):
             ! Sync + Generate Tools Consistency
             ! Standing payload delta + budget gate
             - Smoke — kernel
@@ -64,18 +64,19 @@ describe('print_required_checks — CLI contract', () => {
             - Node Tests (matrix: {ubuntu-latest,macos-26} × shard 1-4/4)
             - Golden Tests (matrix: {ubuntu-latest,macos-26})
             - Workspace Tests (matrix: {ubuntu-latest,macos-26})
+            ! Tests result
             - Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})
             - Rule backstops
             - no-python-in-src
-            - lint commit subjects
+            ! lint commit subjects
 
-          ! = blocks merge (2 of 17); - = runs, visible, advisory
+          ! = blocks merge (4 of 18); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "eq-joined": "Branch: feat/y
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Checks this PR will face (17):
+          Checks this PR will face (18):
             ! Sync + Generate Tools Consistency
             ! Standing payload delta + budget gate
             - Smoke — kernel
@@ -89,18 +90,19 @@ describe('print_required_checks — CLI contract', () => {
             - Node Tests (matrix: {ubuntu-latest,macos-26} × shard 1-4/4)
             - Golden Tests (matrix: {ubuntu-latest,macos-26})
             - Workspace Tests (matrix: {ubuntu-latest,macos-26})
+            ! Tests result
             - Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})
             - Rule backstops
             - no-python-in-src
-            - lint commit subjects
+            ! lint commit subjects
 
-          ! = blocks merge (2 of 17); - = runs, visible, advisory
+          ! = blocks merge (4 of 18); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "feature": "Branch: feat/x
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Checks this PR will face (17):
+          Checks this PR will face (18):
             ! Sync + Generate Tools Consistency
             ! Standing payload delta + budget gate
             - Smoke — kernel
@@ -114,18 +116,19 @@ describe('print_required_checks — CLI contract', () => {
             - Node Tests (matrix: {ubuntu-latest,macos-26} × shard 1-4/4)
             - Golden Tests (matrix: {ubuntu-latest,macos-26})
             - Workspace Tests (matrix: {ubuntu-latest,macos-26})
+            ! Tests result
             - Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})
             - Rule backstops
             - no-python-in-src
-            - lint commit subjects
+            ! lint commit subjects
 
-          ! = blocks merge (2 of 17); - = runs, visible, advisory
+          ! = blocks merge (4 of 18); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "release": "Branch: release/1.2.3
           Base:   HEAD
           PR shape: release  (0 file(s) in diff)
-          Checks this PR will face (12):
+          Checks this PR will face (14):
             ! Sync + Generate Tools Consistency
             ! Standing payload delta + budget gate
             - Smoke — kernel
@@ -138,8 +141,10 @@ describe('print_required_checks — CLI contract', () => {
             - Release install E2E (pack → install → upgrade → boot)
             - npm audit (runtime deps, high+)
             - skill-lint-strict
+            ! Tests result
+            ! lint commit subjects
 
-          ! = blocks merge (2 of 12); - = runs, visible, advisory
+          ! = blocks merge (4 of 14); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
           }

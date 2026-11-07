@@ -77,9 +77,11 @@ name: Standing Payload Delta
 # The filtering moved INSIDE the job, to the `scope` step below, which always
 # reports a conclusion. That is the shape the contract prescribes.
 on:
-  # PR-only steps are guarded by `github.event_name == 'pull_request'`; the
-  # merge-base comes from `merge_group.base_sha` here, since `github.base_ref`
-  # is empty on this event.
+  # Inert: the owner rejected a merge queue on 2026-11-07 — do not enable one
+  # (agents/evidence/owner-directives/2026-11-07-no-merge-queue.md). PR-only
+  # steps are guarded by `github.event_name == 'pull_request'`; on this event
+  # the merge-base would come from `merge_group.base_sha`, since
+  # `github.base_ref` is empty.
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -135,21 +137,28 @@ jobs:
 
       - name: Resolve merge-base
         id: base
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          QUEUE_BASE_SHA: ${{ github.event.merge_group.base_sha }}
         run: |
           set -euo pipefail
+          # A merge-queue entry has no `base_ref`; its base is the `main` tip the
+          # queue built on, which is an ancestor of the queue head and therefore
+          # the merge-base. Without it the measure step ran `git archive ''` and
+          # the approval check could not see the owner directives, so every
+          # queue entry failed this required check (first queue runs, 2026-11-07).
+          #
           # `github.base_ref` is empty on workflow_dispatch, where there is no
           # base to resolve. Emit an empty merge_base rather than failing the
           # step: the scope step below reads empty as "cannot narrow" and runs
           # the full measurement, which is the safe direction. Before this the
           # step died on `set -e` and took the whole job with it.
-          # A merge_group run has no `github.base_ref` either, but it does have
-          # a base: the queue commit is built on `merge_group.base_sha`. Without
-          # it the measure step ran `--base ""` and failed every queue entry.
           base=""
-          if [ -n "${{ github.base_ref }}" ]; then
-            base="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
-          elif [ -n "${{ github.event.merge_group.base_sha }}" ]; then
-            base="$(git merge-base "${{ github.event.merge_group.base_sha }}" HEAD)"
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            base="$QUEUE_BASE_SHA"
+          elif [ -n "$BASE_REF" ]; then
+            base="$(git merge-base "origin/$BASE_REF" HEAD)"
           fi
           echo "merge_base=$base" >> "$GITHUB_OUTPUT"
           echo "merge-base: ${base:-<none — not a pull request>}"

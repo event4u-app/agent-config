@@ -5,6 +5,13 @@ review_by: 2026-09-25
 
 # Stub: road to the `main` protection-ruleset changes (required checks + merge queue)
 
+> **OWNER DECISION 2026-11-07 — NO MERGE QUEUE.** The queue was enabled that
+> morning and removed the same day by owner order ("Das bringt keinen Vorteil.
+> Weg damit"); record: `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`.
+> Transfer 2 below is **closed as rejected** — never promote, re-enable or propose
+> it; reopening is the owner's call only. `Tests result` and `lint commit subjects`
+> are required checks as of the same day.
+
 > **Arrivals:** 4 — latest `inbox-2026-10-w` (2026-10-21, CI-speed round); earlier:
 > `inbox-2026-10-f` (2026-10-06), two feedback rounds (9.10.0, test economy
 > 2026-08-10). Codenames only.
@@ -29,15 +36,17 @@ review_by: 2026-09-25
 > cancel each other (`road-to-a-green-that-saw-what-it-certifies` 1.4). The ruleset
 > write stays here.
 
-> **2026-11-07 — Transfer 2 performed, Transfer 1 changed shape.** The owner
-> enabled the merge queue and added `Tests result` to the required set on
-> ruleset `17749383` (read back the same day: required set `Sync + Generate Tools
-> Consistency` · `Standing payload delta + budget gate` · `lint commit subjects` ·
-> `Tests result`; the merge queue on, method `MERGE`, grouping `ALLGREEN`).
-> The ordering hazard below was live and was closed first: `lint commit subjects`
-> had become required without a `merge_group` trigger, fixed in PR #2897 before
-> the write. Transfer 2's step 4 — one queue run in which every required check
-> reports — is the queue run of the PR carrying this note. Transfer 1's seven
+> **2026-11-07 — Transfer 2 decided NO for good, Transfer 1 changed shape.** The
+> owner added `Tests result` to the required set on ruleset `17749383` (read back:
+> `Sync + Generate Tools Consistency` · `Standing payload delta + budget gate` ·
+> `lint commit subjects` · `Tests result`). The merge queue was enabled the same
+> day after the ordering hazard below was closed (`lint commit subjects` lacked a
+> `merge_group` trigger, PR #2897). Step 4's live validation then failed: every
+> queue entry failed `Standing payload delta + budget gate`, which had no
+> merge-base on `merge_group`, and every merge was blocked for about four hours.
+> The owner removed the queue rule and decided it **stays out permanently** — this
+> transfer is closed as declined, not pending. The workflow bug is fixed
+> regardless (PR #2902). Transfer 1's seven
 > recommended additions are **not** made; `Tests result` covers `Static Checks`,
 > and the Smoke, `skill-lint` and `Rule backstops` contexts stay advisory until
 > the owner decides otherwise. Live values: `docs/contracts/branch-protection-policy.md`.
@@ -169,7 +178,7 @@ here — a second copy is a second thing to drift.
 
 ## Transfer 2 — `merge-queue-enablement`
 
-**Disposition:** B — transferred. **Outcome state:** transferred.
+**Disposition:** B — transferred. **Outcome state:** **rejected by the owner, 2026-11-07 — closed, do not promote** (see the banner at the top). Everything below is the historical plan, kept so the reasoning is not rediscovered.
 
 **Original `Resolved when` criterion, verbatim from the source roadmap:**
 

@@ -3,16 +3,17 @@ stability: beta
 keep-beta-until: 2027-01-07
 keep-beta-reason: >-
   New on 2026-11-07. The selection rules are expected to move once the miss rate
-  is observed (a red push to main after a green queue run); the merge queue and
-  the required check went live on 2026-11-07 and have no queue history yet.
+  is observed (a red push to main after a green PR run); the required check went
+  live on 2026-11-07 and has no miss history yet.
 ---
 
 # CI test selection — run what a change can reach, at the merge gate
 
-> **Status:** live since 2026-11-07. The in-repo half shipped in PR #2894; the
-> repository-admin half — `Tests result` required and the merge queue on — was
-> applied to ruleset `17749383` by owner decision on 2026-11-07 (§ Enabling the
-> gate). A failing test now blocks the merge on the PR and on the queue entry.
+> **Status:** live since 2026-11-07. The in-repo half shipped in PR #2894;
+> `Tests result` was made a required check on ruleset `17749383` by owner
+> decision on 2026-11-07 (§ Enabling the gate). A failing test now blocks the
+> merge on the PR. The merge queue is **off for good** (owner decision, same day:
+> `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`).
 
 ## What it does
 
@@ -25,12 +26,12 @@ change can reach. Every Vitest job then runs only those files, or is skipped.
 |---|---|---|
 | `pull_request` | `origin/<base branch>` (merge base) | selected files |
 | `pull_request` + label `ci:full-tests` | — | whole suite |
-| `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — this is the run that gates the merge |
+| `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — inert: the queue is off for good since 2026-11-07, so the PR run is the one that gates the merge |
 | `push: main` | — | whole suite (post-merge net) |
 | `workflow_dispatch` | — | whole suite |
 
 `push: main` stays a full run on purpose: it is the instrument that catches what
-selection missed. A red `push: main` run after a green queue run is a selection
+selection missed. A red `push: main` run after a green PR run is a selection
 miss and is a defect of this script, not flakiness to re-run.
 
 ## How a file is selected
@@ -117,7 +118,7 @@ for most runs, so the saving shows up as shorter shards, not fewer runners; the
 per-shard setup (checkout, `npm ci`, `npm run build`) is unchanged.
 
 **Not measured:** the miss rate. It is observable only as `push: main` going
-red after a green queue run; count those before tightening anything further.
+red after a green PR run; count those before tightening anything further.
 
 ## Cost changes besides selection
 
@@ -135,14 +136,17 @@ red after a green queue run; count those before tightening anything further.
 - Check names changed: `Node Tests (<os>, shard N/<1|2|4>)` instead of
   `… shard N/4`. Pin `Tests result`, never a shard name.
 
-## Enabling the gate (repository admin — done 2026-11-07)
+## Enabling the gate (repository admin — done 2026-11-07, without the queue)
 
-The goal — a change lands on `main` only if its tests pass, checked on the
-merged result — needs three settings on ruleset `17749383`. They are owner
-decisions; the owner took all three, and accepted with them that macOS failures
-block merges (`Tests result` aggregates the macOS legs — a departure from the
-council decision of 2026-07-12 recorded in `docs/maintainers/branch-protection.md`).
-The live values are in `branch-protection-policy.md`.
+The goal — a change lands on `main` only if its tests pass — was planned as three
+settings on ruleset `17749383`. They are owner decisions. The owner took 1 and 2,
+and accepted with 2 that macOS failures block merges (`Tests result` aggregates
+the macOS legs — a departure from the council decision of 2026-07-12 recorded in
+`docs/maintainers/branch-protection.md`). Step 3 was applied, broke every merge
+for about four hours, and was removed; the owner decided it stays out for good.
+What that gives up: the PR run is judged against the base the PR last saw, not
+against the merged result, and `push: main` is the net for the difference. The
+live values are in `branch-protection-policy.md`.
 
 1. **Require a pull request for every change to `main`.** GitHub cannot run a
    workflow on a direct push *before* the push lands, so "block a commit like a
@@ -151,28 +155,25 @@ The live values are in `branch-protection-policy.md`.
 2. **Add `Tests result` to the required status checks.** It is the one stable
    name over the whole matrix; it reports on every PR now that the trigger has
    no path filter.
-3. **Enable the merge queue** (merge method as today; "only merge non-failing
-   pull requests"). The queue builds the PR on top of the current `main`, fires
-   `merge_group`, `Select tests` diffs against the queue's base SHA, and the PR
-   lands only if `Tests result` is green. Every workflow carrying a required
-   check declares `merge_group` — `tests.yml`, `consistency.yml`,
-   `standing-payload-delta.yml` and `commit-subjects.yml` — which the queue
-   needs: a required check that never reports on the queue entry blocks `main`
-   with no failure to read. `tests/scripts/workflow_merge_group_concurrency.test.ts`
-   pins the four.
+3. ~~**Enable the merge queue.**~~ **Off for good** (owner decision 2026-11-07,
+   `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md` — do not
+   re-enable or propose).
+   Tried that day: every queue entry failed `Standing payload delta + budget
+   gate`, whose merge-base step had no base on `merge_group` (fixed since,
+   `tests/scripts/standing_payload_delta_resolve_base.test.ts`). The
+   `merge_group` triggers in `tests.yml`, `consistency.yml`,
+   `standing-payload-delta.yml` and `commit-subjects.yml` stay and are inert.
 
-Live state, read back 2026-11-07: step 1 predates this contract (the ruleset's
-`pull_request` rule); steps 2 and 3 were applied that day — `Tests result` is the
-fourth required check, and the `merge_queue` rule merges with method `MERGE`,
-grouping `ALLGREEN`, with a 90-minute check timeout (the full matrix has run up
-to ~43 minutes on `push: main`).
+Live state, read back 2026-11-07 after the owner removed the queue: step 1
+predates this contract (the ruleset's `pull_request` rule); `Tests result` is the
+fourth required check; no `merge_queue` rule.
 
 Re-check with `gh api repos/event4u-app/agent-config/rulesets/17749383`; on any
 change, update the live-state table in `branch-protection-policy.md` from that JSON.
 
 ## Revisit if
 
-- `push: main` goes red after a green queue run for a reason selection should
+- `push: main` goes red after a green PR run for a reason selection should
   have caught → add the missing edge kind, with a test in
   `tests/scripts/ci_select_tests.test.ts`;
 - the median selection stays above ~30 % of the suite → the next step is
