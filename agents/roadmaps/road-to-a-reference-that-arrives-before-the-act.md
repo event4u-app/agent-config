@@ -11,9 +11,6 @@ relates:
   - slug: road-to-a-session-start-under-the-host-limit
     relation: disjoint
     note: Owns the session-start size budget, the law form and the inactive-pack floors.
-  - slug: road-to-a-map-that-knows-what-happened
-    relation: disjoint
-    note: Holds the hook-bundle headroom that steps 2.2 and 2.3 need.
 estate_offset_exempt: "Extracted from road-to-mixed-trigger-activation-cost Phase 5 by owner decision of 2026-11-07, recorded in agents/evidence/owner-directives/2026-11-07-wip-cap-25.md, which names road-to-a-reference-that-arrives-before-the-act; no other roadmap owns the reference duty (owner search over active, later/, stubs/, skipped/ and archive/ in round inbox-2026-11-z)."
 estate_growth_exempt: "+1 active_roadmaps: the owner extracted the reference duty into its own active roadmap on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md); its blocker moves with it from road-to-mixed-trigger-activation-cost."
 ---
@@ -108,10 +105,12 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > trigger is a slash command, so no shell command (e.g. `git commit`) can derive
       > a reference today. Run: `task report-rule-requires`.
 
-- [~] **2.2 Make the read ledger fit for the duty.** Key by `agent_id` when present,
+- [x] **2.2 Make the read ledger fit for the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/reread_guard_hook.ts --> Key by `agent_id` when present,
       clear on `pre_compact`, and count a whole-file read through Bash (`cat <file>`).
-      blocked: `hook-bundle-headroom` (1 B left; `road-to-a-map-that-knows-what-happened`).
       verify: tests for subagent separation, compaction reset and a `cat` read.
+      > note: done 2026-11-07 — `agent_id` in the ledger key, ledger cleared on
+      > `pre_compact` (claude binding added), a plain `cat <file>` counted as a full read;
+      > 4 tests seen red, then green. Hook bundle 1,575,691 / 1,585,000 B.
 - [~] **2.3 Observe the duty.** At `pre_tool_use`, compare the 2.1 table with the
       ledger and record `required-pending` · `delivered` · `read` · `omitted-budget`
       per action, writing nothing into context and blocking nothing.
@@ -144,11 +143,11 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 
 ## Blockers
 
-### blocker: hook-bundle-headroom
+### Resolved: hook-bundle-headroom
 
-Owner: whoever lands the next hook shrink or `raise_log` entry. The hook bundle has 1 B of
-headroom (`road-to-a-map-that-knows-what-happened`, step at line 255). Steps 2.2 and 2.3
-add hook bytes and wait for it.
+The bundle ceiling was raised after this blocker was written; on 2026-11-07 it measured
+1,574,998 / 1,585,000 B, so steps 2.2 and 2.3 fit. Re-measure with
+`./scripts-run src/scripts/check_hook_bundle_composition` after each hook-touching step.
 
 ### Resolved: b-owner-spend
 

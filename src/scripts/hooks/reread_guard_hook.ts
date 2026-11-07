@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
  * Re-read guard + post-edit scope hint — `pre_tool_use` concern
- * (road-to-token-economy-cache Phase 6.1/6.2).
+ * (road-to-token-economy-cache Phase 6.1/6.2), also bound on `pre_compact`,
+ * where it clears the session's ledger: compaction drops what was read.
+ *
+ * A whole-file `cat <file>` through Bash counts as a full read, and a
+ * subagent's reads are keyed apart from its parent's (`agent_id`).
  *
  * Two signals, one session-scoped read ledger:
  *
@@ -202,7 +206,9 @@ export function deriveSessionKey(envelope: JsonObject, payload: JsonObject): str
     const raw =
         str(envelope['session_id'] as JsonValue | undefined) ||
         str((payload['session_id'] ?? payload['sessionId']) as JsonValue | undefined);
-    const material = raw || 'unknown-session';
+    const agent = str((payload['agent_id'] ?? payload['agentId']) as JsonValue | undefined);
+    // A subagent reads into its own context, so its reads never satisfy the parent's.
+    const material = `${raw || 'unknown-session'}${agent ? `::${agent}` : ''}`;
     return crypto.createHash('sha256').update(material).digest('hex');
 }
 
@@ -255,6 +261,17 @@ export function isRangedRead(toolInput: JsonObject): boolean {
 }
 
 /** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
+/**
+ * The file a plain `cat <file>` reads whole, or null. Anything broader — a pipe,
+ * a redirect, a flag, a second file — is not a whole-file read of one path.
+ */
+export function wholeFileCatPath(command: string): string | null {
+    const m = /^\s*cat\s+(?:"([^"]+)"|'([^']+)'|([^\s|&;<>'"]+))\s*$/.exec(command);
+    if (m === null) return null;
+    const p = m[1] ?? m[2] ?? m[3] ?? '';
+    return p.startsWith('-') ? null : p;
+}
+
 export function buildDuplicateReadLine(relPath: string, earlierTs: number, compared: CompareBasis): string {
     const when = new Date(earlierTs).toISOString();
     const basis =
@@ -280,15 +297,22 @@ export function main(): number {
         const [envelope, payload] = unwrap(readHookStdin(), 'claude');
 
         const event = str(envelope['event'] as JsonValue | undefined);
+        if (event === 'pre_compact') {
+            // Compaction drops what was read, so the ledger must not outlive it.
+            const root = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
+            fs.rmSync(ledgerFile(root, deriveSessionKey(envelope, payload)), { force: true });
+            return EXIT_ALLOW;
+        }
         if (event !== '' && event !== 'pre_tool_use') return EXIT_ALLOW;
 
         const toolName = extractToolName(payload);
-        const isRead = READ_TOOLS.has(toolName);
+        const toolInput = extractToolInput(payload);
+        const catPath = toolName === 'Bash' ? wholeFileCatPath(str(toolInput['command'])) : null;
+        const isRead = READ_TOOLS.has(toolName) || catPath !== null;
         const isWrite = WRITE_TOOLS.has(toolName);
         if (!isRead && !isWrite) return EXIT_ALLOW;
 
-        const toolInput = extractToolInput(payload);
-        const filePath = extractFilePath(toolInput);
+        const filePath = catPath ?? extractFilePath(toolInput);
         if (!filePath) return EXIT_ALLOW;
 
         const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
