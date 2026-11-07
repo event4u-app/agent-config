@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_run.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_run.ts (py2ts Phase 8 / Wave 8d).
 //
 // The Python original is deleted, so this is a python-free intent suite. To
 // stay CI-parallel-safe (the script's frozen REPORTS_DIR is the shared,
@@ -15,7 +15,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { normTiming, runTs } from './_bench_wave8d.js';
-import * as br from '../../src/scripts/bench_run.js';
+import * as br from '../../internal/bench/core/bench_run.js';
 
 describe('bench_run — CLI (tsx, non-writing paths)', () => {
     it('--quiet --no-write prints the one-line headline + exit 0', () => {

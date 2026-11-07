@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_honesty_run.ts — the honesty-bench transcript
+// Tests for internal/bench/core/bench_honesty_run.ts — the honesty-bench transcript
 // generator. Reads the committed corpora and rule files; every provider here is
 // the mock or a spy, so nothing is called over the network.
 
@@ -29,8 +29,8 @@ import {
     parseFindings,
     type HonestyProvider,
     type HonestyRunRecord,
-} from '../../src/scripts/bench_honesty_run.js';
-import { main as scoreMain } from '../../src/scripts/bench_honesty_score.js';
+} from '../../internal/bench/core/bench_honesty_run.js';
+import { main as scoreMain } from '../../internal/bench/core/bench_honesty_score.js';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const CORPUS_DIR = path.join(ROOT, 'internal', 'bench', 'corpora');

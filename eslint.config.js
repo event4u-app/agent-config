@@ -29,7 +29,7 @@ export default [
         ],
     },
     {
-        files: ['src/**/*.ts', 'tests/**/*.ts'],
+        files: ['src/**/*.ts', 'tests/**/*.ts', 'internal/bench/core/**/*.ts'],
         languageOptions: {
             parser: tsparser,
             parserOptions: {

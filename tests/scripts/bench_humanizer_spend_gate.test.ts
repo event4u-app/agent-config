@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = join(__dirname, "..", "..");
-const SCRIPT = join(ROOT, "src", "scripts", "bench_humanizer_eval.ts");
+const SCRIPT = join(ROOT, "internal", "bench", "core", "bench_humanizer_eval.ts");
 
 function run(args: string[]) {
   return spawnSync("npx", ["tsx", SCRIPT, ...args], {

@@ -47,7 +47,7 @@ Every result on this page so far ran on the **host path**: the operator's own CL
 | Every CLI argument; no `--setting-sources` on any arm | — |
 | Model, per-run budget, task prompt, fixture | — |
 
-Every container trial reads the CLI's `system/init` event. A `bench-ac` trial with no package skill loaded, or a `bench-base` trial with any, is marked errored with a `load_mismatch:` reason before it reaches the statistics. The report records the isolation mode, both image ids, the CLI version and the package version (`images` in the report, built by `src/scripts/bench_ab_images.ts`).
+Every container trial reads the CLI's `system/init` event. A `bench-ac` trial with no package skill loaded, or a `bench-base` trial with any, is marked errored with a `load_mismatch:` reason before it reaches the statistics. The report records the isolation mode, both image ids, the CLI version and the package version (`images` in the report, built by `internal/bench/core/bench_ab_images.ts`).
 
 What a container does **not** remove:
 
@@ -186,7 +186,7 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 
 ### The minimal-prompt baseline (frozen 2026-11-06, before its first run) {#minimal-prompt-baseline}
 
-The scope result above has `package` and `rules-kernel-dc` at 10 of 10 and 8 of 10 on Haiku, and `vanilla` at 1 of 10. The arm `minimal-prompt` asks whether one plain instruction does the same as the rules. It injects the text below and nothing else, with this package scoped away. The text is frozen here before the arm's first run, so a result cannot be bought by rewording the floor afterwards. `tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` fails when this block and `FIXED_INJECTIONS.minimal` in `src/scripts/_lib/bench_ab_arms.ts` disagree.
+The scope result above has `package` and `rules-kernel-dc` at 10 of 10 and 8 of 10 on Haiku, and `vanilla` at 1 of 10. The arm `minimal-prompt` asks whether one plain instruction does the same as the rules. It injects the text below and nothing else, with this package scoped away. The text is frozen here before the arm's first run, so a result cannot be bought by rewording the floor afterwards. `tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` fails when this block and `FIXED_INJECTIONS.minimal` in `internal/bench/core/_lib/bench_ab_arms.ts` disagree.
 
 ```text
 Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.
@@ -209,7 +209,7 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 - **Cost per run, p50 / p95:** A $0.24 / $0.63, B $0.27 / $0.69, C $0.59 / $1.36. **Net value of C vs B:** −$0.067 per run, with `D` = 10× and `C_FP` = 1× A's p50.
 - **Spend:** $65.47 sweep + $1.94 harness smoke = $67.41 of the $150 release.
 
-No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run src/scripts/bench_headroom_17_report <report.json>`.
+No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run internal/bench/core/bench_headroom_17_report <report.json>`.
 
 
 ## Where the main session's default context goes (2026-11-06) {#main-session-census}
@@ -482,7 +482,7 @@ full plugin projection (no skills/commands/hooks in the trimmed arms). Before
 shipping any trimmed default, sweep the full corpus (done below).
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
-- Arms: `rules-kernel-dc` / `rules-balanced` in `src/scripts/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
+- Arms: `rules-kernel-dc` / `rules-balanced` in `internal/bench/core/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
 
 ### Full-corpus P1 gate (`claude-haiku-4-5`, all 30 tasks) — family-scoped PASS
 
@@ -787,7 +787,7 @@ close; this run is its motivating evidence, not a contradiction of it.
 > honest null; the quality-regression gate stays inert (by design — its report
 > path is gitignored) pending a stronger, length-neutral judge.**
 
-The thin-vs-eager runner (`src/scripts/bench_quality_run.ts`) generates each
+The thin-vs-eager runner (`internal/bench/core/bench_quality_run.ts`) generates each
 labelled golden task's answer under the THIN rule context (kernel bodies +
 non-kernel pointers, ~15k tok) and the EAGER context (all rule bodies, ~87k
 tok), then judges the pair in both orders (`evaluatePair` → reject-on-flip).
@@ -816,7 +816,7 @@ directly) to remove the 69% verbosity confound. Until then the thin lever is
 NOT adopted as default and the gate stays inert. The golden set also still
 covers only 14/89 rules (operator hand-labelling), a separate gap.
 
-- Runner: `src/scripts/bench_quality_run.ts` (`--dry-run` free / live is
+- Runner: `internal/bench/core/bench_quality_run.ts` (`--dry-run` free / live is
   API-gated); gate: `src/scripts/check_quality_regression.ts` (inert until a
   `quality-run.json` — gitignored — exists locally).
 - Roadmap: `agents/roadmaps/later/road-to-token-saving.md` Phase 0.
@@ -833,7 +833,7 @@ output-token pair matching with a reported dropped-bucket, two arm-blind
 judges from different provider families (claude-opus-4-8 + gpt-4o, both
 orders, reject-on-flip) with a κ ≥ 0.60 admissibility floor, a Spearman-ρ
 length diagnostic (|ρ| ≥ 0.3 withholds), and a pre-registered n = 90 (the
-full council-labelled corpus). Runner: `src/scripts/bench_quality_rerun.ts`;
+full council-labelled corpus). Runner: `internal/bench/core/bench_quality_rerun.ts`;
 artifact: `internal/bench/reports/quality-rerun-length-neutral.json`;
 actual cost $34.80 (cap $250).
 
@@ -856,7 +856,7 @@ existing precedent, the quality-regression gate stays inert, and any future
 attempt must use a categorically different method (e.g. deterministic
 anchor-scoring against `must_include`/`must_not`, not pairwise LLM judging).
 
-- Runner: `src/scripts/bench_quality_rerun.ts` (design-pinned constants:
+- Runner: `internal/bench/core/bench_quality_rerun.ts` (design-pinned constants:
   band ±15%, κ floor 0.60, ρ flag 0.3, effect floor 10pp; `--max-usd` guard).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 1.
 
@@ -893,7 +893,7 @@ Cost: $0.16 actual (30 calls; ceiling $8 authorized). `finding_floor` is now an
 **enforcing** gate (comment flipped in `run_skill_evals.ts`); calibration data
 in `internal/bench/reports/parity-count.json`.
 
-- Runner: `src/scripts/bench_parity_count.ts` (pre-registered: 3 repeats,
+- Runner: `internal/bench/core/bench_parity_count.ts` (pre-registered: 3 repeats,
   2 vendors, envelope floor rule, controls excluded, `--max-usd` abort).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 3.
 
@@ -922,7 +922,7 @@ not evidence. Raw report is local-only by design
 notes are the durable record. Re-open path: a full uncapped 180-run
 replication on a per-token-billed key.
 
-- Runner: `src/scripts/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
+- Runner: `internal/bench/core/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 2.
 
 ## adversarial-verification-council finding coverage — HONEST NULL (resolved 2026-07-21)
@@ -1314,12 +1314,12 @@ Twenty planted change tasks under `internal/bench/ab/map-task-set/` (four each i
 code, data, interfaces, runtime, delivery), each with a hidden check that is red
 on the untouched fixture and on the naive change the prompt names, and green on
 the reference change (`tests/scripts/bench_map_task_set_corpus.test.ts`). The
-runner `src/scripts/bench_map_task_set.ts` compares `vanilla`, `ac` (package, no
+runner `internal/bench/core/bench_map_task_set.ts` compares `vanilla`, `ac` (package, no
 map) and `ac-map` (package, map drawn into the working copy, plus a find-confirm-update
 note) and reports M1 wrong-change share, M2 recall and precision of the
 `AFFECTED SET` each run declares, and M3 tokens of all runs per successful run,
 plus two readings under a fixed per-run token budget (`--token-budget`). Run
-`./scripts-run src/scripts/bench_map_task_set --dry-run` first: it swaps only the
+`./scripts-run internal/bench/core/bench_map_task_set --dry-run` first: it swaps only the
 model call for a stub (nothing / naive / reference change per arm), runs the clone,
 map build, hidden checks, parser and aggregation for real, writes a `tier: dry-run`
 report to a temp directory and exits 2 if the metrics disagree with the stub. A

@@ -50,7 +50,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { wilcoxon } from './bench_ab_v2_stats.js';
+import { wilcoxon } from './_lib/paired_stats.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);

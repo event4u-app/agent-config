@@ -78,9 +78,10 @@ name: Standing Payload Delta
 # reports a conclusion. That is the shape the contract prescribes.
 on:
   # Inert: the owner rejected a merge queue on 2026-11-07 — do not enable one
-  # (agents/evidence/owner-directives/2026-11-07-no-merge-queue.md). PR-only steps are
-  # already guarded by `github.event_name == 'pull_request'` or an empty
-  # `github.base_ref`, the same path workflow_dispatch takes.
+  # (agents/evidence/owner-directives/2026-11-07-no-merge-queue.md). PR-only
+  # steps are guarded by `github.event_name == 'pull_request'`; on this event
+  # the merge-base would come from `merge_group.base_sha`, since
+  # `github.base_ref` is empty.
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -143,9 +144,14 @@ jobs:
           # step: the scope step below reads empty as "cannot narrow" and runs
           # the full measurement, which is the safe direction. Before this the
           # step died on `set -e` and took the whole job with it.
+          # A merge_group run has no `github.base_ref` either, but it does have
+          # a base: the queue commit is built on `merge_group.base_sha`. Without
+          # it the measure step ran `--base ""` and failed every queue entry.
           base=""
           if [ -n "${{ github.base_ref }}" ]; then
             base="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
+          elif [ -n "${{ github.event.merge_group.base_sha }}" ]; then
+            base="$(git merge-base "${{ github.event.merge_group.base_sha }}" HEAD)"
           fi
           echo "merge_base=$base" >> "$GITHUB_OUTPUT"
           echo "merge-base: ${base:-<none — not a pull request>}"
@@ -458,7 +464,7 @@ jobs:
         run: |
           rc=0
           ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs || rc=1
-          ./scripts-run src/scripts/bench_hook_injection || rc=1
+          ./scripts-run internal/bench/core/bench_hook_injection || rc=1
           ./scripts-run src/scripts/audit_skill_overlap --quiet --print-table --strict || rc=1
           ./scripts-run src/scripts/memory_replay --check || rc=1
           exit "$rc"

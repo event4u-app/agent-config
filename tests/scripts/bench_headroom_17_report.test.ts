@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { c_false_positive_rate, cost_percentiles, net_value, paired, percentile, sign_test_p } from '../../src/scripts/bench_headroom_17_report.js';
+import { c_false_positive_rate, cost_percentiles, net_value, paired, percentile, sign_test_p } from '../../internal/bench/core/bench_headroom_17_report.js';
 
 const run = (cap: boolean, errored = false, fp: boolean | null = null): Record<string, unknown> => ({
     capability_pass: cap,

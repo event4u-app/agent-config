@@ -2,7 +2,7 @@
 // definitions and the per-call spend flag. No CLI call is made here.
 import { describe, expect, it } from 'vitest';
 
-import { agentsJson, cliArgs, loadFixtures, parseStream, userPrompt } from '../../src/scripts/bench_slim_reviewer.js';
+import { agentsJson, cliArgs, loadFixtures, parseStream, userPrompt } from '../../internal/bench/core/bench_slim_reviewer.js';
 
 const rates = { input: 3, output: 15, cache_write: 3.75, cache_read: 0.3 };
 

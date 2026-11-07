@@ -1,6 +1,6 @@
 /**
  * Vitest twin suite for the telegraph bench serializer
- * (`src/scripts/_lib/bench_telegraph_report.ts`). Focused unit suite over
+ * (`internal/bench/core/_lib/bench_telegraph_report.ts`). Focused unit suite over
  * the report dict structural invariants built on shared synthetic bench
  * data (ADR-088 py2ts Phase 2 / Wave 2a).
  */
@@ -8,12 +8,12 @@ import {
     ArmResult,
     PromptResult,
     carve_out_chars,
-} from '../../src/scripts/_lib/bench_telegraph.js';
+} from '../../internal/bench/core/_lib/bench_telegraph.js';
 import { describe, expect, it } from 'vitest';
 
 import {
     build_telegraph_report,
-} from '../../src/scripts/_lib/bench_telegraph_report.js';
+} from '../../internal/bench/core/_lib/bench_telegraph_report.js';
 
 interface ArmSpec {
     text: string;

@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_honesty_score.ts (road-to-honesty-bench Phase 1
+// Tests for internal/bench/core/bench_honesty_score.ts (road-to-honesty-bench Phase 1
 // deterministic scorer). Fixtures are literal objects/JSONL written by the
 // test itself — this suite never reads the real corpus YAMLs under
 // internal/bench/corpora/ (those are authored in parallel by other agents).
@@ -36,7 +36,7 @@ import {
     type FalsePremiseFixture,
     type RebuttalFixture,
     type TranscriptRecord,
-} from '../../src/scripts/bench_honesty_score.js';
+} from '../../internal/bench/core/bench_honesty_score.js';
 
 // ── fixture builders ─────────────────────────────────────────────────────
 

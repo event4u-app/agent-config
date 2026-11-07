@@ -12,8 +12,8 @@
  * even when no single call reports its cost. The runner's own `--max-usd` is
  * passed too, for the record.
  */
-import { LADDER_NAMES } from './bench_artifact_corpus.js';
-import { PARITY_CAP_K } from './bench_artifact_parity.js';
+import { LADDER_NAMES } from '../../../internal/bench/core/_lib/bench_artifact_corpus.js';
+import { PARITY_CAP_K } from '../../../internal/bench/core/_lib/bench_artifact_parity.js';
 
 export type ShowcaseTier = 'quick' | 'full';
 

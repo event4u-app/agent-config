@@ -1,6 +1,6 @@
 /**
  * Vitest twin suite for the bench report emitter
- * (`src/scripts/_lib/bench_report.ts`). Focused unit suite over the
+ * (`internal/bench/core/_lib/bench_report.ts`). Focused unit suite over the
  * rendered Markdown, the indent=2 JSON body, path building, and stamp
  * formats on shared synthetic report dicts (ADR-088 py2ts Phase 2 /
  * Wave 2a). Each report variant exercises a distinct source branch (token
@@ -16,7 +16,7 @@ import {
     utc_now_filename_stamp,
     utc_now_iso,
     write_markdown,
-} from '../../src/scripts/_lib/bench_report.js';
+} from '../../internal/bench/core/_lib/bench_report.js';
 
 // ── synthetic report dicts ──────────────────────────────────────────────────
 

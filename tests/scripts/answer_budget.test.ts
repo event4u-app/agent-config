@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { budgetAnswer, budgetQueryReport, lineSubject, packPrefix, pageReads, tokensOf } from '../../src/scripts/code_graph/answer_budget.js';
-import { PROBES, format, p95 } from '../../src/scripts/bench_answer_size.js';
+import { PROBES, format, p95 } from '../../internal/bench/core/bench_answer_size.js';
 
 const ids = (n: number, file = (i: number) => `src/dir_${i % 7}/module_${i}.ts`) => Array.from({ length: n }, (_, i) => `${file(i)}#symbol_with_a_long_name_${i}`);
 const locate = (id: string) => `${id.split('#')[0]}:${id.length}`;
@@ -76,7 +76,7 @@ describe('bench_answer_size', () => {
 
 describe('bench_answer_size is red over budget', () => {
     it('exits 1 when a probe row is over its budget, 0 when within, and records ask latency without failing', async () => {
-        const { main, registerProbe } = await import('../../src/scripts/bench_answer_size.js');
+        const { main, registerProbe } = await import('../../internal/bench/core/bench_answer_size.js');
         const fs = await import('node:fs');
         const os = await import('node:os');
         const path = await import('node:path');

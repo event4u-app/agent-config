@@ -1,6 +1,6 @@
 /**
  * Tests for the per-turn composite helper in
- * `src/scripts/bench_hook_latency.ts` (road-to-per-turn-hook-economy step 4.1).
+ * `internal/bench/core/bench_hook_latency.ts` (road-to-per-turn-hook-economy step 4.1).
  *
  * The composite is the D-1 row: the number one agentic turn costs, which no
  * per-slot budget can represent. Two properties matter and both are asserted
@@ -14,7 +14,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { perTurnComposite } from "../../src/scripts/bench_hook_latency.js";
+import { perTurnComposite } from "../../internal/bench/core/bench_hook_latency.js";
 
 function row(event: string, p50: number) {
   return { event, runs: 5, p50_ms: p50, p95_ms: p50, max_ms: p50 };

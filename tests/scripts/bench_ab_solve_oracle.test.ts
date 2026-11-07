@@ -4,14 +4,14 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { oracleRootFor, score_task_v2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
+import { oracleRootFor, score_task_v2 } from '../../internal/bench/core/_lib/bench_ab_scoring_v2.js';
 import {
     AB_ROOT,
     fixtureRootFor,
     loadTasks,
     ORACLE_ROOT,
     verifierFiles,
-} from '../../src/scripts/_lib/bench_task_validity.js';
+} from '../../internal/bench/core/_lib/bench_task_validity.js';
 
 type Dict = Record<string, unknown>;
 

@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_tracka_run.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_ab_tracka_run.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists. To stay CI-parallel-safe (the script's frozen
 // REPORTS_DIR / CLONES_DIR are shared committed/gitignored trees written by
@@ -19,7 +19,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import * as tr from '../../src/scripts/bench_ab_tracka_run.js';
+import * as tr from '../../internal/bench/core/bench_ab_tracka_run.js';
 
 describe('bench_ab_tracka_run — score_prompt / integrity (no python required)', () => {
     let clone: string;

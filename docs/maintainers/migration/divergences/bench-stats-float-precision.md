@@ -7,10 +7,10 @@ module. Surfaced first in:
 
 - Python: `src/scripts/bench_condense_memory.py` (`statistics.pstdev` at the
   `stdev_saving_pct` field)
-- TypeScript: `src/scripts/bench_condense_memory.ts` (`_pstdev`, line ~225)
+- TypeScript: `internal/bench/core/bench_condense_memory.ts` (`_pstdev`, line ~225)
 
 Shared helper with the same shape: `src/scripts/_lib/bench_telegraph.py`
-↔ `src/scripts/_lib/bench_telegraph.ts` (`_pstdev`, line ~304).
+↔ `internal/bench/core/_lib/bench_telegraph.ts` (`_pstdev`, line ~304).
 
 ## Symptom
 

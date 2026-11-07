@@ -10,9 +10,9 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { load_artifact_corpus } from '../../src/scripts/_lib/bench_artifact_corpus.js';
-import { AB_ROOT, REPO_ROOT, browser_available, grade_primary, svg_similarity_check } from '../../src/scripts/_lib/bench_artifact_graders.js';
-import { editability_checks, svg_render_gate } from '../../src/scripts/_lib/bench_artifact_svg_gate.js';
+import { load_artifact_corpus } from '../../internal/bench/core/_lib/bench_artifact_corpus.js';
+import { AB_ROOT, REPO_ROOT, browser_available, grade_primary, svg_similarity_check } from '../../internal/bench/core/_lib/bench_artifact_graders.js';
+import { editability_checks, svg_render_gate } from '../../internal/bench/core/_lib/bench_artifact_svg_gate.js';
 
 const svg = (body: string): string => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">${body}</svg>`;
 const status = (checks: { id: string; status: string }[], id: string): string | undefined => checks.find((c) => c.id === id)?.status;

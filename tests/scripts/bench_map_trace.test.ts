@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { live_args } from '../../src/scripts/bench_ab_task_runner.js';
-import { missingTraceFields, parseTrace, payloadHash } from '../../src/scripts/_lib/bench_map_trace.js';
+import { live_args } from '../../internal/bench/core/bench_ab_task_runner.js';
+import { missingTraceFields, parseTrace, payloadHash } from '../../internal/bench/core/_lib/bench_map_trace.js';
 
 const REPO = path.resolve(__dirname, '../..');
 
@@ -48,7 +48,7 @@ describe('trial trace (5.1, H28)', () => {
     });
 
     it('the dry run carries every trace field on every trial', () => {
-        const r = spawnSync(path.join(REPO, 'scripts-run'), ['src/scripts/bench_map_task_set', '--dry-run', '--tasks', '1', '--check-trace-fields', '--out-dir', path.join(REPO, 'agents/map/.build/bench-trace-test')], { cwd: REPO, encoding: 'utf-8' });
+        const r = spawnSync(path.join(REPO, 'scripts-run'), ['internal/bench/core/bench_map_task_set', '--dry-run', '--tasks', '1', '--check-trace-fields', '--out-dir', path.join(REPO, 'agents/map/.build/bench-trace-test')], { cwd: REPO, encoding: 'utf-8' });
         expect(r.status, `${r.stdout}\n${r.stderr}`).toBe(0);
         expect(r.stdout).toMatch(/trace fields: complete on \d+ trial/);
     }, 180_000);

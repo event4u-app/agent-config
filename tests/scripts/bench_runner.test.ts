@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_runner.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_runner.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists for bench_runner, so this is a focused differential
 // suite over the pure helpers (tokenize, rank_skills) plus a golden-parity
@@ -9,7 +9,7 @@
 // iterated in sorted-path order in both implementations).
 import { describe, expect, it } from 'vitest';
 
-import * as br from '../../src/scripts/bench_runner.js';
+import * as br from '../../internal/bench/core/bench_runner.js';
 
 
 

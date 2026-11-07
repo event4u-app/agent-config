@@ -2,7 +2,7 @@
 // discipline by skipping the goal. Shadow form only — the old gate decides.
 import { describe, expect, it } from 'vitest';
 
-import { analyse, compare, gate_verdict, nop_floor_for } from '../../src/scripts/bench_ab_v2_stats.js';
+import { analyse, compare, gate_verdict, nop_floor_for } from '../../internal/bench/core/bench_ab_v2_stats.js';
 
 type Run = Record<string, unknown>;
 const run = (seed: number, cap: boolean, dis: number): Run => ({

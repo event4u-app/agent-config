@@ -30,7 +30,7 @@ change can reach. Every Vitest job then runs only those files, or is skipped.
 | `workflow_dispatch` | — | whole suite |
 
 `push: main` stays a full run on purpose: it is the instrument that catches what
-selection missed. A red `push: main` run after a green queue run is a selection
+selection missed. A red `push: main` run after a green PR run is a selection
 miss and is a defect of this script, not flakiness to re-run.
 
 ## How a file is selected
@@ -117,7 +117,7 @@ for most runs, so the saving shows up as shorter shards, not fewer runners; the
 per-shard setup (checkout, `npm ci`, `npm run build`) is unchanged.
 
 **Not measured:** the miss rate. It is observable only as `push: main` going
-red after a green queue run; count those before tightening anything further.
+red after a green PR run; count those before tightening anything further.
 
 ## Cost changes besides selection
 
@@ -135,12 +135,14 @@ red after a green queue run; count those before tightening anything further.
 - Check names changed: `Node Tests (<os>, shard N/<1|2|4>)` instead of
   `… shard N/4`. Pin `Tests result`, never a shard name.
 
-## Enabling the gate (repository admin — not done)
+## Enabling the gate (repository admin — done 2026-11-07)
 
 The goal — a change lands on `main` only if its tests pass, checked on the
 merged result — needs three settings on ruleset `17749383`. They are owner
-decisions (see `branch-protection-policy.md` and the open stub
-`road-to-main-protection-ruleset-changes`), so they are listed, not applied.
+decisions; the owner took all three, and accepted with them that macOS failures
+block merges (`Tests result` aggregates the macOS legs — a departure from the
+council decision of 2026-07-12 recorded in `docs/maintainers/branch-protection.md`).
+The live values are in `branch-protection-policy.md`.
 
 1. **Require a pull request for every change to `main`.** GitHub cannot run a
    workflow on a direct push *before* the push lands, so "block a commit like a
@@ -164,8 +166,8 @@ Live state 2026-11-07: steps 1 and 2 are in place (the ruleset carries a
 `pull_request` rule and requires `Tests result`); step 3 is rejected and no
 `merge_queue` rule is configured.
 
-Read back with `gh api repos/event4u-app/agent-config/rulesets/17749383`, then
-update the live-state table in `branch-protection-policy.md` from that JSON.
+Re-check with `gh api repos/event4u-app/agent-config/rulesets/17749383`; on any
+change, update the live-state table in `branch-protection-policy.md` from that JSON.
 
 ## Revisit if
 

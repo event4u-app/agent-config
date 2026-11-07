@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { type MapRunRecord, runOutcome, score_affected, summarise_arm } from '../../src/scripts/_lib/bench_map_metrics.js';
+import { type MapRunRecord, runOutcome, score_affected, summarise_arm } from '../../internal/bench/core/_lib/bench_map_metrics.js';
 
 const REPO = path.resolve(__dirname, '../..');
 const REPORT = 'internal/bench/reports/map-task-set/2026-10-26T07-12-04Z-map-task-set.json';
@@ -44,7 +44,7 @@ describe('grading fixed (5.2, H31)', () => {
     });
 
     it('re-scores a stored report without spending', () => {
-        const r = spawnSync(path.join(REPO, 'scripts-run'), ['src/scripts/bench_map_task_set', '--rescore', REPORT], { cwd: REPO, encoding: 'utf-8' });
+        const r = spawnSync(path.join(REPO, 'scripts-run'), ['internal/bench/core/bench_map_task_set', '--rescore', REPORT], { cwd: REPO, encoding: 'utf-8' });
         expect(r.status, r.stderr).toBe(0);
         expect(r.stdout).toMatch(/ac-map delivery 2\/4/);
     }, 60_000);

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { ALL_TELL_RULES } from '../../src/scripts/ai_tells_rules.js';
-import { loadPairs } from '../../src/scripts/bench_humanizer_eval.js';
+import { loadPairs } from '../../internal/bench/core/bench_humanizer_eval.js';
 import { check_staleness, discover_corpora, parse_iso_date, run_checks } from '../../src/scripts/check_corpus_staleness.js';
 import { analyzeText } from '../../src/scripts/detect_ai_tells.js';
 

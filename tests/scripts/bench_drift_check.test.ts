@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_drift_check.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_drift_check.ts (py2ts Phase 8 / Wave 8d).
 //
 // The Python original is deleted, so this is a python-free intent suite over
 // the tsx CLI: the warmup / real-corpus / drift-found branches plus custom

@@ -1,0 +1,438 @@
+#!/usr/bin/env tsx
+/**
+ * Thin-vs-eager quality-run producer (token-saving Phase 0 EXIT).
+ *
+ * The missing RUNNER that produces `internal/bench/reports/quality-run.json` —
+ * the report the `check_quality_regression` gate consumes. For each labelled
+ * golden task it generates the agent's answer under the THIN rule context
+ * (kernel bodies + non-kernel pointers) and the EAGER context (all rule bodies),
+ * then judges the pair with the length-controlled paired judge
+ * (`evaluatePair`: both orders → reject-on-flip).
+ *
+ * Model calls (answer generation + judging) go through the proven council
+ * `AnthropicClient` (synchronous curl → Anthropic Messages API) — so this is
+ * **API-gated**: a real run needs an Anthropic key and costs money proportional
+ * to (golden tasks × 2 arms + 2 judge calls) × the rule-context size. Use
+ * `--dry-run` (deterministic mock, no API) to prove the pipeline + see the
+ * output shape first, and `--limit N` to bound a live run.
+ *
+ * CLI:
+ *   ./scripts-run internal/bench/core/bench_quality_run --dry-run            # mock, no API
+ *   ./scripts-run internal/bench/core/bench_quality_run --limit 5            # live, first 5 tasks
+ *   ./scripts-run internal/bench/core/bench_quality_run --model claude-sonnet-4-5
+ * Then gate on it: ./scripts-run src/scripts/check_quality_regression
+ *
+ * Exit codes: 0 wrote report · 1 error.
+ */
+import { createRequire } from 'node:module';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import process from 'node:process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import * as yaml from 'js-yaml';
+
+import { build_thin, RULES_SOURCE } from '../../../src/scripts/project_thin_rules.js';
+import { evaluatePair, type JudgeFn, type JudgeVerdict, type PairResult } from '../../../src/scripts/check_quality_regression.js';
+
+const _HERE = fileURLToPath(import.meta.url);
+const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+const GOLDEN = path.join(REPO_ROOT, 'internal/bench/corpora/token-quality-golden.yaml');
+const OUT = path.join(REPO_ROOT, 'internal/bench/reports/quality-run.json');
+const DEFAULT_THRESHOLD = 0.48;
+
+export interface GoldenTask {
+  id: string;
+  rubric: string;
+  prompt: string;
+  must_include: string[];
+  must_not: string[];
+}
+
+/** Load the labelled golden tasks (stubs are skipped — they have no real rubric). */
+export function load_golden(file = GOLDEN): GoldenTask[] {
+  const doc = yaml.load(fs.readFileSync(file, 'utf-8')) as { tasks?: unknown[] };
+  const tasks = Array.isArray(doc?.tasks) ? doc.tasks : [];
+  const out: GoldenTask[] = [];
+  for (const t of tasks as Array<Record<string, unknown>>) {
+    if (t.label_status !== 'labelled') continue;
+    const exp = (t.expected ?? {}) as Record<string, unknown>;
+    out.push({
+      id: String(t.id),
+      rubric: String(exp.rubric ?? ''),
+      prompt: String(t.prompt ?? ''),
+      must_include: Array.isArray(exp.must_include) ? exp.must_include.map(String) : [],
+      must_not: Array.isArray(exp.must_not) ? exp.must_not.map(String) : [],
+    });
+  }
+  return out;
+}
+
+/** Assemble the always-loaded rule context for each arm (eager bodies vs thin pointers). */
+export function assemble_contexts(rulesDir = RULES_SOURCE): { eager: string; thin: string } {
+  const thinMap = build_thin(rulesDir);
+  const thin = [...thinMap.values()].join('\n\n');
+  const eager = fs
+    .readdirSync(rulesDir)
+    .filter((n) => n.endsWith('.md'))
+    .sort()
+    .map((n) => fs.readFileSync(path.join(rulesDir, n), 'utf-8'))
+    .join('\n\n');
+  return { eager, thin };
+}
+
+/** A model that answers a task under a given rule context. */
+export type AnswerFn = (armContext: string, task: GoldenTask) => string;
+
+/** A judge that, given the FULL task (rubric + anchors) + two presented answers,
+ * returns the order-relative verdict. Wrapped into evaluatePair's narrow JudgeFn. */
+export type ModelJudgeFn = (task: GoldenTask, first: string, second: string) => JudgeVerdict;
+
+/** Build the judge user-prompt — length-controlled (ignore verbosity). */
+export function judge_prompt(task: GoldenTask, first: string, second: string): string {
+  return (
+    `Rubric: ${task.rubric}\n` +
+    (task.must_include.length ? `Must satisfy: ${task.must_include.join('; ')}\n` : '') +
+    (task.must_not.length ? `Must avoid: ${task.must_not.join('; ')}\n` : '') +
+    `\nTwo answers to the same request. Judge ONLY which better satisfies the rubric —\n` +
+    `IGNORE length and verbosity (a longer answer is not better).\n\n` +
+    `--- ANSWER A ---\n${first}\n\n--- ANSWER B ---\n${second}\n\n` +
+    `Reply with exactly one line: "VERDICT: A", "VERDICT: B", or "VERDICT: TIE".`
+  );
+}
+
+/** Parse a judge reply into the order-relative verdict (default tie = inconclusive). */
+export function parse_verdict(reply: string): JudgeVerdict {
+  const m = /VERDICT:\s*(A|B|TIE)/i.exec(reply);
+  if (!m) return 'tie';
+  const v = (m[1] as string).toUpperCase();
+  return v === 'A' ? 'first' : v === 'B' ? 'second' : 'tie';
+}
+
+/** Run every task through both arms + the paired judge. Pure given the injected fns. */
+export function run_golden_judge(
+  tasks: GoldenTask[],
+  contexts: { eager: string; thin: string },
+  answer: AnswerFn,
+  judge: ModelJudgeFn,
+): PairResult[] {
+  return tasks.map((task) => {
+    const thinAnswer = answer(contexts.thin, task);
+    const eagerAnswer = answer(contexts.eager, task);
+    // evaluatePair calls its JudgeFn with the narrow {id,rubric} ctx; capture
+    // the full task here so the model judge gets the rubric + anchors.
+    const judgeFn: JudgeFn = (_ctx, first, second) => judge(task, first, second);
+    return evaluatePair(task, thinAnswer, eagerAnswer, judgeFn);
+  });
+}
+
+// ── Export mode (--dump-answers): blinded pairs for an external instrument ──
+//
+// Needed because LLM-paired judging on thin-vs-eager is closed-by-diagnosis
+// (`docs/benchmark.md` § Length-neutral judge RERUN). Any admissible re-open
+// needs the raw answer pairs, whether the instrument is deterministic
+// anchor-scoring against `must_include`/`must_not` or a human judge. Export mode
+// makes NO judge calls, so it costs ~half a full judged run (2 arms, 0 judges).
+
+/** Deterministic per-task coin flip — FNV-1a over `seed:taskId`, low bit.
+ * Reproducible blinding without Math.random, so re-running the export yields
+ * the same A/B assignment and a partially-filled verdicts.csv stays valid. */
+export function blind_flip(taskId: string, seed: number): boolean {
+  const s = `${seed}:${taskId}`;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return (h & 1) === 1;
+}
+
+export interface BlindPair {
+  id: string;
+  /** Which arm was presented as ANSWER A. Belongs in _mapping.json ONLY. */
+  a_arm: 'thin' | 'eager';
+  answer_a: string;
+  answer_b: string;
+}
+
+export function build_blind_pair(
+  task: GoldenTask,
+  thinAnswer: string,
+  eagerAnswer: string,
+  seed: number,
+): BlindPair {
+  const thinIsA = blind_flip(task.id, seed);
+  return {
+    id: task.id,
+    a_arm: thinIsA ? 'thin' : 'eager',
+    answer_a: thinIsA ? thinAnswer : eagerAnswer,
+    answer_b: thinIsA ? eagerAnswer : thinAnswer,
+  };
+}
+
+/** Render the operator-facing pair file. MUST NOT leak the arm mapping —
+ * `tests/scripts/bench_quality_run.test.ts` asserts the blinding invariant. */
+export function render_pair_file(task: GoldenTask, pair: BlindPair): string {
+  const lines: string[] = [`# ${task.id}`, '', '## Request', '', task.prompt, '', '## Rubric', '', task.rubric, ''];
+  if (task.must_include.length) lines.push('## Must satisfy', '', ...task.must_include.map((s) => `- ${s}`), '');
+  if (task.must_not.length) lines.push('## Must avoid', '', ...task.must_not.map((s) => `- ${s}`), '');
+  lines.push(
+    '## Judging rules',
+    '',
+    '- Judge ONLY which answer better satisfies the rubric above.',
+    '- IGNORE length and verbosity. A longer answer is NOT a better answer.',
+    '- `tie` is a valid verdict — do not force a winner.',
+    '- Do NOT open `_mapping.json` until every verdict is recorded.',
+    '',
+    '## ANSWER A',
+    '',
+    pair.answer_a,
+    '',
+    '## ANSWER B',
+    '',
+    pair.answer_b,
+    '',
+    '## Verdict',
+    '',
+    `Append to verdicts.csv — one of: \`${task.id},A\` · \`${task.id},B\` · \`${task.id},tie\``,
+    '',
+  );
+  return lines.join('\n');
+}
+
+/** Write the blinded export: one file per task + the withheld mapping + a CSV stub. */
+export function write_export(
+  dir: string,
+  tasks: GoldenTask[],
+  pairs: BlindPair[],
+  meta: { seed: number; model: string; dry_run: boolean },
+): void {
+  fs.mkdirSync(dir, { recursive: true });
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  for (const pair of pairs) {
+    const task = byId.get(pair.id);
+    if (task === undefined) continue;
+    fs.writeFileSync(path.join(dir, `${pair.id}.md`), render_pair_file(task, pair));
+  }
+  fs.writeFileSync(
+    path.join(dir, '_mapping.json'),
+    JSON.stringify(
+      {
+        generated_by: 'bench_quality_run --dump-answers',
+        warning: 'DO NOT READ until every verdict is recorded in verdicts.csv.',
+        seed: meta.seed,
+        answer_model: meta.model,
+        dry_run: meta.dry_run,
+        threshold: DEFAULT_THRESHOLD,
+        mapping: pairs.map((p) => ({ id: p.id, a_arm: p.a_arm })),
+      },
+      null,
+      2,
+    ) + '\n',
+  );
+  const csv = path.join(dir, 'verdicts.csv');
+  if (!fs.existsSync(csv)) {
+    fs.writeFileSync(csv, `task_id,verdict\n${pairs.map((p) => `${p.id},`).join('\n')}\n`);
+  }
+}
+
+// ── Mock model (--dry-run): deterministic, no API ───────────────────────────
+function mock_answer(_ctx: string, task: GoldenTask): string {
+  return `Answer to ${task.id}: ${(task.must_include[0] ?? 'addresses the request')}.`;
+}
+const mock_judge: ModelJudgeFn = () => 'tie'; // dry-run can't truly compare → all ties
+
+interface Args {
+  dryRun: boolean;
+  model: string;
+  limit: number | null;
+  output: string;
+  dumpAnswers: string | null;
+  seed: number;
+}
+
+const DEFAULT_SEED = 20260729;
+
+function parse_args(argv: string[]): Args | number {
+  const a: Args = {
+    dryRun: false,
+    model: 'claude-sonnet-4-5',
+    limit: null,
+    output: OUT,
+    dumpAnswers: null,
+    seed: DEFAULT_SEED,
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === '--dry-run') a.dryRun = true;
+    else if (arg === '--model') a.model = String(argv[(i += 1)] ?? a.model);
+    else if (arg === '--output') a.output = String(argv[(i += 1)] ?? a.output);
+    else if (arg === '--dump-answers') {
+      const v = argv[(i += 1)];
+      if (v === undefined || v.startsWith('--')) {
+        process.stderr.write('error: --dump-answers requires a directory path\n');
+        return 1;
+      }
+      a.dumpAnswers = v;
+    } else if (arg === '--seed') {
+      const v = Number(argv[(i += 1)]);
+      if (!Number.isInteger(v)) {
+        process.stderr.write('error: --seed must be an integer\n');
+        return 1;
+      }
+      a.seed = v;
+    } else if (arg === '--limit') {
+      const v = Number(argv[(i += 1)]);
+      if (!Number.isInteger(v) || v < 1) {
+        process.stderr.write('error: --limit must be a positive integer\n');
+        return 1;
+      }
+      a.limit = v;
+    } else if (arg === '-h' || arg === '--help') {
+      process.stdout.write(
+        'usage: bench_quality_run [--dry-run] [--model M] [--limit N] [--output PATH]\n' +
+          '                        [--dump-answers DIR] [--seed N]\n\n' +
+          '  --dump-answers DIR  export blinded pairs for an external instrument; makes NO\n' +
+          '                      judge calls (~half the cost of a judged run)\n' +
+          `  --seed N            deterministic A/B blinding seed (default ${String(DEFAULT_SEED)})\n`,
+      );
+      return 0;
+    } else {
+      process.stderr.write(`error: unknown argument: ${arg}\n`);
+      return 1;
+    }
+  }
+  return a;
+}
+
+function main(argv: string[]): number {
+  const parsed = parse_args(argv);
+  if (typeof parsed === 'number') return parsed;
+  const args = parsed;
+
+  let tasks = load_golden();
+  if (tasks.length === 0) {
+    process.stderr.write('error: no labelled golden tasks — fill internal/bench/corpora/token-quality-golden.yaml\n');
+    return 1;
+  }
+  if (args.limit !== null) tasks = tasks.slice(0, args.limit);
+  const contexts = assemble_contexts();
+
+  let answer: AnswerFn;
+  let judge: ModelJudgeFn;
+  let modelLabel: string;
+
+  if (args.dryRun) {
+    answer = mock_answer;
+    judge = mock_judge;
+    modelLabel = 'dry-run-mock';
+    process.stdout.write(`⚠️  --dry-run: deterministic mock, no API. Output shape only.\n`);
+  } else {
+    // Live path — reuse the proven council AnthropicClient (sync curl). API-gated.
+    let client: { ask(system: string, user: string): { text: string } };
+    try {
+      // Lazy import so --dry-run + tests never touch the council key path.
+      const require = createRequire(import.meta.url);
+      const clients = require('./ai_council/clients.js') as {
+        AnthropicClient: new (o: { model: string; api_key: string }) => { ask(s: string, u: string): { text: string } };
+        load_anthropic_key: () => string;
+      };
+      client = new clients.AnthropicClient({ model: args.model, api_key: clients.load_anthropic_key() });
+    } catch (e) {
+      process.stderr.write(
+        `error: live model unavailable (${(e as Error).message}). ` +
+          `Set an Anthropic key (see install-anthropic-key) or use --dry-run.\n`,
+      );
+      return 1;
+    }
+    const SYS =
+      'You are an AI coding agent governed by the following always-loaded package rules. ' +
+      'Answer the user request as that agent would, honouring these rules:\n\n';
+    answer = (ctx, task) => client.ask(SYS + ctx, task.prompt).text;
+    judge = (task, first, second) =>
+      parse_verdict(
+        client.ask('You are a strict, length-neutral answer judge.', judge_prompt(task, first, second)).text,
+      );
+    modelLabel = args.model;
+    process.stdout.write(
+      args.dumpAnswers === null
+        ? `Live run: ${tasks.length} tasks × 2 arms + 2 judge calls each via ${args.model}. This costs API $.\n`
+        : `Live export: ${tasks.length} tasks × 2 arms via ${args.model}, NO judge calls. This costs API $.\n`,
+    );
+  }
+
+  // Export mode: generate both arms, blind them, write the pairs, judge nothing.
+  if (args.dumpAnswers !== null) {
+    let pairs: BlindPair[];
+    try {
+      pairs = tasks.map((task) =>
+        build_blind_pair(task, answer(contexts.thin, task), answer(contexts.eager, task), args.seed),
+      );
+    } catch (e) {
+      process.stderr.write(`error: answer generation failed: ${(e as Error).message}\n`);
+      return 1;
+    }
+    const dir = path.resolve(args.dumpAnswers);
+    write_export(dir, tasks, pairs, { seed: args.seed, model: modelLabel, dry_run: args.dryRun });
+    process.stdout.write(
+      `→ wrote ${pairs.length} blinded pairs to ${dir}\n` +
+        `   Arm mapping withheld in _mapping.json — do not open it until verdicts.csv is complete.\n` +
+        `   Judged nothing: LLM-paired judging is closed-by-diagnosis for this question.\n`,
+    );
+    return 0;
+  }
+
+  let results: PairResult[];
+  try {
+    results = run_golden_judge(tasks, contexts, answer, judge);
+  } catch (e) {
+    process.stderr.write(`error: run failed: ${(e as Error).message}\n`);
+    return 1;
+  }
+
+  const payload = {
+    generated_by: 'bench_quality_run',
+    judge_model: modelLabel,
+    dry_run: args.dryRun,
+    threshold: DEFAULT_THRESHOLD,
+    results,
+  };
+  fs.writeFileSync(args.output, JSON.stringify(payload, null, 2) + '\n');
+  const thinWins = results.filter((r) => r.winner === 'thin').length;
+  const eagerWins = results.filter((r) => r.winner === 'eager').length;
+  process.stdout.write(
+    `→ wrote ${path.relative(REPO_ROOT, args.output)} (${results.length} pairs; ` +
+      `thin ${thinWins} / eager ${eagerWins}). Gate: \`check_quality_regression\`.\n`,
+  );
+  return 0;
+}
+
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection,
+    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
+    // import.meta.url is the resolved real path while argv[1] keeps the
+    // symlink path. Compare realpaths so the entry guard still fires
+    // (without this the CLI silently no-ops when run through a symlink).
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+const _IS_MAIN =
+  _isCliEntry();
+if (_IS_MAIN) {
+  process.exit(main(process.argv.slice(2)));
+}
+
+export { main, mock_answer };
