@@ -43,9 +43,10 @@ function runResolve(cwd: string, ctx: { event: string; baseRef: string; queueBas
     const env: Record<string, string> = { ...process.env, GITHUB_OUTPUT: outFile } as Record<string, string>;
     for (const [name, expr] of Object.entries(step.env ?? {})) {
         const m = /^\$\{\{\s*([\w.]+)\s*\}\}$/.exec(expr);
-        expect(m, `env ${name} must be a single context expression`).not.toBeNull();
-        expect(values, `env ${name} reads an unmodelled context`).toHaveProperty(m![1]);
-        env[name] = values[m![1]];
+        const context = m?.[1] ?? '';
+        expect(context, `env ${name} must be a single context expression`).not.toBe('');
+        expect(Object.keys(values), `env ${name} reads an unmodelled context`).toContain(context);
+        env[name] = values[context] ?? '';
     }
     execFileSync('bash', ['-c', step.run!], { cwd, env, encoding: 'utf8' });
     return /^merge_base=(.*)$/m.exec(readFileSync(outFile, 'utf8'))?.[1] ?? '';
