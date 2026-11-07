@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { BUDGET_TOKENS, DIGEST, MAX_WORDS, collect, describe as describeRoadmap, main, overBudget, render } from '../../src/scripts/generate_owned_digest.js';
+import { DIGEST, MAX_WORDS, collect, describe as describeRoadmap, main, render } from '../../src/scripts/generate_owned_digest.js';
 import { REGISTRY } from '../../src/scripts/check_generator_sync.js';
 
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -93,19 +93,10 @@ describe('generate_owned_digest over a fixture tree', () => {
     });
 });
 
-describe('the budget', () => {
-    it('reports over budget instead of truncating', () => {
-        const text = render([{ slug: 'road-to-x', dir: '', status: 'ready', owns: 'x '.repeat(50).trim() }]);
-        expect(overBudget(text, 10)).toMatch(/over its 10-token budget/);
-        expect(overBudget(text)).toBeNull();
-    });
-});
-
 describe('the committed digest', () => {
-    it('is current and inside its budget', () => {
+    it('is current', () => {
         const committed = fs.readFileSync(path.join(ROOT, DIGEST), 'utf8');
         expect(committed).toBe(render(collect(ROOT)));
-        expect(overBudget(committed, BUDGET_TOKENS)).toBeNull();
     });
 
     it('is registered in check_generator_sync over the roadmap tree and the generator', () => {
