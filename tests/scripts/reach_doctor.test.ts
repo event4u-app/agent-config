@@ -1825,7 +1825,19 @@ ${OK_CHANNEL}`,
     });
 
     it('GIVEN the shipped youtube channel on THIS machine (yt-dlp absent) THEN missing + readiness-unknown read as one coherent report, not a contradiction', () => {
-        const payload = collect({ channel: 'youtube' });
+        // "yt-dlp absent" is the precondition, so the test makes it true instead
+        // of reading it off the developer's machine: PATH without any yt-dlp.
+        const savedPath = process.env['PATH'];
+        process.env['PATH'] = (savedPath ?? '')
+            .split(path.delimiter)
+            .filter((dir) => dir !== '' && !fs.existsSync(path.join(dir, 'yt-dlp')))
+            .join(path.delimiter);
+        let payload: ReachDoctorPayload;
+        try {
+            payload = collect({ channel: 'youtube' });
+        } finally {
+            process.env['PATH'] = savedPath;
+        }
         const channel = payload.channels[0];
         const readiness = channel?.backends[0]?.readiness;
 
