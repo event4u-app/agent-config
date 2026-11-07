@@ -96,44 +96,84 @@ describe('mergeHookEvents', () => {
         expect(merged['stop']).toStrictEqual([ourCursorEntry()]);
     });
 
-    describe('a withdrawn event', () => {
-        const ours = (event: string, native: string): Record<string, unknown> => ({
+    describe('a withdrawn windsurf binding, through mergeHostConfig', () => {
+        // The command strings installs before 2026-11-07 wrote, as the bridge
+        // golden recorded them; a test of a deletion must use the real form.
+        const project = (event: string, native: string): Record<string, unknown> => ({
             command:
                 '[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook ' +
                 `--platform windsurf --event ${event} --native-event ${native}`,
+            show_output: false,
         });
-        const label = '.windsurf/hooks.json';
-        const sig = HOOK_SIGNATURES[label] ?? '';
-        const withdrawn = WITHDRAWN_EVENTS[label] ?? [];
-        const patch = { post_setup_worktree: [ours('session_start', 'post_setup_worktree')] };
-
-        it('lists exactly the two windsurf events host_lowering withdrew, for both writers', () => {
-            expect(withdrawn).toStrictEqual(['pre_user_prompt', 'post_cascade_response']);
-            expect(WITHDRAWN_EVENTS['~/.codeium/windsurf/hooks.json']).toStrictEqual(withdrawn);
+        const user = (event: string, native: string): Record<string, unknown> => ({
+            command: `/Users/someone/.codeium/windsurf/hooks/windsurf-dispatcher.sh ${event} ${native}`,
+            show_output: false,
         });
+        const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
 
-        it('loses our entry, keeps the foreign one, and drops a key left empty', () => {
-            const foreign = { command: 'npx other-agent-pack hook pre_user_prompt' };
-            const existing = {
-                post_setup_worktree: [ours('session_start', 'post_setup_worktree')],
-                pre_user_prompt: [foreign, ours('user_prompt_submit', 'pre_user_prompt')],
-                post_cascade_response: [ours('stop', 'post_cascade_response')],
-            };
-            const merged = mergeHookEvents(existing, patch, sig, withdrawn);
-            expect(merged['post_setup_worktree']).toHaveLength(1);
-            expect(merged['pre_user_prompt']).toStrictEqual([foreign]);
-            expect('post_cascade_response' in merged).toBe(false);
-        });
+        const writers = [
+            ['.windsurf/hooks.json', project],
+            ['~/.codeium/windsurf/hooks.json', user],
+        ] as const;
 
-        it('keeps a group that mixes our command with a foreign one whole', () => {
-            const mixed = {
-                hooks: [
-                    { type: 'command', command: ours('stop', 'post_cascade_response')['command'] },
-                    { type: 'command', command: 'user-audit.sh' },
-                ],
-            };
-            const merged = mergeHookEvents({ post_cascade_response: [mixed] }, patch, sig, withdrawn);
-            expect(merged['post_cascade_response']).toStrictEqual([mixed]);
+        for (const [label, ours] of writers) {
+            const install = (file: Record<string, unknown>): Record<string, unknown> =>
+                mergeHostConfig(
+                    file,
+                    { hooks: { post_setup_worktree: [ours('session_start', 'post_setup_worktree')] } },
+                    HOOK_SIGNATURES[label] ?? '',
+                    deepMerge,
+                    WITHDRAWN_EVENTS[label],
+                );
+
+            it(`${label}: removes our unmodified entries, keeps foreign and user-edited ones, idempotently`, () => {
+                const appended = {
+                    command: `${String(ours('stop', 'post_cascade_response')['command'])}; user-audit.sh`,
+                    show_output: false,
+                };
+                const before = {
+                    hooks: {
+                        post_setup_worktree: [ours('session_start', 'post_setup_worktree')],
+                        pre_user_prompt: [foreign, ours('user_prompt_submit', 'pre_user_prompt')],
+                        post_cascade_response: [ours('stop', 'post_cascade_response'), appended],
+                    },
+                };
+                const once = install(before);
+                const hooks = once['hooks'] as Record<string, unknown[]>;
+                expect(hooks['post_setup_worktree']).toStrictEqual([ours('session_start', 'post_setup_worktree')]);
+                expect(hooks['pre_user_prompt']).toStrictEqual([foreign]);
+                expect(hooks['post_cascade_response']).toStrictEqual([appended]);
+                expect(install(once)).toStrictEqual(once);
+            });
+
+            it(`${label}: deletes an event key left with nothing in it`, () => {
+                const after = install({ hooks: { post_cascade_response: [ours('stop', 'post_cascade_response')] } });
+                expect('post_cascade_response' in (after['hooks'] as Record<string, unknown>)).toBe(false);
+            });
+
+            it(`${label}: keeps a group that mixes our command with a foreign one whole`, () => {
+                const mixed = {
+                    hooks: [
+                        { type: 'command', command: ours('stop', 'post_cascade_response')['command'] },
+                        { type: 'command', command: 'user-audit.sh' },
+                    ],
+                };
+                const after = install({ hooks: { post_cascade_response: [mixed] } });
+                expect((after['hooks'] as Record<string, unknown[]>)['post_cascade_response']).toStrictEqual([mixed]);
+            });
+        }
+
+        it('is inert for a writer with no withdrawn bindings', () => {
+            expect(WITHDRAWN_EVENTS[CURSOR_LABEL]).toBeUndefined();
+            const file = { hooks: { stop: [ourCursorEntry()] } };
+            const after = mergeHostConfig(
+                file,
+                { hooks: { beforeShellExecution: [ourCursorEntry()] } },
+                CURSOR_SIG,
+                deepMerge,
+                WITHDRAWN_EVENTS[CURSOR_LABEL],
+            );
+            expect((after['hooks'] as Record<string, unknown[]>)['stop']).toStrictEqual([ourCursorEntry()]);
         });
     });
 

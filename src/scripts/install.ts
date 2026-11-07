@@ -498,7 +498,7 @@ function merge_json_file(
     // Hook arrays are shared with whatever else the consumer installed, so the
     // `hooks` key merges per event by signature instead of being replaced.
     const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) =>
-        mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? '', deep_merge, WITHDRAWN_EVENTS[label] ?? []), { write: write_file });
+        mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? '', deep_merge, WITHDRAWN_EVENTS[label]), { write: write_file });
     if (outcome.status === 'created' || outcome.status === 'updated') success(`${label} ${outcome.status}`);
     else if (outcome.status === 'unchanged') skip(`${label} unchanged (already configured)`);
     else {

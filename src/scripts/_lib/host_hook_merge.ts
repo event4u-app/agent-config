@@ -21,8 +21,8 @@
  * Events the patch does not mention are left exactly as they are — a host file
  * may legitimately carry foreign events this package never binds. The one
  * exception is an event listed in `WITHDRAWN_EVENTS` for the writer: there an
- * entry made only of our commands is removed, foreign ones stay byte-identical,
- * and the key is deleted only when nothing is left.
+ * entry made only of commands we generated, unmodified, is removed; everything
+ * else stays byte-identical, and the key is deleted only when nothing is left.
  *
  * Step 2 is what keeps an upgrade idempotent: a migration that changes our own
  * command string replaces the old entry rather than leaving a stale duplicate
@@ -128,7 +128,7 @@ export function mergeHookEvents(
     existingHooks: unknown,
     patchHooks: Record<string, unknown>,
     signature: string,
-    withdrawn: readonly string[] = [],
+    withdrawn?: WithdrawnBindings,
 ): Record<string, unknown> {
     if (!isPlainObject(existingHooks)) return deepcopy(patchHooks);
     const out: Record<string, unknown> = deepcopy(existingHooks);
@@ -142,11 +142,11 @@ export function mergeHookEvents(
         }
         out[event] = mergeEventEntries(Array.isArray(current) ? current : [], incoming, signature);
     }
-    for (const event of withdrawn) {
+    for (const event of withdrawn?.events ?? []) {
         if (event in patchHooks) continue;
         const current = out[event];
         if (!Array.isArray(current)) continue;
-        const kept = current.filter((e) => !isWhollyManagedEntry(e, signature));
+        const kept = current.filter((e) => !isUnmodifiedGeneratedEntry(e, withdrawn!.generated));
         if (kept.length === current.length) continue;
         if (kept.length === 0) delete out[event];
         else out[event] = kept;
@@ -154,29 +154,39 @@ export function mergeHookEvents(
     return out;
 }
 
+/** Events a release stopped binding, and the exact command forms it generated for them. */
+export interface WithdrawnBindings {
+    readonly events: readonly string[];
+    readonly generated: RegExp;
+}
+
 /**
- * Events a release stopped binding, per writer label — removed from an existing
- * file on the next install so a withdrawn slot stops firing. Listed explicitly
- * rather than inferred from what a patch omits, so a cleanup reaches only the
- * events a ratified change withdrew.
+ * Bindings a release withdrew, per writer label — removed from an existing file
+ * on the next install so a withdrawn slot stops firing. Listed explicitly rather
+ * than inferred from what a patch omits, so cleanup reaches only the events a
+ * ratified change withdrew. `generated` is anchored on both ends: a command a
+ * user edited or appended to no longer matches and is kept, because a stale
+ * entry of ours is a cheaper failure than a deleted user command.
  *
  * windsurf (2026-11-07, issue #2805): `pre_user_prompt` / `post_cascade_response`
  * are documented on no live vendor page; `host_lowering.yaml` withdrew them.
  */
-export const WITHDRAWN_EVENTS: Readonly<Record<string, readonly string[]>> = {
-    '.windsurf/hooks.json': ['pre_user_prompt', 'post_cascade_response'],
-    '~/.codeium/windsurf/hooks.json': ['pre_user_prompt', 'post_cascade_response'],
+export const WITHDRAWN_EVENTS: Readonly<Record<string, WithdrawnBindings>> = {
+    '.windsurf/hooks.json': {
+        events: ['pre_user_prompt', 'post_cascade_response'],
+        generated:
+            /^\[ -x \.\/agent-config \] \|\| exit 0; \.\/agent-config dispatch:hook --platform windsurf --event (?:user_prompt_submit --native-event pre_user_prompt|stop --native-event post_cascade_response)$/,
+    },
+    '~/.codeium/windsurf/hooks.json': {
+        events: ['pre_user_prompt', 'post_cascade_response'],
+        generated: /^\/\S*\/windsurf-dispatcher\.sh (?:user_prompt_submit pre_user_prompt|stop post_cascade_response)$/,
+    },
 };
 
-/**
- * True when every command in `entry` is ours. A group that also carries a
- * foreign command is kept whole: deleting it would delete the neighbour's
- * command, and a stale entry of ours is the cheaper failure.
- */
-function isWhollyManagedEntry(entry: unknown, signature: string): boolean {
-    if (signature === '') return false;
+/** True when every command in `entry` is one this package generated, unmodified. */
+function isUnmodifiedGeneratedEntry(entry: unknown, generated: RegExp): boolean {
     const cmds = entryCommands(entry);
-    return cmds.length > 0 && cmds.every((cmd) => cmd.includes(signature));
+    return cmds.length > 0 && cmds.every((cmd) => generated.test(cmd));
 }
 
 /**
@@ -194,7 +204,7 @@ export function mergeHostConfig(
     patch: Record<string, unknown>,
     signature: string,
     deepMergeFn: (a: Record<string, unknown>, b: Record<string, unknown>) => Record<string, unknown>,
-    withdrawn: readonly string[] = [],
+    withdrawn?: WithdrawnBindings,
 ): Record<string, unknown> {
     const merged = deepMergeFn(existing, patch);
     const patchHooks = patch['hooks'];

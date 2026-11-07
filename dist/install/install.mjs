@@ -7454,7 +7454,7 @@ function mergeEventEntries(existing, incoming, signature) {
   const kept = existing.filter((entry) => !isManagedEntry(entry, signature));
   return [...kept.map((e) => deepcopy(e)), ...incoming.map((e) => deepcopy(e))];
 }
-function mergeHookEvents(existingHooks, patchHooks, signature, withdrawn = []) {
+function mergeHookEvents(existingHooks, patchHooks, signature, withdrawn) {
   if (!isPlainObject(existingHooks)) return deepcopy(patchHooks);
   const out = deepcopy(existingHooks);
   for (const event of Object.keys(patchHooks)) {
@@ -7466,11 +7466,11 @@ function mergeHookEvents(existingHooks, patchHooks, signature, withdrawn = []) {
     }
     out[event] = mergeEventEntries(Array.isArray(current) ? current : [], incoming, signature);
   }
-  for (const event of withdrawn) {
+  for (const event of withdrawn?.events ?? []) {
     if (event in patchHooks) continue;
     const current = out[event];
     if (!Array.isArray(current)) continue;
-    const kept = current.filter((e) => !isWhollyManagedEntry(e, signature));
+    const kept = current.filter((e) => !isUnmodifiedGeneratedEntry(e, withdrawn.generated));
     if (kept.length === current.length) continue;
     if (kept.length === 0) delete out[event];
     else out[event] = kept;
@@ -7478,15 +7478,20 @@ function mergeHookEvents(existingHooks, patchHooks, signature, withdrawn = []) {
   return out;
 }
 var WITHDRAWN_EVENTS = {
-  ".windsurf/hooks.json": ["pre_user_prompt", "post_cascade_response"],
-  "~/.codeium/windsurf/hooks.json": ["pre_user_prompt", "post_cascade_response"]
+  ".windsurf/hooks.json": {
+    events: ["pre_user_prompt", "post_cascade_response"],
+    generated: /^\[ -x \.\/agent-config \] \|\| exit 0; \.\/agent-config dispatch:hook --platform windsurf --event (?:user_prompt_submit --native-event pre_user_prompt|stop --native-event post_cascade_response)$/
+  },
+  "~/.codeium/windsurf/hooks.json": {
+    events: ["pre_user_prompt", "post_cascade_response"],
+    generated: /^\/\S*\/windsurf-dispatcher\.sh (?:user_prompt_submit pre_user_prompt|stop post_cascade_response)$/
+  }
 };
-function isWhollyManagedEntry(entry, signature) {
-  if (signature === "") return false;
+function isUnmodifiedGeneratedEntry(entry, generated) {
   const cmds = entryCommands(entry);
-  return cmds.length > 0 && cmds.every((cmd) => cmd.includes(signature));
+  return cmds.length > 0 && cmds.every((cmd) => generated.test(cmd));
 }
-function mergeHostConfig(existing, patch, signature, deepMergeFn, withdrawn = []) {
+function mergeHostConfig(existing, patch, signature, deepMergeFn, withdrawn) {
   const merged = deepMergeFn(existing, patch);
   const patchHooks = patch["hooks"];
   if (signature === "" || !isPlainObject(patchHooks)) return merged;
@@ -23118,7 +23123,7 @@ function write_json_file(p, data) {
 }
 function merge_json_file(p, new_data, _force, label) {
   const new_entries = build_merge_entries(label, new_data);
-  const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) => mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? "", deepMerge, WITHDRAWN_EVENTS[label] ?? []), { write: write_file });
+  const outcome = mergeHostConfigFile(p, new_data, (existing, incoming) => mergeHostConfig(existing, incoming, HOOK_SIGNATURES[label] ?? "", deepMerge, WITHDRAWN_EVENTS[label]), { write: write_file });
   if (outcome.status === "created" || outcome.status === "updated") success(`${label} ${outcome.status}`);
   else if (outcome.status === "unchanged") skip(`${label} unchanged (already configured)`);
   else {
