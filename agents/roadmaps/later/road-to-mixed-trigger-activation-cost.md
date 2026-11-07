@@ -539,7 +539,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 
 #### 5.A — Two instruments, at zero model cost
 
-- [x] **5.1 Split the census hook buckets by visibility.** Key the hook buckets in
+- [x] **5.1 Split the census hook buckets by visibility.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/main_session_census.ts --> Key the hook buckets in
       `main_session_census.ts` by attachment type as well as event and hook, and report
       `model_visible_chars` (from `hook_additional_context`) apart from
       `stdout_chars` (from `hook_success`).
@@ -558,7 +558,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 
 #### 5.B — Reference duty, observe-only
 
-- [x] **5.3 Compile the requires table.** A pure script derives, from each rule's
+- [x] **5.3 Compile the requires table.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/rule_reference_requires.ts --> A pure script derives, from each rule's
       `triggers` (`command`, `path_prefix`, `file_pattern`) and `load_context`, the
       references an action requires, marked `required` · `conditional` ·
       `informational`, with the referenced file's size in chars and whether it fits the
