@@ -422,6 +422,8 @@ describe('E2E: the ledger as the reference duty needs it', () => {
         ['an interrupted call', (b: string) => ({ stdout: b, stderr: '', interrupted: true })],
         ['a call that wrote to stderr', (b: string) => ({ stdout: b, stderr: 'cat: boom', interrupted: false })],
         ['a response without stdout', () => ({ stderr: '', interrupted: false })],
+        ['a non-zero exit status', (b: string) => ({ stdout: b, stderr: '', interrupted: false, exit_code: 1 })],
+        ['an equal-length output that is not the file now on disk', (b: string) => ({ stdout: 'X'.repeat(Buffer.byteLength(b)), stderr: '', interrupted: false })],
     ])('gives no read credit for %s', (_name, response) => {
         const { root, abs } = makeWorkspace();
         run(postBash(root, `cat ${abs}`, response(fs.readFileSync(abs, 'utf8'))), root);

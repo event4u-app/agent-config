@@ -366,9 +366,10 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
 
 /**
  * A Bash `cat <absolute file>` earns read credit only after it ran, and only when
- * the whole file came back: not interrupted, nothing on stderr, and stdout exactly
- * as many bytes as the file holds. A pre_tool_use cannot know any of that, which is
- * why a `cat` is never credited there.
+ * the whole file came back: not interrupted, nothing on stderr, no non-zero exit
+ * status, and stdout byte-identical to the file now on disk (up to the hash bound).
+ * A pre_tool_use cannot know any of that, which is why a `cat` is never credited
+ * there.
  */
 function recordCompletedCat(envelope: JsonObject, payload: JsonObject): void {
     if (extractToolName(payload) !== 'Bash') return;
@@ -378,14 +379,21 @@ function recordCompletedCat(envelope: JsonObject, payload: JsonObject): void {
     if (!isObject(resp)) return;
     const stdout = resp['stdout'];
     if (typeof stdout !== 'string' || resp['interrupted'] === true || str(resp['stderr'] as JsonValue | undefined) !== '') return;
+    const exit = resp['exit_code'] ?? resp['exitCode'] ?? resp['returnCode'];
+    if (exit !== undefined && exit !== null && exit !== 0) return;
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
     let st: fs.Stats;
+    let onDisk: Buffer;
     try {
         st = fs.statSync(catPath);
+        if (st.size > HASH_BOUND_BYTES) return;
+        onDisk = fs.readFileSync(catPath);
     } catch {
         return;
     }
-    if (Buffer.byteLength(stdout, 'utf8') !== st.size) return;
+    // The bytes returned must be the file as it is now: a length match alone
+    // would credit an equal-length replacement made after the cat ran.
+    if (!onDisk.equals(Buffer.from(stdout, 'utf8'))) return;
     const sessionKey = deriveSessionKey(envelope, payload);
     const ledger = readLedger(workspaceRoot, sessionKey);
     ledger.reads[ledgerKey(workspaceRoot, catPath)] = { mtime: st.mtimeMs, size: st.size, ts: Date.now() };
