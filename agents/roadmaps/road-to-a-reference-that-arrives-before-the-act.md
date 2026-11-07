@@ -107,12 +107,16 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > trigger is a slash command, so no shell command (e.g. `git commit`) can derive
       > a reference today. Run: `task report-rule-requires`.
 
-- [x] **2.2 Make the read ledger fit for the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/reread_guard_hook.ts --> Key by `agent_id` when present,
+- [ ] **2.2 Make the read ledger fit for the duty.** Key by `agent_id` when present,
       clear on `pre_compact`, and count a whole-file read through Bash (`cat <file>`).
       verify: tests for subagent separation, compaction reset and a `cat` read.
-      > note: done 2026-11-07 — `agent_id` in the ledger key, ledger cleared on
-      > `pre_compact` (claude binding added), a plain `cat <file>` counted as a full read;
-      > 4 tests seen red, then green. Hook bundle 1,575,691 / 1,585,000 B.
+      blocked: `hook-binding-ratification`.
+      > note: partial 2026-11-07 — the `agent_id` key ships wired (the concern's
+      > existing Read/Edit/Write binding); the `cat` recognizer and the compaction clear
+      > are built and tested, but binding the concern on Bash and `pre_compact` is hook
+      > plumbing, refused in six council rounds and moved out of the change.
+      > `agents/evidence/analysis/reference-duty-council-rounds-2026-11-07.md`.
+
 - [x] **2.3 Observe the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/reread_guard_hook.ts --> At `pre_tool_use`, compare the 2.1 table with the
       ledger and record `required-pending` · `read` per file act, writing nothing into
       context and blocking nothing.
@@ -120,16 +124,9 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       `path_prefix` with no prior read, and `read` after a whole-file read of the
       reference. (corrected-from-reproduction: the draft named `git commit`, but no rule
       trigger names a shell command — 2.4.)
-      > note: done 2026-11-07 — `_lib/reference_duty.ts`, wired into `reread-guard` on
-      > Edit/Write; ledger `duty` map. Reads under exempt paths (`dist/**`) are now
-      > recorded without an advisory, because projected references live there — the
-      > E2E test failed on exactly that before the fix. `delivered` and `omitted-budget`
-      > need a delivery path to observe and wait on 3.1. Review fixes, same day: a
-      > reference is resolved against its rule file (real rules write `../contexts/…`,
-      > which the first cut never matched), writes under exempt `dist/agent-src/` record
-      > the duty, and `cat` counts only with an absolute path. Known costs, not fixed:
-      > every Edit/Write re-reads `dist/router.json`; subagent-keyed ledgers are never
-      > cleared.
+      > note: done 2026-11-07 — `_lib/reference_duty.ts` in `reread-guard` on Edit/Write,
+      > ledger `duty` counts and `duty_errors`; review and council fixes:
+      > `agents/evidence/analysis/reference-duty-council-rounds-2026-11-07.md`.
 
 - [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.yaml --> For each of the 17
       rules whose `load_context` no act reaches, record one of: prompt-only by design
@@ -169,6 +166,23 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 - **If you do nothing:** 3.1 stays open, and the three always-loaded authority rules can
   never leave the always-loaded layer, because no act would carry them.
 - **Resolved when:** `task report-rule-requires` shows act rows for those three rules.
+
+### blocker: hook-binding-ratification
+- **Status:** open
+- **Owner:** agent, with a two-provider council ratification (ADR-268 § 4)
+- **Blocks:** 2.2
+- **What to do:** add `Bash` to the `reread-guard` `tools:` list and the concern to the
+  claude `pre_compact` binding in `src/scripts/hook_manifest.yaml`, recompile with
+  `./scripts-run src/scripts/compile_hook_manifest`, and take a modification review
+  whose prompt opens with round 6's open points: a bound on `duty` / `duty_errors`
+  growth and a measured per-Edit/Write cost.
+- **Recommendation:** measure the hot-path cost first (one router parse and the matched
+  rules' frontmatter per Edit/Write), then bound the counters, then ask; both seats'
+  last refusals were about exactly those two.
+- **If you do nothing:** reads through `cat` never count and compaction never resets
+  the duty, so 3.1 would measure a ledger that over-credits after a compaction.
+- **Resolved when:** a ratification record under `agents/evidence/ratifications/` with
+  a passing verdict lands with the binding.
 
 ### blocker: hook-bundle-headroom
 - **Status:** RESOLVED 2026-11-07 — the bundle ceiling was raised after this blocker was
