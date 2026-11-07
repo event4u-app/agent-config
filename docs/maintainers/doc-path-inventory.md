@@ -9,7 +9,7 @@ entry for that page in the same change, then regenerates this file;
 
 Scanned: `src/scripts/`, `tests/`, `.github/`, `src/config/gate-coverage.yml`.
 
-- 271 existing doc path(s) named
+- 272 existing doc path(s) named
 - 23 absent path(s) named outside tests (listed below; absent paths named only by tests are fixtures and are omitted)
 - 4 absent ADR-shaped path(s) named outside tests — counted, not listed: `adr_cite_check` owns ADR references
 
@@ -165,6 +165,7 @@ Owner: `src/scripts/check_role_doc_links.ts`.
 - `docs/contracts/evaluator-output.md` (3) — `src/scripts/_lib/evaluator_contract.ts`, `src/scripts/check_evaluator_schema.ts`, `src/scripts/schemas/evaluator-output.schema.json`
 - `docs/contracts/evidence-artifact-types.md` (10) — `.github/workflows/consistency.yml`, `src/scripts/_lib/repeated_run.ts`, `src/scripts/adr/evidence_census.ts`, `src/scripts/dispatch_r2_reviewer.ts`, `src/scripts/lint_evidence_artifacts.ts`, `src/scripts/release_mix_taxonomy.json`, `tests/scripts/classify_merge_risk.test.ts`, `tests/scripts/dispatch_r2_reviewer.test.ts`, `tests/scripts/lint_evidence_artifacts.test.ts`, `tests/scripts/source_shape.test.ts`
 - `docs/contracts/evidence-based-pruning.md` (1) — `src/scripts/lint_new_skill_gate.ts`
+- `docs/contracts/evidence-basis.md` (2) — `.github/pull_request_template.md`, `src/scripts/_lib/standing_asset_delta.ts`
 - `docs/contracts/exit-code-register.md` (3) — `src/scripts/build_exit_code_register.ts`, `tests/install/ownership_ledger_real_install.test.ts`, `tests/scripts/build_exit_code_register.test.ts`
 - `docs/contracts/explain-modes.md` (1) — `src/scripts/config/profile_explain.ts`
 - `docs/contracts/explain-trace.schema.json` (2) — `src/scripts/_cli/cmd_explain.ts`, `src/scripts/lint_explain_trace.ts`

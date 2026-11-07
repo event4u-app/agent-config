@@ -362,6 +362,24 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
         expect(kinds(res.violations)).toContain('missing_register');
     });
 
+    it('fileHistory follows the lineage of the current content, not an abandoned side branch', () => {
+        // Pins the default history simplification. `--full-history` would add
+        // the reverted side-branch commits, and _stampIntroducedAt would then
+        // date the stamp to the revert instead of the commit that wrote it.
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        fs.writeFileSync(p, 'reviewed: 2026-01-01\n', 'utf-8');
+        commitAll(tmp, '2026-01-01');
+        _git(tmp, ['switch', '-q', '-c', 'side']);
+        fs.writeFileSync(p, 'reviewed: 2026-03-01\n', 'utf-8');
+        commitAll(tmp, '2026-03-01');
+        fs.writeFileSync(p, 'reviewed: 2026-01-01\n', 'utf-8');
+        commitAll(tmp, '2026-03-02');
+        _git(tmp, ['switch', '-q', '-']);
+        _git(tmp, ['merge', '-q', '--no-ff', '--no-verify', '-m', 'merge', 'side'], '2026-03-03');
+        expect(mod.fileHistory(p).map((e) => e.date)).toEqual(['2026-01-01']);
+    });
+
     it('missing register, first commit ON the activation day → violation (cannot self-grandfather)', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');
