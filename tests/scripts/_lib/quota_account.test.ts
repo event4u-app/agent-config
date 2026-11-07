@@ -74,21 +74,21 @@ describe('per-account pressure, two logins interleaved', () => {
     ];
 
     it('each account reads its own verdict', () => {
-        expect(planPressure(ledger, NOW, 'claude/a').worst.state).toBe('hot');
-        expect(planPressure(ledger, NOW, 'claude/a').worst.fill).toBe(82);
-        expect(planPressure(ledger, NOW, 'claude/b').worst.state).toBe('ok');
-        expect(planPressure(ledger, NOW, 'claude/b').worst.fill).toBe(10);
+        expect(planPressure(forAccount(ledger, 'claude/a'), NOW).worst.state).toBe('hot');
+        expect(planPressure(forAccount(ledger, 'claude/a'), NOW).worst.fill).toBe(82);
+        expect(planPressure(forAccount(ledger, 'claude/b'), NOW).worst.state).toBe('ok');
+        expect(planPressure(forAccount(ledger, 'claude/b'), NOW).worst.fill).toBe(10);
     });
 
     it('the burn rate is measured within one account, not across the two', () => {
-        const a = planPressure(ledger, NOW, 'claude/a').windows.find((w) => w.window === 'five_hour');
+        const a = planPressure(forAccount(ledger, 'claude/a'), NOW).windows.find((w) => w.window === 'five_hour');
         expect(a?.burn_per_min).toBeCloseTo(1.2, 5);
     });
 
     it('the default login is its own bucket: unlabelled snapshots, never a profile', () => {
         const mixed = [...ledger, snap(3, 55)];
-        expect(planPressure(mixed, NOW, '').worst.fill).toBe(55);
-        expect(planPressure(ledger, NOW, '').worst.state).toBe('unknown');
+        expect(planPressure(forAccount(mixed, ''), NOW).worst.fill).toBe(55);
+        expect(planPressure(forAccount(ledger, ''), NOW).worst.state).toBe('unknown');
     });
 
     it('forAccount keeps only the matching lines', () => {

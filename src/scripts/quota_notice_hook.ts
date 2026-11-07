@@ -42,7 +42,7 @@ import { hasBillingGrant } from './_lib/billing_grant.js';
 import { hostSettingsPaths, readBillingClass, type BillingClassReading } from './_lib/billing_class.js';
 import { coldLine } from './_lib/cold_return.js';
 import { atLeast, CONTEXT_NOTICE_PCT, contextFigure, describeWindow, planPressure, sessionContextFill } from './_lib/pressure.js';
-import { accountFromEnv, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
+import { forAccount, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
@@ -125,8 +125,12 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
         lines.push(meteredText(deps.billing));
     }
     const ledger = readQuotaLedger(deps.stateEnv, deps.now);
-    const account = accountFromEnv(deps.env);
-    for (const w of planPressure(ledger, deps.now, account).windows) {
+    const mine = ledger.filter((x) => x.session === session).reverse();
+    // The tap labelled this session's own snapshots with its account, so the
+    // hook reads it from there instead of carrying the profile detector in its
+    // chunk. No snapshot of its own yet → the default login's bucket.
+    const account = mine[0]?.account ?? '';
+    for (const w of planPressure(forAccount(ledger, account), deps.now).windows) {
         if (!atLeast(w.state, 'warm') || w.state === 'unknown') continue;
         if (!claimOnce(`window|${account}|${w.window}|${w.state}|${w.resets_at ?? 'none'}`, deps.stateEnv, deps.now)) continue;
         const advice =
@@ -135,7 +139,6 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
                 : 'AC is narrowing its own fan-out; /compact or fewer parallel sessions save the most.';
         lines.push(`AC: ${describeWindow(w)}. ${advice}`);
     }
-    const mine = ledger.filter((x) => x.session === session).reverse();
     const cache = mine.find((x) => x.cache);
     // Once per expiry. A host-started turn pays the re-write too, so the line is true there as well.
     const cold = coldLine(cache, deps.now);

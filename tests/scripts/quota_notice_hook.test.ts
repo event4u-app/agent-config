@@ -55,6 +55,13 @@ describe('window notices', () => {
         expect(noticeLines(deps())[0]).toMatch(/85 %/);
     });
 
+    it('each session reads the plan of the account its own snapshots name', () => {
+        feed([70, 76, 82], { account: 'claude/a' }, 'sess-a');
+        appendQuotaSnapshot({ ts: NOW, session: hashSessionId('sess-b'), five_hour: { pct: 10, resets_at: RESET }, account: 'claude/b' }, stateEnv);
+        expect(noticeLines(deps({ sessionId: 'sess-b' }))).toEqual([]);
+        expect(noticeLines(deps({ sessionId: 'sess-a' }))[0]).toMatch(/^AC: 5h window 82 %/);
+    });
+
     it('ok and unknown windows say nothing', () => {
         feed([5, 6, 7]);
         expect(noticeLines(deps())).toEqual([]);
