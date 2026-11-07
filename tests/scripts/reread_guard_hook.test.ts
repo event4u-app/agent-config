@@ -417,6 +417,14 @@ describe('E2E: the ledger as the reference duty needs it', () => {
         run(postBash(root, `cat ${abs}`, { stdout: body, stderr: '', interrupted: false }), root);
         expect(reads(root)).toEqual([path.relative(root, abs)]);
     });
+    it('gives no credit for a cat of a FIFO, and returns instead of blocking on it', () => {
+        const { root } = makeWorkspace();
+        const fifo = path.join(root, 'pipe');
+        spawnSync('mkfifo', [fifo]);
+        const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd: root, input: postBash(root, `cat ${fifo}`, { stdout: '', stderr: '', interrupted: false }), timeout: 15000 });
+        expect(r.status).toBe(0);
+        expect(reads(root)).toEqual([]);
+    });
     it.each([
         ['a truncated output', (b: string) => ({ stdout: b.slice(0, 5), stderr: '', interrupted: false })],
         ['an interrupted call', (b: string) => ({ stdout: b, stderr: '', interrupted: true })],

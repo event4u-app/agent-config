@@ -365,6 +365,36 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
 }
 
 /**
+ * One regular file read through one descriptor, never blocking: opened
+ * non-blocking (a FIFO or device returns instead of hanging the hook), refused
+ * unless it is a regular file within `limit` bytes, and refused when its size or
+ * mtime moved while it was read. Null on any of those, or on any error.
+ */
+function readRegularFileBounded(file: string, limit: number): { bytes: Buffer; stat: fs.Stats } | null {
+    let fd: number | null = null;
+    try {
+        fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+        const before = fs.fstatSync(fd);
+        if (!before.isFile() || before.size > limit) return null;
+        const buf = Buffer.alloc(before.size + 1);
+        let got = 0;
+        for (;;) {
+            const n = fs.readSync(fd, buf, got, buf.length - got, null);
+            if (n === 0) break;
+            got += n;
+            if (got > before.size) return null;
+        }
+        const after = fs.fstatSync(fd);
+        if (got !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs) return null;
+        return { bytes: buf.subarray(0, got), stat: after };
+    } catch {
+        return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
+    }
+}
+
+/**
  * A Bash `cat <absolute file>` earns read credit only after it ran, and only when
  * the whole file came back: not interrupted, nothing on stderr, no non-zero exit
  * status, and stdout byte-identical to the file now on disk (up to the hash bound).
@@ -382,18 +412,12 @@ function recordCompletedCat(envelope: JsonObject, payload: JsonObject): void {
     const exit = resp['exit_code'] ?? resp['exitCode'] ?? resp['returnCode'];
     if (exit !== undefined && exit !== null && exit !== 0) return;
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
-    let st: fs.Stats;
-    let onDisk: Buffer;
-    try {
-        st = fs.statSync(catPath);
-        if (st.size > HASH_BOUND_BYTES) return;
-        onDisk = fs.readFileSync(catPath);
-    } catch {
-        return;
-    }
+    const snap = readRegularFileBounded(catPath, HASH_BOUND_BYTES);
+    if (snap === null) return;
+    const st = snap.stat;
     // The bytes returned must be the file as it is now: a length match alone
     // would credit an equal-length replacement made after the cat ran.
-    if (!onDisk.equals(Buffer.from(stdout, 'utf8'))) return;
+    if (!snap.bytes.equals(Buffer.from(stdout, 'utf8'))) return;
     const sessionKey = deriveSessionKey(envelope, payload);
     const ledger = readLedger(workspaceRoot, sessionKey);
     ledger.reads[ledgerKey(workspaceRoot, catPath)] = { mtime: st.mtimeMs, size: st.size, ts: Date.now() };

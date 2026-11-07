@@ -30,6 +30,19 @@ claude `post_tool_use` every other Bash command is one anchored regex
 when the call was not interrupted, wrote nothing to stderr, exited 0 where the result
 says, and returned bytes identical to the file now on disk.
 
+The read goes through one non-blocking descriptor (a FIFO or device returns at once),
+regular files only, at most 2 MB, refused if size or mtime moved during the read.
+Timed in-process (200 runs after 20 warm-up), open + fstat + read + fstat + byte
+compare:
+
+| File | p50 | p95 |
+|---|---:|---:|
+| 10 KB | 0.02 ms | 0.06 ms |
+| 1 MB | 0.15 ms | 0.28 ms |
+| 2 MB (the cap) | 0.23 ms | 0.45 ms |
+
+Hook bundle after this change: 1,584,309 / 1,585,000 B — 691 B of headroom left.
+
 ## State bounds
 
 - `duty`: at most one entry per `rule::reference` pair. The real bound is the router's
