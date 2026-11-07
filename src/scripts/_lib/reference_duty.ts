@@ -3,22 +3,17 @@
  * the rules triggered by a path require, and whether the session's read ledger
  * shows each one read whole. Observation only — it injects nothing and blocks
  * nothing; whether a gate is worth its cost is measured before one exists.
+ *
+ * Every rule the act matches yields its duties or a {@link DutySourceError}; a
+ * source that cannot be read is never reported as "no duty".
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { allTierRules, ruleSources } from './rule_injection.js';
-import type { Router } from './router_match.js';
+import { parse as parseYaml } from 'yaml';
 
-/**
- * The one key both the read ledger and the duty use for a file: relative to the
- * workspace when the file is inside it, absolute otherwise. Two derivations of
- * this key would silently disagree for every reference outside the workspace.
- */
-export function ledgerKey(workspaceRoot: string, absPath: string): string {
-    const rel = path.relative(workspaceRoot, absPath);
-    return rel === '' || rel.startsWith('..') || path.isAbsolute(rel) ? absPath : rel;
-}
+import { ruleSources } from './rule_injection.js';
+import { trigger_matches, type Trigger } from './router_match.js';
 
 export interface Duty {
     rule: string;
@@ -30,13 +25,17 @@ export interface Duty {
 
 export type DutyState = 'read' | 'required-pending';
 
-/** A basename glob (`*` only), the shape `file_pattern` triggers use. */
-export function globMatches(pattern: string, relPath: string): boolean {
-    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-    return new RegExp(`^${escaped}$`).test(path.basename(relPath));
-}
-
 export class DutySourceError extends Error {}
+
+/**
+ * The one key both the read ledger and the duty use for a file: relative to the
+ * workspace when the file is inside it, absolute otherwise. Two derivations of
+ * this key would silently disagree for every reference outside the workspace.
+ */
+export function ledgerKey(workspaceRoot: string, absPath: string): string {
+    const rel = path.relative(workspaceRoot, absPath);
+    return rel === '' || rel.startsWith('..') || path.isAbsolute(rel) ? absPath : rel;
+}
 
 function loadContextOf(ruleFile: string): string[] {
     let text: string;
@@ -47,43 +46,64 @@ function loadContextOf(ruleFile: string): string[] {
     }
     if (!text.startsWith('---')) return [];
     const end = text.indexOf('\n---', 3);
-    const fm = end === -1 ? '' : text.slice(3, end);
-    const block = /^load_context:\s*\n((?:[ \t]*-[^\n]*\n?)+)/m.exec(fm);
-    if (block === null) return [];
-    return (block[1] ?? '')
-        .split('\n')
-        .map((l) => l.replace(/^\s*-\s*/, '').trim().replace(/^["']|["']$/g, ''))
-        .filter((l) => l !== '');
+    if (end === -1) throw new DutySourceError(`rule frontmatter unterminated: ${ruleFile}`);
+    let fm: unknown;
+    try {
+        fm = parseYaml(text.slice(3, end));
+    } catch (e) {
+        throw new DutySourceError(`rule frontmatter unparsable: ${ruleFile}: ${(e as Error).message}`);
+    }
+    const lc = typeof fm === 'object' && fm !== null ? (fm as Record<string, unknown>)['load_context'] : undefined;
+    if (lc === undefined || lc === null) return [];
+    if (!Array.isArray(lc) || !lc.every((x) => typeof x === 'string')) {
+        throw new DutySourceError(`rule load_context is not a list of paths: ${ruleFile}`);
+    }
+    return lc as string[];
+}
+
+/** The router's tier rules, or a source error when the shape is not the router's. */
+function tierRules(router: unknown, file: string): Array<{ id: string; triggers: Trigger[] }> {
+    if (typeof router !== 'object' || router === null) throw new DutySourceError(`router is not an object: ${file}`);
+    const out: Array<{ id: string; triggers: Trigger[] }> = [];
+    for (const tier of ['tier_1', 'tier_2']) {
+        const list = (router as Record<string, unknown>)[tier];
+        if (list === undefined) continue;
+        if (!Array.isArray(list)) throw new DutySourceError(`router ${tier} is not a list: ${file}`);
+        for (const r of list) {
+            const e = r as Record<string, unknown>;
+            if (typeof e['id'] !== 'string' || !Array.isArray(e['triggers'])) {
+                throw new DutySourceError(`router ${tier} entry without id and trigger list: ${file}`);
+            }
+            out.push({ id: e['id'], triggers: e['triggers'] as Trigger[] });
+        }
+    }
+    return out;
 }
 
 /**
- * References required by the rules whose path or file trigger matches `relPath`.
- * Throws {@link DutySourceError} when the router exists but cannot be read, so a
- * broken source is not mistaken for "no duty"; a missing router is no duty.
+ * References required by the rules whose path or file trigger matches `relPath`,
+ * matched by the router's own `trigger_matches`. Throws {@link DutySourceError}
+ * when the router or a matched rule cannot be read; a missing router is no duty.
  */
 export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
     const sources = ruleSources(workspaceRoot);
     if (sources.router === null) return [];
-    let router: Router;
+    let router: unknown;
     try {
-        router = JSON.parse(fs.readFileSync(sources.router, 'utf8')) as Router;
+        router = JSON.parse(fs.readFileSync(sources.router, 'utf8'));
     } catch (e) {
         throw new DutySourceError(`router unreadable: ${sources.router}: ${(e as Error).message}`);
     }
     const out: Duty[] = [];
-    for (const rule of allTierRules(router)) {
-        const hit = rule.triggers.some((t) => {
-            const tr = t as Record<string, unknown>;
-            if (typeof tr['path_prefix'] === 'string') return relPath.startsWith(tr['path_prefix']);
-            if (typeof tr['file_pattern'] === 'string') return globMatches(tr['file_pattern'], relPath);
-            return false;
-        });
+    for (const rule of tierRules(router, sources.router)) {
+        const hit = rule.triggers.some(
+            (t) => typeof t === 'object' && t !== null && ('path_prefix' in t || 'file_pattern' in t) && trigger_matches(t, '', [relPath]),
+        );
         if (!hit) continue;
         const dir = sources.dirs.find((d) => fs.existsSync(path.join(d, `${rule.id}.md`)));
-        if (dir === undefined) continue;
+        if (dir === undefined) throw new DutySourceError(`matched rule has no file: ${rule.id}`);
         for (const reference of loadContextOf(path.join(dir, `${rule.id}.md`))) {
-            const resolved = ledgerKey(workspaceRoot, path.resolve(dir, reference));
-            out.push({ rule: rule.id, reference, resolved });
+            out.push({ rule: rule.id, reference, resolved: ledgerKey(workspaceRoot, path.resolve(dir, reference)) });
         }
     }
     return out;
@@ -92,9 +112,9 @@ export function dutyForPath(relPath: string, workspaceRoot: string): Duty[] {
 /**
  * `read` when the ledger holds a full read of the path the reference resolves to
  * AND the file still has the size and mtime recorded at that read: a reference
- * edited since the read was not read in its current form. Credit is given at the
- * pre_tool_use of the read, before the host returns the result — a read the host
- * then refuses would still count, which this observation cannot see.
+ * edited since the read was not read in its current form. Metadata equality, not
+ * content identity; and credit is given at the read's pre_tool_use, before the
+ * host returns the result, so a read the host then refuses would still count.
  */
 export function dutyStates(
     duties: readonly Duty[],

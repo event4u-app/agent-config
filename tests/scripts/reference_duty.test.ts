@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { dutyForPath, dutyStates, globMatches } from '../../src/scripts/_lib/reference_duty.js';
+import { dutyForPath, dutyStates } from '../../src/scripts/_lib/reference_duty.js';
 import { ledgerFile } from '../../src/scripts/hooks/reread_guard_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -60,14 +60,6 @@ function duty(root: string): Record<string, { state: string }> {
     const key = crypto.createHash('sha256').update('s1').digest('hex');
     return (JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty?: Record<string, { state: string }> }).duty ?? {};
 }
-
-describe('globMatches', () => {
-    it('matches a basename glob and nothing looser', () => {
-        expect(globMatches('*.vue', 'src/App.vue')).toBe(true);
-        expect(globMatches('*design.html', 'x/my-design.html')).toBe(true);
-        expect(globMatches('*.vue', 'src/App.vue.bak')).toBe(false);
-    });
-});
 
 describe('dutyForPath', () => {
     it('names the references of rules whose path or file trigger matches, and only those', () => {
@@ -124,7 +116,7 @@ describe('council round 1 findings', () => {
         run(root, { tool_name: 'Edit', tool_input: { file_path: target, old_string: 'x', new_string: 'y' } });
         expect(duty(root)[`sot::${REF}`]).toMatchObject({ state: 'read', pending: 1, read: 1 });
     });
-    it('keeps the write and advisory bookkeeping across a compaction, clearing only reads and duty', () => {
+    it('keeps the write and advisory bookkeeping across a compaction, clearing only reads', () => {
         const root = workspace();
         const target = path.join(root, '.claude', 'x.md');
         run(root, { tool_name: 'Read', tool_input: { file_path: path.join(root, RESOLVED) } });
@@ -133,7 +125,6 @@ describe('council round 1 findings', () => {
         const key = crypto.createHash('sha256').update('s1').digest('hex');
         const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as Record<string, Record<string, unknown>>;
         expect(ledger['reads']).toEqual({});
-        expect(ledger['duty'] ?? {}).toEqual({});
         expect(Object.keys(ledger['writes'] ?? {})).toEqual(['.claude/x.md']);
     });
     it('counts a file act whose router cannot be read, instead of reading it as no duty', () => {
@@ -165,3 +156,31 @@ function runEnv(root: string, payload: object, env: Record<string, string>): voi
     const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd: root, input, env: { ...process.env, ...env } });
     expect(r.status).not.toBeNull();
 }
+
+describe('council round 3: every matched rule yields duties or a counted error', () => {
+    it('counts a matched rule whose file is missing', () => {
+        const root = workspace();
+        fs.rmSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'));
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
+    });
+    it('counts a router whose tiers are not lists', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify({ tier_1: 'oops', tier_2: [{ id: 'sot', triggers: 'nope' }] }));
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect((JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8')) as { duty_errors?: number }).duty_errors).toBe(1);
+    });
+    it('keeps the duty counts and errors across a compaction, clearing only reads', () => {
+        const root = workspace();
+        run(root, { tool_name: 'Write', tool_input: { file_path: path.join(root, '.claude', 'x.md'), content: 'x' } });
+        run(root, {}, 'pre_compact');
+        expect(duty(root)[`sot::${REF}`]).toMatchObject({ pending: 1 });
+    });
+    it('reads an inline load_context list the way YAML does', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'sot.md'), `---\ntype: "auto"\nload_context: ["${REF}"] # inline\n---\n\n# sot\n`);
+        expect(dutyForPath('.claude/a.md', root)).toEqual([{ rule: 'sot', reference: REF, resolved: RESOLVED }]);
+    });
+});

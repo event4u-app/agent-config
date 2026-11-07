@@ -337,12 +337,16 @@ export function main(): number {
 
         const event = str(envelope['event'] as JsonValue | undefined);
         if (event === 'pre_compact') {
-            // Compaction drops what was read, so reads and the duty observed on them
-            // must not outlive it; own-write and advisory bookkeeping are not reads.
+            // Compaction drops what was read, so recorded reads must not outlive it.
+            // Everything else — own writes, advisory latches, the duty counts that
+            // are this observation's measurement — is not a read and is kept.
             const root = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
             const sk = deriveSessionKey(envelope, payload);
             const prior = readLedger(root, sk);
-            writeLedger(root, sk, { reads: {}, writes: prior.writes, fired: prior.fired });
+            writeLedger(root, sk, {
+                ...prior,
+                reads: {},
+            });
             return EXIT_ALLOW;
         }
         if (event !== '' && event !== 'pre_tool_use') return EXIT_ALLOW;
