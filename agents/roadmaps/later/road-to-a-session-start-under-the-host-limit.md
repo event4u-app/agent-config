@@ -26,6 +26,10 @@ relates:
 > persisted after 19.0.0, and the measurement and council round of the same day
 > recorded below.
 
+> **Arrivals:** 2 — latest `inbox-2026-11-z` (2026-11-07): a census of ~99k tokens at
+> session start, 91 % rules, and a request to stop loading floors whose pack is inactive.
+> It widens 2.2 by three floors this file did not name (step 2.4).
+
 ## Goal
 
 A consumer who runs `agent-config upgrade` and nothing else gets a session-start
@@ -130,6 +134,14 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       verify: on a machine with no legal, finance or strategy pack active, the
       projected layer carries the verdict's form of those three floors and
       nothing more.
+- [ ] **2.4 Put the remaining pack floors before the same verdict.** 2.2 names legal,
+      finance and strategy. The media, brand and persistence floors (`image-likeness-and-rights`,
+      `brand-source-of-truth`, `scale-discipline`, `history-discipline`) also carry a
+      `packs:` key (`ai-image`, `brand`, `scale-discipline`, `history-discipline`), and
+      no roadmap owns them. Add them to the 2.2
+      question, or record why they differ.
+      verify: the 2.2 verdict names all seven floors, or a recorded reason for each one
+      it leaves out.
 
 ## Phase 3 — Enforced, and on by default
 
