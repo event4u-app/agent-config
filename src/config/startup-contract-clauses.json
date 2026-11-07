@@ -164,7 +164,7 @@
           "source": "ATTEMPTS 1-3 — ROOT-CAUSE PLUS A TARGETED FIX.",
           "in_law": false,
           "response": "act",
-          "witness": "1-3 root-cause + targeted fix",
+          "witness": "failed attempts 1-3: root-cause + targeted fix",
           "unresolved_ref": null
         },
         {
@@ -1365,6 +1365,15 @@
           "response": "none",
           "witness": "financial advice itself allowed",
           "unresolved_ref": null
+        },
+        {
+          "id": "c23",
+          "kind": "prohibition",
+          "source": "*\"What do I have?\"* / *\"Is this symptom serious?\"* → refuse",
+          "in_law": false,
+          "response": "refuse",
+          "witness": "\"what do I have?\"/\"is this symptom serious?\" → refuse",
+          "unresolved_ref": null
         }
       ]
     },
@@ -1430,7 +1439,7 @@
           "source": "Demographic markers (age, gender, ethnicity, family status) are **never** echoed in drafted artifacts",
           "in_law": false,
           "response": "refuse",
-          "witness": "demographics in recruiting drafts",
+          "witness": "demographics (age/gender/ethnicity/family status) in any drafted artifact",
           "unresolved_ref": null
         },
         {

@@ -103,6 +103,11 @@ describe('committed tree', () => {
         }
     });
 
+    it('keeps the scopes round 5 found compressed away', () => {
+        expect(all.get('domain-safety-pii')?.contract).toContain('in any drafted artifact');
+        expect(all.get('domain-safety-disclaimer')?.contract).toContain('"is this symptom serious?" → refuse');
+    });
+
     it('the reply-opening duties share one order: marker, greeting, answer', () => {
         expect(all.get('fast-path-marker-visibility')?.contract).toContain('order: marker, greeting, answer');
         expect(all.get('session-canary')?.contract).toContain('after any fast-path marker, before the answer');
