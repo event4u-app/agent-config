@@ -214,6 +214,23 @@ describe.runIf(hasGit())('archive_completed_roadmaps — untracked-safe (TS-only
         ).toBe(false);
     });
 
+    it('--all does not archive a roadmap that changed a default asset without a measurement line', () => {
+        const repo = path.join(tmp, 'no-measurement');
+        const ACTIVE = path.join('agents', 'roadmaps');
+        const changed = ['# Changed a rule', '', '## Phase 1 — All', '- [x] Trim `src/rules/scope-control.md`', ''].join('\n');
+        initUncommitted(repo, {
+            [path.join(ACTIVE, 'rd-unmeasured.md')]: changed,
+            [path.join(ACTIVE, 'rd-measured.md')]: `${changed}\nMeasurement: none possible — wording only\n`,
+        });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.status, 'exit').toBe(0);
+        expect(ts.stderr).toMatch(/rd-unmeasured\.md.*src\/rules\/scope-control\.md/s);
+        expect(fs.existsSync(path.join(repo, ACTIVE, 'rd-unmeasured.md'))).toBe(true);
+        expect(fs.existsSync(path.join(repo, ACTIVE, 'archive', 'rd-measured.md'))).toBe(true);
+    });
+
     // `guarded-baseline` (council 2026-08-31, 2/2 convergent). Two shapes reach
     // the sweep and both must refuse: a well-formed record, whose box is `[]` so
     // the open-step test would already skip it — silently, which is the half this

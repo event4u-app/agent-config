@@ -176,6 +176,15 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 
 **Size for the next wording (2026-11-06).** `bench_ab_power` with the paired sign test at α 0.05 and 80 % power, assuming independent per-run blind rates: separating the bar's own distance, a control at 15 % against a candidate at 7.5 %, needs 240 pairs per arm. A candidate at 5 % needs 124, one at 2.5 % needs 57. At the measured $0.023 per Haiku run, 240 pairs per arm is 480 runs and about $11. The next wording is measured at that size or not at all.
 
+**The same wording at the pre-registered size (2026-11-07).** Report `2026-11-07T09-54-45Z`, Haiku, 2 tasks × 120 seeds, 240 pairs per arm, same-day `rules-kernel-dc` control, 480 runs, $11.46, no errored run. Counted with the rule above, which reproduces the 2026-11-06 figures exactly (5 / 11 / 9 and 3 / 6 / 13):
+
+| Arm | Blind questions (of 240) | `trapC-ambig-01` questions after a look (of 120) | `trapC-ambig-01` joint pass (of 120) |
+|---|---|---|---|
+| `rules-kernel-dc` (same day) | 22 | 60 | 53 |
+| look-first candidate | 17 | 56 | 73 |
+
+Both bars are met: blind questions at 7.1 %, below the bar's 3 of 40 (7.5 %), and questions after a look on `trapC-ambig-01` at 47 %, above its floor of 30 %. The blind difference against the same-day control is not separable (Fisher one-sided p = 0.25): the control asked blind in 9.2 % of runs, not the 15 % the sample size was planned for. What is separable is the outcome on the ambiguous task: the candidate solves `trapC-ambig-01` correctly and within discipline in 73 of 120 runs against 53 (p = 0.007). `hdrH-done-01` is unchanged (1 and 0 of 120 joint passes, a floor for both). The rule file is a kernel rule and is not edited by an agent; adopting the wording is the owner's change, in its own PR under the kernel soak.
+
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 
 - The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.
@@ -193,6 +202,16 @@ Make the smallest change that fully solves the task. Then find and update everyt
 ```
 
 When the arm is in a run, the report adds three comparisons: `package` vs `minimal-prompt`, `rules-kernel-dc` vs `minimal-prompt`, and `minimal-prompt` vs `vanilla`. A report without the arm renders as before.
+
+**What each arm loads (probe, 2026-11-07).** One trial per arm on `trapC-ambig-01`, Haiku, container isolation, report `2026-11-07T08-01-00Z`, $0.17. The context a run starts with is the first turn's cache write:
+
+| Arm | Injected chars | First-turn context (cache write, tokens) | Package skills loaded |
+|---|---:|---:|---:|
+| `vanilla` | 0 | 7,826 | 0 |
+| `minimal-prompt` | 251 | 7,963 | 0 |
+| `package` | 0 | 99,370 | 303 |
+
+So the floor costs about 140 tokens per turn over `vanilla`, and the full install about 91,500: the comparison is between instructions of very different size, which is the point of the arm. One trial measures size, not behaviour.
 
 ### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
 
@@ -212,6 +231,55 @@ The reviewer arm D did not run, because its slim-reviewer gate failed.
 No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run internal/bench/core/bench_headroom_17_report <report.json>`.
 
 
+## Artifact pilot over the owner's domains (2026-11-07) — PARTIAL, harness hang found {#artifact-pilot-2}
+
+The 2×2 of step 2.1 (`vanilla`/`package` × terse/expert prompt) on the artifact corpus, Sonnet 4.6, 2 seeds, both ladders, report `artifact-2026-11-07T09-56-16-929Z`. The sweep stopped at its $70 cap after 3 of 10 tasks ($73.92 reported). Two faults made it partial:
+
+- **Sizing was wrong by a factor of ten.** Each trial runs two ladders of up to five prompts, each resuming a session; a `package` ladder on Sonnet costs $8–10 because every prompt re-sends about 100k tokens of default context. The full pilot is about $600–700, not the $46 estimated from one prompt per run.
+- **Host calls hung.** 22 of 40 ladders ended `errored`: the CLI sent its second API request and never got an answer, until the timeout killed it (exit 143). The hang is intermittent — the same call run alone succeeds — and is not caused by the inherited session environment, the proxy allow-list or concurrent sweeps (each tested and excluded). `host_call` now re-runs a call that was killed with nothing on stdout, once, and never re-runs a host that answered.
+
+What the three covered tasks show, errored ladders excluded:
+
+| Task | Prompt | `vanilla` reached parity | `package` reached parity | `vanilla` $ | `package` $ |
+|---|---|---|---|---|---|
+| `art-landing-01` | terse | 2 of 2 (3 prompts each) | 1 of 4 | 2.42 | 27.66 |
+| `art-svg-raster-01` | terse | 0 of 2 | 0 of 2 | 3.24 | 17.92 |
+| `art-svg-raster-01` | expert | 0 of 2 | 0 of 2 | 3.52 | 16.85 |
+| `art-svg-prompt-01` | expert | 3 of 3 | — (all errored) | 2.01 | 0 |
+
+Nothing here supports "AC with a terse prompt reaches what vanilla needs an expert prompt for": where both arms have data, `package` never does better and costs five to eleven times as much. Three tasks with errored ladders are not a verdict; the remaining seven tasks are not measured.
+
+## Memory as a task outcome (2026-11-07) — NULL: the store is never read {#memory-outcome}
+
+Three tasks whose decisive fact lives only in a prior session's memory store (`agents/memory/*.yml`, the package's curated format): recall a decision (`memA-recall-01`), take the newer of a superseded pair (`memB-supersede-01`), let the code beat a stale entry (`memC-stale-01`). `package-memory` runs the full install with the store present; `package-no-memory` strips it from fixture and clone. Haiku, container isolation, 10 seeds, report `2026-11-07T08-54-56Z`, 90 runs, $5.77. Modelling: `internal/bench/corpora/SCHEMA-v2.md`.
+
+| Task | `vanilla` | `package-memory` | `package-no-memory` |
+|---|---|---|---|
+| `memA-recall-01` (correct, of 10) | 0 | 0 | 0 |
+| `memB-supersede-01` | 0 | 0 | 0 |
+| `memC-stale-01` | 10 | 10 | 10 |
+| runs that opened the store | 0 of 30 | 0 of 30 | — |
+
+The memory never reached the work: no run read a file under `agents/memory/`, and no hook delivered an entry, so with and without memory are the same arm in effect. `memC` passes everywhere because following the code is what an agent does without memory. The finding is about delivery, not recall quality: a consumer's store is not consulted on a task that does not name it. Mean tokens per run: `package-memory` 0.33–1.08 M against `vanilla` 0.09–0.11 M, for the same outcome.
+
+## Extraction gate — the bench stays in this repository (2026-11-07) {#extraction-gate}
+
+The bench moves into its own app only when at least two of five criteria hold
+**and** the owner agrees. Every T3 (release, rival) report carries this table;
+`npx tsx internal/bench/core/bench_extraction_gate.ts` regenerates it. G2 and G4 are
+measured over the last 90 days (git log of `internal/bench`, `gh run list`); G1, G3
+and G5 are recorded facts in `internal/bench/extraction-gate.json`. A criterion that
+cannot be measured reads `unknown`, never `no`.
+
+| ID | Criterion | Current state | Holds |
+|---|---|---|---|
+| G1 | External demand: someone else wants their package measured or contributes | no external request recorded | no |
+| G2 | Rival-dominated engine: ≥ 50 % of engine commits in 90 days touch a rival | 0 of 197 engine commits (0 %) | no |
+| G3 | Licence conflict: a needed part may not live in this repository | no needed part is under a licence this repository cannot hold (no rival code is vendored yet) | no |
+| G4 | CI burden: ≥ 10 % of failed CI runs in 90 days come from a bench workflow | 0 of 52 failed runs (0 %) | no |
+| G5 | A public, neutral ranking is wanted (owner decision) | no owner decision for a public ranking recorded | no |
+
+**Verdict:** stay — 0 of 5 hold, 2 needed
 ## Where the main session's default context goes (2026-11-06) {#main-session-census}
 
 Measured with `./scripts-run src/scripts/preamble_byte_census --main-session`. The figures come from what the host recorded delivering in one Claude Code session on this repository, not from a model of the tree. The setup was a user-global install with the full rule set, plus the repository's own project rules. Characters are as delivered; tokens are approximately characters / 4. This is one session on one machine, a reading and not a distribution.

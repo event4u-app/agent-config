@@ -53,6 +53,13 @@ export interface ArmSpec {
     isolate_neighbour?: boolean;
     /** Runs on the host CLI even in a `--isolation container` sweep — the host-vs-container control. */
     host_only?: boolean;
+    /**
+     * Fixture-relative paths removed from the trial's tree before the run, from
+     * the pristine copy and the clone alike. `package-no-memory` uses it to drop
+     * the memory a prior session left, so it runs the same task and seed as
+     * `package-memory` with only that store missing.
+     */
+    strip_paths?: readonly string[];
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
@@ -137,6 +144,10 @@ export const ARMS: Record<string, ArmSpec> = {
     'profile-minimal': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },
     'profile-essential': { setting_sources: 'project,local', inject: 'profile-essential' },
     'profile-full': { setting_sources: 'project,local', inject: 'profile-full' },
+    // A multi-session task is modelled by the memory store its fixture carries;
+    // the pair differs only in whether that store reaches the run.
+    'package-memory': { setting_sources: null, inject: null },
+    'package-no-memory': { setting_sources: null, inject: null, strip_paths: ['agents/memory'] },
     neighbour: {
         setting_sources: 'project,local',
         inject: null,
