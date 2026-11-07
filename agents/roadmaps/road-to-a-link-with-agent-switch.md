@@ -136,12 +136,14 @@ cross-account continuation.
 
 ## Risk Register
 
-| Risk | Mitigation |
-|---|---|
-| Agent decides without the user | `switch_decide` is host-confirmed; lint forbids auto-allow |
-| Stale limits route a seat badly | Observations carry `stale`; stale reads count as `null` |
-| agent-switch absent or link off | Every path returns `null` → today's behaviour (K8) |
-| Notice noise | One request per `(account, window, resets_at)`, dedup in agent-switch |
+<!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Agent decides without the user | product | An agent that records a switch decision on its own moves work the user never agreed to move | `switch_decide` is host-confirmed; lint forbids an auto-allow entry for it | Phase 4 — Inform and ask |
+| 2 | Stale limits route a seat badly | implementation | A cached limits read that is hours old can mark a full account usable and place a council seat on it | Observations carry `stale`; a stale read counts as `null`, never as usable | Phase 5 — Load distribution |
+| 3 | agent-switch absent or link off | implementation | A hard dependency would break AC for every user without agent-switch, against fence K8 | Every path returns `null` and falls back to today's behaviour | Phase 2 — Automatic connection |
+| 4 | Notice noise | product | Raising a request on every `hot` notice could flood both tools with duplicate questions | One request per `(account, window, resets_at)`, deduplicated in agent-switch | Phase 4 — Inform and ask |
 
 ## Blockers
 
