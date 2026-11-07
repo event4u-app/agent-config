@@ -18,6 +18,13 @@
  * `UserPromptSubmit` hook costs its output on every turn. A `SessionStart` hook
  * fired by `compact` or `resume` is listed but not counted as default load.
  *
+ * The two hook attachment types are kept apart because they do not reach the
+ * same reader: `hook_additional_context` is model context, while `hook_success`
+ * is the hook's plain stdout, which the host adds to context only for
+ * `SessionStart` and `UserPromptSubmit` and otherwise shows in the transcript
+ * alone. A per-tool-call figure that merges them can price output the model
+ * never received.
+ *
  * Characters are what the transcript holds; `approx_tokens` divides by 4 and is
  * labelled approximate wherever it is shown.
  */
@@ -39,6 +46,8 @@ export interface SkillEntry {
 export interface HookBucket {
     event: string;
     hook: string;
+    attachment: 'hook_success' | 'hook_additional_context';
+    model_visible: boolean;
     occurrences: number;
     total_chars: number;
     mean_chars: number;
@@ -51,6 +60,7 @@ export interface MainSessionCensus {
 }
 
 const CHARS_PER_TOKEN = 4;
+const STDOUT_IS_CONTEXT = new Set(['SessionStart', 'UserPromptSubmit']);
 
 function shorten(p: string, roots: { home: string; repo: string }): string {
     if (p.startsWith(`${roots.repo}/`)) return p.slice(roots.repo.length + 1);
@@ -103,8 +113,10 @@ export function censusMainSession(lines: readonly string[], roots: { home: strin
             if (text === '') continue;
             const event = String(a['hookEvent'] ?? '?');
             const hook = String(a['hookName'] ?? event);
-            const k = `${event}\u0000${hook}`;
-            const b = hooks.get(k) ?? { event, hook, occurrences: 0, total_chars: 0, mean_chars: 0 };
+            const attachment: HookBucket['attachment'] = type;
+            const model_visible = type === 'hook_additional_context' || STDOUT_IS_CONTEXT.has(event);
+            const k = `${event}\u0000${hook}\u0000${type}`;
+            const b = hooks.get(k) ?? { event, hook, attachment, model_visible, occurrences: 0, total_chars: 0, mean_chars: 0 };
             b.occurrences += 1;
             b.total_chars += text.length;
             b.mean_chars = Math.round(b.total_chars / b.occurrences);
@@ -153,7 +165,7 @@ export function renderMainSession(c: MainSessionCensus, transcript: string): str
         c.skills.entries.length > 20 ? `  … ${c.skills.entries.length - 20} more (--format json lists every entry)` : '',
         '',
         `Hook output (${c.hooks.length} hook(s)):`,
-        ...c.hooks.map((h) => `  ${String(h.mean_chars).padStart(7)} chars × ${String(h.occurrences).padStart(3)}  ${h.event} · ${h.hook}`),
+        ...c.hooks.map((h) => `  ${String(h.mean_chars).padStart(7)} chars × ${String(h.occurrences).padStart(3)}  ${h.event} · ${h.hook}${h.model_visible ? '' : '  (stdout, not model-visible)'}`),
     ];
     return out.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n');
 }
