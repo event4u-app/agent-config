@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { stage_package_scope, workspace_dir } from '../../src/scripts/_lib/bench_ab_workspace.js';
+import { stage_package_scope, workspace_dir } from '../../internal/bench/core/_lib/bench_ab_workspace.js';
 
 function tmp(prefix: string): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), prefix));

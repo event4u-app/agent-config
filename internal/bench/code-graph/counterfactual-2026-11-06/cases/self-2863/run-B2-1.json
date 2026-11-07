@@ -1,0 +1,45 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "src/scripts/hooks/memory_audience_shadow_hook.ts",
+  "src/scripts/hooks/spawn_guard_shadow_hook.ts",
+  "tests/hooks/spawn_guard_shadow.test.ts",
+  "tests/hooks/subagent_ledger.test.ts"
+ ],
+ "reply": "{\"files\": [\"src/scripts/hooks/spawn_guard_shadow_hook.ts\", \"src/scripts/hooks/memory_audience_shadow_hook.ts\", \"tests/hooks/subagent_ledger.test.ts\", \"tests/hooks/spawn_guard_shadow.test.ts\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 6228,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 513,
+  "output_tokens_details": {
+   "thinking_tokens": 404
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 6228,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 513,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 6228,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 6228
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

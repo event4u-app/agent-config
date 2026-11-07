@@ -1,0 +1,333 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "ApiController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php:14"
+    },
+    {
+     "label": "normalizeOptionsPayload",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php:47"
+    },
+    {
+     "label": "validateOptionsPayload",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php:61"
+    },
+    {
+     "label": "AttributeController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php:20"
+    },
+    {
+     "label": "storeOption",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php:175"
+    },
+    {
+     "label": "updateOption",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php:220"
+    },
+    {
+     "label": "CategoryFieldController",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php:18"
+    },
+    {
+     "label": "storeOption",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php:187"
+    },
+    {
+     "label": "updateOption",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php:234"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+   "lines": [
+    20,
+    59
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+   "lines": [
+    18,
+    57
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AssociationTypeController.php",
+   "lines": [
+    17,
+    56
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeFamilyController.php",
+   "lines": [
+    17,
+    56
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeGroupController.php",
+   "lines": [
+    14,
+    53
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryController.php",
+   "lines": [
+    19,
+    58
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/MediaFileController.php",
+   "lines": [
+    29,
+    68
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/PassportController.php",
+   "lines": [
+    18,
+    57
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+   "lines": [
+    27,
+    66
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php",
+   "lines": [
+    54,
+    105
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+   "lines": [
+    60,
+    323
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+   "lines": [
+    58,
+    332
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AssociationTypeController.php",
+   "lines": [
+    57,
+    269
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeFamilyController.php",
+   "lines": [
+    57,
+    224
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeGroupController.php",
+   "lines": [
+    54,
+    135
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryController.php",
+   "lines": [
+    59,
+    278
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/MediaFileController.php",
+   "lines": [
+    69,
+    478
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/PassportController.php",
+   "lines": [
+    58,
+    165
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+   "lines": [
+    67,
+    679
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/VariantStructureController.php",
+   "lines": [
+    66,
+    232
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/VariantStructureController.php",
+   "lines": [
+    26,
+    65
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/ChannelController.php",
+   "lines": [
+    57,
+    162
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/ChannelController.php",
+   "lines": [
+    17,
+    56
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/CurrencyController.php",
+   "lines": [
+    53,
+    118
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/CurrencyController.php",
+   "lines": [
+    13,
+    52
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/LocaleController.php",
+   "lines": [
+    53,
+    118
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/LocaleController.php",
+   "lines": [
+    13,
+    52
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php",
+   "lines": [
+    47,
+    54
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+   "lines": [
+    215,
+    215
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+   "lines": [
+    175,
+    214
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+   "lines": [
+    227,
+    229
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+   "lines": [
+    187,
+    226
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/ApiController.php",
+   "lines": [
+    61,
+    66
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+   "lines": [
+    260,
+    273
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeController.php",
+   "lines": [
+    220,
+    259
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+   "lines": [
+    274,
+    283
+   ]
+  },
+  {
+   "path": "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryFieldController.php",
+   "lines": [
+    234,
+    273
+   ]
+  }
+ ]
+}

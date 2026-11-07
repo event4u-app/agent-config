@@ -12,8 +12,8 @@ Arms that load the package run in `bench-ac`; every other arm runs in `bench-bas
 ## Build the images
 
 ```bash
-./scripts-run src/scripts/bench_ab_images                      # default CLI pin
-./scripts-run src/scripts/bench_ab_images --cli-version 2.1.316
+./scripts-run internal/bench/core/bench_ab_images                      # default CLI pin
+./scripts-run internal/bench/core/bench_ab_images --cli-version 2.1.316
 ```
 
 The script packs the current tree, builds both images and writes `images.json` (gitignored). That file records the image ids, the CLI version, the package version, and the commit plus whether the tree was dirty. The runner reads the ids from this file, never a tag. The installed file list is at `/opt/bench/install-manifest.txt` inside `bench-ac`.
@@ -41,7 +41,7 @@ You can also set `CLAUDE_CODE_OAUTH_TOKEN` in the environment. The runner:
 ## Run a sweep
 
 ```bash
-./scripts-run src/scripts/bench_ab_v2_run --isolation container \
+./scripts-run internal/bench/core/bench_ab_v2_run --isolation container \
   --arms vanilla,package --tasks trapE-scope-01,trapE-scope-02 \
   --seeds 12 --model claude-haiku-4-5 --budget 1 --max-usd 15
 ```
@@ -64,7 +64,7 @@ The PHP tasks (`art-login-plain-01`, `art-login-framework-01`, `art-php-endpoint
 ```bash
 docker pull php:8.3-cli
 BENCH_PHP_BIN="$PWD/internal/bench/containers/php-in-docker.sh" \
-  ./scripts-run src/scripts/bench_ab_v2_run --corpus artifact --tasks art-login-plain-01 ...
+  ./scripts-run internal/bench/core/bench_ab_v2_run --corpus artifact --tasks art-login-plain-01 ...
 ```
 
-`BENCH_PHP_BIN=… ./scripts-run src/scripts/bench_artifact_selftest --task <id>` checks the grader first, at no cost.
+`BENCH_PHP_BIN=… ./scripts-run internal/bench/core/bench_artifact_selftest --task <id>` checks the grader first, at no cost.

@@ -1,6 +1,6 @@
 /**
  * Tests for the thin-vs-eager quality-run producer
- * (`src/scripts/bench_quality_run.ts`). The model is mocked — the live
+ * (`internal/bench/core/bench_quality_run.ts`). The model is mocked — the live
  * Anthropic path is exercised only by an operator with an API key.
  */
 import { describe, expect, it } from "vitest";
@@ -19,7 +19,7 @@ import {
   parse_verdict,
   render_pair_file,
   run_golden_judge,
-} from "../../src/scripts/bench_quality_run.js";
+} from "../../internal/bench/core/bench_quality_run.js";
 
 describe("parse_verdict", () => {
   it("maps VERDICT: A/B/TIE to order-relative verdicts", () => {

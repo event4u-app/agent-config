@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_cross_source_eval.ts
+// Tests for internal/bench/core/bench_cross_source_eval.ts
 // (road-to-feedback-9.2.0-followups.md Phase 1, step 1.1).
 //
 // Unlike tests/scripts/bench_honesty_score.test.ts, this suite DOES load the
@@ -20,7 +20,7 @@ import {
     evaluateResponse,
     loadCrossSourceFixtures,
     main,
-} from '../../src/scripts/bench_cross_source_eval.js';
+} from '../../internal/bench/core/bench_cross_source_eval.js';
 
 describe('loadCrossSourceFixtures — real corpus', () => {
     it('loads all 30 fixtures from the shared honesty-false-premise.yaml corpus', () => {

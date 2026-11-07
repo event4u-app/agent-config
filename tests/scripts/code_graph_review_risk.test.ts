@@ -202,6 +202,21 @@ describe('4.2 — a skipped lane reads unknown, never 0', () => {
             fs.rmSync(shallow, { recursive: true, force: true });
         }
     });
+
+    it('a lane that never ran reads unknown when it counted nothing, and keeps what it did count', async () => {
+        // Built with lanes off: no lane record at all, so a zero from a lane-backed term is unmeasured.
+        const { graph: bare } = await buildFromRepo(root, null, {});
+        expect(bare.lanes_run).toBeUndefined();
+        const r = reviewRisk(root, bare, 'HEAD', [{ file: 'app/Services/PartnerClient.php', from: 1, to: 400 }]);
+        for (const term of ['entry points', 'flows', 'missing partners', 'columns', 'operations', 'pipelines'] as const) {
+            const t = r.terms.find((x) => x.term === term)!;
+            if (t.items.length === 0) expect(t.unknown, term).toBe('lane not run');
+        }
+        expect(r.terms.find((t) => t.term === 'missing partners')!.unknown).toBe('lane not run');
+        expect(r.terms.find((t) => t.term === 'callers')!.unknown).toBeNull();
+        expect(renderReviewRisk(r).join('\n')).toContain('missing partners unknown (lane not run)');
+        expect(riskBand(r).band).toBe('unknown');
+    });
 });
 
 describe('5.1 — three deterministic checks', () => {

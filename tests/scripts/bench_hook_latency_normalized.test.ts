@@ -1,6 +1,6 @@
 /**
  * Tests for the control-normalization and cap-posture helpers in
- * `src/scripts/bench_hook_latency.ts` (road-to-hook-latency-gate-noise).
+ * `internal/bench/core/bench_hook_latency.ts` (road-to-hook-latency-gate-noise).
  *
  * Context these assertions defend, because it is the reason the code exists:
  * the absolute `pre_tool_use` cap of 150 ms sat INSIDE its own metric's
@@ -19,7 +19,7 @@ import {
   capFor,
   capsFor,
   normalizedRows,
-} from "../../src/scripts/bench_hook_latency.js";
+} from "../../internal/bench/core/bench_hook_latency.js";
 
 function row(event: string, p95: number) {
   return { event, runs: 50, p50_ms: p95 - 5, p95_ms: p95, max_ms: p95 + 3 };

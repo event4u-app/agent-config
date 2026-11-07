@@ -27,7 +27,7 @@ import {
     scoreSearchAdherence,
     searchAdherencePrompt,
     type AskFn,
-} from '../../src/scripts/_lib/bench_ab_search_adherence.js';
+} from '../../internal/bench/core/_lib/bench_ab_search_adherence.js';
 
 const YES = 'NAMED: yes\nINSPECTED: yes\nJUSTIFIED: yes';
 const NO = 'NAMED: no\nINSPECTED: no\nJUSTIFIED: no';

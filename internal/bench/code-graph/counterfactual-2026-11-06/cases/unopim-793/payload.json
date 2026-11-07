@@ -1,0 +1,166 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "AgentRunner",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:33"
+    },
+    {
+     "label": "buildSystemPrompt",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php:326"
+    },
+    {
+     "label": "CreateProduct",
+     "verdict": "tested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php:21"
+    },
+    {
+     "label": "handle",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php:70"
+    },
+    {
+     "label": "register",
+     "verdict": "untested",
+     "witness": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php:27"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    33,
+    72
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+   "lines": [
+    21,
+    60
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+   "lines": [
+    31,
+    42
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentScopeGuardrailTest.php",
+   "lines": [
+    13,
+    35
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    326,
+    365
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+   "lines": [
+    27,
+    66
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/tests/Unit/AgentMutationFlagTest.php",
+   "lines": [
+    48,
+    60
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    56,
+    88
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+   "lines": [
+    70,
+    109
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    97,
+    136
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    73,
+    772
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+   "lines": [
+    61,
+    496
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    366,
+    515
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+   "lines": [
+    67,
+    495
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/Tools/CreateProduct.php",
+   "lines": [
+    110,
+    447
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    137,
+    227
+   ]
+  },
+  {
+   "path": "packages/Webkul/AiAgent/src/Chat/AgentRunner.php",
+   "lines": [
+    243,
+    254
+   ]
+  }
+ ]
+}

@@ -1,5 +1,5 @@
 /**
- * Tests for `src/scripts/_lib/bench_ab_cache.ts`.
+ * Tests for `internal/bench/core/_lib/bench_ab_cache.ts`.
  *
  * The Python module `src/scripts/_lib/bench_ab_cache.py` has no dedicated
  * pytest suite, so this is a focused differential suite (ADR-088 Phase 2 /
@@ -31,10 +31,9 @@ import {
   CacheKey,
   hash_file,
   read_report_key,
-} from "../../src/scripts/_lib/bench_ab_cache.js";
+} from "../../internal/bench/core/_lib/bench_ab_cache.js";
 
 const __dirname_ts = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname_ts, "..", "..");
 
 let tmp: string;
 
@@ -144,11 +143,3 @@ describe("hash_file", () => {
   });
 });
 
-/** Parse a JSON object and return its [key, value] pairs in source order. */
-function orderedPairs(jsonText: string): Array<[string, unknown]> {
-  // JSON.parse loses nothing for string-keyed objects, and V8 preserves
-  // insertion order for non-integer keys — sufficient to assert key order +
-  // values for the three-field cache key.
-  const obj = JSON.parse(jsonText) as Record<string, unknown>;
-  return Object.entries(obj);
-}

@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_v2_run.ts (py2ts, ADR-096).
+// Tests for internal/bench/core/bench_ab_v2_run.ts (py2ts, ADR-096).
 //
 // No pytest suite exists. This is a focused differential suite over the pure
 // helpers (placebo_prose, status_bucket, trajectory_metrics) plus golden-parity
@@ -21,8 +21,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { container_fields, is_quota_exhausted, quota_brake, trial_container } from '../../src/scripts/_lib/bench_ab_container.js';
-import { primary_checkout_root } from '../../src/scripts/_lib/bench_ab_workspace.js';
+import { container_fields, is_quota_exhausted, quota_brake, trial_container } from '../../internal/bench/core/_lib/bench_ab_container.js';
+import { primary_checkout_root } from '../../internal/bench/core/_lib/bench_ab_workspace.js';
 
 import {
     placebo_prose,
@@ -49,14 +49,13 @@ import {
     integrity_fields,
     PyFloat,
     type CheckpointIO,
-} from '../../src/scripts/bench_ab_v2_run.js';
-import { workspace_dir } from '../../src/scripts/_lib/bench_ab_workspace.js';
-import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
-import { activation_verdict, audit_activation, expected_injection } from '../../src/scripts/_lib/bench_ab_activation.js';
+} from '../../internal/bench/core/bench_ab_v2_run.js';
+import { workspace_dir } from '../../internal/bench/core/_lib/bench_ab_workspace.js';
+import type { ScoreResultV2 } from '../../internal/bench/core/_lib/bench_ab_scoring_v2.js';
+import { activation_verdict, audit_activation, expected_injection } from '../../internal/bench/core/_lib/bench_ab_activation.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
-const TS_SCRIPT = path.join(SCRIPTS, 'bench_ab_v2_run.ts');
+const TS_SCRIPT = path.join(REPO_ROOT, 'internal', 'bench', 'core', 'bench_ab_v2_run.ts');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 
 interface RunOut {
@@ -182,6 +181,22 @@ describe('bench_ab_v2_run — pure helpers', () => {
             inject: 'bare-principle',
             min_lift_ratio: null,
         });
+    });
+
+    // Asserted on purpose, not on wording: the arm is the floor an asset must beat,
+    // so it has to stay short, carry no package vocabulary, and name the behaviours scored.
+    it('minimal-prompt: a few plain sentences that carry the scored behaviours and nothing of the package', () => {
+        const text = injected_text('minimal', 2000) as string;
+        expect(text.length).toBeGreaterThan(0);
+        expect(text.length).toBeLessThan(400);
+        for (const behaviour of [/smallest change/i, /callers|everything it affects/i, /read .* before asking/i, /tests? before/i]) {
+            expect(text).toMatch(behaviour);
+        }
+        for (const pkg of ['Iron Law', 'HARD CONSTRAINT', 'agent-config', 'skill', 'rule', 'downstream-changes', 'scope-control']) {
+            expect(text).not.toContain(pkg);
+        }
+        expect(ARMS['minimal-prompt']).toEqual({ setting_sources: 'project,local', inject: 'minimal', min_lift_ratio: null });
+        expect(injected_text('bare-principle', 2000)).toBe(bare_principle_text());
     });
 
     it('ARMS: the neighbour arm scopes this package away and loads a plugin from a directory', () => {
@@ -795,7 +810,7 @@ describe('brake and resume', () => {
 
 describe('kernel leave-one-out arms', () => {
     it('drops exactly the named rule from the kernel-dc text', async () => {
-        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { rules_subset_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         const full = rules_subset_text('rules-kernel-dc');
         const minus = rules_subset_text('rules-kernel-dc', 'ask-when-uncertain');
         expect(full.split('\n\n---\n\n')).toHaveLength(10);
@@ -806,26 +821,26 @@ describe('kernel leave-one-out arms', () => {
     });
 
     it('refuses to drop a rule that is not in the set', async () => {
-        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { rules_subset_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         expect(() => rules_subset_text('rules-kernel-dc', 'no-such-rule')).toThrow(/not in rules-kernel-dc/);
     });
 
     it('resolves a kernel-minus arm name to a text-injection control arm, and nothing else', async () => {
-        const { ablation_arm } = await import('../../src/scripts/_lib/bench_ab_arms.js');
+        const { ablation_arm } = await import('../../internal/bench/core/_lib/bench_ab_arms.js');
         expect(ablation_arm('kernel-minus-direct-answers')).toEqual({ setting_sources: 'project,local', inject: 'kernel-minus:direct-answers' });
         expect(ablation_arm('kernel-minus-')).toBeNull();
         expect(ablation_arm('package')).toBeNull();
     });
 
     it('injects the leave-one-out text for a kernel-minus arm', async () => {
-        const { injected_text, rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { injected_text, rules_subset_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         expect(injected_text('kernel-minus:scope-control', 0)).toBe(rules_subset_text('rules-kernel-dc', 'scope-control'));
     });
 });
 
 describe('kernel wording-variant arms', () => {
     it('swaps exactly one rule body for the candidate text, in place', async () => {
-        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { rules_subset_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         const full = rules_subset_text('rules-kernel-dc').split('\n\n---\n\n');
         const swapped = rules_subset_text('rules-kernel-dc', null, { id: 'ask-when-uncertain', text: 'CANDIDATE BODY' }).split('\n\n---\n\n');
         expect(swapped).toHaveLength(full.length);
@@ -836,12 +851,12 @@ describe('kernel wording-variant arms', () => {
     });
 
     it('refuses to swap a rule that is not in the set', async () => {
-        const { rules_subset_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { rules_subset_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         expect(() => rules_subset_text('rules-kernel-dc', null, { id: 'no-such-rule', text: 'x' })).toThrow(/not in rules-kernel-dc/);
     });
 
     it('resolves a kernel-variant arm name to a text-injection control arm', async () => {
-        const { ablation_arm } = await import('../../src/scripts/_lib/bench_ab_arms.js');
+        const { ablation_arm } = await import('../../internal/bench/core/_lib/bench_ab_arms.js');
         expect(ablation_arm('kernel-variant-ask-when-uncertain.look-first')).toEqual({
             setting_sources: 'project,local',
             inject: 'kernel-variant:ask-when-uncertain.look-first',
@@ -851,7 +866,7 @@ describe('kernel wording-variant arms', () => {
     });
 
     it('injects the committed candidate in place of the rule it names', async () => {
-        const { injected_text, rules_subset_text, variant_candidate_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { injected_text, rules_subset_text, variant_candidate_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         const candidate = variant_candidate_text('ask-when-uncertain.look-first');
         expect(candidate.length).toBeGreaterThan(0);
         expect(injected_text('kernel-variant:ask-when-uncertain.look-first', 0)).toBe(
@@ -860,7 +875,7 @@ describe('kernel wording-variant arms', () => {
     });
 
     it('refuses a candidate stem that could leave the candidates directory', async () => {
-        const { variant_candidate_text } = await import('../../src/scripts/bench_ab_v2_run.js');
+        const { variant_candidate_text } = await import('../../internal/bench/core/bench_ab_v2_run.js');
         expect(() => variant_candidate_text('../ask-when-uncertain.x')).toThrow(/candidate/);
     });
 });

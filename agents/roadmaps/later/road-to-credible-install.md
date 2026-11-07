@@ -217,7 +217,7 @@ vulnerable range.
 - [x] **Bench harness as a standing, published gate**: 50 invocations per
   event, p50/p95 recorded in-repo per release, wired into CI — a shipped
   artifact an external reviewer can re-run, not an internal note.
-  *Verify:* harness in the repo, CI-wired, numbers published in the docs. <!-- done 2026-07-27: src/scripts/bench_hook_latency.ts (50 runs/event, temp workspace, replay mode, pinned method); --gate enforces budget + >20% regression vs recorded; --update wrote docs/hook-latency.json (p50 67-80ms, p95 69-83ms across all 6 events — budget 150/250ms met); CI step in tests.yml Static Checks; local gate run green -->
+  *Verify:* harness in the repo, CI-wired, numbers published in the docs. <!-- done 2026-07-27: internal/bench/core/bench_hook_latency.ts (50 runs/event, temp workspace, replay mode, pinned method); --gate enforces budget + >20% regression vs recorded; --update wrote docs/hook-latency.json (p50 67-80ms, p95 69-83ms across all 6 events — budget 150/250ms met); CI step in tests.yml Static Checks; local gate run green -->
 - [x] **Only after the precompiled path is live**: move `tsx` from
   `dependencies` to `devDependencies` (Phase-0 item deliberately deferred to
   here — the dispatcher execs tsx until this phase lands). Sweep remaining

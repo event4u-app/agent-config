@@ -67,8 +67,15 @@ const CALLER_RELATIONS: ReadonlySet<Relation> = new Set<Relation>([
     'calls', 'imports', 'uses', 'references', 'inherits', 'injects', 'renders', 'routes-to', 'triggers',
 ]);
 
-/** Relations a request travels along from an entry point to the code that runs it. */
-const REACH_RELATIONS: ReadonlySet<Relation> = new Set<Relation>(['calls', 'routes-to', 'triggers', 'injects']);
+/**
+ * Relations a request travels along from an entry point to the code that runs it —
+ * including the template an action renders and the partials and components that
+ * template includes, whose inline script runs on the page the route serves.
+ */
+const REACH_RELATIONS: ReadonlySet<Relation> = new Set<Relation>(['calls', 'routes-to', 'triggers', 'injects', 'renders', 'includes']);
+
+/** Relations by which the graph states a file is a template some code renders or includes. */
+const TEMPLATE_RELATIONS: ReadonlySet<Relation> = new Set<Relation>(['renders', 'includes']);
 
 const ENTRY_KINDS: ReadonlySet<string> = new Set(['route']);
 
@@ -145,13 +152,19 @@ function enclosing(g: LoadedGraph, file: string, line: number): string | null {
     return best?.id ?? null;
 }
 
+function isTemplate(g: LoadedGraph, file: string): boolean {
+    return g.byId.has(file) && (g.in.get(file) ?? []).some((e) => TEMPLATE_RELATIONS.has(e.relation) && isStatedResolution(e.resolved_via));
+}
+
 /**
  * Catch at `file:line` → its enclosing symbol → backward over accepted
  * reach edges to an entry node. `fire` with the path when one is reached;
  * the guess edges met on the way are recorded and never extend the walk.
  */
 export function entryPathReading(g: LoadedGraph, file: string, line: number): Pick<PairedRow, 'graph' | 'reason' | 'edges' | 'guess_edges'> {
-    const start = enclosing(g, file, line);
+    // A template declares nothing that encloses its inline script; the template itself is the unit —
+    // but only a file the graph states is rendered or included, never any file that merely lacks symbols.
+    const start = enclosing(g, file, line) ?? (isTemplate(g, file) ? file : null);
     if (start === null) return { graph: null, reason: 'no indexed symbol encloses the catch', edges: [], guess_edges: [] };
     const via = new Map<string, CodeEdge>();
     const seen = new Set([start]);

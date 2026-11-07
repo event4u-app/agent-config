@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { preserve_stream } from '../../src/scripts/_lib/bench_ab_workspace.js';
+import { preserve_stream } from '../../internal/bench/core/_lib/bench_ab_workspace.js';
 
 describe('preserve_stream', () => {
     it('keeps a trial stream under its own key, so a later sweep cannot overwrite it', () => {

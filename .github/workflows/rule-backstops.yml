@@ -884,4 +884,4 @@ jobs:
         run: ./scripts-run src/scripts/render_showcase --check
 
       - name: Artifact graders separate their planted references
-        run: ./scripts-run src/scripts/bench_artifact_selftest
+        run: ./scripts-run internal/bench/core/bench_artifact_selftest

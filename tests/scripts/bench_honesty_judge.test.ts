@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_honesty_judge.ts — blinded per-item ranking with
+// Tests for internal/bench/core/bench_honesty_judge.ts — blinded per-item ranking with
 // the mock judge; nothing is called over the network.
 
 import * as fs from 'node:fs';
@@ -7,9 +7,9 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ARMS, generate, loadCorpus, MockProvider, toJsonl } from '../../src/scripts/bench_honesty_run.js';
-import { aggregateJudge, buildTasks, main, parseRanks, shuffledArms } from '../../src/scripts/bench_honesty_judge.js';
-import { main as scoreMain } from '../../src/scripts/bench_honesty_score.js';
+import { ARMS, generate, loadCorpus, MockProvider, toJsonl } from '../../internal/bench/core/bench_honesty_run.js';
+import { aggregateJudge, buildTasks, main, parseRanks, shuffledArms } from '../../internal/bench/core/bench_honesty_judge.js';
+import { main as scoreMain } from '../../internal/bench/core/bench_honesty_score.js';
 
 const CORPUS_DIR = path.resolve(__dirname, '..', '..', 'internal', 'bench', 'corpora');
 

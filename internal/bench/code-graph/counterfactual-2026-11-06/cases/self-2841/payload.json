@@ -1,0 +1,175 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "OWNER_DIRECTIVE",
+     "verdict": "untested",
+     "witness": "src/scripts/_lib/measured_payload_ceiling.ts:230"
+    },
+    {
+     "label": "approvalsAtBase",
+     "verdict": "tested",
+     "witness": "src/scripts/_lib/measured_payload_ceiling.ts:242"
+    },
+    {
+     "label": "DecideOptions",
+     "verdict": "tested",
+     "witness": "src/scripts/check_preamble_payload_budget.ts:414"
+    },
+    {
+     "label": "decide",
+     "verdict": "tested",
+     "witness": "src/scripts/check_preamble_payload_budget.ts:457"
+    },
+    {
+     "label": "existsAtBase",
+     "verdict": "tested",
+     "witness": "src/scripts/check_preamble_payload_budget.ts:495"
+    },
+    {
+     "label": "main",
+     "verdict": "tested",
+     "witness": "src/scripts/check_preamble_payload_budget.ts:691"
+    },
+    {
+     "label": "explicit",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_preamble_payload_budget.test.ts:321"
+    },
+    {
+     "label": "stub",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_preamble_payload_budget.test.ts:311"
+    },
+    {
+     "label": "unverified",
+     "verdict": "untested",
+     "witness": "tests/scripts/check_preamble_payload_budget.test.ts:322"
+    },
+    {
+     "label": "atBase",
+     "verdict": "untested",
+     "witness": "tests/scripts/measured_payload_ceiling.test.ts:529"
+    },
+    {
+     "label": "grant",
+     "verdict": "untested",
+     "witness": "tests/scripts/measured_payload_ceiling.test.ts:518"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "pass",
+   "items": []
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "pass",
+   "items": []
+  }
+ ],
+ "reads": [
+  {
+   "path": "src/scripts/check_preamble_payload_budget.ts",
+   "lines": [
+    457,
+    496
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/measured_payload_ceiling.ts",
+   "lines": [
+    242,
+    256
+   ]
+  },
+  {
+   "path": "tests/scripts/check_preamble_payload_budget.test.ts",
+   "lines": [
+    311,
+    320
+   ]
+  },
+  {
+   "path": "tests/scripts/measured_payload_ceiling.test.ts",
+   "lines": [
+    529,
+    529
+   ]
+  },
+  {
+   "path": "tests/scripts/standing_bound_ratchet.test.ts",
+   "lines": [
+    105,
+    111
+   ]
+  },
+  {
+   "path": "src/scripts/check_preamble_payload_budget.ts",
+   "lines": [
+    691,
+    730
+   ]
+  },
+  {
+   "path": "src/scripts/_lib/measured_payload_ceiling.ts",
+   "lines": [
+    230,
+    230
+   ]
+  },
+  {
+   "path": "tests/scripts/check_preamble_payload_budget.test.ts",
+   "lines": [
+    321,
+    321
+   ]
+  },
+  {
+   "path": "tests/scripts/measured_payload_ceiling.test.ts",
+   "lines": [
+    518,
+    528
+   ]
+  },
+  {
+   "path": "src/scripts/check_preamble_payload_budget.ts",
+   "lines": [
+    414,
+    442
+   ]
+  },
+  {
+   "path": "tests/scripts/check_preamble_payload_budget.test.ts",
+   "lines": [
+    322,
+    322
+   ]
+  },
+  {
+   "path": "src/scripts/check_preamble_payload_budget.ts",
+   "lines": [
+    495,
+    495
+   ]
+  },
+  {
+   "path": "src/scripts/check_preamble_payload_budget.ts",
+   "lines": [
+    497,
+    565
+   ]
+  },
+  {
+   "path": "src/scripts/check_preamble_payload_budget.ts",
+   "lines": [
+    731,
+    1089
+   ]
+  }
+ ]
+}

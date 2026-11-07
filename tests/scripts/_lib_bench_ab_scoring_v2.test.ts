@@ -11,12 +11,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { score_task_v2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
+import { score_task_v2 } from '../../internal/bench/core/_lib/bench_ab_scoring_v2.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 /** TS score_task_v2 → `json.dumps(r, indent=2)`-equivalent. The TS module's */
 /** result is plain JSON (numbers, bools, strings, sorted string array), so */

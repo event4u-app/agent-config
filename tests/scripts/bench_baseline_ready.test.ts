@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_baseline_ready.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_baseline_ready.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists, so this is a focused differential suite over the
 // pure helper (_read_baseline_start) plus a golden-parity layer that runs
@@ -14,7 +14,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import * as bbr from '../../src/scripts/bench_baseline_ready.js';
+import * as bbr from '../../internal/bench/core/bench_baseline_ready.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 

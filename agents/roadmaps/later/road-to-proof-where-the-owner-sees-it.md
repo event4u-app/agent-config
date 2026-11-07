@@ -67,7 +67,7 @@ Constraints carried verbatim in intent:
 
 ## Phase 1 — Tasks with room to show a lift
 
-Evidence (read): `docs/benchmark.md:63-76` · `src/scripts/_lib/bench_ab_arms.ts:100-110`
+Evidence (read): `docs/benchmark.md:63-76` · `internal/bench/core/_lib/bench_ab_arms.ts:100-110`
 
 The 2026-11-05 sweeps had control capability 87–100 % and discipline 0.83–0.94;
 a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
@@ -92,14 +92,14 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   (stubs `road-to-a-line-budget-that-does-not-tax-a-why-comment`,
   `road-to-a-minimal-diff-that-holds-under-load`).
   verify: both task ids present in `internal/bench/corpora/ab-trackb-v2.yaml` with their recorded `final_files`
-- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_sweep.ts -->
+- [x] **1.4** Paid attribution sweep, sized by `bench:ab:power`: `vanilla`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_sweep.ts -->
   `package`, `rules-kernel-dc`, `placebo` and an A/A pair on the headroom tasks.
   Separates "which rule" from "how much context". Done 2026-11-05 on Haiku and
   Sonnet, 70 pairs per comparison: no pooled lift; scope discipline on Haiku lifts
   from 1/10 to 10/10 and the placebo does not reproduce it (`docs/benchmark.md`
   § Headroom sweeps).
   verify: report under `internal/bench/reports/ab-v2/` with an A/A pair and `bench_ab_interpret` labels for every comparison
-- [x] **1.5** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_ab_v2_run.ts --> Find why `package` makes Haiku ask the user for code in about 14% of
+- [x] **1.5** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_v2_run.ts --> Find why `package` makes Haiku ask the user for code in about 14% of
   runs instead of reading the repository (`trapC-ambig-01`, `hdrE-scope-large-01`
   in the 2026-11-05 Haiku sweep). Name the asset that triggers it from the
   transcripts before changing anything.
@@ -121,7 +121,12 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   and after a look in 6/20 on `trapC-ambig-01` (control 11/20). The bar is missed, and the difference is
   within noise (p = 0.36). Open: the bar needs a sample size that can separate single-digit rates (`bench:ab:power`)
   before another wording is measured; the rule stays unchanged.
-- [ ] **1.7** Does a second agent earn its spawn where every arm fails? Re-opens
+  Sized 2026-11-06 (`bench_ab_power`, paired sign test, α 0.05, power 0.8, independent
+  per-run rates): the bar's own distance (control 15 % → candidate 7.5 % blind) needs
+  **240 pairs per arm**; a candidate at 5 % needs 124, at 2.5 % needs 57. At the measured
+  $0.023 per Haiku run, 240 pairs per arm is 480 runs, about $11. The next measurement
+  runs at that size or not at all, and waits on `b-owner-spend`.
+- [x] **1.7** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: internal/bench/ab/fixtures-v2/hdhI-invalidation-01/src/auth/roles.mjs --> Does a second agent earn its spawn where every arm fails? Re-opens
   `team-defect-finding-null` through its own condition (a): a corpus that breaks the
   ceiling (`docs/benchmark.md` § Defect-finding). Four harness-orchestrated arms on
   `capH-debug-08`, `hdrH-done-01`, `hdrL-multistep-01` plus a sealed hold-out of three
@@ -152,33 +157,63 @@ a ceiling that close caps any measurable lift at +0.06–0.17 before noise.
   until this step is positive **and** a separate pre-registered question exists that
   arm D does not answer.
   verify: pre-registration committed before the first run; a result record with the hold-out, either direction
+  **Result (2026-11-06, A/B/C only — D dropped by Amendment 1):** C vs B 7–5, p = 0.39,
+  not detected at this size; arm C's tests reject the reference fix in 39.6 % of runs
+  (ceiling 25 %); net value −$0.067/run; $67.41 of the $150 release. No rung.
+  `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`,
+  `docs/benchmark.md` § Second agent on the headroom tasks.
+- [ ] **1.7d** Arm D of 1.7 (slim reviewer on diff + requirement, one revision) on the
+  same corpus and seal, against B, under the D4 false-positive ceiling. Blocked until a
+  reviewer passes the verdict comparison of `road-to-token-economy-dispatch-followup`
+  3.2a, which the slim reviewer failed on 2026-11-06 (false positives on contested
+  controls 2/3 vs full 1/3). Needs its own spend release.
+  verify: a pre-registration amendment for D committed before its first paid call; a result record D vs B with the hold-out, either direction
 
 ## Phase 2 — The owner's domains
 
 Evidence (read): `internal/bench/corpora/ab-artifact-v2.yaml` (nine `art-*` tasks, no drag-and-drop task) · `taskfiles/bench-ui.yml:14-16`
 
-- [ ] **2.1** 2×2 prompt arms on the nine `art-*` tasks in
+- [x] **2.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_corpus.ts --> 2×2 prompt arms on the nine `art-*` tasks in
   `internal/bench/corpora/ab-artifact-v2.yaml`: vanilla + terse, AC + terse,
   vanilla + expert, AC + expert. "AC with a terse prompt reaches what vanilla
   needs an expert prompt for" is the owner's claim, stated as a testable one.
-  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^18$/
-- [ ] **2.2** Add the missing UI task: drag & drop with keyboard and touch,
+  verify: `grep -c 'prompt_variant' internal/bench/corpora/ab-artifact-v2.yaml` -> /^20$/ (18 for the nine tasks, 2 for `art-dnd-01` added by 2.2)
+  Done 2026-11-06: each task carries `terse` (its prompt) and `expert` (the prompt plus
+  its pre-registered `informed` ladder); `--prompt-variant both --arms vanilla,package`
+  runs the 2×2 and tags every record `prompt_variant` (`internal/bench/corpora/SCHEMA-v2.md`).
+  The run itself is 2.5's and waits on `b-owner-spend`.
+- [x] **2.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_browser_worker.ts --> Add the missing UI task: drag & drop with keyboard and touch,
   responsive breakpoints, one custom component; graded by Playwright actions and
   axe, no model in scoring (the `taskfiles/bench-ui.yml` grader pattern).
   verify: the artifact selftest passes the reference and fails the untouched fixture for the new task
+  Done 2026-11-06: `art-dnd-01` (reorderable list: mouse, touch, keyboard, two
+  breakpoints, a custom switch) graded by the new `browser-acceptance` grader in
+  headless Chromium. Selftest: reference 8/8, a draggable-only page 4/8, `--swap` red,
+  the untouched fixture fails on the missing deliverable. The axe column reads
+  `unknown` until `axe-core` is installed, as for the DOM grader.
 - [ ] **2.3** Web security: reuse the planted-findings fixture of
   `road-to-a-security-chain-measured` and add real exploit attempts (login, password
   storage, XSS) as the oracle.
   verify: the security oracle fails on the untouched fixture for every planted finding
-- [ ] **2.4** Image → SVG: the two `art-svg` tasks graded by render similarity and
+  Waiting 2026-11-06: the planted-findings fixture this step reuses does not exist yet.
+  `stubs/road-to-a-security-chain-measured` owns it (see `relates`) and is not active;
+  building it here would take over that scope. Resumes when the stub lands its fixture.
+- [x] **2.4** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_graders.ts --> Image → SVG: the two `art-svg` tasks graded by render similarity and
   editability (paths named, no embedded raster).
   verify: `npx vitest run tests/scripts/bench_artifact_svg.test.ts` -> 0
+  Done 2026-11-06: both tasks require every shape named (`id` or `<g id>`) and at most
+  40 shapes; the raster task also scores colour agreement with `mascot.png` in
+  Chromium, min 0.85 from calibration (faithful reference 0.890, two-rectangle sketch
+  0.738, blank 0.204, wrong colours 0.026). Render similarity applies only where a
+  source raster exists; the prompt task has none, so it is graded on editability.
+  Briefs and ladders state the new requirement, so earlier pilot runs of these two
+  tasks are not comparable with later ones.
 - [~] **2.5** Owner-released pilot over 2.1–2.4 with a `--max-usd` cap; the report
   states wins and losses alike. Blocked: `b-owner-spend`. Partial 2026-11-05: an
   artifact pilot ran before 2.1–2.4 exist, with one prompt per ladder rung; the
   three tasks it reached on Haiku sit at the ceiling for a short prompt, and so do
   the three UI tasks on Sonnet (`docs/benchmark.md` § Headroom sweeps).
-- [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
+- [x] **2.6** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_install.ts --> Two faults the Sonnet artifact pilot exposed, both before any paid
   rerun: every `package` run stopped at the per-call budget on its first turn ($1
   and $3, against $0.14 for `vanilla`), with the cause unknown because the
   workspaces are disposed; and the three PHP tasks end `indeterminate` because the
@@ -200,19 +235,41 @@ Evidence (read): `docs/benchmark.md:76` · `src/scripts/preamble_byte_census.ts`
 The full install cost 5.5–7.9× vanilla in tokens; the one significant arm before
 (kernel + `downstream-changes`) cost 2.9×.
 
-- [ ] **3.1** Default-context byte census per asset: extend
+- [x] **3.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/main_session_census.ts --> Default-context byte census per asset: extend
   `src/scripts/preamble_byte_census.ts` from subagent cold start to the main-session
   projection, one bucket per rule, hook output and catalog entry; 303 *listed*
   skills is not 303 *loaded*.
   verify: `./scripts-run src/scripts/preamble_byte_census --main-session` -> 0
-- [ ] **3.2** A `minimal-prompt` arm in `src/scripts/_lib/bench_ab_arms.ts`: the
+  Done 2026-11-06: measured from what the host recorded delivering (transcript
+  `instructions`, `skill_listing` and hook attachments), not modelled from files. On
+  this repo's session that day: ~401k chars (~100k tokens) at start-up — 119
+  instruction files (367k chars), a 29k-char skill catalog listing 633 skills of which
+  235 carry a description and 398 arrive as a bare name — and 346 chars of hook
+  output on every prompt turn. Exit 2 when no transcript holds an instructions delivery.
+  Reading written up in `docs/benchmark.md` § Where the main session's default context
+  goes: rules are 91 % of the start-up load, and 21 domain and stack rules (~64k chars,
+  17 % of the instructions) load in every session on a repository that never uses them.
+- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_v2_stats.ts --> A `minimal-prompt` arm in `internal/bench/core/_lib/bench_ab_arms.ts`: the
   shortest instruction that carries the intended behaviour. An asset must beat it,
   not only vanilla.
-  verify: `grep -c "'minimal-prompt'" src/scripts/_lib/bench_ab_arms.ts` -> /^1$/
+  verify: `grep -c "'minimal-prompt'" internal/bench/core/_lib/bench_ab_arms.ts` -> /^1$/
+  verify: a synthetic report with `vanilla`, `minimal-prompt` and `package` renders the `package` vs `minimal-prompt` comparison (`npx vitest run tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` -> 0)
+  Done 2026-11-06: four plain sentences (smallest change, update what it affects,
+  read before asking, test before done), injected with this package scoped away and
+  no package vocabulary. Not yet run; its first reading rides with the next paid sweep.
+  Re-verified 2026-11-06 under the sharper verify: the report compares `package` and
+  `rules-kernel-dc` against the arm and the arm against `vanilla`, and the injected text
+  is frozen in `docs/benchmark.md` § The minimal-prompt baseline before its first run.
+  Open, not blocking: `minimal-prompt` in `CODEX_VALID_ARMS` (needed only for a Codex
+  run), and before 2.5 is released a single-trial probe that checks the context size
+  the arm actually loads, not only the skill count.
 - [ ] **3.3** Smaller-default candidates (shortened rule, lazy reference, routed
   instead of always-loaded) are tried only on tasks where 1.4 or 2.5 showed an
   effect, compared on quality first, priced cost second.
   verify: each candidate's interpretation record compares quality first and priced cost second
+  First candidate set from 3.1: the 21 domain and stack rules that load unconditionally
+  under the full profile (finance, legal, strategy, media, persistence packs, stack
+  routing; ~64k chars). Still gated on an effect from 1.4 or 2.5.
 - [ ] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
   one multi-session task family (decision recall, a superseded decision, a stale
   entry) run with and without memory on this harness. Recall itself stays with
@@ -270,12 +327,18 @@ and their install recipes do not go into this tree (`source-confidentiality`).
 
 Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/scripts/surface-tiers.yml:8-10`
 
-- [ ] **6.1** Move the bench engine (`src/scripts/bench_*`, `src/scripts/_lib/bench_*`)
+- [x] **6.1** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml --> Move the bench engine (`src/scripts/bench_*`, `src/scripts/_lib/bench_*`)
   to `internal/bench/core/`, the `internal/bench/ui/` precedent: `package.json`
   `files[]` ships `src/scripts/`, and 80 bench files currently ship to consumers.
   `agent-config benchmark` (the user command) stays.
   verify: `npm pack --dry-run` -> /^(?![\s\S]*scripts\/bench_)/
-- [ ] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest
+  Done 2026-11-07: 88 files under `internal/bench/core/`, typechecked and linted
+  there; `npm pack` carries no bench file. Eleven maintainer-only scripts that import
+  the engine (showcase, evolution lab, bench linters, release and its drill,
+  llm_propose) stay in `src/scripts/` and are excluded from the package by name;
+  `prepack-check` now honours npm's negated `files` entries. Frozen records keep the
+  paths they were written with.
+- [x] **6.2** Durable evidence: each sweep's report, checkpoint and a sha256 manifest <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_artifact_sweep.ts -->
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
   verify: offline re-scoring of a stored bundle reproduces the report's numbers
@@ -288,12 +351,23 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
 
 Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispatch-policy.json`
 
-- [ ] **7.1** Wire the existing `PolicyChange` diff (`src/scripts/_lib/dispatch_policy.ts:187`)
+- [x] **7.1** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/dispatch-policy.json --> Wire the existing `PolicyChange` diff (`src/scripts/_lib/dispatch_policy.ts:187`)
   into `check_claims`: a new default knob without a policy row fails.
   verify: a fixture adding a default knob without a policy row makes `check_claims` exit non-zero
-- [ ] **7.2** A changed always-loaded asset reports its byte delta (3.1) in the PR;
+  Done 2026-11-06, by enumeration rather than by the release delta: `knobsIn` reads
+  every dispatch default from the places the table already binds (subagent
+  `model_tier` / `omit_project_instructions`, the template's `subagents:` section, the
+  council's round defaults), and `check_claims` fails on one with no row. The six
+  that predate the check sit in `known_unbound`, a baseline that may only shrink.
+- [x] **7.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/standing_asset_delta.ts --> A changed always-loaded asset reports its byte delta (3.1) in the PR;
   a behaviour claim names the tier of evidence it rests on.
   verify: a PR touching an always-loaded asset prints its byte delta
+  Done 2026-11-07. The bucket half already existed: `standing-payload-delta.yml` posts
+  `check_standing_payload_delta` as a sticky PR comment (#2845 showed +4 tok on project
+  rules). Added: a per-asset table of every always-loaded asset whose loaded size
+  changed (projected rule, skill catalog entry, CLAUDE.md), and a PR-template field that
+  names a behaviour claim's evidence tier from `docs/contracts/evidence-basis.md`. The
+  tier field is a prompt to the author; no gate reads it.
 - [ ] **7.3** A roadmap that changed a default asset closes only with the
   measurement it ran, or one line naming why none was possible (owner turn 5:
   "after a roadmap, run tests for those areas").
@@ -304,7 +378,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
 ### blocker: b-owner-spend
 
 - **Owner:** user
-- **What:** every paid sweep (1.7, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
+- **What:** every paid sweep (1.6, 1.7, 1.7d, 2.5, 5.1–5.2). 1.7 is sized at about $130 against a $150 cap on Sonnet 4.6, and its release carries
   the three bars it is judged against, set before the run and never after: the
   false-positive ceiling for reviewer findings, the cost `D` of an escaped defect for the
   net-value line `p_catch · D − C_review − r_FP · C_FP`, and arm A's base profile
@@ -313,8 +387,9 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   $150 release (spend in `docs/benchmark.md` § Headroom sweeps).
 - **Released for 1.7 (owner, 2026-11-06):** up to $150 (sized at about $130), with
   the bars set by the agent on the owner's instruction and recorded as D4 below
-  before any run. The run itself still waits for 6.2 and
-  `road-to-token-economy-dispatch-followup` 3.2a. Not released: 2.5, 5.1–5.2.
+  before any run. Spent 2026-11-06: $67.41 (smoke $1.94, sweep $65.47); arms A–C ran,
+  D did not (its 3.2a gate failed), so the release does not cover 1.7d. Not released:
+  1.6 (sized at about $11), 1.7d, 2.5, 5.1–5.2.
 - **Closes when:** the owner releases a budget per sweep.
 
 ### blocker: b-private-store

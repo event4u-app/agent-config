@@ -961,7 +961,7 @@ confirm interactive); a successful repair replaces the member's round entry.
     that the protocol can return "this holds" as a completed review.
   - The A/B against the measured defect is pre-registered in `docs/CLAIMS.md`
     (`critic-protocol-load-bearing-ab`) and run by
-    `src/scripts/bench_critic_protocol.ts` (`--mock` validates the pipeline in
+    `internal/bench/core/bench_critic_protocol.ts` (`--mock` validates the pipeline in
     both directions without spend; `--run` is maintainer spend-gated). The
     default stays `legacy` regardless of the outcome — promotion is a
     separate, human decision.

@@ -98,12 +98,13 @@ Four dated conformance audits stand behind those two slots — what the session-
 `contexts/execution/session-canary-enforcement-history.md`,
 named in `load_context` above so a session that reaches this rule can open them.
 
-**Two declared gaps, neither papered over.** On **Augment** there is no
+**Declared gaps, none papered over.** On **Augment** there is no
 `user_prompt_submit` slot; its `stop` fires *after* the reply, so injecting
-there could not shape the reply the reminder is for, and counting it would be
-exactly the over-credit the frequency audit exists to remove. Augment therefore
-reports as an open gap rather than as covered. **Copilot** carries no binding here —
-this rule is the only carrier there; re-read it when the trigger fires.
+there could not shape the reply the reminder is for — counting it would be the
+over-credit the frequency audit exists to remove. **Windsurf** lost its package
+prompt binding on 2026-11-07; its event was not established.
+**Copilot** binds nothing. All three lack a bound pre-reply reminder; re-read
+this rule on trigger.
 
 ## See also
 

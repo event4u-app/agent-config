@@ -1,0 +1,54 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "packages/Webkul/Admin/src/Http/Controllers/Configuration/ConfigurationController.php",
+  "packages/Webkul/Admin/src/Http/Controllers/Settings/DataTransfer/ExportController.php",
+  "packages/Webkul/Admin/src/Http/Middleware/Bouncer.php",
+  "packages/Webkul/Admin/src/Routes/Admin/magic-ai-routes.php",
+  "packages/Webkul/Admin/src/Routes/Admin/settings-routes.php",
+  "packages/Webkul/AiAgent/src/Chat/ChatContext.php",
+  "packages/Webkul/AiAgent/src/Chat/ToolRegistry.php",
+  "packages/Webkul/AiAgent/src/Chat/Tools/AbstractTool.php",
+  "packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php",
+  "packages/Webkul/AiAgent/src/Routes/web.php",
+  "packages/Webkul/Core/src/Core.php",
+  "packages/Webkul/MagicAI/src/Jobs/SaveTranslatedAllAttributesJob.php",
+  "packages/Webkul/MagicAI/src/Jobs/SaveTranslatedDataJob.php"
+ ],
+ "reply": "{\"files\": [\"packages/Webkul/AiAgent/src/Chat/ToolRegistry.php\", \"packages/Webkul/AiAgent/src/Chat/Tools/AbstractTool.php\", \"packages/Webkul/AiAgent/src/Chat/ChatContext.php\", \"packages/Webkul/AiAgent/src/Providers/AiAgentServiceProvider.php\", \"packages/Webkul/AiAgent/src/Routes/web.php\", \"packages/Webkul/Admin/src/Routes/Admin/magic-ai-routes.php\", \"packages/Webkul/MagicAI/src/Jobs/SaveTranslatedDataJob.php\", \"packages/Webkul/MagicAI/src/Jobs/SaveTranslatedAllAttributesJob.php\", \"packages/Webkul/Admin/src/Http/Controllers/Configuration/ConfigurationController.php\", \"packages/Webkul/Admin/src/Http/Middleware/Bouncer.php\", \"packages/Webkul/Core/src/Core.php\", \"packages/Webkul/Admin/src/Http/Controllers/Settings/DataTransfer/ExportController.php\", \"packages/Webkul/Admin/src/Routes/Admin/settings-routes.php\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 343,
+  "cache_read_input_tokens": 14147,
+  "output_tokens": 435,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 343,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 435,
+    "cache_read_input_tokens": 14147,
+    "cache_creation_input_tokens": 343,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 343
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

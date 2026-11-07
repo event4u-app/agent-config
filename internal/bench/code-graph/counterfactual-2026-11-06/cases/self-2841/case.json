@@ -1,0 +1,45 @@
+{
+ "id": "self-2841",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2841,
+ "title": "fix(payload-gate): verify grant approvals from git history in the local run",
+ "merged_at": "2026-11-04T12:05:13Z",
+ "merge": "57d98b448e9567e49722d7547d529aad72df1743",
+ "parent": "23d66791da8b8afa4639ecb1942fc3d00c03fa27",
+ "changed_lines": 272,
+ "diff_files": [
+  "agents/evidence/owner-directives/2026-11-04-trigger-eval-freshness-roadmap.md",
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/later/road-to-trigger-evals-that-stay-fresh.md",
+  "src/scripts/_lib/measured_payload_ceiling.ts",
+  "src/scripts/check_preamble_payload_budget.ts",
+  "taskfiles/ci-fast.yml",
+  "tests/scripts/check_preamble_payload_budget.test.ts",
+  "tests/scripts/measured_payload_ceiling.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/check_preamble_payload_budget.ts#DecideOptions",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/check_preamble_payload_budget.ts#decide",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/check_preamble_payload_budget.ts#main",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "tests/scripts/activation_payload.test.ts",
+   "test": true
+  },
+  {
+   "path": "tests/scripts/standing_bound_ratchet.test.ts",
+   "test": true
+  }
+ ]
+}

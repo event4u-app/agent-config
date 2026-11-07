@@ -1,0 +1,56 @@
+{
+ "id": "self-2847",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2847,
+ "title": "feat: an opt-in observation provider slot for reconstruction transfers",
+ "merged_at": "2026-11-04T19:27:33Z",
+ "merge": "34056a346b0ac4ad9a70ac61f379d932476d5fa7",
+ "parent": "498636529c061a9ed7dea180912e1ffe11568de5",
+ "changed_lines": 470,
+ "diff_files": [
+  "agents/roadmaps-owned.md",
+  "agents/roadmaps/archive/road-to-an-observation-provider-slot.md",
+  "agents/roadmaps/road-to-an-observation-provider-slot.md",
+  "dist/agent-src/commands/analyze/reference.md",
+  "dist/install/install.mjs",
+  "docs/contracts/reconstruction-obligations.md",
+  "docs/contracts/settings-classes.md",
+  "docs/settings-reference.md",
+  "src/config/agent-settings.template.yml",
+  "src/domains/analysis-workbench/analyze/reference/command.md",
+  "src/domains/meta/pack.yaml",
+  "src/scripts/_lib/reconstruction_ledger.ts",
+  "src/scripts/reconstruction_ledger.ts",
+  "src/server/schemas/settings.ts",
+  "tests/scripts/reconstruction_observation_provider.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/reconstruction_ledger.ts#LedgerContext",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/reconstruction_ledger.ts#resolveObligation",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/_lib/reconstruction_ledger.ts#validateObligation",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/reconstruction_ledger.ts#main",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "tests/scripts/reconstruction_ledger.test.ts",
+   "test": true
+  },
+  {
+   "path": "tests/scripts/reconstruction_ledger_cli.test.ts",
+   "test": true
+  }
+ ]
+}

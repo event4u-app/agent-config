@@ -1,0 +1,231 @@
+{
+ "checks": [
+  {
+   "id": "untested-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "InboxController",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/InboxController.php:19"
+    },
+    {
+     "label": "__invoke",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/InboxController.php:23"
+    },
+    {
+     "label": "threadsFor",
+     "verdict": "untested",
+     "witness": "app/Http/Controllers/InboxController.php:112"
+    },
+    {
+     "label": "clearFilters",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:249"
+    },
+    {
+     "label": "onSearchInput",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:264"
+    },
+    {
+     "label": "openMailbox",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:224"
+    },
+    {
+     "label": "props",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:82"
+    },
+    {
+     "label": "setAddressFilter",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:240"
+    },
+    {
+     "label": "setAssignmentFilter",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:236"
+    },
+    {
+     "label": "visitInbox",
+     "verdict": "untested",
+     "witness": "resources/js/pages/Inbox.vue:195"
+    }
+   ]
+  },
+  {
+   "id": "missing-co-change",
+   "status": "finding",
+   "items": [
+    {
+     "label": "app/Http/Controllers/ThreadActionController.php",
+     "witness": "app/Http/Controllers/InboxController.php:1"
+    },
+    {
+     "label": "routes/web.php",
+     "witness": "app/Http/Controllers/InboxController.php:1"
+    },
+    {
+     "label": "tests/Feature/InboxReplyTest.php",
+     "witness": "app/Http/Controllers/InboxController.php:1"
+    },
+    {
+     "label": "resources/js/pages/Activity.vue",
+     "witness": "resources/js/pages/Activity.vue:1"
+    }
+   ]
+  },
+  {
+   "id": "touched-entry-point",
+   "status": "finding",
+   "items": [
+    {
+     "label": "GET /inbox",
+     "witness": "routes/web.php:91"
+    },
+    {
+     "label": "route GET /inbox",
+     "witness": "routes/web.php:91"
+    }
+   ]
+  }
+ ],
+ "reads": [
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    195,
+    222
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/InboxController.php",
+   "lines": [
+    23,
+    62
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    65,
+    65
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    236,
+    238
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/InboxController.php",
+   "lines": [
+    19,
+    58
+   ]
+  },
+  {
+   "path": "routes/web.php",
+   "lines": [
+    91,
+    91
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    240,
+    247
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/InboxController.php",
+   "lines": [
+    112,
+    137
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    82,
+    121
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    224,
+    226
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    249,
+    257
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    264,
+    273
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    228,
+    230
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    232,
+    234
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    259,
+    262
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    412,
+    418
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/InboxController.php",
+   "lines": [
+    63,
+    107
+   ]
+  },
+  {
+   "path": "app/Http/Controllers/InboxController.php",
+   "lines": [
+    59,
+    282
+   ]
+  },
+  {
+   "path": "resources/js/pages/Inbox.vue",
+   "lines": [
+    122,
+    140
+   ]
+  }
+ ]
+}

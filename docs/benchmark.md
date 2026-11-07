@@ -47,7 +47,7 @@ Every result on this page so far ran on the **host path**: the operator's own CL
 | Every CLI argument; no `--setting-sources` on any arm | — |
 | Model, per-run budget, task prompt, fixture | — |
 
-Every container trial reads the CLI's `system/init` event. A `bench-ac` trial with no package skill loaded, or a `bench-base` trial with any, is marked errored with a `load_mismatch:` reason before it reaches the statistics. The report records the isolation mode, both image ids, the CLI version and the package version (`images` in the report, built by `src/scripts/bench_ab_images.ts`).
+Every container trial reads the CLI's `system/init` event. A `bench-ac` trial with no package skill loaded, or a `bench-base` trial with any, is marked errored with a `load_mismatch:` reason before it reaches the statistics. The report records the isolation mode, both image ids, the CLI version and the package version (`images` in the report, built by `internal/bench/core/bench_ab_images.ts`).
 
 What a container does **not** remove:
 
@@ -93,6 +93,17 @@ A weak or negative result is a question about the measurement first. `task bench
 | `cost-overhead` | priced cost factor above 2× | break the cost down by bucket and by loaded asset |
 
 Both 2026-11-05 sweeps read `ceiling` + `underpowered` + `cost-overhead`. Construct (did the tasks measure what the asset is for), adherence and real-world use stay open in every record, because no report can answer them. The record has no removal field: **a benchmark result alone never supports removing an asset.** What a removal needs is set out in `agents/roadmaps/later/road-to-proof-where-the-owner-sees-it.md` Phase 4.
+
+### Where sweep evidence is kept {#evidence-store}
+
+Reports land in the gitignored `internal/bench/reports/`, which a clean of untracked files, a worktree removal or a fresh clone deletes. Every live paired sweep and every artifact sweep therefore also copies its evidence into a bundle outside any checkout: `<config-home>/bench-evidence/<report-name>/`, where `<config-home>` is `$EVENT4U_CONFIG_HOME` or `~/.event4u/agent-config/`. A paired bundle holds the report, the sweep's checkpoint, the `pricing.yaml` it was priced with, `reference.json` (the statistics, gate and interpretation computed with the live code at store time) and `manifest.json` with each file's sha256. A selftest report is never stored. A failed store prints a loud error with the retry command and leaves the report where it was.
+
+```bash
+task bench:ab:evidence -- store internal/bench/reports/ab-v2/<stamp>-ab-v2-paired.json
+task bench:ab:evidence -- verify ~/.event4u/agent-config/bench-evidence/<stamp>-ab-v2-paired
+```
+
+`verify` checks every hash, then re-scores the stored records offline with the same `bench_ab_v2_stats` and `bench_ab_interpret` code and compares the result to `reference.json` field by field; any difference exits non-zero. The per-task `nop` floor is not in the reference, because it reads the current task corpus rather than the report. Artifact bundles keep their transcripts and are verified by hash only, since no aggregation stage exists for them yet. Both 2026-11-05 paired reports (`15-15-11Z`, `20-21-44Z`) were stored this way and re-scored to the same numbers.
 
 ### Headroom sweeps on harder tasks (2026-11-05) {#headroom-sweeps}
 
@@ -163,6 +174,8 @@ The roadmap's bar is not met: blind questions had to fall below 3 of 40, and the
 
 Verdict: the wording does not earn a kernel change on this evidence. Blind questions in the low single digits cannot be separated at 40 runs per arm. Testing more wordings at this size would mean picking the luckiest draw, not measuring.
 
+**Size for the next wording (2026-11-06).** `bench_ab_power` with the paired sign test at α 0.05 and 80 % power, assuming independent per-run blind rates: separating the bar's own distance, a control at 15 % against a candidate at 7.5 %, needs 240 pairs per arm. A candidate at 5 % needs 124, one at 2.5 % needs 57. At the measured $0.023 per Haiku run, 240 pairs per arm is 480 runs and about $11. The next wording is measured at that size or not at all.
+
 **Measurement faults found and fixed during these sweeps.** None of them changes a number above. Each one would have produced a wrong number if left in:
 
 - The artifact sweep started the host without credentials. All 108 runs errored at $0. The sweep now passes the configured account's subscription token.
@@ -171,6 +184,63 @@ Verdict: the wording does not earn a kernel change on this evidence. Blind quest
 - `capH-debug-04` and `capH-debug-05` allowed 6 and 5 changed lines, below what a correct fix needs. Haiku failed discipline in all 50 runs. The limit is now 8 on both; the Sonnet sweep ran with the new limits.
 - The activation audit compared each lift arm's total prompt footprint against `vanilla`. A run that finished in fewer turns therefore looked like the treatment had not reached the model: 14 false alarms on Haiku and 5 on Sonnet. A collapse now has to show both in total and per turn. One borderline case remains on Haiku (`hdrH-callers-01`, `rules-kernel-dc`, seed 1). The run's `injected_chars` show the rules did reach it, and the threshold was not tuned to clear it.
 
+### The minimal-prompt baseline (frozen 2026-11-06, before its first run) {#minimal-prompt-baseline}
+
+The scope result above has `package` and `rules-kernel-dc` at 10 of 10 and 8 of 10 on Haiku, and `vanilla` at 1 of 10. The arm `minimal-prompt` asks whether one plain instruction does the same as the rules. It injects the text below and nothing else, with this package scoped away. The text is frozen here before the arm's first run, so a result cannot be bought by rewording the floor afterwards. `tests/scripts/bench_ab_minimal_prompt_comparisons.test.ts` fails when this block and `FIXED_INJECTIONS.minimal` in `internal/bench/core/_lib/bench_ab_arms.ts` disagree.
+
+```text
+Make the smallest change that fully solves the task. Then find and update everything it affects: callers, tests, imports and docs. If the request is unclear, read the code it points at before asking. Run the relevant tests before you say you are done.
+```
+
+When the arm is in a run, the report adds three comparisons: `package` vs `minimal-prompt`, `rules-kernel-dc` vs `minimal-prompt`, and `minimal-prompt` vs `vanilla`. A report without the arm renders as before.
+
+### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
+
+Question: on the tasks above where every arm fails, does a harness-driven second step beat one agent given the same extra compute? Pre-registered in `internal/bench/headroom-17-PREREG.md`. The setup was Sonnet 4.6, base profile `package`, containers. Tasks: the three headroom tasks plus a sealed hold-out of three new edge-case tasks, 8 seeds, 144 runs. Arms:
+
+- A: one agent.
+- B: one agent with one effort step more, the same-compute arm.
+- C: a fresh tester writes edge-case tests from the requirement, then the author implements against them.
+
+The reviewer arm D did not run, because its slim-reviewer gate failed.
+
+- **Primary, C vs B:** capability 7/48 vs 5/48, discordant 7–5, one-sided sign test p = 0.39. **Not detected at this size**, not "no effect". 48 pairs had 80 % power only for a discordance of about 0.15. Per cluster: headroom 5–5, hold-out 2–0. B alone solves `capH-debug-08` (5/8) and C alone solves `hdrH-done-01` (5/8), so the two arms win on different task shapes.
+- **Safety, C's own tests rejecting the reference fix:** 19/48 = **39.6 %** against a 25 % ceiling, so the bar fails. Without the one task where the test asserts an error message the requirement does not fix, the rate is 30 %. The tester works from the requirement only and misses constraints stated elsewhere, for example a README saying `--limit 0` means unlimited.
+- **Cost per run, p50 / p95:** A $0.24 / $0.63, B $0.27 / $0.69, C $0.59 / $1.36. **Net value of C vs B:** −$0.067 per run, with `D` = 10× and `C_FP` = 1× A's p50.
+- **Spend:** $65.47 sweep + $1.94 harness smoke = $67.41 of the $150 release.
+
+No `test` rung is proposed. Result record: `agents/evidence/analysis/headroom-17-second-agent-2026-11-06.md`. Reader: `./scripts-run internal/bench/core/bench_headroom_17_report <report.json>`.
+
+
+## Where the main session's default context goes (2026-11-06) {#main-session-census}
+
+Measured with `./scripts-run src/scripts/preamble_byte_census --main-session`. The figures come from what the host recorded delivering in one Claude Code session on this repository, not from a model of the tree. The setup was a user-global install with the full rule set, plus the repository's own project rules. Characters are as delivered; tokens are approximately characters / 4. This is one session on one machine, a reading and not a distribution.
+
+**Start-up load: ~397k characters (~99k tokens).**
+
+| Bucket | Files | Characters | Share |
+|---|---|---|---|
+| User-global rules (`~/.claude/rules`) | 100 | 328,985 | 83 % |
+| This repository's project rules (`dist/agent-src/rules`) | 15 | 32,984 | 8 % |
+| Skill catalog (633 listed) | — | 29,356 | 7 % |
+| Start-up hook output | 1 | 1,505 | < 1 % |
+| CLAUDE.md files and imports, auto-memory | 4 | 4,544 | 1 % |
+
+What the reading shows:
+
+- **The rules are the load.** 115 rule files make up 91 % of the start-up context. 32 of them carry half of the instruction characters, and the 19 files over 5,000 characters carry 128k on their own. No rule is loaded twice: the user-global and project sets do not overlap by name. 2 of the 102 user-global rule files have a path trigger and stayed out; all the others load in every session.
+- **About 64k characters (~16k tokens, 17 % of the instruction load) are domain and stack rules this repository never exercises:**
+
+  | Rules | Files | Characters |
+  |---|---|---|
+  | Finance, legal and strategy floors, advisory disclaimer, PII and retention | 6 | 30,208 |
+  | Media and brand: likeness, screenshots, brand, icons, design fidelity | 6 | 23,022 |
+  | Persistence packs: scale, history | 2 | 7,682 |
+  | Stack routing: Laravel, Symfony, PHP, Docker, devcontainer, Copilot | 7 | 2,914 |
+
+  Several of these say in their own header that they activate when their pack is installed. They load here because the full profile installs them unconditionally. This is the first concrete candidate set for 3.3. Whether a narrower default loses quality is a measurement, and 3.3 runs it only on tasks where a lift was shown.
+- **Listed is not loaded.** The catalog names 633 skills. Only 235 arrive with a description (22k characters); 398 arrive as a bare name (7k characters). A skill without a description can only be found by name, which is the gap `missing-skill-recovery` exists for.
+- **The recurring cost sits in tool-call hooks, not in prompt turns.** Every prompt turn adds about 360 characters of hook output. Every `Bash` call adds about 1,050 characters through the `PostToolUse` hook, which came to 21k characters over the 20 calls of this session. Every compaction re-delivers about 4,100 characters at `SessionStart:compact`. None of this is in the start-up figure above.
 
 ## Post-repair rerun (2026-11-04) {#post-repair}
 
@@ -412,7 +482,7 @@ full plugin projection (no skills/commands/hooks in the trimmed arms). Before
 shipping any trimmed default, sweep the full corpus (done below).
 
 - Report: `internal/bench/reports/ab-v2/2026-07-07T05-35-14Z-ab-v2-paired.json`.
-- Arms: `rules-kernel-dc` / `rules-balanced` in `src/scripts/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
+- Arms: `rules-kernel-dc` / `rules-balanced` in `internal/bench/core/bench_ab_v2_run.ts` (opt-in, not in the default arm list).
 
 ### Full-corpus P1 gate (`claude-haiku-4-5`, all 30 tasks) — family-scoped PASS
 
@@ -717,7 +787,7 @@ close; this run is its motivating evidence, not a contradiction of it.
 > honest null; the quality-regression gate stays inert (by design — its report
 > path is gitignored) pending a stronger, length-neutral judge.**
 
-The thin-vs-eager runner (`src/scripts/bench_quality_run.ts`) generates each
+The thin-vs-eager runner (`internal/bench/core/bench_quality_run.ts`) generates each
 labelled golden task's answer under the THIN rule context (kernel bodies +
 non-kernel pointers, ~15k tok) and the EAGER context (all rule bodies, ~87k
 tok), then judges the pair in both orders (`evaluatePair` → reject-on-flip).
@@ -746,7 +816,7 @@ directly) to remove the 69% verbosity confound. Until then the thin lever is
 NOT adopted as default and the gate stays inert. The golden set also still
 covers only 14/89 rules (operator hand-labelling), a separate gap.
 
-- Runner: `src/scripts/bench_quality_run.ts` (`--dry-run` free / live is
+- Runner: `internal/bench/core/bench_quality_run.ts` (`--dry-run` free / live is
   API-gated); gate: `src/scripts/check_quality_regression.ts` (inert until a
   `quality-run.json` — gitignored — exists locally).
 - Roadmap: `agents/roadmaps/later/road-to-token-saving.md` Phase 0.
@@ -763,7 +833,7 @@ output-token pair matching with a reported dropped-bucket, two arm-blind
 judges from different provider families (claude-opus-4-8 + gpt-4o, both
 orders, reject-on-flip) with a κ ≥ 0.60 admissibility floor, a Spearman-ρ
 length diagnostic (|ρ| ≥ 0.3 withholds), and a pre-registered n = 90 (the
-full council-labelled corpus). Runner: `src/scripts/bench_quality_rerun.ts`;
+full council-labelled corpus). Runner: `internal/bench/core/bench_quality_rerun.ts`;
 artifact: `internal/bench/reports/quality-rerun-length-neutral.json`;
 actual cost $34.80 (cap $250).
 
@@ -786,7 +856,7 @@ existing precedent, the quality-regression gate stays inert, and any future
 attempt must use a categorically different method (e.g. deterministic
 anchor-scoring against `must_include`/`must_not`, not pairwise LLM judging).
 
-- Runner: `src/scripts/bench_quality_rerun.ts` (design-pinned constants:
+- Runner: `internal/bench/core/bench_quality_rerun.ts` (design-pinned constants:
   band ±15%, κ floor 0.60, ρ flag 0.3, effect floor 10pp; `--max-usd` guard).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 1.
 
@@ -823,7 +893,7 @@ Cost: $0.16 actual (30 calls; ceiling $8 authorized). `finding_floor` is now an
 **enforcing** gate (comment flipped in `run_skill_evals.ts`); calibration data
 in `internal/bench/reports/parity-count.json`.
 
-- Runner: `src/scripts/bench_parity_count.ts` (pre-registered: 3 repeats,
+- Runner: `internal/bench/core/bench_parity_count.ts` (pre-registered: 3 repeats,
   2 vendors, envelope floor rule, controls excluded, `--max-usd` abort).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 3.
 
@@ -852,7 +922,7 @@ not evidence. Raw report is local-only by design
 notes are the durable record. Re-open path: a full uncapped 180-run
 replication on a per-token-billed key.
 
-- Runner: `src/scripts/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
+- Runner: `internal/bench/core/bench_ab_v2_run.ts --host codex` (checkpoint-resumable).
 - Roadmap: `agents/roadmaps/archive/road-to-opt-measurement-unblock.md` Phase 2.
 
 ## adversarial-verification-council finding coverage — HONEST NULL (resolved 2026-07-21)
@@ -1244,12 +1314,12 @@ Twenty planted change tasks under `internal/bench/ab/map-task-set/` (four each i
 code, data, interfaces, runtime, delivery), each with a hidden check that is red
 on the untouched fixture and on the naive change the prompt names, and green on
 the reference change (`tests/scripts/bench_map_task_set_corpus.test.ts`). The
-runner `src/scripts/bench_map_task_set.ts` compares `vanilla`, `ac` (package, no
+runner `internal/bench/core/bench_map_task_set.ts` compares `vanilla`, `ac` (package, no
 map) and `ac-map` (package, map drawn into the working copy, plus a find-confirm-update
 note) and reports M1 wrong-change share, M2 recall and precision of the
 `AFFECTED SET` each run declares, and M3 tokens of all runs per successful run,
 plus two readings under a fixed per-run token budget (`--token-budget`). Run
-`./scripts-run src/scripts/bench_map_task_set --dry-run` first: it swaps only the
+`./scripts-run internal/bench/core/bench_map_task_set --dry-run` first: it swaps only the
 model call for a stub (nothing / naive / reference change per arm), runs the clone,
 map build, hidden checks, parser and aggregation for real, writes a `tier: dry-run`
 report to a temp directory and exits 2 if the metrics disagree with the stub. A

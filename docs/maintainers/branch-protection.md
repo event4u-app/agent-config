@@ -16,12 +16,18 @@
 - **Required checks = a MINIMAL STABLE CORE, not all ~59 checks.**
   Requiring everything turns every workflow/job rename into a lockout.
   Core = the suites that gate correctness on every PR:
-  - `Static Checks (ESLint · typecheck · prepack)`
-  - `Node Tests (ubuntu-latest, shard 1/4)` … `shard 4/4`
-  - `Golden Tests (ubuntu-latest)`
-  - `Install Aux Tests (ubuntu-latest)`
-  (macOS twins stay unrequired — same code, second OS; they still run and
-  still show red, they just don't lock the merge on a runner outage.)
+  - `Tests result` — the always-run aggregate over every `tests.yml` job.
+  (Superseded 2026-11-06: this list used to pin `Static Checks`, the four
+  `Node Tests (ubuntu-latest, shard N/4)` names, `Golden Tests` and
+  `Install Aux Tests`. With test selection
+  ([`ci-test-selection`](../contracts/ci-test-selection.md)) those jobs are
+  skipped when a diff cannot reach them and the shard total varies, so a
+  pinned shard name would never report and would lock the merge. The
+  aggregate fails if any of them fails, macOS twins included.)
+  **Applied 2026-11-07** by owner decision, together with the merge queue:
+  `Tests result` is required, so macOS failures now block a merge, where the
+  2026-07-12 core pinned only `ubuntu-latest` legs. Live values:
+  [`branch-protection-policy`](../contracts/branch-protection-policy.md).
 - **Enforce for admins: yes** (otherwise the protection is decorative).
 - **Required reviews: 0 for now** — the trailing-90-day distinct-reviewer
   count is 1 (bus-factor reality); requiring a second reviewer would block
@@ -47,13 +53,7 @@ gh api -X PUT repos/event4u-app/agent-config/branches/main/protection \
   "required_status_checks": {
     "strict": false,
     "contexts": [
-      "Static Checks (ESLint · typecheck · prepack)",
-      "Node Tests (ubuntu-latest, shard 1/4)",
-      "Node Tests (ubuntu-latest, shard 2/4)",
-      "Node Tests (ubuntu-latest, shard 3/4)",
-      "Node Tests (ubuntu-latest, shard 4/4)",
-      "Golden Tests (ubuntu-latest)",
-      "Install Aux Tests (ubuntu-latest)"
+      "Tests result"
     ]
   },
   "enforce_admins": true,

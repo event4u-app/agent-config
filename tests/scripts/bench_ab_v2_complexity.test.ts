@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_v2_complexity.ts — the offline re-scorer that
+// Tests for internal/bench/core/bench_ab_v2_complexity.ts — the offline re-scorer that
 // retro-fits the T1/T2 endpoints onto a finished report from its preserved
 // workspaces (S0.3 delta #11 + delta #7).
 //
@@ -13,7 +13,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { rescoreReport } from '../../src/scripts/bench_ab_v2_complexity.js';
+import { rescoreReport } from '../../internal/bench/core/bench_ab_v2_complexity.js';
 
 const tmpDirs: string[] = [];
 afterEach(() => {

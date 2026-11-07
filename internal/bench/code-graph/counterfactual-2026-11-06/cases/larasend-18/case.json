@@ -1,0 +1,38 @@
+{
+ "id": "larasend-18",
+ "subject": "larasend",
+ "repo": "savvyagents/larasend",
+ "pr": 18,
+ "title": "Paginate Inbox and Outbound email",
+ "merged_at": "2026-08-15T18:20:53Z",
+ "merge": "da5c06c725f51f537fd8e238e436263665f475d2",
+ "parent": "077b2eaf977de42c84d31a3580e7f8c6ad9156af",
+ "changed_lines": 452,
+ "diff_files": [
+  "app/Http/Controllers/ActivityController.php",
+  "resources/js/components/PaginationControls.vue",
+  "resources/js/pages/Activity.vue",
+  "resources/js/pages/Inbox.vue",
+  "tests/Feature/ActivityDashboardTest.php"
+ ],
+ "changed_symbols": [
+  {
+   "id": "app/Http/Controllers/ActivityController.php#ActivityController",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Http/Controllers/ActivityController.php#ActivityController::__invoke",
+   "signature_touched": false
+  },
+  {
+   "id": "app/Http/Controllers/ActivityController.php#ActivityController::activityEmailsQuery",
+   "signature_touched": false
+  }
+ ],
+ "truth": [
+  {
+   "path": "routes/web.php",
+   "test": false
+  }
+ ]
+}

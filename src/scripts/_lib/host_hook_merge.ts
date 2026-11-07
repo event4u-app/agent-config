@@ -19,7 +19,10 @@
  * 3. append the patch's entries for that event.
  *
  * Events the patch does not mention are left exactly as they are — a host file
- * may legitimately carry foreign events this package never binds.
+ * may legitimately carry foreign events this package never binds. The one
+ * exception is an event listed in `WITHDRAWN_EVENTS` for the writer: there an
+ * entry made only of commands we generated, unmodified, is removed; everything
+ * else stays byte-identical, and the key is deleted only when nothing is left.
  *
  * Step 2 is what keeps an upgrade idempotent: a migration that changes our own
  * command string replaces the old entry rather than leaving a stale duplicate
@@ -48,6 +51,9 @@
  * command we can read, so it cannot be ours, so it is kept. Unreadable means
  * kept, never deleted — the asymmetry is deliberate.
  */
+
+import * as os from 'node:os';
+import * as path from 'node:path';
 
 import { deepcopy, isPlainObject } from './json_merge.js';
 
@@ -125,6 +131,7 @@ export function mergeHookEvents(
     existingHooks: unknown,
     patchHooks: Record<string, unknown>,
     signature: string,
+    withdrawn?: WithdrawnBindings,
 ): Record<string, unknown> {
     if (!isPlainObject(existingHooks)) return deepcopy(patchHooks);
     const out: Record<string, unknown> = deepcopy(existingHooks);
@@ -138,7 +145,62 @@ export function mergeHookEvents(
         }
         out[event] = mergeEventEntries(Array.isArray(current) ? current : [], incoming, signature);
     }
+    for (const event of withdrawn?.events ?? []) {
+        if (event in patchHooks) continue;
+        const current = out[event];
+        if (!Array.isArray(current)) continue;
+        const kept = current.filter((e) => !isUnmodifiedGeneratedEntry(e, withdrawn!.commands));
+        if (kept.length === current.length) continue;
+        if (kept.length === 0) delete out[event];
+        else out[event] = kept;
+    }
     return out;
+}
+
+/** Events a release stopped binding, and the exact command strings it wrote for them. */
+export interface WithdrawnBindings {
+    readonly events: readonly string[];
+    readonly commands: readonly string[];
+}
+
+const WINDSURF_WITHDRAWN: ReadonlyArray<readonly [slot: string, native: string]> = [
+    ['user_prompt_submit', 'pre_user_prompt'],
+    ['stop', 'post_cascade_response'],
+];
+
+/** The user-level trampoline path `install.ts` writes into `~/.codeium/windsurf/hooks.json`. */
+const WINDSURF_USER_TRAMPOLINE = path.join(os.homedir(), '.codeium', 'windsurf', 'hooks', 'windsurf-dispatcher.sh');
+
+/**
+ * Bindings a release withdrew, per writer label — removed from an existing file
+ * on the next install so a withdrawn slot stops firing. Listed explicitly rather
+ * than inferred from what a patch omits, so cleanup reaches only the events a
+ * ratified change withdrew. Ownership is exact string equality with what the
+ * installer wrote: a command a user edited, prefixed or appended to, or another
+ * tool's dispatcher of the same name, is kept — a stale entry of ours is a
+ * cheaper failure than a deleted user command.
+ *
+ * windsurf (2026-11-07, issue #2805): `pre_user_prompt` / `post_cascade_response`
+ * are documented on no live vendor page; `host_lowering.yaml` withdrew them.
+ */
+export const WITHDRAWN_EVENTS: Readonly<Record<string, WithdrawnBindings>> = {
+    '.windsurf/hooks.json': {
+        events: WINDSURF_WITHDRAWN.map(([, native]) => native),
+        commands: WINDSURF_WITHDRAWN.map(
+            ([slot, native]) =>
+                `[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform windsurf --event ${slot} --native-event ${native}`,
+        ),
+    },
+    '~/.codeium/windsurf/hooks.json': {
+        events: WINDSURF_WITHDRAWN.map(([, native]) => native),
+        commands: WINDSURF_WITHDRAWN.map(([slot, native]) => `${WINDSURF_USER_TRAMPOLINE} ${slot} ${native}`),
+    },
+};
+
+/** True when every command in `entry` is, byte for byte, one this package wrote. */
+function isUnmodifiedGeneratedEntry(entry: unknown, commands: readonly string[]): boolean {
+    const cmds = entryCommands(entry);
+    return cmds.length > 0 && cmds.every((cmd) => commands.includes(cmd));
 }
 
 /**
@@ -156,10 +218,11 @@ export function mergeHostConfig(
     patch: Record<string, unknown>,
     signature: string,
     deepMergeFn: (a: Record<string, unknown>, b: Record<string, unknown>) => Record<string, unknown>,
+    withdrawn?: WithdrawnBindings,
 ): Record<string, unknown> {
     const merged = deepMergeFn(existing, patch);
     const patchHooks = patch['hooks'];
     if (signature === '' || !isPlainObject(patchHooks)) return merged;
-    merged['hooks'] = mergeHookEvents(existing['hooks'], patchHooks, signature);
+    merged['hooks'] = mergeHookEvents(existing['hooks'], patchHooks, signature, withdrawn);
     return merged;
 }

@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-14
 # Benchmark Report Schema — step-4 Phase 2
 
 Parser-visible contract for the JSON + Markdown reports emitted by
-[`src/scripts/bench_run.ts`](../../src/scripts/bench_run.ts). Every `task bench`
+[`internal/bench/core/bench_run.ts`](../../internal/bench/core/bench_run.ts). Every `task bench`
 run writes one `internal/bench/reports/<ts>-<corpus_id>.json` + matching `.md`.
 
 ## File layout
@@ -34,7 +34,7 @@ corpus:
   prompt_count: <int>
 runner:
   bench_run_version: <semver>
-  baseline_collector: src/scripts/bench_runner.ts     # selection-accuracy floor
+  baseline_collector: internal/bench/core/bench_runner.ts     # selection-accuracy floor
   baseline_collector_sha: <git-sha-or-mtime>
 selection:
   top_k: 3
@@ -197,8 +197,8 @@ Headers in order:
 
 ## Cross-references
 
-- Runner — [`src/scripts/bench_run.ts`](../../src/scripts/bench_run.ts)
-- Baseline collector — [`src/scripts/bench_runner.ts`](../../src/scripts/bench_runner.ts)
+- Runner — [`internal/bench/core/bench_run.ts`](../../internal/bench/core/bench_run.ts)
+- Baseline collector — [`internal/bench/core/bench_runner.ts`](../../internal/bench/core/bench_runner.ts)
 - Corpus contract — [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md)
 - Pricing source — [`internal/bench/pricing.yaml`](../../bench/pricing.yaml)
 - Cost session reader (live sessions) — [`scripts/cost/track.mjs`](../../src/scripts/cost/track.mjs)

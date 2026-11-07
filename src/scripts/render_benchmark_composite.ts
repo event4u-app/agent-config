@@ -36,7 +36,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
-import { analyse, compare, gate_verdict, mean_tokens_by_arm, to_markdown } from './bench_ab_v2_stats.js';
+import { analyse, compare, gate_verdict, mean_tokens_by_arm, to_markdown } from '../../internal/bench/core/bench_ab_v2_stats.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');

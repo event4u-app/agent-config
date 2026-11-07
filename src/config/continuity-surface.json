@@ -257,7 +257,7 @@
             "id": "injection-census.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "locus": "src/scripts/bench_hook_injection.ts:42",
+            "locus": "internal/bench/core/bench_hook_injection.ts:42",
             "reason": "Hook-injection benchmark output. Measurement, not state."
         },
         {

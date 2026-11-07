@@ -1,0 +1,50 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "src/install/globalRuleScope.ts",
+  "src/install/rule_scope_cli.ts",
+  "src/install/wizard-plan.ts",
+  "src/scripts/_cli/cmd_doctor.ts",
+  "src/scripts/check_consumer_scope_flip.ts",
+  "src/scripts/install.ts",
+  "src/server/routes/install.ts",
+  "tests/install/rule_packs_auto.test.ts",
+  "tests/scripts/compile_router.test.ts"
+ ],
+ "reply": "{\"files\": [\"tests/install/rule_packs_auto.test.ts\", \"tests/scripts/compile_router.test.ts\", \"src/install/globalRuleScope.ts\", \"src/install/rule_scope_cli.ts\", \"src/install/wizard-plan.ts\", \"src/scripts/_cli/cmd_doctor.ts\", \"src/scripts/check_consumer_scope_flip.ts\", \"src/scripts/install.ts\", \"src/server/routes/install.ts\"]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 344,
+  "cache_read_input_tokens": 42910,
+  "output_tokens": 164,
+  "output_tokens_details": {
+   "thinking_tokens": 0
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 344,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 164,
+    "cache_read_input_tokens": 42910,
+    "cache_creation_input_tokens": 344,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 344
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

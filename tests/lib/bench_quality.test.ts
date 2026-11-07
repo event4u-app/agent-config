@@ -1,6 +1,6 @@
 /**
  * Vitest twin suite for the bench quality probe
- * (`src/scripts/_lib/bench_quality.ts`). Focused unit suite: `score_corpus`
+ * (`internal/bench/core/_lib/bench_quality.ts`). Focused unit suite: `score_corpus`
  * is run on shared synthetic prompt sets (rubric + regex assertions, with
  * and without an agent-output file) and the result blocks are asserted,
  * including the round-half-to-even `quality_score`
@@ -11,7 +11,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { score_corpus, type Prompt } from '../../src/scripts/_lib/bench_quality.js';
+import { score_corpus, type Prompt } from '../../internal/bench/core/_lib/bench_quality.js';
 
 // Prompt set: rubric (must_include / must_not_include / length_words) +
 // regex assertion + a prompt with no assertion (excluded from `declared`).

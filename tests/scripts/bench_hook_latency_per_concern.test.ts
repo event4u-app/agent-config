@@ -26,7 +26,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { ConcernLatencyRow } from '../../src/scripts/bench_hook_latency.js';
+import type { ConcernLatencyRow } from '../../internal/bench/core/bench_hook_latency.js';
 import {
     ASK_PROBE,
     blockingConcerns,
@@ -38,7 +38,7 @@ import {
     renderConcernRow,
     slaOverruns,
     windowState,
-} from '../../src/scripts/bench_hook_latency.js';
+} from '../../internal/bench/core/bench_hook_latency.js';
 import { writeConcernTimings } from '../../src/scripts/hooks/concern_timings.js';
 
 let tmp: string;

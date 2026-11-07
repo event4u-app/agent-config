@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_ab_run.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_ab_run.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists. To stay CI-parallel-safe (the script's frozen
 // REPORTS_DIR is the shared, committed `internal/bench/reports/ab` tree — also
@@ -13,11 +13,11 @@
 // validated manually during the port and is documented as divergence-free; it
 // is intentionally not asserted here to keep the shared dir untouched under
 // default file-parallelism.
-import { spawnSync } from 'node:child_process';
+
 import { describe, expect, it } from 'vitest';
 
 import { runTs } from './_bench_wave8d.js';
-import * as abr from '../../src/scripts/bench_ab_run.js';
+import * as abr from '../../internal/bench/core/bench_ab_run.js';
 
 describe('bench_ab_run — in-process pure helpers (no python required)', () => {
     it('utc_stamp matches the %Y-%m-%dT%H-%M-%SZ shape', () => {

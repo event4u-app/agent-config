@@ -1,0 +1,52 @@
+{
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "files": [
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AssociationTypeController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeFamilyController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeGroupController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/MediaFileController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/PassportController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/VariantStructureController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/ChannelController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/CurrencyController.php",
+  "packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/LocaleController.php"
+ ],
+ "reply": "{\"files\": [\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AssociationTypeController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeFamilyController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/AttributeGroupController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/CategoryController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/MediaFileController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/PassportController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/ProductController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Catalog/VariantStructureController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/ChannelController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/CurrencyController.php\",\n\"packages/Webkul/AdminApi/src/Http/Controllers/API/Settings/LocaleController.php\"\n]}",
+ "usage": {
+  "input_tokens": 2,
+  "cache_creation_input_tokens": 8622,
+  "cache_read_input_tokens": 1331,
+  "output_tokens": 784,
+  "output_tokens_details": {
+   "thinking_tokens": 314
+  },
+  "server_tool_use": {
+   "web_search_requests": 0,
+   "web_fetch_requests": 0
+  },
+  "service_tier": "standard",
+  "cache_creation": {
+   "ephemeral_1h_input_tokens": 8622,
+   "ephemeral_5m_input_tokens": 0
+  },
+  "inference_geo": "global",
+  "iterations": [
+   {
+    "input_tokens": 2,
+    "output_tokens": 784,
+    "cache_read_input_tokens": 1331,
+    "cache_creation_input_tokens": 8622,
+    "cache_creation": {
+     "ephemeral_5m_input_tokens": 0,
+     "ephemeral_1h_input_tokens": 8622
+    },
+    "type": "message"
+   }
+  ],
+  "speed": "standard",
+  "fallback_credit": null
+ }
+}

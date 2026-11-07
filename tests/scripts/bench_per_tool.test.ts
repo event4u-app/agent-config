@@ -1,4 +1,4 @@
-// Tests for src/scripts/bench_per_tool.ts (py2ts Phase 8 / Wave 8d).
+// Tests for internal/bench/core/bench_per_tool.ts (py2ts Phase 8 / Wave 8d).
 //
 // No pytest suite exists, so this is a focused differential suite over the
 // pure pieces (load_descriptions, render_markdown shape) plus a golden-parity
@@ -11,7 +11,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import * as bpt from '../../src/scripts/bench_per_tool.js';
+import * as bpt from '../../internal/bench/core/bench_per_tool.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 

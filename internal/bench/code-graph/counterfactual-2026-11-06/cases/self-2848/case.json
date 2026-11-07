@@ -1,0 +1,66 @@
+{
+ "id": "self-2848",
+ "subject": "self",
+ "repo": "event4u-app/agent-config",
+ "pr": 2848,
+ "title": "feat(design-consistency): read definitions with a scanner and deliver by default",
+ "merged_at": "2026-11-04T19:28:35Z",
+ "merge": "2febb560d336611a5eb5aac9cf6dd95fed13ed46",
+ "parent": "34056a346b0ac4ad9a70ac61f379d932476d5fa7",
+ "changed_lines": 647,
+ "diff_files": [
+  "agents/roadmaps/later/road-to-a-control-that-matches-its-neighbours.md",
+  "dist/install/install.mjs",
+  "docs/CLAIMS.md",
+  "docs/contracts/settings-classes.md",
+  "docs/maintainers/doc-path-inventory.md",
+  "docs/proof.md",
+  "docs/settings-reference.md",
+  "internal/bench/corpora/design-consistency-shadow-window.md",
+  "src/config/agent-settings.template.yml",
+  "src/scripts/_lib/control_roles.ts",
+  "src/scripts/_lib/design_consistency_pass.ts",
+  "src/scripts/_lib/design_consistency_rules.ts",
+  "src/scripts/hooks/design_pass_hook.ts",
+  "src/scripts/lint_design_consistency.ts",
+  "src/server/schemas/settings.ts",
+  "tests/hooks/design_consistency_default.test.ts",
+  "tests/scripts/control_roles_definitions.test.ts"
+ ],
+ "changed_symbols": [
+  {
+   "id": "src/scripts/_lib/control_roles.ts#blank@2",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/_lib/control_roles.ts#definedComponents",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/hooks/design_pass_hook.ts#main",
+   "signature_touched": false
+  },
+  {
+   "id": "src/scripts/lint_design_consistency.ts#COMPARED",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/lint_design_consistency.ts#ControlRoleMap",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/lint_design_consistency.ts#SHADOW_REL",
+   "signature_touched": true
+  },
+  {
+   "id": "src/scripts/lint_design_consistency.ts#isProductUi",
+   "signature_touched": true
+  }
+ ],
+ "truth": [
+  {
+   "path": "src/scripts/hooks/concern_registry.ts",
+   "test": false
+  }
+ ]
+}

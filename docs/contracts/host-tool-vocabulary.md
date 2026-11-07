@@ -32,8 +32,8 @@ slot; each cell is the host's own name for it.
 |---|---|---|---|---|---|---|---|---|
 | `session_start` | `SessionStart` | `SessionStart` | `SessionStart` | `sessionStart` | `TaskStart` + `TaskResume` | `post_setup_worktree` | `SessionStart` | — |
 | `session_end` | `SessionEnd` | `SessionEnd` | `SessionEnd` | `sessionEnd` | `TaskComplete` | — | `SessionEnd` | — |
-| `stop` | `Stop` | `Stop` | `Stop` | `stop` | `TaskCancel` | `post_cascade_response` | `AfterAgent` | — |
-| `user_prompt_submit` | — | `UserPromptSubmit` | `UserPromptSubmit` | `beforeSubmitPrompt` | `UserPromptSubmit` | `pre_user_prompt` | `BeforeAgent` | — |
+| `stop` | `Stop` | `Stop` | `Stop` | `stop` | `TaskCancel` | `post_cascade_response` *(aliased, unbound)* | `AfterAgent` | — |
+| `user_prompt_submit` | — | `UserPromptSubmit` | `UserPromptSubmit` | `beforeSubmitPrompt` | `UserPromptSubmit` | `pre_user_prompt` *(aliased, unbound)* | `BeforeAgent` | — |
 | `pre_tool_use` | `PreToolUse` | `PreToolUse` | `PreToolUse` | `preToolUse` *(aliased, unbound)* | `PreToolUse` *(aliased, unbound)* | — | `BeforeTool` *(aliased, unbound)* | — |
 | `post_tool_use` | `PostToolUse` | `PostToolUse` | `PostToolUse` | `postToolUse` | `PostToolUse` | — | `AfterTool` | — |
 | `pre_compact` | — | `PreCompact` | `PreCompact` *(aliased, unbound)* | `preCompact` *(aliased, unbound)* | `PreCompact` *(aliased, unbound)* | — | — | — |

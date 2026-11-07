@@ -57,7 +57,7 @@ stronger-than-ordering fork doctrine) and `reviewer-tier-quality-floor`
       suite-owned spawn wrapper exists (Agent-tool spawns cannot be marked
       on this host — probe on record in the parent). <!-- carried from
       parent 3.2; the reviewer enum value is reserved and fail-open -->
-- [ ] 3.2a A slim end-reviewer **arm**, not a default: `production-validator` with
+- [x] 3.2a A slim end-reviewer **arm**, not a default: `production-validator` with
       `omit_project_instructions: true` plus a review digest (the generated floor, review
       contexts, acceptance block and the `dispatch_r2_reviewer.ts` packet). Verdict
       comparison slim vs full on fixtures that exist: the `wedge-hollow-detection` pair,
@@ -69,6 +69,12 @@ stronger-than-ordering fork doctrine) and `reviewer-tier-quality-floor`
       `evaluator-independence` — a sceptic stance flagged 3 of 3 correct controls
       (`docs/benchmark.md` § adversarial council).
       <!-- verify: `ls agents/evidence/analysis/ | grep -c slim-reviewer` -> /^[1-9]/ -->
+      **Done 2026-11-06 — bar FAILS** (`agents/evidence/analysis/slim-reviewer-verdict-comparison-2026-11-06.md`):
+      11 of 17 fixtures inside the $20 cap ($18.13 spent). Agreement 10/11 (90.9 %), 0 missed
+      planted defects in either arm. Slim false positives on the contested controls are 2/3
+      against full's 1/3, so the false-positive half fails. Reviewer context is 14.8k vs 104k
+      tokens. The slim arm does not ship as a substitute on this evidence.
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/slim_reviewer_score.ts -->
 - [ ] 3.2b A probe that a judge never runs as a fork: the host forks by default and a
       fork inherits the author's conversation (Arrivals line above). Typed subagent,
       `reuse: never`.

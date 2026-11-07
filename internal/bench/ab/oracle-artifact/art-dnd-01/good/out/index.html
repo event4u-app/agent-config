@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priorities</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.4 system-ui, sans-serif; color: #1c1c1c; background: #fafafa; }
+  main { display: grid; gap: 1.5rem; padding: 1rem; max-width: 64rem; margin: 0 auto; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { main { grid-template-columns: 2fr 1fr; align-items: start; } }
+  h1 { font-size: 1.25rem; margin: 0 0 .75rem; }
+  #tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  .task { padding: 1rem; background: #fff; border: 1px solid #bbb; border-radius: .5rem; cursor: grab; touch-action: none; user-select: none; }
+  .task:focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+  .task.lifted { border-color: #0b5fff; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+  .task.dragging { opacity: .6; }
+  body.compact .task { padding: .4rem .75rem; }
+  #detail { padding: 1rem; background: #fff; border: 1px solid #bbb; border-radius: .5rem; }
+  .switch { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1rem; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+  .switch .track { width: 2.5rem; height: 1.4rem; border-radius: 1rem; background: #767676; position: relative; }
+  .switch .knob { position: absolute; top: .2rem; left: .2rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; }
+  .switch[aria-checked="true"] .track { background: #0b5fff; }
+  .switch[aria-checked="true"] .knob { left: 1.3rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <section aria-labelledby="h-list">
+    <h1 id="h-list">Priorities</h1>
+    <p id="hint">Drag an item onto another to move it before it. With the keyboard: Space to pick up, arrows to move, Space to drop, Escape to cancel.</p>
+    <ul id="tasks" aria-describedby="hint">
+      <li class="task" data-id="a" tabindex="0">Alpha</li>
+      <li class="task" data-id="b" tabindex="0">Beta</li>
+      <li class="task" data-id="c" tabindex="0">Gamma</li>
+      <li class="task" data-id="d" tabindex="0">Delta</li>
+    </ul>
+  </section>
+  <aside id="detail" aria-live="off">
+    <p id="top">Top priority: Alpha</p>
+    <button type="button" id="compact" class="switch" role="switch" aria-checked="false">
+      <span class="track" aria-hidden="true"><span class="knob"></span></span>
+      <span>Compact mode</span>
+    </button>
+  </aside>
+</main>
+<div id="announce" class="sr-only" aria-live="polite"></div>
+<script>
+(() => {
+  const list = document.getElementById('tasks');
+  const top = document.getElementById('top');
+  const announce = document.getElementById('announce');
+  const items = () => [...list.querySelectorAll('li.task')];
+  const name = (li) => li.textContent.trim();
+
+  function moved(li) {
+    const pos = items().indexOf(li) + 1;
+    top.textContent = 'Top priority: ' + name(items()[0]);
+    announce.textContent = name(li) + ' moved to position ' + pos + ' of ' + items().length;
+  }
+
+  // Pointer events cover mouse, pen and touch with one code path; touch-action: none
+  // keeps the browser from turning the touch gesture into a scroll.
+  let drag = null;
+  list.addEventListener('pointerdown', (e) => {
+    const li = e.target.closest('li.task');
+    if (!li) return;
+    drag = { li, id: e.pointerId, moved: false };
+    li.setPointerCapture(e.pointerId);
+  });
+  list.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.moved = true;
+    drag.li.classList.add('dragging');
+  });
+  function finish(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const { li } = drag;
+    li.classList.remove('dragging');
+    if (drag.moved) {
+      const under = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el !== li && el.matches && el.matches('li.task'));
+      if (under) {
+        list.insertBefore(li, under);
+        moved(li);
+      }
+    }
+    drag = null;
+  }
+  list.addEventListener('pointerup', finish);
+  list.addEventListener('pointercancel', () => { if (drag) drag.li.classList.remove('dragging'); drag = null; });
+
+  let lifted = null;
+  list.addEventListener('keydown', (e) => {
+    const li = e.target.closest('li.task');
+    if (!li) return;
+    if (e.key === ' ') {
+      e.preventDefault();
+      if (lifted === null) {
+        lifted = { li, next: li.nextElementSibling };
+        li.classList.add('lifted');
+        announce.textContent = name(li) + ' picked up';
+      } else {
+        lifted.li.classList.remove('lifted');
+        moved(lifted.li);
+        lifted = null;
+      }
+    } else if (lifted && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      const cur = lifted.li;
+      if (e.key === 'ArrowUp' && cur.previousElementSibling) list.insertBefore(cur, cur.previousElementSibling);
+      if (e.key === 'ArrowDown' && cur.nextElementSibling) list.insertBefore(cur.nextElementSibling, cur);
+      cur.focus();
+    } else if (lifted && e.key === 'Escape') {
+      e.preventDefault();
+      list.insertBefore(lifted.li, lifted.next);
+      lifted.li.classList.remove('lifted');
+      lifted.li.focus();
+      announce.textContent = name(lifted.li) + ' returned to position ' + (items().indexOf(lifted.li) + 1);
+      lifted = null;
+    }
+  });
+
+  const sw = document.getElementById('compact');
+  sw.addEventListener('click', () => {
+    const on = sw.getAttribute('aria-checked') !== 'true';
+    sw.setAttribute('aria-checked', String(on));
+    document.body.classList.toggle('compact', on);
+  });
+})();
+</script>
+</body>
+</html>

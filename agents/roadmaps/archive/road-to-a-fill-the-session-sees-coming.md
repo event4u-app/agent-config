@@ -79,8 +79,8 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 - [x] **3.1 Credential placeholders in the history.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/chat_history.ts --> Owner answer
       OQ-34 (2026-10-29) asked for placeholders in the history plus the
       originals in a local store resolvable for 7 days; the store conflicts with
-      the egress contract's never-stored floor, and the owner resolved the
-      blocker below with option 1 on 2026-11-04: placeholders only, no original
+      the egress contract's never-stored floor, and the blocker below was resolved
+      with option 1 on 2026-11-04 (owner-delegated council verdict): placeholders only, no original
       anywhere. Reuse the existing egress rules.
       verify: `npx vitest run tests/scripts/chat_history_credential_placeholders.test.ts` -> 0 —
       a credential appended, reset or prepended is a placeholder on disk and no
@@ -91,7 +91,14 @@ continuity record no longer depends on reaching the 800k recycle threshold.
 
 ### blocker: b-history-credential-store-vs-egress-contract
 
-- **Status:** resolved — 2026-11-04, owner picked option 1 (placeholders only) in session.
+- **Status:** resolved — 2026-11-04, option 1. The owner delegated the decision to the AI
+  council ("zu dem blocker, entscheide den im ai council"); both seats (anthropic, openai)
+  returned `VERDICT: option-1`. Prompt:
+  `agents/evidence/council/history-credential-store-blocker-20261104.question.md`; record:
+  `agents/evidence/council/history-credential-store-blocker-20261104.verdict.md`.
+  **Revisit if** a demonstrated workflow needs a credential across sessions and an approved
+  threat model justifies amending the contract; such a design must expire on time, not only on
+  a read or write, since an idle store would otherwise outlive 7 days.
 - **Owner:** owner — the step stores credential values, and the recorded floor says none may be stored.
 - **Blocks:** 3.1.
 - **Conflict:** `docs/contracts/egress-placeholders-v1.md` line 38 defines the `credential`

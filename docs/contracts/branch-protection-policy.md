@@ -32,7 +32,7 @@ keep-beta-reason: >-
 > it is read as a guarantee. The rule is now: **this file mirrors the
 > ruleset; the ruleset is the source of truth.**
 
-## What is actually enforced (live, 2026-08-02)
+## What is actually enforced (live, re-read 2026-11-07)
 
 Enforcement is a repository **ruleset**, not classic branch protection.
 `GET /repos/event4u-app/agent-config/branches/main/protection` returns
@@ -52,12 +52,13 @@ tooling pointed at it reads "unprotected" for a protected branch.
 | Stale reviews dismissed on push | yes |
 | Allowed merge methods | merge · squash · rebase |
 | Branch must be up to date | **no** (`strict_required_status_checks_policy: false`) — this row read `true` until 2026-09-10, when it was checked against the live ruleset while reasoning about a different question. The table's own "Read it" row is the authority; a hand-written value drifts silently because nothing compares them. |
-| **Required status checks** | **two, since 2026-09-11 — `Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`.** Read `exactly one — Sync + Generate Tools Consistency` from 2026-08-02 until then; the second was added by the ruleset edit ADR-276 records. Re-measured 2026-09-13. |
+| **Required status checks** | **four, since 2026-11-07 — `Sync + Generate Tools Consistency`, `Standing payload delta + budget gate`, `lint commit subjects` and `Tests result`.** `Tests result` was added by owner decision on 2026-11-07 ([`ci-test-selection`](ci-test-selection.md) § Enabling the gate); it aggregates the macOS legs too, so a macOS failure now blocks a merge. Read back from the ruleset 2026-11-07. History: one (`Sync + Generate Tools Consistency`) from 2026-08-02, two from 2026-09-11 (ADR-276), three by 2026-11-06 (`lint commit subjects`). |
+| **Merge queue** | **on, since 2026-11-07** — `merge_queue` rule: method `MERGE`, grouping `ALLGREEN`, build 5 / merge 1–5 entries, 5 min wait, 90 min check timeout. Every workflow carrying a required check declares `merge_group`; `tests/scripts/workflow_merge_group_concurrency.test.ts` pins that, because a required check that never reports on a queue entry blocks `main` with no failure to read. |
 | Bypass | **`RepositoryRole 5` (repository admin), `bypass_mode: pull_request`, standing since ruleset version `54668684`** by owner directive `agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md`; every use leaves a bypass record and owes its after-the-fact council review. Before that: none from 2026-09-10 — `bypass_actors: []`, `current_user_can_bypass: never`, re-measured 2026-09-13. Read `repository-admin role, always` until 2026-09-10, when `bypass_actors` was emptied. An `OrganizationAdmin` bypass with `bypass_mode: always` was re-added on 2026-09-11 (version `49393554`) and removed again on 2026-09-12 (version `49500777`), so a record describing that bypass in the present tense describes a one-day state. |
 
 Everything else in CI is **advisory at the branch-protection layer**: the
-checks run, a red one is visible on the PR, but only the two required contexts
-above mechanically block the merge button.
+checks run, a red one is visible on the PR, but only the four required contexts
+above mechanically block the merge — on the PR and again on the merge-queue entry.
 
 The practical gate is therefore maintainer review of the checks tab. **Corrected
 2026-09-13:** this sentence used to end "plus the admin bypass being deliberately
@@ -82,16 +83,16 @@ the **reported check names** — the strings a required-check list must match.
 
 | Workflow | Reported checks |
 |---|---|
-| `consistency.yml` | `Sync + Generate Tools Consistency` **(required — one of two; ruleset read 2026-10-07)** |
+| `consistency.yml` | `Sync + Generate Tools Consistency` **(required — one of four; ruleset read 2026-11-07)** |
 | `smoke.yml` | `Smoke — kernel` · `Smoke — router` · `Smoke — schema` · `Smoke — skills` |
 | `skill-lint.yml` | `skill-lint` (+ `skill-lint-strict`, release-gated) |
-| `tests.yml` | `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests (ubuntu-latest, shard N/4)` · `Install Script Tests (macos-26, unsharded)` · `Install Aux Tests ({ubuntu-latest,macos-26})` · `Node Tests ({ubuntu-latest,macos-26}, shard N/4)` · `Golden Tests ({ubuntu-latest,macos-26})` · `Workspace Tests ({ubuntu-latest,macos-26})` · `Tests result` (always-run aggregate, not required) |
+| `tests.yml` | `Platform scope` · `Select tests` · `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests (ubuntu-latest, shard N/4)` · `Install Script Tests (macos-26, unsharded)` · `Install Aux Tests ({ubuntu-latest,macos-26})` · `Node Tests ({ubuntu-latest,macos-26}, shard N/{1,2,4})` — the shard total follows the selection ([`ci-test-selection`](ci-test-selection.md)) · `Golden Tests ({ubuntu-latest,macos-26})` · `Workspace Tests ({ubuntu-latest,macos-26})` · `Tests result` **(required — the fourth; ruleset read 2026-11-07)** — always-run aggregate over every Tests job, macOS included; reports on every PR and queue entry since the `pull_request` trigger lost its `paths:` filter |
 | `smoke-public-install.yml` | `{ubuntu,macos,windows}-latest · node {20,22}` · `tarball E2E · node {20,22}` · `npm publish dry-run · node {20,22}` |
-| `standing-payload-delta.yml` | `Standing payload delta + budget gate` **(required — the second of two since 2026-09-11; ruleset read 2026-10-07)** — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it was pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
+| `standing-payload-delta.yml` | `Standing payload delta + budget gate` **(required — the second since 2026-09-11; ruleset read 2026-11-07)** — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it was pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
 | `rule-backstops.yml` | `Rule backstops` |
 | `no-python-in-src.yml` | `no-python-in-src` |
-| `commit-subjects.yml` | `lint commit subjects` |
-| evaluator / originality | `originality-gate` · `gate-dry-run` · `live-advisory` |
+| `commit-subjects.yml` | `lint commit subjects` **(required — the third; ruleset read 2026-11-06)** |
+| evaluator / originality | `originality-gate` · `gate-dry-run` · `live-advisory` · `graph-checks` (advisory, `continue-on-error`, not in the ruleset) |
 | `glama-mcp-smoke.yml` | `glama MCP smoke` |
 | `deploy-mcp-worker.yml` | `MCP worker deploy dry-run` |
 | `consumer-matrix.yml` | `Plugin bootstrap integrity` · `Packed-artifact evaluation (clean container)` |

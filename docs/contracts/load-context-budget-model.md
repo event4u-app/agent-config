@@ -282,3 +282,10 @@ regression), which is `pending` as of the Phase 3 measurement — no reduction
 intervention has landed yet. `./scripts-run src/scripts/preamble_byte_census`
 reports the current measured median and the buckets it attributes to; no CI
 gate reads this ceiling.
+
+The main session is measured separately, because there the host records what it
+delivered: `./scripts-run src/scripts/preamble_byte_census --main-session` reads
+the newest transcript of the working directory and attributes the start-up load
+per instruction file, per skill-catalog entry (described or name only) and per
+hook, plus the hook output every prompt turn adds. It exits 2 when no transcript
+holds an instructions delivery.
