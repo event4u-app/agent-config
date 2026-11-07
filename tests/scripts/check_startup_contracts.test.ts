@@ -113,6 +113,23 @@ describe('committed tree', () => {
         expect(all.get('git-history-discipline')?.contract).toContain('conflict resolution forced by a user-invoked');
         expect(all.get('legal-safety-floor')?.contract).toContain('body unreadable → still stop, name the path');
         expect(all.get('strategy-safety-floor')?.contract).toContain('counter-case (one paragraph:');
+        expect(all.get('git-history-discipline')?.contract).toContain('that re-push needs this-turn OK first');
+        expect(all.get('doc-screenshot-hygiene')?.contract).toContain('user-supplied screenshot used only as design spec');
+        expect(all.get('legal-safety-floor')?.contract).toContain('Art. 28/controller/processor/privilege/work product/privacy');
+        expect(all.get('finance-safety-floor')?.contract).toContain('ARR/MRR/NRR, churn rate, gross/contribution margin, EBITDA');
+        expect(all.get('strategy-safety-floor')?.contract).toContain('competitive, market entry, OKR, build vs buy, beachhead, GTM');
+        expect(all.get('settings-ask-protocol')?.contract).toContain('marked as the no-answer outcome (always present)');
+        expect(all.get('settings-ask-protocol')?.contract).toContain('C: not saved, permanent only via human edit/GUI');
+        expect(all.get('domain-safety-retention')?.contract).toContain("copy verbatim from domain-safety-disclaimer's financial section");
+        expect(all.get('domain-safety-pii')?.contract).toContain('marketing: paraphrase quotes, round metrics');
+        expect(all.get('domain-safety-pii')?.contract).toContain('always: logger recursively scrubs');
+        expect(all.get('domain-safety-pii')?.contract).toContain('not redact; stop before generating');
+        expect(all.get('fast-path-marker-visibility')?.contract).toContain('resolved, unavailable, split or aborted');
+        expect(all.get('autonomous-execution')?.contract).toContain('whole fix-loop bound for that target spent');
+        expect(all.get('domain-safety-disclaimer')?.contract).toContain('can I stop my medication → refuse + prescriber');
+        expect(all.get('domain-safety-disclaimer')?.contract).toContain('High (verifiable from cited data)/Medium (reasoned, unverified)');
+        expect(all.get('domain-safety-disclaimer')?.contract).toContain('AI-generated strategic analysis footer, copied likewise');
+        expect(all.get('domain-safety-disclaimer')?.contract).toContain('financial only: bookkeeping/');
     });
 
     it('the reply-opening duties share one order: marker, greeting, answer', () => {

@@ -140,7 +140,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## Startup contract
 
-- **When:** legal-review-prep pack installed + request/open file/loaded skills touch legal-pack skills or NDA/DPA/contract/redline/clause/GDPR/privilege.
+- **When:** legal-review-prep pack installed + request/open file/loaded skills touch legal-pack skills or NDA/DPA/contract/redline/clause/GDPR/Art. 28/controller/processor/privilege/work product/privacy or "is this a legal problem".
 - **Must:** output = draft/research aid for licensed attorney; surface analysis + open question; attorney decides · body (not footnote) carries "Attorney review required on material use. This is a draft for a licensed attorney, not legal advice and not a legal conclusion." · Jurisdiction: tag EU or DE on every output.
 - **Never:** binding legal conclusion · GREEN as clearance; non-lawyer → attorney gate, never self-approval · examine concrete individual case/predict its outcome · single-model legal work-product if require_council (default true) · stale-guidance guess outside EU/DE.
 - **Stop:** legal_review_prep.acknowledged not true → refuse, point to setup wizard (fail-closed) · no council → refuse, no output, not bad output · individual case → STOP: needs a lawyer — emit the body's STOP block verbatim (RDG § 2(1); body unreadable → still stop, name the path), name Rechtsanwaltskammer + Beratungshilfe, offer general concept + template; ends only that branch, not the chat · out-of-scope jurisdiction → refuse + "consult licensed local counsel" · disclaimer or consent never cures RDG line.

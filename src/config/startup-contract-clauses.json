@@ -274,6 +274,15 @@
           "response": "none",
           "witness": "meta-pipeline as per-iteration probe",
           "unresolved_ref": null
+        },
+        {
+          "id": "c31",
+          "kind": "bound",
+          "source": "Crossing 20 entries spends the whole fix-loop bound for that target at once",
+          "in_law": false,
+          "response": "stop",
+          "witness": "whole fix-loop bound for that target spent",
+          "unresolved_ref": null
         }
       ]
     },
@@ -1161,7 +1170,7 @@
           "source": "a user-supplied screenshot used only as a design",
           "in_law": false,
           "response": "none",
-          "witness": "user-supplied design-spec screenshot",
+          "witness": "user-supplied screenshot used only as design spec",
           "unresolved_ref": null
         },
         {
@@ -1255,7 +1264,7 @@
           "source": "> **AI-generated strategic analysis.** This recommendation was drafted",
           "in_law": false,
           "response": "act",
-          "witness": "AI-generated strategic analysis footer",
+          "witness": "AI-generated strategic analysis footer, copied likewise",
           "unresolved_ref": null
         },
         {
@@ -1291,7 +1300,7 @@
           "source": "*\"Can I stop my medication?\"* → refuse + redirect to prescriber.",
           "in_law": false,
           "response": "refuse",
-          "witness": "can I stop my medication",
+          "witness": "can I stop my medication → refuse + prescriber",
           "unresolved_ref": null
         },
         {
@@ -1336,7 +1345,7 @@
           "source": "**Not in scope:** bookkeeping, expense categorization, runway-cash math.",
           "in_law": false,
           "response": "none",
-          "witness": "bookkeeping/expense categorization",
+          "witness": "financial only: bookkeeping/expense categorization",
           "unresolved_ref": null
         },
         {
@@ -1390,7 +1399,7 @@
           "source": "verifiable from cited data → High; reasoned but unverified → Medium; speculative → Low.",
           "in_law": false,
           "response": "act",
-          "witness": "High (cited data)/Medium (reasoned)/Low (speculative)",
+          "witness": "High (verifiable from cited data)/Medium (reasoned, unverified)",
           "unresolved_ref": null
         }
       ]
@@ -1657,6 +1666,33 @@
           "response": "refuse",
           "witness": "hard refuse, flag spoliation, route to counsel",
           "unresolved_ref": null
+        },
+        {
+          "id": "c30",
+          "kind": "obligation",
+          "source": "`[CUSTOMER_COMPANY]`, `[CONTACT_NAME]`, paraphrase quotes, round metrics",
+          "in_law": false,
+          "response": "act",
+          "witness": "marketing: paraphrase quotes, round metrics",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c31",
+          "kind": "obligation",
+          "source": "3. **Logger-level redaction.** Configure the logger to scrub",
+          "in_law": false,
+          "response": "act",
+          "witness": "always: logger recursively scrubs",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c32",
+          "kind": "stop",
+          "source": "a PDF whose header reads `ATTORNEY-CLIENT PRIVILEGED` must hard-stop before",
+          "in_law": false,
+          "response": "stop",
+          "witness": "stop before generating",
+          "unresolved_ref": null
         }
       ]
     },
@@ -1758,7 +1794,7 @@
           "source": "Append the financial-disclaimer footer from `domain-safety-disclaimer`",
           "in_law": false,
           "response": "act",
-          "witness": "append financial-disclaimer footer",
+          "witness": "copy verbatim from domain-safety-disclaimer's financial section",
           "unresolved_ref": null
         },
         {
@@ -2409,7 +2445,7 @@
           "source": "When a decision resolves through the low-impact council fast-path (corpus",
           "in_law": false,
           "response": "none",
-          "witness": "decision resolves via low-impact council fast-path",
+          "witness": "any low-impact council fast-path outcome",
           "unresolved_ref": null
         },
         {
@@ -2563,6 +2599,15 @@
           "in_law": false,
           "response": "none",
           "witness": "`high_impact`/`user_required` never reach fast-path",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c19",
+          "kind": "trigger",
+          "source": "Applies to **every** fast-path outcome:",
+          "in_law": false,
+          "response": "none",
+          "witness": "resolved, unavailable, split or aborted",
           "unresolved_ref": null
         }
       ]
@@ -2793,6 +2838,33 @@
           "response": "refuse",
           "witness": "raise/cut/layoff w/o named human-decision owner",
           "unresolved_ref": null
+        },
+        {
+          "id": "c26",
+          "kind": "trigger",
+          "source": "IRR, MOIC, LTV, CAC, payback, scenario, sensitivity, fundraise, raise, term sheet, dilution",
+          "in_law": false,
+          "response": "none",
+          "witness": "IRR/MOIC",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c27",
+          "kind": "trigger",
+          "source": "ARR, MRR, NRR, churn rate, gross margin, contribution margin, EBITDA, free cash flow",
+          "in_law": false,
+          "response": "none",
+          "witness": "ARR/MRR/NRR, churn rate",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c28",
+          "kind": "trigger",
+          "source": "- Phrases: \"what's it worth\", \"how long do we have\"",
+          "in_law": false,
+          "response": "none",
+          "witness": "\"what's it worth\"/\"how long do we have\"",
+          "unresolved_ref": null
         }
       ]
     },
@@ -3012,6 +3084,15 @@
           "in_law": false,
           "response": "act",
           "witness": "skill git-workflow",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c25",
+          "kind": "stop",
+          "source": "and force-push are Hard-Floor triggers",
+          "in_law": false,
+          "response": "ask",
+          "witness": "that re-push needs this-turn OK first",
           "unresolved_ref": null
         }
       ]
@@ -3362,6 +3443,24 @@
           "in_law": false,
           "response": "none",
           "witness": "request/open file/loaded skills touch",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c25",
+          "kind": "trigger",
+          "source": "GDPR, Art. 28, controller, processor, privilege, work product, privacy",
+          "in_law": false,
+          "response": "none",
+          "witness": "Art. 28/controller/processor",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c26",
+          "kind": "trigger",
+          "source": "\"is this a legal problem\"",
+          "in_law": false,
+          "response": "none",
+          "witness": "or \"is this a legal problem\"",
           "unresolved_ref": null
         }
       ]
@@ -4988,6 +5087,33 @@
           "response": "act",
           "witness": "w/ value taken + change cmd",
           "unresolved_ref": null
+        },
+        {
+          "id": "c30",
+          "kind": "obligation",
+          "source": "always marked as what happens if the user says nothing.",
+          "in_law": false,
+          "response": "ask",
+          "witness": "marked as the no-answer outcome (always present)",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c31",
+          "kind": "obligation",
+          "source": "\"persisted to your global settings — you will not be asked again\"",
+          "in_law": false,
+          "response": "ask",
+          "witness": "B: persisted globally, never asked again",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c32",
+          "kind": "obligation",
+          "source": "\"not saved; making it permanent is a human edit or the GUI\"",
+          "in_law": false,
+          "response": "ask",
+          "witness": "C: not saved, permanent only via human edit/GUI",
+          "unresolved_ref": null
         }
       ]
     },
@@ -5436,6 +5562,24 @@
           "in_law": false,
           "response": "refuse",
           "witness": "vision w/o counter-case",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c30",
+          "kind": "trigger",
+          "source": "competitive, market entry, OKR, build vs buy, beachhead, GTM, category, where to play",
+          "in_law": false,
+          "response": "none",
+          "witness": "competitive, market entry, OKR",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c31",
+          "kind": "trigger",
+          "source": "\"where should we focus\", \"should we reorg\"",
+          "in_law": false,
+          "response": "none",
+          "witness": "\"where should we focus\"/\"should we reorg\"",
           "unresolved_ref": null
         }
       ]

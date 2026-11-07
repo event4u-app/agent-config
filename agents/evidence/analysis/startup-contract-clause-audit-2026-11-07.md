@@ -8,27 +8,27 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 652 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 31914 chars.**
+**28 rules · 668 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 32710 chars.**
 
 ## Per rule
 
 | Rule | Clauses | In law | Unresolved refs | Contract chars |
 |---|---:|---:|---:|---:|
-| `autonomous-execution` | 30 | 0 | 1 | 1397 |
+| `autonomous-execution` | 31 | 0 | 1 | 1442 |
 | `broken-access-control` | 14 | 7 | 0 | 797 |
 | `command-suggestion-policy` | 20 | 13 | 1 | 1058 |
 | `decision-revisit-gate` | 42 | 5 | 1 | 1729 |
-| `doc-screenshot-hygiene` | 22 | 6 | 0 | 1031 |
-| `domain-safety-disclaimer` | 24 | 4 | 0 | 1263 |
-| `domain-safety-pii` | 29 | 2 | 1 | 1456 |
-| `domain-safety-retention` | 27 | 5 | 0 | 1564 |
+| `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
+| `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
+| `domain-safety-pii` | 32 | 2 | 1 | 1528 |
+| `domain-safety-retention` | 27 | 5 | 0 | 1600 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
-| `fast-path-marker-visibility` | 18 | 2 | 0 | 904 |
-| `finance-safety-floor` | 25 | 2 | 1 | 1451 |
-| `git-history-discipline` | 24 | 13 | 0 | 1270 |
+| `fast-path-marker-visibility` | 19 | 2 | 0 | 935 |
+| `finance-safety-floor` | 28 | 2 | 1 | 1629 |
+| `git-history-discipline` | 25 | 13 | 0 | 1264 |
 | `image-likeness-and-rights` | 14 | 3 | 0 | 871 |
-| `legal-safety-floor` | 24 | 6 | 0 | 1279 |
+| `legal-safety-floor` | 26 | 6 | 0 | 1358 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
 | `low-impact-corpus-privacy-floor` | 24 | 10 | 1 | 973 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
@@ -36,9 +36,9 @@ the config is the record.
 | `secret-vcs-guard` | 26 | 5 | 0 | 1283 |
 | `security-sensitive-stop` | 32 | 4 | 2 | 1381 |
 | `session-canary` | 18 | 4 | 1 | 975 |
-| `settings-ask-protocol` | 29 | 6 | 0 | 1318 |
+| `settings-ask-protocol` | 32 | 6 | 0 | 1452 |
 | `source-confidentiality` | 20 | 3 | 0 | 1154 |
-| `strategy-safety-floor` | 29 | 4 | 2 | 1420 |
+| `strategy-safety-floor` | 31 | 4 | 2 | 1564 |
 | `tool-safety` | 22 | 0 | 0 | 840 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 861 |
@@ -77,6 +77,7 @@ the config is the record.
 | `autonomous-execution` | c28 | prohibition | surface | no | STOP. PROPOSE LINTER REDESIGN OR REMOVAL. DO NOT EXPAND THE ALLOWLIST FURTHER. | propose linter redesign/removal, never expand |  |
 | `autonomous-execution` | c29 | obligation | act | no | Verify with the narrowest tool that proves the target green | narrowest probe proving green |  |
 | `autonomous-execution` | c30 | prohibition | none | no | never a meta-pipeline as per-iteration probe | meta-pipeline as per-iteration probe |  |
+| `autonomous-execution` | c31 | bound | stop | no | Crossing 20 entries spends the whole fix-loop bound for that target at once | whole fix-loop bound for that target spent |  |
 | `broken-access-control` | c1 | trigger | none | no | Writing or modifying an endpoint, route, query or serializer returning user- or tenant-owned data | editing endpoint/route/query/serializer |  |
 | `broken-access-control` | c2 | obligation | act | yes | AUTHENTICATED IS NOT AUTHORIZED. EVERY REQUEST-SUPPLIED ID/FILTER GETS A | every request id/filter gets server-derived |  |
 | `broken-access-control` | c3 | trigger | none | yes | A TOOL ARGUMENT A MODEL FILLS IS A REQUEST-SUPPLIED ID. | model-filled tool arg = request-supplied id |  |
@@ -173,7 +174,7 @@ the config is the record.
 | `doc-screenshot-hygiene` | c18 | trigger | none | no | **Fires** when creating/embedding a screenshot into documentation (docs site, | screenshot created/embedded in docs |  |
 | `doc-screenshot-hygiene` | c19 | trigger | none | no | README, feature docs) or when a screenshot lands under 'docs/media/'. | or landing in docs/media/ |  |
 | `doc-screenshot-hygiene` | c20 | exception | none | no | **Does NOT fire** on: image *generation* (see 'media-governance-routing', | not image generation |  |
-| `doc-screenshot-hygiene` | c21 | exception | none | no | a user-supplied screenshot used only as a design | user-supplied design-spec screenshot |  |
+| `doc-screenshot-hygiene` | c21 | exception | none | no | a user-supplied screenshot used only as a design | user-supplied screenshot used only as design spec |  |
 | `doc-screenshot-hygiene` | c22 | exception | none | no | non-doc surfaces. | non-doc surfaces |  |
 | `domain-safety-disclaimer` | c1 | obligation | act | yes | EVERY ADVISORY-SHAPED DRAFT SHIPS WITH THE MATCHING "NOT X ADVICE" | append matching disclaimer |  |
 | `domain-safety-disclaimer` | c2 | prohibition | refuse | yes | DISCLAIMER. DIAGNOSIS AND DOSAGE OUTPUTS ARE REFUSED OUTRIGHT. | output a diagnosis or dosage |  |
@@ -183,22 +184,22 @@ the config is the record.
 | `domain-safety-disclaimer` | c6 | obligation | act | no | 1. **Assumptions section.** 3-5 bullets naming the load-bearing priors | assumptions section (3-5 load-bearing priors) |  |
 | `domain-safety-disclaimer` | c7 | obligation | act | no | 2. **Confidence label per claim.** High / Medium / Low | confidence label per claim |  |
 | `domain-safety-disclaimer` | c8 | obligation | act | no | 3. **Inversion check.** One paragraph: | inversion check (fails if X; early signal Y) |  |
-| `domain-safety-disclaimer` | c9 | obligation | act | no | > **AI-generated strategic analysis.** This recommendation was drafted | AI-generated strategic analysis footer |  |
+| `domain-safety-disclaimer` | c9 | obligation | act | no | > **AI-generated strategic analysis.** This recommendation was drafted | AI-generated strategic analysis footer, copied likewise |  |
 | `domain-safety-disclaimer` | c10 | prohibition | refuse | no | *"What do I have?"* / *"Is this symptom serious?"* → refuse + redirect to a licensed provider | redirect to licensed provider |  |
 | `domain-safety-disclaimer` | c11 | escalation | refuse | no | or emergency services if symptoms suggest acute risk | emergency services if acute |  |
 | `domain-safety-disclaimer` | c12 | prohibition | refuse | no | *"How much [medication] should I take?"* → refuse + redirect to pharmacist / prescriber. | → pharmacist/prescriber |  |
-| `domain-safety-disclaimer` | c13 | prohibition | refuse | no | *"Can I stop my medication?"* → refuse + redirect to prescriber. | can I stop my medication |  |
+| `domain-safety-disclaimer` | c13 | prohibition | refuse | no | *"Can I stop my medication?"* → refuse + redirect to prescriber. | can I stop my medication → refuse + prescriber |  |
 | `domain-safety-disclaimer` | c14 | trigger | none | no | - **Legal:** briefs, contract redlines, ToS, privacy policies, MSAs, DPAs | contract redlines |  |
 | `domain-safety-disclaimer` | c15 | trigger | none | no | - **Medical:** symptom interpretation, diagnostic reasoning, treatment selection | (symptoms, diagnosis, treatment |  |
 | `domain-safety-disclaimer` | c16 | obligation | act | no | mental-health crisis response (include crisis-hotline redirect if acute) | crisis-hotline redirect if acute |  |
 | `domain-safety-disclaimer` | c17 | trigger | none | no | - **Financial:** buy/sell/hold recommendations on any security, crypto, or asset | buy/sell/hold |  |
-| `domain-safety-disclaimer` | c18 | exception | none | no | **Not in scope:** bookkeeping, expense categorization, runway-cash math. | bookkeeping/expense categorization |  |
+| `domain-safety-disclaimer` | c18 | exception | none | no | **Not in scope:** bookkeeping, expense categorization, runway-cash math. | financial only: bookkeeping/expense categorization |  |
 | `domain-safety-disclaimer` | c19 | trigger | none | no | - **Strategic:** board memos, executive summaries, go-to-market plans | board memos |  |
 | `domain-safety-disclaimer` | c20 | prohibition | act | no | Never — the disclaimer is non-negotiable on advisory-shaped drafts. | skip disclaimer on advisory-shaped drafts |  |
 | `domain-safety-disclaimer` | c21 | prohibition | act | no | skip the disclaimer"* — still include it; the professional can strip it. | include it anyway |  |
 | `domain-safety-disclaimer` | c22 | exception | none | no | \| **Financial** \| — (advice OK with disclaimer) | financial advice itself allowed |  |
 | `domain-safety-disclaimer` | c23 | prohibition | refuse | no | *"What do I have?"* / *"Is this symptom serious?"* → refuse | "what do I have?"/"is this symptom serious?" → refuse |  |
-| `domain-safety-disclaimer` | c24 | obligation | act | no | verifiable from cited data → High; reasoned but unverified → Medium; speculative → Low. | High (cited data)/Medium (reasoned)/Low (speculative) |  |
+| `domain-safety-disclaimer` | c24 | obligation | act | no | verifiable from cited data → High; reasoned but unverified → Medium; speculative → Low. | High (verifiable from cited data)/Medium (reasoned, unverified) |  |
 | `domain-safety-pii` | c1 | prohibition | refuse | yes | NO RAW DIRECT IDENTIFIER IN ANY AI-GENERATED DRAFT, LOG LINE, OR EXPORT. | raw direct identifier in AI draft, log line or export |  |
 | `domain-safety-pii` | c2 | trigger | none | no | PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices) | drafts, log code, exports |  |
 | `domain-safety-pii` | c3 | ordering | act | no | Redact at generation time, not after review. | redact at generation time |  |
@@ -228,6 +229,9 @@ the config is the record.
 | `domain-safety-pii` | c27 | escalation | refuse | no | (no DPA cited) → refuse + redirect to legal. | require DPA, route to legal |  |
 | `domain-safety-pii` | c28 | escalation | ask | no | (recipient tier unknown) → ask the recipient question first. | recipient unknown → ask recipient first |  |
 | `domain-safety-pii` | c29 | stop | refuse | no | → hard refuse; flag spoliation risk; redirect to counsel. | hard refuse, flag spoliation, route to counsel |  |
+| `domain-safety-pii` | c30 | obligation | act | no | '[CUSTOMER_COMPANY]', '[CONTACT_NAME]', paraphrase quotes, round metrics | marketing: paraphrase quotes, round metrics |  |
+| `domain-safety-pii` | c31 | obligation | act | no | 3. **Logger-level redaction.** Configure the logger to scrub | always: logger recursively scrubs |  |
+| `domain-safety-pii` | c32 | stop | stop | no | a PDF whose header reads 'ATTORNEY-CLIENT PRIVILEGED' must hard-stop before | stop before generating |  |
 | `domain-safety-retention` | c1 | trigger | none | no | keyword: "right to be forgotten" | right to be forgotten |  |
 | `domain-safety-retention` | c2 | obligation | ask | yes | NAME THE JURISDICTION GAP. | name jurisdiction gap |  |
 | `domain-safety-retention` | c3 | precedence | act | yes | DEFAULT TO THE LONGEST APPLICABLE FLOOR. | default to longest applicable floor |  |
@@ -238,7 +242,7 @@ the config is the record.
 | `domain-safety-retention` | c8 | obligation | act | no | Then cite a primary source. | then cite a primary source |  |
 | `domain-safety-retention` | c9 | prohibition | refuse | no | If any of these apply, do not delete: open tax audit | open tax audit, pending litigation |  |
 | `domain-safety-retention` | c10 | obligation | act | no | When multiple floors apply, the longest wins. Document the chosen floor. | document chosen floor |  |
-| `domain-safety-retention` | c11 | obligation | act | no | Append the financial-disclaimer footer from 'domain-safety-disclaimer' | append financial-disclaimer footer |  |
+| `domain-safety-retention` | c11 | obligation | act | no | Append the financial-disclaimer footer from 'domain-safety-disclaimer' | copy verbatim from domain-safety-disclaimer's financial section |  |
 | `domain-safety-retention` | c12 | obligation | act | no | must respect deletion requests on the regime's response clock (GDPR Art. 12(3)) | regime's response clock (GDPR Art. 12(3): 1 month) |  |
 | `domain-safety-retention` | c13 | obligation | act | no | Raw ticket body + attachments (PII): short retention with DSR honoring. | short retention w/ DSR honoring |  |
 | `domain-safety-retention` | c14 | exception | none | no | Aggregate metrics (de-identified): long retention OK. | de-identified aggregates persist |  |
@@ -309,7 +313,7 @@ the config is the record.
 | `evaluator-independence` | c25 | exception | none | no | - A deterministic checker (linter, test suite, CI gate) — no prompt to steer. | deterministic checker |  |
 | `evaluator-independence` | c26 | prohibition | refuse | no | NEVER CITE A GUARD THAT WARNS AS ONE THAT BLOCKS. | cite warning guard as blocking |  |
 | `evaluator-independence` | c27 | prohibition | refuse | no | Never claim the | claim review ran as if verified |  |
-| `fast-path-marker-visibility` | c1 | trigger | none | no | When a decision resolves through the low-impact council fast-path (corpus | decision resolves via low-impact council fast-path |  |
+| `fast-path-marker-visibility` | c1 | trigger | none | no | When a decision resolves through the low-impact council fast-path (corpus | any low-impact council fast-path outcome |  |
 | `fast-path-marker-visibility` | c2 | obligation | act | yes | EVERY LOW-IMPACT COUNCIL FAST-PATH REPLY OPENS WITH THE EXACT MARKER. | OPENS WITH THE EXACT MARKER |  |
 | `fast-path-marker-visibility` | c3 | prohibition | none | yes | NEVER PARAPHRASE. NEVER SWALLOW. NEVER SUBSTITUTE THE AGENT'S OWN VERDICT. | paraphrase, swallow, substitute own verdict |  |
 | `fast-path-marker-visibility` | c4 | obligation | act | no | Applies to **every** fast-path outcome: | Per outcome: |  |
@@ -327,6 +331,7 @@ the config is the record.
 | `fast-path-marker-visibility` | c16 | prohibition | none | no | - Indenting the marker beyond the leading '> ' — breaks pattern match. **Violation.** | extra indent |  |
 | `fast-path-marker-visibility` | c17 | prohibition | none | no | - Merging marker into a numbered-options block. **Violation.** | merge into numbered options |  |
 | `fast-path-marker-visibility` | c18 | exception | none | no | Only fires for 'low_impact' dispatch outcomes. 'high_impact' and | 'high_impact'/'user_required' never reach fast-path |  |
+| `fast-path-marker-visibility` | c19 | trigger | none | no | Applies to **every** fast-path outcome: | resolved, unavailable, split or aborted |  |
 | `finance-safety-floor` | c1 | trigger | none | no | Auto-activates when 'pack-finance-basic' or 'pack-finance-advanced' is installed | pack-finance-basic/advanced installed |  |
 | `finance-safety-floor` | c2 | trigger | none | no | Active whenever any of these are in the request, the open file, or the loaded skill set: | or finance-pack skill | any of these |
 | `finance-safety-floor` | c3 | trigger | none | no | - Keywords: cash, runway, burn, valuation, DCF, IRR, MOIC, LTV, CAC, payback | runway, burn, valuation, DCF |  |
@@ -352,6 +357,9 @@ the config is the record.
 | `finance-safety-floor` | c23 | prohibition | refuse | no | Forecast accuracy claim without retro-loop reference | accuracy claim w/o retro-loop ref |  |
 | `finance-safety-floor` | c24 | prohibition | refuse | no | Comparing two companies / deals without naming the comparability gap | company/deal comparison w/o named comparability gap |  |
 | `finance-safety-floor` | c25 | prohibition | refuse | no | Suggesting capital actions (raise, cut, layoff) without naming the human-decision owner | raise/cut/layoff w/o named human-decision owner |  |
+| `finance-safety-floor` | c26 | trigger | none | no | IRR, MOIC, LTV, CAC, payback, scenario, sensitivity, fundraise, raise, term sheet, dilution | IRR/MOIC |  |
+| `finance-safety-floor` | c27 | trigger | none | no | ARR, MRR, NRR, churn rate, gross margin, contribution margin, EBITDA, free cash flow | ARR/MRR/NRR, churn rate |  |
+| `finance-safety-floor` | c28 | trigger | none | no | - Phrases: "what's it worth", "how long do we have" | "what's it worth"/"how long do we have" |  |
 | `git-history-discipline` | c1 | trigger | none | no | Fires on any rebase / squash / fixup / amend / force-push / 'reset --hard' / squash-merge intent | rebase/squash/fixup/amend/force-push |  |
 | `git-history-discipline` | c2 | trigger | none | no | on a divergent local↔origin state | divergent local↔origin |  |
 | `git-history-discipline` | c3 | trigger | none | no | on a branch carrying commits you did not author this session | branch with foreign commits |  |
@@ -376,6 +384,7 @@ the config is the record.
 | `git-history-discipline` | c22 | prohibition | refuse | no | folding a follow-up fix into its parent | folding a fix into its parent: forbidden |  |
 | `git-history-discipline` | c23 | obligation | act | no | The follow-up ships as its own commit | follow-up ships as own commit |  |
 | `git-history-discipline` | c24 | escalation | act | no | Body migrated to 'skill:git-workflow' | skill git-workflow |  |
+| `git-history-discipline` | c25 | stop | ask | no | and force-push are Hard-Floor triggers | that re-push needs this-turn OK first |  |
 | `image-likeness-and-rights` | c1 | prohibition | refuse | yes | NEVER GENERATE A REAL PERSON'S LIKENESS, A TRADEMARKED BRAND MARK, | generate real likeness, trademark |  |
 | `image-likeness-and-rights` | c2 | obligation | surface | yes | SURFACE THE RIGHTS QUESTION. REFUSE-AND-SURFACE OVER GENERATE. | surface rights question |  |
 | `image-likeness-and-rights` | c3 | precedence | refuse | yes | REFUSE-AND-SURFACE OVER GENERATE. | REFUSE-AND-SURFACE OVER GENERATE |  |
@@ -414,6 +423,8 @@ the config is the record.
 | `legal-safety-floor` | c22 | prohibition | refuse | no | NEVER A STALE-GUIDANCE GUESS FOR A JURISDICTION THE PACK DOES NOT COVER. | stale-guidance guess |  |
 | `legal-safety-floor` | c23 | obligation | act | no | Every output carries a 'Jurisdiction:' tag ('EU' / 'DE') | Jurisdiction: tag EU or DE on every output |  |
 | `legal-safety-floor` | c24 | trigger | none | no | Active whenever any of these are in the request, the open file, or the loaded skill set: | request/open file/loaded skills touch |  |
+| `legal-safety-floor` | c25 | trigger | none | no | GDPR, Art. 28, controller, processor, privilege, work product, privacy | Art. 28/controller/processor |  |
+| `legal-safety-floor` | c26 | trigger | none | no | "is this a legal problem" | or "is this a legal problem" |  |
 | `lethal-trifecta-guard` | c1 | trigger | none | yes | A SKILL / COMMAND / TOOL THAT COMBINES ALL THREE LEGS — | combining all three legs |  |
 | `lethal-trifecta-guard` | c2 | obligation | act | yes | MUST BREAK ONE LEG, OR GATE THE EGRESS BEHIND HUMAN-IN-THE-LOOP. | break one leg or gate the egress |  |
 | `lethal-trifecta-guard` | c3 | prohibition | refuse | yes | NEVER SHIP THE FULL TRIFECTA ON AN AUTONOMOUS PATH. | ship the full trifecta on an autonomous path |  |
@@ -591,6 +602,9 @@ the config is the record.
 | `settings-ask-protocol` | c27 | exception | none | no | - **The 'ask' routes to a permission gate** — a permission ask about an | permission-gate 'ask' (scope-control) |  |
 | `settings-ask-protocol` | c28 | exception | none | no | - **The 'ask' is code, not agent-carried.** | code 'ask' (TTY prompt) |  |
 | `settings-ask-protocol` | c29 | obligation | act | no | appears in the end-summary as one line: key, value taken, command that changes it. | w/ value taken + change cmd |  |
+| `settings-ask-protocol` | c30 | obligation | ask | no | always marked as what happens if the user says nothing. | marked as the no-answer outcome (always present) |  |
+| `settings-ask-protocol` | c31 | obligation | ask | no | "persisted to your global settings — you will not be asked again" | B: persisted globally, never asked again |  |
+| `settings-ask-protocol` | c32 | obligation | ask | no | "not saved; making it permanent is a human edit or the GUI" | C: not saved, permanent only via human edit/GUI |  |
 | `source-confidentiality` | c1 | trigger | none | no | Authoring or editing a skill, rule, command, guideline, context, ADR, doc, | command, guideline, context, ADR, doc, roadmap, changelog |  |
 | `source-confidentiality` | c2 | trigger | none | no | roadmap, changelog, or script and about to name an external repo / project as | about to name an external repo/project |  |
 | `source-confidentiality` | c3 | prohibition | refuse | yes | NEVER WRITE THAT THIS PACKAGE COPIED / FORKED / PORTED / ADAPTED / | copied/forked/ported/adapted/was-inspired-by |  |
@@ -625,7 +639,7 @@ the config is the record.
 | `strategy-safety-floor` | c12 | ordering | act | no | Each strategy deliverable surfaces, in this order: | In order: |  |
 | `strategy-safety-floor` | c13 | obligation | act | no | 1. **The bet** — one sentence naming what is being chosen and what is being given up. | the bet (one sentence: chosen vs given up) |  |
 | `strategy-safety-floor` | c14 | obligation | act | no | with at least one piece of evidence per claim | ≥1 evidence per claim |  |
-| `strategy-safety-floor` | c15 | obligation | act | no | one paragraph on the strongest argument against this path (not a strawman) | counter-case (strongest argument against, no strawman) |  |
+| `strategy-safety-floor` | c15 | obligation | act | no | one paragraph on the strongest argument against this path (not a strawman) | counter-case (one paragraph: strongest argument against, no strawman) |  |
 | `strategy-safety-floor` | c16 | obligation | act | no | 4. **Residual risk** | residual risk (unresolved + what invalidates it) |  |
 | `strategy-safety-floor` | c17 | obligation | act | no | 5. **Decision owner** | named decision owner (default founder) |  |
 | `strategy-safety-floor` | c18 | escalation | surface | no | \| Board-bound positioning or strategy memo \| | board memo → 'HUMAN REVIEW REQUIRED' |  |
@@ -640,6 +654,8 @@ the config is the record.
 | `strategy-safety-floor` | c27 | prohibition | refuse | no | - Moat claim without a competitor delta (named, with evidence) | moat claim w/o named competitor + evidenced delta |  |
 | `strategy-safety-floor` | c28 | prohibition | refuse | no | - Strategic call that fails the inversion test | call failing the inversion test |  |
 | `strategy-safety-floor` | c29 | prohibition | refuse | no | - Vision statement without a stated counter-case | vision w/o counter-case |  |
+| `strategy-safety-floor` | c30 | trigger | none | no | competitive, market entry, OKR, build vs buy, beachhead, GTM, category, where to play | competitive, market entry, OKR |  |
+| `strategy-safety-floor` | c31 | trigger | none | no | "where should we focus", "should we reorg" | "where should we focus"/"should we reorg" |  |
 | `tool-safety` | c1 | obligation | act | no | Tools are permissions, not abilities. Every tool access must be declared and reviewable. | deny by default |  |
 | `tool-safety` | c2 | obligation | act | no | **Least Agency** — grant the narrowest set of tools, scopes, and consequential actions the task actually needs | narrowest tools/scopes/actions |  |
 | `tool-safety` | c3 | escalation | ask | no | When in doubt, deny and ask, don't grant and hope. | grant on doubt (deny and ask instead) |  |
