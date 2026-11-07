@@ -125,12 +125,13 @@ Released by the owner on 2026-11-07
 spend; pre-registration before a paid run stays mandatory.
 
 ## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
 
-| # | Risk | Mitigation |
-|---|---|---|
-| 1 | The requires table drifts from the rules | Derived from frontmatter on every run, never hand-written |
-| 2 | An observe-only ledger is read as a compliance proof | States are delivery facts; compliance stays with outcome checkers |
-| 3 | A future gate loops on a large reference | Block at most once per reference per session; deliver when it fits the budget |
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The requires table drifts | implementation | The requires table drifts from the rules it describes | Derived from frontmatter on every run, never hand-written | Phase 2 — Reference duty, observe-only |
+| 2 | A ledger read as compliance | product | An observe-only ledger is read as a compliance proof | States are delivery facts; compliance stays with outcome checkers | Phase 2 — Reference duty, observe-only |
+| 3 | A read gate loops | implementation | A read gate blocks repeatedly on a reference larger than the budget | Block at most once per reference per session; deliver when it fits | Phase 3 — Deliver or block, only measured |
 
 ## What this roadmap does NOT cover
 
