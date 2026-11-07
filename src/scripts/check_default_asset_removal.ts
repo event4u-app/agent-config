@@ -28,6 +28,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+import { reportScanned } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
 const RULE_RE = /^src\/rules\/[^/]+\.md$/;
@@ -144,7 +145,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 2;
     }
     const diff = run(['diff', '--name-status', '-M', `${base}...HEAD`]);
-    const removed = removedDefaultAssets(diff.out.split('\n'));
+    const entries = diff.out.split('\n').filter((l) => l.trim() !== '');
+    const removed = removedDefaultAssets(entries);
+    reportScanned({
+        gate: 'check_default_asset_removal',
+        scanned: entries.length,
+        units: 'changed path(s)',
+        roots: ['src/rules', 'src/skills'],
+        allowEmpty: 'EMPTY_VALID: a change that touches no path removes no asset',
+    });
     const problems = removalProblems(removed, base, realGit);
     for (const p of problems) process.stderr.write(`❌  ${p}\n`);
     if (problems.length === 0 && !argv.includes('--quiet')) {

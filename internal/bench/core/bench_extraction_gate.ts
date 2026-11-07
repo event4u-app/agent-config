@@ -65,7 +65,7 @@ export function gateRows(input: {
             current: rival.total === 0 ? 'no engine commits in the window' : `${rival.rival} of ${rival.total} engine commits (${pct(rival.rival, rival.total)})`,
             holds: rival.total === 0 ? null : rival.rival / rival.total >= G2_MIN,
         },
-        { id: 'G3', criterion: 'Licence conflict: a needed part may not live in this repository', current: state.G3.note, holds: state.G3.holds },
+        { id: 'G3', criterion: 'License conflict: a needed part may not live in this repository', current: state.G3.note, holds: state.G3.holds },
         {
             id: 'G4',
             criterion: `CI burden: ≥ ${G4_MIN * 100} % of failed CI runs in ${WINDOW_DAYS} days come from a bench workflow`,

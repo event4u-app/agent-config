@@ -211,7 +211,7 @@ When the arm is in a run, the report adds three comparisons: `package` vs `minim
 | `minimal-prompt` | 251 | 7,963 | 0 |
 | `package` | 0 | 99,370 | 303 |
 
-So the floor costs about 140 tokens per turn over `vanilla`, and the full install about 91,500: the comparison is between instructions of very different size, which is the point of the arm. One trial measures size, not behaviour.
+So the floor costs about 140 tokens per turn over `vanilla`, and the full install about 91,500: the comparison is between instructions of very different size, which is the point of the arm. One trial measures size, not behavior.
 
 ### Second agent on the headroom tasks (2026-11-06) — NULL at this size, safety bar FAILED {#headroom-17}
 
@@ -275,7 +275,7 @@ cannot be measured reads `unknown`, never `no`.
 |---|---|---|---|
 | G1 | External demand: someone else wants their package measured or contributes | no external request recorded | no |
 | G2 | Rival-dominated engine: ≥ 50 % of engine commits in 90 days touch a rival | 0 of 197 engine commits (0 %) | no |
-| G3 | Licence conflict: a needed part may not live in this repository | no needed part is under a licence this repository cannot hold (no rival code is vendored yet) | no |
+| G3 | License conflict: a needed part may not live in this repository | no needed part is under a license this repository cannot hold (no rival code is vendored yet) | no |
 | G4 | CI burden: ≥ 10 % of failed CI runs in 90 days come from a bench workflow | 0 of 52 failed runs (0 %) | no |
 | G5 | A public, neutral ranking is wanted (owner decision) | no owner decision for a public ranking recorded | no |
 

@@ -283,7 +283,7 @@ The full install cost 5.5–7.9× vanilla in tokens; the one significant arm bef
   First candidate set from 3.1: the 21 domain and stack rules that load unconditionally
   under the full profile (finance, legal, strategy, media, persistence packs, stack
   routing; ~64k chars). Still gated on an effect from 1.4 or 2.5.
-- [x] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score:
+- [x] **3.4** "Does memory work" (owner turn 3) as an outcome, not a recall score: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_arms.ts -->
   one multi-session task family (decision recall, a superseded decision, a stale
   entry) run with and without memory on this harness. Recall itself stays with
   `later/road-to-a-memory-the-consumer-owns`; this step only adds the task outcome.
@@ -301,14 +301,14 @@ Evidence (read): `docs/decisions/ADR-202-anchor-scoring-as-thin-quality-instrume
 The owner, turn 7: track real use before removing; check that the right benefit was
 measured. A removal needs all of:
 
-- [x] **4.1** An interpretation record (sibling Phase 4) whose open questions are
+- [x] **4.1** An interpretation record (sibling Phase 4) whose open questions are <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
   answered: construct matched the asset's purpose, the asset was delivered and
   followed, the cost is priced.
   verify: the record for the asset has no open construct, delivery or cost question
   Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
   local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
   needs `agents/evidence/removals/<name>.md`, whose frontmatter answers an interpretation record with no `construct|delivery|cost: open` line.
-- [x] **4.2** Real-use evidence: rerun the skill census over every project store,
+- [x] **4.2** Real-use evidence: rerun the skill census over every project store, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_skill_activation.ts -->
   counting Read events on `SKILL.md` as well as `Skill` calls (stub
   `road-to-a-census-that-refuses-a-partial-store`), and record the result per asset.
   The 2026-10-26 "8 of 301" counted one repository and direct calls only.
@@ -317,7 +317,7 @@ measured. A removal needs all of:
   under both projects roots (1640 stores, 4072 sessions; names withheld) and counts
   `Read` of a `SKILL.md`. 36 of 303 shipped skills were reached, 34 only by a direct
   read. Per-asset table: `agents/evidence/metrics/skill-use-census-all-stores-2026-11-07.md`.
-- [x] **4.3** A per-family non-inferiority margin declared before the deciding run;
+- [x] **4.3** A per-family non-inferiority margin declared before the deciding run; <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
   no universal 3 pp.
   verify: the margin is committed before the deciding report's timestamp
   Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
@@ -329,7 +329,7 @@ measured. A removal needs all of:
   Partly enforced 2026-11-07: the removal gate refuses a record with `safety: true` and no
   existing `adversarial_fixture`. Open: the fixtures themselves — one per security or safety
   asset that fails without it — are a measurement per asset, not a gate.
-- [x] **4.5** Hide-from-default before delete: the first step of a removal is
+- [x] **4.5** Hide-from-default before delete: the first step of a removal is <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/standing-payload-delta.yml -->
   lazy-load or route, reversible in one release.
   verify: the removal PR changes routing or loading, not file existence
   Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
@@ -376,7 +376,7 @@ Evidence (read): `package.json` `files[]` includes `src/scripts/` · `src/script
   are copied out of the gitignored report directory into a store outside any
   checkout; offline re-scoring reproduces the numbers.
   verify: offline re-scoring of a stored bundle reproduces the report's numbers
-- [x] **6.3** The extraction gate stays as the companion plan wrote it: an app only
+- [x] **6.3** The extraction gate stays as the companion plan wrote it: an app only <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_extraction_gate.ts -->
   when at least two of external demand, rival-dominated engine work, a licence
   conflict, CI burden, or an owner-wanted public ranking hold — and the owner agrees.
   verify: the T3 report carries the gate table with each criterion's current state
@@ -408,7 +408,7 @@ Evidence (read): `src/scripts/_lib/dispatch_policy.ts:187` · `src/config/dispat
   changed (projected rule, skill catalog entry, CLAUDE.md), and a PR-template field that
   names a behaviour claim's evidence tier from `docs/contracts/evidence-basis.md`. The
   tier field is a prompt to the author; no gate reads it.
-- [x] **7.3** A roadmap that changed a default asset closes only with the
+- [x] **7.3** A roadmap that changed a default asset closes only with the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/agent-src/scripts/measurement_line.ts -->
   measurement it ran, or one line naming why none was possible (owner turn 5:
   "after a roadmap, run tests for those areas").
   verify: a closing roadmap that changed a default asset carries a measurement line
