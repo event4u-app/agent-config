@@ -24,9 +24,9 @@
 // TS port of the retired Python server.py (ADR-200). The Python module builds on the
 // `mcp` Python SDK (`mcp.server.Server`) and registers handlers via the
 // SDK decorators; the tests poke `server.request_handlers[...]`. There is
-// no `mcp` Python SDK in the TS runtime and the npm
-// `@modelcontextprotocol/sdk` (a different surface) is NOT a dependency of
-// this package. The twin therefore mirrors the *handler logic* exactly and
+// no `mcp` Python SDK in the TS runtime, and the npm
+// `@modelcontextprotocol/sdk` is a different surface, declared in package.json
+// but loaded only on demand (`_SDK_SERVER_SPEC`). The twin therefore mirrors the *handler logic* exactly and
 // exposes it through a transport-agnostic `BuiltServer` whose
 // `request_handlers` map mirrors the Python contract, then attaches the
 // handlers to the npm SDK lazily IF it is importable (degrade-when-absent,
