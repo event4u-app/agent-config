@@ -148,7 +148,6 @@ import { hookSectionEnabled } from '../_lib/hook_settings.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import {
     deliversBodies,
-    installerThinsHost,
     resolveLeanProjection,
 } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
@@ -889,13 +888,14 @@ export function buildInjection(
         (m) => !seen.has(m.id) && (scope === null || scope.has(m.id)),
     );
     if (matches.length === 0) return null;
-    // ONE COPY (`road-to-a-default-install-served-once` 1.1). The gate opens on
-    // the template's `delivery`, but the installer thins only on an explicit
-    // user-global choice, so a default install carries every routed body in
-    // its rule files already. A rule whose installed copy is a full body gets
-    // nothing; a stub still gets its body. Asked only off the consent path, so
-    // an opted-in install's delivery is unchanged byte for byte.
-    if (servedOnce && scope !== null && !installerThinsHost(DELIVERY_HOST, { packageRoot: ruleSources(root).pkg })) {
+    // ONE COPY (`road-to-a-default-install-served-once` 1.1). A rule whose
+    // installed copy is a full body gets nothing; a stub still gets its body.
+    // The filter reads the FORM ON DISK, never whether the installer meant to
+    // thin: since `road-to-a-session-start-under-the-host-limit` 3.2 the
+    // installer thins by default, yet a demoted machine, a kernel rule, or a
+    // file the consumer edited still stands full, and re-delivering it would
+    // put the same body in context twice.
+    if (servedOnce && scope !== null) {
         const full = installedFullIds(root, matches.map((m) => m.id));
         matches = matches.filter((m) => !full.has(m.id));
         if (matches.length === 0) return null;

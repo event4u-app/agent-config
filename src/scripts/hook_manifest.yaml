@@ -1468,11 +1468,12 @@ concerns:
     severity: advisory
     effect: execution
   # road-to-a-setup-that-decides-itself step 3.3 — promote the claude rule layer
-  # after proof, never at install. On session_start: demote a thinned layer the
-  # latest arrival record (taken after the promotion) shows missing a standing
-  # law, or — only while `src/config/layer-form-promotion.json` is enabled, which
-  # step 5.3 decides — thin a full one for the FOLLOWING sessions when the
-  # layer-form decision returns `thinned`. Silent, exit 0 on every path, no
+  # in a session, after proof; the installer is the default writer of the
+  # reduced layer (road-to-a-session-start-under-the-host-limit 3.2). On
+  # session_start: demote a thinned layer the latest arrival record (taken after
+  # the promotion) shows missing a standing law, or — only on a machine
+  # `install --enrol` enrolled — thin a full one for the FOLLOWING sessions when
+  # the layer-form decision returns `thinned`. Silent, exit 0 on every path, no
   # hook-token-budget row — it emits nothing. claude alone: the arrival record
   # and the carrier describe the claude layer only. Loaded from its own chunk.
   # Kill switch: `AGENT_CONFIG_LAYER_PROMOTE=off`.

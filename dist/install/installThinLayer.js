@@ -39,9 +39,10 @@
  * The install manifest records each deployed file's digest from the bytes ON
  * DISK at manifest-write time, which is after this pass. So the next run sees
  * `recorded-unchanged` for a thinned file, `decideDeployWrite` returns `write`,
- * and the verbatim copy restores the full body. Switching the mode back to
- * `eager-all` therefore un-thins by simply not running this pass — no inverse
- * operation, and no stub left behind. The property that carries it is the
+ * and the verbatim copy restores the full body. An install that does not run
+ * this pass — `install --full`, or a carrier the probe did not reach — therefore
+ * un-thins by simply not running it: no inverse operation, and no stub left
+ * behind. The property that carries it is the
  * ordering, which `tests/scripts/install_thin_layer.test.ts` pins directly.
  *
  * Side-effect-free apart from the writes it is asked to make. No CLI entry, no
@@ -54,7 +55,35 @@ import * as os from 'node:os';
 import { buildHostLimitRows, loadHostInstructionLimits, ownershipLine, readLayer, renderHostLimitRows, resolveLayerOwnership, } from '../scripts/_lib/installed_layer.js';
 import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
-import { absoluteBodyLinkPrefix, build_thin, split_frontmatter, } from '../scripts/_lib/thin_rules.js';
+import { absoluteBodyLinkPrefix, build_thin, INSTALLED_STUB_SHAPE, split_frontmatter, } from '../scripts/_lib/thin_rules.js';
+/**
+ * The one package-owned file that declares where an installed layer's stub
+ * bodies are (`road-to-a-session-start-under-the-host-limit`, the step that
+ * brings the session-start budget green).
+ *
+ * Every stub used to carry the absolute bodies directory in its own `Body:`
+ * line — ~75 chars of the same path on each of ~90 stubs, paid at every
+ * session start. Now a stub carries `Body: <id>.md` and this file, loaded
+ * unconditionally beside them, says once which directory those names are in.
+ * It carries the `package:` stamp, so reaping, the inventory and the restore
+ * path treat it as the package's own file.
+ */
+export const RULE_BODIES_INDEX = 'agent-config-rule-bodies.md';
+/** The index text for a bodies directory (absolute, trailing separator optional). */
+export function ruleBodiesIndexText(bodiesDir) {
+    const dir = bodiesDir.replace(/[\\/]+$/, '');
+    return ('---\npackage: event4u/agent-config\n---\n\n# Rule bodies\n\n' +
+        'Stubs in this directory name their rule body as `Body: <id>.md`. ' +
+        `The bodies are in \`${dir}/\`: read \`${dir}/<id>.md\` when a stub matches.\n`);
+}
+/**
+ * Resolve a stub pointer captured by `THIN_BODY_POINTER_RE` to a file: an
+ * absolute pointer as written, a bare `<id>.md` joined with the declared
+ * bodies directory.
+ */
+export function resolveBodyPointer(pointer, bodiesDir) {
+    return path.isAbsolute(pointer) ? pointer : path.join(bodiesDir, pointer);
+}
 /**
  * Replace the body of every thinnable rule in `rulesDir` with its stub.
  *
@@ -65,13 +94,18 @@ export function thinInstalledRuleLayer(opts) {
     const packageRoot = path.resolve(opts.packageRoot);
     const bodySourceDir = path.join(packageRoot, 'dist', 'agent-src', 'rules');
     const bodyLinkPrefix = absoluteBodyLinkPrefix(opts.bodyLinkRoot ?? packageRoot);
+    const indexPath = path.join(opts.rulesDir, RULE_BODIES_INDEX);
     const preserved = opts.preserved ?? new Set();
+    const keepWhole = opts.keepWhole ?? new Set();
     // Scope is `null` on purpose. The copy already applied the install's rule
     // scope, so the files that EXIST in `rulesDir` are the scoped set; asking
     // `build_thin` to resolve the scope a second time would be a second reader
     // of the same decision, and the two could disagree. Anything the stub map
     // names that is not on disk is simply out of scope and is reported as such.
-    const stubs = build_thin(bodySourceDir, null, null, null, { packageRoot, bodyLinkPrefix });
+    // Pointers are bare `<id>.md`; the index written below declares the directory.
+    // INSTALLED_STUB_SHAPE drops the `Fires on:` hint and the contract's own
+    // heading — the reasons are on that constant in thin_rules.ts.
+    const stubs = build_thin(bodySourceDir, null, null, null, { packageRoot, bodyLinkPrefix: '', shape: INSTALLED_STUB_SHAPE });
     let thinned = 0;
     let rewritten = 0;
     let kept = 0;
@@ -119,6 +153,12 @@ export function thinInstalledRuleLayer(opts) {
             // trigger-less, path-only, or a declared `no_stub` member. The
             // installed copy is already the right shape; touching it would be
             // this pass inventing a decision the projector did not make.
+            kept += 1;
+            charsBefore += installed.length;
+            charsAfter += installed.length;
+            continue;
+        }
+        if (keepWhole.has(name.replace(/\.md$/, ''))) {
             kept += 1;
             charsBefore += installed.length;
             charsAfter += installed.length;
@@ -180,7 +220,42 @@ export function thinInstalledRuleLayer(opts) {
             reason: 'no rule bodies found to build stubs from — the layer was left full-bodied',
         });
     }
+    // The index stands exactly while a stub does. With none standing it is removed
+    // (only when it is ours), so a full layer never carries a pointer to bodies
+    // no file in it needs; a later install's reaper removes it in any case,
+    // because it is a package-tagged file the deploy no longer lists.
+    let index = null;
+    if (thinned > 0) {
+        const text = ruleBodiesIndexText(bodyLinkPrefix);
+        try {
+            let current = null;
+            try {
+                current = fs.readFileSync(indexPath, 'utf-8');
+            }
+            catch {
+                current = null;
+            }
+            if (current !== text) {
+                fs.writeFileSync(indexPath, text, 'utf-8');
+                opts.onWrite?.(indexPath);
+            }
+            index = indexPath;
+        }
+        catch (e) {
+            failed.push({ rule: RULE_BODIES_INDEX, reason: String(e) });
+        }
+    }
+    else {
+        try {
+            if (fs.readFileSync(indexPath, 'utf-8').split(/\r?\n/).includes('package: event4u/agent-config'))
+                fs.rmSync(indexPath, { force: true });
+        }
+        catch {
+            // No index to remove.
+        }
+    }
     return {
+        index,
         thinned,
         rewritten,
         kept,

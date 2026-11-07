@@ -62,9 +62,9 @@
 #                     Exit 0 = clear, 1 = blocking finding, 2 = no runner.
 #   --full            Keep this machine's installed rule layer full-bodied
 #                     (writes `user_pin` into the install receipt; sticky).
-#   --enrol           Let this machine's rule layer be thinned while the
-#                     package's promotion switch is off (writes `enrolment`
-#                     into the install receipt). `--full` wins over it.
+#   --enrol           Also let a later session thin a rule layer this
+#                     install left full (writes `enrolment` into the install
+#                     receipt). `--full` wins over it.
 #   --fleet <yaml>    Multi-repo rollout from a fleet.yaml (repos list +
 #                     max_concurrency). Per-repo isolation; aggregate JSON.
 #                     Exit 0 = all green, 1 = any repo failed, 2 = config.

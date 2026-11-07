@@ -1,6 +1,6 @@
 /**
- * road-to-a-setup-that-decides-itself step 3.3 — promote after proof, never at
- * install. Verify: a fresh-HOME fixture where session 1 stays full, session 2
+ * road-to-a-setup-that-decides-itself step 3.3 — a session promotes after proof (the
+ * installer is the default writer since road-to-a-session-start-under-the-host-limit 3.2). Verify: a fresh-HOME fixture where session 1 stays full, session 2
  * thins only with the arrival record present, and a record missing a standing
  * law yields `demoted`.
  *
@@ -21,11 +21,10 @@ import {
     PROMOTING_MARKER,
     PROMOTION_RECORD,
     neverThinned,
-    PROMOTION_SWITCH_REL,
-    promotionEnabled,
     sessionLayerStep,
 } from '../../src/install/layerPromotion.js';
 import { writeEnrolment, writeUserPin } from '../../src/install/userPin.js';
+import { RULE_BODIES_INDEX } from '../../src/install/installThinLayer.js';
 import { CLAUDE_LAYER_DIRNAME, PACKAGE_STAMP_LINE, readCarrierState, recordCarrierProbe } from '../../src/install/stagedRuntime.js';
 import * as inventory from '../../src/scripts/_lib/global_deploy_inventory.js';
 import { captureInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_event.js';
@@ -59,7 +58,7 @@ function stamp(text: string): string {
 }
 
 /** A fresh HOME after `install`: full layer, staged runtime, ledger, lock, a reached carrier. */
-function freshInstall(opts: { enabled?: boolean; observed?: boolean } = {}): Fixture {
+function freshInstall(opts: { enrolled?: boolean; observed?: boolean } = {}): Fixture {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'layer-promotion-'));
     temps.push(root);
     const home = path.join(root, 'home');
@@ -87,8 +86,6 @@ function freshInstall(opts: { enabled?: boolean; observed?: boolean } = {}): Fix
     }
     effect['claude'] = claude;
     fs.writeFileSync(effectFile, JSON.stringify(effect));
-    const switchFile = path.join(stage, PROMOTION_SWITCH_REL);
-    fs.writeFileSync(switchFile, JSON.stringify({ ...JSON.parse(fs.readFileSync(switchFile, 'utf8')), enabled: opts.enabled !== false }));
 
     const snapshot = path.join(stage, CLAUDE_LAYER_DIRNAME);
     fs.mkdirSync(snapshot);
@@ -109,6 +106,8 @@ function freshInstall(opts: { enabled?: boolean; observed?: boolean } = {}): Fix
     inventory.save_inventory(inv, ledgerPath);
     write_lockfile(VERSION, ['claude-code'], { path: lockPath });
     recordCarrierProbe(runtimeRoot, 'claude', 'reached', VERSION);
+    // The session route runs on enrolled machines only; most cases here are about it.
+    if (opts.enrolled !== false) writeEnrolment(runtimeRoot);
 
     const env: NodeJS.ProcessEnv = {
         HOME: home,
@@ -137,7 +136,9 @@ function arrive(f: Fixture, session: string, ts: string, ruleIds: readonly strin
     fs.writeFileSync(path.join(dir, `${session}.jsonl`), `${lines.join('\n')}\n`);
 }
 
-const allRules = (f: Fixture): string[] => fs.readdirSync(f.rulesDir).filter((n) => n.endsWith('.md')).map((n) => n.replace(/\.md$/, ''));
+// The bodies index is the package's file but not a rule; it is never in the ledger's rule set.
+const allRules = (f: Fixture): string[] =>
+    fs.readdirSync(f.rulesDir).filter((n) => n.endsWith('.md') && n !== RULE_BODIES_INDEX).map((n) => n.replace(/\.md$/, ''));
 const stubCount = (f: Fixture): number =>
     allRules(f).filter((id) => is_thin_entry(fs.readFileSync(path.join(f.rulesDir, `${id}.md`), 'utf8'))).length;
 const ledgerMatchesDisk = (f: Fixture): boolean => {
@@ -158,7 +159,7 @@ function restoreAll(f: Fixture, keep = 0): void {
 const step = (f: Fixture, extra: Partial<Parameters<typeof sessionLayerStep>[0]> = {}) =>
     sessionLayerStep({ env: f.env, date: () => new Date('2026-10-24T12:00:00Z'), ...extra });
 
-describe('step 3.3 — promote after proof, never at install', () => {
+describe('step 3.3 — a session promotes after proof; the installer is the default writer', () => {
     it('session 1 full, session 2 thinned only with the arrival record present', () => {
         const f = freshInstall();
         expect(stubCount(f)).toBe(0);
@@ -188,6 +189,7 @@ describe('step 3.3 — promote after proof, never at install', () => {
         const f = freshInstall();
         arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
         expect(step(f).action).toBe('promoted');
+        expect(fs.existsSync(path.join(f.rulesDir, RULE_BODIES_INDEX))).toBe(true);
 
         // A thinned layer the record agrees with holds.
         arrive(f, 'session-2', '2026-10-24T13:00:00Z', allRules(f));
@@ -198,6 +200,8 @@ describe('step 3.3 — promote after proof, never at install', () => {
         expect(step(f)).toEqual({ action: 'demoted', reason: 'arrival-standing-law-missing' });
         expect(readCarrierState(f.runtimeRoot).layer).toBe('demoted');
         expect(stubCount(f)).toBe(0);
+        // No bodies index is left pointing at bodies the full layer does not need.
+        expect(fs.existsSync(path.join(f.rulesDir, RULE_BODIES_INDEX))).toBe(false);
         expect(ledgerMatchesDisk(f)).toBe(true);
         // A demoted machine is not promoted again by a session.
         arrive(f, 'session-4', '2026-10-24T15:00:00Z', allRules(f));
@@ -215,30 +219,29 @@ describe('step 3.3 — promote after proof, never at install', () => {
         expect(step(f)).toEqual({ action: 'none', reason: 'thinned-holds' });
     });
 
-    it('the shipped switch is off, and off means nothing on disk moves', () => {
-        expect(promotionEnabled(REPO)).toBe(false);
-        const f = freshInstall({ enabled: false });
+    it('no shipped switch remains, and an unenrolled machine is never promoted by a session', () => {
+        // road-to-a-session-start-under-the-host-limit 3.3: the installer writes
+        // the reduced layer; the switch that gated this route on a benchmark is gone.
+        expect(fs.existsSync(path.join(REPO, 'src', 'config', 'layer-form-promotion.json'))).toBe(false);
+        const f = freshInstall({ enrolled: false });
         arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
-        expect(step(f)).toEqual({ action: 'none', reason: 'promotion-disabled' });
+        expect(step(f)).toEqual({ action: 'none', reason: 'not-enrolled' });
         expect(stubCount(f)).toBe(0);
     });
 
-    it('an enrolled machine is promoted with the shipped switch off; the --full pin still wins', () => {
-        const enrolled = freshInstall({ enabled: false });
-        writeEnrolment(enrolled.runtimeRoot);
+    it('an enrolled machine is promoted; the --full pin still wins', () => {
+        const enrolled = freshInstall();
         arrive(enrolled, 'session-1', '2026-10-24T10:00:00Z', allRules(enrolled));
         expect(step(enrolled).action).toBe('promoted');
         expect(stubCount(enrolled)).toBeGreaterThan(0);
 
-        const pinned = freshInstall({ enabled: false });
-        writeEnrolment(pinned.runtimeRoot);
+        const pinned = freshInstall();
         writeUserPin(pinned.runtimeRoot);
         arrive(pinned, 'session-1', '2026-10-24T10:00:00Z', allRules(pinned));
         expect(step(pinned)).toEqual({ action: 'none', reason: 'user-pin' });
         expect(stubCount(pinned)).toBe(0);
 
-        const unobserved = freshInstall({ enabled: false, observed: false });
-        writeEnrolment(unobserved.runtimeRoot);
+        const unobserved = freshInstall({ observed: false });
         arrive(unobserved, 'session-1', '2026-10-24T10:00:00Z', allRules(unobserved));
         expect(step(unobserved)).toEqual({ action: 'none', reason: 'delivery-unobserved' });
     });

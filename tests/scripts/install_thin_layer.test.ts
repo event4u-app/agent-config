@@ -24,6 +24,8 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    RULE_BODIES_INDEX,
+    resolveBodyPointer,
     describeThinInstalledLayer,
     installReceiptBudgetLines,
     thinInstalledRuleLayer,
@@ -215,19 +217,52 @@ describe('the installer applies the projector predicate when asked', () => {
         }
     });
 
-    it('writes an ABSOLUTE body pointer — the project-relative one resolves from no installed layer', () => {
-        thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
-        // The pattern comes from the WRITER (step 2.3). It held its own regex
-        // for the markdown-link form, so the day the pointer became a bare path
-        // this case failed with no defect behind it.
+    it('keeps a keepWhole rule full and counts it as kept, not as a consumer edit', () => {
+        const before = read('lawful');
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg, keepWhole: new Set(['lawful']) });
+
+        expect(read('lawful')).toBe(before);
+        expect(is_thin_entry(read('routed'))).toBe(true);
+        expect(res.thinned).toBe(1);
+        expect(res.kept).toBe(4);
+        expect(res.preserved).toEqual([]);
+    });
+
+    it('writes a bare pointer and ONE index that declares the absolute bodies directory', () => {
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
+        // The pattern comes from the WRITER (step 2.3), so a detector cannot re-spell it.
         const link = THIN_BODY_POINTER_RE.exec(read('routed'));
         expect(link).not.toBeNull();
-        const target = (link as RegExpExecArray)[1] as string;
-
-        expect(path.isAbsolute(target)).toBe(true);
-        expect(fs.existsSync(target)).toBe(true);
-        expect(target).toBe(path.join(sourceRules, 'routed.md'));
+        const pointer = (link as RegExpExecArray)[1] as string;
+        expect(pointer).toBe('routed.md');
         expect(read('routed')).not.toContain('../../dist/agent-src/rules/');
+
+        // The index names the directory once; joined with the bare pointer it resolves.
+        const index = fs.readFileSync(path.join(rulesDir, RULE_BODIES_INDEX), 'utf-8');
+        expect(res.index).toBe(path.join(rulesDir, RULE_BODIES_INDEX));
+        expect(index).toContain('package: event4u/agent-config');
+        expect(index).toContain(`${sourceRules}/`);
+        const target = resolveBodyPointer(pointer, res.bodyLinkPrefix);
+        expect(path.isAbsolute(target)).toBe(true);
+        expect(target).toBe(path.join(sourceRules, 'routed.md'));
+        expect(fs.existsSync(target)).toBe(true);
+    });
+
+    it('rewrites the index when the bodies directory changes, and removes it when no stub stands', () => {
+        const full = new Map(['routed', 'lawful'].map((id) => [id, read(id)]));
+        thinInstalledRuleLayer({ rulesDir, packageRoot: pkg, bodyLinkRoot: path.join(tmp, 'runtime-a') });
+        expect(fs.readFileSync(path.join(rulesDir, RULE_BODIES_INDEX), 'utf-8')).toContain(path.join(tmp, 'runtime-a'));
+        thinInstalledRuleLayer({ rulesDir, packageRoot: pkg, bodyLinkRoot: path.join(tmp, 'runtime-b') });
+        const index = fs.readFileSync(path.join(rulesDir, RULE_BODIES_INDEX), 'utf-8');
+        expect(index).toContain(path.join(tmp, 'runtime-b'));
+        expect(index).not.toContain(path.join(tmp, 'runtime-a'));
+
+        // The next install's copy restores the full bodies; keeping both whole leaves no stub.
+        for (const [id, text] of full) fs.writeFileSync(path.join(rulesDir, `${id}.md`), text, 'utf-8');
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg, keepWhole: new Set(['routed', 'lawful']) });
+        expect(res.thinned).toBe(0);
+        expect(res.index).toBeNull();
+        expect(fs.existsSync(path.join(rulesDir, RULE_BODIES_INDEX))).toBe(false);
     });
 
     it('keeps the ownership keys — they are the reaper only evidence', () => {
@@ -238,12 +273,14 @@ describe('the installer applies the projector predicate when asked', () => {
         }
     });
 
-    it('keeps the matching signal a stub needs, read from the source and not from the rewritten file', () => {
+    it('keeps the description, read from the source and not from the rewritten file — and no `Fires on:` hint', () => {
+        // The installer thins only on a reached carrier, where rule-inject matches
+        // the router's triggers itself; the hint would repeat them at every session start.
         thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
         const stub = read('routed');
         expect(stub).toContain(THIN_ENTRY_MARKER);
-        expect(stub).toContain('Fires on: routed-word');
         expect(stub).toContain('What routed is for');
+        expect(stub).not.toContain('Fires on:');
     });
 
     it('is idempotent — a second pass over a thinned layer changes no byte', () => {
@@ -268,73 +305,38 @@ describe('the installer applies the projector predicate when asked', () => {
     });
 });
 
-// ADR-293 removed `lean_projection.*`. The gate below used to answer "did a
-// human ask, and is this host in scope"; the keys that carried the asking are
-// gone, and the user-global layer that was the ONLY one able to carry them on
-// an ADR-020 global-only install is no longer whitelisted. So every case here
-// now asserts the same thing from a different direction — the installer cannot
-// be made to thin by a settings value — which is what makes the key's tombstone
-// line ("ignored") true for this reader rather than only for the docs.
-describe('after ADR-293 no settings value can make the installer thin', () => {
-    it('does NOT thin when the only layer carrying the mode is the shipped template', () => {
+// ADR-293 removed `lean_projection.*`; road-to-a-session-start-under-the-host-limit
+// 3.2 then made the installer thin its default host with no opt-in (owner D1:
+// no opt-in path). So every case here asserts the same thing from a different
+// direction: claude-code is thinned and no other host is, and no settings value
+// — template, user-global, project, a pinned file, the cwd — moves that answer.
+// The consumer brake is `install --full`, read by `prepareClaudeCarrier`, not here.
+describe('the installer thins its default host, and no settings value moves that', () => {
+    it('thins claude-code when the only layer carrying a mode is the shipped template', () => {
         writeUserGlobalSettings(null);
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
     });
 
-    it('does NOT thin when a user-controlled layer still carries delivery', () => {
-        // The pre-ADR-293 opt-in, written exactly as a consumer would have
-        // written it. It is filtered out of the merge now, so it reaches
-        // nothing: this is the assertion that reds if the whitelist row ever
-        // comes back.
+    it('a leftover user-global delivery opt-in changes nothing', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
     });
 
-    it('does NOT thin a consumer who explicitly chose eager-all', () => {
+    it('a leftover eager-all does not opt a consumer out — the pin does', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
     });
 
-    it('does NOT thin any host a leftover hosts list names', () => {
+    it('a leftover hosts list enrols no other host', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n  hosts:\n    - cursor\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
-        // `cursor` was the host this leftover opted IN. It is the sensitive
-        // direction: before ADR-293 this read `true`.
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
+        // `cursor` was the host this leftover opted IN before ADR-293 — the
+        // sensitive direction stays closed.
         expect(installerThinsHost('cursor', { packageRoot: pkg })).toBe(false);
+        expect(installerThinsHost('cline', { packageRoot: pkg })).toBe(false);
     });
 
-    it('ignores a PROJECT layer, which it always did, and now the machine layer too', () => {
-        // The gate decides whether to rewrite `~/.claude/rules`, which every
-        // checkout on this machine reads. A per-project value deciding that
-        // would thin for everyone from one repo — that exclusion is unchanged.
-        // What changed is the other side: the machine layer no longer opts in
-        // either, so both directions now read `false`.
-        const project = path.join(tmp, 'a-checkout');
-        fs.mkdirSync(project, { recursive: true });
-
-        writeUserGlobalSettings(null);
-        fs.writeFileSync(
-            path.join(project, '.agent-settings.yml'),
-            'lean_projection:\n  mode: delivery\n',
-            'utf-8',
-        );
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
-
-        writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
-        fs.writeFileSync(
-            path.join(project, '.agent-settings.yml'),
-            'lean_projection:\n  mode: eager-all\n',
-            'utf-8',
-        );
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
-    });
-
-    it('holds for the shape install.ts actually calls — packageRoot only, from a cwd that disagrees', () => {
-        // Every other case here pins `projectRoot` or `settingsPath`, so none of
-        // them exercises the production call. `install.ts` passes `packageRoot`
-        // and nothing else, which means `process.cwd()` is what the resolver
-        // would otherwise reach for — so the cwd is made to say the opposite of
-        // the user-global layer in both directions.
+    it('ignores a project layer and the cwd in both directions', () => {
         const project = path.join(tmp, 'cwd-checkout');
         fs.mkdirSync(project, { recursive: true });
         fs.writeFileSync(
@@ -345,30 +347,20 @@ describe('after ADR-293 no settings value can make the installer thin', () => {
         const saved = process.cwd();
         try {
             process.chdir(project);
-
             writeUserGlobalSettings(null);
-            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
-
+            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
             writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
-            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
-
-            writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
-            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+            expect(installerThinsHost('cursor', { packageRoot: pkg })).toBe(false);
         } finally {
             process.chdir(saved);
         }
     });
 
     it('accepts an explicit settingsPath and is unmoved by it — no caller has to change', () => {
-        // A pinned file was the last way to reach this gate, and it was the one
-        // the tests themselves used. It is kept, with its answer inverted, so a
-        // regression that restores ANY settings read reds here first.
         const pinned = path.join(tmp, 'pinned.yml');
-        fs.writeFileSync(pinned, 'lean_projection:\n  mode: delivery\n', 'utf-8');
+        fs.writeFileSync(pinned, 'lean_projection:\n  mode: eager-all\n', 'utf-8');
         writeUserGlobalSettings(null);
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, settingsPath: pinned })).toBe(
-            false,
-        );
+        expect(installerThinsHost('claude-code', { packageRoot: pkg, settingsPath: pinned })).toBe(true);
     });
 });
 
@@ -406,16 +398,6 @@ describe('a file this pass must not corrupt', () => {
 });
 
 describe('rollback', () => {
-    it('leaves the layer untouched once the mode is back to eager-all', () => {
-        writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
-        const before = read('routed');
-        if (installerThinsHost('claude-code', { packageRoot: pkg })) {
-            thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
-        }
-        expect(read('routed')).toBe(before);
-        expect(is_thin_entry(read('routed'))).toBe(false);
-    });
-
     it('the manifest digest must be taken AFTER the thin pass, or the stub is preserved forever', () => {
         // The ORDERING is the rollback, so the case has to be able to fail on
         // the ordering. Passing one digest as both `recorded` and `onDisk`
