@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 652 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 31849 chars.**
+**28 rules · 652 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 31914 chars.**
 
 ## Per rule
 
@@ -26,9 +26,9 @@ the config is the record.
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
 | `fast-path-marker-visibility` | 18 | 2 | 0 | 904 |
 | `finance-safety-floor` | 25 | 2 | 1 | 1451 |
-| `git-history-discipline` | 24 | 13 | 0 | 1250 |
+| `git-history-discipline` | 24 | 13 | 0 | 1270 |
 | `image-likeness-and-rights` | 14 | 3 | 0 | 871 |
-| `legal-safety-floor` | 24 | 6 | 0 | 1234 |
+| `legal-safety-floor` | 24 | 6 | 0 | 1279 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
 | `low-impact-corpus-privacy-floor` | 24 | 10 | 1 | 973 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
@@ -372,7 +372,7 @@ the config is the record.
 | `git-history-discipline` | c18 | exception | act | no | **User says so this turn** | (1) user says so this turn |  |
 | `git-history-discipline` | c19 | bound | none | no | This operation only, not a standing rule. | that operation only, not a standing rule |  |
 | `git-history-discipline` | c20 | exception | act | no | **Standing instruction not yet revoked** | (2) unrevoked standing instruction |  |
-| `git-history-discipline` | c21 | exception | act | no | **Conflict resolution forced by 'git pull --rebase'** | (3) finishing a user-invoked 'git pull --rebase' |  |
+| `git-history-discipline` | c21 | exception | act | no | **Conflict resolution forced by 'git pull --rebase'** | (3) conflict resolution forced by a user-invoked 'git pull --rebase' |  |
 | `git-history-discipline` | c22 | prohibition | refuse | no | folding a follow-up fix into its parent | folding a fix into its parent: forbidden |  |
 | `git-history-discipline` | c23 | obligation | act | no | The follow-up ships as its own commit | follow-up ships as own commit |  |
 | `git-history-discipline` | c24 | escalation | act | no | Body migrated to 'skill:git-workflow' | skill git-workflow |  |

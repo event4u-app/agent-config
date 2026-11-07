@@ -2984,7 +2984,7 @@
           "source": "**Conflict resolution forced by `git pull --rebase`**",
           "in_law": false,
           "response": "act",
-          "witness": "(3) finishing a user-invoked `git pull --rebase`",
+          "witness": "(3) conflict resolution forced by a user-invoked `git pull --rebase`",
           "unresolved_ref": null
         },
         {
