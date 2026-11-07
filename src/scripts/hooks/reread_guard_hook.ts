@@ -76,6 +76,7 @@ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
+import { dutyForPath, dutyStates, type DutyState } from '../_lib/reference_duty.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -195,6 +196,8 @@ export interface Ledger {
     writes: Record<string, number>;
     /** Per-path once-per-session advisory latch. */
     fired: Record<string, boolean>;
+    /** Reference duty observed at file acts, `rule::reference` → latest state. */
+    duty?: Record<string, { state: DutyState; ts: number }>;
 }
 
 function emptyLedger(): Ledger {
@@ -224,6 +227,7 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
             reads: isObject(parsed['reads']) ? (parsed['reads'] as unknown as Record<string, ReadRecord>) : {},
             writes: isObject(parsed['writes']) ? (parsed['writes'] as Record<string, number>) : {},
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
+            ...(isObject(parsed['duty']) ? { duty: parsed['duty'] as unknown as NonNullable<Ledger['duty']> } : {}),
         };
     } catch {
         return emptyLedger(); // missing/corrupt ledger → fresh; never a crash
@@ -318,7 +322,8 @@ export function main(): number {
         const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
         const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(workspaceRoot, filePath);
         const relPath = path.relative(workspaceRoot, absPath);
-        if (isExemptPath(relPath) || isExemptPath(absPath)) return EXIT_ALLOW;
+        const exempt = isExemptPath(relPath) || isExemptPath(absPath);
+        if (exempt && !isRead) return EXIT_ALLOW;
 
         const sessionKey = deriveSessionKey(envelope, payload);
         const ledger = readLedger(workspaceRoot, sessionKey);
@@ -326,11 +331,33 @@ export function main(): number {
         // absolute-vs-relative host payloads), absolute otherwise.
         const key = relPath.startsWith('..') ? absPath : relPath;
 
+        if (exempt) {
+            // No advisory on an exempt path, but the read is recorded: a projected
+            // rule reference lives under dist/, and the reference duty asks whether
+            // it was read.
+            if (!isRangedRead(toolInput)) {
+                try {
+                    const st = fs.statSync(absPath);
+                    ledger.reads[key] = { mtime: st.mtimeMs, size: st.size, ts: Date.now() };
+                    writeLedger(workspaceRoot, sessionKey, ledger);
+                } catch {
+                    // unreadable target — nothing to record
+                }
+            }
+            return EXIT_ALLOW;
+        }
+
         if (isWrite) {
             // 6.2 bookkeeping: remember this session's own write. The write has
             // not happened yet, but for every later comparison "about to write"
             // and "wrote" are equivalent.
             ledger.writes[key] = Date.now();
+            const states = dutyStates(dutyForPath(key, workspaceRoot), ledger.reads);
+            if (Object.keys(states).length > 0) {
+                const ts = Date.now();
+                ledger.duty = { ...(ledger.duty ?? {}) };
+                for (const [k, state] of Object.entries(states)) ledger.duty[k] = { state, ts };
+            }
             writeLedger(workspaceRoot, sessionKey, ledger);
             return EXIT_ALLOW;
         }

@@ -111,12 +111,18 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       > note: done 2026-11-07 — `agent_id` in the ledger key, ledger cleared on
       > `pre_compact` (claude binding added), a plain `cat <file>` counted as a full read;
       > 4 tests seen red, then green. Hook bundle 1,575,691 / 1,585,000 B.
-- [~] **2.3 Observe the duty.** At `pre_tool_use`, compare the 2.1 table with the
-      ledger and record `required-pending` · `delivered` · `read` · `omitted-budget`
-      per action, writing nothing into context and blocking nothing.
-      blocked: `hook-bundle-headroom`.
-      verify: a fixture session records one `required-pending` for `git commit` with no
-      prior read, and `read` after a whole-file read.
+- [x] **2.3 Observe the duty.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/reread_guard_hook.ts --> At `pre_tool_use`, compare the 2.1 table with the
+      ledger and record `required-pending` · `read` per file act, writing nothing into
+      context and blocking nothing.
+      verify: a fixture session records `required-pending` for a write under a rule's
+      `path_prefix` with no prior read, and `read` after a whole-file read of the
+      reference. (corrected-from-reproduction: the draft named `git commit`, but no rule
+      trigger names a shell command — 2.4.)
+      > note: done 2026-11-07 — `_lib/reference_duty.ts`, wired into `reread-guard` on
+      > Edit/Write; ledger `duty` map. Reads under exempt paths (`dist/**`) are now
+      > recorded without an advisory, because projected references live there — the
+      > E2E test failed on exactly that before the fix. `delivered` and `omitted-budget`
+      > need a delivery path to observe and wait on 3.1.
 
 - [x] **2.4 Classify the unreachable and the oversized references.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> For each of the 17
       rules whose `load_context` no act reaches, record one of: prompt-only by design
@@ -127,10 +133,7 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       verify: a committed table under `agents/evidence/analysis/` with one row for each
       of the 17 rules and each of the 10 references the requires table names, each with
       its disposition and the file:line it rests on.
-      > note: done 2026-11-07 — prompt-only 6 · covered by a gate or carrier 6 · needs an
-      > act trigger 5 (3 need a shell-command kind that does not exist: commit-policy,
-      > non-destructive-by-default, scope-control). Oversized: read-on-demand 6 · split 3 ·
-      > law line plus pointer 1. `agents/evidence/analysis/rule-reference-reachability-2026-11-07.md`.
+      > note: done 2026-11-07 — `agents/evidence/analysis/rule-reference-reachability-2026-11-07.md`.
 
 ## Phase 3 — Deliver or block, only measured
 
@@ -138,22 +141,44 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
       read-gate (block once per reference), nothing, full layer. Compare violation rate,
       extra turns and cost.
       spend released 2026-11-07; any blocking default still needs owner ratification, with a
-      false-positive ceiling registered before the run. Needs 2.2 and 2.3 first.
+      false-positive ceiling registered before the run.
+      blocked: `shell-command-trigger-kind`.
       verify: pre-registration committed before the first trial.
 
 ## Blockers
 
-### Resolved: hook-bundle-headroom
+### blocker: shell-command-trigger-kind
+- **Status:** open
+- **Owner:** agent — `road-to-mixed-trigger-activation-cost` step 2.3 (action-time delivery)
+- **Blocks:** 3.1
+- **What to do:** add a trigger kind that names a shell command (`git commit`,
+  `gh pr create`, `git push`) and give `commit-policy`, `scope-control` and
+  `non-destructive-by-default` rows with it. Step 2.4 found that the only acts with a
+  duty today are writes under `.claude/`, `dist/agent-src/` and design files plus three
+  slash commands, so a four-arm comparison now would measure a duty almost no task meets.
+- **Recommendation:** build the trigger kind inside `road-to-mixed-trigger-activation-cost`
+  step 2.3, because that step already owns delivery at the tool call; a second carrier
+  here would split one mechanism across two roadmaps.
+- **If you do nothing:** 3.1 stays open, and the three always-loaded authority rules can
+  never leave the always-loaded layer, because no act would carry them.
+- **Resolved when:** `task report-rule-requires` shows act rows for those three rules.
 
-The bundle ceiling was raised after this blocker was written; on 2026-11-07 it measured
-1,574,998 / 1,585,000 B, so steps 2.2 and 2.3 fit. Re-measure with
-`./scripts-run src/scripts/check_hook_bundle_composition` after each hook-touching step.
+### blocker: hook-bundle-headroom
+- **Status:** RESOLVED 2026-11-07 — the bundle ceiling was raised after this blocker was
+  written; it measured 1,578,501 / 1,585,000 B after 2.2 and 2.3 landed.
+- **Owner:** agent
+- **Blocks:** nothing now (held 2.2 and 2.3)
+- **What to do:** re-measure with `./scripts-run src/scripts/check_hook_bundle_composition`
+  after each hook-touching step.
+- **Resolved when:** done.
 
-### Resolved: b-owner-spend
-
-Released by the owner on 2026-11-07
-(`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`). Steps 1.2 and 3.1 may
-spend; pre-registration before a paid run stays mandatory.
+### blocker: b-owner-spend
+- **Status:** RESOLVED 2026-11-07 — released by the owner
+  (`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`).
+- **Owner:** user
+- **Blocks:** nothing now (held 1.2 and 3.1)
+- **What to do:** pre-register before any paid run.
+- **Resolved when:** done.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
