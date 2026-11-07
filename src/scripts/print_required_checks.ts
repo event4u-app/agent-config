@@ -93,6 +93,7 @@ const FEATURE_CHECKS = [
     'Node Tests (matrix: {ubuntu-latest,macos-26} × shard 1-4/4)',
     'Golden Tests (matrix: {ubuntu-latest,macos-26})',
     'Workspace Tests (matrix: {ubuntu-latest,macos-26})',
+    'Tests result',
     'Public Install Smoke (matrix: {ubuntu,macos,windows}-latest × node {20,22})',
     'Rule backstops',
     'no-python-in-src',
@@ -112,6 +113,8 @@ const RELEASE_CHECKS = [
     'Release install E2E (pack → install → upgrade → boot)',
     'npm audit (runtime deps, high+)',
     'skill-lint-strict',
+    'Tests result',
+    'lint commit subjects',
 ] as const;
 
 const DOCS_ONLY_CHECKS = [
@@ -121,12 +124,15 @@ const DOCS_ONLY_CHECKS = [
     'Smoke — router',
     'Smoke — schema',
     'Smoke — skills',
+    'Tests result',
+    'lint commit subjects',
 ] as const;
 
 /**
  * The checks that mechanically BLOCK a merge, per the repository ruleset
- * `main protection` (id 17749383), read on 2026-10-07: two required status
- * contexts, the second added on 2026-09-11 (ADR-276, recorded by #2169).
+ * `main protection` (id 17749383), read on 2026-11-07: four required status
+ * contexts — the second added on 2026-09-11 (ADR-276, recorded by #2169), the
+ * last two by 2026-11-07.
  * Everything else above runs and is visible on the PR but does not gate the
  * merge button. `standing-payload-delta.yml` runs on every `pull_request`, so
  * the second context appears in all three shapes.
@@ -140,6 +146,8 @@ const DOCS_ONLY_CHECKS = [
 const ENFORCED_CHECKS = [
     'Sync + Generate Tools Consistency',
     'Standing payload delta + budget gate',
+    'lint commit subjects',
+    'Tests result',
 ] as const;
 
 /** `git rev-parse --abbrev-ref HEAD`, mirroring `_git(check=True)`. */

@@ -12,7 +12,8 @@ keep-beta-reason: >-
 > **Status:** live since 2026-11-07. The in-repo half shipped in PR #2894;
 > `Tests result` was made a required check on ruleset `17749383` by owner
 > decision on 2026-11-07 (§ Enabling the gate). A failing test now blocks the
-> merge on the PR. The merge queue is **off for good** (owner decision, same day).
+> merge on the PR. The merge queue is **off for good** (owner decision, same day:
+> `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`).
 
 ## What it does
 
@@ -154,7 +155,9 @@ live values are in `branch-protection-policy.md`.
 2. **Add `Tests result` to the required status checks.** It is the one stable
    name over the whole matrix; it reports on every PR now that the trigger has
    no path filter.
-3. ~~**Enable the merge queue.**~~ **Off for good** (owner decision 2026-11-07).
+3. ~~**Enable the merge queue.**~~ **Off for good** (owner decision 2026-11-07,
+   `agents/evidence/owner-directives/2026-11-07-no-merge-queue.md` — do not
+   re-enable or propose).
    Tried that day: every queue entry failed `Standing payload delta + budget
    gate`, whose merge-base step had no base on `merge_group` (fixed since,
    `tests/scripts/standing_payload_delta_resolve_base.test.ts`). The
