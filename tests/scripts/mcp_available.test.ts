@@ -134,3 +134,41 @@ describe('mcp:available report', () => {
         expect(result.out.join('\n')).toContain('no mcp.json in this project');
     });
 });
+
+describe('agent-switch link row (road-to-a-link-with-agent-switch 2.4)', () => {
+    const present = () =>
+        ({
+            state: 'present',
+            status: { enabled: true, version: '2.13.0', contract: 1, mcp: { command: 'agent-switch', args: ['mcp', 'serve'] } },
+        }) as const;
+
+    it('names each link state in the text report', () => {
+        const root = scratch();
+        const cases = [
+            [present, 'present — agent-switch 2.13.0, link contract 1'],
+            [() => ({ state: 'disabled', detail: 'x' }) as const, 'off in agent-switch'],
+            [() => ({ state: 'incompatible', detail: 'speaks link contract 2' }) as const, 'not usable — speaks link contract 2'],
+            [() => ({ state: 'absent', detail: 'x' }) as const, 'not installed'],
+            [() => ({ state: 'failed', detail: 'exited 1' }) as const, 'no answer — exited 1'],
+        ] as const;
+        for (const [probe, expected] of cases) {
+            const text = runMcpAvailable({ cwd: root, json: false, pathEnv: '', linkProbe: probe }).out.join('\n');
+            expect(text).toContain('agent-switch link');
+            expect(text).toContain(expected);
+        }
+    });
+
+    it('carries the probe in --json and still claims no handshake', () => {
+        const root = scratch();
+        const payload = JSON.parse(
+            runMcpAvailable({ cwd: root, json: true, pathEnv: '', linkProbe: present }).out.join('\n'),
+        ) as { agent_switch_link: { state: string }; handshake_performed: boolean };
+        expect(payload.agent_switch_link.state).toBe('present');
+        expect(payload.handshake_performed).toBe(false);
+    });
+
+    it('omits the row when no probe is passed', () => {
+        const root = scratch();
+        expect(runMcpAvailable({ cwd: root, json: false, pathEnv: '' }).out.join('\n')).not.toContain('agent-switch link');
+    });
+});
