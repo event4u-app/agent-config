@@ -102,8 +102,8 @@ named in `load_context` above so a session that reaches this rule can open them.
 `user_prompt_submit` slot; its `stop` fires *after* the reply, so injecting
 there could not shape the reply the reminder is for — counting it would be the
 over-credit the frequency audit exists to remove. **Windsurf** lost its package
-prompt binding on 2026-11-07; the event could not be established.
-**Copilot** binds nothing. On all three no per-turn beat arrives; re-read
+prompt binding on 2026-11-07; its event was not established.
+**Copilot** binds nothing. All three lack a bound pre-reply reminder; re-read
 this rule on trigger.
 
 ## See also
