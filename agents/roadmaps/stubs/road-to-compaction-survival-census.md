@@ -5,10 +5,23 @@ review_by: 2026-12-24
 
 # Stub: road to a compaction-survival census
 
-> **Arrivals:** 2 — latest `inbox-2026-11-z` (2026-11-07): asks to re-deliver laws and
+> **Arrivals:** 3 — latest `inbox-2026-11-zb` (2026-11-08): asks for compaction to keep
+> task state and user-set constraints. That round measured from host transcripts what
+> this stub said only a live session could give — see the 2026-11-08 reading below.
+> Earlier: `inbox-2026-11-z` (2026-11-07): asks to re-deliver laws and
 > active bodies after `/compact`; `rule-inject` is already bound on `pre_compact` and on
 > `session_start` for the compact source, so the open question stays the census, not the
 > wiring. Earlier: `inbox-2026-09-ab` (2026-09-29).
+
+> **2026-11-08 reading — the presence half no longer waits on a human.** The host
+> writes every compaction into the session JSONL (`compact_boundary`, then an
+> `isCompactSummary` record holding the summary). `src/scripts/compaction_census.ts`
+> reads that offline: 274 automatic compactions, session id kept 274/274, and a
+> per-probe presence baseline in the summaries
+> (`agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`,
+> roadmap `road-to-a-compaction-the-session-survives`). What still needs this stub's
+> live-session producer: the **adherence** half of cf01 (followed / paraphrased /
+> gone) and one observed **manual** compaction (zero in the corpus).
 
 > **Stub — not active work.** Transferred out of
 > [`road-to-context-fidelity.md`](../road-to-context-fidelity.md) Phase 0 and

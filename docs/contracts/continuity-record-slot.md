@@ -21,6 +21,11 @@ session:recycle` once before `/clear` — contention over the slot was
 theoretical. Automatic production makes it routine, and a policy decided after
 the writer ships is a policy decided by whatever the writer happened to do.
 
+A session that compacts instead of clearing never reads this slot: `compact`
+injects no record (council `compact-resume-2026-10`). For that path the package
+ships `src/templates/compact-instructions.md`, the `# Compact instructions`
+section the host honours when it summarizes.
+
 ## The policy
 
 ```
