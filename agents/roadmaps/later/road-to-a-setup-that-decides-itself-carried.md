@@ -46,11 +46,14 @@ The parent's full Decisions table (D1-D16) and the frozen pre-registration
 - [ ] **5.2 Run under the existing spend and independence rules.** <!-- blocked-by: phase5-run-waits-on-an-observed-effect-row -->
   verify: the result carries the claims gate's honesty label.
   Open 2026-10-25, held by blocker `phase5-run-waits-on-an-observed-effect-row`: the frozen pre-registration states the run cannot start until the first host's row in `src/config/host-injection-effect.json` reads `observed-true`, and row `claude` still reads `unobserved`. No machine can produce a `thinned` decision, so the computed arm cannot be built; a run now would report every host as "no computed arm", which is a non-result, not a non-inferior one.
+  Note 2026-11-08 (round `inbox-2026-11-zc`, 4th arrival of this ask): a reviewer report asks for this full-vs-reduced comparison before the next release, at an estimated 20–30 USD. Whether it gates the release and whether that spend is released are owner decisions, put to the owner in that round; `later/road-to-a-start-as-light-as-the-field` waits on its result.
+  Note 2026-11-07: per road-to-a-session-start-under-the-host-limit step 3.3, this run no longer gates the default. The default gate is now the session-start size budget (`check_session_start_budget`) plus the contract tests (`check_startup_contracts`); this benchmark becomes a release-time non-inferiority check over the contract form, not an opt-in switch.
 - [ ] **5.3 Enable on the record.** 3.3's promotion is enabled for consumers only <!-- blocked-by: phase5-run-waits-on-an-observed-effect-row -->
   on a non-inferior 5.2; otherwise every machine stays full. Phase 4 ships either
   way: full is today's behaviour, now without its keys.
   verify: the enabling commit cites 5.2's result file.
   Open 2026-10-25, held by the same blocker through 5.2: nothing to enable on until 5.2 has a result file. Every machine stays full meanwhile, which is the state Phase 4 shipped.
+  Note 2026-11-07: per road-to-a-session-start-under-the-host-limit step 3.3, there is no switch left to enable — `src/config/layer-form-promotion.json` is removed, and install and upgrade write the reduced layer themselves (its step 3.2). The default gate is the size budget (`check_session_start_budget`) plus the contract tests (`check_startup_contracts`); the 5.2 benchmark becomes a release-time non-inferiority check over the contract form.
 
 ## Blockers
 

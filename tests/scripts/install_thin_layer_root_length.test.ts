@@ -1,17 +1,21 @@
 // The thinned layer's machine dependence, as a formula — step 1.3 of
 // `road-to-a-thinned-layer-measured-in-one-unit`.
 //
-// Every stub ends in an absolute pointer rooted at the package the install was
-// made from (`absoluteBodyLinkPrefix`), so the layer's standing size depends on
-// where that package happens to sit on the reader's disk. That is a real
+// The thinned layer names the package the install was made from
+// (`absoluteBodyLinkPrefix`), so its standing size depends on where that
+// package happens to sit on the reader's disk. That is a real
 // property of the installed form and not a fixture artefact: an independent
 // install from a longer root was observed raising both the install receipt and
 // the installed-layer report, and until now nobody could say by how much
 // without running two installs.
 //
-// These cases turn it into an equation a reader can apply to any root:
+// These cases turn it into an equation a reader can apply to any root. Stubs
+// used to repeat the root in every `Body:` line (Δ root × number of stubs).
+// Since road-to-a-session-start-under-the-host-limit Phase 3 a stub carries a
+// bare `Body: <id>.md` and the root is written ONCE, in the bodies index, where
+// it appears twice (the directory, and the `<dir>/<id>.md` reading example):
 //
-//     Δ unconditional characters = Δ root length × number of stubs
+//     Δ unconditional characters = 2 × Δ root length, whatever the stub count
 //
 // The fixture is a synthetic package root, for the reason
 // `install_thin_layer.test.ts` states in its own header: pinning to the live
@@ -22,7 +26,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { thinInstalledRuleLayer } from '../../src/install/installThinLayer.js';
+import { RULE_BODIES_INDEX, thinInstalledRuleLayer } from '../../src/install/installThinLayer.js';
 import { readLayer } from '../../src/scripts/_lib/installed_layer.js';
 import { absoluteBodyLinkPrefix, is_thin_entry } from '../../src/scripts/_lib/thin_rules.js';
 
@@ -130,7 +134,7 @@ function runAt(
 }
 
 describe('the thinned layer is machine-dependent, by a stated formula', () => {
-    it('a root 60 characters longer costs exactly 60 x the stub count', () => {
+    it('a root 60 characters longer costs exactly 2 x 60, not 60 x the stub count', () => {
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'itrl-60-'));
         made.push(base);
         const short = runAt(base, 1);
@@ -142,19 +146,18 @@ describe('the thinned layer is machine-dependent, by a stated formula', () => {
         expect(short.stubs).toBe(STUBS);
         expect(long.stubs).toBe(STUBS);
 
-        expect(long.uncond - short.uncond).toBe(60 * STUBS);
+        expect(long.uncond - short.uncond).toBe(2 * 60);
     });
 
-    it('the per-stub cost is one character per character of root', () => {
+    it('the cost per character of root is two, independent of the stub count', () => {
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'itrl-per-'));
         made.push(base);
         const a = runAt(base, 1);
         const b = runAt(base, 24);
         const deltaRoot = b.prefix - a.prefix;
         expect(deltaRoot).toBe(23);
-        // The formula, divided out: the layer grows by the root delta once per
-        // stub, which is what makes a root length a budget decision.
-        expect((b.uncond - a.uncond) / a.stubs).toBe(deltaRoot);
+        // The formula, divided out: the root is paid in the index only.
+        expect(b.uncond - a.uncond).toBe(2 * deltaRoot);
     });
 
     it('two roots of EQUAL length give an identical reading', () => {
@@ -169,7 +172,7 @@ describe('the thinned layer is machine-dependent, by a stated formula', () => {
         expect(second.uncond).toBe(first.uncond);
     });
 
-    it('only the STUBS carry the root — a kept rule is the same size either way', () => {
+    it('only the INDEX carries the root — stubs and kept rules are the same size either way', () => {
         const base = fs.mkdtempSync(path.join(os.tmpdir(), 'itrl-kept-'));
         made.push(base);
         const shortRoot = path.join(base, 'p');
@@ -193,7 +196,10 @@ describe('the thinned layer is machine-dependent, by a stated formula', () => {
             const a = fs.readFileSync(path.join(shortDir, `${id}.md`), 'utf-8');
             const b = fs.readFileSync(path.join(longDir, `${id}.md`), 'utf-8');
             expect(is_thin_entry(a)).toBe(true);
-            expect(b.length - a.length).toBe(60);
+            expect(b).toBe(a);
         }
+        const ia = fs.readFileSync(path.join(shortDir, RULE_BODIES_INDEX), 'utf-8');
+        const ib = fs.readFileSync(path.join(longDir, RULE_BODIES_INDEX), 'utf-8');
+        expect(ib.length - ia.length).toBe(2 * 60);
     });
 });

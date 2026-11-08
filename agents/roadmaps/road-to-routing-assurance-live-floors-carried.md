@@ -50,15 +50,22 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
       verify: the five units at three runs each reach the rate floor
       (`docs/contracts/routing-assurance-metrics.md` § The floors restated as
       rates) on today's catalogue, classified by `compile_trigger_evals --classify`.
-
-      2026-11-05: "Use when" descriptions changed nothing and were reverted; a
-      fixture pilot restored `type-design` 0/3 → 3/3. The council's staged plan
-      for the rest is in `routing-carried-units-20261105.md`. Fixture series v1
-      (`routing-fixture-v1-20261105.md`): 2 of 5 PASSED; `react-shadcn-ui` and
-      `project-analysis-core` answered directly. `type-design` 9/10 at n=10
-      (`routing-type-design-n10-20261105.md`), closed. Direct output judged
-      against each skill's stated value (`routing-direct-output-assessment-20261108.md`):
-      falls short for both, so (b) — a v2 prompt series by an independent author.
+      > note: three units closed. `react-shadcn-ui` and `project-analysis-core` stay
+      at 0/3 in every series (v1, direct-output assessment, v2:
+      `routing-prompt-v2-20261108.md`, 0/9 and 0/6). AI council 2026-11-08, both
+      seats (d): keep this open and the gate visible, take no unit out of the floor,
+      cause first (1.3a), then one pre-registered mechanism (1.3b).
+- [x] **1.3a Establish the cause.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run the v2 series
+      (`internal/bench/trigger-fixtures/series-v2/cases.json`) on host 2.1.311 and
+      on today's host, same catalogue and fixtures, three runs per case.
+      verify: the artefact names both host versions and classifies each.
+      > note: done 2026-11-08 — not the host: 2.1.311 and 2.1.316 both 0/9 and 0/6,
+      same direct-handling traces (`routing-host-cause-13a-20261108.md`). Left open:
+      today's catalogue vs the original prompts; 1.3b chooses with that unresolved.
+- [ ] **1.3b Pilot one mechanism, pre-registered.** One delivery mechanism for the
+      two skills' stated value, chosen after 1.3a, measured on held-out requests
+      with the assessment's rubric, rollback stated before the run.
+      verify: an independent review of the pilot's report.
 
 ## Phase 2 — the suggest-without-read gap (carried 4.4)
 
@@ -95,13 +102,15 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
   off until that revised arm passes 2.1's verify.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-03 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A rule tuned to the gate | implementation | The tie diagnosis is known, so the next uniqueness rule can be picked to pass the parity gate rather than to deliver the right body | The rule, the wrong-body treatment and a fresh native arm are pre-registered by a session that did not author the mechanism, before its arm runs (`b-inline-arm-independence`) | Phase 2 — the suggest-without-read gap (carried 4.4) |
 | 2 | Noise read as a regression | implementation | One run per unit makes every recall 0 or 1; a skill edited on a single-run miss is edited against noise | Every unit in Phase 1 is measured at three runs before and after any edit; 1.2 separates host from catalogue first | Phase 1 — five units the canary left unresolved |
 | 3 | A skill edit that steals from a neighbour | product | Restoring one unit's routing criterion can take it from the skill that now wins the prompt | 1.3 allows the other outcome explicitly — a recorded reason the prompt now belongs to the competing skill — and classifies the five on today's catalogue, not the frozen one | Phase 1 — five units the canary left unresolved |
+| 4 | The baseline host cannot be run again | implementation | 1.3a needs host 2.1.311 beside today's; if that version is no longer installable, the cause stays inferred | Pin the version through the host's own installer before the run; if it cannot be installed, 1.3a records that and the cause stays unestablished rather than assumed | Phase 1 — five units the canary left unresolved |
+| 5 | A pilot that buys quality with standing weight | product | A mechanism that delivers the skills' value in always-loaded guidance or a hook costs every session, not only these two requests | 1.3b pre-registers the mechanism's scope and its standing cost beside the rubric, and states rollback before the run | Phase 1 — five units the canary left unresolved |
 
 ## Acceptance Criteria
 

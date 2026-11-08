@@ -302,6 +302,8 @@ tasks:
       - task: check-command-count
       - task: lint-no-new-atomic-commands
       - task: check-default-asset-removal
+      - task: check-startup-contracts
+      - task: check-session-start-budget
       - task: lint-command-budget
       - task: lint-command-verbs
       - task: check-skill-admissions

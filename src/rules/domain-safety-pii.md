@@ -29,6 +29,11 @@ triggers:
   - keyword: "export to CSV"
   - keyword: "data export"
   - keyword: "partner integration"
+  - keyword: "ATTORNEY-CLIENT PRIVILEGED"
+  - keyword: "ATTORNEY WORK PRODUCT"
+  - keyword: "PREPARED AT REQUEST OF COUNSEL"
+  - keyword: "LITIGATION HOLD"
+  - keyword: "CONFIDENTIAL — INTERNAL LEGAL ANALYSIS"
   - phrase: "draft a response to"
   - phrase: "marketing email featuring"
   - phrase: "draft feedback for"
@@ -165,9 +170,5 @@ PreToolUse hook — see `agents/settings/contexts/legal-privilege-probe.md`.
 
 ## See also
 
-- `skill:privacy-review` — regulatory-regime read (GDPR / CCPA / HIPAA / EEO).
-- `skill:data-handling-judgment` — transfer + retention cognition.
-- `skill:logging-monitoring`, `skill:secrets-management` — technical surfaces.
-- `domain-safety-disclaimer` — companion advisory rule.
-- `domain-safety-retention` — companion retention rule.
-- `doc-screenshot-hygiene` — the visual sibling: PII inside a **screenshot** shipped into docs (this rule covers text drafts / logs / exports, not images).
+- `skill:privacy-review`, `skill:data-handling-judgment`, `skill:logging-monitoring`, `skill:secrets-management`.
+- `domain-safety-disclaimer`, `domain-safety-retention`, `doc-screenshot-hygiene` (screenshots).

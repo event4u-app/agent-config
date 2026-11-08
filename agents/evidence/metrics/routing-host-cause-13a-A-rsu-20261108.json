@@ -1,0 +1,115 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-11-08T17:56:00.800Z",
+  "commit": "05f9a33f3e07bebe6ea137a4914aecccfd6b1abd",
+  "host_version": "2.1.311",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-host-cause-13a-protocol-20261108.md",
+    "sha256": "f6aacad134a6d100ddca46b51542645536abae0b32132ba6a2c277bc37d92096"
+  },
+  "catalogue_sha256": "828f2e07bd5e8f9993081235291d59b15027d34e1e790c91f8a9414c8ca2bed4",
+  "cost_usd": 3.2580834000000003,
+  "partial": false,
+  "cases": [
+    {
+      "case": "0327-react-shadcn-ui-rsu-v2-polish",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "24a007c13cb401c32c3b3a36c605d30811a362baf38246f6a09f9f4caca1decd",
+      "verdict": "not-fired",
+      "cost_usd": 0.21762280000000003,
+      "invoked": [],
+      "id": "rsu-v2-polish",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0327-react-shadcn-ui-rsu-v2-polish",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "24a007c13cb401c32c3b3a36c605d30811a362baf38246f6a09f9f4caca1decd",
+      "verdict": "not-fired",
+      "cost_usd": 0.2257956,
+      "invoked": [],
+      "id": "rsu-v2-polish",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0327-react-shadcn-ui-rsu-v2-polish",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "24a007c13cb401c32c3b3a36c605d30811a362baf38246f6a09f9f4caca1decd",
+      "verdict": "not-fired",
+      "cost_usd": 0.21930120000000006,
+      "invoked": [],
+      "id": "rsu-v2-polish",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0333-react-shadcn-ui-rsu-v2-compose",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "aa8476c3a4ad964fa30625c3ebf9d01d80e06f38eb314b78664fb24f2019fc1f",
+      "verdict": "not-fired",
+      "cost_usd": 0.449576,
+      "invoked": [],
+      "id": "rsu-v2-compose",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0333-react-shadcn-ui-rsu-v2-compose",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "aa8476c3a4ad964fa30625c3ebf9d01d80e06f38eb314b78664fb24f2019fc1f",
+      "verdict": "not-fired",
+      "cost_usd": 0.5497987999999999,
+      "invoked": [],
+      "id": "rsu-v2-compose",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0333-react-shadcn-ui-rsu-v2-compose",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "aa8476c3a4ad964fa30625c3ebf9d01d80e06f38eb314b78664fb24f2019fc1f",
+      "verdict": "not-fired",
+      "cost_usd": 0.560435,
+      "invoked": [],
+      "id": "rsu-v2-compose",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0334-react-shadcn-ui-rsu-v2-add",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "d514028289318d6ea41e1f52879a8b32581ecb57e23bfec8ec6a74ae5675fd4f",
+      "verdict": "not-fired",
+      "cost_usd": 0.33803180000000005,
+      "invoked": [],
+      "id": "rsu-v2-add",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0334-react-shadcn-ui-rsu-v2-add",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "d514028289318d6ea41e1f52879a8b32581ecb57e23bfec8ec6a74ae5675fd4f",
+      "verdict": "not-fired",
+      "cost_usd": 0.340073,
+      "invoked": [],
+      "id": "rsu-v2-add",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    },
+    {
+      "case": "0334-react-shadcn-ui-rsu-v2-add",
+      "skill": "react-shadcn-ui",
+      "query_sha256": "d514028289318d6ea41e1f52879a8b32581ecb57e23bfec8ec6a74ae5675fd4f",
+      "verdict": "not-fired",
+      "cost_usd": 0.35744919999999997,
+      "invoked": [],
+      "id": "rsu-v2-add",
+      "skill_sha256": "73756502ecf853f9e540cb95cb4ee4102b7aa3a74a4df274ee7e1c2e1d434ed4"
+    }
+  ],
+  "units": [
+    {
+      "unit": "react-shadcn-ui",
+      "n": 9,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    }
+  ]
+}

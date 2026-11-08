@@ -292,22 +292,25 @@ export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanPr
 
 
 /**
- * May the INSTALLER thin this host's rule tree? Never, since ADR-293.
+ * May the INSTALLER thin this host's rule tree? Yes for the default host set,
+ * with no settings read (`road-to-a-session-start-under-the-host-limit` 3.2).
  *
- * It used to fold three conditions — a human asked, the chosen mode writes
- * stubs, this host is in scope — over a settings key. The key is gone, so the
- * first condition can no longer be met by anything, and the honest shape is a
- * constant rather than a cascade read that can only return one answer.
+ * ADR-293 removed the settings key that used to fold "a human asked" into this
+ * answer, and for a while the answer was a constant `false`: an install wrote
+ * the full layer and only a later session could promote it. That left an
+ * upgrade-only consumer with a session-start layer over the host's instruction
+ * limit, and D1 of the roadmap above rules out any opt-in. So the installer
+ * thins the default host — contract stubs for contract-bearing rules, pointer
+ * stubs for the thinnable rest, the kernel whole — without anybody asking.
  *
- * THIS IS NOT "thinning is impossible". A fresh install writes the full layer
- * exactly as today, which is what step 3.3 of
- * `road-to-a-setup-that-decides-itself` specifies; promotion happens later, in
- * a session whose arrival record satisfies the decision function, and never at
- * install time. The function is kept rather than deleted so that the one place
- * that answer is decided stays named, and so `rule_inject_hook`'s
- * served-once check keeps reading it when 3.3 gives it a real answer again.
+ * THIS IS A REQUEST, NOT THE DECISION. `prepareClaudeCarrier` still thins only
+ * when the SessionStart probe reaches a dispatcher and no `install --full` pin
+ * is set, because a pointer stub's body arrives through that hook; a dead
+ * carrier keeps the layer full, and the shell branch restores a thinned layer
+ * whose carrier dies later. No settings value — project, user-global or a
+ * pinned file — moves this answer in either direction.
  */
-export function installerThinsHost(_hostId: string, _opts: ResolveOptions = {}): boolean {
-    return false;
+export function installerThinsHost(hostId: string, _opts: ResolveOptions = {}): boolean {
+    return DEFAULT_LEAN_PROJECTION_HOSTS.includes(hostId);
 }
 

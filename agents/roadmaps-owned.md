@@ -9,14 +9,13 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-a-graph-that-wins | active | ready | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
-| road-to-a-linear-time-test-that-holds-on-ci | active | ready | Road to a linear-time test that holds on CI |
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
-| road-to-a-reference-that-arrives-before-the-act | active | ready | Rule references an act requires, measured as delivered, read or missing. |
 | road-to-a-session-start-under-the-host-limit | active | ready | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
+| road-to-denies-that-name-no-bypass | active | ready | A refusal must not hand the agent its own way around. |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
+| road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
@@ -50,6 +49,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-sealed-lineage | later | later | Sealed. |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
+| road-to-a-start-as-light-as-the-field | later | later | A consumer session should start with a footprint comparable to the external reference harnesses: about 40k characters for the full … |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-stop-that-holds-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
@@ -163,7 +163,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-source-silence-cutover | later | later | Every item the predecessor could not close is closed, and each is here because of a named capability gap rather … |
 | road-to-sparring-critic-spike | later | blocked-for-later | Road to sparring-critic spike — one falsification run decides whether the critic exists |
 | road-to-stacks-beyond-php | later | later | A Python, TypeScript or Go repository gets the discipline this tree gives a Laravel one, without a language-named copy of … |
-| road-to-state-and-pins-across-compaction | later | later | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |

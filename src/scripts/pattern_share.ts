@@ -6,7 +6,7 @@
  * Python CLI contract EXACTLY — the `export` / `import` subcommands, their
  * positional + flag args (`--out`, `--force`), exit codes (0 / 1 / 2),
  * stdout/stderr split, the byte-identical refusal/success lines (`❌  …` /
- * `✅  …`), the redaction summary string (`v.category: repr(v.snippet)`), and
+ * `✅  …`), the redaction summary string (`v.category: <masked, N chars>` — the value itself is never echoed), and
  * the stdout passthrough of the pattern body on `export` with no `--out`. No
  * behaviour changes — the SAME `redact_low_impact_entry` primitive backs the
  * privacy floor, and `long_code_excerpt` is the one exempted category.

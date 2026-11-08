@@ -12,7 +12,10 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
+import actReferences from '../../config/act-references.json';
+import { ledgerKey } from './ledger_key.js';
 import { ruleSources } from './rule_injection.js';
+import { commandRunsAct } from './shell_acts.js';
 import { trigger_matches, type Trigger } from './router_match.js';
 
 export interface Duty {
@@ -27,15 +30,10 @@ export type DutyState = 'read' | 'required-pending';
 
 export class DutySourceError extends Error {}
 
-/**
- * The one key both the read ledger and the duty use for a file: relative to the
- * workspace when the file is inside it, absolute otherwise. Two derivations of
- * this key would silently disagree for every reference outside the workspace.
- */
-export function ledgerKey(workspaceRoot: string, absPath: string): string {
-    const rel = path.relative(workspaceRoot, absPath);
-    return rel === '' || rel.startsWith('..') || path.isAbsolute(rel) ? absPath : rel;
-}
+/** The loader checks this before using the chunk; bump it when the exports change. */
+export const REFERENCE_DUTY_SCHEMA = 1;
+
+export { ledgerKey };
 
 function loadContextOf(ruleFile: string): string[] {
     let text: string;
@@ -153,4 +151,40 @@ export function dutyStates(
         states[`${d.rule}::${d.reference}`] = current ? 'read' : 'required-pending';
     }
     return states;
+}
+
+/** One act-time binding: a shell command and the rules whose references it makes due. */
+export interface ActBinding {
+    shell_command: string;
+    rules: string[];
+}
+
+/**
+ * References due when `command` runs a bound shell act (`src/config/act-references.json`).
+ * The table names rule ids only; each reference comes from the rule's own
+ * `load_context`. A bound rule that cannot be read is listed in `errors`.
+ */
+export function scanActDuties(
+    command: string,
+    workspaceRoot: string,
+    bindings: readonly ActBinding[] = actReferences.bindings,
+): DutyScan {
+    const rules = new Set<string>();
+    for (const b of bindings) if (commandRunsAct(command, b.shell_command)) for (const r of b.rules) rules.add(r);
+    if (rules.size === 0) return { duties: [], errors: [] };
+    const sources = ruleSources(workspaceRoot);
+    const duties: Duty[] = [];
+    const errors: string[] = [];
+    for (const id of rules) {
+        const dir = sources.dirs.find((d) => fs.existsSync(path.join(d, `${id}.md`)));
+        try {
+            if (dir === undefined) throw new DutySourceError(`bound rule has no file: ${id}`);
+            for (const reference of loadContextOf(path.join(dir, `${id}.md`))) {
+                duties.push({ rule: id, reference, resolved: ledgerKey(workspaceRoot, path.resolve(dir, reference)) });
+            }
+        } catch (e) {
+            errors.push((e as Error).message);
+        }
+    }
+    return { duties, errors };
 }

@@ -160,11 +160,11 @@ time; what `init` installs is the same either way.
   (`~/.event4u/agent-config/runtime/carrier.json`), and the package never
   thins the layer while it is there. It is sticky — a later install or
   upgrade keeps it — and `agent-config uninstall` removes it.
-- `--enrol` lets a session thin this machine's installed rule layer while
-  the package's own promotion switch is still off. The layer is thinned only
-  when the layer-form decision holds (`agent-config doctor --check
-  layer-form` prints it). `--full` wins over `--enrol`. Meant for maintainer
-  machines; not a setting.
+- `--enrol` also lets a later session thin an installed rule layer that the
+  install left full (install and upgrade already thin it themselves when the
+  hook carrier is reachable). The session thins it only when the layer-form
+  decision holds (`agent-config doctor --check layer-form` prints it).
+  `--full` wins over `--enrol`. Meant for maintainer machines; not a setting.
 
 ## What lands where
 
@@ -275,12 +275,16 @@ when the outcome holds. A thinned rule layer is only written on a carrier that
 probe reached. If a session still starts with no dispatcher on a thinned layer,
 it prints one line saying so, restores the full layer for the next session, and
 the machine stays full until an install, upgrade or doctor run passes the probe.
-An install always writes the full layer. Thinning it is a later session's
-decision, made by the `layer-promote` `SessionStart` concern from the package's
-own evidence (`agent-config doctor --check layer-form` prints the decision), and
-that promotion ships switched off until the package's pre-registered comparison
-enables it; a session whose rule arrivals contradict a thinned layer restores it
-and demotes the machine, whatever the switch says. `AGENT_CONFIG_LAYER_PROMOTE=off`
+Install and upgrade write the reduced layer by default, with no flag: rules
+that carry a startup contract become a stub holding that contract, the rest of
+the thinnable rules become pointer stubs, the kernel rules stay whole, and a
+rule file you edited is left exactly as it is. That needs the probe above to
+reach the carrier and no `--full` pin; otherwise the layer stays full. On a
+machine `--enrol` enrolled, the `layer-promote` `SessionStart` concern may
+also thin a layer an install left full, from the package's own evidence
+(`agent-config doctor --check layer-form` prints the decision); a session whose
+rule arrivals contradict a thinned layer restores it and demotes the machine,
+enrolled or not. `AGENT_CONFIG_LAYER_PROMOTE=off`
 stops the concern. A promotion holds the lock file
 `~/.event4u/agent-config/runtime/promoting`, naming its process; if that process
 is gone but its id was reused by another, the concern does nothing until that

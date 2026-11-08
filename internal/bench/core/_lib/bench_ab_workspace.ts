@@ -190,7 +190,21 @@ export function reset_fixture(
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     const pristine = strip.length > 0 ? stripped_pristine(fixture, strip, `${dest}.pristine`) : fixture;
     fs.cpSync(pristine, dest, { recursive: true });
+    if (task['git_init'] === true) git_init_clone(dest);
     return [dest, pristine];
+}
+
+/**
+ * A task that asks for commits needs a repository: the clone gets one, with the
+ * fixture as its single base commit and a fixed identity, so every arm starts
+ * from the same history. The scorer already skips `.git` when it diffs.
+ */
+export function git_init_clone(dir: string): void {
+    const env = { ...process.env, GIT_AUTHOR_NAME: 'bench', GIT_AUTHOR_EMAIL: 'bench@example.com', GIT_COMMITTER_NAME: 'bench', GIT_COMMITTER_EMAIL: 'bench@example.com', GIT_AUTHOR_DATE: '2026-01-01T00:00:00Z', GIT_COMMITTER_DATE: '2026-01-01T00:00:00Z' };
+    for (const args of [['init', '-q', '-b', 'main'], ['config', 'user.name', 'bench'], ['config', 'user.email', 'bench@example.com'], ['add', '-A'], ['commit', '-q', '-m', 'base']]) {
+        const r = spawnSync('git', args, { cwd: dir, env, encoding: 'utf8' });
+        if (r.status !== 0) throw new Error(`git ${args.join(' ')} failed in ${dir}: ${r.stderr}`);
+    }
 }
 
 /**

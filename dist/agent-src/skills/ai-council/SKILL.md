@@ -340,7 +340,7 @@ Real failure modes seen in the wild:
 |---|---|---|
 | "Pre-warm" the council with the agent's own analysis. | Bias attack — collapses the reviewer to a yes-man. | Send the artefact text only. |
 | Paste the host-agent identity ("I am Augment / Claude Code…") | Identity primes the reviewer's model. | Neutrality preamble in `prompts.ts` already handles this. |
-| Silently truncate a too-large bundle. | Misleads the reviewer into thinking they saw the whole thing. | Bundler raises `BundleTooLarge`; surface and ask for narrower scope. |
+| Silently truncate a too-large bundle. | Misleads the reviewer into thinking they saw the whole thing. | Bundler raises `BundleTooLarge`; narrow scope (or `--max-bundle-bytes`). |
 | Reuse the same SDK client across calls without re-loading the key. | Leaks the key in long-lived process state. | Each invocation builds fresh clients from `load_*_key()`. |
 | Spend against a billable member with no configured ceiling because "the council is standing-authorized". | Standing authorization is a *bound* the user set once, not a blank cheque. No ceiling = nothing was authorized. | Surface the estimate and ask, exactly in that one case (Procedure § 3). |
 | Re-ask per invocation once a ceiling exists. | The ceiling already carried the decision; re-asking is the approval burden this default removed. | Fan out; let `on_overrun` ask on breach. |

@@ -19,7 +19,10 @@
  * package-root prefix — 89 characters per character on the real corpus. A
  * number that moves with the runner's directory name measures the runner as
  * much as the corpus, which is why `estate-count-budget.json` was deleted from
- * this repository.
+ * this repository. Since `road-to-a-session-start-under-the-host-limit` Phase 3
+ * the installer writes bare `Body: <id>.md` pointers and states the absolute
+ * bodies directory ONCE, in `agent-config-rule-bodies.md`; the substitution
+ * below still applies to that one path and to any older stub that carries one.
  *
  * SUBSTITUTED, NOT STRIPPED. Every absolute path becomes a fixed-width token
  * rather than vanishing, so the figure still accounts for the fact that a

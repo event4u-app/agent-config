@@ -79,6 +79,22 @@ describe('bundler — bundle_prompt / bundle_files / bundle_roadmap', () => {
     it('size guard throws BundleTooLarge above the ceiling', () => {
         expect(() => bundle_prompt('x'.repeat(MAX_BUNDLE_BYTES + 1))).toThrow(BundleTooLarge);
     });
+
+    it('an explicit ceiling admits a larger bundle and still fails loud above itself', () => {
+        const big = 'x'.repeat(MAX_BUNDLE_BYTES * 3);
+        expect(bundle_prompt(big, MAX_BUNDLE_BYTES * 4).text.length).toBe(big.length);
+        expect(() => bundle_prompt(big, MAX_BUNDLE_BYTES * 2)).toThrow(BundleTooLarge);
+        const p = path.join(tmpDir('bundler-cap-'), 'r.md');
+        writeFileSync(p, big);
+        expect(bundle_roadmap(p, MAX_BUNDLE_BYTES * 4).text.length).toBe(big.length);
+        expect(() => bundle_roadmap(p)).toThrow(BundleTooLarge);
+    });
+
+    it('rejects a ceiling that is not a positive integer', () => {
+        for (const bad of [0, -1, 1.5, Number.NaN]) {
+            expect(() => bundle_prompt('x', bad), String(bad)).toThrow(RangeError);
+        }
+    });
 });
 
 // ── git-backed diff fixtures ──────────────────────────────────────────────

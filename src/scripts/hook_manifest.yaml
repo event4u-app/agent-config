@@ -1470,11 +1470,12 @@ concerns:
     severity: advisory
     effect: execution
   # road-to-a-setup-that-decides-itself step 3.3 — promote the claude rule layer
-  # after proof, never at install. On session_start: demote a thinned layer the
-  # latest arrival record (taken after the promotion) shows missing a standing
-  # law, or — only while `src/config/layer-form-promotion.json` is enabled, which
-  # step 5.3 decides — thin a full one for the FOLLOWING sessions when the
-  # layer-form decision returns `thinned`. Silent, exit 0 on every path, no
+  # in a session, after proof; the installer is the default writer of the
+  # reduced layer (road-to-a-session-start-under-the-host-limit 3.2). On
+  # session_start: demote a thinned layer the latest arrival record (taken after
+  # the promotion) shows missing a standing law, or — only on a machine
+  # `install --enrol` enrolled — thin a full one for the FOLLOWING sessions when
+  # the layer-form decision returns `thinned`. Silent, exit 0 on every path, no
   # hook-token-budget row — it emits nothing. claude alone: the arrival record
   # and the carrier describe the claude layer only. Loaded from its own chunk.
   # Kill switch: `AGENT_CONFIG_LAYER_PROMOTE=off`.
@@ -1662,6 +1663,17 @@ concerns:
   # has happened. The journal's own RECORDED_EVENTS / NOT_RECORDED partition is
   # unchanged — it governs the vocabulary, not the bindings — so the capture
   # evidence states the unbound slot instead of the partition implying coverage.
+  # road-to-state-and-pins-across-compaction 1.2: writes a keys-only marker
+  # at `pre_compact` under the user-global runtime directory and classifies it
+  # at `session_start(compact)`. Injects nothing (council 2026-11-08: the keys
+  # name the session, not the compaction attempt). Claude only — the one host whose compaction records
+  # were measured. Kill switch: `AGENT_CONFIG_NO_COMPACT_CHECKPOINT=1`.
+  compact-checkpoint:
+    script: src/scripts/hooks/compact_checkpoint_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: telemetry
   journal-record:
     script: src/scripts/hooks/journal_record_hook.ts
     args: []
@@ -1744,7 +1756,7 @@ platforms:
 
   claude:
     ask:              native
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, star-ask, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh, layer-promote]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, star-ask, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh, layer-promote, compact-checkpoint]
     # `rule-inject` is bound here for ONE source: `compact`
     # (road-to-a-rule-carrier-that-works-outside-the-repo step 1.6). The concern
     # returns before reading anything on `startup`, `resume`, `clear` and
@@ -1791,7 +1803,7 @@ platforms:
     # Claude Code transcript fact. (It was the ONLY binding on this slot until
     # the entry below; that sentence is retired rather than left to rot.)
     #
-    pre_compact:      [language-mirror, rule-inject, journal-record, reread-guard]
+    pre_compact:      [language-mirror, rule-inject, journal-record, reread-guard, compact-checkpoint]
     # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
     # platform where both native events were measured present on the installed
     # binary (2.1.229 — see the evidence page cited on the alias rows below).

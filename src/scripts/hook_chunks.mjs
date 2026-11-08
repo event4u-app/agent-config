@@ -25,6 +25,14 @@ import { buildSync } from 'esbuild';
 export const HOOK_CHUNKS = Object.freeze([
     Object.freeze({ entry: 'src/scripts/_lib/svg_rules.ts', outfile: 'dist/hooks/svg_rules.chunk.cjs' }),
     Object.freeze({ entry: 'src/scripts/_lib/egress_engine.ts', outfile: 'dist/hooks/egress_engine.chunk.cjs' }),
+    // Required by `reread-guard` on a file write or a bound shell act alone
+    // (`reference_duty_loader.ts`). `yaml` stays external, as at `chat_history`:
+    // the bundle already carries it and `dist/hooks/` resolves it in any install.
+    Object.freeze({
+        entry: 'src/scripts/_lib/reference_duty.ts',
+        outfile: 'dist/hooks/reference_duty.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // Required by `design-pass` on a UI write alone (`design_consistency_loader.ts`).
     Object.freeze({
         entry: 'src/scripts/_lib/design_consistency_pass.ts',
@@ -87,6 +95,12 @@ export const HOOK_CHUNKS = Object.freeze([
     Object.freeze({
         entry: 'src/scripts/hooks/layer_promotion_hook.ts',
         outfile: 'dist/hooks/layer_promotion.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
+    // Compaction checkpoint on `pre_compact` / `session_start(compact)`; reads no YAML.
+    Object.freeze({
+        entry: 'src/scripts/hooks/compact_checkpoint_hook.ts',
+        outfile: 'dist/hooks/compact_checkpoint.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
     // OQ-25 intake pass on `user_prompt_submit`; reads no YAML.

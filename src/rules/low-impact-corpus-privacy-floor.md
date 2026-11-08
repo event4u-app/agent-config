@@ -67,11 +67,11 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
 One-line marker:
 
 ```
-> Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip.
+> Low-impact corpus refused — <category>: <masked, N chars>. Rephrase or skip.
 ```
 
-Then the agent stops the intake / upstream flow. No silent retry, no
-auto-rewrite.
+Never the matched value, whatever the class. Then the agent stops the
+intake / upstream flow. No silent retry, no auto-rewrite.
 
 ## See also
 

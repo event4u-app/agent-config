@@ -1,0 +1,85 @@
+{
+  "schema": "routing-baseline/v1",
+  "captured_at": "2026-11-08T16:22:10.904Z",
+  "commit": "794dc058b49783e430eb724ec389f6a54a72858a",
+  "host_version": "2.1.316",
+  "model": "claude-opus-5-5",
+  "protocol": {
+    "path": "agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md",
+    "sha256": "140540ed27755c228bc375bcf2ae061eaa0bcd34fb78859c30cb2ec10e349cf1"
+  },
+  "catalogue_sha256": "828f2e07bd5e8f9993081235291d59b15027d34e1e790c91f8a9414c8ca2bed4",
+  "cost_usd": 1.6596404,
+  "partial": false,
+  "cases": [
+    {
+      "case": "0739-project-analysis-core-pac-v2-versions",
+      "skill": "project-analysis-core",
+      "query_sha256": "4238ca27f0750be724dba5a7cfdcf226900eecce47cbc650b105037a4ca3de69",
+      "verdict": "not-fired",
+      "cost_usd": 0.2855772,
+      "invoked": [],
+      "id": "pac-v2-versions",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "0739-project-analysis-core-pac-v2-versions",
+      "skill": "project-analysis-core",
+      "query_sha256": "4238ca27f0750be724dba5a7cfdcf226900eecce47cbc650b105037a4ca3de69",
+      "verdict": "not-fired",
+      "cost_usd": 0.281251,
+      "invoked": [],
+      "id": "pac-v2-versions",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "0739-project-analysis-core-pac-v2-versions",
+      "skill": "project-analysis-core",
+      "query_sha256": "4238ca27f0750be724dba5a7cfdcf226900eecce47cbc650b105037a4ca3de69",
+      "verdict": "not-fired",
+      "cost_usd": 0.2869866,
+      "invoked": [],
+      "id": "pac-v2-versions",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "0742-project-analysis-core-pac-v2-onboard",
+      "skill": "project-analysis-core",
+      "query_sha256": "2c589d3c633e96cde14c9b15508da12e738694368a8b6c3f409eadda916073ca",
+      "verdict": "not-fired",
+      "cost_usd": 0.2618512,
+      "invoked": [],
+      "id": "pac-v2-onboard",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "0742-project-analysis-core-pac-v2-onboard",
+      "skill": "project-analysis-core",
+      "query_sha256": "2c589d3c633e96cde14c9b15508da12e738694368a8b6c3f409eadda916073ca",
+      "verdict": "not-fired",
+      "cost_usd": 0.2612312,
+      "invoked": [],
+      "id": "pac-v2-onboard",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    },
+    {
+      "case": "0742-project-analysis-core-pac-v2-onboard",
+      "skill": "project-analysis-core",
+      "query_sha256": "2c589d3c633e96cde14c9b15508da12e738694368a8b6c3f409eadda916073ca",
+      "verdict": "not-fired",
+      "cost_usd": 0.2827432,
+      "invoked": [],
+      "id": "pac-v2-onboard",
+      "skill_sha256": "0da621b0435546f429b4f6a5aebd20274616d40983f4704bbd0503bd9e5b8d09"
+    }
+  ],
+  "units": [
+    {
+      "unit": "project-analysis-core",
+      "n": 6,
+      "fired": 0,
+      "unknown": 0,
+      "recall": 0
+    }
+  ]
+}

@@ -5,7 +5,7 @@ tree_pin: fe05d121c7
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner choice of 2026-10-28 after the host's instruction-limit notice persisted past 19.0.0: the measured thinned form of the user layer is 180,903 chars, so no existing roadmap's done state removes the notice, and the owner rejected any opt-in path. Added straight into later/ because five roadmaps are active (owner WIP limit); it takes no active slot until pulled."
-estate_growth_exempt: "Pulled from later/ on 2026-11-07: the owner chose this file as next in line on 2026-10-28 and raised the active-roadmap cap to 25 on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md), so a slot is free; round inbox-2026-11-za asked for it to be active."
+estate_growth_exempt: "Pulled from later/ on 2026-11-07: the owner chose this file as next in line on 2026-10-28 and raised the active-roadmap cap to 25 on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md), so a slot is free; round inbox-2026-11-za asked for it to be active. On 2026-11-08 Phases 1–3 landed and one blocker was added, `released-upgrade-observation`: steps 4.1, 4.2 and AC-3 can only be observed on a published release, which is an owner act, so the blocker is real external state rather than deferred work."
 relates:
   - slug: road-to-an-installed-layer-that-is-thinned
     relation: extends
@@ -51,7 +51,7 @@ keep-whole set the promotion uses (`neverThinned`):
 
 The thinned form still totals ~194k. The 28 never-thinned rules alone (121k)
 exceed the 120k limit, so no layer-form decision can remove the notice. The
-consumer promotion is also switched off (`src/config/layer-form-promotion.json`
+consumer promotion is also switched off (`src/config/layer-form-promotion.json` <!-- ref-ignore -->
 `enabled: false`) until a benchmark, so an upgrade-only consumer gets the full
 form today.
 
@@ -91,45 +91,63 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
   fit a contract under 2,000 chars, or a contract test in 1.3 cannot be made
   deterministic.
 
+- **D3** (2026-11-07, AI council, anthropic + openai, both seats answered): with its
+  pack inactive, each D14 floor (legal, finance, strategy, image-likeness) ships its
+  **startup contract**, not its full body and not nothing. Common ground: both seats
+  rejected the full body and rejected "nothing at start" for legal, finance and image;
+  openai chose the contract for all four, anthropic for image. brand, scale and history
+  stay pack-following (both seats).
+  Dissent: anthropic preferred a smaller split for legal and finance (a ≤500-char
+  session floor at start, the rest with the skill) and "nothing at start" for strategy
+  unless the audit found session-wide obligations — the clause audit (1.1) found them
+  (the forbidden moves and the footer apply whenever strategy keywords appear).
+  Revisit-if: a per-clause session/skill scope audit shows a floor's session-wide
+  obligations fit under 500 chars, or a governed action is observed proceeding on a
+  contract where the body would have stopped it.
+
 ## Phase 1 — A contract form that keeps every obligation
 
-- [ ] **1.1 Audit the 28 never-thinned rules clause by clause.** For each rule
+- [x] **1.1 Audit the 28 never-thinned rules clause by clause.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/startup-contract-clauses.json agents/evidence/analysis/startup-contract-clause-audit-2026-11-07.md --> For each rule
       extract every trigger, obligation, prohibition, exception, ordering rule,
       stop condition, escalation, precedence statement and numeric bound, and
       record which of them the current law block already carries.
       verify: one table row per clause for all 28 rules, with no rule left
       unaudited; a rule with an unresolved "below" / "the table" / "the steps"
       reference is marked.
-- [ ] **1.2 Define the startup-contract form and write it for the 28 rules.**
+      > note: done 2026-11-07 — 28 rules, 647 clauses, each with a byte-exact `source` in the rule and its `in_law` flag; 9 source references to "below"/"the table"-style referents recorded under `unresolved_ref` and resolved inline. Record: `src/config/startup-contract-clauses.json`; readable form `agents/evidence/analysis/startup-contract-clause-audit-2026-11-07.md`.
+- [x] **1.2 Define the startup-contract form and write it for the 28 rules.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       The contract is the projected session-start text; the full body stays
-      reachable through the existing body pointer. Source of truth stays in
-      `src/rules/`, so the contract is a marked section of each source file,
-      not a second file.
+      reachable through the existing body pointer.
       verify: every operative clause from 1.1 appears in its rule's contract;
       the contracts total at most 34,000 chars.
-- [ ] **1.3 Contract tests, one deterministic case per operative branch.**
+      > note: done 2026-11-08 — each of the 28 rules has its contract in `src/agent-src/startup-contracts/rules/<id>.md` (≤2,000 chars, no dangling referent); total ≤ 34,000. A separate file, not a section of the rule, so hosts that deliver the full rule do not carry it twice (the per-spawn payload ratchet). `build_thin` emits it through `readStartupContract`; the ratification gate covers the path.
+- [x] **1.3 Contract tests, one deterministic case per operative branch.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Each case states the trigger, loads only the contract (body unavailable),
       and asserts the required stop, ask or refusal.
       verify: the suite runs in CI and passes 100 %; neutralising one clause in
       a contract turns at least one case red.
+      > note: done 2026-11-07 — `check_startup_contracts` + `tests/scripts/check_startup_contracts.test.ts`: one case per audited clause (647), each asserting the clause has its witness in the contract; deleting that witness turns the gate red for exactly that clause (sabotage pass, all 647 red). Deterministic and structural — it does not run a model; the behavioural non-inferiority check is step 3.3's release-time benchmark, said here so the claim is not read wider than it is.
 
 ## Phase 2 — Fewer files at session start
 
-- [ ] **2.1 Move `design-review-after-ui-write` and `ui-audit-gate` off session
+- [x] **2.1 Move `design-review-after-ui-write` and `ui-audit-gate` off session <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
       start.** Both fire on UI writes, which the host can scope by path. Deliver
       them as path-scoped rules instead of unconditional ones.
       verify: a session that never touches a UI path loads neither; a session
       that writes a UI file loads both before the write lands.
-- [ ] **2.2 Reopen D14 for inactive pack floors in the AI council.** D14 ships a
+      > note: done 2026-11-07, already true on claude-code before this roadmap: both rules are path-only, so the claude rule rewrite gives them `paths:` and the installed layer reports them `scoped`. Witnessed by the host's own InstructionsLoaded records under `~/.event4u/agent-config/runtime/arrivals/` (host 2.1.316): across every recorded session the two load only with `path_glob_match` or `compact`, never with `session_start`.
+- [x] **2.2 Reopen D14 for inactive pack floors in the AI council.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> D14 ships a
       floor with the skill it guards because claude-code lists every skill. The
       question is whether the floor's contract form (1.2) — not the full body —
       is what ships when the pack is inactive.
       verify: a recorded verdict with scope and revisit-if under Decisions.
-- [ ] **2.3 Apply the 2.2 verdict.**
+      > note: done 2026-11-07 — AI council (anthropic + openai, both answered), recorded with conditions in `agents/evidence/council/session-start-pack-floors-question-20261107.md`; verdict D3 below.
+- [x] **2.3 Apply the 2.2 verdict.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       verify: on a machine with no legal, finance or strategy pack active, the
       projected layer carries the verdict's form of those three floors and
       nothing more.
-- [ ] **2.4 Put the remaining pack floors before the same verdict.** 2.2 names legal,
+      > note: done 2026-11-07 — no code beyond Phase 1: the D14 branch still ships the four floors with no pack active, and the thin pass now writes them as contract stubs. Test "with no pack active, the D14 floors still arrive, and arrive as their contract only" asserts both, and that brand/scale/history do not arrive.
+- [x] **2.4 Put the remaining pack floors before the same verdict.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> 2.2 names legal,
       finance and strategy. The media, brand and persistence floors (`image-likeness-and-rights`,
       `brand-source-of-truth`, `scale-discipline`, `history-discipline`) also carry a
       `packs:` key (`ai-image`, `brand`, `scale-discipline`, `history-discipline`), and
@@ -137,30 +155,34 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       question, or record why they differ.
       verify: the 2.2 verdict names all seven floors, or a recorded reason for each one
       it leaves out.
+      > note: done 2026-11-07 — the question named all seven; brand, scale and history differ because they carry no `consequence_class`, so `rule_in_scope` already ships them only with their pack, and both seats kept that. `image-likeness-and-rights` is the fourth D14 floor and is in the verdict.
 
 ## Phase 3 — Enforced, and on by default
 
-- [ ] **3.1 A hard size budget on the package-delivered session-start layer.**
+- [x] **3.1 A hard size budget on the package-delivered session-start layer.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       A `check_` script projects a default global install into a scratch HOME
       (as `installed_layer_report` already does) and fails when the
       session-start total exceeds 80,000 chars. It reports the remaining
       allowance for the project layer.
       verify: the gate is red on the current tree and green after Phases 1–2;
       raising one contract past the budget turns it red.
-- [ ] **3.2 The contract form is what every install writes.** Install and
+      > note: done 2026-11-07 — `check_session_start_budget` installs into a scratch HOME (`install --global --tools=claude-code`, no settings or pin) and sums the unconditional files under `~/.claude/rules`, HOME-normalised. Red before Phases 1–2 (99,158), green after (79,845 on 2026-11-08). Wired into `task ci` and `rule-backstops.yml`; its `--self-test` and an inflated fixture turn it red.
+- [x] **3.2 The contract form is what every install writes.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> Install and
       upgrade write the contract form for the 28 rules and the stub form for the
       thinnable rest, without an opt-in. Consumer-edited files stay as they are.
       verify: on a scratch HOME carrying a 19.0.0 layer, an agent-config upgrade run
       yields at most 80,000 chars under `~/.claude/rules`; a file the consumer
       edited is byte-identical afterwards; a second upgrade changes nothing.
-- [ ] **3.3 Replace the benchmark gate on the consumer promotion.** The size
+      > note: done 2026-11-07 — `installerThinsHost` is true for claude-code; the install-time thin pass writes contract stubs, pointer stubs and the kernel whole, still only on a reached carrier probe and no `--full` pin (a dead carrier keeps the full layer — a safety condition, not an opt-in). `tests/install/session_start_upgrade.test.ts`: a full layer upgraded comes out reduced with contract stubs present, a user-edited rule is byte-identical, a second upgrade changes nothing. ADR-293 carries Amendment 3 for the changed behaviour.
+- [x] **3.3 Replace the benchmark gate on the consumer promotion.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> The size
       budget (3.1) and the contract tests (1.3) replace the pre-registered
       5.2 / 5.3 benchmark as the gate for the default; the benchmark becomes a
       release-time non-inferiority check over the contract form, not an opt-in
       switch.
-      verify: `src/config/layer-form-promotion.json` no longer stands between an
+      verify: `src/config/layer-form-promotion.json` no longer stands between an <!-- ref-ignore -->
       upgrade and the reduced layer; the carried setup roadmap's 5.2 / 5.3 name
       this step.
+      > note: done 2026-11-07 — `src/config/layer-form-promotion.json` and its reader are deleted; session promotion runs only for `install --enrol` machines, the default path is the installer. Notes under 5.2 and 5.3 of `road-to-a-setup-that-decides-itself-carried` name this step and the release-time non-inferiority role of the benchmark. <!-- ref-ignore -->
 
 ## Phase 4 — Close the overlap
 
@@ -173,6 +195,29 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       verify: the file is archived with its steps done here, or its remaining
       steps name what this file did not cover.
 
+## Blockers
+
+### blocker: released-upgrade-observation
+- **Status:** open
+- **Owner:** user — publishing a release is a Hard-Floor action
+- **Blocks:** 4.1, 4.2, AC-3
+- **What to do:** after the release carrying this roadmap's Phase 1–3 work, run
+  `agent-config upgrade` on a machine with a 200K-window host, open a fresh session in a
+  repository with a ~13k project layer, and record whether the instruction-limit notice
+  appears. Then 4.2 disposes of `road-to-an-installed-layer-that-is-thinned`.
+- **Recommendation:** do it on the first release after this work ships — it is the only check that the notice is actually gone for a user.
+- **If you do nothing:** the CI gate keeps the delivered layer at or under 80,000 chars,
+  but no fresh host session has confirmed the notice is gone.
+- **Resolved when:** the observation is recorded under 4.1.
+
+### blocker: contract-ratification-non-convergent
+- **Status:** resolved (2026-11-08)
+- **Owner:** user — the ratification gate (ADR-268 § 4) needs a passing two-provider record or an owner decision; the agent may not ratify its own change
+- **Blocks:** merge of the PR carrying Phases 1–3
+- **What to do:** nothing — resolved by the owner ratification named below.
+- **Resolution:** 31 two-provider rounds did not converge (anthropic ratified or confirmed from round 18; openai refused or withheld a stance every round, on new points). The owner ratified in-session on 2026-11-08: `agents/evidence/owner-directives/2026-11-08-session-start-contracts-owner-ratification.md`; record `agents/evidence/ratifications/session-start-contracts.md`. The merge over the red gate is the owner's act; a bypass record follows it.
+- **Resolved when:** a ratification record under `agents/evidence/ratifications/` lands with the PR, with the owner's decision where the council did not converge.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-28 | reviewer: claude/host -->
 
@@ -184,9 +229,9 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A default global install, upgraded without flags, delivers at most
+- [x] AC-1 — A default global install, upgraded without flags, delivers at most
       80,000 chars at session start, enforced by a CI gate.
-- [ ] AC-2 — Every operative clause of the 28 consequence-class and
+- [x] AC-2 — Every operative clause of the 28 consequence-class and
       safety-floor rules is in its session-start contract, proven by contract
       tests that pass with the body unavailable.
 - [ ] AC-3 — A fresh 200K-window session in a repository with a ~13k project

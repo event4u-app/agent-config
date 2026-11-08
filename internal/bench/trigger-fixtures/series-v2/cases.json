@@ -1,0 +1,48 @@
+{
+  "schema": "trigger-series/v1",
+  "series": "v2",
+  "protocol": "agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md",
+  "note": "Kept outside src/skills/*/evals/triggers.json: the corpus is pinned by published records (holdout SET-SHA256, routing-signal 5.1, delivery-set 6.4), so a series that is not part of the published corpus lives here. To compile it, copy the two units into a scratch skills root with these cases appended and pass --skills. Rank prefixes then differ from the 2026-11-08 run, which compiled the cases from the full corpus; match cases by id.",
+  "cases": [
+    {
+      "skill": "react-shadcn-ui",
+      "id": "rsu-v2-add",
+      "q": "Deleting a workspace on the settings page happens on a single click right now. Add a confirmation dialog in front of it that matches the rest of our UI.",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/react-shadcn-ui/rsu-v2-add"
+    },
+    {
+      "skill": "react-shadcn-ui",
+      "id": "rsu-v2-compose",
+      "q": "The admin members page is still a bare list. Turn it into a proper table with name, email, a role badge, and a per-row menu with \"Change role\" and \"Remove\", built the same way as the rest of the app's components.",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/react-shadcn-ui/rsu-v2-compose"
+    },
+    {
+      "skill": "react-shadcn-ui",
+      "id": "rsu-v2-polish",
+      "q": "Design review on the pricing section came back: the three cards have uneven padding, the \"Most popular\" label is unreadable in dark mode, and the plan buttons show no focus state when you tab through them. Please fix those.",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/react-shadcn-ui/rsu-v2-polish"
+    },
+    {
+      "skill": "project-analysis-core",
+      "id": "pac-v2-onboard",
+      "q": "I'm taking over this repository next week and nobody who built it is still around. Before I change anything, give me the lay of the land: what it's built with, how the parts fit together, and what happens from the moment a request comes in.",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/project-analysis-core/pac-v2-onboard"
+    },
+    {
+      "skill": "project-analysis-core",
+      "id": "pac-v2-versions",
+      "q": "Our security review needs to know exactly which versions of the runtime, the frameworks and the main libraries this project runs on, and how a request travels through it. Work it out from the repo and flag anything you couldn't pin down.",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/project-analysis-core/pac-v2-versions"
+    }
+  ]
+}

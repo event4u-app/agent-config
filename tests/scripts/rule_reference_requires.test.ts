@@ -75,4 +75,9 @@ describe('buildRequiresTable', () => {
         expect(t.summary.references_missing).toBe(1);
         expect(t.summary.references_over_budget).toBe(1);
     });
+    it('adds a row per act binding, marked required for a rule with a consequence class', () => {
+        const g = fixture();
+        const rows = buildRequiresTable(g.rules, g.contexts, [{ shell_command: 'git commit', rules: ['roadmaps'] }]).rows.filter((r) => r.act.kind === 'shell_command');
+        expect(rows).toEqual([{ rule: 'roadmaps', act: { kind: 'shell_command', value: 'git commit' }, marking: 'required', references: [{ path: 'contexts/small.md', chars: 300, status: 'fits' }] }]);
+    });
 });
