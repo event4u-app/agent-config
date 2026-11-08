@@ -156,11 +156,21 @@ host-attested session binding exists. Record:
 ## Blockers
 
 ### blocker: compact-attempt-identity
+- **Status:** open
 - **Owner:** council
+- **Blocks:** 1.4, and through it 1.5.
+- **What to do:** after real compactions, read the counts with `npx tsx -e "import { readEventTally } from './src/scripts/_lib/compact_checkpoint.ts'; console.log(readEventTally())"` and put the guarantee and the restorable fields to the council (`agent-config council:run <question-file> --confirm`) with that reading attached.
+- **Recommendation:** collect at least 20 compactions first; a high `orphaned` share argues for the attempt-specific guarantee, a near-total `match` share for the latest-snapshot one.
+- **If you do nothing:** the marker keeps measuring and nothing is injected, which is today's behaviour — no regression, no gain.
 - **Resolved when:** a host-provided per-compaction token shared by `pre_compact` and `session_start(compact)` exists, or 1.3's fault tests show a stale checkpoint cannot become eligible — and the council records the chosen guarantee (1.4).
 
 ### blocker: recall-session-binding
+- **Status:** open
 - **Owner:** council
+- **Blocks:** 3.2, and through it 3.3 and 3.4.
+- **What to do:** check the host hook and MCP docs for a session identity a tool call can verify (start from `src/scripts/hooks/host_lowering.json`, `verified.docs_url` per host) and record the answer in `agents/evidence/council/recall-session-binding.md`; if no host offers one, record that and close Phase 3 as a null. <!-- ref-ignore -->
+- **Recommendation:** run 3.1 first — if post-compaction re-reads are rare, Phase 3 closes as a null and this blocker never needs answering.
+- **If you do nothing:** no recall is built; sessions after a compaction keep re-reading files, as today.
 - **Resolved when:** a supported host is shown to supply an identity a later recall call can verify; that host's mechanism also settles CLI-first versus MCP-first (the one point the 2026-11-08 round split on).
 
 
