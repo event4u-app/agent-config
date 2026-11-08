@@ -8,12 +8,16 @@
  * outside quotes queues its terminator (one word after quote removal, read by the
  * same quote reader as every other word, and empty when quoted as `''`); the
  * bodies follow the line in order, each ending at the line that is exactly its
- * terminator (leading tabs stripped for `<<-`).
+ * terminator (leading tabs stripped for `<<-`; with an unquoted terminator, body
+ * lines joined across backslash-newline first). `<<<` is a here-string, not a heredoc.
  *
  * Supported syntax contract: the above, plus `VAR=…` prefixes, `sudo`/`command`/
  * `time`/`exec`/`nohup`, and `git -C`/`-c` values. An assignment prefix is only one
  * whose `NAME=` is unquoted and that stands before the command name or after
- * `time` / `sudo`: `'X=1' git push` and `nohup X=1 git push` run a command named `X=1`. Not interpreted: `$(…)` and
+ * `time` / `sudo`: `'X=1' git push` and `nohup X=1 git push` run a command named `X=1`.
+ * `time` is the keyword only unquoted at the start of a pipeline; `-p` after any `time`, and `--`
+ * after `command` / `nohup`, are skipped; `command -v` / `-V` run nothing. Other
+ * wrapper options (`sudo -u …`, `command -p`) are not interpreted. Not interpreted: `$(…)` and
  * backticks (their text stays inside the word), subshell parentheses, `eval`,
  * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
@@ -32,10 +36,14 @@ const PREFIX_WORDS = new Set(['sudo', 'command', 'time', 'exec', 'nohup']);
 // name of the command run, so `nohup X=1 git push` does not run git.
 const ASSIGN_AFTER = new Set(['time', 'sudo']);
 
-/** One word after quote removal. `assign` holds when it opens with an unquoted `NAME=`. */
+/**
+ * One word after quote removal. `assign` holds when it opens with an unquoted
+ * `NAME=`; `quoted` when any part of it was quoted or escaped.
+ */
 interface Word {
     text: string;
     assign: boolean;
+    quoted: boolean;
 }
 
 /**
@@ -66,20 +74,27 @@ function readQuoted(s: string, i: number): { text: string; end: number } {
     return { text, end: j + 1 };
 }
 
-function lexCommands(command: string): Word[][] {
-    const out: Word[][] = [];
+/** A simple command's words, and whether it follows a `|` inside a pipeline. */
+interface Simple {
+    words: Word[];
+    piped: boolean;
+}
+
+function lexCommands(command: string): Simple[] {
+    const out: Simple[] = [];
+    let piped = false;
     let words: Word[] = [];
     let word = '';
     let inWord = false;
     // Length of the word's leading unquoted, unescaped run; -1 while no quote or
     // escape has occurred in it. An assignment's `NAME=` must fit inside that run.
     let literal = -1;
-    const pendingHeredocs: Array<{ tag: string; stripTabs: boolean }> = [];
+    const pendingHeredocs: Array<{ tag: string; stripTabs: boolean; quoted: boolean }> = [];
     const endWord = (): void => {
         if (inWord) {
             const m = /^[A-Za-z_][A-Za-z0-9_]*=/.exec(word);
             const limit = literal === -1 ? word.length : literal;
-            words.push({ text: word, assign: m !== null && m[0].length <= limit });
+            words.push({ text: word, assign: m !== null && m[0].length <= limit, quoted: literal !== -1 });
         }
         word = '';
         inWord = false;
@@ -88,10 +103,11 @@ function lexCommands(command: string): Word[][] {
     const markQuoted = (): void => {
         if (literal === -1) literal = word.length;
     };
-    const endCommand = (): void => {
+    const endCommand = (nextPiped = false): void => {
         endWord();
-        if (words.length > 0) out.push(words);
+        if (words.length > 0) out.push({ words, piped });
         words = [];
+        piped = nextPiped;
     };
     const n = command.length;
     let i = 0;
@@ -120,7 +136,13 @@ function lexCommands(command: string): Word[][] {
             while (i < n && command[i] !== '\n') i += 1;
             continue;
         }
-        if (ch === '<' && command[i + 1] === '<' && command[i + 2] !== '<') {
+        // `<<<` is a here-string: a redirection whose word is an ordinary word.
+        if (ch === '<' && command[i + 1] === '<' && command[i + 2] === '<') {
+            endWord();
+            i += 3;
+            continue;
+        }
+        if (ch === '<' && command[i + 1] === '<') {
             endWord();
             let j = i + 2;
             const stripTabs = command[j] === '-';
@@ -150,7 +172,7 @@ function lexCommands(command: string): Word[][] {
                     j += 1;
                 }
             }
-            if (tag !== '' || quoted) pendingHeredocs.push({ tag, stripTabs });
+            if (tag !== '' || quoted) pendingHeredocs.push({ tag, stripTabs, quoted });
             i = j > i + 2 ? j : i + 2;
             continue;
         }
@@ -158,19 +180,30 @@ function lexCommands(command: string): Word[][] {
             endCommand();
             i += 1;
             // Each pending heredoc body follows in order, each up to the line that
-            // is exactly its terminator (leading tabs stripped for `<<-`).
-            for (const { tag, stripTabs } of pendingHeredocs.splice(0)) {
+            // is exactly its terminator (leading tabs stripped for `<<-`). With an
+            // unquoted terminator a body line ending in an odd run of backslashes
+            // continues onto the next before the comparison, as in bash.
+            for (const { tag, stripTabs, quoted } of pendingHeredocs.splice(0)) {
                 while (i < n) {
-                    const eol = command.indexOf('\n', i);
-                    const line = command.slice(i, eol === -1 ? n : eol);
-                    i = eol === -1 ? n : eol + 1;
+                    let line = '';
+                    for (;;) {
+                        const eol = command.indexOf('\n', i);
+                        const part = command.slice(i, eol === -1 ? n : eol);
+                        i = eol === -1 ? n : eol + 1;
+                        const run = /\\*$/.exec(part)?.[0].length ?? 0;
+                        if (quoted || run % 2 === 0 || eol === -1) {
+                            line += part;
+                            break;
+                        }
+                        line += part.slice(0, -1);
+                    }
                     if ((stripTabs ? line.replace(/^\t+/, '') : line) === tag) break;
                 }
             }
             continue;
         }
         if (ch === ';' || ch === '|' || (ch === '&' && command[i + 1] === '&')) {
-            endCommand();
+            endCommand(ch === '|' && command[i + 1] !== '|');
             i += (ch === '&' || (ch === '|' && command[i + 1] === '|')) ? 2 : 1;
             continue;
         }
@@ -195,10 +228,10 @@ function lexCommands(command: string): Word[][] {
 
 /** The command's simple commands, each as its words with quotes removed. */
 export function simpleCommands(command: string): string[][] {
-    return lexCommands(command).map((ws) => ws.map((w) => w.text));
+    return lexCommands(command).map((c) => c.words.map((w) => w.text));
 }
 
-function normalise(words: readonly Word[]): string[] {
+function normalise({ words, piped }: Simple): string[] {
     let k = 0;
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
     let assignOk = true;
@@ -206,8 +239,17 @@ function normalise(words: readonly Word[]): string[] {
         const w = words[k] as Word;
         if (w.assign && assignOk) k += 1;
         else if (PREFIX_WORDS.has(w.text)) {
-            assignOk = ASSIGN_AFTER.has(w.text);
+            // `time` is the keyword only unquoted and at the start of a pipeline;
+            // a quoted `"time"`, or one after `|`, is the time(1) program, after
+            // which `X=1` is the command name.
+            const keyword = w.text === 'time' && !(w.quoted || piped || k > 0);
+            assignOk = ASSIGN_AFTER.has(w.text) && (w.text !== 'time' || keyword);
             k += 1;
+            const next = words[k]?.text;
+            // `command -v` / `-V` only describe the command; they run nothing.
+            if (w.text === 'command' && (next === '-v' || next === '-V')) return [];
+            // `-p` belongs to the keyword and to time(1) alike (POSIX).
+            if ((w.text === 'time' && next === '-p') || ((w.text === 'command' || w.text === 'nohup') && next === '--')) k += 1;
         } else break;
     }
     const t = words.slice(k).map((w) => w.text);
@@ -222,8 +264,8 @@ function normalise(words: readonly Word[]): string[] {
 /** True when some simple command in `command` begins with the words of `act`. */
 export function commandRunsAct(command: string, act: string): boolean {
     const want = act.split(' ');
-    return lexCommands(command).some((words) => {
-        const w = normalise(words);
+    return lexCommands(command).some((simple) => {
+        const w = normalise(simple);
         return want.every((x, i) => w[i] === x);
     });
 }

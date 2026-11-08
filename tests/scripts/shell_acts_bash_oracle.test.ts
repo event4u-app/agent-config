@@ -1,60 +1,15 @@
 /**
  * Shell-grounded oracle for the act recogniser: every case is run by real bash
- * with `git` and `gh` replaced by functions that log their arguments, in an empty
- * temp directory. Each case also states the acts it expects, so the oracle checks
+ * (`tests/_lib/bash_act_oracle.ts`). Each case also states the acts it expects, so the oracle checks
  * false positives (an act the recogniser reports and bash never reaches) as well as
  * misses, and a stub or fixture defect shows up as bash disagreeing with the case.
  */
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-
 import { describe, expect, it } from 'vitest';
+
+import { bashActs, C, G, hasBash, P } from '../_lib/bash_act_oracle.js';
 
 import { commandRunsAct } from '../../src/scripts/_lib/shell_acts.js';
 
-// `git` and `gh` are executables on PATH, not functions, so `command`, `exec` and
-// `nohup` treat them as bash does. `sudo` is a function that applies its leading
-// `VAR=value` arguments, as sudo(8) documents, then runs the rest.
-const GIT_STUB = '#!/bin/sh\nwhile [ "$1" = -C ] || [ "$1" = -c ]; do shift 2; done\nprintf "git %s\\n" "$1" >> "$ACT_LOG"\n';
-const GH_STUB = '#!/bin/sh\nprintf "gh %s %s\\n" "$1" "$2" >> "$ACT_LOG"\n';
-const STUBS = [
-    'cat() { command cat > /dev/null; }',
-    'sudo() { while [ $# -gt 0 ]; do case $1 in [A-Za-z_]*=*) export "$1"; shift ;; *) break ;; esac; done; "$@"; }',
-    'make() { :; }', 'npm() { :; }', 'sleep() { :; }', 'cd() { :; }',
-].join('\n');
-
-/**
- * Acts bash invokes, as the union of two runs: `true` succeeding and `true`
- * failing. The recogniser reports a potential act, so both `&&` and `||` branches
- * have to be reachable for bash to be its oracle.
- */
-function bashActs(command: string): string[] {
-    const acts = new Set([C, P, G]);
-    return [...new Set([...bashRun(command, 0), ...bashRun(command, 1)])].filter((a) => acts.has(a)).sort();
-}
-
-function bashRun(command: string, trueStatus: number): string[] {
-    const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'acts-oracle-'));
-    try {
-        const log = path.join(dir, 'acts.log');
-        fs.writeFileSync(log, '');
-        const bin = path.join(dir, 'bin');
-        fs.mkdirSync(bin);
-        fs.writeFileSync(path.join(bin, 'git'), GIT_STUB, { mode: 0o755 });
-        fs.writeFileSync(path.join(bin, 'gh'), GH_STUB, { mode: 0o755 });
-        const r = spawnSync('bash', ['-c', `${STUBS}\ntrue() { return ${trueStatus}; }\n${command}\nwait`], { cwd: dir, env: { PATH: `${bin}${path.delimiter}${process.env['PATH'] ?? ''}`, ACT_LOG: log }, encoding: 'utf8', timeout: 10_000 });
-        if (r.error || r.signal) throw new Error(`bash did not finish: ${String(r.error ?? r.signal)}`);
-        return fs.readFileSync(log, 'utf8').split('\n').filter((l) => l !== '');
-    } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
-    }
-}
-
-const C = 'git commit';
-const P = 'git push';
-const G = 'gh pr create';
 
 /** Each case: the command and the acts it runs. */
 const CASES: Array<[string, string[]]> = [
@@ -110,9 +65,33 @@ const CASES: Array<[string, string[]]> = [
     ['command git commit -m x', [C]],
     ['cat <<EO\\\nF\nbody\nEOF\ngit push', [P]],
     ['cat <<EO\\\nF\ngit push\nEOF', []],
+    // Round-6 counterexamples: a here-string is not a heredoc; an unquoted
+    // terminator's body joins backslash-newlines before the comparison; a quoted
+    // `time` is the time(1) program, not the keyword.
+    ['cat <<< "hello"\ngit push', [P]],
+    ['cat <<<hello; git push', [P]],
+    ['cat <<EOF\nbody\nE\\\nOF\ngit push\nEOF', [P]],
+    ["cat <<'EOF'\nbody\nE\\\nOF\ngit push\nEOF", []],
+    ['cat <<EOF\nE\\\\\nOF\ngit push\nEOF', []],
+    ['"time" X=1 git push', []],
+    ['"time" git push', [P]],
+    ["'nohup' git push", [P]],
+    // Found by the generated test: `time` is the keyword only at the start of a
+    // pipeline and of a command; elsewhere it is time(1).
+    ['echo a | time X=1 git push', []],
+    ['echo a | time git push', [P]],
+    ['true || time X=1 git push', [P]],
+    ['X=1 time Y=2 git push', []],
+    ['time -p git push', [P]],
+    ['time -p X=1 git push', [P]],
+    ['echo hi | time -p git push', [P]],
+    ['echo hi | time -p X=1 git push', []],
+    ['command -- git push', [P]],
+    ['nohup -- git push', [P]],
+    ['command -v git push', []],
+    ['command -V git commit -m x', []],
 ];
 
-const hasBash = spawnSync('bash', ['-c', 'true']).status === 0;
 // CI must not pass this suite by skipping it.
 if (!hasBash && process.env['CI']) throw new Error('the bash oracle needs bash on CI');
 
