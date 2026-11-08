@@ -1520,7 +1520,7 @@
           "source": "**Logger-level redaction.** Configure the logger to scrub",
           "in_law": false,
           "response": "act",
-          "witness": "logger recursively scrubs email/phone/name/address",
+          "witness": "logger recursively scrubs `email`, `phone`, `name`, `address`",
           "unresolved_ref": null
         },
         {
@@ -1719,6 +1719,15 @@
           "in_law": false,
           "response": "none",
           "witness": "PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c34",
+          "kind": "obligation",
+          "source": "Configure the logger to scrub `email`, `phone`, `name`, `address`, `token`, `password`, `card_number`, `iban` keys recursively from any payload.",
+          "in_law": false,
+          "response": "none",
+          "witness": "`card_number`, `iban` keys",
           "unresolved_ref": null
         }
       ]
@@ -3515,6 +3524,15 @@
           "in_law": false,
           "response": "refuse",
           "witness": "require_council + no council → refuse",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c29",
+          "kind": "obligation",
+          "source": "IS PRODUCED VIA A MULTI-MODEL COUNCIL / research:deep PASS — NEVER SINGLE-MODEL.",
+          "in_law": true,
+          "response": "none",
+          "witness": "a configured but unused council, or several models consulted ad hoc, doesn't count",
           "unresolved_ref": null
         }
       ]

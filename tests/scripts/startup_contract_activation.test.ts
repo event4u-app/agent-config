@@ -86,3 +86,19 @@ describe('low-impact-corpus-privacy-floor — no matched value of any class is e
         expect(contract('low-impact-corpus-privacy-floor')).toContain('category + match length only, for every class');
     });
 });
+
+// Round 14 (both seats): legal's contract forbade single-model output but did
+// not require the council pass to run; pii compressed `card_number` to "card".
+describe('round 14 — the council pass is run, the scrub keys are exact', () => {
+    it('legal: a configured but unused council does not satisfy the contract', () => {
+        const c = contract('legal-safety-floor');
+        expect(c).toContain('produce every legal work-product via a multi-model council / research:deep pass, actually run');
+        expect(c).toContain("a configured but unused council, or several models consulted ad hoc, doesn't count");
+    });
+    it('pii: the logger scrub keys are the body\'s exact identifiers', () => {
+        const c = contract('domain-safety-pii');
+        for (const k of ['email', 'phone', 'name', 'address', 'token', 'password', 'card_number', 'iban']) {
+            expect(c, k).toContain(`\`${k}\``);
+        }
+    });
+});

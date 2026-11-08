@@ -6,7 +6,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 676 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33379 chars.**
+**28 rules · 678 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33622 chars.**
 
 ## Per rule
 
@@ -18,7 +18,7 @@ the config is the record.
 | `decision-revisit-gate` | 43 | 5 | 1 | 1757 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
-| `domain-safety-pii` | 33 | 2 | 1 | 1701 |
+| `domain-safety-pii` | 34 | 2 | 1 | 1731 |
 | `domain-safety-retention` | 27 | 5 | 0 | 1600 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
@@ -26,7 +26,7 @@ the config is the record.
 | `finance-safety-floor` | 28 | 2 | 1 | 1630 |
 | `git-history-discipline` | 25 | 13 | 0 | 1264 |
 | `image-likeness-and-rights` | 15 | 3 | 0 | 1004 |
-| `legal-safety-floor` | 28 | 6 | 0 | 1379 |
+| `legal-safety-floor` | 29 | 7 | 0 | 1592 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
 | `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1110 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
@@ -210,7 +210,7 @@ the config is the record.
 | `domain-safety-pii` | c8 | prohibition | refuse | no | NO RAW EMAIL, NAME, PHONE, ADDRESS, TOKEN, OR PAYMENT IDENTIFIER | logs: allowlisted fields only |  |
 | `domain-safety-pii` | c9 | obligation | act | no | Log 'user_id', 'tenant_id', 'request_id', 'event_type' — never 'user' or 'request' blobs. | user/request blobs |  |
 | `domain-safety-pii` | c10 | obligation | act | no | **PII-exclusion-by-construction (preferred over redaction).** | prefer log types unable to hold free text |  |
-| `domain-safety-pii` | c11 | obligation | act | no | **Logger-level redaction.** Configure the logger to scrub | logger recursively scrubs email/phone/name/address |  |
+| `domain-safety-pii` | c11 | obligation | act | no | **Logger-level redaction.** Configure the logger to scrub | logger recursively scrubs 'email', 'phone', 'name', 'address' |  |
 | `domain-safety-pii` | c12 | obligation | act | no | **No raw exception payloads.** | scrub exception bodies (before_send) |  |
 | `domain-safety-pii` | c13 | prohibition | refuse | no | **No log-and-forget for auth flows.** | or credentials in auth logs |  |
 | `domain-safety-pii` | c14 | prohibition | refuse | no | Refuse to write 'logger.info("User logged in: $request->all()")' or 'Log::info($user)' | refuse 'Log::info($user)', show allowlisted version |  |
@@ -233,6 +233,7 @@ the config is the record.
 | `domain-safety-pii` | c31 | obligation | act | no | 3. **Logger-level redaction.** Configure the logger to scrub | always: logger recursively scrubs |  |
 | `domain-safety-pii` | c32 | stop | stop | no | a PDF whose header reads 'ATTORNEY-CLIENT PRIVILEGED' must hard-stop before | stop before generating |  |
 | `domain-safety-pii` | c33 | bound | none | no | 'ATTORNEY WORK PRODUCT', 'PREPARED AT REQUEST OF COUNSEL', 'LITIGATION HOLD', | PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS |  |
+| `domain-safety-pii` | c34 | obligation | none | no | Configure the logger to scrub 'email', 'phone', 'name', 'address', 'token', 'password', 'card_number', 'iban' keys recursively from any payload. | 'card_number', 'iban' keys |  |
 | `domain-safety-retention` | c1 | trigger | none | no | keyword: "right to be forgotten" | right to be forgotten |  |
 | `domain-safety-retention` | c2 | obligation | ask | yes | NAME THE JURISDICTION GAP. | name jurisdiction gap |  |
 | `domain-safety-retention` | c3 | precedence | act | yes | DEFAULT TO THE LONGEST APPLICABLE FLOOR. | default to longest applicable floor |  |
@@ -429,6 +430,7 @@ the config is the record.
 | `legal-safety-floor` | c26 | trigger | none | no | "is this a legal problem" | or "is this a legal problem" |  |
 | `legal-safety-floor` | c27 | obligation | act | no | > ⚠️ Attorney review required on material use. This is a draft for a licensed | "⚠️ Attorney review required on material use. |  |
 | `legal-safety-floor` | c28 | stop | refuse | no | WHEN legal_review_prep.require_council IS TRUE (DEFAULT), A LEGAL WORK-PRODUCT | require_council + no council → refuse |  |
+| `legal-safety-floor` | c29 | obligation | none | yes | IS PRODUCED VIA A MULTI-MODEL COUNCIL / research:deep PASS — NEVER SINGLE-MODEL. | a configured but unused council, or several models consulted ad hoc, doesn't count |  |
 | `lethal-trifecta-guard` | c1 | trigger | none | yes | A SKILL / COMMAND / TOOL THAT COMBINES ALL THREE LEGS — | combining all three legs |  |
 | `lethal-trifecta-guard` | c2 | obligation | act | yes | MUST BREAK ONE LEG, OR GATE THE EGRESS BEHIND HUMAN-IN-THE-LOOP. | break one leg or gate the egress |  |
 | `lethal-trifecta-guard` | c3 | prohibition | refuse | yes | NEVER SHIP THE FULL TRIFECTA ON AN AUTONOMOUS PATH. | ship the full trifecta on an autonomous path |  |
