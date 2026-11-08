@@ -6,7 +6,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 675 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33184 chars.**
+**28 rules · 676 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33379 chars.**
 
 ## Per rule
 
@@ -25,10 +25,10 @@ the config is the record.
 | `fast-path-marker-visibility` | 19 | 2 | 0 | 935 |
 | `finance-safety-floor` | 28 | 2 | 1 | 1630 |
 | `git-history-discipline` | 25 | 13 | 0 | 1264 |
-| `image-likeness-and-rights` | 14 | 3 | 0 | 871 |
+| `image-likeness-and-rights` | 15 | 3 | 0 | 1004 |
 | `legal-safety-floor` | 28 | 6 | 0 | 1379 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
-| `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1048 |
+| `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1110 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
 | `runtime-safety` | 18 | 0 | 0 | 701 |
 | `secret-vcs-guard` | 26 | 5 | 0 | 1283 |
@@ -400,6 +400,7 @@ the config is the record.
 | `image-likeness-and-rights` | c12 | prohibition | refuse | no | - "Just testing" a celebrity likeness on a scaffold-tier adapter — dry-run or not, | "just testing" (scaffold/dry-run adapter) |  |
 | `image-likeness-and-rights` | c13 | prohibition | none | no | - Skipping the rights check because "it's only a banner" | or "only a banner" |  |
 | `image-likeness-and-rights` | c14 | trigger | none | no | path_prefix: "scripts/ai-image/adapters/" | (or editing 'scripts/ai-image/adapters/') |  |
+| `image-likeness-and-rights` | c15 | obligation | none | no | Check model card; surface if output license is restricted | before every gen/edit, check model card |  |
 | `legal-safety-floor` | c1 | trigger | none | no | Auto-activates when 'pack-legal-review-prep' is installed | legal-review-prep pack installed |  |
 | `legal-safety-floor` | c2 | obligation | act | no | Every output is a **draft to PREPARE for attorney review**, never legal advice. | output = draft/research aid for licensed attorney |  |
 | `legal-safety-floor` | c3 | prohibition | refuse | yes | THE AGENT NEVER ISSUES A BINDING LEGAL CONCLUSION. | binding legal conclusion |  |
@@ -468,7 +469,7 @@ the config is the record.
 | `low-impact-corpus-privacy-floor` | c23 | stop | stop | no | No silent retry, no auto-rewrite. | stop intake/upstream flow |  |
 | `low-impact-corpus-privacy-floor` | c24 | prohibition | stop | no | No silent retry, no | silently retry |  |
 | `low-impact-corpus-privacy-floor` | c25 | prohibition | refuse | no | + inline 'api_key:' shape | inline api_key: shape |  |
-| `low-impact-corpus-privacy-floor` | c26 | prohibition | none | no | match, never the matched value itself, since the marker would otherwise | never echo the matched secret/PII |  |
+| `low-impact-corpus-privacy-floor` | c26 | prohibition | none | no | never the matched value itself, whatever the class (money, SQL names | category + match length only, for every class |  |
 | `question-not-instruction` | c1 | trigger | act | no | A QUESTION ASKS FOR AN ANSWER. IT IS NOT AUTHORIZATION TO ACT. | never authorization to act |  |
 | `question-not-instruction` | c2 | prohibition | refuse | no | → ANSWER FIRST. NEVER BUILD, CHANGE, COMMIT, OR EXECUTE ON A QUESTION. | build, change, commit or execute on a question |  |
 | `question-not-instruction` | c3 | prohibition | refuse | no | RUNNING OFF ON A QUESTION IS A RULE VIOLATION, NOT INITIATIVE. | rule violation, not initiative |  |

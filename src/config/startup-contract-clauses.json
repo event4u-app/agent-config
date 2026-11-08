@@ -3251,6 +3251,15 @@
           "response": "none",
           "witness": "(or editing `scripts/ai-image/adapters/`)",
           "unresolved_ref": null
+        },
+        {
+          "id": "c15",
+          "kind": "obligation",
+          "source": "Check model card; surface if output license is restricted",
+          "in_law": false,
+          "response": "none",
+          "witness": "before every gen/edit, check model card",
+          "unresolved_ref": null
         }
       ]
     },
@@ -3879,10 +3888,10 @@
         {
           "id": "c26",
           "kind": "prohibition",
-          "source": "match, never the matched value itself, since the marker would otherwise",
+          "source": "never the matched value itself, whatever the class (money, SQL names",
           "in_law": false,
           "response": "none",
-          "witness": "never echo the matched secret/PII",
+          "witness": "category + match length only, for every class",
           "unresolved_ref": null
         }
       ]

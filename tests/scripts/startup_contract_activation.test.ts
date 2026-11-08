@@ -64,3 +64,25 @@ describe('low-impact-corpus-privacy-floor — the body and the contract agree on
         expect(contract('low-impact-corpus-privacy-floor')).toContain('never echo the matched secret/PII');
     });
 });
+
+// Round 13 (both seats): the model-card check depended on already knowing the
+// card restricts output — an ordinary subject on an unchecked model met no
+// activation condition. The check now runs on every generation.
+describe('image-likeness-and-rights — the model card is checked whatever the subject', () => {
+    it('the contract activates on every image generation and orders the check before it', () => {
+        const c = contract('image-likeness-and-rights');
+        expect(c).toContain('every AI image gen/edit');
+        expect(c).toContain('whatever the subject');
+        expect(c).toContain('before every gen/edit, check model card');
+        expect(c).not.toMatch(/\bw\/ real person's face\/body.*or license-restricted model\./);
+    });
+    it('an ordinary-subject image request routes the rule', () => {
+        expect(activated('generate an image of a mountain landscape at dawn')).toContain('image-likeness-and-rights');
+    });
+});
+
+describe('low-impact-corpus-privacy-floor — no matched value of any class is echoed', () => {
+    it('the contract limits the preview to category and length for every class', () => {
+        expect(contract('low-impact-corpus-privacy-floor')).toContain('category + match length only, for every class');
+    });
+});
