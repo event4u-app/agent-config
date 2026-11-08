@@ -19,6 +19,7 @@ import {
     STALE_AFTER_MS,
     SWEEP_MAX,
     sweepAbandoned,
+    consumeIfUnchanged,
     WRITE_LIMIT,
 } from '../../src/scripts/_lib/compact_checkpoint.js';
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
@@ -265,7 +266,7 @@ describe('compact checkpoint — council round 7 findings (retention)', () => {
     });
 });
 
-describe('compact checkpoint — sweep: bounded work and guaranteed cleanup', () => {
+describe('compact checkpoint — sweep: bounded work and cleanup progress', () => {
     it('inspects at most SWEEP_MAX entries and reports an incomplete sweep past it', () => {
         const dir = checkpointDir(ENV());
         fs.mkdirSync(dir, { recursive: true });
@@ -338,7 +339,7 @@ describe('compact checkpoint — round 11: headroom keeps every sweep complete',
         expect(WRITE_LIMIT).toBeLessThanOrEqual(SWEEP_MAX - 16);
     });
 
-    it('a sweep still reaches the end after writes stopped at the limit and a few concurrent ones landed', () => {
+    it('a sweep reaches the end after writes stopped at the limit and a few concurrent ones landed', () => {
         const dir = checkpointDir(ENV());
         fs.mkdirSync(dir, { recursive: true });
         for (let i = 0; i < WRITE_LIMIT + 10; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
@@ -361,5 +362,25 @@ describe('compact checkpoint — round 12: progress after an overshoot', () => {
         expect(outcomes[0]).toBe('skipped');
         expect(outcomes).toContain('written');
         expect(sweepAbandoned(dir, new Date('2026-11-08T12:00:10Z')).complete).toBe(true);
+    });
+});
+
+describe('compact checkpoint — round 13 follow-ups', () => {
+    it('does not consume a marker replaced between reading and removal', () => {
+        recordPreCompact(base());
+        const first = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
+        recordPreCompact(base({ now: new Date('2026-11-08T12:00:05Z') }));
+        expect(consumeIfUnchanged(markerFile(), first.written_at)).toBe(false);
+        expect(fs.existsSync(markerFile())).toBe(true);
+        const second = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
+        expect(consumeIfUnchanged(markerFile(), second.written_at)).toBe(true);
+        expect(fs.existsSync(markerFile())).toBe(false);
+    });
+
+    it('an unknown version on both sides compares equal: match means the available keys agree', () => {
+        recordPreCompact(base({ version: null }));
+        expect(observePostCompact(base({ version: null }))).toBe('match');
+        recordPreCompact(base({ version: null }));
+        expect(observePostCompact(base({ version: '20.1.0' }))).toBe('version-mismatch');
     });
 });

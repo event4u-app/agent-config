@@ -56,6 +56,14 @@ describe('compact-checkpoint hook', () => {
         expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);
     });
 
+    it('fails open when the runtime directory cannot be created', () => {
+        const blocker = path.join(root, 'not-a-dir');
+        fs.writeFileSync(blocker, 'x');
+        process.env['EVENT4U_CONFIG_HOME'] = path.join(blocker, 'inside');
+        expect(run({ event: 'pre_compact', payload })).toEqual({ rc: 0, out: '' });
+        expect(run({ event: 'session_start', payload: { ...payload, source: 'compact' } })).toEqual({ rc: 0, out: '' });
+    });
+
     it('ignores session_start from any other source', () => {
         expect(run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'startup' } })).toEqual({ rc: 0, out: '' });
         expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);

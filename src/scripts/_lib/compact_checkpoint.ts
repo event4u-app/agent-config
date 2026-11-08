@@ -345,6 +345,8 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     } else {
         ageMs = Math.max(0, now.getTime() - Date.parse(m.written_at));
         if (m.session_key !== key || m.transcript_hash !== transcriptHash(input.transcriptPath)) outcome = 'key-mismatch';
+        // An unknown version on both sides compares equal: `match` means the
+        // available keys agree, not that the package version was verified.
         else if (m.package_version !== input.version) outcome = 'version-mismatch';
         else if (ageMs > STALE_AFTER_MS) outcome = 'stale';
         else outcome = 'match';
@@ -352,8 +354,25 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     // Consumed only once the class is logged: if logging fails, the marker stays
     // and the next observation classifies it again. A malformed marker is
     // removed the same way; anything that is not a regular file stays.
-    if (logEvent(input.env, outcome, now, ageMs) && lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
+    if (logEvent(input.env, outcome, now, ageMs)) {
+        if (m !== null) consumeIfUnchanged(file, m.written_at);
+        else if (lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
+    }
     return outcome;
+}
+
+/**
+ * Remove the marker only if it is still the one that was read (same
+ * `written_at`), so a marker written by a `pre_compact` that ran between the
+ * read and the removal is left for its own observation. Narrows the window to
+ * the read-compare-remove sequence; without a lock it cannot be closed.
+ */
+export function consumeIfUnchanged(file: string, writtenAt: string): boolean {
+    if (!lstatOrNull(file)?.isFile()) return false;
+    const now = readMarker(file);
+    if (now !== null && now.written_at !== writtenAt) return false;
+    fs.rmSync(file, { force: true });
+    return true;
 }
 
 /** Event counts from the log, for the evidence file and the step's verify. */
