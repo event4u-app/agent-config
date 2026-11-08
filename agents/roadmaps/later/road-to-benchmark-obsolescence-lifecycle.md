@@ -5,7 +5,7 @@ status: later
 
 # Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule
 
-> **Arrivals:** 2 — latest `inbox-2026-11-x` (2026-11-05): the container sweep's strong host sat at 0.94–0.95 discipline without AC and showed no significant lift — the state this file models; the round's removal discipline is carried by `later/road-to-proof-where-the-owner-sees-it` Phase 4, so the un-park condition is unchanged. Earlier: `inbox-2026-10-cb` (2026-10-31): rules carry no motivating failure, no retirement condition and no calibrated model (`decision_impact` used by 0 of 122). Same criticism as this file's subject; it does not change the un-park condition.
+> **Arrivals:** 3 — latest `inbox-2026-11-zc` (2026-11-08): the owner asked to investigate per-model rule and skill sets (a set a strong model does not need, a set a weak one does); the un-park condition is unchanged, and a re-measure on the current Sonnet and Opus is spend-gated and put to the owner in that round. Earlier: 2 — `inbox-2026-11-x` (2026-11-05): the container sweep's strong host sat at 0.94–0.95 discipline without AC and showed no significant lift — the state this file models; the round's removal discipline is carried by `later/road-to-proof-where-the-owner-sees-it` Phase 4, so the un-park condition is unchanged. Earlier: `inbox-2026-10-cb` (2026-10-31): rules carry no motivating failure, no retirement condition and no calibrated model (`decision_impact` used by 0 of 122). Same criticism as this file's subject; it does not change the un-park condition.
 
 > A benchmark-backed claim has two ways to go stale, and this package only
 > handles one. It catches regressions when a claim is re-run. It does **not**
