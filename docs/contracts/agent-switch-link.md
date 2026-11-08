@@ -240,7 +240,10 @@ the link over the CLI verbs below, never the MCP client.
 - **Back-off.** Three link calls in a row that do not answer — a timeout, a
   non-zero exit or output that does not parse, on the prompt or the Stop
   path — stop the link for this session until the next reset of its plan
-  windows (five hours when none is known); the user is told once.
+  windows (five hours when none is known); the user is told once. A call that
+  answers, discovery included, resets the count. The count is kept under a
+  lock; a hook that was already past the check when another tripped the rest
+  still finishes its own one or two calls.
 - **Off switch.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and
   checkpoint, including for a request raised before it was set; the quota
   notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
@@ -250,7 +253,11 @@ the link over the CLI verbs below, never the MCP client.
   days after it was raised, so an orphaned record stops polling. The prompt
   relay and the Stop path change it under a lock, each only its own flag on the
   record as it is then, so neither undoes the other's and a deleted record
-  stays deleted.
+  stays deleted. The checkpoint and each relayed line are claimed under that
+  lock before they happen, so two Stops or two prompts running at once act
+  once, and a raise never replaces a record that is still there. A lock is
+  released only by its holder. Record, back-off and lock files no session has
+  touched for eight days are removed when a request is raised.
 
 ## CLI fallback
 
