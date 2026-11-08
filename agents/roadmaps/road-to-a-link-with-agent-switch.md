@@ -153,37 +153,67 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       provider has no usable account.
       verify: bracket seat tests.
 
-## Phase 6 — Hardening the switch question
+## Phase 6 — Pace requests (agent-switch counterpart)
+
+> **Source:** `road-to-limits-that-last-the-whole-run` 2.3 in
+> `event4u-app/agent-switch`. agent-switch raises a second kind of switch
+> request, `reason.kind: "pace"`: one account runs out well before its reset
+> while another account of the same provider would let its room expire unused.
+> The link contract stays `1`; the additions are fields and an optional
+> argument — `switch_list` takes `session`, each request carries `kind` and a
+> plain `summary`, `limits_get` windows carry `burnPerHour` and `etaFull`.
+
+- [ ] **6.1 Render pace requests at prompt time.** The prompt-time hook reads
+      the calling session's open requests with `switch_list {session}` and shows
+      a pace request in plain words, using its `summary` as is instead of
+      rebuilding it from raw fields. A pace request is not urgent: one line,
+      after a limit request when both are open.
+      verify: hook test — one open pace request → one line carrying its
+      `summary`; a limit and a pace request → the limit first.
+- [ ] **6.2 Answer through `switch_decide`.** On the user's answer the agent
+      calls `switch_decide` (approve with a target, decline, or snooze),
+      host-confirmed as in 4.2; agent-switch carries out the move. AC never
+      raises a pace request: `switch_request` stays the limit path of 4.1.
+      verify: the 4.2 lint covers `switch_decide` for both kinds; a test that no
+      AC path raises a request with a pace reason.
+- [ ] **6.3 Relay and one voice.** 4.3's relay reports a pace request decided
+      in agent-switch like a limit one. agent-switch's own opt-in chat hook
+      (`agent-switch hooks chat on`) stays silent when this link is wired into
+      the session, so the user never sees the suggestion twice; agent-switch
+      detects the wiring, so AC adds nothing for that.
+      verify: relay test with a pace request decided in agent-switch.
+
+## Phase 7 — Hardening the switch question
 
 Carried from ratification rounds 1–5 of the Phase 4 budget raise
 (`agents/evidence/council/agent-switch-ask-ratification-r{1..5}-*.question.md`,
 all `refused`; merged on the owner's word, 2026-11-08). Each item is a
 finding both seats or one seat repeated that the merged change does not close.
 
-- [ ] **6.1 Back off a failing link.** Consecutive failed `switch show` /
+- [ ] **7.1 Back off a failing link.** Consecutive failed `switch show` /
       `switch request` calls (each bounded at 5 s) stop the link for this
       session until the next reset, and say so once.
       verify: test with a fake agent-switch that exits non-zero three times.
-- [ ] **6.2 Measure the cost.** Measure whole-hook latency of `quota-notice`
+- [ ] **7.2 Measure the cost.** Measure whole-hook latency of `quota-notice`
       and `session-eol` with the link answering, failing and absent; record
       the figures and a rollback criterion next to the budget entry.
       verify: committed measurement record.
-- [ ] **6.3 Terminal versus checkpoint.** A request that turns terminal on a
+- [ ] **7.3 Terminal versus checkpoint.** A request that turns terminal on a
       prompt before the Stop path checkpointed it no longer drops the record
       the Stop path needs; decide whether a checkpoint after a finished move
       is still useful and test the race.
       verify: test approved → done between prompt and Stop.
-- [ ] **6.4 Consent at execution.** Show, per supported host, that a
+- [ ] **7.4 Consent at execution.** Show, per supported host, that a
       `switch_decide` call reaches the user's confirmation, or record where it
       does not.
       verify: evidence record per host.
-- [ ] **6.5 Record lifetime and interleaving.** The per-session record
+- [ ] **7.5 Record lifetime and interleaving.** The per-session record
       expires (e.g. after the request's `expiresAt` or seven days) so an
       orphaned one stops polling, and a prompt relay and a Stop checkpoint
       updating it at once cannot undo each other's flag or revive a deleted
       record.
       verify: tests for expiry and for interleaved relay / Stop writes.
-- [ ] **6.6 Default.** With 6.1–6.5 in hand, decide whether the question stays
+- [ ] **7.6 Default.** With 7.1–7.5 in hand, decide whether the question stays
       on by default or becomes opt-in (`AGENT_CONFIG_NO_SWITCH_QUESTION=1` is
       the off switch today).
       verify: owner decision recorded under Decisions.
@@ -202,7 +232,7 @@ cross-account continuation.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -210,6 +240,7 @@ cross-account continuation.
 | 2 | Stale limits route a seat badly | implementation | A cached limits read that is hours old can mark a full account usable and place a council seat on it | Observations carry `stale`; a stale read counts as `null`, never as usable | Phase 5 — Load distribution |
 | 3 | agent-switch absent or link off | implementation | A hard dependency would break AC for every user without agent-switch, against fence K8 | Every path returns `null` and falls back to today's behaviour | Phase 2 — Automatic connection |
 | 4 | Notice noise | product | Raising a request on every `hot` notice could flood both tools with duplicate questions | One request per `(account, window, resets_at)`, deduplicated in agent-switch | Phase 4 — Inform and ask |
+| 5 | One pace request, two voices | product | agent-switch's own chat hook and AC's prompt-time hook could both put the same pace suggestion into one session | agent-switch's hook is silent wherever this link is wired; AC renders the request's `summary` once, after any limit request | Phase 6 — Pace requests (agent-switch counterpart) |
 
 ## Blockers
 

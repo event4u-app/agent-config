@@ -23,7 +23,7 @@ execution:
 > finding id. The release-blocking findings themselves live in
 > `road-to-hook-guards-that-hold-17-findings` and are not repeated here.
 >
-> **Arrivals:** 2 — latest `inbox-2026-10-al`/`-am` (2026-10-25): two review sets at `6194e27` and `1e885a4`/`efa1cca`, re-verified at `384e9e85c9`, add steps 1.10, 3.14–3.16 and 6.6. Before it: 1 — `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add eight still-true findings no roadmap owned — steps 1.9, 3.10–3.13, 4.9–4.10 and 6.5.
+> **Arrivals:** 3 — latest 2026-11-07, seen red in CI while delivering PR #2914: step 5.2b, and 5.2 red on main. Before it: 2 — `inbox-2026-10-al`/`-am` (2026-10-25): two review sets at `6194e27` and `1e885a4`/`efa1cca`, re-verified at `384e9e85c9`, add steps 1.10, 3.14–3.16 and 6.6. Before it: 1 — `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add eight still-true findings no roadmap owned — steps 1.9, 3.10–3.13, 4.9–4.10 and 6.5.
 
 ## Goal
 
@@ -328,11 +328,24 @@ release ledger. The residue items are closed the same way.
       and git state with a 5-minute timeout.
       verify: the test runs against a fixture HOME and commit, with the default
       timeout.
-- [ ] **5.2 `35571c6d9522` — replace the wall-clock p95 assertion.**
+- [x] **5.2 `35571c6d9522` — replace the wall-clock p95 assertion.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `tests/scripts/update_notice_hook.test.ts` asserts an unsupported wall-clock
       threshold; its policy and provenance need tracking.
       verify: the assertion is removed or bound to a recorded measurement and
       a stated policy.
+      > note: done 2026-11-08 — replaced by a check on the module's import closure:
+      > nothing `update_notice_hook.ts` reaches imports a process, socket or `fetch`
+      > (seen red with a planted `node:child_process` import).
+- [x] **5.2b Bound the real-tree module-reach test by its work, not the default timeout.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      `tests/scripts/check_gate_reachability_module_counts.test.ts` § "moduleReachSummary
+      agrees with module_reach.ts on the real tree" walks the whole tree under vitest's
+      30 s default: 11.5 s and 23.3 s on main's macOS shard 4/4 (run 42366665313),
+      30.15 s and red on PR #2914's (2026-11-07). Seen red on main the same day: 5.2's
+      p95 assertion (run 42381558337, ubuntu shard 4/4).
+      verify: the test runs on a fixture tree, or computes both sides once in a
+      `beforeAll` with a stated, measured timeout.
+      > note: done 2026-11-08 — both walks run once in `beforeAll` (120 s bound, 23.3 s
+      > measured on macOS CI); the three tests read the result. 8/8 in 21 s locally.
 - [ ] **5.3 `3932ad9717f1` — exercise the fork rung against real git.**
       `tests/scripts/self_repair_release.test.ts` stubs the fork-rung push as
       success.

@@ -30,3 +30,19 @@ duty observation (with round 6's exact delimiter and per-rule isolation). The `c
 recognizer and the compaction clear are built and tested but not bound; binding them
 is step 2.2's remaining work under blocker `hook-binding-ratification`, and round 6's
 open points (counter bounds, hot-path cost) are its entry questions.
+
+## Rounds 7–13: the binding on its own
+
+After the measured hot-path cost and a cap on duty keys, the binding came back as its
+own change (`feat/reference-duty-binding`), prompts
+`agents/evidence/council/reference-duty-ratification-r{7..13}-20261107.question.md`.
+
+| Round | anthropic | openai | Named, then fixed |
+|---|---|---|---|
+| 7 | refused | refused (no stance line) | cap held only for new keys → enforced on load |
+| 8 | refused | refused | `cat` credited before it ran → credited at `post_tool_use` from the result |
+| 9 | refused | refused | length match credits an equal-length replacement → byte-identical compare |
+| 10 | refused | refused (no stance line) | a `cat` of a FIFO hung the hook → one non-blocking bounded descriptor |
+| 11 | ratified | refused (no stance line) | no deadline; allocation before the length check; path replacement → fixed |
+| 12 | refused | refused | deadline unchecked on the success path → final check |
+| 13 | ratified (high) | ratified (med) | — record: `agents/evidence/ratifications/reference-duty-binding-20261107.md` |

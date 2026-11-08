@@ -4,10 +4,9 @@
  * (road-to-token-economy-cache Phase 6.1/6.2). A subagent's reads are keyed
  * apart from its parent's (`agent_id`).
  *
- * The concern also handles a `pre_compact` envelope (clears the recorded reads)
- * and a Bash `cat <absolute file>` (a full read), but the manifest binds it to
- * neither yet: that binding is hook plumbing and lands with its own
- * ratification.
+ * Also bound on claude `post_tool_use`, where a completed Bash `cat <absolute
+ * file>` that returned the whole file counts as a full read, and on claude
+ * `pre_compact`, where it clears the recorded reads: compaction drops what was read.
  *
  * Two signals, one session-scoped read ledger:
  *
@@ -72,6 +71,7 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
@@ -128,6 +128,9 @@ export interface ReadRecord {
  * hash is a full read of the file on the pre_tool_use path.
  */
 export const HASH_BOUND_BYTES = 2 * 1024 * 1024;
+
+/** How long the post-execution `cat` verification may spend reading, between chunks. */
+export const CAT_VERIFY_DEADLINE_MS = 50;
 
 /**
  * What the content key could say about one read. Only `over-bound` — the stat
@@ -202,6 +205,8 @@ export interface Ledger {
     duty?: Record<string, DutyRecord>;
     /** File acts whose duty could not be computed (an unreadable router). */
     duty_errors?: number;
+    /** Duty keys dropped at {@link MAX_DUTY_KEYS}. */
+    duty_overflow?: number;
 }
 
 function emptyLedger(): Ledger {
@@ -223,6 +228,23 @@ export function ledgerFile(workspaceRoot: string, sessionKey: string): string {
     return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'reread-guard', `${sessionKey}.json`);
 }
 
+/**
+ * The duty map as loaded, held to {@link MAX_DUTY_KEYS}: a ledger written before
+ * the cap, or by hand, keeps its most recent keys and counts the rest.
+ */
+function boundedDuty(parsed: JsonObject): Pick<Ledger, 'duty' | 'duty_overflow'> {
+    const prior = typeof parsed['duty_overflow'] === 'number' ? parsed['duty_overflow'] : 0;
+    if (!isObject(parsed['duty'])) return prior > 0 ? { duty_overflow: prior } : {};
+    const entries = Object.entries(parsed['duty'] as unknown as Record<string, DutyRecord>);
+    if (entries.length <= MAX_DUTY_KEYS) return { duty: Object.fromEntries(entries), ...(prior > 0 ? { duty_overflow: prior } : {}) };
+    const ts = (r: unknown): number => {
+        const v = isObject(r as JsonValue) ? (r as Record<string, unknown>)['ts'] : undefined;
+        return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+    };
+    entries.sort((a, b) => ts(b[1]) - ts(a[1]));
+    return { duty: Object.fromEntries(entries.slice(0, MAX_DUTY_KEYS)), duty_overflow: prior + entries.length - MAX_DUTY_KEYS };
+}
+
 export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
     try {
         const parsed = JSON.parse(fs.readFileSync(ledgerFile(workspaceRoot, sessionKey), 'utf8'));
@@ -231,7 +253,7 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
             reads: isObject(parsed['reads']) ? (parsed['reads'] as unknown as Record<string, ReadRecord>) : {},
             writes: isObject(parsed['writes']) ? (parsed['writes'] as Record<string, number>) : {},
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
-            ...(isObject(parsed['duty']) ? { duty: parsed['duty'] as unknown as NonNullable<Ledger['duty']> } : {}),
+            ...boundedDuty(parsed),
             ...(typeof parsed['duty_errors'] === 'number' ? { duty_errors: parsed['duty_errors'] } : {}),
         };
     } catch {
@@ -303,6 +325,13 @@ export function buildPostEditReadLine(relPath: string): string {
     );
 }
 
+/**
+ * Distinct `rule::reference` keys a ledger keeps. The real bound is the router's
+ * path- and file-triggered references (a handful); the cap only stops a corrupt
+ * or hostile router from growing the file, and a dropped key is counted.
+ */
+export const MAX_DUTY_KEYS = 256;
+
 export interface DutyRecord {
     state: DutyState;
     pending: number;
@@ -325,6 +354,10 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
     const ts = Date.now();
     ledger.duty = { ...(ledger.duty ?? {}) };
     for (const [k, state] of Object.entries(states)) {
+        if (ledger.duty[k] === undefined && Object.keys(ledger.duty).length >= MAX_DUTY_KEYS) {
+            ledger.duty_overflow = (ledger.duty_overflow ?? 0) + 1;
+            continue;
+        }
         const prior = ledger.duty[k] ?? { state, pending: 0, read: 0, ts };
         ledger.duty[k] = {
             state,
@@ -333,6 +366,81 @@ function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
             ts,
         };
     }
+}
+
+/**
+ * One regular file read through one descriptor: opened non-blocking (a FIFO or
+ * device returns instead of hanging the hook), refused unless it is a regular file
+ * within `limit` bytes, refused when its size or mtime moved during the read, when
+ * the path no longer names the inode that was read, or when `deadlineMs` passes
+ * between chunks. Null on any of those, or on any error. A single system call is
+ * not preemptible in-process — true of every filesystem call a hook makes — so the
+ * deadline bounds the loop, not one blocked syscall. `now` and `afterRead` are
+ * testing seams.
+ */
+export function _readRegularFileBounded(
+    file: string,
+    limit: number,
+    opts: { deadlineMs?: number; now?: () => number; afterRead?: () => void } = {},
+): { bytes: Buffer; stat: fs.Stats } | null {
+    const now = opts.now ?? ((): number => performance.now());
+    const deadline = now() + (opts.deadlineMs ?? CAT_VERIFY_DEADLINE_MS);
+    let fd: number | null = null;
+    try {
+        fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+        const before = fs.fstatSync(fd);
+        if (!before.isFile() || before.size > limit) return null;
+        const buf = Buffer.alloc(before.size + 1);
+        let got = 0;
+        for (;;) {
+            if (now() > deadline) return null;
+            const n = fs.readSync(fd, buf, got, buf.length - got, null);
+            if (n === 0) break;
+            got += n;
+            if (got > before.size) return null;
+        }
+        opts.afterRead?.();
+        const after = fs.fstatSync(fd);
+        if (got !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs) return null;
+        const named = fs.statSync(file);
+        if (named.ino !== after.ino || named.dev !== after.dev || now() > deadline) return null;
+        return { bytes: buf.subarray(0, got), stat: after };
+    } catch {
+        return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
+    }
+}
+
+/**
+ * A Bash `cat <absolute file>` earns read credit only after it ran, and only when
+ * the whole file came back: not interrupted, nothing on stderr, no non-zero exit
+ * status, and stdout byte-identical to the file now on disk (up to the hash bound).
+ * A pre_tool_use cannot know any of that, which is why a `cat` is never credited
+ * there.
+ */
+function recordCompletedCat(envelope: JsonObject, payload: JsonObject): void {
+    if (extractToolName(payload) !== 'Bash') return;
+    const catPath = wholeFileCatPath(str(extractToolInput(payload)['command']));
+    if (catPath === null) return;
+    const resp = payload['tool_response'] ?? payload['toolResponse'];
+    if (!isObject(resp)) return;
+    const stdout = resp['stdout'];
+    if (typeof stdout !== 'string' || resp['interrupted'] === true || str(resp['stderr'] as JsonValue | undefined) !== '') return;
+    const exit = resp['exit_code'] ?? resp['exitCode'] ?? resp['returnCode'];
+    if (exit !== undefined && exit !== null && exit !== 0) return;
+    const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
+    if (Buffer.byteLength(stdout, 'utf8') > HASH_BOUND_BYTES) return;
+    const snap = _readRegularFileBounded(catPath, HASH_BOUND_BYTES);
+    if (snap === null || Buffer.byteLength(stdout, 'utf8') !== snap.bytes.length) return;
+    const st = snap.stat;
+    // The bytes returned must be the file as it is now: a length match alone
+    // would credit an equal-length replacement made after the cat ran.
+    if (!snap.bytes.equals(Buffer.from(stdout, 'utf8'))) return;
+    const sessionKey = deriveSessionKey(envelope, payload);
+    const ledger = readLedger(workspaceRoot, sessionKey);
+    ledger.reads[ledgerKey(workspaceRoot, catPath)] = { mtime: st.mtimeMs, size: st.size, ts: Date.now() };
+    writeLedger(workspaceRoot, sessionKey, ledger);
 }
 
 export function main(): number {
@@ -353,16 +461,19 @@ export function main(): number {
             });
             return EXIT_ALLOW;
         }
+        if (event === 'post_tool_use') {
+            recordCompletedCat(envelope, payload);
+            return EXIT_ALLOW;
+        }
         if (event !== '' && event !== 'pre_tool_use') return EXIT_ALLOW;
 
         const toolName = extractToolName(payload);
         const toolInput = extractToolInput(payload);
-        const catPath = toolName === 'Bash' ? wholeFileCatPath(str(toolInput['command'])) : null;
-        const isRead = READ_TOOLS.has(toolName) || catPath !== null;
+        const isRead = READ_TOOLS.has(toolName);
         const isWrite = WRITE_TOOLS.has(toolName);
         if (!isRead && !isWrite) return EXIT_ALLOW;
 
-        const filePath = catPath ?? extractFilePath(toolInput);
+        const filePath = extractFilePath(toolInput);
         if (!filePath) return EXIT_ALLOW;
 
         const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
