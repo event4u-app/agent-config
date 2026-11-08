@@ -4097,7 +4097,7 @@
           "source": "- `assisted` execution must produce a proposal, never execute silently",
           "in_law": false,
           "response": "none",
-          "witness": "`assisted` beyond a proposal or running silently",
+          "witness": "`assisted` without first producing a proposal, or executing silently",
           "unresolved_ref": null
         },
         {

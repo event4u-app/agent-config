@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's startup contract (`src/agent-src/startup-contracts/rules/<id>.md`). This page is the readable form;
 the config is the record.
 
-**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33887 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33922 chars.**
 
 ## Per rule
 
@@ -22,7 +22,7 @@ the config is the record.
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
 | `domain-safety-pii` | 36 | 2 | 1 | 2000 |
 | `domain-safety-retention` | 27 | 5 | 0 | 1600 |
-| `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
+| `engineering-safety-floor` | 27 | 3 | 1 | 1361 |
 | `evaluator-independence` | 27 | 8 | 0 | 1243 |
 | `fast-path-marker-visibility` | 19 | 2 | 0 | 935 |
 | `finance-safety-floor` | 28 | 2 | 1 | 1630 |
@@ -32,7 +32,7 @@ the config is the record.
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
 | `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1107 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
-| `runtime-safety` | 18 | 0 | 0 | 701 |
+| `runtime-safety` | 18 | 0 | 0 | 721 |
 | `secret-vcs-guard` | 26 | 5 | 0 | 1283 |
 | `security-sensitive-stop` | 32 | 4 | 2 | 1381 |
 | `session-canary` | 18 | 4 | 1 | 975 |
@@ -493,7 +493,7 @@ the config is the record.
 | `question-not-instruction` | c15 | exception | act | no | it"*) — the trailing imperative governs. | trailing imperative governs |  |
 | `runtime-safety` | c1 | trigger | none | no | Execution is an extension of skills, not a replacement for reasoning or review. | skill declares/omits execution metadata |  |
 | `runtime-safety` | c2 | obligation | act | no | - Default execution type is 'manual' — skills without an execution block are instructional only | default type 'manual' |  |
-| `runtime-safety` | c3 | prohibition | none | no | - 'assisted' execution must produce a proposal, never execute silently | 'assisted' beyond a proposal or running silently |  |
+| `runtime-safety` | c3 | prohibition | none | no | - 'assisted' execution must produce a proposal, never execute silently | 'assisted' without first producing a proposal, or executing silently |  |
 | `runtime-safety` | c4 | obligation | act | no |   - 'handler' ≠ 'none' | 'handler' ≠ 'none' |  |
 | `runtime-safety` | c5 | obligation | act | no |   - 'safety_mode: strict' | 'safety_mode: strict' |  |
 | `runtime-safety` | c6 | obligation | act | no |   - Explicit 'allowed_tools' declaration (can be empty '[]') | explicit 'allowed_tools' (may be '[]') |  |

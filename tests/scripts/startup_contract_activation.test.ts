@@ -156,3 +156,18 @@ describe('domain-safety-pii — activation is unconditional, as the body law is'
         expect(activated('data export to CSV with company size, industry, region and founding year per row')).toContain('domain-safety-pii');
     });
 });
+
+// Round 27 (openai): two contracts were stricter than their bodies, which
+// contradicts "no obligation changed". Both now carry the body's own scope.
+describe('contracts no stricter than their bodies', () => {
+    it('runtime-safety: assisted execution needs a proposal first, not "never beyond a proposal"', () => {
+        const c = contract('runtime-safety');
+        expect(c).toContain('`assisted` without first producing a proposal, or executing silently');
+        expect(c).not.toContain('beyond a proposal');
+    });
+    it('engineering-safety-floor: the reset gate covers a pushed ref, as the body says', () => {
+        const c = contract('engineering-safety-floor');
+        expect(c).toContain('`git reset --hard <pushed>` w/o explicit named authorization');
+        expect(c).not.toMatch(/\/reset --hard w\/o/);
+    });
+});
