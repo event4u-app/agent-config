@@ -425,3 +425,24 @@ describe('compact checkpoint — round 18: missing protection flags skip, never 
         expect(readRegular(file, 10)).toBe('x');
     });
 });
+
+describe('compact checkpoint — round 19: no mutation at all without protection flags', () => {
+    const lacking = () => {
+        const { O_NOFOLLOW: _drop, ...rest } = fs.constants;
+        return rest as typeof fs.constants;
+    };
+
+    it('writes nothing at pre_compact when a flag is missing', () => {
+        expect(recordPreCompact(base({ constants: lacking() }))).toBe('skipped');
+        expect(fs.existsSync(checkpointDir(ENV()))).toBe(false);
+    });
+
+    it('neither trims an oversized log nor consumes the marker when a flag is missing', () => {
+        recordPreCompact(base());
+        const big = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none' })}\n`.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / 50));
+        fs.writeFileSync(eventsFile(ENV()), big);
+        expect(observePostCompact(base({ constants: lacking() }))).toBe('none');
+        expect(fs.readFileSync(eventsFile(ENV()), 'utf8')).toBe(big);
+        expect(fs.existsSync(markerFile())).toBe(true);
+    });
+});

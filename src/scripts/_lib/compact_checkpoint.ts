@@ -93,6 +93,8 @@ export interface CheckpointInput {
     transcriptPath: string;
     version: string | null;
     now?: Date;
+    /** Open-flag table; the platform's when absent. Without the protection flags nothing is touched. */
+    constants?: typeof fs.constants;
 }
 
 interface Marker {
@@ -236,8 +238,9 @@ function writeAtomic(dir: string, file: string, body: string): void {
     }
 }
 
-/** Whether the event reached the log. */
+/** Whether the event reached the log. Nothing is read, trimmed or written without the protection flags. */
 function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: number): boolean {
+    if (protectionFlags() === null) return false;
     const dir = safeDir(env);
     if (dir === null) return false;
     const file = eventsFile(env);
@@ -320,6 +323,7 @@ export function sweepAbandoned(dir: string, now: Date): { inspected: number; com
 /** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker if there is room. */
 export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
     const now = input.now ?? new Date();
+    if (protectionFlags(input.constants) === null) return 'skipped';
     const dir = safeDir(input.env);
     if (dir === null) return 'skipped';
     const key = eolSessionKey(input.sessionId);
@@ -354,6 +358,7 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
  */
 export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     const now = input.now ?? new Date();
+    if (protectionFlags(input.constants) === null) return 'none';
     if (!inBoundary(input.env)) return 'none';
     const key = eolSessionKey(input.sessionId);
     const file = checkpointFile(key, input.env);
