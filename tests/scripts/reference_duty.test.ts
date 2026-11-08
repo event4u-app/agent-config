@@ -7,11 +7,11 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { dutyStates, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
+import { dutyStates, scanActDuties, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
 import { _concern_matches_tool, _load_yaml, _resolve_concerns } from '../../src/scripts/hooks/dispatch_hook.js';
 import { ledgerFile, MAX_DUTY_KEYS } from '../../src/scripts/hooks/reread_guard_hook.js';
 
@@ -282,5 +282,70 @@ describe('the cap holds on a ledger loaded over it', () => {
         const after = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) as { duty: Record<string, unknown>; duty_overflow?: number };
         expect(Object.keys(after.duty)).toHaveLength(MAX_DUTY_KEYS);
         expect(after.duty_overflow).toBe(10);
+    });
+});
+
+describe('act-time duty: a shell command bound in act-references', () => {
+    function withCommitRule(root: string): void {
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
+    }
+    it('names the bound rule\'s references for a chained git commit, and nothing for an unbound command', () => {
+        const root = workspace();
+        withCommitRule(root);
+        expect(scanActDuties('git add a && git commit -m x', root).duties).toEqual([{ rule: 'commit-policy', reference: REF, resolved: RESOLVED }]);
+        expect(scanActDuties('git status', root).duties).toEqual([]);
+    });
+    it('counts a bound rule whose file is missing as an error', () => {
+        const root = workspace();
+        expect(scanActDuties('git commit -m x', root).errors).toHaveLength(1);
+    });
+    it('records the duty at a Bash pre_tool_use, observe-only, without the raw command', () => {
+        const root = workspace();
+        withCommitRule(root);
+        run(root, { tool_name: 'Bash', tool_input: { command: 'git add a && git commit -m "secret-ish message"' } });
+        const d = duty(root);
+        expect(d[`commit-policy::${REF}`]).toMatchObject({ state: 'required-pending', pending: 1 });
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect(fs.readFileSync(ledgerFile(root, key), 'utf8')).not.toContain('secret-ish');
+    });
+});
+
+describe('the duty chunk failing to load', () => {
+    it('the loader returns null for a bundled run whose chunk is missing', async () => {
+        const { loadReferenceDuty, _resetReferenceDutyCache } = await import('../../src/scripts/hooks/reference_duty_loader.js');
+        _resetReferenceDutyCache();
+        const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'duty-chunk-'));
+        tmps.push(dir);
+        expect(loadReferenceDuty(pathToFileURL(path.join(dir, 'dispatch.js')).href, true)).toBeNull();
+        _resetReferenceDutyCache();
+    });
+    it('counts one error per act scan when the duty cannot load, not two', async () => {
+        const { _recordActDutyWith } = await import('../../src/scripts/hooks/reread_guard_hook.js');
+        const root = workspace();
+        const ledger = { reads: {}, writes: {}, fired: {} } as Record<string, unknown>;
+        _recordActDutyWith(ledger as never, 'git commit -m x', root, null);
+        expect(ledger['duty_errors']).toBe(1);
+    });
+    it('a file write whose duty cannot load counts one error and keeps the write bookkeeping', async () => {
+        const { _recordDutyWith } = await import('../../src/scripts/hooks/reread_guard_hook.js');
+        const root = workspace();
+        const ledger = { reads: { a: { ts: 1 } }, writes: { b: { ts: 2 } }, fired: { c: 1 } } as Record<string, unknown>;
+        const before = JSON.stringify({ reads: ledger['reads'], writes: ledger['writes'], fired: ledger['fired'] });
+        _recordDutyWith(ledger as never, 'src/rules/x.md', root, null);
+        expect(ledger['duty_errors']).toBe(1);
+        expect(ledger['duty']).toBeUndefined();
+        expect(JSON.stringify({ reads: ledger['reads'], writes: ledger['writes'], fired: ledger['fired'] })).toBe(before);
+    });
+    it('a commit split by a line continuation reaches the ledger through pre-check, lexer and table', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
+        run(root, { tool_name: 'Bash', tool_input: { command: 'cd x && git com\\\nmit -m y 2>&1<<<z | tail -1' } });
+        expect(duty(root)[`commit-policy::${REF}`]).toMatchObject({ pending: 1 });
+    });
+    it('a partly quoted commit reaches the ledger through pre-check, lexer and table', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
+        run(root, { tool_name: 'Bash', tool_input: { command: 'cd x && git "comm"it -m y 2>&1 | tail -1' } });
+        expect(duty(root)[`commit-policy::${REF}`]).toMatchObject({ pending: 1 });
     });
 });

@@ -3,6 +3,7 @@
 // A prior session is modelled by the memory it left on disk; the no-memory arm
 // is the same fixture with that store removed from BOTH the pristine tree and
 // the clone, so the scorer never reads the removal as the run's own work.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -190,5 +191,17 @@ describe('memory task family', () => {
         expect(byId['retry-fixed-1s']?.['status']).toBe('superseded');
         expect(byId['retry-exponential-250']?.['status']).toBe('active');
         expect(String(byId['retry-exponential-250']?.['rule'])).toMatch(/retry-fixed-1s/);
+    });
+});
+
+describe('reset_fixture with git_init', () => {
+    it('makes the clone a git repository with the fixture as its one base commit, and leaves the pristine tree alone', () => {
+        const t = { id: 'refA-chunk-01', fixture: 'fixtures-v2/refA-chunk-01', git_init: true };
+        const [clone, pristine] = reset_fixture(t, 'ref-nothing', 0);
+        const count = spawnSync('git', ['rev-list', '--count', 'HEAD'], { cwd: clone, encoding: 'utf8' });
+        expect(count.stdout.trim()).toBe('1');
+        expect(spawnSync('git', ['status', '--porcelain'], { cwd: clone, encoding: 'utf8' }).stdout.trim()).toBe('');
+        expect(fs.existsSync(path.join(pristine, '.git'))).toBe(false);
+        expect(changed_files(pristine, clone).size).toBe(0);
     });
 });

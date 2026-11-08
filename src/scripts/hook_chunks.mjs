@@ -25,6 +25,14 @@ import { buildSync } from 'esbuild';
 export const HOOK_CHUNKS = Object.freeze([
     Object.freeze({ entry: 'src/scripts/_lib/svg_rules.ts', outfile: 'dist/hooks/svg_rules.chunk.cjs' }),
     Object.freeze({ entry: 'src/scripts/_lib/egress_engine.ts', outfile: 'dist/hooks/egress_engine.chunk.cjs' }),
+    // Required by `reread-guard` on a file write or a bound shell act alone
+    // (`reference_duty_loader.ts`). `yaml` stays external, as at `chat_history`:
+    // the bundle already carries it and `dist/hooks/` resolves it in any install.
+    Object.freeze({
+        entry: 'src/scripts/_lib/reference_duty.ts',
+        outfile: 'dist/hooks/reference_duty.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // Required by `design-pass` on a UI write alone (`design_consistency_loader.ts`).
     Object.freeze({
         entry: 'src/scripts/_lib/design_consistency_pass.ts',
