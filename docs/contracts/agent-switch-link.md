@@ -251,9 +251,12 @@ the link over the CLI verbs below, never the MCP client.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
   It expires a day after the request's `expiresAt` and never later than seven
-  days after it was raised. An expired record is no longer polled and nothing is
-  raised over it; the next Stop gives it one last look, writes a checkpoint
-  still owed, and forgets it. The prompt
+  days after it was raised. An expired record is no longer polled by the prompt and
+  nothing is raised over it; the Stop path forgets it once nothing is owed — its
+  checkpoint was written, or the request reached a state that owes none — and
+  keeps it while a write fails, a lookup gets no answer or the link rests. A
+  record left eight days is pruned, by the next raise anywhere or by its own
+  session's next prompt. The prompt
   relay and the Stop path change it under a lock, each only its own flag on the
   record as it is then, so neither undoes the other's and a deleted record
   stays deleted. Each relayed line is claimed under that lock before it is
