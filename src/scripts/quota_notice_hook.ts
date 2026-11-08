@@ -52,6 +52,7 @@ import {
     sessionContextFill,
     type WindowPressure,
 } from './_lib/pressure.js';
+import { switchRecordPath } from './_lib/switch_record_path.js';
 import { forAccount, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import {
     isTerminal,
@@ -179,6 +180,8 @@ function switchTurn(
     try {
         if (linkResting(session, deps.stateEnv, deps.now)) return;
         const rec = readSwitchRecord(session, deps.stateEnv, deps.now);
+        // An expired record waits for the Stop path's last look; nothing is raised over it.
+        if (rec === null && fs.existsSync(switchRecordPath(session, deps.stateEnv))) return;
         if (rec !== null) {
             const req = showSwitch(rec.id, link, tally);
             if (req === null) return;

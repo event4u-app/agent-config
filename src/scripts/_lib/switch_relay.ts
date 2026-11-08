@@ -35,8 +35,6 @@ const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
 const LOCK_STALE_MS = 2000;
 const LOCK_TRIES = 50;
 const LOCK_WAIT_MS = 5;
-/** A checkpoint reservation older than this belongs to a Stop that died; the next Stop takes it over. */
-const RESERVE_STALE_MS = 2 * 60_000;
 const ID_RE = /^[0-9a-f]{16}$/;
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const TERMINAL = new Set(['done', 'failed', 'declined', 'snoozed', 'expired']);
@@ -170,7 +168,8 @@ function callJson(argv: string[], opts: LinkOptions, tally?: CallTally): unknown
 export function raiseSwitch(account: string, sessionId: string, opts: LinkOptions = {}, tally?: CallTally): SwitchRequest | null {
     if (!isAccount(account) || !SESSION_ID_RE.test(sessionId)) return null;
     const probe = probeLink(opts).state;
-    if (probe === 'failed' || probe === 'present') tallied(tally, probe === 'present');
+    // Only a failed discovery counts: a present one says nothing about whether `switch` answers.
+    if (probe === 'failed') tallied(tally, false);
     if (probe !== 'present') return null;
     const session = `${account}/${sessionId}`;
     const res = obj(callJson(['switch', 'request', '--session', session, '--by', 'ac', '--json'], opts, tally));
@@ -189,10 +188,8 @@ export function showSwitch(id: string, opts: LinkOptions = {}, tally?: CallTally
 export interface SwitchRecord {
     readonly id: string;
     readonly decision_told: boolean;
-    /** Set by the Stop path once the run checkpoint for an approved move was written — completed, never merely reserved. */
+    /** Set by the Stop path once the run checkpoint for an approved move was written. */
     readonly checkpointed: boolean;
-    /** When a Stop reserved the checkpoint write; a reservation older than RESERVE_STALE_MS is taken over. */
-    readonly reserved_at?: number | null;
     /** Set once a terminal outcome was shown; a `done` record outlives that until the Stop path checkpointed it. */
     readonly outcome_told: boolean;
     /** Epoch ms after which the record is dropped unread, so an orphaned one stops polling. */
@@ -216,24 +213,28 @@ function parseRecord(raw: string, mtimeMs: number): SwitchRecord | null {
         decision_told: o['decision_told'] === true,
         checkpointed: o['checkpointed'] === true,
         outcome_told: o['outcome_told'] === true,
-        reserved_at: num(o['reserved_at']),
         expires_at: expires,
     };
 }
 
-/** The live record, or `null`; an expired one is removed on the way. */
-export function readSwitchRecord(sessionHash: string, stateEnv?: EnvMap | null, now: number = Date.now()): SwitchRecord | null {
+/** The record as stored, expired or not; `null` when there is none. */
+function readRecordFile(sessionHash: string, stateEnv?: EnvMap | null): SwitchRecord | null {
     const file = switchRecordPath(sessionHash, stateEnv);
     try {
-        const rec = parseRecord(fs.readFileSync(file, 'utf-8'), fs.statSync(file).mtimeMs);
-        if (rec !== null && now >= rec.expires_at) {
-            updateSwitchRecord(sessionHash, (cur) => (cur?.id === rec.id ? null : cur), stateEnv);
-            return null;
-        }
-        return rec;
+        return parseRecord(fs.readFileSync(file, 'utf-8'), fs.statSync(file).mtimeMs);
     } catch {
         return null;
     }
+}
+
+/**
+ * The live record, or `null`. An expired one reads as `null` and is left in
+ * place: the prompt stops polling it, and the next Stop gives it one last look
+ * — a checkpoint still owed is written then — and forgets it.
+ */
+export function readSwitchRecord(sessionHash: string, stateEnv?: EnvMap | null, now: number = Date.now()): SwitchRecord | null {
+    const rec = readRecordFile(sessionHash, stateEnv);
+    return rec !== null && now < rec.expires_at ? rec : null;
 }
 
 export function writeSwitchRecord(sessionHash: string, rec: SwitchRecord | null, stateEnv?: EnvMap | null): void {
@@ -524,45 +525,44 @@ export function checkpointBeforeMove(
     now: number = Date.now(),
 ): boolean {
     if (switchQuestionOff(env)) return false;
-    const rec = readSwitchRecord(sessionHash, stateEnv, now);
-    if (rec === null || rec.checkpointed || linkResting(sessionHash, stateEnv, now)) return false;
+    const rec = readRecordFile(sessionHash, stateEnv);
+    if (rec === null) return false;
+    const expired = now >= rec.expires_at;
+    const forget = (): void => {
+        if (expired) updateSwitchRecord(sessionHash, (cur) => (cur?.id === rec.id ? null : cur), stateEnv);
+    };
+    if (rec.checkpointed || linkResting(sessionHash, stateEnv, now)) {
+        forget();
+        return false;
+    }
     const tally = newTally();
     const state = stateOf(rec.id, opts, tally);
     noteCalls(sessionHash, tally, null, stateEnv, now);
-    if (state === null || !CHECKPOINT_STATES.has(state)) return false;
-    // Reserve before the side effect, so a second Stop running at once finds it taken.
-    // The reservation is not completion: nothing forgets the record on it, and one
-    // left by a Stop that died is taken over once it is stale.
-    const claim = { reserved: false };
-    updateSwitchRecord(
-        sessionHash,
-        (cur) => {
-            if (cur?.id !== rec.id || cur.checkpointed) return cur;
-            const held = cur.reserved_at ?? null;
-            if (held !== null && now - held < RESERVE_STALE_MS) return cur;
-            claim.reserved = true;
-            return { ...cur, reserved_at: now };
-        },
-        stateEnv,
-    );
-    if (!claim.reserved) return false;
+    if (state === null || !CHECKPOINT_STATES.has(state)) {
+        forget();
+        return false;
+    }
+    // At least once, not exactly once: the run checkpoint is one file per run,
+    // replaced atomically, so a second write (two Stops at once, or a Stop whose
+    // completion update could not take the lock) replaces it with a newer state.
+    // The obligation is complete only after a write that reported success.
     let written = false;
     try {
         written = write();
     } catch {
         written = false;
-    } finally {
-        updateSwitchRecord(
-            sessionHash,
-            (cur) => {
-                if (cur?.id !== rec.id) return cur;
-                // Not written: hand the reservation back so the next Stop tries again.
-                if (!written) return { ...cur, reserved_at: null };
-                // The outcome was already shown, so nothing is left to tell or to write.
-                return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true, reserved_at: null };
-            },
-            stateEnv,
-        );
     }
+    updateSwitchRecord(
+        sessionHash,
+        (cur) => {
+            if (cur?.id !== rec.id) return cur;
+            // An expired record gets this one last Stop and is then forgotten.
+            if (expired) return null;
+            if (!written) return cur;
+            // The outcome was already shown, so nothing is left to tell or to write.
+            return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true };
+        },
+        stateEnv,
+    );
     return written;
 }

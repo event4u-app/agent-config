@@ -662,18 +662,20 @@ describe('7.x council round 1 findings', () => {
         return { ...binEnv, PATH: `${racer}${path.delimiter}${binEnv.PATH}` };
     }
 
-    it('two Stops at once write the checkpoint once: the one that lost the reservation writes nothing', () => {
+    it('two Stops at once may both write: the checkpoint is overwritten in place, and the obligation is completed', () => {
         hot();
         setRequest();
         noticeReply(deps());
         setRequest({ state: 'approved', decision: doneNow.decision });
         let writes = 0;
-        const ok = checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: racingLink('reserved_at', Date.now()) });
-        expect(ok).toBe(false);
-        expect(writes).toBe(0);
+        // The other Stop completes while this one waits on `switch show`.
+        const ok = checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: racingLink('checkpointed') });
+        expect(ok).toBe(true);
+        expect(writes).toBe(1);
+        expect(readSwitchRecord(sess(), stateEnv)?.checkpointed).toBe(true);
     });
 
-    it('a failed write releases the reservation so the next Stop tries again', () => {
+    it('a failed write leaves the obligation for the next Stop', () => {
         hot();
         setRequest();
         noticeReply(deps());
@@ -712,18 +714,18 @@ describe('7.x council round 1 findings', () => {
         expect(fs.readFileSync(held, 'utf-8')).toBe('someone-else');
     });
 
-    it('a successful probe counts as an answer', () => {
+    it('a successful probe alone does not reset the count of failing switch calls', () => {
         hot();
-        // Two unanswered relays first.
         setRequest();
         noticeReply(deps());
         fs.rmSync(switchFile);
+        // Two unanswered relays.
         [1, 2].forEach(() => noticeReply(deps()));
-        // The record is gone (expired); the next raise probes successfully, then the request fails.
+        // The record is gone; the next raise finds the link present, then `switch request` fails.
         writeRecordNull();
         appendQuotaSnapshot({ ts: NOW, session: sess(), five_hour: { pct: 90, resets_at: RESET + 3600 }, account: 'claude/a' }, stateEnv);
         noticeReply(deps());
-        expect(linkResting(sess(), stateEnv, NOW)).toBe(false);
+        expect(linkResting(sess(), stateEnv, NOW)).toBe(true);
     });
 
     function writeRecordNull(): void {
@@ -766,7 +768,7 @@ describe('7.x council round 1 findings', () => {
         expect(readSwitchRecord(sess(), stateEnv)).toBeNull();
     });
 
-    it('a write that throws hands the reservation back and does not throw', () => {
+    it('a write that throws leaves the obligation for the next Stop and does not throw', () => {
         hot();
         setRequest();
         noticeReply(deps());
@@ -784,13 +786,39 @@ describe('7.x council round 1 findings', () => {
         expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv })).toBe(true);
     });
 
-    it('a reservation left by a Stop that died is taken over once it is stale, not before', () => {
+    it('an expired record is not polled by the prompt; a checkpoint still owed gets one last Stop, then it is forgotten', () => {
         hot();
         setRequest();
         noticeReply(deps());
         setRequest({ state: 'approved', decision: doneNow.decision });
-        updateSwitchRecord(sess(), (cur) => (cur === null ? cur : { ...cur, reserved_at: NOW }), stateEnv);
-        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, NOW + 60_000)).toBe(false);
-        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, NOW + 3 * 60_000)).toBe(true);
+        const later = (readSwitchRecord(sess(), stateEnv, NOW)?.expires_at ?? 0) + 1;
+        const shows = calls('show').length;
+        noticeReply(deps({ now: later }));
+        expect(calls('show')).toHaveLength(shows);
+        let writes = 0;
+        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv }, {}, later)).toBe(true);
+        expect(writes).toBe(1);
+        expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(false);
+    });
+
+    it('an expired record with nothing owed is forgotten by the Stop without a write', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        const later = (readSwitchRecord(sess(), stateEnv, NOW)?.expires_at ?? 0) + 1;
+        let writes = 0;
+        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(writes).toBe(0);
+        expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(false);
+    });
+
+    it('no request is raised over an expired record before the Stop path has looked at it', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        const later = (readSwitchRecord(sess(), stateEnv, NOW)?.expires_at ?? 0) + 1;
+        appendQuotaSnapshot({ ts: later - 1000, session: sess(), five_hour: { pct: 90, resets_at: Math.trunc(later / 1000) + 3600 }, account: 'claude/a' }, stateEnv);
+        noticeReply(deps({ now: later }));
+        expect(calls('request')).toHaveLength(1);
     });
 });
