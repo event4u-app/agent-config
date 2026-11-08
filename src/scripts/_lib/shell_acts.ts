@@ -12,7 +12,8 @@
  *
  * Supported syntax contract: the above, plus `VAR=…` prefixes, `sudo`/`command`/
  * `time`/`exec`/`nohup`, and `git -C`/`-c` values. An assignment prefix is only one
- * whose `NAME=` is unquoted: `'X=1' git push` runs a command named `X=1`. Not interpreted: `$(…)` and
+ * whose `NAME=` is unquoted and that stands before the command name or after
+ * `time` / `sudo`: `'X=1' git push` and `nohup X=1 git push` run a command named `X=1`. Not interpreted: `$(…)` and
  * backticks (their text stays inside the word), subshell parentheses, `eval`,
  * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
@@ -26,6 +27,10 @@
  */
 
 const PREFIX_WORDS = new Set(['sudo', 'command', 'time', 'exec', 'nohup']);
+// After these an assignment is still a prefix: `time` is a keyword, and sudo(8)
+// applies `VAR=value` arguments. After `command`, `exec` and `nohup` it is the
+// name of the command run, so `nohup X=1 git push` does not run git.
+const ASSIGN_AFTER = new Set(['time', 'sudo']);
 
 /** One word after quote removal. `assign` holds when it opens with an unquoted `NAME=`. */
 interface Word {
@@ -133,6 +138,9 @@ function lexCommands(command: string): Word[][] {
                     tag += text;
                     quoted = true;
                     j = end;
+                } else if (c === '\\' && command[j + 1] === '\n') {
+                    // A line continuation is removed here as in any other word.
+                    j += 2;
                 } else if (c === '\\' && j + 1 < n) {
                     tag += command[j + 1];
                     quoted = true;
@@ -193,7 +201,15 @@ export function simpleCommands(command: string): string[][] {
 function normalise(words: readonly Word[]): string[] {
     let k = 0;
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
-    while (k < words.length && ((words[k] as Word).assign || PREFIX_WORDS.has((words[k] as Word).text))) k += 1;
+    let assignOk = true;
+    while (k < words.length) {
+        const w = words[k] as Word;
+        if (w.assign && assignOk) k += 1;
+        else if (PREFIX_WORDS.has(w.text)) {
+            assignOk = ASSIGN_AFTER.has(w.text);
+            k += 1;
+        } else break;
+    }
     const t = words.slice(k).map((w) => w.text);
     if (t[0] === 'git') {
         let i = 1;

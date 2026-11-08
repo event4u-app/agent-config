@@ -14,11 +14,14 @@ import { describe, expect, it } from 'vitest';
 
 import { commandRunsAct } from '../../src/scripts/_lib/shell_acts.js';
 
+// `git` and `gh` are executables on PATH, not functions, so `command`, `exec` and
+// `nohup` treat them as bash does. `sudo` is a function that applies its leading
+// `VAR=value` arguments, as sudo(8) documents, then runs the rest.
+const GIT_STUB = '#!/bin/sh\nwhile [ "$1" = -C ] || [ "$1" = -c ]; do shift 2; done\nprintf "git %s\\n" "$1" >> "$ACT_LOG"\n';
+const GH_STUB = '#!/bin/sh\nprintf "gh %s %s\\n" "$1" "$2" >> "$ACT_LOG"\n';
 const STUBS = [
-    'git() { while [ "$1" = -C ] || [ "$1" = -c ]; do shift 2; done; printf "git %s\\n" "$1" >> "$ACT_LOG"; }',
-    'gh() { printf "gh %s %s\\n" "$1" "$2" >> "$ACT_LOG"; }',
     'cat() { command cat > /dev/null; }',
-    'sudo() { "$@"; }',
+    'sudo() { while [ $# -gt 0 ]; do case $1 in [A-Za-z_]*=*) export "$1"; shift ;; *) break ;; esac; done; "$@"; }',
     'make() { :; }', 'npm() { :; }', 'sleep() { :; }', 'cd() { :; }',
 ].join('\n');
 
@@ -37,7 +40,11 @@ function bashRun(command: string, trueStatus: number): string[] {
     try {
         const log = path.join(dir, 'acts.log');
         fs.writeFileSync(log, '');
-        const r = spawnSync('bash', ['-c', `${STUBS}\ntrue() { return ${trueStatus}; }\n${command}\nwait`], { cwd: dir, env: { PATH: process.env['PATH'] ?? '', ACT_LOG: log }, encoding: 'utf8', timeout: 10_000 });
+        const bin = path.join(dir, 'bin');
+        fs.mkdirSync(bin);
+        fs.writeFileSync(path.join(bin, 'git'), GIT_STUB, { mode: 0o755 });
+        fs.writeFileSync(path.join(bin, 'gh'), GH_STUB, { mode: 0o755 });
+        const r = spawnSync('bash', ['-c', `${STUBS}\ntrue() { return ${trueStatus}; }\n${command}\nwait`], { cwd: dir, env: { PATH: `${bin}${path.delimiter}${process.env['PATH'] ?? ''}`, ACT_LOG: log }, encoding: 'utf8', timeout: 10_000 });
         if (r.error || r.signal) throw new Error(`bash did not finish: ${String(r.error ?? r.signal)}`);
         return fs.readFileSync(log, 'utf8').split('\n').filter((l) => l !== '');
     } finally {
@@ -90,9 +97,24 @@ const CASES: Array<[string, string[]]> = [
     ['X\\=1 git push', []],
     ['X="a b" git push', [P]],
     ["X='a' Y=2 git push", [P]],
+    // Round-5 counterexamples: an assignment is a prefix only before the command
+    // name or after `time` / `sudo`; a continuation inside a heredoc terminator is
+    // removed, as in any other word.
+    ['command X=1 git push', []],
+    ['nohup X=1 git push', []],
+    ['exec X=1 git push', []],
+    ['time X=1 git push', [P]],
+    ['sudo X=1 git push', [P]],
+    ['X=1 nohup git push', [P]],
+    ['nohup git push', [P]],
+    ['command git commit -m x', [C]],
+    ['cat <<EO\\\nF\nbody\nEOF\ngit push', [P]],
+    ['cat <<EO\\\nF\ngit push\nEOF', []],
 ];
 
 const hasBash = spawnSync('bash', ['-c', 'true']).status === 0;
+// CI must not pass this suite by skipping it.
+if (!hasBash && process.env['CI']) throw new Error('the bash oracle needs bash on CI');
 
 describe.skipIf(!hasBash)('the recogniser agrees with bash', () => {
     it.each(CASES)('%j', (command, expected) => {
