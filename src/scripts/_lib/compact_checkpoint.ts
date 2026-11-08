@@ -22,8 +22,9 @@
  * (`~/.event4u/agent-config/state/compact-checkpoint/`, never inside a
  * repository), plus the package's own `package.json`. Storage outside the
  * repository is what keeps repository contents from substituting a directory
- * or a file under it. Below the runtime root each component must still be a
- * real directory; every read opens a
+ * or a file under it. The runtime root itself (`~/.event4u/agent-config` or
+ * `EVENT4U_CONFIG_HOME`) is the user's own and trusted as given, symlink or not.
+ * Below it each component must still be a real directory; every read opens a
  * regular file only, without following a symlink or blocking, and reads at most
  * a fixed number of bytes — hooks run inside repositories whose contents others
  * can supply. A concurrent swap between check and open is narrowed, not closed.

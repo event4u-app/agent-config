@@ -446,3 +446,14 @@ describe('compact checkpoint — round 19: no mutation at all without protection
         expect(fs.existsSync(markerFile())).toBe(true);
     });
 });
+
+describe('compact checkpoint — round 20: the runtime root is trusted as given', () => {
+    it('writes under a symlinked runtime root, because the root is the user’s own', () => {
+        const real = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-realroot-'));
+        const link = path.join(root, 'linked-root');
+        fs.symlinkSync(real, link);
+        expect(recordPreCompact(base({ env: { EVENT4U_CONFIG_HOME: link } }))).toBe('written');
+        expect(fs.existsSync(path.join(real, 'state', 'compact-checkpoint'))).toBe(true);
+        fs.rmSync(real, { recursive: true, force: true });
+    });
+});
