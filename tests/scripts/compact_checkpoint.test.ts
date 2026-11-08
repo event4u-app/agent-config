@@ -12,42 +12,34 @@ import {
     EVENT_LOG_MAX_LINES,
     eventsFile,
     observePostCompact,
+    packageVersionFrom,
     readEventTally,
+    readRegular,
     recordPreCompact,
     STALE_AFTER_MS,
 } from '../../src/scripts/_lib/compact_checkpoint.js';
-import { claim_file, claim_read_paths } from '../../src/scripts/_lib/roadmap_claim.js';
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
 
 let root: string;
 const SID = 'session-aaaa';
 const TRANSCRIPT = '/tmp/transcripts/session-aaaa.jsonl';
-const SLUG = 'road-to-x';
-
-function seed(opts: { substantive?: boolean } = {}): void {
-    const { substantive = true } = opts;
-    fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
-    fs.writeFileSync(
-        path.join(root, 'agents', 'roadmaps', `${SLUG}.md`),
-        '# Road to x\n\n## Phase 1\n\n- [x] **1.1** done\n- [ ] **1.2** open\n',
-    );
-    const stateFile = eolStateFile(root, eolSessionKey(SID));
-    fs.mkdirSync(path.dirname(stateFile), { recursive: true });
-    const counters = substantive
-        ? { scanned_bytes: 1, assistant_records: 40, tool_calls: 200, final_context_tokens: 400000 }
-        : { scanned_bytes: 1, assistant_records: 0, tool_calls: 0, final_context_tokens: 0 };
-    fs.writeFileSync(stateFile, JSON.stringify({ schema_version: 1, counters }));
-}
 
 const base = (over: Partial<Parameters<typeof recordPreCompact>[0]> = {}) => ({
     root,
     sessionId: SID,
     transcriptPath: TRANSCRIPT,
-    slug: SLUG,
     version: '20.1.0',
     now: new Date('2026-11-08T12:00:00Z'),
     ...over,
 });
+
+const markerFile = () => checkpointFile(root, eolSessionKey(SID));
+
+const fifoAt = (p: string) => {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.rmSync(p, { force: true });
+    execFileSync('mkfifo', [p]);
+};
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-'));
@@ -56,37 +48,23 @@ afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
 });
 
-describe('compact checkpoint — write at pre_compact, never inject', () => {
-    it('writes a checkpoint carrying the continuity record and the two keys', () => {
-        seed();
+describe('compact checkpoint — a marker at pre_compact, never injected', () => {
+    it('writes a marker carrying only keys, version and time', () => {
         expect(recordPreCompact(base())).toBe('written');
-        const cp = JSON.parse(fs.readFileSync(checkpointFile(root, eolSessionKey(SID)), 'utf8'));
-        expect(cp.session_key).toBe(eolSessionKey(SID));
-        expect(cp.transcript_hash).toMatch(/^[0-9a-f]{16}$/);
-        expect(cp.package_version).toBe('20.1.0');
-        expect(cp.continuity.variant).toBe('continuity_record');
-        expect(cp.continuity.remaining.length).toBe(1);
+        const m = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
+        expect(Object.keys(m).sort()).toEqual(['package_version', 'schema_version', 'session_key', 'transcript_hash', 'written_at']);
+        expect(m.session_key).toBe(eolSessionKey(SID));
+        expect(m.transcript_hash).toMatch(/^[0-9a-f]{16}$/);
     });
 
-    it('skips without a claimed roadmap and without a substantive session', () => {
-        seed();
-        expect(recordPreCompact(base({ slug: null }))).toBe('skipped');
-        seed({ substantive: false });
-        expect(recordPreCompact(base())).toBe('skipped');
-        expect(fs.existsSync(checkpointFile(root, eolSessionKey(SID)))).toBe(false);
-    });
-
-    it('classifies the paired session_start(compact) as a match and consumes it', () => {
-        seed();
+    it('classifies the paired session_start(compact) as a match and consumes the marker', () => {
         recordPreCompact(base());
-        const later = new Date('2026-11-08T12:01:00Z');
-        expect(observePostCompact(base({ now: later }))).toBe('match');
-        expect(fs.existsSync(checkpointFile(root, eolSessionKey(SID)))).toBe(false);
-        expect(observePostCompact(base({ now: later }))).toBe('none');
+        expect(observePostCompact(base({ now: new Date('2026-11-08T12:01:00Z') }))).toBe('match');
+        expect(fs.existsSync(markerFile())).toBe(false);
+        expect(observePostCompact(base())).toBe('none');
     });
 
-    it('names a key mismatch, a version mismatch and a stale checkpoint', () => {
-        seed();
+    it('names a key mismatch, a version mismatch and a stale marker', () => {
         recordPreCompact(base());
         expect(observePostCompact(base({ transcriptPath: '/tmp/other.jsonl' }))).toBe('key-mismatch');
         recordPreCompact(base());
@@ -96,61 +74,42 @@ describe('compact checkpoint — write at pre_compact, never inject', () => {
         expect(observePostCompact(base({ now: late }))).toBe('stale');
     });
 
-    it('counts an unobserved checkpoint as orphaned when the next compaction writes', () => {
-        seed();
+    it('counts an unclassified marker as orphaned when the next compaction writes', () => {
         recordPreCompact(base());
         recordPreCompact(base({ now: new Date('2026-11-08T12:30:00Z') }));
         expect(readEventTally(root)).toMatchObject({ written: 2, orphaned: 1 });
     });
 
-    it('returns no task state to the caller on any path', () => {
-        seed();
-        recordPreCompact(base());
-        const out = observePostCompact(base());
-        expect(typeof out).toBe('string');
-        expect(out).not.toContain(SLUG);
-    });
-
-    it('logs counts only — no session id, path or slug in the event log', () => {
-        seed();
+    it('logs counts only — no session id or path in the event log', () => {
         recordPreCompact(base());
         observePostCompact(base());
         const log = fs.readFileSync(eventsFile(root), 'utf8');
         expect(log).not.toContain(SID);
         expect(log).not.toContain(TRANSCRIPT);
-        expect(log).not.toContain(SLUG);
         expect(readEventTally(root)).toMatchObject({ written: 1, match: 1 });
     });
-});
 
-describe('compact checkpoint — council round 1 findings', () => {
-    it('a checkpoint with an unparseable timestamp is never a match', () => {
-        seed();
+    it('a marker with an unparseable timestamp is never a match; another session key is a key mismatch', () => {
         recordPreCompact(base());
-        const file = checkpointFile(root, eolSessionKey(SID));
-        const cp = JSON.parse(fs.readFileSync(file, 'utf8'));
-        fs.writeFileSync(file, JSON.stringify({ ...cp, written_at: 'not-a-date' }));
+        const m = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
+        fs.writeFileSync(markerFile(), JSON.stringify({ ...m, written_at: 'not-a-date' }));
         expect(observePostCompact(base())).toBe('none');
-    });
-
-    it('a checkpoint carrying another session key is a key mismatch', () => {
-        seed();
-        recordPreCompact(base());
-        const file = checkpointFile(root, eolSessionKey(SID));
-        const cp = JSON.parse(fs.readFileSync(file, 'utf8'));
-        fs.writeFileSync(file, JSON.stringify({ ...cp, session_key: 'f'.repeat(64) }));
+        fs.writeFileSync(markerFile(), JSON.stringify({ ...m, session_key: 'f'.repeat(64) }));
         expect(observePostCompact(base())).toBe('key-mismatch');
     });
 
-    it('an observed checkpoint is removed, so files do not accumulate', () => {
-        seed();
-        recordPreCompact(base());
-        observePostCompact(base());
-        expect(fs.existsSync(checkpointFile(root, eolSessionKey(SID)))).toBe(false);
+    it('opens nothing outside its own directory: roadmap, claim, counters and .git may all be FIFOs', () => {
+        fifoAt(eolStateFile(root, eolSessionKey(SID)));
+        fifoAt(path.join(root, 'agents', 'roadmaps', 'road-to-x.md'));
+        fifoAt(path.join(root, 'agents', 'runtime', 'state', 'roadmap-claim.json'));
+        fifoAt(path.join(root, '.git'));
+        expect(recordPreCompact(base())).toBe('written');
+        expect(observePostCompact(base())).toBe('match');
     });
+});
 
-    it('refuses to write through a symlinked checkpoint directory', () => {
-        seed();
+describe('compact checkpoint — filesystem boundary', () => {
+    it('refuses a symlinked checkpoint directory', () => {
         const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-elsewhere-'));
         fs.mkdirSync(path.dirname(checkpointDir(root)), { recursive: true });
         fs.symlinkSync(elsewhere, checkpointDir(root));
@@ -159,32 +118,16 @@ describe('compact checkpoint — council round 1 findings', () => {
         fs.rmSync(elsewhere, { recursive: true, force: true });
     });
 
-    it('keeps the event log bounded', () => {
-        seed();
-        fs.mkdirSync(checkpointDir(root), { recursive: true });
-        const line = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none' })}\n`;
-        fs.writeFileSync(eventsFile(root), line.repeat(EVENT_LOG_MAX_LINES + 50));
-        recordPreCompact(base());
-        const lines = fs.readFileSync(eventsFile(root), 'utf8').trim().split('\n');
-        expect(lines.length).toBeLessThanOrEqual(EVENT_LOG_MAX_LINES);
-        expect(JSON.parse(lines[lines.length - 1]!).event).toBe('written');
-    });
-});
-
-describe('compact checkpoint — council round 2 findings (filesystem boundary)', () => {
     it('refuses an ancestor symlink on write: nothing lands outside the repository', () => {
-        seed();
         const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-anc-'));
         fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
-        fs.renameSync(path.join(root, 'agents', 'runtime'), path.join(elsewhere, 'runtime-real'));
-        fs.symlinkSync(path.join(elsewhere, 'runtime-real'), path.join(root, 'agents', 'runtime'));
+        fs.symlinkSync(elsewhere, path.join(root, 'agents', 'runtime'));
         expect(recordPreCompact(base())).toBe('skipped');
-        expect(fs.existsSync(path.join(elsewhere, 'runtime-real', 'state', 'compact-checkpoint'))).toBe(false);
+        expect(fs.readdirSync(elsewhere)).toEqual([]);
         fs.rmSync(elsewhere, { recursive: true, force: true });
     });
 
-    it('refuses an ancestor symlink on observation: an outside checkpoint is neither read nor deleted', () => {
-        seed();
+    it('refuses an ancestor symlink on observation: an outside marker is neither read nor deleted', () => {
         recordPreCompact(base());
         const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-obs-'));
         const real = path.join(elsewhere, 'runtime-real');
@@ -195,67 +138,47 @@ describe('compact checkpoint — council round 2 findings (filesystem boundary)'
         fs.rmSync(elsewhere, { recursive: true, force: true });
     });
 
-    it('does not block on a FIFO at the checkpoint path', () => {
-        seed();
-        fs.mkdirSync(checkpointDir(root), { recursive: true });
-        execFileSync('mkfifo', [checkpointFile(root, eolSessionKey(SID))]);
+    it('does not block on a FIFO at the marker path', () => {
+        fifoAt(markerFile());
         expect(observePostCompact(base())).toBe('none');
     });
 
-    it('does not read an oversized event log whole: it is replaced, not loaded', () => {
-        seed();
+    it('keeps the event log bounded by lines', () => {
+        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        const line = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none' })}\n`;
+        fs.writeFileSync(eventsFile(root), line.repeat(EVENT_LOG_MAX_LINES + 50));
+        recordPreCompact(base());
+        const lines = fs.readFileSync(eventsFile(root), 'utf8').trim().split('\n');
+        expect(lines.length).toBeLessThanOrEqual(EVENT_LOG_MAX_LINES);
+        expect(JSON.parse(lines[lines.length - 1]!).event).toBe('written');
+    });
+
+    it('replaces an oversized event log instead of loading it', () => {
         fs.mkdirSync(checkpointDir(root), { recursive: true });
         fs.writeFileSync(eventsFile(root), 'x'.repeat(EVENT_LOG_MAX_BYTES + 10));
         recordPreCompact(base());
         expect(fs.statSync(eventsFile(root)).size).toBeLessThan(EVENT_LOG_MAX_BYTES);
         expect(readEventTally(root).written).toBe(1);
     });
-});
 
-describe('compact checkpoint — council round 3 findings (every reachable read)', () => {
-    const fifoAt = (p: string) => {
-        fs.mkdirSync(path.dirname(p), { recursive: true });
-        fs.rmSync(p, { force: true });
-        execFileSync('mkfifo', [p]);
-    };
-
-    it('skips without blocking when the session counters file is a FIFO', () => {
-        seed();
-        fifoAt(eolStateFile(root, eolSessionKey(SID)));
-        expect(recordPreCompact(base())).toBe('skipped');
+    it('readRegular refuses a FIFO, a symlink and an oversized file', () => {
+        const fifo = path.join(root, 'f');
+        execFileSync('mkfifo', [fifo]);
+        const big = path.join(root, 'big');
+        fs.writeFileSync(big, 'x'.repeat(100));
+        const link = path.join(root, 'l');
+        fs.symlinkSync(big, link);
+        expect(readRegular(fifo, 1000)).toBeNull();
+        expect(readRegular(link, 1000)).toBeNull();
+        expect(readRegular(big, 99)).toBeNull();
+        expect(readRegular(big, 100)).toBe('x'.repeat(100));
     });
 
-    it('skips without blocking when the claimed roadmap file is a FIFO', () => {
-        seed();
-        fifoAt(path.join(root, 'agents', 'roadmaps', `${SLUG}.md`));
-        expect(recordPreCompact(base())).toBe('skipped');
-    });
-
-    it('skips when the session counters file is a symlink', () => {
-        seed();
-        const f = eolStateFile(root, eolSessionKey(SID));
-        const real = path.join(root, 'elsewhere.json');
-        fs.renameSync(f, real);
-        fs.symlinkSync(real, f);
-        expect(recordPreCompact(base())).toBe('skipped');
-    });
-
-    it('skips without blocking when a claim file the session would read is a FIFO', () => {
-        seed();
-        for (const p of claim_read_paths(root, SID)) {
-            if (p.startsWith(root)) {
-                fifoAt(p);
-                break;
-            }
-        }
-        expect(recordPreCompact(base({ slug: undefined }))).toBe('skipped');
-    });
-
-    it('resolves the claimed slug itself when none is passed', () => {
-        seed();
-        const claim = claim_file(root, SID);
-        fs.mkdirSync(path.dirname(claim), { recursive: true });
-        fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SID }));
-        expect(recordPreCompact(base({ slug: undefined }))).toBe('written');
+    it('packageVersionFrom does not block on a FIFO package.json', () => {
+        const dir = path.join(root, 'pkg', 'dist', 'hooks');
+        fs.mkdirSync(dir, { recursive: true });
+        fifoAt(path.join(dir, 'package.json'));
+        fs.writeFileSync(path.join(root, 'pkg', 'package.json'), JSON.stringify({ version: '9.9.9' }));
+        expect(packageVersionFrom(dir)).toBe('9.9.9');
     });
 });

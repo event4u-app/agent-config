@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * compact-checkpoint — writes a task-state checkpoint at `pre_compact` and, at
+ * compact-checkpoint — writes a marker at `pre_compact` and, at
  * `session_start` with source `compact`, records what an injection would have
  * met. It prints nothing and injects nothing: the identity keys available
  * today name the session, not the compaction attempt.
@@ -12,7 +12,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { observePostCompact, recordPreCompact } from '../_lib/compact_checkpoint.js';
+import { observePostCompact, packageVersionFrom, recordPreCompact } from '../_lib/compact_checkpoint.js';
 import { readHookStdin } from './hook_stdin.js';
 import { unwrap } from './envelope.js';
 import { is_replay_mode } from './state_io.js';
@@ -21,22 +21,8 @@ function str(v: unknown): string {
     return typeof v === 'string' ? v.trim() : '';
 }
 
-// Walks up because the source (src/scripts/hooks/) and the built chunk
-// (dist/hooks/) sit at different depths below the package root.
 function packageVersion(): string | null {
-    let dir = process.env['AGENT_CONFIG_PACKAGE_ROOT'] || path.dirname(fileURLToPath(import.meta.url));
-    for (let i = 0; i < 5; i++) {
-        try {
-            const v = (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')) as { version?: unknown }).version;
-            if (typeof v === 'string') return v;
-        } catch {
-            // not here, keep walking
-        }
-        const up = path.dirname(dir);
-        if (up === dir) break;
-        dir = up;
-    }
-    return null;
+    return packageVersionFrom(process.env['AGENT_CONFIG_PACKAGE_ROOT'] || path.dirname(fileURLToPath(import.meta.url)));
 }
 
 export function main(): number {
@@ -53,7 +39,7 @@ export function main(): number {
         if (event === 'pre_compact') {
             recordPreCompact(input);
         } else if (event === 'session_start' && str(payload['source'] ?? envelope['source']) === 'compact') {
-            observePostCompact({ ...input, slug: null });
+            observePostCompact(input);
         }
     } catch {
         // a measurement never fails a compaction

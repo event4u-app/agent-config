@@ -41,8 +41,7 @@ describe('compact-checkpoint hook', () => {
         const b = run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'compact' } });
         expect([a.rc, b.rc]).toEqual([0, 0]);
         expect(a.out + b.out).toBe('');
-        // no claimed roadmap in a fresh root → skipped, then nothing to observe
-        expect(readEventTally(root)).toMatchObject({ skipped: 1, none: 1 });
+        expect(readEventTally(root)).toMatchObject({ written: 1, match: 1 });
     });
 
     it('ignores session_start from any other source', () => {

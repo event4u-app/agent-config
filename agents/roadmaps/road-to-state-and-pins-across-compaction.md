@@ -50,9 +50,11 @@ of re-reading or guessing.
       Writing and measuring is approved; injection is not.
       Record: `agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md`.
       verify: `test -f agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md` -> 0
-- [x] **1.2** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> `pre_compact` writes the checkpoint (field discipline of
-      `continuity_writer.ts`, no judgement fields, write timestamp and package
-      version) and **injects nothing**. A counts-only log records written /
+- [x] **1.2** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> `pre_compact` writes a marker — session key, transcript hash, package
+      version, time — and **injects nothing**. No task state yet: which fields
+      may be restored is 1.4's decision, and reading them would mean calling
+      roadmap, claim and git readers this hook cannot bound (ratification
+      rounds 1–4, 2026-11-08). A counts-only log records written /
       consumed / orphaned per compaction.
       Shipped as the `compact-checkpoint` concern (claude only, lazy chunk,
       kill switch `AGENT_CONFIG_NO_COMPACT_CHECKPOINT=1`).
