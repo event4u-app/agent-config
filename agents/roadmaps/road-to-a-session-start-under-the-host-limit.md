@@ -215,7 +215,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 - **Status:** resolved (2026-11-08)
 - **Owner:** user — the ratification gate (ADR-268 § 4) needs a passing two-provider record or an owner decision; the agent may not ratify its own change
 - **Blocks:** merge of the PR carrying Phases 1–3
-- **Resolution:** the owner chose to raise the council prompt cap first (2026-11-08). `council_cli` gained `--max-bundle-bytes` and `--member-timeout` for one run, so rounds 12–21 showed all 28 rule files in full. Every finding was verified and fixed test-first; round 21 closed with both seats `ratified` over subject `f77bee9bcfdc…`. Record: `agents/evidence/ratifications/session-start-contracts.md`; `check_kernel_edit_ratified` green.
+- **Resolution:** the owner chose to raise the council prompt cap first (2026-11-08). `council_cli` gained `--max-bundle-bytes` and `--member-timeout` for one run, so rounds 12–21 showed all 28 rule files in full. Every finding was verified and fixed test-first; round 22 closed with both seats `ratified` over subject `7192f4deff0b…` (round 21 ratified the rules; round 22 re-ratified after the hook-chunk ceiling raise changed the subject). Record: `agents/evidence/ratifications/session-start-contracts.md`; `check_kernel_edit_ratified` green.
 - **Resolved when:** a ratification record under `agents/evidence/ratifications/` with a passing verdict lands with the PR.
 
 ## Risk Register
