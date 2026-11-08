@@ -434,6 +434,19 @@ describe('check_references — a frozen record may name an archived roadmap', ()
         expect(sweep._is_frozen_record(rel)).toBe(expected);
     });
 
+    // A frozen record may name a file a later change deliberately removed, when
+    // the removal is registered with its reason. Unregistered, it still reds;
+    // and a live (non-frozen) document naming it still reds either way.
+    it('resolves a path the tombstone register records as removed, from a frozen record only', () => {
+        base();
+        write('src/config/removed-paths.json', JSON.stringify({ removed: [{ path: 'src/config/gone.json', removed_by: 'ADR-1', reason: 'r' }] }));
+        write('agents/evidence/council/a.md', 'It read `src/config/gone.json` then.\n');
+        write('agents/roadmaps/road-to-y.md', 'Still reads `src/config/gone.json`.\n');
+        write('agents/evidence/council/b.md', 'And `src/config/never-registered.json`.\n');
+        const broken = cr.scan_all(tmp).filter((b) => b.ref_type === 'path').map((b) => `${path.basename(b.file)}:${b.ref}`);
+        expect(broken.sort()).toEqual(['b.md:src/config/never-registered.json', 'road-to-y.md:src/config/gone.json']);
+    });
+
     it('only a TOP-LEVEL roadmap path qualifies', () => {
         base();
         write('agents/roadmaps/archive/road-to-x.md', '# x');

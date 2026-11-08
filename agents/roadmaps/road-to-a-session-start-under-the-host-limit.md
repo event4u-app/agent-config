@@ -51,7 +51,7 @@ keep-whole set the promotion uses (`neverThinned`):
 
 The thinned form still totals ~194k. The 28 never-thinned rules alone (121k)
 exceed the 120k limit, so no layer-form decision can remove the notice. The
-consumer promotion is also switched off (`src/config/layer-form-promotion.json`
+consumer promotion is also switched off (`src/config/layer-form-promotion.json` <!-- ref-ignore -->
 `enabled: false`) until a benchmark, so an upgrade-only consumer gets the full
 form today.
 
@@ -181,10 +181,10 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       5.2 / 5.3 benchmark as the gate for the default; the benchmark becomes a
       release-time non-inferiority check over the contract form, not an opt-in
       switch.
-      verify: `src/config/layer-form-promotion.json` no longer stands between an
+      verify: `src/config/layer-form-promotion.json` no longer stands between an <!-- ref-ignore -->
       upgrade and the reduced layer; the carried setup roadmap's 5.2 / 5.3 name
       this step.
-      > note: done 2026-11-07 — `src/config/layer-form-promotion.json` and its reader are deleted; session promotion runs only for `install --enrol` machines, the default path is the installer. Notes under 5.2 and 5.3 of `road-to-a-setup-that-decides-itself-carried` name this step and the release-time non-inferiority role of the benchmark.
+      > note: done 2026-11-07 — `src/config/layer-form-promotion.json` and its reader are deleted; session promotion runs only for `install --enrol` machines, the default path is the installer. Notes under 5.2 and 5.3 of `road-to-a-setup-that-decides-itself-carried` name this step and the release-time non-inferiority role of the benchmark. <!-- ref-ignore -->
 
 ## Phase 4 — Close the overlap
 

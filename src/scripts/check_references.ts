@@ -545,6 +545,29 @@ export function _is_frozen_record_source(rel: string): boolean {
     return _FROZEN_RECORD_PREFIXES.some((p) => norm.startsWith(p)) || norm.endsWith('.patch');
 }
 
+/**
+ * Paths a change deliberately removed, each with what removed it and why
+ * (`src/config/removed-paths.json`). A frozen record may keep naming one — it
+ * describes the tree it was written against, and nothing may rewrite it — but
+ * only a registered removal qualifies, and only from a frozen record: a live
+ * document naming a removed path is still broken.
+ */
+export const REMOVED_PATHS_REGISTER = 'src/config/removed-paths.json';
+
+export function _registered_removal(ref: string, root: string): boolean {
+    let raw: string;
+    try {
+        raw = fs.readFileSync(path.join(root, REMOVED_PATHS_REGISTER), 'utf-8');
+    } catch {
+        return false;
+    }
+    const parsed = JSON.parse(raw) as { removed?: Array<{ path?: unknown; removed_by?: unknown; reason?: unknown }> };
+    const norm = ref.split(path.sep).join('/');
+    return (parsed.removed ?? []).some(
+        (e) => e.path === norm && typeof e.removed_by === 'string' && e.removed_by !== '' && typeof e.reason === 'string' && e.reason !== '',
+    );
+}
+
 /** Does `ref` name a top-level roadmap that now lives under a terminal disposition? */
 export function _resolves_under_terminal_disposition(ref: string, root: string): boolean {
     const norm = ref.split(path.sep).join('/');
@@ -761,7 +784,7 @@ function check_file(
             if (
                 !resolved &&
                 _is_frozen_record_source(_relPosix(root, filepath)) &&
-                _resolves_under_terminal_disposition(rawRef, root)
+                (_resolves_under_terminal_disposition(rawRef, root) || _registered_removal(rawRef, root))
             ) {
                 // A record naming the pre-archival path of a roadmap that is
                 // still findable. Nothing may rewrite it — see above.
