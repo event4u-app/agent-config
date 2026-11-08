@@ -117,13 +117,10 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       > note: done 2026-11-07 — 28 rules, 647 clauses, each with a byte-exact `source` in the rule and its `in_law` flag; 9 source references to "below"/"the table"-style referents recorded under `unresolved_ref` and resolved inline. Record: `src/config/startup-contract-clauses.json`; readable form `agents/evidence/analysis/startup-contract-clause-audit-2026-11-07.md`.
 - [x] **1.2 Define the startup-contract form and write it for the 28 rules.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       The contract is the projected session-start text; the full body stays
-      reachable through the existing body pointer. Source of truth stays in
-      `src/rules/`, so the contract is a marked section of each source file,
-      not a second file.
+      reachable through the existing body pointer.
       verify: every operative clause from 1.1 appears in its rule's contract;
       the contracts total at most 34,000 chars.
-      > note: done 2026-11-07 — a `## Startup contract` section ends each of the 28 source rules (≤11 lines, ≤2,000 chars, no dangling referent); total **32,361 chars** ≤ 34,000. `build_thin` emits it via `thin_entry_with_contract` (digest-marked, body pointer kept); `neverThinned` no longer holds these rules whole. A first draft measured 44,535 and was compacted per rule with every clause kept.
-      > note: 2026-11-08 — the contracts moved out of the rule files into `src/agent-src/startup-contracts/rules/<id>.md` (projected to `dist/agent-src/startup-contracts/rules/`): carried inside the rule, every host that delivers the full rule paid them twice, +8,072 tok per subagent spawn against the preamble payload ratchet. The stub builder reads them through `readStartupContract`; the ratification gate covers the new path (`…/rules/<slug>.md`).
+      > note: done 2026-11-08 — each of the 28 rules has its contract in `src/agent-src/startup-contracts/rules/<id>.md` (≤2,000 chars, no dangling referent); total ≤ 34,000. A separate file, not a section of the rule, so hosts that deliver the full rule do not carry it twice (the per-spawn payload ratchet). `build_thin` emits it through `readStartupContract`; the ratification gate covers the path.
 - [x] **1.3 Contract tests, one deterministic case per operative branch.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Each case states the trigger, loads only the contract (body unavailable),
       and asserts the required stop, ask or refusal.
@@ -169,7 +166,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       allowance for the project layer.
       verify: the gate is red on the current tree and green after Phases 1–2;
       raising one contract past the budget turns it red.
-      > note: done 2026-11-07 — `check_session_start_budget` runs the real `install --global --tools=claude-code` into a scratch HOME (no settings, no enrolment, no pin) and sums the unconditional files under `~/.claude/rules`. The scratch HOME path is counted as `/Users/username` and both totals are printed. Red on the tree before Phases 1–2 (99,158), green after: **79,762** normalised (raw 79,876), project-layer allowance 40,238. Wired into `task ci` and `rule-backstops.yml`; an inflated fixture file turns it red (`check_session_start_budget.test.ts`). Reaching the budget also took: short contract markers, a bare `Body: <id>.md` pointer with one bodies index, and installed stubs without the `Fires on:` hint (rule-inject matches triggers on a reached carrier).
+      > note: done 2026-11-07 — `check_session_start_budget` installs into a scratch HOME (`install --global --tools=claude-code`, no settings or pin) and sums the unconditional files under `~/.claude/rules`, HOME-normalised. Red before Phases 1–2 (99,158), green after (79,845 on 2026-11-08). Wired into `task ci` and `rule-backstops.yml`; its `--self-test` and an inflated fixture turn it red.
 - [x] **3.2 The contract form is what every install writes.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> Install and
       upgrade write the contract form for the 28 rules and the stub form for the
       thinnable rest, without an opt-in. Consumer-edited files stay as they are.

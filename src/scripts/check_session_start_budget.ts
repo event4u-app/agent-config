@@ -52,6 +52,7 @@ import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 
 import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { isUnconditional } from './_lib/installed_layer.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
@@ -235,7 +236,39 @@ export function projectDefaultInstall(packageRoot: string, home: string, extraAr
     return { ok: r.status === 0, status: r.status, output: `${r.stdout ?? ''}${r.stderr ?? ''}`, carrier, layer };
 }
 
+/**
+ * `--self-test` — drives the real binary with `--home` over synthetic layers, so
+ * no install runs: a small layer passes, one character over the budget and a
+ * large layer are both refused.
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sssb-self-'));
+    const home = (chars: number): string => {
+        const h = fs.mkdtempSync(path.join(tmp, 'home-'));
+        const rules = path.join(h, '.claude', 'rules');
+        fs.mkdirSync(rules, { recursive: true });
+        fs.writeFileSync(path.join(rules, 'a.md'), `# A\n\n${'x'.repeat(Math.max(0, chars - 6))}\n`, 'utf-8');
+        return h;
+    };
+    const run = (h: string): number => runGateCli(REPO_ROOT, 'src/scripts/check_session_start_budget.ts', ['--home', h, '--quiet'], REPO_ROOT);
+    try {
+        return runSelfTest({
+            gate: GATE,
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                { name: 'a layer well under the budget passes', expect: 'accept', run: () => run(home(1_000)) },
+                { name: 'a layer just over the budget is refused', expect: 'reject', run: () => run(home(SESSION_START_BUDGET + 50)) },
+                { name: 'a full-size layer is refused', expect: 'reject', run: () => run(home(340_000)) },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
     const parsed = parseGateArgs(GATE, argv, {
         home: { type: 'string' },
         keep: { type: 'boolean' },

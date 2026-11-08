@@ -18,16 +18,20 @@
  * release-time non-inferiority check of step 3.3, not a CI gate.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
 import { readConsequenceClass } from './_lib/rule_consequence_class.js';
 import { readStartupContract } from './_lib/rule_law_section.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
-const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
+const SELF_ROOT = path.resolve(import.meta.dirname, '..', '..');
+/** `CHECK_STARTUP_CONTRACTS_ROOT` points the gate at a fixture tree (its `--self-test`). */
+const REPO_ROOT = process.env['CHECK_STARTUP_CONTRACTS_ROOT'] ?? SELF_ROOT;
 const CONFIG_REL = path.join('src', 'config', 'startup-contract-clauses.json');
 const RULES_REL = path.join('src', 'rules');
 
@@ -148,7 +152,65 @@ export function orphanContracts(repoRoot: string): string[] {
         .map((n) => `${path.join(CONTRACTS_REL, n)}: a startup contract for a rule that does not exist`);
 }
 
+/**
+ * `--self-test` — drives the real binary over a one-rule fixture tree: an
+ * audited contract passes; a contract missing a clause's witness, and a
+ * required rule with no contract file, are refused.
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'csc-self-'));
+    const contract = '## Startup contract\n\n- **When:** a secret is about to be staged.\n- **Never:** commit it; stop and ask.\n';
+    const tree = (contractText: string | null): string => {
+        const root = fs.mkdtempSync(path.join(tmp, 'repo-'));
+        fs.mkdirSync(path.join(root, 'src', 'rules'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'src', 'rules', 'r.md'), '---\ntype: "auto"\n---\n# R\n\nNEVER commit a secret.\n', 'utf-8');
+        fs.writeFileSync(
+            path.join(root, 'src', 'config', 'rule-consequence-class.json'),
+            JSON.stringify({ criterion_ref: 'fixture', members: { r: { reason: 'fixture' } }, no_stub: {}, excluded: {} }),
+            'utf-8',
+        );
+        fs.writeFileSync(
+            path.join(root, CONFIG_REL),
+            JSON.stringify({
+                per_rule_max_chars: 2000,
+                total_max_chars: 34000,
+                rules: { r: { clauses: [{ id: 'c1', kind: 'prohibition', source: 'NEVER commit a secret.', in_law: true, response: 'stop', witness: 'commit it; stop and ask', unresolved_ref: null }] } },
+            }),
+            'utf-8',
+        );
+        if (contractText !== null) {
+            fs.mkdirSync(path.join(root, CONTRACTS_REL), { recursive: true });
+            fs.writeFileSync(path.join(root, CONTRACTS_REL, 'r.md'), contractText, 'utf-8');
+        }
+        return root;
+    };
+    const run = (root: string): number => {
+        process.env['CHECK_STARTUP_CONTRACTS_ROOT'] = root;
+        try {
+            return runGateCli(SELF_ROOT, 'src/scripts/check_startup_contracts.ts', ['--quiet'], root);
+        } finally {
+            delete process.env['CHECK_STARTUP_CONTRACTS_ROOT'];
+        }
+    };
+    try {
+        return runSelfTest({
+            gate: 'check_startup_contracts',
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                { name: 'an audited contract carrying every witness passes', expect: 'accept', run: () => run(tree(contract)) },
+                { name: 'a contract missing a clause witness is refused', expect: 'reject', run: () => run(tree(contract.replace('commit it; stop and ask', 'commit it'))) },
+                { name: 'a required rule with no contract file is refused', expect: 'reject', run: () => run(tree(null)) },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
     const parsed = parseGateArgs('check_startup_contracts', argv, { quiet: { type: 'boolean' } });
     if (!parsed.ok) {
         process.stderr.write(`${parsed.message}\n`);

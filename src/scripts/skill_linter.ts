@@ -714,7 +714,9 @@ export function detect_artifact_type(p: string, text: string): ArtifactType {
     if (basename(p).toLowerCase() === 'skill.md' || pathStr.includes('/skills/')) {
         return 'skill';
     }
-    if (pathStr.includes('/rules/')) {
+    // A startup contract (`startup-contracts/rules/<id>.md`) is a section of its
+    // rule, not a rule: no frontmatter, no H1. check_startup_contracts gates it.
+    if (pathStr.includes('/rules/') && !pathStr.includes('/startup-contracts/')) {
         return 'rule';
     }
     if (pathStr.includes('/guidelines/')) {
@@ -2670,7 +2672,7 @@ export function gather_changed_candidate_files(root: string, since?: string | nu
                 continue;
             }
             const isMd = path.extname(p) === '.md';
-            const inEvals = norm.includes('/evals/');
+            const inEvals = norm.includes('/evals/') || norm.includes('/startup-contracts/');
             if (
                 !inEvals &&
                 (basename(p) === 'SKILL.md' || (isMd && (norm.includes('/rules/') || norm.includes('/commands/'))))
@@ -4409,7 +4411,7 @@ function _changed_filter_matches_head(root: string): boolean {
         }
         if (
             norm.endsWith('/SKILL.md') ||
-            (norm.endsWith('.md') && (norm.includes('/rules/') || norm.includes('/commands/')))
+            (norm.endsWith('.md') && !norm.includes('/startup-contracts/') && (norm.includes('/rules/') || norm.includes('/commands/')))
         ) {
             return true;
         }
