@@ -4,9 +4,9 @@
 
 You are an independent reviewer for a change in the `event4u/agent-config` repository. One file in it, `src/config/hook-bundle-budget.json`, is on the ratification gate's list (the hook bundle's byte budget), so the change needs a two-provider verdict under ADR-268 § 4.
 
-subject: 7ea86de5559c4f27758760713fb3b6e1f8db0047e88a93e86eba8b9f075d78ad
+subject: 7e56c954ef527ad2214948ff8caf1f3abbf43a1da5ac4b88e2e4fda3ab9c7f8a
 
-(The digest covers the gated file at commit `537caf236b`, computed with `./scripts-run src/scripts/ratification_subject`.)
+(The digest covers the gated file at commit `308dcfa408`, computed with `./scripts-run src/scripts/ratification_subject`.)
 
 ## What the change does
 
@@ -28,41 +28,9 @@ Round 4: anthropic `refused` (no dealbreaker), openai `refused` (dealbreaker) �
 - Chunk 17,603 B against the unchanged 18,200 B ceiling; the gated derivation now states that reading and that the margin shrank to about 3 %. Bundle 1,582,782 B.
 - **Not added, with reasons.** A kill switch: emptying `bindings` disables act observation without touching file-write observation, and the whole change reverts as one commit; observation is advisory and blocks nothing. Production telemetry: `duty_errors` is the counted failure signal in every session ledger; an alerting threshold is outside this change. `ledgerKey` is a key normaliser, not a containment boundary — round 4 was right about that, and the description does not claim otherwise.
 
-## Round 3 and what changed
+## Rounds 1–3
 
-Round 3: anthropic `refused`, openai refusing without a stance line — three concrete counterexamples. Round 4:
-
-- `git com\<newline>mit`: the lexer already joined the continuation; the **pre-check** did not — it now removes line continuations before matching.
-- `git "com\mit"`: inside double quotes a backslash now escapes only `$` `` ` `` `"` `\` and newline, so this is the word `com\mit` and **not** a commit (bash agrees). My round-3 end-to-end test had asserted the opposite; it now uses `git "comm"it`.
-- `cat <<E"OF"`: the terminator is read as one word with quote removal → `EOF`.
-- **Shell-grounded oracle** (`tests/scripts/shell_acts_bash_oracle.test.ts`): each of 28 cases is executed by real bash in an empty temp dir with `git`/`gh` replaced by logging functions (and `true` made to fail, so every `||` branch is reachable — the recogniser reports a potential act before anything runs); the recogniser must agree with what bash invoked, per act. All 28 agree.
-- **Pre-check narrowed** to each bound act's last word (`commit|push|create`): `printf` no longer loads the chunk; a test keeps every act's last word matched.
-- Chunk 17,148 B (ceiling 18,200 B); bundle 1,582,683 B.
-- Kept as one change, as stated in round 3.
-
-## Round 2 and what changed
-
-Round 2: anthropic `refused`, openai `refused` — lexer gaps and a pre-check that could reject what the lexer matches. Round 3:
-
-- **Heredocs:** any unquoted terminator word (`EOF-1`) or a quoted one; several heredocs on one line are queued and their bodies consumed in order; a body ends at the line that is **exactly** its terminator (leading tabs stripped only for `<<-`), so `  EOF` does not end an `<<EOF`.
-- **Separators:** a lone `&` separates commands; `2>&1` and `&>file` stay redirections.
-- **Pre-check is a superset of the lexer:** `actWordsMayMatch` removes quotes and backslashes and matches `commit|push|pr` without word boundaries, so `git com\mit`, `git "commit"`, `git 'push'`, `g\h pr create` all reach the lexer. A test keeps every bound act matched by it (`tests/scripts/act_references.test.ts`, shown below).
-- **Syntax contract** stated in `shell_acts.ts`: what is lexed, and what is not interpreted (`$(…)`, backticks, subshells, `eval`, aliases, functions, `bash -c`).
-- **End-to-end test:** `cd x && git "com\mit" -m y 2>&1 | tail -1` through the hook records the bound rule's duty in the ledger.
-- Matrix now 19 recognised and 12 rejected forms; every round-2 case failed before the fix. Chunk 16,748 B (ceiling 18,200 B); bundle 1,582,658 B.
-- Not split into two PRs: the chunk move and the act observation share the loader and the ledger path, and the chunk's only failure mode for file-write observation is a counted error, tested.
-
-## Round 1 and what changed
-
-Round 1: anthropic `refused`, openai `refused` — both on recogniser correctness and failure exposure. Round 2:
-
-- **Recogniser rewritten as a one-pass lexer** (`simpleCommands`): single/double quotes, backslash escapes, `#` comments, line continuations, separators outside quotes, heredoc operator only outside quotes (body dropped to its terminator). `git -C`/`-c` values are skipped as lexed words, so `git -C "my repo" commit` is recognised. Matrix: 13 recognised forms including `git -C "my repo" commit`, `git -C 'my repo' push`, `git commit -m x # done`, `echo '<<EOF'; git commit`; 11 rejected forms including `echo hello\; git push`, `echo x # ; git push`, `echo "a; git push"`, `echo 'git commit -m x'`, `git -C "dir; git push" status`. The four forms round 1 named failed before the rewrite.
-- **Re-measured on the spike corpus** (now 14,931 commands): 999 `git commit`, 508 `git push`, 129 `gh pr create`; every command holding the literal text without being recognised was read — all are text in heredocs or strings, or `git commit-tree`.
-- **A match is a potential act**: the header says so — invoked, not necessarily succeeded.
-- **Double count fixed:** a failed duty load counts one `duty_errors`; the duty object is passed through, not reloaded (`_recordActDutyWith`, tested).
-- **Failure path:** the loader executes a bundled chunk only when its digest sidecar verifies `ok` (was: anything but `mismatch`); a missing chunk returns null (tested), and the hook counts one error and observes nothing. The read ledger and the guard's advisories do not depend on the chunk.
-- File-write duty logic stays in the chunk: it was observe-only before and remains so; its only failure mode is a counted error.
-- Chunk measured 16,523 B; its ceiling in the gated file is 18,200 B (+10 %).
+Rounds 1–3 refused on lexer gaps (separators, comments, `git -C` values, heredoc terminators, line continuations, double-quote escapes) and on a pre-check that could reject what the lexer accepts; each was fixed with a test seen red first. Their questions are committed beside this one (`act-references-ratification-r1..r4-20261108.question.md`).
 
 ## Answer each question, by number
 
@@ -79,7 +47,7 @@ Round 1: anthropic `refused`, openai `refused` — both on recogniser correctnes
 End with exactly one line in this form:
 `STANCE: <ratified|confirmed-non-expanding|refused> | CONFIDENCE: <high|med|low> | DEALBREAKER: <yes|no>`
 
-## The diff (`git diff origin/main...feat/act-references`, source and config, plus the bash oracle and the table test; the bench corpus under `internal/` is omitted — it ships nothing)
+## The diff (`git diff origin/main...feat/act-references` for the files below; unchanged since round 4 and omitted: `_lib/ledger_key.ts` (moved `ledgerKey`), `hook_chunks.mjs` (one chunk entry), `rule_reference_requires.ts` (adds `shell_command` rows), the bench corpus under `internal/`)
 
 ```diff
 diff --git a/src/config/act-references.json b/src/config/act-references.json
@@ -98,70 +66,13 @@ index 0000000000..4f13b7e7da
 +    ]
 +}
 diff --git a/src/config/hook-bundle-budget.json b/src/config/hook-bundle-budget.json
-index c7f03a2ec7..a990888a1e 100644
+index c7f03a2ec7..29141481bf 100644
 --- a/src/config/hook-bundle-budget.json
 +++ b/src/config/hook-bundle-budget.json
-@@ -215,13 +215,13 @@
-             "entry": "src/scripts/chat_history.ts",
-             "max_bytes": 232000,
-             "registered_at": "2026-10-20",
--            "derivation": "Measured 209,890 bytes on 2026-10-20, with `yaml` external (inlined it is 472,201 — a second copy of the parser the dispatch bundle already carries). The ceiling is that reading plus about 10 %, rounded, because this chunk carries a 2,300-line concern plus the memory lookup and FTS index it reads, all of which still grow.\n\nWHY IT WAS MOVED — AND THE REASON FIRST GIVEN WAS FALSE, which is recorded here rather than corrected silently. This entry said `chat-history` is bound on `session_start` and on no other event, and called it the largest narrow-event module the metafile ranks. An independent provider review of 2026-10-20 checked the manifest and refused the change on it: `chat-history` is bound on FIVE events — `session_start`, `session_end`, `stop`, `post_tool_use` and `user_prompt_submit` — across seven hosts. It is close to the widest-bound concern in the tree, not the narrowest. The claim came from reading the `session_start:` rows of the manifest and never the others.\n\nWHAT SURVIVES THE CORRECTION, stated as narrowly as the evidence allows: the move takes 120,586 bytes out of a bundle every hook event parses (1,549,961 -> 1,429,414 B) and pays for them with one `require` of a 209,890-byte CJS file on the events that actually need the concern. Whether that is a latency WIN is UNMEASURED, and the 2026-10-18 council that chose this mechanism asked for exactly that proof inside `src/config/hook-latency-budget.json`. Until it exists this chunk is a byte-budget move with an unproven wall-clock effect, and the honest narrow-event candidates the same metafile ranks are recorded for whoever re-does it: `turn-end-gate` 71,928 B on `stop` alone, `injection-scan` 46,660 B on `post_tool_use` alone, `skill-route` 31,183 B and `git-authorization` 30,761 B on `user_prompt_submit` alone, `session-eol` 27,708 B on `stop` alone, `handoff-context` 25,220 B on `session_start` alone.\n\nUNLIKE THE OTHER TWO CHUNKS this one carries a CONCERN, so there is a correct path behind the fast one: `_run_concern` tries the static registry, then `loadLazyConcern`, then the historical spawn-per-concern path. A missing or mis-digested chunk costs latency, never the concern's effect — which the same review confirmed, noting it holds because `src/scripts/` ships in the package."
-+            "derivation": "Measured 209,890 bytes on 2026-10-20, with `yaml` external (inlined it is 472,201 — a second copy of the parser the dispatch bundle already carries). The ceiling was the registered reading plus about 10 %, rounded, because this chunk carries a 2,300-line concern plus the memory lookup and FTS index it reads, all of which still grow.\n\nWHY IT WAS MOVED — AND THE REASON FIRST GIVEN WAS FALSE, which is recorded here rather than corrected silently. This entry said `chat-history` is bound on `session_start` and on no other event, and called it the largest narrow-event module the metafile ranks. An independent provider review of 2026-10-20 checked the manifest and refused the change on it: `chat-history` is bound on FIVE events — `session_start`, `session_end`, `stop`, `post_tool_use` and `user_prompt_submit` — across seven hosts. It is close to the widest-bound concern in the tree, not the narrowest. The claim came from reading the `session_start:` rows of the manifest and never the others.\n\nWHAT SURVIVES THE CORRECTION, stated as narrowly as the evidence allows: the move takes 120,586 bytes out of a bundle every hook event parses (1,549,961 -> 1,429,414 B) and pays for them with one `require` of a 209,890-byte CJS file on the events that actually need the concern. Whether that is a latency WIN is UNMEASURED, and the 2026-10-18 council that chose this mechanism asked for exactly that proof inside `src/config/hook-latency-budget.json`. Until it exists this chunk is a byte-budget move with an unproven wall-clock effect, and the honest narrow-event candidates the same metafile ranks are recorded for whoever re-does it: `turn-end-gate` 71,928 B on `stop` alone, `injection-scan` 46,660 B on `post_tool_use` alone, `skill-route` 31,183 B and `git-authorization` 30,761 B on `user_prompt_submit` alone, `session-eol` 27,708 B on `stop` alone, `handoff-context` 25,220 B on `session_start` alone.\n\nUNLIKE THE OTHER TWO CHUNKS this one carries a CONCERN, so there is a correct path behind the fast one: `_run_concern` tries the static registry, then `loadLazyConcern`, then the historical spawn-per-concern path. A missing or mis-digested chunk costs latency, never the concern's effect — which the same review confirmed, noting it holds because `src/scripts/` ships in the package."
-         },
-         {
-             "entry": "src/scripts/hooks/instructions_observer_hook.ts",
-             "max_bytes": 12000,
-             "registered_at": "2026-10-23",
--            "derivation": "Measured 11,097 bytes on 2026-10-23 (the observe-only `InstructionsLoaded` capture, its classifier, and the CLI entry the spawn fallback needs). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `instructions_loaded` alone, so a chunk keeps it off every other dispatch's parse; the observer body ships here, never in the dispatch bundle. The binding that reaches it (one registry row and the event name in three vocabularies, 237 bytes) does sit in the bundle and is the 2026-10-23 raise of `max_bytes` recorded in `raise_log`. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the capture."
-+            "derivation": "Measured 11,097 bytes on 2026-10-23 (the observe-only `InstructionsLoaded` capture, its classifier, and the CLI entry the spawn fallback needs). The ceiling was the registered reading plus about 10 %, rounded, with no growth queued. Bound on `instructions_loaded` alone, so a chunk keeps it off every other dispatch's parse; the observer body ships here, never in the dispatch bundle. The binding that reaches it (one registry row and the event name in three vocabularies, 237 bytes) does sit in the bundle and is the 2026-10-23 raise of `max_bytes` recorded in `raise_log`. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the capture."
-         },
-         {
-             "entry": "src/scripts/hooks/code_graph_refresh_hook.ts",
-@@ -233,13 +233,13 @@
-             "entry": "src/scripts/update_notice_hook.ts",
-             "max_bytes": 35500,
-             "registered_at": "2026-10-24",
--            "derivation": "Measured 32,812 bytes on 2026-10-24 (the concern, its decision library and the delivery-receipt reader) with `yaml` external (the concern reads one user-global settings file with it; inlined it would be a second copy of the parser the dispatch bundle already carries). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps its body off every other dispatch parse; the bundle carries only its LAZY_CONCERNS row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the notice."
-+            "derivation": "Measured 32,812 bytes on 2026-10-24 (the concern, its decision library and the delivery-receipt reader) with `yaml` external (the concern reads one user-global settings file with it; inlined it would be a second copy of the parser the dispatch bundle already carries). The ceiling was the registered reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps its body off every other dispatch parse; the bundle carries only its LAZY_CONCERNS row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the notice."
-         },
-         {
-             "entry": "src/scripts/hooks/layer_promotion_hook.ts",
-             "max_bytes": 56800,
-             "registered_at": "2026-10-24",
--            "derivation": "Measured 54,058 bytes on 2026-10-24 (the session-start layer step of road-to-a-setup-that-decides-itself 3.3: the decision with its machine evidence, the arrival-record reader, the thin pass, the staged-snapshot restore and the ownership-ledger rewrite) with `yaml` external (the thin pass parses rule frontmatter; `chat_history` requires the same copy earlier on the same event, so the load is a cache hit). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps it off every other dispatch's parse; the bundle carries only its LAZY_CONCERNS row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the layer step."
-+            "derivation": "Measured 54,058 bytes on 2026-10-24 (the session-start layer step of road-to-a-setup-that-decides-itself 3.3: the decision with its machine evidence, the arrival-record reader, the thin pass, the staged-snapshot restore and the ownership-ledger rewrite) with `yaml` external (the thin pass parses rule frontmatter; `chat_history` requires the same copy earlier on the same event, so the load is a cache hit). The ceiling was the registered reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps it off every other dispatch's parse; the bundle carries only its LAZY_CONCERNS row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the layer step."
-         },
-         {
-             "entry": "src/scripts/hooks/subagent_constraints_hook.ts",
-@@ -251,19 +251,19 @@
-             "entry": "src/scripts/star_ask_hook.ts",
-             "max_bytes": 21200,
-             "registered_at": "2026-10-25",
--            "derivation": "Measured 19,308 bytes on 2026-10-25 (the monthly star ask of ADR-301: its cadence, its state file and its per-state claim; no receipt reader since the council's 2026-10-25 refusal moved the count to emission) with `yaml` external (it reads the user-global settings layers with it, as `update_notice` does). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps its body off every other dispatch parse; the bundle carries only its LAZY_CONCERNS row. Like `update_notice` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the ask."
-+            "derivation": "Measured 19,308 bytes on 2026-10-25 (the monthly star ask of ADR-301: its cadence, its state file and its per-state claim; no receipt reader since the council's 2026-10-25 refusal moved the count to emission) with `yaml` external (it reads the user-global settings layers with it, as `update_notice` does). The ceiling was the registered reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps its body off every other dispatch parse; the bundle carries only its LAZY_CONCERNS row. Like `update_notice` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the ask."
-         },
-         {
-             "entry": "src/scripts/quota_notice_hook.ts",
-             "max_bytes": 22800,
-             "registered_at": "2026-10-25",
--            "derivation": "Measured 20,703 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask with its per-call pending marker and read-path expiry from ratification rounds 1-5, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice."
-+            "derivation": "Measured 20,703 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask with its per-call pending marker and read-path expiry from ratification rounds 1-5, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling was the registered reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice."
-         },
-         {
-             "entry": "src/scripts/hooks/intake_pass_hook.ts",
-             "max_bytes": 10800,
-             "registered_at": "2026-10-28",
--            "derivation": "Measured 9,807 bytes on 2026-10-28 (the intake-pass concern, its task-prompt and question predicates after council round 1, and the shared `isSyntheticPrompt` reader), no `yaml`. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `user_prompt_submit` on every host that binds the slot; the dispatch bundle carries only its LAZY_CONCERNS row. A missing chunk falls back to the spawn path and costs latency, never the line."
-+            "derivation": "Measured 9,807 bytes on 2026-10-28 (the intake-pass concern, its task-prompt and question predicates after council round 1, and the shared `isSyntheticPrompt` reader), no `yaml`. The ceiling was the registered reading plus about 10 %, rounded, with no growth queued. Bound on `user_prompt_submit` on every host that binds the slot; the dispatch bundle carries only its LAZY_CONCERNS row. A missing chunk falls back to the spawn path and costs latency, never the line."
-         },
-         {
-             "entry": "src/scripts/hooks/web_launch_rows.ts",
-@@ -275,7 +275,13 @@
-             "entry": "src/scripts/self_repair_hook.ts",
+@@ -276,6 +276,12 @@
              "max_bytes": 61600,
              "registered_at": "2026-11-04",
--            "derivation": "Measured 55,991 bytes on 2026-11-04 for the roadmap agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md. The chunk holds the self-repair concern, its four detectors including persistence-claim, the record store with the target and subject indexes, and the Class-A telemetry shadow (emitDefectShadow: a structural-fields-only copy of a queued record for the org telemetry pack, inert unless that pack activated telemetry); `yaml` is external, resolved from the installed package as for the chat_history, update_notice and star_ask chunks. The ceiling is that reading plus about 10 %, rounded, the same margin as the quota_notice and intake_pass rows. The margin approves no planned code: a later addition to the chunk is measured and reviewed on its own change. WHY IT WAS MOVED: the dispatch bundle sat 14 bytes under its 1,582,000 ceiling at origin/main b53718de2 (measured 1,581,986 B by this gate with APFS-cloned node_modules), and the roadmap's detector work had to land somewhere. The concern built alone was 51,156 bytes before the work; moving it out, as the 2026-10-18 council chose for this situation, took the dispatch bundle to 1,557,293 B (-24,693 B, the rest being modules other concerns still import) instead of raising the dispatch ceiling. Bound on `user_prompt_submit` and `stop`; the bundle carries only its LAZY_CONCERNS row. A missing or mis-digested chunk falls back to spawning the same script, which is slower; tests/hooks/self_repair_lazy_paths.test.ts pins that the loader path and the spawn fallback write the same record, and that the built dispatcher falls back to the spawn exactly once with the chunk missing. On either path a failure of the concern does not reject the hook event (`fail_closed: false`, unchanged by this move); the dispatcher still writes that run's exit code to agents/runtime/state/.dispatcher/<session>/self-repair.json, which is where a failing concern is visible."
-+            "derivation": "Measured 55,991 bytes on 2026-11-04 for the roadmap agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md. The chunk holds the self-repair concern, its four detectors including persistence-claim, the record store with the target and subject indexes, and the Class-A telemetry shadow (emitDefectShadow: a structural-fields-only copy of a queued record for the org telemetry pack, inert unless that pack activated telemetry); `yaml` is external, resolved from the installed package as for the chat_history, update_notice and star_ask chunks. The ceiling was the registered reading plus about 10 %, rounded, the same margin as the quota_notice and intake_pass rows. The margin approves no planned code: a later addition to the chunk is measured and reviewed on its own change. WHY IT WAS MOVED: the dispatch bundle sat 14 bytes under its 1,582,000 ceiling at origin/main b53718de2 (measured 1,581,986 B by this gate with APFS-cloned node_modules), and the roadmap's detector work had to land somewhere. The concern built alone was 51,156 bytes before the work; moving it out, as the 2026-10-18 council chose for this situation, took the dispatch bundle to 1,557,293 B (-24,693 B, the rest being modules other concerns still import) instead of raising the dispatch ceiling. Bound on `user_prompt_submit` and `stop`; the bundle carries only its LAZY_CONCERNS row. A missing or mis-digested chunk falls back to spawning the same script, which is slower; tests/hooks/self_repair_lazy_paths.test.ts pins that the loader path and the spawn fallback write the same record, and that the built dispatcher falls back to the spawn exactly once with the chunk missing. On either path a failure of the concern does not reject the hook event (`fail_closed: false`, unchanged by this move); the dispatcher still writes that run's exit code to agents/runtime/state/.dispatcher/<session>/self-repair.json, which is where a failing concern is visible."
+             "derivation": "Measured 55,991 bytes on 2026-11-04 for the roadmap agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md. The chunk holds the self-repair concern, its four detectors including persistence-claim, the record store with the target and subject indexes, and the Class-A telemetry shadow (emitDefectShadow: a structural-fields-only copy of a queued record for the org telemetry pack, inert unless that pack activated telemetry); `yaml` is external, resolved from the installed package as for the chat_history, update_notice and star_ask chunks. The ceiling is that reading plus about 10 %, rounded, the same margin as the quota_notice and intake_pass rows. The margin approves no planned code: a later addition to the chunk is measured and reviewed on its own change. WHY IT WAS MOVED: the dispatch bundle sat 14 bytes under its 1,582,000 ceiling at origin/main b53718de2 (measured 1,581,986 B by this gate with APFS-cloned node_modules), and the roadmap's detector work had to land somewhere. The concern built alone was 51,156 bytes before the work; moving it out, as the 2026-10-18 council chose for this situation, took the dispatch bundle to 1,557,293 B (-24,693 B, the rest being modules other concerns still import) instead of raising the dispatch ceiling. Bound on `user_prompt_submit` and `stop`; the bundle carries only its LAZY_CONCERNS row. A missing or mis-digested chunk falls back to spawning the same script, which is slower; tests/hooks/self_repair_lazy_paths.test.ts pins that the loader path and the spawn fallback write the same record, and that the built dispatcher falls back to the spawn exactly once with the chunk missing. On either path a failure of the concern does not reject the hook event (`fail_closed: false`, unchanged by this move); the dispatcher still writes that run's exit code to agents/runtime/state/.dispatcher/<session>/self-repair.json, which is where a failing concern is visible."
 +        },
 +        {
 +            "entry": "src/scripts/_lib/reference_duty.ts",
@@ -171,24 +82,6 @@ index c7f03a2ec7..a990888a1e 100644
          }
      ],
      "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",
-diff --git a/src/scripts/_lib/ledger_key.ts b/src/scripts/_lib/ledger_key.ts
-new file mode 100644
-index 0000000000..9fa6dc9b90
---- /dev/null
-+++ b/src/scripts/_lib/ledger_key.ts
-@@ -0,0 +1,12 @@
-+import * as path from 'node:path';
-+
-+/**
-+ * The one key both the read ledger and the reference duty use for a file:
-+ * relative to the workspace when the file is inside it, absolute otherwise. Two
-+ * derivations of this key would silently disagree for every reference outside
-+ * the workspace.
-+ */
-+export function ledgerKey(workspaceRoot: string, absPath: string): string {
-+    const rel = path.relative(workspaceRoot, absPath);
-+    return rel === '' || rel.startsWith('..') || path.isAbsolute(rel) ? absPath : rel;
-+}
 diff --git a/src/scripts/_lib/reference_duty.ts b/src/scripts/_lib/reference_duty.ts
 index 451756fa5e..cdcd4ad319 100644
 --- a/src/scripts/_lib/reference_duty.ts
@@ -483,25 +376,6 @@ index 0000000000..45afa897dc
 +        return want.every((x, i) => w[i] === x);
 +    });
 +}
-diff --git a/src/scripts/hook_chunks.mjs b/src/scripts/hook_chunks.mjs
-index 470a94a431..c72bb5443c 100644
---- a/src/scripts/hook_chunks.mjs
-+++ b/src/scripts/hook_chunks.mjs
-@@ -25,6 +25,14 @@ import { buildSync } from 'esbuild';
- export const HOOK_CHUNKS = Object.freeze([
-     Object.freeze({ entry: 'src/scripts/_lib/svg_rules.ts', outfile: 'dist/hooks/svg_rules.chunk.cjs' }),
-     Object.freeze({ entry: 'src/scripts/_lib/egress_engine.ts', outfile: 'dist/hooks/egress_engine.chunk.cjs' }),
-+    // Required by `reread-guard` on a file write or a bound shell act alone
-+    // (`reference_duty_loader.ts`). `yaml` stays external, as at `chat_history`:
-+    // the bundle already carries it and `dist/hooks/` resolves it in any install.
-+    Object.freeze({
-+        entry: 'src/scripts/_lib/reference_duty.ts',
-+        outfile: 'dist/hooks/reference_duty.chunk.cjs',
-+        external: Object.freeze(['yaml']),
-+    }),
-     // Required by `design-pass` on a UI write alone (`design_consistency_loader.ts`).
-     Object.freeze({
-         entry: 'src/scripts/_lib/design_consistency_pass.ts',
 diff --git a/src/scripts/hooks/reference_duty_loader.ts b/src/scripts/hooks/reference_duty_loader.ts
 new file mode 100644
 index 0000000000..7fe4628069
@@ -681,71 +555,6 @@ index 5086fc1d17..73316e800a 100644
          const isRead = READ_TOOLS.has(toolName);
          const isWrite = WRITE_TOOLS.has(toolName);
          if (!isRead && !isWrite) return EXIT_ALLOW;
-diff --git a/src/scripts/rule_reference_requires.ts b/src/scripts/rule_reference_requires.ts
-index 0662fe9b95..f6b83b2cdd 100644
---- a/src/scripts/rule_reference_requires.ts
-+++ b/src/scripts/rule_reference_requires.ts
-@@ -3,7 +3,8 @@
-  * rule frontmatter alone.
-  *
-  * An act is a trigger that names something the agent does rather than something
-- * it says: `path_prefix`, `file_pattern`, `command`. A keyword or phrase trigger
-+ * it says: `path_prefix`, `file_pattern`, `command`, or a `shell_command` bound in
-+ * `src/config/act-references.json`. A keyword or phrase trigger
-  * names a prompt, so a rule whose references hang only on those is reachable by
-  * no act and is listed under `no_act` instead of being dropped.
-  *
-@@ -21,12 +22,13 @@ import * as fs from 'node:fs';
- import * as path from 'node:path';
- import { fileURLToPath, pathToFileURL } from 'node:url';
- 
-+import actReferences from '../config/act-references.json';
- import { parseFrontmatter } from './preamble_byte_census.js';
- 
- /** Mirrors `COMPOSED_CHARS` in `hooks/rule_inject_hook.ts`; a test holds them equal. */
- export const INJECT_BUDGET_CHARS = 8000;
- 
--const ACT_KINDS = ['path_prefix', 'file_pattern', 'command'] as const;
-+const ACT_KINDS = ['path_prefix', 'file_pattern', 'command', 'shell_command'] as const;
- type ActKind = (typeof ACT_KINDS)[number];
- 
- export interface Reference {
-@@ -61,7 +63,21 @@ function reference(rel: string, contextsRoot: string): Reference {
-     return { path: rel, chars, status: chars > INJECT_BUDGET_CHARS ? 'omitted-budget' : 'fits' };
- }
- 
--export function buildRequiresTable(rulesDir: string, contextsRoot: string): RequiresTable {
-+export interface ActBinding {
-+    shell_command: string;
-+    rules: string[];
-+}
-+
-+/**
-+ * The requires table. `shell_command` rows come from `src/config/act-references.json`,
-+ * which binds a shell act to rule ids (kernel rules included — it is not a router
-+ * trigger); the references themselves are still each rule's own `load_context`.
-+ */
-+export function buildRequiresTable(
-+    rulesDir: string,
-+    contextsRoot: string,
-+    bindings: readonly ActBinding[] = actReferences.bindings,
-+): RequiresTable {
-     const rows: RequiresRow[] = [];
-     const no_act: string[] = [];
-     const acts_by_kind: Partial<Record<ActKind, number>> = {};
-@@ -80,6 +96,12 @@ export function buildRequiresTable(rulesDir: string, contextsRoot: string): Requ
-         const marking: RequiresRow['marking'] = typeof fm['consequence_class'] === 'string' ? 'required' : fm['type'] === 'manual' ? 'informational' : 'conditional';
-         const triggers = Array.isArray(fm['triggers']) ? (fm['triggers'] as unknown[]) : [];
-         let acts = 0;
-+        for (const b of bindings) {
-+            if (!b.rules.includes(rule)) continue;
-+            rows.push({ rule, act: { kind: 'shell_command', value: b.shell_command }, marking, references });
-+            acts_by_kind.shell_command = (acts_by_kind.shell_command ?? 0) + 1;
-+            acts += 1;
-+        }
-         for (const t of triggers) {
-             if (typeof t !== 'object' || t === null) continue;
-             for (const kind of ACT_KINDS) {
 diff --git a/tests/scripts/act_references.test.ts b/tests/scripts/act_references.test.ts
 new file mode 100644
 index 0000000000..89bb3e591c
