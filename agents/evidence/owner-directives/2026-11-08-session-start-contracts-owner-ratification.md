@@ -17,7 +17,13 @@ answered (verbatim):
 
 - The subject `2d4468836a50612a94b44477d3e94bef9565167ccf8c14bdfa296d820ede59fb`
   (69 gated files at commit `9423070cfdbcb811bbc3811cec49fc4aa41dbd01` of `feat/session-start-contracts`; see
-  the ratification record) is ratified by the owner.
+  the ratification record) is ratified by the owner, and so is the subject
+  after merging `main` into the branch,
+  `c4be0a922aceb30c4ec8abf94153c1b403d781974f1ad274dbc9b84aaf722261` at commit
+  `af66abb72cc15b833ea0fb3dc6f1265295349631`. The two differ only by `main`'s own `raise_log` entry for
+  `src/scripts/quota_notice_hook.ts` in `src/config/hook-bundle-budget.json`,
+  merged as a sibling of this branch's entry; no rule, contract or ceiling of
+  this change moved.
 - The merge over a red `check_kernel_edit_ratified` is the owner's own act on
   the forge. An agent records it in a bypass record and never performs it.
 - openai's last open points stay recorded as dissent, not as findings to act on
