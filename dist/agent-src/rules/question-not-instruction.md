@@ -55,7 +55,7 @@ violation: the user loses their answer AND gets unrequested work.
 
 ## What to do
 
-1. **Answer the literal question** — directly, honestly, first token.
+1. **Answer the literal question** — directly, honestly, first token (after any fast-path marker and canary greeting).
 2. If the answer implies work *might* follow, **stop after the answer** and let
    the user decide. Offer numbered options if a decision is genuinely theirs
    (per [`user-interaction`](user-interaction.md)), but do not start the work.

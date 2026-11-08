@@ -171,5 +171,4 @@ PreToolUse hook — see `agents/settings/contexts/legal-privilege-probe.md`.
 ## See also
 
 - `skill:privacy-review`, `skill:data-handling-judgment`, `skill:logging-monitoring`, `skill:secrets-management`.
-- `domain-safety-disclaimer`, `domain-safety-retention` — companion rules.
-- `doc-screenshot-hygiene` — the same floor for screenshots.
+- `domain-safety-disclaimer`, `domain-safety-retention`, `doc-screenshot-hygiene` (screenshots).

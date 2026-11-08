@@ -181,3 +181,19 @@ describe('tool-safety keeps the body modality', () => {
         expect(c).not.toContain('keep usage logged');
     });
 });
+
+// Round 29 (openai): three body/contract mismatches in scope or precedence.
+describe('round 29 — body and contract say the same thing', () => {
+    const body = (id: string): string => fs.readFileSync(path.join(REPO, 'src', 'rules', `${id}.md`), 'utf8');
+    it('tool-safety keeps "where the host supports it" on scoped grants', () => {
+        expect(contract('tool-safety')).toContain('prefer scoped grants (Bash(<cmd>:*)) where the host supports it');
+    });
+    it('image-likeness-and-rights: the body states the model-card check is universal, as the contract does', () => {
+        expect(body('image-likeness-and-rights')).toContain('Check model card on every gen/edit');
+        expect(contract('image-likeness-and-rights')).toContain('before every gen/edit, check model card');
+    });
+    it('question-not-instruction: the body names the marker and greeting precedence the contract carries', () => {
+        expect(body('question-not-instruction')).toContain('first token (after any fast-path marker and canary greeting');
+        expect(contract('question-not-instruction')).toContain('first token after any fast-path marker and canary greeting');
+    });
+});

@@ -108,5 +108,5 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## See also
 
-- `domain-safety-disclaimer`, `finance-safety-floor` — sibling floors.
+- `domain-safety-disclaimer`, `finance-safety-floor`.
 - [`positioning-strategy`](../skills/positioning-strategy/SKILL.md), [`competitive-moat-analysis`](../skills/competitive-moat-analysis/SKILL.md).

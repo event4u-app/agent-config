@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's startup contract (`src/agent-src/startup-contracts/rules/<id>.md`). This page is the readable form;
 the config is the record.
 
-**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33961 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33988 chars.**
 
 ## Per rule
 
@@ -39,7 +39,7 @@ the config is the record.
 | `settings-ask-protocol` | 32 | 6 | 0 | 1452 |
 | `source-confidentiality` | 20 | 3 | 0 | 1154 |
 | `strategy-safety-floor` | 31 | 4 | 2 | 1696 |
-| `tool-safety` | 22 | 0 | 0 | 896 |
+| `tool-safety` | 22 | 0 | 0 | 923 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 861 |
 
@@ -397,7 +397,7 @@ the config is the record.
 | `image-likeness-and-rights` | c4 | trigger | ask | no | \| Real person's face / body (celebrity, public figure, private individual) \| Likeness consent required | real person → likeness consent |  |
 | `image-likeness-and-rights` | c5 | prohibition | refuse | no | Trademark clearance required — refuse without explicit rights | trademark w/o rights → refuse |  |
 | `image-likeness-and-rights` | c6 | trigger | surface | no | \| Named living artist's distinctive style (e.g. "in the style of [name]") \| Style license check | 'media/style.md' license check |  |
-| `image-likeness-and-rights` | c7 | obligation | surface | no | Check model card; surface if output license is restricted | check model card, surface restricted output license |  |
+| `image-likeness-and-rights` | c7 | obligation | surface | no | Check model card on every gen/edit; surface if output license is restricted | check model card, surface restricted output license |  |
 | `image-likeness-and-rights` | c8 | stop | stop | no | and stops the job until checked: | halt job until policy check passes |  |
 | `image-likeness-and-rights` | c9 | obligation | act | no | - 'agents/settings/policies/media/disclosure.md' — mandatory AI-generation disclosure. | (mandatory AI disclosure) |  |
 | `image-likeness-and-rights` | c10 | prohibition | none | no | These policies carry the full decision framework; this rule surfaces them | don't duplicate |  |
@@ -405,7 +405,7 @@ the config is the record.
 | `image-likeness-and-rights` | c12 | prohibition | refuse | no | - "Just testing" a celebrity likeness on a scaffold-tier adapter — dry-run or not, | "just testing" (scaffold/dry-run adapter) |  |
 | `image-likeness-and-rights` | c13 | prohibition | none | no | - Skipping the rights check because "it's only a banner" | or "only a banner" |  |
 | `image-likeness-and-rights` | c14 | trigger | none | no | path_prefix: "scripts/ai-image/adapters/" | (or editing 'scripts/ai-image/adapters/') |  |
-| `image-likeness-and-rights` | c15 | obligation | none | no | Check model card; surface if output license is restricted | before every gen/edit, check model card |  |
+| `image-likeness-and-rights` | c15 | obligation | none | no | Check model card on every gen/edit; surface if output license is restricted | before every gen/edit, check model card |  |
 | `legal-safety-floor` | c1 | trigger | none | no | Auto-activates when 'pack-legal-review-prep' is installed | legal-review-prep pack installed |  |
 | `legal-safety-floor` | c2 | obligation | act | no | Every output is a **draft to PREPARE for attorney review**, never legal advice. | output = draft/research aid for licensed attorney |  |
 | `legal-safety-floor` | c3 | prohibition | refuse | yes | THE AGENT NEVER ISSUES A BINDING LEGAL CONCLUSION. | binding legal conclusion |  |
@@ -483,7 +483,7 @@ the config is the record.
 | `question-not-instruction` | c5 | obligation | act | no | **Answer it.** Explain, reflect, surface the trade-off. Do NOT execute. | explain, reflect, surface trade-off |  |
 | `question-not-instruction` | c6 | exception | act | no | Execute per the usual authority gates. | executes per usual authority gates |  |
 | `question-not-instruction` | c7 | trigger | none | no | A question that expresses **frustration or challenge** | frustration/challenge |  |
-| `question-not-instruction` | c8 | obligation | act | no | 1. **Answer the literal question** — directly, honestly, first token. | answer literal question first |  |
+| `question-not-instruction` | c8 | obligation | act | no | 1. **Answer the literal question** — directly, honestly, first token (after any fast-path marker and canary greeting | answer literal question first |  |
 | `question-not-instruction` | c9 | stop | stop | no | 2. If the answer implies work *might* follow, **stop after the answer** and let | stop after answer |  |
 | `question-not-instruction` | c10 | obligation | ask | no | Offer numbered options if a decision is genuinely theirs | offer numbered options only if decision is theirs |  |
 | `question-not-instruction` | c11 | prohibition | stop | no | (per ['user-interaction'](user-interaction.md)), but do not start the work. | do not start work |  |
@@ -678,7 +678,7 @@ the config is the record.
 | `tool-safety` | c8 | prohibition | refuse | no | - **No hidden credentials** — tools must not embed API keys or tokens in skill files | API keys/tokens in skill files |  |
 | `tool-safety` | c9 | prohibition | refuse | no | - **No arbitrary execution** — tool adapters have fixed interfaces, not free-form calls | arbitrary execution (adapters = fixed interfaces) |  |
 | `tool-safety` | c10 | obligation | act | no | - **Audit trail** — tool usage should be observable and logged | tool usage should be observable and logged |  |
-| `tool-safety` | c11 | obligation | act | no | - **Prefer scoped-grant syntax over bare tool names** where the host supports | prefer scoped grants (Bash(<cmd>:*)) |  |
+| `tool-safety` | c11 | obligation | act | no | - **Prefer scoped-grant syntax over bare tool names** where the host supports | prefer scoped grants (Bash(<cmd>:*)) where the host supports it |  |
 | `tool-safety` | c12 | precedence | refuse | no | a tool matching the | refuse disallowed_tools match even if allowed |  |
 | `tool-safety` | c13 | obligation | act | no | - **Falsifiable numeric activation thresholds** belong in descriptions where | numeric thresholds in descriptions where they apply |  |
 | `tool-safety` | c14 | trigger | none | no | - Skills that declare 'allowed_tools' in their execution block | skill declares allowed_tools |  |

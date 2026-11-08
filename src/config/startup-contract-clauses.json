@@ -3210,7 +3210,7 @@
         {
           "id": "c7",
           "kind": "obligation",
-          "source": "Check model card; surface if output license is restricted",
+          "source": "Check model card on every gen/edit; surface if output license is restricted",
           "in_law": false,
           "response": "surface",
           "witness": "check model card, surface restricted output license",
@@ -3282,7 +3282,7 @@
         {
           "id": "c15",
           "kind": "obligation",
-          "source": "Check model card; surface if output license is restricted",
+          "source": "Check model card on every gen/edit; surface if output license is restricted",
           "in_law": false,
           "response": "none",
           "witness": "before every gen/edit, check model card",
@@ -4000,7 +4000,7 @@
         {
           "id": "c8",
           "kind": "obligation",
-          "source": "1. **Answer the literal question** — directly, honestly, first token.",
+          "source": "1. **Answer the literal question** — directly, honestly, first token (after any fast-path marker and canary greeting",
           "in_law": false,
           "response": "act",
           "witness": "answer literal question first",
@@ -5790,7 +5790,7 @@
           "source": "- **Prefer scoped-grant syntax over bare tool names** where the host supports",
           "in_law": false,
           "response": "act",
-          "witness": "prefer scoped grants (Bash(<cmd>:*))",
+          "witness": "prefer scoped grants (Bash(<cmd>:*)) where the host supports it",
           "unresolved_ref": null
         },
         {
