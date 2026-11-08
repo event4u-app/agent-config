@@ -223,7 +223,7 @@ export function renderSummary(r: GraphChecksReport): string {
     }
     lines.push(`- rows: ${r.graph_findings.length}${r.omitted ? ` (+${r.omitted} omitted, at most ${MAX_PER_CHECK} per check)` : ''}`, '');
     if (r.graph_findings.length === 0) {
-        lines.push('No check flagged anything.');
+        lines.push('No finding rows were produced; see the check statuses above.');
         return `${lines.join('\n')}\n`;
     }
     lines.push('| check | finding | at |', '|---|---|---|');

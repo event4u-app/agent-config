@@ -78,6 +78,7 @@ describe('graph checks report — evidence and shape', () => {
         expect(r.graph_findings.filter((f) => f.check === 'untested-change')).toHaveLength(100);
         // The count states the qualifying items: 150 untested, not the 180 the check carried.
         expect(r.checks.find((c) => c.id === 'untested-change')?.items).toBe(150);
+        expect(r.omitted).toBe(50);
         expect(renderSummary(r)).toContain('untested-change: 150 flagged');
         expect(r.graph_findings.some((f) => f.check === 'missing-co-change')).toBe(true);
         expect(renderSummary(r)).toContain('missing-co-change: did not run');
@@ -177,5 +178,27 @@ describe('graph checks report — main', () => {
 
     it('exits 2 on a usage error and writes nothing', async () => {
         expect(await main(['--out'], os.tmpdir())).toBe(2);
+    });
+});
+
+describe('graph checks report — the workflow fallback', () => {
+    // The job summary step writes this when the report step never finished; it
+    // must be a complete no-analysis report, not a different shape under the
+    // same schema identifier.
+    it('writes the same shape as a no-analysis report, with the base ref escaped', () => {
+        const wf = fs.readFileSync(path.join(process.cwd(), '.github', 'workflows', 'self-review-gate.yml'), 'utf-8');
+        const m = /node -e '([^']+)'/.exec(wf.slice(wf.indexOf('graph-checks:')));
+        expect(m).not.toBeNull();
+        const out = outDir();
+        const r = spawnSync(process.execPath, ['-e', (m as RegExpExecArray)[1] as string], { env: { ...process.env, BASE_REF: 'feat/"odd"', OUT: path.join(out, 'graph-checks.json') }, encoding: 'utf-8' });
+        expect(r.status).toBe(0);
+        const fallback = readReport(out);
+        const { root, base } = repo();
+        const reference = buildReport(root, resolveRevisions(root, base), null, 'x');
+        expect(Object.keys(fallback).sort()).toEqual(Object.keys(reference).sort());
+        expect(Object.keys(fallback.revisions).sort()).toEqual(Object.keys(reference.revisions).sort());
+        expect(fallback.status).toBe('no-analysis');
+        expect(fallback.revisions.base_ref).toBe('feat/"odd"');
+        expect(fallback.reason).toContain('no report was written');
     });
 });

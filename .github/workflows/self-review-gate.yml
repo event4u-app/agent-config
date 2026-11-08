@@ -190,15 +190,22 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: ./node_modules/.bin/tsx src/scripts/graph_checks_report.ts --base "origin/$BASE_REF" --out "$RUNNER_TEMP/graph-checks"
+      # When the report step never finished, the fallback is a complete
+      # no-analysis report (the same shape the script writes), built with node so
+      # the base ref is escaped; node is present once setup-node ran, even if
+      # `npm ci` failed.
       - name: Job summary
         if: always()
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          OUT: ${{ runner.temp }}/graph-checks/graph-checks.json
         run: |
           mkdir -p "$RUNNER_TEMP/graph-checks"
           if [ -f "$RUNNER_TEMP/graph-checks/summary.md" ]; then
             cat "$RUNNER_TEMP/graph-checks/summary.md" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Code-graph review checks: no report was written (the job failed before the report step finished). No analysis is not a pass." >> "$GITHUB_STEP_SUMMARY"
-            echo '{"schema":"graph-checks-report/1","advisory":true,"status":"no-report","reason":"the job failed before the report step finished"}' > "$RUNNER_TEMP/graph-checks/graph-checks.json"
+            node -e 'require("fs").writeFileSync(process.env.OUT, JSON.stringify({ schema: "graph-checks-report/1", advisory: true, status: "no-analysis", reason: "no report was written: the job failed before the report step finished", revisions: { base_ref: process.env.BASE_REF ?? "", base_sha: null, merge_base_sha: null, head_sha: null }, graph_provenance: null, graph_checksum: null, checks: [], omitted: 0, graph_findings: [] }) + "\n")'
           fi
       - name: Upload the graph-checks artifact
         if: always()
