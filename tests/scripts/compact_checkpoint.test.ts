@@ -13,6 +13,7 @@ import {
     eventsFile,
     observePostCompact,
     packageVersionFrom,
+    protectionFlags,
     readEventTally,
     readRegular,
     recordPreCompact,
@@ -405,5 +406,22 @@ describe('compact checkpoint — round 14: generation-aware consumption', () => 
         fs.writeFileSync(markerFile(), '{not json');
         expect(removeIfStillInvalid(markerFile())).toBe(true);
         expect(fs.existsSync(markerFile())).toBe(false);
+    });
+});
+
+describe('compact checkpoint — round 18: missing protection flags skip, never degrade', () => {
+    it('protectionFlags is null when the platform lacks O_NOFOLLOW or O_NONBLOCK', () => {
+        const { O_NOFOLLOW, O_NONBLOCK, ...rest } = fs.constants;
+        expect(protectionFlags({ ...rest, O_NONBLOCK } as typeof fs.constants)).toBeNull();
+        expect(protectionFlags({ ...rest, O_NOFOLLOW } as typeof fs.constants)).toBeNull();
+        expect(protectionFlags(fs.constants)).toEqual({ O_NOFOLLOW, O_NONBLOCK });
+    });
+
+    it('readRegular refuses to read when a protection flag is missing', () => {
+        const file = path.join(root, 'plain');
+        fs.writeFileSync(file, 'x');
+        const { O_NOFOLLOW: _drop, ...rest } = fs.constants;
+        expect(readRegular(file, 10, rest as typeof fs.constants)).toBeNull();
+        expect(readRegular(file, 10)).toBe('x');
     });
 });

@@ -71,7 +71,7 @@ export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
  */
 export const SWEEP_MAX = 512;
 
-/** A marker is written only while the directory holds fewer entries than this. */
+/** A marker is written only while the directory holds fewer entries than this; the 32-entry gap to `SWEEP_MAX` covers the event log, temp files and writers racing past the check. */
 export const WRITE_LIMIT = 480;
 
 const MARKER_NAME = /^[0-9a-f]{64}\.json$/;
@@ -141,14 +141,26 @@ function safeDir(env?: EnvMap): string | null {
 }
 
 /**
- * A regular file's text, opened without following a symlink or blocking, and at
- * most `max` bytes even if the file grows after it was opened; `null` otherwise.
+ * The two open flags every read and append here depends on, or `null` when the
+ * platform lacks either. Callers skip rather than open without them: a missing
+ * flag must never silently mean "follow symlinks" or "block".
  */
-export function readRegular(file: string, max: number): string | null {
-    const { O_RDONLY, O_NOFOLLOW, O_NONBLOCK } = fs.constants;
+export function protectionFlags(constants: typeof fs.constants = fs.constants): { O_NOFOLLOW: number; O_NONBLOCK: number } | null {
+    const { O_NOFOLLOW, O_NONBLOCK } = constants;
+    return typeof O_NOFOLLOW === 'number' && typeof O_NONBLOCK === 'number' ? { O_NOFOLLOW, O_NONBLOCK } : null;
+}
+
+/**
+ * A regular file's text, opened without following a symlink or blocking, and at
+ * most `max` bytes even if the file grows after it was opened; `null` otherwise,
+ * including on a platform that lacks the protection flags.
+ */
+export function readRegular(file: string, max: number, constants: typeof fs.constants = fs.constants): string | null {
+    const flags = protectionFlags(constants);
+    if (flags === null) return null;
     let fd: number;
     try {
-        fd = fs.openSync(file, O_RDONLY | (O_NOFOLLOW ?? 0) | (O_NONBLOCK ?? 0));
+        fd = fs.openSync(file, constants.O_RDONLY | flags.O_NOFOLLOW | flags.O_NONBLOCK);
     } catch {
         return null;
     }
@@ -249,8 +261,10 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
         writeAtomic(dir, file, `${kept.join('\n')}${kept.length > 0 ? '\n' : ''}${line}`);
         return true;
     }
-    const { O_WRONLY, O_APPEND, O_CREAT, O_NOFOLLOW, O_NONBLOCK } = fs.constants;
-    const fd = fs.openSync(file, O_WRONLY | O_APPEND | O_CREAT | (O_NOFOLLOW ?? 0) | (O_NONBLOCK ?? 0), 0o644);
+    const flags = protectionFlags();
+    if (flags === null) return false;
+    const { O_WRONLY, O_APPEND, O_CREAT } = fs.constants;
+    const fd = fs.openSync(file, O_WRONLY | O_APPEND | O_CREAT | flags.O_NOFOLLOW | flags.O_NONBLOCK, 0o644);
     try {
         // Re-checked on the descriptor: a FIFO or a hard-linked file swapped in after the lstat is refused.
         const fst = fs.fstatSync(fd);
