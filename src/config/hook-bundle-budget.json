@@ -276,6 +276,12 @@
             "derivation": "Measured 9,807 bytes on 2026-10-28 (the intake-pass concern, its task-prompt and question predicates after council round 1, and the shared `isSyntheticPrompt` reader), no `yaml`. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `user_prompt_submit` on every host that binds the slot; the dispatch bundle carries only its LAZY_CONCERNS row. A missing chunk falls back to the spawn path and costs latency, never the line."
         },
         {
+            "entry": "src/scripts/hooks/compact_checkpoint_hook.ts",
+            "max_bytes": 38500,
+            "registered_at": "2026-11-08",
+            "derivation": "Measured 34,775 bytes on 2026-11-08 (the compact-checkpoint concern, the continuity-record writer it reuses and the roadmap-claim reader), `yaml` external. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `pre_compact` and `session_start` on claude only; the dispatch bundle carries only its LAZY_CONCERNS row."
+        },
+        {
             "entry": "src/scripts/hooks/web_launch_rows.ts",
             "max_bytes": 14000,
             "registered_at": "2026-11-02",
