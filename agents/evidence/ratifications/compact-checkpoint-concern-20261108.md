@@ -42,7 +42,7 @@ model's context, a denial, a rewrite, or a weakened gate.
 
 ## How the verdict was reached
 
-Fifteen rounds, prompts committed verbatim beside this record
+Fifteen rounds, prompts committed verbatim under `agents/evidence/council/`
 (`compact-checkpoint-concern-20261108.question.md` for round 1,
 `.roundN.question.md` for rounds 2-15). Every round before 15 ended in
 `request_changes` or `refused` on a concrete defect, each fixed with a
