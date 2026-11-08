@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Reference duty at the act: four arms, measured (2026-11-08)
 
 Step 3.1 of `road-to-a-reference-that-arrives-before-the-act`, scored against
