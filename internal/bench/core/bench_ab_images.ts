@@ -7,7 +7,7 @@
  * runner never builds: it reads `images.json` and runs the recorded image ids,
  * so a report names the image a trial ran in rather than a mutable tag.
  *
- * Usage: bench_ab_images [--out <images.json>] [--cli-version <x.y.z>]
+ * Usage: bench_ab_images [--out <images.json>] [--cli-version <x.y.z>] [--with-full-layer]
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -40,6 +40,36 @@ export interface ImagesFile {
     cli_version: string;
     base: ImageRecord;
     ac: ImageRecord;
+    /** Built with `--with-full-layer`: the same tarball installed with `init --full`. */
+    ac_full?: ImageRecord;
+    /** Rule-layer form measured inside each package image at build time. */
+    layer?: { ac: LayerReading; ac_full?: LayerReading };
+}
+
+/** What the installed rule layer of a package image looks like. */
+export interface LayerReading {
+    rule_files: number;
+    thinned: number;
+    bytes: number;
+}
+
+const THIN_MARKER = '> Load the body on a match.';
+
+/** `files:N thinned:N bytes:N` → reading; null when the probe printed something else. */
+export function parse_layer_reading(out: string): LayerReading | null {
+    const m = /files:(\d+)\s+thinned:(\d+)\s+bytes:(\d+)/.exec(out.replace(/\s+/g, ' '));
+    if (!m) return null;
+    return { rule_files: Number(m[1]), thinned: Number(m[2]), bytes: Number(m[3]) };
+}
+
+function read_layer(exec: Exec, imageId: string): LayerReading {
+    const probe =
+        "echo files:$(find /home/node/.claude/rules -name '*.md' | wc -l) " +
+        `thinned:$(grep -rlF '${THIN_MARKER}' /home/node/.claude/rules | wc -l) ` +
+        "bytes:$(find /home/node/.claude/rules -name '*.md' -exec cat {} + | wc -c)";
+    const reading = parse_layer_reading(must(exec, 'docker', ['run', '--rm', imageId, 'sh', '-c', probe]));
+    if (reading === null) throw new Error(`could not read the rule layer of ${imageId}`);
+    return reading;
 }
 
 export interface Exec {
@@ -69,7 +99,7 @@ export function parse_cli_version(out: string): string | null {
  * Build both images and return the record. Every external call goes through
  * `exec`, so the sequence is testable without Docker.
  */
-export function build_images(opts: { exec?: Exec; cli_version?: string; now?: () => Date } = {}): ImagesFile {
+export function build_images(opts: { exec?: Exec; cli_version?: string; now?: () => Date; with_full_layer?: boolean } = {}): ImagesFile {
     const exec = opts.exec ?? realExec;
     const cliVersion = opts.cli_version ?? DEFAULT_CLI_VERSION;
     const tree_sha = must(exec, 'git', ['rev-parse', 'HEAD'], { cwd: REPO_ROOT });
@@ -96,10 +126,30 @@ export function build_images(opts: { exec?: Exec; cli_version?: string; now?: ()
             '-f', path.join(ctx, 'Dockerfile.ac'), ctx,
         ]);
         const acId = must(exec, 'docker', ['image', 'inspect', '--format', '{{.Id}}', 'bench-ac']);
+        let acFullId: string | null = null;
+        if (opts.with_full_layer === true) {
+            must(exec, 'docker', [
+                'build', '-q', '-t', 'bench-ac-full',
+                '--build-arg', 'BASE_IMAGE=bench-base',
+                '--build-arg', 'INIT_EXTRA=--full',
+                '-f', path.join(ctx, 'Dockerfile.ac'), ctx,
+            ]);
+            acFullId = must(exec, 'docker', ['image', 'inspect', '--format', '{{.Id}}', 'bench-ac-full']);
+        }
 
         const seen = parse_cli_version(must(exec, 'docker', ['run', '--rm', baseId, 'claude', '--version']));
         if (seen !== cliVersion) {
             throw new Error(`bench-base runs CLI ${String(seen)}, expected ${cliVersion}`);
+        }
+        let layer: ImagesFile['layer'];
+        if (acFullId !== null) {
+            // The comparison is only about the layer form, so prove both forms
+            // are what the arm names claim before any sweep can read them.
+            const reduced = read_layer(exec, acId);
+            const full = read_layer(exec, acFullId);
+            if (reduced.thinned === 0) throw new Error('bench-ac carries no reduced rule layer — the default install did not thin');
+            if (full.thinned !== 0) throw new Error(`bench-ac-full carries ${String(full.thinned)} thinned rule(s) — init --full did not pin the full layer`);
+            layer = { ac: reduced, ac_full: full };
         }
         return {
             schema: 1,
@@ -110,6 +160,8 @@ export function build_images(opts: { exec?: Exec; cli_version?: string; now?: ()
             cli_version: cliVersion,
             base: { tag: 'bench-base', id: baseId },
             ac: { tag: 'bench-ac', id: acId },
+            ...(acFullId !== null ? { ac_full: { tag: 'bench-ac-full', id: acFullId } } : {}),
+            ...(layer !== undefined ? { layer } : {}),
         };
     } finally {
         fs.rmSync(ctx, { recursive: true, force: true });
@@ -131,6 +183,9 @@ export function read_images(file: string = DEFAULT_IMAGES_FILE): ImagesFile {
             throw new Error(`${file}: ${k}.id is not an image id`);
         }
     }
+    if (raw.ac_full !== undefined && (typeof raw.ac_full.id !== 'string' || !raw.ac_full.id.startsWith('sha256:'))) {
+        throw new Error(`${file}: ac_full.id is not an image id`);
+    }
     return raw as ImagesFile;
 }
 
@@ -141,12 +196,13 @@ export function read_images(file: string = DEFAULT_IMAGES_FILE): ImagesFile {
  */
 export function container_context(opts: { selftest: boolean; images_file?: string; account?: string | null }): { ctx: ContainerCtx; images: ImagesFile | null } {
     if (opts.selftest) {
-        return { ctx: { base_image: 'selftest', ac_image: 'selftest', token: '', package_skills: new Set() }, images: null };
+        return { ctx: { base_image: 'selftest', ac_image: 'selftest', ac_full_image: 'selftest', token: '', package_skills: new Set() }, images: null };
     }
     const images = read_images(opts.images_file);
     const ctx: ContainerCtx = {
         base_image: images.base.id,
         ac_image: images.ac.id,
+        ...(images.ac_full !== undefined ? { ac_full_image: images.ac_full.id } : {}),
         token: '',
         package_skills: package_skill_names(path.join(REPO_ROOT, 'src', 'skills')),
         pool: read_token_pool(),
@@ -160,18 +216,23 @@ export function container_context(opts: { selftest: boolean; images_file?: strin
 export function main(argv: readonly string[] = process.argv.slice(2), exec?: Exec): number {
     let out = DEFAULT_IMAGES_FILE;
     let cli: string | undefined;
+    let withFull = false;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--out') out = argv[++i] ?? out;
         else if (a === '--cli-version') cli = argv[++i];
+        else if (a === '--with-full-layer') withFull = true;
         else {
             process.stderr.write(`bench_ab_images: unknown argument ${a}\n`);
             return 2;
         }
     }
-    const rec = build_images({ ...(exec ? { exec } : {}), ...(cli ? { cli_version: cli } : {}) });
+    const rec = build_images({ ...(exec ? { exec } : {}), ...(cli ? { cli_version: cli } : {}), with_full_layer: withFull });
     fs.writeFileSync(out, `${JSON.stringify(rec, null, 2)}\n`, 'utf-8');
     process.stdout.write(`bench_ab_images: base ${rec.base.id.slice(0, 19)} · ac ${rec.ac.id.slice(0, 19)} · CLI ${rec.cli_version} · package ${rec.package_version} @ ${rec.tree_sha.slice(0, 10)}${rec.tree_dirty ? '+dirty' : ''} → ${out}\n`);
+    if (rec.layer?.ac_full !== undefined) {
+        process.stdout.write(`bench_ab_images: rule layer reduced ${String(rec.layer.ac.thinned)}/${String(rec.layer.ac.rule_files)} thinned, ${String(rec.layer.ac.bytes)} B · full ${String(rec.layer.ac_full.thinned)}/${String(rec.layer.ac_full.rule_files)} thinned, ${String(rec.layer.ac_full.bytes)} B\n`);
+    }
     return 0;
 }
 

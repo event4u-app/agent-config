@@ -1071,6 +1071,11 @@ export function main(argv: string[] | null = null): number {
 
     const budget = new SweepBudget(args.max_usd, tier_rates);
     const brake = quota_brake(3);
+    const layerArm = arms.find((a) => (ARMS[a] as ArmSpec).ac_layer !== undefined);
+    if (layerArm !== undefined && args.isolation !== 'container') {
+        process.stderr.write(`arm ${layerArm}: a rule-layer arm runs only with --isolation container\n`);
+        return 1;
+    }
     const ctr = args.isolation === 'container' ? container_context({ selftest, account: args.account }) : null;
 
     const { records, aborted } = collect_records(

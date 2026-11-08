@@ -4,11 +4,13 @@ ARG BASE_IMAGE=bench-base
 FROM ${BASE_IMAGE}
 
 ARG PACKAGE_TARBALL=agent-config.tgz
+# `--full` pins the full rule layer (the user brake, src/install/userPin.ts); empty = the default form.
+ARG INIT_EXTRA=""
 COPY --chown=node:node ${PACKAGE_TARBALL} /tmp/agent-config.tgz
 
 USER node
 RUN cd /tmp \
- && npx -y --package=/tmp/agent-config.tgz agent-config init --yes --no-ui --offline --tools=claude-code \
+ && npx -y --package=/tmp/agent-config.tgz agent-config init --yes --no-ui --offline --tools=claude-code ${INIT_EXTRA} \
  && rm /tmp/agent-config.tgz
 
 USER root
