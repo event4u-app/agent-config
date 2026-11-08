@@ -180,8 +180,12 @@ function switchTurn(
     try {
         if (linkResting(session, deps.stateEnv, deps.now)) return;
         const rec = readSwitchRecord(session, deps.stateEnv, deps.now);
-        // An expired record waits for the Stop path's last look; nothing is raised over it.
-        if (rec === null && fs.existsSync(switchRecordPath(session, deps.stateEnv))) return;
+        // An expired record waits for the Stop path, which retires it once nothing is
+        // owed; nothing is raised over it, and one left eight days is pruned here.
+        if (rec === null && fs.existsSync(switchRecordPath(session, deps.stateEnv))) {
+            pruneSwitchState(deps.stateEnv, deps.now);
+            return;
+        }
         if (rec !== null) {
             const req = showSwitch(rec.id, link, tally);
             if (req === null) return;

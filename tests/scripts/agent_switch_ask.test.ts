@@ -821,4 +821,45 @@ describe('7.x council round 1 findings', () => {
         noticeReply(deps({ now: later }));
         expect(calls('request')).toHaveLength(1);
     });
+
+    function expiredApproved(): number {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        return (readSwitchRecord(sess(), stateEnv, NOW)?.expires_at ?? 0) + 1;
+    }
+
+    it('an expired record whose last write fails keeps the obligation for the next Stop', () => {
+        const later = expiredApproved();
+        expect(checkpointBeforeMove(sess(), () => false, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(true);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later)).toBe(true);
+        expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(false);
+    });
+
+    it('an expired record whose lookup gets no answer is kept', () => {
+        const later = expiredApproved();
+        fs.rmSync(switchFile);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(true);
+    });
+
+    it('an expired record is kept while the link rests', () => {
+        const later = expiredApproved();
+        fs.rmSync(switchFile);
+        [1, 2, 3].forEach(() => checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later));
+        expect(linkResting(sess(), stateEnv, later)).toBe(true);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(true);
+    });
+
+    it('a session blocked by an expired record it cannot finish prunes it after eight days', () => {
+        const later = expiredApproved();
+        const file = switchRecordPath(sess(), stateEnv);
+        const old = new Date(later - 9 * 24 * 3600_000);
+        fs.utimesSync(file, old, old);
+        noticeReply(deps({ now: later }));
+        expect(fs.existsSync(file)).toBe(false);
+    });
 });

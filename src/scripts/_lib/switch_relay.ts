@@ -528,17 +528,23 @@ export function checkpointBeforeMove(
     const rec = readRecordFile(sessionHash, stateEnv);
     if (rec === null) return false;
     const expired = now >= rec.expires_at;
+    // An expired record is forgotten only once nothing is owed: its checkpoint
+    // was written, or the request reached a state that owes none. A failed write,
+    // a lookup with no answer, or a resting link keeps it for a later Stop; the
+    // eight-day prune bounds how long.
     const forget = (): void => {
         if (expired) updateSwitchRecord(sessionHash, (cur) => (cur?.id === rec.id ? null : cur), stateEnv);
     };
-    if (rec.checkpointed || linkResting(sessionHash, stateEnv, now)) {
+    if (rec.checkpointed) {
         forget();
         return false;
     }
+    if (linkResting(sessionHash, stateEnv, now)) return false;
     const tally = newTally();
     const state = stateOf(rec.id, opts, tally);
     noteCalls(sessionHash, tally, null, stateEnv, now);
-    if (state === null || !CHECKPOINT_STATES.has(state)) {
+    if (state === null) return false;
+    if (!CHECKPOINT_STATES.has(state)) {
         forget();
         return false;
     }
@@ -556,9 +562,8 @@ export function checkpointBeforeMove(
         sessionHash,
         (cur) => {
             if (cur?.id !== rec.id) return cur;
-            // An expired record gets this one last Stop and is then forgotten.
-            if (expired) return null;
             if (!written) return cur;
+            if (expired) return null;
             // The outcome was already shown, so nothing is left to tell or to write.
             return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true };
         },
