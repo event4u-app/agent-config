@@ -1,5 +1,6 @@
 /**
- * Identifies the shell acts (`git commit`, …) an agent's Bash command can reach.
+ * Identifies the shell acts (`git commit`, …) an agent's Bash command names: a
+ * syntactic candidate per simple command, not a claim that the command reaches it.
  * Correctness is measured against bash on the grammar of
  * `tests/scripts/shell_acts_bash_fuzz.test.ts`; beyond it the result is best effort.
  *
@@ -31,8 +32,9 @@
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
  * `git -C <dir>` / `git -c k=v` are skipped, quoted values included.
  *
- * A match is a potential act: the command reaches it on some branch, which does not
- * mean that branch runs or the act succeeds.
+ * A match is a candidate act: some simple command names it. Control flow is not
+ * evaluated, so a branch that never runs still counts, and so does a command after
+ * `exec git push;`, which ends the shell.
  * Not recognised, by design: commands built at runtime (`eval`, `$CMD`), aliases
  * and shell functions, wrappers that run git themselves, and `bash -c "…"`. A
  * recognised act is a fact about the command; an unrecognised one is no evidence
@@ -293,7 +295,7 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
     // After `exec`, `nohup`, `sudo` or time(1) the next word is looked up as an
     // external program, and there is no `exec` program: `exec exec git push` runs
     // nothing. `command` and `time` exist as programs on POSIX systems and are
-    // taken to (the larger set of potential acts).
+    // taken to (the larger set of candidate acts).
     let external = false;
     while (k < words.length) {
         const w = words[k] as Word;
@@ -337,6 +339,8 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
 /** True when some simple command in `command` begins with the words of `act`. */
 export function commandRunsAct(command: string, act: string): boolean {
     const want = act.split(' ');
+    // Each simple command is judged on its own; nothing evaluates control flow, so
+    // `exec git push; git commit` names both acts although exec ends the shell.
     return lexCommands(command).some((simple) => {
         const w = normalise(simple);
         return want.every((x, i) => w[i] === x);

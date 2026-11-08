@@ -54,6 +54,19 @@ describe('commandRunsAct', () => {
     });
 });
 
+describe('candidates are syntactic, judged per simple command', () => {
+    // Bash never runs the commit (exec replaces the shell); the recogniser names it,
+    // because it does not evaluate control flow. Pinned here rather than in the bash
+    // oracle, which compares against what bash runs.
+    it('names an act after exec, which ends the shell', () => {
+        expect(commandRunsAct('exec git push; git commit -m x', 'git commit')).toBe(true);
+        expect(commandRunsAct('exec git push; git commit -m x', 'git push')).toBe(true);
+    });
+    it('names an act on a branch that never runs', () => {
+        expect(commandRunsAct('false && git push', 'git push')).toBe(true);
+    });
+});
+
 describe('the bundle pre-check never rejects a command the lexer would match', () => {
     it.each([
         'git com\\mit -m x',

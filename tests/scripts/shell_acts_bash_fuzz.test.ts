@@ -6,7 +6,7 @@
  * forms someone thought of; this checks their combinations.
  *
  * `exec` is not generated: it ends the shell, so the commands after it are
- * potential acts bash never reaches. Commands bash rejects as syntax errors are
+ * candidate acts bash never reaches. Commands bash rejects as syntax errors are
  * skipped and counted. `SHELL_ACTS_FUZZ_N` raises the count for a local sweep,
  * `SHELL_ACTS_FUZZ_SEED` moves its first seed.
  */

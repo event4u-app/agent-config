@@ -60,7 +60,7 @@ const STUBS = [
 /**
  * Acts bash invokes, as the union of eight runs: `true`, `cond` and the act stubs
  * (`git`, `gh`) each succeeding and failing, so a branch behind a failed act
- * (`git push || git commit`) is reached as well. The recogniser reports a potential act, so both `&&` and `||` branches
+ * (`git push || git commit`) is reached as well. The recogniser reports candidate acts, so both `&&` and `||` branches
  * have to be reachable for bash to be its oracle.
  */
 export function bashActs(command: string): string[] {
