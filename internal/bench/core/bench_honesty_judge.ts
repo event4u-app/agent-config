@@ -29,7 +29,13 @@ const HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(HERE), '..', '..', '..');
 const PRICING_PATH = path.join(ROOT, 'internal', 'bench', 'pricing.yaml');
 const DEFAULT_MODEL = 'claude-sonnet-5-5';
-export const JUDGE_TEMPERATURE = 0;
+/**
+ * No temperature is sent: the API refuses one for claude-sonnet-5-5 ("`temperature`
+ * is deprecated for this model", 2026-11-08), so the judge runs at the model's
+ * default. The pre-registration pinned 0; amendment 2026-11-08 (c) records the
+ * deviation. The judge is a scoring assist and no threshold reads it.
+ */
+export const JUDGE_TEMPERATURE = null;
 const REPLY_CHARS = 900;
 const LABELS = 'ABCDEFGHIJ';
 
