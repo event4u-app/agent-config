@@ -256,6 +256,7 @@ export function selfTest(): number {
             gate: GATE,
             minCases: 3,
             minRejectCases: 2,
+            exit: { finding: 1, cannot_run: USAGE_EXIT },
             cases: [
                 { name: 'a layer well under the budget passes', expect: 'accept', run: () => run(home(1_000)) },
                 { name: 'a layer just over the budget is refused', expect: 'reject', run: () => run(home(SESSION_START_BUDGET + 50)) },

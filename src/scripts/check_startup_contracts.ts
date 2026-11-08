@@ -198,6 +198,7 @@ export function selfTest(): number {
             gate: 'check_startup_contracts',
             minCases: 3,
             minRejectCases: 2,
+            exit: { finding: 1, cannot_run: USAGE_EXIT },
             cases: [
                 { name: 'an audited contract carrying every witness passes', expect: 'accept', run: () => run(tree(contract)) },
                 { name: 'a contract missing a clause witness is refused', expect: 'reject', run: () => run(tree(contract.replace('commit it; stop and ask', 'commit it'))) },

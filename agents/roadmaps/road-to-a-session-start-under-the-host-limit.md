@@ -5,7 +5,7 @@ tree_pin: fe05d121c7
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner choice of 2026-10-28 after the host's instruction-limit notice persisted past 19.0.0: the measured thinned form of the user layer is 180,903 chars, so no existing roadmap's done state removes the notice, and the owner rejected any opt-in path. Added straight into later/ because five roadmaps are active (owner WIP limit); it takes no active slot until pulled."
-estate_growth_exempt: "Pulled from later/ on 2026-11-07: the owner chose this file as next in line on 2026-10-28 and raised the active-roadmap cap to 25 on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md), so a slot is free; round inbox-2026-11-za asked for it to be active."
+estate_growth_exempt: "Pulled from later/ on 2026-11-07: the owner chose this file as next in line on 2026-10-28 and raised the active-roadmap cap to 25 on 2026-11-07 (agents/evidence/owner-directives/2026-11-07-wip-cap-25.md), so a slot is free; round inbox-2026-11-za asked for it to be active. On 2026-11-08 Phases 1–3 landed and one blocker was added, `released-upgrade-observation`: steps 4.1, 4.2 and AC-3 can only be observed on a published release, which is an owner act, so the blocker is real external state rather than deferred work."
 relates:
   - slug: road-to-an-installed-layer-that-is-thinned
     relation: extends
