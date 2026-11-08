@@ -78,6 +78,10 @@ import {
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { CONTEXT_NOTICE_PCT, sessionContextFill } from '../_lib/pressure.js';
 import { hashSessionId, readQuotaLedger } from '../_lib/quota_ledger.js';
+import { switchRecordPath } from '../_lib/switch_record_path.js';
+import type { checkpointBeforeMove } from '../_lib/switch_relay.js';
+import type { EnvMap } from '../_lib/user_global_paths.js';
+import { loadLazyExport } from './lazy_concern.js';
 import { current_branch } from '../_lib/git_common_dir.js';
 import { derive_session_tag } from '../_lib/session_tag.js';
 import { localDay, pruneStaleMarkers, pruneStalePointers, writeSessionPointer } from '../retro_queue.js';
@@ -163,6 +167,49 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
         str(payload['session_id'] as JsonValue | undefined) ||
         str(envelope['session_id'] as JsonValue | undefined)
     ).trim();
+}
+
+/**
+ * The link half of the checkpoint lives in the `quota_notice` chunk, not in this
+ * bundle; it is loaded only for a session that has a switch record at all.
+ */
+export function loadMoveCheckpoint(): typeof checkpointBeforeMove | null {
+    return loadLazyExport<typeof checkpointBeforeMove>('src/scripts/quota_notice_hook.ts', 'checkpointBeforeMove');
+}
+
+export function moveCheckpoint(
+    sessionHash: string,
+    write: () => boolean,
+    stateEnv?: EnvMap | null,
+    load: () => typeof checkpointBeforeMove | null = loadMoveCheckpoint,
+): boolean {
+    if (!fs.existsSync(switchRecordPath(sessionHash, stateEnv))) return false;
+    return load()?.(sessionHash, write, stateEnv) ?? false;
+}
+
+/** The derived run checkpoint for a session inside a claimed run; silent outside one, and never throws. */
+/** Whether a checkpoint was written; off, unclaimed or failed all read as `false`. */
+export function leaveRunCheckpoint(workspaceRoot: string, runId: string): boolean {
+    try {
+        if (!run_checkpoints_enabled(workspaceRoot)) return false;
+        const slug = read_claimed_slug(workspaceRoot, runId);
+        if (slug === null) return false;
+        // `road-to-wired-instruments` 2.1. The fingerprint was never
+        // passed here, so `context_fingerprint` was null in every
+        // checkpoint this package has ever written and the resume-time
+        // drift check it exists for could not fire. The value comes from
+        // the newest recorded probe rather than from a fresh one: this is
+        // the Stop path, and the probe costs a `gh` call. Absent stays
+        // absent, which reads as "not known" and never as "unchanged".
+        const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
+        const cp = buildCheckpoint(workspaceRoot, eolSessionKey(runId), slug, {
+            ...(observed !== null ? { contextFingerprint: observed } : {}),
+        });
+        return cp !== null && writeCheckpoint(workspaceRoot, cp) !== null;
+    } catch {
+        // never block the Stop path
+        return false;
+    }
 }
 
 /** Load prior per-session state; any read/shape error reads as "fresh session". */
@@ -391,23 +438,12 @@ export function main(): number {
     // Best-effort throughout. A checkpoint is a recovery aid, and a
     // recovery aid that can fail a Stop is a liability.
     const checkpointRunId = payloadSessionId(payload, envelope);
-    if (crossedThresholdNow && checkpointRunId !== '' && run_checkpoints_enabled(workspaceRoot)) {
+    if (crossedThresholdNow && checkpointRunId !== '') leaveRunCheckpoint(workspaceRoot, checkpointRunId);
+    // Best effort: an approved move may already be running (`how: now`), so a
+    // checkpoint left here can arrive after the target session started.
+    if (checkpointRunId !== '') {
         try {
-            const slug = read_claimed_slug(workspaceRoot, checkpointRunId);
-            if (slug !== null) {
-                // `road-to-wired-instruments` 2.1. The fingerprint was never
-                // passed here, so `context_fingerprint` was null in every
-                // checkpoint this package has ever written and the resume-time
-                // drift check it exists for could not fire. The value comes from
-                // the newest recorded probe rather than from a fresh one: this is
-                // the Stop path, and the probe costs a `gh` call. Absent stays
-                // absent, which reads as "not known" and never as "unchanged".
-                const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
-                const cp = buildCheckpoint(workspaceRoot, eolSessionKey(checkpointRunId), slug, {
-                    ...(observed !== null ? { contextFingerprint: observed } : {}),
-                });
-                if (cp !== null) writeCheckpoint(workspaceRoot, cp);
-            }
+            moveCheckpoint(hashSessionId(checkpointRunId), () => leaveRunCheckpoint(workspaceRoot, checkpointRunId));
         } catch {
             // never block the Stop path
         }

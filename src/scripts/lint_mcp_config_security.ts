@@ -31,6 +31,41 @@ export const CHECK = 'mcp-config-security';
 
 //   Python: re.compile(r"(^|/)(\.mcp\.json|mcp\.json|claude_desktop_config\.json)")
 const _NAME_HINTS = /(^|\/)(\.mcp\.json|mcp\.json|claude_desktop_config\.json)/;
+// Claude Code's settings files: their `permissions.allow` is the other place a
+// tool can be auto-allowed. Read for the switch_decide rule alone, so the MCP
+// smells above keep their scope (road-to-a-link-with-agent-switch 4.2).
+const _CLAUDE_SETTINGS = /(^|[\\/])\.claude[\\/]settings(\.local)?\.json$/;
+
+// `switch_decide` records the user's answer to an agent-switch switch request,
+// so the host must confirm every call (docs/contracts/agent-switch-link.md §
+// switch_decide). An auto-allow list naming it — or the whole agent-switch
+// server, which covers it — takes the user out of the decision. HIGH (fail).
+const _ALLOW_LIST = /"(autoApprove|alwaysAllow|allow)"\s*:\s*\[([^\]]*)\]/g;
+const _DECIDE_ENTRY = /"(switch_decide|mcp__agent-switch(__switch_decide|__\*)?)"/;
+
+export function autoAllowsSwitchDecide(chunk: string): number[] {
+    const offsets: number[] = [];
+    for (const m of chunk.matchAll(_ALLOW_LIST)) {
+        const entry = _DECIDE_ENTRY.exec(m[2] ?? '');
+        if (entry !== null) offsets.push((m.index ?? 0) + m[0].indexOf(entry[0]));
+    }
+    return offsets;
+}
+
+function decideFindings(sf: sl.ScannedFile, start: number, numbered: Array<[number, string]>): sl.Finding[] {
+    const chunk = numbered.map(([, t]) => t).join('\n');
+    return autoAllowsSwitchDecide(chunk).map(
+        (offset) =>
+            new sl.Finding(
+                sf.rel,
+                numbered[chunk.slice(0, offset).split('\n').length - 1]?.[0] ?? start,
+                CHECK,
+                'HIGH',
+                "switch_decide auto-allowed — the agent-switch decision is the user's; the host must confirm every call",
+                sf.weight,
+            ),
+    );
+}
 
 // Real secret VALUES — detected by the one rule table, which owns every
 // credential pattern (road-to-one-detector-and-the-senders-we-own 2.2). The
@@ -131,6 +166,9 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
     const finish = (hits: sl.Finding[]): sl.Finding[] =>
         pragmaForm === 'bound' ? sf.filter_bound_pragma(CHECK, hits) : hits;
     const out: sl.Finding[] = [];
+    if (_CLAUDE_SETTINGS.test(sf.path)) {
+        return finish(decideFindings(sf, 1, sf.lines.map((t, i) => [i + 1, t] as [number, string])));
+    }
     for (const [start, numbered] of _candidate_chunks(sf)) {
         for (const [lineno, text] of numbered) {
             if (hasInlineSecret(text)) {
@@ -161,6 +199,7 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
             }
         }
         const chunk = numbered.map(([, t]) => t).join('\n');
+        out.push(...decideFindings(sf, start, numbered));
         if (_NPX.test(chunk) && _NPX_YES.test(chunk)) {
             out.push(
                 new sl.Finding(

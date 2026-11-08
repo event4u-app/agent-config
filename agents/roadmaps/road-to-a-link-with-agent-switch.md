@@ -107,22 +107,37 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Phase 4 — Inform and ask
 
-- [ ] **4.1 Raise.** At `hot`, `quota-notice` calls `switch_request` for the
+- [x] **4.1 Raise.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> At `hot`, `quota-notice` calls `switch_request` for the
       session's account and names the request in the notice: targets, and that
       the user can answer here or in agent-switch.
       verify: hook tests: hot + link → one request, one notice; no link → today's notice.
-- [ ] **4.2 Decide in-session.** The notice tells the agent the request id; on
+      `tests/scripts/agent_switch_ask.test.ts` § 4.1. The hook is synchronous,
+      so it reaches the link over the CLI verbs (`switch request --session
+      provider/name/<id> --by ac`), never the MCP client; the raise is claimed
+      once per `(account, window, resets_at)` on the machine, so AC adds no
+      noise of its own even where agent-switch's own dedup misses.
+- [x] **4.2 Decide in-session.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_mcp_config_security.ts --> The notice tells the agent the request id; on
       the user's answer the agent calls `switch_decide`, which the host
       confirms with the user (never auto-allowed; checked by
       `lint_mcp_config_security`).
       verify: lint test rejecting an auto-allow entry for `switch_decide`.
-- [ ] **4.3 Relay a decision from agent-switch.** On the next prompt, a request
+      `tests/scripts/lint_mcp_config_security.test.ts` § switch_decide is never
+      auto-allowed (by name, `__*`, or the whole server, in `.mcp.json` and
+      `.claude/settings*.json`); the model's half of the notice is
+      `additional_context`, pinned in `tests/scripts/agent_switch_ask.test.ts` § 4.2.
+- [x] **4.3 Relay a decision from agent-switch.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> On the next prompt, a request
       decided in agent-switch is reported once ("moving after this turn to …"),
       and its outcome once when `done|failed`.
       verify: hook tests over fixture request states.
-- [ ] **4.4 Hand the work over.** Before an approved move, write the run
+      `tests/scripts/agent_switch_ask.test.ts` § 4.3; a decision made here
+      (`by: ac:…`) is not echoed back, a terminal request is forgotten.
+- [x] **4.4 Hand the work over.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/session_eol_hook.ts --> Before an approved move, write the run
       checkpoint / handoff brief so the target session resumes the step.
       verify: test that an approved request triggers one checkpoint write.
+      `tests/scripts/agent_switch_ask.test.ts` § 4.4. Written by the
+      `session-eol` Stop hook, not by `quota-notice`: an approval given in the
+      session is followed by a move after the turn, so no later prompt would
+      come, while this turn's Stop always runs first.
 
 ## Phase 5 — Load distribution
 
@@ -167,6 +182,41 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       the session, so the user never sees the suggestion twice; agent-switch
       detects the wiring, so AC adds nothing for that.
       verify: relay test with a pace request decided in agent-switch.
+
+## Phase 7 — Hardening the switch question
+
+Carried from ratification rounds 1–5 of the Phase 4 budget raise
+(`agents/evidence/council/agent-switch-ask-ratification-r{1..5}-*.question.md`,
+all `refused`; merged on the owner's word, 2026-11-08). Each item is a
+finding both seats or one seat repeated that the merged change does not close.
+
+- [ ] **7.1 Back off a failing link.** Consecutive failed `switch show` /
+      `switch request` calls (each bounded at 5 s) stop the link for this
+      session until the next reset, and say so once.
+      verify: test with a fake agent-switch that exits non-zero three times.
+- [ ] **7.2 Measure the cost.** Measure whole-hook latency of `quota-notice`
+      and `session-eol` with the link answering, failing and absent; record
+      the figures and a rollback criterion next to the budget entry.
+      verify: committed measurement record.
+- [ ] **7.3 Terminal versus checkpoint.** A request that turns terminal on a
+      prompt before the Stop path checkpointed it no longer drops the record
+      the Stop path needs; decide whether a checkpoint after a finished move
+      is still useful and test the race.
+      verify: test approved → done between prompt and Stop.
+- [ ] **7.4 Consent at execution.** Show, per supported host, that a
+      `switch_decide` call reaches the user's confirmation, or record where it
+      does not.
+      verify: evidence record per host.
+- [ ] **7.5 Record lifetime and interleaving.** The per-session record
+      expires (e.g. after the request's `expiresAt` or seven days) so an
+      orphaned one stops polling, and a prompt relay and a Stop checkpoint
+      updating it at once cannot undo each other's flag or revive a deleted
+      record.
+      verify: tests for expiry and for interleaved relay / Stop writes.
+- [ ] **7.6 Default.** With 7.1–7.5 in hand, decide whether the question stays
+      on by default or becomes opt-in (`AGENT_CONFIG_NO_SWITCH_QUESTION=1` is
+      the off switch today).
+      verify: owner decision recorded under Decisions.
 
 ## Decisions
 

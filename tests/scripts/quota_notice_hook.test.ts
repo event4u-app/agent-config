@@ -58,8 +58,10 @@ describe('window notices', () => {
     it('each session reads the plan of the account its own snapshots name', () => {
         feed([70, 76, 82], { account: 'claude/a' }, 'sess-a');
         appendQuotaSnapshot({ ts: NOW, session: hashSessionId('sess-b'), five_hour: { pct: 10, resets_at: RESET }, account: 'claude/b' }, stateEnv);
-        expect(noticeLines(deps({ sessionId: 'sess-b' }))).toEqual([]);
-        expect(noticeLines(deps({ sessionId: 'sess-a' }))[0]).toMatch(/^AC: 5h window 82 %/);
+        // No agent-switch on PATH: the hot window must not reach a real binary.
+        const link = { env: { PATH: home } };
+        expect(noticeLines(deps({ sessionId: 'sess-b', link }))).toEqual([]);
+        expect(noticeLines(deps({ sessionId: 'sess-a', link }))[0]).toMatch(/^AC: 5h window 82 %/);
     });
 
     it('ok and unknown windows say nothing', () => {
