@@ -73,6 +73,7 @@ export const ON_DEMAND_TREES: readonly OnDemandTree[] = [
     { dir: 'presets', why: 'installer input, not session content' },
     { dir: 'profiles', why: 'installer input, not session content' },
     { dir: 'scripts', why: 'executable support code; never rendered into a prompt' },
+    { dir: 'startup-contracts', why: 'installer input: the thin pass copies each contract into the stub it writes, and the stub is measured in the installed layer by check_session_start_budget; no host loads this tree' },
     { dir: 'templates', why: 'scaffolding copied on demand by authoring flows' },
     { dir: 'user-types', why: 'installer input, not session content' },
 ];
