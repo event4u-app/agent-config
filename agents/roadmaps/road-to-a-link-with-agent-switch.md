@@ -155,8 +155,8 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
 
 ## Phase 6 — Hardening the switch question
 
-Carried from ratification rounds 1–4 of the Phase 4 budget raise
-(`agents/evidence/council/agent-switch-ask-ratification-r{1..4}-*.question.md`,
+Carried from ratification rounds 1–5 of the Phase 4 budget raise
+(`agents/evidence/council/agent-switch-ask-ratification-r{1..5}-*.question.md`,
 all `refused`; merged on the owner's word, 2026-11-08). Each item is a
 finding both seats or one seat repeated that the merged change does not close.
 
@@ -177,7 +177,13 @@ finding both seats or one seat repeated that the merged change does not close.
       `switch_decide` call reaches the user's confirmation, or record where it
       does not.
       verify: evidence record per host.
-- [ ] **6.5 Default.** With 6.1–6.4 in hand, decide whether the question stays
+- [ ] **6.5 Record lifetime and interleaving.** The per-session record
+      expires (e.g. after the request's `expiresAt` or seven days) so an
+      orphaned one stops polling, and a prompt relay and a Stop checkpoint
+      updating it at once cannot undo each other's flag or revive a deleted
+      record.
+      verify: tests for expiry and for interleaved relay / Stop writes.
+- [ ] **6.6 Default.** With 6.1–6.5 in hand, decide whether the question stays
       on by default or becomes opt-in (`AGENT_CONFIG_NO_SWITCH_QUESTION=1` is
       the off switch today).
       verify: owner decision recorded under Decisions.
