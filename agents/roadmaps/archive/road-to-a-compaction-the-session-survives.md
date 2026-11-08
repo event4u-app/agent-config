@@ -46,31 +46,31 @@ compact (the compact-instructions template) is reachable from the docs.
 
 ## Phase 1 — Identity and presence from host records
 
-- [x] **1.1** `src/scripts/compaction_census.ts`: aggregate-only census of host
+- [x] **1.1** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/compaction_census.ts --> `src/scripts/compaction_census.ts`: aggregate-only census of host
       transcripts — compaction triggers, session id across the boundary, token
       medians, host version range, and presence of deterministic probes in the
       host-written summary. No path, id or text in the output; roots
       deduplicated by real path.
-      `verify: npx vitest run tests/scripts/compaction_census.test.ts`
-- [x] **1.2** Tests seen red: the identity comparison inverted fails the suite,
+      verify: `npx vitest run tests/scripts/compaction_census.test.ts` -> 0
+- [x] **1.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/compaction_census.ts --> Tests seen red: the identity comparison inverted fails the suite,
       restored it passes (6 cases: kept/changed id, no summary → unobserved,
       per-probe presence, trigger/median/version, malformed lines, no leak of
       id or text).
-- [x] **1.3** Run on the maintainer corpus and record the reading:
+- [x] **1.3** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run on the maintainer corpus and record the reading:
       `agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`
       — 274 automatic compactions, id kept 274/274, presence baseline per probe,
       labelled a lower bound on presence only.
-      `verify: test -f agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`
-- [x] **1.4** Record on `stubs/road-to-compaction-survival-census` that the
+      verify: `test -f agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md` -> 0
+- [x] **1.4** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Record on `stubs/road-to-compaction-survival-census` that the
       presence half of cf01 has a baseline from automatic compactions, and that
       what remains is the adherence half plus a manual-compaction observation.
 
 ## Phase 2 — The template users who compact can find
 
-- [x] **2.1** Link `src/templates/compact-instructions.md` from
+- [x] **2.1** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Link `src/templates/compact-instructions.md` from
       `docs/contracts/continuity-record-slot.md`, where `/clear` and recycling are
       described, as the path for a session that compacts instead.
-      `verify: grep -q compact-instructions docs/contracts/continuity-record-slot.md`
+      verify: `grep -q compact-instructions docs/contracts/continuity-record-slot.md` -> 0
 
 ## Decisions
 

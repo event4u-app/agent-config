@@ -52,47 +52,44 @@ of re-reading or guessing.
       signal sufficient for `session_start(compact)` to inject task state?
       Attach `agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`.
       <!-- blocked-by: council-compact-checkpoint-lineage -->
-      verify: `test -f agents/evidence/council/compact-checkpoint-lineage.md`
+      verify: `test -f agents/evidence/council/compact-checkpoint-lineage.md` -> 0
 - [ ] **1.2** On a yes: `pre_compact` writes the checkpoint with the field
       discipline of `continuity_writer.ts` (no judgement fields);
       `session_start(compact)` injects it only when both keys match, inside the
       8,000-char restore budget, ordered by the injection budget.
-      verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts`
+      verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
 - [ ] **1.3** Tests: own checkpoint restores; foreign, missing and mismatched
       checkpoints inject nothing.
-      verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts`
-
+      verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
 ## Phase 2 — Session pins the user set, restored verbatim
 
 - [ ] **2.1** Capture only from `user_prompt_submit` text carrying an explicit
       line-start marker (`pin:`), never from tool output or file content, so
       injected content can neither create nor remove a pin. No model decides
       what is a pin.
-      verify: `npx vitest run tests/scripts/session_pins.test.ts`
+      verify: `npx vitest run tests/scripts/session_pins.test.ts` -> 0
 - [ ] **2.2** Restore through the existing `language-mirror` marker pattern
       (arm at `pre_compact`, one re-emit after) — no second mechanism; pass pins
       to subagents through `subagent-constraints`.
-      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts tests/scripts/session_pins.test.ts`
+      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts tests/scripts/session_pins.test.ts` -> 0
 - [ ] **2.3** Cap 12 pins × 300 chars; overflow tells the user, never truncates
       silently.
-      verify: `npx vitest run tests/scripts/session_pins.test.ts`
+      verify: `npx vitest run tests/scripts/session_pins.test.ts` -> 0
 - [ ] **2.4** Add a pin probe to `compaction_census` and re-run it on sessions
       that used pins; pre-registered target: pin text present in ≥ 95 % of
       summaries-plus-restore.
-      verify: `test -f agents/evidence/analysis/session-pin-presence.md`
-
+      verify: `test -f agents/evidence/analysis/session-pin-presence.md` -> 0
 ## Phase 3 — Recall from the session's own transcript
 
 - [ ] **3.1** Read-only keyword recall over the session's own JSONL only, output
       capped (2,000 tokens per call, 3 calls per turn), redacted through the
       existing redact path, on an existing verb (ADR-041; candidate
       `export --recall`). <!-- blocked-by: recall-verb-placement -->
-      verify: `npx vitest run tests/scripts/transcript_recall.test.ts`
+      verify: `npx vitest run tests/scripts/transcript_recall.test.ts` -> 0
 - [ ] **3.2** Pre-registered paired comparison over ≥ 15 compactions: re-read
       rate of already-read paths in the 10 turns after a compaction, before vs
       after. No gain keeps the default off and publishes the null.
-      verify: `test -f agents/evidence/analysis/transcript-recall-paired.md`
-
+      verify: `test -f agents/evidence/analysis/transcript-recall-paired.md` -> 0
 ## Phase 4 — Governance imports, each small
 
 - [ ] **4.1** Widen `check_kill_switch_table` from `src/scripts/hooks` +
@@ -101,23 +98,22 @@ of re-reading or guessing.
       condition mandatory for gate bypasses. Today about 25 such names appear in
       no doc, among them `AGENT_CONFIG_SKIP_SURFACE_TIER_CHECK` and
       `AGENT_CONFIG_ORCHESTRATION_HALT`.
-      verify: `./scripts-run src/scripts/check_kill_switch_table`
+      verify: `./scripts-run src/scripts/check_kill_switch_table` -> 0
 - [ ] **4.2** `fast-check` as a devDependency (supply-chain intake first) for
       four pure decision cores: `classify_update` (uncertainty never `auto`),
       `classify_merge_risk` (more touched surface never lowers risk),
       `prefix_stable_surfaces` (append stability), `injection_budget` (one
       nudge). Shrunk counterexamples become fixed regression cases.
-      verify: `npx vitest run tests/scripts/property_decision_cores.test.ts`
+      verify: `npx vitest run tests/scripts/property_decision_cores.test.ts` -> 0
 - [ ] **4.3** A `known_bad` range with a rollback target in the update notice,
       reported in every mode except `off`, never auto-installed.
       <!-- blocked-by: known-bad-publication-authority -->
-      verify: `npx vitest run tests/scripts/update_notice.test.ts`
+      verify: `npx vitest run tests/scripts/update_notice.test.ts` -> 0
 - [ ] **4.4** `host_lowering.json` `claude.pre_compact.block_exit` re-checked
       against the current host docs through the digest gate; truth only, never
       used to block a compaction (a blocked recovery compaction fails the
       request).
-      verify: `./scripts-run src/scripts/check_host_docs_digest`
-
+      verify: `./scripts-run src/scripts/check_host_docs_digest` -> 0
 ## Blockers
 
 ### blocker: council-compact-checkpoint-lineage
