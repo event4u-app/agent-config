@@ -1,14 +1,14 @@
 ---
 proposed_by: the repository owner, in session on 2026-11-08 ("hol die roadmap aus later und starte phase 1", then "commit, PR und merge wenn grün")
 implemented_by: claude-opus-5.5 session on feat/compact-checkpoint-phase-1
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), rounds 1-15 of 2026-11-08
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), rounds 1-17 of 2026-11-08
 providers: [anthropic, openai]
 verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
 effective_after: merge
-subject: 59020ae84e32ac864339f0251510d06414ec6ae4b71b77a5adfbf86871989726
+subject: 3650afc967a8a6fcbb15c1ce8dc9da2b77c57b8a871a643629a7882d50ded64c
 ---
 
 <!-- evidence-type: ratification -->
@@ -20,7 +20,7 @@ subject: 59020ae84e32ac864339f0251510d06414ec6ae4b71b77a5adfbf86871989726
 `src/config/hook-bundle-budget.json`. The `subject:` digest above covers them,
 computed with
 `./scripts-run src/scripts/ratification_subject --files <the branch's changed files>`
-at commit `22adcaee0d`. Named for the branch, because the pre-push gate reads
+at commit `71b07de651`, after merging `main` (#2926 had added its own rows to the budget file). Named for the branch, because the pre-push gate reads
 this file before the pull request exists.
 
 ## What was ratified
@@ -42,9 +42,9 @@ model's context, a denial, a rewrite, or a weakened gate.
 
 ## How the verdict was reached
 
-Fifteen rounds, prompts committed verbatim under `agents/evidence/council/`
+Seventeen rounds, prompts committed verbatim under `agents/evidence/council/`
 (`compact-checkpoint-concern-20261108.question.md` for round 1,
-`.roundN.question.md` for rounds 2-15). Every round before 15 ended in
+`.roundN.question.md` for rounds 2-17). Every round before 15 ended in
 `request_changes` or `refused` on a concrete defect, each fixed with a
 regression test shown red before the fix and green after:
 
@@ -56,6 +56,8 @@ regression test shown red before the fix and green after:
 | 7-12 | retention, sweep work bound, sweep completeness, capacity reserve, cleanup progress claims | 24 h sweep bounded by entries inspected; writes only below 480 while a sweep reads 512; the comment states progress, not a hard ceiling |
 | 13-14 | same-session replacement between read and removal; identical timestamps | removal compares a per-marker random generation; invalid files are removed only if still invalid |
 | 15 | none blocking | — |
+| 16 | the base moved (#2926), so the digest changed; my packet omitted the implementation and one seat rightly would not judge | — |
+| 17 | none blocking, on the merged base with the full implementation | — |
 
 **Round 15, anthropic:** "RATIFIED — This expands authority … and the
 expansion is acceptable within its telemetry-only scope." Blocking defects:
@@ -64,6 +66,13 @@ none.
 **Round 15, openai:** "The filesystem authority expansion is acceptable for
 this telemetry feature … Merge-blocking defects: None established by the
 supplied material. … APPROVE."
+
+**Round 17 (merged base, full implementation), anthropic:** "ratified —
+expands filesystem authority … for telemetry; acceptable". Blocking defects:
+none.
+
+**Round 17, openai:** "No merge-blocking defect is demonstrated in the
+supplied code. … APPROVE."
 
 ## Follow-ups both seats listed as non-blocking
 
