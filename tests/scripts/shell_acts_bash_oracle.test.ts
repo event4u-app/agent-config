@@ -142,6 +142,10 @@ const CASES: Array<[string, string[]]> = [
     ['nohup command exec git push', [P]],
     ['exec command exec git push', [P]],
     ['nohup command command git push', [P]],
+    // Round-13 counterexample: `&>` takes no fd number, so the digit is an argument.
+    ['git 2&>/dev/null push', []],
+    ['git 2&>/dev/null commit -m x', []],
+    ['git 2>/dev/null push', [P]],
     ['git push || git commit -m x', [C, P]],
     ['true && { git push || gh pr create -t t; }', [G, P]],
     ['git push && git commit -m x || gh pr create -t t', [C, G, P]],

@@ -1,5 +1,7 @@
 /**
- * Whether an agent's Bash command runs a given shell act (`git commit`, …).
+ * Identifies the shell acts (`git commit`, …) an agent's Bash command can reach.
+ * Correctness is measured against bash on the grammar of
+ * `tests/scripts/shell_acts_bash_fuzz.test.ts`; beyond it the result is best effort.
  *
  * Agents chain: a prefix match finds 17 % of commits in real transcripts, so the
  * command is lexed into simple commands of words. One pass honours single and
@@ -239,7 +241,9 @@ function lexCommands(command: string): Simple[] {
         // Any other redirection, a here-string `<<<` included: the operator and its
         // operand word are dropped, wherever they stand among the arguments.
         if (ch === '<' || ch === '>' || (ch === '&' && command[next(i)] === '>')) {
-            endWordBeforeRedirect();
+            // `&>` takes no fd number: in `git 2&>/dev/null push` the 2 is an argument.
+            if (ch === '&') endWord();
+            else endWordBeforeRedirect();
             if (redirectAt === -1) redirectAt = words.length;
             // The operator's characters, continuations between them removed.
             const at = [i, next(i), next(next(i))];

@@ -48,7 +48,7 @@ const TAGS: Array<[string, string, boolean]> = [
 
 // Redirections, some with operands that look like act words; one may be placed
 // before the command or between any two of its words.
-const REDIRECTS = ['>out', '> out', '2>&1', '1>&2', '<<<x', "<<< 'a b'", '>>log', '&>/dev/null', '2>/dev/null', '>|f', '<<<push', '>push', '<<<git', '< /dev/null', '2>&1<<<x', '>out 2>&1', '2>&1>log', '3>&1 1>&2 2>&3', '2>\\\n&1', '>\\\n>log', '<\\\n<<x'];
+const REDIRECTS = ['>out', '> out', '2>&1', '1>&2', '<<<x', "<<< 'a b'", '>>log', '&>/dev/null', '2>/dev/null', '>|f', '<<<push', '>push', '<<<git', '< /dev/null', '2>&1<<<x', '>out 2>&1', '2>&1>log', '3>&1 1>&2 2>&3', '2>\\\n&1', '>\\\n>log', '<\\\n<<x', '2&>/dev/null', '1&>out'];
 
 function act(r: () => number): string {
     const form = pick(r, ACT_FORMS);
