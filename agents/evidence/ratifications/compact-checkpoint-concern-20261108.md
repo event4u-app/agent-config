@@ -1,14 +1,14 @@
 ---
 proposed_by: the repository owner, in session on 2026-11-08 ("hol die roadmap aus later und starte phase 1", then "commit, PR und merge wenn grün")
 implemented_by: claude-opus-5.5 session on feat/compact-checkpoint-phase-1
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), rounds 1-17 of 2026-11-08
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), rounds 1-20 of 2026-11-08
 providers: [anthropic, openai]
 verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
 effective_after: merge
-subject: 3650afc967a8a6fcbb15c1ce8dc9da2b77c57b8a871a643629a7882d50ded64c
+subject: f365da37fac80cd583f9390d8c5a94a3d573a0f02e3fdf3d85037c2310fa0d9f
 ---
 
 <!-- evidence-type: ratification -->
@@ -20,7 +20,7 @@ subject: 3650afc967a8a6fcbb15c1ce8dc9da2b77c57b8a871a643629a7882d50ded64c
 `src/config/hook-bundle-budget.json`. The `subject:` digest above covers them,
 computed with
 `./scripts-run src/scripts/ratification_subject --files <the branch's changed files>`
-at commit `71b07de651`, after merging `main` (#2926 had added its own rows to the budget file). Named for the branch, because the pre-push gate reads
+at commit `a8666d327f`, after merging `main` (#2926 and #2919 had edited the gated files). Named for the branch, because the pre-push gate reads
 this file before the pull request exists.
 
 ## What was ratified
@@ -42,9 +42,9 @@ model's context, a denial, a rewrite, or a weakened gate.
 
 ## How the verdict was reached
 
-Seventeen rounds, prompts committed verbatim under `agents/evidence/council/`
+Twenty rounds, prompts committed verbatim under `agents/evidence/council/`
 (`compact-checkpoint-concern-20261108.question.md` for round 1,
-`.roundN.question.md` for rounds 2-17). Every round before 15 ended in
+`.roundN.question.md` for rounds 2-20). Every round before 15 ended in
 `request_changes` or `refused` on a concrete defect, each fixed with a
 regression test shown red before the fix and green after:
 
@@ -58,6 +58,9 @@ regression test shown red before the fix and green after:
 | 15 | none blocking | — |
 | 16 | the base moved (#2926), so the digest changed; my packet omitted the implementation and one seat rightly would not judge | — |
 | 17 | none blocking, on the merged base with the full implementation | — |
+| 18 | base moved again (#2919); one seat: a missing O_NOFOLLOW/O_NONBLOCK silently degraded | `protectionFlags()`; skip when either is missing |
+| 19 | the log-trim branch ran before that check | the check gates every entry point |
+| 20 | none blocking | the trusted runtime root documented and tested |
 
 **Round 15, anthropic:** "RATIFIED — This expands authority … and the
 expansion is acceptable within its telemetry-only scope." Blocking defects:
@@ -73,6 +76,10 @@ none.
 
 **Round 17, openai:** "No merge-blocking defect is demonstrated in the
 supplied code. … APPROVE."
+
+**Round 20 (current main), anthropic:** "Verdict: `ratified` … The expansion
+is acceptable". **Round 20, openai:** "The change adds acceptable filesystem
+authority … APPROVE."
 
 ## Follow-ups both seats listed as non-blocking
 
