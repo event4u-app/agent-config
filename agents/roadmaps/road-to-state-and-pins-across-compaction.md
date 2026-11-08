@@ -183,12 +183,14 @@ host-attested session binding exists. Record:
 | L3 | owner-reserved | user, 2026-11-08 (answered "1" to: only the owner, older targets allowed, notice only) | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | the owner delegates advisory issuance, or a notice is acted on as an install |
 
 ## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
 
-| Risk | Mitigation |
-|---|---|
-| Recall becomes a token sink | Output caps and a pre-registered null that keeps the default off. |
-| Restores add standing payload | Injection only on re-arm events (`session_start(compact)`), never always-on. |
-| Pins become an injection vector | User-prompt source only; tool and file content can never create or delete a pin. |
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Recall becomes a token sink | implementation | Every recall re-sends bytes that compaction had just folded away; unbounded use costs more than it saves. | Output caps per call and turn (3.3); a pre-registered decision rule that keeps the default off on no gain (3.4). | Phase 3 — Recall from the session's own transcript |
+| 2 | Restores add standing payload | implementation | Restored state or pins injected on every turn would grow the always-on context. | Injection only on the re-arm event `session_start(compact)`, never always-on (1.5, 2.2). | Phase 1 — A checkpoint the session wrote for itself |
+| 3 | Pins become an injection vector | implementation | Text from tool output or files could create or remove a pin and steer later turns. | Pins come only from user-prompt text with an explicit marker (2.1). | Phase 2 — Session pins the user set, restored verbatim |
+| 4 | Stale state restored as current | implementation | A checkpoint from an earlier compaction attempt matches the next one and restores outdated status. | Injection waits on an attempt-specific guarantee (1.4); fields restored only as historical observations. | Phase 1 — A checkpoint the session wrote for itself |
 
 ## Acceptance Criteria
 
