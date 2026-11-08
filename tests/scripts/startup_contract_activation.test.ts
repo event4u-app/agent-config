@@ -115,3 +115,14 @@ describe('domain-safety-pii — sector placeholders that are not personal data',
         },
     );
 });
+
+// Round 18 (openai): the Must list covered non-personal values, but the When
+// line still required personal data, so a draft holding only those fell outside.
+describe('domain-safety-pii — activation covers the non-personal sector values', () => {
+    it('the When line names them', () => {
+        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\*[^\n]*any value Must lists as "even if not personal data"/);
+    });
+    it('a finance draft with only a counterparty, cost center and amount routes the rule', () => {
+        expect(activated('draft a finance memo to the counterparty with the cost center and the invoice amount')).toContain('domain-safety-pii');
+    });
+});
