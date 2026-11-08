@@ -41,8 +41,22 @@ import { event4u_root, write_target, type EnvMap } from './user_global_paths.js'
 /** A classification older than this reads as `stale`. A stated default, set to be revised from `age_ms` readings. */
 export const STALE_AFTER_MS = 10 * 60 * 1000;
 
-/** The event log never exceeds this; an append that would cross it first trims the log to half, newest lines kept. */
+/**
+ * The event log's bound. An append that would cross it first trims the log to
+ * half, newest lines kept. Concurrent appenders can each pass the size check,
+ * so the bound is approximate by a few lines under concurrency, not exact. A
+ * tally therefore counts the retained window, not every event ever logged.
+ */
 export const EVENT_LOG_MAX_BYTES = 256 * 1024;
+
+/** A marker of any session untouched this long is abandoned and removed by the next write. */
+export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+/** Most stale markers removed in one sweep, so a full directory cannot stall a compaction. */
+const SWEEP_MAX = 200;
+
+const MARKER_NAME = /^[0-9a-f]{64}\.json$/;
+const PACKAGE_NAME = '@event4u/agent-config';
 
 const MARKER_MAX_BYTES = 4 * 1024;
 const PACKAGE_JSON_MAX_BYTES = 64 * 1024;
@@ -133,15 +147,15 @@ export function readRegular(file: string, max: number): string | null {
     }
 }
 
-/** The `version` of the nearest `package.json` at or above `startDir` (five levels at most), read through `readRegular`. */
+/** The `version` of this package's own `package.json` at or above `startDir` (five levels at most), read through `readRegular`. */
 export function packageVersionFrom(startDir: string): string | null {
     let dir = startDir;
     for (let i = 0; i < 5; i++) {
         const text = readRegular(path.join(dir, 'package.json'), PACKAGE_JSON_MAX_BYTES);
         if (text !== null) {
             try {
-                const v = (JSON.parse(text) as { version?: unknown }).version;
-                if (typeof v === 'string') return v;
+                const pkg = JSON.parse(text) as { name?: unknown; version?: unknown };
+                if (pkg.name === PACKAGE_NAME && typeof pkg.version === 'string') return pkg.version;
             } catch {
                 // not a package manifest; keep walking
             }
@@ -216,11 +230,34 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
     }
 }
 
+/** Remove markers of any session not touched within `MARKER_RETENTION_MS`; regular files with marker names only. */
+function sweepAbandoned(dir: string, now: Date): void {
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir);
+    } catch {
+        return;
+    }
+    let removed = 0;
+    for (const name of names) {
+        if (removed >= SWEEP_MAX) break;
+        if (!MARKER_NAME.test(name)) continue;
+        const p = path.join(dir, name);
+        const st = lstatOrNull(p);
+        if (st === null || !st.isFile()) continue;
+        if (now.getTime() - st.mtimeMs > MARKER_RETENTION_MS) {
+            fs.rmSync(p, { force: true });
+            removed++;
+        }
+    }
+}
+
 /** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker. */
 export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
     const now = input.now ?? new Date();
     const dir = safeDir(input.env);
     if (dir === null) return 'skipped';
+    sweepAbandoned(dir, now);
     const key = eolSessionKey(input.sessionId);
     const file = checkpointFile(key, input.env);
     if (lstatOrNull(file) !== null) {
@@ -289,8 +326,8 @@ export function readEventTally(env?: EnvMap): Record<EventName, number> {
     for (const line of text.split('\n')) {
         if (!line) continue;
         try {
-            const ev = (JSON.parse(line) as { event?: EventName }).event;
-            if (ev !== undefined && ev in tally) tally[ev]++;
+            const ev = (JSON.parse(line) as { event?: unknown }).event;
+            if (typeof ev === 'string' && Object.hasOwn(tally, ev)) tally[ev as EventName]++;
         } catch {
             continue;
         }

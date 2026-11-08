@@ -9,6 +9,7 @@ import {
     checkpointDir,
     checkpointFile,
     EVENT_LOG_MAX_BYTES,
+    MARKER_RETENTION_MS,
     eventsFile,
     observePostCompact,
     packageVersionFrom,
@@ -213,7 +214,50 @@ describe('compact checkpoint — filesystem boundary', () => {
         const dir = path.join(root, 'pkg', 'dist', 'hooks');
         fs.mkdirSync(dir, { recursive: true });
         fifoAt(path.join(dir, 'package.json'));
-        fs.writeFileSync(path.join(root, 'pkg', 'package.json'), JSON.stringify({ version: '9.9.9' }));
+        fs.writeFileSync(path.join(root, 'pkg', 'package.json'), JSON.stringify({ name: '@event4u/agent-config', version: '9.9.9' }));
         expect(packageVersionFrom(dir)).toBe('9.9.9');
+    });
+});
+
+describe('compact checkpoint — council round 7 findings (retention)', () => {
+    it('removes abandoned markers of other sessions once they are older than the retention bound', () => {
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
+        const old = path.join(checkpointDir(ENV()), `${'a'.repeat(64)}.json`);
+        const fresh = path.join(checkpointDir(ENV()), `${'b'.repeat(64)}.json`);
+        fs.writeFileSync(old, '{}');
+        fs.writeFileSync(fresh, '{}');
+        const past = new Date(Date.parse('2026-11-08T12:00:00Z') - MARKER_RETENTION_MS - 1000);
+        fs.utimesSync(old, past, past);
+        const now = new Date('2026-11-08T12:00:00Z');
+        fs.utimesSync(fresh, now, now);
+        recordPreCompact(base());
+        expect(fs.existsSync(old)).toBe(false);
+        expect(fs.existsSync(fresh)).toBe(true);
+    });
+
+    it('leaves files that are not markers alone', () => {
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
+        const other = path.join(checkpointDir(ENV()), 'notes.txt');
+        fs.writeFileSync(other, 'x');
+        const past = new Date(0);
+        fs.utimesSync(other, past, past);
+        recordPreCompact(base());
+        expect(fs.existsSync(other)).toBe(true);
+    });
+
+    it('reads the version only from this package’s own manifest', () => {
+        const dir = path.join(root, 'outer', 'inner');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(root, 'outer', 'inner', 'package.json'), JSON.stringify({ name: 'someone-else', version: '1.0.0' }));
+        fs.writeFileSync(path.join(root, 'outer', 'package.json'), JSON.stringify({ name: '@event4u/agent-config', version: '20.1.0' }));
+        expect(packageVersionFrom(dir)).toBe('20.1.0');
+    });
+
+    it('ignores log lines whose event is an object prototype key', () => {
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
+        fs.writeFileSync(eventsFile(ENV()), `${JSON.stringify({ event: 'toString' })}\n${JSON.stringify({ event: 'written' })}\n`);
+        const tally = readEventTally(ENV());
+        expect(tally.written).toBe(1);
+        expect(Object.values(tally).every((v) => Number.isFinite(v))).toBe(true);
     });
 });
