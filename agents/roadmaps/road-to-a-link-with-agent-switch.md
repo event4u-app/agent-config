@@ -138,6 +138,36 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       provider has no usable account.
       verify: bracket seat tests.
 
+## Phase 6 — Pace requests (agent-switch counterpart)
+
+> **Source:** `road-to-limits-that-last-the-whole-run` 2.3 in
+> `event4u-app/agent-switch`. agent-switch raises a second kind of switch
+> request, `reason.kind: "pace"`: one account runs out well before its reset
+> while another account of the same provider would let its room expire unused.
+> The link contract stays `1`; the additions are fields and an optional
+> argument — `switch_list` takes `session`, each request carries `kind` and a
+> plain `summary`, `limits_get` windows carry `burnPerHour` and `etaFull`.
+
+- [ ] **6.1 Render pace requests at prompt time.** The prompt-time hook reads
+      the calling session's open requests with `switch_list {session}` and shows
+      a pace request in plain words, using its `summary` as is instead of
+      rebuilding it from raw fields. A pace request is not urgent: one line,
+      after a limit request when both are open.
+      verify: hook test — one open pace request → one line carrying its
+      `summary`; a limit and a pace request → the limit first.
+- [ ] **6.2 Answer through `switch_decide`.** On the user's answer the agent
+      calls `switch_decide` (approve with a target, decline, or snooze),
+      host-confirmed as in 4.2; agent-switch carries out the move. AC never
+      raises a pace request: `switch_request` stays the limit path of 4.1.
+      verify: the 4.2 lint covers `switch_decide` for both kinds; a test that no
+      AC path raises a request with a pace reason.
+- [ ] **6.3 Relay and one voice.** 4.3's relay reports a pace request decided
+      in agent-switch like a limit one. agent-switch's own opt-in chat hook
+      (`agent-switch hooks chat on`) stays silent when this link is wired into
+      the session, so the user never sees the suggestion twice; agent-switch
+      detects the wiring, so AC adds nothing for that.
+      verify: relay test with a pace request decided in agent-switch.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -152,7 +182,7 @@ cross-account continuation.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -160,6 +190,7 @@ cross-account continuation.
 | 2 | Stale limits route a seat badly | implementation | A cached limits read that is hours old can mark a full account usable and place a council seat on it | Observations carry `stale`; a stale read counts as `null`, never as usable | Phase 5 — Load distribution |
 | 3 | agent-switch absent or link off | implementation | A hard dependency would break AC for every user without agent-switch, against fence K8 | Every path returns `null` and falls back to today's behaviour | Phase 2 — Automatic connection |
 | 4 | Notice noise | product | Raising a request on every `hot` notice could flood both tools with duplicate questions | One request per `(account, window, resets_at)`, deduplicated in agent-switch | Phase 4 — Inform and ask |
+| 5 | One pace request, two voices | product | agent-switch's own chat hook and AC's prompt-time hook could both put the same pace suggestion into one session | agent-switch's hook is silent wherever this link is wired; AC renders the request's `summary` once, after any limit request | Phase 6 — Pace requests (agent-switch counterpart) |
 
 ## Blockers
 
