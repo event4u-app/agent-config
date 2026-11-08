@@ -127,3 +127,9 @@ Concrete next steps: make activation opt-in; implement polling back-off and reco
 
 STANCE: refused | CONFIDENCE: high | DEALBREAKER: yes
 ```
+
+## For the owner's decision
+
+- **Expected gain.** Near a plan limit the session asks the user, in the session, whether agent-switch should move the work, names up to three candidate accounts, relays a decision taken in agent-switch and the outcome of the move, and leaves a run checkpoint before the move when it can. Without it the user sees the quota notice only and has to switch by hand.
+- **Risk.** Each prompt with an open request, and the first hot prompt per window, spawns `agent-switch` synchronously (bounded at 5 s per call, no back-off yet); consent to `switch_decide` rests on the host's tool confirmation and agent-switch, not on AC; the checkpoint is best effort and a `how: now` move can precede it; relayed text from agent-switch reaches the model context, labelled as data and clipped to 160 characters. The open items are Phase 7 of `agents/roadmaps/road-to-a-link-with-agent-switch.md`.
+- **Rollback.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and checkpoint at once, also for an open request, with no reinstall; `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops the notice too. A full rollback is a revert of the merge commit, which also returns the `quota_notice` ceiling to 22,800 B.
