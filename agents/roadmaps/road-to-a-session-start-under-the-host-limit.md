@@ -132,13 +132,13 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 
 ## Phase 2 — Fewer files at session start
 
-- [x] **2.1 Move `design-review-after-ui-write` and `ui-audit-gate` off session
-      start.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Both fire on UI writes, which the host can scope by path. Deliver
+- [x] **2.1 Move `design-review-after-ui-write` and `ui-audit-gate` off session <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml -->
+      start.** Both fire on UI writes, which the host can scope by path. Deliver
       them as path-scoped rules instead of unconditional ones.
       verify: a session that never touches a UI path loads neither; a session
       that writes a UI file loads both before the write lands.
       > note: done 2026-11-07, already true on claude-code before this roadmap: both rules are path-only, so the claude rule rewrite gives them `paths:` and the installed layer reports them `scoped`. Witnessed by the host's own InstructionsLoaded records under `~/.event4u/agent-config/runtime/arrivals/` (host 2.1.316): across every recorded session the two load only with `path_glob_match` or `compact`, never with `session_start`.
-- [x] **2.2 Reopen D14 for inactive pack floors in the AI council.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> D14 ships a
+- [x] **2.2 Reopen D14 for inactive pack floors in the AI council.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> D14 ships a
       floor with the skill it guards because claude-code lists every skill. The
       question is whether the floor's contract form (1.2) — not the full body —
       is what ships when the pack is inactive.
@@ -149,7 +149,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       projected layer carries the verdict's form of those three floors and
       nothing more.
       > note: done 2026-11-07 — no code beyond Phase 1: the D14 branch still ships the four floors with no pack active, and the thin pass now writes them as contract stubs. Test "with no pack active, the D14 floors still arrive, and arrive as their contract only" asserts both, and that brand/scale/history do not arrive.
-- [x] **2.4 Put the remaining pack floors before the same verdict.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> 2.2 names legal,
+- [x] **2.4 Put the remaining pack floors before the same verdict.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> 2.2 names legal,
       finance and strategy. The media, brand and persistence floors (`image-likeness-and-rights`,
       `brand-source-of-truth`, `scale-discipline`, `history-discipline`) also carry a
       `packs:` key (`ai-image`, `brand`, `scale-discipline`, `history-discipline`), and
