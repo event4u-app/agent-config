@@ -2,12 +2,12 @@
 proposed_by: claude-code session, road-to-a-session-start-under-the-host-limit
 implemented_by: same session
 reviewed_by: ai-council
-subject: 7192f4deff0bbd274acc9bfec1f565804be607b3547e6d633bbd9a9febfcdf66
-providers: [anthropic, openai]
-verdict: ratified
+subject: 2d4468836a50612a94b44477d3e94bef9565167ccf8c14bdfa296d820ede59fb
+providers: [anthropic]
+verdict: confirmed-non-expanding
 seats:
-  anthropic: ratified
-  openai: ratified
+  anthropic: confirmed-non-expanding
+  openai: no-final-verdict
 effective_after: merge
 ---
 
@@ -15,84 +15,83 @@ effective_after: merge
 
 # Modification review
 
-Appends a startup contract to each of the 28 high-consequence and safety-floor rules, adds review-driven frontmatter triggers and one body paragraph, rewords one hook-manifest comment, and raises the layer-promotion hook chunk ceiling for the contract stub builder.
+Each of the 28 high-consequence rules gains a startup contract in its own file; five rule files change (triggers, the low-impact refusal fence, See-also lines, two body clarifications); one hook-manifest comment; the layer-promotion hook chunk ceiling.
 
-Verdict `ratified`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/session-start-contracts-ratification-r22-20261108.question.md`, committed at `892dccdb7f9942cc84f9060e031b84153e71bce7` and naming this record's subject.
+Verdict `confirmed-non-expanding`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/session-start-contracts-ratification-r31-20261108.question.md`, committed at `1c14c5cc8f5834b96f3f951a314fa3181f6ee723` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
 ## Each seat, verbatim
 
-### anthropic — `ratified`
+### anthropic — `confirmed-non-expanding`
 
 ```text
-**Assessment: Agree (with one structural caveat)**
+**Assessment: confirmed-non-expanding**
 
-## 1. My Position
+Reviewed all 28 contracts against their rule bodies. Each contract accurately compresses its rule's obligations without material loss. Specific verifications:
 
-These startup contracts are **equivalent in authority** to their full rule bodies for the stated purpose: carrying core obligations at session start until the full body arrives on trigger. The compression is sound, fail-closed where needed, and validated through 21 rounds of adversarial review.
+**Structural integrity maintained:**
+- All Iron Laws captured without softening (MUST → must, NEVER → never)
+- Multi-step procedures complete (5 steps in `decision-revisit-gate`, stop-ask-resume in `user-interrupt-priority`, quarantine in `evaluator-independence`)
+- Numeric bounds preserved (allowlist > 20, fix-loop 1-3/4-6/7-10, session-budget one question, interrupt-budget zero non-interactive)
+- Fail-safes intact (body-unreadable → don't deliver, no council → refuse, no name → inert)
 
-## 2. Strongest Argument FOR
+**No authority expansions:**
+- `decision-revisit-gate` contract's "unbounded by available/tree evidence (files/records/measurements)" clarifies the body's "cannot be bounded from available evidence" with examples, doesn't narrow scope
+- `finance-safety-floor` and `domain-safety-disclaimer` "gist only:" notations are contract-brevity markers paired with "body unreadable → don't deliver", not substitutions
+- `image-likeness-and-rights` makes the model-card check explicit for ordinary subjects, which the body implies by placing it in the universal gates table
+- Round 29/30 fixes verified: `question-not-instruction` includes fast-path marker and canary greeting ordering, `decision-revisit-gate` preserves body's transition test wording
 
-**The fail-closed architecture proves the compression is honest.** Four contracts (legal, finance, strategy, disclaimer) must copy exact text from their bodies. Their contracts explicitly state: "body unreadable → don't deliver, name the missing path." This is a **refusal to degrade gracefully**, which is the signature of a system that knows its limits. If the authors were willing to compress dishonestly, they'd have inlined those texts and avoided the dependency. Instead they:
+**Enforcement honesty consistent:**
+- Instruction-only declarations match rule bodies (`evaluator-independence` items 2-4, `security-sensitive-stop`, `git-history-discipline` pre-edit reasoning)
+- Host-specific gaps declared (`session-canary` Augment/Windsurf/Copilot, `git-history-discipline` claude-only block-no-verify)
+- Deterministic coverage stated plainly (`secret-vcs-guard` check_secret_leak, `tool-safety` lint_agent_security)
 
-- Point to the body for normative text
-- Fail hard if the pointer breaks  
-- Test the pointer resolution in `session_start_upgrade.test.ts`
+**Strongest counter-argument:**
+The contracts' compression inevitably loses some operational detail (the full disclaimer templates, the complete See-also webs, the worked examples). An agent holding only the contract might miss a nuance the full body would have clarified. This is the deliberate trade: session-start budget discipline requires compression, and the trigger-based routing means the full body arrives when the rule fires.
 
-This pattern appears in four contracts independently, suggesting it's a principled design choice, not a one-off. The round-by-round fixes (privilege markers → frontmatter triggers in round 12, redaction preview masking in round 13, image model-card check unconditional in round 12) show the review caught real weakenings and fixed them with tests. A 680-clause audit where every restored qualifier got a regression assertion is not a rubber stamp.
-
-## 3. Strongest Counter-Argument to Consider
-
-**Density under degradation creates a silent failure mode.** Several contracts (decision-revisit-gate at ~1,950 chars, domain-safety-pii at the 2,000 char ceiling, settings-ask-protocol at ~1,850 chars) compress complex decision trees into bullets. An agent with degraded context might:
-
-- See the contract's opening "When:" clause
-- Match the condition
-- Begin reading the dense "Must:" section
-- Hit a context limit mid-bullet
-- Finish with a partial read it doesn't recognize as partial
-
-The contracts are **at session start**, which means full context, so this seems theoretical. But if context compression (mentioned in system instructions) runs during a long session, a mid-bullet truncation could leave an agent that thinks it read the contract when it only got half. The full bodies have paragraph breaks and section headers that fail more obviously when cut. The contracts are optimized for token count, not degradation resilience.
-
-**Counter to the counter:** The session-start injection happens once, before compression starts. The `<total_tokens>15000000 tokens left</total_tokens>` in the system block suggests ample headroom. And the round 16 note "no single review had compared every contract with its whole body" → round 22 shows all 28 full files together suggests the reviewers know the density risk and addressed it by reviewing everything in one coherent pass.
-
-## 4. Concrete Next Steps
-
-### If you agree (ratify):
-
-1. **Merge** subject `7192f4d...` as the record shows rounds 12–21 fixed every finding and round 22 presents the full comparison requested
-2. **Monitor** the one honestly-stated gap: mis-route rate for command-suggestion HIGH tier is "unmeasured, not low" (contract line admits this). A >5% mis-route over 50 auto-routes reverts to block-always per the contract itself
-3. **Watch** the density concern above in practice - if session-end reports or user feedback show mid-contract truncation, that's the trigger to add section markers or paragraph breaks to the densest contracts (decision-revisit-gate, domain-safety-pii, settings-ask-protocol)
-
-### If you disagree:
-
-1. **Identify** which specific contract(s) drop a prohibition or soften a MUST that the body enforces - the 680-clause audit suggests there isn't one, but an independent eye might catch what 21 rounds missed
-2. **Propose** either (a) inline the missing text into that contract (if under 2,000 chars), or (b) add the missing clause as a separate trigger-on-demand rule if it's truly weight-bearing
-3. **Don't block** on the density-under-degradation concern alone - it's theoretical and solvable post-merge if it manifests
+**Concrete next step:**
+Merge as written. The contracts achieve their stated goal (session-start presence under 80k chars, measured 79,845) without material weakening. Any agent spawned with these contracts can act safely within their bounds and knows when to route to the full body.
 
 ---
 
-**STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no**
+STANCE: confirmed-non-expanding | CONFIDENCE: high | DEALBREAKER: no
 ```
 
-### openai — `ratified`
+### openai — `no-final-verdict`
 
 ```text
-1. **Assessment: agree, within the supplied evidence.** I found no concrete, material weakening in the 28 startup contracts compared with their supplied bodies. The round-22 budget increase also appears justified. This is a textual review; I have not independently verified the digest, repository contents, or test results.
+1. **Assessment: mixed; I would withhold ratification pending clarification.** The contracts preserve most substantive prohibitions, exceptions, and escalation conditions across the 28 supplied pairs. However, several introduce explicit obligations absent from their corresponding bodies. That conflicts with treating this as purely non-expanding compression.
 
-2. **Strongest argument:** The contracts preserve the operative gates rather than merely summarize intent. For example, `legal-safety-floor` retains acknowledgment, actual council execution, individual-case refusal, and jurisdiction restrictions. Where exact body text is required, it explicitly fails closed if that body cannot be read.
+2. **Strongest argument:** the contracts sometimes add policy rather than summarize it:
 
-3. **Strongest counter-argument:** Textual equivalence does not establish delivery reliability. The delivery section says bodies arrive “on a trigger,” while the stub also instructs the agent to load them “on a match.” Those mechanisms must cover semantic matches beyond literal router keywords. Pointer-resolution tests prove files exist; they do not prove the agent receives or reads them before acting.
+   - **`git-history-discipline`, contract § Must:** “that re-push needs this-turn OK first.” The body’s protocol requires “an immediate re-push in the same turn,” but does not itself state that additional permission requirement. Its cross-reference to the canonical Hard Floor may justify this, but that dependency needs an explicit clause-level attribution.
+   - **`domain-safety-disclaimer`, contract § Must:** “body unreadable → don't deliver, name the missing path.” The body requires the disclaimer “verbatim or translated,” but contains no missing-path reporting requirement. Similar additions appear in the finance, strategy, retention, and legal contracts.
+   
+   These additions are generally conservative. Nevertheless, additional mandatory behavior is a semantic change, even when it reduces authority.
 
-4. **Concrete next steps:** Accept the supplied contracts, then verify the exact subject’s required checks before merging. Include an installed-layer integration case with a semantic match lacking a frontmatter keyword, demonstrating body retrieval before the governed action. For the budget change, confirm the measured 60,848-byte chunk using the locked CI toolchain; 66,900 provides approximately 10% headroom.
+3. **Strongest counter-argument:** these clauses may simply operationalize existing requirements. An agent cannot reproduce a required footer reliably without reading it, and another standing rule may already require permission before pushing. If those dependencies are established, the additions could be faithful composition rather than new policy. I found no comparably clear dropped substantive prohibition in the supplied pairs.
 
-STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no
+4. **Concrete next steps:**
+
+   - Attribute each additional obligation to its authoritative rule, or add it explicitly to the corresponding body and review it as a policy change.
+   - Separate **preserved**, **dependency-derived**, and **new** obligations in the clause audit.
+   - Address the documented missing-contract fallback: a readable audit omitting a high-consequence member produces a law-only stub, despite the comment that missing contracts should not deliver less than the ratified contract. CI rejection limits this risk but does not make that runtime behavior fail-safe.
+   - Keep the verdict bounded to the evidence: supplied hashes and test descriptions do not establish that the implementation or tests were independently verified.
+
+The displayed rule-body delta removes no clear operative obligation. The masking change strengthens privacy; the model-card and reply-order changes explicitly alter the bodies to match their contracts.
 ```
 
-## Rounds
+## Rounds and the owner decision
 
-Twenty-two ratification rounds (anthropic + openai, subscription CLI, $0) plus two full-body equivalence passes over four groups of seven rules. Rounds 12–22 showed all 28 rule files in full (`council_cli --max-bundle-bytes`, `--member-timeout`). Every finding was verified against the rule body and fixed, each fix pinned by a test shown red against the prior text (`tests/scripts/startup_contract_activation.test.ts`, `tests/scripts/check_startup_contracts.test.ts`). Rounds 15–16 produced agreeing verdicts without the closing stance line under the PR template, so they record no verdict; round 21 was the first in which both seats closed `ratified` on a stance line; the pre-push preflight then found the layer-promotion hook chunk over its ceiling, the ceiling raise in the gated `hook-bundle-budget.json` changed the subject, and this record is rendered from round 22, where both seats ratified the full subject again. Every round's prompt is committed under `agents/evidence/council/session-start-contracts-*`.
+Thirty-one ratification rounds (anthropic + openai, subscription CLI, $0) plus two full-body equivalence passes. From round 12 each round saw all 28 rule files in full (`council_cli --max-bundle-bytes`, `--member-timeout`). Every finding was verified against the rule body and fixed with a regression test shown red first, or answered in the next prompt. anthropic ratified or confirmed every round from 18 on; openai refused or withheld a stance in every round, each time on new points — from round 30 on no dropped prohibition, only scope, modality and evidence-binding points, some reversing its own earlier requests.
+
+That is the non-convergence ADR-268 § 4 / ADR-281 § 4 hands to the owner. Asked in-session on 2026-11-08 with the council's recommendation, the dissent, the change, its gain, risk and rollback, the owner chose option 1, owner ratification:
+`agents/evidence/owner-directives/2026-11-08-session-start-contracts-owner-ratification.md`.
+The merge over the red `check_kernel_edit_ratified` is the owner's own act on the forge; the bypass record follows it.
+
+Every round's prompt is committed under `agents/evidence/council/session-start-contracts-*`.
 
 ## Independence
 
-`proposed_by` and `implemented_by` are the same session; `reviewed_by` is the two-provider council, whose prompts are committed beside this record.
+`proposed_by` and `implemented_by` are the same session; `reviewed_by` is the two-provider council; the decision is the owner's.
