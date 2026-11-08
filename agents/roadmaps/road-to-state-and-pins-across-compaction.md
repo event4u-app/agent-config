@@ -1,15 +1,11 @@
 ---
 complexity: standard
-status: later
+status: ready
 review_by: 2026-12-08
-entry_condition:
-  what: "road-to-a-compaction-the-session-survives is archived (identity reading and presence baseline on main)"
-  when: "after that roadmap closes"
-  who: owner
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner search: grep -rlE 'session pin|sessionPin|checkpoint.*compact|recall.*transcript|known_bad|fast-check' across agents/roadmaps/*.md, later/ and stubs/ returned no owner (stubs/road-to-target-project-bootstrap-enforce mentions fast-check only as a consumer-grading signal; later/road-to-a-stop-that-holds-carried 1.4 owns the hooks-only kill-switch table, not a src-wide ledger). Added to later/, not active: its first phase waits on a council round, and the round that produced it (inbox-2026-11-zb) emitted one active roadmap already."
-estate_growth_exempt: "Grows later_roadmaps by one and open_blockers by three. The three blockers are not new work but the decisions this file's steps genuinely wait on — two council questions (checkpoint lineage under the compact-resume-2026-10 verdict; recall verb under ADR-041) and one owner-reserved release commitment (who may issue a known_bad advisory). Recording them as blockers is what keeps the file from presenting takeable steps that are not takeable. The round's active roadmap closed in the same change, so active_roadmaps is unchanged at 8."
+estate_growth_exempt: "Pulled from later/ on 2026-11-08 at the owner's instruction (\"hol die roadmap aus later und starte phase 1\"); its entry condition is met (road-to-a-compaction-the-session-survives is archived). Grows active_roadmaps by one and concern_count by one: the compact-checkpoint concern Phase 1.2 asks for, which writes and measures and injects nothing. active_roadmaps stays far under the owner cap of 25."
 relates:
   - slug: road-to-a-compaction-the-session-survives
     relation: depends
@@ -54,16 +50,26 @@ of re-reading or guessing.
       Writing and measuring is approved; injection is not.
       Record: `agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md`.
       verify: `test -f agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md` -> 0
-- [ ] **1.2** `pre_compact` writes the checkpoint (field discipline of
+- [x] **1.2** `pre_compact` writes the checkpoint (field discipline of
       `continuity_writer.ts`, no judgement fields, write timestamp and package
       version) and **injects nothing**. A counts-only log records written /
       consumed / orphaned per compaction.
-      verify: `npx vitest run tests/scripts/compact_checkpoint.test.ts` -> 0
-- [ ] **1.3** Fault tests against the lifecycle the council named: an aborted
+      Shipped as the `compact-checkpoint` concern (claude only, lazy chunk,
+      kill switch `AGENT_CONFIG_NO_COMPACT_CHECKPOINT=1`).
+      verify: `npx vitest run tests/scripts/compact_checkpoint.test.ts tests/hooks/compact_checkpoint_hook.test.ts` -> 0
+      production entry: `src/scripts/hooks/compact_checkpoint_hook.ts`
+- [x] **1.3** Fault tests against the lifecycle the council named: an aborted
       compaction followed by a second one, a manual `/compact`, duplicate
       callbacks, a package upgrade between write and read. Each must show
       whether a stale checkpoint can become eligible.
+      Result: every `pre_compact` invalidates an unobserved predecessor, so an
+      aborted attempt cannot match the next one when that next `pre_compact`
+      runs (proved sensitive: removing the invalidation reds the test).
+      Residual: if `pre_compact` never fires for the second compaction, the
+      orphan is still classified — `stale` once older than the bound. That is
+      the case an attempt-specific host token would close (1.4).
       verify: `npx vitest run tests/scripts/compact_checkpoint_lifecycle.test.ts` -> 0
+      production entry: `src/scripts/hooks/compact_checkpoint_hook.ts`
 - [ ] **1.4** Choose the guarantee explicitly — attempt-specific handoff or
       "latest validated snapshot of this session" — and list which fields may
       be restored, each as a historical observation ("tests passed at <sha>"),
