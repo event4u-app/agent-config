@@ -1,5 +1,5 @@
 ---
-complexity: standard
+complexity: structural
 status: ready
 review_by: 2026-12-08
 execution:
@@ -8,7 +8,7 @@ estate_offset_exempt: "Owner search: grep -rlE 'session pin|sessionPin|checkpoin
 estate_growth_exempt: "Pulled from later/ on 2026-11-08 at the owner's instruction (\"hol die roadmap aus later und starte phase 1\"); its entry condition is met (road-to-a-compaction-the-session-survives is archived). Grows active_roadmaps by one and concern_count by one: the compact-checkpoint concern Phase 1.2 asks for, which writes and measures and injects nothing. active_roadmaps stays far under the owner cap of 25."
 relates:
   - slug: road-to-a-compaction-the-session-survives
-    relation: depends
+    relation: extends
     note: "Starts from its identity reading (274/274 kept on auto) and presence baseline."
   - slug: later/road-to-a-stop-that-holds-carried
     relation: extends
