@@ -6,32 +6,38 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { main, moduleReachLine, moduleReachSummary } from '../../src/scripts/check_gate_reachability.js';
+import { analyseModuleReach, groupCounts } from '../../src/scripts/_lib/module_reach.js';
 
 const REPO = process.cwd();
 
 describe('the five module-reach numbers, beside this gate\'s own verdicts', () => {
-    it('moduleReachSummary agrees with module_reach.ts on the real tree', async () => {
-        const { analyseModuleReach, groupCounts } = await import('../../src/scripts/_lib/module_reach.js');
-        const { modules } = analyseModuleReach(REPO);
+    // Both walks cover the whole tree. Measured on CI: up to 23.3 s on macOS for
+    // the pair, inside vitest's 30 s default by too little — so they run once,
+    // here, under a stated bound, and every test below reads the result.
+    let modules: ReturnType<typeof analyseModuleReach>['modules'];
+    let s: ReturnType<typeof moduleReachSummary>;
+    beforeAll(() => {
+        modules = analyseModuleReach(REPO).modules;
+        s = moduleReachSummary(REPO);
+    }, 120_000);
+
+    it('moduleReachSummary agrees with module_reach.ts on the real tree', () => {
         const unreferenced = modules.filter((m) => !m.namedByProduction);
-        const s = moduleReachSummary(REPO);
         expect(s.unreferencedTotal).toBe(unreferenced.length);
         expect(s.groups).toEqual(groupCounts(unreferenced));
         expect(s.reachedByNothing).toBe(modules.filter((m) => !m.reachedByImportOrPath).length);
     });
 
     it('unreferencedTotal is a cross-check, not one of the five — it is not printed', () => {
-        const s = moduleReachSummary(REPO);
         const sum = Object.values(s.groups).reduce((a, b) => a + b, 0);
         expect(s.unreferencedTotal).toBe(sum);
         expect(moduleReachLine(s)).not.toContain('unreferencedTotal');
     });
 
     it('the printed line is marked reported, not gated, and names all five numbers', () => {
-        const s = moduleReachSummary(REPO);
         const line = moduleReachLine(s);
         expect(line).toContain('reported, not gated');
         expect(line).toContain(`contract-test ${String(s.groups['contract-test'])}`);
