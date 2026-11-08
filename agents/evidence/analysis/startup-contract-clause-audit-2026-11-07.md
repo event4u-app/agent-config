@@ -6,7 +6,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 678 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33622 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33814 chars.**
 
 ## Per rule
 
@@ -18,7 +18,7 @@ the config is the record.
 | `decision-revisit-gate` | 43 | 5 | 1 | 1757 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
-| `domain-safety-pii` | 34 | 2 | 1 | 1731 |
+| `domain-safety-pii` | 36 | 2 | 1 | 1923 |
 | `domain-safety-retention` | 27 | 5 | 0 | 1600 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
@@ -234,6 +234,8 @@ the config is the record.
 | `domain-safety-pii` | c32 | stop | stop | no | a PDF whose header reads 'ATTORNEY-CLIENT PRIVILEGED' must hard-stop before | stop before generating |  |
 | `domain-safety-pii` | c33 | bound | none | no | 'ATTORNEY WORK PRODUCT', 'PREPARED AT REQUEST OF COUNSEL', 'LITIGATION HOLD', | PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS |  |
 | `domain-safety-pii` | c34 | obligation | none | no | Configure the logger to scrub 'email', 'phone', 'name', 'address', 'token', 'password', 'card_number', 'iban' keys recursively from any payload. | 'card_number', 'iban' keys |  |
+| `domain-safety-pii` | c35 | obligation | none | no | \| **Finance** \| '[COUNTERPARTY]', '[CONTACT_EMAIL]', '[BANK_ACCOUNT]', '[TAX_ID]', '[COST_CENTER]', '[AMOUNT]' \| | counterparty, bank account, tax ID, cost center, amount |  |
+| `domain-safety-pii` | c36 | obligation | none | no | \| **Recruiting** \| '[CANDIDATE_NAME]', '[CANDIDATE_EMAIL]', '[CURRENT_EMPLOYER]', '[UNIVERSITY]', '[COMP_TARGET]'; | current employer, university, comp target |  |
 | `domain-safety-retention` | c1 | trigger | none | no | keyword: "right to be forgotten" | right to be forgotten |  |
 | `domain-safety-retention` | c2 | obligation | ask | yes | NAME THE JURISDICTION GAP. | name jurisdiction gap |  |
 | `domain-safety-retention` | c3 | precedence | act | yes | DEFAULT TO THE LONGEST APPLICABLE FLOOR. | default to longest applicable floor |  |

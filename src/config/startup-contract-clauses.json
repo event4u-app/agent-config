@@ -1729,6 +1729,24 @@
           "response": "none",
           "witness": "`card_number`, `iban` keys",
           "unresolved_ref": null
+        },
+        {
+          "id": "c35",
+          "kind": "obligation",
+          "source": "| **Finance** | `[COUNTERPARTY]`, `[CONTACT_EMAIL]`, `[BANK_ACCOUNT]`, `[TAX_ID]`, `[COST_CENTER]`, `[AMOUNT]` |",
+          "in_law": false,
+          "response": "none",
+          "witness": "counterparty, bank account, tax ID, cost center, amount",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c36",
+          "kind": "obligation",
+          "source": "| **Recruiting** | `[CANDIDATE_NAME]`, `[CANDIDATE_EMAIL]`, `[CURRENT_EMPLOYER]`, `[UNIVERSITY]`, `[COMP_TARGET]`;",
+          "in_law": false,
+          "response": "none",
+          "witness": "current employer, university, comp target",
+          "unresolved_ref": null
         }
       ]
     },

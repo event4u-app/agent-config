@@ -102,3 +102,16 @@ describe('round 14 — the council pass is run, the scrub keys are exact', () =>
         }
     });
 });
+
+// Round 17 (openai): "PII → placeholders" did not cover the sector fields the
+// body replaces although they are not personal data (amounts, cost centers…).
+describe('domain-safety-pii — sector placeholders that are not personal data', () => {
+    it.each(['order/account IDs', 'payment details', 'customer company', 'current employer', 'university', 'comp target', 'counterparty', 'bank account', 'tax ID', 'cost center', 'amount'])(
+        'the contract replaces %s before drafting',
+        (field) => {
+            const c = contract('domain-safety-pii');
+            expect(c).toContain('even if not personal data');
+            expect(c).toContain(field);
+        },
+    );
+});
