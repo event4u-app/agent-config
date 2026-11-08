@@ -140,6 +140,14 @@ function lexCommands(command: string): Simple[] {
         redirectAt = -1;
     };
     const n = command.length;
+    // Bash removes backslash-newline before it reads operators, so one may stand
+    // inside `<<`, `&&`, `2>&1` or before a heredoc terminator. `skip` steps over
+    // them; `next(j)` is the index of the next real character after `j`.
+    const skip = (j: number): number => {
+        while (command[j] === '\\' && command[j + 1] === '\n') j += 2;
+        return j;
+    };
+    const next = (j: number): number => skip(j + 1);
     let i = 0;
     while (i < n) {
         const ch = command[i] as string;
@@ -166,13 +174,13 @@ function lexCommands(command: string): Simple[] {
             while (i < n && command[i] !== '\n') i += 1;
             continue;
         }
-        if (ch === '<' && command[i + 1] === '<' && command[i + 2] !== '<') {
+        if (ch === '<' && command[next(i)] === '<' && command[next(next(i))] !== '<') {
             endWordBeforeRedirect();
             if (redirectAt === -1) redirectAt = words.length;
-            let j = i + 2;
+            let j = next(next(i));
             const stripTabs = command[j] === '-';
-            if (stripTabs) j += 1;
-            while (command[j] === ' ' || command[j] === '\t') j += 1;
+            if (stripTabs) j = next(j);
+            while (command[j] === ' ' || command[j] === '\t' || (command[j] === '\\' && command[j + 1] === '\n')) j += command[j] === '\\' ? 2 : 1;
             // The terminator is one word after quote removal: `E"OF"` and `'EOF'` are
             // EOF, `"E\\OF"` is E\OF, and a quoted empty word (`<<''`) is a valid,
             // empty terminator.
@@ -198,7 +206,7 @@ function lexCommands(command: string): Simple[] {
                 }
             }
             if (tag !== '' || quoted) pendingHeredocs.push({ tag, stripTabs, quoted });
-            i = j > i + 2 ? j : i + 2;
+            i = j;
             continue;
         }
         if (ch === '\n') {
@@ -229,17 +237,21 @@ function lexCommands(command: string): Simple[] {
         }
         // Any other redirection, a here-string `<<<` included: the operator and its
         // operand word are dropped, wherever they stand among the arguments.
-        if (ch === '<' || ch === '>' || (ch === '&' && command[i + 1] === '>')) {
+        if (ch === '<' || ch === '>' || (ch === '&' && command[next(i)] === '>')) {
             endWordBeforeRedirect();
             if (redirectAt === -1) redirectAt = words.length;
-            const op = /^(?:&>>|&>|<<<|>>|>\||>&|<&|<>|>|<)/.exec(command.slice(i, i + 3)) as RegExpExecArray;
-            i += op[0].length;
+            // The operator's characters, continuations between them removed.
+            const at = [i, next(i), next(next(i))];
+            const text = at.map((k) => command[k] ?? '').join('');
+            const op = /^(?:&>>|&>|<<<|>>|>\||>&|<&|<>|>|<)/.exec(text) as RegExpExecArray;
+            i = (at[op[0].length - 1] as number) + 1;
             operand = true;
             continue;
         }
-        if (ch === ';' || ch === '|' || (ch === '&' && command[i + 1] === '&')) {
-            endCommand(ch === '|' && command[i + 1] !== '|');
-            i += (ch === '&' || (ch === '|' && command[i + 1] === '|')) ? 2 : 1;
+        if (ch === ';' || ch === '|' || (ch === '&' && command[next(i)] === '&')) {
+            const double = (ch === '&' || ch === '|') && command[next(i)] === ch;
+            endCommand(ch === '|' && !double);
+            i = double ? next(i) + 1 : i + 1;
             continue;
         }
         // A lone `&` backgrounds the command before it (`>&` and `&>` are redirections, read above).

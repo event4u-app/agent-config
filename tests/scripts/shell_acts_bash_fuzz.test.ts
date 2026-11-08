@@ -50,7 +50,7 @@ const TAGS: Array<[string, string, boolean]> = [
 
 // Redirections, some with operands that look like act words; one may be placed
 // before the command or between any two of its words.
-const REDIRECTS = ['>out', '> out', '2>&1', '1>&2', '<<<x', "<<< 'a b'", '>>log', '&>/dev/null', '2>/dev/null', '>|f', '<<<push', '>push', '<<<git', '< /dev/null', '2>&1<<<x', '>out 2>&1', '2>&1>log', '3>&1 1>&2 2>&3'];
+const REDIRECTS = ['>out', '> out', '2>&1', '1>&2', '<<<x', "<<< 'a b'", '>>log', '&>/dev/null', '2>/dev/null', '>|f', '<<<push', '>push', '<<<git', '< /dev/null', '2>&1<<<x', '>out 2>&1', '2>&1>log', '3>&1 1>&2 2>&3', '2>\\\n&1', '>\\\n>log', '<\\\n<<x'];
 
 function act(r: () => number): string {
     const form = pick(r, ACT_FORMS);
@@ -81,12 +81,13 @@ function simple(r: () => number): string {
  */
 function heredoc(r: () => number): string {
     const [spec, tag, quoted] = pick(r, TAGS);
-    const op = `${pick(r, ['', '', '2>&1', '>out '])}${r() < 0.5 ? '<<' : '<<-'}${spec}`;
+    // A continuation may split the operator or stand before the terminator.
+    const op = `${pick(r, ['', '', '2>&1', '>out '])}${pick(r, ['<<', '<<', '<<-', '<\\\n<', '<<\\\n ', '<<\\\n-'])}${spec}`;
     const lines: string[] = [];
     for (let k = Math.floor(r() * 3); k > 0; k -= 1) {
         lines.push(pick(r, [act(r), 'prose line', `  ${tag}`, ...(quoted ? [] : [`${tag.slice(0, 1)}\\`]), `${tag}x`]));
     }
-    const tabbed = op.includes('<<-');
+    const tabbed = /<(\\\n)?<(\\\n)?-/.test(op);
     const body = lines.map((l) => (tabbed ? `\t${l}` : l));
     let head = `cat ${op} > /dev/null`;
     if (r() < 0.4) {
@@ -102,8 +103,8 @@ function command(r: () => number): string {
     let out = '';
     let needNewline = false;
     for (let k = 1 + Math.floor(r() * 4); k > 0; k -= 1) {
-        if (out !== '') out += needNewline ? '\n' : pick(r, ['; ', ' && ', ' | ', '\n', ' & ', ' || ']);
-        if (out.endsWith('&& ') || out.endsWith('|| ')) out = `${out}true; `;
+        if (out !== '') out += needNewline ? '\n' : pick(r, ['; ', ' && ', ' | ', '\n', ' & ', ' || ', ' &\\\n& ', ' |\\\n| ']);
+        if (/(&|\|)(\\\n)?\1 $/.test(out)) out = `${out}true; `;
         const h = r() < 0.25;
         out += h ? heredoc(r) : simple(r);
         needNewline = h;

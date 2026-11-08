@@ -113,6 +113,19 @@ const CASES: Array<[string, string[]]> = [
     ['git 2>&1>log push', [P]],
     ['git 3>&1 1>&2 2>&3 push', [P]],
     ['git <<EOF 2>&1 push\ngit commit -m x\nEOF', [P]],
+    // Round-9 counterexample and its class: a continuation inside an operator or
+    // before a heredoc terminator is removed before bash reads the operator.
+    ['cat <<\\\n EOF\ngit push\nEOF', []],
+    ['cat << \\\n \\\n EOF\ngit push\nEOF', []],
+    ['cat <\\\n<EOF\ngit push\nEOF', []],
+    ['cat <<\\\n-EOF\n\tgit push\n\tEOF', []],
+    ['true &\\\n& git push', [P]],
+    ['true |\\\n| git push', [P]],
+    ['git 2>\\\n&1 push', [P]],
+    ['git >\\\n> log push', [P]],
+    ['cat <<\\\n<x; git push', [P]],
+    ['echo a # c \\\ngit push', [P]],
+    ['cat <<EOF \\\n> /dev/null\nbody\nEOF\ngit push', [P]],
     ['>out time git push', [P]],
     // Reserved words open a command; they do not name it.
     ['! git push', [P]],
