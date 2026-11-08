@@ -122,9 +122,11 @@ function lexCommands(command: string): Simple[] {
     const markQuoted = (): void => {
         if (literal === -1) literal = word.length;
     };
-    // Before a redirection operator, a word of digits is its file descriptor.
+    // Before a redirection operator, a word of digits is its file descriptor —
+    // unless an earlier operator is still waiting for its operand, which that
+    // word then is (`2>&1<<EOF`: `1` belongs to `>&`).
     const endWordBeforeRedirect = (): void => {
-        if (inWord && literal === -1 && /^\d+$/.test(word)) {
+        if (inWord && !operand && literal === -1 && /^\d+$/.test(word)) {
             word = '';
             inWord = false;
         } else endWord();

@@ -50,7 +50,7 @@ const TAGS: Array<[string, string, boolean]> = [
 
 // Redirections, some with operands that look like act words; one may be placed
 // before the command or between any two of its words.
-const REDIRECTS = ['>out', '> out', '2>&1', '1>&2', '<<<x', "<<< 'a b'", '>>log', '&>/dev/null', '2>/dev/null', '>|f', '<<<push', '>push', '<<<git', '< /dev/null'];
+const REDIRECTS = ['>out', '> out', '2>&1', '1>&2', '<<<x', "<<< 'a b'", '>>log', '&>/dev/null', '2>/dev/null', '>|f', '<<<push', '>push', '<<<git', '< /dev/null', '2>&1<<<x', '>out 2>&1', '2>&1>log', '3>&1 1>&2 2>&3'];
 
 function act(r: () => number): string {
     const form = pick(r, ACT_FORMS);
@@ -74,16 +74,28 @@ function simple(r: () => number): string {
     return pick(r, [lead, lead, lead, `! ${s}`, `{ ${s}; }`, `if cond; then ${s}; fi`, `if cond; then ${s}; else ${act(r)}; fi`]);
 }
 
-/** A heredoc segment; it ends with its terminator line, so a newline must follow. */
+/**
+ * A heredoc segment; it ends with its terminator line, so a newline must follow.
+ * The operator sits on `cat` or among an act's words, possibly next to another
+ * redirection (`2>&1<<EOF`).
+ */
 function heredoc(r: () => number): string {
     const [spec, tag, quoted] = pick(r, TAGS);
+    const op = `${pick(r, ['', '', '2>&1', '>out '])}${r() < 0.5 ? '<<' : '<<-'}${spec}`;
     const lines: string[] = [];
     for (let k = Math.floor(r() * 3); k > 0; k -= 1) {
         lines.push(pick(r, [act(r), 'prose line', `  ${tag}`, ...(quoted ? [] : [`${tag.slice(0, 1)}\\`]), `${tag}x`]));
     }
-    const tabbed = r() < 0.2;
+    const tabbed = op.includes('<<-');
     const body = lines.map((l) => (tabbed ? `\t${l}` : l));
-    return `cat ${tabbed ? '<<-' : '<<'}${spec} > /dev/null\n${[...body, tabbed ? `\t${tag}` : tag].join('\n')}`;
+    let head = `cat ${op} > /dev/null`;
+    if (r() < 0.4) {
+        const form = pick(r, ACT_FORMS);
+        const words = form.map((w, i) => (i === 0 || w.startsWith('-') || w.startsWith('"') ? w : mangle(r, w)));
+        words.splice(1 + Math.floor(r() * words.length), 0, op);
+        head = pick(r, PREFIXES) + words.join(' ');
+    }
+    return `${head}\n${[...body, tabbed ? `\t${tag}` : tag].join('\n')}`;
 }
 
 function command(r: () => number): string {
@@ -96,7 +108,8 @@ function command(r: () => number): string {
         out += h ? heredoc(r) : simple(r);
         needNewline = h;
     }
-    return out + (r() < 0.2 ? ' # trailing' : '');
+    // A comment after a heredoc's terminator would make it no terminator at all.
+    return out + (!needNewline && r() < 0.2 ? ' # trailing' : '');
 }
 
 const N = Number(process.env['SHELL_ACTS_FUZZ_N'] ?? 60);

@@ -106,6 +106,13 @@ const CASES: Array<[string, string[]]> = [
     ['nohup >f X=1 git push', []],
     ["git <<< 'a b' push", [P]],
     ['>out time X=1 git push', []],
+    // Round-8 counterexample: adjacent redirections, a heredoc among them.
+    ['git 2>&1<<EOF push\nEOF', [P]],
+    ['git 2>&1<<<x push', [P]],
+    ['git >out 2>&1 push', [P]],
+    ['git 2>&1>log push', [P]],
+    ['git 3>&1 1>&2 2>&3 push', [P]],
+    ['git <<EOF 2>&1 push\ngit commit -m x\nEOF', [P]],
     ['>out time git push', [P]],
     // Reserved words open a command; they do not name it.
     ['! git push', [P]],
