@@ -11,7 +11,9 @@ answering, failing, hanging, resting (backed off by 7.1) and absent.
 - Harness: `agents/evidence/analysis/agent-switch-link-latency.mjs`, run as
   `npx tsx agents/evidence/analysis/agent-switch-link-latency.mjs 20` after
   `npm run build:hooks`, at the tree of `feat/agent-switch-link-hardening`
-  (Phase 7.1/7.3/7.5 in place, with the council round 1 fixes).
+  (Phase 7.1/7.3/7.5 in place, with the council round 1 fixes). The round 2
+  fix changed only the Stop path's reservation bookkeeping (one more locked
+  file update per checkpoint, no added agent-switch call) and was not re-measured.
 - Each sample is one `node dist/hooks/dispatch.js --platform claude --event …`
   in a fresh HOME / `EVENT4U_CONFIG_HOME` / PATH, so the built bundle and its
   lazily-loaded `quota_notice` chunk run exactly as on a host.
@@ -100,5 +102,9 @@ observed:
 5. A record or back-off update is skipped because its lock could not be had
    within the 250 ms the lock waits — seen as a repeated line or a missing
    checkpoint above, since a skipped update is not logged.
-6. The `quota_notice` chunk outgrows its ceiling in
+6. The back-off cannot be kept (an unwritable state directory) on a machine
+   that pays link stalls — the link never rests there.
+7. A checkpoint reservation is found older than two minutes without having
+   been taken over by a later Stop.
+8. The `quota_notice` chunk outgrows its ceiling in
    `src/config/hook-bundle-budget.json` again without a reviewed raise.

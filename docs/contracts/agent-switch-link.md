@@ -255,8 +255,16 @@ the link over the CLI verbs below, never the MCP client.
   record as it is then, so neither undoes the other's and a deleted record
   stays deleted. The checkpoint and each relayed line are claimed under that
   lock before they happen, so two Stops or two prompts running at once act
-  once, and a raise never replaces a record that is still there. A lock is
-  released only by its holder. Record, back-off and lock files no session has
+  once, and a raise never replaces a record that is still there. A checkpoint
+  reservation is not completion: the record is forgotten only after the
+  checkpoint was written, a write that fails or throws hands the reservation
+  back, and a reservation older than two minutes (a Stop that died) is taken
+  over by the next Stop. A lock is released only by its holder. The lock is
+  advisory and its stale break (older than two seconds) is a check followed by
+  a removal, so two breakers at the same instant can remove a fresh lock; the
+  code holding it only reads and writes small files — the checkpoint write and
+  every agent-switch call run outside it. An unwritable state directory keeps
+  no back-off count, so the link does not rest there. Record, back-off and lock files no session has
   touched for eight days are removed when a request is raised.
 
 ## CLI fallback
