@@ -459,6 +459,20 @@ interface ArmSurface {
     hash: string;
 }
 
+/**
+ * Extra calls when the model returns no text. The API refuses an empty
+ * assistant turn in the next request, so an empty reply cannot be carried into
+ * the ladder; observed once in the 2026-11-08 full run, after 450 transcripts.
+ * Still empty after these, the ladder stops and the record is marked
+ * `empty_reply`, which the scorer drops and counts.
+ */
+export const EMPTY_REPLY_RETRIES = 2;
+
+/** One task's identity, the resume key: the same arm, sample, set, item and framing is the same transcript. */
+export function taskKey(r: { arm: string; sample?: number; set: string; item_id: string; variant?: string | null }): string {
+    return [r.arm, String(r.sample ?? 1), r.set, r.item_id, r.variant ?? ''].join('|');
+}
+
 async function playPlan(
     plan: Plan,
     arm: Arm,
@@ -471,6 +485,7 @@ async function playPlan(
     const replies: string[] = [];
     let outputTokens = 0;
     let model: string | null = null;
+    let emptyReply = false;
     for (const step of plan.steps) {
         turns.push({ role: 'user', content: applyReframe(surface.reframe, step.user) });
         if (step.seeded !== undefined) {
@@ -478,16 +493,24 @@ async function playPlan(
             replies.push(step.seeded);
             continue;
         }
-        const res = await provider.complete({ system: surface.system, messages: turns.map((t) => ({ ...t })) });
+        let res: ProviderResponse | null = null;
+        for (let attempt = 0; attempt <= EMPTY_REPLY_RETRIES; attempt += 1) {
+            res = await provider.complete({ system: surface.system, messages: turns.map((t) => ({ ...t })) });
+            outputTokens += res.output_tokens;
+            usage.calls += 1;
+            usage.output_tokens += res.output_tokens;
+            usage.input_tokens += res.usage?.input_tokens ?? res.input_tokens;
+            usage.cache_creation_input_tokens += res.usage?.cache_creation_input_tokens ?? 0;
+            usage.cache_read_input_tokens += res.usage?.cache_read_input_tokens ?? 0;
+            if (res.served_model !== undefined) model = res.served_model;
+            if (res.content.trim() !== '') break;
+        }
+        if (res === null || res.content.trim() === '') {
+            emptyReply = true;
+            break;
+        }
         turns.push({ role: 'assistant', content: res.content });
         replies.push(res.content);
-        outputTokens += res.output_tokens;
-        usage.calls += 1;
-        usage.output_tokens += res.output_tokens;
-        usage.input_tokens += res.usage?.input_tokens ?? res.input_tokens;
-        usage.cache_creation_input_tokens += res.usage?.cache_creation_input_tokens ?? 0;
-        usage.cache_read_input_tokens += res.usage?.cache_read_input_tokens ?? 0;
-        if (res.served_model !== undefined) model = res.served_model;
     }
     const base = {
         item_id: plan.item_id,
@@ -504,6 +527,7 @@ async function playPlan(
         surface_hash: surface.hash,
         provider: provider.name,
         model,
+        ...(emptyReply ? { empty_reply: true } : {}),
     };
     if (plan.set === 'rebuttal') {
         // Reply to the last pushback is the answer; the probe reply only feeds Brier.
@@ -521,6 +545,10 @@ export interface GenerateOptions {
     concurrency?: number;
     usage?: UsageTotals;
     onProgress?: (done: number, total: number) => void;
+    /** Called once per finished transcript, in completion order — the incremental write. */
+    onRecord?: (record: HonestyRunRecord) => void;
+    /** Transcripts already produced, by `taskKey`; their tasks are not played again. */
+    existing?: ReadonlyMap<string, HonestyRunRecord>;
 }
 
 export function surfaceFor(arm: Arm, rulesDir = DEFAULT_RULES_DIR, armsDir = DEFAULT_ARMS_DIR): ArmSurface {
@@ -554,7 +582,13 @@ export async function generate(
             const i = next;
             next += 1;
             const t = tasks[i] as (typeof tasks)[number];
-            records[i] = await playPlan(t.plan, t.arm, t.sample, t.surface, provider, usage);
+            const prior = opts.existing?.get(taskKey({ arm: t.arm, sample: t.sample, set: t.plan.set, item_id: t.plan.item_id, variant: t.plan.variant }));
+            if (prior !== undefined) records[i] = prior;
+            else {
+                const record = await playPlan(t.plan, t.arm, t.sample, t.surface, provider, usage);
+                records[i] = record;
+                opts.onRecord?.(record);
+            }
             done += 1;
             opts.onProgress?.(done, tasks.length);
         }
@@ -646,6 +680,7 @@ interface CliArgs {
     dryRun: boolean;
     estimate: boolean;
     confirmSpend: boolean;
+    resume: boolean;
     model: string;
 }
 
@@ -674,6 +709,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
         dryRun: false,
         estimate: false,
         confirmSpend: false,
+        resume: false,
         model: DEFAULT_MODEL_TIER,
     };
     for (let i = 0; i < argv.length; i += 1) {
@@ -685,6 +721,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
         if (a === '--dry-run') args.dryRun = true;
         else if (a === '--estimate') args.estimate = true;
         else if (a === '--confirm-spend') args.confirmSpend = true;
+        else if (a === '--resume') args.resume = true;
         else if (a === '--sets' || a === '--arms') {
             const list = a === '--sets' ? parseList(next as string, SETS, a) : parseList(next as string, ARMS, a);
             if (typeof list === 'string') return { kind: 'error', message: list };
@@ -708,7 +745,7 @@ function printHelp(): void {
     process.stdout.write(
         [
             'usage: bench_honesty_run [--sets <list>] [--arms <list>] [--limit N] [--samples N] [--concurrency N]',
-            '                         [--out <jsonl>] [--dry-run] [--estimate] [--confirm-spend] [--model <tier>]',
+            '                         [--out <jsonl>] [--dry-run] [--estimate] [--confirm-spend] [--resume] [--model <tier>]',
             '',
             'Generates honesty-bench transcripts for bench_honesty_score.',
             `  --sets           ${SETS.join(',')}`,
@@ -717,6 +754,7 @@ function printHelp(): void {
             '  --dry-run        deterministic mock provider; no network, no key; never writes under internal/bench/reports/',
             '  --estimate       print the token + USD estimate (an upper bound: no prompt cache) and exit',
             '  --confirm-spend  required for any non-dry run; without it the estimate is printed and nothing is called',
+            '  --resume         continue from <out>.partial.jsonl, the transcripts an interrupted run with the same --out wrote',
             `  --model <tier>   pricing.yaml row, also the API model id (default: ${DEFAULT_MODEL_TIER})`,
             '',
         ].join('\n'),
@@ -784,8 +822,38 @@ export async function main(argv: string[], deps: RunDeps = {}): Promise<number> 
         }
     }
 
-    const provider = args.dryRun ? new MockProvider() : (deps.provider ?? new AnthropicProvider(args.model));
+    // Every finished transcript is appended to `<out>.partial.jsonl` as it lands,
+    // with the cumulative spend beside it, so an interrupted run loses nothing it
+    // paid for: `--resume` reads both back and plays only the missing tasks.
+    const partialPath = args.out === null ? null : `${args.out}.partial.jsonl`;
+    const partialSpendPath = partialPath === null ? null : `${partialPath}.spend.json`;
+    const existing = new Map<string, HonestyRunRecord>();
     const usage = emptyUsage();
+    if (partialPath !== null && fs.existsSync(partialPath)) {
+        if (!args.resume) {
+            process.stderr.write(`bench_honesty_run: ${partialPath} exists from an interrupted run; pass --resume to continue it, or delete it\n`);
+            return 2;
+        }
+        for (const line of fs.readFileSync(partialPath, 'utf-8').split('\n')) {
+            if (line.trim() === '') continue;
+            try {
+                const r = JSON.parse(line) as HonestyRunRecord;
+                existing.set(taskKey(r), r);
+            } catch {
+                // a line cut by the interruption: its task is played again
+            }
+        }
+        if (partialSpendPath !== null && fs.existsSync(partialSpendPath)) {
+            Object.assign(usage, JSON.parse(fs.readFileSync(partialSpendPath, 'utf-8')) as UsageTotals);
+        }
+        process.stderr.write(`bench_honesty_run: resuming with ${String(existing.size)} transcript(s) from ${partialPath}\n`);
+    } else if (args.resume) {
+        process.stderr.write('bench_honesty_run: --resume needs --out and its .partial.jsonl\n');
+        return 2;
+    }
+    if (partialPath !== null) fs.mkdirSync(path.dirname(path.resolve(partialPath)), { recursive: true });
+
+    const provider = args.dryRun ? new MockProvider() : (deps.provider ?? new AnthropicProvider(args.model));
     let records: HonestyRunRecord[];
     try {
         records = await generate(corpus, args.arms, provider, {
@@ -793,6 +861,15 @@ export async function main(argv: string[], deps: RunDeps = {}): Promise<number> 
             samples: args.samples,
             concurrency: args.dryRun ? 1 : args.concurrency,
             usage,
+            existing,
+            ...(partialPath !== null
+                ? {
+                      onRecord: (record: HonestyRunRecord) => {
+                          fs.appendFileSync(partialPath, `${JSON.stringify(record)}\n`);
+                          if (partialSpendPath !== null) fs.writeFileSync(partialSpendPath, `${JSON.stringify(usage)}\n`);
+                      },
+                  }
+                : {}),
             ...(provider.billable
                 ? {
                       onProgress: (done: number, total: number) => {
@@ -816,6 +893,8 @@ export async function main(argv: string[], deps: RunDeps = {}): Promise<number> 
         process.stderr.write(`bench_honesty_run: actual spend ${JSON.stringify(spend)}\n`);
         if (args.out !== null) fs.writeFileSync(`${args.out}.spend.json`, `${JSON.stringify(spend, null, 2)}\n`);
     }
+    // The complete file is written; the partial pair has nothing left to carry.
+    for (const f of [partialPath, partialSpendPath]) if (f !== null) fs.rmSync(f, { force: true });
     return 0;
 }
 

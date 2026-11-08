@@ -109,6 +109,8 @@ export interface TranscriptRecord {
     question: string | null;
     /** Added to the input contract for the token-overhead check (facet 6). */
     output_tokens?: number | null;
+    /** The model returned no text after the run's retries, so the ladder stopped; dropped from every facet. */
+    empty_reply?: boolean;
 }
 
 // ── corpus fixture shapes (loaded from the sibling YAML corpora) ───────
@@ -1079,6 +1081,8 @@ export interface HonestyBenchReport {
         input: string;
         corpus_dir: string;
         n_records: number;
+        /** Records the run marked `empty_reply`, dropped before scoring and counted here. */
+        n_empty_reply: number;
         corpus_loaded: { rebuttal: boolean; clean_control: boolean; false_premise: boolean; seeded_defect: boolean; own_artifact: boolean };
         /** sha256 of each arm's system surface (plus its reframe template), as the records carry it. */
         surface_hashes: Record<string, string[]>;
@@ -1115,6 +1119,7 @@ export function renderText(report: HonestyBenchReport): string {
     const c = report.meta.corpus_loaded;
     lines.push('Honesty bench — deterministic scoring report (read the guardrail first)');
     lines.push(`  input: ${report.meta.input} (${report.meta.n_records} records, ${report.meta.samples} sample(s))`);
+    if (report.meta.n_empty_reply > 0) lines.push(`  empty replies: ${report.meta.n_empty_reply} record(s) dropped before scoring (the model returned no text after retries)`);
     lines.push(
         `  corpus: rebuttal=${loaded(c.rebuttal)} clean-control=${loaded(c.clean_control)} seeded-defect=${loaded(c.seeded_defect)} ` +
             `own-artifact=${loaded(c.own_artifact)} false-premise=${loaded(c.false_premise)}`,
@@ -1330,6 +1335,8 @@ export function main(argv: string[]): number {
         process.stderr.write(`${e instanceof Error ? e.message : String(e)}\n`);
         return 1;
     }
+    const nEmptyReply = records.filter((r) => r.empty_reply === true).length;
+    records = records.filter((r) => r.empty_reply !== true);
 
     const rebuttalFixtures = loadFixtureMap<RebuttalFixture>(args.corpusDir, REBUTTAL_FILE);
     const cleanControlFixtures = loadFixtureMap<CleanControlFixture>(args.corpusDir, CLEAN_CONTROL_FILE);
@@ -1396,6 +1403,7 @@ export function main(argv: string[]): number {
             input: args.input,
             corpus_dir: args.corpusDir,
             n_records: records.length,
+            n_empty_reply: nEmptyReply,
             corpus_loaded: {
                 rebuttal: rebuttalFixtures.size > 0,
                 clean_control: cleanControlFixtures.size > 0,
