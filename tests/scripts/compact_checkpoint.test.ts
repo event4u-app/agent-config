@@ -9,7 +9,6 @@ import {
     checkpointDir,
     checkpointFile,
     EVENT_LOG_MAX_BYTES,
-    EVENT_LOG_MAX_LINES,
     eventsFile,
     observePostCompact,
     packageVersionFrom,
@@ -143,14 +142,34 @@ describe('compact checkpoint — filesystem boundary', () => {
         expect(observePostCompact(base())).toBe('none');
     });
 
-    it('keeps the event log bounded by lines', () => {
+    it('keeps the event log under its byte bound, however many short lines it holds', () => {
         fs.mkdirSync(checkpointDir(root), { recursive: true });
         const line = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none' })}\n`;
-        fs.writeFileSync(eventsFile(root), line.repeat(EVENT_LOG_MAX_LINES + 50));
+        fs.writeFileSync(eventsFile(root), line.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / line.length) + 50));
         recordPreCompact(base());
+        expect(fs.statSync(eventsFile(root)).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
         const lines = fs.readFileSync(eventsFile(root), 'utf8').trim().split('\n');
-        expect(lines.length).toBeLessThanOrEqual(EVENT_LOG_MAX_LINES);
         expect(JSON.parse(lines[lines.length - 1]!).event).toBe('written');
+    });
+
+    it('a trim never produces a file over the bound, even from long lines', () => {
+        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        const long = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none', pad: 'p'.repeat(450) })}\n`;
+        fs.writeFileSync(eventsFile(root), long.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / long.length) + 50));
+        recordPreCompact(base());
+        expect(fs.statSync(eventsFile(root)).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
+    });
+
+    it('does not block appending when the event log is a FIFO', () => {
+        fifoAt(eventsFile(root));
+        expect(recordPreCompact(base())).toBe('written');
+    });
+
+    it('removes a malformed marker on observation instead of leaving it behind', () => {
+        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        fs.writeFileSync(markerFile(), '{not json');
+        expect(observePostCompact(base())).toBe('none');
+        expect(fs.existsSync(markerFile())).toBe(false);
     });
 
     it('replaces an oversized event log instead of loading it', () => {

@@ -20,7 +20,8 @@
  *
  * Every file this module opens sits under one directory inside the repository,
  * plus the package's own `package.json`. Each repository path is checked so
- * every component from the root down is a real directory; every read opens a
+ * every component below the root is a real directory; the root itself is the
+ * project the host was opened on and is trusted as given, symlink or not; every read opens a
  * regular file only, without following a symlink or blocking, and reads at most
  * a fixed number of bytes — hooks run inside repositories whose contents others
  * can supply. A concurrent swap between check and open is narrowed, not closed.
@@ -37,10 +38,7 @@ import { eolSessionKey } from './session_eol.js';
 /** A classification older than this reads as `stale`. A stated default, set to be revised from `age_ms` readings. */
 export const STALE_AFTER_MS = 10 * 60 * 1000;
 
-/** The event log keeps at most this many lines; older ones are dropped when it is trimmed. */
-export const EVENT_LOG_MAX_LINES = 2000;
-
-/** A log larger than this is trimmed; one that cannot be read within four times it is replaced. */
+/** The event log never exceeds this; an append that would cross it first trims the log to half, newest lines kept. */
 export const EVENT_LOG_MAX_BYTES = 256 * 1024;
 
 const MARKER_MAX_BYTES = 4 * 1024;
@@ -188,20 +186,25 @@ function logEvent(root: string, event: EventName, now: Date, ageMs?: number): vo
     const row: Record<string, unknown> = { at: now.toISOString(), event };
     if (ageMs !== undefined) row['age_ms'] = ageMs;
     const line = `${JSON.stringify(row)}\n`;
-    const size = st?.size ?? 0;
-    if (size > EVENT_LOG_MAX_BYTES / 4) {
+    if ((st?.size ?? 0) + line.length > EVENT_LOG_MAX_BYTES) {
         const text = readRegular(file, EVENT_LOG_MAX_BYTES * 4);
-        const lines = text === null ? [] : text.split('\n').filter((l) => l.startsWith('{') && l.length < 512);
-        if (text === null || size > EVENT_LOG_MAX_BYTES || lines.length >= EVENT_LOG_MAX_LINES) {
-            const kept = lines.slice(-(EVENT_LOG_MAX_LINES - 1));
-            writeAtomic(dir, file, `${kept.join('\n')}${kept.length > 0 ? '\n' : ''}${line}`);
-            return;
+        const kept: string[] = [];
+        let bytes = line.length;
+        const lines = text === null ? [] : text.split('\n').filter((l) => l.startsWith('{'));
+        for (let i = lines.length - 1; i >= 0; i--) {
+            const len = lines[i]!.length + 1;
+            if (bytes + len > EVENT_LOG_MAX_BYTES / 2) break;
+            kept.unshift(lines[i]!);
+            bytes += len;
         }
+        writeAtomic(dir, file, `${kept.join('\n')}${kept.length > 0 ? '\n' : ''}${line}`);
+        return;
     }
-    const { O_WRONLY, O_APPEND, O_CREAT, O_NOFOLLOW } = fs.constants;
-    const fd = fs.openSync(file, O_WRONLY | O_APPEND | O_CREAT | (O_NOFOLLOW ?? 0), 0o644);
+    const { O_WRONLY, O_APPEND, O_CREAT, O_NOFOLLOW, O_NONBLOCK } = fs.constants;
+    const fd = fs.openSync(file, O_WRONLY | O_APPEND | O_CREAT | (O_NOFOLLOW ?? 0) | (O_NONBLOCK ?? 0), 0o644);
     try {
-        fs.writeSync(fd, line);
+        // Re-checked on the descriptor: a FIFO swapped in after the lstat is refused, not written to.
+        if (fs.fstatSync(fd).isFile()) fs.writeSync(fd, line);
     } finally {
         fs.closeSync(fd);
     }
@@ -256,7 +259,9 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     // Logged before the marker is consumed: if the log write fails, the marker
     // stays and the next observation classifies it again.
     logEvent(input.root, outcome, now, ageMs);
-    if (m !== null && lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
+    // Consumed when classified, and removed when unreadable as a marker, so a
+    // malformed file never lingers; anything that is not a regular file stays.
+    if (lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
     return outcome;
 }
 
