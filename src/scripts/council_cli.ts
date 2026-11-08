@@ -471,6 +471,8 @@ interface BuildMembersOptions {
     command?: QuorumCommand;
     /** `--effort` wins over the member key, which wins over the `lens` default (`effort.ts`). */
     effort_flag?: string | null;
+    /** `--member-timeout`: wall-clock seconds per CLI seat call for this run; absent → the client default. */
+    member_timeout_seconds?: number | null;
     lens?: string | null;
     /**
      * Test-only injection point, mirroring the `settings`/`members`/`table`
@@ -756,6 +758,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                         binary: (cfg['binary'] as string | null) ?? null,
                         max_calls_per_day: cli_caps[name] ?? null,
                         warn_at: cli_warn_at,
+                        timeout_seconds: opts.member_timeout_seconds ?? null,
                     }),
                 );
             } catch (exc) {
@@ -994,10 +997,10 @@ const _CLI_FACTORY: Record<
     perplexity: [PerplexityCliClient, 'sonar-pro', 'Perplexity (community)'],
 };
 
-function _construct_cli_member(
+export function _construct_cli_member(
     name: string,
     model: string | null,
-    opts: { binary?: string | null; max_calls_per_day?: number | null; warn_at?: number; effort?: Effort | null } = {},
+    opts: { binary?: string | null; max_calls_per_day?: number | null; warn_at?: number; effort?: Effort | null; timeout_seconds?: number | null } = {},
 ): ExternalAIClient {
     const binary = opts.binary ?? null;
     const max_calls_per_day = opts.max_calls_per_day ?? null;
@@ -1011,6 +1014,7 @@ function _construct_cli_member(
                 warn_at?: number;
                 consumer?: string;
                 effort?: Effort | null;
+                timeout_seconds?: number;
             }) => CliClient,
             string,
             string,
@@ -1021,6 +1025,7 @@ function _construct_cli_member(
             max_calls_per_day,
             warn_at,
             effort: opts.effort ?? null,
+            ...(opts.timeout_seconds ? { timeout_seconds: opts.timeout_seconds } : {}),
             // Declared at the construction site — the client cannot know its
             // caller. The council half of the two enumerated consumers.
             consumer: CLI_CONSUMER_COUNCIL,
@@ -1643,7 +1648,7 @@ function cmd_estimate(
             skipped,
             quorum_out,
             probe_store: readProbeStore(REPO_ROOT),
-            effort_flag: _getattr<string | null>(args, 'effort', null), lens: _getattr<boolean>(args, 'debate', false) ? 'debate' : (_getattr<string | null>(args, 'prompt_mode', null) ?? args.input_mode),
+            effort_flag: _getattr<string | null>(args, 'effort', null), member_timeout_seconds: _getattr<number | null>(args, 'member_timeout', null), lens: _getattr<boolean>(args, 'debate', false) ? 'debate' : (_getattr<string | null>(args, 'prompt_mode', null) ?? args.input_mode),
             // A cost preview spends nothing and runs no pass. The line is
             // still written — tagged, so a consumer excludes it deliberately
             // instead of never learning it was there.
@@ -2289,7 +2294,7 @@ function cmd_run(
             quorum_out,
             probe_store: readProbeStore(REPO_ROOT),
             fallback_out,
-            effort_flag: _getattr<string | null>(args, 'effort', null), lens: _getattr<string | null>(args, 'prompt_mode', null) ?? args.input_mode,
+            effort_flag: _getattr<string | null>(args, 'effort', null), member_timeout_seconds: _getattr<number | null>(args, 'member_timeout', null), lens: _getattr<string | null>(args, 'prompt_mode', null) ?? args.input_mode,
         });
     }
     // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
@@ -2851,7 +2856,7 @@ function cmd_debate(
             probe_store: readProbeStore(REPO_ROOT),
             command: 'debate',
             fallback_out,
-            effort_flag: _getattr<string | null>(args, 'effort', null), lens: 'debate',
+            effort_flag: _getattr<string | null>(args, 'effort', null), member_timeout_seconds: _getattr<number | null>(args, 'member_timeout', null), lens: 'debate',
         });
     }
     if (table === null) {
@@ -3321,6 +3326,7 @@ interface Args {
     prompt_mode: string | null;
     max_tokens: number | null;
     max_bundle_bytes?: number | null;
+    member_timeout?: number | null;
     mode_override: string | null;
     model: string[] | null;
     siblings: string[] | null;
@@ -3437,6 +3443,7 @@ function _commonInputSpecs(): OptSpec[] {
         { flag: '--input-mode', takesValue: true, choices: ['prompt', 'roadmap'], apply: (o, v) => (o.input_mode = v as string) },
         { flag: '--prompt-mode', takesValue: true, choices: ['pr', 'design', 'optimize', 'analysis'], apply: (o, v) => (o.prompt_mode = v) },
         { flag: '--max-tokens', takesValue: true, isInt: true, apply: (o, v) => (o.max_tokens = v === null ? null : parseInt(v, 10)) },
+        { flag: '--member-timeout', takesValue: true, isInt: true, apply: (o, v) => (o.member_timeout = v === null ? null : parseInt(v, 10)) },
         { flag: '--max-bundle-bytes', takesValue: true, isInt: true, apply: (o, v) => (o.max_bundle_bytes = v === null ? null : parseInt(v, 10)) },
         { flag: '--mode-override', takesValue: true, choices: ['api', 'manual'], apply: (o, v) => (o.mode_override = v) },
         { flag: '--model', takesValue: true, apply: (o, v) => { (o.model ??= []).push(v as string); } },
