@@ -112,7 +112,7 @@ export function censusTexts(texts: readonly string[], probes: readonly Probe[]):
                 out.triggers[trigger] = (out.triggers[trigger] ?? 0) + 1;
                 if (typeof meta['preTokens'] === 'number') pre.push(meta['preTokens'] as number);
                 if (typeof meta['postTokens'] === 'number') post.push(meta['postTokens'] as number);
-                const before = typeof rec['sessionId'] === 'string' ? (rec['sessionId'] as string) : last;
+                const before: string | null = typeof rec['sessionId'] === 'string' ? (rec['sessionId'] as string) : last;
                 open = { before, summarised: false };
                 const v = rec['version'];
                 if (typeof v === 'string') {
