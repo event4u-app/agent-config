@@ -628,3 +628,118 @@ describe('7.5 record lifetime and interleaving', () => {
         expect(fs.existsSync(held)).toBe(false);
     });
 });
+
+describe('7.x council round 1 findings', () => {
+    const sess = (): string => hashSessionId('sess-a');
+    const doneNow = {
+        state: 'done',
+        decision: { kind: 'approve', target: 'claude/b', how: 'now', by: 'ac:claude-code', at: 'x' },
+        outcome: { at: 'x', ok: true, detail: null, resume: null },
+    };
+
+    it('a done record awaiting its checkpoint is not replaced by a new raise in a later window', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest(doneNow);
+        // A new cycle: the same account is hot again on a later reset, so the raise claim is free.
+        appendQuotaSnapshot({ ts: NOW, session: sess(), five_hour: { pct: 90, resets_at: RESET + 3600 }, account: 'claude/a' }, stateEnv);
+        noticeReply(deps());
+        expect(calls('request')).toHaveLength(1);
+        expect(readSwitchRecord(sess(), stateEnv)?.id).toBe(ID);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv })).toBe(true);
+    });
+
+    function racingLink(field: string): Record<string, string> {
+        // A second hook sets `field` on the record while this one waits on `switch show`.
+        const rec = switchRecordPath(sess(), stateEnv);
+        const racer = path.join(home, `racer-${field}`);
+        fs.mkdirSync(racer);
+        const exe = path.join(racer, 'agent-switch');
+        const set = `const f=${JSON.stringify(rec)};const fs=require('fs');const o=JSON.parse(fs.readFileSync(f,'utf-8'));o[${JSON.stringify(field)}]=true;fs.writeFileSync(f,JSON.stringify(o));`;
+        fs.writeFileSync(exe, `#!/bin/sh\n"${process.execPath}" -e ${JSON.stringify(set)}\nexec "${process.execPath}" "${FAKE}" "$@"\n`);
+        fs.chmodSync(exe, 0o755);
+        return { ...binEnv, PATH: `${racer}${path.delimiter}${binEnv.PATH}` };
+    }
+
+    it('two Stops at once write the checkpoint once: the one that lost the reservation writes nothing', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        let writes = 0;
+        const ok = checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: racingLink('checkpointed') });
+        expect(ok).toBe(false);
+        expect(writes).toBe(0);
+    });
+
+    it('a failed write releases the reservation so the next Stop tries again', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        expect(checkpointBeforeMove(sess(), () => false, stateEnv, { env: binEnv })).toBe(false);
+        expect(readSwitchRecord(sess(), stateEnv)?.checkpointed).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv })).toBe(true);
+    });
+
+    it('the outcome line is claimed under the lock: a prompt that lost the race shows nothing', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest(doneNow);
+        const r = noticeReply(deps({ link: { env: racingLink('outcome_told') } }));
+        expect(r.lines.filter((l) => l.includes('moved this work'))).toEqual([]);
+    });
+
+    it('a lock is released only by its holder', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
+        let replaced = false;
+        updateSwitchRecord(
+            sess(),
+            (cur) => {
+                // The holder stalls; another process breaks the lock as stale and takes it.
+                fs.writeFileSync(held, 'someone-else');
+                replaced = true;
+                return cur;
+            },
+            stateEnv,
+        );
+        expect(replaced).toBe(true);
+        expect(fs.readFileSync(held, 'utf-8')).toBe('someone-else');
+    });
+
+    it('a successful probe counts as an answer', () => {
+        hot();
+        // Two unanswered relays first.
+        setRequest();
+        noticeReply(deps());
+        fs.rmSync(switchFile);
+        [1, 2].forEach(() => noticeReply(deps()));
+        // The record is gone (expired); the next raise probes successfully, then the request fails.
+        writeRecordNull();
+        appendQuotaSnapshot({ ts: NOW, session: sess(), five_hour: { pct: 90, resets_at: RESET + 3600 }, account: 'claude/a' }, stateEnv);
+        noticeReply(deps());
+        expect(linkResting(sess(), stateEnv, NOW)).toBe(false);
+    });
+
+    function writeRecordNull(): void {
+        updateSwitchRecord(sess(), () => null, stateEnv);
+    }
+
+    it('a raise prunes state files of sessions untouched for over eight days', () => {
+        const dir = path.dirname(switchRecordPath(sess(), stateEnv));
+        fs.mkdirSync(dir, { recursive: true });
+        const orphan = path.join(dir, 'ffffffffffffffffffff.backoff.json');
+        fs.writeFileSync(orphan, '{}');
+        const old = new Date(NOW - 9 * 24 * 3600_000);
+        fs.utimesSync(orphan, old, old);
+        hot();
+        setRequest();
+        noticeReply(deps());
+        expect(fs.existsSync(orphan)).toBe(false);
+    });
+});

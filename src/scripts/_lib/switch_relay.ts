@@ -168,7 +168,7 @@ function callJson(argv: string[], opts: LinkOptions, tally?: CallTally): unknown
 export function raiseSwitch(account: string, sessionId: string, opts: LinkOptions = {}, tally?: CallTally): SwitchRequest | null {
     if (!isAccount(account) || !SESSION_ID_RE.test(sessionId)) return null;
     const probe = probeLink(opts).state;
-    if (probe === 'failed') tallied(tally, false);
+    if (probe === 'failed' || probe === 'present') tallied(tally, probe === 'present');
     if (probe !== 'present') return null;
     const session = `${account}/${sessionId}`;
     const res = obj(callJson(['switch', 'request', '--session', session, '--by', 'ac', '--json'], opts, tally));
@@ -249,14 +249,20 @@ function pause(ms: number): void {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-/** Take `<file>.lock`; a holder older than LOCK_STALE_MS is taken to have died. */
-function lock(file: string): string | null {
+/**
+ * Run `fn` holding `<file>.lock`, or return `null` when the lock could not be
+ * had. The lock file carries a token of this holder, and only a holder whose
+ * token is still in it removes it: a holder older than LOCK_STALE_MS is taken
+ * to have died and its lock is broken, and if it was only slow, its release
+ * must not delete the lock its successor now holds.
+ */
+function locked<T>(file: string, fn: () => T): { value: T } | null {
     const held = `${file}.lock`;
+    const token = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
     for (let i = 0; i < LOCK_TRIES; i++) {
         try {
             fs.mkdirSync(path.dirname(file), { recursive: true });
-            fs.closeSync(fs.openSync(held, 'wx', 0o600));
-            return held;
+            fs.writeFileSync(held, token, { flag: 'wx', mode: 0o600 });
         } catch {
             try {
                 if (Date.now() - fs.statSync(held).mtimeMs > LOCK_STALE_MS) fs.rmSync(held, { force: true });
@@ -264,15 +270,25 @@ function lock(file: string): string | null {
                 // released meanwhile
             }
             pause(LOCK_WAIT_MS);
+            continue;
+        }
+        try {
+            return { value: fn() };
+        } finally {
+            try {
+                if (fs.readFileSync(held, 'utf-8') === token) fs.rmSync(held, { force: true });
+            } catch {
+                // already gone
+            }
         }
     }
     return null;
 }
 
 /**
- * Read-modify-write of the record under a lock, applied to what is on disk
+ * Read-modify-write of the record under its lock, applied to what is on disk
  * now rather than to what the caller read earlier: the prompt relay and the
- * Stop checkpoint can run at once, and each sets only its own flag on the
+ * Stop checkpoint can run at once, and each changes only its own flag on the
  * current record, so neither undoes the other's and a deleted record stays
  * deleted (`fn` gets `null` and returns it). Returns whether `fn` was applied.
  */
@@ -282,20 +298,41 @@ export function updateSwitchRecord(
     stateEnv?: EnvMap | null,
 ): boolean {
     const file = switchRecordPath(sessionHash, stateEnv);
-    const held = lock(file);
-    if (held === null) return false;
+    return (
+        locked(file, () => {
+            let cur: SwitchRecord | null = null;
+            try {
+                cur = parseRecord(fs.readFileSync(file, 'utf-8'), fs.statSync(file).mtimeMs);
+            } catch {
+                cur = null;
+            }
+            const next = fn(cur);
+            if (next !== cur) writeSwitchRecord(sessionHash, next, stateEnv);
+        }) !== null
+    );
+}
+
+/** State files of sessions untouched for longer than this are removed when a request is raised. */
+const PRUNE_AFTER_MS = 8 * 24 * HOUR_MS;
+
+/**
+ * Remove records, back-off files and locks no session has touched for eight
+ * days. Expiry on read covers a session that comes back; this covers one that
+ * never does. Run on a raise, which happens at most once per window and reset.
+ */
+export function pruneSwitchState(stateEnv?: EnvMap | null, now: number = Date.now()): void {
+    const dir = path.dirname(switchRecordPath('x', stateEnv));
     try {
-        let cur: SwitchRecord | null = null;
-        try {
-            cur = parseRecord(fs.readFileSync(file, 'utf-8'), fs.statSync(file).mtimeMs);
-        } catch {
-            cur = null;
+        for (const name of fs.readdirSync(dir)) {
+            const p = path.join(dir, name);
+            try {
+                if (now - fs.statSync(p).mtimeMs > PRUNE_AFTER_MS) fs.rmSync(p, { force: true });
+            } catch {
+                // removed meanwhile
+            }
         }
-        const next = fn(cur);
-        if (next !== cur) writeSwitchRecord(sessionHash, next, stateEnv);
-        return true;
-    } finally {
-        fs.rmSync(held, { force: true });
+    } catch {
+        // no directory yet
     }
 }
 
@@ -331,7 +368,7 @@ function writeBackoff(sessionHash: string, b: Backoff, stateEnv?: EnvMap | null)
         fs.mkdirSync(path.dirname(file), { recursive: true });
         write_atomic(file, JSON.stringify(b));
     } catch {
-        // best-effort: a lost count delays the rest by one call at worst
+        // best-effort: a lost write delays the rest by one call at worst
     }
 }
 
@@ -341,29 +378,37 @@ export function linkResting(sessionHash: string, stateEnv?: EnvMap | null, now: 
 }
 
 /**
- * Fold one hook run's calls into the streak; at BACKOFF_AFTER the link rests
- * until `until` (the next reset, when known). A lost increment between two
- * hooks running at once costs one extra call, so this file takes no lock.
+ * Fold one hook run's calls into the streak, under the back-off file's lock;
+ * at BACKOFF_AFTER the link rests until `until` (the next reset, when known).
+ * The bound is on the streak, not on calls already running: a hook that
+ * passed the resting check before another hook tripped the rest still finishes
+ * its one or two calls, so overlapping hooks add at most that many.
  */
 export function noteCalls(sessionHash: string, tally: CallTally, until: number | null, stateEnv?: EnvMap | null, now: number = Date.now()): void {
     if (!tally.reset && tally.failed === 0) return;
-    const prev = readBackoff(sessionHash, stateEnv, now);
-    if (prev.until !== null) return;
-    const fails = (tally.reset ? 0 : prev.fails) + tally.failed;
-    const rests = fails >= BACKOFF_AFTER;
-    writeBackoff(
-        sessionHash,
-        { fails, until: rests ? (until !== null && until > now ? until : now + BACKOFF_FALLBACK_MS) : null, told: false },
-        stateEnv,
-    );
+    locked(backoffPath(sessionHash, stateEnv), () => {
+        const prev = readBackoff(sessionHash, stateEnv, now);
+        if (prev.until !== null) return;
+        const fails = (tally.reset ? 0 : prev.fails) + tally.failed;
+        const rests = fails >= BACKOFF_AFTER;
+        writeBackoff(
+            sessionHash,
+            { fails, until: rests ? (until !== null && until > now ? until : now + BACKOFF_FALLBACK_MS) : null, told: false },
+            stateEnv,
+        );
+    });
 }
 
-/** The one line saying the link rests, or `null` once it was said. */
+/** The one line saying the link rests, claimed under the lock so two prompts never both say it. */
 export function restingLine(sessionHash: string, stateEnv?: EnvMap | null, now: number = Date.now()): string | null {
-    const b = readBackoff(sessionHash, stateEnv, now);
-    if (b.until === null || b.told) return null;
-    writeBackoff(sessionHash, { ...b, told: true }, stateEnv);
-    const at = new Date(b.until).toISOString().slice(11, 16);
+    const claimed = locked(backoffPath(sessionHash, stateEnv), () => {
+        const b = readBackoff(sessionHash, stateEnv, now);
+        if (b.until === null || b.told) return null;
+        writeBackoff(sessionHash, { ...b, told: true }, stateEnv);
+        return b.until;
+    });
+    if (claimed === null || claimed.value === null) return null;
+    const at = new Date(claimed.value).toISOString().slice(11, 16);
     return `AC: agent-switch did not answer ${BACKOFF_AFTER} times in a row; AC stops asking it about this session until ${at} UTC.`;
 }
 
@@ -479,15 +524,29 @@ export function checkpointBeforeMove(
     const state = stateOf(rec.id, opts, tally);
     noteCalls(sessionHash, tally, null, stateEnv, now);
     if (state === null || !CHECKPOINT_STATES.has(state)) return false;
-    if (!write()) return false;
+    // Reserve before the side effect, so a second Stop running at once finds it taken.
+    const claim = { reserved: false };
+    updateSwitchRecord(
+        sessionHash,
+        (cur) => {
+            if (cur?.id !== rec.id || cur.checkpointed) return cur;
+            claim.reserved = true;
+            return { ...cur, checkpointed: true };
+        },
+        stateEnv,
+    );
+    if (!claim.reserved) return false;
+    const written = write();
     updateSwitchRecord(
         sessionHash,
         (cur) => {
             if (cur?.id !== rec.id) return cur;
+            // Not written: hand the reservation back so the next Stop tries again.
+            if (!written) return { ...cur, checkpointed: false };
             // The outcome was already shown, so nothing is left to tell or to write.
-            return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true };
+            return state === 'done' && cur.outcome_told ? null : cur;
         },
         stateEnv,
     );
-    return true;
+    return written;
 }
