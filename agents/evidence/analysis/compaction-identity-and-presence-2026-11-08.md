@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 # Compaction: session identity and summary presence, read from host transcripts
 
 drafted-against: ceea998a0d · measured 2026-11-08 · round `inbox-2026-11-zb`
