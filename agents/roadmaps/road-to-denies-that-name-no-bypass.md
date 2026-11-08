@@ -45,7 +45,9 @@ of these defects is small, and each has a reproduction recorded below.
       test carries a template-literal fixture.
       Done 2026-11-08: red on the tree before 1.1/1.3 with four findings, not two. The
       sibling search found `block_speaking_inbox_dir.ts` printing its switch the same way.
-      Council round 1 added shadowing, escapes and plain-string cases; self-test 14/14.
+      Council rounds 1-4 kept finding regex misses, so the gate now evaluates string
+      expressions from the TypeScript AST; that found a fifth site
+      (`block_config_weakening.ts`, a `+` chain naming the manifest). Self-test 20/20.
 - [x] **1.3 No deny tells the agent to remove its own entry.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       `block_no_verify.ts:721` and `block_kernel_rule_writes.ts:248-249` say "disable
       or remove the entry in src/scripts/hook_manifest.yaml". The bypass is a

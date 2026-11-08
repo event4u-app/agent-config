@@ -36,10 +36,12 @@
  * string in the same module takes that constant's value before the patterns
  * run. Without that the gate read `${KILL_SWITCH}=1` literally and certified a
  * deny that printed its own kill switch (round inbox-2026-11-zc). Every value a
- * name is given anywhere is kept and every combination is checked, so
+ * name is given anywhere is kept, constants built from constants resolve to a
+ * fixed point, and every combination is checked, so
  * shadowing cannot hide a switch; escapes, line continuations and an escaped
  * `\${` are the parser's own cooked text. A message with more variants than
- * the gate enumerates fails rather than passes. A deny may also not name the
+ * the gate enumerates, or nested deeper than it evaluates, fails rather than
+ * passes. A deny may also not name the
  * hook manifest: telling the refused agent where its own entry lives is a
  * bypass too, so any reference is refused.
  *
@@ -151,12 +153,24 @@ export const MAX_VARIANTS = 4096;
  * never hide a switch.
  */
 export function stringConstants(sf: ts.SourceFile): Map<string, string[]> {
-    // Three passes so a constant built from other constants resolves too.
+    // To a fixed point, so a chain of constants of any length resolves. Each pass
+    // can only add values, so it settles within one pass per declaration.
     let known = new Map<string, string[]>();
-    for (let pass = 0; pass < 3; pass += 1) {
-        known = collectConstants(sf, known);
+    for (let pass = 0; pass <= sf.statements.length + 64; pass += 1) {
+        const next = collectConstants(sf, known);
+        if (sameConstants(known, next)) return next;
+        known = next;
     }
     return known;
+}
+
+function sameConstants(a: ReadonlyMap<string, readonly string[]>, b: ReadonlyMap<string, readonly string[]>): boolean {
+    if (a.size !== b.size) return false;
+    for (const [k, v] of a) {
+        const w = b.get(k);
+        if (w === undefined || w.length !== v.length || w.some((x, i) => x !== v[i])) return false;
+    }
+    return true;
 }
 
 function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly string[]>): Map<string, string[]> {
@@ -169,8 +183,14 @@ function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly
             for (const decl of node.declarations) {
                 if (!ts.isIdentifier(decl.name) || decl.initializer === undefined) continue;
                 const values = evaluate(decl.initializer, known, 0);
-                if (values === null || values.some((v) => v.includes('\u0000HOLE'))) continue;
                 const name = decl.name.text;
+                if (values === null) {
+                    // Too large to enumerate: recorded empty, which makes any
+                    // message that uses it unresolvable rather than certified.
+                    out.set(name, out.get(name) ?? []);
+                    continue;
+                }
+                if (values.some((v) => v.includes('\u0000HOLE'))) continue;
                 out.set(name, [...new Set([...(out.get(name) ?? []), ...values])]);
             }
         }
@@ -193,7 +213,8 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
         return left.flatMap((l) => right.map((r) => l + r));
     };
     const hole = (n: ts.Node): string[] => [`\u0000HOLE\${${n.getText()}}`];
-    if (depth > 64) return hole(node);
+    // Past the budget the expression is uncertified, never a silent hole.
+    if (depth > 256) return null;
     if (ts.isParenthesizedExpression(node)) return evaluate(node.expression, constants, depth + 1);
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return [node.text];
     if (ts.isTemplateExpression(node)) {
@@ -209,7 +230,8 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
     }
     if (ts.isIdentifier(node)) {
         const values = constants.get(node.text);
-        return values !== undefined && values.length > 0 ? [...values] : hole(node);
+        if (values === undefined) return hole(node);
+        return values.length > 0 ? [...values] : null;
     }
     return hole(node);
 }
@@ -411,8 +433,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 19,
-        minRejectCases: 12,
+        minCases: 21,
+        minRejectCases: 14,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -532,6 +554,29 @@ function selfTest(): number {
                 name: 'a switch split across a + chain is joined before matching',
                 expect: 'reject',
                 run: () => run(plant('concat', "process.stderr.write('Blocked: AGENT_CONFIG_' +\n    'X=1 to skip');\n")),
+            },
+            {
+                name: 'a chain of four constants still resolves',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        plant(
+                            'const-chain',
+                            "const A = 'AGENT_CONFIG_';\nconst B = A;\nconst C = B;\nconst D = C;\n" +
+                                'process.stderr.write(`Blocked: ${D}X=1`);\n',
+                        ),
+                    ),
+            },
+            {
+                name: 'a + chain deeper than the evaluation budget fails, not passes',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        plant(
+                            'deep-chain',
+                            "process.stderr.write('Blocked: AGENT_CONFIG_' + " + "'' + ".repeat(300) + "'X=1');\n",
+                        ),
+                    ),
             },
             {
                 name: 'a placeholder naming a non-switch constant passes',
