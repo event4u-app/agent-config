@@ -22,6 +22,7 @@ import { detectEnvironment, type EnvironmentReport } from './_lib/environment_de
 
 import {
     BundleTooLarge,
+    MAX_BUNDLE_BYTES,
     bundle_prompt,
     bundle_roadmap,
 } from './ai_council/bundler.js';
@@ -1036,17 +1037,19 @@ function build_question(opts: {
     input_mode: string;
     max_tokens: number;
     prompt_mode_override?: string | null;
+    max_bundle_bytes?: number | null;
 }): [CouncilQuestion, string] {
     const { input_path, input_mode, max_tokens } = opts;
+    const cap = opts.max_bundle_bytes ?? MAX_BUNDLE_BYTES;
     const prompt_mode_override = opts.prompt_mode_override ?? null;
     let ctx: { mode: string; text: string };
     let artefact: string;
     if (input_mode === 'prompt') {
         const text = fs.readFileSync(input_path, 'utf-8');
-        ctx = bundle_prompt(text);
+        ctx = bundle_prompt(text, cap);
         artefact = String(input_path);
     } else if (input_mode === 'roadmap') {
-        ctx = bundle_roadmap(input_path);
+        ctx = bundle_roadmap(input_path, cap);
         artefact = String(input_path);
     } else {
         throw new ValueError(
@@ -1657,6 +1660,7 @@ function cmd_estimate(
         input_path: args.question as string,
         input_mode: args.input_mode,
         max_tokens: _resolve_max_tokens(args, ai_cfg),
+        max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
     // Same inputs and position as `run`: before pricing, so a pin prices the model it pins.
@@ -2315,6 +2319,7 @@ function cmd_run(
         input_path: args.question as string,
         input_mode: args.input_mode,
         max_tokens: _resolve_max_tokens(args, ai_cfg),
+        max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
     const [proceed, gate_exit] = _necessity_gate({
@@ -2859,6 +2864,7 @@ function cmd_debate(
         input_path: args.question as string,
         input_mode: args.input_mode,
         max_tokens: _resolve_max_tokens(args, ai_cfg),
+        max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
     const [proceed, gate_exit] = _necessity_gate({
@@ -3314,6 +3320,7 @@ interface Args {
     input_mode: string;
     prompt_mode: string | null;
     max_tokens: number | null;
+    max_bundle_bytes?: number | null;
     mode_override: string | null;
     model: string[] | null;
     siblings: string[] | null;
@@ -3430,6 +3437,7 @@ function _commonInputSpecs(): OptSpec[] {
         { flag: '--input-mode', takesValue: true, choices: ['prompt', 'roadmap'], apply: (o, v) => (o.input_mode = v as string) },
         { flag: '--prompt-mode', takesValue: true, choices: ['pr', 'design', 'optimize', 'analysis'], apply: (o, v) => (o.prompt_mode = v) },
         { flag: '--max-tokens', takesValue: true, isInt: true, apply: (o, v) => (o.max_tokens = v === null ? null : parseInt(v, 10)) },
+        { flag: '--max-bundle-bytes', takesValue: true, isInt: true, apply: (o, v) => (o.max_bundle_bytes = v === null ? null : parseInt(v, 10)) },
         { flag: '--mode-override', takesValue: true, choices: ['api', 'manual'], apply: (o, v) => (o.mode_override = v) },
         { flag: '--model', takesValue: true, apply: (o, v) => { (o.model ??= []).push(v as string); } },
         { flag: '--siblings', takesValue: true, apply: (o, v) => { (o.siblings ??= []).push(v as string); } },
