@@ -47,19 +47,32 @@ of re-reading or guessing.
 
 ## Phase 1 — A checkpoint the session wrote for itself
 
-- [ ] **1.1** Put to the council, neutrally: is a checkpoint written at
-      `pre_compact` and keyed by (session id, transcript path) a predecessor
-      signal sufficient for `session_start(compact)` to inject task state?
-      Attach `agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`.
-      <!-- blocked-by: council-compact-checkpoint-lineage -->
-      verify: `test -f agents/evidence/council/compact-checkpoint-lineage.md` -> 0
-- [ ] **1.2** On a yes: `pre_compact` writes the checkpoint with the field
-      discipline of `continuity_writer.ts` (no judgement fields);
-      `session_start(compact)` injects it only when both keys match, inside the
-      8,000-char restore budget, ordered by the injection budget.
-      verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
-- [ ] **1.3** Tests: own checkpoint restores; foreign, missing and mismatched
-      checkpoints inject nothing.
+- [x] **1.1** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Council answered 2026-11-08 (2/2 present, split on the label,
+      convergent on the substance): (session id, transcript path) does **not**
+      authorise injection. It names the session, not the compaction attempt — a
+      checkpoint orphaned by an aborted compaction would match the next one.
+      Writing and measuring is approved; injection is not.
+      Record: `agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md`.
+      verify: `test -f agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md` -> 0
+- [ ] **1.2** `pre_compact` writes the checkpoint (field discipline of
+      `continuity_writer.ts`, no judgement fields, write timestamp and package
+      version) and **injects nothing**. A counts-only log records written /
+      consumed / orphaned per compaction.
+      verify: `npx vitest run tests/scripts/compact_checkpoint.test.ts` -> 0
+- [ ] **1.3** Fault tests against the lifecycle the council named: an aborted
+      compaction followed by a second one, a manual `/compact`, duplicate
+      callbacks, a package upgrade between write and read. Each must show
+      whether a stale checkpoint can become eligible.
+      verify: `npx vitest run tests/scripts/compact_checkpoint_lifecycle.test.ts` -> 0
+- [ ] **1.4** Choose the guarantee explicitly — attempt-specific handoff or
+      "latest validated snapshot of this session" — and list which fields may
+      be restored, each as a historical observation ("tests passed at <sha>"),
+      never as current status. <!-- blocked-by: compact-attempt-identity -->
+      verify: `test -f agents/evidence/council/compact-checkpoint-guarantee.md` -> 0
+- [ ] **1.5** Only then inject at `session_start(compact)`: both keys match,
+      staleness bound, version mismatch rejects, at most once, behind its own
+      switch independent of rule restore and language pin; a wrong-session or
+      stale restore disables it.
       verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
 ## Phase 2 — Session pins the user set, restored verbatim
 
@@ -81,14 +94,32 @@ of re-reading or guessing.
       verify: `test -f agents/evidence/analysis/session-pin-presence.md` -> 0
 ## Phase 3 — Recall from the session's own transcript
 
-- [ ] **3.1** Read-only keyword recall over the session's own JSONL only, output
-      capped (2,000 tokens per call, 3 calls per turn), redacted through the
-      existing redact path, on an existing verb (ADR-041; candidate
-      `export --recall`). <!-- blocked-by: recall-verb-placement -->
+Council 2026-11-08 (2/2, split on the surface only): not `memory:lookup`; one
+transport-independent core with CLI or MCP as adapters; nothing ships before a
+host-attested session binding exists. Record:
+`agents/evidence/council/transcript-recall-surface-2026-11-08.md`.
+
+- [ ] **3.1** Show the need first: extend `compaction_census` to count, in the
+      10 turns after each compaction, reads of paths already read before the
+      boundary and turns that refer back to pre-boundary content. A rate too
+      low to move a pre-registered outcome closes this phase as a null.
+      verify: `test -f agents/evidence/analysis/post-compaction-reread.md` -> 0
+- [ ] **3.2** Session binding from a host-supplied identity, never a
+      caller-supplied path or id; state the narrower guarantee honestly — the
+      command limits its own scope, it cannot confine a shell that can read the
+      file anyway. <!-- blocked-by: recall-session-binding -->
+      verify: `test -f agents/evidence/council/recall-session-binding.md` -> 0
+- [ ] **3.3** Core: snapshot offset with a tolerated unfinished tail; recall
+      output excluded from later searches; redaction failure returns nothing;
+      original roles kept so recalled text is never read as a current
+      instruction; telemetry counts only, never queries or excerpts; kill switch
+      checked per call. Caps 2,000 tokens per call, 3 per turn, with the turn
+      counter's owner named.
       verify: `npx vitest run tests/scripts/transcript_recall.test.ts` -> 0
-- [ ] **3.2** Pre-registered paired comparison over ≥ 15 compactions: re-read
-      rate of already-read paths in the 10 turns after a compaction, before vs
-      after. No gain keeps the default off and publishes the null.
+- [ ] **3.4** Pre-register the decision rule before any run: outcome metric,
+      improvement threshold, regression and inconclusive handling, stop
+      conditions (cross-session result, redaction failure, budget bypass).
+      ≥ 15 compactions is the floor, not the rule. No gain keeps it off.
       verify: `test -f agents/evidence/analysis/transcript-recall-paired.md` -> 0
 ## Phase 4 — Governance imports, each small
 
@@ -106,8 +137,8 @@ of re-reading or guessing.
       nudge). Shrunk counterexamples become fixed regression cases.
       verify: `npx vitest run tests/scripts/property_decision_cores.test.ts` -> 0
 - [ ] **4.3** A `known_bad` range with a rollback target in the update notice,
-      reported in every mode except `off`, never auto-installed.
-      <!-- blocked-by: known-bad-publication-authority -->
+      reported in every mode except `off`, never auto-installed. Only the owner
+      issues an advisory; its target may be older than the installed version (L3).
       verify: `npx vitest run tests/scripts/update_notice.test.ts` -> 0
 - [ ] **4.4** `host_lowering.json` `claude.pre_compact.block_exit` re-checked
       against the current host docs through the digest gate; truth only, never
@@ -116,17 +147,14 @@ of re-reading or guessing.
       verify: `./scripts-run src/scripts/check_host_docs_digest` -> 0
 ## Blockers
 
-### blocker: council-compact-checkpoint-lineage
+### blocker: compact-attempt-identity
 - **Owner:** council
-- **Resolved when:** a council record answers 1.1 with the identity evidence attached.
+- **Resolved when:** a host-provided per-compaction token shared by `pre_compact` and `session_start(compact)` exists, or 1.3's fault tests show a stale checkpoint cannot become eligible — and the council records the chosen guarantee (1.4).
 
-### blocker: recall-verb-placement
+### blocker: recall-session-binding
 - **Owner:** council
-- **Resolved when:** the verb carrying recall is chosen under ADR-041.
+- **Resolved when:** a supported host is shown to supply an identity a later recall call can verify; that host's mechanism also settles CLI-first versus MCP-first (the one point the 2026-11-08 round split on).
 
-### blocker: known-bad-publication-authority
-- **Owner:** user
-- **Resolved when:** the owner states who may publish a `known_bad` advisory and whether its target may be older than the installed version — a public release commitment.
 
 ## Decisions
 
@@ -134,6 +162,7 @@ of re-reading or guessing.
 |---|---|---|---|---|
 | L1 | reversible-technical | run | Pins enter by explicit user marker only; heuristic or model extraction is rejected — about half of real rules are phrased declaratively and a false pin is worse than none. | a marker-only pin set stays empty across sessions that set constraints |
 | L2 | reversible-technical | run | No proxy, no request-path work, no own summarizer: this package is not in the request path and the host compacts itself. | the host offers a summarizer hook that takes instructions per call |
+| L3 | owner-reserved | user, 2026-11-08 (answered "1" to: only the owner, older targets allowed, notice only) | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | the owner delegates advisory issuance, or a notice is acted on as an install |
 
 ## Risk Register
 
