@@ -147,7 +147,7 @@ describe(`generated commands: the recogniser agrees with bash ${EXACT ? '(exact)
             }
             const want = bashActs(cmd);
             const got = ACTS.filter((a) => commandRunsAct(cmd, a)).sort();
-            const agrees = EXACT ? JSON.stringify(want) === JSON.stringify(got) : want.every((x) => got.includes(x));
+            const agrees = EXACT ? JSON.stringify(want) === JSON.stringify(got) : want.every((x) => (got as readonly string[]).includes(x));
             if (!agrees) mismatches.push(`seed ${seed}: ${JSON.stringify(cmd)} bash=${JSON.stringify(want)} recogniser=${JSON.stringify(got)}`);
         }
         expect(mismatches).toEqual([]);
