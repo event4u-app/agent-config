@@ -6,7 +6,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33869 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33891 chars.**
 
 ## Per rule
 
@@ -18,7 +18,7 @@ the config is the record.
 | `decision-revisit-gate` | 43 | 5 | 1 | 1757 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
-| `domain-safety-pii` | 36 | 2 | 1 | 1978 |
+| `domain-safety-pii` | 36 | 2 | 1 | 2000 |
 | `domain-safety-retention` | 27 | 5 | 0 | 1600 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
@@ -201,7 +201,7 @@ the config is the record.
 | `domain-safety-disclaimer` | c23 | prohibition | refuse | no | *"What do I have?"* / *"Is this symptom serious?"* → refuse | "what do I have?"/"is this symptom serious?" → refuse |  |
 | `domain-safety-disclaimer` | c24 | obligation | act | no | verifiable from cited data → High; reasoned but unverified → Medium; speculative → Low. | High (verifiable from cited data)/Medium (reasoned, unverified) |  |
 | `domain-safety-pii` | c1 | prohibition | refuse | yes | NO RAW DIRECT IDENTIFIER IN ANY AI-GENERATED DRAFT, LOG LINE, OR EXPORT. | raw direct identifier in AI draft, log line or export |  |
-| `domain-safety-pii` | c2 | trigger | none | no | PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices) | drafts, log code, exports |  |
+| `domain-safety-pii` | c2 | trigger | none | no | PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices) | any log code; drafts/exports |  |
 | `domain-safety-pii` | c3 | ordering | act | no | Redact at generation time, not after review. | redact at generation time |  |
 | `domain-safety-pii` | c4 | obligation | act | yes | Replace any pasted PII with placeholders **before** drafting. | PII → placeholders BEFORE drafting |  |
 | `domain-safety-pii` | c5 | exception | act | no | Real customer names / logos / quotes allowed only when the prompt cites one of: | marketing real names/logos/quotes only if prompt cites | the prompt cites one of: |

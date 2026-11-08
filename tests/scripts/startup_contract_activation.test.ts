@@ -126,3 +126,21 @@ describe('domain-safety-pii — activation covers the non-personal sector values
         expect(activated('draft a finance memo to the counterparty with the cost center and the invoice amount')).toContain('domain-safety-pii');
     });
 });
+
+// Round 19 (openai): the body treats tokens, API keys and webhook secrets under
+// the same log rule, but the When line reached them only through personal data.
+describe('domain-safety-pii — activation covers a credential with no personal data', () => {
+    it('the When line names secrets on their own', () => {
+        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\*[^\n]*secrets \(tokens, API keys, webhook secrets\)/);
+    });
+    it('a log line holding only a webhook secret routes the rule', () => {
+        expect(activated('add a log line to the logger that prints the webhook secret on startup')).toContain('domain-safety-pii');
+    });
+});
+
+// The body's log surface binds every log stream, not only one holding personal data.
+describe('domain-safety-pii — every log code activates the contract', () => {
+    it('the When line opens with any log code, unconditioned', () => {
+        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\* any log code;/);
+    });
+});
