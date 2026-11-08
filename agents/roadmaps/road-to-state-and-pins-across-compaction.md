@@ -50,7 +50,7 @@ of re-reading or guessing.
       Writing and measuring is approved; injection is not.
       Record: `agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md`.
       verify: `test -f agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md` -> 0
-- [x] **1.2** `pre_compact` writes the checkpoint (field discipline of
+- [x] **1.2** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> `pre_compact` writes the checkpoint (field discipline of
       `continuity_writer.ts`, no judgement fields, write timestamp and package
       version) and **injects nothing**. A counts-only log records written /
       consumed / orphaned per compaction.
@@ -58,7 +58,7 @@ of re-reading or guessing.
       kill switch `AGENT_CONFIG_NO_COMPACT_CHECKPOINT=1`).
       verify: `npx vitest run tests/scripts/compact_checkpoint.test.ts tests/hooks/compact_checkpoint_hook.test.ts` -> 0
       production entry: `src/scripts/hooks/compact_checkpoint_hook.ts`
-- [x] **1.3** Fault tests against the lifecycle the council named: an aborted
+- [x] **1.3** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Fault tests against the lifecycle the council named: an aborted
       compaction followed by a second one, a manual `/compact`, duplicate
       callbacks, a package upgrade between write and read. Each must show
       whether a stale checkpoint can become eligible.
