@@ -78,3 +78,68 @@ describe('read_images', () => {
         expect(() => read_images(f)).toThrow(/base\.id is not an image id/);
     });
 });
+
+describe('build_images --with-full-layer', () => {
+    /** As `fakeExec`, plus a third image and a rule-layer reading per image id. */
+    function layerExec(readings: Record<string, string>, calls: Call[]): Exec {
+        const base = fakeExec('2.1.316 (Claude Code)', calls);
+        return (cmd, args, opts) => {
+            if (cmd === 'docker' && args[0] === 'image' && args[args.length - 1] === 'bench-ac-full') {
+                calls.push({ cmd, args });
+                return { status: 0, stdout: `sha256:${'f'.repeat(64)}\n`, stderr: '' };
+            }
+            if (cmd === 'docker' && args[0] === 'run' && args.includes('sh')) {
+                calls.push({ cmd, args });
+                return { status: 0, stdout: readings[args[2] as string] ?? '', stderr: '' };
+            }
+            return base(cmd, args, opts);
+        };
+    }
+    const AC = `sha256:${'a'.repeat(64)}`;
+    const FULL = `sha256:${'f'.repeat(64)}`;
+
+    it('builds the full-layer image from the same context with init --full, and records both layer forms', () => {
+        const calls: Call[] = [];
+        const rec = build_images({
+            exec: layerExec({ [AC]: 'files:104 thinned:91 bytes:119367', [FULL]: 'files:103 thinned:0 bytes:380427' }, calls),
+            cli_version: '2.1.316',
+            with_full_layer: true,
+        });
+        expect(rec.ac_full).toEqual({ tag: 'bench-ac-full', id: FULL });
+        expect(rec.layer).toEqual({
+            ac: { rule_files: 104, thinned: 91, bytes: 119367 },
+            ac_full: { rule_files: 103, thinned: 0, bytes: 380427 },
+        });
+        const fullBuild = calls.find((c) => c.args[0] === 'build' && c.args.includes('bench-ac-full'));
+        expect(fullBuild?.args).toContain('INIT_EXTRA=--full');
+        const acBuild = calls.find((c) => c.args[0] === 'build' && c.args.includes('bench-ac'));
+        expect(acBuild?.args.join(' ')).not.toContain('INIT_EXTRA');
+    });
+
+    it('refuses a full image that still carries a thinned rule', () => {
+        expect(() =>
+            build_images({
+                exec: layerExec({ [AC]: 'files:104 thinned:91 bytes:1', [FULL]: 'files:104 thinned:3 bytes:2' }, []),
+                cli_version: '2.1.316',
+                with_full_layer: true,
+            }),
+        ).toThrow(/bench-ac-full carries 3 thinned/);
+    });
+
+    it('refuses a default image that was not thinned', () => {
+        expect(() =>
+            build_images({
+                exec: layerExec({ [AC]: 'files:103 thinned:0 bytes:1', [FULL]: 'files:103 thinned:0 bytes:2' }, []),
+                cli_version: '2.1.316',
+                with_full_layer: true,
+            }),
+        ).toThrow(/no reduced rule layer/);
+    });
+
+    it('builds no third image without the flag', () => {
+        const calls: Call[] = [];
+        const rec = build_images({ exec: fakeExec('2.1.316 (Claude Code)', calls), cli_version: '2.1.316' });
+        expect(rec.ac_full).toBeUndefined();
+        expect(calls.some((c) => c.args.includes('bench-ac-full'))).toBe(false);
+    });
+});
