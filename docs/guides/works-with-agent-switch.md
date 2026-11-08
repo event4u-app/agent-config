@@ -128,10 +128,11 @@ outside any profile reads the default login's windows.
 `agent-config install` registers the link's MCP server in `.mcp.json` when
 agent-switch reports the link on, and removes that entry on the next install once you switch the
 link off. `agent-config mcp:available` shows the link's state. The switch
-question is live: it is asked in a session running under an agent-switch
-profile, once per limit cycle, and when you approve a move, AC leaves the run
+question is opt-in: set `AGENT_CONFIG_SWITCH_QUESTION=1` and it is asked in a
+session running under an agent-switch profile, once per limit cycle, and when you approve a move, AC leaves the run
 checkpoint before the turn ends so the session the work moves to can resume
-the step. Never put `switch_decide` (or the whole `agent-switch` server) on an
+the step. If agent-switch stops answering, AC stops asking it for that session
+after three tries until the next reset and tells you once. Never put `switch_decide` (or the whole `agent-switch` server) on an
 auto-allow list: the decision is yours, and `lint_mcp_config_security` fails
 such an entry. Seat placement by limits is still being built
 (`road-to-a-link-with-agent-switch` Phase 5).
