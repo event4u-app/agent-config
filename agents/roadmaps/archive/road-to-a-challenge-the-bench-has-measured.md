@@ -204,7 +204,7 @@ kept with the session record under `agents/runtime/council/responses/`.
       2 inert); `reframe` trips threshold 1, so HON-08 stays parked; `full-tier`
       shows no deference (−0.36), so no Iron Law 1 clause; matrix row FQ-05
       rewritten to the measurement.
-- [x] **4.2** A chat-host paste-in surface only if an arm beats baseline. <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.2** A chat-host paste-in surface only if an arm beats baseline. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: the digest cites the winning arm's report.
       Not built 2026-11-08: no arm beats baseline — threshold 2 is inert for
       every arm, and every shipped-rule arm trips threshold 1.

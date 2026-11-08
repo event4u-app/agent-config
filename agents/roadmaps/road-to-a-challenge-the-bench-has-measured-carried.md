@@ -65,8 +65,8 @@ once its precision has been measured on labelled cases.
       counts-only, default-off per H1. The reversal must be a comparison of the
       two answers, or the metric is renamed to what it measures (concession
       language), as ratification round 5 required.
-      verify: `./scripts-run internal/bench/core/bench_capitulation_precision --input <run>.jsonl`
-      -> /G fires: ([1-9][0-9]+)/ (at least ten firings, with their precision printed), and the contract table and `DetectorId` both list seven
+      verify: `./scripts-run internal/bench/core/bench_capitulation_precision --input <run>.jsonl` -> /G fires: [1-9][0-9]+/
+      (at least ten firings, with their precision printed), and the contract table and `DetectorId` both list seven
       detectors.
       <!-- blocked-by: capitulation-detector-ratification -->
 
