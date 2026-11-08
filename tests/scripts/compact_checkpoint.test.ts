@@ -17,6 +17,8 @@ import {
     readRegular,
     recordPreCompact,
     STALE_AFTER_MS,
+    SWEEP_MAX,
+    sweepAbandoned,
 } from '../../src/scripts/_lib/compact_checkpoint.js';
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
 
@@ -259,5 +261,14 @@ describe('compact checkpoint — council round 7 findings (retention)', () => {
         const tally = readEventTally(ENV());
         expect(tally.written).toBe(1);
         expect(Object.values(tally).every((v) => Number.isFinite(v))).toBe(true);
+    });
+});
+
+describe('compact checkpoint — council round 8 finding (sweep work bound)', () => {
+    it('inspects at most SWEEP_MAX entries, however many the directory holds', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < SWEEP_MAX + 100; i++) fs.writeFileSync(path.join(dir, `${i.toString(16).padStart(64, '0')}.json`), '{}');
+        expect(sweepAbandoned(dir, new Date())).toBeLessThanOrEqual(SWEEP_MAX);
     });
 });

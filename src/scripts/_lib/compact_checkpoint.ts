@@ -52,8 +52,12 @@ export const EVENT_LOG_MAX_BYTES = 256 * 1024;
 /** A marker of any session untouched this long is abandoned and removed by the next write. */
 export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
 
-/** Most stale markers removed in one sweep, so a full directory cannot stall a compaction. */
-const SWEEP_MAX = 200;
+/**
+ * Most directory entries one sweep looks at, kept or removed, so a full
+ * directory cannot stall a compaction. Entries past the budget wait for a later
+ * sweep; reaching them needs fewer than this many entries ahead of them.
+ */
+export const SWEEP_MAX = 200;
 
 const MARKER_NAME = /^[0-9a-f]{64}\.json$/;
 const PACKAGE_NAME = '@event4u/agent-config';
@@ -230,26 +234,33 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
     }
 }
 
-/** Remove markers of any session not touched within `MARKER_RETENTION_MS`; regular files with marker names only. */
-function sweepAbandoned(dir: string, now: Date): void {
-    let names: string[];
+/**
+ * Remove markers of any session not touched within `MARKER_RETENTION_MS`;
+ * regular files with marker names only. Reads the directory incrementally and
+ * stops after `SWEEP_MAX` entries. Returns how many entries it looked at.
+ */
+export function sweepAbandoned(dir: string, now: Date): number {
+    let d: fs.Dir;
     try {
-        names = fs.readdirSync(dir);
+        d = fs.opendirSync(dir);
     } catch {
-        return;
+        return 0;
     }
-    let removed = 0;
-    for (const name of names) {
-        if (removed >= SWEEP_MAX) break;
-        if (!MARKER_NAME.test(name)) continue;
-        const p = path.join(dir, name);
-        const st = lstatOrNull(p);
-        if (st === null || !st.isFile()) continue;
-        if (now.getTime() - st.mtimeMs > MARKER_RETENTION_MS) {
-            fs.rmSync(p, { force: true });
-            removed++;
+    let inspected = 0;
+    try {
+        for (let entry = d.readSync(); entry !== null && inspected < SWEEP_MAX; entry = d.readSync()) {
+            inspected++;
+            if (!MARKER_NAME.test(entry.name)) continue;
+            const p = path.join(dir, entry.name);
+            const st = lstatOrNull(p);
+            if (st !== null && st.isFile() && now.getTime() - st.mtimeMs > MARKER_RETENTION_MS) fs.rmSync(p, { force: true });
         }
+    } catch {
+        // an unreadable entry ends the sweep; the next write tries again
+    } finally {
+        d.closeSync();
     }
+    return inspected;
 }
 
 /** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker. */
