@@ -56,12 +56,12 @@ compact (the compact-instructions template) is reachable from the docs.
       restored it passes (6 cases: kept/changed id, no summary → unobserved,
       per-probe presence, trigger/median/version, malformed lines, no leak of
       id or text).
-- [x] **1.3** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run on the maintainer corpus and record the reading:
+- [x] **1.3** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run on the maintainer corpus and record the reading:
       `agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`
       — 274 automatic compactions, id kept 274/274, presence baseline per probe,
       labelled a lower bound on presence only.
       verify: `test -f agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md` -> 0
-- [x] **1.4** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Record on `stubs/road-to-compaction-survival-census` that the
+- [x] **1.4** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Record on `stubs/road-to-compaction-survival-census` that the
       presence half of cf01 has a baseline from automatic compactions, and that
       what remains is the adherence half plus a manual-compaction observation.
 
