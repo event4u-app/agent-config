@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -7,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     checkpointDir,
     checkpointFile,
+    EVENT_LOG_MAX_BYTES,
     EVENT_LOG_MAX_LINES,
     eventsFile,
     observePostCompact,
@@ -165,5 +167,46 @@ describe('compact checkpoint — council round 1 findings', () => {
         const lines = fs.readFileSync(eventsFile(root), 'utf8').trim().split('\n');
         expect(lines.length).toBeLessThanOrEqual(EVENT_LOG_MAX_LINES);
         expect(JSON.parse(lines[lines.length - 1]!).event).toBe('written');
+    });
+});
+
+describe('compact checkpoint — council round 2 findings (filesystem boundary)', () => {
+    it('refuses an ancestor symlink on write: nothing lands outside the repository', () => {
+        seed();
+        const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-anc-'));
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        fs.renameSync(path.join(root, 'agents', 'runtime'), path.join(elsewhere, 'runtime-real'));
+        fs.symlinkSync(path.join(elsewhere, 'runtime-real'), path.join(root, 'agents', 'runtime'));
+        expect(recordPreCompact(base())).toBe('skipped');
+        expect(fs.existsSync(path.join(elsewhere, 'runtime-real', 'state', 'compact-checkpoint'))).toBe(false);
+        fs.rmSync(elsewhere, { recursive: true, force: true });
+    });
+
+    it('refuses an ancestor symlink on observation: an outside checkpoint is neither read nor deleted', () => {
+        seed();
+        recordPreCompact(base());
+        const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-obs-'));
+        const real = path.join(elsewhere, 'runtime-real');
+        fs.renameSync(path.join(root, 'agents', 'runtime'), real);
+        fs.symlinkSync(real, path.join(root, 'agents', 'runtime'));
+        expect(observePostCompact(base())).toBe('none');
+        expect(fs.existsSync(path.join(real, 'state', 'compact-checkpoint', `${eolSessionKey(SID)}.json`))).toBe(true);
+        fs.rmSync(elsewhere, { recursive: true, force: true });
+    });
+
+    it('does not block on a FIFO at the checkpoint path', () => {
+        seed();
+        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        execFileSync('mkfifo', [checkpointFile(root, eolSessionKey(SID))]);
+        expect(observePostCompact(base())).toBe('none');
+    });
+
+    it('does not read an oversized event log whole: it is replaced, not loaded', () => {
+        seed();
+        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        fs.writeFileSync(eventsFile(root), 'x'.repeat(EVENT_LOG_MAX_BYTES + 10));
+        recordPreCompact(base());
+        expect(fs.statSync(eventsFile(root)).size).toBeLessThan(EVENT_LOG_MAX_BYTES);
+        expect(readEventTally(root).written).toBe(1);
     });
 });
