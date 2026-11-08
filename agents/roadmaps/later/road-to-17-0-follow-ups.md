@@ -328,12 +328,15 @@ release ledger. The residue items are closed the same way.
       and git state with a 5-minute timeout.
       verify: the test runs against a fixture HOME and commit, with the default
       timeout.
-- [ ] **5.2 `35571c6d9522` — replace the wall-clock p95 assertion.**
+- [x] **5.2 `35571c6d9522` — replace the wall-clock p95 assertion.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `tests/scripts/update_notice_hook.test.ts` asserts an unsupported wall-clock
       threshold; its policy and provenance need tracking.
       verify: the assertion is removed or bound to a recorded measurement and
       a stated policy.
-- [ ] **5.2b Bound the real-tree module-reach test by its work, not the default timeout.**
+      > note: done 2026-11-08 — replaced by a check on the module's import closure:
+      > nothing `update_notice_hook.ts` reaches imports a process, socket or `fetch`
+      > (seen red with a planted `node:child_process` import).
+- [x] **5.2b Bound the real-tree module-reach test by its work, not the default timeout.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `tests/scripts/check_gate_reachability_module_counts.test.ts` § "moduleReachSummary
       agrees with module_reach.ts on the real tree" walks the whole tree under vitest's
       30 s default: 11.5 s and 23.3 s on main's macOS shard 4/4 (run 42366665313),
@@ -341,6 +344,8 @@ release ledger. The residue items are closed the same way.
       p95 assertion (run 42381558337, ubuntu shard 4/4).
       verify: the test runs on a fixture tree, or computes both sides once in a
       `beforeAll` with a stated, measured timeout.
+      > note: done 2026-11-08 — both walks run once in `beforeAll` (120 s bound, 23.3 s
+      > measured on macOS CI); the three tests read the result. 8/8 in 21 s locally.
 - [ ] **5.3 `3932ad9717f1` — exercise the fork rung against real git.**
       `tests/scripts/self_repair_release.test.ts` stubs the fork-rung push as
       success.
