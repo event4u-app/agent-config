@@ -336,6 +336,12 @@ describe('the duty chunk failing to load', () => {
         expect(ledger['duty']).toBeUndefined();
         expect(JSON.stringify({ reads: ledger['reads'], writes: ledger['writes'], fired: ledger['fired'] })).toBe(before);
     });
+    it('a commit split by a line continuation reaches the ledger through pre-check, lexer and table', () => {
+        const root = workspace();
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
+        run(root, { tool_name: 'Bash', tool_input: { command: 'cd x && git com\\\nmit -m y 2>&1<<<z | tail -1' } });
+        expect(duty(root)[`commit-policy::${REF}`]).toMatchObject({ pending: 1 });
+    });
     it('a partly quoted commit reaches the ledger through pre-check, lexer and table', () => {
         const root = workspace();
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);

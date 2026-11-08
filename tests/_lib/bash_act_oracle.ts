@@ -46,8 +46,9 @@ const GIT_STUB = '#!/bin/sh\nwhile [ "$1" = -C ] || [ "$1" = -c ]; do shift 2; d
 // has /usr/bin/time: an optional -p, then the utility named by the rest.
 const TIME_STUB = '#!/bin/sh\n[ "$1" = -p ] && shift\nexec "$@"\n';
 const GH_STUB = '#!/bin/sh\nprintf "gh %s %s\\n" "$1" "$2" >> "$ACT_LOG"\nexit "${ACT_STATUS:-0}"\n';
-// command(1), the POSIX utility, for the external lookup after `exec` / `nohup`.
-const COMMAND_STUB = '#!/bin/sh\nexec "$@"\n';
+// command(1) as macOS ships it (/usr/bin/command runs sh's `command` builtin), for
+// the external lookup after `exec` / `nohup`: `nohup command exec git push` runs git.
+const COMMAND_STUB = '#!/bin/sh\ncommand "$@"\n';
 const STUBS = [
     'cat() { command cat > /dev/null; }',
     'sudo() { while [ $# -gt 0 ]; do case $1 in [A-Za-z_]*=*) export "$1"; shift ;; *) break ;; esac; done; "$@"; }',
