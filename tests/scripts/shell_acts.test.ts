@@ -16,6 +16,11 @@ describe('commandRunsAct', () => {
         ['npm test; git push origin HEAD', 'git push'],
         ['true || gh pr create --title t', 'gh pr create'],
         ["cat > f <<'EOF'\nit's prose\nEOF\ngit commit -m done", 'git commit'],
+        ['git -C "my repo" commit -m x', 'git commit'],
+        ["git -C 'my repo' push", 'git push'],
+        ['git commit -m x # done', 'git commit'],
+        ["echo '<<EOF'; git commit -m x", 'git commit'],
+        ['make && \\\n  git push', 'git push'],
     ])('recognises %j as %s', (cmd, act) => {
         expect(commandRunsAct(cmd, act)).toBe(true);
     });
@@ -26,6 +31,11 @@ describe('commandRunsAct', () => {
         ['git log --grep commit', 'git commit'],
         ['gh pr view 1', 'gh pr create'],
         ['git pushx', 'git push'],
+        ['echo hello\\; git push', 'git push'],
+        ['echo x # ; git push', 'git push'],
+        ['echo "a; git push"', 'git push'],
+        ["echo 'git commit -m x'", 'git commit'],
+        ['git -C "dir; git push" status', 'git push'],
     ])('does not take %j for %s', (cmd, act) => {
         expect(commandRunsAct(cmd, act)).toBe(false);
     });

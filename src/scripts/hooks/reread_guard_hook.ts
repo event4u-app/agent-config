@@ -80,7 +80,7 @@ import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 import { ledgerKey } from '../_lib/ledger_key.js';
 import type { DutyScan, DutyState } from '../_lib/reference_duty.js';
-import { ACT_WORDS, loadReferenceDuty } from './reference_duty_loader.js';
+import { ACT_WORDS, loadReferenceDuty, type ReferenceDuty } from './reference_duty_loader.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -345,41 +345,50 @@ export interface DutyRecord {
 function recordActDuty(envelope: JsonObject, payload: JsonObject, command: string): void {
     if (!ACT_WORDS.test(command)) return;
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
-    const duty = loadReferenceDuty();
-    let scan: DutyScan;
-    try {
-        if (duty === null) throw new Error('reference duty unavailable');
-        scan = duty.scanActDuties(command, workspaceRoot);
-    } catch {
-        scan = { duties: [], errors: ['act scan failed'] };
-    }
-    if (scan.duties.length === 0 && scan.errors.length === 0) return;
     const sessionKey = deriveSessionKey(envelope, payload);
     const ledger = readLedger(workspaceRoot, sessionKey);
-    applyScan(ledger, scan, workspaceRoot);
-    writeLedger(workspaceRoot, sessionKey, ledger);
+    if (_recordActDutyWith(ledger, command, workspaceRoot, loadReferenceDuty())) writeLedger(workspaceRoot, sessionKey, ledger);
+}
+
+/** True when the ledger changed. Exported as a testing seam. */
+export function _recordActDutyWith(ledger: Ledger, command: string, workspaceRoot: string, duty: ReferenceDuty | null): boolean {
+    if (duty === null) {
+        ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
+        return true;
+    }
+    let scan: DutyScan;
+    try {
+        scan = duty.scanActDuties(command, workspaceRoot);
+    } catch {
+        ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
+        return true;
+    }
+    if (scan.duties.length === 0 && scan.errors.length === 0) return false;
+    applyScan(ledger, scan, workspaceRoot, duty);
+    return true;
 }
 
 function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
+    const duty = loadReferenceDuty();
+    if (duty === null) {
+        ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
+        return;
+    }
     let scan: DutyScan;
     try {
-        const duty = loadReferenceDuty();
-        if (duty === null) throw new Error('reference duty unavailable');
         scan = duty.scanDuties(key, workspaceRoot);
     } catch {
         ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
         return;
     }
-    applyScan(ledger, scan, workspaceRoot);
+    applyScan(ledger, scan, workspaceRoot, duty);
 }
 
-function applyScan(ledger: Ledger, scan: DutyScan, workspaceRoot: string): void {
+function applyScan(ledger: Ledger, scan: DutyScan, workspaceRoot: string, duty: ReferenceDuty): void {
     let states: Record<string, DutyState>;
     try {
         // Each matched rule whose duties could not be read is one unobserved duty.
         if (scan.errors.length > 0) ledger.duty_errors = (ledger.duty_errors ?? 0) + scan.errors.length;
-        const duty = loadReferenceDuty();
-        if (duty === null) throw new Error('reference duty unavailable');
         states = duty.dutyStates(scan.duties, ledger.reads, workspaceRoot);
     } catch {
         ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;

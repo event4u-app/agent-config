@@ -7,7 +7,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -307,5 +307,23 @@ describe('act-time duty: a shell command bound in act-references', () => {
         expect(d[`commit-policy::${REF}`]).toMatchObject({ state: 'required-pending', pending: 1 });
         const key = crypto.createHash('sha256').update('s1').digest('hex');
         expect(fs.readFileSync(ledgerFile(root, key), 'utf8')).not.toContain('secret-ish');
+    });
+});
+
+describe('the duty chunk failing to load', () => {
+    it('the loader returns null for a bundled run whose chunk is missing', async () => {
+        const { loadReferenceDuty, _resetReferenceDutyCache } = await import('../../src/scripts/hooks/reference_duty_loader.js');
+        _resetReferenceDutyCache();
+        const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'duty-chunk-'));
+        tmps.push(dir);
+        expect(loadReferenceDuty(pathToFileURL(path.join(dir, 'dispatch.js')).href, true)).toBeNull();
+        _resetReferenceDutyCache();
+    });
+    it('counts one error per act scan when the duty cannot load, not two', async () => {
+        const { _recordActDutyWith } = await import('../../src/scripts/hooks/reread_guard_hook.js');
+        const root = workspace();
+        const ledger = { reads: {}, writes: {}, fired: {} } as Record<string, unknown>;
+        _recordActDutyWith(ledger as never, 'git commit -m x', root, null);
+        expect(ledger['duty_errors']).toBe(1);
     });
 });

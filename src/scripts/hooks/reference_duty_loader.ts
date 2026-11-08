@@ -52,7 +52,8 @@ export function loadReferenceDuty(selfUrl: string = import.meta.url, bundled: bo
         let mod: Record<string, unknown>;
         if (bundled) {
             const specifier = path.join(dir, REFERENCE_DUTY_CHUNK);
-            if (verifyBundle(specifier).state === 'mismatch') return null;
+            // Only a chunk whose digest sidecar verifies is executed.
+            if (verifyBundle(specifier).state !== 'ok') return null;
             mod = req(specifier) as Record<string, unknown>;
         } else {
             const ext = self.endsWith('.ts') ? '.ts' : '.js';
@@ -65,4 +66,9 @@ export function loadReferenceDuty(selfUrl: string = import.meta.url, bundled: bo
         cached = null;
     }
     return cached;
+}
+
+/** Test seam: forget the cached load. Never called by the hook path. */
+export function _resetReferenceDutyCache(): void {
+    cached = undefined;
 }
