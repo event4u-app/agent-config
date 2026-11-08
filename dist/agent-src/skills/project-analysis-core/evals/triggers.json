@@ -8,8 +8,6 @@
     {"q": "ich kenne das Projekt nicht, ermittle Versionen und Architektur", "trigger": true, "class": "exemplar", "language": "de"},
     {"q": "analyze this Laravel app's service container setup", "trigger": false, "class": "near-miss", "note": "the framework is already known; project-analysis-laravel goes directly"},
     {"q": "why does this one endpoint return 500 only in staging?", "trigger": false, "class": "near-miss", "note": "an isolated issue needs root-cause analysis, not discovery"},
-    {"q": "rename the variable total to grandTotal", "trigger": false, "class": "counterexample"},
-    {"id": "pac-v2-onboard", "q": "I'm taking over this repository next week and nobody who built it is still around. Before I change anything, give me the lay of the land: what it's built with, how the parts fit together, and what happens from the moment a request comes in.", "trigger": true, "class": "exemplar", "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/project-analysis-core/pac-v2-onboard"},
-    {"id": "pac-v2-versions", "q": "Our security review needs to know exactly which versions of the runtime, the frameworks and the main libraries this project runs on, and how a request travels through it. Work it out from the repo and flag anything you couldn't pin down.", "trigger": true, "class": "exemplar", "note": "prompt series v2 (agents/evidence/preregistration/routing-prompt-series-v2-protocol-20261108.md); workspace fixture internal/bench/trigger-fixtures/project-analysis-core/pac-v2-versions"}
+    {"q": "rename the variable total to grandTotal", "trigger": false, "class": "counterexample"}
   ]
 }

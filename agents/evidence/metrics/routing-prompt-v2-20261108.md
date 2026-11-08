@@ -39,6 +39,8 @@ Both units are classified **REGRESSION**: 0/9 and 0/6 against a floor of 0.90. N
 
 The contract named two invocations by `--tag skill:<unit>`. The compiled cases carry no tags, so `--tag` would have selected nothing. Instead the five cases ran from two copies of the compiled plugin root: the three `react-shadcn-ui` cases with `--allow-tools Edit Write`, and the two `project-analysis-core` cases without it. Cases, prompts, fixtures, flags and run counts are unchanged.
 
+**Where the cases live, changed after the run.** The contract added the five cases to `src/skills/<unit>/evals/triggers.json`, and the run compiled them from there. Published records pin that corpus by hash: the holdout `SET-SHA256`, the routing-signal 5.1 verdict and the delivery-set 6.4 record. CI showed all three failing to reproduce, so the cases moved to `internal/bench/trigger-fixtures/series-v2/cases.json` with the same ids, prompts and fixtures. The measurement above is unchanged. A re-run compiles them from a scratch skills root via `--skills`, matching cases by id.
+
 ## Reading
 
 Three series now agree:
