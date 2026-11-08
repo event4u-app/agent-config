@@ -548,26 +548,27 @@ export function checkpointBeforeMove(
         forget();
         return false;
     }
-    // At least once, not exactly once: the run checkpoint is one file per run,
-    // replaced atomically, so a second write (two Stops at once, or a Stop whose
-    // completion update could not take the lock) replaces it with a newer state.
-    // The obligation is complete only after a write that reported success.
-    let written = false;
-    try {
-        written = write();
-    } catch {
-        written = false;
-    }
+    // The checkpoint is built and written while the record lock is held, so two
+    // Stops write in order and one that finds it completed meanwhile does not
+    // write an older snapshot over it. A Stop that cannot take the lock writes
+    // nothing and leaves the obligation for the next Stop. The obligation is
+    // complete only after a write that reported success.
+    const result = { written: false };
     updateSwitchRecord(
         sessionHash,
         (cur) => {
-            if (cur?.id !== rec.id) return cur;
-            if (!written) return cur;
+            if (cur?.id !== rec.id || cur.checkpointed) return cur;
+            try {
+                result.written = write();
+            } catch {
+                result.written = false;
+            }
+            if (!result.written) return cur;
             if (expired) return null;
             // The outcome was already shown, so nothing is left to tell or to write.
             return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true };
         },
         stateEnv,
     );
-    return written;
+    return result.written;
 }

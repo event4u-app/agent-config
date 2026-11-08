@@ -580,26 +580,26 @@ describe('7.5 record lifetime and interleaving', () => {
         expect(readSwitchRecord(sess(), stateEnv, mtime + 7 * 24 * 3600_000)).toBeNull();
     });
 
-    it('a prompt relay inside the Stop checkpoint keeps both flags', () => {
+    it('a prompt during the Stop checkpoint waits for the lock: nothing is lost, the line comes on the next prompt', () => {
         raise();
         setRequest(approved);
         const ok = checkpointBeforeMove(
             sess(),
             () => {
-                // The next prompt relays the approval while the Stop path is still writing.
-                noticeReply(deps());
+                // The record lock is held while the checkpoint is written; this prompt cannot change the record.
+                expect(noticeReply(deps()).lines.filter((l) => l.includes('approved in agent-switch'))).toEqual([]);
                 return true;
             },
             stateEnv,
             { env: binEnv },
         );
         expect(ok).toBe(true);
-        const rec = readSwitchRecord(sess(), stateEnv);
-        expect(rec?.decision_told).toBe(true);
-        expect(rec?.checkpointed).toBe(true);
+        expect(readSwitchRecord(sess(), stateEnv)?.checkpointed).toBe(true);
+        expect(noticeReply(deps()).lines.filter((l) => l.includes('approved in agent-switch'))).toHaveLength(1);
+        expect(noticeReply(deps()).lines.filter((l) => l.includes('approved in agent-switch'))).toEqual([]);
     });
 
-    it('a record the prompt deleted meanwhile is not revived by the Stop path', () => {
+    it('a decline seen during the Stop checkpoint is applied by the next prompt, and the record is not revived', () => {
         raise();
         setRequest(approved);
         checkpointBeforeMove(
@@ -612,6 +612,9 @@ describe('7.5 record lifetime and interleaving', () => {
             stateEnv,
             { env: binEnv },
         );
+        noticeReply(deps());
+        expect(readSwitchRecord(sess(), stateEnv)).toBeNull();
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv })).toBe(false);
         expect(readSwitchRecord(sess(), stateEnv)).toBeNull();
     });
 
@@ -662,7 +665,7 @@ describe('7.x council round 1 findings', () => {
         return { ...binEnv, PATH: `${racer}${path.delimiter}${binEnv.PATH}` };
     }
 
-    it('two Stops at once may both write: the checkpoint is overwritten in place, and the obligation is completed', () => {
+    it('a Stop that finds the checkpoint completed by another Stop meanwhile does not write an older snapshot over it', () => {
         hot();
         setRequest();
         noticeReply(deps());
@@ -670,9 +673,19 @@ describe('7.x council round 1 findings', () => {
         let writes = 0;
         // The other Stop completes while this one waits on `switch show`.
         const ok = checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: racingLink('checkpointed') });
-        expect(ok).toBe(true);
-        expect(writes).toBe(1);
-        expect(readSwitchRecord(sess(), stateEnv)?.checkpointed).toBe(true);
+        expect(ok).toBe(false);
+        expect(writes).toBe(0);
+    });
+
+    it('the checkpoint is written while the record lock is held, so concurrent Stops write in order', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
+        let locked = false;
+        expect(checkpointBeforeMove(sess(), () => (locked = fs.existsSync(held)), stateEnv, { env: binEnv })).toBe(true);
+        expect(locked).toBe(true);
     });
 
     it('a failed write leaves the obligation for the next Stop', () => {
@@ -745,7 +758,7 @@ describe('7.x council round 1 findings', () => {
         expect(fs.existsSync(orphan)).toBe(false);
     });
 
-    it('a prompt that sees the move done while the Stop is writing does not drop the obligation if the write fails', () => {
+    it('a move that finishes while the Stop is writing and the write fails keeps the obligation for the next Stop', () => {
         hot();
         setRequest();
         noticeReply(deps());
@@ -765,6 +778,7 @@ describe('7.x council round 1 findings', () => {
         let writes = 0;
         expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv })).toBe(true);
         expect(writes).toBe(1);
+        expect(noticeReply(deps()).lines).toContain('AC: agent-switch moved this work to claude/b.');
         expect(readSwitchRecord(sess(), stateEnv)).toBeNull();
     });
 
