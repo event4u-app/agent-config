@@ -6,13 +6,17 @@
  * the gate's required path).
  *
  * What keeps it apart from the gate:
- * - it runs in its own CI job with `continue-on-error`, and that job is not in
- *   the branch ruleset's required checks (read 2026-11-06) — `continue-on-error`
- *   alone would not make it optional, the ruleset does;
+ * - it runs in its own CI job with `continue-on-error`; whether that job is a
+ *   required check is the branch ruleset's call, outside this repository's files
+ *   — `continue-on-error` alone does not make it optional;
  * - its artifact carries `schema: graph-checks-report/1` and `graph_findings`,
  *   never `findings`, and the dispositions ledger refuses to ingest it
  *   (`check_finding_dispositions.refusesIngest`);
  * - it posts no PR comment — the job summary is its only rendered surface.
+ *
+ * What it cannot claim: the graph build and this script run code from the PR
+ * itself, so the report is advisory output of PR-controlled code, not
+ * independent evidence.
  *
  * What makes the report's claims true:
  * - every revision is recorded resolved: base, merge-base and head SHAs. The
@@ -156,12 +160,17 @@ export function escapeMarkdown(s: string): string {
         .replace(/~/g, '&#126;');
 }
 
+/** The items a check flags: for `untested-change` only those still untested. */
+export function flaggedItems(c: ReviewCheck): ReviewCheck['items'] {
+    return c.id === 'untested-change' ? c.items.filter((i) => i.verdict === 'untested') : c.items;
+}
+
 /** The flagged items of each check, first `n` kept; what was dropped is counted. */
 export function capChecks(checks: readonly ReviewCheck[], n: number): { checks: ReviewCheck[]; omitted: number } {
     let omitted = 0;
     const out = checks.map((c) => {
         if (c.status !== 'finding') return c;
-        const flagged = c.id === 'untested-change' ? c.items.filter((i) => i.verdict === 'untested') : c.items;
+        const flagged = flaggedItems(c);
         omitted += Math.max(0, flagged.length - n);
         return { ...c, items: flagged.slice(0, n) };
     });
@@ -188,7 +197,7 @@ export function buildReport(root: string, rev: Revisions, analysis: Analysis | n
         status: 'analysed',
         graph_provenance: analysis.provenance,
         graph_checksum: analysis.checksum,
-        checks: analysis.checks.map((c) => ({ id: c.id, status: c.status, ...(c.reason ? { reason: clip(c.reason, MAX_REASON_CHARS) } : {}), items: c.items.length })),
+        checks: analysis.checks.map((c) => ({ id: c.id, status: c.status, ...(c.reason ? { reason: clip(c.reason, MAX_REASON_CHARS) } : {}), items: c.status === 'finding' ? flaggedItems(c).length : c.items.length })),
         omitted,
         graph_findings: graphCheckFindings(checks, root, rev.head_sha, blobReader(root, rev.head_sha)),
     };
@@ -199,7 +208,7 @@ export function renderSummary(r: GraphChecksReport): string {
     const lines = [
         '## Code-graph review checks (advisory, separate job)',
         '',
-        'Reported beside the self-review gate, never by it: these rows cannot block, and the dispositions ledger refuses them.',
+        'Reported beside the self-review gate, never by it: the dispositions ledger refuses these rows. Produced by code from this PR, so advisory, not independent evidence.',
         '',
         `- base: ${escapeMarkdown(r.revisions.base_ref)} = ${short(r.revisions.base_sha)} · merge-base: ${short(r.revisions.merge_base_sha)} · head: ${short(r.revisions.head_sha)}`,
         `- graph: ${short(r.graph_checksum)} (${escapeMarkdown(r.graph_provenance ?? 'none')})`,

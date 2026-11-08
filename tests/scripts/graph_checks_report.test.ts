@@ -76,6 +76,9 @@ describe('graph checks report — evidence and shape', () => {
         const { root, base } = repo();
         const r = buildReport(root, resolveRevisions(root, base), { checks, checksum: 'c0ffee', provenance: 'supplied' });
         expect(r.graph_findings.filter((f) => f.check === 'untested-change')).toHaveLength(100);
+        // The count states the qualifying items: 150 untested, not the 180 the check carried.
+        expect(r.checks.find((c) => c.id === 'untested-change')?.items).toBe(150);
+        expect(renderSummary(r)).toContain('untested-change: 150 flagged');
         expect(r.graph_findings.some((f) => f.check === 'missing-co-change')).toBe(true);
         expect(renderSummary(r)).toContain('missing-co-change: did not run');
     });

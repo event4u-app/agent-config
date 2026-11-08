@@ -146,15 +146,15 @@ jobs:
   # 2026-11-06, after five AI-council rounds refused every placement on the
   # gate's required path (`agents/evidence/council/graph-checks-*`).
   #
-  # Optional because the branch ruleset does not list it (read 2026-11-06:
-  # three required checks, none from this workflow). `continue-on-error` only
-  # keeps a red here from failing the workflow run; it does not make a check
-  # optional, the ruleset does. No step here is a dependency of the gate's jobs.
+  # Whether it is required is the branch ruleset's call, which lives outside
+  # this file: `continue-on-error` only keeps a red here from failing the
+  # workflow run. No step here is a dependency of the gate's jobs.
   #
-  # Read-only token (`contents: read`, no PR comment) — which limits the token,
-  # not what `npm ci` may do to the workspace; that is why the report refuses
-  # a checkout that differs from its commit. It checks out the PR's REAL head,
-  # never the synthetic merge commit, so every SHA it records exists.
+  # The token is read-only (`contents: read`, no PR comment). That limits the
+  # token, not the job: `npm ci`, the graph build and the reporter run code from
+  # the PR itself, so the report is advisory output of PR-controlled code, never
+  # independent evidence. It checks out the PR's REAL head, never the synthetic
+  # merge commit, so every SHA it records exists.
   #
   # Artifact `code-graph-checks` holds `graph_findings`, never `findings`, and
   # the dispositions ledger refuses to ingest it. "No analysis" and "no report"
@@ -182,8 +182,9 @@ jobs:
           node-version: '22'
       - run: npm ci --no-audit --no-fund --prefer-offline
       # Builds the graph itself, from this clean checkout, then reports. Seven
-      # minutes (measured: about 25 s to build this repository) so the summary
-      # and the upload below always keep time to run.
+      # minutes (measured: about 25 s to build this repository) leave the rest of
+      # the job's ten for the summary and the upload below, unless checkout and
+      # install already used them; then the job times out with no summary.
       - name: Build the graph and report its checks (advisory)
         timeout-minutes: 7
         env:
