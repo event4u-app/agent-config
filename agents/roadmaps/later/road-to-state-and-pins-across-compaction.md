@@ -47,7 +47,7 @@ of re-reading or guessing.
 
 ## Phase 1 — A checkpoint the session wrote for itself
 
-- [x] **1.1** Council answered 2026-11-08 (2/2 present, split on the label,
+- [x] **1.1** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Council answered 2026-11-08 (2/2 present, split on the label,
       convergent on the substance): (session id, transcript path) does **not**
       authorise injection. It names the session, not the compaction attempt — a
       checkpoint orphaned by an aborted compaction would match the next one.
