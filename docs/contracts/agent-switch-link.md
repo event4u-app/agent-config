@@ -179,7 +179,11 @@ writes only `open` (raise) and a decision.
 
 `id` is derived from `(account, session, window, resetsAt)`. Raising twice in
 one limit cycle returns the existing request instead of a second one, so AC may
-raise on every `hot` notice without producing noise.
+raise on every `hot` notice without producing noise. `resetsAt` is rounded to
+the nearest minute before it names a request, because the host reports one reset
+with sub-second jitter; the stored `reason.resetsAt` stays as observed. A pace
+request (`reason.kind: "pace"`) adds its kind, so it never shares an id with a
+limit request on the same window.
 
 `expiresAt` is the window's reset time when it is in the future, else five
 hours after raising. An `open` request read after that point reads as
