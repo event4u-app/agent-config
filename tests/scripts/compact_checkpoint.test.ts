@@ -16,6 +16,7 @@ import {
     recordPreCompact,
     STALE_AFTER_MS,
 } from '../../src/scripts/_lib/compact_checkpoint.js';
+import { claim_file, claim_read_paths } from '../../src/scripts/_lib/roadmap_claim.js';
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
 
 let root: string;
@@ -208,5 +209,53 @@ describe('compact checkpoint — council round 2 findings (filesystem boundary)'
         recordPreCompact(base());
         expect(fs.statSync(eventsFile(root)).size).toBeLessThan(EVENT_LOG_MAX_BYTES);
         expect(readEventTally(root).written).toBe(1);
+    });
+});
+
+describe('compact checkpoint — council round 3 findings (every reachable read)', () => {
+    const fifoAt = (p: string) => {
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.rmSync(p, { force: true });
+        execFileSync('mkfifo', [p]);
+    };
+
+    it('skips without blocking when the session counters file is a FIFO', () => {
+        seed();
+        fifoAt(eolStateFile(root, eolSessionKey(SID)));
+        expect(recordPreCompact(base())).toBe('skipped');
+    });
+
+    it('skips without blocking when the claimed roadmap file is a FIFO', () => {
+        seed();
+        fifoAt(path.join(root, 'agents', 'roadmaps', `${SLUG}.md`));
+        expect(recordPreCompact(base())).toBe('skipped');
+    });
+
+    it('skips when the session counters file is a symlink', () => {
+        seed();
+        const f = eolStateFile(root, eolSessionKey(SID));
+        const real = path.join(root, 'elsewhere.json');
+        fs.renameSync(f, real);
+        fs.symlinkSync(real, f);
+        expect(recordPreCompact(base())).toBe('skipped');
+    });
+
+    it('skips without blocking when a claim file the session would read is a FIFO', () => {
+        seed();
+        for (const p of claim_read_paths(root, SID)) {
+            if (p.startsWith(root)) {
+                fifoAt(p);
+                break;
+            }
+        }
+        expect(recordPreCompact(base({ slug: undefined }))).toBe('skipped');
+    });
+
+    it('resolves the claimed slug itself when none is passed', () => {
+        seed();
+        const claim = claim_file(root, SID);
+        fs.mkdirSync(path.dirname(claim), { recursive: true });
+        fs.writeFileSync(claim, JSON.stringify({ slug: SLUG, session_id: SID }));
+        expect(recordPreCompact(base({ slug: undefined }))).toBe('written');
     });
 });

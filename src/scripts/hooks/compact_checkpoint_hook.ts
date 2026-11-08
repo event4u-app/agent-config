@@ -16,7 +16,6 @@ import { observePostCompact, recordPreCompact } from '../_lib/compact_checkpoint
 import { readHookStdin } from './hook_stdin.js';
 import { unwrap } from './envelope.js';
 import { is_replay_mode } from './state_io.js';
-import { read_claimed_slug } from '../_lib/roadmap_claim.js';
 
 function str(v: unknown): string {
     return typeof v === 'string' ? v.trim() : '';
@@ -52,7 +51,7 @@ export function main(): number {
         const root = str(envelope['workspace_root']) || process.cwd();
         const input = { root, sessionId, transcriptPath, version: packageVersion() };
         if (event === 'pre_compact') {
-            recordPreCompact({ ...input, slug: read_claimed_slug(root, sessionId) });
+            recordPreCompact(input);
         } else if (event === 'session_start' && str(payload['source'] ?? envelope['source']) === 'compact') {
             observePostCompact({ ...input, slug: null });
         }

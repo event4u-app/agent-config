@@ -33,6 +33,10 @@ import * as path from 'node:path';
 
 import { containedPath } from './contained_write.js';
 import { buildContinuityRecord } from './continuity_writer.js';
+import { git_dir } from './git_common_dir.js';
+import { recycle_consumed_rel } from './recycle_envelope_paths.js';
+import { claim_read_paths, read_claimed_slug } from './roadmap_claim.js';
+import { roadmapPath } from './run_checkpoint.js';
 import { eolSessionKey, eolStateFile, type StoredEolCounters } from './session_eol.js';
 
 /** A classification older than this reads as `stale`. A stated default, set to be revised from `age_ms` readings. */
@@ -46,6 +50,9 @@ export const EVENT_LOG_MAX_BYTES = 256 * 1024;
 
 const CHECKPOINT_MAX_BYTES = 256 * 1024;
 
+/** Largest file the continuity writer and its readers may be handed. */
+const READ_MAX_BYTES = 1024 * 1024;
+
 export type PreCompactOutcome = 'written' | 'skipped';
 export type PostCompactOutcome = 'match' | 'key-mismatch' | 'version-mismatch' | 'stale' | 'none';
 type EventName = PreCompactOutcome | 'orphaned' | PostCompactOutcome;
@@ -54,7 +61,8 @@ export interface CheckpointInput {
     root: string;
     sessionId: string;
     transcriptPath: string;
-    slug: string | null;
+    /** The claimed roadmap; `undefined` resolves it here, after the claim files pass the preflight. */
+    slug?: string | null | undefined;
     version: string | null;
     now?: Date;
 }
@@ -115,9 +123,17 @@ function readRegular(file: string, max: number): string | null {
         return null;
     }
     try {
-        const st = fs.fstatSync(fd);
-        if (!st.isFile() || st.size > max) return null;
-        return fs.readFileSync(fd, 'utf8');
+        if (!fs.fstatSync(fd).isFile()) return null;
+        // Read at most max + 1 bytes: a file that grew after fstat is still refused.
+        const buf = Buffer.alloc(max + 1);
+        let n = 0;
+        for (;;) {
+            const got = fs.readSync(fd, buf, n, buf.length - n, null);
+            if (got === 0) break;
+            n += got;
+            if (n > max) return null;
+        }
+        return buf.subarray(0, n).toString('utf8');
     } catch {
         return null;
     } finally {
@@ -195,10 +211,47 @@ function logEvent(root: string, event: EventName, now: Date, ageMs?: number): vo
     }
 }
 
-function readCounters(root: string, sessionKey: string): StoredEolCounters | null {
+/** Absent, or a regular non-symlink file no larger than `max`. A FIFO, device or symlink fails. */
+function absentOrRegular(p: string, max = READ_MAX_BYTES): boolean {
+    let st: fs.Stats;
     try {
-        const state = JSON.parse(fs.readFileSync(eolStateFile(root, sessionKey), 'utf8')) as { counters?: StoredEolCounters };
-        return state.counters ?? null;
+        st = fs.lstatSync(p);
+    } catch {
+        return true;
+    }
+    return st.isFile() && st.size <= max;
+}
+
+/**
+ * Every file the continuity writer and the claim reader will open for this
+ * session, checked before any of them is opened. Those readers are shared with
+ * the Stop path and read without these guards, so the checkpoint refuses to
+ * call them unless each path is absent or a plain file. Git's refs and
+ * packed-refs are not walked: a repository whose refs block also blocks git.
+ */
+function readsAreSafe(root: string, sessionId: string, slug: string | null | undefined): boolean {
+    const paths = [eolStateFile(root, eolSessionKey(sessionId)), path.join(root, recycle_consumed_rel(sessionId))];
+    if (slug === undefined) paths.push(...claim_read_paths(root, sessionId));
+    else if (slug !== null) paths.push(roadmapPath(root, slug));
+    if (!paths.every((p) => absentOrRegular(p))) return false;
+    const dotGit = path.join(root, '.git');
+    try {
+        const st = fs.lstatSync(dotGit);
+        if (!(st.isDirectory() || (st.isFile() && st.size <= READ_MAX_BYTES))) return false;
+    } catch {
+        return true;
+    }
+    const gd = git_dir(root);
+    return gd === null || absentOrRegular(path.join(gd, 'HEAD'));
+}
+
+function readCounters(root: string, sessionKey: string): StoredEolCounters | null {
+    const file = eolStateFile(root, sessionKey);
+    if (!containedPath(root, path.dirname(file))) return null;
+    const text = readRegular(file, READ_MAX_BYTES);
+    if (text === null) return null;
+    try {
+        return (JSON.parse(text) as { counters?: StoredEolCounters }).counters ?? null;
     } catch {
         return null;
     }
@@ -218,10 +271,22 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
         logEvent(input.root, 'orphaned', now);
     }
 
+    let slug = input.slug;
+    if (!readsAreSafe(input.root, input.sessionId, slug)) {
+        logEvent(input.root, 'skipped', now);
+        return 'skipped';
+    }
+    if (slug === undefined) {
+        slug = read_claimed_slug(input.root, input.sessionId);
+        if (!readsAreSafe(input.root, input.sessionId, slug)) {
+            logEvent(input.root, 'skipped', now);
+            return 'skipped';
+        }
+    }
     const decision = buildContinuityRecord({
         root: input.root,
         sessionId: input.sessionId,
-        slug: input.slug,
+        slug,
         counters: readCounters(input.root, key),
         now,
     });
