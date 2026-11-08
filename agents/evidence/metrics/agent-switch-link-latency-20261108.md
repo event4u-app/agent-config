@@ -11,9 +11,9 @@ answering, failing, hanging, resting (backed off by 7.1) and absent.
 - Harness: `agents/evidence/analysis/agent-switch-link-latency.mjs`, run as
   `npx tsx agents/evidence/analysis/agent-switch-link-latency.mjs 20` after
   `npm run build:hooks`, at the tree of `feat/agent-switch-link-hardening`
-  (Phase 7.1/7.3/7.5 in place, with the council round 1 fixes). The round 2
-  fix changed only the Stop path's reservation bookkeeping (one more locked
-  file update per checkpoint, no added agent-switch call) and was not re-measured.
+  (Phase 7.1/7.3/7.5 in place, with the council round 1 fixes). The round 2 and
+  round 3 changes touched only the Stop path's record bookkeeping and the
+  back-off accounting (no added agent-switch call) and were not re-measured.
 - Each sample is one `node dist/hooks/dispatch.js --platform claude --event …`
   in a fresh HOME / `EVENT4U_CONFIG_HOME` / PATH, so the built bundle and its
   lazily-loaded `quota_notice` chunk run exactly as on a host.
@@ -95,16 +95,15 @@ observed:
    request open measures above 500 ms p95 on this machine class with this
    harness — the per-call cost has more than doubled. (A hanging link is
    bounded by criterion 1, not by this one.)
-3. A run checkpoint owed for an approved or finished move is not written
-   while the session runs on (the record was dropped or replaced first), or
-   is written twice for one request.
+3. A run checkpoint owed for an approved or finished move is never written
+   while the session runs on (the record was dropped or replaced first). A
+   second write is not a failure: the checkpoint is one file per run,
+   replaced atomically.
 4. The same relayed line or resting notice is shown twice for one request.
 5. A record or back-off update is skipped because its lock could not be had
    within the 250 ms the lock waits — seen as a repeated line or a missing
    checkpoint above, since a skipped update is not logged.
 6. The back-off cannot be kept (an unwritable state directory) on a machine
    that pays link stalls — the link never rests there.
-7. A checkpoint reservation is found older than two minutes without having
-   been taken over by a later Stop.
-8. The `quota_notice` chunk outgrows its ceiling in
+7. The `quota_notice` chunk outgrows its ceiling in
    `src/config/hook-bundle-budget.json` again without a reviewed raise.

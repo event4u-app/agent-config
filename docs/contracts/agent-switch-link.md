@@ -240,8 +240,9 @@ the link over the CLI verbs below, never the MCP client.
 - **Back-off.** Three link calls in a row that do not answer — a timeout, a
   non-zero exit or output that does not parse, on the prompt or the Stop
   path — stop the link for this session until the next reset of its plan
-  windows (five hours when none is known); the user is told once. A call that
-  answers, discovery included, resets the count. The count is kept under a
+  windows (five hours when none is known); the user is told once. A `switch`
+  call that answers resets the count; a discovery that finds the link present
+  does not, since it says nothing about whether `switch` answers. The count is kept under a
   lock; a hook that was already past the check when another tripped the rest
   still finishes its own one or two calls.
 - **Off switch.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and
@@ -250,22 +251,25 @@ the link over the CLI verbs below, never the MCP client.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
   It expires a day after the request's `expiresAt` and never later than seven
-  days after it was raised, so an orphaned record stops polling. The prompt
+  days after it was raised. An expired record is no longer polled and nothing is
+  raised over it; the next Stop gives it one last look, writes a checkpoint
+  still owed, and forgets it. The prompt
   relay and the Stop path change it under a lock, each only its own flag on the
   record as it is then, so neither undoes the other's and a deleted record
-  stays deleted. The checkpoint and each relayed line are claimed under that
-  lock before they happen, so two Stops or two prompts running at once act
-  once, and a raise never replaces a record that is still there. A checkpoint
-  reservation is not completion: the record is forgotten only after the
-  checkpoint was written, a write that fails or throws hands the reservation
-  back, and a reservation older than two minutes (a Stop that died) is taken
-  over by the next Stop. A lock is released only by its holder. The lock is
+  stays deleted. Each relayed line is claimed under that lock before it is
+  shown, so two prompts running at once show it once, and a raise never
+  replaces a record that is still there. The checkpoint is written **at least
+  once**, not exactly once: the run checkpoint is one file per run, replaced
+  atomically, so a second write — two Stops at once, or a Stop whose completion
+  update could not take the lock — replaces it with a newer state. The record
+  is forgotten only after a write that reported success; a write that fails,
+  throws or is cut short leaves the obligation for the next Stop. A lock is released only by its holder. The lock is
   advisory and its stale break (older than two seconds) is a check followed by
   a removal, so two breakers at the same instant can remove a fresh lock; the
   code holding it only reads and writes small files — the checkpoint write and
   every agent-switch call run outside it. An unwritable state directory keeps
-  no back-off count, so the link does not rest there. Record, back-off and lock files no session has
-  touched for eight days are removed when a request is raised.
+  no back-off count, so the link does not rest there. Record, back-off and lock files no
+  session has touched for eight days are removed when a request is raised.
 
 ## CLI fallback
 
