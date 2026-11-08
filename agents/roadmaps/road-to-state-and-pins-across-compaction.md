@@ -1,18 +1,14 @@
 ---
-complexity: standard
-status: later
+complexity: structural
+status: ready
 review_by: 2026-12-08
-entry_condition:
-  what: "road-to-a-compaction-the-session-survives is archived (identity reading and presence baseline on main)"
-  when: "after that roadmap closes"
-  who: owner
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner search: grep -rlE 'session pin|sessionPin|checkpoint.*compact|recall.*transcript|known_bad|fast-check' across agents/roadmaps/*.md, later/ and stubs/ returned no owner (stubs/road-to-target-project-bootstrap-enforce mentions fast-check only as a consumer-grading signal; later/road-to-a-stop-that-holds-carried 1.4 owns the hooks-only kill-switch table, not a src-wide ledger). Added to later/, not active: its first phase waits on a council round, and the round that produced it (inbox-2026-11-zb) emitted one active roadmap already."
-estate_growth_exempt: "Grows later_roadmaps by one and open_blockers by three. The three blockers are not new work but the decisions this file's steps genuinely wait on — two council questions (checkpoint lineage under the compact-resume-2026-10 verdict; recall verb under ADR-041) and one owner-reserved release commitment (who may issue a known_bad advisory). Recording them as blockers is what keeps the file from presenting takeable steps that are not takeable. The round's active roadmap closed in the same change, so active_roadmaps is unchanged at 8."
+estate_growth_exempt: "Pulled from later/ on 2026-11-08 at the owner's instruction (\"hol die roadmap aus later und starte phase 1\"); its entry condition is met (road-to-a-compaction-the-session-survives is archived). Grows active_roadmaps by one and concern_count by one: the compact-checkpoint concern Phase 1.2 asks for, which writes and measures and injects nothing. active_roadmaps stays far under the owner cap of 25."
 relates:
   - slug: road-to-a-compaction-the-session-survives
-    relation: depends
+    relation: extends
     note: "Starts from its identity reading (274/274 kept on auto) and presence baseline."
   - slug: later/road-to-a-stop-that-holds-carried
     relation: extends
@@ -54,16 +50,28 @@ of re-reading or guessing.
       Writing and measuring is approved; injection is not.
       Record: `agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md`.
       verify: `test -f agents/evidence/council/compact-checkpoint-lineage-2026-11-08.md` -> 0
-- [ ] **1.2** `pre_compact` writes the checkpoint (field discipline of
-      `continuity_writer.ts`, no judgement fields, write timestamp and package
-      version) and **injects nothing**. A counts-only log records written /
+- [x] **1.2** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> `pre_compact` writes a marker — session key, transcript hash, package
+      version, time — and **injects nothing**. No task state yet: which fields
+      may be restored is 1.4's decision, and reading them would mean calling
+      roadmap, claim and git readers this hook cannot bound (ratification
+      rounds 1–4, 2026-11-08). A counts-only log records written /
       consumed / orphaned per compaction.
-      verify: `npx vitest run tests/scripts/compact_checkpoint.test.ts` -> 0
-- [ ] **1.3** Fault tests against the lifecycle the council named: an aborted
+      Shipped as the `compact-checkpoint` concern (claude only, lazy chunk,
+      kill switch `AGENT_CONFIG_NO_COMPACT_CHECKPOINT=1`).
+      verify: `npx vitest run tests/scripts/compact_checkpoint.test.ts tests/hooks/compact_checkpoint_hook.test.ts` -> 0
+      production entry: `src/scripts/hooks/compact_checkpoint_hook.ts`
+- [x] **1.3** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Fault tests against the lifecycle the council named: an aborted
       compaction followed by a second one, a manual `/compact`, duplicate
       callbacks, a package upgrade between write and read. Each must show
       whether a stale checkpoint can become eligible.
+      Result: every `pre_compact` invalidates an unobserved predecessor, so an
+      aborted attempt cannot match the next one when that next `pre_compact`
+      runs (proved sensitive: removing the invalidation reds the test).
+      Residual: if `pre_compact` never fires for the second compaction, the
+      orphan is still classified — `stale` once older than the bound. That is
+      the case an attempt-specific host token would close (1.4).
       verify: `npx vitest run tests/scripts/compact_checkpoint_lifecycle.test.ts` -> 0
+      production entry: `src/scripts/hooks/compact_checkpoint_hook.ts`
 - [ ] **1.4** Choose the guarantee explicitly — attempt-specific handoff or
       "latest validated snapshot of this session" — and list which fields may
       be restored, each as a historical observation ("tests passed at <sha>"),
@@ -148,29 +156,41 @@ host-attested session binding exists. Record:
 ## Blockers
 
 ### blocker: compact-attempt-identity
+- **Status:** open
 - **Owner:** council
+- **Blocks:** 1.4, and through it 1.5.
+- **What to do:** after real compactions, read the counts with `npx tsx -e "import { readEventTally } from './src/scripts/_lib/compact_checkpoint.ts'; console.log(readEventTally())"` and put the guarantee and the restorable fields to the council (`agent-config council:run <question-file> --confirm`) with that reading attached.
+- **Recommendation:** collect at least 20 compactions first; a high `orphaned` share argues for the attempt-specific guarantee, a near-total `match` share for the latest-snapshot one.
+- **If you do nothing:** the marker keeps measuring and nothing is injected, which is today's behaviour — no regression, no gain.
 - **Resolved when:** a host-provided per-compaction token shared by `pre_compact` and `session_start(compact)` exists, or 1.3's fault tests show a stale checkpoint cannot become eligible — and the council records the chosen guarantee (1.4).
 
 ### blocker: recall-session-binding
+- **Status:** open
 - **Owner:** council
+- **Blocks:** 3.2, and through it 3.3 and 3.4.
+- **What to do:** check the host hook and MCP docs for a session identity a tool call can verify (start from `src/scripts/hooks/host_lowering.json`, `verified.docs_url` per host) and record the answer in `agents/evidence/council/recall-session-binding.md`; if no host offers one, record that and close Phase 3 as a null. <!-- ref-ignore -->
+- **Recommendation:** run 3.1 first — if post-compaction re-reads are rare, Phase 3 closes as a null and this blocker never needs answering.
+- **If you do nothing:** no recall is built; sessions after a compaction keep re-reading files, as today.
 - **Resolved when:** a supported host is shown to supply an identity a later recall call can verify; that host's mechanism also settles CLI-first versus MCP-first (the one point the 2026-11-08 round split on).
 
 
 ## Decisions
 
-| ID | Class | Resolved by | Decision | Revisit-if |
-|---|---|---|---|---|
-| L1 | reversible-technical | run | Pins enter by explicit user marker only; heuristic or model extraction is rejected — about half of real rules are phrased declaratively and a false pin is worse than none. | a marker-only pin set stays empty across sessions that set constraints |
-| L2 | reversible-technical | run | No proxy, no request-path work, no own summarizer: this package is not in the request path and the host compacts itself. | the host offers a summarizer hook that takes instructions per call |
-| L3 | owner-reserved | user, 2026-11-08 (answered "1" to: only the owner, older targets allowed, notice only) | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | the owner delegates advisory issuance, or a notice is acted on as an install |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| L1 | reversible-technical | agent | Pins enter by explicit user marker only; heuristic or model extraction is rejected. | About half of real rules are phrased declaratively, so extraction misses them, and a false pin is worse than none. | a marker-only pin set stays empty across sessions that set constraints |
+| L2 | reversible-technical | agent | No proxy, no request-path work, no own summarizer. | This package is not in the request path and the host compacts itself. | the host offers a summarizer hook that takes instructions per call |
+| L3 | product-owned | owner | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | Owner answer "1" in session on 2026-11-08, recorded in PR #2923. | the owner delegates advisory issuance, or a notice is acted on as an install |
 
 ## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
 
-| Risk | Mitigation |
-|---|---|
-| Recall becomes a token sink | Output caps and a pre-registered null that keeps the default off. |
-| Restores add standing payload | Injection only on re-arm events (`session_start(compact)`), never always-on. |
-| Pins become an injection vector | User-prompt source only; tool and file content can never create or delete a pin. |
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Recall becomes a token sink | implementation | Every recall re-sends bytes that compaction had just folded away; unbounded use costs more than it saves. | Output caps per call and turn (3.3); a pre-registered decision rule that keeps the default off on no gain (3.4). | Phase 3 — Recall from the session's own transcript |
+| 2 | Restores add standing payload | implementation | Restored state or pins injected on every turn would grow the always-on context. | Injection only on the re-arm event `session_start(compact)`, never always-on (1.5, 2.2). | Phase 1 — A checkpoint the session wrote for itself |
+| 3 | Pins become an injection vector | implementation | Text from tool output or files could create or remove a pin and steer later turns. | Pins come only from user-prompt text with an explicit marker (2.1). | Phase 2 — Session pins the user set, restored verbatim |
+| 4 | Stale state restored as current | implementation | A checkpoint from an earlier compaction attempt matches the next one and restores outdated status. | Injection waits on an attempt-specific guarantee (1.4); fields restored only as historical observations. | Phase 1 — A checkpoint the session wrote for itself |
 
 ## Acceptance Criteria
 

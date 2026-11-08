@@ -97,6 +97,12 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/layer_promotion.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
+    // Compaction checkpoint on `pre_compact` / `session_start(compact)`; reads no YAML.
+    Object.freeze({
+        entry: 'src/scripts/hooks/compact_checkpoint_hook.ts',
+        outfile: 'dist/hooks/compact_checkpoint.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // OQ-25 intake pass on `user_prompt_submit`; reads no YAML.
     Object.freeze({
         entry: 'src/scripts/hooks/intake_pass_hook.ts',
