@@ -41,7 +41,7 @@ relates:
 > six plan revisions and the 2026-11-05 container result, re-verified at
 > `main@630d97cb5b`. Sibling: `road-to-a-bench-that-can-tell` (the $0 foundation).
 
-> **Arrivals:** 2 — latest `inbox-2026-11-za` (2026-11-07): asks again for the 2.5 pilot (two-by-two terse/expert prompt, rough estimate 80–120 $) and 1.6 (~11 $), and for this file to be active; the owner released spend on 2026-11-07 only for the reference-duty steps, and pulling it needs the 150-word step split first. Earlier: `inbox-2026-11-na` (2026-11-06): the owner's roles /
+> **Arrivals:** 3 — latest `inbox-2026-11-zc` (2026-11-08): the owner accepted the 1.6 look-first wording (its kernel PR is an owner act, blocked for agents by `block-kernel-rule-writes`), ordered that deletion is the last resort after adapting and optimising (→ 4.6), made lower real model cost a first-tier goal (→ 3.x census, 7.x), and asked for per-model sets (→ `later/road-to-benchmark-obsolescence-lifecycle`). A reviewer report in the same round asks for 1.6 a third time and for a second-family regression of it. Earlier: 2 — `inbox-2026-11-za` (2026-11-07): asks again for the 2.5 pilot (two-by-two terse/expert prompt, rough estimate 80–120 $) and 1.6 (~11 $), and for this file to be active; the owner released spend on 2026-11-07 only for the reference-duty steps, and pulling it needs the 150-word step split first. Earlier: `inbox-2026-11-na` (2026-11-06): the owner's roles /
 > second-agent / A/B thread, re-verified at `main@8206cc0`. It asks whether a reviewer
 > or tester step earns its spawn; the only place that can answer is the three tasks
 > every arm fails here, so it landed as step 1.7. It also re-raised 1.5 (the 14 %
@@ -335,6 +335,10 @@ measured. A removal needs all of:
   Enforced 2026-11-07 by `check_default_asset_removal` (CI: standing-payload-delta,
   local: `task check-default-asset-removal`): deleting a rule or a skill's `SKILL.md`
   needs `agents/evidence/removals/<name>.md`, whose frontmatter answers `hidden_in`, an earlier base commit where the asset was already out of the default (rule `type: manual`, skill `disable-model-invocation: true`).
+- [ ] **4.6** Adapt before removing: a removal record names the adapted variant
+  (shorter wording, later carrier, narrower trigger) that was measured first and
+  why it did not hold. Owner order of 2026-11-08 (round `inbox-2026-11-zc`).
+  verify: `check_default_asset_removal` refuses a record without an `adapted_variant` field that cites a measurement file
 
 ## Phase 5 — Against the packages AC is compared with
 

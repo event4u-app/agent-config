@@ -29,3 +29,8 @@ review_by: 2027-01-15
    production writer** from the ledger.
 
 Closes when each item is landed or declined with its reason.
+6. **An identical-failure budget.** Round `inbox-2026-11-zc` (2026-11-08) asks
+   for a hard budget on the same failure signature recurring, beyond the band
+   lines in item 1: after that many identical `SAME` results the run changes
+   strategy or escalates, never retries. It waits on the same shadow window,
+   because the count it would cap is the one that window measures.
