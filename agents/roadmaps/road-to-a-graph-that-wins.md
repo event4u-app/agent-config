@@ -383,17 +383,19 @@ Two reach gaps account for what the run could trace.
       yields a route node with a stated `routes-to` edge to its action, and `entryPathReading`
       fires on a catch inside that action.
       > note: done 2026-11-06 — `routeFileSet` (`providers/laravel.ts`) adds files loaded by `loadRoutesFrom` / `group(__DIR__ …)` and their `require`s; `Route::controller(C::class)` groups resolve bare method-name handlers (unopim's package routes use both). `npx vitest run tests/scripts/code_graph_laravel_package_routes.test.ts` -> 0.
-- [ ] 6.2 **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
+- [x] 6.2 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/detector_labels.ts --> **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
       indexed declaration encloses the line, so the reading cannot start. Measure which constructs
       they are (closures, arrow functions, class constants, compiled templates) and index the
       enclosing one where the extractor can.
       verify: the 27 rows of `code-graph-detector-labels-2026-11-06/unopim.catch.jsonl` re-read
       after the change, with the share still unanswered reported per construct.
       > note: 2026-11-06 — measured on the recorded rows: 12 inline script in Blade templates (11 labelled reachable), 12 compiled bundles under `public/**/build` (2), 3 test code (0). Extractor side landed: views resolve by namespace (`loadViewsFrom`, `anonymousComponentPath`), and the entry-path reading starts at a template the graph states is rendered or included and walks `renders` / `includes` (fixture tests in the same file; compiled bundles stay unanswered by design). Open: the re-read of the 27 rows itself, which is 6.3's run.
-- [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
+      > note: done 2026-11-08 — re-read with the runner's `reread` command (`internal/bench/reports/code-graph-detector-labels-2026-11-08.md`). Still unanswered per construct: compiled bundles 12 of 12 (by design), Blade templates 3 of 12 (was 12), test code 3 of 4; PHP classes 0 of 12. The 9 Blade catches now read through `renders` / `includes` all fire.
+- [x] 6.3 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/detector_labels.ts --> **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
       the same labels (no relabelling) and publish the paired verdict beside the original.
       verify: `ls internal/bench/reports/code-graph-detector-labels-*.md | wc -l` -> /^\s*[2-9]/
       (a second dated report, written by the runner's report command over the re-read rows).
+      > note: done 2026-11-08 — same 40 rows, labels byte-identical (checked): graph answered 22 (was 13), fire / quiet 12 / 10 (was 0 / 13), paired verdict `no-change` 2 / 8, p 0.055 (was `regression` 2 / 11, p 0.011). Not a `pass`: 9 PHP-class catches labelled reachable are still read `quiet`; their recorded edges show where the walk stops. Report: `internal/bench/reports/code-graph-detector-labels-2026-11-08.md`.
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
