@@ -171,3 +171,13 @@ describe('contracts no stricter than their bodies', () => {
         expect(c).not.toMatch(/\/reset --hard w\/o/);
     });
 });
+
+// Round 28 (openai): tool-safety's contract made two recommendations mandatory.
+describe('tool-safety keeps the body modality', () => {
+    it('read-only is a preference and logging a should, as the body says', () => {
+        const c = contract('tool-safety');
+        expect(c).toContain('prefer read-only actions; writes need explicit approval');
+        expect(c).toContain('tool usage should be observable and logged');
+        expect(c).not.toContain('keep usage logged');
+    });
+});

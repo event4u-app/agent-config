@@ -5781,7 +5781,7 @@
           "source": "- **Audit trail** — tool usage should be observable and logged",
           "in_law": false,
           "response": "act",
-          "witness": "keep usage logged",
+          "witness": "tool usage should be observable and logged",
           "unresolved_ref": null
         },
         {

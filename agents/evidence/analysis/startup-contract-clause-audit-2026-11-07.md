@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's startup contract (`src/agent-src/startup-contracts/rules/<id>.md`). This page is the readable form;
 the config is the record.
 
-**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33922 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33961 chars.**
 
 ## Per rule
 
@@ -39,7 +39,7 @@ the config is the record.
 | `settings-ask-protocol` | 32 | 6 | 0 | 1452 |
 | `source-confidentiality` | 20 | 3 | 0 | 1154 |
 | `strategy-safety-floor` | 31 | 4 | 2 | 1696 |
-| `tool-safety` | 22 | 0 | 0 | 857 |
+| `tool-safety` | 22 | 0 | 0 | 896 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 861 |
 
@@ -677,7 +677,7 @@ the config is the record.
 | `tool-safety` | c7 | obligation | ask | no | - **Read-first** — prefer read-only actions; write requires explicit approval | writes need explicit approval |  |
 | `tool-safety` | c8 | prohibition | refuse | no | - **No hidden credentials** — tools must not embed API keys or tokens in skill files | API keys/tokens in skill files |  |
 | `tool-safety` | c9 | prohibition | refuse | no | - **No arbitrary execution** — tool adapters have fixed interfaces, not free-form calls | arbitrary execution (adapters = fixed interfaces) |  |
-| `tool-safety` | c10 | obligation | act | no | - **Audit trail** — tool usage should be observable and logged | keep usage logged |  |
+| `tool-safety` | c10 | obligation | act | no | - **Audit trail** — tool usage should be observable and logged | tool usage should be observable and logged |  |
 | `tool-safety` | c11 | obligation | act | no | - **Prefer scoped-grant syntax over bare tool names** where the host supports | prefer scoped grants (Bash(<cmd>:*)) |  |
 | `tool-safety` | c12 | precedence | refuse | no | a tool matching the | refuse disallowed_tools match even if allowed |  |
 | `tool-safety` | c13 | obligation | act | no | - **Falsifiable numeric activation thresholds** belong in descriptions where | numeric thresholds in descriptions where they apply |  |
