@@ -418,9 +418,8 @@ export function main(): number {
     // recovery aid that can fail a Stop is a liability.
     const checkpointRunId = payloadSessionId(payload, envelope);
     if (crossedThresholdNow && checkpointRunId !== '') leaveRunCheckpoint(workspaceRoot, checkpointRunId);
-    // road-to-a-link-with-agent-switch 4.4: a move agent-switch was told to make
-    // happens after this turn at the earliest, so this Stop is the last point the
-    // session can leave its checkpoint for the target session to resume from.
+    // Best effort: an approved move may already be running (`how: now`), so a
+    // checkpoint left here can arrive after the target session started.
     if (checkpointRunId !== '') {
         try {
             checkpointBeforeMove(hashSessionId(checkpointRunId), () => leaveRunCheckpoint(workspaceRoot, checkpointRunId));

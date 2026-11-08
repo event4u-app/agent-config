@@ -90,6 +90,7 @@ function parseSwitchRequest(raw: unknown): SwitchRequest | null {
     const target = str(d?.['target']);
     const win = str(reason?.['window']);
     const o = obj(r['outcome']);
+    if (d !== null && (kind === null || !KINDS.has(kind))) return null;
     return {
         id,
         state,
@@ -97,7 +98,7 @@ function parseSwitchRequest(raw: unknown): SwitchRequest | null {
         fill: num(reason?.['fill']),
         candidates,
         decision:
-            d !== null && kind !== null && KINDS.has(kind)
+            d !== null && kind !== null
                 ? { kind, target: isAccount(target) ? target : null, how: HOWS.has(str(d['how']) ?? '') ? str(d['how']) : null, by: str(d['by']) ?? '' }
                 : null,
         outcome: o !== null && typeof o['ok'] === 'boolean' ? { ok: o['ok'], detail: str(o['detail']), resume: str(o['resume']) } : null,
@@ -241,17 +242,19 @@ function stateOf(id: string, opts: LinkOptions): string | null {
     return r !== null && r['v'] === 1 && r['id'] === id && typeof r['state'] === 'string' ? r['state'] : null;
 }
 
+/** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` turns the whole link off — raise, relay and checkpoint — and leaves the quota notice as it was; `AGENT_CONFIG_NO_QUOTA_NOTICE=1` turns off both. */
+export function switchQuestionOff(env: NodeJS.ProcessEnv): boolean {
+    return env['AGENT_CONFIG_NO_SWITCH_QUESTION'] === '1' || env['AGENT_CONFIG_NO_QUOTA_NOTICE'] === '1';
+}
+
 /**
  * The Stop path's half (4.4): when this session's request has been approved —
  * in agent-switch or here — and no checkpoint was left for it yet, call `write`
- * once. Agent-switch moves after the turn at the earliest, so the turn's own
- * Stop runs first. `write` reports whether a checkpoint was written; one that
- * was not is tried again on the next Stop. Returns whether one was written.
+ * once. Best effort: nothing here holds agent-switch back, and a move with
+ * `how: now` can run before this Stop. `write` reports whether a checkpoint was
+ * written; one that was not is tried again on the next Stop. Returns whether
+ * one was written.
  */
-/** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` turns the whole link off — raise, relay and checkpoint — and leaves the quota notice as it was. */
-export function switchQuestionOff(env: NodeJS.ProcessEnv): boolean {
-    return env['AGENT_CONFIG_NO_SWITCH_QUESTION'] === '1';
-}
 
 export function checkpointBeforeMove(
     sessionHash: string,
