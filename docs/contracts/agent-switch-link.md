@@ -245,9 +245,12 @@ the link over the CLI verbs below, never the MCP client.
   does not, since it says nothing about whether `switch` answers. The count is kept under a
   lock; a hook that was already past the check when another tripped the rest
   still finishes its own one or two calls.
-- **Off switch.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and
-  checkpoint, including for a request raised before it was set; the quota
-  notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
+- **Opt-in and off switch.** The question is off unless
+  `AGENT_CONFIG_SWITCH_QUESTION=1` is set: without it there is no raise, relay
+  or checkpoint and the quota notice is the one without a request.
+  `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and checkpoint,
+  including for a request raised before it was set, and wins over the opt-in;
+  the quota notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
   It expires a day after the request's `expiresAt` and never later than seven

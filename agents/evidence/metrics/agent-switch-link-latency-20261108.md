@@ -85,9 +85,9 @@ start-up is its own and is not measured here.
 
 ## Rollback criterion
 
-Turn the question off by default (`AGENT_CONFIG_NO_SWITCH_QUESTION=1` as the
-shipped default, step 7.6) or revert the change, when any of these is
-observed:
+The question ships opt-in (`AGENT_CONFIG_SWITCH_QUESTION=1`, step 7.6), so
+these readings apply to sessions that turned it on. Withdraw the opt-in from
+the documentation or revert the change when any of these is observed:
 
 1. A session pays more than three 5 s link stalls, plus one for each hook that
    was already past the resting check, before the link rests — the back-off
