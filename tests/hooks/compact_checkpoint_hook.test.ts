@@ -29,10 +29,12 @@ const payload = { session_id: 'sid-1', transcript_path: '/tmp/t/sid-1.jsonl' };
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-hook-'));
+    process.env['EVENT4U_CONFIG_HOME'] = root;
 });
 afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
     delete process.env['AGENT_CONFIG_NO_COMPACT_CHECKPOINT'];
+    delete process.env['EVENT4U_CONFIG_HOME'];
 });
 
 describe('compact-checkpoint hook', () => {
@@ -41,12 +43,12 @@ describe('compact-checkpoint hook', () => {
         const b = run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'compact' } });
         expect([a.rc, b.rc]).toEqual([0, 0]);
         expect(a.out + b.out).toBe('');
-        expect(readEventTally(root)).toMatchObject({ written: 1, match: 1 });
+        expect(readEventTally({ EVENT4U_CONFIG_HOME: root })).toMatchObject({ written: 1, match: 1 });
     });
 
     it('ignores session_start from any other source', () => {
         run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'startup' } });
-        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'state', 'compact-checkpoint'))).toBe(false);
+        expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);
     });
 
     it('does nothing when switched off or when the envelope is unusable', () => {
@@ -54,6 +56,6 @@ describe('compact-checkpoint hook', () => {
         expect(run({ event: 'pre_compact', workspace_root: root, payload }).rc).toBe(0);
         delete process.env['AGENT_CONFIG_NO_COMPACT_CHECKPOINT'];
         expect(run({ event: 'pre_compact', workspace_root: root, payload: {} }).rc).toBe(0);
-        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'state', 'compact-checkpoint'))).toBe(false);
+        expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);
     });
 });

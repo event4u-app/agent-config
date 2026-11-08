@@ -20,11 +20,12 @@ import {
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
 
 let root: string;
+const ENV = () => ({ EVENT4U_CONFIG_HOME: root });
 const SID = 'session-aaaa';
 const TRANSCRIPT = '/tmp/transcripts/session-aaaa.jsonl';
 
 const base = (over: Partial<Parameters<typeof recordPreCompact>[0]> = {}) => ({
-    root,
+    env: { EVENT4U_CONFIG_HOME: root },
     sessionId: SID,
     transcriptPath: TRANSCRIPT,
     version: '20.1.0',
@@ -32,7 +33,7 @@ const base = (over: Partial<Parameters<typeof recordPreCompact>[0]> = {}) => ({
     ...over,
 });
 
-const markerFile = () => checkpointFile(root, eolSessionKey(SID));
+const markerFile = () => checkpointFile(eolSessionKey(SID), ENV());
 
 const fifoAt = (p: string) => {
     fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -76,16 +77,16 @@ describe('compact checkpoint — a marker at pre_compact, never injected', () =>
     it('counts an unclassified marker as orphaned when the next compaction writes', () => {
         recordPreCompact(base());
         recordPreCompact(base({ now: new Date('2026-11-08T12:30:00Z') }));
-        expect(readEventTally(root)).toMatchObject({ written: 2, orphaned: 1 });
+        expect(readEventTally(ENV())).toMatchObject({ written: 2, orphaned: 1 });
     });
 
     it('logs counts only — no session id or path in the event log', () => {
         recordPreCompact(base());
         observePostCompact(base());
-        const log = fs.readFileSync(eventsFile(root), 'utf8');
+        const log = fs.readFileSync(eventsFile(ENV()), 'utf8');
         expect(log).not.toContain(SID);
         expect(log).not.toContain(TRANSCRIPT);
-        expect(readEventTally(root)).toMatchObject({ written: 1, match: 1 });
+        expect(readEventTally(ENV())).toMatchObject({ written: 1, match: 1 });
     });
 
     it('a marker with an unparseable timestamp is never a match; another session key is a key mismatch', () => {
@@ -97,7 +98,7 @@ describe('compact checkpoint — a marker at pre_compact, never injected', () =>
         expect(observePostCompact(base())).toBe('key-mismatch');
     });
 
-    it('opens nothing outside its own directory: roadmap, claim, counters and .git may all be FIFOs', () => {
+    it('opens nothing in the repository: roadmap, claim, counters and .git there may all be FIFOs', () => {
         fifoAt(eolStateFile(root, eolSessionKey(SID)));
         fifoAt(path.join(root, 'agents', 'roadmaps', 'road-to-x.md'));
         fifoAt(path.join(root, 'agents', 'runtime', 'state', 'roadmap-claim.json'));
@@ -110,8 +111,8 @@ describe('compact checkpoint — a marker at pre_compact, never injected', () =>
 describe('compact checkpoint — filesystem boundary', () => {
     it('refuses a symlinked checkpoint directory', () => {
         const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-elsewhere-'));
-        fs.mkdirSync(path.dirname(checkpointDir(root)), { recursive: true });
-        fs.symlinkSync(elsewhere, checkpointDir(root));
+        fs.mkdirSync(path.dirname(checkpointDir(ENV())), { recursive: true });
+        fs.symlinkSync(elsewhere, checkpointDir(ENV()));
         expect(recordPreCompact(base())).toBe('skipped');
         expect(fs.readdirSync(elsewhere)).toEqual([]);
         fs.rmSync(elsewhere, { recursive: true, force: true });
@@ -119,8 +120,7 @@ describe('compact checkpoint — filesystem boundary', () => {
 
     it('refuses an ancestor symlink on write: nothing lands outside the repository', () => {
         const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-anc-'));
-        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
-        fs.symlinkSync(elsewhere, path.join(root, 'agents', 'runtime'));
+        fs.symlinkSync(elsewhere, path.join(root, 'state'));
         expect(recordPreCompact(base())).toBe('skipped');
         expect(fs.readdirSync(elsewhere)).toEqual([]);
         fs.rmSync(elsewhere, { recursive: true, force: true });
@@ -130,10 +130,10 @@ describe('compact checkpoint — filesystem boundary', () => {
         recordPreCompact(base());
         const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'compact-cp-obs-'));
         const real = path.join(elsewhere, 'runtime-real');
-        fs.renameSync(path.join(root, 'agents', 'runtime'), real);
-        fs.symlinkSync(real, path.join(root, 'agents', 'runtime'));
+        fs.renameSync(path.join(root, 'state'), real);
+        fs.symlinkSync(real, path.join(root, 'state'));
         expect(observePostCompact(base())).toBe('none');
-        expect(fs.existsSync(path.join(real, 'state', 'compact-checkpoint', `${eolSessionKey(SID)}.json`))).toBe(true);
+        expect(fs.existsSync(path.join(real, 'compact-checkpoint', `${eolSessionKey(SID)}.json`))).toBe(true);
         fs.rmSync(elsewhere, { recursive: true, force: true });
     });
 
@@ -143,41 +143,57 @@ describe('compact checkpoint — filesystem boundary', () => {
     });
 
     it('keeps the event log under its byte bound, however many short lines it holds', () => {
-        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
         const line = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none' })}\n`;
-        fs.writeFileSync(eventsFile(root), line.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / line.length) + 50));
+        fs.writeFileSync(eventsFile(ENV()), line.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / line.length) + 50));
         recordPreCompact(base());
-        expect(fs.statSync(eventsFile(root)).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
-        const lines = fs.readFileSync(eventsFile(root), 'utf8').trim().split('\n');
+        expect(fs.statSync(eventsFile(ENV())).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
+        const lines = fs.readFileSync(eventsFile(ENV()), 'utf8').trim().split('\n');
         expect(JSON.parse(lines[lines.length - 1]!).event).toBe('written');
     });
 
     it('a trim never produces a file over the bound, even from long lines', () => {
-        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
         const long = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none', pad: 'p'.repeat(450) })}\n`;
-        fs.writeFileSync(eventsFile(root), long.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / long.length) + 50));
+        fs.writeFileSync(eventsFile(ENV()), long.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / long.length) + 50));
         recordPreCompact(base());
-        expect(fs.statSync(eventsFile(root)).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
+        expect(fs.statSync(eventsFile(ENV())).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
+    });
+
+    it('counts UTF-8 bytes, not characters, against the bound', () => {
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
+        const wide = `${JSON.stringify({ at: '2026-01-01T00:00:00.000Z', event: 'none', pad: '漢'.repeat(150) })}\n`;
+        fs.writeFileSync(eventsFile(ENV()), wide.repeat(Math.ceil(EVENT_LOG_MAX_BYTES / Buffer.byteLength(wide)) + 20));
+        recordPreCompact(base());
+        expect(fs.statSync(eventsFile(ENV())).size).toBeLessThanOrEqual(EVENT_LOG_MAX_BYTES);
+    });
+
+    it('stores nothing under the repository it runs in', () => {
+        const repo = path.join(root, 'repo');
+        fs.mkdirSync(repo, { recursive: true });
+        recordPreCompact(base());
+        expect(fs.readdirSync(repo)).toEqual([]);
+        expect(checkpointDir(ENV()).startsWith(root)).toBe(true);
     });
 
     it('does not block appending when the event log is a FIFO', () => {
-        fifoAt(eventsFile(root));
+        fifoAt(eventsFile(ENV()));
         expect(recordPreCompact(base())).toBe('written');
     });
 
     it('removes a malformed marker on observation instead of leaving it behind', () => {
-        fs.mkdirSync(checkpointDir(root), { recursive: true });
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
         fs.writeFileSync(markerFile(), '{not json');
         expect(observePostCompact(base())).toBe('none');
         expect(fs.existsSync(markerFile())).toBe(false);
     });
 
     it('replaces an oversized event log instead of loading it', () => {
-        fs.mkdirSync(checkpointDir(root), { recursive: true });
-        fs.writeFileSync(eventsFile(root), 'x'.repeat(EVENT_LOG_MAX_BYTES + 10));
+        fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
+        fs.writeFileSync(eventsFile(ENV()), 'x'.repeat(EVENT_LOG_MAX_BYTES + 10));
         recordPreCompact(base());
-        expect(fs.statSync(eventsFile(root)).size).toBeLessThan(EVENT_LOG_MAX_BYTES);
-        expect(readEventTally(root).written).toBe(1);
+        expect(fs.statSync(eventsFile(ENV())).size).toBeLessThan(EVENT_LOG_MAX_BYTES);
+        expect(readEventTally(ENV()).written).toBe(1);
     });
 
     it('readRegular refuses a FIFO, a symlink and an oversized file', () => {

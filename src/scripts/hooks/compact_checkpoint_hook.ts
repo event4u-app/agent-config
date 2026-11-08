@@ -34,8 +34,7 @@ export function main(): number {
         const sessionId = str(payload['session_id']) || str(envelope['session_id']);
         const transcriptPath = str(payload['transcript_path'] ?? payload['transcriptPath']);
         if (sessionId === '' || transcriptPath === '') return 0;
-        const root = str(envelope['workspace_root']) || process.cwd();
-        const input = { root, sessionId, transcriptPath, version: packageVersion() };
+        const input = { sessionId, transcriptPath, version: packageVersion() };
         if (event === 'pre_compact') {
             recordPreCompact(input);
         } else if (event === 'session_start' && str(payload['source'] ?? envelope['source']) === 'compact') {

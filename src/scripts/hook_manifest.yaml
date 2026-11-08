@@ -1662,10 +1662,10 @@ concerns:
   # has happened. The journal's own RECORDED_EVENTS / NOT_RECORDED partition is
   # unchanged — it governs the vocabulary, not the bindings — so the capture
   # evidence states the unbound slot instead of the partition implying coverage.
-  # road-to-state-and-pins-across-compaction 1.2: writes a task-state
-  # checkpoint at `pre_compact` and classifies it at `session_start(compact)`.
-  # Injects nothing (council 2026-11-08: the keys name the session, not the
-  # compaction attempt). Claude only — the one host whose compaction records
+  # road-to-state-and-pins-across-compaction 1.2: writes a keys-only marker
+  # at `pre_compact` under the user-global runtime directory and classifies it
+  # at `session_start(compact)`. Injects nothing (council 2026-11-08: the keys
+  # name the session, not the compaction attempt). Claude only — the one host whose compaction records
   # were measured. Kill switch: `AGENT_CONFIG_NO_COMPACT_CHECKPOINT=1`.
   compact-checkpoint:
     script: src/scripts/hooks/compact_checkpoint_hook.ts

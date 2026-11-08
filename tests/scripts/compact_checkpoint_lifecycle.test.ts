@@ -12,11 +12,12 @@ import {
 } from '../../src/scripts/_lib/compact_checkpoint.js';
 
 let root: string;
+const ENV = () => ({ EVENT4U_CONFIG_HOME: root });
 const T0 = Date.parse('2026-11-08T12:00:00Z');
 const at = (ms: number) => new Date(T0 + ms);
 
 const input = (over: Record<string, unknown> = {}) => ({
-    root,
+    env: { EVENT4U_CONFIG_HOME: root },
     sessionId: 'session-life',
     transcriptPath: '/tmp/t/session-life.jsonl',
     version: '20.1.0',
@@ -36,7 +37,7 @@ describe('compact checkpoint lifecycle — can a stale marker become eligible?',
         recordPreCompact(input());
         recordPreCompact(input({ now: at(30_000) }));
         expect(observePostCompact(input({ now: at(60_000) }))).toBe('match');
-        expect(readEventTally(root)).toMatchObject({ written: 2, orphaned: 1, match: 1 });
+        expect(readEventTally(ENV())).toMatchObject({ written: 2, orphaned: 1, match: 1 });
     });
 
     it('residual: if pre_compact never ran for the second compaction, the orphan is classified — stale once old enough', () => {

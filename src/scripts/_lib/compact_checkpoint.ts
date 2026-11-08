@@ -18,10 +18,12 @@
  *   - `age_ms` between write and classification, so a staleness bound can be
  *     set from readings rather than guessed.
  *
- * Every file this module opens sits under one directory inside the repository,
- * plus the package's own `package.json`. Each repository path is checked so
- * every component below the root is a real directory; the root itself is the
- * project the host was opened on and is trusted as given, symlink or not; every read opens a
+ * Every file this module opens sits under the user's own runtime directory
+ * (`~/.event4u/agent-config/state/compact-checkpoint/`, never inside a
+ * repository), plus the package's own `package.json`. Storage outside the
+ * repository is what keeps repository contents from substituting a directory
+ * or a file under it. Below the runtime root each component must still be a
+ * real directory; every read opens a
  * regular file only, without following a symlink or blocking, and reads at most
  * a fixed number of bytes — hooks run inside repositories whose contents others
  * can supply. A concurrent swap between check and open is narrowed, not closed.
@@ -34,6 +36,7 @@ import * as path from 'node:path';
 
 import { containedPath } from './contained_write.js';
 import { eolSessionKey } from './session_eol.js';
+import { event4u_root, write_target, type EnvMap } from './user_global_paths.js';
 
 /** A classification older than this reads as `stale`. A stated default, set to be revised from `age_ms` readings. */
 export const STALE_AFTER_MS = 10 * 60 * 1000;
@@ -49,7 +52,8 @@ export type PostCompactOutcome = 'match' | 'key-mismatch' | 'version-mismatch' |
 type EventName = PreCompactOutcome | 'orphaned' | PostCompactOutcome;
 
 export interface CheckpointInput {
-    root: string;
+    /** Environment the runtime root resolves from; `process.env` when absent. */
+    env?: EnvMap;
     sessionId: string;
     transcriptPath: string;
     version: string | null;
@@ -64,16 +68,16 @@ interface Marker {
     written_at: string;
 }
 
-export function checkpointDir(root: string): string {
-    return path.join(root, 'agents', 'runtime', 'state', 'compact-checkpoint');
+export function checkpointDir(env?: EnvMap): string {
+    return write_target(path.join('state', 'compact-checkpoint'), { env: env ?? null });
 }
 
-export function checkpointFile(root: string, sessionKey: string): string {
-    return path.join(checkpointDir(root), `${sessionKey}.json`);
+export function checkpointFile(sessionKey: string, env?: EnvMap): string {
+    return path.join(checkpointDir(env), `${sessionKey}.json`);
 }
 
-export function eventsFile(root: string): string {
-    return path.join(checkpointDir(root), 'events.jsonl');
+export function eventsFile(env?: EnvMap): string {
+    return path.join(checkpointDir(env), 'events.jsonl');
 }
 
 export function transcriptHash(transcriptPath: string): string {
@@ -88,15 +92,15 @@ function lstatOrNull(p: string): fs.Stats | null {
     }
 }
 
-function inBoundary(root: string): boolean {
-    return containedPath(root, checkpointDir(root));
+function inBoundary(env?: EnvMap): boolean {
+    return containedPath(event4u_root(env ?? null), checkpointDir(env));
 }
 
-/** The directory, created inside the boundary, or `null` when the boundary does not hold. */
-function safeDir(root: string): string | null {
-    if (!inBoundary(root)) return null;
-    fs.mkdirSync(checkpointDir(root), { recursive: true });
-    return inBoundary(root) ? checkpointDir(root) : null;
+/** The directory, created under the runtime root, or `null` when a component below it is not a real directory. */
+function safeDir(env?: EnvMap): string | null {
+    if (!inBoundary(env)) return null;
+    fs.mkdirSync(checkpointDir(env), { recursive: true });
+    return inBoundary(env) ? checkpointDir(env) : null;
 }
 
 /**
@@ -177,22 +181,23 @@ function writeAtomic(dir: string, file: string, body: string): void {
     fs.renameSync(tmp, file);
 }
 
-function logEvent(root: string, event: EventName, now: Date, ageMs?: number): void {
-    const dir = safeDir(root);
+function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: number): void {
+    const dir = safeDir(env);
     if (dir === null) return;
-    const file = eventsFile(root);
+    const file = eventsFile(env);
     const st = lstatOrNull(file);
     if (st !== null && !st.isFile()) return;
     const row: Record<string, unknown> = { at: now.toISOString(), event };
     if (ageMs !== undefined) row['age_ms'] = ageMs;
     const line = `${JSON.stringify(row)}\n`;
-    if ((st?.size ?? 0) + line.length > EVENT_LOG_MAX_BYTES) {
+    const lineBytes = Buffer.byteLength(line, 'utf8');
+    if ((st?.size ?? 0) + lineBytes > EVENT_LOG_MAX_BYTES) {
         const text = readRegular(file, EVENT_LOG_MAX_BYTES * 4);
         const kept: string[] = [];
-        let bytes = line.length;
+        let bytes = lineBytes;
         const lines = text === null ? [] : text.split('\n').filter((l) => l.startsWith('{'));
         for (let i = lines.length - 1; i >= 0; i--) {
-            const len = lines[i]!.length + 1;
+            const len = Buffer.byteLength(lines[i]!, 'utf8') + 1;
             if (bytes + len > EVENT_LOG_MAX_BYTES / 2) break;
             kept.unshift(lines[i]!);
             bytes += len;
@@ -203,8 +208,9 @@ function logEvent(root: string, event: EventName, now: Date, ageMs?: number): vo
     const { O_WRONLY, O_APPEND, O_CREAT, O_NOFOLLOW, O_NONBLOCK } = fs.constants;
     const fd = fs.openSync(file, O_WRONLY | O_APPEND | O_CREAT | (O_NOFOLLOW ?? 0) | (O_NONBLOCK ?? 0), 0o644);
     try {
-        // Re-checked on the descriptor: a FIFO swapped in after the lstat is refused, not written to.
-        if (fs.fstatSync(fd).isFile()) fs.writeSync(fd, line);
+        // Re-checked on the descriptor: a FIFO or a hard-linked file swapped in after the lstat is refused.
+        const fst = fs.fstatSync(fd);
+        if (fst.isFile() && fst.nlink === 1) fs.writeSync(fd, line);
     } finally {
         fs.closeSync(fd);
     }
@@ -213,15 +219,15 @@ function logEvent(root: string, event: EventName, now: Date, ageMs?: number): vo
 /** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker. */
 export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
     const now = input.now ?? new Date();
-    const dir = safeDir(input.root);
+    const dir = safeDir(input.env);
     if (dir === null) return 'skipped';
     const key = eolSessionKey(input.sessionId);
-    const file = checkpointFile(input.root, key);
+    const file = checkpointFile(key, input.env);
     if (lstatOrNull(file) !== null) {
         // Removed before anything else, and counted only once the removal held,
         // so a failed write below can never leave the predecessor eligible.
         fs.rmSync(file, { force: true });
-        logEvent(input.root, 'orphaned', now);
+        logEvent(input.env, 'orphaned', now);
     }
     const marker: Marker = {
         schema_version: 2,
@@ -231,7 +237,7 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
         written_at: now.toISOString(),
     };
     writeAtomic(dir, file, `${JSON.stringify(marker)}\n`);
-    logEvent(input.root, 'written', now);
+    logEvent(input.env, 'written', now);
     return 'written';
 }
 
@@ -241,9 +247,9 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
  */
 export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     const now = input.now ?? new Date();
-    if (!inBoundary(input.root)) return 'none';
+    if (!inBoundary(input.env)) return 'none';
     const key = eolSessionKey(input.sessionId);
-    const file = checkpointFile(input.root, key);
+    const file = checkpointFile(key, input.env);
     const m = readMarker(file);
     let outcome: PostCompactOutcome;
     let ageMs: number | undefined;
@@ -258,7 +264,7 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     }
     // Logged before the marker is consumed: if the log write fails, the marker
     // stays and the next observation classifies it again.
-    logEvent(input.root, outcome, now, ageMs);
+    logEvent(input.env, outcome, now, ageMs);
     // Consumed when classified, and removed when unreadable as a marker, so a
     // malformed file never lingers; anything that is not a regular file stays.
     if (lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
@@ -266,7 +272,7 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
 }
 
 /** Event counts from the log, for the evidence file and the step's verify. */
-export function readEventTally(root: string): Record<EventName, number> {
+export function readEventTally(env?: EnvMap): Record<EventName, number> {
     const tally: Record<EventName, number> = {
         written: 0,
         skipped: 0,
@@ -277,8 +283,8 @@ export function readEventTally(root: string): Record<EventName, number> {
         stale: 0,
         none: 0,
     };
-    if (!inBoundary(root)) return tally;
-    const text = readRegular(eventsFile(root), EVENT_LOG_MAX_BYTES * 4);
+    if (!inBoundary(env)) return tally;
+    const text = readRegular(eventsFile(env), EVENT_LOG_MAX_BYTES * 4);
     if (text === null) return tally;
     for (const line of text.split('\n')) {
         if (!line) continue;
