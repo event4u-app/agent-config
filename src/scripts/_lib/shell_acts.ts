@@ -9,7 +9,9 @@
  * same quote reader as every other word, and empty when quoted as `''`); the
  * bodies follow the line in order, each ending at the line that is exactly its
  * terminator (leading tabs stripped for `<<-`; with an unquoted terminator, body
- * lines joined across backslash-newline first). `<<<` is a here-string, not a heredoc.
+ * lines joined across backslash-newline first). Every other redirection (`>`, `>>`,
+ * `<`, `<>`, `>|`, `>&`, `<&`, `&>`, `&>>`, the here-string `<<<`, each with an
+ * optional fd number) is dropped together with its operand word, wherever it stands.
  *
  * Supported syntax contract: the above, plus `VAR=…` prefixes, `sudo`/`command`/
  * `time`/`exec`/`nohup`, and `git -C`/`-c` values. An assignment prefix is only one
@@ -74,15 +76,21 @@ function readQuoted(s: string, i: number): { text: string; end: number } {
     return { text, end: j + 1 };
 }
 
-/** A simple command's words, and whether it follows a `|` inside a pipeline. */
+/**
+ * A simple command's words; whether it follows a `|` inside a pipeline; and
+ * whether a redirection stood before its first word, which keeps a following
+ * `time` from being the keyword.
+ */
 interface Simple {
     words: Word[];
     piped: boolean;
+    redirectedFirst: boolean;
 }
 
 function lexCommands(command: string): Simple[] {
     const out: Simple[] = [];
     let piped = false;
+    let redirectedFirst = false;
     let words: Word[] = [];
     let word = '';
     let inWord = false;
@@ -90,8 +98,11 @@ function lexCommands(command: string): Simple[] {
     // escape has occurred in it. An assignment's `NAME=` must fit inside that run.
     let literal = -1;
     const pendingHeredocs: Array<{ tag: string; stripTabs: boolean; quoted: boolean }> = [];
+    // Set by a redirection operator: the next word is its operand, not an argument.
+    let operand = false;
     const endWord = (): void => {
-        if (inWord) {
+        if (inWord && operand) operand = false;
+        else if (inWord) {
             const m = /^[A-Za-z_][A-Za-z0-9_]*=/.exec(word);
             const limit = literal === -1 ? word.length : literal;
             words.push({ text: word, assign: m !== null && m[0].length <= limit, quoted: literal !== -1 });
@@ -103,11 +114,20 @@ function lexCommands(command: string): Simple[] {
     const markQuoted = (): void => {
         if (literal === -1) literal = word.length;
     };
+    // Before a redirection operator, a word of digits is its file descriptor.
+    const endWordBeforeRedirect = (): void => {
+        if (inWord && literal === -1 && /^\d+$/.test(word)) {
+            word = '';
+            inWord = false;
+        } else endWord();
+    };
     const endCommand = (nextPiped = false): void => {
         endWord();
-        if (words.length > 0) out.push({ words, piped });
+        operand = false;
+        if (words.length > 0) out.push({ words, piped, redirectedFirst });
         words = [];
         piped = nextPiped;
+        redirectedFirst = false;
     };
     const n = command.length;
     let i = 0;
@@ -136,14 +156,9 @@ function lexCommands(command: string): Simple[] {
             while (i < n && command[i] !== '\n') i += 1;
             continue;
         }
-        // `<<<` is a here-string: a redirection whose word is an ordinary word.
-        if (ch === '<' && command[i + 1] === '<' && command[i + 2] === '<') {
-            endWord();
-            i += 3;
-            continue;
-        }
-        if (ch === '<' && command[i + 1] === '<') {
-            endWord();
+        if (ch === '<' && command[i + 1] === '<' && command[i + 2] !== '<') {
+            endWordBeforeRedirect();
+            if (words.length === 0) redirectedFirst = true;
             let j = i + 2;
             const stripTabs = command[j] === '-';
             if (stripTabs) j += 1;
@@ -202,13 +217,23 @@ function lexCommands(command: string): Simple[] {
             }
             continue;
         }
+        // Any other redirection, a here-string `<<<` included: the operator and its
+        // operand word are dropped, wherever they stand among the arguments.
+        if (ch === '<' || ch === '>' || (ch === '&' && command[i + 1] === '>')) {
+            endWordBeforeRedirect();
+            if (words.length === 0) redirectedFirst = true;
+            const op = /^(?:&>>|&>|<<<|>>|>\||>&|<&|<>|>|<)/.exec(command.slice(i, i + 3)) as RegExpExecArray;
+            i += op[0].length;
+            operand = true;
+            continue;
+        }
         if (ch === ';' || ch === '|' || (ch === '&' && command[i + 1] === '&')) {
             endCommand(ch === '|' && command[i + 1] !== '|');
             i += (ch === '&' || (ch === '|' && command[i + 1] === '|')) ? 2 : 1;
             continue;
         }
-        // A lone `&` backgrounds the command before it; `2>&1` and `&>f` are redirections.
-        if (ch === '&' && command[i + 1] !== '>' && !(inWord && /[<>]$/.test(word))) {
+        // A lone `&` backgrounds the command before it (`>&` and `&>` are redirections, read above).
+        if (ch === '&') {
             endCommand();
             i += 1;
             continue;
@@ -231,7 +256,7 @@ export function simpleCommands(command: string): string[][] {
     return lexCommands(command).map((c) => c.words.map((w) => w.text));
 }
 
-function normalise({ words, piped }: Simple): string[] {
+function normalise({ words, piped, redirectedFirst }: Simple): string[] {
     let k = 0;
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
     let assignOk = true;
@@ -239,10 +264,11 @@ function normalise({ words, piped }: Simple): string[] {
         const w = words[k] as Word;
         if (w.assign && assignOk) k += 1;
         else if (PREFIX_WORDS.has(w.text)) {
-            // `time` is the keyword only unquoted and at the start of a pipeline;
+            // `time` is the keyword only unquoted, first in its command (no word or
+            // redirection before it) and at the start of a pipeline;
             // a quoted `"time"`, or one after `|`, is the time(1) program, after
             // which `X=1` is the command name.
-            const keyword = w.text === 'time' && !(w.quoted || piped || k > 0);
+            const keyword = w.text === 'time' && !(w.quoted || piped || redirectedFirst || k > 0);
             assignOk = ASSIGN_AFTER.has(w.text) && (w.text !== 'time' || keyword);
             k += 1;
             const next = words[k]?.text;

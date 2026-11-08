@@ -90,7 +90,30 @@ const CASES: Array<[string, string[]]> = [
     ['nohup -- git push', [P]],
     ['command -v git push', []],
     ['command -V git commit -m x', []],
+    // Round-7 counterexamples: a redirection's operand is not an argument, and a
+    // redirection may stand anywhere among the words.
+    ['git <<<x push', [P]],
+    ['<<<git push', []],
+    ['git <<<push status', []],
+    ['git >out push', [P]],
+    ['>out git push', [P]],
+    ['git > out push', [P]],
+    ['git >push status', []],
+    ['2>/dev/null git commit -m x', [C]],
+    ['git 2>&1 push', [P]],
+    ['git &>/dev/null push', [P]],
+    ['X=1 >f git push', [P]],
+    ['nohup >f X=1 git push', []],
+    ["git <<< 'a b' push", [P]],
+    ['>out time X=1 git push', []],
+    ['>out time git push', [P]],
 ];
+
+describe.skipIf(!hasBash)('the bash stubs log what they are asked to run', () => {
+    it.each([['git push', [P]], ['git commit -m x', [C]], ['gh pr create -t t', [G]], ['git status', []]] as Array<[string, string[]]>)('%j', (command, expected) => {
+        expect(bashActs(command)).toEqual(expected);
+    });
+});
 
 // CI must not pass this suite by skipping it.
 if (!hasBash && process.env['CI']) throw new Error('the bash oracle needs bash on CI');
