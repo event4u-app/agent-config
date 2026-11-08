@@ -80,7 +80,7 @@ import { atomic_write_json } from './state_io.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 import { ledgerKey } from '../_lib/ledger_key.js';
 import type { DutyScan, DutyState } from '../_lib/reference_duty.js';
-import { ACT_WORDS, loadReferenceDuty, type ReferenceDuty } from './reference_duty_loader.js';
+import { actWordsMayMatch, loadReferenceDuty, type ReferenceDuty } from './reference_duty_loader.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field — see
 // the file header for why this never blocks on `claude`. This concern never
@@ -343,7 +343,7 @@ export interface DutyRecord {
 
 /** The duty a bound shell act makes due; the command itself is never stored. */
 function recordActDuty(envelope: JsonObject, payload: JsonObject, command: string): void {
-    if (!ACT_WORDS.test(command)) return;
+    if (!actWordsMayMatch(command)) return;
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined).trim() || process.cwd();
     const sessionKey = deriveSessionKey(envelope, payload);
     const ledger = readLedger(workspaceRoot, sessionKey);

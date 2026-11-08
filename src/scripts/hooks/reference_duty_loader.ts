@@ -18,11 +18,16 @@ export const REFERENCE_DUTY_CHUNK = 'reference_duty.chunk.cjs';
 export const EXPECTED_REFERENCE_DUTY_SCHEMA = 1;
 
 /**
- * Words at least one of which every bound shell act contains. A Bash command
- * holding none of them cannot run a bound act, so the chunk is not loaded for
- * it; a test holds this in step with `src/config/act-references.json`.
+ * Whether a command could run a bound act, so loading the chunk is worth it. A
+ * superset of the lexer: quotes and backslashes are removed before matching, and
+ * no word boundary is required, so a form the lexer would match is never skipped.
+ * A test holds this in step with `src/config/act-references.json`.
  */
-export const ACT_WORDS = /\b(?:commit|push|pr)\b/;
+export const ACT_WORDS = /commit|push|pr/;
+
+export function actWordsMayMatch(command: string): boolean {
+    return ACT_WORDS.test(command.replace(/[\\'"]/g, ''));
+}
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 

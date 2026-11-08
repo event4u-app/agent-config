@@ -21,6 +21,14 @@ describe('commandRunsAct', () => {
         ['git commit -m x # done', 'git commit'],
         ["echo '<<EOF'; git commit -m x", 'git commit'],
         ['make && \\\n  git push', 'git push'],
+        ["cat > f <<EOF-1\nprose\nEOF-1\ngit commit -m x", 'git commit'],
+        ["cat > a <<A > b <<B\none\nA\ntwo\nB\ngit push", 'git push'],
+        ["cat > f <<-EOF\n\tbody\n\tEOF\ngit commit -m x", 'git commit'],
+        ['sleep 1 & git push', 'git push'],
+        ['git com\\mit -m x', 'git commit'],
+        ['git "commit" -m x', 'git commit'],
+        ['git push 2>&1 | tail -3', 'git push'],
+        ['git push &>/dev/null', 'git push'],
     ])('recognises %j as %s', (cmd, act) => {
         expect(commandRunsAct(cmd, act)).toBe(true);
     });
@@ -36,7 +44,20 @@ describe('commandRunsAct', () => {
         ['echo "a; git push"', 'git push'],
         ["echo 'git commit -m x'", 'git commit'],
         ['git -C "dir; git push" status', 'git push'],
+        ["cat > f <<EOF\n  EOF\ngit push\nEOF", 'git push'],
     ])('does not take %j for %s', (cmd, act) => {
         expect(commandRunsAct(cmd, act)).toBe(false);
+    });
+});
+
+describe('the bundle pre-check never rejects a command the lexer would match', () => {
+    it.each([
+        'git com\\mit -m x',
+        'git "commit" -m x',
+        "git 'push'",
+        'g\\h pr create',
+    ])('%j passes ACT_WORDS', async (cmd) => {
+        const { actWordsMayMatch } = await import('../../src/scripts/hooks/reference_duty_loader.js');
+        expect(actWordsMayMatch(cmd)).toBe(true);
     });
 });

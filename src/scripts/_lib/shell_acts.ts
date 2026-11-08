@@ -4,8 +4,15 @@
  * Agents chain: a prefix match finds 17 % of commits in real transcripts, so the
  * command is lexed into simple commands of words. One pass honours single and
  * double quotes, backslash escapes, `#` comments, line continuations, and the
- * separators `;` `&&` `||` `|` and newline outside quotes; a heredoc operator
- * outside quotes drops the body up to its terminator line. Per command, leading
+ * separators `;` `&&` `||` `|` `&` and newline outside quotes. A heredoc operator
+ * outside quotes queues its terminator (any unquoted word, or a quoted one); the
+ * bodies follow the line in order, each ending at the line that is exactly its
+ * terminator (leading tabs stripped for `<<-`).
+ *
+ * Supported syntax contract: the above, plus `VAR=…` prefixes, `sudo`/`command`/
+ * `time`/`exec`/`nohup`, and `git -C`/`-c` values. Not interpreted: `$(…)` and
+ * backticks (their text stays inside the word), subshell parentheses, `eval`,
+ * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
  * `git -C <dir>` / `git -c k=v` are skipped, quoted values included.
  *
@@ -24,7 +31,7 @@ export function simpleCommands(command: string): string[][] {
     let words: string[] = [];
     let word = '';
     let inWord = false;
-    let pendingHeredoc: string | null = null;
+    const pendingHeredocs: Array<{ tag: string; stripTabs: boolean }> = [];
     const endWord = (): void => {
         if (inWord) words.push(word);
         word = '';
@@ -79,11 +86,12 @@ export function simpleCommands(command: string): string[][] {
         if (ch === '<' && command[i + 1] === '<' && command[i + 2] !== '<') {
             endWord();
             let j = i + 2;
-            if (command[j] === '-') j += 1;
+            const stripTabs = command[j] === '-';
+            if (stripTabs) j += 1;
             while (command[j] === ' ' || command[j] === '\t') j += 1;
-            const m = /^['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?/.exec(command.slice(j));
+            const m = /^(?:'([^'\n]+)'|"([^"\n]+)"|([^\s;&|<>()'"]+))/.exec(command.slice(j));
             if (m) {
-                pendingHeredoc = m[1] as string;
+                pendingHeredocs.push({ tag: (m[1] ?? m[2] ?? m[3]) as string, stripTabs });
                 i = j + m[0].length;
                 continue;
             }
@@ -93,14 +101,14 @@ export function simpleCommands(command: string): string[][] {
         if (ch === '\n') {
             endCommand();
             i += 1;
-            if (pendingHeredoc !== null) {
-                const tag = pendingHeredoc;
-                pendingHeredoc = null;
+            // Each pending heredoc body follows in order, each up to the line that
+            // is exactly its terminator (leading tabs stripped for `<<-`).
+            for (const { tag, stripTabs } of pendingHeredocs.splice(0)) {
                 while (i < n) {
                     const eol = command.indexOf('\n', i);
                     const line = command.slice(i, eol === -1 ? n : eol);
                     i = eol === -1 ? n : eol + 1;
-                    if (line.trim() === tag) break;
+                    if ((stripTabs ? line.replace(/^\t+/, '') : line) === tag) break;
                 }
             }
             continue;
@@ -108,6 +116,12 @@ export function simpleCommands(command: string): string[][] {
         if (ch === ';' || ch === '|' || (ch === '&' && command[i + 1] === '&')) {
             endCommand();
             i += (ch === '&' || (ch === '|' && command[i + 1] === '|')) ? 2 : 1;
+            continue;
+        }
+        // A lone `&` backgrounds the command before it; `2>&1` and `&>f` are redirections.
+        if (ch === '&' && command[i + 1] !== '>' && !(inWord && /[<>]$/.test(word))) {
+            endCommand();
+            i += 1;
             continue;
         }
         if (ch === ' ' || ch === '\t') {
