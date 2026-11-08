@@ -489,9 +489,18 @@ function stateOf(id: string, opts: LinkOptions, tally: CallTally): string | null
     return r !== null && r['v'] === 1 && r['id'] === id && typeof r['state'] === 'string' ? r['state'] : null;
 }
 
-/** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` turns the whole link off — raise, relay and checkpoint — and leaves the quota notice as it was; `AGENT_CONFIG_NO_QUOTA_NOTICE=1` turns off both. */
+/**
+ * The question is opt-in (road-to-a-link-with-agent-switch 7.6): raise, relay
+ * and checkpoint run only with `AGENT_CONFIG_SWITCH_QUESTION=1`.
+ * `AGENT_CONFIG_NO_SWITCH_QUESTION=1` still turns it off and wins over the
+ * opt-in; `AGENT_CONFIG_NO_QUOTA_NOTICE=1` turns off the notice and the question.
+ */
 export function switchQuestionOff(env: NodeJS.ProcessEnv): boolean {
-    return env['AGENT_CONFIG_NO_SWITCH_QUESTION'] === '1' || env['AGENT_CONFIG_NO_QUOTA_NOTICE'] === '1';
+    return (
+        env['AGENT_CONFIG_SWITCH_QUESTION'] !== '1' ||
+        env['AGENT_CONFIG_NO_SWITCH_QUESTION'] === '1' ||
+        env['AGENT_CONFIG_NO_QUOTA_NOTICE'] === '1'
+    );
 }
 
 /** States the Stop path leaves a checkpoint for. */

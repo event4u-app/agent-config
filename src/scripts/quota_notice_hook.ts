@@ -28,7 +28,8 @@
  * race for the same notice cannot both print it. Claims older than eight days
  * are removed when a new one is taken.
  *
- * WHAT STOPS IT. The switch question alone: `AGENT_CONFIG_NO_SWITCH_QUESTION=1`.
+ * WHAT STOPS IT. The switch question is opt-in: it runs only with
+ * `AGENT_CONFIG_SWITCH_QUESTION=1`, and `AGENT_CONFIG_NO_SWITCH_QUESTION=1` wins over that.
  * The notices: `AGENT_CONFIG_NO_QUOTA_NOTICE=1`, CI, replay
  * mode, and any host without a verified user channel. The ask: only
  * `AGENT_CONFIG_NO_SPAWN_ASK=1` or a billing grant — in CI or print mode an

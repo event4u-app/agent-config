@@ -48,13 +48,18 @@ beforeEach(() => {
     const exe = path.join(bin, 'agent-switch');
     fs.writeFileSync(exe, `#!/bin/sh\nexec "${process.execPath}" "${FAKE}" "$@"\n`, 'utf-8');
     fs.chmodSync(exe, 0o755);
+    // The question is opt-in (7.6); these tests exercise it switched on.
+    process.env['AGENT_CONFIG_SWITCH_QUESTION'] = '1';
     binEnv = {
         PATH: `${bin}${path.delimiter}${path.dirname(process.execPath)}`,
         FAKE_AS_SWITCH_FILE: switchFile,
         FAKE_AS_LOG: logFile,
     };
 });
-afterEach(() => fs.rmSync(home, { recursive: true, force: true }));
+afterEach(() => {
+    delete process.env['AGENT_CONFIG_SWITCH_QUESTION'];
+    fs.rmSync(home, { recursive: true, force: true });
+});
 
 function request(over: Record<string, unknown> = {}): Record<string, unknown> {
     return {
@@ -100,7 +105,7 @@ function deps(over: Partial<QuotaNoticeDeps> = {}): QuotaNoticeDeps {
     return {
         sessionId: 'sess-a',
         viaHost: true,
-        env: {},
+        env: { AGENT_CONFIG_SWITCH_QUESTION: '1' },
         stateEnv,
         billing: { billing_class: 'plan', source: null },
         now: NOW,
@@ -490,7 +495,7 @@ describe('7.1 back off a failing link', () => {
         setRequest();
         noticeReply(deps());
         fs.rmSync(switchFile);
-        [1, 2, 3].forEach(() => checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, NOW));
+        [1, 2, 3].forEach(() => checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, NOW));
         expect(linkResting(sess(), stateEnv, NOW + 5 * 3600_000 - 1)).toBe(true);
         expect(linkResting(sess(), stateEnv, NOW + 5 * 3600_000)).toBe(false);
     });
@@ -810,7 +815,7 @@ describe('7.x council round 1 findings', () => {
         noticeReply(deps({ now: later }));
         expect(calls('show')).toHaveLength(shows);
         let writes = 0;
-        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv }, {}, later)).toBe(true);
+        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later)).toBe(true);
         expect(writes).toBe(1);
         expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(false);
     });
@@ -821,7 +826,7 @@ describe('7.x council round 1 findings', () => {
         noticeReply(deps());
         const later = (readSwitchRecord(sess(), stateEnv, NOW)?.expires_at ?? 0) + 1;
         let writes = 0;
-        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later)).toBe(false);
         expect(writes).toBe(0);
         expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(false);
     });
@@ -846,25 +851,25 @@ describe('7.x council round 1 findings', () => {
 
     it('an expired record whose last write fails keeps the obligation for the next Stop', () => {
         const later = expiredApproved();
-        expect(checkpointBeforeMove(sess(), () => false, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => false, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later)).toBe(false);
         expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(true);
-        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later)).toBe(true);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later)).toBe(true);
         expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(false);
     });
 
     it('an expired record whose lookup gets no answer is kept', () => {
         const later = expiredApproved();
         fs.rmSync(switchFile);
-        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later)).toBe(false);
         expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(true);
     });
 
     it('an expired record is kept while the link rests', () => {
         const later = expiredApproved();
         fs.rmSync(switchFile);
-        [1, 2, 3].forEach(() => checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later));
+        [1, 2, 3].forEach(() => checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later));
         expect(linkResting(sess(), stateEnv, later)).toBe(true);
-        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, later)).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, { AGENT_CONFIG_SWITCH_QUESTION: '1' }, later)).toBe(false);
         expect(fs.existsSync(switchRecordPath(sess(), stateEnv))).toBe(true);
     });
 
@@ -875,5 +880,35 @@ describe('7.x council round 1 findings', () => {
         fs.utimesSync(file, old, old);
         noticeReply(deps({ now: later }));
         expect(fs.existsSync(file)).toBe(false);
+    });
+});
+
+describe('7.6 the question is opt-in', () => {
+    const ON = { AGENT_CONFIG_SWITCH_QUESTION: '1' };
+
+    it('without the opt-in nothing is raised and today’s notice is shown', () => {
+        hot();
+        setRequest();
+        const r = noticeReply(deps({ env: {} }));
+        expect(calls('request')).toEqual([]);
+        expect(r.lines.some((l) => /^AC: 5h window 85 %/.test(l))).toBe(true);
+        expect(r.context).toEqual([]);
+    });
+
+    it('without the opt-in the Stop path writes nothing and does not ask agent-switch', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: { kind: 'approve', target: 'claude/b', how: 'after-turn', by: 'as-gui', at: 'x' } });
+        const shows = calls('show').length;
+        expect(checkpointBeforeMove(hashSessionId('sess-a'), () => true, stateEnv, { env: binEnv }, {})).toBe(false);
+        expect(calls('show')).toHaveLength(shows);
+    });
+
+    it('the off switch wins over the opt-in', () => {
+        hot();
+        setRequest();
+        noticeReply(deps({ env: { ...ON, AGENT_CONFIG_NO_SWITCH_QUESTION: '1' } }));
+        expect(calls('request')).toEqual([]);
     });
 });
