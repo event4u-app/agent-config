@@ -51,7 +51,7 @@ Capability (where defined): the edits are present and the tree is clean.
 
 ## Size and model
 
-Model `claude-haiku-4-5`, 3 seeds, 4 tasks × 4 arms = 48 trials; budget cap $0.50
+Model `claude-haiku-5-5` (the priced Haiku row in `internal/bench/pricing.yaml`), 3 seeds, 4 tasks × 4 arms = 48 trials; budget cap $0.50
 per trial. Spend released by the owner on 2026-11-08
 (`agents/evidence/owner-directives/2026-11-07-wip-cap-25.md`).
 
