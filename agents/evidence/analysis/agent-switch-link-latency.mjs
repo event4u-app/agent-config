@@ -1,9 +1,9 @@
 /**
  * Whole-hook latency of `quota-notice` (user_prompt_submit) and `session-eol`
  * (stop) through the built dispatcher, with agent-switch answering, failing,
- * hanging, resting (backed off) and absent. Run from the agent-config root:
- *   npx tsx agents/evidence/analysis/agent-switch-link-latency.mjs [n]
- * after `npm run build:hooks`. Needs no network and touches no real agent-switch:
+ * hanging, resting (backed off) and absent. Run it with `npx tsx` from the
+ * agent-config root, sample count as the only argument, after
+ * `npm run build:hooks`. Needs no network and touches no real agent-switch:
  * every run gets its own HOME, EVENT4U_CONFIG_HOME and PATH.
  */
 import { spawnSync } from 'node:child_process';
