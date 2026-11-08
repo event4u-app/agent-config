@@ -225,7 +225,12 @@ the link over the CLI verbs below, never the MCP client.
   checkpoint (a session inside a claimed run only), once it was written;
   a write that did not happen is tried again on the next Stop. agent-switch moves
   after the turn at the earliest, so this Stop is the last point the session
-  can leave it.
+  can leave it. The checkpoint is best effort and never gates a move: AC
+  cannot hold agent-switch back, and a move with `how: now` can run before
+  this Stop does.
+- **Off switch.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and
+  checkpoint, including for a request raised before it was set; the quota
+  notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
 

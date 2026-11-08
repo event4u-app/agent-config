@@ -28,7 +28,8 @@
  * race for the same notice cannot both print it. Claims older than eight days
  * are removed when a new one is taken.
  *
- * WHAT STOPS IT. The notices: `AGENT_CONFIG_NO_QUOTA_NOTICE=1`, CI, replay
+ * WHAT STOPS IT. The switch question alone: `AGENT_CONFIG_NO_SWITCH_QUESTION=1`.
+ * The notices: `AGENT_CONFIG_NO_QUOTA_NOTICE=1`, CI, replay
  * mode, and any host without a verified user channel. The ask: only
  * `AGENT_CONFIG_NO_SPAWN_ASK=1` or a billing grant — in CI or print mode an
  * unanswered ask keeps the spawn from running. Fail-open on every path: exit 0.
@@ -60,6 +61,7 @@ import {
     readSwitchRecord,
     relayLine,
     showSwitch,
+    switchQuestionOff,
     writeSwitchRecord,
 } from './_lib/switch_relay.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
@@ -155,6 +157,7 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
  * reset) on the machine, so a hot window raises once per cycle.
  */
 function switchTurn(deps: QuotaNoticeDeps, session: string, account: string, hot: WindowPressure | undefined, out: NoticeReply): void {
+    if (switchQuestionOff(deps.env)) return;
     const link = deps.link ?? {};
     const rec = readSwitchRecord(session, deps.stateEnv);
     if (rec !== null) {

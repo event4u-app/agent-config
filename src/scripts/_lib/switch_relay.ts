@@ -248,12 +248,19 @@ function stateOf(id: string, opts: LinkOptions): string | null {
  * Stop runs first. `write` reports whether a checkpoint was written; one that
  * was not is tried again on the next Stop. Returns whether one was written.
  */
+/** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` turns the whole link off — raise, relay and checkpoint — and leaves the quota notice as it was. */
+export function switchQuestionOff(env: NodeJS.ProcessEnv): boolean {
+    return env['AGENT_CONFIG_NO_SWITCH_QUESTION'] === '1';
+}
+
 export function checkpointBeforeMove(
     sessionHash: string,
     write: () => boolean,
     stateEnv?: EnvMap | null,
     opts: LinkOptions = {},
+    env: NodeJS.ProcessEnv = process.env,
 ): boolean {
+    if (switchQuestionOff(env)) return false;
     const rec = readSwitchRecord(sessionHash, stateEnv);
     if (rec === null || rec.checkpointed) return false;
     const state = stateOf(rec.id, opts);

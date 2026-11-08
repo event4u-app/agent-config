@@ -308,6 +308,46 @@ describe('4.4 hand the work over', () => {
     });
 });
 
+describe('switching the question off', () => {
+    const OFF = { AGENT_CONFIG_NO_SWITCH_QUESTION: '1' };
+    const approved = { state: 'approved', decision: { kind: 'approve', target: 'claude/b', how: 'after-turn', by: 'ac:claude-code', at: 'x' } };
+
+    it('raises nothing and keeps today’s notice', () => {
+        hot();
+        setRequest();
+        const r = noticeReply(deps({ env: OFF }));
+        expect(calls('request')).toEqual([]);
+        expect(r.lines.some((l) => l.includes(ID))).toBe(false);
+        expect(r.lines.some((l) => l.includes('five_hour') || l.includes('5-hour') || l.includes('%'))).toBe(true);
+        expect(readSwitchRecord(hashSessionId('sess-a'), stateEnv)).toBeNull();
+    });
+
+    it('stops relaying a request raised before it was switched off', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest(approved);
+        const r = noticeReply(deps({ env: OFF }));
+        expect(calls('show')).toEqual([]);
+        expect(r.lines.some((l) => l.includes(ID))).toBe(false);
+    });
+
+    it('writes no checkpoint and does not ask agent-switch', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest(approved);
+        let writes = 0;
+        const write = (): boolean => {
+            writes++;
+            return true;
+        };
+        expect(checkpointBeforeMove(hashSessionId('sess-a'), write, stateEnv, { env: binEnv }, OFF)).toBe(false);
+        expect(writes).toBe(0);
+        expect(calls('show')).toEqual([]);
+    });
+});
+
 describe('reading a request', () => {
     const show = (): ReturnType<typeof showSwitch> => showSwitch(ID, { env: binEnv });
 
