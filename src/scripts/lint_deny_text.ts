@@ -230,28 +230,32 @@ function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly
  */
 function staticLiteralInit(node: ts.Node, known: ReadonlyMap<string, readonly string[]>): boolean {
     let text = false;
+    // A denylist of what reaches outside the author's text, rather than an
+    // allowlist of what stays inside it: a syntax form nobody listed (a unary
+    // operator, `typeof`, a comma) is then static by default and fails closed.
     const isStatic = (n: ts.Node): boolean => {
-        if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) {
+        if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n)) {
             text = true;
             return true;
         }
-        if (ts.isNumericLiteral(n) || n.kind === ts.SyntaxKind.TrueKeyword || n.kind === ts.SyntaxKind.FalseKeyword || n.kind === ts.SyntaxKind.NullKeyword) return true;
         if (ts.isIdentifier(n)) {
             // A known constant is text by construction (or unreadable text).
             if (known.has(n.text)) text = true;
-            return known.has(n.text);
+            return known.has(n.text) || n.text === 'undefined';
         }
         if (
-            ts.isTemplateExpression(n) || ts.isTemplateSpan(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n) ||
-            ts.isArrayLiteralExpression(n) || ts.isObjectLiteralExpression(n) || ts.isPropertyAssignment(n) ||
-            ts.isParenthesizedExpression(n) || ts.isAsExpression(n) || ts.isSatisfiesExpression(n) ||
-            ts.isTypeAssertionExpression(n) || ts.isNonNullExpression(n) || ts.isBinaryExpression(n) ||
-            ts.isConditionalExpression(n) || ts.isSpreadElement(n) || ts.isTypeNode(n) || ts.isToken(n)
+            ts.isCallExpression(n) || ts.isNewExpression(n) || ts.isTaggedTemplateExpression(n) ||
+            ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n) ||
+            ts.isAwaitExpression(n) || ts.isYieldExpression(n) ||
+            ts.isFunctionExpression(n) || ts.isArrowFunction(n) || ts.isClassExpression(n) ||
+            n.kind === ts.SyntaxKind.ThisKeyword || n.kind === ts.SyntaxKind.SuperKeyword ||
+            ts.isMetaProperty(n) || ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword
         ) {
-            if (ts.isPropertyAssignment(n)) return isStatic(n.initializer);
-            return ts.forEachChild(n, (c) => (isStatic(c) ? undefined : true)) !== true;
+            return false;
         }
-        return false;
+        if (ts.isPropertyAssignment(n)) return isStatic(n.initializer);
+        if (ts.isShorthandPropertyAssignment(n)) return isStatic(n.name);
+        return ts.forEachChild(n, (c) => (isStatic(c) ? undefined : true)) !== true;
     };
     return isStatic(node) && text;
 }
@@ -529,8 +533,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 30,
-        minRejectCases: 22,
+        minCases: 31,
+        minRejectCases: 23,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -721,6 +725,11 @@ function selfTest(): number {
                 name: 'numeric addition is not read as concatenation',
                 expect: 'reject',
                 run: () => run(plant('arith', 'process.stderr.write(`Blocked: AGENT_CONFIG_${1 + 2}=1`);\n')),
+            },
+            {
+                name: 'a unary operator over a literal fails closed',
+                expect: 'reject',
+                run: () => run(plant('unary', "process.stderr.write('Blocked: AGENT_CONFIG_' + +'1' + '=1');\n")),
             },
             {
                 name: 'a hole bound at runtime is not a finding',
