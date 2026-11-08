@@ -8,7 +8,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's startup contract (`src/agent-src/startup-contracts/rules/<id>.md`). This page is the readable form;
 the config is the record.
 
-**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33988 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33993 chars.**
 
 ## Per rule
 
@@ -17,11 +17,11 @@ the config is the record.
 | `autonomous-execution` | 31 | 0 | 1 | 1442 |
 | `broken-access-control` | 14 | 7 | 0 | 797 |
 | `command-suggestion-policy` | 21 | 13 | 1 | 1085 |
-| `decision-revisit-gate` | 43 | 5 | 1 | 1757 |
+| `decision-revisit-gate` | 43 | 5 | 1 | 1787 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
 | `domain-safety-pii` | 36 | 2 | 1 | 2000 |
-| `domain-safety-retention` | 27 | 5 | 0 | 1600 |
+| `domain-safety-retention` | 27 | 5 | 0 | 1591 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1361 |
 | `evaluator-independence` | 27 | 8 | 0 | 1243 |
 | `fast-path-marker-visibility` | 19 | 2 | 0 | 935 |
@@ -39,7 +39,7 @@ the config is the record.
 | `settings-ask-protocol` | 32 | 6 | 0 | 1452 |
 | `source-confidentiality` | 20 | 3 | 0 | 1154 |
 | `strategy-safety-floor` | 31 | 4 | 2 | 1696 |
-| `tool-safety` | 22 | 0 | 0 | 923 |
+| `tool-safety` | 22 | 0 | 0 | 907 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 861 |
 
@@ -145,7 +145,7 @@ the config is the record.
 | `decision-revisit-gate` | c30 | escalation | ask | no | **Lowers or removes** a recorded security / privacy / safety / data-handling floor | lowers/removes safety/security/privacy/data floor |  |
 | `decision-revisit-gate` | c31 | escalation | ask | no | \| Irreversible or materially destructive \| | irreversible/materially destructive |  |
 | `decision-revisit-gate` | c32 | escalation | ask | no | Spend or liability **above** a delegated threshold | spend/liability over delegated cap |  |
-| `decision-revisit-gate` | c33 | escalation | ask | no | Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | legal/regulatory/contractual/licensing |  |
+| `decision-revisit-gate` | c33 | escalation | ask | no | Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | creates/removes/weakens a legal/regulatory/contractual/licensing |  |
 | `decision-revisit-gate` | c34 | escalation | ask | no | Governance self-amendment — reopening authority, quorum, escalation, this set | amends governance |  |
 | `decision-revisit-gate` | c35 | escalation | ask | no | \| Cannot be bounded from available evidence \| | unbounded by available |  |
 | `decision-revisit-gate` | c36 | escalation | ask | no | Council split, abstention, or no quorum is an **escalation condition**, not a | split/abstention/no quorum → user |  |
@@ -249,7 +249,7 @@ the config is the record.
 | `domain-safety-retention` | c9 | prohibition | refuse | no | If any of these apply, do not delete: open tax audit | open tax audit, pending litigation |  |
 | `domain-safety-retention` | c10 | obligation | act | no | When multiple floors apply, the longest wins. Document the chosen floor. | document chosen floor |  |
 | `domain-safety-retention` | c11 | obligation | act | no | Append the financial-disclaimer footer from 'domain-safety-disclaimer' | copy verbatim from domain-safety-disclaimer's financial section |  |
-| `domain-safety-retention` | c12 | obligation | act | no | must respect deletion requests on the regime's response clock (GDPR Art. 12(3)) | regime's response clock (GDPR Art. 12(3): 1 month) |  |
+| `domain-safety-retention` | c12 | obligation | act | no | must respect deletion requests on the regime's response clock (GDPR Art. 12(3)) | regime's response clock (GDPR Art. 12(3)) |  |
 | `domain-safety-retention` | c13 | obligation | act | no | Raw ticket body + attachments (PII): short retention with DSR honoring. | short retention w/ DSR honoring |  |
 | `domain-safety-retention` | c14 | exception | none | no | Aggregate metrics (de-identified): long retention OK. | de-identified aggregates persist |  |
 | `domain-safety-retention` | c15 | obligation | act | no | name the expiry and the deletion job that must run | deletion job that must run |  |
@@ -678,7 +678,7 @@ the config is the record.
 | `tool-safety` | c8 | prohibition | refuse | no | - **No hidden credentials** — tools must not embed API keys or tokens in skill files | API keys/tokens in skill files |  |
 | `tool-safety` | c9 | prohibition | refuse | no | - **No arbitrary execution** — tool adapters have fixed interfaces, not free-form calls | arbitrary execution (adapters = fixed interfaces) |  |
 | `tool-safety` | c10 | obligation | act | no | - **Audit trail** — tool usage should be observable and logged | tool usage should be observable and logged |  |
-| `tool-safety` | c11 | obligation | act | no | - **Prefer scoped-grant syntax over bare tool names** where the host supports | prefer scoped grants (Bash(<cmd>:*)) where the host supports it |  |
+| `tool-safety` | c11 | obligation | act | no | - **Prefer scoped-grant syntax over bare tool names** where the host supports | prefer scoped grants where the host supports it |  |
 | `tool-safety` | c12 | precedence | refuse | no | a tool matching the | refuse disallowed_tools match even if allowed |  |
 | `tool-safety` | c13 | obligation | act | no | - **Falsifiable numeric activation thresholds** belong in descriptions where | numeric thresholds in descriptions where they apply |  |
 | `tool-safety` | c14 | trigger | none | no | - Skills that declare 'allowed_tools' in their execution block | skill declares allowed_tools |  |

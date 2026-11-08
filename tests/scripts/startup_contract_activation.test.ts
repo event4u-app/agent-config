@@ -186,7 +186,7 @@ describe('tool-safety keeps the body modality', () => {
 describe('round 29 — body and contract say the same thing', () => {
     const body = (id: string): string => fs.readFileSync(path.join(REPO, 'src', 'rules', `${id}.md`), 'utf8');
     it('tool-safety keeps "where the host supports it" on scoped grants', () => {
-        expect(contract('tool-safety')).toContain('prefer scoped grants (Bash(<cmd>:*)) where the host supports it');
+        expect(contract('tool-safety')).toContain('prefer scoped grants where the host supports it');
     });
     it('image-likeness-and-rights: the body states the model-card check is universal, as the contract does', () => {
         expect(body('image-likeness-and-rights')).toContain('Check model card on every gen/edit');
@@ -195,5 +195,19 @@ describe('round 29 — body and contract say the same thing', () => {
     it('question-not-instruction: the body names the marker and greeting precedence the contract carries', () => {
         expect(body('question-not-instruction')).toContain('first token (after any fast-path marker and canary greeting');
         expect(contract('question-not-instruction')).toContain('first token after any fast-path marker and canary greeting');
+    });
+});
+
+// Round 30 (openai): two contracts said more than their bodies.
+describe('round 30 — no restriction or number the body does not state', () => {
+    it('decision-revisit-gate keeps the transition test on commitments', () => {
+        const c = contract('decision-revisit-gate');
+        expect(c).toContain('creates/removes/weakens a legal/regulatory/contractual/licensing/compat/public commitment');
+        expect(c).not.toContain('compat/public pledge');
+    });
+    it('domain-safety-retention names the response clock without a number the body does not give', () => {
+        const c = contract('domain-safety-retention');
+        expect(c).toContain("regime's response clock (GDPR Art. 12(3))");
+        expect(c).not.toContain('1 month');
     });
 });
