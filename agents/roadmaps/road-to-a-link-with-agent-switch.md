@@ -182,7 +182,7 @@ cross-account continuation.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-11-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -190,6 +190,7 @@ cross-account continuation.
 | 2 | Stale limits route a seat badly | implementation | A cached limits read that is hours old can mark a full account usable and place a council seat on it | Observations carry `stale`; a stale read counts as `null`, never as usable | Phase 5 — Load distribution |
 | 3 | agent-switch absent or link off | implementation | A hard dependency would break AC for every user without agent-switch, against fence K8 | Every path returns `null` and falls back to today's behaviour | Phase 2 — Automatic connection |
 | 4 | Notice noise | product | Raising a request on every `hot` notice could flood both tools with duplicate questions | One request per `(account, window, resets_at)`, deduplicated in agent-switch | Phase 4 — Inform and ask |
+| 5 | One pace request, two voices | product | agent-switch's own chat hook and AC's prompt-time hook could both put the same pace suggestion into one session | agent-switch's hook is silent wherever this link is wired; AC renders the request's `summary` once, after any limit request | Phase 6 — Pace requests (agent-switch counterpart) |
 
 ## Blockers
 
