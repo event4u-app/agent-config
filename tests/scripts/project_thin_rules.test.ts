@@ -111,6 +111,8 @@ describe('project_thin_rules — pure surface', () => {
         for (const id of noTrigger) {
             const text = map.get(`${id}.md`);
             if (text === undefined) continue; // out of scope in this projection
+            // A startup contract is the one sanctioned stub form for a no-trigger rule.
+            if (text.includes(ptr.STUB_CONTRACT_OPEN)) continue;
             expect(text).not.toContain(ptr.THIN_ENTRY_MARKER);
         }
     });
@@ -204,6 +206,7 @@ describe('law-in-stub', () => {
             const stub = out.get(`${id}.md`);
             if (stub === undefined) continue; // not projected in this scope
             if (!ptr.is_thin_entry(stub)) continue; // kept full-bodied for another reason
+            if (stub.includes(ptr.STUB_CONTRACT_OPEN)) continue; // carries its startup contract instead (check_startup_contracts)
             const law = lawText(ruleBody(fs.readFileSync(`${ptr.RULES_SOURCE}/${id}.md`, 'utf-8'))) as string;
             expect(stub, `${id} stub must carry its law verbatim`).toContain(law);
             expect(stub, `${id} stub must carry the digest of what it copied`).toContain(

@@ -3538,3 +3538,46 @@ gates:
       road-to-a-green-that-saw-what-it-certifies 1.1. Duplicates of OQ-36 and
       OQ-37 reached main without a git conflict; the step in consistency.yml
       carries no pull_request guard so it also runs under merge_group.
+
+  - id: check_startup_contracts
+    argv: ["--quiet"]
+    min_scanned: 25
+    corpus: "every rule that must carry a startup contract — the high-consequence class plus `tier: safety-floor`, kernel excluded — 28 on 2026-11-07. The floor is 25 because the set moves by single rules joining or leaving the class, while a class file or tier read that stopped resolving collapses to zero."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    canary:
+      class: contract-violation
+      path: src/rules/zz-canary-startup-contract.md
+      content: |
+        ---
+        type: auto
+        tier: safety-floor
+        description: "Canary planted by check_gate_coverage --canary; never ships."
+        ---
+
+        # Canary
+
+        A safety-floor rule with no startup contract.
+    note: >-
+      road-to-a-session-start-under-the-host-limit 1.1–1.3. A rule in the set
+      reaches session start as its contract only, so a missing contract, a
+      clause without a witness, or a dangling "below" fails here.
+
+  - id: check_session_start_budget
+    argv: ["--quiet"]
+    min_scanned: 60
+    corpus: "every `.md` the real global install writes into a scratch HOME's `~/.claude/rules` — 102 on 2026-11-07, unconditional and path-scoped alike. The floor is 60: the rule set moves by single rules, while an install that wrote nothing or a moved rules directory reads zero."
+    status: enforced
+    no_canary_reason: >-
+      The corpus is a scratch HOME the gate creates and deletes on each run, not
+      a repository path a planted file can join, so a create-only canary is never
+      read. Discrimination is proven in
+      `tests/scripts/check_session_start_budget.test.ts`: one installed file
+      inflated past the budget turns a real default install red, and a fixture
+      HOME flips from exit 0 to exit 1 on one inflated file.
+    note: >-
+      road-to-a-session-start-under-the-host-limit 3.1. Red on the current tree
+      by design until that roadmap's Phases 1–2 land; listed in
+      `gate-reachability-exemptions.json` until then, so this row is what runs it
+      on every `task ci`. It needs `dist/hooks/dispatch.js` for the carrier probe
+      (the installer thins only on a reached carrier).

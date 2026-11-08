@@ -220,6 +220,16 @@
             "what_was_added": "Shell syntax the recogniser needed to agree with bash after the 20,600 raise, each found by a ratification seat or by the generated bash test and pinned in the oracle: redirections dropped with their operands at any position (fd numbers, here-strings, a pending operand outranking a digit word, no fd before `&>`), operators and heredoc terminators read across backslash-newline, leading reserved words opening a command only before any redirection, `time` as keyword per bash 5 after every opener, and the lookup context that makes `exec` after `exec` / `nohup` / `sudo` / time(1) a program name. Measured 18,774 B at the 20,600 raise, 20,607 B after round 15.",
             "why_it_could_not_be_avoided": "Each addition closes a false or missed candidate that bash 3.2 and 5.2 disagree with; trimming code to fit would reopen one of them. The chunk loads only on a file write or a Bash command carrying a bound act word; the dispatch bundle is unchanged at 1,582,782 B.",
             "what_would_have_caught_it": "Sizing the ceiling to the parser's eventual scope rather than to one round's reading: a hand-written bash lexer kept growing for eight rounds after the first raise. Sized to the round-15 reading plus about 7 %, so the next fix does not need a raise of its own."
+        },
+        {
+            "date": "2026-11-08",
+            "chunk": "src/scripts/hooks/layer_promotion_hook.ts",
+            "from": 56800,
+            "to": 66900,
+            "by": "agent, feat/session-start-contracts (road-to-a-session-start-under-the-host-limit 3.2)",
+            "what_was_added": "The thin pass now writes the startup-contract stub form: `thin_entry_with_contract`, the installed stub shape and `shortDescription` in thin_rules (+1,960 B), the rule-bodies index and pointer resolution in installThinLayer (+1,369 B), `startupContract` in rule_law_section (+729 B), and the contract-bearing exclusion in layerPromotion (+248 B) — 60,848 B against 56,542 B on main, attributed per input with the chunk's own esbuild options.",
+            "why_it_could_not_be_avoided": "The session-start promotion must write the same contract stubs the installer writes, so it imports the one stub builder; a second, smaller builder would let the promoted layer and the installed layer disagree about what a stub carries.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the contract stub builder the installed layer and the promotion share."
         }
     ],
     "chunks": [
@@ -267,9 +277,9 @@
         },
         {
             "entry": "src/scripts/hooks/layer_promotion_hook.ts",
-            "max_bytes": 56800,
+            "max_bytes": 66900,
             "registered_at": "2026-10-24",
-            "derivation": "Measured 54,058 bytes on 2026-10-24 (the session-start layer step of road-to-a-setup-that-decides-itself 3.3: the decision with its machine evidence, the arrival-record reader, the thin pass, the staged-snapshot restore and the ownership-ledger rewrite) with `yaml` external (the thin pass parses rule frontmatter; `chat_history` requires the same copy earlier on the same event, so the load is a cache hit). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps it off every other dispatch's parse; the bundle carries only its LAZY_CONCERNS row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the layer step."
+            "derivation": "Measured 54,058 bytes on 2026-10-24 (the session-start layer step of road-to-a-setup-that-decides-itself 3.3: the decision with its machine evidence, the arrival-record reader, the thin pass, the staged-snapshot restore and the ownership-ledger rewrite) with `yaml` external (the thin pass parses rule frontmatter; `chat_history` requires the same copy earlier on the same event, so the load is a cache hit). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on claude `session_start` alone, so a chunk keeps it off every other dispatch's parse; the bundle carries only its LAZY_CONCERNS row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the layer step. Raised 2026-11-08 to 66,900: measured 60,848 bytes after road-to-a-session-start-under-the-host-limit 3.2 (the reading plus about 10 %, rounded); see raise_log."
         },
         {
             "entry": "src/scripts/hooks/subagent_constraints_hook.ts",

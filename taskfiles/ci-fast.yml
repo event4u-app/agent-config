@@ -2183,6 +2183,19 @@ tasks:
     desc: Fail when a rule or skill is deleted without a removal record that answers interpretation, census, margin, safety fixture and prior hiding
     cmd: ./scripts-run src/scripts/check_default_asset_removal {{.QUIET_FLAG}}
 
+  check-startup-contracts:
+    silent: true
+    desc: Fail when a high-consequence or safety-floor rule lacks a self-contained startup contract that witnesses every audited clause (road-to-a-session-start-under-the-host-limit 1.1–1.3)
+    cmd: ./scripts-run src/scripts/check_startup_contracts {{.QUIET_FLAG}}
+
+  check-session-start-budget:
+    silent: true
+    desc: Project a default global install into a scratch HOME and fail when the claude-code session-start rule layer exceeds 80,000 chars; prints the project-layer allowance (road-to-a-session-start-under-the-host-limit 3.1)
+    cmds:
+      # The installer thins only on a reached carrier, which needs the hook bundle.
+      - test -f dist/hooks/dispatch.js || npm run --silent build:hooks
+      - ./scripts-run src/scripts/check_session_start_budget {{.QUIET_FLAG}}
+
   lint-no-new-atomic-commands:
     silent: true
     desc: Fail when a new atomic command lands without a `cluster:` field (P0.8c)

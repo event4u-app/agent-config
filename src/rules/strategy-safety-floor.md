@@ -17,6 +17,10 @@ triggers:
   - keyword: "category"
   - keyword: "where to play"
   - keyword: "where not to play"
+  - keyword: "market-entry-analysis"
+  - keyword: "build-buy-partner"
+  - keyword: "org-design"
+  - keyword: "fundraising-narrative"
   - phrase: "what's our strategy"
   - phrase: "should we enter"
   - phrase: "what's our moat"
@@ -102,7 +106,5 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## See also
 
-- `domain-safety-disclaimer` — generic advisory-content floor (core pack)
-- `finance-safety-floor` — finance-pack floor, often paired with strategy work (pack-finance-basic)
-- [`positioning-strategy`](../skills/positioning-strategy/SKILL.md) — opposable-axis discipline
-- [`competitive-moat-analysis`](../skills/competitive-moat-analysis/SKILL.md) — inversion test
+- `domain-safety-disclaimer`, `finance-safety-floor`.
+- [`positioning-strategy`](../skills/positioning-strategy/SKILL.md), [`competitive-moat-analysis`](../skills/competitive-moat-analysis/SKILL.md).

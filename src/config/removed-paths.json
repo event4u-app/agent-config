@@ -1,0 +1,10 @@
+{
+  "_comment": "Paths a change deliberately removed. A frozen record under agents/evidence/ may keep naming one (check_references); a live document may not. Each entry names what removed it and why.",
+  "removed": [
+    {
+      "path": "src/config/layer-form-promotion.json",
+      "removed_by": "road-to-a-session-start-under-the-host-limit 3.3; ADR-293 amendment 3",
+      "reason": "The promotion switch is retired: the installer writes the reduced layer by default, so no file decides whether the session-start promotion may thin a full layer."
+    }
+  ]
+}

@@ -143,7 +143,9 @@ export class RedactionResult {
         if (this.ok) {
             return 'redaction: clean';
         }
-        const parts = this.violations.map((v) => `${v.category}: ${_pyRepr(v.snippet)}`);
+        // The category and the length only: echoing the match would publish the
+        // very value the gate refused (low-impact-corpus-privacy-floor).
+        const parts = this.violations.map((v) => `${v.category}: <masked, ${[...v.snippet].length} chars>`);
         return 'redaction REFUSED — ' + parts.join('; ');
     }
 }

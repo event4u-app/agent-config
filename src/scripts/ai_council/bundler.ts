@@ -91,12 +91,15 @@ export function redact(text: string, egress: CouncilEgress = councilEgress()): s
     return egress.replace(_splitlines(text).join('\n'));
 }
 
-function _enforceSize(text: string, mode: string): string {
+function _enforceSize(text: string, mode: string, maxBytes: number = MAX_BUNDLE_BYTES): string {
+    if (!Number.isInteger(maxBytes) || maxBytes <= 0) {
+        throw new RangeError(`bundle ceiling must be a positive integer (got ${maxBytes})`);
+    }
     const n = _utf8Len(text);
-    if (n > MAX_BUNDLE_BYTES) {
+    if (n > maxBytes) {
         throw new BundleTooLarge(
             `Bundle for ${_pyRepr(mode)} mode is ${n} bytes ` +
-                `(> ${MAX_BUNDLE_BYTES} hard ceiling). ` +
+                `(> ${maxBytes} hard ceiling). ` +
                 'Narrow the scope (smaller diff, fewer files, shorter prompt).',
         );
     }
@@ -118,12 +121,17 @@ function _pyRepr(s: string): string {
     return `${quote}${body}${quote}`;
 }
 
-export function bundle_prompt(text: string): CouncilContext {
+/**
+ * `maxBytes` raises the ceiling for one call, on an explicit caller request
+ * (`council_cli --max-bundle-bytes`): a review whose subject cannot be judged in
+ * parts. It never truncates — above the raised ceiling the bundle still fails loud.
+ */
+export function bundle_prompt(text: string, maxBytes: number = MAX_BUNDLE_BYTES): CouncilContext {
     const redacted = redact(text);
-    return _context('prompt', _enforceSize(redacted, 'prompt'), ['<inline prompt>']);
+    return _context('prompt', _enforceSize(redacted, 'prompt', maxBytes), ['<inline prompt>']);
 }
 
-export function bundle_roadmap(p: string): CouncilContext {
+export function bundle_roadmap(p: string, maxBytes: number = MAX_BUNDLE_BYTES): CouncilContext {
     if (!fs.existsSync(p)) {
         throw new FileNotFoundError(`Roadmap not found: ${p}`);
     }
@@ -131,7 +139,7 @@ export function bundle_roadmap(p: string): CouncilContext {
     const redacted = redact(raw);
     return _context(
         'roadmap',
-        _enforceSize(redacted, 'roadmap'),
+        _enforceSize(redacted, 'roadmap', maxBytes),
         [p],
         ['<linked contracts/skills not included by default>'],
     );
