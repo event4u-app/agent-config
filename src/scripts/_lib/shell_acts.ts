@@ -1,8 +1,12 @@
 /**
  * Identifies the shell acts (`git commit`, …) an agent's Bash command names: a
  * syntactic candidate per simple command, not a claim that the command reaches it.
- * Correctness is measured against bash on the grammar of
- * `tests/scripts/shell_acts_bash_fuzz.test.ts`; beyond it the result is best effort.
+ * Agreement is measured against bash 5 on the grammar of
+ * `tests/scripts/shell_acts_bash_fuzz.test.ts` and the curated cases beside it; the
+ * oracle's `BASH3` map records where bash 3.2 reads fewer acts. It is sampled
+ * evidence under the oracle's assumptions (stubbed programs, statuses varied per
+ * run), not proven equivalence. Beyond that grammar the result is best effort, and
+ * a change to the generator's grammar changes the claim, so it is reviewed as one.
  *
  * Agents chain: a prefix match finds 17 % of commits in real transcripts, so the
  * command is lexed into simple commands of words. One pass honours single and
