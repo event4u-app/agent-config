@@ -38,7 +38,7 @@ stays under 250 ms on a fast machine.
       `evaluator-independence` § Tests are evaluators, the new test is shown red against
       the removed quadratic regex before it lands, and an independent reviewer validates it.
       > note: done 2026-11-05 — growth n/8 → n, fastest of three, bound 28 (measured: linear 11–13×, removed form 62–67×); a negative control rejects the removed form; the hook budget is held on the 100,000-character page. Reviewed by OpenAI, two rounds: `agents/evidence/reviews/2026-11-05-linear-time-test-growth.md`.
-- [x] **1.2 Verify on CI** — <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> the shard that ran it is green on three consecutive pushes.
+- [x] **1.2 Verify on CI** — <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> the shard that ran it is green on three consecutive pushes.
       > note: done 2026-11-08 — `tests/scripts/design_slop_css_blocks_linear.test.ts` ran and passed (10 tests, none skipped) in Node Tests (ubuntu-latest) on three consecutive `main` pushes: run 42458954244 (`ceea998a0`, job 128663963890), run 42463228045 (`12bd765ce`, job 128676917337), run 42466095446 (`1dc17f40a`, job 128685928895). Read from each job's log, not from the run's overall status.
 
 ## Risk Register
