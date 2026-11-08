@@ -81,6 +81,14 @@ once its precision has been measured on labelled cases.
 - **Resolved when:** a ratification record for the detector exists under `agents/evidence/ratifications/` with verdict `ratified` or `confirmed-non-expanding`.
 - **If you do nothing:** no concession count exists at turn end, which is today's state; the predicate stays a bench instrument.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The audit relabels to fit the rules | product | A second label written knowing which arm found what turns the re-score into a defence of the shipped rules. | The second labeller reads the artifact only, never the transcripts or the corpus note; the pre-registered reading stays the binding one. | Phase 1 — The guardrail, sized on audited labels |
+| 2 | A count teaches stubbornness | product | A capitulation counter pushes the agent to hold wrong answers. | It ships only after a measured precision; the remedy text names both outcomes; failure to update stays a bench measure. | Phase 2 — The capitulation count, measured before it ships |
+
 ## Acceptance Criteria
 
 - [ ] AC-1 — The 2026-11-08 guardrail trip is re-read on audited labels, and the decision that follows names its rows.
