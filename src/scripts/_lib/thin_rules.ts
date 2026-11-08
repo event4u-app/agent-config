@@ -735,10 +735,15 @@ export function build_thin(
         // a law-only or pointer stub would deliver less than the contract the
         // floor was ratified with. check_startup_contracts refuses the state in
         // CI; this is what an install does if it ever arrives anyway.
+        // Needs a contract when the audit declares it; a safety-floor rule always
+        // does, so an incomplete audit can never thin a floor to a pointer stub.
+        // With an unreadable audit every high-consequence member does too. A
+        // member a readable audit omits keeps the law stub below — the form a
+        // thinned layer gave it before contracts (CI refuses that audit anyway).
+        const safetyFloor = !kernel.has(stem) && SAFETY_FLOOR_TIER_RE.test(frontmatterOf(text));
         const needsContract =
-            contractBearing !== null
-                ? contractBearing.has(stem)
-                : !kernel.has(stem) && (cls.members[stem] !== undefined || SAFETY_FLOOR_TIER_RE.test(frontmatterOf(text)));
+            safetyFloor ||
+            (contractBearing !== null ? contractBearing.has(stem) : !kernel.has(stem) && cls.members[stem] !== undefined);
         const contractMissing = needsContract && contract === null;
         if (announce !== null && contractMissing) {
             announce(`CONTRACT MISSING: ${path.basename(p)} — kept full-bodied, it carries no startup contract`);

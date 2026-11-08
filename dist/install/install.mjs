@@ -14673,7 +14673,8 @@ function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, con
       continue;
     }
     const noStub = cls.no_stub[stem] !== void 0;
-    const needsContract = contractBearing !== null ? contractBearing.has(stem) : !kernel.has(stem) && (cls.members[stem] !== void 0 || SAFETY_FLOOR_TIER_RE.test(frontmatterOf2(text)));
+    const safetyFloor = !kernel.has(stem) && SAFETY_FLOOR_TIER_RE.test(frontmatterOf2(text));
+    const needsContract = safetyFloor || (contractBearing !== null ? contractBearing.has(stem) : !kernel.has(stem) && cls.members[stem] !== void 0);
     const contractMissing = needsContract && contract === null;
     if (announce !== null && contractMissing) {
       announce(`CONTRACT MISSING: ${path34.basename(p)} \u2014 kept full-bodied, it carries no startup contract`);
