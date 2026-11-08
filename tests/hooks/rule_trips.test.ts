@@ -18,8 +18,12 @@ const BUNDLE = path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js');
 describe('rule-trip counting', () => {
     it('a seeded block-no-verify violation increments the block counter', () => {
         if (!fs.existsSync(BUNDLE)) {
-            // Bundle absent on a fresh checkout — build:hooks produces it; the
-            // CI Static Checks job builds before tests that need dist/.
+            // On CI every Node Tests shard runs `npm run build` (which includes
+            // build:hooks) first, so an absent bundle there is a broken job and
+            // must fail rather than skip green. A fresh local checkout may lack it.
+            if (process.env['CI']) {
+                throw new Error('dist/hooks/dispatch.js missing on CI — the build step did not produce the hook bundle');
+            }
             console.warn('dist/hooks/dispatch.js missing — run `npm run build:hooks`; skipping');
             return;
         }

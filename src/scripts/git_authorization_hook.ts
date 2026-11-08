@@ -26,7 +26,8 @@
  * the prose was in context every time. The ledger is the missing fact, not a
  * new obligation.
  *
- * State: `agents/state/git-authorization.json`
+ * State: `agents/state/git-authorization/<session>.json`, one file per session;
+ * no file at all when the host gives no session id.
  *   { "session_id": str, "detected_at": iso8601, "authorized": [op, …],
  *     "evidence": { op: "phrase" }, "prompt_chars": int }
  *
@@ -70,15 +71,6 @@ import { readHookStdin } from "./hooks/hook_stdin.js";
 
 const EXIT_ALLOW = 0;
 
-/**
- * Legacy single-file ledger path — one file for the whole project root.
- *
- * Kept for direct invocations and for reading a ledger written by an older
- * build, NOT as the write target when a session id is known. See
- * `ledgerFileFor` for why one shared file was the defect.
- */
-export const STATE_FILE = path.join("agents", "state", "git-authorization.json");
-
 /** Per-session ledger directory. */
 export const STATE_DIR = path.join("agents", "state", "git-authorization");
 
@@ -113,17 +105,21 @@ export function sessionSlug(session_id: string): string {
  * edge case there; it is the normal condition. Scoping the file by session is
  * what makes "this turn's prompt" mean this conversation's turn.
  */
-export function ledgerFileFor(session_id: string): string {
+export function ledgerFileFor(session_id: string): string | null {
+    // No id → no record. Two id-less sessions are indistinguishable, and one
+    // shared file let each read the other's turn stamp, grants and pending
+    // refusal (round inbox-2026-11-zc). Nothing enforces git authorization
+    // since ADR-254, so keeping no record costs no deadlock.
     if (!session_id) {
-        return STATE_FILE;
+        return null;
     }
     return path.join(STATE_DIR, `${sessionSlug(session_id)}.json`);
 }
 
 /** Where THIS session's refused-operation record lives. */
-export function pendingFileFor(session_id: string): string {
+export function pendingFileFor(session_id: string): string | null {
     if (!session_id) {
-        return PENDING_FILE;
+        return null;
     }
     return path.join(PENDING_DIR, `${sessionSlug(session_id)}.json`);
 }
@@ -148,7 +144,6 @@ export function pendingFileFor(session_id: string): string {
  * the immediately following prompt. Everything the user is consenting to has
  * already been named to them in the refusal they just read.
  */
-export const PENDING_FILE = path.join("agents", "state", "git-authorization-pending.json");
 
 /** A refused operation carried to exactly one following prompt. */
 export interface PendingRefusal {
@@ -1196,8 +1191,12 @@ export function classifyAuthorization(prompt: string): {
 
 /** Grants the session already holds, or `[]` for any ledger that has none. */
 export function readGrants(consumer_root: string, session_id: string): MergeGrant[] {
+  const rel = ledgerFileFor(session_id);
+  if (rel === null) {
+    return [];
+  }
   try {
-    const raw = fs.readFileSync(path.join(consumer_root, ledgerFileFor(session_id)), "utf8");
+    const raw = fs.readFileSync(path.join(consumer_root, rel), "utf8");
     const decoded = JSON.parse(raw) as unknown;
     if (!_isObject(decoded) || !Array.isArray(decoded["grants"])) {
       return [];
@@ -1243,7 +1242,11 @@ export function consumeGrantTarget(
   session_id: string,
   target: number,
 ): void {
-  const file = path.join(consumer_root, ledgerFileFor(session_id));
+  const rel = ledgerFileFor(session_id);
+  if (rel === null) {
+    return;
+  }
+  const file = path.join(consumer_root, rel);
   let decoded: unknown;
   try {
     decoded = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -1299,7 +1302,11 @@ export function takePending(
     session_id: string,
     now: number,
 ): PendingRefusal | null {
-    const file = path.join(consumer_root, pendingFileFor(session_id));
+    const rel = pendingFileFor(session_id);
+    if (rel === null) {
+        return null;
+    }
+    const file = path.join(consumer_root, rel);
     let raw: string;
     try {
         raw = fs.readFileSync(file, "utf8");
@@ -1426,8 +1433,12 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     ),
   };
 
+  const ledgerRel = ledgerFileFor(session);
+  if (ledgerRel === null) {
+    return EXIT_ALLOW;
+  }
   try {
-    atomic_write_json(path.join(options.consumer_root, ledgerFileFor(session)), ledger);
+    atomic_write_json(path.join(options.consumer_root, ledgerRel), ledger);
   } catch (err) {
     // The SIBLING of the swallow in `consumeGrantTarget`, and named here
     // because AC-5 describes a behavioural class rather than one call site:

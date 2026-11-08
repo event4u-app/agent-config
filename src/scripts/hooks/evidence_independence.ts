@@ -211,11 +211,12 @@ interface DispatchState extends JsonObject {
  * stale file and the stamp never changed per turn.
  */
 function _ledgerStamp(consumer_root: string, session_id: string): string {
+  const rel = ledgerFileFor(session_id);
+  if (rel === null) {
+    return "";
+  }
   try {
-    const raw = fs.readFileSync(
-      path.join(consumer_root, ledgerFileFor(session_id)),
-      "utf8",
-    );
+    const raw = fs.readFileSync(path.join(consumer_root, rel), "utf8");
     const d = JSON.parse(raw) as Record<string, unknown>;
     return typeof d["detected_at"] === "string" ? d["detected_at"] : "";
   } catch {

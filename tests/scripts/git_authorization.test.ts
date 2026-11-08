@@ -22,6 +22,7 @@ import {
   isAffirmative,
   splitFences,
   ledgerFileFor,
+  readGrants,
   pendingFileFor,
   humanTypedThisTurn,
   run as ledgerRun,
@@ -47,7 +48,7 @@ function submit(prompt: string, session = "s1"): void {
 }
 
 function ledger(session = "s1"): { authorized: GitOp[] } {
-  return JSON.parse(fs.readFileSync(path.join(tmp, ledgerFileFor(session)), "utf8")) as {
+  return JSON.parse(fs.readFileSync(path.join(tmp, (ledgerFileFor(session) as string)), "utf8")) as {
     authorized: GitOp[];
   };
 }
@@ -362,7 +363,7 @@ describe("concurrent sessions", () => {
   it("and it does not lend its own authorization to anyone else", () => {
     submit("mach den npm publish", "mine");
     expect(ledger("mine").authorized).toContain("publish");
-    expect(fs.existsSync(path.join(tmp, ledgerFileFor("other")))).toBe(false);
+    expect(fs.existsSync(path.join(tmp, (ledgerFileFor("other") as string)))).toBe(false);
   });
 
   // The session id arrives from the host envelope, so it is untrusted input on
@@ -372,11 +373,23 @@ describe("concurrent sessions", () => {
     const stateDir = path.resolve(tmp, "agents", "state");
     for (const hostile of ["../../../etc/passwd", "a/b", "..", "x y", "/abs/path"]) {
       for (const rel of [ledgerFileFor(hostile), pendingFileFor(hostile)]) {
+        if (rel === null) throw new Error(`${hostile} resolved to no path`);
         const resolved = path.resolve(tmp, rel);
         expect(resolved.startsWith(`${stateDir}${path.sep}`), `${hostile} → ${rel}`).toBe(true);
         expect(path.relative(stateDir, resolved).split(path.sep)).toHaveLength(2);
       }
     }
+  });
+  // Two sessions the host gave no id are indistinguishable, so one shared file
+  // made each read the other's turn stamp, grants and pending record. Without an
+  // id there is no record to keep (round inbox-2026-11-zc, council 2026-11-08).
+  it("an empty session id writes and reads no shared file", () => {
+    expect(ledgerFileFor("")).toBeNull();
+    expect(pendingFileFor("")).toBeNull();
+    submit("Push das bitte.", "");
+    expect(fs.existsSync(path.join(tmp, "agents", "state", "git-authorization.json"))).toBe(false);
+    expect(fs.existsSync(path.join(tmp, "agents", "state", "git-authorization"))).toBe(false);
+    expect(readGrants(tmp, "")).toEqual([]);
   });
 });
 
@@ -461,7 +474,7 @@ describe("humanTypedThisTurn — the wake predicate", () => {
 describe("a machine wake leaves per-turn state standing", () => {
   it("the ledger file is untouched — same content, same mtime", async () => {
     submit("push it");
-    const file = path.join(tmp, ledgerFileFor("s1"));
+    const file = path.join(tmp, (ledgerFileFor("s1") as string));
     expect(ledger().authorized).toContain("push");
     const before = fs.readFileSync(file, "utf8");
     const beforeStat = fs.statSync(file).mtimeMs;
@@ -479,7 +492,7 @@ describe("a machine wake leaves per-turn state standing", () => {
     // takePending() rmSync's the record BEFORE any affirmative or origin check,
     // so a notification arriving between a refusal and the confirmation used to
     // delete the record and make the `ja` confirm nothing.
-    const pendingPath = path.join(tmp, pendingFileFor("s1"));
+    const pendingPath = path.join(tmp, (pendingFileFor("s1") as string));
     fs.mkdirSync(path.dirname(pendingPath), { recursive: true });
     fs.writeFileSync(
       pendingPath,
@@ -517,7 +530,7 @@ const QUOTA_RESET =
 
 describe("the host's quota-reset sentence is not an authorization", () => {
   function plantPending(op: GitOp): string {
-    const pendingPath = path.join(tmp, pendingFileFor("s1"));
+    const pendingPath = path.join(tmp, (pendingFileFor("s1") as string));
     fs.mkdirSync(path.dirname(pendingPath), { recursive: true });
     fs.writeFileSync(pendingPath, JSON.stringify({ op, session_id: "s1", refused_at: new Date().toISOString() }));
     return pendingPath;
@@ -584,12 +597,12 @@ describe("a forwarded session message is not a human turn", () => {
     it(`${name}: no ledger is written when none existed`, () => {
       expect(humanTypedThisTurn(frame)).toBe(false);
       submit(frame);
-      expect(fs.existsSync(path.join(tmp, ledgerFileFor("s1")))).toBe(false);
+      expect(fs.existsSync(path.join(tmp, (ledgerFileFor("s1") as string)))).toBe(false);
     });
 
     it(`${name}: an existing ledger stays byte-equal, detected_at unchanged`, async () => {
       submit("what does this function do?");
-      const file = path.join(tmp, ledgerFileFor("s1"));
+      const file = path.join(tmp, (ledgerFileFor("s1") as string));
       const before = fs.readFileSync(file, "utf8");
       const detectedBefore = (JSON.parse(before) as { detected_at?: string }).detected_at;
       await new Promise((r) => setTimeout(r, 15));
