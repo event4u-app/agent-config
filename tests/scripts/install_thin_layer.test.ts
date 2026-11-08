@@ -122,6 +122,10 @@ function makePackage(): void {
         }),
         'utf-8',
     );
+    // A package ships its clause audit; this one declares no rule contract-bearing,
+    // so `lawful` takes the law-stub path. Without the audit the installer fails
+    // safe and keeps every class member whole (startup_contract_missing_fallback).
+    fs.writeFileSync(path.join(pkg, 'src', 'config', 'startup-contract-clauses.json'), JSON.stringify({ rules: {} }), 'utf-8');
     for (const [id, body] of [
         ['kern', padBody('Kernel body, never thinned.')],
         ['routed', padBody('A long routed body that the stub replaces.')],
