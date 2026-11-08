@@ -106,8 +106,8 @@ of re-reading or guessing.
       nudge). Shrunk counterexamples become fixed regression cases.
       verify: `npx vitest run tests/scripts/property_decision_cores.test.ts` -> 0
 - [ ] **4.3** A `known_bad` range with a rollback target in the update notice,
-      reported in every mode except `off`, never auto-installed.
-      <!-- blocked-by: known-bad-publication-authority -->
+      reported in every mode except `off`, never auto-installed. Only the owner
+      issues an advisory; its target may be older than the installed version (L3).
       verify: `npx vitest run tests/scripts/update_notice.test.ts` -> 0
 - [ ] **4.4** `host_lowering.json` `claude.pre_compact.block_exit` re-checked
       against the current host docs through the digest gate; truth only, never
@@ -124,9 +124,6 @@ of re-reading or guessing.
 - **Owner:** council
 - **Resolved when:** the verb carrying recall is chosen under ADR-041.
 
-### blocker: known-bad-publication-authority
-- **Owner:** user
-- **Resolved when:** the owner states who may publish a `known_bad` advisory and whether its target may be older than the installed version — a public release commitment.
 
 ## Decisions
 
@@ -134,6 +131,7 @@ of re-reading or guessing.
 |---|---|---|---|---|
 | L1 | reversible-technical | run | Pins enter by explicit user marker only; heuristic or model extraction is rejected — about half of real rules are phrased declaratively and a false pin is worse than none. | a marker-only pin set stays empty across sessions that set constraints |
 | L2 | reversible-technical | run | No proxy, no request-path work, no own summarizer: this package is not in the request path and the host compacts itself. | the host offers a summarizer hook that takes instructions per call |
+| L3 | owner-reserved | user, 2026-11-08 (answered "1" to: only the owner, older targets allowed, notice only) | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | the owner delegates advisory issuance, or a notice is acted on as an install |
 
 ## Risk Register
 
