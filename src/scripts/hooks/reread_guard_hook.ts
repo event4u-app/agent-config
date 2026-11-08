@@ -369,7 +369,15 @@ export function _recordActDutyWith(ledger: Ledger, command: string, workspaceRoo
 }
 
 function recordDuty(ledger: Ledger, key: string, workspaceRoot: string): void {
-    const duty = loadReferenceDuty();
+    _recordDutyWith(ledger, key, workspaceRoot, loadReferenceDuty());
+}
+
+/**
+ * The file-act duty. A duty that could not load (missing or mis-digested chunk) is
+ * one counted error; the write, read and advisory bookkeeping is left as it was.
+ * Exported as a testing seam.
+ */
+export function _recordDutyWith(ledger: Ledger, key: string, workspaceRoot: string, duty: ReferenceDuty | null): void {
     if (duty === null) {
         ledger.duty_errors = (ledger.duty_errors ?? 0) + 1;
         return;

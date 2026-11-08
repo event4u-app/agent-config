@@ -29,6 +29,15 @@ describe('src/config/act-references.json', () => {
         expect(String(b['owner']).trim()).not.toBe('');
         expect(String(b['shell_command'])).toMatch(/^[a-z][a-z0-9-]*( [a-z][a-z0-9-]*)+$/);
     });
+    it('binds each shell command once, each with distinct, non-empty rules', () => {
+        const cmds = table.bindings.map((b) => String(b['shell_command']));
+        expect(new Set(cmds).size).toBe(cmds.length);
+        for (const b of table.bindings) {
+            const rules = b['rules'] as string[];
+            expect(rules.length).toBeGreaterThan(0);
+            expect(new Set(rules).size).toBe(rules.length);
+        }
+    });
     it.each(table.bindings.flatMap((b) => (b['rules'] as string[]).map((r) => [String(b['shell_command']), r])))(
         '%s → %s exists and carries load_context',
         (_cmd, rule) => {
@@ -42,5 +51,30 @@ describe('the bundle-side pre-check stays in step with the table', () => {
     it('every bound act\'s last word is one ACT_WORDS matches', async () => {
         const { ACT_WORDS } = await import('../../src/scripts/hooks/reference_duty_loader.js');
         for (const b of table.bindings) expect(ACT_WORDS.test(String(b['shell_command']).split(' ').pop() as string)).toBe(true);
+    });
+});
+
+describe('the pre-check never drops what the lexer recognises', () => {
+    // Every bound act, with one quote, empty-quote or escape inserted at every
+    // position of its last word: bash still runs the act, so the lexer must
+    // recognise it and the pre-check must let it through to the lexer.
+    const variants = table.bindings.flatMap((b) => {
+        const words = String(b['shell_command']).split(' ');
+        const last = words.pop() as string;
+        const head = words.join(' ');
+        const out: Array<[string, string]> = [];
+        for (let i = 1; i < last.length; i += 1) {
+            for (const ins of ['\\', "''", '""', '\\\n']) {
+                out.push([String(b['shell_command']), `cd x && ${head} ${last.slice(0, i)}${ins}${last.slice(i)} -q 2>&1 | tail -1`]);
+            }
+            out.push([String(b['shell_command']), `${head} ${last.slice(0, i)}"${last.slice(i)}" -q`]);
+        }
+        return out;
+    });
+    it.each(variants)('%s ← %j', async (act, command) => {
+        const { actWordsMayMatch } = await import('../../src/scripts/hooks/reference_duty_loader.js');
+        const { commandRunsAct } = await import('../../src/scripts/_lib/shell_acts.js');
+        expect(commandRunsAct(command, act)).toBe(true);
+        expect(actWordsMayMatch(command)).toBe(true);
     });
 });

@@ -5,12 +5,14 @@
  * command is lexed into simple commands of words. One pass honours single and
  * double quotes, backslash escapes, `#` comments, line continuations, and the
  * separators `;` `&&` `||` `|` `&` and newline outside quotes. A heredoc operator
- * outside quotes queues its terminator (any unquoted word, or a quoted one); the
+ * outside quotes queues its terminator (one word after quote removal, read by the
+ * same quote reader as every other word, and empty when quoted as `''`); the
  * bodies follow the line in order, each ending at the line that is exactly its
  * terminator (leading tabs stripped for `<<-`).
  *
  * Supported syntax contract: the above, plus `VAR=…` prefixes, `sudo`/`command`/
- * `time`/`exec`/`nohup`, and `git -C`/`-c` values. Not interpreted: `$(…)` and
+ * `time`/`exec`/`nohup`, and `git -C`/`-c` values. An assignment prefix is only one
+ * whose `NAME=` is unquoted: `'X=1' git push` runs a command named `X=1`. Not interpreted: `$(…)` and
  * backticks (their text stays inside the word), subshell parentheses, `eval`,
  * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
@@ -25,17 +27,61 @@
 
 const PREFIX_WORDS = new Set(['sudo', 'command', 'time', 'exec', 'nohup']);
 
-/** The command's simple commands, each as its words with quotes removed. */
-export function simpleCommands(command: string): string[][] {
-    const out: string[][] = [];
-    let words: string[] = [];
+/** One word after quote removal. `assign` holds when it opens with an unquoted `NAME=`. */
+interface Word {
+    text: string;
+    assign: boolean;
+}
+
+/**
+ * The quoted run that starts at `i` (a `'` or `"`), quotes removed, and the index
+ * after its closing quote. Inside double quotes a backslash escapes only
+ * $ ` " \ and newline; before anything else it stays a literal backslash.
+ * Shared by words and heredoc terminators, so the two cannot diverge.
+ */
+function readQuoted(s: string, i: number): { text: string; end: number } {
+    const q = s[i];
+    const n = s.length;
+    if (q === "'") {
+        const close = s.indexOf("'", i + 1);
+        const end = close === -1 ? n : close;
+        return { text: s.slice(i + 1, end), end: end + 1 };
+    }
+    let text = '';
+    let j = i + 1;
+    while (j < n && s[j] !== '"') {
+        if (s[j] === '\\' && j + 1 < n && '$`"\\\n'.includes(s[j + 1] as string)) {
+            if (s[j + 1] !== '\n') text += s[j + 1];
+            j += 2;
+            continue;
+        }
+        text += s[j];
+        j += 1;
+    }
+    return { text, end: j + 1 };
+}
+
+function lexCommands(command: string): Word[][] {
+    const out: Word[][] = [];
+    let words: Word[] = [];
     let word = '';
     let inWord = false;
+    // Length of the word's leading unquoted, unescaped run; -1 while no quote or
+    // escape has occurred in it. An assignment's `NAME=` must fit inside that run.
+    let literal = -1;
     const pendingHeredocs: Array<{ tag: string; stripTabs: boolean }> = [];
     const endWord = (): void => {
-        if (inWord) words.push(word);
+        if (inWord) {
+            const m = /^[A-Za-z_][A-Za-z0-9_]*=/.exec(word);
+            const limit = literal === -1 ? word.length : literal;
+            words.push({ text: word, assign: m !== null && m[0].length <= limit });
+        }
         word = '';
         inWord = false;
+        literal = -1;
+    };
+    const markQuoted = (): void => {
+        if (literal === -1) literal = word.length;
     };
     const endCommand = (): void => {
         endWord();
@@ -51,34 +97,18 @@ export function simpleCommands(command: string): string[][] {
                 i += 2;
                 continue;
             }
+            markQuoted();
             word += command[i + 1] ?? '';
             inWord = true;
             i += 2;
             continue;
         }
-        if (ch === "'") {
-            const close = command.indexOf("'", i + 1);
-            const end = close === -1 ? n : close;
-            word += command.slice(i + 1, end);
+        if (ch === "'" || ch === '"') {
+            markQuoted();
+            const { text, end } = readQuoted(command, i);
+            word += text;
             inWord = true;
-            i = end + 1;
-            continue;
-        }
-        if (ch === '"') {
-            i += 1;
-            while (i < n && command[i] !== '"') {
-                // Inside double quotes a backslash escapes only $ ` " \ and newline;
-                // before anything else it stays a literal backslash.
-                if (command[i] === '\\' && i + 1 < n && '$`"\\\n'.includes(command[i + 1] as string)) {
-                    if (command[i + 1] !== '\n') word += command[i + 1];
-                    i += 2;
-                    continue;
-                }
-                word += command[i];
-                i += 1;
-            }
-            inWord = true;
-            i += 1;
+            i = end;
             continue;
         }
         if (ch === '#' && !inWord) {
@@ -91,24 +121,28 @@ export function simpleCommands(command: string): string[][] {
             const stripTabs = command[j] === '-';
             if (stripTabs) j += 1;
             while (command[j] === ' ' || command[j] === '\t') j += 1;
-            // The terminator is one word after quote removal: `E"OF"` and `'EOF'` are EOF.
+            // The terminator is one word after quote removal: `E"OF"` and `'EOF'` are
+            // EOF, `"E\\OF"` is E\OF, and a quoted empty word (`<<''`) is a valid,
+            // empty terminator.
             let tag = '';
+            let quoted = false;
             while (j < n && !/[\s;&|<>()]/.test(command[j] as string)) {
                 const c = command[j] as string;
                 if (c === "'" || c === '"') {
-                    const close = command.indexOf(c, j + 1);
-                    const end = close === -1 ? n : close;
-                    tag += command.slice(j + 1, end);
-                    j = end + 1;
+                    const { text, end } = readQuoted(command, j);
+                    tag += text;
+                    quoted = true;
+                    j = end;
                 } else if (c === '\\' && j + 1 < n) {
                     tag += command[j + 1];
+                    quoted = true;
                     j += 2;
                 } else {
                     tag += c;
                     j += 1;
                 }
             }
-            if (tag !== '') pendingHeredocs.push({ tag, stripTabs });
+            if (tag !== '' || quoted) pendingHeredocs.push({ tag, stripTabs });
             i = j > i + 2 ? j : i + 2;
             continue;
         }
@@ -151,9 +185,16 @@ export function simpleCommands(command: string): string[][] {
     return out;
 }
 
-function normalise(words: readonly string[]): string[] {
-    let t = [...words];
-    while (t.length > 0 && (/^[A-Za-z_][A-Za-z0-9_]*=/.test(t[0] as string) || PREFIX_WORDS.has(t[0] as string))) t = t.slice(1);
+/** The command's simple commands, each as its words with quotes removed. */
+export function simpleCommands(command: string): string[][] {
+    return lexCommands(command).map((ws) => ws.map((w) => w.text));
+}
+
+function normalise(words: readonly Word[]): string[] {
+    let k = 0;
+    // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
+    while (k < words.length && ((words[k] as Word).assign || PREFIX_WORDS.has((words[k] as Word).text))) k += 1;
+    const t = words.slice(k).map((w) => w.text);
     if (t[0] === 'git') {
         let i = 1;
         while (i < t.length && (t[i] === '-C' || t[i] === '-c')) i += 2;
@@ -165,7 +206,7 @@ function normalise(words: readonly string[]): string[] {
 /** True when some simple command in `command` begins with the words of `act`. */
 export function commandRunsAct(command: string, act: string): boolean {
     const want = act.split(' ');
-    return simpleCommands(command).some((words) => {
+    return lexCommands(command).some((words) => {
         const w = normalise(words);
         return want.every((x, i) => w[i] === x);
     });

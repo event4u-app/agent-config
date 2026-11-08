@@ -326,6 +326,16 @@ describe('the duty chunk failing to load', () => {
         _recordActDutyWith(ledger as never, 'git commit -m x', root, null);
         expect(ledger['duty_errors']).toBe(1);
     });
+    it('a file write whose duty cannot load counts one error and keeps the write bookkeeping', async () => {
+        const { _recordDutyWith } = await import('../../src/scripts/hooks/reread_guard_hook.js');
+        const root = workspace();
+        const ledger = { reads: { a: { ts: 1 } }, writes: { b: { ts: 2 } }, fired: { c: 1 } } as Record<string, unknown>;
+        const before = JSON.stringify({ reads: ledger['reads'], writes: ledger['writes'], fired: ledger['fired'] });
+        _recordDutyWith(ledger as never, 'src/rules/x.md', root, null);
+        expect(ledger['duty_errors']).toBe(1);
+        expect(ledger['duty']).toBeUndefined();
+        expect(JSON.stringify({ reads: ledger['reads'], writes: ledger['writes'], fired: ledger['fired'] })).toBe(before);
+    });
     it('a partly quoted commit reaches the ledger through pre-check, lexer and table', () => {
         const root = workspace();
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
