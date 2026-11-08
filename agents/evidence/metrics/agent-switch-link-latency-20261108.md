@@ -11,9 +11,10 @@ answering, failing, hanging, resting (backed off by 7.1) and absent.
 - Harness: `agents/evidence/analysis/agent-switch-link-latency.mjs`, run as
   `npx tsx agents/evidence/analysis/agent-switch-link-latency.mjs 20` after
   `npm run build:hooks`, at the tree of `feat/agent-switch-link-hardening`
-  (Phase 7.1/7.3/7.5 in place, with the council round 1 fixes). The round 2 and
-  round 3 changes touched only the Stop path's record bookkeeping and the
-  back-off accounting (no added agent-switch call) and were not re-measured.
+  (Phase 7.1/7.3/7.5 in place, with the council round 1 fixes). The changes after
+  round 1 touched only the Stop path's record bookkeeping (the checkpoint is now
+  written while the record lock is held) and the back-off accounting, added no
+  agent-switch call, and were not re-measured.
 - Each sample is one `node dist/hooks/dispatch.js --platform claude --event …`
   in a fresh HOME / `EVENT4U_CONFIG_HOME` / PATH, so the built bundle and its
   lazily-loaded `quota_notice` chunk run exactly as on a host.
@@ -96,9 +97,8 @@ observed:
    harness — the per-call cost has more than doubled. (A hanging link is
    bounded by criterion 1, not by this one.)
 3. A run checkpoint owed for an approved or finished move is never written
-   while the session runs on (the record was dropped or replaced first). A
-   second write is not a failure: the checkpoint is one file per run,
-   replaced atomically.
+   while the session runs on (the record was dropped or replaced first), or
+   an older snapshot replaces a newer one.
 4. The same relayed line or resting notice is shown twice for one request.
 5. A record or back-off update is skipped because its lock could not be had
    within the 250 ms the lock waits — seen as a repeated line or a missing
