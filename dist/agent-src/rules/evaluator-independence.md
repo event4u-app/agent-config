@@ -149,10 +149,3 @@ item 3:
   steered before it was returned.
 - [`direct-answers`](direct-answers.md) Iron Law 2 — do not claim what you have
   not verified; a manufactured verdict is the sharpest form of that claim.
-
-## Startup contract
-
-- **When:** commissioning review/judge/blind pass/council run on own work; test you'll implement against; not fan-out (read/map/search/implement), human-commissioned/prompted review, deterministic checker.
-- **Must:** neutral prompt: only scope, diff, question; ask for findings · scope = whole delta or human-set boundary · ship prompt w/ verdict (self-review = gate evidence only w/ prompt recorded) · tests: name acceptance behaviour, write test independently, show red, implement, independent instance validates green · critical behavior (security/authority/data loss/merge) → other provider/council if `agent-config council:status` reports 2+ providers, never assumed; same-agent = fallback only · one evaluation per turn per subject; a second is verdict shopping.
-- **Never:** author verdict into evaluator's prompt · state expected outcome/direction, even "none expected" · narrow scope of review you commissioned · silently weaken assertion, delete/skip/xfail failing test, lower threshold, bend fixtures · cite warning guard as blocking · claim review ran as if verified.
-- **Stop:** test looks wrong → evidence → independent test review → council/team → change only after independent verdict; owner isn't arbiter.

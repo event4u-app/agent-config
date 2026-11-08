@@ -35,7 +35,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as token_count from './_lib/token_count.js';
-import { ruleBody, startupContract } from './_lib/rule_law_section.js';
+import { readStartupContract } from './_lib/rule_law_section.js';
 
 /**
  * The mechanism lives in `_lib/thin_rules.ts`; this file is its CLI.
@@ -138,7 +138,7 @@ export function measure(
     // A no-trigger rule that carries a startup contract is projected as a stub, not kept full.
     const residueIds = [...noTrigger]
         .filter((id) => stemSet.has(id))
-        .filter((id) => startupContract(ruleBody(fs.readFileSync(path.join(rules_dir, `${id}.md`), 'utf-8'))) === null)
+        .filter((id) => readStartupContract(rules_dir, id) === null)
         .sort();
     const residueBlob = residueIds
         .map((id) => fs.readFileSync(path.join(rules_dir, `${id}.md`), 'utf-8'))

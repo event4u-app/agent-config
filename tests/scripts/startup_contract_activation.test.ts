@@ -11,12 +11,12 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { match_prompt, type Router } from '../../src/scripts/_lib/router_match.js';
-import { startupContract, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
+import { readStartupContract } from '../../src/scripts/_lib/rule_law_section.js';
 import { build } from '../../src/scripts/compile_router.js';
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 const contract = (id: string): string =>
-    startupContract(ruleBody(fs.readFileSync(path.join(REPO, 'src', 'rules', `${id}.md`), 'utf8'))) as string;
+    readStartupContract(path.join(REPO, 'src', 'rules'), id) as string;
 const router = build() as unknown as Router;
 const activated = (prompt: string): string[] => match_prompt(router, prompt).activated_rules.map((r) => String(r.rule));
 
@@ -59,8 +59,8 @@ describe('strategy-safety-floor — every founder-strategy skill', () => {
 describe('low-impact-corpus-privacy-floor — the body and the contract agree on masking', () => {
     it('the body forbids echoing the matched value, as the contract does', () => {
         const body = fs.readFileSync(path.join(REPO, 'src', 'rules', 'low-impact-corpus-privacy-floor.md'), 'utf8');
-        const beforeContract = body.slice(0, body.indexOf('## Startup contract'));
-        expect(beforeContract).toContain('never the matched value itself');
+        expect(body).toContain('Never the matched value, whatever the class.');
+        expect(body).toContain('<masked, N chars>');
         expect(contract('low-impact-corpus-privacy-floor')).toContain('never echo the matched secret/PII');
     });
 });

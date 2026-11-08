@@ -123,6 +123,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
       verify: every operative clause from 1.1 appears in its rule's contract;
       the contracts total at most 34,000 chars.
       > note: done 2026-11-07 — a `## Startup contract` section ends each of the 28 source rules (≤11 lines, ≤2,000 chars, no dangling referent); total **32,361 chars** ≤ 34,000. `build_thin` emits it via `thin_entry_with_contract` (digest-marked, body pointer kept); `neverThinned` no longer holds these rules whole. A first draft measured 44,535 and was compacted per rule with every clause kept.
+      > note: 2026-11-08 — the contracts moved out of the rule files into `src/agent-src/startup-contracts/rules/<id>.md` (projected to `dist/agent-src/startup-contracts/rules/`): carried inside the rule, every host that delivers the full rule paid them twice, +8,072 tok per subagent spawn against the preamble payload ratchet. The stub builder reads them through `readStartupContract`; the ratification gate covers the new path (`…/rules/<slug>.md`).
 - [x] **1.3 Contract tests, one deterministic case per operative branch.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Each case states the trigger, loads only the contract (body unavailable),
       and asserts the required stop, ask or refusal.

@@ -5,10 +5,10 @@
 Step 1.1 of `road-to-a-session-start-under-the-host-limit`. Generated from
 `src/config/startup-contract-clauses.json`, which `check_startup_contracts` checks on
 every run: each `source` is a byte-exact span of the rule file, each `witness` a
-byte-exact span of the rule's `## Startup contract`. This page is the readable form;
+byte-exact span of the rule's startup contract (`src/agent-src/startup-contracts/rules/<id>.md`). This page is the readable form;
 the config is the record.
 
-**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33891 chars.**
+**28 rules · 680 clauses · 129 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33887 chars.**
 
 ## Per rule
 
@@ -23,14 +23,14 @@ the config is the record.
 | `domain-safety-pii` | 36 | 2 | 1 | 2000 |
 | `domain-safety-retention` | 27 | 5 | 0 | 1600 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
-| `evaluator-independence` | 27 | 8 | 0 | 1244 |
+| `evaluator-independence` | 27 | 8 | 0 | 1243 |
 | `fast-path-marker-visibility` | 19 | 2 | 0 | 935 |
 | `finance-safety-floor` | 28 | 2 | 1 | 1630 |
 | `git-history-discipline` | 25 | 13 | 0 | 1264 |
 | `image-likeness-and-rights` | 15 | 3 | 0 | 1004 |
 | `legal-safety-floor` | 29 | 7 | 0 | 1592 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
-| `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1110 |
+| `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1107 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
 | `runtime-safety` | 18 | 0 | 0 | 701 |
 | `secret-vcs-guard` | 26 | 5 | 0 | 1283 |
@@ -305,7 +305,7 @@ the config is the record.
 | `evaluator-independence` | c11 | obligation | act | no | Write the scope, the diff and the question. Nothing about how it is expected to | neutral prompt: only scope, diff, question |  |
 | `evaluator-independence` | c12 | prohibition | refuse | no | including a reassurance that no outcome is expected, which is an | even "none expected" |  |
 | `evaluator-independence` | c13 | trigger | none | no | A TEST IS AN EVALUATOR, AND AN IMPLEMENTER WHO WROTE IT HAS AUTHORED ITS VERDICT. | test you'll implement against |  |
-| `evaluator-independence` | c14 | ordering | act | no | THE ACCEPTANCE BEHAVIOUR IS NAMED, THE TEST IS WRITTEN INDEPENDENTLY, IT IS SHOWN | name acceptance behaviour, write test independently, show red |  |
+| `evaluator-independence` | c14 | ordering | act | no | THE ACCEPTANCE BEHAVIOUR IS NAMED, THE TEST IS WRITTEN INDEPENDENTLY, IT IS SHOWN | name acceptance behavior, write test independently, show red |  |
 | `evaluator-independence` | c15 | ordering | act | no | RED, THEN IT IS IMPLEMENTED AGAINST, THEN AN INDEPENDENT INSTANCE VALIDATES GREEN. | independent instance validates green |  |
 | `evaluator-independence` | c16 | prohibition | refuse | no | THE IMPLEMENTER NEVER SILENTLY WEAKENS AN ASSERTION, DELETES, SKIPS OR XFAILS A | silently weaken assertion, delete/skip/xfail failing test |  |
 | `evaluator-independence` | c17 | prohibition | refuse | no | FAILING TEST, LOWERS A THRESHOLD, OR CHANGES FIXTURE SEMANTICS TO FIT THE CODE. | lower threshold, bend fixtures |  |
@@ -343,7 +343,7 @@ the config is the record.
 | `finance-safety-floor` | c3 | trigger | none | no | - Keywords: cash, runway, burn, valuation, DCF, IRR, MOIC, LTV, CAC, payback | runway, burn, valuation, DCF |  |
 | `finance-safety-floor` | c4 | prohibition | refuse | yes | THE AGENT NEVER ISSUES A FINAL "INVEST" / "DON'T INVEST" / "RAISE" / "DON'T RAISE" CALL. | final "invest"/"don't invest" |  |
 | `finance-safety-floor` | c5 | obligation | surface | yes | SURFACE THE TRADE-OFF. NAME THE RISK. THE HUMAN DECIDES. | surface trade-off, name risk, human decides |  |
-| `finance-safety-floor` | c6 | precedence | none | no | Holds for every finance-pack skill ('runway-cognition', 'dcf-modeling' | finance-pack artefacts |  |
+| `finance-safety-floor` | c6 | precedence | none | no | Holds for every finance-pack skill ('runway-cognition', 'dcf-modeling' | finance-pack artifacts |  |
 | `finance-safety-floor` | c7 | prohibition | refuse | no | Finance output is decision support, never the decision. | **Never:** final |  |
 | `finance-safety-floor` | c8 | obligation | act | no | Every finance-pack deliverable (memo, valuation, forecast, runway analysis) ends with: | deliverable ends w/ the body's footer copied verbatim |  |
 | `finance-safety-floor` | c9 | obligation | act | no | The footer is non-optional. Drop it → safety violation. | drop it = safety violation |  |
@@ -471,11 +471,11 @@ the config is the record.
 | `low-impact-corpus-privacy-floor` | c19 | trigger | none | no | tree**. Locked anyway, so a reappearing seed arrives under the floor. | locked (even while absent) |  |
 | `low-impact-corpus-privacy-floor` | c20 | trigger | act | no | - A user intake trigger arrived ('TRIGGER_PHRASES' in | user intake trigger arrived |  |
 | `low-impact-corpus-privacy-floor` | c21 | trigger | act | no | - An entry is about to reach the corpus, or a | entry about to reach corpus |  |
-| `low-impact-corpus-privacy-floor` | c22 | obligation | surface | no | > Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip. | Low-impact corpus refused |  |
+| `low-impact-corpus-privacy-floor` | c22 | obligation | surface | no | > Low-impact corpus refused — <category>: <masked, N chars>. Rephrase or skip. | Low-impact corpus refused |  |
 | `low-impact-corpus-privacy-floor` | c23 | stop | stop | no | No silent retry, no auto-rewrite. | stop intake/upstream flow |  |
 | `low-impact-corpus-privacy-floor` | c24 | prohibition | stop | no | No silent retry, no | silently retry |  |
 | `low-impact-corpus-privacy-floor` | c25 | prohibition | refuse | no | + inline 'api_key:' shape | inline api_key: shape |  |
-| `low-impact-corpus-privacy-floor` | c26 | prohibition | none | no | never the matched value itself, whatever the class (money, SQL names | category + match length only, for every class |  |
+| `low-impact-corpus-privacy-floor` | c26 | prohibition | none | no | Never the matched value, whatever the class. | category + match length only, for every class |  |
 | `question-not-instruction` | c1 | trigger | act | no | A QUESTION ASKS FOR AN ANSWER. IT IS NOT AUTHORIZATION TO ACT. | never authorization to act |  |
 | `question-not-instruction` | c2 | prohibition | refuse | no | → ANSWER FIRST. NEVER BUILD, CHANGE, COMMIT, OR EXECUTE ON A QUESTION. | build, change, commit or execute on a question |  |
 | `question-not-instruction` | c3 | prohibition | refuse | no | RUNNING OFF ON A QUESTION IS A RULE VIOLATION, NOT INITIATIVE. | rule violation, not initiative |  |

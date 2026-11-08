@@ -24,7 +24,7 @@ import { pathToFileURL } from 'node:url';
 import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
 import { readConsequenceClass } from './_lib/rule_consequence_class.js';
-import { ruleBody, startupContract } from './_lib/rule_law_section.js';
+import { readStartupContract } from './_lib/rule_law_section.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..');
@@ -130,9 +130,22 @@ export function readRuleTexts(repoRoot: string): Map<string, RuleText> {
     const out = new Map<string, RuleText>();
     for (const name of fs.readdirSync(dir).filter((n) => n.endsWith('.md'))) {
         const file = fs.readFileSync(path.join(dir, name), 'utf8');
-        out.set(name.slice(0, -3), { file, contract: startupContract(ruleBody(file)) });
+        out.set(name.slice(0, -3), { file, contract: readStartupContract(dir, name.slice(0, -3)) });
     }
     return out;
+}
+
+/** Source directory of the contracts, one file per rule (`startupContractPath`). */
+export const CONTRACTS_REL = path.join('src', 'agent-src', 'startup-contracts', 'rules');
+
+/** Contract files that name no rule — an orphan is never read by a stub builder, so its edits go unchecked. */
+export function orphanContracts(repoRoot: string): string[] {
+    const dir = path.join(repoRoot, CONTRACTS_REL);
+    if (!fs.existsSync(dir)) return [];
+    return fs
+        .readdirSync(dir)
+        .filter((n) => n.endsWith('.md') && !fs.existsSync(path.join(repoRoot, RULES_REL, n)))
+        .map((n) => `${path.join(CONTRACTS_REL, n)}: a startup contract for a rule that does not exist`);
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -149,7 +162,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         units: 'contract-bearing rule(s)',
         roots: [RULES_REL],
     });
-    const problems = contractProblems(required, readRuleTexts(REPO_ROOT), config);
+    const problems = [...contractProblems(required, readRuleTexts(REPO_ROOT), config), ...orphanContracts(REPO_ROOT)];
     for (const p of problems) process.stderr.write(`❌  ${p}\n`);
     if (problems.length === 0 && parsed.values.quiet !== true) {
         const clauses = Object.values(config.rules).reduce((n, r) => n + r.clauses.length, 0);

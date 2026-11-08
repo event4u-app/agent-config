@@ -201,7 +201,8 @@ no opt-in path) and D2 (AI council, 2026-10-28: startup contracts plus an 80k
 size budget plus contract tests), steps 3.2 and 3.3. Still no settings key.
 
 - `installerThinsHost` answers `true` for claude-code. Install and upgrade write
-  contract stubs for rules carrying a `## Startup contract`, pointer stubs for
+  contract stubs for rules with a startup contract (`startup-contracts/rules/<id>.md`
+  beside the rules directory, so the full rule never carries it twice), pointer stubs for
   the thinnable rest and the kernel whole, when the carrier probe passes and no
   `--full` pin is set. A consequence-class or `safety-floor` rule still without a
   contract stays whole; a consumer-edited file stays as it is.

@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     contractProblems,
+    orphanContracts,
     readRuleTexts,
     requiredRules,
     type ContractConfig,
@@ -22,6 +23,7 @@ import { startupContract } from '../../src/scripts/_lib/rule_law_section.js';
 import { build_thin } from '../../src/scripts/_lib/thin_rules.js';
 import { rule_in_scope } from '../../src/install/ruleInScope.js';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 
 const REPO = path.resolve(import.meta.dirname, '..', '..');
 
@@ -87,6 +89,24 @@ describe('committed tree', () => {
 
     it('passes the gate', () => {
         expect(contractProblems(required, all, cfg)).toEqual([]);
+        expect(orphanContracts(REPO)).toEqual([]);
+    });
+
+    it('names a contract file whose rule does not exist', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orphan-contract-'));
+        fs.mkdirSync(path.join(tmp, 'src', 'rules'), { recursive: true });
+        fs.mkdirSync(path.join(tmp, 'src', 'agent-src', 'startup-contracts', 'rules'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, 'src', 'rules', 'kept.md'), '# kept\n');
+        fs.writeFileSync(path.join(tmp, 'src', 'agent-src', 'startup-contracts', 'rules', 'kept.md'), CONTRACT);
+        fs.writeFileSync(path.join(tmp, 'src', 'agent-src', 'startup-contracts', 'rules', 'gone.md'), CONTRACT);
+        expect(orphanContracts(tmp)).toEqual([expect.stringContaining('gone.md')]);
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('no rule body carries its contract — the full rule is delivered without the duplicate', () => {
+        for (const id of required) {
+            expect(all.get(id)?.file, id).not.toContain('## Startup contract');
+        }
     });
 
     const cases = Object.entries(cfg.rules).flatMap(([id, r]) => r.clauses.map((c) => [id, c] as const));

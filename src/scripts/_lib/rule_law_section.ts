@@ -29,6 +29,7 @@
  * that question already lives.
  */
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 /** Same literal as `check_iron_law_prominence.ts` — one definition, two readers. */
 export const IRON_LAW_RE = /\biron\s+laws?\b/i;
@@ -155,6 +156,28 @@ export function startupContract(body: string): string | null {
         }
     }
     return start === -1 ? null : lines.slice(start).join('\n').trim();
+}
+
+/**
+ * Where a rule's startup contract lives: its own file, `startup-contracts/rules/<id>.md`,
+ * beside the rules directory (`dist/agent-src/rules` ↔ `dist/agent-src/startup-contracts/rules`;
+ * in source, `src/rules` ↔ `src/agent-src/startup-contracts/rules`). Not inside the rule:
+ * every host that delivers the full rule would otherwise carry the contract twice, once as
+ * the body it restates (road-to-a-session-start-under-the-host-limit; the per-spawn
+ * payload ratchet). `null` when the rule has none.
+ */
+export function startupContractPath(rulesDir: string, id: string): string | null {
+    for (const base of [path.join(rulesDir, '..', 'startup-contracts', 'rules'), path.join(rulesDir, '..', 'agent-src', 'startup-contracts', 'rules')]) {
+        const file = path.join(base, `${id}.md`);
+        if (fs.existsSync(file)) return file;
+    }
+    return null;
+}
+
+/** The startup contract of rule `id` under `rulesDir`, heading included; `null` when it has none. */
+export function readStartupContract(rulesDir: string, id: string): string | null {
+    const file = startupContractPath(rulesDir, id);
+    return file === null ? null : startupContract(ruleBody(fs.readFileSync(file, 'utf8')));
 }
 
 export interface RuleLawMeasure {

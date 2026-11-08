@@ -2369,7 +2369,7 @@
           "source": "THE ACCEPTANCE BEHAVIOUR IS NAMED, THE TEST IS WRITTEN INDEPENDENTLY, IT IS SHOWN",
           "in_law": false,
           "response": "act",
-          "witness": "name acceptance behaviour, write test independently, show red",
+          "witness": "name acceptance behavior, write test independently, show red",
           "unresolved_ref": null
         },
         {
@@ -2719,7 +2719,7 @@
           "source": "Holds for every finance-pack skill (`runway-cognition`, `dcf-modeling`",
           "in_law": false,
           "response": "none",
-          "witness": "finance-pack artefacts",
+          "witness": "finance-pack artifacts",
           "unresolved_ref": null
         },
         {
@@ -3888,7 +3888,7 @@
         {
           "id": "c22",
           "kind": "obligation",
-          "source": "> Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip.",
+          "source": "> Low-impact corpus refused — <category>: <masked, N chars>. Rephrase or skip.",
           "in_law": false,
           "response": "surface",
           "witness": "Low-impact corpus refused",
@@ -3924,7 +3924,7 @@
         {
           "id": "c26",
           "kind": "prohibition",
-          "source": "never the matched value itself, whatever the class (money, SQL names",
+          "source": "Never the matched value, whatever the class.",
           "in_law": false,
           "response": "none",
           "witness": "category + match length only, for every class",

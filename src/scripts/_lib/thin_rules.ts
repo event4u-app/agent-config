@@ -29,7 +29,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { lawText, ruleBody, startupContract } from './rule_law_section.js';
+import { lawText, readStartupContract, ruleBody, startupContract } from './rule_law_section.js';
 import {
     readConsequenceClass,
     stubLawIds,
@@ -694,11 +694,12 @@ export function build_thin(
         // A startup contract outranks every keep-whole reason but the kernel's:
         // the contract exists precisely so these rules stop costing their whole
         // body at session start, and its clause witnesses are what make that safe.
-        if (!kernel.has(stem) && startupContract(ruleBody(text)) !== null) {
+        const contract = kernel.has(stem) ? null : readStartupContract(path.dirname(p), stem);
+        if (contract !== null) {
             if (announce !== null) {
                 announce(`CONTRACT: ${path.basename(p)} — stub carries its startup contract`);
             }
-            out.set(path.basename(p), thin_entry_with_contract(stem, text, bodyLinkPrefix, shape));
+            out.set(path.basename(p), thin_entry_with_contract(stem, contract, bodyLinkPrefix, shape));
             continue;
         }
         const noStub = cls.no_stub[stem] !== undefined;

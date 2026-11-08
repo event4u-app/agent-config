@@ -170,17 +170,6 @@ PreToolUse hook — see `agents/settings/contexts/legal-privilege-probe.md`.
 
 ## See also
 
-- `skill:privacy-review` — regulatory-regime read (GDPR / CCPA / HIPAA / EEO).
-- `skill:data-handling-judgment` — transfer + retention cognition.
-- `skill:logging-monitoring`, `skill:secrets-management` — technical surfaces.
-- `domain-safety-disclaimer` — companion advisory rule.
-- `domain-safety-retention` — companion retention rule.
-- `doc-screenshot-hygiene` — the visual sibling: PII inside a **screenshot** shipped into docs (this rule covers text drafts / logs / exports, not images).
-
-## Startup contract
-
-- **When:** every AI draft, log code and data export, whatever it holds (PII, tokens/API keys, B2B quasi-IDs like company size/industry/region/founding year); privilege-marked doc (ATTORNEY-CLIENT PRIVILEGED, ATTORNEY WORK PRODUCT, PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS) outbound.
-- **Must:** redact at generation time: PII → placeholders BEFORE drafting, plus these even if not personal data: order/account IDs, payment details, customer company, current employer, university, comp target, counterparty, bank account, tax ID, cost center, amount; marketing: paraphrase quotes, round metrics · logs: allowlisted fields only · prefer log types unable to hold free text; always: logger recursively scrubs `email`, `phone`, `name`, `address`, `token`, `password`, `card_number`, `iban` keys · scrub exception bodies (before_send) · exports: drop or tenant-salted hash name/email/phone/address · drop national IDs (never hash) + card/IBAN · scrub or drop free text.
-- **Never:** raw direct identifier in AI draft, log line or export · demographics (age/gender/ethnicity/family status) in any drafted artifact — ATS record only · user/request blobs or credentials in auth logs; refuse `Log::info($user)`, show allowlisted version.
-- **Except:** marketing real names/logos/quotes only if prompt cites dated reference agreement/quote approval or press-release URL; else redact.
-- **Stop:** 3+ quasi-IDs per row → flag re-identification risk, ask re bucketing · recipient unknown → ask recipient first · partner w/o DPA → refuse, require DPA, route to legal · SEC-probe email purge → hard refuse, flag spoliation, route to counsel · privilege marker outbound → block pending explicit user confirmation, not redact; stop before generating · internal on-prem NDA: pseudonymized · internal cloud/BYO: + aggregated · partner w/ DPA: pseudonymized, min columns · public: aggregated, k ≥ 5, no quasi-ID combos; k ≥ 50 to call metric anonymous.
+- `skill:privacy-review`, `skill:data-handling-judgment`, `skill:logging-monitoring`, `skill:secrets-management`.
+- `domain-safety-disclaimer`, `domain-safety-retention` — companion rules.
+- `doc-screenshot-hygiene` — the same floor for screenshots.
