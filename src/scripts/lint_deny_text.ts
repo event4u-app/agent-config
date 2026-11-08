@@ -184,6 +184,9 @@ function sameConstants(a: ReadonlyMap<string, readonly string[]>, b: ReadonlyMap
 
 function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly string[]>): Map<string, string[]> {
     const out = new Map<string, string[]>();
+    // Names with any declaration the gate cannot read. Applied after the walk,
+    // so declaration order cannot let a readable twin mask one.
+    const poisoned = new Set<string>();
     const visit = (node: ts.Node): void => {
         if (
             ts.isVariableDeclarationList(node) &&
@@ -198,23 +201,22 @@ function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly
                 // text at all is runtime assembly and stays a hole.
                 const literal = staticLiteralInit(decl.initializer, known);
                 if (!ts.isIdentifier(decl.name)) {
-                    if (literal) for (const name of boundNames(decl.name)) out.set(name, out.get(name) ?? []);
+                    if (literal) for (const name of boundNames(decl.name)) poisoned.add(name);
                     continue;
                 }
                 const name = decl.name.text;
                 const values = evaluate(decl.initializer, known, 0);
                 if (values === null || values.some((v) => v.includes('\u0000HOLE'))) {
-                    if (values === null || literal) out.set(name, out.get(name) ?? []);
+                    if (values === null || literal) poisoned.add(name);
                     continue;
                 }
-                const prior = out.get(name);
-                // An empty entry from another declaration of this name stays empty.
-                out.set(name, prior !== undefined && prior.length === 0 ? [] : [...new Set([...(prior ?? []), ...values])]);
+                out.set(name, [...new Set([...(out.get(name) ?? []), ...values])]);
             }
         }
         ts.forEachChild(node, visit);
     };
     visit(sf);
+    for (const name of poisoned) out.set(name, []);
     return out;
 }
 
@@ -233,7 +235,11 @@ function staticLiteralInit(node: ts.Node, known: ReadonlyMap<string, readonly st
             return true;
         }
         if (ts.isNumericLiteral(n) || n.kind === ts.SyntaxKind.TrueKeyword || n.kind === ts.SyntaxKind.FalseKeyword || n.kind === ts.SyntaxKind.NullKeyword) return true;
-        if (ts.isIdentifier(n)) return known.has(n.text);
+        if (ts.isIdentifier(n)) {
+            // A known constant is text by construction (or unreadable text).
+            if (known.has(n.text)) text = true;
+            return known.has(n.text);
+        }
         if (
             ts.isTemplateExpression(n) || ts.isTemplateSpan(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n) ||
             ts.isArrayLiteralExpression(n) || ts.isObjectLiteralExpression(n) || ts.isPropertyAssignment(n) ||
@@ -280,6 +286,11 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
         return evaluate(node.expression, constants, depth + 1);
     }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return [node.text];
+    // Primitives coerce to text inside a concatenation or a template.
+    if (ts.isNumericLiteral(node)) return [String(Number(node.text))];
+    if (node.kind === ts.SyntaxKind.TrueKeyword) return ['true'];
+    if (node.kind === ts.SyntaxKind.FalseKeyword) return ['false'];
+    if (node.kind === ts.SyntaxKind.NullKeyword) return ['null'];
     if (ts.isTemplateExpression(node)) {
         let acc: string[] | null = [node.head.text];
         for (const span of node.templateSpans) {
@@ -504,8 +515,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 25,
-        minRejectCases: 17,
+        minCases: 28,
+        minRejectCases: 20,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -668,6 +679,23 @@ function selfTest(): number {
                 expect: 'reject',
                 run: () =>
                     run(plant('destructure', "const [PREFIX] = ['AGENT_CONFIG_'];\nprocess.stderr.write(`Blocked: ${PREFIX}X=1`);\n")),
+            },
+            {
+                name: 'an unreadable shadow is not masked by a readable twin declared first',
+                expect: 'reject',
+                run: () =>
+                    run(plant('poison-order', "const PREFIX = 'safe';\nfunction deny() {\n    const [PREFIX] = ['AGENT_CONFIG_'];\n    return `Blocked: ${PREFIX}X=1`;\n}\nvoid deny;\n")),
+            },
+            {
+                name: 'destructuring through another literal constant still fails closed',
+                expect: 'reject',
+                run: () =>
+                    run(plant('poison-alias', "const PARTS = ['AGENT_CONFIG_'];\nconst [PREFIX] = PARTS;\nprocess.stderr.write(`Blocked: ${PREFIX}X=1`);\n")),
+            },
+            {
+                name: 'a numeric literal in a concatenation is coerced, not a hole',
+                expect: 'reject',
+                run: () => run(plant('numeric', "process.stderr.write('Blocked: AGENT_CONFIG_' + 1 + '=1');\n")),
             },
             {
                 name: 'a hole bound at runtime is not a finding',
