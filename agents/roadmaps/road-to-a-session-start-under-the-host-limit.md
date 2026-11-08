@@ -205,6 +205,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
   `agent-config upgrade` on a machine with a 200K-window host, open a fresh session in a
   repository with a ~13k project layer, and record whether the instruction-limit notice
   appears. Then 4.2 disposes of `road-to-an-installed-layer-that-is-thinned`.
+- **Recommendation:** do it on the first release after this work ships — it is the only check that the notice is actually gone for a user.
 - **If you do nothing:** the CI gate keeps the delivered layer at or under 80,000 chars,
   but no fresh host session has confirmed the notice is gone.
 - **Resolved when:** the observation is recorded under 4.1.
@@ -213,6 +214,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 - **Status:** resolved (2026-11-08)
 - **Owner:** user — the ratification gate (ADR-268 § 4) needs a passing two-provider record or an owner decision; the agent may not ratify its own change
 - **Blocks:** merge of the PR carrying Phases 1–3
+- **What to do:** nothing — resolved by the owner ratification named below.
 - **Resolution:** 31 two-provider rounds did not converge (anthropic ratified or confirmed from round 18; openai refused or withheld a stance every round, on new points). The owner ratified in-session on 2026-11-08: `agents/evidence/owner-directives/2026-11-08-session-start-contracts-owner-ratification.md`; record `agents/evidence/ratifications/session-start-contracts.md`. The merge over the red gate is the owner's act; a bypass record follows it.
 - **Resolved when:** a ratification record under `agents/evidence/ratifications/` lands with the PR, with the owner's decision where the council did not converge.
 
