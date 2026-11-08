@@ -3,7 +3,8 @@
  * rule frontmatter alone.
  *
  * An act is a trigger that names something the agent does rather than something
- * it says: `path_prefix`, `file_pattern`, `command`. A keyword or phrase trigger
+ * it says: `path_prefix`, `file_pattern`, `command`, or a `shell_command` bound in
+ * `src/config/act-references.json`. A keyword or phrase trigger
  * names a prompt, so a rule whose references hang only on those is reachable by
  * no act and is listed under `no_act` instead of being dropped.
  *
@@ -21,12 +22,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import actReferences from '../config/act-references.json';
 import { parseFrontmatter } from './preamble_byte_census.js';
 
 /** Mirrors `COMPOSED_CHARS` in `hooks/rule_inject_hook.ts`; a test holds them equal. */
 export const INJECT_BUDGET_CHARS = 8000;
 
-const ACT_KINDS = ['path_prefix', 'file_pattern', 'command'] as const;
+const ACT_KINDS = ['path_prefix', 'file_pattern', 'command', 'shell_command'] as const;
 type ActKind = (typeof ACT_KINDS)[number];
 
 export interface Reference {
@@ -61,7 +63,21 @@ function reference(rel: string, contextsRoot: string): Reference {
     return { path: rel, chars, status: chars > INJECT_BUDGET_CHARS ? 'omitted-budget' : 'fits' };
 }
 
-export function buildRequiresTable(rulesDir: string, contextsRoot: string): RequiresTable {
+export interface ActBinding {
+    shell_command: string;
+    rules: string[];
+}
+
+/**
+ * The requires table. `shell_command` rows come from `src/config/act-references.json`,
+ * which binds a shell act to rule ids (kernel rules included — it is not a router
+ * trigger); the references themselves are still each rule's own `load_context`.
+ */
+export function buildRequiresTable(
+    rulesDir: string,
+    contextsRoot: string,
+    bindings: readonly ActBinding[] = actReferences.bindings,
+): RequiresTable {
     const rows: RequiresRow[] = [];
     const no_act: string[] = [];
     const acts_by_kind: Partial<Record<ActKind, number>> = {};
@@ -80,6 +96,12 @@ export function buildRequiresTable(rulesDir: string, contextsRoot: string): Requ
         const marking: RequiresRow['marking'] = typeof fm['consequence_class'] === 'string' ? 'required' : fm['type'] === 'manual' ? 'informational' : 'conditional';
         const triggers = Array.isArray(fm['triggers']) ? (fm['triggers'] as unknown[]) : [];
         let acts = 0;
+        for (const b of bindings) {
+            if (!b.rules.includes(rule)) continue;
+            rows.push({ rule, act: { kind: 'shell_command', value: b.shell_command }, marking, references });
+            acts_by_kind.shell_command = (acts_by_kind.shell_command ?? 0) + 1;
+            acts += 1;
+        }
         for (const t of triggers) {
             if (typeof t !== 'object' || t === null) continue;
             for (const kind of ACT_KINDS) {
