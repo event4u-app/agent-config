@@ -176,11 +176,11 @@ host-attested session binding exists. Record:
 
 ## Decisions
 
-| ID | Class | Resolved by | Decision | Revisit-if |
-|---|---|---|---|---|
-| L1 | reversible-technical | run | Pins enter by explicit user marker only; heuristic or model extraction is rejected — about half of real rules are phrased declaratively and a false pin is worse than none. | a marker-only pin set stays empty across sessions that set constraints |
-| L2 | reversible-technical | run | No proxy, no request-path work, no own summarizer: this package is not in the request path and the host compacts itself. | the host offers a summarizer hook that takes instructions per call |
-| L3 | owner-reserved | user, 2026-11-08 (answered "1" to: only the owner, older targets allowed, notice only) | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | the owner delegates advisory issuance, or a notice is acted on as an install |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| L1 | reversible-technical | agent | Pins enter by explicit user marker only; heuristic or model extraction is rejected. | About half of real rules are phrased declaratively, so extraction misses them, and a false pin is worse than none. | a marker-only pin set stays empty across sessions that set constraints |
+| L2 | reversible-technical | agent | No proxy, no request-path work, no own summarizer. | This package is not in the request path and the host compacts itself. | the host offers a summarizer hook that takes instructions per call |
+| L3 | product-owned | owner | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | Owner answer "1" in session on 2026-11-08, recorded in PR #2923. | the owner delegates advisory issuance, or a notice is acted on as an install |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
