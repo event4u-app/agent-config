@@ -52,7 +52,7 @@ import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLin
 import { decideLayerForm, gatherShippedEvidence, ruleForm } from '../scripts/_lib/layer_form_decision.js';
 import { readMachineEvidence, withMachineEvidence } from '../scripts/_lib/layer_form_evidence.js';
 import { readConsequenceClass } from '../scripts/_lib/rule_consequence_class.js';
-import { ruleBody, startupContract } from '../scripts/_lib/rule_law_section.js';
+import { readStartupContract } from '../scripts/_lib/rule_law_section.js';
 import { readEnrolment } from './userPin.js';
 import { RULE_BODIES_INDEX, thinInstalledRuleLayer } from './installThinLayer.js';
 import { CLAUDE_LAYER_DIRNAME, DEMOTED_MARKER, PACKAGE_STAMP_LINE, THINNED_MARKER, currentRuntimeDir, markClaudeLayer, readCarrierState, runtimeRootFor, } from './stagedRuntime.js';
@@ -217,7 +217,7 @@ export function neverThinned(packageRoot) {
     for (const name of names) {
         const text = fs.readFileSync(path.join(dir, name), 'utf8');
         const end = text.indexOf('\n---', 3);
-        if (startupContract(ruleBody(text)) !== null)
+        if (readStartupContract(dir, name.slice(0, -3)) !== null)
             contracted.add(name.slice(0, -3));
         if (text.startsWith('---') && end > 0 && /^tier:\s*["']?safety-floor["']?\s*$/m.test(text.slice(0, end))) {
             safetyFloor.add(name.slice(0, -3));
