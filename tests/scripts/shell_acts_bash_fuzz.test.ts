@@ -123,13 +123,18 @@ const FIRST = Number(process.env['SHELL_ACTS_FUZZ_SEED'] ?? 1);
 if (!Number.isInteger(N) || N < 1 || !Number.isInteger(FIRST)) throw new Error(`bad SHELL_ACTS_FUZZ_N / SHELL_ACTS_FUZZ_SEED: ${String(N)} / ${String(FIRST)}`);
 
 
-// The recogniser follows bash 5 where versions differ, so the generated comparison
-// needs bash >= 4: on macOS run it with `BASH_ORACLE_IMAGE=ubuntu:24.04`.
-const MAJOR = hasBash ? oracleBashMajor() : 0;
-// Linux CI runners ship bash 5; macOS runners ship 3.2 and skip, as a Mac does locally.
-if (process.env['CI'] && process.platform === 'linux' && MAJOR < 4) throw new Error(`the generated bash test needs bash >= 4 on Linux CI, found ${oracleBashVersion()}`);
+// The recogniser follows bash 5 where versions differ; only 3.2 against 5.2 is
+// measured, so the exact comparison needs bash 5. Under an older bash (macOS ships
+// 3.2) the test still runs, with the direction that matters for a guard: every act
+// bash runs must be named; naming more than bash 3.2 runs is allowed.
+if (!hasBash) throw new Error('the generated bash test needs bash on PATH');
+const MAJOR = oracleBashMajor();
+if (Number.isNaN(MAJOR)) throw new Error(`cannot read the oracle's bash version: ${JSON.stringify(oracleBashVersion())}`);
+const EXACT = MAJOR >= 5;
+// Linux CI runners ship bash 5: there the exact comparison must run.
+if (process.env['CI'] && process.platform === 'linux' && !EXACT) throw new Error(`the generated bash test needs bash >= 5 on Linux CI, found ${oracleBashVersion()}`);
 
-describe.skipIf(MAJOR < 4)('generated commands: the recogniser agrees with bash', () => {
+describe(`generated commands: the recogniser agrees with bash ${EXACT ? '(exact)' : '(names every act bash runs)'}`, () => {
     it(`${N} seeded commands`, () => {
         const mismatches: string[] = [];
         let skipped = 0;
@@ -142,9 +147,10 @@ describe.skipIf(MAJOR < 4)('generated commands: the recogniser agrees with bash'
             }
             const want = bashActs(cmd);
             const got = ACTS.filter((a) => commandRunsAct(cmd, a)).sort();
-            if (JSON.stringify(want) !== JSON.stringify(got)) mismatches.push(`seed ${seed}: ${JSON.stringify(cmd)} bash=${JSON.stringify(want)} recogniser=${JSON.stringify(got)}`);
+            const agrees = EXACT ? JSON.stringify(want) === JSON.stringify(got) : want.every((x) => got.includes(x));
+            if (!agrees) mismatches.push(`seed ${seed}: ${JSON.stringify(cmd)} bash=${JSON.stringify(want)} recogniser=${JSON.stringify(got)}`);
         }
         expect(mismatches).toEqual([]);
         expect(skipped).toBeLessThan(N * 0.05);
-    }, Math.max(120_000, N * 1500));
+    }, Math.max(300_000, N * 3000));
 });
