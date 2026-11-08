@@ -38,3 +38,15 @@ answered (verbatim):
 
 `agent-config install --full` restores the full rule layer on a machine;
 reverting #2919 restores the previous behaviour for everyone.
+
+## Correction 2026-11-08 — what separates the subjects
+
+The after-the-fact council review of the bypass
+(`agents/evidence/council/bypass-2919-review-20261108.md`) found the sentence
+"differ only by `main`'s own `raise_log` entries" incomplete. Between
+`2d446883…` and `64cb0bc5…` the gated file `src/config/hook-bundle-budget.json`
+also gained `main`'s two ceilings (`quota_notice_hook.ts` 22,800 → 41,000 from
+#2921, `reference_duty.ts` 22,000 from #2926) and a `what_would_have_caught_it`
+field on this branch's own `layer_promotion_hook` raise entry. The owner's
+decision binds the subjects by digest, so it is unchanged; the full list is in
+the bypass record.
