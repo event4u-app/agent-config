@@ -10,12 +10,10 @@
  * skipped and counted. `SHELL_ACTS_FUZZ_N` raises the count for a local sweep,
  * `SHELL_ACTS_FUZZ_SEED` moves its first seed.
  */
-import { spawnSync } from 'node:child_process';
-
 import { describe, expect, it } from 'vitest';
 
 import { commandRunsAct } from '../../src/scripts/_lib/shell_acts.js';
-import { ACTS, bashActs, hasBash } from '../_lib/bash_act_oracle.js';
+import { ACTS, bashAccepts, bashActs, hasBash, oracleBashMajor, oracleBashVersion } from '../_lib/bash_act_oracle.js';
 
 function rng(seed: number): () => number {
     let a = seed >>> 0;
@@ -118,11 +116,13 @@ const FIRST = Number(process.env['SHELL_ACTS_FUZZ_SEED'] ?? 1);
 // A malformed override must fail, not quietly run zero seeds.
 if (!Number.isInteger(N) || N < 1 || !Number.isInteger(FIRST)) throw new Error(`bad SHELL_ACTS_FUZZ_N / SHELL_ACTS_FUZZ_SEED: ${String(N)} / ${String(FIRST)}`);
 
-function bashAccepts(cmd: string): boolean {
-    return spawnSync('bash', ['-n', '-c', cmd], { encoding: 'utf8' }).status === 0;
-}
 
-describe.skipIf(!hasBash)('generated commands: the recogniser agrees with bash', () => {
+// The recogniser follows bash 5 where versions differ, so the generated comparison
+// needs bash >= 4: on macOS run it with `BASH_ORACLE_IMAGE=ubuntu:24.04`. CI has it.
+const MAJOR = hasBash ? oracleBashMajor() : 0;
+if (process.env['CI'] && MAJOR < 4) throw new Error(`the generated bash test needs bash >= 4 on CI, found ${oracleBashVersion()}`);
+
+describe.skipIf(MAJOR < 4)('generated commands: the recogniser agrees with bash', () => {
     it(`${N} seeded commands`, () => {
         const mismatches: string[] = [];
         let skipped = 0;

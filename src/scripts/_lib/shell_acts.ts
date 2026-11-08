@@ -21,13 +21,14 @@
  * after `command` / `nohup`, are skipped; `command -v` / `-V` run nothing. Other
  * wrapper options (`sudo -u …`, `command -p`) are not interpreted. Leading unquoted
  * reserved words (`!`, `{`, `if`, `then`, `else`, `elif`, `do`, `while`, `until`) open
- * the command rather than name it. Not interpreted: `$(…)` and
+ * the command rather than name it. Where bash versions differ, this follows bash 5. Not interpreted: `$(…)` and
  * backticks (their text stays inside the word), subshell parentheses, `eval`,
  * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
  * `git -C <dir>` / `git -c k=v` are skipped, quoted values included.
  *
- * A match is a potential act: it was invoked, which does not mean it succeeded.
+ * A match is a potential act: the command reaches it on some branch, which does not
+ * mean that branch runs or the act succeeds.
  * Not recognised, by design: commands built at runtime (`eval`, `$CMD`), aliases
  * and shell functions, wrappers that run git themselves, and `bash -c "…"`. A
  * recognised act is a fact about the command; an unrecognised one is no evidence
@@ -42,9 +43,7 @@ const ASSIGN_AFTER = new Set(['time', 'sudo']);
 // Reserved words that open a command list or a pipeline; unquoted and leading,
 // the command proper starts after them (`if true; then git push; fi`, `! git push`).
 const LEADING_RESERVED = new Set(['!', '{', 'if', 'then', 'else', 'elif', 'do', 'while', 'until']);
-// After these, as at the very start, `time` is still the keyword; after `!`, `if`,
-// `elif`, `while` and `until` bash runs time(1) instead (measured).
-const TIME_KEYWORD_AFTER = new Set(['{', 'then', 'else', 'do']);
+
 
 /**
  * One word after quote removal. `assign` holds when it opens with an unquoted
@@ -289,8 +288,8 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
         const w = words[k] as Word;
         if (w.assign && assignOk) k += 1;
         else if (PREFIX_WORDS.has(w.text)) {
-            // `time` is the keyword only unquoted, first in its command (no word or
-            // redirection before it, at most a `{`/`then`/`else`/`do` opener) and at
+            // `time` is the keyword only unquoted, first in its command after any
+            // reserved-word opener (no other word or redirection before it) and at
             // the start of a pipeline;
             // a quoted `"time"`, or one after `|`, is the time(1) program, after
             // which `X=1` is the command name.
@@ -300,7 +299,9 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
                 !w.quoted &&
                 (redirectAt === -1 || redirectAt > k) &&
                 // After `|` only an opener (`| { time …; }`) starts a fresh pipeline.
-                (opener === null ? !piped : TIME_KEYWORD_AFTER.has(opener));
+                // Bash 5 keeps the keyword after every opener; bash 3.2 runs time(1)
+                // after `!`, `if`, `elif`, `while` and `until`, which this follows not.
+                (opener !== null || !piped);
             assignOk = ASSIGN_AFTER.has(w.text) && (w.text !== 'time' || keyword);
             k += 1;
             const next = words[k]?.text;

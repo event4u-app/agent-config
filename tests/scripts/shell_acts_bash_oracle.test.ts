@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { bashActs, C, G, hasBash, P } from '../_lib/bash_act_oracle.js';
+import { bashActs, C, G, hasBash, oracleBashMajor, P } from '../_lib/bash_act_oracle.js';
 
 import { commandRunsAct } from '../../src/scripts/_lib/shell_acts.js';
 
@@ -126,6 +126,10 @@ const CASES: Array<[string, string[]]> = [
     ['cat <<\\\n<x; git push', [P]],
     ['echo a # c \\\ngit push', [P]],
     ['cat <<EOF \\\n> /dev/null\nbody\nEOF\ngit push', [P]],
+    // Round-10 dispute, settled by bash 3.2 and 5.3 alike: with `<<-` the leading
+    // tabs are stripped from the joined line, so a tab after a continuation stays.
+    ['cat <<-EOF\nE\\\n\tOF\ngit push\nEOF', []],
+    ['cat <<-EOF\n\tE\\\nOF\ngit push\nEOF', [P]],
     ['>out time git push', [P]],
     // Reserved words open a command; they do not name it.
     ['! git push', [P]],
@@ -133,10 +137,12 @@ const CASES: Array<[string, string[]]> = [
     ['if true; then git push; else git commit -m x; fi', [C, P]],
     ['{ git push; }', [P]],
     ['true && { X=1 git push; }', [P]],
-    ['! time X=1 git push', []],
+    ['! time X=1 git push', [P]],
     ['{ time X=1 git push; }', [P]],
     ['if true; then time X=1 git push; fi', [P]],
-    ['if time X=1 git push; then :; fi', []],
+    ['if time X=1 git push; then :; fi', [P]],
+    ['while time X=1 git push; do break; done', [P]],
+    ['{ ! time X=1 git push; }', [P]],
     ['time ! X=1 git push', [P]],
     ['{ 2>/dev/null time X=1 git push; }', []],
     ['echo a | { time X=1 git push; }', [P]],
@@ -153,9 +159,21 @@ describe.skipIf(!hasBash)('the bash stubs log what they are asked to run', () =>
 // CI must not pass this suite by skipping it.
 if (!hasBash && process.env['CI']) throw new Error('the bash oracle needs bash on CI');
 
+// Where bash 3.2 (macOS's /bin/bash) reaches fewer acts than bash 5, which the
+// recogniser follows: `time` after `!`, `if`, `elif`, `while` or `until` is time(1)
+// there, so the assignment after it is a command name.
+const BASH3: Record<string, string[]> = {
+    '! time X=1 git push': [],
+    'if time X=1 git push; then :; fi': [],
+    'while time X=1 git push; do break; done': [],
+    '{ ! time X=1 git push; }': [],
+};
+
 describe.skipIf(!hasBash)('the recogniser agrees with bash', () => {
+    const major = hasBash ? oracleBashMajor() : 0;
     it.each(CASES)('%j', (command, expected) => {
-        expect(bashActs(command)).toEqual([...expected].sort());
+        const fromBash = major < 4 && BASH3[command] ? BASH3[command] : expected;
+        expect(bashActs(command)).toEqual([...fromBash].sort());
         const recognised = [C, P, G].filter((act) => commandRunsAct(command, act)).sort();
         expect(recognised).toEqual([...expected].sort());
     });
