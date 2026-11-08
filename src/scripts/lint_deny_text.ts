@@ -54,7 +54,11 @@
  * from any of these), which the gate keeps as a hole, a message in a module
  * the concern imports, and a kill switch named in a way none of the patterns
  * matches. This is a pattern gate over parsed source, not a proof about emitted
- * bytes.
+ * bytes: it models the JavaScript an author writes in a deny (literals,
+ * templates, `+`, `?:`, constants, type assertions) and refuses what it does
+ * not model when that is fixed at author time. A construction outside that
+ * model may still escape it; review of the deny text remains the control, and
+ * this gate is the net under it.
  *
  * Exit codes: 0 clean · 1 a deny names a bypass · 2 the corpus could not be read.
  */
@@ -208,7 +212,7 @@ function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly
                 const name = decl.name.text;
                 const values = evaluate(decl.initializer, known, 0);
                 if (values === null || values.some((v) => v.includes('\u0000HOLE'))) {
-                    if (values === null || literal) poisoned.add(name);
+                    if (values === null || literal || staticLiteralInit(decl.initializer, known, false)) poisoned.add(name);
                     continue;
                 }
                 out.set(name, [...new Set([...(out.get(name) ?? []), ...values])]);
@@ -228,7 +232,7 @@ function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly
  * shaped, so one the gate cannot evaluate must not pass. Anything reaching a
  * call, a property read or an unknown name is runtime assembly.
  */
-function staticLiteralInit(node: ts.Node, known: ReadonlyMap<string, readonly string[]>): boolean {
+function staticLiteralInit(node: ts.Node, known: ReadonlyMap<string, readonly string[]>, requireText = true): boolean {
     let text = false;
     // A denylist of what reaches outside the author's text, rather than an
     // allowlist of what stays inside it: a syntax form nobody listed (a unary
@@ -257,7 +261,7 @@ function staticLiteralInit(node: ts.Node, known: ReadonlyMap<string, readonly st
         if (ts.isShorthandPropertyAssignment(n)) return isStatic(n.name);
         return ts.forEachChild(n, (c) => (isStatic(c) ? undefined : true)) !== true;
     };
-    return isStatic(node) && text;
+    return isStatic(node) && (text || !requireText);
 }
 
 /** Every identifier a binding pattern binds. */
@@ -322,7 +326,7 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
     }
     // An operator the gate does not evaluate, over text fixed at author time,
     // is uncertified rather than a hole: only runtime values may be holes.
-    return staticLiteralInit(node, constants) ? null : hole(node);
+    return staticLiteralInit(node, constants, false) ? null : hole(node);
 }
 
 /** An expression built only from numeric literals and arithmetic. */
@@ -332,6 +336,14 @@ function numericOnly(node: ts.Expression): boolean {
     if (ts.isPrefixUnaryExpression(node)) return numericOnly(node.operand);
     if (ts.isBinaryExpression(node)) return numericOnly(node.left) && numericOnly(node.right);
     return false;
+}
+
+/** Does any string or template literal inside the expression carry whitespace? */
+function hasProseLiteral(node: ts.Node): boolean {
+    if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) && /\s/.test(node.text)) {
+        return true;
+    }
+    return ts.forEachChild(node, (c) => (hasProseLiteral(c) ? true : undefined)) === true;
 }
 
 /** A string-bearing expression that is not itself part of a larger one. */
@@ -369,7 +381,9 @@ export function messageTexts(src: string, fileName = 'concern.ts'): Array<{ vari
             const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
             const at = `line ${String(line)}: ${node.getText(sf).replace(/\s+/g, ' ').slice(0, 80)}`;
             if (variants === null) {
-                out.push({ variants: null, at });
+                // Uncertified only where it is a message: some literal text in
+                // it carries whitespace. A numeric `+` is not prose.
+                if (hasProseLiteral(node)) out.push({ variants: null, at });
             } else {
                 const texts = variants.map((v) => v.replace(/\u0000HOLE/g, ''));
                 if (texts.some((t) => /\s/.test(t))) out.push({ variants: texts, at });
@@ -533,8 +547,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 31,
-        minRejectCases: 23,
+        minCases: 34,
+        minRejectCases: 25,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -730,6 +744,21 @@ function selfTest(): number {
                 name: 'a unary operator over a literal fails closed',
                 expect: 'reject',
                 run: () => run(plant('unary', "process.stderr.write('Blocked: AGENT_CONFIG_' + +'1' + '=1');\n")),
+            },
+            {
+                name: 'numeric arithmetic inside a message fails closed',
+                expect: 'reject',
+                run: () => run(plant('mul', 'process.stderr.write(`Blocked: AGENT_CONFIG_${2 * 3}=1`);\n')),
+            },
+            {
+                name: 'a constant built by arithmetic fails closed when a message uses it',
+                expect: 'reject',
+                run: () => run(plant('num-const', 'const N = -1;\nprocess.stderr.write(`Blocked: AGENT_CONFIG_${N}=1`);\n')),
+            },
+            {
+                name: 'arithmetic outside any message is not a finding',
+                expect: 'accept',
+                run: () => run(plant('retry', 'const RETRY_DELAY = 1000 + 250;\nvoid RETRY_DELAY;\nprocess.stderr.write(`BLOCKED — try later`);\n')),
             },
             {
                 name: 'a hole bound at runtime is not a finding',
