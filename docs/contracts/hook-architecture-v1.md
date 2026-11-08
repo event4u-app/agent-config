@@ -1329,6 +1329,8 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
 | `AGENT_CONFIG_NO_INTAKE_PASS` | operator | `=1` silences the `intake-pass` concern: no intake-pass line on any prompt (owner answer OQ-25 ships it on, with no settings key, so this is its only off switch) | `hooks/intake_pass_hook.ts:78` |
 | `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
+| `AGENT_CONFIG_NO_QUOTA_NOTICE` | operator | `=1` silences the `quota-notice` concern (plan-limit, context and metered notices) and with it the agent-switch switch question and its Stop-path checkpoint. Also read by `quota_notice_hook.ts`, outside the scanned roots | `_lib/switch_relay.ts:248` |
+| `AGENT_CONFIG_NO_SWITCH_QUESTION` | operator | `=1` stops the agent-switch switch question alone — raise, relay and Stop-path checkpoint, also for a request raised before it was set; the quota notice stays | `_lib/switch_relay.ts:248` |
 | `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
 | `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |
 | `AGENT_CONFIG_PROJECT_TREE_FORM` | maintainer | `=full` forces the full rule-layer form for every project tree, over the shipped `project-tree-form.json` record and over any verdict — the operator rollback that needs no release | `_lib/project_tree_form.ts:129` |
