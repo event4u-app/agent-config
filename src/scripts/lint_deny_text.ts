@@ -346,6 +346,12 @@ function hasProseLiteral(node: ts.Node): boolean {
     return ts.forEachChild(node, (c) => (hasProseLiteral(c) ? true : undefined)) === true;
 }
 
+/** Does the expression name a `const` the gate tracks (readable or not)? Its prose may live there. */
+function usesConstant(node: ts.Node, constants: ReadonlyMap<string, readonly string[]>): boolean {
+    if (ts.isIdentifier(node) && constants.has(node.text)) return true;
+    return ts.forEachChild(node, (c) => (usesConstant(c, constants) ? true : undefined)) === true;
+}
+
 /** A string-bearing expression that is not itself part of a larger one. */
 function isOutermostString(node: ts.Node): node is ts.Expression {
     const stringy =
@@ -383,7 +389,7 @@ export function messageTexts(src: string, fileName = 'concern.ts'): Array<{ vari
             if (variants === null) {
                 // Uncertified only where it is a message: some literal text in
                 // it carries whitespace. A numeric `+` is not prose.
-                if (hasProseLiteral(node)) out.push({ variants: null, at });
+                if (hasProseLiteral(node) || usesConstant(node, constants)) out.push({ variants: null, at });
             } else {
                 const texts = variants.map((v) => v.replace(/\u0000HOLE/g, ''));
                 if (texts.some((t) => /\s/.test(t))) out.push({ variants: texts, at });
@@ -547,8 +553,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 34,
-        minRejectCases: 25,
+        minCases: 36,
+        minRejectCases: 26,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -759,6 +765,17 @@ function selfTest(): number {
                 name: 'arithmetic outside any message is not a finding',
                 expect: 'accept',
                 run: () => run(plant('retry', 'const RETRY_DELAY = 1000 + 250;\nvoid RETRY_DELAY;\nprocess.stderr.write(`BLOCKED — try later`);\n')),
+            },
+            {
+                name: 'prose supplied through an unreadable constant still fails closed',
+                expect: 'reject',
+                run: () =>
+                    run(plant('poison-prose', "const [HEAD] = ['Blocked: AGENT_CONFIG_'];\nprocess.stderr.write(`${HEAD}X=1`);\n")),
+            },
+            {
+                name: 'the maintainer-change wording the hooks now use passes',
+                expect: 'accept',
+                run: () => run(plant('maintainer', emit('BLOCKED — a maintainer change to this guard, reviewed in its own PR.'))),
             },
             {
                 name: 'a hole bound at runtime is not a finding',
