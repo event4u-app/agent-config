@@ -41,9 +41,10 @@
  * checked, so
  * shadowing cannot hide a switch; escapes, line continuations and an escaped
  * `\${` are the parser's own cooked text. A message with more variants than
- * the gate enumerates, nested deeper than it evaluates, or using a `const`
- * whose initializer is fixed at author time yet not evaluable here (a
- * destructuring pattern over literals, say), fails rather than passes. A deny may also not name the
+ * the gate enumerates, nested deeper than it evaluates, or containing any
+ * expression fixed at author time that the gate does not evaluate (an operator
+ * other than `+`, numeric arithmetic, a destructuring pattern over literals),
+ * fails rather than passes. A deny may also not name the
  * hook manifest: telling the refused agent where its own entry lives is a
  * bypass too, so any reference is refused.
  *
@@ -306,6 +307,8 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
         return [...a, ...b];
     }
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+        // Numeric addition is not concatenation; the gate does not evaluate it.
+        if (numericOnly(node.left) && numericOnly(node.right)) return null;
         return join(evaluate(node.left, constants, depth + 1), evaluate(node.right, constants, depth + 1));
     }
     if (ts.isIdentifier(node)) {
@@ -313,7 +316,18 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
         if (values === undefined) return hole(node);
         return values.length > 0 ? [...values] : null;
     }
-    return hole(node);
+    // An operator the gate does not evaluate, over text fixed at author time,
+    // is uncertified rather than a hole: only runtime values may be holes.
+    return staticLiteralInit(node, constants) ? null : hole(node);
+}
+
+/** An expression built only from numeric literals and arithmetic. */
+function numericOnly(node: ts.Expression): boolean {
+    if (ts.isNumericLiteral(node)) return true;
+    if (ts.isParenthesizedExpression(node)) return numericOnly(node.expression);
+    if (ts.isPrefixUnaryExpression(node)) return numericOnly(node.operand);
+    if (ts.isBinaryExpression(node)) return numericOnly(node.left) && numericOnly(node.right);
+    return false;
 }
 
 /** A string-bearing expression that is not itself part of a larger one. */
@@ -515,8 +529,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 28,
-        minRejectCases: 20,
+        minCases: 30,
+        minRejectCases: 22,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -696,6 +710,17 @@ function selfTest(): number {
                 name: 'a numeric literal in a concatenation is coerced, not a hole',
                 expect: 'reject',
                 run: () => run(plant('numeric', "process.stderr.write('Blocked: AGENT_CONFIG_' + 1 + '=1');\n")),
+            },
+            {
+                name: 'an unevaluated operator over author-fixed text fails closed',
+                expect: 'reject',
+                run: () =>
+                    run(plant('logical-or', "const PREFIX = 'AGENT_CONFIG_';\nprocess.stderr.write('Blocked: ' + (PREFIX || '') + 'X=1');\n")),
+            },
+            {
+                name: 'numeric addition is not read as concatenation',
+                expect: 'reject',
+                run: () => run(plant('arith', 'process.stderr.write(`Blocked: AGENT_CONFIG_${1 + 2}=1`);\n')),
             },
             {
                 name: 'a hole bound at runtime is not a finding',
