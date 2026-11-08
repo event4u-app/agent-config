@@ -58,8 +58,9 @@ const NAMED: Record<string, { file: string; kind: CorpusSelection['kind'] }> = {
     'ab-trackb-v2': { file: 'ab-trackb-v2.yaml', kind: 'discipline' },
     'ab-artifact-v2': { file: 'ab-artifact-v2.yaml', kind: 'artifact' },
     'ab-headroom-17': { file: 'ab-headroom-17.yaml', kind: 'discipline' },
+    'ab-refduty': { file: 'ab-refduty.yaml', kind: 'discipline' },
 };
-const ALIASES: Record<string, string> = { trackb: 'ab-trackb-v2', artifact: 'ab-artifact-v2', headroom17: 'ab-headroom-17' };
+const ALIASES: Record<string, string> = { trackb: 'ab-trackb-v2', artifact: 'ab-artifact-v2', headroom17: 'ab-headroom-17', refduty: 'ab-refduty' };
 
 /**
  * Strip `--corpus <name>` / `--corpus=<name>` out of argv before the runner's own

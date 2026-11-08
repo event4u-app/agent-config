@@ -98,6 +98,7 @@ const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
+import { install_act_hook, refs_injection_text } from './_lib/bench_refduty_arms.js';
 import { ablation_arm, ARMS, FIXED_INJECTIONS, neighbour_env, neighbour_plugin_dir, profile_rules_text, type ArmSpec } from './_lib/bench_ab_arms.js';
 import { preflight_exit } from './_lib/bench_ab_delivery_preflight.js';
 export { ARMS, neighbour_env, neighbour_plugin_dir };
@@ -281,6 +282,7 @@ export function injected_text(inject: string | null, placebo_chars: number): str
         const text = variant_candidate_text(stem);
         return rules_subset_text('rules-kernel-dc', null, { id: stem.slice(0, stem.indexOf('.')), text });
     }
+    if (inject === 'profile-minimal+refs') return `${profile_rules_text('minimal', ROUTER_PATH, RULES_DIR)}\n\n${refs_injection_text()}`;
     if (inject?.startsWith('profile-')) return profile_rules_text(inject.slice('profile-'.length), ROUTER_PATH, RULES_DIR);
     return null;
 }
@@ -581,6 +583,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     }
     const host = opts.host ?? 'claude';
     const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec), spec.strip_paths);
+    if (spec.act_hook) install_act_hook(clone, spec.act_hook);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     let cf: Dict = {};

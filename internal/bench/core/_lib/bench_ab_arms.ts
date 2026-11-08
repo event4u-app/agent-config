@@ -9,6 +9,8 @@ import process from 'node:process';
 export interface ArmSpec {
     setting_sources: string | null;
     inject: string | null; // None | "rdp" | "placebo"
+    /** Reference-duty step 3.1: a project PreToolUse hook installed into the clone. */
+    act_hook?: 'deliver' | 'gate';
     recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
     /**
      * A harness-orchestrated multi-step arm
@@ -142,6 +144,14 @@ export const ARMS: Record<string, ArmSpec> = {
     // each profile names in `dist/router.json` `profiles`. `profile-minimal` is
     // kernel only — too small a surface for the footprint-lift audit.
     'profile-minimal': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },
+    // Reference-duty step 3.1 (internal/bench/refduty-PREREG.md): the kernel text
+    // in every arm; the arms differ only in how commit-policy's reference reaches
+    // the act. `ref-full` puts it in the prompt, `ref-deliver` names it at the
+    // act, `ref-gate` blocks the act once until it is read.
+    'ref-nothing': { setting_sources: 'project,local', inject: 'profile-minimal', min_lift_ratio: null },
+    'ref-full': { setting_sources: 'project,local', inject: 'profile-minimal+refs', min_lift_ratio: null },
+    'ref-deliver': { setting_sources: 'project,local', inject: 'profile-minimal', act_hook: 'deliver', min_lift_ratio: null },
+    'ref-gate': { setting_sources: 'project,local', inject: 'profile-minimal', act_hook: 'gate', min_lift_ratio: null },
     'profile-essential': { setting_sources: 'project,local', inject: 'profile-essential' },
     'profile-full': { setting_sources: 'project,local', inject: 'profile-full' },
     // A multi-session task is modelled by the memory store its fixture carries;
