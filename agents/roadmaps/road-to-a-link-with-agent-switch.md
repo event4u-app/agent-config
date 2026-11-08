@@ -153,6 +153,35 @@ routing and the move; AC reads, asks and relays. The unattended-spawn refusal
       provider has no usable account.
       verify: bracket seat tests.
 
+## Phase 6 — Hardening the switch question
+
+Carried from ratification rounds 1–4 of the Phase 4 budget raise
+(`agents/evidence/council/agent-switch-ask-ratification-r{1..4}-*.question.md`,
+all `refused`; merged on the owner's word, 2026-11-08). Each item is a
+finding both seats or one seat repeated that the merged change does not close.
+
+- [ ] **6.1 Back off a failing link.** Consecutive failed `switch show` /
+      `switch request` calls (each bounded at 5 s) stop the link for this
+      session until the next reset, and say so once.
+      verify: test with a fake agent-switch that exits non-zero three times.
+- [ ] **6.2 Measure the cost.** Measure whole-hook latency of `quota-notice`
+      and `session-eol` with the link answering, failing and absent; record
+      the figures and a rollback criterion next to the budget entry.
+      verify: committed measurement record.
+- [ ] **6.3 Terminal versus checkpoint.** A request that turns terminal on a
+      prompt before the Stop path checkpointed it no longer drops the record
+      the Stop path needs; decide whether a checkpoint after a finished move
+      is still useful and test the race.
+      verify: test approved → done between prompt and Stop.
+- [ ] **6.4 Consent at execution.** Show, per supported host, that a
+      `switch_decide` call reaches the user's confirmation, or record where it
+      does not.
+      verify: evidence record per host.
+- [ ] **6.5 Default.** With 6.1–6.4 in hand, decide whether the question stays
+      on by default or becomes opt-in (`AGENT_CONFIG_NO_SWITCH_QUESTION=1` is
+      the off switch today).
+      verify: owner decision recorded under Decisions.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
