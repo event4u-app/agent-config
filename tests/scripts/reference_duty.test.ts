@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { dutyStates, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
+import { dutyStates, scanActDuties, scanDuties } from '../../src/scripts/_lib/reference_duty.js';
 import { _concern_matches_tool, _load_yaml, _resolve_concerns } from '../../src/scripts/hooks/dispatch_hook.js';
 import { ledgerFile, MAX_DUTY_KEYS } from '../../src/scripts/hooks/reread_guard_hook.js';
 
@@ -282,5 +282,30 @@ describe('the cap holds on a ledger loaded over it', () => {
         const after = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) as { duty: Record<string, unknown>; duty_overflow?: number };
         expect(Object.keys(after.duty)).toHaveLength(MAX_DUTY_KEYS);
         expect(after.duty_overflow).toBe(10);
+    });
+});
+
+describe('act-time duty: a shell command bound in act-references', () => {
+    function withCommitRule(root: string): void {
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
+    }
+    it('names the bound rule\'s references for a chained git commit, and nothing for an unbound command', () => {
+        const root = workspace();
+        withCommitRule(root);
+        expect(scanActDuties('git add a && git commit -m x', root).duties).toEqual([{ rule: 'commit-policy', reference: REF, resolved: RESOLVED }]);
+        expect(scanActDuties('git status', root).duties).toEqual([]);
+    });
+    it('counts a bound rule whose file is missing as an error', () => {
+        const root = workspace();
+        expect(scanActDuties('git commit -m x', root).errors).toHaveLength(1);
+    });
+    it('records the duty at a Bash pre_tool_use, observe-only, without the raw command', () => {
+        const root = workspace();
+        withCommitRule(root);
+        run(root, { tool_name: 'Bash', tool_input: { command: 'git add a && git commit -m "secret-ish message"' } });
+        const d = duty(root);
+        expect(d[`commit-policy::${REF}`]).toMatchObject({ state: 'required-pending', pending: 1 });
+        const key = crypto.createHash('sha256').update('s1').digest('hex');
+        expect(fs.readFileSync(ledgerFile(root, key), 'utf8')).not.toContain('secret-ish');
     });
 });
