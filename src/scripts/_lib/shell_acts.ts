@@ -42,10 +42,6 @@
  */
 
 const PREFIX_WORDS = new Set(['sudo', 'command', 'time', 'exec', 'nohup']);
-// After these an assignment is still a prefix: `time` is a keyword, and sudo(8)
-// applies `VAR=value` arguments. After `command`, `exec` and `nohup` it is the
-// name of the command run, so `nohup X=1 git push` does not run git.
-const ASSIGN_AFTER = new Set(['time', 'sudo']);
 // Reserved words that open a command list or a pipeline; unquoted and leading,
 // the command proper starts after them (`if true; then git push; fi`, `! git push`).
 const LEADING_RESERVED = new Set(['!', '{', 'if', 'then', 'else', 'elif', 'do', 'while', 'until']);
@@ -286,11 +282,26 @@ export function simpleCommands(command: string): string[][] {
 }
 
 function normalise({ words, piped, redirectAt }: Simple): string[] {
+    // The grammar prefix of a command, as bash 5 reads it: any sequence of leading
+    // reserved words (`!`, `{`, `if`, …) and the `time` keyword with its `-p`. Each
+    // counts only unquoted and before any redirection (`>f ! git push` runs `!`).
+    // `time` is the keyword at the start of a pipeline or after another prefix
+    // token; after `|` alone it is time(1). Bash 3.2 reads fewer of these.
     let k = 0;
-    // A reserved word counts only before any redirection: `>f ! git push` runs `!`.
-    while (k < words.length && !(words[k] as Word).quoted && (redirectAt === -1 || redirectAt > k) && LEADING_RESERVED.has((words[k] as Word).text)) k += 1;
-    const start = k;
-    const opener = start === 0 ? null : (words[start - 1] as Word).text;
+    let prefixed = false;
+    const grammar = (j: number): boolean => {
+        const w = words[j];
+        return w !== undefined && !w.quoted && (redirectAt === -1 || redirectAt > j);
+    };
+    while (grammar(k)) {
+        const w = (words[k] as Word).text;
+        if (LEADING_RESERVED.has(w)) k += 1;
+        else if (w === 'time' && (prefixed || !piped)) {
+            k += 1;
+            if (grammar(k) && (words[k] as Word).text === '-p') k += 1;
+        } else break;
+        prefixed = true;
+    }
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
     let assignOk = true;
     // After `exec`, `nohup`, `sudo` or time(1) the next word is looked up as an
@@ -302,30 +313,19 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
         const w = words[k] as Word;
         if (w.assign && assignOk) k += 1;
         else if (PREFIX_WORDS.has(w.text) && !(external && w.text === 'exec')) {
-            // `time` is the keyword only unquoted, first in its command after any
-            // reserved-word opener (no other word or redirection before it) and at
-            // the start of a pipeline;
-            // a quoted `"time"`, or one after `|`, is the time(1) program, after
-            // which `X=1` is the command name.
-            const keyword =
-                w.text === 'time' &&
-                k === start &&
-                !w.quoted &&
-                (redirectAt === -1 || redirectAt > k) &&
-                // After `|` only an opener (`| { time …; }`) starts a fresh pipeline.
-                // Bash 5 keeps the keyword after every opener; bash 3.2 runs time(1)
-                // after `!`, `if`, `elif`, `while` and `until`, which this follows not.
-                (opener !== null || !piped);
-            assignOk = ASSIGN_AFTER.has(w.text) && (w.text !== 'time' || keyword);
-            external = w.text === 'exec' || w.text === 'nohup' || w.text === 'sudo' || (w.text === 'time' && !keyword);
+            // Every keyword `time` was taken above; one here is time(1), after which
+            // `X=1` is the command name.
+            // sudo(8) applies `VAR=value` arguments; after `command`, `exec`, `nohup`
+            // and time(1) an assignment is the name of the command run.
+            assignOk = w.text === 'sudo';
+            external = w.text === 'exec' || w.text === 'nohup' || w.text === 'sudo' || w.text === 'time';
             k += 1;
             const next = words[k]?.text;
             // `command -v` / `-V` only describe the command; they run nothing.
             if (w.text === 'command' && (next === '-v' || next === '-V')) return [];
-            // `-p` belongs to the keyword and to time(1) alike (POSIX).
+            // Options of time(1), `command` and `nohup` are arguments: a redirection
+            // before them changes nothing.
             if ((w.text === 'time' && next === '-p') || ((w.text === 'command' || w.text === 'nohup') && next === '--')) k += 1;
-            // The keyword may negate what it times: `time ! X=1 git push`.
-            if (keyword && words[k]?.text === '!' && !(words[k] as Word).quoted) k += 1;
         } else break;
     }
     const t = words.slice(k).map((w) => w.text);

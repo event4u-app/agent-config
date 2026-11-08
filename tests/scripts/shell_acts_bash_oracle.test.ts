@@ -152,6 +152,24 @@ const CASES: Array<[string, string[]]> = [
     ['X=1 ! git push', []],
     ['! >/dev/null git push', [P]],
     ['{ >/dev/null git push; }', [P]],
+    // Round-16 counterexample and its pattern: after the `time` keyword, `-p` and
+    // `!` are grammar, broken by a redirection before them; options of time(1),
+    // `command` and `nohup` are arguments, where a redirection changes nothing.
+    ['time >/dev/null ! git push', []],
+    ['time ! >/dev/null git push', [P]],
+    ['time >/dev/null -p git push', []],
+    ['time -p >/dev/null ! git push', []],
+    ['time -p ! >/dev/null git push', [P]],
+    ['echo a | time >/dev/null -p git push', [P]],
+    ['command >/dev/null -v git push', []],
+    ['nohup >/dev/null -- git push', [P]],
+    // Found by the generated test: bash 5 reads any sequence of `time`, `time -p`
+    // and `!` as the grammar prefix; bash 3.2 reads none of these chains.
+    ['time ! time X=1 git push', [P]],
+    ['time time X=1 git push', [P]],
+    ['time -p time X=1 git push', [P]],
+    ['! time ! X=1 git push', [P]],
+    ['time ! ! X=1 git push', [P]],
     ['git push || git commit -m x', [C, P]],
     ['true && { git push || gh pr create -t t; }', [G, P]],
     ['git push && git commit -m x || gh pr create -t t', [C, G, P]],
@@ -192,6 +210,11 @@ const BASH3: Record<string, string[]> = {
     'if time X=1 git push; then :; fi': [],
     'while time X=1 git push; do break; done': [],
     '{ ! time X=1 git push; }': [],
+    'time ! time X=1 git push': [],
+    'time time X=1 git push': [],
+    'time -p time X=1 git push': [],
+    '! time ! X=1 git push': [],
+    'time ! ! X=1 git push': [],
 };
 
 describe.skipIf(!hasBash)('the recogniser agrees with bash', () => {

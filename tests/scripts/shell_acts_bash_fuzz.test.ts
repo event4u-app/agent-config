@@ -70,7 +70,9 @@ function simple(r: () => number): string {
     // A comment would swallow the closing `}` / `fi`, so commented forms stay bare.
     if (s.includes('#')) return lead;
     // A redirection before `!` makes it an ordinary word (`>out ! git push` runs `!`).
-    return pick(r, [lead, lead, lead, `! ${s}`, `${pick(r, REDIRECTS)} ! ${s}`, `{ ${s}; }`, `if cond; then ${s}; fi`, `if cond; then ${s}; else ${act(r)}; fi`]);
+    // Redirections on either side of `!`, after `time` and `time -p` too.
+    const t = pick(r, ['', '', 'time ', 'time -p ']);
+    return pick(r, [lead, lead, lead, `${t}! ${s}`, `${t}${pick(r, REDIRECTS)} ! ${s}`, `${t}! ${pick(r, REDIRECTS)} ${s}`, `time ${pick(r, REDIRECTS)} -p ${s}`, `{ ${s}; }`, `if cond; then ${s}; fi`, `if cond; then ${s}; else ${act(r)}; fi`]);
 }
 
 /**
