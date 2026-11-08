@@ -55,10 +55,13 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
       `routing-prompt-v2-20261108.md`, 0/9 and 0/6). AI council 2026-11-08, both
       seats (d): keep this open and the gate visible, take no unit out of the floor,
       cause first (1.3a), then one pre-registered mechanism (1.3b).
-- [ ] **1.3a Establish the cause.** Run the v2 series
+- [x] **1.3a Establish the cause.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run the v2 series
       (`internal/bench/trigger-fixtures/series-v2/cases.json`) on host 2.1.311 and
       on today's host, same catalogue and fixtures, three runs per case.
       verify: the artefact names both host versions and classifies each.
+      > note: done 2026-11-08 — not the host: 2.1.311 and 2.1.316 both 0/9 and 0/6,
+      same direct-handling traces (`routing-host-cause-13a-20261108.md`). Left open:
+      today's catalogue vs the original prompts; 1.3b chooses with that unresolved.
 - [ ] **1.3b Pilot one mechanism, pre-registered.** One delivery mechanism for the
       two skills' stated value, chosen after 1.3a, measured on held-out requests
       with the assessment's rubric, rollback stated before the run.

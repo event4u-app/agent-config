@@ -5,7 +5,7 @@ review_by: 2027-01-15
 
 # Stub: a discipline profile that changes what loads
 
-> **Arrivals:** 1 — latest `inbox-2026-11-na` (2026-11-06): the owner's "developer
+> **Arrivals:** 2 — latest `inbox-2026-11-zc` (2026-11-08): a plan in that round assumes the discipline profile already selects what loads; at `ea21dd17a4` `resolve_discipline_profile` still has no caller, so the claim is diverged and this stub still owns the wiring. Earlier: 1 — `inbox-2026-11-na` (2026-11-06): the owner's "developer
 > model / PO model with fewer rules" idea is this stub's `essential` profile, the only
 > significant positive profile measurement on record. The round recommends the first
 > scope (make it select) with the default left at `full` until the non-trap

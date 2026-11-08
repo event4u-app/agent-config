@@ -13,6 +13,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
 | road-to-a-session-start-under-the-host-limit | active | ready | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
+| road-to-denies-that-name-no-bypass | active | ready | A refusal must not hand the agent its own way around. |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
@@ -48,6 +49,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-sealed-lineage | later | later | Sealed. |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
+| road-to-a-start-as-light-as-the-field | later | later | A consumer session should start with a footprint comparable to the external reference harnesses: about 40k characters for the full … |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-stop-that-holds-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
