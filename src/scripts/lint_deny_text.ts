@@ -37,17 +37,20 @@
  * run. Without that the gate read `${KILL_SWITCH}=1` literally and certified a
  * deny that printed its own kill switch (round inbox-2026-11-zc). Every value a
  * name is given anywhere is kept, constants built from constants resolve to a
- * fixed point, and every combination is checked, so
+ * fixed point, type assertions are seen through, and every combination is
+ * checked, so
  * shadowing cannot hide a switch; escapes, line continuations and an escaped
  * `\${` are the parser's own cooked text. A message with more variants than
- * the gate enumerates, or nested deeper than it evaluates, fails rather than
- * passes. A deny may also not name the
+ * the gate enumerates, nested deeper than it evaluates, or using a `const`
+ * whose initializer is fixed at author time yet not evaluable here (a
+ * destructuring pattern over literals, say), fails rather than passes. A deny may also not name the
  * hook manifest: telling the refused agent where its own entry lives is a
  * bypass too, so any reference is refused.
  *
  * WHAT IT DOES NOT SEE, so nobody reads more into a green than is there:
- * a message assembled at runtime from non-literal parts (a call, a property,
- * an imported value or a `let`), a message in a module
+ * text a message takes from a value not fixed at author time (a call, a
+ * property read, an imported value, a `let`, a parameter, or a `const` built
+ * from any of these), which the gate keeps as a hole, a message in a module
  * the concern imports, and a kill switch named in a way none of the patterns
  * matches. This is a pattern gate over parsed source, not a proof about emitted
  * bytes.
@@ -155,8 +158,14 @@ export const MAX_VARIANTS = 4096;
 export function stringConstants(sf: ts.SourceFile): Map<string, string[]> {
     // To a fixed point, so a chain of constants of any length resolves. Each pass
     // can only add values, so it settles within one pass per declaration.
+    let declarators = 0;
+    const count = (node: ts.Node): void => {
+        if (ts.isVariableDeclaration(node)) declarators += 1;
+        ts.forEachChild(node, count);
+    };
+    count(sf);
     let known = new Map<string, string[]>();
-    for (let pass = 0; pass <= sf.statements.length + 64; pass += 1) {
+    for (let pass = 0; pass <= declarators + 1; pass += 1) {
         const next = collectConstants(sf, known);
         if (sameConstants(known, next)) return next;
         known = next;
@@ -181,23 +190,69 @@ function collectConstants(sf: ts.SourceFile, known: ReadonlyMap<string, readonly
             (node.flags & ts.NodeFlags.Const) !== 0
         ) {
             for (const decl of node.declarations) {
-                if (!ts.isIdentifier(decl.name) || decl.initializer === undefined) continue;
-                const values = evaluate(decl.initializer, known, 0);
-                const name = decl.name.text;
-                if (values === null) {
-                    // Too large to enumerate: recorded empty, which makes any
-                    // message that uses it unresolvable rather than certified.
-                    out.set(name, out.get(name) ?? []);
+                if (decl.initializer === undefined) continue;
+                // A const whose initializer carries literal text but does not
+                // evaluate (a destructuring pattern, an unsupported form, a
+                // too-large product) is recorded EMPTY: a message using it is
+                // then unresolvable, never certified. A const with no literal
+                // text at all is runtime assembly and stays a hole.
+                const literal = staticLiteralInit(decl.initializer, known);
+                if (!ts.isIdentifier(decl.name)) {
+                    if (literal) for (const name of boundNames(decl.name)) out.set(name, out.get(name) ?? []);
                     continue;
                 }
-                if (values.some((v) => v.includes('\u0000HOLE'))) continue;
-                out.set(name, [...new Set([...(out.get(name) ?? []), ...values])]);
+                const name = decl.name.text;
+                const values = evaluate(decl.initializer, known, 0);
+                if (values === null || values.some((v) => v.includes('\u0000HOLE'))) {
+                    if (values === null || literal) out.set(name, out.get(name) ?? []);
+                    continue;
+                }
+                const prior = out.get(name);
+                // An empty entry from another declaration of this name stays empty.
+                out.set(name, prior !== undefined && prior.length === 0 ? [] : [...new Set([...(prior ?? []), ...values])]);
             }
         }
         ts.forEachChild(node, visit);
     };
     visit(sf);
     return out;
+}
+
+/**
+ * Is the initializer fixed at author time — built only from literals, array and
+ * object literals, operators, type assertions and constants already known — and
+ * does it carry string text? Such a value is the author's text however it is
+ * shaped, so one the gate cannot evaluate must not pass. Anything reaching a
+ * call, a property read or an unknown name is runtime assembly.
+ */
+function staticLiteralInit(node: ts.Node, known: ReadonlyMap<string, readonly string[]>): boolean {
+    let text = false;
+    const isStatic = (n: ts.Node): boolean => {
+        if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) {
+            text = true;
+            return true;
+        }
+        if (ts.isNumericLiteral(n) || n.kind === ts.SyntaxKind.TrueKeyword || n.kind === ts.SyntaxKind.FalseKeyword || n.kind === ts.SyntaxKind.NullKeyword) return true;
+        if (ts.isIdentifier(n)) return known.has(n.text);
+        if (
+            ts.isTemplateExpression(n) || ts.isTemplateSpan(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n) ||
+            ts.isArrayLiteralExpression(n) || ts.isObjectLiteralExpression(n) || ts.isPropertyAssignment(n) ||
+            ts.isParenthesizedExpression(n) || ts.isAsExpression(n) || ts.isSatisfiesExpression(n) ||
+            ts.isTypeAssertionExpression(n) || ts.isNonNullExpression(n) || ts.isBinaryExpression(n) ||
+            ts.isConditionalExpression(n) || ts.isSpreadElement(n) || ts.isTypeNode(n) || ts.isToken(n)
+        ) {
+            if (ts.isPropertyAssignment(n)) return isStatic(n.initializer);
+            return ts.forEachChild(n, (c) => (isStatic(c) ? undefined : true)) !== true;
+        }
+        return false;
+    };
+    return isStatic(node) && text;
+}
+
+/** Every identifier a binding pattern binds. */
+function boundNames(name: ts.BindingName): string[] {
+    if (ts.isIdentifier(name)) return [name.text];
+    return name.elements.flatMap((el) => (ts.isOmittedExpression(el) ? [] : boundNames(el.name)));
 }
 
 /**
@@ -215,7 +270,15 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
     const hole = (n: ts.Node): string[] => [`\u0000HOLE\${${n.getText()}}`];
     // Past the budget the expression is uncertified, never a silent hole.
     if (depth > 256) return null;
-    if (ts.isParenthesizedExpression(node)) return evaluate(node.expression, constants, depth + 1);
+    if (
+        ts.isParenthesizedExpression(node) ||
+        ts.isAsExpression(node) ||
+        ts.isSatisfiesExpression(node) ||
+        ts.isTypeAssertionExpression(node) ||
+        ts.isNonNullExpression(node)
+    ) {
+        return evaluate(node.expression, constants, depth + 1);
+    }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return [node.text];
     if (ts.isTemplateExpression(node)) {
         let acc: string[] | null = [node.head.text];
@@ -224,6 +287,12 @@ function evaluate(node: ts.Expression, constants: ReadonlyMap<string, readonly s
             acc = join(acc, [span.literal.text]);
         }
         return acc;
+    }
+    if (ts.isConditionalExpression(node)) {
+        const a = evaluate(node.whenTrue, constants, depth + 1);
+        const b = evaluate(node.whenFalse, constants, depth + 1);
+        if (a === null || b === null || a.length + b.length > MAX_VARIANTS) return null;
+        return [...a, ...b];
     }
     if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
         return join(evaluate(node.left, constants, depth + 1), evaluate(node.right, constants, depth + 1));
@@ -261,18 +330,20 @@ function isOutermostString(node: ts.Node): node is ts.Expression {
  * so a template whose own text is bare still counts once its holes fill in.
  * `null` marks an expression with too many variants to certify.
  */
-export function messageTexts(src: string, fileName = 'concern.ts'): Array<string[] | null> {
+export function messageTexts(src: string, fileName = 'concern.ts'): Array<{ variants: string[] | null; at: string }> {
     const sf = ts.createSourceFile(fileName, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const constants = stringConstants(sf);
-    const out: Array<string[] | null> = [];
+    const out: Array<{ variants: string[] | null; at: string }> = [];
     const visit = (node: ts.Node): void => {
         if (isOutermostString(node)) {
             const variants = evaluate(node, constants, 0);
+            const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+            const at = `line ${String(line)}: ${node.getText(sf).replace(/\s+/g, ' ').slice(0, 80)}`;
             if (variants === null) {
-                out.push(null);
+                out.push({ variants: null, at });
             } else {
                 const texts = variants.map((v) => v.replace(/\u0000HOLE/g, ''));
-                if (texts.some((t) => /\s/.test(t))) out.push(texts);
+                if (texts.some((t) => /\s/.test(t))) out.push({ variants: texts, at });
             }
         }
         ts.forEachChild(node, visit);
@@ -284,9 +355,9 @@ export function messageTexts(src: string, fileName = 'concern.ts'): Array<string
 /** Findings for one concern's source text. */
 export function scanSource(concern: string, file: string, src: string): DenyFinding[] {
     const out: DenyFinding[] = [];
-    for (const variants of messageTexts(src, file)) {
+    for (const { variants, at } of messageTexts(src, file)) {
         if (variants === null) {
-            out.push({ concern, file, kind: 'unresolvable', text: '(too many variants)' });
+            out.push({ concern, file, kind: 'unresolvable', text: at });
             continue;
         }
         const text =
@@ -345,7 +416,7 @@ const REASON: Readonly<Record<DenyFinding['kind'], string>> = {
     'export-line': 'carries an `export` line the reader can paste',
     'settings-key': 'names a settings key path',
     'manifest-reference': 'names the hook manifest, the file that switches the guard off',
-    unresolvable: `prints more variants than the gate enumerates (${String(MAX_VARIANTS)}), so it cannot be certified`,
+    unresolvable: 'uses literal text the gate cannot evaluate (too many variants, too deep, or a const it cannot read), so it cannot be certified',
 };
 
 export function main(argv: readonly string[]): number {
@@ -433,8 +504,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 21,
-        minRejectCases: 14,
+        minCases: 25,
+        minRejectCases: 17,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -577,6 +648,32 @@ function selfTest(): number {
                             "process.stderr.write('Blocked: AGENT_CONFIG_' + " + "'' + ".repeat(300) + "'X=1');\n",
                         ),
                     ),
+            },
+            {
+                name: 'a long constant chain inside one function still resolves',
+                expect: 'reject',
+                run: () => {
+                    const chain = Array.from({ length: 101 }, (_, i) => (i === 0 ? "    const A0 = 'AGENT_CONFIG_';" : `    const A${String(i)} = A${String(i - 1)};`));
+                    return run(plant('fn-chain', `function deny() {\n${chain.join('\n')}\n    process.stderr.write(\`Blocked: \${A100}X=1\`);\n}\nvoid deny;\n`));
+                },
+            },
+            {
+                name: 'a type assertion does not hide a constant',
+                expect: 'reject',
+                run: () =>
+                    run(plant('as-const', "const PREFIX = 'AGENT_CONFIG_' as const;\nprocess.stderr.write(`Blocked: ${PREFIX}X=1`);\n")),
+            },
+            {
+                name: 'a destructured literal constant fails rather than passes',
+                expect: 'reject',
+                run: () =>
+                    run(plant('destructure', "const [PREFIX] = ['AGENT_CONFIG_'];\nprocess.stderr.write(`Blocked: ${PREFIX}X=1`);\n")),
+            },
+            {
+                name: 'a hole bound at runtime is not a finding',
+                expect: 'accept',
+                run: () =>
+                    run(plant('runtime-hole', "const [ok, reason] = check(process.argv);\nvoid ok;\nprocess.stderr.write(`BLOCKED — ${reason}`);\n")),
             },
             {
                 name: 'a placeholder naming a non-switch constant passes',
