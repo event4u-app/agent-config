@@ -20,12 +20,8 @@ import { load_agent_settings, project_settings_path, resolve_project_root } from
 import { recentHostMarker } from './_lib/quota_parked.js';
 import { detectEnvironment, type EnvironmentReport } from './_lib/environment_detector.js';
 
-import {
-    BundleTooLarge,
-    MAX_BUNDLE_BYTES,
-    bundle_prompt,
-    bundle_roadmap,
-} from './ai_council/bundler.js';
+import { BundleTooLarge } from './ai_council/bundler.js';
+import { ValueError, build_question } from './ai_council/build_question.js';
 import { select_chairman } from './ai_council/chairman.js';
 import { warnIfRecounciled } from './ai_council/recouncil_guard.js';
 import { resolveEffort, type Effort } from './ai_council/effort.js';
@@ -1036,36 +1032,6 @@ export function _construct_cli_member(
             `(known: ${_pyReprStrList(_pySortedStr(_CLI_PROVIDERS))}).`,
     );
 }
-
-function build_question(opts: {
-    input_path: string;
-    input_mode: string;
-    max_tokens: number;
-    prompt_mode_override?: string | null;
-    max_bundle_bytes?: number | null;
-}): [CouncilQuestion, string] {
-    const { input_path, input_mode, max_tokens } = opts;
-    const cap = opts.max_bundle_bytes ?? MAX_BUNDLE_BYTES;
-    const prompt_mode_override = opts.prompt_mode_override ?? null;
-    let ctx: { mode: string; text: string };
-    let artefact: string;
-    if (input_mode === 'prompt') {
-        const text = fs.readFileSync(input_path, 'utf-8');
-        ctx = bundle_prompt(text, cap);
-        artefact = String(input_path);
-    } else if (input_mode === 'roadmap') {
-        ctx = bundle_roadmap(input_path, cap);
-        artefact = String(input_path);
-    } else {
-        throw new ValueError(
-            `unsupported input mode: ${_pyReprStr(input_mode)} (use prompt | roadmap)`,
-        );
-    }
-    const mode = prompt_mode_override || ctx.mode;
-    return [new CouncilQuestion({ mode, user_prompt: ctx.text, max_tokens }), artefact];
-}
-
-class ValueError extends Error {}
 
 function format_estimate_table(
     members: ExternalAIClient[],

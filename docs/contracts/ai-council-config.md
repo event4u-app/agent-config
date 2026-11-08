@@ -1691,6 +1691,12 @@ as comments and the loader enforces them.
   (gitignored, refreshed weekly by `./scripts-run src/scripts/update_prices`;
   bootstrapped from `scripts/ai_council/_default_prices.py` on first run).
 
+**Bundle ceiling and seat timeout, per run.** The bundler refuses a prompt over
+50 KB (`BundleTooLarge`) and a CLI seat call stops after 300 s. A review whose
+subject cannot be judged in parts raises either for one invocation:
+`--max-bundle-bytes <n>` (the bundle still fails loud above `n`) and
+`--member-timeout <seconds>`. Neither changes a default or any stored setting.
+
 ## Validation rules
 
 A loader call (`scripts/ai_council/config.py:load_council_config()`)

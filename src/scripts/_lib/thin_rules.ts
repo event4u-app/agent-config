@@ -636,6 +636,23 @@ export interface ThinRoots {
     readonly shape?: StubShape;
 }
 
+/** The clause audit's rule list: the rules declared to carry a startup contract. */
+const CONTRACT_AUDIT_REL = path.join('src', 'config', 'startup-contract-clauses.json');
+
+/**
+ * Rules the package declares contract-bearing, read from the clause audit that
+ * ships with it. Empty when the audit is absent, so a tree that predates
+ * contracts keeps its existing stub forms.
+ */
+function declaredContractRules(packageRoot: string): Set<string> {
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(packageRoot, CONTRACT_AUDIT_REL), 'utf-8')) as { rules?: Record<string, unknown> };
+        return new Set(Object.keys(raw.rules ?? {}));
+    } catch {
+        return new Set();
+    }
+}
+
 /** Map {filename: thin_or_full_text} for every rule. Kernel stays full. */
 export function build_thin(
     rules_dir: string = RULES_SOURCE,
@@ -678,6 +695,7 @@ export function build_thin(
     const noTrigger = no_trigger_ids(routerPath);
     const pathOnly = path_only_ids(routerPath);
     const cls = consequenceClass ?? readConsequenceClass(classRoot);
+    const contractBearing = declaredContractRules(classRoot);
     const lawInStub = stubLawIds(cls);
     const wsMap = scope !== null ? rule_workspaces_map(routerPath) : new Map<string, string[]>();
     const out = new Map<string, string>();
@@ -703,7 +721,15 @@ export function build_thin(
             continue;
         }
         const noStub = cls.no_stub[stem] !== undefined;
-        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub;
+        // A rule that should carry a startup contract but has none stays whole:
+        // a law-only or pointer stub would deliver less than the contract the
+        // floor was ratified with. check_startup_contracts refuses the state in
+        // CI; this is what an install does if it ever arrives anyway.
+        const contractMissing = contractBearing.has(stem) && contract === null;
+        if (announce !== null && contractMissing) {
+            announce(`CONTRACT MISSING: ${path.basename(p)} — kept full-bodied, it carries no startup contract`);
+        }
+        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub || contractMissing;
         if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
             announce(`D3: trigger-less auto rule ${path.basename(p)} — kept full-bodied, never thinned`);
         }
