@@ -23,6 +23,18 @@ import { switchRecordPath } from './switch_record_path.js';
 import type { EnvMap } from './user_global_paths.js';
 
 const CALL_TIMEOUT_MS = 5000;
+const HOUR_MS = 3_600_000;
+/** An orphaned record stops polling after this, whatever the request said. */
+const RECORD_MAX_MS = 7 * 24 * HOUR_MS;
+/** Room for an approved request to be carried out after its `expiresAt`, which only bounds an open one. */
+const RECORD_GRACE_MS = 24 * HOUR_MS;
+/** Unanswered calls in a row after which the link rests for this session. */
+const BACKOFF_AFTER = 3;
+/** How long it rests when the next reset is not known; agent-switch's own default request lifetime. */
+const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
+const LOCK_STALE_MS = 2000;
+const LOCK_TRIES = 50;
+const LOCK_WAIT_MS = 5;
 const ID_RE = /^[0-9a-f]{16}$/;
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const TERMINAL = new Set(['done', 'failed', 'declined', 'snoozed', 'expired']);
@@ -48,6 +60,8 @@ export interface SwitchRequest {
     readonly candidates: readonly SwitchCandidate[];
     readonly decision: { readonly kind: string; readonly target: string | null; readonly how: string | null; readonly by: string } | null;
     readonly outcome: { readonly ok: boolean; readonly detail: string | null; readonly resume: string | null } | null;
+    /** Epoch ms of the request's `expiresAt`, or `null` when absent or unreadable. */
+    readonly expires_at: number | null;
 }
 
 function obj(x: unknown): Record<string, unknown> | null {
@@ -103,36 +117,69 @@ function parseSwitchRequest(raw: unknown): SwitchRequest | null {
                 ? { kind, target: isAccount(target) ? target : null, how: HOWS.has(str(d['how']) ?? '') ? str(d['how']) : null, by: str(d['by']) ?? '' }
                 : null,
         outcome: o !== null && typeof o['ok'] === 'boolean' ? { ok: o['ok'], detail: str(o['detail']), resume: str(o['resume']) } : null,
+        expires_at: Number.isFinite(Date.parse(str(r['expiresAt']) ?? '')) ? Date.parse(str(r['expiresAt']) ?? '') : null,
     };
 }
 
-function callJson(argv: string[], opts: LinkOptions): unknown {
-    const r = runAgentSwitch(argv, opts, CALL_TIMEOUT_MS);
-    if (r.status !== 0) return null;
-    try {
-        return JSON.parse(r.stdout);
-    } catch {
-        return null;
+/**
+ * The calls one hook run made, in order: answered ones reset the streak,
+ * unanswered ones extend it. Per the contract a non-zero exit is "absence for
+ * that call", so a refusal counts as unanswered too — a raise happens once per
+ * cycle, so three of them in a row still means the link is not working for
+ * this session.
+ */
+export interface CallTally {
+    reset: boolean;
+    failed: number;
+}
+
+export function newTally(): CallTally {
+    return { reset: false, failed: 0 };
+}
+
+function tallied(tally: CallTally | undefined, answered: boolean): void {
+    if (tally === undefined) return;
+    if (answered) {
+        tally.reset = true;
+        tally.failed = 0;
+    } else {
+        tally.failed++;
     }
+}
+
+function callJson(argv: string[], opts: LinkOptions, tally?: CallTally): unknown {
+    const r = runAgentSwitch(argv, opts, CALL_TIMEOUT_MS);
+    let value: unknown = null;
+    if (r.status === 0) {
+        try {
+            value = JSON.parse(r.stdout);
+        } catch {
+            value = null;
+        }
+    }
+    tallied(tally, value !== null);
+    return value;
 }
 
 /**
  * Raise (or find) the request for this session. `null` when the link is not
  * present, the session cannot be named, or agent-switch has no account to offer.
  */
-export function raiseSwitch(account: string, sessionId: string, opts: LinkOptions = {}): SwitchRequest | null {
+export function raiseSwitch(account: string, sessionId: string, opts: LinkOptions = {}, tally?: CallTally): SwitchRequest | null {
     if (!isAccount(account) || !SESSION_ID_RE.test(sessionId)) return null;
-    if (probeLink(opts).state !== 'present') return null;
+    const probe = probeLink(opts).state;
+    if (probe === 'failed') tallied(tally, false);
+    if (probe !== 'present') return null;
     const session = `${account}/${sessionId}`;
-    const res = obj(callJson(['switch', 'request', '--session', session, '--by', 'ac', '--json'], opts));
+    const res = obj(callJson(['switch', 'request', '--session', session, '--by', 'ac', '--json'], opts, tally));
     const raw = obj(res?.['request']);
     // A reply about another session is never this session's question.
     return raw !== null && raw['session'] === session ? parseSwitchRequest(raw) : null;
 }
 
-export function showSwitch(id: string, opts: LinkOptions = {}): SwitchRequest | null {
+export function showSwitch(id: string, opts: LinkOptions = {}, tally?: CallTally): SwitchRequest | null {
     if (!ID_RE.test(id)) return null;
-    const req = parseSwitchRequest(callJson(['switch', 'show', id, '--json'], opts));
+    const req = parseSwitchRequest(callJson(['switch', 'show', id, '--json'], opts, tally));
     return req?.id === id ? req : null;
 }
 
@@ -142,15 +189,43 @@ export interface SwitchRecord {
     readonly decision_told: boolean;
     /** Set by the Stop path once it left the run checkpoint for an approved move. */
     readonly checkpointed: boolean;
+    /** Set once a terminal outcome was shown; a `done` record outlives that until the Stop path checkpointed it. */
+    readonly outcome_told: boolean;
+    /** Epoch ms after which the record is dropped unread, so an orphaned one stops polling. */
+    readonly expires_at: number;
 }
 
-export function readSwitchRecord(sessionHash: string, stateEnv?: EnvMap | null): SwitchRecord | null {
+/** When a record raised `now` for `req` stops being read. */
+export function recordExpiry(req: Pick<SwitchRequest, 'expires_at'>, now: number): number {
+    const ceiling = now + RECORD_MAX_MS;
+    return req.expires_at === null ? ceiling : Math.min(ceiling, Math.max(req.expires_at, now) + RECORD_GRACE_MS);
+}
+
+function parseRecord(raw: string, mtimeMs: number): SwitchRecord | null {
+    const o = obj(JSON.parse(raw));
+    const id = str(o?.['id']);
+    if (o === null || id === null || !ID_RE.test(id)) return null;
+    // A record written before records carried an expiry lasts as long as the ceiling from its last write.
+    const expires = num(o['expires_at']) ?? mtimeMs + RECORD_MAX_MS;
+    return {
+        id,
+        decision_told: o['decision_told'] === true,
+        checkpointed: o['checkpointed'] === true,
+        outcome_told: o['outcome_told'] === true,
+        expires_at: expires,
+    };
+}
+
+/** The live record, or `null`; an expired one is removed on the way. */
+export function readSwitchRecord(sessionHash: string, stateEnv?: EnvMap | null, now: number = Date.now()): SwitchRecord | null {
+    const file = switchRecordPath(sessionHash, stateEnv);
     try {
-        const o = obj(JSON.parse(fs.readFileSync(switchRecordPath(sessionHash, stateEnv), 'utf-8')));
-        const id = str(o?.['id']);
-        return o !== null && id !== null && ID_RE.test(id)
-            ? { id, decision_told: o['decision_told'] === true, checkpointed: o['checkpointed'] === true }
-            : null;
+        const rec = parseRecord(fs.readFileSync(file, 'utf-8'), fs.statSync(file).mtimeMs);
+        if (rec !== null && now >= rec.expires_at) {
+            updateSwitchRecord(sessionHash, (cur) => (cur?.id === rec.id ? null : cur), stateEnv);
+            return null;
+        }
+        return rec;
     } catch {
         return null;
     }
@@ -168,6 +243,128 @@ export function writeSwitchRecord(sessionHash: string, rec: SwitchRecord | null,
     } catch {
         // best-effort: a lost record shows a line twice at worst, never a wrong one
     }
+}
+
+function pause(ms: number): void {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/** Take `<file>.lock`; a holder older than LOCK_STALE_MS is taken to have died. */
+function lock(file: string): string | null {
+    const held = `${file}.lock`;
+    for (let i = 0; i < LOCK_TRIES; i++) {
+        try {
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.closeSync(fs.openSync(held, 'wx', 0o600));
+            return held;
+        } catch {
+            try {
+                if (Date.now() - fs.statSync(held).mtimeMs > LOCK_STALE_MS) fs.rmSync(held, { force: true });
+            } catch {
+                // released meanwhile
+            }
+            pause(LOCK_WAIT_MS);
+        }
+    }
+    return null;
+}
+
+/**
+ * Read-modify-write of the record under a lock, applied to what is on disk
+ * now rather than to what the caller read earlier: the prompt relay and the
+ * Stop checkpoint can run at once, and each sets only its own flag on the
+ * current record, so neither undoes the other's and a deleted record stays
+ * deleted (`fn` gets `null` and returns it). Returns whether `fn` was applied.
+ */
+export function updateSwitchRecord(
+    sessionHash: string,
+    fn: (cur: SwitchRecord | null) => SwitchRecord | null,
+    stateEnv?: EnvMap | null,
+): boolean {
+    const file = switchRecordPath(sessionHash, stateEnv);
+    const held = lock(file);
+    if (held === null) return false;
+    try {
+        let cur: SwitchRecord | null = null;
+        try {
+            cur = parseRecord(fs.readFileSync(file, 'utf-8'), fs.statSync(file).mtimeMs);
+        } catch {
+            cur = null;
+        }
+        const next = fn(cur);
+        if (next !== cur) writeSwitchRecord(sessionHash, next, stateEnv);
+        return true;
+    } finally {
+        fs.rmSync(held, { force: true });
+    }
+}
+
+interface Backoff {
+    readonly fails: number;
+    readonly until: number | null;
+    readonly told: boolean;
+}
+
+function backoffPath(sessionHash: string, stateEnv?: EnvMap | null): string {
+    return switchRecordPath(sessionHash, stateEnv).replace(/\.json$/, '.backoff.json');
+}
+
+function readBackoff(sessionHash: string, stateEnv: EnvMap | null | undefined, now: number): Backoff {
+    try {
+        const o = obj(JSON.parse(fs.readFileSync(backoffPath(sessionHash, stateEnv), 'utf-8')));
+        const until = num(o?.['until']);
+        // A rest that ran out starts a fresh count.
+        if (until !== null && now >= until) return { fails: 0, until: null, told: false };
+        return { fails: num(o?.['fails']) ?? 0, until, told: o?.['told'] === true };
+    } catch {
+        return { fails: 0, until: null, told: false };
+    }
+}
+
+function writeBackoff(sessionHash: string, b: Backoff, stateEnv?: EnvMap | null): void {
+    const file = backoffPath(sessionHash, stateEnv);
+    try {
+        if (b.fails === 0 && b.until === null) {
+            fs.rmSync(file, { force: true });
+            return;
+        }
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        write_atomic(file, JSON.stringify(b));
+    } catch {
+        // best-effort: a lost count delays the rest by one call at worst
+    }
+}
+
+/** Whether the link rests for this session (7.1). */
+export function linkResting(sessionHash: string, stateEnv?: EnvMap | null, now: number = Date.now()): boolean {
+    return readBackoff(sessionHash, stateEnv, now).until !== null;
+}
+
+/**
+ * Fold one hook run's calls into the streak; at BACKOFF_AFTER the link rests
+ * until `until` (the next reset, when known). A lost increment between two
+ * hooks running at once costs one extra call, so this file takes no lock.
+ */
+export function noteCalls(sessionHash: string, tally: CallTally, until: number | null, stateEnv?: EnvMap | null, now: number = Date.now()): void {
+    if (!tally.reset && tally.failed === 0) return;
+    const prev = readBackoff(sessionHash, stateEnv, now);
+    if (prev.until !== null) return;
+    const fails = (tally.reset ? 0 : prev.fails) + tally.failed;
+    const rests = fails >= BACKOFF_AFTER;
+    writeBackoff(
+        sessionHash,
+        { fails, until: rests ? (until !== null && until > now ? until : now + BACKOFF_FALLBACK_MS) : null, told: false },
+        stateEnv,
+    );
+}
+
+/** The one line saying the link rests, or `null` once it was said. */
+export function restingLine(sessionHash: string, stateEnv?: EnvMap | null, now: number = Date.now()): string | null {
+    const b = readBackoff(sessionHash, stateEnv, now);
+    if (b.until === null || b.told) return null;
+    writeBackoff(sessionHash, { ...b, told: true }, stateEnv);
+    const at = new Date(b.until).toISOString().slice(11, 16);
+    return `AC: agent-switch did not answer ${BACKOFF_AFTER} times in a row; AC stops asking it about this session until ${at} UTC.`;
 }
 
 /** The candidates a notice or the model is shown: never more than three. */
@@ -208,6 +405,7 @@ const HOW_TEXT: Record<string, string> = { 'after-turn': 'after this turn', now:
 export function relayLine(req: SwitchRequest, rec: SwitchRecord): string | null {
     const d = req.decision;
     if (req.state === 'done' || req.state === 'failed') {
+        if (rec.outcome_told) return null;
         const to = d?.target ?? 'the other account';
         // A move is reported only on a positive outcome; `done` that says otherwise, or nothing, is not one.
         if (req.state === 'done' && req.outcome?.ok === true) {
@@ -234,8 +432,8 @@ export function isTerminal(req: SwitchRequest): boolean {
  * The state of request `id` and nothing else — all the Stop path needs. It ships
  * in the dispatch bundle, so it reads no candidate, decision or text at all.
  */
-function stateOf(id: string, opts: LinkOptions): string | null {
-    const r = obj(callJson(['switch', 'show', id, '--json'], opts));
+function stateOf(id: string, opts: LinkOptions, tally: CallTally): string | null {
+    const r = obj(callJson(['switch', 'show', id, '--json'], opts, tally));
     return r !== null && r['v'] === 1 && r['id'] === id && typeof r['state'] === 'string' ? r['state'] : null;
 }
 
@@ -244,28 +442,52 @@ export function switchQuestionOff(env: NodeJS.ProcessEnv): boolean {
     return env['AGENT_CONFIG_NO_SWITCH_QUESTION'] === '1' || env['AGENT_CONFIG_NO_QUOTA_NOTICE'] === '1';
 }
 
+/** States the Stop path leaves a checkpoint for. */
+const CHECKPOINT_STATES = new Set(['approved', 'executing', 'done']);
+
+/**
+ * Whether a prompt that just read `req` may forget the record. A `done` move
+ * whose checkpoint is still owed is kept for the Stop path (7.3): a move with
+ * `how: now` finishes inside the turn, so the prompt can see it terminal first.
+ */
+export function relayForgets(req: SwitchRequest, cur: SwitchRecord): boolean {
+    return isTerminal(req) && !(req.state === 'done' && !cur.checkpointed);
+}
+
 /**
  * The Stop path's half (4.4): when this session's request has been approved —
  * in agent-switch or here — and no checkpoint was left for it yet, call `write`
- * once. Best effort: nothing here holds agent-switch back, and a move with
- * `how: now` can run before this Stop. `write` reports whether a checkpoint was
- * written; one that was not is tried again on the next Stop. Returns whether
- * one was written.
+ * once. A move that already finished still gets one (7.3): the run checkpoint
+ * is the newest derived state of the run, read by whichever session resumes it,
+ * and the work done since the last one would otherwise be missing from it.
+ * Best effort: nothing here holds agent-switch back. `write` reports whether a
+ * checkpoint was written; one that was not is tried again on the next Stop.
+ * Returns whether one was written.
  */
-
 export function checkpointBeforeMove(
     sessionHash: string,
     write: () => boolean,
     stateEnv?: EnvMap | null,
     opts: LinkOptions = {},
     env: NodeJS.ProcessEnv = process.env,
+    now: number = Date.now(),
 ): boolean {
     if (switchQuestionOff(env)) return false;
-    const rec = readSwitchRecord(sessionHash, stateEnv);
-    if (rec === null || rec.checkpointed) return false;
-    const state = stateOf(rec.id, opts);
-    if (state !== 'approved' && state !== 'executing') return false;
+    const rec = readSwitchRecord(sessionHash, stateEnv, now);
+    if (rec === null || rec.checkpointed || linkResting(sessionHash, stateEnv, now)) return false;
+    const tally = newTally();
+    const state = stateOf(rec.id, opts, tally);
+    noteCalls(sessionHash, tally, null, stateEnv, now);
+    if (state === null || !CHECKPOINT_STATES.has(state)) return false;
     if (!write()) return false;
-    writeSwitchRecord(sessionHash, { ...rec, checkpointed: true }, stateEnv);
+    updateSwitchRecord(
+        sessionHash,
+        (cur) => {
+            if (cur?.id !== rec.id) return cur;
+            // The outcome was already shown, so nothing is left to tell or to write.
+            return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true };
+        },
+        stateEnv,
+    );
     return true;
 }
