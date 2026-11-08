@@ -1,34 +1,41 @@
 /**
- * Promote the claude rule layer after proof, never at install
- * (road-to-a-setup-that-decides-itself step 3.3).
+ * Promote the claude rule layer in a session, on proof
+ * (road-to-a-setup-that-decides-itself step 3.3), and demote it on contrary proof.
  *
- * An install writes the full layer, exactly as before. A LATER session whose
- * evidence satisfies the layer-form decision thins it for the sessions after
- * it: the `layer-promote` concern calls {@link sessionLayerStep} on
+ * THE INSTALLER IS THE DEFAULT WRITER OF THE REDUCED LAYER. Since step 3.2 of
+ * `road-to-a-session-start-under-the-host-limit`, install and upgrade write the
+ * thinned form themselves whenever the carrier probe passes and no
+ * `install --full` pin is set (`installerThinsHost`, `prepareClaudeCarrier`).
+ * This module is the second route: a LATER session whose evidence satisfies the
+ * layer-form decision thins a layer the install left full, for the sessions
+ * after it. The `layer-promote` concern calls {@link sessionLayerStep} on
  * `session_start`. Nothing here thins the session that is running — its rules
  * are already loaded — which is also why a promotion can never change what the
  * session that took the decision reads.
  *
- * OFF UNTIL STEP 5.3. `src/config/layer-form-promotion.json` ships
- * `enabled: false`, and an unreadable switch reads as off. Step 5.3 flips it on
- * a non-inferior pre-registered comparison and cites the result there; until
- * then the decision still runs in `doctor` as a shadow and nothing on disk
- * moves. The switch is package-owned and shipped, never a settings key.
+ * ENROLLED MACHINES ONLY. The session route runs only where `install --enrol`
+ * wrote its receipt field. The shipped switch that used to open it for everyone
+ * (`src/config/layer-form-promotion.json`, off until a pre-registered benchmark)
+ * is gone: step 3.3 of the roadmap above replaces that benchmark gate with the
+ * session-start size budget (`check_session_start_budget`) and the contract
+ * tests (`check_startup_contracts`), and the benchmark becomes a release-time
+ * non-inferiority check over the contract form. The switch had only ever read
+ * `false`, so dropping it changes no machine's behaviour.
  *
- * DEMOTION RUNS WHATEVER THE SWITCH SAYS. A thinned layer whose arrival record —
+ * DEMOTION RUNS ON EVERY MACHINE. A thinned layer whose arrival record —
  * taken after the promotion — shows a standing law missing is restored from
  * the staged snapshot and the machine is demoted, as a dead carrier demotes it
  * in the shell branch of `claude_settings_hooks`. Only files carrying the
  * package stamp are overwritten, missing ones are added, none is removed.
- * Restoring is the safe direction, so no switch may stand in front of it.
+ * Restoring is the safe direction, so no enrolment may stand in front of it.
  *
  * THE OWNERSHIP LEDGER FOLLOWS THE BYTES. The installer decides whether a file
  * was edited by comparing it with the digest it recorded. A layer rewritten
  * after the install would read as edited everywhere, and the next install would
  * preserve every stub as a user modification. Each file this module rewrites
  * has its recorded digest moved to the new bytes, so the next install sees
- * its own file and writes the full layer again — "a fresh install writes the
- * full layer" stays true after a promotion. A file whose bytes already
+ * its own file, writes the full layer again and then runs its own thin pass —
+ * the install decides the form again after a promotion. A file whose bytes already
  * differed from the record before the pass is a user edit and is left alone.
  *
  * LATENCY. The budget is the shipped `any_hook_event` p95 of
@@ -46,8 +53,9 @@ import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLin
 import { decideLayerForm, gatherShippedEvidence, ruleForm, type LayerFormDecision, type NeverThinned } from '../scripts/_lib/layer_form_decision.js';
 import { readMachineEvidence, withMachineEvidence } from '../scripts/_lib/layer_form_evidence.js';
 import { readConsequenceClass } from '../scripts/_lib/rule_consequence_class.js';
+import { readStartupContract } from '../scripts/_lib/rule_law_section.js';
 import { readEnrolment } from './userPin.js';
-import { thinInstalledRuleLayer } from './installThinLayer.js';
+import { RULE_BODIES_INDEX, thinInstalledRuleLayer } from './installThinLayer.js';
 import {
     CLAUDE_LAYER_DIRNAME,
     DEMOTED_MARKER,
@@ -59,7 +67,6 @@ import {
     runtimeRootFor,
 } from './stagedRuntime.js';
 
-export const PROMOTION_SWITCH_REL = path.join('src', 'config', 'layer-form-promotion.json');
 export const PROMOTION_RECORD = 'promotion.json';
 /**
  * The promotion lock: created exclusively before the thin pass, removed after
@@ -122,11 +129,6 @@ function readJson(file: string): Record<string, unknown> | null {
     } catch {
         return null;
     }
-}
-
-/** `true` only when the shipped switch says exactly `enabled: true`. */
-export function promotionEnabled(packageRoot: string): boolean {
-    return readJson(path.join(packageRoot, PROMOTION_SWITCH_REL))?.['enabled'] === true;
 }
 
 export function readPromotionRecord(runtimeRoot: string): PromotionRecord | null {
@@ -242,19 +244,36 @@ export function neverThinned(packageRoot: string): NeverThinned {
     } catch {
         // No bodies to read a tier from: the thin pass reads the same directory and finds nothing either.
     }
+    // A rule carrying a startup contract leaves the set: its stub carries the
+    // contract, which is the session-start form the contract was written to be
+    // (road-to-a-session-start-under-the-host-limit 3.2).
+    const contracted = new Set<string>();
     for (const name of names) {
         const text = fs.readFileSync(path.join(dir, name), 'utf8');
         const end = text.indexOf('\n---', 3);
+        if (readStartupContract(dir, name.slice(0, -3)) !== null) contracted.add(name.slice(0, -3));
         if (text.startsWith('---') && end > 0 && /^tier:\s*["']?safety-floor["']?\s*$/m.test(text.slice(0, end))) {
             safetyFloor.add(name.slice(0, -3));
         }
     }
-    return { consequenceClass: new Set(Object.keys(readConsequenceClass(packageRoot).members)), safetyFloor };
+    const consequenceClass = new Set(Object.keys(readConsequenceClass(packageRoot).members).filter((id) => !contracted.has(id)));
+    return { consequenceClass, safetyFloor: new Set([...safetyFloor].filter((id) => !contracted.has(id))) };
+}
+
+/**
+ * {@link neverThinned} as one id set — what the installer's thin pass keeps
+ * whole (`road-to-a-session-start-under-the-host-limit` 3.2), so an install and
+ * a session promotion keep the same rules whole.
+ */
+export function neverThinnedIds(packageRoot: string): Set<string> {
+    const never = neverThinned(packageRoot);
+    return new Set([...never.consequenceClass, ...never.safetyFloor]);
 }
 
 /**
  * Restore the staged full layer into `rulesDir`: overwrite only stamped files,
- * add missing ones, remove none — the shell branch's rule. Returns the files
+ * add missing ones, remove none — the shell branch's rule — except the
+ * package's own bodies index, which a full layer has no stub to need. Returns the files
  * written, or `null` when the snapshot is missing.
  */
 export function restoreStagedLayer(packageRoot: string, rulesDir: string): string[] | null {
@@ -273,6 +292,15 @@ export function restoreStagedLayer(packageRoot: string, rulesDir: string): strin
         fs.copyFileSync(path.join(snapshot, name), tmp);
         fs.renameSync(tmp, target);
         written.push(target);
+    }
+    // A full layer needs no bodies index: drop ours unless the snapshot itself carries one.
+    const index = path.join(rulesDir, RULE_BODIES_INDEX);
+    if (!names.includes(RULE_BODIES_INDEX)) {
+        try {
+            if (fs.readFileSync(index, 'utf8').split(/\r?\n/).includes(PACKAGE_STAMP_LINE)) fs.rmSync(index, { force: true });
+        } catch {
+            // No index on disk.
+        }
     }
     return written;
 }
@@ -367,9 +395,7 @@ export function sessionLayerStep(opts: SessionLayerOptions = {}): SessionLayerOu
             return { action: 'demoted', reason: 'arrival-standing-law-missing' };
         }
         if (state.layer === 'demoted') return { action: 'none', reason: 'demoted' };
-        if (!promotionEnabled(packageRoot) && readEnrolment(runtimeRoot) === null) {
-            return { action: 'none', reason: 'promotion-disabled' };
-        }
+        if (readEnrolment(runtimeRoot) === null) return { action: 'none', reason: 'not-enrolled' };
 
         const decision = decideClaudeLayer(packageRoot, env);
         if (decision.form !== 'thinned') return { action: 'none', reason: decision.reason };

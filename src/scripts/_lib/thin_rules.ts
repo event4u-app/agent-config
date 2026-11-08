@@ -29,7 +29,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { lawText, ruleBody } from './rule_law_section.js';
+import { lawText, readStartupContract, ruleBody, startupContract } from './rule_law_section.js';
 import {
     readConsequenceClass,
     stubLawIds,
@@ -417,9 +417,56 @@ const BODY_LINK_PREFIX = '../../dist/agent-src/rules/';
  * that will not exist afterwards. That is strictly better than the project-
  * relative prefix, which resolves from an installed layer NEVER, and under
  * `delivery` the hook loads the body and does not follow this link at all.
+ *
+ * IN THE INSTALLED LAYER THIS PREFIX IS DECLARED ONCE. `thinInstalledRuleLayer`
+ * builds its stubs with an empty prefix — `Body: <id>.md` — and writes this
+ * directory into one index file beside them (`RULE_BODIES_INDEX`), so ~90
+ * stubs stop repeating the same ~75-char path at every session start. A reader
+ * resolving a pointer joins a bare one with that directory
+ * (`resolveBodyPointer`). The repository projection keeps its relative prefix.
  */
 export function absoluteBodyLinkPrefix(packageRoot: string): string {
     return `${path.join(path.resolve(packageRoot), 'dist', 'agent-src', 'rules')}${path.sep}`;
+}
+
+/**
+ * How a stub is shaped for the INSTALLED layer (`~/.claude/rules`), as opposed
+ * to this repository's projection, which keeps every default.
+ *
+ * `firesOn: false` drops the `Fires on: …` hint. The installer thins only on a
+ * carrier the probe reached, and there the rule-inject concern matches the
+ * router's triggers itself and delivers the body; the hint repeats the router
+ * to the model at every session start (~4,100 chars over the default layer,
+ * measured 2026-11-07) and buys nothing the concern does not already do. The
+ * description, the marker and the `Body:` pointer stay.
+ *
+ * `contractHeading: false` drops the contract's own `## Startup contract` line;
+ * the stub's `## <Title>` already heads it. The digest is then taken over the
+ * heading-less text; the installed form carries the contract bare.
+ *
+ * `descriptionMax` keeps the description's first sentence, cut at a word
+ * boundary to at most that many characters. Same reason as the hint: on a
+ * reached carrier the concern delivers the body on a trigger, so the
+ * description only has to tell the model what the rule is about when it
+ * decides to load a body itself, and the full text cost ~9,000 chars at every
+ * session start over the default layer (measured 2026-11-07).
+ */
+export interface StubShape {
+    readonly firesOn?: boolean;
+    readonly contractHeading?: boolean;
+    readonly descriptionMax?: number;
+}
+
+/** The shape `thinInstalledRuleLayer` writes. */
+export const INSTALLED_STUB_SHAPE: StubShape = { firesOn: false, contractHeading: false, descriptionMax: 90 };
+
+/** The first sentence of `desc`, cut at a word boundary to at most `max` chars. */
+export function shortDescription(desc: string, max: number): string {
+    const first = (desc.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? desc).trim();
+    if (first.length <= max) return first;
+    const cut = first.slice(0, max - 1);
+    const space = cut.lastIndexOf(' ');
+    return `${(space > 0 ? cut.slice(0, space) : cut).replace(/[\s,;:—-]+$/, '')}…`;
 }
 
 /** Build the minimal progressive-disclosure pointer for a non-kernel rule. */
@@ -427,10 +474,12 @@ export function thin_entry(
     rule_id: string,
     text: string,
     bodyLinkPrefix: string = BODY_LINK_PREFIX,
+    shape: StubShape = {},
 ): string {
     const [fm] = split_frontmatter(text);
-    const desc = _description(fm);
-    const hint = _trigger_hint(fm);
+    const full = _description(fm);
+    const desc = shape.descriptionMax === undefined ? full : shortDescription(full, shape.descriptionMax);
+    const hint = shape.firesOn === false ? '' : _trigger_hint(fm);
     const title = _title(rule_id.replace(/-/g, ' '));
     const fires = hint ? ` Fires on: ${hint}.` : '';
     return (
@@ -492,6 +541,7 @@ export function thin_entry_with_law(
     rule_id: string,
     text: string,
     bodyLinkPrefix: string = BODY_LINK_PREFIX,
+    shape: StubShape = {},
 ): string {
     const law = lawText(ruleBody(text));
     if (law === null) {
@@ -511,11 +561,60 @@ export function thin_entry_with_law(
         );
     }
     return (
-        thin_entry(rule_id, text, bodyLinkPrefix) +
+        thin_entry(rule_id, text, bodyLinkPrefix, shape) +
         `\n${STUB_LAW_OPEN}${lawDigest(law)} -->\n` +
         `${law}\n` +
         `${STUB_LAW_CLOSE}\n`
     );
+}
+
+/** Markers around a stub's startup contract, mirroring {@link STUB_LAW_OPEN}. */
+export const STUB_CONTRACT_OPEN = '<!-- contract sha256 ';
+export const STUB_CONTRACT_CLOSE = '<!-- /contract -->';
+
+/** Characters a startup contract may carry — `check_startup_contracts` holds the same ceiling. */
+export const STARTUP_CONTRACT_MAX_CHARS = 2_000;
+
+/**
+ * A stub that carries the rule's startup contract instead of its law.
+ *
+ * `road-to-a-session-start-under-the-host-limit` D2 (council 2026-10-28,
+ * 2/2) converged on self-contained contracts for the high-consequence and
+ * safety-floor rules, because their full bodies alone exceed the host's limit.
+ * That reverses the earlier rejection of a summarised contract recorded on
+ * {@link thin_entry_with_law}, and it carries the rejection's own condition:
+ * omissions must not read as permission. So the contract is authored in the
+ * source rule, copied here byte for byte with its digest, and every audited
+ * clause of the rule has a witness in it (`src/config/startup-contract-clauses.json`,
+ * checked by `check_startup_contracts`).
+ */
+export function thin_entry_with_contract(
+    rule_id: string,
+    text: string,
+    bodyLinkPrefix: string = BODY_LINK_PREFIX,
+    shape: StubShape = {},
+): string {
+    const contract = startupContract(ruleBody(text));
+    if (contract === null) {
+        throw new StubLawError(rule_id, `${rule_id} has no \`## Startup contract\` section`);
+    }
+    if (contract.length > STARTUP_CONTRACT_MAX_CHARS) {
+        throw new StubLawError(
+            rule_id,
+            `${rule_id}'s startup contract is ${contract.length} chars, over the ${STARTUP_CONTRACT_MAX_CHARS} ceiling`,
+        );
+    }
+    // No description and no `Fires on:` hint: the contract's own **When:** line
+    // states the activation, and repeating it would be paid on every session start.
+    const title = _title(rule_id.replace(/-/g, ' '));
+    const head = `## ${title}\n${THIN_ENTRY_MARKER} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md\n`;
+    if (shape.contractHeading === false) {
+        // The installed form carries the contract bare: no heading and no digest
+        // markers, because nothing reads them there and every byte is paid at each
+        // session start. The source copy is what `check_startup_contracts` verifies.
+        return `${head}${contract.replace(/^#{1,6}[^\n]*\n+/, '')}\n`;
+    }
+    return `${head}\n${STUB_CONTRACT_OPEN}${lawDigest(contract)} -->\n${contract}\n${STUB_CONTRACT_CLOSE}\n`;
 }
 
 /**
@@ -533,6 +632,35 @@ export interface ThinRoots {
     readonly routerPath?: string;
     /** Prefix a stub's `Body:` link is built on — see {@link absoluteBodyLinkPrefix}. */
     readonly bodyLinkPrefix?: string;
+    /** Stub shape; the installed layer passes {@link INSTALLED_STUB_SHAPE}. Default: the projection's. */
+    readonly shape?: StubShape;
+}
+
+/** The clause audit's rule list: the rules declared to carry a startup contract. */
+const CONTRACT_AUDIT_REL = path.join('src', 'config', 'startup-contract-clauses.json');
+
+/**
+ * Rules the package declares contract-bearing, read from the clause audit that
+ * ships with it. `null` when the audit is absent or unreadable — the caller then
+ * fails safe and treats every high-consequence or safety-floor rule as needing a
+ * contract, so a damaged package never thins a floor to less than its full text.
+ */
+function declaredContractRules(packageRoot: string): Set<string> | null {
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(packageRoot, CONTRACT_AUDIT_REL), 'utf-8')) as { rules?: unknown };
+        if (raw.rules === null || typeof raw.rules !== 'object' || Array.isArray(raw.rules)) return null;
+        return new Set(Object.keys(raw.rules));
+    } catch {
+        return null;
+    }
+}
+
+const SAFETY_FLOOR_TIER_RE = /^tier:\s*["']?safety-floor["']?\s*$/m;
+
+/** The frontmatter block of a rule, fences excluded; `''` when it has none. */
+function frontmatterOf(text: string): string {
+    const end = text.indexOf('\n---', 3);
+    return text.startsWith('---') && end > 0 ? text.slice(0, end) : '';
 }
 
 /** Map {filename: thin_or_full_text} for every rule. Kernel stays full. */
@@ -572,10 +700,12 @@ export function build_thin(
         : path.join(roots.packageRoot, 'dist', 'router.json'));
     const classRoot = roots?.packageRoot ?? REPO_ROOT;
     const bodyLinkPrefix = roots?.bodyLinkPrefix ?? BODY_LINK_PREFIX;
+    const shape = roots?.shape ?? {};
     const kernel = kernel_ids(routerPath);
     const noTrigger = no_trigger_ids(routerPath);
     const pathOnly = path_only_ids(routerPath);
     const cls = consequenceClass ?? readConsequenceClass(classRoot);
+    const contractBearing = declaredContractRules(classRoot);
     const lawInStub = stubLawIds(cls);
     const wsMap = scope !== null ? rule_workspaces_map(routerPath) : new Map<string, string[]>();
     const out = new Map<string, string>();
@@ -589,8 +719,36 @@ export function build_thin(
         // copied into a stub, and a stub with no law is exactly the shape the
         // class exists to prevent for these rules — so the safe residue is the
         // full text, not a pointer.
+        // A startup contract outranks every keep-whole reason but the kernel's:
+        // the contract exists precisely so these rules stop costing their whole
+        // body at session start, and its clause witnesses are what make that safe.
+        const contract = kernel.has(stem) ? null : readStartupContract(path.dirname(p), stem);
+        if (contract !== null) {
+            if (announce !== null) {
+                announce(`CONTRACT: ${path.basename(p)} — stub carries its startup contract`);
+            }
+            out.set(path.basename(p), thin_entry_with_contract(stem, contract, bodyLinkPrefix, shape));
+            continue;
+        }
         const noStub = cls.no_stub[stem] !== undefined;
-        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub;
+        // A rule that should carry a startup contract but has none stays whole:
+        // a law-only or pointer stub would deliver less than the contract the
+        // floor was ratified with. check_startup_contracts refuses the state in
+        // CI; this is what an install does if it ever arrives anyway.
+        // Needs a contract when the audit declares it; a safety-floor rule always
+        // does, so an incomplete audit can never thin a floor to a pointer stub.
+        // With an unreadable audit every high-consequence member does too. A
+        // member a readable audit omits keeps the law stub below — the form a
+        // thinned layer gave it before contracts (CI refuses that audit anyway).
+        const safetyFloor = !kernel.has(stem) && SAFETY_FLOOR_TIER_RE.test(frontmatterOf(text));
+        const needsContract =
+            safetyFloor ||
+            (contractBearing !== null ? contractBearing.has(stem) : !kernel.has(stem) && cls.members[stem] !== undefined);
+        const contractMissing = needsContract && contract === null;
+        if (announce !== null && contractMissing) {
+            announce(`CONTRACT MISSING: ${path.basename(p)} — kept full-bodied, it carries no startup contract`);
+        }
+        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub || contractMissing;
         if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
             announce(`D3: trigger-less auto rule ${path.basename(p)} — kept full-bodied, never thinned`);
         }
@@ -610,10 +768,10 @@ export function build_thin(
                     `LAW: high-consequence rule ${path.basename(p)} — stub carries its own law section, byte-copied`,
                 );
             }
-            out.set(path.basename(p), thin_entry_with_law(stem, text, bodyLinkPrefix));
+            out.set(path.basename(p), thin_entry_with_law(stem, text, bodyLinkPrefix, shape));
             continue;
         }
-        out.set(path.basename(p), thin_entry(stem, text, bodyLinkPrefix));
+        out.set(path.basename(p), thin_entry(stem, text, bodyLinkPrefix, shape));
     }
     return out;
 }

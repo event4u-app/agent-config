@@ -116,6 +116,26 @@ describe('redact_low_impact_entry — RedactionResult.summary()', () => {
     it('joins violations with the REFUSED marker', () => {
         const r = redact_low_impact_entry(`${EMAIL} and ${MONEY}`);
         expect(r.summary().startsWith('redaction REFUSED — ')).toBe(true);
-        expect(r.summary()).toContain(`email: '${EMAIL}'`);
+        expect(r.summary()).toContain(`email: <masked, ${EMAIL.length} chars>`);
+    });
+
+    // low-impact-corpus-privacy-floor: the refusal names the category and never
+    // the matched value — for every class, not only secrets and PII.
+    it.each([
+        ['secret', `leaked ${SK} here`, SK.slice(0, 8)],
+        ['secret', `config ${API_KEY} value`, 'C'.repeat(14)],
+        ['email', `contact ${EMAIL} now`, EMAIL],
+        ['project_path', `see ${UPATH}`, UPATH],
+        ['internal_hostname', `call ${HOST}`, HOST],
+        ['monetary_amount', `cost ${MONEY}`, MONEY],
+        ['long_code_excerpt', `run \`${LONG}\``, 'x'.repeat(20)],
+        ['customer_name', 'shipped for Acmecorp', 'Acmecorp', { customerNames: ['Acmecorp'] }],
+        ['sql_identifier', 'joined invoices_ledger', 'invoices_ledger', { sqlIdentifiers: ['invoices_ledger'] }],
+    ] as Array<[string, string, string, Record<string, unknown>?]>)('%s refusal never echoes the matched value', (cat, text, value, opts) => {
+        const r = redact_low_impact_entry(text, opts ?? {});
+        expect(r.ok).toBe(false);
+        const s = r.summary();
+        expect(s).toContain(`${cat}: <masked, `);
+        expect(s).not.toContain(value);
     });
 });

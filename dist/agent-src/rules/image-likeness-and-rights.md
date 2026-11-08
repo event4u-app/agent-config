@@ -44,7 +44,7 @@ SURFACE THE RIGHTS QUESTION. REFUSE-AND-SURFACE OVER GENERATE.
 | Real person's face / body (celebrity, public figure, private individual) | Likeness consent required — route to `media/likeness.md` + `media/public-figures.md` |
 | Trademarked logo, brand mark, or product identity of a third party | Trademark clearance required — refuse without explicit rights |
 | Named living artist's distinctive style (e.g. "in the style of [name]") | Style license check — route to `media/style.md` |
-| AI model license restrictions (training data, output restrictions) | Check model card; surface if output license is restricted |
+| AI model license restrictions (training data, output restrictions) | Check model card on every gen/edit; surface if output license is restricted |
 
 ## Compose — do NOT duplicate
 

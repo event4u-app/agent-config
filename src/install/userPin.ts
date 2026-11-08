@@ -55,10 +55,12 @@ export function describeUserPin(pin: UserPin | null): string | null {
 }
 
 /**
- * `install --enrol`: this machine may be promoted to the thinned layer while
- * the shipped promotion switch is off — the maintainer arm the frozen
- * comparison needs (owner decision E2, 2026-10-28). The decision function
- * still has to say `thinned`; demotion runs unchanged; `--full` wins.
+ * `install --enrol`: a session may promote this machine's layer to the thinned
+ * form when the install left it full — the maintainer arm the release-time
+ * comparison needs (owner decision E2, 2026-10-28). The installer thins by
+ * default (`road-to-a-session-start-under-the-host-limit` 3.2); enrolment only
+ * opens the second, session-time route. The decision function still has to say
+ * `thinned`; demotion runs unchanged; `--full` wins.
  */
 export const ENROLMENT_FIELD = 'enrolment';
 

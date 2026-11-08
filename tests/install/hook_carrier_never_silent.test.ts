@@ -25,6 +25,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { build_claude_hook_matrix, DISPATCHER_FAILED_REFUSAL, NO_DISPATCHER_REFUSAL, THINNED_DEAD_CARRIER_LINE } from '../../src/scripts/_lib/claude_settings_hooks.js';
 import { absoluteBodyLinkPrefix } from '../../src/scripts/_lib/thin_rules.js';
+import { resolveBodyPointer } from '../../src/install/installThinLayer.js';
 import {
     describeCarrierProbe,
     describeCarrierState,
@@ -275,7 +276,8 @@ describe('the install-time decision', () => {
         expect(plan.thin).toBe(true);
         expect(plan.warnings).toEqual([]);
         rmSync(path.join(tmp, 'npm-cache'), { recursive: true, force: true });
-        expect(existsSync(`${absoluteBodyLinkPrefix(plan.bodyLinkRoot as string)}alpha.md`)).toBe(true);
+        // The bodies directory a thinned layer declares in its index, joined with a bare pointer.
+        expect(existsSync(resolveBodyPointer('alpha.md', absoluteBodyLinkPrefix(plan.bodyLinkRoot as string)))).toBe(true);
         expect(run('PreToolUse', '', { FIXTURE_TAG: 'after-cache' }).stdout).toContain('FIXTURE-DISPATCH after-cache');
     });
 

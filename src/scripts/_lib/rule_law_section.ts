@@ -29,6 +29,7 @@
  * that question already lives.
  */
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 /** Same literal as `check_iron_law_prominence.ts` — one definition, two readers. */
 export const IRON_LAW_RE = /\biron\s+laws?\b/i;
@@ -121,6 +122,64 @@ export function lawText(body: string): string | null {
     return sections.map((s) => s.text).join('\n\n');
 }
 
+/** Heading title of a rule's session-start contract (`road-to-a-session-start-under-the-host-limit` 1.2). */
+export const STARTUP_CONTRACT_RE = /^startup contract$/i;
+
+/**
+ * The rule's startup contract — the `## Startup contract` section, heading
+ * included, up to the next heading of the same or a shallower depth. `null`
+ * when the rule carries none. Fences are skipped when looking for headings, the
+ * same way {@link lawSections} skips them.
+ */
+export function startupContract(body: string): string | null {
+    const lines = body.split('\n');
+    let inFence = false;
+    let start = -1;
+    let depth = 0;
+    for (let i = 0; i < lines.length; i += 1) {
+        const raw = lines[i] as string;
+        if (FENCE_RE.test(raw)) {
+            inFence = !inFence;
+            continue;
+        }
+        if (inFence) continue;
+        const m = HEADING_RE.exec(raw);
+        if (m === null) continue;
+        const d = (m[1] as string).length;
+        if (start === -1) {
+            if (STARTUP_CONTRACT_RE.test((m[2] as string).trim())) {
+                start = i;
+                depth = d;
+            }
+        } else if (d <= depth) {
+            return lines.slice(start, i).join('\n').trim();
+        }
+    }
+    return start === -1 ? null : lines.slice(start).join('\n').trim();
+}
+
+/**
+ * Where a rule's startup contract lives: its own file, `startup-contracts/rules/<id>.md`,
+ * beside the rules directory (`dist/agent-src/rules` ↔ `dist/agent-src/startup-contracts/rules`;
+ * in source, `src/rules` ↔ `src/agent-src/startup-contracts/rules`). Not inside the rule:
+ * every host that delivers the full rule would otherwise carry the contract twice, once as
+ * the body it restates (road-to-a-session-start-under-the-host-limit; the per-spawn
+ * payload ratchet). `null` when the rule has none.
+ */
+export function startupContractPath(rulesDir: string, id: string): string | null {
+    for (const base of [path.join(rulesDir, '..', 'startup-contracts', 'rules'), path.join(rulesDir, '..', 'agent-src', 'startup-contracts', 'rules')]) {
+        const file = path.join(base, `${id}.md`);
+        if (fs.existsSync(file)) return file;
+    }
+    return null;
+}
+
+/** The startup contract of rule `id` under `rulesDir`, heading included; `null` when it has none. */
+export function readStartupContract(rulesDir: string, id: string): string | null {
+    const file = startupContractPath(rulesDir, id);
+    return file === null ? null : startupContract(ruleBody(fs.readFileSync(file, 'utf8')));
+}
+
 export interface RuleLawMeasure {
     id: string;
     /** Characters of the law text, 0 when there is none. */
@@ -137,11 +196,14 @@ export interface RuleLawMeasure {
 export function measureRuleFile(id: string, filePath: string): RuleLawMeasure {
     const body = ruleBody(fs.readFileSync(filePath, 'utf-8'));
     const law = lawText(body);
+    // The startup contract restates the body for session start and is priced by
+    // `check_startup_contracts`; counting it here would charge the rule twice.
+    const contract = startupContract(body);
     return {
         id,
         lawChars: law === null ? 0 : law.length,
         sections: lawSections(body).length,
-        bodyChars: body.length,
+        bodyChars: contract === null ? body.length : body.replace(contract, '').trim().length,
         law,
     };
 }

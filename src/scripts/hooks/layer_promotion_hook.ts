@@ -4,7 +4,9 @@
  * step 3.3. On `session_start` it runs {@link sessionLayerStep}: demote a
  * thinned claude rule layer that the latest arrival record contradicts, or
  * promote a full one for the FOLLOWING sessions when the layer-form decision
- * returns `thinned`. Promotion is off until step 5.3 flips the shipped switch.
+ * returns `thinned`. Promotion runs on `install --enrol` machines only; install
+ * and upgrade write the reduced layer themselves
+ * (road-to-a-session-start-under-the-host-limit 3.2).
  *
  * Silent, exit 0 on every path, never blocks a session start. Loaded from its
  * own chunk, never inlined into the dispatch bundle.

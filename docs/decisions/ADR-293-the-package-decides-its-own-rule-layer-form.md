@@ -194,6 +194,27 @@ Owner decision, given in the session that analysed inbox round
 The consumer default is unchanged: the shipped switch stays off until the frozen
 comparison has run and its result is cited by the enabling commit.
 
+## Amendment 3 (2026-11-07) — the installer writes the reduced layer
+
+Applies `road-to-a-session-start-under-the-host-limit` D1 (owner, 2026-10-28:
+no opt-in path) and D2 (AI council, 2026-10-28: startup contracts plus an 80k
+size budget plus contract tests), steps 3.2 and 3.3. Still no settings key.
+
+- `installerThinsHost` answers `true` for claude-code. Install and upgrade write
+  contract stubs for rules with a startup contract (`startup-contracts/rules/<id>.md`
+  beside the rules directory, so the full rule never carries it twice), pointer stubs for
+  the thinnable rest and the kernel whole, when the carrier probe passes and no
+  `--full` pin is set. A consequence-class or `safety-floor` rule still without a
+  contract stays whole; a consumer-edited file stays as it is.
+- Decision 1's "`full` for every consequence-class and `safety-floor` rule" now
+  reads: full, or the rule's startup contract, whose clause coverage
+  `check_startup_contracts` proves.
+- `src/config/layer-form-promotion.json` is removed. The session-time promotion
+  runs on `install --enrol` machines only; the size budget
+  (`check_session_start_budget`) and the contract tests replace the frozen
+  comparison as the gate for the default, and that comparison becomes a
+  release-time non-inferiority check over the contract form.
+
 ## Consequences
 
 - A consumer never sets, reads or reasons about how the package loads its rule

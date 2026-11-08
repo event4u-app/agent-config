@@ -117,10 +117,12 @@ import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
 import {
     describeThinInstalledLayer,
     installReceiptBudgetLines,
+    RULE_BODIES_INDEX,
     thinInstalledRuleLayer,
 } from '../install/installThinLayer.js';
 import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
 import { deployClaudeCarrier } from '../install/stagedRuntime.js';
+import { neverThinnedIds } from '../install/layerPromotion.js';
 import { mergeToolsAliases as _merge_tools_aliases } from '../install/toolsArg.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
 import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunBool, dryRunScopeLine, dryRunTargetLines } from '../install/wizard-plan.js';
@@ -2973,7 +2975,17 @@ function _deploy_global_content(
             deployClaudeCarrier({
                 packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn, userPin: state.FULL_PIN, enrol: state.ENROL,
                 wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
-                thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: claude_rule_rewrite.onlyDeployed(anchor, current_files, (p) => _log_tx_entry('write', p)) })),
+                thin: (bodyLinkRoot) => {
+                    const res = thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, keepWhole: neverThinnedIds(package_root), bodyLinkRoot, onWrite: claude_rule_rewrite.onlyDeployed(anchor, current_files, (p) => _log_tx_entry('write', p)) });
+                    // The bodies index is a deployed file of this run: listed, so the
+                    // ledger records it and the tagged reaper keeps it; when no stub
+                    // stands it is not listed and a stale one is reaped.
+                    if (res.index !== null) {
+                        current_files.add(`rules/${RULE_BODIES_INDEX}`);
+                        _log_tx_entry('write', res.index);
+                    }
+                    return describeThinInstalledLayer(res);
+                },
             });
             if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, undefined, { thisDeploy: new Map([[anchor, current_files]]) })) info(l);
         }
