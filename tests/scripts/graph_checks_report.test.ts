@@ -140,6 +140,7 @@ describe('graph checks report — main', () => {
         const row = r.graph_findings.find((f) => f.check === 'untested-change' && f.title.endsWith(': lonely'));
         expect(row?.exhibits?.[0]).toMatchObject({ path: 'app/a.ts', commit: head });
         expect(fs.readFileSync(path.join(out, 'summary.md'), 'utf-8')).toContain('untested-change: ');
+        expect(fs.existsSync(path.join(out, 'summary.md.tmp'))).toBe(false);
     }, 60_000);
 
     it('reports no analysis, never a fallback, when there is no merge-base', async () => {
@@ -200,5 +201,48 @@ describe('graph checks report — the workflow fallback', () => {
         expect(fallback.status).toBe('no-analysis');
         expect(fallback.revisions.base_ref).toBe('feat/"odd"');
         expect(fallback.reason).toContain('no report was written');
+    });
+});
+
+describe('graph checks report — the job summary step, run as written', () => {
+    // The step's own `run:` block, executed by bash with the variables Actions
+    // sets, over the three output states it can meet.
+    const step = (): string => {
+        const wf = fs.readFileSync(path.join(process.cwd(), '.github', 'workflows', 'self-review-gate.yml'), 'utf-8');
+        const job = wf.slice(wf.indexOf('graph-checks:'));
+        const m = /- name: Job summary\n[\s\S]*?run: \|\n((?: {10}.*\n)+)/.exec(job);
+        expect(m).not.toBeNull();
+        return ((m as RegExpExecArray)[1] as string).replace(/^ {10}/gm, '');
+    };
+    const run = (setup: (dir: string) => void): { json: GraphChecksReport; summary: string } => {
+        const tmp = outDir();
+        const dir = path.join(tmp, 'graph-checks');
+        fs.mkdirSync(dir, { recursive: true });
+        setup(dir);
+        const summaryFile = path.join(tmp, 'step-summary.md');
+        const r = spawnSync('bash', ['-e', '-c', step()], { env: { ...process.env, RUNNER_TEMP: tmp, GITHUB_STEP_SUMMARY: summaryFile, BASE_REF: 'main', OUT: path.join(dir, 'graph-checks.json') }, encoding: 'utf-8' });
+        expect(r.status).toBe(0);
+        return { json: readReport(dir), summary: fs.readFileSync(summaryFile, 'utf-8') };
+    };
+
+    it('writes the fallback when the report step wrote nothing', () => {
+        const { json, summary } = run(() => {});
+        expect(json.status).toBe('no-analysis');
+        expect(summary).toContain('no report was written');
+    });
+    it('replaces a report the step wrote before it was interrupted, since its summary is missing', () => {
+        const { json, summary } = run((dir) => fs.writeFileSync(path.join(dir, 'graph-checks.json'), '{"schema":"graph-checks-report/1","status":"analysed"'));
+        expect(json.status).toBe('no-analysis');
+        expect(json.revisions.base_ref).toBe('main');
+        expect(summary).toContain('no report was written');
+    });
+    it('keeps a finished report and renders its summary', () => {
+        const done = { ...buildReport(repo().root, { base_ref: 'main', base_sha: null, merge_base_sha: null, head_sha: null }, null, 'x') };
+        const { json, summary } = run((dir) => {
+            fs.writeFileSync(path.join(dir, 'graph-checks.json'), JSON.stringify(done));
+            fs.writeFileSync(path.join(dir, 'summary.md'), 'SUMMARY-SENTINEL\n');
+        });
+        expect(json).toEqual(done);
+        expect(summary).toBe('SUMMARY-SENTINEL\n');
     });
 });

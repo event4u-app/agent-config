@@ -281,7 +281,11 @@ export async function main(argv: readonly string[], root = process.cwd()): Promi
     try {
         fs.mkdirSync(args.out, { recursive: true });
         fs.writeFileSync(path.join(args.out, 'graph-checks.json'), `${JSON.stringify(report, null, 2)}\n`);
-        fs.writeFileSync(path.join(args.out, 'summary.md'), renderSummary(report));
+        // Written last and renamed into place: the job reads its existence as
+        // "the report finished", so it must never exist half-written.
+        const summary = path.join(args.out, 'summary.md');
+        fs.writeFileSync(`${summary}.tmp`, renderSummary(report));
+        fs.renameSync(`${summary}.tmp`, summary);
     } catch (e) {
         process.stderr.write(`graph_checks_report: could not write the report: ${(e as Error).message}\n`);
         return 1;
