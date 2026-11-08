@@ -29,3 +29,33 @@ describe('a required rule with no contract file stays whole', () => {
         expect(stubs.get(`${id}.md`)).toBe(fs.readFileSync(path.join(tmp, 'rules', `${id}.md`), 'utf8'));
     });
 });
+
+// Round 25 (openai): if the clause audit is also absent or malformed, the
+// declared set cannot be read. Fail safe: every high-consequence or
+// safety-floor rule without a contract stays whole.
+describe.each([
+    ['absent', null],
+    ['malformed', '{ not json'],
+    ['wrong shape', '{"rules": []}'],
+])('with the clause audit %s and the contracts missing', (_label, audit) => {
+    let tmp: string;
+    let stubs: Map<string, string>;
+    beforeAll(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'missing-audit-'));
+        const pkg = path.join(tmp, 'pkg');
+        fs.cpSync(path.join(REPO, 'dist', 'agent-src', 'rules'), path.join(pkg, 'dist', 'agent-src', 'rules'), { recursive: true });
+        fs.cpSync(path.join(REPO, 'dist', 'agent-src', 'startup-contracts'), path.join(pkg, 'dist', 'agent-src', 'startup-contracts'), { recursive: true });
+        fs.cpSync(path.join(REPO, 'dist', 'router.json'), path.join(pkg, 'dist', 'router.json'));
+        fs.cpSync(path.join(REPO, 'src', 'config'), path.join(pkg, 'src', 'config'), { recursive: true });
+        const auditPath = path.join(pkg, 'src', 'config', 'startup-contract-clauses.json');
+        if (audit === null) fs.rmSync(auditPath);
+        else fs.writeFileSync(auditPath, audit);
+        for (const id of DROPPED) fs.rmSync(path.join(pkg, 'dist', 'agent-src', 'startup-contracts', 'rules', `${id}.md`));
+        stubs = build_thin(path.join(pkg, 'dist', 'agent-src', 'rules'), null, null, null, { packageRoot: pkg });
+    });
+    afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+    it.each(DROPPED)('%s is delivered byte-identical to its full rule', (id) => {
+        expect(stubs.get(`${id}.md`)).toBe(fs.readFileSync(path.join(tmp, 'pkg', 'dist', 'agent-src', 'rules', `${id}.md`), 'utf8'));
+    });
+});

@@ -14634,10 +14634,16 @@ var CONTRACT_AUDIT_REL = path34.join("src", "config", "startup-contract-clauses.
 function declaredContractRules(packageRoot) {
   try {
     const raw = JSON.parse(fs35.readFileSync(path34.join(packageRoot, CONTRACT_AUDIT_REL), "utf-8"));
-    return new Set(Object.keys(raw.rules ?? {}));
+    if (raw.rules === null || typeof raw.rules !== "object" || Array.isArray(raw.rules)) return null;
+    return new Set(Object.keys(raw.rules));
   } catch {
-    return /* @__PURE__ */ new Set();
+    return null;
   }
+}
+var SAFETY_FLOOR_TIER_RE = /^tier:\s*["']?safety-floor["']?\s*$/m;
+function frontmatterOf2(text) {
+  const end = text.indexOf("\n---", 3);
+  return text.startsWith("---") && end > 0 ? text.slice(0, end) : "";
 }
 function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, consequenceClass = null, roots = null) {
   const routerPath = roots?.routerPath ?? (roots?.packageRoot === void 0 ? ROUTER : path34.join(roots.packageRoot, "dist", "router.json"));
@@ -14667,7 +14673,8 @@ function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, con
       continue;
     }
     const noStub = cls.no_stub[stem] !== void 0;
-    const contractMissing = contractBearing.has(stem) && contract === null;
+    const needsContract = contractBearing !== null ? contractBearing.has(stem) : !kernel.has(stem) && (cls.members[stem] !== void 0 || SAFETY_FLOOR_TIER_RE.test(frontmatterOf2(text)));
+    const contractMissing = needsContract && contract === null;
     if (announce !== null && contractMissing) {
       announce(`CONTRACT MISSING: ${path34.basename(p)} \u2014 kept full-bodied, it carries no startup contract`);
     }

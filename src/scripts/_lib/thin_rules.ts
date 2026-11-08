@@ -641,16 +641,26 @@ const CONTRACT_AUDIT_REL = path.join('src', 'config', 'startup-contract-clauses.
 
 /**
  * Rules the package declares contract-bearing, read from the clause audit that
- * ships with it. Empty when the audit is absent, so a tree that predates
- * contracts keeps its existing stub forms.
+ * ships with it. `null` when the audit is absent or unreadable — the caller then
+ * fails safe and treats every high-consequence or safety-floor rule as needing a
+ * contract, so a damaged package never thins a floor to less than its full text.
  */
-function declaredContractRules(packageRoot: string): Set<string> {
+function declaredContractRules(packageRoot: string): Set<string> | null {
     try {
-        const raw = JSON.parse(fs.readFileSync(path.join(packageRoot, CONTRACT_AUDIT_REL), 'utf-8')) as { rules?: Record<string, unknown> };
-        return new Set(Object.keys(raw.rules ?? {}));
+        const raw = JSON.parse(fs.readFileSync(path.join(packageRoot, CONTRACT_AUDIT_REL), 'utf-8')) as { rules?: unknown };
+        if (raw.rules === null || typeof raw.rules !== 'object' || Array.isArray(raw.rules)) return null;
+        return new Set(Object.keys(raw.rules));
     } catch {
-        return new Set();
+        return null;
     }
+}
+
+const SAFETY_FLOOR_TIER_RE = /^tier:\s*["']?safety-floor["']?\s*$/m;
+
+/** The frontmatter block of a rule, fences excluded; `''` when it has none. */
+function frontmatterOf(text: string): string {
+    const end = text.indexOf('\n---', 3);
+    return text.startsWith('---') && end > 0 ? text.slice(0, end) : '';
 }
 
 /** Map {filename: thin_or_full_text} for every rule. Kernel stays full. */
@@ -725,7 +735,11 @@ export function build_thin(
         // a law-only or pointer stub would deliver less than the contract the
         // floor was ratified with. check_startup_contracts refuses the state in
         // CI; this is what an install does if it ever arrives anyway.
-        const contractMissing = contractBearing.has(stem) && contract === null;
+        const needsContract =
+            contractBearing !== null
+                ? contractBearing.has(stem)
+                : !kernel.has(stem) && (cls.members[stem] !== undefined || SAFETY_FLOOR_TIER_RE.test(frontmatterOf(text)));
+        const contractMissing = needsContract && contract === null;
         if (announce !== null && contractMissing) {
             announce(`CONTRACT MISSING: ${path.basename(p)} — kept full-bodied, it carries no startup contract`);
         }
