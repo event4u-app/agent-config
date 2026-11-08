@@ -36,8 +36,10 @@
  * module before the patterns run. Without that the gate read
  * `${KILL_SWITCH}=1` literally and certified a deny that printed its own kill
  * switch (round inbox-2026-11-zc). A name declared more than once keeps every
- * value, and escapes are decoded, so shadowing or `\x41` cannot hide a switch;
- * a `${…}` inside a plain string is not interpolated and is not resolved. A
+ * value and every combination of holes is enumerated, so shadowing cannot hide
+ * a switch; escapes and line continuations are decoded as JS does; an escaped
+ * `\${` and a `${…}` in a plain string are text, not holes. A template with
+ * more printable variants than the gate enumerates fails rather than passes. A
  * deny may also not name the hook manifest: telling the refused agent where its
  * own entry lives is a bypass too, so any reference is refused.
  *
@@ -121,7 +123,7 @@ export const SETTINGS_ROOTS: readonly string[] = [
 export interface DenyFinding {
     readonly concern: string;
     readonly file: string;
-    readonly kind: 'env-assignment' | 'export-line' | 'settings-key' | 'manifest-reference';
+    readonly kind: 'env-assignment' | 'export-line' | 'settings-key' | 'manifest-reference' | 'unresolvable';
     readonly text: string;
 }
 
@@ -216,7 +218,7 @@ export function messageLiterals(src: string): string[] {
 /** As {@link messageLiterals}, keeping whether each was a template literal. */
 export function messageLiteralsWithKind(src: string): Array<{ body: string; template: boolean }> {
     const out: Array<{ body: string; template: boolean }> = [];
-    const re = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
+    const re = /'((?:[^'\\]|\\[\s\S])*)'|"((?:[^"\\]|\\[\s\S])*)"|`((?:[^`\\]|\\[\s\S])*)`/g;
     for (const m of src.matchAll(re)) {
         const body = m[1] ?? m[2] ?? m[3] ?? '';
         if (/\s/.test(body)) {
@@ -228,57 +230,6 @@ export function messageLiteralsWithKind(src: string): Array<{ body: string; temp
 
 const ENV_ASSIGNMENT_RE = /AGENT_CONFIG_[A-Z0-9_]+\s*=/;
 const MANIFEST_RE = /hook_manifest\.(yaml|json)/;
-
-/** The escapes a JS string literal can carry, decoded, so `\x41` reads as `A`. */
-export function decodeEscapes(raw: string): string {
-    return raw.replace(/\\(u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|.)/g, (_w, all: string, cp?: string, u4?: string, x2?: string) => {
-        const hex = cp ?? u4 ?? x2;
-        if (hex !== undefined) return String.fromCodePoint(parseInt(hex, 16));
-        // Every single-character escape JS defines; any other `\c` is `c`, as in JS.
-        const simple: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0', v: '\v', f: '\f', b: '\b' };
-        return simple[all] ?? all;
-    });
-}
-
-/**
- * Every `const NAME = '...'` string constant, comments already stripped, as
- * ALL the values a name is given anywhere in the module. Scope is not tracked,
- * so a name declared twice keeps both values and a placeholder is checked
- * against each: shadowing can then over-report, never hide a kill switch.
- */
-export function stringConstants(src: string): Map<string, string[]> {
-    const out = new Map<string, string[]>();
-    const re = /\bconst\s+([A-Za-z_$][\w$]*)\s*(?::\s*string\s*)?=\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\$]|\\.)*)`)/g;
-    for (const m of src.matchAll(re)) {
-        const name = m[1] as string;
-        const value = decodeEscapes(m[2] ?? m[3] ?? m[4] ?? '');
-        out.set(name, [...(out.get(name) ?? []), value]);
-    }
-    return out;
-}
-
-/**
- * The texts a template literal can print, each decoded: the text with every
- * known placeholder at its first value, plus one variant per (placeholder,
- * value) pair with only that placeholder substituted. A bypass pattern is about
- * one name and its `=`, so the linear set finds it without enumerating the
- * cross product, and there is no cap to fail open at. Unknown placeholders stay
- * as written. Only template literals interpolate, so callers pass a plain
- * string's body through {@link decodeEscapes} alone.
- */
-export function resolvePlaceholders(text: string, constants: ReadonlyMap<string, readonly string[]>): string[] {
-    const names = [...new Set([...text.matchAll(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g)].map((m) => m[1] as string))];
-    const reFor = (name: string): RegExp => new RegExp(`\\$\\{\\s*${name.replace(/\$/g, '\\$')}\\s*\\}`, 'g');
-    let first = text;
-    const variants: string[] = [];
-    for (const name of names) {
-        const values = constants.get(name);
-        if (values === undefined || values.length === 0) continue;
-        first = first.replace(reFor(name), () => values[0] as string);
-        for (const val of values) variants.push(decodeEscapes(text.replace(reFor(name), () => val)));
-    }
-    return [decodeEscapes(first), ...variants];
-}
 const EXPORT_RE = /(^|[\s`'"(])export\s/;
 
 function settingsKeyIn(text: string): boolean {
@@ -291,6 +242,94 @@ function settingsKeyIn(text: string): boolean {
     return false;
 }
 
+
+/**
+ * Decode a string literal's escapes as JS does, so `\x41` reads as `A` and a
+ * backslash before a line break (a line continuation) disappears.
+ */
+export function decodeEscapes(raw: string): string {
+    return raw.replace(/\\(\r\n|[\s\S])(?:(?<=u)\{([0-9a-fA-F]+)\}|(?<=u)([0-9a-fA-F]{4})|(?<=x)([0-9a-fA-F]{2}))?/g,
+        (whole, c: string, cp?: string, u4?: string, x2?: string) => {
+            const hex = cp ?? u4 ?? x2;
+            if (hex !== undefined) return String.fromCodePoint(parseInt(hex, 16));
+            if (c === '\n' || c === '\r\n' || c === '\r' || c === '\u2028' || c === '\u2029') return '';
+            const simple: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0', v: '\v', f: '\f', b: '\b' };
+            void whole;
+            // Every other `\c` is `c`, as in JS.
+            return simple[c] ?? c;
+        });
+}
+
+/**
+ * Every `const NAME = '...'` string constant, comments already stripped, as
+ * ALL the values a name is given anywhere in the module, decoded once. Scope
+ * is not tracked, so a name declared twice keeps both values and a
+ * placeholder is checked against each: shadowing can over-report, never hide.
+ */
+export function stringConstants(src: string): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    const re = /\bconst\s+([A-Za-z_$][\w$]*)\s*(?::\s*string\s*)?=\s*(?:'((?:[^'\\]|\\[\s\S])*)'|"((?:[^"\\]|\\[\s\S])*)"|`((?:[^`\\$]|\\[\s\S])*)`)/g;
+    for (const m of src.matchAll(re)) {
+        const name = m[1] as string;
+        const value = decodeEscapes(m[2] ?? m[3] ?? m[4] ?? '');
+        out.set(name, [...(out.get(name) ?? []), value]);
+    }
+    return out;
+}
+
+/** Above this many printable variants a template is not certified. */
+export const MAX_VARIANTS = 4096;
+
+/**
+ * Split a template body into decoded literal chunks and `${NAME}` holes. An
+ * escaped `\${` is literal text, as in JS; a hole that is not a bare name
+ * (an expression) is kept as its source text.
+ */
+export function templateParts(body: string): Array<{ text: string } | { name: string }> {
+    const parts: Array<{ text: string } | { name: string }> = [];
+    let raw = '';
+    let i = 0;
+    while (i < body.length) {
+        const c = body[i] as string;
+        if (c === '\\') {
+            raw += body.slice(i, i + 2);
+            i += 2;
+            continue;
+        }
+        if (c === '$' && body[i + 1] === '{') {
+            const end = body.indexOf('}', i + 2);
+            const inner = end === -1 ? '' : body.slice(i + 2, end).trim();
+            if (end !== -1 && /^[A-Za-z_$][\w$]*$/.test(inner)) {
+                parts.push({ text: decodeEscapes(raw) });
+                raw = '';
+                parts.push({ name: inner });
+                i = end + 1;
+                continue;
+            }
+        }
+        raw += c;
+        i += 1;
+    }
+    parts.push({ text: decodeEscapes(raw) });
+    return parts;
+}
+
+/**
+ * Every text a template literal can print, given the constants each hole may
+ * take: the full cross product, with unknown holes kept as `${NAME}`. `null`
+ * when the product exceeds {@link MAX_VARIANTS}, which the caller reports as a
+ * finding: a gate that cannot enumerate does not certify.
+ */
+export function resolvePlaceholders(body: string, constants: ReadonlyMap<string, readonly string[]>): string[] | null {
+    let variants = [''];
+    for (const part of templateParts(body)) {
+        const options = 'text' in part ? [part.text] : (constants.get(part.name) ?? [`\${${part.name}}`]);
+        if (variants.length * options.length > MAX_VARIANTS) return null;
+        variants = variants.flatMap((v) => options.map((o) => v + o));
+    }
+    return variants;
+}
+
 /** Findings for one concern's source text. */
 export function scanSource(concern: string, file: string, src: string): DenyFinding[] {
     const out: DenyFinding[] = [];
@@ -298,6 +337,10 @@ export function scanSource(concern: string, file: string, src: string): DenyFind
     const constants = stringConstants(stripped);
     for (const lit of messageLiteralsWithKind(stripped)) {
         const variants = lit.template ? resolvePlaceholders(lit.body, constants) : [decodeEscapes(lit.body)];
+        if (variants === null) {
+            out.push({ concern, file, kind: 'unresolvable', text: lit.body });
+            continue;
+        }
         const text = variants.find((v) => ENV_ASSIGNMENT_RE.test(v) || EXPORT_RE.test(v) || settingsKeyIn(v) || MANIFEST_RE.test(v)) ?? variants[0] ?? lit.body;
         if (ENV_ASSIGNMENT_RE.test(text)) {
             out.push({ concern, file, kind: 'env-assignment', text });
@@ -352,6 +395,7 @@ const REASON: Readonly<Record<DenyFinding['kind'], string>> = {
     'export-line': 'carries an `export` line the reader can paste',
     'settings-key': 'names a settings key path',
     'manifest-reference': 'names the hook manifest, the file that switches the guard off',
+    unresolvable: `prints more variants than the gate enumerates (${String(MAX_VARIANTS)}), so it cannot be certified`,
 };
 
 export function main(argv: readonly string[]): number {
@@ -439,8 +483,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 13,
-        minRejectCases: 7,
+        minCases: 16,
+        minRejectCases: 9,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -512,6 +556,35 @@ function selfTest(): number {
                             'plain-dollar',
                             "const KILL = 'AGENT_CONFIG_X';\nvoid KILL;\n" +
                                 "process.stderr.write('BLOCKED: the shell form ${KILL}=1 is quoted here as text');\n",
+                        ),
+                    ),
+            },
+            {
+                name: 'two holes that only together spell a switch fail',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        plant(
+                            'two-holes',
+                            "const A = 'safe';\nfunction f() { const A = 'AGENT_CONFIG_'; const B = 'X'; return A + B; }\nconst B = 'safe';\nvoid f;\n" +
+                                'process.stderr.write(`BLOCKED: ${A}${B}=1`);\n',
+                        ),
+                    ),
+            },
+            {
+                name: 'a line continuation inside the switch name is decoded',
+                expect: 'reject',
+                run: () => run(plant('continuation', 'process.stderr.write(`BLOCKED (AGENT_CONFIG_\\\nX=1)`);\n')),
+            },
+            {
+                name: 'an escaped placeholder prints literal text and is not resolved',
+                expect: 'accept',
+                run: () =>
+                    run(
+                        plant(
+                            'escaped-hole',
+                            "const KILL = 'AGENT_CONFIG_X';\nvoid KILL;\n" +
+                                'process.stderr.write(`BLOCKED: the form \\${KILL} is shown as text`);\n',
                         ),
                     ),
             },
