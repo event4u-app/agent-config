@@ -16,7 +16,12 @@
 // have made that gate report every correct stub as missing its pointer — a red
 // with no defect behind it, which is the shape that teaches a reader to ignore
 // a gate.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
+
+import { readStartupContract } from '../../src/scripts/_lib/rule_law_section.js';
 
 import { evaluate_demotion } from '../../src/scripts/probe_host_compliance.js';
 import {
@@ -186,5 +191,29 @@ describe('the installed stub shape', () => {
         const text = `---\ndescription: "${long}"\n---\n\n# R\n\nbody\n`;
         expect(thin_entry('r', text, '', INSTALLED_STUB_SHAPE)).toContain(shortDescription(long, 90));
         expect(thin_entry('r', text, '')).toContain(long);
+    });
+});
+
+// The contract lives in its own file beside the rules directory; the rule never
+// carries it. A rule without one is not a contract stub — readStartupContract
+// returns null and build_thin takes the pointer/keep-whole paths instead.
+describe('readStartupContract — separate contract files', () => {
+    it('reads the contract beside a projected rules dir and returns null when there is none', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rsc-'));
+        const rules = path.join(root, 'dist', 'agent-src', 'rules');
+        const contracts = path.join(root, 'dist', 'agent-src', 'startup-contracts', 'rules');
+        fs.mkdirSync(rules, { recursive: true });
+        fs.mkdirSync(contracts, { recursive: true });
+        fs.writeFileSync(path.join(rules, 'with.md'), '---\ntype: "auto"\n---\n# With\n\nBody.\n');
+        fs.writeFileSync(path.join(rules, 'without.md'), '---\ntype: "auto"\n---\n# Without\n\nBody.\n');
+        const contract = '## Startup contract\n\n- **When:** a probe.\n- **Must:** stop.';
+        fs.writeFileSync(path.join(contracts, 'with.md'), `${contract}\n`);
+        expect(readStartupContract(rules, 'with')).toBe(contract);
+        expect(readStartupContract(rules, 'without')).toBeNull();
+        const stub = thin_entry_with_contract('with', readStartupContract(rules, 'with') as string, '', INSTALLED_STUB_SHAPE);
+        expect(stub).toContain('- **When:** a probe.');
+        expect(stub).toContain('Body: with.md');
+        expect(() => thin_entry_with_contract('without', fs.readFileSync(path.join(rules, 'without.md'), 'utf8'))).toThrow(/no `## Startup contract`/);
+        fs.rmSync(root, { recursive: true, force: true });
     });
 });
