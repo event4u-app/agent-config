@@ -118,9 +118,10 @@ if (!Number.isInteger(N) || N < 1 || !Number.isInteger(FIRST)) throw new Error(`
 
 
 // The recogniser follows bash 5 where versions differ, so the generated comparison
-// needs bash >= 4: on macOS run it with `BASH_ORACLE_IMAGE=ubuntu:24.04`. CI has it.
+// needs bash >= 4: on macOS run it with `BASH_ORACLE_IMAGE=ubuntu:24.04`.
 const MAJOR = hasBash ? oracleBashMajor() : 0;
-if (process.env['CI'] && MAJOR < 4) throw new Error(`the generated bash test needs bash >= 4 on CI, found ${oracleBashVersion()}`);
+// Linux CI runners ship bash 5; macOS runners ship 3.2 and skip, as a Mac does locally.
+if (process.env['CI'] && process.platform === 'linux' && MAJOR < 4) throw new Error(`the generated bash test needs bash >= 4 on Linux CI, found ${oracleBashVersion()}`);
 
 describe.skipIf(MAJOR < 4)('generated commands: the recogniser agrees with bash', () => {
     it(`${N} seeded commands`, () => {
