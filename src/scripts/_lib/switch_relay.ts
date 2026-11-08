@@ -90,7 +90,8 @@ function parseSwitchRequest(raw: unknown): SwitchRequest | null {
     const target = str(d?.['target']);
     const win = str(reason?.['window']);
     const o = obj(r['outcome']);
-    if (d !== null && (kind === null || !KINDS.has(kind))) return null;
+    // A decision that is present must be one this contract knows; a malformed one is not read as absent.
+    if (r['decision'] !== undefined && r['decision'] !== null && (kind === null || !KINDS.has(kind))) return null;
     return {
         id,
         state,

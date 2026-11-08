@@ -12,7 +12,7 @@ keep-beta-until: 2027-01-31
 > `src/commands/link.ts`). The AC side: `src/scripts/_lib/agent_switch_link.ts`
 > (discovery), `src/scripts/_lib/agent_switch_client.ts` (MCP client and CLI
 > fallback), `src/scripts/_lib/agent_switch_limits.ts` (the limits read),
-> `src/scripts/_lib/switch_relay.ts` (raise, relay, checkpoint before a move,
+> `src/scripts/_lib/switch_relay.ts` (raise, relay, best-effort checkpoint,
 > used by the `quota-notice` and `session-eol` hooks) and
 > `src/scripts/_lib/mcp_bridge.ts` (`.mcp.json` entry), pinned by
 > `tests/scripts/agent_switch_link.test.ts`,
@@ -217,7 +217,10 @@ the link over the CLI verbs below, never the MCP client.
   `detail` as one line of at most 160 characters; a move is reported only on
   `ok: true`, `done` with `ok: false` as a failure and `done` without an
   outcome as such. A reply whose `id` is not the one asked for, whose `state`
-  or decision `kind` is not one of this contract's, is not read; a decision
+  is not one of this contract's, or whose `decision` is present but not an
+  object with one of this contract's `kind` values, is not read. In the model
+  context the relayed text is labelled as data from agent-switch, never an
+  instruction to act on; a decision
   `target` that is not an account and a `reason.window` that is not a window
   name are dropped. A terminal request is then forgotten.
 - **Hand over.** At the end of each turn the `session-eol` Stop hook reads
