@@ -275,6 +275,9 @@ export async function main(argv: readonly string[], root = process.cwd()): Promi
         process.stderr.write(`graph_checks_report: ${(e as Error).message}\nusage: graph_checks_report.ts --base <rev> --out <dir> [--graph <graph.json>]\n`);
         return 2;
     }
+    // A summary left by an earlier run in a reused `--out` would read as this
+    // run's completion marker; it goes before anything else can fail.
+    for (const stale of ['summary.md', 'summary.md.tmp']) fs.rmSync(path.join(args.out, stale), { force: true });
     const rev = resolveRevisions(root, args.base);
     const { analysis, reason } = await analyse(root, rev, args.graph);
     const report = buildReport(root, rev, analysis, reason);

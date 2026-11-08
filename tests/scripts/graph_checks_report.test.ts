@@ -246,3 +246,17 @@ describe('graph checks report — the job summary step, run as written', () => {
         expect(summary).toBe('SUMMARY-SENTINEL\n');
     });
 });
+
+describe('graph checks report — a reused output directory', () => {
+    it('removes a previous summary before it writes anything, so a stale one never marks completion', async () => {
+        const { root, base } = repo();
+        const out = outDir();
+        fs.writeFileSync(path.join(out, 'summary.md'), 'STALE\n');
+        fs.writeFileSync(path.join(out, 'summary.md.tmp'), 'STALE\n');
+        // An unwritable JSON target makes the run fail after the stale files are gone.
+        fs.mkdirSync(path.join(out, 'graph-checks.json'));
+        await main(['--base', base, '--out', out], root);
+        expect(fs.existsSync(path.join(out, 'summary.md'))).toBe(false);
+        expect(fs.existsSync(path.join(out, 'summary.md.tmp'))).toBe(false);
+    }, 60_000);
+});
