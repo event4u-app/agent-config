@@ -131,7 +131,8 @@ link off. `agent-config mcp:available` shows the link's state. The switch
 question is live: it is asked in a session running under an agent-switch
 profile, once per limit cycle, and when you approve a move, AC leaves the run
 checkpoint before the turn ends so the session the work moves to can resume
-the step. Never put `switch_decide` (or the whole `agent-switch` server) on an
+the step. If agent-switch stops answering, AC stops asking it for that session
+after three tries until the next reset and tells you once. Never put `switch_decide` (or the whole `agent-switch` server) on an
 auto-allow list: the decision is yours, and `lint_mcp_config_security` fails
 such an entry. Seat placement by limits is still being built
 (`road-to-a-link-with-agent-switch` Phase 5).

@@ -226,20 +226,31 @@ the link over the CLI verbs below, never the MCP client.
   context the relayed text is labelled as data from agent-switch, never an
   instruction to act on; a decision
   `target` that is not an account and a `reason.window` that is not a window
-  name are dropped. A terminal request is then forgotten.
+  name are dropped. A terminal request is then forgotten — except a `done`
+  move whose checkpoint is still owed, which is kept, without being reported
+  again, until the Stop path has left it.
 - **Hand over.** At the end of each turn the `session-eol` Stop hook reads
-  the request once it is `approved` or `executing` and leaves the run
+  the request once it is `approved`, `executing` or `done` and leaves the run
   checkpoint (a session inside a claimed run only), once it was written;
-  a write that did not happen is tried again on the next Stop. agent-switch moves
-  after the turn at the earliest, so this Stop is the last point the session
-  can leave it. The checkpoint is best effort and never gates a move: AC
-  cannot hold agent-switch back, and a move with `how: now` can run before
-  this Stop does.
+  a write that did not happen is tried again on the next Stop. The checkpoint
+  is best effort and never gates a move: AC cannot hold agent-switch back,
+  and a move with `how: now` can finish before this Stop runs. A checkpoint
+  left after a finished move is still written, because the run checkpoint is
+  the newest state of the run that whichever session resumes it reads.
+- **Back-off.** Three link calls in a row that do not answer — a timeout, a
+  non-zero exit or output that does not parse, on the prompt or the Stop
+  path — stop the link for this session until the next reset of its plan
+  windows (five hours when none is known); the user is told once.
 - **Off switch.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and
   checkpoint, including for a request raised before it was set; the quota
   notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
+  It expires a day after the request's `expiresAt` and never later than seven
+  days after it was raised, so an orphaned record stops polling. The prompt
+  relay and the Stop path change it under a lock, each only its own flag on the
+  record as it is then, so neither undoes the other's and a deleted record
+  stays deleted.
 
 ## CLI fallback
 
