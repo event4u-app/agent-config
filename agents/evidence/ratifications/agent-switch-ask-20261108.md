@@ -15,9 +15,9 @@ effective_after: merge
 
 # Modification review
 
-Raise the quota_notice lazy chunk ceiling from 22,800 to 41,000 B for the agent-switch switch question (raise, relay, best-effort checkpoint, off switch). Council round 5 refused (both seats, dealbreaker); merged on the owner's word per ADR-282, residual findings carried into Phase 6 of road-to-a-link-with-agent-switch.
+Raise the quota_notice lazy chunk ceiling from 22,800 to 41,000 B for the agent-switch switch question (raise, relay, best-effort checkpoint, off switch). Council round 5 refused (both seats, dealbreaker); merged on the owner's word per ADR-282, residual findings carried into Phase 7 of road-to-a-link-with-agent-switch.
 
-Verdict `refused`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/agent-switch-ask-ratification-r5-20261108.question.md`, committed at `46a14baaad3b7a8c749695ca5f2edb168be50dae` and naming this record's subject.
+Verdict `refused`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/agent-switch-ask-ratification-r5-20261108.question.md`, committed at `172f63ac9d91b56c4f5e782f1fc3889bea1eafd0` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
