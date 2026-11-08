@@ -29,6 +29,8 @@ describe('commandRunsAct', () => {
         ['git "commit" -m x', 'git commit'],
         ['git push 2>&1 | tail -3', 'git push'],
         ['git push &>/dev/null', 'git push'],
+        ['git com\\\nmit -m x', 'git commit'],
+        ['cat <<E"OF"\nbody\nEOF\ngit push', 'git push'],
     ])('recognises %j as %s', (cmd, act) => {
         expect(commandRunsAct(cmd, act)).toBe(true);
     });
@@ -45,6 +47,8 @@ describe('commandRunsAct', () => {
         ["echo 'git commit -m x'", 'git commit'],
         ['git -C "dir; git push" status', 'git push'],
         ["cat > f <<EOF\n  EOF\ngit push\nEOF", 'git push'],
+        ['git "com\\mit" -m x', 'git commit'],
+        ['cat <<E"OF"\ngit push\nEOF', 'git push'],
     ])('does not take %j for %s', (cmd, act) => {
         expect(commandRunsAct(cmd, act)).toBe(false);
     });
@@ -56,8 +60,17 @@ describe('the bundle pre-check never rejects a command the lexer would match', (
         'git "commit" -m x',
         "git 'push'",
         'g\\h pr create',
+        'git com\\\nmit -m x',
     ])('%j passes ACT_WORDS', async (cmd) => {
         const { actWordsMayMatch } = await import('../../src/scripts/hooks/reference_duty_loader.js');
         expect(actWordsMayMatch(cmd)).toBe(true);
+    });
+});
+
+describe('the pre-check is narrow enough not to load the chunk for printf', () => {
+    it('rejects commands that hold no bound act word', async () => {
+        const { actWordsMayMatch } = await import('../../src/scripts/hooks/reference_duty_loader.js');
+        expect(actWordsMayMatch('printf "%s" x')).toBe(false);
+        expect(actWordsMayMatch('npm run build')).toBe(false);
     });
 });

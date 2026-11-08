@@ -39,8 +39,8 @@ describe('src/config/act-references.json', () => {
 });
 
 describe('the bundle-side pre-check stays in step with the table', () => {
-    it('every bound act contains a word ACT_WORDS matches', async () => {
+    it('every bound act\'s last word is one ACT_WORDS matches', async () => {
         const { ACT_WORDS } = await import('../../src/scripts/hooks/reference_duty_loader.js');
-        for (const b of table.bindings) expect(ACT_WORDS.test(String(b['shell_command']))).toBe(true);
+        for (const b of table.bindings) expect(ACT_WORDS.test(String(b['shell_command']).split(' ').pop() as string)).toBe(true);
     });
 });

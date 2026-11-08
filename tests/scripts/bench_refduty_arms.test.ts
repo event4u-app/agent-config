@@ -30,6 +30,15 @@ function hook(dir: string, mode: string, payload: object): { status: number | nu
 }
 const commit = (transcript: string) => ({ tool_name: 'Bash', tool_input: { command: 'git add -A && git commit -m x' }, transcript_path: transcript, session_id: 's' });
 
+describe('install_act_hook in a git clone', () => {
+    it('keeps everything it installs out of git, so the task tree stays clean and nothing of it is committed', () => {
+        const d = clone();
+        spawnSync('git', ['init', '-q'], { cwd: d });
+        install_act_hook(d, 'gate');
+        expect(spawnSync('git', ['status', '--porcelain'], { cwd: d, encoding: 'utf8' }).stdout.trim()).toBe('');
+    });
+});
+
 describe('install_act_hook', () => {
     it('copies the bound references into .claude/references and registers a project PreToolUse hook', () => {
         const d = clone();

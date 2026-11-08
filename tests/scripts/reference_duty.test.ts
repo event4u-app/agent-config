@@ -326,10 +326,10 @@ describe('the duty chunk failing to load', () => {
         _recordActDutyWith(ledger as never, 'git commit -m x', root, null);
         expect(ledger['duty_errors']).toBe(1);
     });
-    it('a quoted, escaped commit reaches the ledger through pre-check, lexer and table', () => {
+    it('a partly quoted commit reaches the ledger through pre-check, lexer and table', () => {
         const root = workspace();
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', 'commit-policy.md'), `---\ntype: "always"\nload_context:\n  - ${REF}\n---\n\n# commit-policy\n`);
-        run(root, { tool_name: 'Bash', tool_input: { command: 'cd x && git "com\\mit" -m y 2>&1 | tail -1' } });
+        run(root, { tool_name: 'Bash', tool_input: { command: 'cd x && git "comm"it -m y 2>&1 | tail -1' } });
         expect(duty(root)[`commit-policy::${REF}`]).toMatchObject({ pending: 1 });
     });
 });

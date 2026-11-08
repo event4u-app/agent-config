@@ -19,14 +19,16 @@ export const EXPECTED_REFERENCE_DUTY_SCHEMA = 1;
 
 /**
  * Whether a command could run a bound act, so loading the chunk is worth it. A
- * superset of the lexer: quotes and backslashes are removed before matching, and
- * no word boundary is required, so a form the lexer would match is never skipped.
- * A test holds this in step with `src/config/act-references.json`.
+ * superset of the lexer: line continuations, quotes and backslashes are removed
+ * before matching, and no word boundary is required, so a form the lexer would
+ * match is never skipped. It matches the LAST word of each bound act, which keeps
+ * `printf` and the like from loading the chunk; a test holds it in step with
+ * `src/config/act-references.json`.
  */
-export const ACT_WORDS = /commit|push|pr/;
+export const ACT_WORDS = /commit|push|create/;
 
 export function actWordsMayMatch(command: string): boolean {
-    return ACT_WORDS.test(command.replace(/[\\'"]/g, ''));
+    return ACT_WORDS.test(command.replace(/\\\n/g, '').replace(/[\\'"]/g, ''));
 }
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;

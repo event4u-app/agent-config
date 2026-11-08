@@ -81,4 +81,11 @@ export function install_act_hook(clone: string, mode: ActHookMode): void {
     const command = `${JSON.stringify(TSX)} ${JSON.stringify(ACT_HOOK_SCRIPT)} ${mode} ${JSON.stringify(clone)}`;
     const settings = { hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command }] }] } };
     fs.writeFileSync(path.join(dir, 'settings.json'), `${JSON.stringify(settings, null, 2)}\n`);
+    // In a git clone the installed files must not show as untracked or be swept
+    // into a commit: they are the arm, not the task.
+    const exclude = path.join(clone, '.git', 'info', 'exclude');
+    if (fs.existsSync(path.join(clone, '.git'))) {
+        fs.mkdirSync(path.dirname(exclude), { recursive: true });
+        fs.appendFileSync(exclude, '\n.claude/\n');
+    }
 }

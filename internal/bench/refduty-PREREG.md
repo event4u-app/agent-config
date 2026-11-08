@@ -74,3 +74,18 @@ per trial. Spend released by the owner on 2026-11-08
 
 9 reference-decided trials per arm detect large effects only. The tasks test two
 obligations of one reference. A null here is not "references never matter".
+
+## Amendment 1 — an instrument defect, found after the first sweep (2026-11-08)
+
+The first sweep (`internal/bench/reports/ab-v2/2026-11-08T05-56-14Z-ab-v2-paired.json`,
+48 trials, $0.28) is **invalid for `ref-deliver` and `ref-gate`**: `install_act_hook`
+left the files it installs under the clone's `.claude/` untracked, so the clean-tree
+capability check failed in all 24 of their trials, and a `git add -A` could commit
+them into a task's history. `ref-nothing` and `ref-full` install nothing and are
+unaffected. Fix: the installed files are excluded through the clone's
+`.git/info/exclude` (tested). A second deviation: the act recogniser was tightened
+during that sweep (heredoc terminators, `&`, double-quote escapes); the hook of the
+later `ref-deliver`/`ref-gate` trials ran the newer version. Both arms are re-run
+in full with the fixed instrument; the endpoints, the decision rule and the corpus
+are unchanged. The first sweep's figures for those two arms are reported as the
+defect, never as a result.

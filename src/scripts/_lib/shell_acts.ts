@@ -67,8 +67,10 @@ export function simpleCommands(command: string): string[][] {
         if (ch === '"') {
             i += 1;
             while (i < n && command[i] !== '"') {
-                if (command[i] === '\\' && i + 1 < n) {
-                    word += command[i + 1];
+                // Inside double quotes a backslash escapes only $ ` " \ and newline;
+                // before anything else it stays a literal backslash.
+                if (command[i] === '\\' && i + 1 < n && '$`"\\\n'.includes(command[i + 1] as string)) {
+                    if (command[i + 1] !== '\n') word += command[i + 1];
                     i += 2;
                     continue;
                 }
@@ -89,13 +91,25 @@ export function simpleCommands(command: string): string[][] {
             const stripTabs = command[j] === '-';
             if (stripTabs) j += 1;
             while (command[j] === ' ' || command[j] === '\t') j += 1;
-            const m = /^(?:'([^'\n]+)'|"([^"\n]+)"|([^\s;&|<>()'"]+))/.exec(command.slice(j));
-            if (m) {
-                pendingHeredocs.push({ tag: (m[1] ?? m[2] ?? m[3]) as string, stripTabs });
-                i = j + m[0].length;
-                continue;
+            // The terminator is one word after quote removal: `E"OF"` and `'EOF'` are EOF.
+            let tag = '';
+            while (j < n && !/[\s;&|<>()]/.test(command[j] as string)) {
+                const c = command[j] as string;
+                if (c === "'" || c === '"') {
+                    const close = command.indexOf(c, j + 1);
+                    const end = close === -1 ? n : close;
+                    tag += command.slice(j + 1, end);
+                    j = end + 1;
+                } else if (c === '\\' && j + 1 < n) {
+                    tag += command[j + 1];
+                    j += 2;
+                } else {
+                    tag += c;
+                    j += 1;
+                }
             }
-            i += 2;
+            if (tag !== '') pendingHeredocs.push({ tag, stripTabs });
+            i = j > i + 2 ? j : i + 2;
             continue;
         }
         if (ch === '\n') {
