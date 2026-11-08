@@ -64,6 +64,8 @@ import {
     switchQuestionOff,
     writeSwitchRecord,
 } from './_lib/switch_relay.js';
+// The Stop path (`session_eol_hook`) loads this from the chunk, so it stays out of the dispatch bundle.
+export { checkpointBeforeMove } from './_lib/switch_relay.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';

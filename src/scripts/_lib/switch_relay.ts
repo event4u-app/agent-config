@@ -13,13 +13,13 @@
  * each shown once, and a request is no longer read once it reached a terminal state.
  */
 
-import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { type LinkOptions, probeLink, runAgentSwitch } from './agent_switch_link.js';
 import { write_atomic } from './fs_atomic.js';
-import { isAccount, quotaStateDir } from './quota_ledger.js';
+import { isAccount } from './quota_ledger.js';
+import { switchRecordPath } from './switch_record_path.js';
 import type { EnvMap } from './user_global_paths.js';
 
 const CALL_TIMEOUT_MS = 5000;
@@ -144,13 +144,9 @@ export interface SwitchRecord {
     readonly checkpointed: boolean;
 }
 
-function recordPath(sessionHash: string, stateEnv?: EnvMap | null): string {
-    return path.join(quotaStateDir(stateEnv), 'switch', `${createHash('sha256').update(sessionHash).digest('hex').slice(0, 20)}.json`);
-}
-
 export function readSwitchRecord(sessionHash: string, stateEnv?: EnvMap | null): SwitchRecord | null {
     try {
-        const o = obj(JSON.parse(fs.readFileSync(recordPath(sessionHash, stateEnv), 'utf-8')));
+        const o = obj(JSON.parse(fs.readFileSync(switchRecordPath(sessionHash, stateEnv), 'utf-8')));
         const id = str(o?.['id']);
         return o !== null && id !== null && ID_RE.test(id)
             ? { id, decision_told: o['decision_told'] === true, checkpointed: o['checkpointed'] === true }
@@ -161,7 +157,7 @@ export function readSwitchRecord(sessionHash: string, stateEnv?: EnvMap | null):
 }
 
 export function writeSwitchRecord(sessionHash: string, rec: SwitchRecord | null, stateEnv?: EnvMap | null): void {
-    const file = recordPath(sessionHash, stateEnv);
+    const file = switchRecordPath(sessionHash, stateEnv);
     try {
         if (rec === null) {
             fs.rmSync(file, { force: true });

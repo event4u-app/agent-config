@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { appendQuotaSnapshot, hashSessionId } from '../../src/scripts/_lib/quota_ledger.js';
 import { checkpointBeforeMove, readSwitchRecord, relayLine, showSwitch } from '../../src/scripts/_lib/switch_relay.js';
 import { noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
+import { loadMoveCheckpoint, moveCheckpoint } from '../../src/scripts/hooks/session_eol_hook.js';
 
 const FAKE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'fake_agent_switch.mjs');
 const NOW = Date.now();
@@ -310,6 +311,24 @@ describe('4.4 hand the work over', () => {
     it('a session without a raised request never asks agent-switch', () => {
         expect(checkpointBeforeMove(hashSessionId('nobody'), () => true, stateEnv, { env: binEnv })).toBe(false);
         expect(calls('show')).toEqual([]);
+    });
+
+    it('the Stop path loads the link only for a session with a record, and from the quota-notice chunk', () => {
+        const sess = hashSessionId('sess-a');
+        let loads = 0;
+        const load = (): typeof checkpointBeforeMove => {
+            loads++;
+            return (h, w, s) => checkpointBeforeMove(h, w, s, { env: binEnv });
+        };
+        expect(moveCheckpoint(sess, () => true, stateEnv, load)).toBe(false);
+        expect(loads).toBe(0);
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: { kind: 'approve', target: 'claude/b', how: 'after-turn', by: 'ac:claude-code', at: 'x' } });
+        expect(moveCheckpoint(sess, () => true, stateEnv, load)).toBe(true);
+        expect(loads).toBe(1);
+        expect(typeof loadMoveCheckpoint()).toBe('function');
     });
 });
 
