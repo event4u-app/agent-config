@@ -46,3 +46,12 @@ stehenden PR-Bypass. Dafür ist laut deiner Direktive vom 25.10. ein Bypass-Reco
 mit nachträglichem Council-Review fällig." <!-- md-language-check: ignore -->
 
 <!-- standing-bypass: ruleset_version=54936982 -->
+
+The ruleset moved to version `56735008` on 2026-11-07 when the owner removed the
+merge queue (`agents/evidence/owner-directives/2026-11-07-no-merge-queue.md`);
+its bypass actor is unchanged (`RepositoryRole 5`, `bypass_mode: pull_request`,
+read from the ruleset history on 2026-11-08). The owner used the standing bypass
+on 2026-11-08 for PR #2919, after deciding owner ratification of a non-convergent
+council review (`2026-11-08-session-start-contracts-owner-ratification.md`).
+
+<!-- standing-bypass: ruleset_version=56735008 -->
