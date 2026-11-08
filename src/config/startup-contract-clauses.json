@@ -1439,7 +1439,7 @@
           "source": "PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices)",
           "in_law": false,
           "response": "none",
-          "witness": "any log code; drafts/exports",
+          "witness": "every AI draft, log code and data export, whatever it holds",
           "unresolved_ref": null
         },
         {

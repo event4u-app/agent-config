@@ -120,7 +120,7 @@ describe('domain-safety-pii — sector placeholders that are not personal data',
 // line still required personal data, so a draft holding only those fell outside.
 describe('domain-safety-pii — activation covers the non-personal sector values', () => {
     it('the When line names them', () => {
-        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\*[^\n]*any value Must lists as "even if not personal data"/);
+        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\* every AI draft, log code and data export, whatever it holds/);
     });
     it('a finance draft with only a counterparty, cost center and amount routes the rule', () => {
         expect(activated('draft a finance memo to the counterparty with the cost center and the invoice amount')).toContain('domain-safety-pii');
@@ -131,7 +131,7 @@ describe('domain-safety-pii — activation covers the non-personal sector values
 // the same log rule, but the When line reached them only through personal data.
 describe('domain-safety-pii — activation covers a credential with no personal data', () => {
     it('the When line names secrets on their own', () => {
-        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\*[^\n]*secrets \(tokens, API keys, webhook secrets\)/);
+        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\* every AI draft, log code and data export, whatever it holds[^\n]*tokens\/API keys/);
     });
     it('a log line holding only a webhook secret routes the rule', () => {
         expect(activated('add a log line to the logger that prints the webhook secret on startup')).toContain('domain-safety-pii');
@@ -141,6 +141,18 @@ describe('domain-safety-pii — activation covers a credential with no personal 
 // The body's log surface binds every log stream, not only one holding personal data.
 describe('domain-safety-pii — every log code activates the contract', () => {
     it('the When line opens with any log code, unconditioned', () => {
-        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\* any log code;/);
+        expect(contract('domain-safety-pii')).toMatch(/\*\*When:\*\* every AI draft, log code and data export, whatever it holds/);
+    });
+});
+
+// Round 20 (openai): an export of only B2B quasi-identifiers fell outside the
+// conditional When. The body's law binds every draft, log line and export, so
+// the When line now does too.
+describe('domain-safety-pii — activation is unconditional, as the body law is', () => {
+    it('names B2B quasi-identifiers among what an export may hold', () => {
+        expect(contract('domain-safety-pii')).toContain('B2B quasi-IDs like company size/industry/region/founding year');
+    });
+    it('an export of only B2B quasi-identifiers routes the rule', () => {
+        expect(activated('data export to CSV with company size, industry, region and founding year per row')).toContain('domain-safety-pii');
     });
 });

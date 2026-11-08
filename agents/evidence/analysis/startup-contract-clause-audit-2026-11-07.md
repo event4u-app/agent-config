@@ -201,7 +201,7 @@ the config is the record.
 | `domain-safety-disclaimer` | c23 | prohibition | refuse | no | *"What do I have?"* / *"Is this symptom serious?"* → refuse | "what do I have?"/"is this symptom serious?" → refuse |  |
 | `domain-safety-disclaimer` | c24 | obligation | act | no | verifiable from cited data → High; reasoned but unverified → Medium; speculative → Low. | High (verifiable from cited data)/Medium (reasoned, unverified) |  |
 | `domain-safety-pii` | c1 | prohibition | refuse | yes | NO RAW DIRECT IDENTIFIER IN ANY AI-GENERATED DRAFT, LOG LINE, OR EXPORT. | raw direct identifier in AI draft, log line or export |  |
-| `domain-safety-pii` | c2 | trigger | none | no | PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices) | any log code; drafts/exports |  |
+| `domain-safety-pii` | c2 | trigger | none | no | PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices) | every AI draft, log code and data export, whatever it holds |  |
 | `domain-safety-pii` | c3 | ordering | act | no | Redact at generation time, not after review. | redact at generation time |  |
 | `domain-safety-pii` | c4 | obligation | act | yes | Replace any pasted PII with placeholders **before** drafting. | PII → placeholders BEFORE drafting |  |
 | `domain-safety-pii` | c5 | exception | act | no | Real customer names / logos / quotes allowed only when the prompt cites one of: | marketing real names/logos/quotes only if prompt cites | the prompt cites one of: |
