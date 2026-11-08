@@ -52,10 +52,12 @@ compact (the compact-instructions template) is reachable from the docs.
       host-written summary. No path, id or text in the output; roots
       deduplicated by real path.
       verify: `npx vitest run tests/scripts/compaction_census.test.ts` -> 0
+      production entry: `src/scripts/compaction_census.ts` (CLI, run via `./scripts-run`)
 - [x] **1.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/compaction_census.ts --> Tests seen red: the identity comparison inverted fails the suite,
       restored it passes (6 cases: kept/changed id, no summary → unobserved,
       per-probe presence, trigger/median/version, malformed lines, no leak of
       id or text).
+      production entry: `src/scripts/compaction_census.ts` (CLI, run via `./scripts-run`)
 - [x] **1.3** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run on the maintainer corpus and record the reading:
       `agents/evidence/analysis/compaction-identity-and-presence-2026-11-08.md`
       — 274 automatic compactions, id kept 274/274, presence baseline per probe,
