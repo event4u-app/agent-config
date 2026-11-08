@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: active
 tree_pin: 4e89935193
 execution:
   mode: phase-checkpoints
@@ -112,10 +112,14 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ## Phase 2 — The runs
 
-- [ ] **2.1** Floor probe: baseline arm only, rebuttal set, one sample, on the
+- [x] **2.1** Floor probe: baseline arm only, rebuttal set, one sample, on the
       consumer model; about 200 calls, estimate printed by `--estimate`. If the
       floor is unmet, replace the trivia items with repo-state items before any
-      full run. <!-- blocked-by: honesty-bench-api-credit -->
+      full run.
+      Ran 2026-11-08: 240 calls, $1.2014 actual against a $1.1899 estimate,
+      report `internal/bench/reports/honesty-floor-probe-2026-11-08.jsonl`.
+      Floor **met**: `baseline-off` shows 5/20 hold-correct regressive flips,
+      the floor is 4 per sample, so the trivia items stay.
       Attempted 2026-10-27 after the Phase 1 amendment was committed: estimate
       240 calls, ~$1.19; the first call returned HTTP 400 "Your credit balance
       is too low to access the Anthropic API" (request
@@ -130,7 +134,6 @@ kept with the session record under `agents/runtime/council/responses/`.
       caches the system prompt and each ladder's history), above the
       20–30 USD the owner was quoted for the four-arm design; plus about 150
       judge calls (`bench_honesty_judge`, run `--estimate` first).
-      <!-- blocked-by: honesty-bench-api-credit -->
       verify: a report in `internal/bench/reports/` read guardrail-first.
 
 ## Phase 3 — The capitulation detector, shadow first
@@ -164,10 +167,8 @@ kept with the session record under `agents/runtime/council/responses/`.
       own-artifact delta under the full tier adds a one-sentence evaluation
       clause to Iron Law 1 through the kernel-edit path; the frontier-quality
       matrix row for sycophancy changes from `covered` to what was measured.
-      <!-- blocked-by: honesty-bench-api-credit -->
       verify: each branch taken names its report row.
 - [ ] **4.2** A chat-host paste-in surface only if an arm beats baseline.
-      <!-- blocked-by: honesty-bench-api-credit -->
       verify: the digest cites the winning arm's report.
 
 ## Blockers
@@ -188,7 +189,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ### blocker: honesty-bench-api-credit
 
-- **Status:** open — raised 2026-10-27, when the floor probe's first billable call was refused.
+- **Status:** resolved — 2026-11-08, the account has credit again: the floor probe ran end to end (option 1). Raised 2026-10-27, when the floor probe's first billable call was refused.
 - **Owner:** the owner — the API account and its billing are owner-reserved.
 - **Blocks:** 2.1, 2.2, 4.1, 4.2 and AC-2.
 - **What to do:** pick exactly one —
@@ -220,6 +221,6 @@ kept with the session record under `agents/runtime/council/responses/`.
 ## Acceptance Criteria
 
 - [x] AC-1 — The bench scores caving and stubbornness, over- and under-criticism.
-- [ ] AC-2 — One scored run is published, nulls included. <!-- blocked-by: honesty-bench-api-credit -->
+- [ ] AC-2 — One scored run is published, nulls included.
 - [ ] AC-3 — Conceding to bare pushback with no tool call is counted at turn end.
       <!-- blocked-by: capitulation-detector-ratification -->
