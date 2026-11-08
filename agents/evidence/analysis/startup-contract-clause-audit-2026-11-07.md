@@ -1,5 +1,3 @@
-<!-- evidence-type: analysis -->
-
 # Startup-contract clause audit — 2026-11-07
 
 Step 1.1 of `road-to-a-session-start-under-the-host-limit`. Generated from
@@ -8,7 +6,7 @@ every run: each `source` is a byte-exact span of the rule file, each `witness` a
 byte-exact span of the rule's `## Startup contract`. This page is the readable form;
 the config is the record.
 
-**28 rules · 673 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 32827 chars.**
+**28 rules · 675 clauses · 128 already carried by the rule's law section · 13 unresolved references in the source, each resolved inline in its contract · contracts total 33184 chars.**
 
 ## Per rule
 
@@ -20,7 +18,7 @@ the config is the record.
 | `decision-revisit-gate` | 43 | 5 | 1 | 1757 |
 | `doc-screenshot-hygiene` | 22 | 6 | 0 | 1044 |
 | `domain-safety-disclaimer` | 24 | 4 | 0 | 1333 |
-| `domain-safety-pii` | 32 | 2 | 1 | 1528 |
+| `domain-safety-pii` | 33 | 2 | 1 | 1701 |
 | `domain-safety-retention` | 27 | 5 | 0 | 1600 |
 | `engineering-safety-floor` | 27 | 3 | 1 | 1346 |
 | `evaluator-independence` | 27 | 8 | 0 | 1244 |
@@ -30,7 +28,7 @@ the config is the record.
 | `image-likeness-and-rights` | 14 | 3 | 0 | 871 |
 | `legal-safety-floor` | 28 | 6 | 0 | 1379 |
 | `lethal-trifecta-guard` | 15 | 3 | 0 | 722 |
-| `low-impact-corpus-privacy-floor` | 25 | 10 | 1 | 996 |
+| `low-impact-corpus-privacy-floor` | 26 | 10 | 1 | 1048 |
 | `question-not-instruction` | 15 | 0 | 0 | 760 |
 | `runtime-safety` | 18 | 0 | 0 | 701 |
 | `secret-vcs-guard` | 26 | 5 | 0 | 1283 |
@@ -38,7 +36,7 @@ the config is the record.
 | `session-canary` | 18 | 4 | 1 | 975 |
 | `settings-ask-protocol` | 32 | 6 | 0 | 1452 |
 | `source-confidentiality` | 20 | 3 | 0 | 1154 |
-| `strategy-safety-floor` | 31 | 4 | 2 | 1564 |
+| `strategy-safety-floor` | 31 | 4 | 2 | 1696 |
 | `tool-safety` | 22 | 0 | 0 | 857 |
 | `untrusted-input-defense` | 19 | 6 | 1 | 866 |
 | `user-interrupt-priority` | 18 | 4 | 0 | 861 |
@@ -234,6 +232,7 @@ the config is the record.
 | `domain-safety-pii` | c30 | obligation | act | no | '[CUSTOMER_COMPANY]', '[CONTACT_NAME]', paraphrase quotes, round metrics | marketing: paraphrase quotes, round metrics |  |
 | `domain-safety-pii` | c31 | obligation | act | no | 3. **Logger-level redaction.** Configure the logger to scrub | always: logger recursively scrubs |  |
 | `domain-safety-pii` | c32 | stop | stop | no | a PDF whose header reads 'ATTORNEY-CLIENT PRIVILEGED' must hard-stop before | stop before generating |  |
+| `domain-safety-pii` | c33 | bound | none | no | 'ATTORNEY WORK PRODUCT', 'PREPARED AT REQUEST OF COUNSEL', 'LITIGATION HOLD', | PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS |  |
 | `domain-safety-retention` | c1 | trigger | none | no | keyword: "right to be forgotten" | right to be forgotten |  |
 | `domain-safety-retention` | c2 | obligation | ask | yes | NAME THE JURISDICTION GAP. | name jurisdiction gap |  |
 | `domain-safety-retention` | c3 | precedence | act | yes | DEFAULT TO THE LONGEST APPLICABLE FLOOR. | default to longest applicable floor |  |
@@ -466,9 +465,10 @@ the config is the record.
 | `low-impact-corpus-privacy-floor` | c20 | trigger | act | no | - A user intake trigger arrived ('TRIGGER_PHRASES' in | user intake trigger arrived |  |
 | `low-impact-corpus-privacy-floor` | c21 | trigger | act | no | - An entry is about to reach the corpus, or a | entry about to reach corpus |  |
 | `low-impact-corpus-privacy-floor` | c22 | obligation | surface | no | > Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip. | Low-impact corpus refused |  |
-| `low-impact-corpus-privacy-floor` | c23 | stop | stop | no | Then the agent stops the intake / upstream flow. No silent retry, no | stop intake/upstream flow |  |
+| `low-impact-corpus-privacy-floor` | c23 | stop | stop | no | No silent retry, no auto-rewrite. | stop intake/upstream flow |  |
 | `low-impact-corpus-privacy-floor` | c24 | prohibition | stop | no | No silent retry, no | silently retry |  |
 | `low-impact-corpus-privacy-floor` | c25 | prohibition | refuse | no | + inline 'api_key:' shape | inline api_key: shape |  |
+| `low-impact-corpus-privacy-floor` | c26 | prohibition | none | no | match, never the matched value itself, since the marker would otherwise | never echo the matched secret/PII |  |
 | `question-not-instruction` | c1 | trigger | act | no | A QUESTION ASKS FOR AN ANSWER. IT IS NOT AUTHORIZATION TO ACT. | never authorization to act |  |
 | `question-not-instruction` | c2 | prohibition | refuse | no | → ANSWER FIRST. NEVER BUILD, CHANGE, COMMIT, OR EXECUTE ON A QUESTION. | build, change, commit or execute on a question |  |
 | `question-not-instruction` | c3 | prohibition | refuse | no | RUNNING OFF ON A QUESTION IS A RULE VIOLATION, NOT INITIATIVE. | rule violation, not initiative |  |
@@ -638,7 +638,7 @@ the config is the record.
 | `strategy-safety-floor` | c6 | prohibition | refuse | yes | THE AGENT NEVER ISSUES A FINAL "ENTER MARKET X" / "BUILD" / "BUY" / "REORG" CALL. | issue a final "enter market X" |  |
 | `strategy-safety-floor` | c7 | obligation | act | yes | FRAME THE TRADE-OFF. SURFACE THE COST OF EACH PATH. THE FOUNDER DECIDES. | frame trade-off, surface cost of each path |  |
 | `strategy-safety-floor` | c8 | prohibition | refuse | yes | It does **not** make the bet. | call or make the bet |  |
-| `strategy-safety-floor` | c9 | bound | none | yes | Holds for every founder-strategy skill | + 7 siblings |  |
+| `strategy-safety-floor` | c9 | bound | none | yes | Holds for every founder-strategy skill | okr-tree-modeling, org-design, fundraising-narrative |  |
 | `strategy-safety-floor` | c10 | obligation | act | no | Every strategy deliverable (positioning brief, market-entry memo, build-vs-buy analysis, OKR tree, moat map) ends with: | ends w/ the "Not a strategic decision." footer | ends with: |
 | `strategy-safety-floor` | c11 | obligation | act | no | The footer is non-optional. Drop it → safety violation. | dropping it = safety violation |  |
 | `strategy-safety-floor` | c12 | ordering | act | no | Each strategy deliverable surfaces, in this order: | In order: |  |

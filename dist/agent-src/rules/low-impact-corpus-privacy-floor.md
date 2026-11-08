@@ -70,8 +70,10 @@ One-line marker:
 > Low-impact corpus refused — <category>: <snippet…>. Rephrase or skip.
 ```
 
-Then the agent stops the intake / upstream flow. No silent retry, no
-auto-rewrite.
+`<snippet…>` is a masked preview — the category and position of the
+match, never the matched value itself, since the marker would otherwise
+leak what the gate refused. Then the agent stops the intake / upstream
+flow. No silent retry, no auto-rewrite.
 
 ## See also
 

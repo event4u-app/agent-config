@@ -1711,6 +1711,15 @@
           "response": "stop",
           "witness": "stop before generating",
           "unresolved_ref": null
+        },
+        {
+          "id": "c33",
+          "kind": "bound",
+          "source": "`ATTORNEY WORK PRODUCT`, `PREPARED AT REQUEST OF COUNSEL`, `LITIGATION HOLD`,",
+          "in_law": false,
+          "response": "none",
+          "witness": "PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS",
+          "unresolved_ref": null
         }
       ]
     },
@@ -3843,7 +3852,7 @@
         {
           "id": "c23",
           "kind": "stop",
-          "source": "Then the agent stops the intake / upstream flow. No silent retry, no",
+          "source": "No silent retry, no auto-rewrite.",
           "in_law": false,
           "response": "stop",
           "witness": "stop intake/upstream flow",
@@ -3865,6 +3874,15 @@
           "in_law": false,
           "response": "refuse",
           "witness": "inline api_key: shape",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c26",
+          "kind": "prohibition",
+          "source": "match, never the matched value itself, since the marker would otherwise",
+          "in_law": false,
+          "response": "none",
+          "witness": "never echo the matched secret/PII",
           "unresolved_ref": null
         }
       ]
@@ -5426,7 +5444,7 @@
           "source": "Holds for every founder-strategy skill",
           "in_law": true,
           "response": "none",
-          "witness": "+ 7 siblings",
+          "witness": "okr-tree-modeling, org-design, fundraising-narrative",
           "unresolved_ref": null
         },
         {

@@ -29,6 +29,11 @@ triggers:
   - keyword: "export to CSV"
   - keyword: "data export"
   - keyword: "partner integration"
+  - keyword: "ATTORNEY-CLIENT PRIVILEGED"
+  - keyword: "ATTORNEY WORK PRODUCT"
+  - keyword: "PREPARED AT REQUEST OF COUNSEL"
+  - keyword: "LITIGATION HOLD"
+  - keyword: "CONFIDENTIAL — INTERNAL LEGAL ANALYSIS"
   - phrase: "draft a response to"
   - phrase: "marketing email featuring"
   - phrase: "draft feedback for"
@@ -174,7 +179,7 @@ PreToolUse hook — see `agents/settings/contexts/legal-privilege-probe.md`.
 
 ## Startup contract
 
-- **When:** drafts, log code, exports w/ personal data; privileged-doc egress.
+- **When:** drafts, log code, exports w/ personal data; a doc carrying a privilege marker (ATTORNEY-CLIENT PRIVILEGED, ATTORNEY WORK PRODUCT, PREPARED AT REQUEST OF COUNSEL, LITIGATION HOLD, CONFIDENTIAL — INTERNAL LEGAL ANALYSIS) on an outbound path.
 - **Must:** redact at generation time: PII → placeholders BEFORE drafting; marketing: paraphrase quotes, round metrics · logs: allowlisted fields only · prefer log types unable to hold free text; always: logger recursively scrubs email/phone/name/address/token/password/card/iban keys · scrub exception bodies (before_send) · exports: drop or tenant-salted hash name/email/phone/address · drop national IDs (never hash) + card/IBAN · scrub or drop free text.
 - **Never:** raw direct identifier in AI draft, log line or export · demographics (age/gender/ethnicity/family status) in any drafted artifact — ATS record only · user/request blobs or credentials in auth logs; refuse `Log::info($user)`, show allowlisted version.
 - **Except:** marketing real names/logos/quotes only if prompt cites dated reference agreement/quote approval or press-release URL; else redact.

@@ -17,6 +17,14 @@ triggers:
   - keyword: "category"
   - keyword: "where to play"
   - keyword: "where not to play"
+  - keyword: "vision-articulation"
+  - keyword: "positioning-strategy"
+  - keyword: "competitive-moat-analysis"
+  - keyword: "market-entry-analysis"
+  - keyword: "build-buy-partner"
+  - keyword: "okr-tree-modeling"
+  - keyword: "org-design"
+  - keyword: "fundraising-narrative"
   - phrase: "what's our strategy"
   - phrase: "should we enter"
   - phrase: "what's our moat"
@@ -111,7 +119,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## Startup contract
 
-- **When:** pack-founder-strategy installed + in request/open file/loaded skills: any founder-strategy skill (vision-articulation + 7 siblings), vision, positioning, moat, competitive, market entry, OKR, build vs buy, beachhead, GTM, category, where to play or "what's our strategy"/"should we enter"/"where should we focus"/"should we reorg".
+- **When:** pack-founder-strategy installed + in request/open file/loaded skills: any founder-strategy skill (vision-articulation, positioning-strategy, competitive-moat-analysis, market-entry-analysis, build-buy-partner, okr-tree-modeling, org-design, fundraising-narrative), vision, positioning, moat, competitive, market entry, OKR, build vs buy, beachhead, GTM, category, where to play or "what's our strategy"/"should we enter"/"where should we focus"/"should we reorg".
 - **Must:** frame trade-off, surface cost of each path; founder decides. In order: the bet (one sentence: chosen vs given up) · why now/us, ≥1 evidence per claim · counter-case (one paragraph: strongest argument against, no strawman) · residual risk (unresolved + what invalidates it) · named decision owner (default founder) · ends w/ the "Not a strategic decision." footer (copy verbatim from the body; body unreadable → don't deliver, name the missing path); dropping it = safety violation.
 - **Never:** issue a final "enter market X"/"build"/"buy"/"reorg" call or make the bet · "enter X" w/o cost of not entering Y · positioning verdict w/o opposable axis · build/buy w/o integration-cost + optionality · OKR tree w/o measurability + laddering check · moat claim w/o named competitor + evidenced delta · call failing the inversion test · vision w/o counter-case.
 - **Stop:** board memo → `HUMAN REVIEW REQUIRED`, no commit w/o explicit user confirmation · reorg/layoff/org-design → refuse to finalize, `DRAFT` watermark, user reviews people impact · regulated-domain entry → refuse, domain-safety-disclaimer + domain counsel · public positioning → mandatory counter-case + named decision owner.
