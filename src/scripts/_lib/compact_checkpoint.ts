@@ -53,11 +53,12 @@ export const EVENT_LOG_MAX_BYTES = 256 * 1024;
 export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Most directory entries one sweep looks at, kept or removed, so a full
- * directory cannot stall a compaction. Entries past the budget wait for a later
- * sweep; reaching them needs fewer than this many entries ahead of them.
+ * Most directory entries one sweep looks at, kept or removed. A write is
+ * refused while the directory holds more than this, so it never grows past
+ * the budget and every sweep sees all of it: an expired marker is removed by
+ * the next write, however the directory is ordered.
  */
-export const SWEEP_MAX = 200;
+export const SWEEP_MAX = 512;
 
 const MARKER_NAME = /^[0-9a-f]{64}\.json$/;
 const PACKAGE_NAME = '@event4u/agent-config';
@@ -237,18 +238,29 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
 /**
  * Remove markers of any session not touched within `MARKER_RETENTION_MS`;
  * regular files with marker names only. Reads the directory incrementally and
- * stops after `SWEEP_MAX` entries. Returns how many entries it looked at.
+ * looks at no more than `SWEEP_MAX` entries; `complete` says whether it
+ * reached the end.
  */
-export function sweepAbandoned(dir: string, now: Date): number {
+export function sweepAbandoned(dir: string, now: Date): { inspected: number; complete: boolean } {
     let d: fs.Dir;
     try {
         d = fs.opendirSync(dir);
     } catch {
-        return 0;
+        return { inspected: 0, complete: false };
     }
     let inspected = 0;
+    let complete = false;
     try {
-        for (let entry = d.readSync(); entry !== null && inspected < SWEEP_MAX; entry = d.readSync()) {
+        for (;;) {
+            if (inspected >= SWEEP_MAX) {
+                complete = d.readSync() === null;
+                break;
+            }
+            const entry = d.readSync();
+            if (entry === null) {
+                complete = true;
+                break;
+            }
             inspected++;
             if (!MARKER_NAME.test(entry.name)) continue;
             const p = path.join(dir, entry.name);
@@ -256,11 +268,11 @@ export function sweepAbandoned(dir: string, now: Date): number {
             if (st !== null && st.isFile() && now.getTime() - st.mtimeMs > MARKER_RETENTION_MS) fs.rmSync(p, { force: true });
         }
     } catch {
-        // an unreadable entry ends the sweep; the next write tries again
+        complete = false;
     } finally {
         d.closeSync();
     }
-    return inspected;
+    return { inspected, complete };
 }
 
 /** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker. */
@@ -268,7 +280,10 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
     const now = input.now ?? new Date();
     const dir = safeDir(input.env);
     if (dir === null) return 'skipped';
-    sweepAbandoned(dir, now);
+    if (!sweepAbandoned(dir, now).complete) {
+        logEvent(input.env, 'skipped', now);
+        return 'skipped';
+    }
     const key = eolSessionKey(input.sessionId);
     const file = checkpointFile(key, input.env);
     if (lstatOrNull(file) !== null) {

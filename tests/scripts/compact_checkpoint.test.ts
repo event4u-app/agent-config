@@ -264,11 +264,33 @@ describe('compact checkpoint — council round 7 findings (retention)', () => {
     });
 });
 
-describe('compact checkpoint — council round 8 finding (sweep work bound)', () => {
-    it('inspects at most SWEEP_MAX entries, however many the directory holds', () => {
+describe('compact checkpoint — sweep: bounded work and guaranteed cleanup', () => {
+    it('inspects at most SWEEP_MAX entries and reports an incomplete sweep past it', () => {
         const dir = checkpointDir(ENV());
         fs.mkdirSync(dir, { recursive: true });
         for (let i = 0; i < SWEEP_MAX + 100; i++) fs.writeFileSync(path.join(dir, `${i.toString(16).padStart(64, '0')}.json`), '{}');
-        expect(sweepAbandoned(dir, new Date())).toBeLessThanOrEqual(SWEEP_MAX);
+        const r = sweepAbandoned(dir, new Date());
+        expect(r.inspected).toBeLessThanOrEqual(SWEEP_MAX);
+        expect(r.complete).toBe(false);
+    });
+
+    it('writes no new marker while the directory holds more than the sweep can see, so it cannot grow past the budget', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < SWEEP_MAX + 10; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
+        expect(recordPreCompact(base())).toBe('skipped');
+        expect(fs.existsSync(markerFile())).toBe(false);
+    });
+
+    it('reaches an expired marker behind a persistent prefix of other files', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < 250; i++) fs.writeFileSync(path.join(dir, `keep${i}.txt`), 'x');
+        const old = path.join(dir, `${'c'.repeat(64)}.json`);
+        fs.writeFileSync(old, '{}');
+        const past = new Date(Date.parse('2026-11-08T12:00:00Z') - MARKER_RETENTION_MS - 1000);
+        fs.utimesSync(old, past, past);
+        for (let i = 0; i < 3; i++) recordPreCompact(base({ now: new Date(Date.parse('2026-11-08T12:00:00Z') + i) }));
+        expect(fs.existsSync(old)).toBe(false);
     });
 });
