@@ -14630,6 +14630,15 @@ ${contract}
 ${STUB_CONTRACT_CLOSE}
 `;
 }
+var CONTRACT_AUDIT_REL = path34.join("src", "config", "startup-contract-clauses.json");
+function declaredContractRules(packageRoot) {
+  try {
+    const raw = JSON.parse(fs35.readFileSync(path34.join(packageRoot, CONTRACT_AUDIT_REL), "utf-8"));
+    return new Set(Object.keys(raw.rules ?? {}));
+  } catch {
+    return /* @__PURE__ */ new Set();
+  }
+}
 function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, consequenceClass = null, roots = null) {
   const routerPath = roots?.routerPath ?? (roots?.packageRoot === void 0 ? ROUTER : path34.join(roots.packageRoot, "dist", "router.json"));
   const classRoot = roots?.packageRoot ?? REPO_ROOT;
@@ -14639,6 +14648,7 @@ function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, con
   const noTrigger = no_trigger_ids(routerPath);
   const pathOnly = path_only_ids(routerPath);
   const cls = consequenceClass ?? readConsequenceClass(classRoot);
+  const contractBearing = declaredContractRules(classRoot);
   const lawInStub = stubLawIds(cls);
   const wsMap = scope !== null ? rule_workspaces_map(routerPath) : /* @__PURE__ */ new Map();
   const out = /* @__PURE__ */ new Map();
@@ -14657,7 +14667,11 @@ function build_thin(rules_dir = RULES_SOURCE, scope = null, announce = null, con
       continue;
     }
     const noStub = cls.no_stub[stem] !== void 0;
-    const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub;
+    const contractMissing = contractBearing.has(stem) && contract === null;
+    if (announce !== null && contractMissing) {
+      announce(`CONTRACT MISSING: ${path34.basename(p)} \u2014 kept full-bodied, it carries no startup contract`);
+    }
+    const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub || contractMissing;
     if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
       announce(`D3: trigger-less auto rule ${path34.basename(p)} \u2014 kept full-bodied, never thinned`);
     }
