@@ -6,12 +6,14 @@
  *   tsx internal/bench/code-graph/detector_labels.ts collect --subject <name> --clone <dir> --units <units.jsonl> --out <rows.jsonl>
  *   tsx internal/bench/code-graph/detector_labels.ts tamper  --subject <name> --clone <dir> --deps <dir> --rows <rows.jsonl> --out <tamper.jsonl>
  *   tsx internal/bench/code-graph/detector_labels.ts catch   --subject <name> --clone <dir> --rows <rows.jsonl> --sample N --out <catch.jsonl>
+ *   tsx internal/bench/code-graph/detector_labels.ts reread  --subject <name> --clone <dir> --rows <catch.jsonl> --out <catch.jsonl>
  *   tsx internal/bench/code-graph/detector_labels.ts report  --in <file>… --out <report.md> --json <report.json>
  *
  * The labels are predicate-conformance labels: each checks, from a source independent
  * of the graph, the predicate the graph-backed form decides — never whether a finding
  * is harmful. A test-file deletion is read at its parent, where the test still exists;
- * a newly added catch at the commit that adds it.
+ * a newly added catch at the commit that adds it. `reread` recomputes the graph's
+ * reading on rows already labelled and keeps every label as it was (no relabelling).
  */
 import { spawn, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -292,6 +294,40 @@ async function cmdCatch(o: Record<string, string>): Promise<number> {
     return 0;
 }
 
+/** A labelled row with a fresh graph reading; the label and its basis are kept as they were. */
+export function withReading(row: LabelledRow, reading: { graph: LabelledRow['graph']; reason: string; edges: readonly string[] }): LabelledRow {
+    return { ...row, graph: reading.graph, reason: reading.reason, edges: [...reading.edges] };
+}
+
+/** Re-read labelled silent-catch rows with the current graph, at each row's own commit. */
+async function cmdReread(o: Record<string, string>): Promise<number> {
+    const clone = path.resolve(o.clone as string);
+    const rows = readJsonl<LabelledRow>(o.rows as string).filter((r) => r.detector === 'silent-catch' && r.subject === o.subject);
+    const bySha = new Map<string, LabelledRow[]>();
+    for (const r of rows) bySha.set(r.sha, [...(bySha.get(r.sha) ?? []), r]);
+    const out: LabelledRow[] = [];
+    for (const [sha, rs] of bySha) {
+        const dir = path.join(os.tmpdir(), `dl-${String(o.subject)}-${sha.slice(0, 10)}`);
+        try {
+            checkout(clone, sha, dir);
+            const g = await graphAt(dir);
+            for (const r of rs) {
+                const reading = entryPathReading(g, r.file, r.line);
+                out.push(withReading(r, { graph: reading.graph, reason: reading.reason, edges: reading.edges.map((e) => `${e.source} -${e.relation}-> ${e.target}`) }));
+                process.stdout.write(`reread: ${r.key} graph=${String(reading.graph)} label=${String(r.label)}\n`);
+            }
+            g.close();
+            fs.rmSync(path.join(dir, '.dl-graph'), { recursive: true, force: true });
+        } catch (err) {
+            for (const r of rs) out.push(withReading(r, { graph: null, reason: `failed: ${String(err).slice(0, 300)}`, edges: [] }));
+        } finally {
+            dropCheckout(clone, dir);
+        }
+    }
+    fs.writeFileSync(o.out as string, out.map((x) => JSON.stringify(x)).join('\n') + '\n');
+    return 0;
+}
+
 function cmdReport(o: Record<string, string>, multi: Record<string, string[]>): number {
     const rows = (multi.in ?? []).flatMap((f) => readJsonl<LabelledRow>(f));
     const v = verdicts(rows);
@@ -315,8 +351,9 @@ async function main(argv: readonly string[]): Promise<number> {
     if (cmd === 'collect') return cmdCollect(opts);
     if (cmd === 'tamper') return cmdTamper(opts);
     if (cmd === 'catch') return cmdCatch(opts);
+    if (cmd === 'reread') return cmdReread(opts);
     if (cmd === 'report') return cmdReport(opts, multi);
-    process.stderr.write('usage: detector_labels.ts collect|tamper|catch|report …\n');
+    process.stderr.write('usage: detector_labels.ts collect|tamper|catch|reread|report …\n');
     return 2;
 }
 

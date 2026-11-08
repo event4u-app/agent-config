@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type LabelledRow, parseReachability, seededSample, verdicts } from '../../../internal/bench/code-graph/detector_labels.js';
+import { type LabelledRow, parseReachability, seededSample, verdicts, withReading } from '../../../internal/bench/code-graph/detector_labels.js';
 
 const row = (key: string, graph: 'fire' | 'quiet' | null, label: boolean | null, subject = 'unopim'): LabelledRow => ({
     subject,
@@ -51,5 +51,19 @@ describe('detector labels', () => {
         expect(u.verdict.wins).toBe(6);
         expect(u.verdict.losses).toBe(0);
         expect(u.verdict.kind).toBe('pass');
+    });
+});
+
+describe('withReading (reread)', () => {
+    it('replaces the graph reading and keeps the label and its basis', () => {
+        const before = { ...row('k', null, true), reason: 'no indexed symbol encloses the catch', label_basis: 'reachable via route X' };
+        const after = withReading(before, { graph: 'fire', reason: 'entry path found', edges: ['a -routes-to-> b'] });
+        expect(after.graph).toBe('fire');
+        expect(after.reason).toBe('entry path found');
+        expect(after.edges).toEqual(['a -routes-to-> b']);
+        expect(after.label).toBe(true);
+        expect(after.label_basis).toBe('reachable via route X');
+        expect(after.key).toBe('k');
+        expect(before.graph).toBeNull();
     });
 });
