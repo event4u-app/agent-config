@@ -343,6 +343,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       and `code-intelligence` carries the form rule: the graph feeds checks and read
       lists, never prose.
       verify: `grep -c 'impact --diff' src/skills/blast-radius-analyzer/SKILL.md` -> /^[1-9]/
+      Measurement: `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md` (3.5) — the structured checks beat the plain review in direction (B1 > A), but bar (ii) failed (38 unsupported names against 3 allowed), so the skills consume them as advisory input only.
 - [x] 5.3 **The self-review gate reads the checks, advisory.** `self_review_gate.ts`
       receives the three checks as findings with a disposition, typed with the
       exhibits that landed on `review-findings.schema.json` in #2722; advisory until
@@ -433,6 +434,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
 - [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
       verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
-- [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
+- [x] AC-8 <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/self-review-gate.yml --> `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
       > note: 2026-11-06 — the first two hold (5.2). Wiring the checks into `self_review_gate.ts` went through five council rounds (`agents/evidence/council/graph-checks-self-review-20261106.md`); both seats refused every placement on the gate's required path, and the last round named a separate, non-required reporting job as the version it would accept. That narrows the criterion, which is the owner's call; the wiring was withdrawn and the gate is unchanged. Owner decision 2026-11-06: narrowed to a separate, non-required job beside the gate.
       > note: 2026-11-06 — the `graph-checks` job in `self-review-gate.yml` runs `graph_checks_report.ts` (graph built from the PR's clean real head, resolved SHAs, per-check status, artifact refused by the dispositions ledger). Council round 6 (`agents/evidence/council/graph-checks-job-r6-20261106.question.md`) accepted the placement and refused the first implementation; every required change it named is in the shipped version, which no council round has reviewed yet. Open: that review round.
+      > note: done 2026-11-08 — the review rounds ran (7–10, `agents/evidence/council/graph-checks-job-20261108.md`). Round 10: anthropic and openai both `confirmed-non-expanding`, no dealbreaker. Fixed along the way: the flagged count (150, not 180), the fallback report's shape, the summary step's shell branch (now run under bash in tests), the completion marker (summary written last, atomically; a stale one removed first), and claims the job could not back (PR-controlled execution, external requiredness, time budget).
