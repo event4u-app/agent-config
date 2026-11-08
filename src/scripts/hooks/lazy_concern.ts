@@ -121,6 +121,16 @@ export function loadLazyConcernUncached(
     selfUrl: string = import.meta.url,
     bundled: boolean = isBundled(),
 ): ConcernMain | null {
+    return loadLazyExport<ConcernMain>(script, 'main', selfUrl, bundled);
+}
+
+/** Any function a lazy concern's chunk exports, under the same checks as its `main`. */
+export function loadLazyExport<T>(
+    script: string,
+    name: string,
+    selfUrl: string = import.meta.url,
+    bundled: boolean = isBundled(),
+): T | null {
     try {
         const specifier = lazyConcernSpecifier(script, selfUrl, bundled);
         if (specifier === null || !fs.existsSync(specifier)) return null;
@@ -131,8 +141,8 @@ export function loadLazyConcernUncached(
             string,
             unknown
         >;
-        const main = mod['main'];
-        return typeof main === 'function' ? (main as ConcernMain) : null;
+        const fn = mod[name];
+        return typeof fn === 'function' ? (fn as T) : null;
     } catch {
         return null;
     }

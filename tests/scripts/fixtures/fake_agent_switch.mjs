@@ -3,14 +3,21 @@
 //   FAKE_AS_LINK = on | off | contract2 | garbled | exit1   (default on)
 //   FAKE_AS_MCP  = ok | broken                             (default ok)
 //   FAKE_AS_LIMITS = <json>   the limits report, over MCP and over `limits --json`
+//   FAKE_AS_SWITCH_FILE = <path>  a JSON switch request: `switch request` answers
+//                       {request, created}, `switch show` answers it; a missing
+//                       file makes both exit 1 (no candidate / unknown id)
+//   FAKE_AS_LOG = <path>  every argv is appended to it as one JSON line
 // `mcp serve` speaks line-delimited JSON-RPC like the real server; every other
 // verb echoes its argv so a test can assert the CLI fallback's mapping.
+import { appendFileSync, readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 
 const argv = process.argv.slice(2);
 const link = process.env.FAKE_AS_LINK ?? 'on';
 const mcp = process.env.FAKE_AS_MCP ?? 'ok';
 const limits = process.env.FAKE_AS_LIMITS;
+const switchFile = process.env.FAKE_AS_SWITCH_FILE;
+if (process.env.FAKE_AS_LOG) appendFileSync(process.env.FAKE_AS_LOG, `${JSON.stringify(argv)}\n`);
 const out = (v) => process.stdout.write(`${JSON.stringify(v)}\n`);
 
 if (argv[0] === 'link' && argv[1] === 'status') {
@@ -70,6 +77,15 @@ if (argv[0] === 'mcp' && argv[1] === 'serve') {
     });
 } else if (argv[0] === 'limits' && limits !== undefined) {
     process.stdout.write(`${limits}\n`);
+} else if (argv[0] === 'switch' && switchFile !== undefined && (argv[1] === 'request' || argv[1] === 'show')) {
+    let req;
+    try {
+        req = JSON.parse(readFileSync(switchFile, 'utf-8'));
+    } catch {
+        process.stderr.write('no such request\n');
+        process.exit(1);
+    }
+    out(argv[1] === 'request' ? { request: req, created: true } : req);
 } else {
     out({ via: 'cli', argv });
 }

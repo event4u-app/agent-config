@@ -162,6 +162,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-source-silence-cutover | later | later | Every item the predecessor could not close is closed, and each is here because of a named capability gap rather … |
 | road-to-sparring-critic-spike | later | blocked-for-later | Road to sparring-critic spike — one falsification run decides whether the critic exists |
 | road-to-stacks-beyond-php | later | later | A Python, TypeScript or Go repository gets the discipline this tree gives a Laravel one, without a language-named copy of … |
+| road-to-state-and-pins-across-compaction | later | later | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |

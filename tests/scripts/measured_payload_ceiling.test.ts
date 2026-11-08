@@ -396,6 +396,15 @@ describe('payload outside every measured bucket is refused', () => {
         }
     });
 
+    it('the startup-contract tree is classified as installer input, not standing payload', () => {
+        const root = tmpdir();
+        const dir = path.join(root, PROJECTION_ROOT, 'startup-contracts', 'rules');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'x.md'), '## Startup contract\n\n- **When:** a probe.\n', 'utf-8');
+        expect(auditCatalogue(root).findings).toStrictEqual([]);
+        expect(ON_DEMAND_TREES.find((t) => t.dir === 'startup-contracts')?.why).toMatch(/installer input/);
+    });
+
     it('an unclassified projected tree REDS', () => {
         const root = tmpdir();
         const dir = path.join(root, PROJECTION_ROOT, 'a-new-standing-tree');

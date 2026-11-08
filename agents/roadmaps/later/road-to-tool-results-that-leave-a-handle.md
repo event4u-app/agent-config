@@ -28,6 +28,22 @@ relates:
 > full, and naming the output store as the missing foundation for any reduction.
 > Tree facts re-read at `main@9a943f30c` on 2026-10-14.
 
+> **Arrivals:** 3 — latest `inbox-2026-11-zb` (2026-11-08): an analysis of an
+> external context-compression reference proposing to keep large tool outputs out
+> of the prompt behind a searchable local index. Earlier: `inbox-2026-10-p`,
+> `inbox-2026-09-ab`. Four imports for D12 and 3.2, not new steps — each is a
+> claim from an external reading, unverified here:
+> 1. The host now clears old tool results itself ("tool-result clearing" in its
+>    cost docs), so the 2026-10-14 byte baseline must be re-read net of that
+>    before any effect is claimed.
+> 2. Compressed reads broke edit anchors in an external study (patches applied
+>    in 15 of 40 cases instead of 27): a shortened Read must never stand in for
+>    a later `Edit` `old_string` on the same path.
+> 3. A handle without an explicit pointer to its restore path is not used
+>    spontaneously; the pointer belongs to the handle format.
+> 4. Measure success-adjusted billed cost, not bytes; every recall re-sends
+>    bytes that were just folded away.
+
 ## Goal
 
 A large tool result can reach the model shorter than the host produced it
