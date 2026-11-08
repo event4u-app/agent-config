@@ -35,12 +35,16 @@
  * the value of a `const NAME = '...'` string constant declared in the same
  * module before the patterns run. Without that the gate read
  * `${KILL_SWITCH}=1` literally and certified a deny that printed its own kill
- * switch (round inbox-2026-11-zc). A deny may also not name the hook manifest:
- * telling the refused agent to edit or remove its own entry is a bypass too.
+ * switch (round inbox-2026-11-zc). A name declared more than once keeps every
+ * value, and escapes are decoded, so shadowing or `\x41` cannot hide a switch;
+ * a `${…}` inside a plain string is not interpolated and is not resolved. A
+ * deny may also not name the hook manifest: telling the refused agent where its
+ * own entry lives is a bypass too, so any reference is refused.
  *
  * WHAT IT DOES NOT SEE, so nobody reads more into a green than is there:
  * a message assembled at runtime from non-literal parts, a placeholder whose
- * value is not a string constant of the same module, a message in a module
+ * value is not a single string-literal constant of the same module (a
+ * concatenation or a computed value), a message in a module
  * the concern imports, and a kill switch named in a way none of the patterns
  * matches. This is a pattern gate over source text, not a proof about emitted
  * bytes.
@@ -117,7 +121,7 @@ export const SETTINGS_ROOTS: readonly string[] = [
 export interface DenyFinding {
     readonly concern: string;
     readonly file: string;
-    readonly kind: 'env-assignment' | 'export-line' | 'settings-key' | 'manifest-edit';
+    readonly kind: 'env-assignment' | 'export-line' | 'settings-key' | 'manifest-reference';
     readonly text: string;
 }
 
@@ -206,33 +210,68 @@ export function stripComments(src: string): string {
 
 /** Message-shaped string literals — comments already stripped. */
 export function messageLiterals(src: string): string[] {
-    const out: string[] = [];
+    return messageLiteralsWithKind(src).map((l) => l.body);
+}
+
+/** As {@link messageLiterals}, keeping whether each was a template literal. */
+export function messageLiteralsWithKind(src: string): Array<{ body: string; template: boolean }> {
+    const out: Array<{ body: string; template: boolean }> = [];
     const re = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
     for (const m of src.matchAll(re)) {
         const body = m[1] ?? m[2] ?? m[3] ?? '';
         if (/\s/.test(body)) {
-            out.push(body);
+            out.push({ body, template: m[3] !== undefined });
         }
     }
     return out;
 }
 
 const ENV_ASSIGNMENT_RE = /AGENT_CONFIG_[A-Z0-9_]+\s*=/;
-const MANIFEST_RE = /hook_manifest\.yaml/;
+const MANIFEST_RE = /hook_manifest\.(yaml|json)/;
 
-/** Module-level `const NAME = '...'` string constants, comments already stripped. */
-export function stringConstants(src: string): Map<string, string> {
-    const out = new Map<string, string>();
-    const re = /\bconst\s+([A-Za-z_$][\w$]*)\s*(?::\s*string\s*)?=\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
+/** The escapes a JS string literal can carry, decoded, so `\x41` reads as `A`. */
+export function decodeEscapes(raw: string): string {
+    return raw.replace(/\\(u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|.)/g, (_w, all: string, cp?: string, u4?: string, x2?: string) => {
+        const hex = cp ?? u4 ?? x2;
+        if (hex !== undefined) return String.fromCodePoint(parseInt(hex, 16));
+        const simple: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0' };
+        return simple[all] ?? all;
+    });
+}
+
+/**
+ * Every `const NAME = '...'` string constant, comments already stripped, as
+ * ALL the values a name is given anywhere in the module. Scope is not tracked,
+ * so a name declared twice keeps both values and a placeholder is checked
+ * against each: shadowing can then over-report, never hide a kill switch.
+ */
+export function stringConstants(src: string): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    const re = /\bconst\s+([A-Za-z_$][\w$]*)\s*(?::\s*string\s*)?=\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\$]|\\.)*)`)/g;
     for (const m of src.matchAll(re)) {
-        out.set(m[1] as string, m[2] ?? m[3] ?? '');
+        const name = m[1] as string;
+        const value = decodeEscapes(m[2] ?? m[3] ?? m[4] ?? '');
+        out.set(name, [...(out.get(name) ?? []), value]);
     }
     return out;
 }
 
-/** Replace `${NAME}` by the constant's value where one is known; others stay. */
-export function resolvePlaceholders(text: string, constants: ReadonlyMap<string, string>): string {
-    return text.replace(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g, (whole, name: string) => constants.get(name) ?? whole);
+/**
+ * The texts a template literal can print: one per combination of the values
+ * its known placeholders may take (capped), each decoded. Unknown placeholders
+ * stay as written. Only template literals interpolate, so callers pass a plain
+ * string's body through {@link decodeEscapes} alone.
+ */
+export function resolvePlaceholders(text: string, constants: ReadonlyMap<string, readonly string[]>): string[] {
+    let variants = [decodeEscapes(text)];
+    const names = [...new Set([...text.matchAll(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g)].map((m) => m[1] as string))];
+    for (const name of names) {
+        const values = constants.get(name);
+        if (values === undefined) continue;
+        const re = new RegExp(`\\$\\{\\s*${name.replace(/\$/g, '\\$')}\\s*\\}`, 'g');
+        variants = variants.flatMap((v) => values.map((val) => v.replace(re, () => val))).slice(0, 64);
+    }
+    return variants;
 }
 const EXPORT_RE = /(^|[\s`'"(])export\s/;
 
@@ -251,8 +290,9 @@ export function scanSource(concern: string, file: string, src: string): DenyFind
     const out: DenyFinding[] = [];
     const stripped = stripComments(src);
     const constants = stringConstants(stripped);
-    for (const raw of messageLiterals(stripped)) {
-        const text = resolvePlaceholders(raw, constants);
+    for (const lit of messageLiteralsWithKind(stripped)) {
+        const variants = lit.template ? resolvePlaceholders(lit.body, constants) : [decodeEscapes(lit.body)];
+        const text = variants.find((v) => ENV_ASSIGNMENT_RE.test(v) || EXPORT_RE.test(v) || settingsKeyIn(v) || MANIFEST_RE.test(v)) ?? variants[0] ?? lit.body;
         if (ENV_ASSIGNMENT_RE.test(text)) {
             out.push({ concern, file, kind: 'env-assignment', text });
             continue;
@@ -266,7 +306,7 @@ export function scanSource(concern: string, file: string, src: string): DenyFind
             continue;
         }
         if (MANIFEST_RE.test(text)) {
-            out.push({ concern, file, kind: 'manifest-edit', text });
+            out.push({ concern, file, kind: 'manifest-reference', text });
         }
     }
     return out;
@@ -305,7 +345,7 @@ const REASON: Readonly<Record<DenyFinding['kind'], string>> = {
     'env-assignment': 'names an environment kill switch, with its value',
     'export-line': 'carries an `export` line the reader can paste',
     'settings-key': 'names a settings key path',
-    'manifest-edit': 'points the refused agent at the hook manifest, its own off switch',
+    'manifest-reference': 'names the hook manifest, the file that switches the guard off',
 };
 
 export function main(argv: readonly string[]): number {
@@ -393,8 +433,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: GATE,
-        minCases: 10,
-        minRejectCases: 5,
+        minCases: 13,
+        minRejectCases: 7,
         cases: [
             {
                 name: 'an empty corpus is refused, not certified green',
@@ -432,6 +472,42 @@ function selfTest(): number {
                 name: 'a deny pointing at the hook manifest fails',
                 expect: 'reject',
                 run: () => run(plant('manifest', emit('BLOCKED — remove the entry in src/scripts/hook_manifest.yaml'))),
+            },
+            {
+                name: 'a shadowed constant cannot hide the kill switch',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        plant(
+                            'shadow',
+                            "const KILL = 'AGENT_CONFIG_X';\nfunction f() { const KILL = 'harmless'; return KILL; }\nvoid f;\n" +
+                                'process.stderr.write(`BLOCKED (override: ${KILL}=1)`);\n',
+                        ),
+                    ),
+            },
+            {
+                name: 'an escaped kill-switch name is decoded before matching',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        plant(
+                            'escape',
+                            "const KILL = 'AGENT_CONFIG_\\x58';\n" +
+                                'process.stderr.write(`BLOCKED (override: ${KILL}=1)`);\n',
+                        ),
+                    ),
+            },
+            {
+                name: 'a ${NAME} inside a plain string is not interpolated',
+                expect: 'accept',
+                run: () =>
+                    run(
+                        plant(
+                            'plain-dollar',
+                            "const KILL = 'AGENT_CONFIG_X';\nvoid KILL;\n" +
+                                "process.stderr.write('BLOCKED: the shell form ${KILL}=1 is quoted here as text');\n",
+                        ),
+                    ),
             },
             {
                 name: 'a placeholder naming a non-switch constant passes',
