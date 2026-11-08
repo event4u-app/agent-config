@@ -1,26 +1,26 @@
 /**
- * Compaction checkpoint — written at `pre_compact`, observed after, never injected.
+ * Compaction checkpoint — written at `pre_compact`, classified after, never injected.
  *
  * Injection is deliberately absent: (session key, transcript hash) names the
  * session, not the compaction attempt, so a checkpoint left behind by an
  * aborted compaction would match the next one. Until an attempt-specific
  * signal exists this module only writes and measures.
  *
- * Three facts it records, each the council asked for:
+ * What it records:
  *
- *   - `orphaned` — a checkpoint still unobserved when the next `pre_compact`
- *     writes. That is the aborted-attempt case; its rate is the evidence the
- *     attempt-identity blocker waits on.
- *   - the post-compaction classification — `match`, `key-mismatch`,
- *     `version-mismatch`, `stale` or `none` — of what an injection WOULD have
- *     met. Nothing is returned to the model on any path.
- *   - `age_ms` between write and observation, so a staleness bound can be set
- *     from readings rather than guessed.
+ *   - `orphaned` — a checkpoint still unclassified when the next `pre_compact`
+ *     runs. An aborted compaction produces this, and so does a compaction whose
+ *     `session_start` never reached the concern; the count cannot tell them apart.
+ *   - the post-compaction class — `match`, `key-mismatch`, `version-mismatch`,
+ *     `stale` or `none` — of what an injection WOULD have met. Nothing is
+ *     returned to the model on any path.
+ *   - `age_ms` between write and classification, so a staleness bound can be
+ *     set from readings rather than guessed.
  *
- * The checkpoint body is the deterministic continuity record
- * (`continuity_writer.buildContinuityRecord`): same gates, same forbidden
- * judgement fields. The event log carries counts and ages only — no session
- * id, path or slug — because it outlives the session that wrote it.
+ * The checkpoint body is the deterministic continuity record: same gates, same
+ * forbidden judgement fields. The event log carries counts and ages only and is
+ * bounded. Writes refuse a symlinked directory or file, because hooks run
+ * inside repositories whose contents others can supply.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -31,6 +31,9 @@ import { eolSessionKey, eolStateFile, type StoredEolCounters } from './session_e
 
 /** A classification older than this reads as `stale`. A stated default, set to be revised from `age_ms` readings. */
 export const STALE_AFTER_MS = 10 * 60 * 1000;
+
+/** The event log keeps at most this many lines; older ones are dropped on the next write. */
+export const EVENT_LOG_MAX_LINES = 2000;
 
 export type PreCompactOutcome = 'written' | 'skipped';
 export type PostCompactOutcome = 'match' | 'key-mismatch' | 'version-mismatch' | 'stale' | 'none';
@@ -51,7 +54,6 @@ interface Checkpoint {
     transcript_hash: string;
     package_version: string | null;
     written_at: string;
-    observed_at: string | null;
     continuity: Record<string, unknown>;
 }
 
@@ -71,27 +73,66 @@ export function transcriptHash(transcriptPath: string): string {
     return crypto.createHash('sha256').update(transcriptPath).digest('hex').slice(0, 16);
 }
 
-function readCheckpoint(file: string): Checkpoint | null {
+function isSymlink(p: string): boolean {
     try {
-        const cp = JSON.parse(fs.readFileSync(file, 'utf8')) as Checkpoint;
-        return cp && cp.schema_version === 1 && typeof cp.written_at === 'string' ? cp : null;
+        return fs.lstatSync(p).isSymbolicLink();
+    } catch {
+        return false;
+    }
+}
+
+/** The directory, created if absent, or `null` when it or a parent we create into is a symlink. */
+function safeDir(root: string): string | null {
+    const dir = checkpointDir(root);
+    if (isSymlink(dir) || isSymlink(path.dirname(dir))) return null;
+    fs.mkdirSync(dir, { recursive: true });
+    return isSymlink(dir) ? null : dir;
+}
+
+function readCheckpoint(file: string): Checkpoint | null {
+    if (isSymlink(file)) return null;
+    try {
+        const cp = JSON.parse(fs.readFileSync(file, 'utf8')) as Partial<Checkpoint>;
+        if (
+            cp?.schema_version !== 1 ||
+            typeof cp.session_key !== 'string' ||
+            typeof cp.transcript_hash !== 'string' ||
+            typeof cp.written_at !== 'string' ||
+            !Number.isFinite(Date.parse(cp.written_at)) ||
+            (cp.package_version !== null && typeof cp.package_version !== 'string') ||
+            cp.continuity === null ||
+            typeof cp.continuity !== 'object'
+        ) {
+            return null;
+        }
+        return cp as Checkpoint;
     } catch {
         return null;
     }
 }
 
-function writeAtomic(file: string, body: string): void {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    const tmp = `${file}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, body);
+function writeAtomic(dir: string, file: string, body: string): void {
+    if (isSymlink(file)) throw new Error('refusing to write through a symlink');
+    const tmp = path.join(dir, `.${path.basename(file)}.${crypto.randomBytes(6).toString('hex')}.tmp`);
+    fs.writeFileSync(tmp, body, { flag: 'wx' });
     fs.renameSync(tmp, file);
 }
 
 function logEvent(root: string, event: EventName, now: Date, ageMs?: number): void {
+    const dir = safeDir(root);
+    if (dir === null) return;
+    const file = eventsFile(root);
+    if (isSymlink(file)) return;
     const row: Record<string, unknown> = { at: now.toISOString(), event };
     if (ageMs !== undefined) row['age_ms'] = ageMs;
-    fs.mkdirSync(checkpointDir(root), { recursive: true });
-    fs.appendFileSync(eventsFile(root), `${JSON.stringify(row)}\n`);
+    let lines: string[] = [];
+    try {
+        lines = fs.readFileSync(file, 'utf8').split('\n').filter((l) => l.trim() !== '');
+    } catch {
+        lines = [];
+    }
+    lines.push(JSON.stringify(row));
+    writeAtomic(dir, file, `${lines.slice(-EVENT_LOG_MAX_LINES).join('\n')}\n`);
 }
 
 function readCounters(root: string, sessionKey: string): StoredEolCounters | null {
@@ -103,17 +144,18 @@ function readCounters(root: string, sessionKey: string): StoredEolCounters | nul
     }
 }
 
-/** `pre_compact`: write this session's checkpoint; an unobserved predecessor is counted as orphaned first. */
+/** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's checkpoint. */
 export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
     const now = input.now ?? new Date();
+    const dir = safeDir(input.root);
+    if (dir === null) return 'skipped';
     const key = eolSessionKey(input.sessionId);
     const file = checkpointFile(input.root, key);
-    const previous = readCheckpoint(file);
-    if (previous !== null && previous.observed_at === null) {
-        // Invalidate before deciding whether to write: a skipped write must not
-        // leave the previous attempt's checkpoint eligible for this compaction.
-        logEvent(input.root, 'orphaned', now);
+    if (fs.existsSync(file) || isSymlink(file)) {
+        // Removed before anything else, and counted only once the removal held,
+        // so a skipped write below can never leave the predecessor eligible.
         fs.rmSync(file, { force: true });
+        logEvent(input.root, 'orphaned', now);
     }
 
     const decision = buildContinuityRecord({
@@ -133,35 +175,37 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
         transcript_hash: transcriptHash(input.transcriptPath),
         package_version: input.version,
         written_at: now.toISOString(),
-        observed_at: null,
         continuity: decision.record,
     };
-    writeAtomic(file, `${JSON.stringify(cp, null, 2)}\n`);
+    writeAtomic(dir, file, `${JSON.stringify(cp, null, 2)}\n`);
     logEvent(input.root, 'written', now);
     return 'written';
 }
 
 /**
- * `session_start(compact)`: classify what an injection would have met, mark the
- * checkpoint observed, and return only the class. Never the checkpoint.
+ * `session_start(compact)`: classify what an injection would have met, log it,
+ * then consume the checkpoint. Returns only the class, never the checkpoint.
  */
 export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     const now = input.now ?? new Date();
-    const file = checkpointFile(input.root, eolSessionKey(input.sessionId));
+    const key = eolSessionKey(input.sessionId);
+    const file = checkpointFile(input.root, key);
     const cp = readCheckpoint(file);
     let outcome: PostCompactOutcome;
     let ageMs: number | undefined;
-    if (cp === null || cp.observed_at !== null) {
+    if (cp === null) {
         outcome = 'none';
     } else {
         ageMs = Math.max(0, now.getTime() - Date.parse(cp.written_at));
-        if (cp.transcript_hash !== transcriptHash(input.transcriptPath)) outcome = 'key-mismatch';
+        if (cp.session_key !== key || cp.transcript_hash !== transcriptHash(input.transcriptPath)) outcome = 'key-mismatch';
         else if (cp.package_version !== input.version) outcome = 'version-mismatch';
         else if (ageMs > STALE_AFTER_MS) outcome = 'stale';
         else outcome = 'match';
-        writeAtomic(file, `${JSON.stringify({ ...cp, observed_at: now.toISOString() }, null, 2)}\n`);
     }
+    // Logged before the checkpoint is consumed: if the log write fails, the
+    // checkpoint stays and the next observation classifies it again.
     logEvent(input.root, outcome, now, ageMs);
+    if (fs.existsSync(file) && !isSymlink(file)) fs.rmSync(file, { force: true });
     return outcome;
 }
 
