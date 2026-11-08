@@ -51,7 +51,7 @@ import * as path from 'node:path';
 import { read_lockfile } from './installed_lock.js';
 
 /**
- * The six refusing detectors, in the order the gate runs them (G only counts).
+ * The six detectors, in the order the gate runs them.
  *
  * The roadmap's § 0 names three (A promissory, B language, C verification).
  * That was true of the draft and is not true of the tree: detector D
@@ -709,8 +709,7 @@ export function pruneAgedRefusalState(
     }
     const cutoffMs = now.getTime() - maxAgeDays * 24 * 60 * 60 * 1000;
     for (const name of entries) {
-        const advisory = name.endsWith('.advisory.jsonl');
-        if (!name.endsWith('.json') && !advisory) continue;
+        if (!name.endsWith('.json')) continue;
         result.scanned += 1;
         const file = path.join(dir, name);
         // A shadow record is a sibling in the same directory whose name also
@@ -718,9 +717,7 @@ export function pruneAgedRefusalState(
         // Left to the branch below it would land in `kept` FOREVER — the
         // unbounded growth this pruner exists to stop, reintroduced by the
         // instrument step 2.1 added. Its own clock is `last_at`.
-        // Detector G's counter (`.advisory.jsonl`) is measurement too: it takes
-        // this branch, fails the shadow parse, and ages out on its mtime.
-        if (name.endsWith(SHADOW_SUFFIX) || advisory) {
+        if (name.endsWith(SHADOW_SUFFIX)) {
             let shadow: ShadowRecord | null = null;
             try {
                 shadow = parseShadowRecord(fs.readFileSync(file, 'utf-8'));

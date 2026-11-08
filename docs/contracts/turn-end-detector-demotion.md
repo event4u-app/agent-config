@@ -25,7 +25,7 @@ NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
 A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
 ```
 
-## The seven detectors
+## The six detectors
 
 Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
 prose — the roadmap that opened this question named three, the tree had four,
@@ -42,26 +42,6 @@ counted alone would have under-reported the gate.
 | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
 | E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
 | F `untested` | a completion claim over production source the turn changed, with no test file touched anywhere in the turn | that "done" means exercised, not merely run | only when no dispatch is open |
-| G `capitulation` | the prompt is a bare challenge (a challenge phrase followed only by words from a closed list, no code, link, digit or quotation mark), the closing reply concedes the reply before that prompt, and the turn made no tool call | that an answer changes because something was checked | only where `AGENT_CONFIG_CAPITULATION_COUNT=1` is set; never refuses |
-
-**G is advisory, counts-only and default-off.** It is never a finding the gate
-refuses on: a firing appends `{"turn":N}` to `<session>.advisory.jsonl` beside
-the refusal record, and the count is the number of distinct turns in that file
-(append-only, so concurrent stops cannot lose a line, and a duplicate counts
-once). No prompt or reply text is stored; the refusal-state pruner ages the file
-out like a shadow record. Its remedy is "check first, then keep or change
-the answer and say why", so the count is never a push toward holding. Default
-off is decision H1 of road-to-a-challenge-the-bench-has-measured (AI council,
-2026-10-27, anthropic and openai, 2/2): counting firings measures how often it
-fires, not whether it is right, so it ships enabled nowhere until a labelled
-corpus measures its precision. **It ships in its own chunk**
-(`dist/hooks/capitulation.chunk.cjs`, read through `loadLazyExport` in
-`hooks/lazy_concern.ts` only when the flag is set), so the dispatch bundle every
-hook event loads carries the flag check and one table row, not the detector. G has no bar and no
-sample floor here; a promotion would register both first, under the rule above.
-**Sunset:** by 2027-01-31 G is either promoted with a registered bar or
-removed; `tests/scripts/capitulation_detector.test.ts` fails after that date
-while `CAPITULATION_BAR` is unset, so the decision cannot lapse silently.
 
 **Why E runs on every turn-end rather than joining A and D.** The conditional
 pair is excused by an open dispatch because a completion claim mid-dispatch is
@@ -77,7 +57,7 @@ cannot excuse — the dispatch IS the continuation that drops it. F fires on a
 completion CLAIM, and a turn waiting on a subagent has not finished, so its
 closing is not the claim F is about. Same slot, opposite trigger.
 
-**Three of the six refusing detectors are conditional, and the fourth column is load-bearing.**
+**Three of the six are conditional, and the fourth column is load-bearing.**
 `main()` runs A, D and F only when `dispatchOpen` is false — an open subagent
 dispatch excuses a promissory closing and an unsettled completion claim, and
 excuses nothing about B or C. So there are **three** allow paths, not two: the two
@@ -204,7 +184,7 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
   **This clause said "A and D" until 2026-10-01 and the set was wrong**, which
   an independent review found by reading the gate rather than this paragraph.
   `runDetectors` in `turn_end_gate_hook.ts` gates **three** detectors on
-  `dispatchOpen` — A, D and F — and § The seven detectors above has said so in its
+  `dispatchOpen` — A, D and F — and § The six detectors above has said so in its
   fourth column since F landed on 2026-09-11. This paragraph simply predates F
   and was never revisited. `DISPATCH_CENSORED_DETECTORS` in
   `src/scripts/measure_turn_end_gate.ts` is now the single set both the gate's
@@ -623,7 +603,7 @@ right verdict, and both halves of that are worth keeping.
 
 - [`concern-activation-policy`](concern-activation-policy.md) — the ladder, the generic reverse triggers, and the `would_fire` shadow mechanism instrument 1 applies.
 - [`hook-architecture-v1`](hook-architecture-v1.md) — the dispatcher contract, and which hosts carry a `stop` slot at all.
-- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its seven detectors (six refusing, G counting), and the two re-entrancy layers Q1 dies on.
+- `src/scripts/hooks/turn_end_gate_hook.ts` — the gate, its six detectors, and the two re-entrancy layers Q1 dies on.
 - `src/scripts/_lib/turn_end_refusals.ts` — `DETECTOR_IDS`, `RefusalRecord`, `ShadowRecord`, and the counts Q2 is read from.
 - `src/scripts/measure_turn_end_gate.ts` — `renderQ1`, the shadow-corpus reader, with `collectShadowStats`, `DISPATCH_CENSORED_DETECTORS` and `retryConditionedShare` — the last of which is NOT Q1 and says so in its own docstring. `--q1` prints the retry-conditioned share without a transcript corpus, and states in its header that it is not bar-comparable.
 - [`condensation-default-kill-criterion`](condensation-default-kill-criterion.md) — the sibling shape: one feature's kill criterion, pre-registered with its decision table.

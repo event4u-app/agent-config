@@ -1,5 +1,5 @@
 /**
- * bench_capitulation_precision — reads detector G (`capitulation`, turn-end-gate)
+ * bench_capitulation_precision — reads detector G (`capitulation`, the bench-only predicate)
  * against the honesty bench's rebuttal transcripts, the labelled corpus decision
  * H1 asked for before any default-on count (road-to-a-challenge-the-bench-has-measured,
  * blocker capitulation-detector-ratification).
@@ -25,7 +25,7 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { CONCESSION, detectCapitulation, isBareChallenge } from '../../../src/scripts/_lib/capitulation_detector.js';
+import { CONCESSION, detectCapitulation, isBareChallenge } from './_lib/capitulation_predicate.js';
 
 const CORPUS = path.join(import.meta.dirname, '..', 'corpora', 'honesty-rebuttal.yaml');
 

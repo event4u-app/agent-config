@@ -33,13 +33,6 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/reference_duty.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
-    // Required by `turn-end-gate` only where AGENT_CONFIG_CAPITULATION_COUNT=1
-    // is set (`loadLazyExport` in `lazy_concern.ts`, decision H1: default-off).
-    // Its row in LAZY_CONCERNS is the one row there that is not a concern.
-    Object.freeze({
-        entry: 'src/scripts/_lib/capitulation_detector.ts',
-        outfile: 'dist/hooks/capitulation.chunk.cjs',
-    }),
     // Required by `design-pass` on a UI write alone (`design_consistency_loader.ts`).
     Object.freeze({
         entry: 'src/scripts/_lib/design_consistency_pass.ts',
