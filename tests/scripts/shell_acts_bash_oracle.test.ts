@@ -130,6 +130,18 @@ const CASES: Array<[string, string[]]> = [
     // tabs are stripped from the joined line, so a tab after a continuation stays.
     ['cat <<-EOF\nE\\\n\tOF\ngit push\nEOF', []],
     ['cat <<-EOF\n\tE\\\nOF\ngit push\nEOF', [P]],
+    // Round-11 counterexamples: wrapper chains, and branches behind a failed act.
+    ['exec exec git push', []],
+    ['nohup exec git push', []],
+    ['exec nohup git push', [P]],
+    ['command exec git push', [P]],
+    ['command command git push', [P]],
+    ['nohup nohup git push', [P]],
+    ['time exec git push', [P]],
+    ['nohup command git push', [P]],
+    ['git push || git commit -m x', [C, P]],
+    ['true && { git push || gh pr create -t t; }', [G, P]],
+    ['git push && git commit -m x || gh pr create -t t', [C, G, P]],
     ['>out time git push', [P]],
     // Reserved words open a command; they do not name it.
     ['! git push', [P]],

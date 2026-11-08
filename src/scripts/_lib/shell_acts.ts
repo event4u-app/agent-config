@@ -21,7 +21,9 @@
  * after `command` / `nohup`, are skipped; `command -v` / `-V` run nothing. Other
  * wrapper options (`sudo -u …`, `command -p`) are not interpreted. Leading unquoted
  * reserved words (`!`, `{`, `if`, `then`, `else`, `elif`, `do`, `while`, `until`) open
- * the command rather than name it. Where bash versions differ, this follows bash 5. Not interpreted: `$(…)` and
+ * the command rather than name it. After `exec` / `nohup` / `sudo` / time(1) a
+ * following `exec` is a program name, not a wrapper. Where bash versions differ,
+ * this follows bash 5. Not interpreted: `$(…)` and
  * backticks (their text stays inside the word), subshell parentheses, `eval`,
  * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
@@ -284,10 +286,15 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
     const opener = start === 0 ? null : (words[start - 1] as Word).text;
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
     let assignOk = true;
+    // After `exec`, `nohup`, `sudo` or time(1) the next word is looked up as an
+    // external program, and there is no `exec` program: `exec exec git push` runs
+    // nothing. `command` and `time` exist as programs on POSIX systems and are
+    // taken to (the larger set of potential acts).
+    let external = false;
     while (k < words.length) {
         const w = words[k] as Word;
         if (w.assign && assignOk) k += 1;
-        else if (PREFIX_WORDS.has(w.text)) {
+        else if (PREFIX_WORDS.has(w.text) && !(external && w.text === 'exec')) {
             // `time` is the keyword only unquoted, first in its command after any
             // reserved-word opener (no other word or redirection before it) and at
             // the start of a pipeline;
@@ -303,6 +310,7 @@ function normalise({ words, piped, redirectAt }: Simple): string[] {
                 // after `!`, `if`, `elif`, `while` and `until`, which this follows not.
                 (opener !== null || !piped);
             assignOk = ASSIGN_AFTER.has(w.text) && (w.text !== 'time' || keyword);
+            external = w.text === 'exec' || w.text === 'nohup' || w.text === 'sudo' || (w.text === 'time' && !keyword);
             k += 1;
             const next = words[k]?.text;
             // `command -v` / `-V` only describe the command; they run nothing.

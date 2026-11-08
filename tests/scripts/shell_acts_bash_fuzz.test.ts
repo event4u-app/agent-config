@@ -39,7 +39,7 @@ function mangle(r: () => number, word: string): string {
 }
 
 const ACT_FORMS = [['git', 'commit', '-m', 'x'], ['git', 'push'], ['gh', 'pr', 'create', '-t', 't'], ['git', '-C', '"my dir"', 'commit', '-q']];
-const PREFIXES = ['', 'X=1 ', "'X=1' ", '"X"=1 ', 'X="a b" ', 'time ', '"time" ', 'nohup ', 'command ', 'sudo ', 'sudo X=1 ', 'nohup X=1 ', 'command X=1 ', 'time X=1 ', 'X=1 nohup ', 'time -p ', 'time -p X=1 ', 'command -- ', 'nohup -- ', 'command -v '];
+const PREFIXES = ['', 'X=1 ', "'X=1' ", '"X"=1 ', 'X="a b" ', 'time ', '"time" ', 'nohup ', 'command ', 'sudo ', 'sudo X=1 ', 'nohup X=1 ', 'command X=1 ', 'time X=1 ', 'X=1 nohup ', 'time -p ', 'time -p X=1 ', 'command -- ', 'nohup -- ', 'command -v ', 'nohup nohup ', 'command command ', 'nohup command ', 'time nohup ', 'nohup time '];
 const OTHERS = ['echo hi', 'echo "git push"', "echo 'git commit -m x'", 'cat <<< "git push"', 'cat <<<x', 'make', 'npm test', 'echo a # ; git push', 'echo "a; git push"', 'echo hello\\; git push'];
 const TAGS: Array<[string, string, boolean]> = [
     ['EOF', 'EOF', false], ["'EOF'", 'EOF', true], ['"EOF"', 'EOF', true], ['E"OF"', 'EOF', true],
@@ -102,6 +102,9 @@ function command(r: () => number): string {
     let needNewline = false;
     for (let k = 1 + Math.floor(r() * 4); k > 0; k -= 1) {
         if (out !== '') out += needNewline ? '\n' : pick(r, ['; ', ' && ', ' | ', '\n', ' & ', ' || ', ' &\\\n& ', ' |\\\n| ']);
+        // Commands after `&&` / `||` start behind `true;`: chaining the generated
+        // commands directly would make one branch depend on the outcome of another,
+        // which the oracle's eight runs cannot reach independently.
         if (/(&|\|)(\\\n)?\1 $/.test(out)) out = `${out}true; `;
         const h = r() < 0.25;
         out += h ? heredoc(r) : simple(r);
@@ -140,5 +143,5 @@ describe.skipIf(MAJOR < 4)('generated commands: the recogniser agrees with bash'
         }
         expect(mismatches).toEqual([]);
         expect(skipped).toBeLessThan(N * 0.05);
-    }, Math.max(120_000, N * 700));
+    }, Math.max(120_000, N * 1500));
 });
