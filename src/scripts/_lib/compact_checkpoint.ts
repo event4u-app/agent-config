@@ -61,6 +61,10 @@ export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
 export const SWEEP_MAX = 512;
 
 const MARKER_NAME = /^[0-9a-f]{64}\.json$/;
+const TEMP_NAME = /^\..+\.[0-9a-f]{12}\.tmp$/;
+
+/** Entries a marker write may add: the marker itself and, if absent, the event log. */
+const WRITE_RESERVE = 2;
 const PACKAGE_NAME = '@event4u/agent-config';
 
 const MARKER_MAX_BYTES = 4 * 1024;
@@ -196,16 +200,22 @@ function readMarker(file: string): Marker | null {
 function writeAtomic(dir: string, file: string, body: string): void {
     if (lstatOrNull(file)?.isSymbolicLink()) throw new Error('refusing to write through a symlink');
     const tmp = path.join(dir, `.${path.basename(file)}.${crypto.randomBytes(6).toString('hex')}.tmp`);
-    fs.writeFileSync(tmp, body, { flag: 'wx' });
-    fs.renameSync(tmp, file);
+    try {
+        fs.writeFileSync(tmp, body, { flag: 'wx' });
+        fs.renameSync(tmp, file);
+    } catch (err) {
+        fs.rmSync(tmp, { force: true });
+        throw err;
+    }
 }
 
-function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: number): void {
+/** Whether the event reached the log. */
+function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: number): boolean {
     const dir = safeDir(env);
-    if (dir === null) return;
+    if (dir === null) return false;
     const file = eventsFile(env);
     const st = lstatOrNull(file);
-    if (st !== null && !st.isFile()) return;
+    if (st !== null && !st.isFile()) return false;
     const row: Record<string, unknown> = { at: now.toISOString(), event };
     if (ageMs !== undefined) row['age_ms'] = ageMs;
     const line = `${JSON.stringify(row)}\n`;
@@ -222,22 +232,24 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
             bytes += len;
         }
         writeAtomic(dir, file, `${kept.join('\n')}${kept.length > 0 ? '\n' : ''}${line}`);
-        return;
+        return true;
     }
     const { O_WRONLY, O_APPEND, O_CREAT, O_NOFOLLOW, O_NONBLOCK } = fs.constants;
     const fd = fs.openSync(file, O_WRONLY | O_APPEND | O_CREAT | (O_NOFOLLOW ?? 0) | (O_NONBLOCK ?? 0), 0o644);
     try {
         // Re-checked on the descriptor: a FIFO or a hard-linked file swapped in after the lstat is refused.
         const fst = fs.fstatSync(fd);
-        if (fst.isFile() && fst.nlink === 1) fs.writeSync(fd, line);
+        if (!(fst.isFile() && fst.nlink === 1)) return false;
+        fs.writeSync(fd, line);
+        return true;
     } finally {
         fs.closeSync(fd);
     }
 }
 
 /**
- * Remove markers of any session not touched within `MARKER_RETENTION_MS`;
- * regular files with marker names only. Reads the directory incrementally and
+ * Remove markers of any session, and temporary files, not touched within
+ * `MARKER_RETENTION_MS`; regular files with those names only. Reads the directory incrementally and
  * looks at no more than `SWEEP_MAX` entries; `complete` says whether it
  * reached the end.
  */
@@ -262,7 +274,7 @@ export function sweepAbandoned(dir: string, now: Date): { inspected: number; com
                 break;
             }
             inspected++;
-            if (!MARKER_NAME.test(entry.name)) continue;
+            if (!MARKER_NAME.test(entry.name) && !TEMP_NAME.test(entry.name)) continue;
             const p = path.join(dir, entry.name);
             const st = lstatOrNull(p);
             if (st !== null && st.isFile() && now.getTime() - st.mtimeMs > MARKER_RETENTION_MS) fs.rmSync(p, { force: true });
@@ -275,22 +287,23 @@ export function sweepAbandoned(dir: string, now: Date): { inspected: number; com
     return { inspected, complete };
 }
 
-/** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker. */
+/** `pre_compact`: invalidate an unclassified predecessor, then write this attempt's marker if there is room. */
 export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
     const now = input.now ?? new Date();
     const dir = safeDir(input.env);
     if (dir === null) return 'skipped';
-    if (!sweepAbandoned(dir, now).complete) {
-        logEvent(input.env, 'skipped', now);
-        return 'skipped';
-    }
     const key = eolSessionKey(input.sessionId);
     const file = checkpointFile(key, input.env);
     if (lstatOrNull(file) !== null) {
-        // Removed before anything else, and counted only once the removal held,
-        // so a failed write below can never leave the predecessor eligible.
+        // Removed first, before any refusal below, so neither a refused nor a
+        // failed write can leave the predecessor eligible.
         fs.rmSync(file, { force: true });
         logEvent(input.env, 'orphaned', now);
+    }
+    const sweep = sweepAbandoned(dir, now);
+    if (!sweep.complete || sweep.inspected + WRITE_RESERVE > SWEEP_MAX) {
+        logEvent(input.env, 'skipped', now);
+        return 'skipped';
     }
     const marker: Marker = {
         schema_version: 2,
@@ -325,12 +338,10 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
         else if (ageMs > STALE_AFTER_MS) outcome = 'stale';
         else outcome = 'match';
     }
-    // Logged before the marker is consumed: if the log write fails, the marker
-    // stays and the next observation classifies it again.
-    logEvent(input.env, outcome, now, ageMs);
-    // Consumed when classified, and removed when unreadable as a marker, so a
-    // malformed file never lingers; anything that is not a regular file stays.
-    if (lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
+    // Consumed only once the class is logged: if logging fails, the marker stays
+    // and the next observation classifies it again. A malformed marker is
+    // removed the same way; anything that is not a regular file stays.
+    if (logEvent(input.env, outcome, now, ageMs) && lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
     return outcome;
 }
 

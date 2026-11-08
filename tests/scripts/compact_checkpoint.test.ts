@@ -294,3 +294,40 @@ describe('compact checkpoint — sweep: bounded work and guaranteed cleanup', ()
         expect(fs.existsSync(old)).toBe(false);
     });
 });
+
+describe('compact checkpoint — council round 10 blockers', () => {
+    it('refuses a write that would take the directory past the sweep budget, at exactly the boundary', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < SWEEP_MAX - 1; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
+        expect(recordPreCompact(base())).toBe('skipped');
+        expect(fs.readdirSync(dir).length).toBeLessThanOrEqual(SWEEP_MAX);
+    });
+
+    it('invalidates the predecessor even when the new write is refused', () => {
+        recordPreCompact(base());
+        const dir = checkpointDir(ENV());
+        for (let i = 0; i < SWEEP_MAX + 5; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
+        expect(recordPreCompact(base({ now: new Date('2026-11-08T12:00:30Z') }))).toBe('skipped');
+        expect(observePostCompact(base({ now: new Date('2026-11-08T12:01:00Z') }))).toBe('none');
+    });
+
+    it('removes abandoned temporary files once they are older than the retention bound', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        const tmp = path.join(dir, `.${'d'.repeat(64)}.json.abcdef012345.tmp`);
+        fs.writeFileSync(tmp, 'x');
+        const past = new Date(Date.parse('2026-11-08T12:00:00Z') - MARKER_RETENTION_MS - 1000);
+        fs.utimesSync(tmp, past, past);
+        recordPreCompact(base());
+        expect(fs.existsSync(tmp)).toBe(false);
+    });
+
+    it('keeps the marker when the classification could not be logged', () => {
+        recordPreCompact(base());
+        fs.rmSync(eventsFile(ENV()), { force: true });
+        fifoAt(eventsFile(ENV()));
+        observePostCompact(base());
+        expect(fs.existsSync(markerFile())).toBe(true);
+    });
+});
