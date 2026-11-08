@@ -107,6 +107,21 @@ const CASES: Array<[string, string[]]> = [
     ["git <<< 'a b' push", [P]],
     ['>out time X=1 git push', []],
     ['>out time git push', [P]],
+    // Reserved words open a command; they do not name it.
+    ['! git push', [P]],
+    ['if true; then git push; fi', [P]],
+    ['if true; then git push; else git commit -m x; fi', [C, P]],
+    ['{ git push; }', [P]],
+    ['true && { X=1 git push; }', [P]],
+    ['! time X=1 git push', []],
+    ['{ time X=1 git push; }', [P]],
+    ['if true; then time X=1 git push; fi', [P]],
+    ['if time X=1 git push; then :; fi', []],
+    ['time ! X=1 git push', [P]],
+    ['{ 2>/dev/null time X=1 git push; }', []],
+    ['echo a | { time X=1 git push; }', [P]],
+    ['echo a | if cond; then time X=1 git push; fi', [P]],
+    ["'if' git push", []],
 ];
 
 describe.skipIf(!hasBash)('the bash stubs log what they are asked to run', () => {

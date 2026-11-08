@@ -24,19 +24,28 @@ const STUBS = [
     'cat() { command cat > /dev/null; }',
     'sudo() { while [ $# -gt 0 ]; do case $1 in [A-Za-z_]*=*) export "$1"; shift ;; *) break ;; esac; done; "$@"; }',
     'make() { :; }', 'npm() { :; }', 'sleep() { :; }', 'cd() { :; }',
+    // A generated word fragment such as `sh` must not execute text piped into it.
+    'sh() { :; }', 'bash() { :; }',
 ].join('\n');
 
 /**
- * Acts bash invokes, as the union of two runs: `true` succeeding and `true`
- * failing. The recogniser reports a potential act, so both `&&` and `||` branches
+ * Acts bash invokes, as the union of four runs: `true` and `cond` each succeeding
+ * and failing. The recogniser reports a potential act, so both `&&` and `||` branches
  * have to be reachable for bash to be its oracle.
  */
 export function bashActs(command: string): string[] {
     const acts = new Set<string>(ACTS);
-    return [...new Set([...bashRun(command, 0), ...bashRun(command, 1)])].filter((a) => acts.has(a)).sort();
+    const runs = [0, 1].flatMap((t) => [0, 1].map((c) => bashRun(command, t, c)));
+    return [...new Set(runs.flat())].filter((a) => acts.has(a)).sort();
 }
 
-function bashRun(command: string, trueStatus: number): string[] {
+/**
+ * One run with `true` and `cond` returning the given statuses. `cond` is the
+ * condition the generated `if` forms use: kept apart from the `true` gates of
+ * `&&`/`||` chains so that reaching an `else` never requires `true` to succeed
+ * and fail in the same run.
+ */
+function bashRun(command: string, trueStatus: number, condStatus: number): string[] {
     const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'acts-oracle-'));
     try {
         const log = path.join(dir, 'acts.log');
@@ -45,7 +54,7 @@ function bashRun(command: string, trueStatus: number): string[] {
         fs.mkdirSync(bin);
         fs.writeFileSync(path.join(bin, 'git'), GIT_STUB, { mode: 0o755 });
         fs.writeFileSync(path.join(bin, 'gh'), GH_STUB, { mode: 0o755 });
-        const r = spawnSync('bash', ['-c', `${STUBS}\ntrue() { return ${trueStatus}; }\n${command}\nwait`], { cwd: dir, env: { PATH: `${bin}${path.delimiter}${process.env['PATH'] ?? ''}`, ACT_LOG: log }, encoding: 'utf8', timeout: 10_000 });
+        const r = spawnSync('bash', ['-c', `${STUBS}\ntrue() { return ${trueStatus}; }\ncond() { return ${condStatus}; }\n${command}\nwait`], { cwd: dir, env: { PATH: `${bin}${path.delimiter}${process.env['PATH'] ?? ''}`, ACT_LOG: log }, encoding: 'utf8', timeout: 10_000 });
         if (r.error || r.signal) throw new Error(`bash did not finish: ${String(r.error ?? r.signal)}`);
         return fs.readFileSync(log, 'utf8').split('\n').filter((l) => l !== '');
     } finally {

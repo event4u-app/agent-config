@@ -19,7 +19,9 @@
  * `time` / `sudo`: `'X=1' git push` and `nohup X=1 git push` run a command named `X=1`.
  * `time` is the keyword only unquoted at the start of a pipeline; `-p` after any `time`, and `--`
  * after `command` / `nohup`, are skipped; `command -v` / `-V` run nothing. Other
- * wrapper options (`sudo -u …`, `command -p`) are not interpreted. Not interpreted: `$(…)` and
+ * wrapper options (`sudo -u …`, `command -p`) are not interpreted. Leading unquoted
+ * reserved words (`!`, `{`, `if`, `then`, `else`, `elif`, `do`, `while`, `until`) open
+ * the command rather than name it. Not interpreted: `$(…)` and
  * backticks (their text stays inside the word), subshell parentheses, `eval`,
  * aliases, functions, `bash -c` strings. Per command, leading
  * `VAR=…` assignments and `sudo`/`command`/`time`/`exec`/`nohup` are dropped and
@@ -37,6 +39,12 @@ const PREFIX_WORDS = new Set(['sudo', 'command', 'time', 'exec', 'nohup']);
 // applies `VAR=value` arguments. After `command`, `exec` and `nohup` it is the
 // name of the command run, so `nohup X=1 git push` does not run git.
 const ASSIGN_AFTER = new Set(['time', 'sudo']);
+// Reserved words that open a command list or a pipeline; unquoted and leading,
+// the command proper starts after them (`if true; then git push; fi`, `! git push`).
+const LEADING_RESERVED = new Set(['!', '{', 'if', 'then', 'else', 'elif', 'do', 'while', 'until']);
+// After these, as at the very start, `time` is still the keyword; after `!`, `if`,
+// `elif`, `while` and `until` bash runs time(1) instead (measured).
+const TIME_KEYWORD_AFTER = new Set(['{', 'then', 'else', 'do']);
 
 /**
  * One word after quote removal. `assign` holds when it opens with an unquoted
@@ -77,20 +85,20 @@ function readQuoted(s: string, i: number): { text: string; end: number } {
 }
 
 /**
- * A simple command's words; whether it follows a `|` inside a pipeline; and
- * whether a redirection stood before its first word, which keeps a following
- * `time` from being the keyword.
+ * A simple command's words; whether it follows a `|` inside a pipeline; and the
+ * index of the word the first redirection stood before (-1 if none), since a
+ * redirection before `time` keeps it from being the keyword.
  */
 interface Simple {
     words: Word[];
     piped: boolean;
-    redirectedFirst: boolean;
+    redirectAt: number;
 }
 
 function lexCommands(command: string): Simple[] {
     const out: Simple[] = [];
     let piped = false;
-    let redirectedFirst = false;
+    let redirectAt = -1;
     let words: Word[] = [];
     let word = '';
     let inWord = false;
@@ -124,10 +132,10 @@ function lexCommands(command: string): Simple[] {
     const endCommand = (nextPiped = false): void => {
         endWord();
         operand = false;
-        if (words.length > 0) out.push({ words, piped, redirectedFirst });
+        if (words.length > 0) out.push({ words, piped, redirectAt });
         words = [];
         piped = nextPiped;
-        redirectedFirst = false;
+        redirectAt = -1;
     };
     const n = command.length;
     let i = 0;
@@ -158,7 +166,7 @@ function lexCommands(command: string): Simple[] {
         }
         if (ch === '<' && command[i + 1] === '<' && command[i + 2] !== '<') {
             endWordBeforeRedirect();
-            if (words.length === 0) redirectedFirst = true;
+            if (redirectAt === -1) redirectAt = words.length;
             let j = i + 2;
             const stripTabs = command[j] === '-';
             if (stripTabs) j += 1;
@@ -221,7 +229,7 @@ function lexCommands(command: string): Simple[] {
         // operand word are dropped, wherever they stand among the arguments.
         if (ch === '<' || ch === '>' || (ch === '&' && command[i + 1] === '>')) {
             endWordBeforeRedirect();
-            if (words.length === 0) redirectedFirst = true;
+            if (redirectAt === -1) redirectAt = words.length;
             const op = /^(?:&>>|&>|<<<|>>|>\||>&|<&|<>|>|<)/.exec(command.slice(i, i + 3)) as RegExpExecArray;
             i += op[0].length;
             operand = true;
@@ -256,8 +264,11 @@ export function simpleCommands(command: string): string[][] {
     return lexCommands(command).map((c) => c.words.map((w) => w.text));
 }
 
-function normalise({ words, piped, redirectedFirst }: Simple): string[] {
+function normalise({ words, piped, redirectAt }: Simple): string[] {
     let k = 0;
+    while (k < words.length && !(words[k] as Word).quoted && LEADING_RESERVED.has((words[k] as Word).text)) k += 1;
+    const start = k;
+    const opener = start === 0 ? null : (words[start - 1] as Word).text;
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.
     let assignOk = true;
     while (k < words.length) {
@@ -265,10 +276,17 @@ function normalise({ words, piped, redirectedFirst }: Simple): string[] {
         if (w.assign && assignOk) k += 1;
         else if (PREFIX_WORDS.has(w.text)) {
             // `time` is the keyword only unquoted, first in its command (no word or
-            // redirection before it) and at the start of a pipeline;
+            // redirection before it, at most a `{`/`then`/`else`/`do` opener) and at
+            // the start of a pipeline;
             // a quoted `"time"`, or one after `|`, is the time(1) program, after
             // which `X=1` is the command name.
-            const keyword = w.text === 'time' && !(w.quoted || piped || redirectedFirst || k > 0);
+            const keyword =
+                w.text === 'time' &&
+                k === start &&
+                !w.quoted &&
+                (redirectAt === -1 || redirectAt > k) &&
+                // After `|` only an opener (`| { time …; }`) starts a fresh pipeline.
+                (opener === null ? !piped : TIME_KEYWORD_AFTER.has(opener));
             assignOk = ASSIGN_AFTER.has(w.text) && (w.text !== 'time' || keyword);
             k += 1;
             const next = words[k]?.text;
@@ -276,6 +294,8 @@ function normalise({ words, piped, redirectedFirst }: Simple): string[] {
             if (w.text === 'command' && (next === '-v' || next === '-V')) return [];
             // `-p` belongs to the keyword and to time(1) alike (POSIX).
             if ((w.text === 'time' && next === '-p') || ((w.text === 'command' || w.text === 'nohup') && next === '--')) k += 1;
+            // The keyword may negate what it times: `time ! X=1 git push`.
+            if (keyword && words[k]?.text === '!' && !(words[k] as Word).quoted) k += 1;
         } else break;
     }
     const t = words.slice(k).map((w) => w.text);

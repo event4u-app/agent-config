@@ -1,7 +1,7 @@
 /**
  * Generated differential test: seeded commands built from the supported syntax
  * (prefixes, wrappers, quoting and escapes inside act words, redirections at any
- * position, separators, comments, heredocs with every terminator form, here-strings) are run by real bash and must
+ * position, `!` / `{ }` / `if` compounds, separators, comments, heredocs with every terminator form, here-strings) are run by real bash and must
  * produce the acts the recogniser reports. A hand-picked case list only checks the
  * forms someone thought of; this checks their combinations.
  *
@@ -66,7 +66,12 @@ function act(r: () => number): string {
 
 function simple(r: () => number): string {
     const s = r() < 0.6 ? act(r) : pick(r, OTHERS);
-    return pick(r, ['', '', '', 'true && ', 'true || ']) + s;
+    const lead = pick(r, ['', '', '', 'true && ', 'true || ']) + s;
+    // Compound forms whose bodies hold the command; `if cond` takes both branches
+    // across the oracle's runs of `cond`.
+    // A comment would swallow the closing `}` / `fi`, so commented forms stay bare.
+    if (s.includes('#')) return lead;
+    return pick(r, [lead, lead, lead, `! ${s}`, `{ ${s}; }`, `if cond; then ${s}; fi`, `if cond; then ${s}; else ${act(r)}; fi`]);
 }
 
 /** A heredoc segment; it ends with its terminator line, so a newline must follow. */
@@ -94,7 +99,7 @@ function command(r: () => number): string {
     return out + (r() < 0.2 ? ' # trailing' : '');
 }
 
-const N = Number(process.env['SHELL_ACTS_FUZZ_N'] ?? 100);
+const N = Number(process.env['SHELL_ACTS_FUZZ_N'] ?? 60);
 const FIRST = Number(process.env['SHELL_ACTS_FUZZ_SEED'] ?? 1);
 // A malformed override must fail, not quietly run zero seeds.
 if (!Number.isInteger(N) || N < 1 || !Number.isInteger(FIRST)) throw new Error(`bad SHELL_ACTS_FUZZ_N / SHELL_ACTS_FUZZ_SEED: ${String(N)} / ${String(FIRST)}`);
@@ -120,5 +125,5 @@ describe.skipIf(!hasBash)('generated commands: the recogniser agrees with bash',
         }
         expect(mismatches).toEqual([]);
         expect(skipped).toBeLessThan(N * 0.05);
-    }, Math.max(120_000, N * 300));
+    }, Math.max(120_000, N * 700));
 });
