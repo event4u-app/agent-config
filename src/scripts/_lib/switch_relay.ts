@@ -35,6 +35,8 @@ const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
 const LOCK_STALE_MS = 2000;
 const LOCK_TRIES = 50;
 const LOCK_WAIT_MS = 5;
+/** A checkpoint reservation older than this belongs to a Stop that died; the next Stop takes it over. */
+const RESERVE_STALE_MS = 2 * 60_000;
 const ID_RE = /^[0-9a-f]{16}$/;
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const TERMINAL = new Set(['done', 'failed', 'declined', 'snoozed', 'expired']);
@@ -187,8 +189,10 @@ export function showSwitch(id: string, opts: LinkOptions = {}, tally?: CallTally
 export interface SwitchRecord {
     readonly id: string;
     readonly decision_told: boolean;
-    /** Set by the Stop path once it left the run checkpoint for an approved move. */
+    /** Set by the Stop path once the run checkpoint for an approved move was written — completed, never merely reserved. */
     readonly checkpointed: boolean;
+    /** When a Stop reserved the checkpoint write; a reservation older than RESERVE_STALE_MS is taken over. */
+    readonly reserved_at?: number | null;
     /** Set once a terminal outcome was shown; a `done` record outlives that until the Stop path checkpointed it. */
     readonly outcome_told: boolean;
     /** Epoch ms after which the record is dropped unread, so an orphaned one stops polling. */
@@ -212,6 +216,7 @@ function parseRecord(raw: string, mtimeMs: number): SwitchRecord | null {
         decision_told: o['decision_told'] === true,
         checkpointed: o['checkpointed'] === true,
         outcome_told: o['outcome_told'] === true,
+        reserved_at: num(o['reserved_at']),
         expires_at: expires,
     };
 }
@@ -368,7 +373,8 @@ function writeBackoff(sessionHash: string, b: Backoff, stateEnv?: EnvMap | null)
         fs.mkdirSync(path.dirname(file), { recursive: true });
         write_atomic(file, JSON.stringify(b));
     } catch {
-        // best-effort: a lost write delays the rest by one call at worst
+        // An unwritable state directory means the link never rests: the count is not
+        // kept. That is a rollback criterion in the latency record, not a bound.
     }
 }
 
@@ -525,28 +531,38 @@ export function checkpointBeforeMove(
     noteCalls(sessionHash, tally, null, stateEnv, now);
     if (state === null || !CHECKPOINT_STATES.has(state)) return false;
     // Reserve before the side effect, so a second Stop running at once finds it taken.
+    // The reservation is not completion: nothing forgets the record on it, and one
+    // left by a Stop that died is taken over once it is stale.
     const claim = { reserved: false };
     updateSwitchRecord(
         sessionHash,
         (cur) => {
             if (cur?.id !== rec.id || cur.checkpointed) return cur;
+            const held = cur.reserved_at ?? null;
+            if (held !== null && now - held < RESERVE_STALE_MS) return cur;
             claim.reserved = true;
-            return { ...cur, checkpointed: true };
+            return { ...cur, reserved_at: now };
         },
         stateEnv,
     );
     if (!claim.reserved) return false;
-    const written = write();
-    updateSwitchRecord(
-        sessionHash,
-        (cur) => {
-            if (cur?.id !== rec.id) return cur;
-            // Not written: hand the reservation back so the next Stop tries again.
-            if (!written) return { ...cur, checkpointed: false };
-            // The outcome was already shown, so nothing is left to tell or to write.
-            return state === 'done' && cur.outcome_told ? null : cur;
-        },
-        stateEnv,
-    );
+    let written = false;
+    try {
+        written = write();
+    } catch {
+        written = false;
+    } finally {
+        updateSwitchRecord(
+            sessionHash,
+            (cur) => {
+                if (cur?.id !== rec.id) return cur;
+                // Not written: hand the reservation back so the next Stop tries again.
+                if (!written) return { ...cur, reserved_at: null };
+                // The outcome was already shown, so nothing is left to tell or to write.
+                return state === 'done' && cur.outcome_told ? null : { ...cur, checkpointed: true, reserved_at: null };
+            },
+            stateEnv,
+        );
+    }
     return written;
 }

@@ -650,13 +650,13 @@ describe('7.x council round 1 findings', () => {
         expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv })).toBe(true);
     });
 
-    function racingLink(field: string): Record<string, string> {
+    function racingLink(field: string, value: unknown = true): Record<string, string> {
         // A second hook sets `field` on the record while this one waits on `switch show`.
         const rec = switchRecordPath(sess(), stateEnv);
         const racer = path.join(home, `racer-${field}`);
         fs.mkdirSync(racer);
         const exe = path.join(racer, 'agent-switch');
-        const set = `const f=${JSON.stringify(rec)};const fs=require('fs');const o=JSON.parse(fs.readFileSync(f,'utf-8'));o[${JSON.stringify(field)}]=true;fs.writeFileSync(f,JSON.stringify(o));`;
+        const set = `const f=${JSON.stringify(rec)};const fs=require('fs');const o=JSON.parse(fs.readFileSync(f,'utf-8'));o[${JSON.stringify(field)}]=${JSON.stringify(value)};fs.writeFileSync(f,JSON.stringify(o));`;
         fs.writeFileSync(exe, `#!/bin/sh\n"${process.execPath}" -e ${JSON.stringify(set)}\nexec "${process.execPath}" "${FAKE}" "$@"\n`);
         fs.chmodSync(exe, 0o755);
         return { ...binEnv, PATH: `${racer}${path.delimiter}${binEnv.PATH}` };
@@ -668,7 +668,7 @@ describe('7.x council round 1 findings', () => {
         noticeReply(deps());
         setRequest({ state: 'approved', decision: doneNow.decision });
         let writes = 0;
-        const ok = checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: racingLink('checkpointed') });
+        const ok = checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: racingLink('reserved_at', Date.now()) });
         expect(ok).toBe(false);
         expect(writes).toBe(0);
     });
@@ -741,5 +741,56 @@ describe('7.x council round 1 findings', () => {
         setRequest();
         noticeReply(deps());
         expect(fs.existsSync(orphan)).toBe(false);
+    });
+
+    it('a prompt that sees the move done while the Stop is writing does not drop the obligation if the write fails', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        const failed = checkpointBeforeMove(
+            sess(),
+            () => {
+                setRequest(doneNow);
+                noticeReply(deps());
+                return false;
+            },
+            stateEnv,
+            { env: binEnv },
+        );
+        expect(failed).toBe(false);
+        expect(readSwitchRecord(sess(), stateEnv)?.id).toBe(ID);
+        let writes = 0;
+        expect(checkpointBeforeMove(sess(), () => ++writes > 0, stateEnv, { env: binEnv })).toBe(true);
+        expect(writes).toBe(1);
+        expect(readSwitchRecord(sess(), stateEnv)).toBeNull();
+    });
+
+    it('a write that throws hands the reservation back and does not throw', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        expect(
+            checkpointBeforeMove(
+                sess(),
+                () => {
+                    throw new Error('disk full');
+                },
+                stateEnv,
+                { env: binEnv },
+            ),
+        ).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv })).toBe(true);
+    });
+
+    it('a reservation left by a Stop that died is taken over once it is stale, not before', () => {
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: doneNow.decision });
+        updateSwitchRecord(sess(), (cur) => (cur === null ? cur : { ...cur, reserved_at: NOW }), stateEnv);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, NOW + 60_000)).toBe(false);
+        expect(checkpointBeforeMove(sess(), () => true, stateEnv, { env: binEnv }, {}, NOW + 3 * 60_000)).toBe(true);
     });
 });
