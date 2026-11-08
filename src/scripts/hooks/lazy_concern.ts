@@ -76,6 +76,7 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
     'src/scripts/hooks/intake_pass_hook.ts': lazy('intake_pass.chunk.cjs', 'intake_pass_hook'),
     'src/scripts/self_repair_hook.ts': lazy('self_repair.chunk.cjs', '../self_repair_hook'),
     'src/scripts/hooks/compact_checkpoint_hook.ts': lazy('compact_checkpoint.chunk.cjs', 'compact_checkpoint_hook'),
+    'src/scripts/_lib/capitulation_detector.ts': lazy('capitulation.chunk.cjs', '../_lib/capitulation_detector'),
 });
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;

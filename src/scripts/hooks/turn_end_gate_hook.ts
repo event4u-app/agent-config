@@ -9,7 +9,7 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * SIX detectors ride on one guard, because building the unsafe part twice
+ * SEVEN detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
  *   A — promissory closing  (`promissory`, FC-5, 20 measured occurrences)
@@ -33,11 +33,16 @@
  *   F — untested change     (`untested`; the turn changed production code,
  *                            touched no test, and claimed done —
  *                            `detectUntestedChange`.)
+ *   G — capitulation        (`capitulation`; a bare challenge, a conceding
+ *                            closing reply and no tool call. Advisory and
+ *                            default-off: it only counts, never refuses, and
+ *                            runs only where AGENT_CONFIG_CAPITULATION_COUNT=1,
+ *                            loaded from its own chunk through `loadLazyExport`.)
  *
  * The SVG render obligation (`openSvgObligation`) also runs in that list but
- * reports under C's id, `verification`, so it is not a seventh detector.
+ * reports under C's id, `verification`, so it is not an eighth detector.
  *
- * THREE of the six are CONDITIONAL, and saying "unconditional" here would be the
+ * THREE of the six refusing detectors are CONDITIONAL, and saying "unconditional" here would be the
  * same stale-header defect this block corrects below. A and D are the
  * completion-adjacent pair an open subagent dispatch excuses, and F is a
  * completion claim too, so `runDetectors()` runs those three only when
@@ -51,7 +56,8 @@
  * `_lib/turn_end_refusals.ts` is read off that union rather than off this
  * comment for exactly that reason, and the count is corrected here rather than
  * left as a stale header the next reader has to disbelieve. E made it five, and
- * F made it six while this line still said five (corrected 2026-10-31); the
+ * F made it six while this line still said five (corrected 2026-10-31), and G
+ * made it seven (2026-11-08); the
  * header count is now pinned to the union by `turn_end_gate_hook.test.ts`.
  *
  * ## Removal condition
@@ -265,10 +271,14 @@ export type DetectorId =
     | 'verification'
     | 'completion'
     | 'pending-decision'
-    | 'untested';
+    | 'untested'
+    | 'capitulation';
+
+/** The detectors that can refuse a turn. G (`capitulation`) only counts, so it never reaches a finding. */
+export type RefusingDetectorId = Exclude<DetectorId, 'capitulation'>;
 
 export interface Finding {
-    detector: DetectorId;
+    detector: RefusingDetectorId;
     /** The span that triggered it — quoted back so the refusal is actionable. */
     evidence: string;
     reason: string;
@@ -1020,7 +1030,7 @@ function markRefusedTurn(
     workspaceRoot: string,
     sessionKey: string,
     turnOrdinal: number,
-    detectors: readonly DetectorId[],
+    detectors: readonly RefusingDetectorId[],
     promptId: string,
 ): void {
     if (is_replay_mode()) return;
@@ -1067,6 +1077,8 @@ function markRefusedTurn(
 // `tests/scripts/turn_end_gate_hook.test.ts` addresses all three names at
 // this path.
 import { readTranscriptTail, type ToolCall } from '../_lib/turn_end_transcript.js';
+import type { maybeCountCapitulation } from '../_lib/capitulation_detector.js';
+import { loadLazyExport } from './lazy_concern.js';
 
 export {
     extractToolCalls,
@@ -1107,6 +1119,7 @@ interface DetectorInputs {
     turnOrdinal: number;
     promptId: string;
     lastAssistant: string;
+    transcriptPath: string;
     toolCalls: ToolCall[];
     turnTexts: string[];
     closingFromPayload: boolean;
@@ -1225,6 +1238,7 @@ function assembleDetectorInputs(
         turnOrdinal,
         promptId,
         lastAssistant,
+        transcriptPath,
         toolCalls,
         turnTexts,
         closingFromPayload,
@@ -1443,6 +1457,10 @@ export function main(): number {
     // turn the gate allows and a turn it refuses are both in the record — a
     // recall reading needs the allowed turns as its negative arm.
     recordGraphFeeder(inputs, findings, 'live');
+    // Detector G: advisory, counts-only, default-off (H1), in its own chunk. Never in `findings`.
+    if (!is_replay_mode() && process.env['AGENT_CONFIG_CAPITULATION_COUNT'] === '1') {
+        loadLazyExport<typeof maybeCountCapitulation>('src/scripts/_lib/capitulation_detector.ts', 'maybeCountCapitulation')?.(sessionStateFile(inputs.workspaceRoot, inputs.sessionKey), inputs, TRANSCRIPT_READ_MAX_BYTES);
+    }
     if (findings.length === 0) return EXIT_ALLOW;
 
     markRefusedTurn(

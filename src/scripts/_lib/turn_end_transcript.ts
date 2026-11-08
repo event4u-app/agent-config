@@ -214,3 +214,46 @@ function _messageText(content: unknown): string | null {
     }
     return parts.length > 0 ? parts.join('\n') : null;
 }
+
+/**
+ * The current turn's genuine user prompt and the last assistant text before it,
+ * with the same filters as `readTranscriptTail` (sidechains, synthetic prompts,
+ * text blocks only). Detector `capitulation` compares the two replies across
+ * that prompt. A separate reader rather than two more `TranscriptTail` fields:
+ * only the detector's opt-in chunk imports it, so the dispatch bundle every hook
+ * event loads does not carry it. Held in memory only.
+ */
+export function readPromptPair(
+    transcriptPath: string,
+    opts: { homeDir?: string; maxBytes?: number } = {},
+): { lastUserPrompt: string; previousAssistant: string } {
+    let lastUserPrompt = '';
+    let previousAssistant = '';
+    let lastAssistant = '';
+    try {
+        if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return { lastUserPrompt, previousAssistant };
+        if (opts.maxBytes !== undefined && fs.statSync(transcriptPath).size > opts.maxBytes) return { lastUserPrompt, previousAssistant };
+        for (const line of fs.readFileSync(transcriptPath, 'utf-8').split('\n')) {
+            let entry: Record<string, unknown>;
+            try {
+                entry = JSON.parse(line) as Record<string, unknown>;
+            } catch {
+                continue;
+            }
+            if (typeof entry !== 'object' || entry === null || entry['isSidechain'] === true) continue;
+            const role = entry['type'];
+            const msg = entry['message'];
+            if ((role !== 'assistant' && role !== 'user') || typeof msg !== 'object' || msg === null) continue;
+            const text = _messageText((msg as Record<string, unknown>)['content']);
+            if (text === null) continue;
+            if (role === 'assistant') lastAssistant = text;
+            else if (!isSyntheticPrompt(text)) {
+                lastUserPrompt = text;
+                previousAssistant = lastAssistant;
+            }
+        }
+    } catch {
+        // unreadable: nothing to compare
+    }
+    return { lastUserPrompt: lastUserPrompt.trim(), previousAssistant: previousAssistant.trim() };
+}
