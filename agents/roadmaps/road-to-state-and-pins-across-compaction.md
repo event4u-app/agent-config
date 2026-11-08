@@ -196,3 +196,4 @@ host-attested session binding exists. Record:
 
 - Each phase closes on its verify line or its pre-registered null.
 - No new always-on bytes; all restores ride `session_start(compact)`.
+- Outcome, not only mechanism (round `inbox-2026-11-zc`, 2026-11-08): on a session that compacts mid-task, the first reply after compaction names the active task, its next step and every user pin without asking for them; measured on recorded compactions with the share and its denominator.
