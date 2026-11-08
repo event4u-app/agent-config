@@ -46,6 +46,16 @@ describe('compact-checkpoint hook', () => {
         expect(readEventTally({ EVENT4U_CONFIG_HOME: root })).toMatchObject({ written: 1, match: 1 });
     });
 
+    it('does nothing in replay mode', () => {
+        process.env['AGENT_CONFIG_REPLAY'] = '1';
+        try {
+            expect(run({ event: 'pre_compact', payload }).rc).toBe(0);
+        } finally {
+            delete process.env['AGENT_CONFIG_REPLAY'];
+        }
+        expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);
+    });
+
     it('ignores session_start from any other source', () => {
         run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'startup' } });
         expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);

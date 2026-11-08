@@ -53,18 +53,22 @@ export const EVENT_LOG_MAX_BYTES = 256 * 1024;
 export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Most directory entries one sweep looks at, kept or removed. A write is
- * refused while the directory holds more than this, so it never grows past
- * the budget and every sweep sees all of it: an expired marker is removed by
- * the next write, however the directory is ordered.
+ * Most directory entries one sweep looks at, kept or removed, plus one read to
+ * learn whether the end was reached. Markers are written only below
+ * `WRITE_LIMIT`, well under this; the gap absorbs the event log and writers
+ * racing past the check, so a sweep still sees the whole directory and an
+ * expired marker is removed by the next write however the directory is ordered.
+ * The count is not an exact ceiling under concurrency — more than the gap of
+ * simultaneous writers could exceed it.
  */
 export const SWEEP_MAX = 512;
+
+/** A marker is written only while the directory holds fewer entries than this. */
+export const WRITE_LIMIT = 480;
 
 const MARKER_NAME = /^[0-9a-f]{64}\.json$/;
 const TEMP_NAME = /^\..+\.[0-9a-f]{12}\.tmp$/;
 
-/** Entries a marker write may add: the marker itself and, if absent, the event log. */
-const WRITE_RESERVE = 2;
 const PACKAGE_NAME = '@event4u/agent-config';
 
 const MARKER_MAX_BYTES = 4 * 1024;
@@ -240,7 +244,8 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
         // Re-checked on the descriptor: a FIFO or a hard-linked file swapped in after the lstat is refused.
         const fst = fs.fstatSync(fd);
         if (!(fst.isFile() && fst.nlink === 1)) return false;
-        fs.writeSync(fd, line);
+        const buf = Buffer.from(line, 'utf8');
+        for (let off = 0; off < buf.length; ) off += fs.writeSync(fd, buf, off, buf.length - off);
         return true;
     } finally {
         fs.closeSync(fd);
@@ -249,9 +254,9 @@ function logEvent(env: EnvMap | undefined, event: EventName, now: Date, ageMs?: 
 
 /**
  * Remove markers of any session, and temporary files, not touched within
- * `MARKER_RETENTION_MS`; regular files with those names only. Reads the directory incrementally and
- * looks at no more than `SWEEP_MAX` entries; `complete` says whether it
- * reached the end.
+ * `MARKER_RETENTION_MS`; regular files with those names only. Reads the
+ * directory incrementally, looks at no more than `SWEEP_MAX` entries and reads
+ * one more to learn whether it reached the end; `complete` says whether it did.
  */
 export function sweepAbandoned(dir: string, now: Date): { inspected: number; complete: boolean } {
     let d: fs.Dir;
@@ -301,7 +306,7 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
         logEvent(input.env, 'orphaned', now);
     }
     const sweep = sweepAbandoned(dir, now);
-    if (!sweep.complete || sweep.inspected + WRITE_RESERVE > SWEEP_MAX) {
+    if (!sweep.complete || sweep.inspected >= WRITE_LIMIT) {
         logEvent(input.env, 'skipped', now);
         return 'skipped';
     }

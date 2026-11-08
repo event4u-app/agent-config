@@ -34,12 +34,12 @@ export function main(): number {
         const sessionId = str(payload['session_id']) || str(envelope['session_id']);
         const transcriptPath = str(payload['transcript_path'] ?? payload['transcriptPath']);
         if (sessionId === '' || transcriptPath === '') return 0;
+        const isPre = event === 'pre_compact';
+        const isPost = event === 'session_start' && str(payload['source'] ?? envelope['source']) === 'compact';
+        if (!isPre && !isPost) return 0;
         const input = { sessionId, transcriptPath, version: packageVersion() };
-        if (event === 'pre_compact') {
-            recordPreCompact(input);
-        } else if (event === 'session_start' && str(payload['source'] ?? envelope['source']) === 'compact') {
-            observePostCompact(input);
-        }
+        if (isPre) recordPreCompact(input);
+        else observePostCompact(input);
     } catch {
         // a measurement never fails a compaction
     }

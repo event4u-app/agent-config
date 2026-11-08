@@ -277,9 +277,9 @@
         },
         {
             "entry": "src/scripts/hooks/compact_checkpoint_hook.ts",
-            "max_bytes": 19400,
+            "max_bytes": 19600,
             "registered_at": "2026-11-08",
-            "derivation": "Measured 17,583 bytes on 2026-11-08 (the compact-checkpoint concern: a keys-only marker in the user-global runtime directory with an inspection-bounded, complete sweep of abandoned markers, its bounded non-following reader, and the containment check and runtime-path helpers it reuses), `yaml` external. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `pre_compact` and `session_start` on claude only; the dispatch bundle carries only its LAZY_CONCERNS row."
+            "derivation": "Measured 17,733 bytes on 2026-11-08 (the compact-checkpoint concern: a keys-only marker in the user-global runtime directory with an inspection-bounded, complete sweep of abandoned markers, its bounded non-following reader, and the containment check and runtime-path helpers it reuses), `yaml` external. The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `pre_compact` and `session_start` on claude only; the dispatch bundle carries only its LAZY_CONCERNS row."
         },
         {
             "entry": "src/scripts/hooks/web_launch_rows.ts",

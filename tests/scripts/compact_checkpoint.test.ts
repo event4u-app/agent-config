@@ -19,6 +19,7 @@ import {
     STALE_AFTER_MS,
     SWEEP_MAX,
     sweepAbandoned,
+    WRITE_LIMIT,
 } from '../../src/scripts/_lib/compact_checkpoint.js';
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
 
@@ -296,12 +297,12 @@ describe('compact checkpoint — sweep: bounded work and guaranteed cleanup', ()
 });
 
 describe('compact checkpoint — council round 10 blockers', () => {
-    it('refuses a write that would take the directory past the sweep budget, at exactly the boundary', () => {
+    it('refuses a write at the write limit, leaving headroom below what a sweep reads', () => {
         const dir = checkpointDir(ENV());
         fs.mkdirSync(dir, { recursive: true });
-        for (let i = 0; i < SWEEP_MAX - 1; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
+        for (let i = 0; i < WRITE_LIMIT; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
         expect(recordPreCompact(base())).toBe('skipped');
-        expect(fs.readdirSync(dir).length).toBeLessThanOrEqual(SWEEP_MAX);
+        expect(fs.readdirSync(dir).length).toBeLessThan(SWEEP_MAX);
     });
 
     it('invalidates the predecessor even when the new write is refused', () => {
@@ -329,5 +330,18 @@ describe('compact checkpoint — council round 10 blockers', () => {
         fifoAt(eventsFile(ENV()));
         observePostCompact(base());
         expect(fs.existsSync(markerFile())).toBe(true);
+    });
+});
+
+describe('compact checkpoint — round 11: headroom keeps every sweep complete', () => {
+    it('the write limit leaves room below the sweep budget for the log and concurrent writers', () => {
+        expect(WRITE_LIMIT).toBeLessThanOrEqual(SWEEP_MAX - 16);
+    });
+
+    it('a sweep still reaches the end after writes stopped at the limit and a few concurrent ones landed', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < WRITE_LIMIT + 10; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
+        expect(sweepAbandoned(dir, new Date()).complete).toBe(true);
     });
 });
