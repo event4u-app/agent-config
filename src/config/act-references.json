@@ -1,0 +1,9 @@
+{
+    "_comment": "Act-time reference bindings for the reference duty (road-to-a-reference-that-arrives-before-the-act, council design round 2, 2026-11-08, option B). Each binding names a shell command and the rules whose load_context references are due when that command runs. The table carries rule ids only: no rule text and no reference paths — those stay in the rules, so the rule is still the one place that says what the reference is. Read by src/scripts/_lib/reference_duty.ts (observation in the reread-guard concern) and src/scripts/rule_reference_requires.ts; validated by tests/scripts/act_references.test.ts. Kernel rules may appear here because this is not a router activation trigger, which the rule schema forbids on kernel rules.",
+    "schema_version": 1,
+    "bindings": [
+        { "shell_command": "git commit", "rules": ["commit-policy"], "owner": "maintainer" },
+        { "shell_command": "git push", "rules": ["non-destructive-by-default", "scope-control"], "owner": "maintainer" },
+        { "shell_command": "gh pr create", "rules": ["scope-control"], "owner": "maintainer" }
+    ]
+}

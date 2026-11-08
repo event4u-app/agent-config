@@ -12,7 +12,7 @@ relates:
     relation: disjoint
     note: Owns the session-start size budget, the law form and the inactive-pack floors.
 estate_offset_exempt: "Extracted from road-to-mixed-trigger-activation-cost Phase 5 by owner decision of 2026-11-07, recorded in agents/evidence/owner-directives/2026-11-07-wip-cap-25.md, which names road-to-a-reference-that-arrives-before-the-act; no other roadmap owns the reference duty (owner search over active, later/, stubs/, skipped/ and archive/ in round inbox-2026-11-z)."
-estate_growth_exempt: "Resolves hook-binding-ratification; no new blocker or roadmap."
+estate_growth_exempt: "Resolves shell-command-trigger-kind; no new blocker or roadmap."
 ---
 # Road to a reference that arrives before the act
 
@@ -140,31 +140,30 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 
 ## Phase 3 — Deliver or block, only measured
 
-- [ ] **3.1 Choose the policy by measurement.** Four arms on the same tasks: deliver,
+- [x] **3.1 Choose the policy by measurement.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/act-references.json --> Four arms on the same tasks: deliver,
       read-gate (block once per reference), nothing, full layer. Compare violation rate,
       extra turns and cost.
       spend released 2026-11-07; any blocking default still needs owner ratification, with a
       false-positive ceiling registered before the run.
-      blocked: `shell-command-trigger-kind`.
       verify: pre-registration committed before the first trial.
+      Result: `ref-gate` helps (2/9 vs 5/9 violations, +1.75 turns, 0 false blocks); deliver and
+      full show no detected difference — not a default without owner ratification
+      ([`refduty-sweep-2026-11-08`](../../evidence/analysis/refduty-sweep-2026-11-08.md)).
 
 ## Blockers
 
 ### blocker: shell-command-trigger-kind
-- **Status:** open
-- **Owner:** agent — `road-to-mixed-trigger-activation-cost` step 2.3 (action-time delivery)
-- **Blocks:** 3.1
-- **What to do:** add a trigger kind that names a shell command (`git commit`,
-  `gh pr create`, `git push`) and give `commit-policy`, `scope-control` and
-  `non-destructive-by-default` rows with it. Step 2.4 found that the only acts with a
-  duty today are writes under `.claude/`, `dist/agent-src/` and design files plus three
-  slash commands, so a four-arm comparison now would measure a duty almost no task meets.
-- **Recommendation:** build the trigger kind inside `road-to-mixed-trigger-activation-cost`
-  step 2.3, because that step already owns delivery at the tool call; a second carrier
-  here would split one mechanism across two roadmaps.
-- **If you do nothing:** 3.1 stays open, and the three always-loaded authority rules can
-  never leave the always-loaded layer, because no act would carry them.
-- **Resolved when:** `task report-rule-requires` shows act rows for those three rules.
+- **Status:** RESOLVED 2026-11-08 — council design round 2 chose a separate act-reference
+  table (`src/config/act-references.json`, rule ids only) over kernel-rule frontmatter,
+  which the rule schema forbids for router triggers. A recognition spike measured the
+  segmenting recogniser at ≤ 0.1 % misses over 14,834 real Bash calls
+  (`agents/evidence/analysis/shell-command-recognition-spike-2026-11-08.md`);
+  `task report-rule-requires` now shows `shell_command` rows for `commit-policy`,
+  `scope-control` and `non-destructive-by-default`.
+- **Owner:** agent
+- **Blocks:** nothing now (held 3.1)
+- **What to do:** nothing.
+- **Resolved when:** done.
 
 ### blocker: hook-binding-ratification
 - **Status:** RESOLVED 2026-11-07 — ratified by two providers in round 13
