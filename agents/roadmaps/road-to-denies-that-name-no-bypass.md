@@ -4,7 +4,7 @@ status: ready
 tree_pin: ea21dd17a4
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Owner search found none: grep -rlF -e KILL_SWITCH -e lint_deny_text -e neutralizeBoundary -e pendingFileFor over agents/roadmaps/*.md, later/ and stubs/ returned no roadmap owning a deny text, a fence or the session-id fallback; the adjacent later/road-to-typed-grants-that-persist owns grant objects, not deny wording. Active because the operator asked this round's findings to be executed (/roadmap:process-full in the same invocation)."
+estate_offset_exempt: "Owner search found none: grep -rlF -e KILL_SWITCH -e lint_deny_text -e neutralizeBoundary -e pendingFileFor over agents/roadmaps/*.md, later/ and stubs/ returned no roadmap owning a deny text, a fence or the session-id fallback; the adjacent later/road-to-typed-grants-that-persist owns grant objects, not deny wording. Active because the operator asked this round's findings to be executed (/roadmap:process-full in the same invocation)."
 relates:
   - slug: road-to-typed-grants-that-persist
     relation: disjoint
