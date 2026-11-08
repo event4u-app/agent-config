@@ -29,6 +29,8 @@
  * can supply. A concurrent swap between check and open is narrowed, not closed.
  * Two sessions appending at once can interleave, and a trim racing an append can
  * drop that append; accepted for a counts-only log.
+ * A sweep can also remove a marker that replaced an expired one between the
+ * sweep's lstat and its removal; that observation then reads `none`.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -94,7 +96,9 @@ export interface CheckpointInput {
 }
 
 interface Marker {
-    schema_version: 2;
+    schema_version: 3;
+    /** Random per write, so two markers are told apart even within one millisecond. */
+    generation: string;
     session_key: string;
     transcript_hash: string;
     package_version: string | null;
@@ -192,7 +196,8 @@ function readMarker(file: string): Marker | null {
     try {
         const m = JSON.parse(text) as Partial<Marker>;
         if (
-            m?.schema_version !== 2 ||
+            m?.schema_version !== 3 ||
+            typeof m.generation !== 'string' ||
             typeof m.session_key !== 'string' ||
             typeof m.transcript_hash !== 'string' ||
             typeof m.written_at !== 'string' ||
@@ -317,7 +322,8 @@ export function recordPreCompact(input: CheckpointInput): PreCompactOutcome {
         return 'skipped';
     }
     const marker: Marker = {
-        schema_version: 2,
+        schema_version: 3,
+        generation: crypto.randomBytes(8).toString('hex'),
         session_key: key,
         transcript_hash: transcriptHash(input.transcriptPath),
         package_version: input.version,
@@ -355,22 +361,29 @@ export function observePostCompact(input: CheckpointInput): PostCompactOutcome {
     // and the next observation classifies it again. A malformed marker is
     // removed the same way; anything that is not a regular file stays.
     if (logEvent(input.env, outcome, now, ageMs)) {
-        if (m !== null) consumeIfUnchanged(file, m.written_at);
-        else if (lstatOrNull(file)?.isFile()) fs.rmSync(file, { force: true });
+        if (m !== null) consumeIfUnchanged(file, m.generation);
+        else removeIfStillInvalid(file);
     }
     return outcome;
 }
 
 /**
  * Remove the marker only if it is still the one that was read (same
- * `written_at`), so a marker written by a `pre_compact` that ran between the
+ * `generation`), so a marker written by a `pre_compact` that ran between the
  * read and the removal is left for its own observation. Narrows the window to
  * the read-compare-remove sequence; without a lock it cannot be closed.
  */
-export function consumeIfUnchanged(file: string, writtenAt: string): boolean {
+export function consumeIfUnchanged(file: string, generation: string): boolean {
     if (!lstatOrNull(file)?.isFile()) return false;
-    const now = readMarker(file);
-    if (now !== null && now.written_at !== writtenAt) return false;
+    const current = readMarker(file);
+    if (current === null || current.generation !== generation) return false;
+    fs.rmSync(file, { force: true });
+    return true;
+}
+
+/** Remove a regular file at the marker path only if it still does not read as a valid marker. */
+export function removeIfStillInvalid(file: string): boolean {
+    if (!lstatOrNull(file)?.isFile() || readMarker(file) !== null) return false;
     fs.rmSync(file, { force: true });
     return true;
 }

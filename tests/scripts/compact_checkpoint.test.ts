@@ -20,6 +20,7 @@ import {
     SWEEP_MAX,
     sweepAbandoned,
     consumeIfUnchanged,
+    removeIfStillInvalid,
     WRITE_LIMIT,
 } from '../../src/scripts/_lib/compact_checkpoint.js';
 import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
@@ -57,7 +58,7 @@ describe('compact checkpoint — a marker at pre_compact, never injected', () =>
     it('writes a marker carrying only keys, version and time', () => {
         expect(recordPreCompact(base())).toBe('written');
         const m = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
-        expect(Object.keys(m).sort()).toEqual(['package_version', 'schema_version', 'session_key', 'transcript_hash', 'written_at']);
+        expect(Object.keys(m).sort()).toEqual(['generation', 'package_version', 'schema_version', 'session_key', 'transcript_hash', 'written_at']);
         expect(m.session_key).toBe(eolSessionKey(SID));
         expect(m.transcript_hash).toMatch(/^[0-9a-f]{16}$/);
     });
@@ -370,10 +371,10 @@ describe('compact checkpoint — round 13 follow-ups', () => {
         recordPreCompact(base());
         const first = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
         recordPreCompact(base({ now: new Date('2026-11-08T12:00:05Z') }));
-        expect(consumeIfUnchanged(markerFile(), first.written_at)).toBe(false);
+        expect(consumeIfUnchanged(markerFile(), first.generation)).toBe(false);
         expect(fs.existsSync(markerFile())).toBe(true);
         const second = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
-        expect(consumeIfUnchanged(markerFile(), second.written_at)).toBe(true);
+        expect(consumeIfUnchanged(markerFile(), second.generation)).toBe(true);
         expect(fs.existsSync(markerFile())).toBe(false);
     });
 
@@ -382,5 +383,27 @@ describe('compact checkpoint — round 13 follow-ups', () => {
         expect(observePostCompact(base({ version: null }))).toBe('match');
         recordPreCompact(base({ version: null }));
         expect(observePostCompact(base({ version: '20.1.0' }))).toBe('version-mismatch');
+    });
+});
+
+describe('compact checkpoint — round 14: generation-aware consumption', () => {
+    it('two markers written at the same instant are told apart', () => {
+        recordPreCompact(base());
+        const first = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
+        recordPreCompact(base());
+        const second = JSON.parse(fs.readFileSync(markerFile(), 'utf8'));
+        expect(second.written_at).toBe(first.written_at);
+        expect(second.generation).not.toBe(first.generation);
+        expect(consumeIfUnchanged(markerFile(), first.generation)).toBe(false);
+        expect(fs.existsSync(markerFile())).toBe(true);
+    });
+
+    it('an invalid-marker cleanup leaves a valid marker that appeared in the meantime', () => {
+        recordPreCompact(base());
+        expect(removeIfStillInvalid(markerFile())).toBe(false);
+        expect(fs.existsSync(markerFile())).toBe(true);
+        fs.writeFileSync(markerFile(), '{not json');
+        expect(removeIfStillInvalid(markerFile())).toBe(true);
+        expect(fs.existsSync(markerFile())).toBe(false);
     });
 });
