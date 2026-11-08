@@ -226,20 +226,58 @@ the link over the CLI verbs below, never the MCP client.
   context the relayed text is labelled as data from agent-switch, never an
   instruction to act on; a decision
   `target` that is not an account and a `reason.window` that is not a window
-  name are dropped. A terminal request is then forgotten.
+  name are dropped. A terminal request is then forgotten — except a `done`
+  move whose checkpoint is still owed, which is kept, without being reported
+  again, until the Stop path has left it.
 - **Hand over.** At the end of each turn the `session-eol` Stop hook reads
-  the request once it is `approved` or `executing` and leaves the run
+  the request once it is `approved`, `executing` or `done` and leaves the run
   checkpoint (a session inside a claimed run only), once it was written;
-  a write that did not happen is tried again on the next Stop. agent-switch moves
-  after the turn at the earliest, so this Stop is the last point the session
-  can leave it. The checkpoint is best effort and never gates a move: AC
-  cannot hold agent-switch back, and a move with `how: now` can run before
-  this Stop does.
-- **Off switch.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and
-  checkpoint, including for a request raised before it was set; the quota
-  notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
+  a write that did not happen is tried again on the next Stop. The checkpoint
+  is best effort and never gates a move: AC cannot hold agent-switch back,
+  and a move with `how: now` can finish before this Stop runs. A checkpoint
+  left after a finished move is still written, because the run checkpoint is
+  the newest state of the run that whichever session resumes it reads.
+- **Back-off.** Three link calls in a row that do not answer — a timeout, a
+  non-zero exit or output that does not parse, on the prompt or the Stop
+  path — stop the link for this session until the next reset of its plan
+  windows (five hours when none is known); the user is told once. A `switch`
+  call that answers resets the count; a discovery that finds the link present
+  does not, since it says nothing about whether `switch` answers. The count is kept under a
+  lock; a hook that was already past the check when another tripped the rest
+  still finishes its own one or two calls.
+- **Opt-in and off switch.** The question is off unless
+  `AGENT_CONFIG_SWITCH_QUESTION=1` is set: without it there is no raise, relay
+  or checkpoint and the quota notice is the one without a request.
+  `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and checkpoint,
+  including for a request raised before it was set, and wins over the opt-in;
+  the quota notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
+  It expires a day after the request's `expiresAt` and never later than seven
+  days after it was raised. An expired record is no longer polled by the prompt and
+  nothing is raised over it; the Stop path forgets it once nothing is owed — its
+  checkpoint was written, or the request reached a state that owes none — and
+  keeps it while a write fails, a lookup gets no answer or the link rests. A
+  record left eight days is pruned, by the next raise anywhere or by its own
+  session's next prompt. The prompt
+  relay and the Stop path change it under a lock, each only its own flag on the
+  record as it is then, so neither undoes the other's and a deleted record
+  stays deleted. Each relayed line is claimed under that lock before it is
+  shown, so two prompts running at once show it once in normal operation; a
+  prompt that dies after its claim loses that line, and the lock's stale break
+  below can let two prompts claim it. A raise never replaces a record that is
+  still there. The run checkpoint is built and written while the record lock is
+  held, so Stops write in order and one that finds the obligation completed
+  meanwhile does not write an older snapshot over it; a Stop that cannot take
+  the lock writes nothing. The record is forgotten only after a write that
+  reported success; a write that fails, throws or is cut short leaves the
+  obligation for the next Stop. A lock is released only by its holder. The lock is
+  advisory and its stale break (older than two seconds) is a check followed by
+  a removal, so two breakers at the same instant can remove a fresh lock. The
+  code holding it reads and writes files only: the record, the back-off count,
+  and the checkpoint build and write; every agent-switch call runs outside it. An unwritable state directory keeps
+  no back-off count, so the link does not rest there. Record, back-off and lock files no
+  session has touched for eight days are removed when a request is raised.
 
 ## CLI fallback
 
