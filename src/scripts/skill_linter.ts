@@ -714,9 +714,7 @@ export function detect_artifact_type(p: string, text: string): ArtifactType {
     if (basename(p).toLowerCase() === 'skill.md' || pathStr.includes('/skills/')) {
         return 'skill';
     }
-    // A startup contract (`startup-contracts/rules/<id>.md`) is a section of its
-    // rule, not a rule: no frontmatter, no H1. check_startup_contracts gates it.
-    if (pathStr.includes('/rules/') && !pathStr.includes('/startup-contracts/')) {
+    if (pathStr.includes('/rules/') && !pathStr.includes('/startup-contracts/')) { // a contract is no rule
         return 'rule';
     }
     if (pathStr.includes('/guidelines/')) {
