@@ -234,7 +234,8 @@ export function decodeEscapes(raw: string): string {
     return raw.replace(/\\(u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|.)/g, (_w, all: string, cp?: string, u4?: string, x2?: string) => {
         const hex = cp ?? u4 ?? x2;
         if (hex !== undefined) return String.fromCodePoint(parseInt(hex, 16));
-        const simple: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0' };
+        // Every single-character escape JS defines; any other `\c` is `c`, as in JS.
+        const simple: Record<string, string> = { n: '\n', t: '\t', r: '\r', '0': '\0', v: '\v', f: '\f', b: '\b' };
         return simple[all] ?? all;
     });
 }
@@ -257,21 +258,26 @@ export function stringConstants(src: string): Map<string, string[]> {
 }
 
 /**
- * The texts a template literal can print: one per combination of the values
- * its known placeholders may take (capped), each decoded. Unknown placeholders
- * stay as written. Only template literals interpolate, so callers pass a plain
+ * The texts a template literal can print, each decoded: the text with every
+ * known placeholder at its first value, plus one variant per (placeholder,
+ * value) pair with only that placeholder substituted. A bypass pattern is about
+ * one name and its `=`, so the linear set finds it without enumerating the
+ * cross product, and there is no cap to fail open at. Unknown placeholders stay
+ * as written. Only template literals interpolate, so callers pass a plain
  * string's body through {@link decodeEscapes} alone.
  */
 export function resolvePlaceholders(text: string, constants: ReadonlyMap<string, readonly string[]>): string[] {
-    let variants = [decodeEscapes(text)];
     const names = [...new Set([...text.matchAll(/\$\{\s*([A-Za-z_$][\w$]*)\s*\}/g)].map((m) => m[1] as string))];
+    const reFor = (name: string): RegExp => new RegExp(`\\$\\{\\s*${name.replace(/\$/g, '\\$')}\\s*\\}`, 'g');
+    let first = text;
+    const variants: string[] = [];
     for (const name of names) {
         const values = constants.get(name);
-        if (values === undefined) continue;
-        const re = new RegExp(`\\$\\{\\s*${name.replace(/\$/g, '\\$')}\\s*\\}`, 'g');
-        variants = variants.flatMap((v) => values.map((val) => v.replace(re, () => val))).slice(0, 64);
+        if (values === undefined || values.length === 0) continue;
+        first = first.replace(reFor(name), () => values[0] as string);
+        for (const val of values) variants.push(decodeEscapes(text.replace(reFor(name), () => val)));
     }
-    return variants;
+    return [decodeEscapes(first), ...variants];
 }
 const EXPORT_RE = /(^|[\s`'"(])export\s/;
 
