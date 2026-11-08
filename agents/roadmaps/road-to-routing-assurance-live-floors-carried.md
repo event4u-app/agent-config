@@ -59,6 +59,23 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
       (`routing-type-design-n10-20261105.md`), closed. Direct output judged
       against each skill's stated value (`routing-direct-output-assessment-20261108.md`):
       falls short for both, so (b) — a v2 prompt series by an independent author.
+      2026-11-08: v2 series run as pre-registered (`routing-prompt-v2-20261108.md`):
+      `react-shadcn-ui` 0/9, `project-analysis-core` 0/6, both REGRESSION — every run
+      did the work itself. AI council on the disposition
+      (`agents/evidence/council/routing-carried-13-disposition-20261108.question.md`):
+      both seats (d) — keep 1.3 open and the failing gate visible; take neither unit
+      out of the floor; establish the cause before choosing a mechanism; then a
+      bounded, pre-registered pilot of one mechanism toward an output-quality check,
+      which cannot by itself satisfy this step. Work whose acceptance does not depend
+      on 1.3 continues.
+  - [ ] **1.3a Establish the cause.** Run the v2 series on host 2.1.311 (the
+        baseline host) and on today's host, same catalogue and fixtures, three runs
+        per case. Fires on 2.1.311 → the host change is the cause; does not → it is not.
+        verify: the artefact names both host versions and classifies each.
+  - [ ] **1.3b Pilot one mechanism, pre-registered.** One delivery mechanism for
+        the two skills' stated value (chosen after 1.3a), measured on held-out
+        requests with the assessment's rubric, rollback stated before the run.
+        verify: an independent review of the pilot's report.
 
 ## Phase 2 — the suggest-without-read gap (carried 4.4)
 
