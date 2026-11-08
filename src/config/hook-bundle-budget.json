@@ -192,13 +192,24 @@
             "what_would_have_caught_it": "Nothing earlier: the base headroom is smaller than the change. Sized to the measurement plus 540 bytes of headroom; rebuild variability was not measured."
         },
         {
+            "date": "2026-11-07",
+            "chunk": "src/scripts/quota_notice_hook.ts",
+            "from": 22800,
+            "to": 41000,
+            "by": "agent, feat/agent-switch-link-ask (road-to-a-link-with-agent-switch Phase 4)",
+            "what_was_added": "The switch question near a plan limit: `_lib/switch_relay.ts` (raise a request for this session over `agent-switch switch request --session … --by ac --json`, read it back with `switch show`, parse the version-1 request, the per-session record of what was told, the user's line and the model's `additional_context` naming the id and that only the user decides) and the link discovery it gates on (`_lib/agent_switch_link.ts` with the hardened spawn environment of `_lib/spawn_env.ts`). Measured 38,720 B against 22,772 B on origin/main d783496af2, both readings by this gate; ceiling 41,000 B leaves 2,280 B, about 6 % of the reading; any growth past it is caught by this gate.",
+            "why_it_could_not_be_avoided": "The feature is this concern's: the raise follows the same hot-window reading the notice already makes, on the same prompt, and the relay has to run on every prompt while a request is open. The cheaper paths were taken first. The MCP client (`agent_switch_client.ts`) stays out: its lazy SDK import would inline the SDK into the chunk, so the hook reaches agent-switch over the synchronous CLI verbs the contract already defines. The checkpoint before a move, which needs the settings cascade and the run-claim reader (measured at about 466 KB with them, the yaml parser among them), lives in the `session-eol` Stop path that already carries both, not here. A second lazily-required chunk for the relay alone was considered and refused: it would load on every prompt that has a request open and every prompt with a hot window, which is when this code runs anyway, and it would add a loader and a second budget entry for no byte this concern does not need.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the feature."
+        },
+        {
             "date": "2026-11-08",
             "chunk": "src/scripts/hooks/layer_promotion_hook.ts",
             "from": 56800,
             "to": 66900,
             "by": "agent, feat/session-start-contracts (road-to-a-session-start-under-the-host-limit 3.2)",
             "what_was_added": "The thin pass now writes the startup-contract stub form: `thin_entry_with_contract`, the installed stub shape and `shortDescription` in thin_rules (+1,960 B), the rule-bodies index and pointer resolution in installThinLayer (+1,369 B), `startupContract` in rule_law_section (+729 B), and the contract-bearing exclusion in layerPromotion (+248 B) — 60,848 B against 56,542 B on main, attributed per input with the chunk's own esbuild options.",
-            "why_it_could_not_be_avoided": "The session-start promotion must write the same contract stubs the installer writes, so it imports the one stub builder; a second, smaller builder would let the promoted layer and the installed layer disagree about what a stub carries."
+            "why_it_could_not_be_avoided": "The session-start promotion must write the same contract stubs the installer writes, so it imports the one stub builder; a second, smaller builder would let the promoted layer and the installed layer disagree about what a stub carries.",
+            "what_would_have_caught_it": "Nothing earlier: the growth is the contract stub builder the installed layer and the promotion share."
         }
     ],
     "chunks": [
@@ -264,7 +275,7 @@
         },
         {
             "entry": "src/scripts/quota_notice_hook.ts",
-            "max_bytes": 22800,
+            "max_bytes": 41000,
             "registered_at": "2026-10-25",
             "derivation": "Measured 20,703 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask with its per-call pending marker and read-path expiry from ratification rounds 1-5, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice."
         },

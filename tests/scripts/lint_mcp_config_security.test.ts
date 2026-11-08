@@ -101,4 +101,37 @@ describe('lint_mcp_config_security — _scan over a built ScannedFile', () => {
         expect(hits.map((h) => h.check)).toEqual([sl.LEGACY_PRAGMA_CHECK]);
         expect(hits[0]!.is_fail).toBe(false);
     });
+
+    // road-to-a-link-with-agent-switch 4.2: switch_decide records the user's
+    // answer, so the host must confirm every call. An auto-allow entry for it —
+    // by name, or for the whole agent-switch server — fails.
+    describe('switch_decide is never auto-allowed', () => {
+        const DECIDE = 'switch' + '_decide';
+        const SERVER = 'mcp__' + 'agent-switch';
+        const decideHits = (hits: sl.Finding[]): sl.Finding[] => hits.filter((h) => h.message.includes(DECIDE));
+
+        it.each([
+            ['an autoApprove list in .mcp.json', '.mcp.json', `{ "mcpServers": { "agent-switch": { "command": "agent-switch", "autoApprove": ["${DECIDE}"] } } }\n`],
+            ['an alwaysAllow list', '.mcp.json', `{ "mcpServers": { "agent-switch": {\n  "alwaysAllow": [\n    "${DECIDE}"\n  ] } } }\n`],
+            ['a Claude permission allow for the tool', '.claude/settings.json', `{ "permissions": { "allow": ["${SERVER}__${DECIDE}"] } }\n`],
+            ['a Claude permission allow for the whole server', '.claude/settings.json', `{ "permissions": { "allow": ["${SERVER}"] } }\n`],
+            ['a wildcard over the server', '.claude/settings.local.json', `{ "permissions": { "allow": ["${SERVER}__*"] } }\n`],
+        ])('%s fails as HIGH', (_label, name, body) => {
+            fs.mkdirSync(path.dirname(path.join((tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-decide-'))), name)), { recursive: true });
+            const p = path.join(tmp, name);
+            fs.writeFileSync(p, body, 'utf-8');
+            const hits = decideHits(mcp._scan(sl.scan_file(p)));
+            expect(hits).toHaveLength(1);
+            expect(hits[0]!.severity).toBe('HIGH');
+            expect(hits[0]!.is_fail).toBe(true);
+        });
+
+        it('the server entry itself, a deny, and other tools on an allow list do not', () => {
+            expect(decideHits(scanFile('.mcp.json', `{ "mcpServers": { "agent-switch": { "command": "agent-switch", "args": ["mcp", "serve"] } } }\n`))).toEqual([]);
+            fs.rmSync(tmp, { recursive: true, force: true });
+            expect(decideHits(scanFile('settings.json', `{ "permissions": { "deny": ["${SERVER}__${DECIDE}"] } }\n`))).toEqual([]);
+            fs.rmSync(tmp, { recursive: true, force: true });
+            expect(decideHits(scanFile('.mcp.json', `{ "autoApprove": ["switch_list"], "note": "${DECIDE} is asked" }\n`))).toEqual([]);
+        });
+    });
 });
