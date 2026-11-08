@@ -623,8 +623,7 @@ export function decide(kind: ConfigKind, rel_path: string, session_total: number
                 'LINTER is wrong, not the content. Fix the code or redesign the check; ' +
                 'do not expand the allowlist further.\n' +
                 '  Legitimate override is a human action outside this session: land the ' +
-                'linter redesign, or remove the `block-config-weakening` entry in ' +
-                'src/scripts/hook_manifest.yaml.',
+                'linter redesign, or a maintainer change to this guard, reviewed in its own PR.',
         };
     }
     if (session_total >= SESSION_WARN_AT) {
