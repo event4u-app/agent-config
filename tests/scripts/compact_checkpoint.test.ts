@@ -194,7 +194,7 @@ describe('compact checkpoint — filesystem boundary', () => {
 
     it('replaces an oversized event log instead of loading it', () => {
         fs.mkdirSync(checkpointDir(ENV()), { recursive: true });
-        fs.writeFileSync(eventsFile(ENV()), 'x'.repeat(EVENT_LOG_MAX_BYTES + 10));
+        fs.writeFileSync(eventsFile(ENV()), 'x'.repeat(EVENT_LOG_MAX_BYTES * 4 + 10));
         recordPreCompact(base());
         expect(fs.statSync(eventsFile(ENV())).size).toBeLessThan(EVENT_LOG_MAX_BYTES);
         expect(readEventTally(ENV()).written).toBe(1);
@@ -343,5 +343,23 @@ describe('compact checkpoint — round 11: headroom keeps every sweep complete',
         fs.mkdirSync(dir, { recursive: true });
         for (let i = 0; i < WRITE_LIMIT + 10; i++) fs.writeFileSync(path.join(dir, `n${i}.txt`), 'x');
         expect(sweepAbandoned(dir, new Date()).complete).toBe(true);
+    });
+});
+
+describe('compact checkpoint — round 12: progress after an overshoot', () => {
+    it('drains a directory pushed past the sweep budget, so a later sweep is complete again', () => {
+        const dir = checkpointDir(ENV());
+        fs.mkdirSync(dir, { recursive: true });
+        const past = new Date(Date.parse('2026-11-08T12:00:00Z') - MARKER_RETENTION_MS - 1000);
+        for (let i = 0; i < SWEEP_MAX + 88; i++) {
+            const p = path.join(dir, `${(i + 1).toString(16).padStart(64, '0')}.json`);
+            fs.writeFileSync(p, '{}');
+            fs.utimesSync(p, past, past);
+        }
+        const outcomes: string[] = [];
+        for (let i = 0; i < 4; i++) outcomes.push(recordPreCompact(base({ now: new Date(Date.parse('2026-11-08T12:00:00Z') + i) })));
+        expect(outcomes[0]).toBe('skipped');
+        expect(outcomes).toContain('written');
+        expect(sweepAbandoned(dir, new Date('2026-11-08T12:00:10Z')).complete).toBe(true);
     });
 });

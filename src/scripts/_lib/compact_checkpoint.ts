@@ -55,11 +55,17 @@ export const MARKER_RETENTION_MS = 24 * 60 * 60 * 1000;
 /**
  * Most directory entries one sweep looks at, kept or removed, plus one read to
  * learn whether the end was reached. Markers are written only below
- * `WRITE_LIMIT`, well under this; the gap absorbs the event log and writers
- * racing past the check, so a sweep still sees the whole directory and an
- * expired marker is removed by the next write however the directory is ordered.
- * The count is not an exact ceiling under concurrency — more than the gap of
- * simultaneous writers could exceed it.
+ * `WRITE_LIMIT`; the gap absorbs the event log and writers racing past the
+ * check, so ordinarily a sweep sees the whole directory and an expired marker
+ * is removed by the next write.
+ *
+ * Without a cross-process lock this is not a hard ceiling: more simultaneous
+ * writers than the gap can push the directory past it. Cleanup still makes
+ * progress then — while a sweep is incomplete no marker is added, and each
+ * sweep removes the expired entries among those it looks at — so the
+ * directory only shrinks until a sweep is complete again. Files that never
+ * expire (anything not named like a marker or temp file) are not removed, and
+ * `SWEEP_MAX` of them would stop writes for good.
  */
 export const SWEEP_MAX = 512;
 

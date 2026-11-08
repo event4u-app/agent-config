@@ -49,7 +49,7 @@ describe('compact-checkpoint hook', () => {
     it('does nothing in replay mode', () => {
         process.env['AGENT_CONFIG_REPLAY'] = '1';
         try {
-            expect(run({ event: 'pre_compact', payload }).rc).toBe(0);
+            expect(run({ event: 'pre_compact', payload })).toEqual({ rc: 0, out: '' });
         } finally {
             delete process.env['AGENT_CONFIG_REPLAY'];
         }
@@ -57,15 +57,15 @@ describe('compact-checkpoint hook', () => {
     });
 
     it('ignores session_start from any other source', () => {
-        run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'startup' } });
+        expect(run({ event: 'session_start', workspace_root: root, payload: { ...payload, source: 'startup' } })).toEqual({ rc: 0, out: '' });
         expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);
     });
 
     it('does nothing when switched off or when the envelope is unusable', () => {
         process.env['AGENT_CONFIG_NO_COMPACT_CHECKPOINT'] = '1';
-        expect(run({ event: 'pre_compact', workspace_root: root, payload }).rc).toBe(0);
+        expect(run({ event: 'pre_compact', workspace_root: root, payload })).toEqual({ rc: 0, out: '' });
         delete process.env['AGENT_CONFIG_NO_COMPACT_CHECKPOINT'];
-        expect(run({ event: 'pre_compact', workspace_root: root, payload: {} }).rc).toBe(0);
+        expect(run({ event: 'pre_compact', workspace_root: root, payload: {} })).toEqual({ rc: 0, out: '' });
         expect(fs.existsSync(path.join(root, 'state', 'compact-checkpoint'))).toBe(false);
     });
 });
