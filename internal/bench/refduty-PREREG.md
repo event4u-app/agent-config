@@ -1,7 +1,7 @@
 # PREREG — reference duty at the act: nothing, full, deliver, gate
 
 > Pre-registration for step 3.1 of
-> [`road-to-a-reference-that-arrives-before-the-act`](../../agents/roadmaps/road-to-a-reference-that-arrives-before-the-act.md).
+> [`road-to-a-reference-that-arrives-before-the-act`](../../agents/roadmaps/archive/road-to-a-reference-that-arrives-before-the-act.md).
 > Committed **before** the first paid trial of corpus `ab-refduty` and before any
 > report under `internal/bench/reports/` names it.
 

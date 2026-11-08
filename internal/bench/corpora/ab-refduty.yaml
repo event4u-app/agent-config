@@ -1,6 +1,6 @@
 # Reference-duty corpus — act-time references at `git commit`.
 #
-# Step 3.1 of agents/roadmaps/road-to-a-reference-that-arrives-before-the-act.md;
+# Step 3.1 of agents/roadmaps/archive/road-to-a-reference-that-arrives-before-the-act.md;
 # pre-registration: internal/bench/refduty-PREREG.md. Schema: SCHEMA-v2.md, plus
 # `git_init: true` (the clone is a repository with the fixture as its base commit).
 #

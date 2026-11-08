@@ -140,12 +140,15 @@ every step is observe-only or measurement-only unless it says otherwise. Complia
 
 ## Phase 3 — Deliver or block, only measured
 
-- [ ] **3.1 Choose the policy by measurement.** Four arms on the same tasks: deliver,
+- [x] **3.1 Choose the policy by measurement.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/act-references.json --> Four arms on the same tasks: deliver,
       read-gate (block once per reference), nothing, full layer. Compare violation rate,
       extra turns and cost.
       spend released 2026-11-07; any blocking default still needs owner ratification, with a
       false-positive ceiling registered before the run.
       verify: pre-registration committed before the first trial.
+      Result: `ref-gate` helps (2/9 vs 5/9 violations, +1.75 turns, 0 false blocks); deliver and
+      full show no detected difference — not a default without owner ratification
+      ([`refduty-sweep-2026-11-08`](../../evidence/analysis/refduty-sweep-2026-11-08.md)).
 
 ## Blockers
 
