@@ -112,7 +112,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ## Phase 2 — The runs
 
-- [x] **2.1** Floor probe: baseline arm only, rebuttal set, one sample, on the
+- [x] **2.1** Floor probe: baseline arm only, rebuttal set, one sample, on the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: internal/bench/reports/honesty-floor-probe-2026-11-08.jsonl -->
       consumer model; about 200 calls, estimate printed by `--estimate`. If the
       floor is unmet, replace the trivia items with repo-state items before any
       full run.
@@ -128,7 +128,7 @@ kept with the session record under `agents/runtime/council/responses/`.
       resolves under the user-global `~/.event4u/agent-config/` directory. No
       transcript was produced and nothing was spent.
       verify: the probe report names its floor result.
-- [x] **2.2** Full scored run: all arms over all sets, three samples, pinned
+- [x] **2.2** Full scored run: all arms over all sets, three samples, pinned <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
       model and judge; nulls published with the same prominence. Estimate
       7,245 calls, ~$44.68 as an upper bound (no prompt cache; the provider
       caches the system prompt and each ladder's history), above the
@@ -188,7 +188,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ## Phase 4 — Act on the result
 
-- [x] **4.1** Branch by result: a clean-control guardrail failure reviews the
+- [x] **4.1** Branch by result: a clean-control guardrail failure reviews the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       prohibition rules first; `folk-prompt` ≈ baseline records the video's
       prompt as an honest null; `reframe` meeting its bar un-parks HON-08; an
       own-artifact delta under the full tier adds a one-sentence evaluation
@@ -204,7 +204,7 @@ kept with the session record under `agents/runtime/council/responses/`.
       2 inert); `reframe` trips threshold 1, so HON-08 stays parked; `full-tier`
       shows no deference (−0.36), so no Iron Law 1 clause; matrix row FQ-05
       rewritten to the measurement.
-- [x] **4.2** A chat-host paste-in surface only if an arm beats baseline.
+- [x] **4.2** A chat-host paste-in surface only if an arm beats baseline. <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: the digest cites the winning arm's report.
       Not built 2026-11-08: no arm beats baseline — threshold 2 is inert for
       every arm, and every shipped-rule arm trips threshold 1.

@@ -12,12 +12,6 @@ estate_growth_exempt: >-
   3.2 and AC-3 with their blocker, and the clean-control audit the parent's
   guardrail review (step 4.1) found necessary.
 estate_offset_exempt: "The parent sat in later/ on main and is archived here, which offsets no active roadmap. This successor holds runnable work (the clean-control audit needs no owner and no spend), so later/ would hide work that can move; parking an unrelated active roadmap to offset it would be a disposition this change does not own."
-relates:
-  - slug: road-to-a-challenge-the-bench-has-measured
-    relation: depends
-    note: "Archived parent. The bench, its full run and the guardrail review are there."
-depends:
-  - road-to-a-challenge-the-bench-has-measured
 ---
 # Road to a challenge the bench has measured — carried
 
@@ -71,8 +65,8 @@ once its precision has been measured on labelled cases.
       counts-only, default-off per H1. The reversal must be a comparison of the
       two answers, or the metric is renamed to what it measures (concession
       language), as ratification round 5 required.
-      verify: `bench_capitulation_precision` reports a precision over at least
-      ten firings, and the contract table and `DetectorId` both list seven
+      verify: `./scripts-run internal/bench/core/bench_capitulation_precision --input <run>.jsonl`
+      -> /G fires: ([1-9][0-9]+)/ (at least ten firings, with their precision printed), and the contract table and `DetectorId` both list seven
       detectors.
       <!-- blocked-by: capitulation-detector-ratification -->
 
