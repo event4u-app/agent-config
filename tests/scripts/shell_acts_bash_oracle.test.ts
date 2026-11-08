@@ -146,6 +146,12 @@ const CASES: Array<[string, string[]]> = [
     ['git 2&>/dev/null push', []],
     ['git 2&>/dev/null commit -m x', []],
     ['git 2>/dev/null push', [P]],
+    // Round-15 counterexample: a redirection (or an assignment) before a reserved
+    // word makes it an ordinary word, in bash 3.2 and 5.2 alike.
+    ['> /dev/null ! git push', []],
+    ['X=1 ! git push', []],
+    ['! >/dev/null git push', [P]],
+    ['{ >/dev/null git push; }', [P]],
     ['git push || git commit -m x', [C, P]],
     ['true && { git push || gh pr create -t t; }', [G, P]],
     ['git push && git commit -m x || gh pr create -t t', [C, G, P]],

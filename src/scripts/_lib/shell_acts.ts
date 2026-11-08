@@ -287,7 +287,8 @@ export function simpleCommands(command: string): string[][] {
 
 function normalise({ words, piped, redirectAt }: Simple): string[] {
     let k = 0;
-    while (k < words.length && !(words[k] as Word).quoted && LEADING_RESERVED.has((words[k] as Word).text)) k += 1;
+    // A reserved word counts only before any redirection: `>f ! git push` runs `!`.
+    while (k < words.length && !(words[k] as Word).quoted && (redirectAt === -1 || redirectAt > k) && LEADING_RESERVED.has((words[k] as Word).text)) k += 1;
     const start = k;
     const opener = start === 0 ? null : (words[start - 1] as Word).text;
     // A quoted `'X=1'` is a command name, not an assignment: bash runs `X=1`.

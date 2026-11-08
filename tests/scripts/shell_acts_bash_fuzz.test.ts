@@ -69,7 +69,8 @@ function simple(r: () => number): string {
     // across the oracle's runs of `cond`.
     // A comment would swallow the closing `}` / `fi`, so commented forms stay bare.
     if (s.includes('#')) return lead;
-    return pick(r, [lead, lead, lead, `! ${s}`, `{ ${s}; }`, `if cond; then ${s}; fi`, `if cond; then ${s}; else ${act(r)}; fi`]);
+    // A redirection before `!` makes it an ordinary word (`>out ! git push` runs `!`).
+    return pick(r, [lead, lead, lead, `! ${s}`, `${pick(r, REDIRECTS)} ! ${s}`, `{ ${s}; }`, `if cond; then ${s}; fi`, `if cond; then ${s}; else ${act(r)}; fi`]);
 }
 
 /**
