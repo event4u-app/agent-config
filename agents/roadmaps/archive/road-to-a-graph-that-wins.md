@@ -343,6 +343,7 @@ reviews worse. Distinct from 3.2, which teaches two existing detectors to read e
       and `code-intelligence` carries the form rule: the graph feeds checks and read
       lists, never prose.
       verify: `grep -c 'impact --diff' src/skills/blast-radius-analyzer/SKILL.md` -> /^[1-9]/
+      Measurement: `internal/bench/reports/code-graph-counterfactual-review-2026-11-06.md` (3.5) — the structured checks beat the plain review in direction (B1 > A), but bar (ii) failed (38 unsupported names against 3 allowed), so the skills consume them as advisory input only.
 - [x] 5.3 **The self-review gate reads the checks, advisory.** `self_review_gate.ts`
       receives the three checks as findings with a disposition, typed with the
       exhibits that landed on `review-findings.schema.json` in #2722; advisory until
@@ -383,17 +384,19 @@ Two reach gaps account for what the run could trace.
       yields a route node with a stated `routes-to` edge to its action, and `entryPathReading`
       fires on a catch inside that action.
       > note: done 2026-11-06 — `routeFileSet` (`providers/laravel.ts`) adds files loaded by `loadRoutesFrom` / `group(__DIR__ …)` and their `require`s; `Route::controller(C::class)` groups resolve bare method-name handlers (unopim's package routes use both). `npx vitest run tests/scripts/code_graph_laravel_package_routes.test.ts` -> 0.
-- [ ] 6.2 **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
+- [x] 6.2 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/detector_labels.ts --> **Catches with no enclosing indexed symbol.** 27 of the 40 sampled catches sit where no
       indexed declaration encloses the line, so the reading cannot start. Measure which constructs
       they are (closures, arrow functions, class constants, compiled templates) and index the
       enclosing one where the extractor can.
       verify: the 27 rows of `code-graph-detector-labels-2026-11-06/unopim.catch.jsonl` re-read
       after the change, with the share still unanswered reported per construct.
       > note: 2026-11-06 — measured on the recorded rows: 12 inline script in Blade templates (11 labelled reachable), 12 compiled bundles under `public/**/build` (2), 3 test code (0). Extractor side landed: views resolve by namespace (`loadViewsFrom`, `anonymousComponentPath`), and the entry-path reading starts at a template the graph states is rendered or included and walks `renders` / `includes` (fixture tests in the same file; compiled bundles stay unanswered by design). Open: the re-read of the 27 rows itself, which is 6.3's run.
-- [ ] 6.3 **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
+      > note: done 2026-11-08 — re-read with the runner's `reread` command (`internal/bench/reports/code-graph-detector-labels-2026-11-08.md`). Still unanswered per construct: compiled bundles 12 of 12 (by design), Blade templates 3 of 12 (was 12), test code 3 of 4; PHP classes 0 of 12. The 9 Blade catches now read through `renders` / `includes` all fire.
+- [x] 6.3 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/code-graph/detector_labels.ts --> **Re-read the labelled rows.** Recompute the silent-catch reading on the same 40 rows with
       the same labels (no relabelling) and publish the paired verdict beside the original.
       verify: `ls internal/bench/reports/code-graph-detector-labels-*.md | wc -l` -> /^\s*[2-9]/
       (a second dated report, written by the runner's report command over the re-read rows).
+      > note: done 2026-11-08 — same 40 rows, labels byte-identical (checked): graph answered 22 (was 13), fire / quiet 12 / 10 (was 0 / 13), paired verdict `no-change` 2 / 8, p 0.055 (was `regression` 2 / 11, p 0.011). Not a `pass`: 9 PHP-class catches labelled reachable are still read `quiet`; their recorded edges show where the walk stops. Report: `internal/bench/reports/code-graph-detector-labels-2026-11-08.md`.
 
 ## Null path, stated now
 If fewer than 4 of the 6 scored classes win, the graph-first wording stays withheld and
@@ -431,6 +434,7 @@ K8 no Fact-IR rewrite before a second provider emits the same edge family.
 - [x] AC-6 `code-graph prove` emits the bundle from `scorecard.yaml`.
 - [x] AC-7 A partial parse, a shallow clone and a skipped lane appear as `unknown` in every review answer, never as `0`, and no capped answer drops an item uncounted.
       verify: `npx vitest run tests/scripts/code_graph_ac7_unknown_everywhere.test.ts` -> 0 (review-risk, impact, tests-for, ask, dead — JSON and SQLite paths)
-- [ ] AC-8 `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
+- [x] AC-8 <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/self-review-gate.yml --> `blast-radius-analyzer`, the review chain and the self-review gate consume the three checks as structured findings.
       > note: 2026-11-06 — the first two hold (5.2). Wiring the checks into `self_review_gate.ts` went through five council rounds (`agents/evidence/council/graph-checks-self-review-20261106.md`); both seats refused every placement on the gate's required path, and the last round named a separate, non-required reporting job as the version it would accept. That narrows the criterion, which is the owner's call; the wiring was withdrawn and the gate is unchanged. Owner decision 2026-11-06: narrowed to a separate, non-required job beside the gate.
       > note: 2026-11-06 — the `graph-checks` job in `self-review-gate.yml` runs `graph_checks_report.ts` (graph built from the PR's clean real head, resolved SHAs, per-check status, artifact refused by the dispositions ledger). Council round 6 (`agents/evidence/council/graph-checks-job-r6-20261106.question.md`) accepted the placement and refused the first implementation; every required change it named is in the shipped version, which no council round has reviewed yet. Open: that review round.
+      > note: done 2026-11-08 — the review rounds ran (7–10, `agents/evidence/council/graph-checks-job-20261108.md`). Round 10: anthropic and openai both `confirmed-non-expanding`, no dealbreaker. Fixed along the way: the flagged count (150, not 180), the fallback report's shape, the summary step's shell branch (now run under bash in tests), the completion marker (summary written last, atomically; a stale one removed first), and claims the job could not back (PR-controlled execution, external requiredness, time budget).
