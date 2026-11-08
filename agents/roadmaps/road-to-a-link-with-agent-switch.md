@@ -237,10 +237,43 @@ finding both seats or one seat repeated that the merged change does not close.
       at most seven days, legacy records by mtime; a relay inside the Stop
       write keeps both flags, a deleted record is not revived, a held lock
       defers and a stale one is broken.
-- [ ] **7.6 Default.** With 7.1–7.5 in hand, decide whether the question stays
+- [x] **7.6 Default.** With 7.1–7.5 in hand, decide whether the question stays
       on by default or becomes opt-in (`AGENT_CONFIG_NO_SWITCH_QUESTION=1` is
       the off switch today).
       verify: owner decision recorded under Decisions.
+      D5: opt-in. The question runs only with `AGENT_CONFIG_SWITCH_QUESTION=1`;
+      `AGENT_CONFIG_NO_SWITCH_QUESTION=1` still wins. `tests/scripts/agent_switch_ask.test.ts`
+      § 7.6.
+
+## Phase 8 — Residuals of the hardening ratification
+
+Carried from council rounds 1–6 of the Phase 7 budget raise
+(`agents/evidence/council/agent-switch-hardening-ratification-r{1..6}-20261108.question.md`,
+all `refused`; merged on the owner's word with the question opt-in, D5).
+
+- [ ] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
+      outlives the two-second stale break can lose its lock to a second Stop and
+      still publish an older snapshot after it (round 6). Serialize in a way
+      that cannot evict a live writer, or write checkpoint generations so an
+      older one never replaces a newer one.
+      verify: a two-process test with a writer held past the stale break.
+- [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
+      with reentrant callbacks and a racing fake agent-switch. Add tests that
+      overlap two real hook processes for the relay claim, the back-off count
+      and the checkpoint.
+      verify: the two-process tests.
+- [ ] **8.3 Consent at execution, closed.** Ask agent-switch to mark
+      `switch_decide` with `requiresUserInteraction` (counterpart roadmap
+      `road-to-the-agent-config-link`), then show a live interactive prompt on
+      Claude Code; until then the gaps in
+      `agents/evidence/investigations/switch-decide-consent-per-host-20261108.md` stand.
+      verify: evidence record updated with a live observation.
+- [ ] **8.4 The ceiling.** One seat held across rounds that the implementer
+      raising the `quota_notice` ceiling is not authorized by disclosure. Before
+      the question leaves opt-in, either bring the chunk back under 41,000 B
+      (for example the link in its own lazily loaded chunk with its own measured
+      budget) or have the raise ratified.
+      verify: the budget gate at the chosen ceiling, and a ratification record.
 
 ## Decisions
 
@@ -250,6 +283,7 @@ finding both seats or one seat repeated that the merged change does not close.
 | D2 | product-owned | owner | agent-switch executes; AC reads, asks, relays | owner directive 2026-11-05; fences K2/K4 | agent-switch drops contract v1 |
 | D3 | product-owned | owner | Connection is automatic, switched off only in agent-switch | owner directive 2026-11-05 (default on) | the link is found to expose more than limits and requests |
 | D4 | reversible-technical | council:2026-11-05 | Seat account may change on limits; seat model never does | council 2026-11-05 (openai), host verdict accept | a seat's account change is shown to change its verdicts |
+| D5 | product-owned | owner | The switch question is opt-in (`AGENT_CONFIG_SWITCH_QUESTION=1`) | owner decision 2026-11-08 after council rounds 1–6 refused the Phase 7 raise | Phase 8 is closed and the raise ratified |
 
 revisit-if: agent-switch drops contract v1, or a host offers its own
 cross-account continuation.
