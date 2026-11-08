@@ -193,14 +193,17 @@ const CASES: Array<[string, string[]]> = [
     ["'if' git push", []],
 ];
 
-describe.skipIf(!hasBash)('the bash stubs log what they are asked to run', () => {
+// Bash is on every runner and machine this package supports; a missing one fails
+// the suite rather than skipping it.
+if (!hasBash) throw new Error('the bash oracle needs bash on PATH');
+
+describe('the bash stubs log what they are asked to run', () => {
     it.each([['git push', [P]], ['git commit -m x', [C]], ['gh pr create -t t', [G]], ['git status', []]] as Array<[string, string[]]>)('%j', (command, expected) => {
         expect(bashActs(command)).toEqual(expected);
     });
 });
 
 // CI must not pass this suite by skipping it.
-if (!hasBash && process.env['CI']) throw new Error('the bash oracle needs bash on CI');
 
 // Where bash 3.2 (macOS's /bin/bash) reaches fewer acts than bash 5, which the
 // recogniser follows: `time` after `!`, `if`, `elif`, `while` or `until` is time(1)
@@ -217,8 +220,8 @@ const BASH3: Record<string, string[]> = {
     'time ! ! X=1 git push': [],
 };
 
-describe.skipIf(!hasBash)('the recogniser agrees with bash', () => {
-    const major = hasBash ? oracleBashMajor() : 0;
+describe('the recogniser agrees with bash', () => {
+    const major = oracleBashMajor();
     it.each(CASES)('%j', (command, expected) => {
         const fromBash = major < 4 && BASH3[command] ? BASH3[command] : expected;
         expect(bashActs(command)).toEqual([...fromBash].sort());
