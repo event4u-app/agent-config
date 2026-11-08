@@ -24,6 +24,9 @@ answered (verbatim):
   `src/scripts/quota_notice_hook.ts` in `src/config/hook-bundle-budget.json`,
   merged as a sibling of this branch's entry; no rule, contract or ceiling of
   this change moved.
+  The same holds for the subject after the next merge of `main`,
+  `64cb0bc514617a524b479bf91bb7c60e143638ac9d167ace598c046dc34d9a64` at commit `9cad173d37b5da27e7c088d17da3a869d87b4727`: it adds `main`'s two
+  `raise_log` entries for `src/scripts/_lib/reference_duty.ts`, merged the same way.
 - The merge over a red `check_kernel_edit_ratified` is the owner's own act on
   the forge. An agent records it in a bypass record and never performs it.
 - openai's last open points stay recorded as dissent, not as findings to act on
