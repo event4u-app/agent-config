@@ -11,6 +11,7 @@ estate_growth_exempt: >-
   change, so the active count does not grow. It holds the parent's steps 3.1,
   3.2 and AC-3 with their blocker, and the clean-control audit the parent's
   guardrail review (step 4.1) found necessary.
+estate_offset_exempt: "The parent sat in later/ on main and is archived here, which offsets no active roadmap. This successor holds runnable work (the clean-control audit needs no owner and no spend), so later/ would hide work that can move; parking an unrelated active roadmap to offset it would be a disposition this change does not own."
 relates:
   - slug: road-to-a-challenge-the-bench-has-measured
     relation: depends
