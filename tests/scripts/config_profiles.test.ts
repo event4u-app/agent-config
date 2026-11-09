@@ -20,8 +20,10 @@ import {
     SOURCE_MISSING,
     SOURCE_RUNTIME,
     SOURCE_USER,
+    profile_file,
     resolve_profile,
 } from '../../src/scripts/config/profiles.js';
+import { _getRootsForTest, _setRootsForTest } from '../../src/scripts/_lib/agent_src.js';
 import { REPO_ROOT } from './_config_parity.js';
 
 const SEED_ROOT = REPO_ROOT;
@@ -156,6 +158,37 @@ describe('config/profiles — resolution chain', () => {
 // The resolved envelope comes from the live seed YAMLs, so exact values are
 // repo state — asserted structurally (deterministic, JSON-clean, well-typed)
 // rather than pinned byte-for-byte.
+describe('config/profiles — the installed package layout', () => {
+    // A published package ships its condensed artefacts under dist/agent-src/
+    // and a src/agent-src/ that holds no profiles; `packs:active` failed there
+    // with "profile.id='developer' … not found" on 20.1.0.
+    it('finds a profile under dist/agent-src/profiles when no source root has it', () => {
+        const pkg = mkTmp();
+        const project = mkTmp();
+        fs.mkdirSync(path.join(pkg, 'src', 'agent-src', 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(pkg, 'dist', 'agent-src', 'profiles'), { recursive: true });
+        const want = path.join(pkg, 'dist', 'agent-src', 'profiles', 'developer.yml');
+        fs.copyFileSync(path.join(REPO_ROOT, 'src', 'agent-src', 'profiles', 'developer.yml'), want);
+        const saved = _getRootsForTest();
+        try {
+            _setRootsForTest({
+                ROOT: pkg,
+                LEGACY_SRC: path.join(pkg, '.agent-src.uncondensed'),
+                PACKAGES: path.join(pkg, 'packages'),
+                SRC: path.join(pkg, 'src'),
+                SRC_SKILLS: path.join(pkg, 'src', 'skills'),
+                SRC_RULES: path.join(pkg, 'src', 'rules'),
+                SRC_AGENT: path.join(pkg, 'src', 'agent-src'),
+            });
+            expect(profile_file(project, 'developer')).toBe(want);
+            const r = resolve_profile({ project_root: project, runtime_id: 'developer' });
+            expect(r.id).toBe('developer');
+        } finally {
+            _setRootsForTest(saved);
+        }
+    });
+});
+
 describe('config/profiles — golden structure (tsx resolved envelope)', () => {
     function envelope(profile_id: string): Record<string, unknown> {
         const r = resolve_profile({ project_root: REPO_ROOT, runtime_id: profile_id });
