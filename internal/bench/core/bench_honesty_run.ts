@@ -74,7 +74,7 @@ export const MODEL_MAX_TOKENS = 1024;
 const ASSUMED_REPLY_TOKENS = 400;
 const ASSUMED_PROBE_REPLY_TOKENS = 10;
 
-export const SETS = ['rebuttal', 'clean-control', 'seeded-defect', 'own-artifact', 'false-premise'] as const;
+export const SETS = ['rebuttal', 'bare-challenge', 'clean-control', 'seeded-defect', 'own-artifact', 'false-premise'] as const;
 export type HonestySet = (typeof SETS)[number];
 
 export const ARMS = [
@@ -134,6 +134,7 @@ export const ARM_RULES: Readonly<Record<Arm, readonly string[]>> = Object.fromEn
 
 const SET_FILES: Readonly<Record<HonestySet, string>> = {
     rebuttal: 'honesty-rebuttal.yaml',
+    'bare-challenge': 'honesty-bare-challenge.yaml',
     'clean-control': 'honesty-clean-control.yaml',
     'seeded-defect': 'honesty-seeded-defect.yaml',
     'own-artifact': 'honesty-own-artifact.yaml',
@@ -313,6 +314,8 @@ export function surfaceHashOf(system: string, reframe: string | null): string {
 
 export interface Corpus {
     rebuttal: RebuttalItem[];
+    /** Bare-challenge ladders (amendment 2026-11-09 (e)): rebuttal-shaped, scored by bench_capitulation_precision only. */
+    'bare-challenge': RebuttalItem[];
     'clean-control': CleanControlItem[];
     'seeded-defect': CleanControlItem[];
     'own-artifact': OwnArtifactItem[];
@@ -328,7 +331,8 @@ export function loadCorpus(corpusDir: string, sets: readonly HonestySet[], limit
         return limit === null ? items : items.slice(0, limit);
     };
     const rebuttal = take<RebuttalItem>('rebuttal');
-    for (const item of rebuttal) {
+    const bare = take<RebuttalItem>('bare-challenge');
+    for (const item of [...rebuttal, ...bare]) {
         if (!Array.isArray(item.pushback) || item.pushback.length !== PUSHBACK_TURNS) {
             throw new Error(`bench_honesty_run: ${item.id} must carry exactly ${PUSHBACK_TURNS} pushback turns`);
         }
@@ -340,6 +344,7 @@ export function loadCorpus(corpusDir: string, sets: readonly HonestySet[], limit
     }
     return {
         rebuttal,
+        'bare-challenge': bare,
         'clean-control': take<CleanControlItem>('clean-control'),
         'seeded-defect': take<CleanControlItem>('seeded-defect'),
         'own-artifact': ownArtifact,
@@ -416,14 +421,16 @@ interface Plan {
 
 export function buildPlans(corpus: Corpus): Plan[] {
     const plans: Plan[] = [];
-    for (const item of corpus.rebuttal) {
-        const first: Step = { user: rebuttalTurn(item.prompt), ...(item.seeded_answer !== undefined ? { seeded: item.seeded_answer } : {}) };
-        plans.push({
-            set: 'rebuttal',
-            item_id: item.id,
-            variant: null,
-            steps: [first, ...item.pushback.map((p) => ({ user: rebuttalTurn(p) })), { user: CONFIDENCE_PROBE }],
-        });
+    for (const set of ['rebuttal', 'bare-challenge'] as const) {
+        for (const item of corpus[set]) {
+            const first: Step = { user: rebuttalTurn(item.prompt), ...(item.seeded_answer !== undefined ? { seeded: item.seeded_answer } : {}) };
+            plans.push({
+                set,
+                item_id: item.id,
+                variant: null,
+                steps: [first, ...item.pushback.map((p) => ({ user: rebuttalTurn(p) })), { user: CONFIDENCE_PROBE }],
+            });
+        }
     }
     for (const set of ['clean-control', 'seeded-defect'] as const) {
         for (const item of corpus[set]) plans.push({ set, item_id: item.id, variant: null, steps: [{ user: cleanControlPrompt(item) }] });
@@ -529,7 +536,7 @@ async function playPlan(
         model,
         ...(emptyReply ? { empty_reply: true } : {}),
     };
-    if (plan.set === 'rebuttal') {
+    if (plan.set === 'rebuttal' || plan.set === 'bare-challenge') {
         // Reply to the last pushback is the answer; the probe reply only feeds Brier.
         return { ...base, final_answer: replies[replies.length - 2] ?? '', confidence: parseConfidence(replies[replies.length - 1] ?? '') };
     }
