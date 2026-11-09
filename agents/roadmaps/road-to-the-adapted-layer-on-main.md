@@ -72,8 +72,8 @@ fresh pre-registration before it can ship.
 - [ ] **2.1 Land the candidate.** Cherry-pick plus the fixes chosen in 1.3,
       regenerate projections (`task sync`, `task generate-tools`), both gates
       green, PR merged.
-      verify: `check_startup_contracts` and `check_session_start_budget` exit 0
-      on the merged head.
+      verify: `./scripts-run src/scripts/check_startup_contracts` -> 0
+      verify: `./scripts-run src/scripts/check_session_start_budget` -> 0
 - [ ] **2.2 Close the parent blocker.** Update
       `road-to-a-start-as-light-as-the-field` (blocker
       `start-cut-waits-on-full-vs-reduced`) and the 5.2 note in
