@@ -24,7 +24,7 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 
 import { DEFAULT_PROJECT_FILE, logger } from '../_lib/agent_settings.js';
-import { artefact_roots } from '../_lib/agent_src.js';
+import { ROOT, artefact_roots } from '../_lib/agent_src.js';
 import type * as YamlModule from 'yaml';
 
 // ESM-standard `require` shim — works whether imported or run directly.
@@ -156,6 +156,11 @@ export function profile_file(project_root: string, profile_id: string): string {
         if (_exists(candidate)) {
             return candidate;
         }
+    }
+    // A published package carries its profiles only in the condensed tree.
+    const shipped = path.join(ROOT(), 'dist', 'agent-src', 'profiles', `${profile_id}.yml`);
+    if (_exists(shipped)) {
+        return shipped;
     }
     return legacy;
 }
