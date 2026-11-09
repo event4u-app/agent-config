@@ -555,6 +555,31 @@ function parseArgs(argv: string[]): Args | string {
 }
 
 /**
+ * Where a green replay is recorded: one file per commit under the shared git
+ * directory, so every worktree of the checkout sees it and nothing lands in
+ * the tree. The pre-push hook only checks that the file exists — the replay
+ * itself cannot run inside the hook, because `git push` holds the connection
+ * to the remote open while the hook runs and GitHub closes it after a few idle
+ * minutes (measured: "Connection to github.com closed by remote host" after a
+ * green 5-minute replay, push exit 141).
+ */
+export function stampPath(root: string, sha: string): string {
+    if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`not a full commit id: ${sha}`);
+    const common = git(['rev-parse', '--path-format=absolute', '--git-common-dir'], root);
+    return path.join(common, 'ci-mirror', `${sha}.json`);
+}
+
+export function writeStamp(root: string, head: string, base: string, results: JobResult[]): string {
+    const file = stampPath(root, head);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const notVerified = results.flatMap((j) => j.steps
+        .filter((s) => s.verdict === 'not-reproducible' || s.verdict === 'owner-decision')
+        .map((s) => ({ job: j.displayName, step: s.name, verdict: s.verdict, detail: s.detail ?? null })));
+    fs.writeFileSync(file, JSON.stringify({ head, base, at: new Date().toISOString(), jobs: results.length, not_verified: notVerified }, null, 2));
+    return file;
+}
+
+/**
  * Run `fn` over `items` with at most `limit` in flight, results in input order.
  * Seven jobs at once meant seven checkouts and seven node_modules clones at
  * once; on a busy laptop that turned an 8-minute replay into 77 minutes.
@@ -691,10 +716,24 @@ export async function main(argv: string[]): Promise<number> {
         const { blocking, text } = summarize(results);
         process.stdout.write(`\n${text}\n`);
         if (args.json) fs.writeFileSync(args.json, JSON.stringify({ head: headSha, base: baseSha, blocking, jobs: results }, null, 2));
-        process.stdout.write(blocking > 0
-            ? `\n❌ CI mirror: ${blocking} blocking failure(s). Fix them all, commit, and push again.\n`
-            : '\n✅ CI mirror: no blocking failure in the mirrored jobs.\n');
-        return blocking > 0 ? 1 : 0;
+        if (blocking > 0) {
+            process.stdout.write(`\n❌ CI mirror: ${blocking} blocking failure(s). Fix them all, commit, and run it again.\n`);
+            return 1;
+        }
+        // Only a run of the WHOLE plan stamps: a `--job` subset proves nothing
+        // about the jobs it left out.
+        const timedOut = results.some((j) => j.steps.some((st) => st.detail === TIMED_OUT));
+        if (timedOut) {
+            process.stdout.write('\n⚠️  CI mirror: no blocking failure, but INCOMPLETE — steps ran out of time on this machine. No push stamp written; run it again when the machine is quieter.\n');
+            return 1;
+        }
+        if (args.jobs.length === 0) {
+            const stamp = writeStamp(root, headSha, baseSha, results);
+            process.stdout.write(`\n✅ CI mirror: no blocking failure. Stamped ${headSha.slice(0, 10)} (${path.basename(stamp)}) — \`git push\` now passes the pre-push check without a re-run.\n`);
+        } else {
+            process.stdout.write('\n✅ CI mirror: no blocking failure in the selected jobs (a --job subset writes no push stamp).\n');
+        }
+        return 0;
     } finally {
         if (!args.keep) {
             for (const wt of worktrees) tryGit(['worktree', 'remove', '--force', wt], root);

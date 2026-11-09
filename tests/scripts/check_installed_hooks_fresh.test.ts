@@ -275,7 +275,7 @@ describe("carrier — the pre-push hook body", () => {
     const body = rendered();
     const hookFresh = body.indexOf("Installed-hook freshness");
     const baseFresh = body.indexOf("Base freshness");
-    const preflight = body.indexOf("CI mirror — replaying");
+    const preflight = body.indexOf("CI mirror — is a green replay");
     expect(baseFresh).toBeGreaterThan(-1);
     expect(hookFresh).toBeGreaterThan(baseFresh);
     expect(hookFresh).toBeLessThan(preflight);
