@@ -55,7 +55,7 @@ import { run_orchestrated_arm } from './_lib/bench_headroom_run.js';
 import { dry_run_listing, load_v2_tasks, select_corpus } from './_lib/bench_artifact_corpus.js';
 import { start_artifact_sweep } from './_lib/bench_artifact_sweep.js';
 import { plugin_scope, preserve_stream, preserve_transcript, primary_checkout_root, reset_fixture } from './_lib/bench_ab_workspace.js';
-import { container_fields, is_quota_exhausted, next_account_hint, quota_brake, trial_container, type ContainerCtx } from './_lib/bench_ab_container.js';
+import { container_fields, is_quota_exhausted, next_account_hint, quota_brake, trial_container, with_pre_model_reruns, type ContainerCtx } from './_lib/bench_ab_container.js';
 import { container_context } from './bench_ab_images.js';
 import {
     SweepBudget,
@@ -1094,7 +1094,8 @@ export function main(argv: string[] | null = null): number {
                 container: ctr?.ctx ?? null,
             };
             if (selftest) return selftest_run(task, _arm, runOpts);
-            return run_one(task, _arm, runOpts);
+            if (ctr === null) return run_one(task, _arm, runOpts);
+            return with_pre_model_reruns(() => run_one(task, _arm, runOpts), args.pre_model_reruns);
         },
         ckpt,
         undefined,
@@ -1123,6 +1124,7 @@ export function main(argv: string[] | null = null): number {
         host: args.host,
         isolation: args.isolation,
         account: ctr?.ctx.account ?? null,
+        pre_model_reruns: args.pre_model_reruns,
         images: (ctr?.images ?? null) as unknown as Json,
         // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
         // one. Both the tier marker and the filename say so, because a number is
@@ -1200,6 +1202,8 @@ interface ParsedArgs {
     isolation: string;
     /** Container sweeps: which configured account to run on (default: the first). */
     account: string | null;
+    /** Container sweeps: reruns of a trial that ended before any model call; the pre-registration names it. */
+    pre_model_reruns: number;
 }
 
 class ArgExit extends Error {}
@@ -1221,8 +1225,9 @@ function parse_args(argv: string[]): ParsedArgs {
         fresh: false,
         isolation: 'host',
         account: null,
+        pre_model_reruns: 0,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--account NAME] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--account NAME] [--pre-model-reruns N] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1296,6 +1301,10 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a === '--account' || a.startsWith('--account=')) {
             out.account = a === '--account' ? need(i, '--account') : a.slice('--account='.length);
             if (a === '--account') i += 1;
+        } else if (a === '--pre-model-reruns' || a.startsWith('--pre-model-reruns=')) {
+            out.pre_model_reruns = _pyInt(a === '--pre-model-reruns' ? need(i, '--pre-model-reruns') : a.slice('--pre-model-reruns='.length), '--pre-model-reruns');
+            if (a === '--pre-model-reruns') i += 1;
+            if (out.pre_model_reruns < 0) argErr('argument --pre-model-reruns: must be >= 0');
         } else if (a === '--no-checkpoint') {
             out.checkpoint = false;
         } else if (a === '--fresh') {

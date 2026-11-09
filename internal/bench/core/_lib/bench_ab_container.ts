@@ -16,6 +16,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { countedTrials, type Receipt } from '../../../../src/scripts/_lib/eval_publication.js';
+
 import { loaded_package_skills, parse_init_event, type InitInfo } from './bench_ab_delivery_probe.js';
 
 export const CONTAINER_WORKDIR = '/work';
@@ -115,6 +117,52 @@ export function load_check(stream: string, expects_package: boolean, packageSkil
     return { ok: true, reason: `${n} package skill(s) loaded`, package_skills: n };
 }
 
+function tokens_spent(run: Record<string, unknown>): number {
+    const breakdown = (run['tokens_breakdown'] ?? {}) as Record<string, unknown>;
+    return ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens']
+        .reduce((a, k) => a + (typeof breakdown[k] === 'number' ? (breakdown[k] as number) : 0), 0);
+}
+
+/**
+ * `false` only on positive evidence that the run ended before any model call:
+ * it errored, its stream has no `system/init` event, and it spent no tokens.
+ * Anything less certain counts as reached (eval-measurement-integrity § A run
+ * that never reached the model is not a trial).
+ */
+export function reached_model(run: Record<string, unknown>): boolean {
+    if (typeof run['reached_model'] === 'boolean') return run['reached_model'];
+    if (run['errored'] !== true) return true;
+    if (typeof run['stream'] !== 'string') return true;
+    if (parse_init_event(run['stream']) !== null) return true;
+    return tokens_spent(run) > 0;
+}
+
+/**
+ * Run `attempt` until one reaches the model, at most `maxReruns` reruns; the
+ * counted trial is chosen by `countedTrials`. A trial that never reached the
+ * model is returned errored with `environment_failure: true`, so every
+ * statistic that drops errored runs drops it, and the reason names the count.
+ */
+export function with_pre_model_reruns(attempt: () => Record<string, unknown>, maxReruns: number): Record<string, unknown> {
+    const runs: Record<string, unknown>[] = [];
+    const receipts: Receipt[] = [];
+    for (let n = 1; n <= maxReruns + 1; n += 1) {
+        const run = attempt();
+        runs.push(run);
+        const reached = reached_model(run);
+        receipts.push({ caseId: 'trial', configuration: 'arm', attempt: n, outcome: reached ? 'pass' : 'aborted', failureReason: reached ? undefined : 'timeout', reachedModel: reached });
+        if (reached) break;
+    }
+    const verdict = countedTrials(receipts, maxReruns);
+    const counted = verdict.trials[0];
+    if (counted === undefined) {
+        const last = runs[runs.length - 1] as Record<string, unknown>;
+        const n = verdict.environmentFailures[0]?.preModelAborts ?? runs.length;
+        return { ...last, errored: true, environment_failure: true, pre_model_aborts: n, reason: `environment_failure: ${String(n)} pre-model abort(s); last: ${String(last['reason'] ?? 'no reason')}` };
+    }
+    return { ...(runs[counted.attempt - 1] as Record<string, unknown>), pre_model_aborts: verdict.excludedPreModel };
+}
+
 const QUOTA_TEXT = /usage limit|rate[_ ]limit|limit reached|quota|too many requests|\b429\b/i;
 
 /**
@@ -124,9 +172,7 @@ const QUOTA_TEXT = /usage limit|rate[_ ]limit|limit reached|quota|too many reque
  */
 export function is_quota_exhausted(run: Record<string, unknown>): boolean {
     if (run['errored'] !== true) return false;
-    const breakdown = (run['tokens_breakdown'] ?? {}) as Record<string, unknown>;
-    const spent = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens']
-        .reduce((a, k) => a + (typeof breakdown[k] === 'number' ? (breakdown[k] as number) : 0), 0);
+    const spent = tokens_spent(run);
     const said = QUOTA_TEXT.test(`${String(run['reason'] ?? '')}\n${String(run['transcript'] ?? '').slice(-2000)}`);
     return said || spent === 0;
 }
@@ -187,7 +233,7 @@ export function trial_container(ctx: ContainerCtx, spec: ImageSpec): ContainerSp
 export function container_fields(run: Record<string, unknown>, spec: ImageSpec, ctx: ContainerCtx): Record<string, unknown> {
     const check = load_check(String(run['stream'] ?? ''), arm_loads_package(spec), ctx.package_skills);
     const image = image_for(ctx, spec);
-    const base = { image, load_check: check };
+    const base = { image, load_check: check, reached_model: reached_model(run) };
     if (check.ok || run['errored'] === true) return base;
     return { ...base, errored: true, reason: `load_mismatch: ${check.reason}` };
 }
