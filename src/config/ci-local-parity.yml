@@ -86,10 +86,23 @@
 # So `pre_push_budget_seconds` below is a real budget, not a wish. A gate declared
 # `local_only` or `both` that exceeds it is reported, not silently added to the hook.
 
-# Wall-clock ceiling for the pre-push gate set, in seconds. Derived from the
-# measured bucket-A sum (14.5s) plus headroom; the existing hook already costs
-# `task consistency` + eslint + tsc, so this is a bounded increase, not a new tax.
-pre_push_budget_seconds: 25
+# Wall-clock ceiling for the pre-push gate set, in seconds.
+#
+# RAISED 25 -> 540 on 2026-11-09, on the owner's instruction that a push must
+# not go red for anything decidable locally. The 25s figure bought a subset
+# (consistency + 22-gate preflight + changed-file typecheck) that left 295
+# CI-enforced gates able to fail only after a push; PR #2949 then spent four
+# push/red cycles of ~6 min CI each on four such failures. The pre-push hook
+# now replays the CI gate jobs (src/scripts/ci_mirror.ts): measured 473s wall
+# clock for the whole replay on 2026-11-09 (M-series laptop, 7 jobs in
+# parallel, longest job Consistency at 412s), which leaves 23 CI gates that can
+# only fail after a push. The ceiling is that measurement plus ~15% headroom.
+#
+# The trade the old comment warned about is real and is accepted here: a long
+# hook invites a bypass. AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 exists and prints
+# on every use. Revisit-if: the median pre-push exceeds this ceiling, or a
+# sampled week shows the bypass used on more than one push in five.
+pre_push_budget_seconds: 540
 
 # Gates CI runs that no local chain reaches — each needs a reason it cannot or
 # should not run locally. `reason` is free text; `class` is one of:
