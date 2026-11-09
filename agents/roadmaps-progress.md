@@ -2,35 +2,36 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change. A repository that does not commit this file has no git history for it — regenerate to see the current state.
 >
-> 7 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **9** open blockers in the active tree, **2** need you → `agent-config gates` · **45** overdue stubs, **14** owner decisions → `agent-config stubs:due`
+> 8 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers in the active tree, **2** need you → `agent-config gates` · **45** overdue stubs, **14** owner decisions → `agent-config stubs:due`
 
 ## Overall
 
-**72 / 178 steps done · 40%**
+**84 / 190 steps done · 44%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-a-link-with-agent-switch.md](roadmaps/road-to-a-link-with-agent-switch.md) | 7 | 24 | 14 | 10 | 0 | 0 | 0 | ████░░░░░░ 42% |
-| 2 | [road-to-a-map-that-holds-on-the-real-repo.md](roadmaps/road-to-a-map-that-holds-on-the-real-repo.md) | 7 | 54 | 23 | 28 | 3 | 0 | [2](#blockers-road-to-a-map-that-holds-on-the-real-repo) | ██████░░░░ 55% |
-| 3 | [road-to-a-map-that-knows-what-happened.md](roadmaps/road-to-a-map-that-knows-what-happened.md) | 5 | 69 | 40 | 13 | 16 | 0 | [2](#blockers-road-to-a-map-that-knows-what-happened) | ██░░░░░░░░ 25% |
-| 4 | [road-to-a-session-start-under-the-host-limit.md](roadmaps/road-to-a-session-start-under-the-host-limit.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-a-session-start-under-the-host-limit) | ████████░░ 80% |
-| 5 | [road-to-routing-assurance-live-floors-carried.md](roadmaps/road-to-routing-assurance-live-floors-carried.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-routing-assurance-live-floors-carried) | ███░░░░░░░ 33% |
-| 6 | [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md) | 4 | 19 | 13 | 6 | 0 | 0 | [3](#blockers-road-to-state-and-pins-across-compaction) | ███░░░░░░░ 32% |
-| 7 | [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md) | 2 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-a-challenge-the-bench-has-measured-carried.md](roadmaps/road-to-a-challenge-the-bench-has-measured-carried.md) | 2 | 8 | 3 | 5 | 0 | 0 | [1](#blockers-road-to-a-challenge-the-bench-has-measured-carried) | ██████░░░░ 62% |
+| 2 | [road-to-a-link-with-agent-switch.md](roadmaps/road-to-a-link-with-agent-switch.md) | 8 | 28 | 12 | 16 | 0 | 0 | 0 | ██████░░░░ 57% |
+| 3 | [road-to-a-map-that-holds-on-the-real-repo.md](roadmaps/road-to-a-map-that-holds-on-the-real-repo.md) | 7 | 54 | 23 | 28 | 3 | 0 | [2](#blockers-road-to-a-map-that-holds-on-the-real-repo) | ██████░░░░ 55% |
+| 4 | [road-to-a-map-that-knows-what-happened.md](roadmaps/road-to-a-map-that-knows-what-happened.md) | 5 | 69 | 40 | 13 | 16 | 0 | [2](#blockers-road-to-a-map-that-knows-what-happened) | ██░░░░░░░░ 25% |
+| 5 | [road-to-a-session-start-under-the-host-limit.md](roadmaps/road-to-a-session-start-under-the-host-limit.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-a-session-start-under-the-host-limit) | ████████░░ 80% |
+| 6 | [road-to-routing-assurance-live-floors-carried.md](roadmaps/road-to-routing-assurance-live-floors-carried.md) | 2 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-routing-assurance-live-floors-carried) | ████░░░░░░ 44% |
+| 7 | [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md) | 4 | 19 | 13 | 6 | 0 | 0 | [3](#blockers-road-to-state-and-pins-across-compaction) | ███░░░░░░░ 32% |
+| 8 | [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md) | 2 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
-## Parked — `later/` (159 roadmaps, not active backlog)
+## Parked — `later/` (158 roadmaps, not active backlog)
 
 > Excluded from the table above and from `/roadmap:process-*` by design. Listed here so a resume condition is visible without opening the file.
 
-> Carrying **98** open blockers, **20** owned by you — parking resolves nothing, so these are NOT in the active-tree count above.
+> Carrying **97** open blockers, **20** owned by you — parking resolves nothing, so these are NOT in the active-tree count above.
 
 | Roadmap | Open blockers | Resume when |
 |---|---:|---|
@@ -39,7 +40,6 @@
 | [road-to-a-bounded-trial-of-the-user-profile-layer.md](roadmaps/later/road-to-a-bounded-trial-of-the-user-profile-layer.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-byte-bound-and-a-public-figure.md](roadmaps/later/road-to-a-byte-bound-and-a-public-figure.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-canvas-the-code-owns.md](roadmaps/later/road-to-a-canvas-the-code-owns.md) | 1 | Resume when: `tests/fixtures/design-sync/host-observed/` exists — the maintainer's one canvas-account run of option (a) under § Blockers; that unblocks 3.2b, 5.2 and 8.5 together. | <!-- ref-ignore -->
-| [road-to-a-challenge-the-bench-has-measured.md](roadmaps/later/road-to-a-challenge-the-bench-has-measured.md) | 2 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-cold-start-paid-once-carried.md](roadmaps/later/road-to-a-cold-start-paid-once-carried.md) | 1 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
 | [road-to-a-control-that-matches-its-neighbours.md](roadmaps/later/road-to-a-control-that-matches-its-neighbours.md) | 0 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
 | [road-to-a-court-at-the-stops.md](roadmaps/later/road-to-a-court-at-the-stops.md) | 0 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
@@ -67,6 +67,7 @@
 | [road-to-a-sealed-lineage.md](roadmaps/later/road-to-a-sealed-lineage.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-setup-that-decides-itself-carried.md](roadmaps/later/road-to-a-setup-that-decides-itself-carried.md) | 1 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-site-the-owner-can-sign.md](roadmaps/later/road-to-a-site-the-owner-can-sign.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
+| [road-to-a-start-as-light-as-the-field.md](roadmaps/later/road-to-a-start-as-light-as-the-field.md) | 1 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-step-that-costs-what-it-changes-carried.md](roadmaps/later/road-to-a-step-that-costs-what-it-changes-carried.md) | 2 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-stop-that-holds-carried.md](roadmaps/later/road-to-a-stop-that-holds-carried.md) | 5 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-a-trunk-whose-own-gates-are-green-carried.md](roadmaps/later/road-to-a-trunk-whose-own-gates-are-green-carried.md) | 1 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
@@ -137,7 +138,7 @@
 | [road-to-mcp-full-power.md](roadmaps/later/road-to-mcp-full-power.md) | 1 (1 you) | Blocked until the next council-approved MCP tool batch exists — the only open work (Phase 5 Step 3 codegen bridge + AC2) generates tools from an approved cut list, and the 2026-07-07 verdict left z... | <!-- ref-ignore -->
 | [road-to-merge-surface-zero.md](roadmaps/later/road-to-merge-surface-zero.md) | 0 | Resume when EITHER of the two conditions below clears. They are the whole set, deliberately — both seats refused a longer list, on the ground that a resume condition naming every open blocker is no... | <!-- ref-ignore -->
 | [road-to-mission-catalogue.md](roadmaps/later/road-to-mission-catalogue.md) | 0 | Status: later (parked). Blocked until the `/mission:upgrade` infrastructure is operationally validated on a live Laravel repo (the Phase 2B trigger). Every item below is gated on an unmet external... | <!-- ref-ignore -->
-| [road-to-mixed-trigger-activation-cost.md](roadmaps/later/road-to-mixed-trigger-activation-cost.md) | 1 (1 you) | Blocked until: the host exposes an `InstructionsLoaded` observer that a session can read (step 3.3's instrument; absent from the 2.1.229 binary's token extraction, so building against it today woul... | <!-- ref-ignore -->
+| [road-to-mixed-trigger-activation-cost.md](roadmaps/later/road-to-mixed-trigger-activation-cost.md) | 1 (1 you) | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
 | [road-to-mod-surfaces-that-read-what-ac-knows.md](roadmaps/later/road-to-mod-surfaces-that-read-what-ac-knows.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-one-identity-axis.md](roadmaps/later/road-to-one-identity-axis.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-one-upstream-that-checks-what-leaves-carried.md](roadmaps/later/road-to-one-upstream-that-checks-what-leaves-carried.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
@@ -188,7 +189,6 @@
 | [road-to-trigger-eval-freshness-has-no-writer.md](roadmaps/later/road-to-trigger-eval-freshness-has-no-writer.md) | 1 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
 | [road-to-trigger-evals-that-stay-fresh.md](roadmaps/later/road-to-trigger-evals-that-stay-fresh.md) | 0 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
 | [road-to-typed-grants-that-persist.md](roadmaps/later/road-to-typed-grants-that-persist.md) | 2 | _condition present but unlabelled — see file_ | <!-- ref-ignore -->
-| [road-to-web-launch-readiness-benchmark.md](roadmaps/later/road-to-web-launch-readiness-benchmark.md) | 0 | Resume when: a ground-truth-blind session or human (one that has not read `GROUND-TRUTH.md`) is available to freeze the protocol and run the arms, or the claim/command is proposed for promotion — a... | <!-- ref-ignore -->
 | [road-to-windsurf-hooks-after-the-cascade-move.md](roadmaps/later/road-to-windsurf-hooks-after-the-cascade-move.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
 | [road-to-worker-generation-recycling.md](roadmaps/later/road-to-worker-generation-recycling.md) | 3 | construction. Resume when the maintainer blockers are resolved and Phase 1's exit gate (≥ 30 shadow capsules from real dispatches) has data. | <!-- ref-ignore -->
 | [road-to-workflows-that-cannot-exfiltrate.md](roadmaps/later/road-to-workflows-that-cannot-exfiltrate.md) | 0 | _no resume line recorded_ | <!-- ref-ignore -->
@@ -198,9 +198,27 @@
 
 ## Per-roadmap phase breakdown
 
+### [road-to-a-challenge-the-bench-has-measured-carried.md](roadmaps/road-to-a-challenge-the-bench-has-measured-carried.md)
+
+**Road to a challenge the bench has measured — carried** — 5 / 8 done (62%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The guardrail, sized on audited labels | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | The capitulation count, measured before it ships | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+
+<a id="blockers-road-to-a-challenge-the-bench-has-measured-carried"></a>
+**Blockers**
+
+- **capitulation-detector-ratification** (owner: an implementer, then the AI council (the hook-bundle budget is a ratified surface).) — blocks 2.2, 2.3 and AC-2.
+  - **If you do nothing:** no concession count exists at turn end, which is today's state; the predicate stays a bench instrument.
+  - **What to do:**
+    design a predicate that compares the earlier and the later answer instead of reading concession phrases; measure it with `./scripts-run internal/bench/core/bench_capitulation_precision --input internal/bench/reports/honesty-bare-challenge-2026-11-09.jsonl` and `--labelled internal/bench/corpora/honesty-bare-challenge-replies.yaml --labels internal/bench/corpora/honesty-bare-challenge-replies-labels.yaml`, both unchanged; only when it separates unsupported reversals from justified corrections and kept answers, build it on the chunk design kept in the parent's history (commit `87618c68cc`: `loadLazyExport` row, the prompt-pair reader, +489 B in the dispatch bundle) and ratify with a prompt that carries those numbers. <!-- ref-ignore -->
+  - **Resolved when:** a ratification record for the detector exists under `agents/evidence/ratifications/` with verdict `ratified` or `confirmed-non-expanding`.
+
 ### [road-to-a-link-with-agent-switch.md](roadmaps/road-to-a-link-with-agent-switch.md)
 
-**Road to a link with agent-switch** — 10 / 24 done (42%)
+**Road to a link with agent-switch** — 16 / 28 done (57%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -210,7 +228,8 @@
 | 4 | Inform and ask | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 5 | Load distribution | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | Pace requests (agent-switch counterpart) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 7 | Hardening the switch question | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 7 | Hardening the switch question | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 8 | Residuals of the hardening ratification | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-a-map-that-holds-on-the-real-repo.md](roadmaps/road-to-a-map-that-holds-on-the-real-repo.md)
 
@@ -305,11 +324,11 @@ _1 blocker resolved._
 
 ### [road-to-routing-assurance-live-floors-carried.md](roadmaps/road-to-routing-assurance-live-floors-carried.md)
 
-**Road to routing assurance — what the live floors carried** — 3 / 9 done (33%)
+**Road to routing assurance — what the live floors carried** — 4 / 9 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | five units the canary left unresolved | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+| 1 | five units the canary left unresolved | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
 | 2 | the suggest-without-read gap (carried 4.4) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
 
 <a id="blockers-road-to-routing-assurance-live-floors-carried"></a>
@@ -382,6 +401,7 @@ Days since each active roadmap landed at its path and since its last ticked step
 
 | Roadmap | Days since landing | Days since last tick |
 |---|---:|---:|
+| [road-to-a-challenge-the-bench-has-measured-carried.md](roadmaps/road-to-a-challenge-the-bench-has-measured-carried.md) | — | — |
 | [road-to-a-link-with-agent-switch.md](roadmaps/road-to-a-link-with-agent-switch.md) | — | — |
 | [road-to-a-map-that-holds-on-the-real-repo.md](roadmaps/road-to-a-map-that-holds-on-the-real-repo.md) | — | — |
 | [road-to-a-map-that-knows-what-happened.md](roadmaps/road-to-a-map-that-knows-what-happened.md) | — | — |
