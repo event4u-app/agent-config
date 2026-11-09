@@ -214,6 +214,17 @@ export interface RunFacts {
     prNumber: string;
     runnerTemp: string;
     workspace: string;
+    /** The caller's clone is shallow; CI checks out with full history. */
+    shallow?: boolean | undefined;
+}
+
+/**
+ * A step that demands full git history: CI marks these with an
+ * `*_REQUIRE_HISTORY=1` env var that turns "no history" from a skip into a
+ * failure. On a shallow clone that failure is a fact about the clone.
+ */
+export function needsFullHistory(env: Record<string, string>): boolean {
+    return Object.entries(env).some(([k, v]) => /_REQUIRE_HISTORY$/.test(k) && v === '1');
 }
 
 export function makeContext(
@@ -405,6 +416,8 @@ export async function runJob(plan: JobPlan, facts: RunFacts, workdir: string, lo
             record({ verdict: 'owner-decision', exitCode: code, logFile, seconds });
         } else if (code === 127) {
             record({ verdict: 'not-reproducible', exitCode: code, logFile, seconds, detail: 'exit 127 — a command this machine does not have' });
+        } else if (facts.shallow && needsFullHistory(s.env)) {
+            record({ verdict: 'not-reproducible', exitCode: code, logFile, seconds, detail: 'needs full git history and this clone is shallow — `git fetch --unshallow` makes it checkable here' });
         } else if (s.continueOnError) {
             record({ verdict: 'passed', exitCode: code, logFile, seconds, detail: 'failed, but continue-on-error: true' });
         } else {
@@ -541,12 +554,14 @@ export async function main(argv: string[]): Promise<number> {
     const baseSha = tryGit(['rev-parse', `origin/${args.base}`], root) ?? tryGit(['rev-parse', args.base], root);
     if (!baseSha) { process.stderr.write(`ci_mirror: cannot resolve the base ${args.base}\n`); return 2; }
     const pr = prFacts(root, headRef);
+    const shallow = tryGit(['rev-parse', '--is-shallow-repository'], root) === 'true';
 
     const scratch = fs.mkdtempSync(path.join(os.tmpdir(), `ci-mirror-${headSha.slice(0, 7)}-`));
     const logDir = path.join(scratch, 'logs');
     fs.mkdirSync(logDir);
     process.stdout.write(`🔍 CI mirror — replaying ${plans.length} CI job(s) on ${headSha.slice(0, 10)} against origin/${args.base}, in parallel throwaway worktrees\n`);
     process.stdout.write(`   logs: ${logDir}\n`);
+    if (shallow) process.stdout.write('   ⚠️  this clone is shallow; steps that demand full history are reported, not failed (`git fetch --unshallow` to check them)\n');
 
     const worktrees: string[] = [];
     try {
@@ -567,7 +582,7 @@ export async function main(argv: string[]): Promise<number> {
                     labels: pr.labels.map((name) => ({ name })),
                 },
             }));
-            const facts: RunFacts = { baseRef: args.base, baseSha, headSha, headRef, prNumber: pr.number, runnerTemp, workspace: workdir };
+            const facts: RunFacts = { baseRef: args.base, baseSha, headSha, headRef, prNumber: pr.number, runnerTemp, workspace: workdir, shallow };
             const r = await runJob(plan, facts, workdir, logDir);
             process.stdout.write(`   … ${plan.displayName} finished (${r.seconds}s)\n`);
             return r;

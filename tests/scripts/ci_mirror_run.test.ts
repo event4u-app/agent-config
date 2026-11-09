@@ -159,3 +159,39 @@ describe('ci_mirror — the caller\'s checkout is never written through', () => 
         fs.rmSync(dir, { recursive: true, force: true });
     });
 });
+
+describe('ci_mirror — a gate that demands full history, on a shallow clone', () => {
+    const HISTORY_WORKFLOW = `
+on: { pull_request: {} }
+jobs:
+  h:
+    runs-on: ubuntu-latest
+    steps:
+      - name: history gate
+        env:
+          RELEASE_SURFACE_REQUIRE_HISTORY: '1'
+        run: echo "offender not reachable"; exit 1
+`;
+    async function runWith(shallow: boolean) {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-mirror-hist-'));
+        fs.mkdirSync(path.join(dir, '.github/workflows'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.github/workflows/h.yml'), HISTORY_WORKFLOW);
+        const cfg: MirrorConfig = { jobs: [{ workflow: 'h.yml', job: 'h' }], ci_only_steps: [], owner_decision_steps: [] };
+        const plan = planJobs(dir, cfg)[0];
+        if (!plan) throw new Error('fixture job did not plan');
+        const r = await runJob(plan, {
+            baseRef: 'main', baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40), headRef: 't',
+            prNumber: '1', runnerTemp: dir, workspace: dir, shallow,
+        }, dir, dir);
+        fs.rmSync(dir, { recursive: true, force: true });
+        return r.steps[0]?.verdict;
+    }
+
+    it('reports it as not reproducible here, naming the fix', async () => {
+        expect(await runWith(true)).toBe('not-reproducible');
+    });
+
+    it('still fails it on a full clone, where the failure is real', async () => {
+        expect(await runWith(false)).toBe('failed');
+    });
+});

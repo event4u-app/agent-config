@@ -32,6 +32,12 @@
             "job": "consistency",
             "step": "Lint workflow files (actionlint)",
             "reason": "Needs bash 4 (`mapfile`) and downloads the actionlint binary at run time; macOS ships bash 3.2. It only lints workflow files the PR changed, so CI remains its one runner."
+        },
+        {
+            "workflow": "tests.yml",
+            "job": "static-checks",
+            "step": "hook-latency bench gate (pre-registered budget, real path)",
+            "reason": "Measures hook wall-clock against a millisecond budget. Locally the mirror runs its jobs in parallel on a working laptop, so the reading measures machine load, not the change; the CI runner is the instrument the budget was registered on."
         }
     ],
     "owner_decision_steps": [
