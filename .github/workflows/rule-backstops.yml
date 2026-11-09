@@ -73,6 +73,10 @@ on:
       - ".github/about.yml"
       - ".github/topics.yml"
       - ".github/workflows/rule-backstops.yml"
+      # ci_mirror --check reads every mirrored workflow and the mirror config;
+      # a renamed step in either must trigger it.
+      - "src/config/ci-mirror.json"
+      - ".github/workflows/**"
   push:
     branches:
       - main
@@ -122,6 +126,10 @@ on:
       - ".github/about.yml"
       - ".github/topics.yml"
       - ".github/workflows/rule-backstops.yml"
+      # ci_mirror --check reads every mirrored workflow and the mirror config;
+      # a renamed step in either must trigger it.
+      - "src/config/ci-mirror.json"
+      - ".github/workflows/**"
 
 # Superseded PR pushes cancel; `push: main` runs never do. On main this
 # workflow is the ONLY run for that commit, so cancelling it would leave the
@@ -993,3 +1001,12 @@ jobs:
       - name: Artifact graders separate their planted references
         if: ${{ !cancelled() }}
         run: ./scripts-run internal/bench/core/bench_artifact_selftest
+
+      # The pre-push hook replays these workflows locally (src/scripts/ci_mirror.ts).
+      # A step renamed here would silently stop being CI-only or owner-decision
+      # in src/config/ci-mirror.json, and a new expression the mirror cannot
+      # render would make it report instead of run. Cheap: it parses, it runs
+      # nothing.
+      - name: CI mirror plan agrees with the workflows
+        if: ${{ !cancelled() }}
+        run: ./scripts-run src/scripts/ci_mirror --check

@@ -12,7 +12,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
-import { LOCAL_JOB_ID, loadConfig, planJobs, unreproducibleSteps } from '../../src/scripts/ci_mirror.js';
+import { LOCAL_JOB_ID, loadConfig, planJobs, planProblems, unreproducibleSteps } from '../../src/scripts/ci_mirror.js';
 
 const ROOT = path.resolve(__dirname, '../..');
 const config = loadConfig(ROOT);
@@ -52,6 +52,12 @@ describe('ci_mirror plan — the real workflows', () => {
             expect(plan, `${entry.workflow}:${entry.job}`).toBeDefined();
             expect(plan!.steps.map((s) => s.name), entry.step).toContain(entry.step);
         }
+    });
+
+    it('--check is clean on the real tree, and catches a step renamed under a config entry', () => {
+        expect(planProblems(config, plans)).toEqual([]);
+        const renamed = { ...config, ci_only_steps: [{ ...config.ci_only_steps[0]!, step: 'a step that was renamed' }] };
+        expect(planProblems(renamed, plans).join('\n')).toContain('has no step "a step that was renamed"');
     });
 
     it('gives every CI-only step a reason', () => {

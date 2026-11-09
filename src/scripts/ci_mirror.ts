@@ -38,6 +38,7 @@
  * Usage:
  *   ./scripts-run src/scripts/ci_mirror               # run all mirrored jobs
  *   ./scripts-run src/scripts/ci_mirror --list        # print the plan only
+ *   ./scripts-run src/scripts/ci_mirror --check       # config vs workflows (CI runs this)
  *   ./scripts-run src/scripts/ci_mirror --job rule-backstops.yml:rule-backstops
  *   ./scripts-run src/scripts/ci_mirror --json report.json --keep
  *
@@ -490,15 +491,16 @@ export function summarize(results: JobResult[]): { blocking: number; text: strin
     return { blocking, text: lines.join('\n') };
 }
 
-interface Args { list: boolean; keep: boolean; json?: string; jobs: string[]; base: string }
+interface Args { list: boolean; check: boolean; keep: boolean; json?: string; jobs: string[]; base: string }
 
 function parseArgs(argv: string[]): Args | string {
-    const a: Args = { list: false, keep: false, jobs: [], base: 'main' };
+    const a: Args = { list: false, check: false, keep: false, jobs: [], base: 'main' };
     for (let i = 0; i < argv.length; i++) {
         const v = argv[i];
         const next = () => { const n = argv[++i]; if (n === undefined || n.startsWith('--')) throw new Error(`${v} needs a value`); return n; };
         try {
             if (v === '--list') a.list = true;
+            else if (v === '--check') a.check = true;
             else if (v === '--keep') a.keep = true;
             else if (v === '--json') a.json = next();
             else if (v === '--job') a.jobs.push(next());
@@ -509,6 +511,25 @@ function parseArgs(argv: string[]): Args | string {
         }
     }
     return a;
+}
+
+/**
+ * What makes the mirror wrong without making it fail: a config entry naming a
+ * step that no longer exists (a renamed step would silently stop being CI-only
+ * or owner-decision), or a mirrored step whose expressions it cannot render.
+ * `--check` reports these and exits 1, so CI keeps config and workflows in step.
+ */
+export function planProblems(config: MirrorConfig, plans: JobPlan[]): string[] {
+    const problems: string[] = [];
+    for (const e of [...config.ci_only_steps, ...config.owner_decision_steps]) {
+        const plan = plans.find((p) => p.workflow === e.workflow && p.job === e.job);
+        if (!plan) problems.push(`${e.workflow}:${e.job} is named for step "${e.step}" but is not a mirrored job`);
+        else if (!plan.steps.some((s) => s.name === e.step)) problems.push(`${e.workflow}:${e.job} has no step "${e.step}" (renamed?)`);
+    }
+    for (const p of plans) {
+        for (const u of unreproducibleSteps(p)) problems.push(`${p.workflow}:${p.job} › ${u.step}: ${u.reason}`);
+    }
+    return problems;
 }
 
 /**
@@ -537,6 +558,16 @@ export async function main(argv: string[]): Promise<number> {
     const config = loadConfig(root);
     const plans = planJobs(root, config, args.jobs);
     if (plans.length === 0) { process.stderr.write('ci_mirror: no job matched\n'); return 2; }
+
+    if (args.check) {
+        const problems = planProblems(config, plans);
+        for (const p of problems) process.stdout.write(`❌  ${p}\n`);
+        const steps = plans.reduce((n, p) => n + p.steps.length, 0);
+        process.stdout.write(problems.length > 0
+            ? `❌  ci_mirror --check: ${problems.length} problem(s) in src/config/ci-mirror.json vs the workflows\n`
+            : `✅  ci_mirror --check: ${plans.length} job(s), ${steps} step(s), config and workflows agree\n`);
+        return problems.length > 0 ? 1 : 0;
+    }
 
     if (args.list) {
         for (const p of plans) {
