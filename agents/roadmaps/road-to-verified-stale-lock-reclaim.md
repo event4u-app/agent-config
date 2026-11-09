@@ -50,8 +50,12 @@ stale-lock break or a release, under any interleaving of three contenders.
 
 ## Phase 1 — protocol decision
 
-- [ ] 1.1 Write a deterministic three-contender harness (injection points between every stat, rename, link and remove; no timing) and run it against the current `state_io.ts` lock to record which interleavings admit two holders.
-- [ ] 1.2 Decide the protocol from the harness: a filesystem protocol that passes every interleaving, or a lease with owner token plus fencing on the write, or a native lock dependency. Record the decision with the rejected shape above and the residual window, if any, stated.
+- [x] 1.1 Write a deterministic three-contender harness (injection points between every stat, rename, link and remove; no timing) and run it against the current `state_io.ts` lock to record which interleavings admit two holders. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      Done 2026-11-09: `tests/scripts/state_io_lock_interleavings.test.ts`. One schedule admits two holders on the non-strict path — A's stale-break remove landing while B holds, then C beside B — plus the paused-holder release race; the strict path admits none (`agents/evidence/analysis/state-io-lock-interleavings-2026-11-09.md`).
+      reach exempt: a test-only harness over the shipped `update_text_under_lock`; it adds no production symbol, and Phase 2 flips its pinned violation list to empty.
+- [x] 1.2 Decide the protocol from the harness: a filesystem protocol that passes every interleaving, or a lease with owner token plus fencing on the write, or a native lock dependency. Record the decision with the rejected shape above and the residual window, if any, stated. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/generation_lock.ts -->
+      Done 2026-11-09: the generation lock (`src/scripts/_lib/generation_lock.ts`) — a stale break creates `held.<g+1>` with `O_EXCL` and removes only lower generations; a release ages its own generation instead of removing it. No double grant over every three-caller schedule (≤ 3 preemptions); the explorer finds the double grant in today's stat-then-remove shape and in a remove-on-release variant. Residual: a paused holder beside its superseder (D1).
+      reach exempt: the protocol has no production caller until 2.1 wires it into `hooks/state_io.ts`; the dispatch bundle is a ratified budget surface, so that wiring carries its own byte figure.
 
 ## Phase 2 — the five sites
 
@@ -79,4 +83,4 @@ the 2.5 search reports zero matches.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | contested-technical | evidence | Whether a pure filesystem protocol can close the three-contender window is answered by the 1.1 harness, not by design. If no protocol survives it, 1.2 chooses between a native advisory lock, a single-writer process, and documenting the residual race, and records the choice here. | council rounds 54 and 55 (the rejected rename-aside shape); Node has no `flock`/`fcntl` | Node ships a portable advisory file lock |
+| D1 | contested-technical | evidence | A filesystem protocol survives: the generation lock. No native dependency and no single-writer process. Residual, documented: a holder paused past `LOCK_STALE_MS` runs beside its superseder (a lease without fencing). | council rounds 54 and 55 (the rejected rename-aside shape); Node has no `flock`/`fcntl` | Node ships a portable advisory file lock |
