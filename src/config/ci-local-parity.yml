@@ -93,10 +93,12 @@
 # (consistency + 22-gate preflight + changed-file typecheck) that left 295
 # CI-enforced gates able to fail only after a push; PR #2949 then spent four
 # push/red cycles of ~6 min CI each on four such failures. The pre-push hook
-# now replays the CI gate jobs (src/scripts/ci_mirror.ts): measured 473s wall
-# clock for the whole replay on 2026-11-09 (M-series laptop, 7 jobs in
-# parallel, longest job Consistency at 412s), which leaves 23 CI gates that can
-# only fail after a push. The ceiling is that measurement plus ~15% headroom.
+# now replays the CI gate jobs (src/scripts/ci_mirror.ts): measured on
+# 2026-11-09 on an M-series laptop at 367s wall clock with 3 jobs at a time
+# (longest job Consistency at 355s), 473s with all 7 at once, and 77 minutes
+# with all 7 at once on a machine already at load 81 - which is why it runs 3
+# at a time. 23 CI gates remain that can only fail after a push. The ceiling
+# is the 7-at-once figure plus ~15% headroom.
 #
 # The trade the old comment warned about is real and is accepted here: a long
 # hook invites a bypass. AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 exists and prints
