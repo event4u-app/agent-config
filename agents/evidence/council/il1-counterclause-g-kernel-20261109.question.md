@@ -1,3 +1,4 @@
+<!-- evidence-type: original-review -->
 # Kernel edit for review: one line added to `direct-answers` § Iron Law 1
 
 ## The proposed change
