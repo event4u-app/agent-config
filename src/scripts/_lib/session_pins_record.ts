@@ -3,6 +3,13 @@
  * `language-mirror` precheck (which decides whether to load the pin chunk at
  * all) and by the chunk's own locked transition. One reader, so the two cannot
  * drift apart — the bundle reaches this small module, not the chunk.
+ *
+ * loss_class: ephemeral-lossy
+ *
+ * Only bookkeeping is ever dropped, never a pin: a compaction stamp over
+ * {@link STAMP_MAX_CHARS} characters is ignored (with a stderr line), and
+ * stamps older than the {@link SEEN_MAX} window are forgotten. Pin text is
+ * refused whole or kept whole elsewhere, never shortened.
  */
 import fs from 'node:fs';
 
