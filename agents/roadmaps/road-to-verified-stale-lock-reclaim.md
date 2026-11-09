@@ -4,6 +4,7 @@ status: ready
 review_by: 2026-12-09
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Carries a defect found in review of the session-pins change (council rounds 54-55) that exists on main at five sites; that change completes no roadmap it could archive, and parking this one would drop a known data-race fix, so it lands without an offset."
 estate_growth_exempt: "Created under fix-what-you-see from council rounds 54 and 55 of the session-pins Phase 2 change (feat/session-pins-phase-2). Round 55 judged the in-branch fix unsafe and asked for the lock work in its own change; the branch was reverted to the pre-existing behaviour and the whole defect, all five sites, moved here."
 relates:
   - slug: road-to-state-and-pins-across-compaction
@@ -13,7 +14,10 @@ relates:
 # Road to verified stale-lock reclaim
 
 > **Source:** council rounds 54 and 55 of the session-pins Phase 2 change; tree
-> facts verified on 2026-11-09.
+> facts verified on 2026-11-09. No owner existed: a grep over
+> `agents/roadmaps/{*,later,stubs}` for `_acquire_lock|LOCK_STALE_MS|stale-lock reclaim`
+> finds only `road-to-state-and-pins-across-compaction`, whose step 2.5 records the
+> round-56 point and carries no lock work.
 
 ## Goal
 
@@ -39,9 +43,10 @@ stale-lock break or a release, under any interleaving of three contenders.
   then fails with `EEXIST` and two holders overlap. And a link-back failing for
   any other reason (`EACCES`) followed by removing the aside file deletes a live
   lock silently. Its retry after a successful break also had no deadline.
-- **Open question for Phase 1.** Node exposes no `flock`/`fcntl`. A pure
-  filesystem protocol may not close the three-contender window at all; the
-  phase must establish that before designing one.
+- **What Phase 1 settles first.** Node exposes no `flock`/`fcntl`, so a pure
+  filesystem protocol may not close the three-contender window at all. Step 1.1
+  measures that before 1.2 designs anything; how the answer is decided is
+  recorded as D1 below.
 
 ## Phase 1 — protocol decision
 
@@ -60,3 +65,9 @@ stale-lock break or a release, under any interleaving of three contenders.
 
 Every step is `[x]`, each site's harness run was seen red before its fix, and
 the 2.5 search reports zero matches.
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | contested-technical | evidence | Whether a pure filesystem protocol can close the three-contender window is answered by the 1.1 harness, not by design. If no protocol survives it, 1.2 chooses between a native advisory lock, a single-writer process, and documenting the residual race, and records the choice here. | council rounds 54 and 55 (the rejected rename-aside shape); Node has no `flock`/`fcntl` | Node ships a portable advisory file lock |
