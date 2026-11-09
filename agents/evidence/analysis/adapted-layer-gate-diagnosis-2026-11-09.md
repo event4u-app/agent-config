@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 # Adapted layer — gate diagnosis, 2026-11-09
 
 For `road-to-the-adapted-layer-on-main` steps 1.1 and 1.2. Tree: `main@14a2d4f134`
