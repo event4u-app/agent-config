@@ -41,6 +41,7 @@
  *   ./scripts-run src/scripts/ci_mirror --check       # config vs workflows (CI runs this)
  *   ./scripts-run src/scripts/ci_mirror --job rule-backstops.yml:rule-backstops
  *   ./scripts-run src/scripts/ci_mirror --json report.json --keep
+ *   ./scripts-run src/scripts/ci_mirror --parallel 1     # default 3 jobs at a time
  *
  * Exit: 0 no blocking failure · 1 blocking failure · 2 usage or setup error.
  */
@@ -324,8 +325,9 @@ function baseEnv(): Record<string, string> {
     return out;
 }
 
-function runShell(script: string, cwd: string, env: Record<string, string>, logFile: string, timeoutMs: number): Promise<number> {
+function runShell(script: string, cwd: string, env: Record<string, string>, logFile: string, timeoutMs: number): Promise<{ code: number; timedOut: boolean }> {
     return new Promise((resolve) => {
+        let timedOut = false;
         const scriptFile = `${logFile}.sh`;
         fs.writeFileSync(scriptFile, script);
         const log = fs.openSync(logFile, 'w');
@@ -333,16 +335,19 @@ function runShell(script: string, cwd: string, env: Record<string, string>, logF
             cwd, env, stdio: ['ignore', log, log], detached: true,
         });
         const timer = setTimeout(() => {
+            timedOut = true;
             fs.writeSync(log, `\n[ci_mirror] step exceeded the job's remaining ${Math.round(timeoutMs / 1000)}s — killed\n`);
             try { process.kill(-(child.pid ?? 0), 'SIGKILL'); } catch { /* already gone */ }
         }, Math.max(timeoutMs, 1000));
         child.on('close', (code, signal) => {
             clearTimeout(timer);
             fs.closeSync(log);
-            resolve(code ?? (signal ? 137 : 1));
+            resolve({ code: code ?? (signal ? 137 : 1), timedOut });
         });
     });
 }
+
+export const TIMED_OUT = "timed out on this machine — the job's CI time budget ran out locally, so the step is unverified here";
 
 export async function runJob(plan: JobPlan, facts: RunFacts, workdir: string, logDir: string): Promise<JobResult> {
     const started = Date.now();
@@ -405,13 +410,24 @@ export async function runJob(plan: JobPlan, facts: RunFacts, workdir: string, lo
         if (extraPath.length > 0) env.PATH = `${extraPath.join(':')}:${env.PATH ?? ''}`;
 
         const t0 = Date.now();
-        const code = await runShell(script, path.join(workdir, s.workingDirectory ?? ''), env, logFile, deadline - Date.now());
+        if (deadline - Date.now() <= 0) {
+            record({ verdict: 'not-reproducible', detail: TIMED_OUT });
+            continue;
+        }
+        const { code, timedOut } = await runShell(script, path.join(workdir, s.workingDirectory ?? ''), env, logFile, deadline - Date.now());
         const seconds = Math.round((Date.now() - t0) / 100) / 10;
         Object.assign(jobEnv, parseKeyFile(envFile));
         extraPath.unshift(...fs.readFileSync(pathFile, 'utf8').split('\n').filter(Boolean));
         steps[s.id ?? `__${s.index}`] = { outputs: parseKeyFile(outputFile), outcome: code === 0 ? 'success' : 'failure' };
 
         if (code === 0) { record({ verdict: 'passed', exitCode: 0, logFile, seconds }); continue; }
+        if (timedOut) {
+            // The job's CI time budget ran out HERE — a fact about this
+            // machine's load, not a verdict on the step. Not a pass either.
+            jobSucceeded = false;
+            record({ verdict: 'not-reproducible', exitCode: code, logFile, seconds, detail: TIMED_OUT });
+            continue;
+        }
         if (!s.continueOnError) jobSucceeded = false;
         const log = fs.readFileSync(logFile, 'utf8');
         if (s.ownerMarker && s.ownerMarker.test(log)) {
@@ -489,6 +505,11 @@ export function summarize(results: JobResult[]): { blocking: number; text: strin
             }
         }
     };
+    const timedOut = results.reduce((n, j) => n + j.steps.filter((s) => s.detail === TIMED_OUT).length, 0);
+    if (timedOut > 0) {
+        lines.push('', `⚠️  INCOMPLETE: ${timedOut} step(s) ran out of time on this machine and are NOT verified.`,
+            '    A busy machine stretches every step; rerun when it is quieter, or with --parallel 1.');
+    }
     section('failed', `❌ ${blocking} blocking failure(s) — CI fails on exactly these:`, true);
     section('owner-decision', '⏸  Owner decision required — reported, does not block the push (CI shows this step red until the owner decides):', true);
     section('not-reproducible', '⚠️  Not verified on this machine — CI is the only runner for these:', false);
@@ -496,10 +517,10 @@ export function summarize(results: JobResult[]): { blocking: number; text: strin
     return { blocking, text: lines.join('\n') };
 }
 
-interface Args { list: boolean; check: boolean; keep: boolean; json?: string; jobs: string[]; base: string }
+interface Args { list: boolean; check: boolean; keep: boolean; json?: string; jobs: string[]; base: string; parallel: number }
 
 function parseArgs(argv: string[]): Args | string {
-    const a: Args = { list: false, check: false, keep: false, jobs: [], base: 'main' };
+    const a: Args = { list: false, check: false, keep: false, jobs: [], base: 'main', parallel: 3 };
     for (let i = 0; i < argv.length; i++) {
         const v = argv[i];
         const next = () => { const n = argv[++i]; if (n === undefined || n.startsWith('--')) throw new Error(`${v} needs a value`); return n; };
@@ -510,12 +531,34 @@ function parseArgs(argv: string[]): Args | string {
             else if (v === '--json') a.json = next();
             else if (v === '--job') a.jobs.push(next());
             else if (v === '--base') a.base = next();
+            else if (v === '--parallel') {
+                a.parallel = Number(next());
+                if (!Number.isInteger(a.parallel) || a.parallel < 1) return '--parallel needs a whole number ≥ 1';
+            }
             else return `unknown argument: ${v}`;
         } catch (e) {
             return (e as Error).message;
         }
     }
     return a;
+}
+
+/**
+ * Run `fn` over `items` with at most `limit` in flight, results in input order.
+ * Seven jobs at once meant seven checkouts and seven node_modules clones at
+ * once; on a busy laptop that turned an 8-minute replay into 77 minutes.
+ */
+export async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
+    const out: R[] = new Array<R>(items.length);
+    let next = 0;
+    const worker = async (): Promise<void> => {
+        while (next < items.length) {
+            const i = next++;
+            out[i] = await fn(items[i] as T, i);
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+    return out;
 }
 
 /**
@@ -595,13 +638,13 @@ export async function main(argv: string[]): Promise<number> {
     const scratch = fs.mkdtempSync(path.join(os.tmpdir(), `ci-mirror-${headSha.slice(0, 7)}-`));
     const logDir = path.join(scratch, 'logs');
     fs.mkdirSync(logDir);
-    process.stdout.write(`🔍 CI mirror — replaying ${plans.length} CI job(s) on ${headSha.slice(0, 10)} against origin/${args.base}, in parallel throwaway worktrees\n`);
+    process.stdout.write(`🔍 CI mirror — replaying ${plans.length} CI job(s) on ${headSha.slice(0, 10)} against origin/${args.base}, in throwaway worktrees, ${args.parallel} at a time\n`);
     process.stdout.write(`   logs: ${logDir}\n`);
     if (shallow) process.stdout.write('   ⚠️  this clone is shallow; steps that demand full history are reported, not failed (`git fetch --unshallow` to check them)\n');
 
     const worktrees: string[] = [];
     try {
-        const results = await Promise.all(plans.map(async (plan, i) => {
+        const results = await mapLimit(plans, args.parallel, async (plan, i) => {
             const workdir = plan.inCaller ? root : path.join(scratch, `wt-${i}`);
             const runnerTemp = path.join(scratch, `tmp-${i}`);
             fs.mkdirSync(runnerTemp);
@@ -621,8 +664,14 @@ export async function main(argv: string[]): Promise<number> {
             const facts: RunFacts = { baseRef: args.base, baseSha, headSha, headRef, prNumber: pr.number, runnerTemp, workspace: workdir, shallow };
             const r = await runJob(plan, facts, workdir, logDir);
             process.stdout.write(`   … ${plan.displayName} finished (${r.seconds}s)\n`);
+            // Drop the job's checkout and clone now, not at the end: each holds
+            // ~50k files, and the peak count is what loads the machine.
+            if (!plan.inCaller && !args.keep) {
+                tryGit(['worktree', 'remove', '--force', workdir], root);
+                fs.rmSync(workdir, { recursive: true, force: true });
+            }
             return r;
-        }));
+        });
         const { blocking, text } = summarize(results);
         process.stdout.write(`\n${text}\n`);
         if (args.json) fs.writeFileSync(args.json, JSON.stringify({ head: headSha, base: baseSha, blocking, jobs: results }, null, 2));

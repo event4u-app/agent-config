@@ -195,3 +195,53 @@ jobs:
         expect(await runWith(false)).toBe('failed');
     });
 });
+
+describe('ci_mirror — a busy machine is reported, never read as a verdict', () => {
+    it('reports a step that outlives the job budget, and the steps after it, as unverified — not failed, not passed', async () => {
+        const { TIMED_OUT, summarize } = await import('../../src/scripts/ci_mirror.js');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-mirror-timeout-'));
+        fs.mkdirSync(path.join(dir, '.github/workflows'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.github/workflows/t.yml'), `
+on: { pull_request: {} }
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    timeout-minutes: 0.03
+    steps:
+      - name: slow step
+        run: sleep 10
+      - name: after the budget
+        if: \${{ !cancelled() }}
+        run: echo late
+`);
+        const plan = planJobs(dir, { jobs: [{ workflow: 't.yml', job: 't' }], ci_only_steps: [], owner_decision_steps: [] })[0];
+        if (!plan) throw new Error('fixture job did not plan');
+        const r = await runJob(plan, {
+            baseRef: 'main', baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40), headRef: 't',
+            prNumber: '1', runnerTemp: dir, workspace: dir,
+        }, dir, dir);
+        fs.rmSync(dir, { recursive: true, force: true });
+        expect(r.steps.map((s) => [s.verdict, s.detail])).toEqual([
+            ['not-reproducible', TIMED_OUT],
+            ['not-reproducible', TIMED_OUT],
+        ]);
+        const { blocking, text } = summarize([r]);
+        expect(blocking).toBe(0);
+        expect(text).toContain('INCOMPLETE: 2 step(s)');
+    }, 30_000);
+
+    it('mapLimit never runs more than the limit at once, and keeps input order', async () => {
+        const { mapLimit } = await import('../../src/scripts/ci_mirror.js');
+        let inFlight = 0;
+        let peak = 0;
+        const out = await mapLimit([5, 1, 4, 2, 3, 0], 2, async (n) => {
+            inFlight += 1;
+            peak = Math.max(peak, inFlight);
+            await new Promise((r) => setTimeout(r, n * 5));
+            inFlight -= 1;
+            return n * 10;
+        });
+        expect(peak).toBe(2);
+        expect(out).toEqual([50, 10, 40, 20, 30, 0]);
+    });
+});
