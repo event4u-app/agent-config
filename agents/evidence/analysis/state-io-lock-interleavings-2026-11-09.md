@@ -43,3 +43,30 @@ two holders. Strict: B never breaks, so one holder.
   the harness to each before its fix, as the roadmap's closing condition asks.
 - It explores one nesting depth of three callers. A violation needing four
   callers would not appear here.
+
+## Step 1.2 — the generation-lock candidate
+
+`src/scripts/_lib/generation_lock.ts`, measured by
+`tests/scripts/generation_lock_interleavings.test.ts`. The protocol is written as
+filesystem steps, so the explorer advances three callers (acquire, enter,
+leave, release) one step at a time over every schedule with at most three
+preemptions, from three starting states, optionally with a "time passes" actor
+that ages the newest guard while someone may hold it.
+
+| Protocol | Two holders found |
+|---|---|
+| stat-then-remove (today's `state_io` shape) | yes |
+| candidate with a release that removes its generation | yes |
+| candidate (release ages its own generation; break creates `g + 1` exclusively; post-create check) | no — empty, abandoned and released starts |
+| candidate, with a paused holder | pairs only: the aged holder beside its superseder |
+
+The two sabotaged variants are what make the empty row mean something: the
+same explorer finds their double grants.
+
+**Residual, stated.** A holder that pauses past the stale threshold keeps
+running beside the caller that superseded it. That is a lease without fencing;
+closing it needs the write itself to check the generation, which the five
+sites' plain `rename` publish cannot do.
+
+**What it costs.** One `readdir` per acquire and a second after a create, and a
+generation file per lock that never goes away (one file, aged, after release).

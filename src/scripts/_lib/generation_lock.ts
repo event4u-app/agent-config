@@ -2,8 +2,7 @@
  * A file lock whose stale-break never removes a path another caller may hold.
  *
  * Candidate for `road-to-verified-stale-lock-reclaim` step 1.2, measured by
- * `tests/scripts/generation_lock_interleavings.test.ts` against the same
- * three-caller schedules that found two holders in `state_io`'s lock.
+ * `tests/scripts/generation_lock_interleavings.test.ts`.
  *
  * The guard is a family of companions `<lock>.held.<g>`. The holder is whoever
  * created the highest generation. Acquiring creates generation 1 when none
@@ -13,8 +12,11 @@
  * removes anything: it ages the caller's own generation to the epoch, so the
  * next caller supersedes it at once and generation numbers never restart. After
  * every create the caller checks that no higher generation exists, and backs
- * off if one does. So no remove ever lands on a guard that is still the
- * holder's, which is the stat-then-remove window.
+ * off if one does.
+ *
+ * The protocol is written as a sequence of filesystem steps (`acquireSteps`)
+ * so the interleaving harness can run several callers step by step against a
+ * real directory; `tryAcquire` drives the same steps synchronously.
  *
  * What it does not do: a holder paused past the stale threshold keeps running
  * after a peer superseded it. That is a lease without fencing, and no lock
@@ -34,72 +36,101 @@ export interface Held {
     readonly generation: number;
 }
 
+export type Step =
+    | { op: 'list'; lockPath: string }
+    | { op: 'age'; file: string }
+    | { op: 'create'; file: string }
+    | { op: 'remove'; file: string }
+    | { op: 'expire'; file: string };
+
+/** What a step returns: a generation list, an age in ms (`null` when absent), or whether a create won. */
+export type StepResult = number[] | number | null | boolean | undefined;
+
 const SUFFIX = '.held.';
 
-function generations(lockPath: string): number[] {
-    const dir = path.dirname(lockPath);
-    const prefix = path.basename(lockPath) + SUFFIX;
-    let names: string[];
-    try {
-        names = fs.readdirSync(dir);
-    } catch {
-        return [];
-    }
-    return names
-        .filter((n) => n.startsWith(prefix) && /^\d+$/.test(n.slice(prefix.length)))
-        .map((n) => Number(n.slice(prefix.length)))
-        .sort((a, b) => a - b);
-}
-
-function companion(lockPath: string, g: number): string {
+export function companion(lockPath: string, g: number): string {
     return `${lockPath}${SUFFIX}${String(g)}`;
 }
 
-function createExclusive(file: string): boolean {
-    try {
-        fs.closeSync(fs.openSync(file, 'wx', 0o644));
-        return true;
-    } catch (err) {
-        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return false;
-        throw err;
+/** Execute one step against the real filesystem. */
+export function execute(step: Step, now: () => number = Date.now): StepResult {
+    switch (step.op) {
+        case 'list': {
+            const prefix = path.basename(step.lockPath) + SUFFIX;
+            let names: string[];
+            try {
+                names = fs.readdirSync(path.dirname(step.lockPath));
+            } catch {
+                return [];
+            }
+            return names
+                .filter((n) => n.startsWith(prefix) && /^\d+$/.test(n.slice(prefix.length)))
+                .map((n) => Number(n.slice(prefix.length)))
+                .sort((a, b) => a - b);
+        }
+        case 'age':
+            try {
+                return now() - fs.statSync(step.file).mtimeMs;
+            } catch {
+                return null;
+            }
+        case 'create':
+            try {
+                fs.closeSync(fs.openSync(step.file, 'wx', 0o644));
+                return true;
+            } catch (err) {
+                if ((err as NodeJS.ErrnoException).code === 'EEXIST') return false;
+                throw err;
+            }
+        case 'remove':
+            fs.rmSync(step.file, { force: true });
+            return undefined;
+        case 'expire':
+            try {
+                fs.utimesSync(step.file, 0, 0);
+            } catch {
+                // Already superseded and removed: nothing of ours is left.
+            }
+            return undefined;
     }
+}
+
+/** The acquire protocol, one filesystem step per yield. */
+export function* acquireSteps(lockPath: string, staleMs: number): Generator<Step, Held | null, StepResult> {
+    const gens = (yield { op: 'list', lockPath }) as number[];
+    const top = gens[gens.length - 1];
+    let g = 1;
+    if (top !== undefined) {
+        const age = (yield { op: 'age', file: companion(lockPath, top) }) as number | null;
+        // Gone between the listing and the stat: only a superseder removes a
+        // generation, so a higher one exists and holds.
+        if (age === null || age < staleMs) return null;
+        g = top + 1;
+    }
+    if (!((yield { op: 'create', file: companion(lockPath, g) }) as boolean)) return null;
+    const after = (yield { op: 'list', lockPath }) as number[];
+    if ((after[after.length - 1] ?? g) > g) {
+        // Our listing was out of date and a later generation already holds.
+        yield { op: 'remove', file: companion(lockPath, g) };
+        return null;
+    }
+    for (const lower of gens) yield { op: 'remove', file: companion(lockPath, lower) };
+    return { lockPath, generation: g };
 }
 
 /** One non-blocking attempt. Returns the held generation, or `null` when a live peer holds it. */
 export function tryAcquire(lockPath: string, options: GenerationLockOptions): Held | null {
-    const now = options.now ?? Date.now;
-    const gens = generations(lockPath);
-    const top = gens[gens.length - 1];
-    if (top === undefined) return claim(lockPath, 1, []);
-    let age: number;
-    try {
-        age = now() - fs.statSync(companion(lockPath, top)).mtimeMs;
-    } catch {
-        // Gone between the listing and the stat: only a superseder removes a
-        // generation, so a higher one exists and holds.
-        return null;
-    }
-    if (age < options.staleMs) return null;
-    return claim(lockPath, top + 1, gens);
+    const it = acquireSteps(lockPath, options.staleMs);
+    let r = it.next();
+    while (r.done !== true) r = it.next(execute(r.value, options.now));
+    return r.value;
 }
 
-function claim(lockPath: string, g: number, below: readonly number[]): Held | null {
-    if (!createExclusive(companion(lockPath, g))) return null;
-    const after = generations(lockPath);
-    if ((after[after.length - 1] ?? g) > g) {
-        // Our listing was out of date and a later generation already holds.
-        fs.rmSync(companion(lockPath, g), { force: true });
-        return null;
-    }
-    for (const lower of below) fs.rmSync(companion(lockPath, lower), { force: true });
-    return { lockPath, generation: g };
+/** The release protocol: age the caller's own generation to the epoch; remove nothing. */
+export function* releaseSteps(held: Held): Generator<Step, void, StepResult> {
+    yield { op: 'expire', file: companion(held.lockPath, held.generation) };
 }
 
-/** Release ages the caller's own generation to the epoch; it removes nothing. */
 export function release(held: Held): void {
-    try {
-        fs.utimesSync(companion(held.lockPath, held.generation), 0, 0);
-    } catch {
-        // Already superseded and removed: nothing of ours is left to release.
-    }
+    for (const step of releaseSteps(held)) execute(step);
 }
