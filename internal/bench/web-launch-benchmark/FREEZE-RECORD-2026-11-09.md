@@ -1,7 +1,7 @@
 # Freeze record — web-launch-readiness benchmark, 2026-11-09
 
 Resolves the condition of `b-benchmark-independent-execution`
-(`agents/roadmaps/later/road-to-web-launch-readiness-benchmark.md`): the seven
+(`agents/roadmaps/archive/road-to-web-launch-readiness-benchmark.md`): the seven
 protocol items are frozen in writing, in a commit that precedes any arm's
 execution.
 
