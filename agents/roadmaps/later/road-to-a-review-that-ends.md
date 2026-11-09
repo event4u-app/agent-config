@@ -9,7 +9,7 @@ entry_condition:
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-u (third arrival of the slow-run subject) verified at 553e58dfb that the completion review has no round cap (docs/contracts/plan-review-gates.md:303-307, § 2.5; nothing in src/scripts/check_completion_review.ts counts rounds) while review artefacts reach round25 (agents/evidence/reviews, slug fix-release-shape-allows-its-own-census). No active, later/ or stub roadmap owns a completion-review round cap. Folding it into road-to-agent-throughput-recovery was rejected: that file owns night-level throughput and waits on two pre-registered 14-night windows until 2026-11-17, so a contract change it does not measure would sit behind a window it does not need. Folding into road-to-a-step-that-costs-what-it-changes was rejected because this file needs one owner ADR and nothing else, and must not wait on that file's Phase 0 baseline."
-estate_growth_exempt: "+1 open_blockers: review-round-cap-is-an-owner-contract-change, added in this change. Capping the completion review weakens a recorded verification loop, which the decision-revisit gate reserves to the owner; recording it as a blocker is the honest form of a decision that no agent may take."
+estate_growth_exempt: "+1 open_blockers: ratification-round-cap-is-an-owner-contract-change, added in this change (round inbox-2026-11-wn, 2026-11-09). Ending a council ratification loop weakens a recorded verification loop, which the decision-revisit gate reserves to the owner, exactly as the completion-review cap (now resolved, ADR-294) was; recording it as a blocker is the honest form of a decision no agent may take."
 relates:
   - slug: road-to-a-step-that-costs-what-it-changes
     relation: disjoint
@@ -117,7 +117,47 @@ Resume when the 20th post-cap review has merged (parked 2026-10-24: 11 review ar
       verify: a Decisions row with all three figures, written after the 20th
       review merges.
 
+## Phase 3 — Council ratification rounds
+
+Added 2026-11-09 (round `inbox-2026-11-wn`: an external review asks three times
+in one source for a ratification cap of three to five rounds, then a structured
+defect report and the owner). ADR-294 caps the completion review only; the
+"not in scope" note under Context covers `debate_max_rounds`, one question per
+debate. A ratification is a different loop: the same change re-submitted after
+each fix. Counted on `main@14a2d4f134` from
+`agents/evidence/council/*.roundN.question.md`: 56 rounds on
+`session-pins-phase-2-20261108` (merged on the owner's word with the last
+round refused), 20 on `compact-checkpoint-concern-20261108`, 11 on
+`denies-name-no-bypass-20261108`. Nothing counts or ends them.
+
+- [ ] **3.1 Yield by ratification round.** For every subject with ≥ 3 rounds,
+      per round: new defects raised, of those fixed in the next push, and of
+      those introduced by the previous round's fix — the F6 table, for this
+      loop. Add the council spend per round where the ledger has it, giving
+      cost per real defect fixed.
+      verify: an artefact under `agents/evidence/analysis/` with one table per subject and a pooled yield-by-round row.
+- [ ] **3.2 Owner decision on a ratification cap.** <!-- blocked-by: ratification-round-cap-is-an-owner-contract-change -->
+      Present 3.1's table with the options under the blocker.
+      verify: the decision is recorded under `docs/decisions/` or in the blocker entry.
+- [ ] **3.3 Enforce the chosen cap** where ratification records are written
+      (`ratification_header`) and read (`check_kernel_edit_ratified` and the
+      budget-surface check): a round past the cap is refused, and every open
+      defect is carried into the structured report the owner reads.
+      verify: a test sees round N+1 refused and the report list every open defect.
+
 ## Blockers
+
+### blocker: ratification-round-cap-is-an-owner-contract-change
+- **Status:** open — raised 2026-11-09.
+- **Class:** 3
+- **Owner:** user
+- **Ownership:** product-owned — ending a recorded verification loop is governance self-amendment (decision-revisit-gate, owner-reserved set), as the completion-review cap was.
+- **Blocks:** 3.2, 3.3
+- **Question:** A council ratification has no round limit; one change ran 56 rounds and still merged on the owner's word with the last round refused. Should ratification end after N rounds with a structured defect report to the owner, and at which N?
+- **Recommendation:** wait for 3.1's yield table, then a cap in the three-to-five range the review proposes; the completion review's five rests on its own curve, which this loop has not been shown to share.
+- **If you do nothing:** ratifications keep looping until they pass or the owner merges over them, as #2949 did.
+- **What to do:** after 3.1, pick (a) a cap at three, (b) a cap at five, (c) a cap at the round 3.1's yield curve flattens, or (d) no cap, measurement only.
+- **Resolved when:** the chosen option is recorded and this Status reads resolved.
 
 ### blocker: review-round-cap-is-an-owner-contract-change
 - **Status:** resolved — 2026-10-21, the owner chose (b), five rounds with the severity gate (`agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`, ADR-294)

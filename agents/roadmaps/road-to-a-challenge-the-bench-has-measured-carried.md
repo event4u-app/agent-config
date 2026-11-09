@@ -5,6 +5,13 @@ execution:
   mode: phase-checkpoints
 owner: maintainer
 parent_roadmap: road-to-a-challenge-the-bench-has-measured
+relates:
+  - slug: road-to-a-challenge-the-bench-has-measured
+    relation: extends
+    note: "Archived parent; its steps 3.1, 3.2 and AC-3 are carried here."
+  - slug: road-to-proof-where-the-owner-sees-it
+    relation: disjoint
+    note: "Parked sibling that holds the look-first kernel wording; this file holds the Iron Law 1 clause. Both kernel edits are owner acts."
 review_by: 2027-01-31
 estate_growth_exempt: >-
   Carried from road-to-a-challenge-the-bench-has-measured, archived in the same

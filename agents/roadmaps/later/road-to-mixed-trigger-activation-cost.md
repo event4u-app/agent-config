@@ -42,6 +42,7 @@ execution:
 > that demand this roadmap specifically — it is a floor on the recurrence, not
 > a count of asks. Written here so the next round meets a number.
 
+> **Resume when:** `road-to-cost-parity-1-rule-payload-diet`'s per-rule norm-line lint exists (step 2.3), or the owner resolves blocker `b-behavioural-bench-spend` (steps 3.1/3.2).
 > **Unblocked 2026-11-09:** the host now exposes `InstructionsLoaded`; `hooks/hooks.json` binds it and the observer records load reasons (`agents/evidence/analysis/instructions-loaded-observer-2026-11-09.md`), which closed step 3.3.
 > **The other open step is not this one's dependency, and is recorded here so the
 > conjunction stays out of the resume line:** step 2.3's just-in-time carrier
