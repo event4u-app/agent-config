@@ -13,6 +13,8 @@ const SELF = path.join(import.meta.dirname, 'git_ls_files_buffer.test.ts');
 
 /** A raw `execFileSync`/`spawnSync`/`execSync` of `git` whose argv is exactly `ls-files` (optionally `-z`). */
 const WHOLE_TREE = /\b(execFileSync|spawnSync|execSync)\(\s*'git',\s*\[(?:'-C',\s*[^,\]]+,\s*)?'ls-files'(?:,\s*'-z')?\]/;
+/** The same call in string form: `execSync('git ls-files')`. */
+const WHOLE_TREE_STRING = /\bexecSync\(\s*['"`]git ls-files(?: -z)?['"`]/;
 
 function walk(dir: string, out: string[]): void {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -31,7 +33,7 @@ describe('whole-tree git ls-files calls', () => {
         for (const f of files) {
             const lines = fs.readFileSync(f, 'utf8').split('\n');
             lines.forEach((line, i) => {
-                if (!WHOLE_TREE.test(line)) return;
+                if (!WHOLE_TREE.test(line) && !WHOLE_TREE_STRING.test(line)) return;
                 const call = lines.slice(i, i + 6).join('\n');
                 if (!/maxBuffer/.test(call)) missing.push(`${path.relative(ROOT, f)}:${String(i + 1)}`);
             });
