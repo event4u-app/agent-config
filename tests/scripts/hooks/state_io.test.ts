@@ -583,7 +583,7 @@ describe('update_text_under_lock — strict exclusion', () => {
                 e.code = 'EACCES';
                 throw e;
             }
-            return real(p, flags, mode);
+            return real(p, flags ?? 'r', mode);
         }) as typeof fs.openSync);
     }
 

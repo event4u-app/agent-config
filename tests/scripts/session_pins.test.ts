@@ -1516,7 +1516,7 @@ describe('council round 21 — fence membership first, well-formed text, strict 
                 e.code = 'EACCES';
                 throw e;
             }
-            return real(p, flags, mode);
+            return real(p, flags ?? 'r', mode);
         }) as typeof fs.openSync);
         try {
             run(prompt('pin: second'), { consumer_root: tmp, env: ENV });
