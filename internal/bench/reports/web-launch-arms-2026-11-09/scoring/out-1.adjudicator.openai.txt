@@ -1,0 +1,161 @@
+{
+  "output_id": "out-1",
+  "truth_scorable": true,
+  "truth_scorability_note": "The manifest identifies distinct defects, affected locations across the three fixtures, and a unique decoy sufficiently clearly for this site-specific scoring.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "The homepage loads a script over insecure HTTP.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "8",
+      "decoy": false,
+      "note": "The cited script uses http://cdn.ledgerly.example/widget.js, identifying row 8."
+    },
+    {
+      "n": 2,
+      "claim": "The homepage lacks a viewport meta tag.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "11",
+      "decoy": false,
+      "note": "The supplied homepage head has no viewport metadata, matching row 11."
+    },
+    {
+      "n": 3,
+      "claim": "The dashboard lacks a document language.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "10",
+      "decoy": false,
+      "note": "The missing lang attribute identifies a faulty condition expressly included in row 10, whose single match goes to this earlier finding."
+    },
+    {
+      "n": 4,
+      "claim": "The dashboard lacks a viewport meta tag.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This independently asserted condition is supported, but row 10 already receives its one permitted match."
+    },
+    {
+      "n": 5,
+      "claim": "The homepage image and both dashboard images lack alt attributes.",
+      "location": "index.html; app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "12",
+      "decoy": false,
+      "note": "The report collectively identifies and evidences all three images covered by row 12."
+    },
+    {
+      "n": 6,
+      "claim": "The dashboard shares the marketing homepage title.",
+      "location": "index.html; app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "13",
+      "decoy": false,
+      "note": "The report explicitly compares the identical titles on the two affected pages."
+    },
+    {
+      "n": 7,
+      "claim": "The dashboard lacks a meta description.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The missing description is a supported observation outside the frozen saas-app manifest."
+    },
+    {
+      "n": 8,
+      "claim": "The imprint contains no substantive company or contact details.",
+      "location": "imprint.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The supplied body contains only a heading, but incomplete imprint content is outside the manifest."
+    },
+    {
+      "n": 9,
+      "claim": "The imprint is not linked from any supplied page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The supplied pages contain no imprint link, but this discoverability issue is outside the manifest."
+    },
+    {
+      "n": 10,
+      "claim": "The site has no sitemap.",
+      "location": "site-wide; /sitemap.xml",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The report concretely asserts sitemap absence as a minor defect, which has no saas-app manifest match."
+    },
+    {
+      "n": 11,
+      "claim": "The site has no favicon.",
+      "location": "site-wide; /favicon.ico",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The report asserts favicon absence and its consequences, but this condition is outside the manifest."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["8", "10", "11", "12", "13"],
+  "false_positives": 6,
+  "rulings": [
+    {
+      "point": "Whether to split the dashboard's missing language and viewport.",
+      "ruling": "Extract two distinct findings, as Reviewer 2 did.",
+      "why": "Missing document language and missing viewport independently assert concrete faulty conditions with different consequences."
+    },
+    {
+      "point": "Assignment of the two dashboard head findings to row 10.",
+      "ruling": "Match the language finding to row 10 and leave the viewport finding unmatched.",
+      "why": "Both identify conditions explicitly covered by row 10, but the one-to-one rule permits only one match and breaks the tie by finding appearance order."
+    },
+    {
+      "point": "Whether the missing dashboard description belongs within the shared-title finding.",
+      "ruling": "Extract the missing description separately, as Reviewer 2 did.",
+      "why": "Description absence is an independent concrete defect rather than evidence or a consequence of title duplication."
+    },
+    {
+      "point": "Credit for the missing dashboard description.",
+      "ruling": "Count it as a false positive.",
+      "why": "The observation is supported by the supplied file but appears in no real-defect row for saas-app."
+    },
+    {
+      "point": "Deduplication and the grouped image finding.",
+      "ruling": "Keep the collective missing-alt finding and mark no findings as duplicates.",
+      "why": "The images evidence one collectively asserted condition across the manifest's affected scope, while explanatory repetitions within an item do not establish additional findings."
+    },
+    {
+      "point": "Other row matches and unmatched findings.",
+      "ruling": "Retain matches to rows 8, 11, 12 and 13 and leave the imprint, sitemap and favicon claims unmatched.",
+      "why": "The matched claims identify the correct conditions and locations, whereas the other asserted defects are outside the frozen manifest."
+    },
+    {
+      "point": "Extraction from the uncertainties section.",
+      "ruling": "Extract no additional findings and award no privacy-page match.",
+      "why": "The report leaves asset deployment, HTTPS availability, legal-page deployment and authentication unresolved rather than asserting established launch defects."
+    },
+    {
+      "point": "False-positive total.",
+      "ruling": "Use six false positives, agreeing with Reviewer 2.",
+      "why": "Eleven deduplicated findings receive five valid one-to-one matches, leaving six unmatched findings."
+    },
+    {
+      "point": "Decoy flag.",
+      "ruling": "Keep decoy_flagged false.",
+      "why": "The report never asserts that a missing team photo is a launch problem or recommends adding one."
+    },
+    {
+      "point": "Truth scorability.",
+      "ruling": "Keep truth_scorable true.",
+      "why": "The manifest distinguishes its rows, fixtures, affected scopes and unique decoy sufficiently for the supplied site-specific assessment."
+    }
+  ]
+}
