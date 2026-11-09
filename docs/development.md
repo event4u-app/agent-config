@@ -149,17 +149,21 @@ task tool-validate             # Validate tool declarations
 
 ```bash
 task install -- --target <dir> # Run the installer orchestrator on a target
-task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push consistency gate, chat-history bridges)
+task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push CI mirror, chat-history bridges)
 ```
 
-The **pre-push hook runs `task consistency`** — the exact local mirror of the CI
-"Sync + Generate Tools Consistency" gate (sync-check + sync + generate-tools +
-router + corpus + `git diff --quiet`). Any derived-output drift (counts, dist,
-generated tool trees) is blocked **before** the push instead of failing remote
-CI; the fix is `task consistency-fix`, stage, re-push. The hook auto-installs on
+The **pre-push hook replays the CI gate jobs** with `src/scripts/ci_mirror.ts`:
+it reads the steps of the jobs named in `src/config/ci-mirror.json` straight
+from the workflow files, runs them in throwaway worktrees of HEAD (your working
+tree is never touched), and reports **every** failure CI would report, in one
+run. Run it by hand with `./scripts-run src/scripts/ci_mirror`; `--list` prints
+the plan, `--job <workflow>:<job>` narrows it. A refused ratification record is
+reported as an owner decision and does not block the push. Derived-output drift
+still shows up as the consistency job's `git diff` step — fix it with
+`task consistency-fix`, commit, re-push. The hook auto-installs on
 `npm install` in a git clone (the `prepare` script); run `task install-hooks`
-manually if you skipped install scripts. Bypass a genuine WIP push with
-`git push --no-verify`.
+manually if you skipped install scripts. Emergency bypass, printed on use:
+`AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1`, or `git push --no-verify`.
 
 #### One manual install is required, and nothing installs it for you
 
@@ -225,7 +229,7 @@ an operation that cannot have moved the installer.
 A consumer who installs `@event4u/agent-config` as a dependency receives **no
 git hooks**. `src/install/` references `.git/hooks` nowhere, and `prepare` does
 not run for a registry dependency. This is a decision, not an oversight: the
-pre-push chain runs `task consistency` and `task preflight`, which depend on
+pre-push chain replays this repository's CI workflows (`ci_mirror`), which depend on
 this repository's Taskfile, its `./scripts-run` shim and its generated trees —
 none of which exist in a consumer project. Shipping hooks on dependency install
 would also establish persistent repository execution from a package install,

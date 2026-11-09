@@ -29,7 +29,9 @@ Do NOT use when:
 `agents/roadmaps-progress.md` is auto-generated and must reflect the
 live state in real time. After **any** checkbox edit (`[x]`, `[~]`,
 `[-]`, `[ ]`) or phase add/rename/remove in a roadmap file, regenerate
-the dashboard **in the same response**.
+the dashboard **in the same response**. Regenerating is not committing: where
+the dashboard is gitignored, as in this package's own repository, it is never
+staged — CI refuses a committed copy there.
 
 **Completion = archival.** If an edit takes a roadmap to
 `count_open == 0` (pure `[x]`, or `[x]` + `[~]`/`[-]`), `git mv`
