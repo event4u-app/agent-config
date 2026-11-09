@@ -57,22 +57,44 @@ wording of the two contracts byte-identical needs no new measurement. A fix
 that changes that wording is a new variant and needs a re-measure under a
 fresh pre-registration before it can ship.
 
-- [ ] **1.1 Diagnose `check_startup_contracts`.** Cherry-pick the two commits
+- [x] **1.1 Diagnose `check_startup_contracts`.** Cherry-pick the two commits
       onto a branch from main, run
       `./scripts-run src/scripts/check_startup_contracts`, and record which
       assertion fails and why.
       verify: the failing assertion and its cause are written under this step.
-- [ ] **1.2 Find the 1,544 chars.** Run `check_session_start_budget` on the
+      Done 2026-11-09 on `main@14a2d4f134` + both commits: two failures, one
+      cause. `downstream-changes: carries a startup contract or an audit entry
+      but is not a consequence-class or safety-floor rule`, and the same for
+      `think-before-action`. `contractProblems` (`check_startup_contracts.ts`
+      ~95) refuses a contract on any rule outside `requiredRules`, which is the
+      consequence class plus `tier: safety-floor`; both rules sit in the class's
+      `excluded` list (`src/config/rule-consequence-class.json`, "a missed
+      caller is … recoverable", "analysis discipline"). The check has no notion
+      of an optional contract. Once that assertion passes, the same function
+      will also ask for a clause audit for each rule in
+      `src/config/startup-contract-clauses.json`, which the payload does not
+      carry. The contract wording itself is not what fails.
+- [x] **1.2 Find the 1,544 chars.** Run `check_session_start_budget` on the
       cherry-picked branch and list candidates that cut ≥1,544 chars outside
       the two benchmarked contracts (other start-layer text), or the cost of
       raising the budget.
       verify: a table of candidates with char deltas under this step.
+      Done 2026-11-09: main 79,845, adapted 81,544 (+1,699; 101 unconditional
+      files, layer thinned, carrier reached). Read from a default install into
+      a scratch HOME.
+
+      | Candidate | Δ chars | Keeps the two contracts byte-identical | Note |
+      |---|---:|---|---|
+      | Shorten each installed file's `source_path:` by dropping the `dist/agent-src/rules/` prefix | −2,200 | yes | installer format change; every consumer of `source_path` re-read first |
+      | Install the three pack floors (finance 1,819, strategy 1,884, legal 1,776) only when their pack is installed | −5,479 | yes | changes when a safety floor is delivered; the benchmark arms all carried them |
+      | Drop the per-file frontmatter block entirely (9,624 across 101 files) | up to −9,624 | yes | `package:` is how uninstall finds its files; not without a replacement marker |
+      | Raise the budget to 82,000 | +2,000 allowance | yes | host-limit allowance falls from 38,456 to 36,456 chars |
 - [ ] **1.3 Owner decision on both gates.** <!-- blocked-by: adapted-layer-gate-decisions -->
       Present 1.1 and 1.2 as options (fix the check, fix the text, trim
       elsewhere, raise the budget, or do not ship), each marked whether it
       keeps the benchmarked wording.
       verify: the decision is recorded in the result file's owner section.
-- [ ] **1.4 Pre-model aborts settled before data.** Write into
+- [x] **1.4 Pre-model aborts settled before data.** Write into
       `docs/contracts/eval-measurement-integrity.md` the convention the owner
       applied post-data on 2026-11-09: a run that ends before any model call
       (startup-hook timeout, harness crash) is an environment failure, not a
@@ -81,6 +103,10 @@ fresh pre-registration before it can ship.
       beside `_lib/eval_publication.ABORT_REASONS` with a test that sees a
       pre-model abort excluded and a post-call timeout kept.
       verify: the contract's "Where each rule is executable" table has the row, and its test passes.
+      Done 2026-11-09: § A run that never reached the model is not a trial, and
+      `countedTrials` (receipt field `reachedModel`); six tests in
+      `tests/lib/eval_integrity.test.ts`, seen red first, and red again with the
+      predicate loosened to exclude an abort that does not say it missed the model.
 - [ ] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- blocked-by: adapted-layer-gate-decisions -->
       Pre-register, before any transcript, a run on fresh seeds (and unseen
       tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
@@ -115,8 +141,7 @@ fresh pre-registration before it can ship.
 - **What to do:** run `./scripts-run src/scripts/check_startup_contracts` and `./scripts-run src/scripts/check_session_start_budget` on a branch carrying `ced3e99b3b` and `51add0fc53`, then choose one of: (a) fix the check, (b) fix the contract text and re-measure, (c) trim 1,544 chars elsewhere, (d) raise the budget, (e) do not ship (the reduced form stays), (f) restore the full layer for the release while the adapted form is pursued, (g) ship only after the 1.5 fresh confirmation. (f) and (g) combine with (a)-(d).
 - **Resolved when:** the owner section of the result file names the chosen
   path for both gates.
-- **Recommendation:** run 1.1 and 1.2 first; a decision without the diagnosis
-  is a guess.
+- **Recommendation:** 1.1 and 1.2 are done (2026-11-09). Gate 1 is the check, not the text: (a) — let a measured non-class rule carry a contract, with its clause audit — keeps the benchmarked wording. Gate 2: the `source_path:` prefix cut (−2,200) clears it without touching rule text. Take (g) as well: the third look rests on a post-data reading, and 1.4 now freezes that rule for the next run.
 - **If you do nothing:** the shipped start layer stays the reduced form that
   read INFERIOR in the first look.
 
