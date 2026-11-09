@@ -134,7 +134,7 @@ of re-reading or guessing.
       with the round-56 replies' smaller points (repeated marker diagnostics,
       no combined worst-case line test, retention of unreadable pin files).
       verify: `test -f agents/evidence/council/session-pins-phase-2-20261108.round57.question.md` -> 0
-- [x] **2.6** Ratification record for the Phase 2 budget raises
+- [x] **2.6** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Ratification record for the Phase 2 budget raises
       (`agents/evidence/ratifications/session-pins-phase-2-20261109.md`,
       verdict `refused`, merged on the owner's word per ADR-282).
       verify: `test -f agents/evidence/ratifications/session-pins-phase-2-20261109.md` -> 0
