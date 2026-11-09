@@ -29,6 +29,26 @@ make that choice. Per § 4 the release waits. The interpretation is put to the o
 together with the choice the protocol already names: further tracing, or restoring
 the full layer.
 
+## Owner decision, 2026-11-09
+
+The owner adopted the **exclusion reading**: the two `trapC-ambig-01` trials that
+timed out in the SessionStart hook, with no system/init event and no assistant
+message, are not counted trials. They never reached the model, so they carry no
+evidence about the scoped line. Under that reading `B_a − B_f = 5 − 3 = 2`, the guard
+holds, and the run reads **NON-INFERIOR**.
+
+This is an owner reading made after the data, and it is recorded as such. The
+sections below are unchanged and still describe the frozen rule's undetermined
+outcome. The decision makes the adapted form a **release candidate**, not a shipped
+default. Two gates stay open, each with its own decision (protocol § 4):
+
+- `check_startup_contracts` fails on the adapted form;
+- `check_session_start_budget` reads 81,544 of 80,000 chars.
+
+Any later pre-registration in this line freezes the rule this one left open: a
+trial with no kept stream and a failed `load_check` is an infrastructure error and
+is not counted.
+
 ## Run
 
 | Field | Value |
