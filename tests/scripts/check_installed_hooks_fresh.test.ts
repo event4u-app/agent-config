@@ -287,7 +287,7 @@ describe("carrier — the pre-push hook body", () => {
     // future edit cannot quietly promote it back to a blocker.
     const body = rendered();
     const start = body.indexOf("# INSTALLED-HOOK FRESHNESS");
-    const end = body.indexOf("if ! command -v task", start);
+    const end = body.indexOf("Checking for leftover conflict markers", start);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     const block = body.slice(start, end);
