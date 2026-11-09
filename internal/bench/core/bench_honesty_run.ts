@@ -86,6 +86,7 @@ export const ARMS = [
     'reframe',
     'always-disagree',
     'prohibitions-plus-clause',
+    'prohibitions-plus-clause-g',
 ] as const;
 export type Arm = (typeof ARMS)[number];
 
@@ -131,6 +132,12 @@ export const ARM_SPECS: Readonly<Record<Arm, ArmSpec>> = {
         parts: [{ rule: 'direct-answers', section: IL1 }],
         system_file: 'il1-counterclause.md',
         contents: '`direct-answers` § Iron Law 1, then `honesty-arms/il1-counterclause.md`',
+    },
+    // Amendment 2026-11-09 (g): the council-proposed rewording, measured before it replaces (f)'s line.
+    'prohibitions-plus-clause-g': {
+        parts: [{ rule: 'direct-answers', section: IL1 }],
+        system_file: 'il1-counterclause-g.md',
+        contents: '`direct-answers` § Iron Law 1, then `honesty-arms/il1-counterclause-g.md`',
     },
 };
 

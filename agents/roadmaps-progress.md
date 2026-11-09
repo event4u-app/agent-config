@@ -2,28 +2,29 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change. A repository that does not commit this file has no git history for it — regenerate to see the current state.
 >
-> 8 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers in the active tree, **2** need you → `agent-config gates` · **45** overdue stubs, **14** owner decisions → `agent-config stubs:due`
+> 9 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers in the active tree, **2** need you → `agent-config gates` · **45** overdue stubs, **14** owner decisions → `agent-config stubs:due`
 
 ## Overall
 
-**85 / 190 steps done · 45%**
+**86 / 202 steps done · 43%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-a-challenge-the-bench-has-measured-carried.md](roadmaps/road-to-a-challenge-the-bench-has-measured-carried.md) | 2 | 8 | 3 | 5 | 0 | 0 | [1](#blockers-road-to-a-challenge-the-bench-has-measured-carried) | ██████░░░░ 62% |
+| 1 | [road-to-a-challenge-the-bench-has-measured-carried.md](roadmaps/road-to-a-challenge-the-bench-has-measured-carried.md) | 3 | 13 | 7 | 6 | 0 | 0 | [1](#blockers-road-to-a-challenge-the-bench-has-measured-carried) | █████░░░░░ 46% |
 | 2 | [road-to-a-link-with-agent-switch.md](roadmaps/road-to-a-link-with-agent-switch.md) | 8 | 28 | 12 | 16 | 0 | 0 | 0 | ██████░░░░ 57% |
 | 3 | [road-to-a-map-that-holds-on-the-real-repo.md](roadmaps/road-to-a-map-that-holds-on-the-real-repo.md) | 7 | 54 | 23 | 28 | 3 | 0 | [2](#blockers-road-to-a-map-that-holds-on-the-real-repo) | ██████░░░░ 55% |
 | 4 | [road-to-a-map-that-knows-what-happened.md](roadmaps/road-to-a-map-that-knows-what-happened.md) | 5 | 69 | 40 | 13 | 16 | 0 | [2](#blockers-road-to-a-map-that-knows-what-happened) | ██░░░░░░░░ 25% |
 | 5 | [road-to-a-session-start-under-the-host-limit.md](roadmaps/road-to-a-session-start-under-the-host-limit.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-a-session-start-under-the-host-limit) | ████████░░ 80% |
 | 6 | [road-to-routing-assurance-live-floors-carried.md](roadmaps/road-to-routing-assurance-live-floors-carried.md) | 2 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-routing-assurance-live-floors-carried) | ████░░░░░░ 44% |
 | 7 | [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md) | 4 | 19 | 12 | 7 | 0 | 0 | [3](#blockers-road-to-state-and-pins-across-compaction) | ████░░░░░░ 37% |
-| 8 | [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md) | 2 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-the-adapted-layer-on-main.md](roadmaps/road-to-the-adapted-layer-on-main.md) | 2 | 7 | 7 | 0 | 0 | 0 | [1](#blockers-road-to-the-adapted-layer-on-main) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md) | 2 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -200,17 +201,19 @@
 
 ### [road-to-a-challenge-the-bench-has-measured-carried.md](roadmaps/road-to-a-challenge-the-bench-has-measured-carried.md)
 
-**Road to a challenge the bench has measured — carried** — 5 / 8 done (62%)
+**Road to a challenge the bench has measured — carried** — 6 / 13 done (46%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The guardrail, sized on audited labels | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | The capitulation count, measured before it ships | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+| 2 | The capitulation count, measured before it ships | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 3 | The Iron Law 1 counter-clause, into the kernel | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
 
 <a id="blockers-road-to-a-challenge-the-bench-has-measured-carried"></a>
 **Blockers**
 
 - **capitulation-detector-ratification** (owner: an implementer, then the AI council (the hook-bundle budget is a ratified surface).) — blocks 2.2, 2.3 and AC-2.
+  - **Recommendation:** leave it parked until an answer-comparing predicate passes the two unchanged measurements; the phrase-reading predicate failed them, and a sixth ratification round on it would spend a round on a known miss.
   - **If you do nothing:** no concession count exists at turn end, which is today's state; the predicate stays a bench instrument.
   - **What to do:**
     design a predicate that compares the earlier and the later answer instead of reading concession phrases; measure it with `./scripts-run internal/bench/core/bench_capitulation_precision --input internal/bench/reports/honesty-bare-challenge-2026-11-09.jsonl` and `--labelled internal/bench/corpora/honesty-bare-challenge-replies.yaml --labels internal/bench/corpora/honesty-bare-challenge-replies-labels.yaml`, both unchanged; only when it separates unsupported reversals from justified corrections and kept answers, build it on the chunk design kept in the parent's history (commit `87618c68cc`: `loadLazyExport` row, the prompt-pair reader, +489 B in the dispatch bundle) and ratify with a prompt that carries those numbers. <!-- ref-ignore -->
@@ -376,6 +379,25 @@ _1 blocker resolved._
     check the host hook and MCP docs for a session identity a tool call can verify (start from `src/scripts/hooks/host_lowering.json`, `verified.docs_url` per host) and record the answer in `agents/evidence/council/recall-session-binding.md`; if no host offers one, record that and close Phase 3 as a null. <!-- ref-ignore -->
   - **Resolved when:** a supported host is shown to supply an identity a later recall call can verify; that host's mechanism also settles CLI-first versus MCP-first (the one point the 2026-11-08 round split on).
 
+### [road-to-the-adapted-layer-on-main.md](roadmaps/road-to-the-adapted-layer-on-main.md)
+
+**Road to the adapted layer on main** — 0 / 7 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | clear the two gates | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | land it | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-the-adapted-layer-on-main"></a>
+**Blockers**
+
+- **adapted-layer-gate-decisions** (owner: the repository owner.) — blocks 1.3, and through it Phase 2.
+  - **Recommendation:** run 1.1 and 1.2 first; a decision without the diagnosis is a guess.
+  - **If you do nothing:** the shipped start layer stays the reduced form that read INFERIOR in the first look.
+  - **What to do:**
+    run `./scripts-run src/scripts/check_startup_contracts` and `./scripts-run src/scripts/check_session_start_budget` on a branch carrying `ced3e99b3b` and `51add0fc53`, then choose one of: (a) fix the check, (b) fix the contract text and re-measure, (c) trim 1,544 chars elsewhere, (d) raise the budget, (e) do not ship. <!-- ref-ignore -->
+  - **Resolved when:** the owner section of the result file names the chosen path for both gates.
+
 ### [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md)
 
 **Road to verified stale-lock reclaim** — 0 / 7 done (0%)
@@ -408,5 +430,6 @@ Days since each active roadmap landed at its path and since its last ticked step
 | [road-to-a-session-start-under-the-host-limit.md](roadmaps/road-to-a-session-start-under-the-host-limit.md) | — | — |
 | [road-to-routing-assurance-live-floors-carried.md](roadmaps/road-to-routing-assurance-live-floors-carried.md) | — | — |
 | [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md) | — | — |
+| [road-to-the-adapted-layer-on-main.md](roadmaps/road-to-the-adapted-layer-on-main.md) | — | — |
 | [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md) | — | — |
 
