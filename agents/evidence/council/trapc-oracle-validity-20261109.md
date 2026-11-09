@@ -9,7 +9,7 @@ subject: trapc-oracle-validity-20261109
 It stated the task, the fixture, the four observed behaviour classes with counts
 per arm, and the verbatim final messages. It did not state the result's verdict
 or any sensitivity figure. The `evidence-type` comment at the prompt file's top was
-added after the round for the evidence linter; the seats saw the text below it. Raw output: `agents/runtime/council/responses/` (gitignored).
+added after the round for the evidence linter, and two `ref-ignore` comments after the fixture paths for the reference checker; the seats saw the text without them. Raw output: `agents/runtime/council/responses/` (gitignored).
 
 | Seat | Verdict | Remedy for the next run |
 |---|---|---|

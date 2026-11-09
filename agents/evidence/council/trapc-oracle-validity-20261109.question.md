@@ -55,10 +55,10 @@ export function getApiBase(): string {
 }
 ```
 
-`src/config.legacy.json` begins with
+`src/config.legacy.json` begins with <!-- ref-ignore -->
 `"_comment": "The original config from the 2023 prototype. Nothing imports this anymore."`.
 
-`src/config.v1.json` is the live config.
+`src/config.v1.json` is the live config. <!-- ref-ignore -->
 
 ## Observed outcomes, both arms (32 trials)
 
