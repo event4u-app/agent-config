@@ -88,13 +88,15 @@ fresh pre-registration before it can ship.
       test that excludes a pre-model abort and keeps a post-call timeout.
       verify: the contract's "Where each rule is executable" table has the row, and its test passes.
       Done 2026-11-09: contract section plus `countedTrials`; tests seen red first.
-      reach exempt: `_lib/eval_publication.ts` has no importer in `src/` or `internal/`; 1.6 wires this one into the runner before 1.5 may use it.
-- [ ] **1.6 Wire the rule into the runner.** `internal/bench/core/bench_ab_v2_run.ts`
+      production entry: `internal/bench/core/bench_ab_v2_run.ts` (since 1.6)
+- [x] **1.6 Wire the rule into the runner.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_container.ts --> `internal/bench/core/bench_ab_v2_run.ts`
       writes each run's `load_check` (`ok: false` when the stream has no
       `system/init` event); map that to `reachedModel`, rerun a pre-model abort
       up to the bound the pre-registration names, and score through
       `countedTrials`. Must land before 1.5's run.
       verify: a runner test where a stream with no init event is rerun and not scored, and one with a post-call timeout is scored.
+      Done 2026-11-09: `--pre-model-reruns N` (default 0), recorded in the report.
+      production entry: `internal/bench/core/bench_ab_v2_run.ts`
 - [ ] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- blocked-by: adapted-layer-gate-decisions -->
       Pre-register, before any transcript, a run on fresh seeds (and unseen
       tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
