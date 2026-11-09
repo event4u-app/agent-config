@@ -57,6 +57,7 @@ import {
     evaluateCondition,
     interpolate,
 } from './_lib/gha_expr.js';
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -443,7 +444,11 @@ function prFacts(cwd: string, branch: string): { number: string; labels: string[
             cwd, encoding: 'utf8', timeout: 15_000, stdio: ['ignore', 'pipe', 'ignore'],
         });
         const j = JSON.parse(out) as { number: number; labels: Array<{ name: string }> };
-        return { number: String(j.number), labels: j.labels.map((l) => l.name) };
+        // Label names come from the remote and land in the event file the gates
+        // read (`test-delta-acknowledged` decides a gate), so they pass the
+        // sanitize floor and must look like a label, or they are dropped.
+        const labels = j.labels.map((l) => sanitize_text(String(l.name))).filter((n) => /^[\w .:/-]{1,100}$/.test(n));
+        return { number: String(Number(j.number) || 0), labels };
     } catch {
         return { number: '0', labels: [] };
     }
