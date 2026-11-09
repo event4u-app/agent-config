@@ -29,17 +29,17 @@ once its precision has been measured on labelled cases.
 
 ## Phase 1 — The guardrail, sized on audited labels
 
-- [ ] **1.1** Blind second label for each of the 30 clean-control items: a
+- [x] **1.1** Blind second label for each of the 30 clean-control items: a <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       reviewer who has not seen the corpus's `audit_note` reads each artifact and
       lists every real defect, with file:line. Record both labels and every
       disagreement in `internal/bench/corpora/honesty-clean-control-audit.md`.
       verify: the audit file covers 30 items, each with both labels.
-- [ ] **1.2** Re-score threshold 1 with findings that match a defect both labels
+- [x] **1.2** Re-score threshold 1 with findings that match a defect both labels <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_score.ts -->
       confirm removed from the invented count, beside the pre-registered
       reading, which stays the binding one. A corpus item both labels call
       defective is corrected in a dated corpus amendment before any later run.
       verify: the scorer report prints both readings for every arm.
-- [ ] **1.3** Act on the re-score: if a shipped-rule arm still trips, name the
+- [x] **1.3** Act on the re-score: if a shipped-rule arm still trips, name the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       clause its surface adds that the excess follows and put the edit to the
       owner (every candidate rule is a kernel rule); if none trips, record that
       the 2026-11-08 trip came from the labels.
@@ -47,7 +47,7 @@ once its precision has been measured on labelled cases.
 
 ## Phase 2 — The capitulation count, measured before it ships
 
-- [ ] **2.1** Add genuine bare challenges to the rebuttal corpus by a
+- [x] **2.1** Add genuine bare challenges to the rebuttal corpus by a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
       pre-registered amendment before data: pushback with no counter-claim
       ("Are you sure?", "No, that's wrong."), and replies labelled independently
       for whether the answer changed — including an apology that keeps the
@@ -74,10 +74,10 @@ once its precision has been measured on labelled cases.
 
 ### blocker: capitulation-detector-ratification
 
-- **Status:** open — raised 2026-10-28 (round 4 refused the in-bundle design); round 5 refused the chunk design on 2026-11-08, 2/2.
+- **Status:** open — raised 2026-10-28 (round 4 refused the in-bundle design); round 5 refused the chunk design on 2026-11-08, 2/2. On 2026-11-09 the measurement round 5 asked for exists and the predicate fails it: live precision 0/5 and recall 0/69 on 1,071 genuine bare challenges, and on 16 blind-labelled written replies it fires as often on a justified correction or a kept answer as on a reversal (`agents/evidence/analysis/capitulation-precision-2026-11-09.md`). The predicate is not put to a sixth round.
 - **Owner:** an implementer, then the AI council (the hook-bundle budget is a ratified surface).
 - **Blocks:** 2.2, 2.3 and AC-2.
-- **What to do:** 2.1 first; then re-run `./scripts-run internal/bench/core/bench_capitulation_precision` on a run that includes the new cases; then build the detector from `internal/bench/core/_lib/capitulation_predicate.ts` (the predicate) and the chunk design kept in the parent's history (commit `87618c68cc`: `loadLazyExport` row, the prompt-pair reader, +489 B in the dispatch bundle), and ratify with a prompt that carries the new measurement.
+- **What to do:** design a predicate that compares the earlier and the later answer instead of reading concession phrases; measure it with `./scripts-run internal/bench/core/bench_capitulation_precision --input internal/bench/reports/honesty-bare-challenge-2026-11-09.jsonl` and `--labelled internal/bench/corpora/honesty-bare-challenge-replies.yaml --labels internal/bench/corpora/honesty-bare-challenge-replies-labels.yaml`, both unchanged; only when it separates unsupported reversals from justified corrections and kept answers, build it on the chunk design kept in the parent's history (commit `87618c68cc`: `loadLazyExport` row, the prompt-pair reader, +489 B in the dispatch bundle) and ratify with a prompt that carries those numbers.
 - **Resolved when:** a ratification record for the detector exists under `agents/evidence/ratifications/` with verdict `ratified` or `confirmed-non-expanding`.
 - **If you do nothing:** no concession count exists at turn end, which is today's state; the predicate stays a bench instrument.
 
@@ -91,6 +91,6 @@ once its precision has been measured on labelled cases.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The 2026-11-08 guardrail trip is re-read on audited labels, and the decision that follows names its rows.
+- [x] AC-1 — The 2026-11-08 guardrail trip is re-read on audited labels, and the decision that follows names its rows.
 - [ ] AC-2 — Conceding to bare pushback with no tool call is counted at turn end (parent AC-3).
       <!-- blocked-by: capitulation-detector-ratification -->

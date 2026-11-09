@@ -1,0 +1,51 @@
+{
+  "site": "local-business",
+  "arm": "comparator",
+  "attempts": [
+    {
+      "at": "2026-11-09T03:04:11.079Z",
+      "status": 200,
+      "request_id": "req_011CgrcT9djrngz1xD3QSQf4",
+      "temperature_sent": false,
+      "response": "{\"model\":\"claude-sonnet-5-5\",\"id\":\"[redacted message id, sha256=585745bc7e3b5cadfafa7f71f4b56526b535371c02973516fff5c19fed224977]\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"thinking\",\"thinking\":\"\",\"signature\":\"[redacted provider signature, sha256=42465ecd54de7c04e2acba7778e63835bd83a68bf331f38e4642d25cd8039edc]\"},{\"type\":\"text\",\"text\":\"# Pre-launch audit: Bäckerei Sonnenblume\\n\\n## Established defects\\n\\n1. **`robots.txt` blocks the whole site from crawlers.**\\n   - Evidence: `User-agent: *` followed by `Disallow: /`.\\n   - This is a launch blocker. Search engines are told not to crawl any page, which contradicts the `sitemap.xml` that lists four URLs.\\n\\n2. **The home page is set to `noindex, nofollow`.**\\n   - File: `index.html`\\n   - Evidence: `<meta name=\\\"robots\\\" content=\\\"noindex, nofollow\\\" />`\\n   - This looks like a leftover from staging. The most important page would be kept out of search results, and its links would not be followed.\\n\\n3. **`kontakt.html` and `sortiment.html` have no `<title>`.**\\n   - Evidence: both `<head>` sections contain only charset, viewport and canonical.\\n   - Browser tabs, bookmarks and search snippets will show no meaningful page title.\\n\\n4. **`kontakt.html` and `sortiment.html` have no meta description.**\\n   - Evidence: neither file has `<meta name=\\\"description\\\">`, while `index.html` and `impressum.html` do.\\n   - The Kontakt page matters most for a local business.\\n\\n5. **All three images lack `alt` attributes.**\\n   - `index.html`: `<img src=\\\"/laden.jpg\\\" />`\\n   - `sortiment.html`: `<img src=\\\"/brot.jpg\\\" />` and `<img src=\\\"/kuchen.jpg\\\" />`\\n   - This is an accessibility failure. On `sortiment.html` the images are the only content besides the heading, so screen-reader users and search engines get nothing about the product range.\\n\\n6. **There is no site navigation, and `kontakt.html` and `impressum.html` are not linked from any page.**\\n   - Evidence: the only `<a>` in the whole site is `index.html` → `/sortiment.html`.\\n   - `kontakt.html` and `impressum.html` are orphans. Visitors cannot reach the address page, and the legally required Impressum is not reachable from any page.\\n   - `sortiment.html`, `kontakt.html` and `impressum.html` have no link back to the home page or to each other.\\n\\n7. **The Impressum is incomplete for a German business site.**\\n   - File: `impressum.html`\\n   - Evidence: the body is only `<h1>Impressum</h1><p>Inhaberin: Anna Sonnenblume</p>`.\\n   - It has no postal address and no electronic contact (email or phone). The address appears only on the Kontakt page. German law (§5 DDG) requires these details in the legal notice.\\n   - The page is also very thin, with no business name or legal form.\\n\\n8. **`kontakt.html` has no way to contact the business.**\\n   - Evidence: the only content is `Salzstraße 12, 79098 Freiburg`.\\n   - There is no phone number, email, or opening hours. The hours appear only on the home page. For a local business, this is a functional gap on the page meant to serve that purpose.\\n\\n## Uncertainties (not established from the supplied files)\\n\\n- **Image files may be missing.** `/laden.jpg`, `/brot.jpg` and `/kuchen.jpg` are referenced but not supplied. They may exist on the server and simply not be part of this text-file evidence. Confirm before launch.\\n- **Canonical and sitemap URLs may not match the real paths.**\\n  - The canonicals and `sitemap.xml` use extensionless URLs (`/sortiment`, `/kontakt`, `/impressum`).\\n  - The files are `.html`, and the home page links to `/sortiment.html`.\\n  - If the server does not rewrite or redirect between these forms, the canonicals and sitemap entries would point to 404s, and `/sortiment.html` would be a duplicate of the canonical URL. This depends on server configuration that was not supplied.\\n- **No favicon was supplied.** It is not referenced in any `<head>`, and `/favicon.ico` is absent from the files. This is cosmetic, and the file may exist at the server root.\\n- **`robots.txt` has no `Sitemap:` directive.** This is optional, and moot until item 1 is fixed.\"}],\"container\":null,\"stop_reason\":\"end_turn\",\"stop_sequence\":null,\"stop_details\":null,\"usage\":{\"input_tokens\":1524,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":0},\"output_tokens\":2409,\"output_tokens_details\":{\"thinking_tokens\":1036},\"service_tier\":\"standard\",\"inference_geo\":\"global\",\"speed\":\"standard\"},\"diagnostics\":null}"
+    }
+  ],
+  "final": {
+    "model": "claude-sonnet-5-5",
+    "id": "[redacted message id, sha256=585745bc7e3b5cadfafa7f71f4b56526b535371c02973516fff5c19fed224977]",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "[redacted provider signature, sha256=42465ecd54de7c04e2acba7778e63835bd83a68bf331f38e4642d25cd8039edc]"
+      },
+      {
+        "type": "text",
+        "text": "# Pre-launch audit: Bäckerei Sonnenblume\n\n## Established defects\n\n1. **`robots.txt` blocks the whole site from crawlers.**\n   - Evidence: `User-agent: *` followed by `Disallow: /`.\n   - This is a launch blocker. Search engines are told not to crawl any page, which contradicts the `sitemap.xml` that lists four URLs.\n\n2. **The home page is set to `noindex, nofollow`.**\n   - File: `index.html`\n   - Evidence: `<meta name=\"robots\" content=\"noindex, nofollow\" />`\n   - This looks like a leftover from staging. The most important page would be kept out of search results, and its links would not be followed.\n\n3. **`kontakt.html` and `sortiment.html` have no `<title>`.**\n   - Evidence: both `<head>` sections contain only charset, viewport and canonical.\n   - Browser tabs, bookmarks and search snippets will show no meaningful page title.\n\n4. **`kontakt.html` and `sortiment.html` have no meta description.**\n   - Evidence: neither file has `<meta name=\"description\">`, while `index.html` and `impressum.html` do.\n   - The Kontakt page matters most for a local business.\n\n5. **All three images lack `alt` attributes.**\n   - `index.html`: `<img src=\"/laden.jpg\" />`\n   - `sortiment.html`: `<img src=\"/brot.jpg\" />` and `<img src=\"/kuchen.jpg\" />`\n   - This is an accessibility failure. On `sortiment.html` the images are the only content besides the heading, so screen-reader users and search engines get nothing about the product range.\n\n6. **There is no site navigation, and `kontakt.html` and `impressum.html` are not linked from any page.**\n   - Evidence: the only `<a>` in the whole site is `index.html` → `/sortiment.html`.\n   - `kontakt.html` and `impressum.html` are orphans. Visitors cannot reach the address page, and the legally required Impressum is not reachable from any page.\n   - `sortiment.html`, `kontakt.html` and `impressum.html` have no link back to the home page or to each other.\n\n7. **The Impressum is incomplete for a German business site.**\n   - File: `impressum.html`\n   - Evidence: the body is only `<h1>Impressum</h1><p>Inhaberin: Anna Sonnenblume</p>`.\n   - It has no postal address and no electronic contact (email or phone). The address appears only on the Kontakt page. German law (§5 DDG) requires these details in the legal notice.\n   - The page is also very thin, with no business name or legal form.\n\n8. **`kontakt.html` has no way to contact the business.**\n   - Evidence: the only content is `Salzstraße 12, 79098 Freiburg`.\n   - There is no phone number, email, or opening hours. The hours appear only on the home page. For a local business, this is a functional gap on the page meant to serve that purpose.\n\n## Uncertainties (not established from the supplied files)\n\n- **Image files may be missing.** `/laden.jpg`, `/brot.jpg` and `/kuchen.jpg` are referenced but not supplied. They may exist on the server and simply not be part of this text-file evidence. Confirm before launch.\n- **Canonical and sitemap URLs may not match the real paths.**\n  - The canonicals and `sitemap.xml` use extensionless URLs (`/sortiment`, `/kontakt`, `/impressum`).\n  - The files are `.html`, and the home page links to `/sortiment.html`.\n  - If the server does not rewrite or redirect between these forms, the canonicals and sitemap entries would point to 404s, and `/sortiment.html` would be a duplicate of the canonical URL. This depends on server configuration that was not supplied.\n- **No favicon was supplied.** It is not referenced in any `<head>`, and `/favicon.ico` is absent from the files. This is cosmetic, and the file may exist at the server root.\n- **`robots.txt` has no `Sitemap:` directive.** This is optional, and moot until item 1 is fixed."
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 1524,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 2409,
+      "output_tokens_details": {
+        "thinking_tokens": 1036
+      },
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "diagnostics": null
+  }
+}

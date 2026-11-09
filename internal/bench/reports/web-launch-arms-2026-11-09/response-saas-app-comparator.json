@@ -1,0 +1,51 @@
+{
+  "site": "saas-app",
+  "arm": "comparator",
+  "attempts": [
+    {
+      "at": "2026-11-09T03:04:27.126Z",
+      "status": 200,
+      "request_id": "req_011CgrcUUFCscKMUNs7FAQaZ",
+      "temperature_sent": false,
+      "response": "{\"model\":\"claude-sonnet-5-5\",\"id\":\"[redacted message id, sha256=956106045a83c844f173637c8bd764b077aa42171ede60e910d9c359f453fc5a]\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"thinking\",\"thinking\":\"\",\"signature\":\"[redacted provider signature, sha256=517f9b285cdf214f7c5f5289295ffac1bcc97a6e45a5e5cfeb2b147ce65ca50a]\"},{\"type\":\"text\",\"text\":\"# Pre-launch audit: Ledgerly (saas-app)\\n\\nI audited four files: `index.html`, `imprint.html`, `app/dashboard.html` and `robots.txt`.\\n\\n## Established defects\\n\\n1. **`index.html`: script loaded over insecure HTTP (mixed content).**\\n   - Evidence: `<script src=\\\"http://cdn.ledgerly.example/widget.js\\\"></script>`\\n   - On an HTTPS site, browsers block this active mixed content, so the widget will not load. If it did load, it could be tampered with in transit. Use an `https://` URL.\\n\\n2. **`index.html`: no viewport meta tag.**\\n   - Evidence: the `<head>` has only `charset`, `title`, `description` and the script. `imprint.html` does include `<meta name=\\\"viewport\\\" ...>`.\\n   - Mobile browsers will render the landing page at desktop width.\\n\\n3. **`app/dashboard.html`: missing `lang` attribute and viewport meta tag.**\\n   - Evidence: the page opens with `<html>` (no `lang`), and the `<head>` contains only `charset` and `title`.\\n   - This hurts screen-reader pronunciation and language detection, and the page will not render responsively on mobile.\\n\\n4. **`index.html` and `app/dashboard.html`: images have no `alt` attribute.**\\n   - Evidence:\\n     - `index.html`: `<img src=\\\"/product-screenshot.png\\\" />`\\n     - `app/dashboard.html`: `<img src=\\\"/icons/chart.svg\\\" />` and `<img src=\\\"/icons/export.svg\\\" />`\\n   - Screen-reader users get no description. Use meaningful alt text for informative images and `alt=\\\"\\\"` for decorative ones.\\n\\n5. **`app/dashboard.html`: the title is copied from the marketing homepage, and there is no meta description.**\\n   - Evidence: `<title>Ledgerly — close your books faster</title>` is identical to the title in `index.html`, while the page's `<h1>` is \\\"Dashboard\\\".\\n   - The title does not describe the page, and the two pages are indistinguishable in tabs, history and bookmarks. A title such as \\\"Dashboard — Ledgerly\\\" would fix this.\\n   - The page is disallowed in `robots.txt`, so the missing description is low priority.\\n\\n6. **`imprint.html`: placeholder content.**\\n   - Evidence: `<body><h1>Imprint</h1></body>`, while the meta description promises \\\"Company details and the responsible contact.\\\"\\n   - The page has no company name, address or contact. An imprint page without these fails its legal purpose in jurisdictions that require one.\\n\\n7. **`imprint.html` is not linked from any supplied page.**\\n   - Evidence: the only link in the site files is `index.html` → `/app/dashboard.html`. Nothing links to `/imprint.html`.\\n   - A legal page must be easy to reach. Add a footer link on the landing page and in the app.\\n\\n8. **Site-wide: no sitemap.**\\n   - Evidence: `/sitemap.xml` is absent from the supplied files, and `robots.txt` has no `Sitemap:` directive.\\n   - This is minor for a site this small, but it should be added or consciously skipped.\\n\\n9. **Site-wide: no favicon.**\\n   - Evidence: `/favicon.ico` is absent, and no page has a `<link rel=\\\"icon\\\">`.\\n   - Browsers will request `/favicon.ico` and get a 404, and the tab will show no brand icon.\\n\\n## Uncertainties (not counted as defects)\\n\\n- **Referenced assets are not in the supplied files:** `/product-screenshot.png`, `/icons/chart.svg` and `/icons/export.svg`. They may exist outside this snapshot. Confirm they are deployed, or the images will be broken.\\n- **`cdn.ledgerly.example/widget.js`:** I can't verify that the host serves HTTPS.\\n- **Privacy policy and terms pages:** none are supplied. A SaaS product normally needs them, but I can't tell whether they are meant to be part of this deployment.\\n- **`robots.txt` blocks `/app/`:** this looks intentional. It is not access control, so confirm the app requires authentication. `index.html` also links directly to `/app/dashboard.html`, and the dashboard HTML contains no sign of an auth gate.\"}],\"container\":null,\"stop_reason\":\"end_turn\",\"stop_sequence\":null,\"stop_details\":null,\"usage\":{\"input_tokens\":790,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":0},\"output_tokens\":2114,\"output_tokens_details\":{\"thinking_tokens\":696},\"service_tier\":\"standard\",\"inference_geo\":\"global\",\"speed\":\"standard\"},\"diagnostics\":null}"
+    }
+  ],
+  "final": {
+    "model": "claude-sonnet-5-5",
+    "id": "[redacted message id, sha256=956106045a83c844f173637c8bd764b077aa42171ede60e910d9c359f453fc5a]",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "[redacted provider signature, sha256=517f9b285cdf214f7c5f5289295ffac1bcc97a6e45a5e5cfeb2b147ce65ca50a]"
+      },
+      {
+        "type": "text",
+        "text": "# Pre-launch audit: Ledgerly (saas-app)\n\nI audited four files: `index.html`, `imprint.html`, `app/dashboard.html` and `robots.txt`.\n\n## Established defects\n\n1. **`index.html`: script loaded over insecure HTTP (mixed content).**\n   - Evidence: `<script src=\"http://cdn.ledgerly.example/widget.js\"></script>`\n   - On an HTTPS site, browsers block this active mixed content, so the widget will not load. If it did load, it could be tampered with in transit. Use an `https://` URL.\n\n2. **`index.html`: no viewport meta tag.**\n   - Evidence: the `<head>` has only `charset`, `title`, `description` and the script. `imprint.html` does include `<meta name=\"viewport\" ...>`.\n   - Mobile browsers will render the landing page at desktop width.\n\n3. **`app/dashboard.html`: missing `lang` attribute and viewport meta tag.**\n   - Evidence: the page opens with `<html>` (no `lang`), and the `<head>` contains only `charset` and `title`.\n   - This hurts screen-reader pronunciation and language detection, and the page will not render responsively on mobile.\n\n4. **`index.html` and `app/dashboard.html`: images have no `alt` attribute.**\n   - Evidence:\n     - `index.html`: `<img src=\"/product-screenshot.png\" />`\n     - `app/dashboard.html`: `<img src=\"/icons/chart.svg\" />` and `<img src=\"/icons/export.svg\" />`\n   - Screen-reader users get no description. Use meaningful alt text for informative images and `alt=\"\"` for decorative ones.\n\n5. **`app/dashboard.html`: the title is copied from the marketing homepage, and there is no meta description.**\n   - Evidence: `<title>Ledgerly — close your books faster</title>` is identical to the title in `index.html`, while the page's `<h1>` is \"Dashboard\".\n   - The title does not describe the page, and the two pages are indistinguishable in tabs, history and bookmarks. A title such as \"Dashboard — Ledgerly\" would fix this.\n   - The page is disallowed in `robots.txt`, so the missing description is low priority.\n\n6. **`imprint.html`: placeholder content.**\n   - Evidence: `<body><h1>Imprint</h1></body>`, while the meta description promises \"Company details and the responsible contact.\"\n   - The page has no company name, address or contact. An imprint page without these fails its legal purpose in jurisdictions that require one.\n\n7. **`imprint.html` is not linked from any supplied page.**\n   - Evidence: the only link in the site files is `index.html` → `/app/dashboard.html`. Nothing links to `/imprint.html`.\n   - A legal page must be easy to reach. Add a footer link on the landing page and in the app.\n\n8. **Site-wide: no sitemap.**\n   - Evidence: `/sitemap.xml` is absent from the supplied files, and `robots.txt` has no `Sitemap:` directive.\n   - This is minor for a site this small, but it should be added or consciously skipped.\n\n9. **Site-wide: no favicon.**\n   - Evidence: `/favicon.ico` is absent, and no page has a `<link rel=\"icon\">`.\n   - Browsers will request `/favicon.ico` and get a 404, and the tab will show no brand icon.\n\n## Uncertainties (not counted as defects)\n\n- **Referenced assets are not in the supplied files:** `/product-screenshot.png`, `/icons/chart.svg` and `/icons/export.svg`. They may exist outside this snapshot. Confirm they are deployed, or the images will be broken.\n- **`cdn.ledgerly.example/widget.js`:** I can't verify that the host serves HTTPS.\n- **Privacy policy and terms pages:** none are supplied. A SaaS product normally needs them, but I can't tell whether they are meant to be part of this deployment.\n- **`robots.txt` blocks `/app/`:** this looks intentional. It is not access control, so confirm the app requires authentication. `index.html` also links directly to `/app/dashboard.html`, and the dashboard HTML contains no sign of an auth gate."
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 790,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 2114,
+      "output_tokens_details": {
+        "thinking_tokens": 696
+      },
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "diagnostics": null
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "output_id": "out-1",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects across all three fixtures, their affected locations, and a unique decoy clearly enough to apply the rubric.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "The homepage loads a script over insecure HTTP.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "8",
+      "decoy": false,
+      "note": "The script source is http://cdn.ledgerly.example/widget.js."
+    },
+    {
+      "n": 2,
+      "claim": "The homepage lacks a viewport meta tag.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "11",
+      "decoy": false,
+      "note": "The supplied homepage head contains no viewport metadata."
+    },
+    {
+      "n": 3,
+      "claim": "The dashboard lacks a document language.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "10",
+      "decoy": false,
+      "note": "The dashboard opens with an html element without lang; row 10 receives its single credit here by finding appearance order."
+    },
+    {
+      "n": 4,
+      "claim": "The dashboard lacks a viewport meta tag.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported, distinct defect is also bundled into row 10, which cannot receive a second match under the one-to-one rule."
+    },
+    {
+      "n": 5,
+      "claim": "The homepage image and both dashboard images lack alt attributes.",
+      "location": "index.html; app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "12",
+      "decoy": false,
+      "note": "The report identifies all three image elements listed in row 12."
+    },
+    {
+      "n": 6,
+      "claim": "The dashboard shares the marketing homepage title.",
+      "location": "index.html; app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "13",
+      "decoy": false,
+      "note": "Both supplied pages use the identical Ledgerly marketing title."
+    },
+    {
+      "n": 7,
+      "claim": "The dashboard lacks a meta description.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The description is absent, but this real observation is outside the frozen manifest."
+    },
+    {
+      "n": 8,
+      "claim": "The imprint contains no substantive company or contact details.",
+      "location": "imprint.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The body contains only an Imprint heading, but incomplete imprint content is not a manifest row."
+    },
+    {
+      "n": 9,
+      "claim": "The imprint is not linked from any supplied page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The supplied HTML contains only the dashboard link, but imprint discoverability is outside the manifest."
+    },
+    {
+      "n": 10,
+      "claim": "The site has no sitemap.",
+      "location": "site-wide; /sitemap.xml",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "No sitemap is supplied, but sitemap absence is not a real-defect row for saas-app."
+    },
+    {
+      "n": 11,
+      "claim": "The site has no favicon.",
+      "location": "site-wide; /favicon.ico",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "No favicon file or icon link is supplied, but favicon absence is outside the manifest."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["8", "10", "11", "12", "13"],
+  "false_positives": 6
+}

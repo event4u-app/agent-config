@@ -1,0 +1,32 @@
+{
+  "out-1": {
+    "file": "response-saas-app-comparator.json",
+    "site": "saas-app",
+    "arm": "comparator"
+  },
+  "out-2": {
+    "file": "response-saas-app-treatment.json",
+    "site": "saas-app",
+    "arm": "treatment"
+  },
+  "out-3": {
+    "file": "response-docs-comparator.json",
+    "site": "docs",
+    "arm": "comparator"
+  },
+  "out-4": {
+    "file": "response-local-business-comparator.json",
+    "site": "local-business",
+    "arm": "comparator"
+  },
+  "out-5": {
+    "file": "response-docs-treatment.json",
+    "site": "docs",
+    "arm": "treatment"
+  },
+  "out-6": {
+    "file": "response-local-business-treatment.json",
+    "site": "local-business",
+    "arm": "treatment"
+  }
+}

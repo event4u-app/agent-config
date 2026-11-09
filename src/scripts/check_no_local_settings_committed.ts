@@ -29,7 +29,7 @@ const LOCAL_FILE = '.agent-settings.local.yml';
 
 /** Every tracked path — the unfiltered corpus the basename match runs over. */
 function _tracked_files(): string[] {
-    const res = spawnSync('git', ['ls-files'], { encoding: 'utf-8' });
+    const res = spawnSync('git', ['ls-files'], { encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 });
     // Mirror Python: CalledProcessError (non-zero) or FileNotFoundError
     // (git missing) → return [] (nothing to enforce).
     if (res.error !== undefined || res.status !== 0 || typeof res.stdout !== 'string') {

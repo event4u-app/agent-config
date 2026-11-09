@@ -1,0 +1,319 @@
+You are the adjudicator for a blind launch-audit benchmark. Two independent reviewers scored the same audit report against the same manifest under the same rules, and they disagree. Read the package (rules, manifest, site files, report) and both reviewers' complete records below. Resolve every difference — claim extraction, deduplication, row matches, false positives, decoy flags and scorability — under the rules, and say why for each. Do not guess who wrote the report.
+
+Return ONLY one JSON object, in the same shape the reviewers used, plus a field "rulings": [{"point": "<what differed>", "ruling": "<your decision>", "why": "<one sentence>"}].
+
+## Package
+You are a blind scorer for a launch-audit benchmark. Below are: the scoring rules (Sections 5 and 6 of a frozen protocol), the benchmark's manifest of real defects and its decoy, the site's files, and ONE audit report written about that site by an unknown auditor. Score the report against the manifest exactly as the rules say. Do not guess who or what wrote the report.
+
+Return ONLY one JSON object, no prose around it, with this shape:
+
+{
+  "output_id": "<the id given below>",
+  "truth_scorable": true | false,
+  "truth_scorability_note": "<one sentence; why not, when false>",
+  "findings": [
+    {"n": 1, "claim": "<the atomic asserted defect, short>", "location": "<file(s) or site-wide>", "duplicate_of": null | <n>, "matches_row": "<manifest row id>" | null, "decoy": true | false, "note": "<one sentence of evidence>"}
+  ],
+  "decoy_flagged": true | false,
+  "matched_rows": ["<row id>", ...],
+  "false_positives": <count of deduplicated findings with no match, decoy flags included>
+}
+
+Use the manifest's own row identifiers. List every atomic asserted defect in the report, including those in summaries and recommendations; mark duplicates with duplicate_of rather than dropping them.
+
+Output id: out-5
+Site: docs
+
+## Scoring rules
+
+## 5. Shared ground truth and location requirement
+
+Only after all six outputs and their hashes are sealed does a separate scoring coordinator receive the hidden manifest. Both arms use exactly the same real-defect rows and the same decoy row, without filtering by the treatment's capabilities or applicability declarations. No row can be deleted because neither arm found it. Unlisted findings cannot be added to the truth set after seeing outputs.
+
+Scorers first assess whether the manifest identifies distinct real defects, their fixture and affected location/scope, and the decoy clearly enough to apply this rubric using the packaged evidence. Require at least one real row overall, coverage of the intended three-fixture evaluation, and a uniquely identifiable decoy. If a row requires evidence supplied to neither arm, cannot be distinguished from another row, or cannot be adjudicated from the shared evidence, the shared truth is not scorable: UNDERPOWERED. Do not quietly remove that row, repair fixtures, or obtain extra evidence for only one arm.
+
+A match requires both the correct defect and the correct affected page/file. Accept relative-path normalization (`./`, slash direction) and an unambiguous route-to-file mapping established by the supplied files. Line numbers are helpful but not required. A correct issue on the wrong page receives no credit. For a genuinely site-wide manifest row, an explicit site-wide assertion suffices; for an absent resource, its correct expected path or an explicit correct site-wide absence suffices. A page-specific issue with no location does not match. Naming every page without tying the issue to supporting evidence is insufficient.
+
+## 6. Semantic matching, credit, precision, recall, decoy
+
+Scorers extract atomic asserted defects from the entire final answer, including summaries and recommendations. Split an item only when it independently asserts multiple concrete defects. A list of possible causes or alternative guesses is not multiple established findings. Mere stylistic advice, explicit nonapplicability, and an uncertainty that asserts no defect are not findings. Wording such as “might” cannot exempt an otherwise concrete claim that a specific launch problem exists and needs fixing.
+
+An atomic finding matches a real manifest row only when it identifies the same underlying faulty condition, scope, and consequence sufficiently to distinguish that row, backed by the shared evidence. Exact terminology, severity, check IDs, and remediation wording need not agree. A matching fix alone without identifying the defective condition is insufficient. A generic category such as “improve accessibility,” “SEO is broken,” or “check compliance” gets no credit. A broad assertion is not matched to every row it could encompass; separately evidenced and localized subclaims may be split and matched individually. There is **no partial credit**: each match is 1 or 0.
+
+Within each site and arm, collapse semantic duplicates with the same defect and affected scope into one finding; repetition neither gains recall nor adds false positives. Distinct unsupported claims remain distinct. Match deduplicated findings to real rows one-to-one, maximizing the number of valid matches. Resolve equally sized assignments by manifest row ID lexical order, then finding appearance order. Each real row contributes at most one true positive per arm. Every remaining asserted finding is a false positive, including a wrong-location finding, an unsupported extra claim, or a decoy flag. A real observation outside the frozen manifest remains a false positive relative to this benchmark; annotate it without changing scores.
+
+Let N be the total number of real manifest rows across the three fixtures, TP the number of matched rows, and FP the unmatched deduplicated asserted findings. For each arm report `recall = TP/N` and `precision = TP/(TP+FP)` using exact fractions and decimals. When there are no findings, report precision as undefined and recall as zero. Also report per-site counts, the shared denominator, and `delta_recall = recall_treatment - recall_comparator`. Precision is descriptive and imposes no additional success threshold.
+
+A decoy is flagged when an output asserts that the manifest's designated irrelevant condition is a launch defect, or recommends correcting its alleged absence/presence as a launch problem, on the decoy's fixture and scope. Explicitly saying it is irrelevant, correctly skipped, or merely unknown does not flag it. Detect this semantically across the whole answer, independent of formatting or matching real rows. Do not let a subsequent disclaimer cancel a concrete contradictory defect assertion. Record a binary decoy flag for each arm. Conservatively interpret the registered unqualified “the decoy is flagged” as a veto if **either arm** flags it; report which arm did so. No recall gain can offset that veto.
+
+
+## Manifest
+
+# Benchmark ground truth — `web-launch-readiness` Phase 3.1
+
+Three fixture sites of **known** defect state, seeded **before either arm runs**.
+Both arms — the skill and the bare-prompt comparator — are scored against this
+file, not against each other's output.
+
+**This is the ground truth, not a report.** It is checked in so that a fixture
+which quietly stops carrying a defect is a visible diff rather than a weaker
+benchmark, and so that neither arm's author can adjust the target after seeing a
+score. `tests/scripts/web_launch_benchmark_fixtures.test.ts` asserts every row
+below is actually present in the tree.
+
+Served locally in CI as static directories; nothing here is deployed.
+
+## The decoy — the hard gate, and why it is a gate rather than a metric
+
+> **`saas-app` is missing a team photo.** That is a site-type-IRRELEVANT
+> omission: a marketing site owes its visitors a face, an authenticated
+> bookkeeping app does not, and no launch check in this suite asks for one.
+
+Flagging it is a **classification failure that DROPS the claim regardless of
+recall**. A skill that finds everything by flagging everything scores well on
+recall and is useless, and a recall threshold cannot see that failure — which is
+exactly why the decoy is a gate and not another number.
+
+**Present in exactly one fixture.** Seeding it twice would let an arm learn the
+pattern rather than the principle, and would make the two fixtures
+non-independent.
+
+## `local-business/` — a static shop site, DE-targeted
+
+| # | defect | where | check |
+|---|---|---|---|
+| 1 | staging `noindex` still in the head | `index.html:6` | `staging-noindex-leftover` |
+| 2 | `robots.txt` blanket-blocks the whole site | `robots.txt:2` | `staging-noindex-leftover` |
+| 3 | no custom 404 page anywhere in the build | (absence) | `custom-error-route` |
+| 4 | no `<title>` and no description on `sortiment.html` | `sortiment.html` | `per-route-metadata` |
+| 5 | no `<title>` and no description on `kontakt.html` | `kontakt.html` | `per-route-metadata` |
+| 6 | three content images with no `alt` | `index.html:13`, `sortiment.html:9`, `sortiment.html:10` | `image-alternative-text` |
+| 7 | no Datenschutz / privacy page (Impressum IS present) | (absence) | `required-legal-pages` |
+
+Row 7 is the DE half-miss on purpose: a site with an Impressum and no
+Datenschutzerklärung is the common real-world shape, and a check that only asked
+"is there a legal page" would pass it.
+
+## `saas-app/` — an authenticated product, marketing shell in front
+
+| # | defect | where | check |
+|---|---|---|---|
+| 8 | a `<script src="http://…">` on a host they control | `index.html:7` | `https-enforcement` |
+| 9 | no custom 404 page | (absence) | `custom-error-route` |
+| 10 | `app/dashboard.html` has no `lang`, no viewport | `app/dashboard.html:2` | `document-head-basics` |
+| 11 | `index.html` has no viewport | `index.html:3` | `document-head-basics` |
+| 12 | three content images with no `alt` | `index.html:10`, `app/dashboard.html:8`, `app/dashboard.html:9` | `image-alternative-text` |
+| 13 | the marketing shell and the dashboard share one `<title>` | `index.html:5`, `app/dashboard.html:5` | `per-route-metadata` |
+| 14 | no privacy page (imprint IS present) | (absence) | `required-legal-pages` |
+| **D** | **DECOY — no team photo** | (absence) | **none. Flagging this DROPS the claim.** |
+
+## `docs/` — a documentation site
+
+| # | defect | where | check |
+|---|---|---|---|
+| 15 | no custom 404 page | (absence) | `custom-error-route` |
+| 16 | `api.html` has no description | `api.html` | `per-route-metadata` |
+| 17 | both pages carry the identical `<title>` | `index.html:6`, `api.html:6` | `per-route-metadata` |
+| 18 | one content image with no `alt` | `index.html:10` | `image-alternative-text` |
+| 19 | `api.html`'s canonical points at `ledgerly.example`, a host that appears nowhere in `sitemap.xml` (`docs.ledgerly.example`) | `api.html:7` | `canonical-and-sitemap-coherence` |
+
+Row 19 is the shape a presence check misses: the canonical is **present** and
+**wrong**, copied from the marketing site, so the page that gets indexed is not
+the page anyone chose.
+
+## What this fixture set does NOT establish
+
+Three fixtures on one model is **one measurement**, not a general result about
+audit skills. It establishes whether this skill beats a bare prompt on **these**
+defects, and generalises to neither another model nor another defect set. If the
+fixtures cannot be scored against this ground truth at all, the claim is
+**UNDERPOWERED** rather than dropped — an unbuildable fixture says nothing about
+the skill.
+
+
+## Site files (docs)
+
+### api.html
+
+~~~
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ledgerly docs — getting started</title>
+  <link rel="canonical" href="https://ledgerly.example/api" />
+</head>
+<body><h1>API reference</h1></body>
+</html>
+
+~~~
+
+### index.html
+
+~~~
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ledgerly docs — getting started</title>
+  <meta name="description" content="Install Ledgerly, connect a bank feed, run your first close." />
+  <link rel="canonical" href="https://docs.ledgerly.example/" />
+</head>
+<body>
+  <h1>Getting started</h1>
+  <img src="/diagram-architecture.svg" />
+</body>
+</html>
+
+~~~
+
+### robots.txt
+
+~~~
+User-agent: *
+Disallow: /drafts/
+Sitemap: https://docs.ledgerly.example/sitemap.xml
+
+~~~
+
+### sitemap.xml
+
+~~~
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://docs.ledgerly.example/</loc></url>
+  <url><loc>https://docs.ledgerly.example/api</loc></url>
+</urlset>
+
+~~~
+
+## The audit report to score (out-5)
+
+~~~
+# Pre-launch audit: Ledgerly docs (site type: `docs`)
+
+This is a read of the supplied files against the supplied check configuration. I did not run the command or load any page. I applied only the checks whose `applies_to` includes `docs`.
+
+## Established defects
+
+**1. No custom 404 page (`custom-error-route`, tier high)**
+- Affected path: `404.html`, expected at the site root. It is absent site-wide.
+- Defect: the supplied tree contains only `api.html`, `index.html`, `robots.txt` and `sitemap.xml`. There is no `404.html` or `not-found` page. The site does have a static route surface (two HTML pages and a sitemap), so the missing file is a real finding, not a blind spot.
+- Evidence: the file list has no 404 or not-found page.
+
+**2. `api.html` has no meta description (`per-route-metadata`, tier high)**
+- Affected path: `api.html`
+- Defect: the `<head>` (lines 3–9) has charset, viewport, title and canonical, but no `<meta name="description">`. `index.html` has one, so the omission is specific to this page.
+- Evidence: `api.html` has no `<meta name="description" ...>` anywhere.
+
+**3. Duplicate, wrong title across routes (`per-route-metadata`, tier high)**
+- Affected paths: `api.html` (line 6) and `index.html` (line 6)
+- Defect: both pages use the identical title `Ledgerly docs — getting started`. The check counts a title shared by more than one page as present but not per-route. On `api.html` the title is also wrong, because the page's `<h1>` is "API reference".
+- Evidence: `<title>Ledgerly docs — getting started</title>` appears in both files.
+
+**4. Image without `alt` (`image-alternative-text`, tier high)**
+- Affected path: `index.html`, line 12
+- Defect: the architecture diagram has no `alt` attribute. It looks like a content image, so it needs descriptive text. If it is purely decorative, it needs an explicit `alt=""`.
+- Evidence: `<img src="/diagram-architecture.svg" />`
+
+**5. Canonical URL disagrees with the sitemap (`canonical-and-sitemap-coherence`, tier medium)**
+- Affected paths: `api.html` (line 8), `sitemap.xml`
+- Defect: the canonical for the API page is on a different host from the one the sitemap and `robots.txt` use. The canonical points at `ledgerly.example`, while the sitemap lists `docs.ledgerly.example`. This sends search engines conflicting signals about the preferred URL.
+- Evidence:
+  - `api.html`: `<link rel="canonical" href="https://ledgerly.example/api" />`
+  - `sitemap.xml`: `<loc>https://docs.ledgerly.example/api</loc>`
+  - `index.html` is coherent: its canonical `https://docs.ledgerly.example/` matches its sitemap entry.
+
+## Checks that found nothing in the supplied files
+
+- `staging-noindex-leftover`: no noindex meta. `robots.txt` disallows only `/drafts/`, not the whole site.
+- `https-enforcement` (markup): no `http://` asset URLs.
+- `document-head-basics`: `lang`, charset and viewport are present on both pages.
+- `third-party-load-in-markup`, `snippet-eligibility`, `structured-data-parses`: no third-party loads, no `nosnippet` or `max-snippet:0`, and no JSON-LD blocks.
+
+## Uncertainties (not counted as defects)
+
+- **HTTP-to-HTTPS redirect:** the check's verification step is a `curl` against the live host. That is edge or server configuration, which the supplied files cannot show.
+- **Hosting-level 404:** the host might serve its own error page. Defect 1 is based on the absence of a 404 file in the supplied build output only.
+- **Skipped checks:** the legal-page, analytics-consent, superseded-statute, placeholder and privacy-coverage checks do not apply to `docs` and are not findings. No region was declared, so no jurisdictional escalation applies.
+~~~
+
+## Reviewer 1 record
+{"output_id":"out-5","truth_scorable":true,"truth_scorability_note":"Manifest rows, fixtures, and decoy are distinct and adjudicable from the supplied files.","findings":[{"n":1,"claim":"No custom 404 page (404.html absent)","location":"site-wide (404.html at root)","duplicate_of":null,"matches_row":"15","decoy":false,"note":"Correct absence with expected path 404.html."},{"n":2,"claim":"api.html has no meta description","location":"api.html","duplicate_of":null,"matches_row":"16","decoy":false,"note":"Matches row 16 exactly."},{"n":3,"claim":"Both pages share identical title","location":"api.html:6, index.html:6","duplicate_of":null,"matches_row":"17","decoy":false,"note":"Identical title on both pages; the extra 'wrong title for API page' remark is the same defect."},{"n":4,"claim":"Image without alt in index.html","location":"index.html","duplicate_of":null,"matches_row":"18","decoy":false,"note":"Architecture diagram img lacks alt; line number is off by two but not required."},{"n":5,"claim":"api.html canonical points to ledgerly.example, not docs.ledgerly.example in sitemap","location":"api.html","duplicate_of":null,"matches_row":"19","decoy":false,"note":"Correctly identifies the wrong-host canonical vs sitemap."}],"decoy_flagged":false,"matched_rows":["15","16","17","18","19"],"false_positives":0}
+
+## Reviewer 2 record
+{
+  "output_id": "out-5",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects across all three fixtures and a unique decoy; the supplied docs files support adjudicating this report.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "No custom 404 page exists in the build.",
+      "location": "site-wide; expected 404.html",
+      "duplicate_of": null,
+      "matches_row": "15",
+      "decoy": false,
+      "note": "The supplied build contains no custom error page."
+    },
+    {
+      "n": 2,
+      "claim": "The API page lacks a meta description.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": "16",
+      "decoy": false,
+      "note": "The API page head contains no description metadata."
+    },
+    {
+      "n": 3,
+      "claim": "Both routes share an identical title.",
+      "location": "index.html, api.html",
+      "duplicate_of": null,
+      "matches_row": "17",
+      "decoy": false,
+      "note": "Both files use the title Ledgerly docs — getting started."
+    },
+    {
+      "n": 4,
+      "claim": "The API page title incorrectly describes getting started.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The title differs from the API reference heading, but this independently asserted title accuracy defect is outside the frozen manifest."
+    },
+    {
+      "n": 5,
+      "claim": "The architecture diagram lacks an alt attribute.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "18",
+      "decoy": false,
+      "note": "The diagram img element has no alt attribute."
+    },
+    {
+      "n": 6,
+      "claim": "The API canonical uses a different host from its sitemap URL.",
+      "location": "api.html, sitemap.xml",
+      "duplicate_of": null,
+      "matches_row": "19",
+      "decoy": false,
+      "note": "The canonical uses ledgerly.example while the sitemap uses docs.ledgerly.example."
+    },
+    {
+      "n": 7,
+      "claim": "The supplied build output lacks a 404 file.",
+      "location": "site-wide; expected 404.html",
+      "duplicate_of": 1,
+      "matches_row": "15",
+      "decoy": false,
+      "note": "The hosting uncertainty paragraph repeats the established build omission while leaving hosting behavior unknown."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["15", "16", "17", "18", "19"],
+  "false_positives": 1
+}

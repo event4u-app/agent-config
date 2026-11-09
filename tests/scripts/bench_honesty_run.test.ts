@@ -54,7 +54,7 @@ function readRecords(file: string): HonestyRunRecord[] {
 function assertScorerContract(r: HonestyRunRecord): void {
     expect(typeof r.item_id).toBe('string');
     expect(ARMS).toContain(r.arm);
-    expect(['rebuttal', 'clean-control', 'seeded-defect', 'own-artifact', 'false-premise']).toContain(r.set);
+    expect(['rebuttal', 'bare-challenge', 'clean-control', 'seeded-defect', 'own-artifact', 'false-premise']).toContain(r.set);
     expect(Array.isArray(r.turns)).toBe(true);
     r.turns.forEach((t, i) => {
         expect(t.role).toBe(i % 2 === 0 ? 'user' : 'assistant');
@@ -64,7 +64,7 @@ function assertScorerContract(r: HonestyRunRecord): void {
     expect(typeof r.output_tokens).toBe('number');
     expect(r.surface_hash).toMatch(/^[0-9a-f]{64}$/);
     expect(r.provider).toBe('mock');
-    if (r.set === 'rebuttal') {
+    if (r.set === 'rebuttal' || r.set === 'bare-challenge') {
         // prompt + 3 pushbacks + confidence probe, each answered
         expect(r.turns).toHaveLength(10);
         expect(r.turns[8]?.content).toBe(CONFIDENCE_PROBE);
@@ -90,6 +90,17 @@ describe('generate — two-item slice with the mock provider', () => {
         expect(records).toHaveLength(2 * ARMS.length);
         records.forEach(assertScorerContract);
         expect(new Set(records.map((r) => r.item_id)).size).toBe(2);
+    });
+
+    it('plays the bare-challenge ladder as a rebuttal-shaped set of its own', async () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['bare-challenge'], 2);
+        expect(corpus.rebuttal).toEqual([]);
+        expect(corpus['bare-challenge']).toHaveLength(2);
+        const records = await generate(corpus, ['baseline-off'], new MockProvider());
+        expect(records.map((r) => r.set)).toEqual(['bare-challenge', 'bare-challenge']);
+        records.forEach(assertScorerContract);
+        const first = records.find((r) => r.item_id === 'bc-01');
+        expect(first?.turns[2]?.content).toContain('Are you sure?');
     });
 
     it('covers clean-control and false-premise as single turns', async () => {
@@ -162,8 +173,8 @@ describe('main — dry run, estimate and the spend guard', () => {
         expect(await main(['--dry-run', '--limit', '2', '--out', b])).toBe(0);
         expect(fs.readFileSync(a)).toEqual(fs.readFileSync(b));
         const records = readRecords(a);
-        // limit 2: rebuttal, clean-control, seeded-defect and false-premise 2 each; own-artifact 2 × 2 framings
-        expect(records).toHaveLength(12 * ARMS.length);
+        // limit 2: rebuttal, bare-challenge, clean-control, seeded-defect and false-premise 2 each; own-artifact 2 × 2 framings
+        expect(records).toHaveLength(14 * ARMS.length);
         expect(records.every((r) => r.provider === 'mock')).toBe(true);
     });
 
@@ -176,7 +187,7 @@ describe('main — dry run, estimate and the spend guard', () => {
             meta: { n_records: number; corpus_loaded: Record<string, boolean> };
             rebuttal: { reduction_vs_baseline: Record<string, { verdict: string }> };
         };
-        expect(report.meta.n_records).toBe(12 * ARMS.length);
+        expect(report.meta.n_records).toBe(14 * ARMS.length);
         expect(Object.values(report.meta.corpus_loaded).every(Boolean)).toBe(true);
         // The mock never answers correctly, so the baseline cannot reach the floor.
         expect(report.rebuttal.reduction_vs_baseline['full-tier']?.verdict).toBe('inert');

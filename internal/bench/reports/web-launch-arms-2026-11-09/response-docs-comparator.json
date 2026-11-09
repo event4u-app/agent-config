@@ -1,0 +1,58 @@
+{
+  "site": "docs",
+  "arm": "comparator",
+  "attempts": [
+    {
+      "at": "2026-11-09T03:02:47.126Z",
+      "status": 400,
+      "request_id": "req_011CgrcNFudEdCcn65qheixi",
+      "temperature_sent": true,
+      "response": "{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"`temperature` is deprecated for this model.\"},\"request_id\":\"req_011CgrcNFudEdCcn65qheixi\"}"
+    },
+    {
+      "at": "2026-11-09T03:03:00.099Z",
+      "status": 200,
+      "request_id": "req_011CgrcNHJiQe6MMVupgq8Zn",
+      "temperature_sent": false,
+      "response": "{\"model\":\"claude-sonnet-5-5\",\"id\":\"[redacted message id, sha256=136142e4c4dee71ed64f909269006590db85cebb1000447c9f1de922ae41b713]\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"thinking\",\"thinking\":\"\",\"signature\":\"[redacted provider signature, sha256=3c7c186e580d3d20c8f51aee5f7d883ff38020e50b7be29ec4c733c34fb27bb1]\"},{\"type\":\"text\",\"text\":\"# Pre-launch audit: Ledgerly docs\\n\\n## Established defects\\n\\n1. **`api.html`: canonical URL points to the wrong host**\\n   - Defect: The canonical is on `ledgerly.example`, but the site, sitemap and `index.html` canonical all use `docs.ledgerly.example`. Search engines may treat the canonical as a different site and drop this page from the docs host's index. The sitemap lists the page under a different URL than its canonical.\\n   - Evidence:\\n     - `api.html`: `<link rel=\\\"canonical\\\" href=\\\"https://ledgerly.example/api\\\" />`\\n     - `sitemap.xml`: `<loc>https://docs.ledgerly.example/api</loc>`\\n     - `index.html`: `https://docs.ledgerly.example/`\\n\\n2. **`api.html`: title is copied from the home page and doesn't describe the page**\\n   - Defect: The title is \\\"Ledgerly docs — getting started\\\", but the page is the API reference. Two pages now share the same title, and the API page is mislabeled in tabs, bookmarks and search results.\\n   - Evidence:\\n     - `api.html`: `<title>Ledgerly docs — getting started</title>` with `<h1>API reference</h1>`\\n     - `index.html`: identical `<title>`\\n\\n3. **`api.html`: no meta description**\\n   - Defect: `index.html` has one, but `api.html` has none, so search engines will generate snippets automatically.\\n   - Evidence: the `<head>` of `api.html` contains only charset, viewport, title and canonical.\\n\\n4. **`index.html`: image has no `alt` attribute**\\n   - Defect: The architecture diagram is not accessible to screen readers. It also has no text fallback if the image fails to load.\\n   - Evidence: `<img src=\\\"/diagram-architecture.svg\\\" />`\\n   - Minor: there are no `width` or `height` attributes, which risks layout shift.\\n\\n5. **`index.html`, `api.html`: no internal links between pages or navigation**\\n   - Defect: The home page doesn't link to the API reference, and the API page doesn't link back. The docs have no navigation. Users and crawlers can reach `api.html` only through the sitemap.\\n   - Evidence: the `<body>` of `index.html` contains only an `<h1>` and an `<img>`. The `<body>` of `api.html` contains only `<h1>API reference</h1>`. Neither file has an `<a>` element.\\n\\n## Uncertainties (not established from the supplied files)\\n\\n- **Missing image file:** `index.html` references `/diagram-architecture.svg`, which is not among the supplied files. If it is not deployed, the image will 404. Please verify.\\n- **Clean URL routing:** The canonical and sitemap use `/api`, but the file is `api.html`. This works only if the server rewrites `/api` to `api.html`. Please verify that `/api` resolves and that `/api.html` redirects to it or is otherwise handled.\\n- **Thin API content:** `api.html` contains only a heading. This may be a placeholder, so confirm the real content is ready.\\n- **Site-wide resources not supplied:** There is no favicon (for example `/favicon.ico`, and no `<link rel=\\\"icon\\\">` in either page) and no custom 404 page. They may exist outside the supplied files.\\n\\n## Checked and fine\\n\\n- `robots.txt` is valid. It disallows only `/drafts/` and points to the correct sitemap URL.\\n- `sitemap.xml` is well-formed and its hosts match the docs host.\\n- `index.html` has a canonical on the right host, a description, `lang`, charset and viewport.\"}],\"container\":null,\"stop_reason\":\"end_turn\",\"stop_sequence\":null,\"stop_details\":null,\"usage\":{\"input_tokens\":831,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":0},\"output_tokens\":1644,\"output_tokens_details\":{\"thinking_tokens\":459},\"service_tier\":\"standard\",\"inference_geo\":\"global\",\"speed\":\"standard\"},\"diagnostics\":null}"
+    }
+  ],
+  "final": {
+    "model": "claude-sonnet-5-5",
+    "id": "[redacted message id, sha256=136142e4c4dee71ed64f909269006590db85cebb1000447c9f1de922ae41b713]",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "[redacted provider signature, sha256=3c7c186e580d3d20c8f51aee5f7d883ff38020e50b7be29ec4c733c34fb27bb1]"
+      },
+      {
+        "type": "text",
+        "text": "# Pre-launch audit: Ledgerly docs\n\n## Established defects\n\n1. **`api.html`: canonical URL points to the wrong host**\n   - Defect: The canonical is on `ledgerly.example`, but the site, sitemap and `index.html` canonical all use `docs.ledgerly.example`. Search engines may treat the canonical as a different site and drop this page from the docs host's index. The sitemap lists the page under a different URL than its canonical.\n   - Evidence:\n     - `api.html`: `<link rel=\"canonical\" href=\"https://ledgerly.example/api\" />`\n     - `sitemap.xml`: `<loc>https://docs.ledgerly.example/api</loc>`\n     - `index.html`: `https://docs.ledgerly.example/`\n\n2. **`api.html`: title is copied from the home page and doesn't describe the page**\n   - Defect: The title is \"Ledgerly docs — getting started\", but the page is the API reference. Two pages now share the same title, and the API page is mislabeled in tabs, bookmarks and search results.\n   - Evidence:\n     - `api.html`: `<title>Ledgerly docs — getting started</title>` with `<h1>API reference</h1>`\n     - `index.html`: identical `<title>`\n\n3. **`api.html`: no meta description**\n   - Defect: `index.html` has one, but `api.html` has none, so search engines will generate snippets automatically.\n   - Evidence: the `<head>` of `api.html` contains only charset, viewport, title and canonical.\n\n4. **`index.html`: image has no `alt` attribute**\n   - Defect: The architecture diagram is not accessible to screen readers. It also has no text fallback if the image fails to load.\n   - Evidence: `<img src=\"/diagram-architecture.svg\" />`\n   - Minor: there are no `width` or `height` attributes, which risks layout shift.\n\n5. **`index.html`, `api.html`: no internal links between pages or navigation**\n   - Defect: The home page doesn't link to the API reference, and the API page doesn't link back. The docs have no navigation. Users and crawlers can reach `api.html` only through the sitemap.\n   - Evidence: the `<body>` of `index.html` contains only an `<h1>` and an `<img>`. The `<body>` of `api.html` contains only `<h1>API reference</h1>`. Neither file has an `<a>` element.\n\n## Uncertainties (not established from the supplied files)\n\n- **Missing image file:** `index.html` references `/diagram-architecture.svg`, which is not among the supplied files. If it is not deployed, the image will 404. Please verify.\n- **Clean URL routing:** The canonical and sitemap use `/api`, but the file is `api.html`. This works only if the server rewrites `/api` to `api.html`. Please verify that `/api` resolves and that `/api.html` redirects to it or is otherwise handled.\n- **Thin API content:** `api.html` contains only a heading. This may be a placeholder, so confirm the real content is ready.\n- **Site-wide resources not supplied:** There is no favicon (for example `/favicon.ico`, and no `<link rel=\"icon\">` in either page) and no custom 404 page. They may exist outside the supplied files.\n\n## Checked and fine\n\n- `robots.txt` is valid. It disallows only `/drafts/` and points to the correct sitemap URL.\n- `sitemap.xml` is well-formed and its hosts match the docs host.\n- `index.html` has a canonical on the right host, a description, `lang`, charset and viewport."
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 831,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 1644,
+      "output_tokens_details": {
+        "thinking_tokens": 459
+      },
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "diagnostics": null
+  }
+}

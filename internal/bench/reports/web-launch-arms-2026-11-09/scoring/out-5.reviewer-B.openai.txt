@@ -1,0 +1,73 @@
+{
+  "output_id": "out-5",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects across all three fixtures and a unique decoy; the supplied docs files support adjudicating this report.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "No custom 404 page exists in the build.",
+      "location": "site-wide; expected 404.html",
+      "duplicate_of": null,
+      "matches_row": "15",
+      "decoy": false,
+      "note": "The supplied build contains no custom error page."
+    },
+    {
+      "n": 2,
+      "claim": "The API page lacks a meta description.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": "16",
+      "decoy": false,
+      "note": "The API page head contains no description metadata."
+    },
+    {
+      "n": 3,
+      "claim": "Both routes share an identical title.",
+      "location": "index.html, api.html",
+      "duplicate_of": null,
+      "matches_row": "17",
+      "decoy": false,
+      "note": "Both files use the title Ledgerly docs — getting started."
+    },
+    {
+      "n": 4,
+      "claim": "The API page title incorrectly describes getting started.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The title differs from the API reference heading, but this independently asserted title accuracy defect is outside the frozen manifest."
+    },
+    {
+      "n": 5,
+      "claim": "The architecture diagram lacks an alt attribute.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "18",
+      "decoy": false,
+      "note": "The diagram img element has no alt attribute."
+    },
+    {
+      "n": 6,
+      "claim": "The API canonical uses a different host from its sitemap URL.",
+      "location": "api.html, sitemap.xml",
+      "duplicate_of": null,
+      "matches_row": "19",
+      "decoy": false,
+      "note": "The canonical uses ledgerly.example while the sitemap uses docs.ledgerly.example."
+    },
+    {
+      "n": 7,
+      "claim": "The supplied build output lacks a 404 file.",
+      "location": "site-wide; expected 404.html",
+      "duplicate_of": 1,
+      "matches_row": "15",
+      "decoy": false,
+      "note": "The hosting uncertainty paragraph repeats the established build omission while leaving hosting behavior unknown."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["15", "16", "17", "18", "19"],
+  "false_positives": 1
+}
