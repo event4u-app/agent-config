@@ -97,6 +97,14 @@ fresh pre-registration before it can ship.
 - **If you do nothing:** the shipped start layer stays the reduced form that
   read INFERIOR in the first look.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-09 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A gate fix that changes the measured text | product | Trimming or rewording the two contracts to pass a gate ships text that was never benchmarked | The decision rule under Phase 1: any wording change is a new variant and is re-measured first | Phase 1 — clear the two gates |
+| 2 | A post-data reading taken as a clean pass | product | NON-INFERIOR rests on the owner's exclusion of two pre-model timeouts, not on the frozen text alone | The result file states the reading as post-data; the landing PR cites it | Phase 2 — land it |
+
 ## Acceptance Criteria
 
 - [ ] AC-1: Main carries the adapted contracts with both gates green, or the
