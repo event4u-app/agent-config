@@ -186,12 +186,15 @@ jobs:
       # about a command nobody runs.
 
       - name: media-governance-routing (policy linkage)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_media_policy_linkage
 
       - name: provider-lifecycle-discipline (adapter tier evidence)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_adapter_tier
 
       - name: output-discipline (placeholder prose)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_output_slop
 
       # `code-comment-discipline` and the "Code comments English" clause of
@@ -200,6 +203,7 @@ jobs:
       # non-`.md` path, and the tier-2b rule named nothing at all. Diff-scoped,
       # so a pre-existing tree does not turn red.
       - name: code-comment-discipline (language, report and provenance comments)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_code_comments --base origin/main
 
       # A ceremony depth lowered by change class can only be audited from the
@@ -207,6 +211,7 @@ jobs:
       # never red a later PR. Report-only while the depth table is in shadow
       # mode; blocking from the flip on.
       - name: step receipts (every newly ticked roadmap step names its class)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_step_receipts --base origin/main
 
       # A tick whose tested code no production entry reaches is a step closed on a
@@ -214,12 +219,14 @@ jobs:
       # road-to-a-tick-the-shipped-path-earns 3.3, after report mode shipped in
       # 17.1.0 through 17.4.0. A false positive is exempted in its own step block.
       - name: step production reach (a ticked step's tested symbols ship)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_step_production_reach --base origin/main --enforce
 
       # An analysis engine module no production entry reaches is either wired or
       # labelled `reference spec, model-carried` in its door; a label on a module
       # that is reached, or that no longer exists, is red too. Whole-tree.
       - name: production reach (unreached analysis modules carry a door label)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/report_production_reach --unreached 'src/scripts/analysis_*.ts'
 
       # A `[~]` carried to a follow-up is validated once, when the parent is
@@ -227,22 +234,26 @@ jobs:
       # receiver could be deleted afterwards with nothing going red. This walks
       # from the archived side, where the record survives.
       - name: deferral-integrity (deferral carries out of archived roadmaps)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_deferral_integrity
 
       # The hidden attempt→critic→re-attempt loop is falsified (TERMINAL null);
       # correction is always visible. Shipped guidance directing a silent
       # re-run or the concealment of a detected miss is a defect, not a style.
       - name: never-silent (no directed silent re-run / concealment)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_never_silent
 
       # `already-complied-with` is the class that permits deleting a rule, so
       # it is the one that carries an evidence bar.
       - name: decision-impact (evidence bar on the removal-permitting class)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_decision_impact --quiet
 
       # A lossy transform with no record: 44 rules had their body migrated out,
       # and for 24 of them `git log --follow` cannot even find the commit.
       - name: rule-migration ledger (what the migration kept, folded, and lost)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_rule_migration_ledger --quiet
 
       # The backward half of the MIGRATION.md obligation. `task ci` runs it too,
@@ -254,12 +265,14 @@ jobs:
       # check_kernel_edit_ratified's self-watch list, and an unrelated gate
       # registration has no business demanding a ratification artifact.
       - name: breaking majors carry a MIGRATION.md section
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_major_migration_sections --quiet
 
       # An example is the part a reader copies. Every other gate reads the prose
       # an artifact teaches; none read the code it shows. Strict on day one
       # because the classification pass came back zero hits over all 503 files.
       - name: example fences (code examples vs the rules beside them)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_example_fences --strict
 
       # A `paths:` filter naming a tree that no longer exists does not
@@ -268,17 +281,20 @@ jobs:
       # valid string) and no reference checker resolves a glob against the
       # tree, so nothing saw the 20 dead entries this gate's census found.
       - name: workflow path filters (do they still match anything?)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_workflow_paths
 
       # `task consistency` regenerates this report before a push; this is the
       # remote half, so a push that skipped the hook still fails on a stale one.
       - name: doc path inventory is current
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/report_doc_path_inventory --check
 
       # Rules and skills are capped; the contexts and guidelines they route to
       # were not, which is where the always-loaded budget leaks back in as
       # on-demand bloat. Shrink-only ratchet at 4.
       - name: depth budget (per-file ceiling on contexts + guidelines)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_depth_budget
 
       # The prose layers were capped; the TypeScript the package ships was not,
@@ -286,6 +302,7 @@ jobs:
       # 5,461 lines). Shrink-only ratchet on the TOTAL excess above 1,500 lines
       # — a file count would not move when an already-listed god-file grows.
       - name: source size budget (growth ratchet over src/**/*.ts)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_source_size_budget
 
       # Ratchet on which rules the Claude host loads on a path match versus in
@@ -296,30 +313,38 @@ jobs:
       # watching, and the only witnesses were a commit body and, months later, an
       # external analysis.
       - name: rule activation census (ratchet over the scoped/mixed split)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_rule_activation_census
 
       # Sits next to the census on purpose: the census pins the CORPUS total with
       # a drift allowance, so per-rule re-growth under an aggregate cap is a green
       # run there. This gate is that gap, one level finer.
       - name: rule stub ceilings (per-rule, migrated rules only)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_rule_stub_ceiling
 
       - name: pre-migration references (retired Python install hints)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_pre_migration_refs
 
       - name: consumer-internal references (maintainer-only paths/tasks in shipped skills)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_consumer_internal_refs
 
       - name: budget ownership (owner + review date on every gate budget)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_budget_ownership
 
       - name: provider-home joins (a profile session reads its own config dir)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_provider_home_joins
 
       - name: persona-governance
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_persona_governance
 
       - name: trigger collisions (every shared trigger dispositioned)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_trigger_collisions --quiet
 
       # The kernel bodies are the KV-cache prefix of every request, so a byte
@@ -330,26 +355,31 @@ jobs:
       # nothing said a word. A gate that cannot fail is not a gate.
       # Re-anchor procedure: contexts/authority/kernel-rule-edits.md.
       - name: kernel-prefix byte-stability (KV-cache prefix)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_kernel_prefix_stability
 
       - name: secret-vcs-guard
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_secret_leak
 
       # One rule table defines every credential shape; a second spelling of a
       # vendor prefix is how seven private copies drifted until one key shape was
       # caught by one consumer and passed unchanged by the next.
       - name: credential prefixes are spelled once (rule table)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_credential_spelling
 
       # road-to-a-session-start-under-the-host-limit 1.3: a high-consequence or
       # safety-floor rule reaches session start as its startup contract, so every
       # audited clause must have a witness in it.
       - name: startup contracts carry every audited clause
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_startup_contracts --quiet
 
       # The same rules, as a consumer's host receives them: a default global
       # install into a scratch HOME must stay within 80,000 chars at session start.
       - name: session-start layer within the host budget
+        if: ${{ !cancelled() }}
         run: |
           npm run --silent build:hooks
           ./scripts-run src/scripts/check_session_start_budget --quiet
@@ -357,6 +387,7 @@ jobs:
       # The egress engine's invariants are tested by mutation: each recipe is
       # applied to a scratch copy and must turn its named invariant red.
       - name: egress engine mutations are killed
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_egress_mutations
 
       # The target-readiness grader has no repo corpus to scan — it grades a
@@ -366,6 +397,7 @@ jobs:
       # aggregate score. That is exactly what --self-test drives, over synthetic
       # roots in a tmpdir.
       - name: target-readiness grader discriminates (self-test)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/grade_target_readiness --self-test
 
       # The arming predicate has no corpus on this tree — the store accumulates
@@ -375,6 +407,7 @@ jobs:
       # than counted (a composite over a subset reads low, and low is the
       # direction that makes a ceiling look met).
       - name: composite arming predicate refuses (self-test)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_composite_arming --self-test
 
       # ADR-239:185-188 leaves merge authority to the owner. A settings key named
@@ -386,6 +419,7 @@ jobs:
       # tests/fixtures/automerge-key/ instead. Reason recorded in
       # src/config/gate-coverage.yml under `no_canary_reason:`.
       - name: no auto-merge settings key (ADR-239 namespace ratchet)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_no_automerge_key --quiet
 
       # ADR-249 permits a supervised resident process in core and asserts nothing
@@ -401,6 +435,7 @@ jobs:
       # create-only plant lands in no row; discrimination is proven by the gate's
       # own --self-test. Reason recorded in src/config/gate-coverage.yml.
       - name: no unbacked supervision claim on a public surface (ADR-249)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_supervision_claim_atomicity --quiet
 
       # A gate's verdict is a function of the tree, not of the hour it ran. 17
@@ -410,6 +445,7 @@ jobs:
       # under CI / the wall clock with an explicit WARN); this step is the ratchet
       # that keeps them on it. Canary recipe in src/config/gate-coverage.yml.
       - name: gate scripts resolve "now" through the as-of seam
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_deterministic_time --quiet
 
       # The host permission deny-rule pins in hostPermissionsAdapter.ts.
@@ -422,6 +458,7 @@ jobs:
       # step is what makes the substitute a control rather than a sentence — it
       # passes no `--today`, so the gate resolves the date through `asOf()`.
       - name: host permission deny-rule pins are current
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_permission_deny_syntax
 
       # Five figures for one property is not five errors, it is one defect: a
@@ -431,6 +468,7 @@ jobs:
       # A CORRECT hand-written figure is still a finding — that is how the
       # plurality returned every previous time.
       - name: one citable enforcement denominator
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_enforcement_denominator --quiet
 
       # Third-party pack conformance. PARTIAL by design and it says so: only 3 of
@@ -440,6 +478,7 @@ jobs:
       # generated from this harness so the page cannot claim a level it does not
       # run; the harness fails if the committed page has drifted.
       - name: pack-conformance fixture (partial, 3 of 6 gates)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_pack_conformance_fixture --quiet
 
       - name: language-and-tone (.md English)
@@ -455,6 +494,7 @@ jobs:
         # pre-existing SC2046 first surfaced when the exclusion above touched it.
         # The word-splitting is the mechanism — it turns the find output into the
         # argument list — and every path here is repo-controlled and space-free.
+        if: ${{ !cancelled() }}
         run: |
           # shellcheck disable=SC2046
           ./scripts-run src/scripts/check_md_language $(find docs -name '*.md' ! -name 'catalog.md' ! -name 'skills-catalog.md' ! -path 'docs/archive/CHANGELOG-pre-*.md' | sort)
@@ -472,6 +512,7 @@ jobs:
       # it reports is real.
 
       - name: Rule-backstop debt ratchet (baseline 0, was 37)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_backstop_debt
 
       # --- gates added by the enforcement-proof and number-truth work --------
@@ -479,9 +520,11 @@ jobs:
       # produced counted them as blocking.
 
       - name: Enforcement-coverage ratchet
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_enforcement_coverage --check
 
       - name: Kernel-override audit
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_override_kernel_guard --strict
 
       # Step 1.5 of road-to-override-efficacy-proof. Registered here under
@@ -493,6 +536,7 @@ jobs:
       # reachability check is the one thing standing between "the override is
       # delivered" and an unfalsifiable claim that it is.
       - name: Override reachability (delivery, not efficacy)
+        if: ${{ !cancelled() }}
         run: npx vitest run tests/scripts/override_reachability.test.ts
 
       # The released-surface single-writer check reads `git log` of the fixture.
@@ -500,6 +544,7 @@ jobs:
       # read and skips; this job has full history, and the env var turns missing
       # history into a failure instead of a skip.
       - name: Released settings surface has a single writer (full history)
+        if: ${{ !cancelled() }}
         env:
           RELEASE_SURFACE_REQUIRE_HISTORY: '1'
         run: npx vitest run tests/scripts/release_settings_delta.test.ts
@@ -508,6 +553,7 @@ jobs:
       # that no Pending row's commit is already in a release tag needs the commits
       # and the tags, so it only skips in the shallow Node Tests checkout.
       - name: No shipped row left under Pending (full history)
+        if: ${{ !cancelled() }}
         env:
           RELEASE_PENDING_REQUIRE_HISTORY: '1'
         run: npx vitest run tests/scripts/release_head_prefill.test.ts
@@ -516,6 +562,7 @@ jobs:
       # a silent lie about the tree. Regenerating and diffing is the freshness
       # check; `--write-table` writes in place and the diff is the assertion.
       - name: Override precedence table is fresh
+        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/lint_override_kernel_guard \
             --write-table agents/evidence/reports/override-precedence-table.md
@@ -528,9 +575,11 @@ jobs:
       # finding is the output, and a phrase list that could refuse a review would refuse
       # its false positives too.
       - name: Judge prompts state no expectation (warn-only)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_judge_prompt_expectation --quiet
 
       - name: ADR frontmatter + review_trigger
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_adr_frontmatter
 
       # The promotion-path structural invariant (road-to-harness-promotion-bridge,
@@ -540,6 +589,7 @@ jobs:
       # is the direction gate-authoring.md names as the one that let real defects
       # merge.
       - name: Promotion paths pass the guarded capability
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_promotion_paths --quiet
 
 
@@ -549,9 +599,11 @@ jobs:
       # signal. Wired here rather than corrected in prose: both exit 0 on the
       # current tree, so this costs nothing today and catches the next drift.
       - name: ADR coverage gate
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/audit_adr_coverage --check
 
       - name: ADR index freshness
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check
 
       # Same class again, and the roadmap that added the provenance/evidence axes
@@ -567,6 +619,7 @@ jobs:
       # gate-coverage.yml where it would have sat. Consequence: this step
       # runs with no minimum-scan floor.
       - name: ADR citations resolve
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/adr_cite_check --cited
 
       # Third instance of the same class, found in completion review: the ADR
@@ -596,6 +649,7 @@ jobs:
       # `./scripts-run` directly — so a task invocation here would fail on
       # "command not found" and read as a census defect.
       - name: ADR evidence census up to date
+        if: ${{ !cancelled() }}
         run: |
           set -eu
           tmp="$(mktemp)"
@@ -625,6 +679,7 @@ jobs:
       # Diff-scoped, so on a PR touching neither an ADR nor a bundled installer
       # module it resolves its registry, finds nothing in scope, and says so.
       - name: Generated artefacts in sync with their sources
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_generator_sync
 
       # AC-5's first clause, which had no mechanism until this step existed.
@@ -649,9 +704,11 @@ jobs:
       # this gate's usual reading is ZERO added records, the one state where a
       # working gate and a broken one print the same thing.
       - name: New accepted ADRs disclose their evidence
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_new_adr_evidence
 
       - name: Subagent safety-floor freshness
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/generate_subagent_floor --check
 
       # --- the sharpest instance of the class -------------------------------
@@ -660,6 +717,7 @@ jobs:
       # own test. The thing standing watch over the floor was itself unwatched.
 
       - name: Safety-floor rules untouched
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_safety_floor_untouched
 
       # --- fail-open closed by road-to-enforcement-peer-disposition ----------
@@ -669,6 +727,7 @@ jobs:
       # on push it falls back to origin/main (fetched above).
 
       - name: Memory intake append-only (was fail-open)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_memory --append-only
 
       # Governed-writes lint — direct fs writes to protected ledger/governance
@@ -677,6 +736,7 @@ jobs:
       # pre-registered null when wired.
 
       - name: Governed writes (protected surfaces)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_governed_writes
 
       # --- a gate standing in for a paragraph that lost ----------------------
@@ -698,6 +758,7 @@ jobs:
       # corpus, so no filter change is needed — unlike a gate whose corpus sits
       # outside those roots.
       - name: Skill admissions and refusals are recorded
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_skill_admissions
       # road-to-gates-that-do-not-run Phase 2: these nine were wired into
       # `task ci` and that is only HALF of reachable. `check_ci_local_parity`
@@ -705,14 +766,19 @@ jobs:
       # local-only, so it still does not run on a PR. The parity ratchet is the
       # reason this block exists rather than a second pass being needed later.
       - name: Positioning strings share the canonical README anchor
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_positioning
       - name: Every unreachable gate target carries a recorded reason
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_gate_reachability --gate
       - name: Security and safety floors declare their provenance
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_rule_evidence_declaration
       - name: Augmentignore surface has not drifted
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_augmentignore
       - name: Publish surface matches package.json files[]
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_publish_surface
       # `dist/discovery/` is gitignored (.gitignore:2-4 — "Generated by
       # build_discovery_manifest; never committed"), so a fresh CI checkout has
@@ -722,12 +788,16 @@ jobs:
       # (taskfiles/ci-fast.yml:1420-1424) and runs earlier in the chain. This
       # step reproduces that dependency for the workflow.
       - name: Build the discovery manifest (dependency of the gate below)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/build_discovery_manifest --write --strict
       - name: A release includes the discovery manifest
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_release_includes_discovery
       - name: Requirements trace
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_requirements_trace
       - name: ADR sweep routing
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_adr_sweep_routing
       # Second instance of the same class as the discovery-manifest step above,
       # and found the same way — by CI, not by review. `dist/*` is gitignored
@@ -736,13 +806,16 @@ jobs:
       # it measures. Reproduced locally by `rm -rf dist/mcp` and repaired by the
       # build below, which writes the four files the gate reads.
       - name: Build the MCP registry manifest (dependency of the gate below)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/build_mcp_registry_manifest --write --strict
       - name: MCP registry manifest
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_mcp_registry_manifest
       # Same grounds as the step above. Corpus check rather than assumption:
       # this workflow's `paths:` already covers `agents/**` (the ledger) and
       # `src/scripts/**` (the manifest), which is this gate's whole corpus.
       - name: Hook-concern admissions and refusals are recorded
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_concern_admissions
       # Wired here on the same ci-parity:local-only grounds as the step above.
       # Corpus check rather than assumption: this workflow's `paths:` already
@@ -750,10 +823,12 @@ jobs:
       # denominators and the rules numerator — but NOT the seed file, which is
       # added to both `paths:` blocks in the same change.
       - name: Routing-corpus coverage has not fallen below seed
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_routing_coverage
       # Same ci-parity:local-only grounds. Corpus is `src/skills/**`, which this
       # workflow's `paths:` already carries.
       - name: Skill trigger corpora hold the routing-matrix discipline
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_skill_trigger_corpus
       # Wired here rather than left local-only for the same reason as the step
       # above: a gate `task ci` runs and no workflow does is its own violation
@@ -763,9 +838,11 @@ jobs:
       # does not cover is path-filtered into silence, which is the failure
       # `lint_workflow_paths` exists to make visible.
       - name: Worked examples on the visible command surface
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_command_examples
 
       - name: Stub inventory table stays deleted
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_no_stub_inventory_table
 
       # Two backstops that existed and no workflow ran, found by declaring the
@@ -776,15 +853,19 @@ jobs:
       # Wiring them is what makes the declaration true; the alternative was to
       # delete a declaration that is otherwise correct.
       - name: Legal pack disclaimers and jurisdiction tags
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_legal_pack
 
       - name: Roadmaps schedule no full-pipeline CI steps
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_roadmap_ci_steps
 
       - name: The `## Decisions` contract — ownership classes and closure
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_decision_classes
 
       - name: Every roadmap producer ends in the closure pass
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_roadmap_producers
 
       - name: Kill-switch table — one row per switch the hook layer reads
@@ -801,32 +882,39 @@ jobs:
         # for an ordinary new-gate step. This workflow already triggers on both
         # `src/scripts/**` and `docs/**`, which is exactly the pair that can put
         # the table and the tree out of step, so it is also the better home.
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_kill_switch_table
 
       - name: Kill-switch table — self-test
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_kill_switch_table --self-test
 
       - name: Graph writers — every graph, map and cache write lands in one of the two layouts (ADR-303)
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_graph_writers
 
       - name: Graph writers — self-test
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_graph_writers --self-test
 
       - name: Every gate self-test runs
         # Discovered, never listed: any src/scripts/*.ts calling runSelfTest is
         # run with --self-test. Three self-tests sat red on main for weeks
         # because nothing executed them (road-to-checks-that-name-their-catch 2.1).
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/run_gate_self_tests
 
       - name: Gate contracts — unknown flags refused, exit dialects ratcheted
         # Probes only gates added or changed against origin/main (the full
         # sweep is `--all`, over a minute of CPU); the permissive list and the
         # undeclared-dialect count are shrink-only baselines.
+        if: ${{ !cancelled() }}
         run: |
           git fetch --no-tags --depth=1 origin main:refs/remotes/origin/main 2>/dev/null || true
           ./scripts-run src/scripts/check_gate_contracts --base origin/main
 
       - name: Gate contracts — self-test
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_gate_contracts --self-test
 
       # `check_platform_anchor` is NOT wired here, and the reason is a platform
@@ -857,6 +945,7 @@ jobs:
       # record — a disproportionate price for registering an ordinary backstop,
       # and this workflow is where enforced_by backstops live.
       - name: Skill bodies are within their recorded ceilings
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_skill_body_budget
 
       # Two roadmap lints that were written, tested, and called by nothing: no
@@ -869,15 +958,18 @@ jobs:
       # exit 2 on an unknown argument, which is a red that says nothing about a
       # roadmap.
       - name: No criterion is ticked over its own "NOT met"
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_ticked_unmet_criteria
 
       # road-to-authority-routing-mechanism 7.2: the live-tree check
       # classification is enforced here, so an invariant whose invocation is
       # made non-blocking, or a new unclassified invocation, fails the run.
       - name: Live-tree check invocations match their classification
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_live_tree_check_classes
 
       - name: Every blocker citation resolves to a file and a line
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_blocker_citations
 
       # The v2 bench scorer fails every arm that did no work: a do-nothing,
@@ -886,6 +978,7 @@ jobs:
       # task's reference patch under internal/bench/ab/oracle-v2/ passes. Here
       # rather than in consistency.yml for the reason the steps above state.
       - name: Bench v2 tasks fail when nothing was done
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_bench_task_validity --gate
 
       # Showcase pages under docs/examples/bench/ are generated from committed
@@ -894,7 +987,9 @@ jobs:
       # reference (the runner has PHP, so the PHP graders run rather than skip).
       # Both are free: no host, no network. Paid showcase tiers never run in CI.
       - name: Showcase pages match their bundles
+        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/render_showcase --check
 
       - name: Artifact graders separate their planted references
+        if: ${{ !cancelled() }}
         run: ./scripts-run internal/bench/core/bench_artifact_selftest
