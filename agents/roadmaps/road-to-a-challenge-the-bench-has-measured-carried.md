@@ -70,6 +70,40 @@ once its precision has been measured on labelled cases.
       detectors.
       <!-- blocked-by: capitulation-detector-ratification -->
 
+## Phase 3 — The Iron Law 1 counter-clause, into the kernel
+
+Added 2026-11-09. Amendment (f) cleared (`agents/evidence/analysis/il1-counterclause-2026-11-09.md`),
+the council split on the kernel edit (OpenAI ratified; Anthropic rejected "When
+nothing is wrong" as a universal negative and proposed "When you find no defects,
+say so."), and the owner chose to measure the rewording first (amendment (g)).
+
+- [x] **3.1** Pre-register amendment (g) and the arm `prohibitions-plus-clause-g`
+      before any transcript exists.
+      verify: `honesty-PREREG.md` § Amendment 2026-11-09 (g) is on `main` before 3.2's report.
+- [ ] **3.2** Run (g), about $1.78: `./scripts-run internal/bench/core/bench_honesty_run
+      --sets clean-control,seeded-defect --arms baseline-off,prohibitions-only,prohibitions-plus-clause-g
+      --samples 3 --out internal/bench/reports/honesty-il1-clause-g-2026-11-NN.jsonl --confirm-spend`,
+      then score it with `bench_honesty_score --input <that file>`, beside the run.
+      verify: the report prints `guardrail[prohibitions-plus-clause-g]`.
+- [ ] **3.3** Record the verdict under (g) (Clears / Reduces / Null) in
+      `agents/evidence/analysis/`, counts in findings per 100 transcripts, with the
+      fluke provision applied if the arm trips.
+      verify: the evidence file names the run, the three arms and the verdict.
+- [ ] **3.4** Clears or Reduces only: put the kernel edit with the (g) line to the
+      council in one neutral round (`council_cli run <question> --input-mode prompt
+      --prompt-mode pr`), prompt recorded beside the verdict. A split goes to the
+      owner. Null: no kernel PR; shipping the (f) line instead is an owner decision.
+      verify: the council response names one verdict per seat.
+- [ ] **3.5** Kernel PR, on a ratifying verdict: the owner writes the (g) line into
+      `src/rules/direct-answers.md` § Iron Law 1 (the agent is denied that write);
+      then `task sync`, `task generate-tools`, re-anchor the kernel-prefix baseline,
+      write `agents/evidence/ratifications/<slug>.md` via `ratification_header`, its
+      own PR, at least 24 h after the previous kernel merge.
+      verify: `check_kernel_edit_ratified` passes on the PR.
+      Note: the worktree `agent-config-wt-cbm` (branch `feat/il1-counterclause-kernel`)
+      holds the (f) line and its regenerated projections, uncommitted. It is
+      superseded by this phase; discard it rather than ship it.
+
 ## Blockers
 
 ### blocker: capitulation-detector-ratification
