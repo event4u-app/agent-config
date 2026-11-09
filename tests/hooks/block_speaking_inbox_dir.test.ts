@@ -388,9 +388,9 @@ describe('the deny message', () => {
         expect(msg).toContain('link_crypto encrypt');
     });
 
-    it('names the rule and the maintainer kill switch', () => {
+    it('names the rule, and never the kill switch that turns the guard off', () => {
         expect(msg).toContain('src/rules/source-confidentiality.md');
-        expect(msg).toContain('AGENT_CONFIG_ALLOW_SPEAKING_INBOX');
+        expect(msg).not.toContain('AGENT_CONFIG_ALLOW_SPEAKING_INBOX');
     });
 });
 

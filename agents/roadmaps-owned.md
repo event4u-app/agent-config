@@ -9,6 +9,7 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
@@ -20,7 +21,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
-| road-to-a-challenge-the-bench-has-measured | later | later | The honesty bench measures both directions of each failure (caving and stubbornness, over-criticism and under-criticism), it has run once on … |
 | road-to-a-cold-start-paid-once-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-control-that-matches-its-neighbours | later | later | Every UI change — including a one-line follow-up with no command — that adds an interactive control uses the project's … |
 | road-to-a-court-at-the-stops | later | later | The deterministic exhibit check runs automatically at the three moments the tree already stops (plan, roadmap, review); a fresh-subagent prosecutor … |
@@ -48,6 +48,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-sealed-lineage | later | later | Sealed. |
 | road-to-a-setup-that-decides-itself-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-site-the-owner-can-sign | later | later | A website request runs AC's existing blocks in a fixed order. |
+| road-to-a-start-as-light-as-the-field | later | later | A consumer session should start with a footprint comparable to the external reference harnesses: about 40k characters for the full … |
 | road-to-a-step-that-costs-what-it-changes-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-stop-that-holds-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
@@ -175,7 +176,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-trigger-eval-freshness-has-no-writer | later | later | `check_trigger_evals` either measures something a mechanism produces, or it stops claiming to. |
 | road-to-trigger-evals-that-stay-fresh | later | later | `check-trigger-evals` is green on a fresh checkout and stays green without anyone hand-editing a date. |
 | road-to-typed-grants-that-persist | later | later | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
-| road-to-web-launch-readiness-benchmark | later | later | Road to web-launch-readiness — the benchmark and its verdict |
 | road-to-windsurf-hooks-after-the-cascade-move | later | later | Road to Windsurf hooks after the Cascade move |
 | road-to-worker-generation-recycling | later | later | On subagent-capable hosts, a worker that reaches 80 % of its tier budget emits a structured state capsule and is … |
 | road-to-workflows-that-cannot-exfiltrate | later | later | A workflow in this repository cannot send repository data or a token to a host nobody allow-listed, cannot run a … |

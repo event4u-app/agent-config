@@ -284,7 +284,7 @@ describe("the ledger write path", () => {
     submit("fixe die ci");
     // The turn-scoped half is spent exactly as `commit-policy` requires…
     const raw = JSON.parse(
-      fs.readFileSync(path.join(tmp, ledgerFileFor("s1")), "utf8"),
+      fs.readFileSync(path.join(tmp, (ledgerFileFor("s1") as string)), "utf8"),
     ) as { authorized: string[] };
     expect(raw.authorized).not.toContain("pr-merge");
     // …and the object-bound half is still standing.
@@ -326,9 +326,9 @@ describe("the ledger write path", () => {
   });
 
   it("reads a pre-ADR-252 ledger as holding no grants rather than throwing", () => {
-    fs.mkdirSync(path.dirname(path.join(tmp, ledgerFileFor("s1"))), { recursive: true });
+    fs.mkdirSync(path.dirname(path.join(tmp, (ledgerFileFor("s1") as string))), { recursive: true });
     fs.writeFileSync(
-      path.join(tmp, ledgerFileFor("s1")),
+      path.join(tmp, (ledgerFileFor("s1") as string)),
       JSON.stringify({
         session_id: "s1",
         detected_at: new Date().toISOString(),

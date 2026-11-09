@@ -35,7 +35,7 @@ function main(argv?: readonly string[]): number {
         // itself: `git ls-files` is path-scoped to the cwd, so running from a
         // subtree with nothing tracked yields an empty index AND an empty `-ci`
         // result, and the gate prints its green line having examined nothing.
-        tracked = execSync('git ls-files', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+        tracked = execSync('git ls-files', { encoding: 'utf-8', cwd: process.cwd(), maxBuffer: 256 * 1024 * 1024 }).trim();
         output = execSync('git ls-files -ci --exclude-standard', {
             encoding: 'utf-8',
             cwd: process.cwd(),

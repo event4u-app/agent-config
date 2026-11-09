@@ -93,6 +93,7 @@ const COMPARISONS: Array<[string, string, string]> = [
     ['package-ladder', 'package', 'ladder size claim (T1/T2 pair)'],
     // Container controls (2026-11): an A/A pair that must show nothing, and the
     // container baseline against the host one. Arm-guarded like every row above.
+    ['package', 'package-full', 'reduced rule layer vs full rule layer'],
     ['vanilla-b', 'vanilla', 'A/A control (vanilla vs vanilla)'],
     ['vanilla', 'vanilla-host', 'container vs host baseline'],
     // The minimal prompt is the floor an asset has to beat, not only vanilla:

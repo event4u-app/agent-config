@@ -16,6 +16,8 @@ describe('bench_honesty_anthropic', () => {
         ]) as { model: string; temperature: number; system: Array<{ cache_control?: unknown }>; messages: Array<{ content: Array<{ cache_control?: unknown }> }> };
         expect(body.model).toBe('m');
         expect(body.temperature).toBe(1);
+        const unset = buildBody({ ...opts, temperature: null }, 's', [{ role: 'user', content: 'q' }]) as Record<string, unknown>;
+        expect('temperature' in unset).toBe(false);
         expect(body.system[0]?.cache_control).toEqual({ type: 'ephemeral' });
         expect(body.messages.map((m) => m.content[0]?.cache_control !== undefined)).toEqual([false, false, true]);
         expect('system' in buildBody(opts, '', [{ role: 'user', content: 'a' }])).toBe(false);

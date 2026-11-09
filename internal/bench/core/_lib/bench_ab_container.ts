@@ -149,6 +149,8 @@ export function quota_brake(limit = 3): (record: Record<string, unknown>) => str
 export interface ContainerCtx {
     base_image: string;
     ac_image: string;
+    /** The full-rule-layer image (`init --full`), when built; arms with `ac_layer: 'full'` need it. */
+    ac_full_image?: string;
     token: string;
     package_skills: ReadonlySet<string>;
     /** Every configured account, for the brake's resume hint; never rotated through. */
@@ -161,8 +163,20 @@ export function arm_loads_package(spec: { setting_sources: string | null }): boo
     return spec.setting_sources === null;
 }
 
-export function trial_container(ctx: ContainerCtx, spec: { setting_sources: string | null }): ContainerSpec & { token: string } {
-    return { image: arm_loads_package(spec) ? ctx.ac_image : ctx.base_image, token: ctx.token };
+type ImageSpec = { setting_sources: string | null; ac_layer?: 'full' };
+
+/** The image an arm runs on. An arm asking for the full layer without that image is refused, never run on the default one. */
+export function image_for(ctx: ContainerCtx, spec: ImageSpec): string {
+    if (!arm_loads_package(spec)) return ctx.base_image;
+    if (spec.ac_layer !== 'full') return ctx.ac_image;
+    if (ctx.ac_full_image === undefined) {
+        throw new Error('arm needs the full-rule-layer image: build it with bench_ab_images --with-full-layer');
+    }
+    return ctx.ac_full_image;
+}
+
+export function trial_container(ctx: ContainerCtx, spec: ImageSpec): ContainerSpec & { token: string } {
+    return { image: image_for(ctx, spec), token: ctx.token };
 }
 
 /**
@@ -170,9 +184,9 @@ export function trial_container(ctx: ContainerCtx, spec: { setting_sources: stri
  * into an errored one, so every statistic that already drops errored runs drops
  * it too, and the reason says which check failed.
  */
-export function container_fields(run: Record<string, unknown>, spec: { setting_sources: string | null }, ctx: ContainerCtx): Record<string, unknown> {
+export function container_fields(run: Record<string, unknown>, spec: ImageSpec, ctx: ContainerCtx): Record<string, unknown> {
     const check = load_check(String(run['stream'] ?? ''), arm_loads_package(spec), ctx.package_skills);
-    const image = arm_loads_package(spec) ? ctx.ac_image : ctx.base_image;
+    const image = image_for(ctx, spec);
     const base = { image, load_check: check };
     if (check.ok || run['errored'] === true) return base;
     return { ...base, errored: true, reason: `load_mismatch: ${check.reason}` };

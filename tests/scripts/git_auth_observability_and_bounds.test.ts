@@ -40,7 +40,7 @@ afterEach(() => {
 
 function ledgerFixture(session: string, target: number): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gauth-obs-'));
-    const file = path.join(root, ledgerFileFor(session));
+    const file = path.join(root, (ledgerFileFor(session) as string));
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(
         file,
@@ -68,7 +68,7 @@ describe('AC-5 — a failed grant-consumption write is observable, and the outco
 
     it('an unwritable ledger directory writes a diagnostic to stderr and still returns', () => {
         const root = ledgerFixture('sess-ro', 42);
-        const dir = path.dirname(path.join(root, ledgerFileFor('sess-ro')));
+        const dir = path.dirname(path.join(root, (ledgerFileFor('sess-ro') as string)));
         fs.chmodSync(dir, 0o500); // readable, not writable — the read succeeds, the write cannot
         // A ROOT runner ignores the mode bits entirely, so the write would
         // succeed and the diagnostic would never fire. That is an environment

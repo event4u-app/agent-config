@@ -435,7 +435,10 @@ export function buildEmission(
     if (description === null || room <= 16) {
         return { reason, additional_context: truncateBytes(head, budget) };
     }
-    return { reason, additional_context: `${lead}${truncateBytes(description, room)}"` };
+    // `"` inside the description would close the quote it sits in, and the rest
+    // would read as unquoted text. A same-width `'` keeps the byte budget exact.
+    const fenced = description.replaceAll('"', "'");
+    return { reason, additional_context: `${lead}${truncateBytes(fenced, room)}"` };
 }
 
 /** Hashed session key — mirrors `reread_guard_hook.deriveSessionKey`. */

@@ -308,6 +308,13 @@ describe('the tool and command surface', () => {
         expect(msg).toContain('process.env.NAME');
         expect(segmentVerdict('printenv')?.class).toBe('process-environment');
     });
+
+    it('the refusal never names the switch that turns the guard off', () => {
+        const r = verdictFor('Read', { file_path: '/repo/.env' });
+        const msg = denyMessage(r as NonNullable<typeof r>);
+        expect(msg).not.toContain(KILL_SWITCH);
+        expect(msg).not.toMatch(/AGENT_CONFIG_ALLOW_/);
+    });
 });
 
 describe('what the host does with the refusal', () => {

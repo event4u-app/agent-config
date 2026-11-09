@@ -8,6 +8,7 @@ import {
     CONTAINER_SYSPROMPT,
     container_argv,
     container_env,
+    image_for,
     is_quota_exhausted,
     load_check,
     quota_brake,
@@ -177,5 +178,22 @@ describe('token pool', async () => {
         expect(next_account_hint(pool, 'a')).toMatch(/--account <name> \(configured: b\)/);
         expect(next_account_hint(pool, 'a')).not.toContain('tok-');
         expect(next_account_hint([{ name: 'a', token: 'x' }], 'a')).toMatch(/no other account/);
+    });
+});
+
+describe('image_for', () => {
+    const ctx = { base_image: 'base', ac_image: 'reduced', token: TOKEN, package_skills: new Set<string>() };
+
+    it('runs a package arm on the default image and a control arm on the base image', () => {
+        expect(image_for(ctx, { setting_sources: null })).toBe('reduced');
+        expect(image_for(ctx, { setting_sources: 'project,local' })).toBe('base');
+    });
+
+    it('runs the full-layer arm on the full image', () => {
+        expect(image_for({ ...ctx, ac_full_image: 'full' }, { setting_sources: null, ac_layer: 'full' })).toBe('full');
+    });
+
+    it('refuses the full-layer arm when that image was not built, rather than running it on the default one', () => {
+        expect(() => image_for(ctx, { setting_sources: null, ac_layer: 'full' })).toThrow(/--with-full-layer/);
     });
 });

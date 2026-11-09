@@ -7,15 +7,15 @@ ruleset_version_before: 56735008
 ruleset_version_after: 56735008
 restore_by: 2026-11-15T16:41:50+01:00
 restored_at: superseded-by-owner-ruling agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md
-council_review: pending
+council_review: agents/evidence/council/bypass-2919-review-20261108.md
 ---
 <!-- evidence-type: bypass-record -->
 
 # Bypass — PR #2919, startup contracts
 
 Under the standing actor kept by `2026-10-25-standing-pull-request-bypass.md`
-(ruleset `17749383`, version `56735008`). On head `22dbf4b22e` 63 of 64 checks
-passed or were skipped; the one red, "Sync + Generate Tools Consistency", failed
+(ruleset `17749383`, version `56735008`). On head `22dbf4b22e` 65 of 66 checks
+passed or were skipped (53 passed, 12 skipped); the one red, "Sync + Generate Tools Consistency", failed
 only at the step "Kernel / governance-hook edits carry a ratification artifact".
 
 - **Why it was red:** the change edits the 28 high-consequence rules' startup
@@ -28,11 +28,19 @@ only at the step "Kernel / governance-hook edits carry a ratification artifact".
 - **Who decided:** the repository owner, in session on 2026-11-08, choosing
   owner ratification (`2026-11-08-session-start-contracts-owner-ratification.md`).
 - **Who executed:** the owner, with `gh pr merge 2919 --merge --admin`.
-- **Subject:** `64cb0bc5…`, the gated digest at the merged head. It differs from
-  the council-reviewed `2d446883…` only by `main`'s own `raise_log` entries merged
-  into `src/config/hook-bundle-budget.json`; the owner directive names both.
+- **Subject:** `64cb0bc5…`, the gated digest at the merged head; the owner
+  directive names it and the council-reviewed `2d446883…`. Between the two, the
+  only gated file that changed is `src/config/hook-bundle-budget.json`, in five
+  places: `main`'s `quota_notice_hook.ts` raise and ceiling 22,800 → 41,000
+  (#2921), `main`'s two `reference_duty.ts` raises and its new 22,000 ceiling
+  (#2926), and a `what_would_have_caught_it` field added to this branch's own
+  `layer_promotion_hook` raise entry (a CI fix; the entry's ceiling did not move).
+  Ungated files changed in the same range too: `check_startup_contracts.ts` and
+  `check_session_start_budget.ts` gained `--self-test`, `skill_linter.ts` stops
+  treating a startup-contract file as a rule (`check_startup_contracts` gates
+  those files), `check_pack_size.ts` re-pins the installer, and two tests.
 - **What the bypass did not do:** it did not ratify the change through the
   council. openai's last open points stay recorded as dissent in the owner
   directive.
-- **`council_review`:** `pending` — the after-the-fact council review of this
-  bypass has not run yet.
+- **`council_review`:** `bypass-2919-review-20261108.md` — one round, both
+  seats; the corrections above come from it.
