@@ -83,17 +83,12 @@ fresh pre-registration before it can ship.
 - [x] **1.4 Pre-model aborts settled before data.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/eval_publication.ts --> Write into
       `docs/contracts/eval-measurement-integrity.md` the convention the owner
       applied post-data on 2026-11-09: a run that ends before any model call
-      (startup-hook timeout, harness crash) is an environment failure, not a
-      trial; it is rerun up to a bound named in the pre-registration and
-      reported with its abort reason, never scored. Give it an executable half
-      beside `_lib/eval_publication.ABORT_REASONS` with a test that sees a
-      pre-model abort excluded and a post-call timeout kept.
+      is an environment failure, rerun up to a pre-registered bound and
+      reported, never scored. Executable half beside `ABORT_REASONS`, with a
+      test that excludes a pre-model abort and keeps a post-call timeout.
       verify: the contract's "Where each rule is executable" table has the row, and its test passes.
-      Done 2026-11-09: § A run that never reached the model is not a trial, and
-      `countedTrials` (receipt field `reachedModel`); six tests in
-      `tests/lib/eval_integrity.test.ts`, seen red first, and red again with the
-      predicate loosened to exclude an abort that does not say it missed the model.
-      reach exempt: `_lib/eval_publication.ts` has no importer in `src/` or `internal/` — every row of the contract's executable table is a library half today; 1.6 wires this one into the runner before 1.5 may use it.
+      Done 2026-11-09: contract section plus `countedTrials`; tests seen red first.
+      reach exempt: `_lib/eval_publication.ts` has no importer in `src/` or `internal/`; 1.6 wires this one into the runner before 1.5 may use it.
 - [ ] **1.6 Wire the rule into the runner.** `internal/bench/core/bench_ab_v2_run.ts`
       writes each run's `load_check` (`ok: false` when the stream has no
       `system/init` event); map that to `reachedModel`, rerun a pre-model abort
