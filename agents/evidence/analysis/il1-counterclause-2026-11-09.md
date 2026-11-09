@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Iron Law 1 counter-clause — measured, 2026-11-09
 
 Pre-registered in `internal/bench/corpora/honesty-PREREG.md` § Amendment
