@@ -77,7 +77,7 @@ the council split on the kernel edit (OpenAI ratified; Anthropic rejected "When
 nothing is wrong" as a universal negative and proposed "When you find no defects,
 say so."), and the owner chose to measure the rewording first (amendment (g)).
 
-- [x] **3.1** Pre-register amendment (g) and the arm `prohibitions-plus-clause-g`
+- [x] **3.1** Pre-register amendment (g) and the arm `prohibitions-plus-clause-g` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
       before any transcript exists.
       verify: `honesty-PREREG.md` § Amendment 2026-11-09 (g) is on `main` before 3.2's report.
 - [ ] **3.2** Run (g), about $1.78: `./scripts-run internal/bench/core/bench_honesty_run
@@ -99,7 +99,7 @@ say so."), and the owner chose to measure the rewording first (amendment (g)).
       then `task sync`, `task generate-tools`, re-anchor the kernel-prefix baseline,
       write `agents/evidence/ratifications/<slug>.md` via `ratification_header`, its
       own PR, at least 24 h after the previous kernel merge.
-      verify: `check_kernel_edit_ratified` passes on the PR.
+      verify: `./scripts-run src/scripts/check_kernel_edit_ratified` -> 0
       Note: the worktree `agent-config-wt-cbm` (branch `feat/il1-counterclause-kernel`)
       holds the (f) line and its regenerated projections, uncommitted. It is
       superseded by this phase; discard it rather than ship it.
