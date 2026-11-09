@@ -267,7 +267,7 @@ describe("carrier — the pre-push hook body", () => {
     expect(body).toMatch(/-f src\/scripts\/check_installed_hooks_fresh\.ts/);
   });
 
-  it("runs AFTER base freshness and before preflight", () => {
+  it("runs AFTER base freshness and before the CI mirror", () => {
     // Being behind a base that moved the installer is the commonest cause of a
     // mismatch, and its repair is to MERGE. Base freshness exits first, so that
     // contributor is never handed a re-install that would write the OLDER hook
@@ -275,7 +275,7 @@ describe("carrier — the pre-push hook body", () => {
     const body = rendered();
     const hookFresh = body.indexOf("Installed-hook freshness");
     const baseFresh = body.indexOf("Base freshness");
-    const preflight = body.indexOf("Preflight — the CI-only");
+    const preflight = body.indexOf("CI mirror — replaying");
     expect(baseFresh).toBeGreaterThan(-1);
     expect(hookFresh).toBeGreaterThan(baseFresh);
     expect(hookFresh).toBeLessThan(preflight);

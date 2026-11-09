@@ -83,8 +83,8 @@ echo "→  installing git hooks into $HOOKS_DIR" >&2
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
-# Pre-push hook: mirror the CI "Sync + Generate Tools Consistency" gate LOCALLY
-# so derived-output drift is caught BEFORE push, not in remote CI.
+# Pre-push hook: replay the CI gate jobs LOCALLY (src/scripts/ci_mirror.ts)
+# so every failure CI would report is caught BEFORE push, all at once.
 #
 # THIS HOOK REFUSES. IT NEVER MERGES, AND NO ONE MAY "IMPROVE" IT INTO ONE.
 # A merge inside pre-push rewrites the working tree at the exact moment the
@@ -108,18 +108,11 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # default is merged FIRST, so a conflict surfaces against the broader base
 # where it is cheapest to abandon.
 #
-# History: the remote "Consistency" check failed in a large share of PRs because
-# the old hook only verified dist sync + the COMMAND count — it missed
-# guideline/skill/rule count drift and the generate-tools / router / corpus
-# outputs (e.g. a new guideline bumping the count in README + docs/architecture).
-# `task consistency` is the EXACT CI mirror (sync-check + sync + generate-tools
-# + compile-router + compile-corpus + `git diff --quiet`),
-# so any derived-output drift blocks the push here. Runtime ~10s: three
-# consecutive timed runs on 2026-08-30 measured 9.79s / 10.19s / 10.26s
-# (road-to-agent-turnaround 3.2). The header said "~15-40s" until then, which
-# over-stated this half of the hook by 1.5-4x while the hook AS A WHOLE was far
-# more expensive than either number — see the preflight block below. Still
-# cheaper than a red CI run and a fixup re-push.
+# History: the remote "Consistency" check failed in a large share of PRs, and
+# the hook answered with growing subsets of CI — `task consistency`, then the
+# 22-gate `task preflight`, then a changed-files typecheck. Each subset left the
+# rest of CI unpredicted. The CI MIRROR block below replays the CI jobs
+# themselves instead; see its comment for what it reads and what it costs.
 
 # A delete-only push has no content to gate, so every check below is answering
 # a question nobody asked. Measured 2026-08-18 during the 14.0.0 release:
@@ -187,8 +180,8 @@ fail=0
 # or both, and the contributor pays for it after the work looks finished.
 #
 # It runs FIRST because everything after it is invalidated by the merge that has
-# to happen anyway: `task consistency` regenerates derived files against the
-# stale base, the merge then re-dirties them, and the ~10s is spent twice. And
+# to happen anyway: the CI mirror would judge the stale base, the merge then
+# changes the tree, and the mirror's minutes are spent twice. And
 # it EXITS instead of accumulating into `fail`, for the same reason — there is
 # no useful second finding to collect from a tree that is about to move.
 #
@@ -339,87 +332,53 @@ else
     # Advisory in both cases: nothing here sets fail=1 or exits.
 fi
 
-if ! command -v task >/dev/null 2>&1; then
-    echo "⚠️  'task' (go-task) not found — cannot run the consistency gate locally."
-    echo "    Install it (https://taskfile.dev) so pre-push can mirror the CI check;"
-    echo "    skipping the consistency check for this push."
-else
-    echo "🔍 Consistency — mirroring the CI 'Sync + Generate Tools Consistency' gate..."
-    if ! task consistency; then
-        echo "❌  Derived outputs drifted (counts / dist / generated tool trees / router / corpus)."
-        echo "    'task consistency' just regenerated them into your working tree —"
-        echo "    review + 'git add' the changes (or run 'task consistency-fix'), commit, then re-push."
-        fail=1
-    fi
-fi
-
-# road-to-local-ci-trust Phase 2: the CI-only repo-content gates, as one task.
-# Deliberately placed AFTER the consistency block above — `task consistency`
-# runs `task sync`, which generates the `.augment/` projection. Several
-# preflight gates read that tree, so on a FRESH worktree (this repo's standard
-# workflow) running preflight first would fail with "produced by regeneration
-# but absent before" — red for a reason the contributor did not cause, which is
-# exactly the anti-pattern this gate set exists to avoid.
-#
-# BUDGET: measured 36.05s on 2026-08-30 (road-to-agent-turnaround 3.2, a clean
-# exit-0 run), against the 25s `pre_push_budget_seconds` ceiling in
-# src/config/ci-local-parity.yml. That is 44% OVER, and the header claimed 15s
-# until this measurement. The ceiling's own comment calls it "a real budget, not
-# a wish" — and nothing measures the hook, so the gate set grew past it with no
-# signal. Recorded rather than fixed here: narrowing preflight to the pushed
-# paths is one edit away from turning a push-blocking mirror into a partial one,
-# which is how drift reaches CI instead of the developer.
-#
-# The hook's local cost is therefore ~46s (10s consistency + 36s preflight),
-# which is what the 67s median `git push` in the ten-session corpus is mostly
-# made of. `check_enforcement_coverage` (30.7s) stays out of preflight by design.
-echo "🔍 Preflight — the CI-only repo-content gates..."
-if [ "${AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT:-}" = "1" ]; then
-    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT=1"
-elif ! command -v task >/dev/null 2>&1; then
-    echo "⚠️  'task' not found — skipping preflight for this push."
-elif ! task preflight; then
-    echo "❌  Preflight failed. These gates run in CI too, so pushing now buys a"
-    echo "    red run and a fixup re-push. Fix the failures above, or"
-    echo "    AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT=1 for a genuine WIP push."
-    exit 1
-fi
-
 echo "🔍 Checking for leftover conflict markers / unmerged paths..."
 if ! ./scripts-run src/scripts/check_no_conflict_markers --quiet; then
     echo "❌  Conflict markers or unmerged paths present. Resolve them (e.g. 'git checkout HEAD -- <file>' or finish the merge), then re-push."
-    fail=1
+    echo "   Push blocked."
+    exit 1
 fi
 
-# Changed-files static pass (typecheck + lint) — the deterministic backstop to
-# the behavioural verify-before-complete rule (#818). Catches the compile/lint
-# errors that reach remote CI "Static Checks" (e.g. TS18048). Runs only when
-# the push touches .ts, so docs-only pushes stay fast. Skip a genuine WIP push
-# with AGENT_CONFIG_SKIP_PREPUSH_STATIC=1 (the agent cannot use --no-verify).
-echo "🔍 Static check on changed TypeScript (typecheck + lint)..."
-if [ "${AGENT_CONFIG_SKIP_PREPUSH_STATIC:-}" = "1" ]; then
-    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_STATIC=1"
-else
-    base="$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD~1)"
-    changed_ts="$(git diff --name-only --diff-filter=d "$base"...HEAD -- '*.ts' 2>/dev/null || true)"
-    if [ -n "$changed_ts" ]; then
-        if ! npx eslint $changed_ts; then
-            echo "❌  ESLint failed on changed TypeScript. Fix before pushing (or AGENT_CONFIG_SKIP_PREPUSH_STATIC=1 for a WIP push)."
-            fail=1
-        fi
-        if ! npm run --silent typecheck; then
-            echo "❌  Typecheck (tsc) failed — this is the class of error remote CI 'Static Checks' catches (#818). Fix before pushing."
-            fail=1
-        fi
-    else
-        echo "⏭️  no changed .ts vs origin/main — skipping."
+# CI MIRROR — the CI gate jobs themselves, replayed on this machine.
+#
+# This replaced three hand-kept subsets: `task consistency`, the 22-gate
+# `task preflight`, and a changed-files typecheck. CI ran ~380 gates, so a
+# green hook predicted nothing, and each CI job stopped at its first red step,
+# so every fix-push revealed the next red one. PR #2949 took four pushes for
+# four failures that were all decidable here.
+#
+# `ci_mirror` reads the steps of the jobs named in src/config/ci-mirror.json
+# straight from the workflow files — there is no second list to drift — runs
+# them in throwaway worktrees of HEAD (the working tree is never touched), and
+# reports EVERY failure at once. A refused ratification record is reported as
+# an owner decision and does not block the push: the author cannot fix it, and
+# CI keeps the step red until the owner decides.
+#
+# Cost: measured in src/config/ci-local-parity.yml (`pre_push_budget_seconds`).
+# Emergency bypass, printed on every use: AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1.
+for legacy in AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT AGENT_CONFIG_SKIP_PREPUSH_STATIC; do
+    if [ "${!legacy:-}" = "1" ]; then
+        echo "⚠️  $legacy no longer skips anything: the CI mirror replaced preflight and"
+        echo "    the static pass. A refused ratification no longer needs a bypass."
     fi
+done
+echo "🔍 CI mirror — replaying the CI gate jobs locally (src/config/ci-mirror.json)..."
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_MIRROR:-}" = "1" ]; then
+    echo "⚠️  CI mirror SKIPPED via AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 — this push is unverified,"
+    echo "    and CI is its first gate."
+elif ! command -v task >/dev/null 2>&1; then
+    echo "❌  'task' (go-task) not found. The CI jobs call it, so they cannot be replayed."
+    echo "    Install it (https://taskfile.dev), or AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 for an"
+    echo "    emergency push."
+    fail=1
+elif ! ./scripts-run src/scripts/ci_mirror; then
+    echo "❌  These are the failures CI would report on this push. Fix them all, commit, push again."
+    fail=1
 fi
 
 if [ $fail -ne 0 ]; then
     echo ""
     echo "   Push blocked — fix the failures above and re-push."
-    echo "   Bypass for a WIP push:  git push --no-verify"
     exit 1
 fi
 EOF
@@ -442,6 +401,20 @@ cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 # + .claude-plugin/skills/), AND verify
 # agents/roadmaps-progress.md is in sync with the current state of
 # agents/roadmaps/ (roadmap-progress-sync Iron Law).
+
+# A dashboard this repository ignores never enters a commit. It is a local
+# view, and CI refuses it ("Verify the roadmap dashboard is not committed"),
+# so a staged copy only buys a red run. Staging an ignored file takes
+# `git add -f`, which is exactly what the old "then stage it" advice below
+# produced on every regeneration.
+if git diff --cached --name-only --diff-filter=AM | grep -qx 'agents/roadmaps-progress.md' \
+    && git check-ignore -q --no-index agents/roadmaps-progress.md; then
+    echo ""
+    echo "❌  Commit blocked — agents/roadmaps-progress.md is staged, but this repository"
+    echo "   does not commit the dashboard (it is gitignored; CI refuses it)."
+    echo "       git rm --cached agents/roadmaps-progress.md"
+    exit 1
+fi
 
 ./scripts-run src/scripts/lint_marketplace
 status=$?
@@ -470,8 +443,9 @@ if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)';
         echo ""
         echo "❌  Commit blocked — the roadmap dashboard gate failed."
         echo "   The cause is printed above. The three it reports:"
-        echo "     · dashboard stale      → './agent-config roadmap:progress',"
-        echo "                               then stage agents/roadmaps-progress.md"
+        echo "     · dashboard stale      → './agent-config roadmap:progress'. Stage the"
+        echo "                               dashboard only where it is tracked; this"
+        echo "                               repository ignores it, so never stage it here"
         echo "     · Iron Law 3           → unresolved '[~]' deferred items. Surface"
         echo "                               them and ask the user; NOT the agent's"
         echo "                               to clear (roadmap-management § 4b)"
