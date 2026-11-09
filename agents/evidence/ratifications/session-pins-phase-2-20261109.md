@@ -32,6 +32,17 @@ Not re-reviewed after that fix: step 2.5 of the pins roadmap stays open for a
 further round. Merged on the owner's word (2026-11-09) per ADR-282, as with
 `agent-switch-hardening-20261108`.
 
+**Expected gain.** A user's `pin:` constraints survive compaction and reach
+subagents, where today they are lost silently at the first compaction.
+
+**Risk.** Up to three extra lines per compaction (6,144 B row); a hook that dies
+holding the pins lock blocks that session's pins for the rest of it, reported
+on every attempt. The language restore changes for every session: an
+untakeable pin-lost marker is reported, not acted on.
+
+**Rollback.** `AGENT_CONFIG_NO_SESSION_PINS=1` disables the pins at runtime;
+reverting the merge commit restores the previous budgets and hooks.
+
 The seats answered in the PR-review vocabulary (`REFUSED`, `REQUEST_CHANGES`),
 which the record writer does not read as stance lines, so this record is typed
 and its header produced by `ratification_header`; `REQUEST_CHANGES` is recorded
