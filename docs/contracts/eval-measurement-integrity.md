@@ -83,6 +83,10 @@ any other first attempt. A case whose every attempt within the bound missed
 the model is listed as an environment failure, so the denominator stays
 visible.
 
+The A/B runner applies it on container sweeps: `bench_ab_v2_run --isolation
+container --pre-model-reruns N`, where `N` is the bound the pre-registration
+named (default `0`: no rerun, the trial is still marked an environment failure).
+
 ## The non-inference section
 
 **Every measurement artifact carries a section enumerating the inferences its
