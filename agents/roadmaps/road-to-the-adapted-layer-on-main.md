@@ -22,6 +22,12 @@ relates:
 > **Source:** owner decision of 2026-11-09 recorded in
 > `agents/evidence/metrics/ask-scope-vs-full-layer-result-20261109.md`
 > § Owner decision, 2026-11-09 (merged in PR #2946).
+>
+> **Arrivals:** 1 — `inbox-2026-11-wn` (2026-11-09): an external review asks
+> that the release rest on a fresh pre-registered run rather than on the
+> post-data reading of the third look, with pre-model aborts settled in the
+> protocol beforehand, a padded arm, and Haiku plus Sonnet 5.5 (→ 1.4, 1.5,
+> blocker options (f) and (g)).
 
 ## Goal
 
@@ -66,6 +72,22 @@ fresh pre-registration before it can ship.
       elsewhere, raise the budget, or do not ship), each marked whether it
       keeps the benchmarked wording.
       verify: the decision is recorded in the result file's owner section.
+- [ ] **1.4 Pre-model aborts settled before data.** Write into
+      `docs/contracts/eval-measurement-integrity.md` the convention the owner
+      applied post-data on 2026-11-09: a run that ends before any model call
+      (startup-hook timeout, harness crash) is an environment failure, not a
+      trial; it is rerun up to a bound named in the pre-registration and
+      reported with its abort reason, never scored. Give it an executable half
+      beside `_lib/eval_publication.ABORT_REASONS` with a test that sees a
+      pre-model abort excluded and a post-call timeout kept.
+      verify: the contract's "Where each rule is executable" table has the row, and its test passes.
+- [ ] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- blocked-by: adapted-layer-gate-decisions -->
+      Pre-register, before any transcript, a run on fresh seeds (and unseen
+      tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
+      and Sonnet 5.5, with a third arm: the reduced layer padded with neutral
+      text to the full layer's length, so content loss and first-turn size are
+      separated. Rough cost $20–45 per model.
+      verify: the pre-registration is on `main` before the run's report, and the report prints a verdict per model and per arm.
 
 ## Phase 2 — land it
 
@@ -90,7 +112,7 @@ fresh pre-registration before it can ship.
 - **Class:** 3 — human-only. A ship decision on a benchmarked default is the owner's; steps 1.1 and 1.2 prepare the options and are agent work.
 - **Owner:** the repository owner.
 - **Blocks:** 1.3, and through it Phase 2.
-- **What to do:** run `./scripts-run src/scripts/check_startup_contracts` and `./scripts-run src/scripts/check_session_start_budget` on a branch carrying `ced3e99b3b` and `51add0fc53`, then choose one of: (a) fix the check, (b) fix the contract text and re-measure, (c) trim 1,544 chars elsewhere, (d) raise the budget, (e) do not ship.
+- **What to do:** run `./scripts-run src/scripts/check_startup_contracts` and `./scripts-run src/scripts/check_session_start_budget` on a branch carrying `ced3e99b3b` and `51add0fc53`, then choose one of: (a) fix the check, (b) fix the contract text and re-measure, (c) trim 1,544 chars elsewhere, (d) raise the budget, (e) do not ship (the reduced form stays), (f) restore the full layer for the release while the adapted form is pursued, (g) ship only after the 1.5 fresh confirmation. (f) and (g) combine with (a)-(d).
 - **Resolved when:** the owner section of the result file names the chosen
   path for both gates.
 - **Recommendation:** run 1.1 and 1.2 first; a decision without the diagnosis
@@ -104,7 +126,8 @@ fresh pre-registration before it can ship.
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A gate fix that changes the measured text | product | Trimming or rewording the two contracts to pass a gate ships text that was never benchmarked | The decision rule under Phase 1: any wording change is a new variant and is re-measured first | Phase 1 — clear the two gates |
-| 2 | A post-data reading taken as a clean pass | product | NON-INFERIOR rests on the owner's exclusion of two pre-model timeouts, not on the frozen text alone | The result file states the reading as post-data; the landing PR cites it | Phase 2 — land it |
+| 2 | A post-data reading taken as a clean pass | product | NON-INFERIOR rests on the owner's exclusion of two pre-model timeouts, not on the frozen text alone | The result file states the reading as post-data; the landing PR cites it; 1.4 freezes the abort rule for every later run; option (g) offers a fresh confirmation | Phase 2 — land it |
+| 3 | A form fitted to eight tasks | product | Three looks on the same eight tasks, each built after the previous result was known, can tune the form to that corpus | 1.5 runs on fresh seeds and unseen tasks, with a padded arm that separates content loss from first-turn size, on two models | Phase 1 — clear the two gates |
 
 ## Acceptance Criteria
 

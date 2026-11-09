@@ -62,6 +62,17 @@ undecided ones — so nothing is fixed or dismissed on a single-run number.
       > note: done 2026-11-08 — not the host: 2.1.311 and 2.1.316 both 0/9 and 0/6,
       same direct-handling traces (`routing-host-cause-13a-20261108.md`). Left open:
       today's catalogue vs the original prompts; 1.3b chooses with that unresolved.
+- [ ] **1.3c Reproduce the baseline cell before choosing a mechanism.** Added
+      2026-11-09 (round `inbox-2026-11-wn`, an external review asking that the
+      cause be fixed before 1.3b). 1.2 (frozen catalogue, today's host) and
+      1.3a (two hosts, today's catalogue) each ruled one factor out, yet the
+      2026-10-27 baseline fired. Run the exact baseline triple — frozen
+      catalogue `1c967b17…`, the original prompts, host 2.1.311 — at three runs
+      per unit for `react-shadcn-ui` and `project-analysis-core`. Fires →
+      catalogue and host interact, or the prompt set is the cause; does not
+      fire → the baseline itself does not reproduce and the 2026-10-27 reading
+      is recorded as unreproducible before 1.3b chooses.
+      verify: the artefact names host, catalogue sha and prompt set, and 1.3b's note cites its verdict.
 - [ ] **1.3b Pilot one mechanism, pre-registered.** One delivery mechanism for the
       two skills' stated value, chosen after 1.3a, measured on held-out requests
       with the assessment's rubric, rollback stated before the run.
