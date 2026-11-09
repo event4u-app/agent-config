@@ -403,7 +403,7 @@ function _sleep(ms: number): void {
  */
 function _acquire_lock(
   lock_path: string,
-  options: { blocking?: boolean } = {},
+  options: { blocking?: boolean; strict?: boolean } = {},
 ): number | null {
   const blocking = options.blocking ?? true;
   // Open (and keep) the sentinel lock file with O_CREAT | O_RDWR — never
@@ -431,7 +431,9 @@ function _acquire_lock(
         // without the companion guard rather than wedge the never-block hook
         // contract. Pre-existing behaviour, deliberately retained: the failure
         // mode here is a lost guard, and the alternative is a lost write.
-        return fd;
+        // `strict` callers (session pins) prefer the reported failure: a write
+        // without exclusion can silently drop a user's constraint.
+        return options.strict === true ? give_up() : fd;
       }
       // EEXIST: somebody holds it. Decide from the COMPANION, never from how
       // long we have waited.
@@ -439,19 +441,32 @@ function _acquire_lock(
       try {
         age_ms = Date.now() - fs.statSync(held).mtimeMs;
       } catch {
-        // Vanished between the open and the stat — the holder just released.
-        // Retry at once: this is real progress, not a spin.
+        // Usually vanished between the open and the stat — the holder just
+        // released. But a guard that persistently refuses both creation and
+        // stat (a dangling symlink, a denied directory) would spin here
+        // forever, so this retry is paced and bounded like every other — and a
+        // non-blocking caller does not wait for it at all.
+        if (!blocking) return give_up();
+        _sleep(LOCK_SPIN_SLEEP_MS);
+        if (Date.now() - start > LOCK_ACQUIRE_DEADLINE_MS) return give_up();
         continue;
       }
       if (age_ms >= LOCK_STALE_MS) {
         // A genuine staleness check: the companion itself has been untouched
         // for longer than any live critical section here can last. Removing it
         // is progress, so the immediate retry is bounded.
+        let removed = true;
         try {
           fs.rmSync(held, { force: true });
         } catch {
-          /* a peer reclaimed it first — the retry below sees the new one */
+          // A peer reclaimed it first (the retry sees the new one), or it cannot
+          // be removed at all — then retrying at once would spin forever.
+          removed = false;
         }
+        if (removed) continue;
+        if (!blocking) return give_up();
+        _sleep(LOCK_SPIN_SLEEP_MS);
+        if (Date.now() - start > LOCK_ACQUIRE_DEADLINE_MS) return give_up();
         continue;
       }
       // A LIVE peer holds it.
@@ -1044,7 +1059,7 @@ export function owns_session_state(state: unknown, session_id: string): boolean 
 export function update_text_under_lock(
   target: string,
   transform: (loaded: string | null) => string | null,
-  options: { blocking?: boolean } = {},
+  options: { blocking?: boolean; strict?: boolean } = {},
 ): LockedUpdateResult {
   if (is_replay_mode()) return "failed";
   const targetPath = path.resolve(target);
@@ -1067,7 +1082,7 @@ export function update_text_under_lock(
   const lock_path = _target_lock_path(targetPath);
   let fd: number | null;
   try {
-    fd = _acquire_lock(lock_path, { blocking: options.blocking ?? true });
+    fd = _acquire_lock(lock_path, { blocking: options.blocking ?? true, strict: options.strict === true });
   } catch {
     return "failed";
   }
