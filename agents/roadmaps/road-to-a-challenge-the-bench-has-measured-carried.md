@@ -87,20 +87,23 @@ say so."), and the owner chose to measure the rewording first (amendment (g)).
 - [x] **3.1** Pre-register amendment (g) and the arm `prohibitions-plus-clause-g` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
       before any transcript exists.
       verify: `honesty-PREREG.md` § Amendment 2026-11-09 (g) is on `main` before 3.2's report.
-- [ ] **3.2** Run (g), about $1.78: `./scripts-run internal/bench/core/bench_honesty_run
+- [x] **3.2** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/evidence/analysis/il1-counterclause-g-2026-11-09.md --> Run (g), about $1.78: `./scripts-run internal/bench/core/bench_honesty_run
       --sets clean-control,seeded-defect --arms baseline-off,prohibitions-only,prohibitions-plus-clause-g
       --samples 3 --out internal/bench/reports/honesty-il1-clause-g-2026-11-NN.jsonl --confirm-spend`,
       then score it with `bench_honesty_score --input <that file>`, beside the run.
       verify: the report prints `guardrail[prohibitions-plus-clause-g]`.
-- [ ] **3.3** Record the verdict under (g) (Clears / Reduces / Null) in
+      Done 2026-11-09: `honesty-il1-clause-g-2026-11-09.jsonl`, $2.25; the report prints `guardrail[prohibitions-plus-clause-g]: excess=-28.89pp tripped=false`.
+- [x] **3.3** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/evidence/analysis/il1-counterclause-g-2026-11-09.md --> Record the verdict under (g) (Clears / Reduces / Null) in
       `agents/evidence/analysis/`, counts in findings per 100 transcripts, with the
       fluke provision applied if the arm trips.
       verify: the evidence file names the run, the three arms and the verdict.
-- [ ] **3.4** Clears or Reduces only: put the kernel edit with the (g) line to the
+      Done 2026-11-09: **Clears** — 59 invented findings against 85 (baseline) and 113 (shipped), 0/45 missed (`agents/evidence/analysis/il1-counterclause-g-2026-11-09.md`).
+- [x] **3.4** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/evidence/analysis/il1-counterclause-g-2026-11-09.md --> Clears or Reduces only: put the kernel edit with the (g) line to the
       council in one neutral round (`council_cli run <question> --input-mode prompt
       --prompt-mode pr`), prompt recorded beside the verdict. A split goes to the
       owner. Null: no kernel PR; shipping the (f) line instead is an owner decision.
       verify: the council response names one verdict per seat.
+      Done 2026-11-09: both seats APPROVE; the named change is to the PR's measurement note, not the line — state that (f) and (g) ran unpaired and cannot be ranked, and that 0/45 is 15 artifacts × 3 samples (`agents/evidence/council/il1-counterclause-g-kernel-20261109.{question,response}.md`).
 - [ ] **3.5** Kernel PR, on a ratifying verdict: the owner writes the (g) line into
       `src/rules/direct-answers.md` § Iron Law 1 (the agent is denied that write);
       then `task sync`, `task generate-tools`, re-anchor the kernel-prefix baseline,
