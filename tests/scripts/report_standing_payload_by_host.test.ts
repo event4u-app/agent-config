@@ -131,7 +131,7 @@ describe('3.1 — a single-file figure comes from the emitter or from a tracked 
     // single-file row may name an untracked path as the file it reads.
     it('no row reads an untracked path for its figure', () => {
         const tracked = new Set(
-            execFileSync('git', ['ls-files'], { cwd: process.cwd(), encoding: 'utf-8' })
+            execFileSync('git', ['ls-files'], { cwd: process.cwd(), encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 })
                 .split('\n')
                 .filter((l) => l !== ''),
         );

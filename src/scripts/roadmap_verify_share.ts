@@ -196,7 +196,7 @@ export function runReport(rootAbs: string, rootLabel: string, opts: RunOptions):
 
 /** Tracked files under the repo, or `null` when git cannot answer. */
 function trackedFiles(): Set<string> | null {
-    const res = spawnSync('git', ['ls-files', '-z'], { cwd: REPO_ROOT, encoding: 'utf-8', shell: false });
+    const res = spawnSync('git', ['ls-files', '-z'], { cwd: REPO_ROOT, encoding: 'utf-8', shell: false, maxBuffer: 256 * 1024 * 1024 });
     if (res.status !== 0) return null;
     return new Set(
         res.stdout
