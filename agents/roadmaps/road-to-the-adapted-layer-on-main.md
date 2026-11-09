@@ -57,44 +57,30 @@ wording of the two contracts byte-identical needs no new measurement. A fix
 that changes that wording is a new variant and needs a re-measure under a
 fresh pre-registration before it can ship.
 
-- [x] **1.1 Diagnose `check_startup_contracts`.** Cherry-pick the two commits
+- [x] **1.1 Diagnose `check_startup_contracts`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Cherry-pick the two commits
       onto a branch from main, run
       `./scripts-run src/scripts/check_startup_contracts`, and record which
       assertion fails and why.
       verify: the failing assertion and its cause are written under this step.
-      Done 2026-11-09 on `main@14a2d4f134` + both commits: two failures, one
-      cause. `downstream-changes: carries a startup contract or an audit entry
-      but is not a consequence-class or safety-floor rule`, and the same for
-      `think-before-action`. `contractProblems` (`check_startup_contracts.ts`
-      ~95) refuses a contract on any rule outside `requiredRules`, which is the
-      consequence class plus `tier: safety-floor`; both rules sit in the class's
-      `excluded` list (`src/config/rule-consequence-class.json`, "a missed
-      caller is … recoverable", "analysis discipline"). The check has no notion
-      of an optional contract. Once that assertion passes, the same function
-      will also ask for a clause audit for each rule in
-      `src/config/startup-contract-clauses.json`, which the payload does not
-      carry. The contract wording itself is not what fails.
-- [x] **1.2 Find the 1,544 chars.** Run `check_session_start_budget` on the
+      Done 2026-11-09: both rules are refused as "not a consequence-class or
+      safety-floor rule" — the check has no optional contract, and a clause
+      audit is missing next. The wording is not what fails
+      (`agents/evidence/analysis/adapted-layer-gate-diagnosis-2026-11-09.md`).
+- [x] **1.2 Find the 1,544 chars.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run `check_session_start_budget` on the
       cherry-picked branch and list candidates that cut ≥1,544 chars outside
       the two benchmarked contracts (other start-layer text), or the cost of
       raising the budget.
       verify: a table of candidates with char deltas under this step.
-      Done 2026-11-09: main 79,845, adapted 81,544 (+1,699; 101 unconditional
-      files, layer thinned, carrier reached). Read from a default install into
-      a scratch HOME.
-
-      | Candidate | Δ chars | Keeps the two contracts byte-identical | Note |
-      |---|---:|---|---|
-      | Shorten each installed file's `source_path:` by dropping the `dist/agent-src/rules/` prefix | −2,200 | yes | installer format change; every consumer of `source_path` re-read first |
-      | Install the three pack floors (finance 1,819, strategy 1,884, legal 1,776) only when their pack is installed | −5,479 | yes | changes when a safety floor is delivered; the benchmark arms all carried them |
-      | Drop the per-file frontmatter block entirely (9,624 across 101 files) | up to −9,624 | yes | `package:` is how uninstall finds its files; not without a replacement marker |
-      | Raise the budget to 82,000 | +2,000 allowance | yes | host-limit allowance falls from 38,456 to 36,456 chars |
+      Done 2026-11-09: main 79,845, adapted 81,544. Candidates (Δ chars): the
+      `source_path:` prefix −2,200; pack floors only with their pack −5,479;
+      frontmatter block up to −9,624; budget raise to 82,000. Table and notes
+      in the same evidence file.
 - [ ] **1.3 Owner decision on both gates.** <!-- blocked-by: adapted-layer-gate-decisions -->
       Present 1.1 and 1.2 as options (fix the check, fix the text, trim
       elsewhere, raise the budget, or do not ship), each marked whether it
       keeps the benchmarked wording.
       verify: the decision is recorded in the result file's owner section.
-- [x] **1.4 Pre-model aborts settled before data.** Write into
+- [x] **1.4 Pre-model aborts settled before data.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/eval_publication.ts --> Write into
       `docs/contracts/eval-measurement-integrity.md` the convention the owner
       applied post-data on 2026-11-09: a run that ends before any model call
       (startup-hook timeout, harness crash) is an environment failure, not a
