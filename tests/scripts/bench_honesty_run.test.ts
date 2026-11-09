@@ -234,8 +234,8 @@ describe('main — dry run, estimate and the spend guard', () => {
 });
 
 describe('arm surfaces (prereg amendment 2026-10-27, step 1.6)', () => {
-    it('lists eight arms, each with a stated content line', () => {
-        expect(ARMS).toHaveLength(8);
+    it('lists nine arms, each with a stated content line', () => {
+        expect(ARMS).toHaveLength(9);
         for (const arm of ARMS) expect(ARM_SPECS[arm].contents.length).toBeGreaterThan(0);
     });
 
@@ -245,6 +245,15 @@ describe('arm surfaces (prereg amendment 2026-10-27, step 1.6)', () => {
         expect(plus.startsWith(pro)).toBe(true);
         expect(plus.slice(pro.length)).toContain('When nothing is wrong, say so. Never invent a defect to look critical.');
         expect(plus).not.toContain('## Iron Law 2');
+    });
+
+    it('prohibitions-plus-clause-g is prohibitions-only followed by the reworded line only (amendment g)', () => {
+        const pro = assembleSurface('prohibitions-only');
+        const g = assembleSurface('prohibitions-plus-clause-g');
+        expect(g.startsWith(pro)).toBe(true);
+        expect(g.slice(pro.length)).toContain('When you find no defects, say so. Never invent a defect to look critical.');
+        expect(g.slice(pro.length)).not.toContain('When nothing is wrong');
+        expect(g).not.toContain('## Iron Law 2');
     });
 
     it('prohibitions-only carries Iron Law 1 only; evidence-rules carries Iron Law 2 and not Iron Law 1', () => {
