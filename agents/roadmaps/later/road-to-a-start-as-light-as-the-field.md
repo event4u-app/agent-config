@@ -56,6 +56,7 @@ named in the same set: removing before proving.
       later carrier, and measure that form first. This is the operator's
       standing order for this set: delete only as a last resort.
       verify: every removal record names the adapted variant it measured.
+      Note 2026-11-09: first adapted variant measured (contract stubs for two rules): INCONCLUSIVE by the per-task veto, see the blocker status. No removal was recorded on it.
 
 ## Blockers
 
@@ -63,7 +64,7 @@ named in the same set: removing before proving.
 
 <!-- asked: 2026-11-08 | record: agents/roadmaps/later/road-to-a-setup-that-decides-itself-carried.md -->
 
-- **Status:** open, raised 2026-11-08 by round inbox-2026-11-zc. 2026-11-09: the comparison has a result file, `agents/evidence/metrics/full-vs-reduced-layer-result-20261109.md`. It reads **INFERIOR**, so by 1.1 a further cut is off the table: the loss has to be traced first. The blocker stays open until the owner decides how the inferior result is handled (keep the reduced default and trace the loss, or restore full).
+- **Status:** open, raised 2026-11-08 by round inbox-2026-11-zc. 2026-11-09: the comparison has a result file, `agents/evidence/metrics/full-vs-reduced-layer-result-20261109.md`. It reads **INFERIOR**, so by 1.1 a further cut is off the table: the loss has to be traced first. The blocker stays open until the owner decides how the inferior result is handled (keep the reduced default and trace the loss, or restore full). 2026-11-09, later: the owner chose to adapt first (1.3). The adapted form (startup contracts for `downstream-changes` and `think-before-action`) ran under `agents/evidence/preregistration/adapted-vs-full-layer-protocol-20261109.md` and reads **INCONCLUSIVE** (`agents/evidence/metrics/adapted-vs-full-layer-result-20261109.md`): primary LB −0.066 clears the −0.10 margin, but `trapE-scope-laravel-01` meets the per-task veto at Σd −5.0, where four adapted runs asked which currency to pass instead of updating the caller. The blocker stays open; the owner decides between further tracing and restoring full.
 - **Class:** 1. The condition is a result another file produces; no decision is owed here.
 - **Owner:** `road-to-a-setup-that-decides-itself-carried` step 5.2.
 - **Run:** `ls agents/evidence/metrics/ | grep -i full-vs-reduced`. The blocker clears when a result file exists.
