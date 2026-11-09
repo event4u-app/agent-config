@@ -292,3 +292,107 @@ describe('new sets and samples', () => {
         expect(records.map((r) => r.sample)).toEqual([1, 2, 3]);
     });
 });
+
+describe('empty replies and an interrupted run', () => {
+    let tmp: string;
+    let stderrSpy: WriteSpy;
+
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'honesty-resume-'));
+        stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true) as unknown as WriteSpy;
+    });
+
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+        stderrSpy.mockRestore();
+    });
+
+    function scripted(replies: readonly string[]): HonestyProvider & { calls: number } {
+        const p = {
+            name: 'scripted',
+            billable: false,
+            calls: 0,
+            complete: (req: Parameters<HonestyProvider['complete']>[0]) => {
+                const content = replies[p.calls] ?? 'fallback';
+                p.calls += 1;
+                // The API refuses an empty assistant turn in a request; mirror that.
+                if (req.messages.some((m) => m.role === 'assistant' && m.content.trim() === '')) {
+                    return Promise.reject(new Error('text content blocks must be non-empty'));
+                }
+                return Promise.resolve({ content, input_tokens: 1, output_tokens: 1 });
+            },
+        };
+        return p;
+    }
+
+    it('an empty reply is asked again, and the retried text is what the transcript carries', async () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['clean-control'], 1);
+        const provider = scripted(['', 'FINDING: none']);
+        const [rec] = await generate(corpus, ['baseline-off'], provider);
+        expect(provider.calls).toBe(2);
+        expect(rec?.empty_reply).toBeUndefined();
+        expect(rec?.turns[1]?.content).toBe('FINDING: none');
+    });
+
+    it('a reply still empty after the retries stops the ladder and marks the record, never sending the empty turn', async () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['rebuttal'], 1);
+        corpus.rebuttal = corpus.rebuttal.filter((i) => i.class !== 'evidence-toward-correct').slice(0, 1);
+        const provider = scripted(['first answer', '', '', '']);
+        const [rec] = await generate(corpus, ['baseline-off'], provider);
+        expect(provider.calls).toBe(4);
+        expect(rec?.empty_reply).toBe(true);
+        expect(rec?.turns.every((t) => t.content.trim() !== '')).toBe(true);
+        expect(rec?.turns.at(-1)?.role).toBe('user');
+    });
+
+    it('the scorer drops an empty-reply record and counts it', async () => {
+        const corpus = loadCorpus(CORPUS_DIR, ['clean-control'], 2);
+        const records = await generate(corpus, ['baseline-off'], new MockProvider());
+        const marked = records.map((r, i) => (i === 0 ? { ...r, empty_reply: true } : r));
+        const input = path.join(tmp, 'in.jsonl');
+        fs.writeFileSync(input, marked.map((r) => JSON.stringify(r)).join('\n') + '\n');
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true) as unknown as WriteSpy;
+        try {
+            expect(await scoreMain(['--input', input, '--format', 'json'])).toBe(0);
+            const report = JSON.parse(written(out)) as { meta: { n_records: number; n_empty_reply: number } };
+            expect(report.meta).toMatchObject({ n_records: records.length - 1, n_empty_reply: 1 });
+        } finally {
+            out.mockRestore();
+        }
+    });
+
+    it('every finished transcript lands in the partial file, and --resume plays only the missing tasks', async () => {
+        const out = path.join(tmp, 'run.jsonl');
+        const base = ['--limit', '2', '--sets', 'clean-control', '--arms', 'baseline-off', '--out', out, '--confirm-spend'];
+        let calls = 0;
+        const failing: HonestyProvider = {
+            name: 'flaky',
+            billable: false,
+            complete: (req) => {
+                calls += 1;
+                if (calls === 2) return Promise.reject(new Error('HTTP 500'));
+                return new MockProvider().complete(req);
+            },
+        };
+        expect(await main([...base, '--concurrency', '1'], { provider: failing })).toBe(1);
+        expect(fs.existsSync(out)).toBe(false);
+        expect(readRecords(`${out}.partial.jsonl`)).toHaveLength(1);
+
+        // Without --resume an existing partial file is refused, not overwritten.
+        expect(await main([...base], { provider: new MockProvider() })).toBe(2);
+
+        let resumed = 0;
+        const counting: HonestyProvider = {
+            name: 'mock',
+            billable: false,
+            complete: (req) => {
+                resumed += 1;
+                return new MockProvider().complete(req);
+            },
+        };
+        expect(await main([...base, '--resume'], { provider: counting })).toBe(0);
+        expect(resumed).toBe(1);
+        expect(readRecords(out)).toHaveLength(2);
+        expect(fs.existsSync(`${out}.partial.jsonl`)).toBe(false);
+    });
+});
