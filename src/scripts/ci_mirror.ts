@@ -14,8 +14,11 @@
  * THE WORKFLOW FILES — there is no second gate list to drift — and runs each
  * job's `run:` steps in a throwaway worktree of HEAD, with the expressions and
  * `if:` conditions those steps carry evaluated the way Actions evaluates them
- * (`_lib/gha_expr.ts`). Jobs run in parallel; inside a job, steps run in order
- * and keep running after a failure exactly when the workflow says they do.
+ * (`_lib/gha_expr.ts`). Jobs run three at a time; inside a job, steps run in order
+ * and keep running after a failure even where the workflow would skip them
+ * (collect-all), so one local run reports what CI would report over several
+ * pushes. Explicit status conditions (`failure()`, `always()`) keep their
+ * meaning.
  *
  * What it does not do. `uses:` steps (checkout, setup-node, artifact uploads)
  * and pure `npm ci` steps are the runner's setup; the mirror replaces them with
@@ -56,6 +59,7 @@ import {
     type ExprValue,
     UnsupportedExpression,
     evaluateCondition,
+    hasStatusFunction,
     interpolate,
 } from './_lib/gha_expr.js';
 import { sanitize_text } from './_lib/retrieval_sanitize.js';
@@ -368,7 +372,14 @@ export async function runJob(plan: JobPlan, facts: RunFacts, workdir: string, lo
         let script: string;
         let stepEnv: Record<string, string>;
         try {
-            if (!evaluateCondition(s.if, ctx)) {
+            // COLLECT-ALL: a step whose condition is only the implicit
+            // `success()` runs here even after an earlier failure. On Actions
+            // it would be skipped, and its failure would surface on the NEXT
+            // push; reporting it now is the mirror's purpose. A condition that
+            // names a status function (`failure()`, `always()`) keeps its
+            // meaning, so on-failure upload steps still only run on failure.
+            const condCtx = hasStatusFunction(s.if) ? ctx : { ...ctx, jobSucceeded: true };
+            if (!evaluateCondition(s.if, condCtx)) {
                 record({ verdict: 'skipped', detail: `if: ${String(s.if ?? 'success()')}` });
                 if (s.id) steps[s.id] = { outputs: {}, outcome: 'skipped' };
                 continue;
@@ -635,7 +646,12 @@ export async function main(argv: string[]): Promise<number> {
     const pr = prFacts(root, headRef);
     const shallow = tryGit(['rev-parse', '--is-shallow-repository'], root) === 'true';
 
-    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), `ci-mirror-${headSha.slice(0, 7)}-`));
+    // realpath: on macOS the temp dir lives under the /var -> /private/var
+    // symlink, and a script started through the link path fails its own
+    // is-this-main check and exits 0 having run nothing. The ratification
+    // step runs its gate from a worktree under RUNNER_TEMP; through the link
+    // that read as a pass.
+    const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `ci-mirror-${headSha.slice(0, 7)}-`)));
     const logDir = path.join(scratch, 'logs');
     fs.mkdirSync(logDir);
     process.stdout.write(`🔍 CI mirror — replaying ${plans.length} CI job(s) on ${headSha.slice(0, 10)} against origin/${args.base}, in throwaway worktrees, ${args.parallel} at a time\n`);

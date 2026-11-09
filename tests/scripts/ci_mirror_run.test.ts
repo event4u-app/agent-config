@@ -35,6 +35,9 @@ jobs:
           [ "$JOB_LEVEL" = job-value ]
           [ "\${{ github.event_name }}" = pull_request ]
       - name: default condition after a failure
+        run: echo "runs here, would be skipped on Actions"
+      - name: explicit success() after a failure
+        if: success()
         run: echo "must not run"
       - name: refused ratification
         if: \${{ !cancelled() }}
@@ -105,8 +108,12 @@ describe('ci_mirror runJob — one run reports every failure', () => {
         expect(verdict('reads the output, the env file and the job env')).toBe('passed');
     });
 
-    it('skips a step whose implicit success() is false after a failure', () => {
-        expect(verdict('default condition after a failure')).toBe('skipped');
+    it('collect-all: runs a default-condition step after a failure, so its verdict is known now', () => {
+        expect(verdict('default condition after a failure')).toBe('passed');
+    });
+
+    it('keeps an explicit status condition: success() after a failure stays skipped', () => {
+        expect(verdict('explicit success() after a failure')).toBe('skipped');
     });
 
     it('classifies a refused record as an owner decision, but a missing record as a failure', () => {

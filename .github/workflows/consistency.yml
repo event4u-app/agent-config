@@ -175,13 +175,11 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Show tool versions
-        if: ${{ !cancelled() }}
         run: |
           node --version
           task --version
 
       - name: Verify current sync state
-        if: ${{ !cancelled() }}
         run: task sync-check
 
       # agents/index.md + docs/catalog.md embed every artefact description
@@ -190,7 +188,6 @@ jobs:
       # reached main after a description-shortening pass. A gate that only exists
       # on one side drifts silently on the other.
       - name: Verify the artefact index + catalog are regenerated
-        if: ${{ !cancelled() }}
         run: task check-index
 
       # The archive index is generated from 500 archived roadmaps, so it goes
@@ -198,7 +195,6 @@ jobs:
       # that closes it. Registered here and not only in `task ci`, because no
       # workflow invokes `task ci`.
       - name: Verify the archive index is regenerated
-        if: ${{ !cancelled() }}
         run: task check-archive-index
 
       # Registered in the job that `main protection` requires, deliberately.
@@ -214,7 +210,6 @@ jobs:
       # defect a merge block on every PR. It did, the first time this step was
       # wired. Those conditions keep running in `task ci`.
       - name: Verify the roadmap dashboard is not committed
-        if: ${{ !cancelled() }}
         run: task roadmap-dashboard-untracked-check
 
       # Both gates land in `task ci` AND here, for the reason the steps above
@@ -224,25 +219,21 @@ jobs:
       # validators were deleted — registering its replacement somewhere nothing
       # runs would reproduce that in one move.
       - name: Verify the RDP trigger-fixture corpus is well-formed
-        if: ${{ !cancelled() }}
         run: task lint-reasoning-fixtures
 
       - name: Verify no skill claims explicit-request-only and auto-triggers
-        if: ${{ !cancelled() }}
         run: task lint-skill-trigger-contradiction
 
       # Same reason as the two steps above: no workflow invokes `task ci`, so a
       # budget registered only there cannot fail a pull request — which is how
       # this file's previous fix stopped holding for three months.
       - name: Verify the documented MCP snippets match the installer entry
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_mcp_doc_drift --quiet
 
       # Registered here as well as in `task ci` for the reason the comment above
       # gives: no workflow invokes `task ci`, so a gate registered only there
       # cannot fail a pull request.
       - name: Verify the per-slot enforcement table matches host_lowering.yaml
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_enforcement_matrix --quiet
 
       # Registered here as well as in `task ci` for the reason above: no
@@ -250,14 +241,12 @@ jobs:
       # generated from the import graph; this fails when the committed table,
       # the module header, or the structural detector disagree with the tree.
       - name: Verify the generated read-surface table matches the tree
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_read_surface_coverage --quiet
       # The format column of the same document, against the emitters rather than
       # against the lowering file. Same reason this step sits here rather than
       # only in `task ci`: no workflow invokes `task ci`, so a gate registered
       # only there cannot fail a pull request.
       - name: Verify the host table's format column names only emitted paths
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_host_format_column --quiet
 
       # One YAML reader in the hook bundle, and a byte ceiling on it. Unlike its
@@ -268,11 +257,9 @@ jobs:
       # the whole reason it can fail a pull request, which is where the second
       # YAML parser it exists to catch would have been caught.
       - name: Verify the hook bundle carries one YAML reader and stays under its byte ceiling
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_hook_bundle_composition
 
       - name: Verify README size, word and time-to-first-command budgets
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_readme_size --quiet
 
       # The source-confidentiality gate ran in `task ci` and NOWHERE ELSE, and
@@ -292,7 +279,6 @@ jobs:
       # the two literally, and a manifest that probes a gate differently from CI
       # is a coverage claim about a run that never happened.
       - name: Invocation contract — declaration, derivation and reader parity
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/check_placeholder_drift
           ./scripts-run src/scripts/check_input_references
@@ -300,7 +286,6 @@ jobs:
           ./scripts-run src/scripts/check_inputs_parity
 
       - name: Plumbing guards — deny text and the exit-code table
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/lint_deny_text
           ./scripts-run src/scripts/lint_exit_codes
@@ -323,7 +308,6 @@ jobs:
       # argv the manifest declares; its verdict on this tree at that date was
       # 0 HIGH, 0 MEDIUM, 0 allowlisted over 35 workflow files.
       - name: Audit workflow security (HIGH blocks)
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_workflow_security --strict
 
       # Pack boundaries ran only in `task ci`, which no workflow invokes, so a
@@ -332,11 +316,9 @@ jobs:
       # row in src/config/gate-coverage.yml pins: a count above the baseline in
       # src/config/gate-violation-baselines.json exits 1 and fails this job.
       - name: Enforce cross-pack reference boundaries
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_pack_boundaries --quiet
 
       - name: Block readable external inspiration/harvest source names
-        if: ${{ !cancelled() }}
         run: task check-no-external-sources
 
       - name: Retain the attribution-shape report
@@ -349,7 +331,6 @@ jobs:
           retention-days: 30
 
       - name: Verify dist == rewrite(src) byte-for-byte
-        if: ${{ !cancelled() }}
         run: task check-condensation
 
       # A body link in a projected rule is what a consumer actually clicks, and
@@ -359,15 +340,12 @@ jobs:
       # next to check-condensation because both read the COMMITTED projection,
       # before the regeneration steps below overwrite it.
       - name: Verify projected rule links resolve
-        if: ${{ !cancelled() }}
         run: task check-condensed-paths
 
       - name: Regenerate .augment from source
-        if: ${{ !cancelled() }}
         run: task sync
 
       - name: Regenerate tool-specific outputs
-        if: ${{ !cancelled() }}
         run: task generate-tools
 
       - name: Rule projection integrity — every rule reaches every host rule tree
@@ -376,7 +354,6 @@ jobs:
         # leg: it proves generate-tools emitted every rule in its own emit plan.
         # The stale-tree half is caught on a working checkout by `task preflight`,
         # which runs it before anything regenerates.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_rule_projection_integrity
 
       - name: Host tree parity — a host outside lean_projection.hosts gets exactly eager-all
@@ -387,7 +364,6 @@ jobs:
         # root it owns and diffs every tree whose host is not a delivery host.
         # It never writes into the checkout, so it is safe to run before or
         # after generate-tools.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_host_tree_parity
 
       - name: Rule layer partition — no rule is delivered from both layers
@@ -402,7 +378,6 @@ jobs:
         # success line. It has teeth in `task preflight` on a working checkout, and
         # it runs here so a syntax or import regression in it is caught by CI rather
         # than by the next maintainer's push.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_rule_layer_partition
 
       - name: Evidence artifacts — a newly added one declares its type
@@ -411,20 +386,17 @@ jobs:
         # branch that adds none scans nothing and says so rather than exiting
         # silently green. The pre-existing untyped corpus is a deliberate scope
         # exclusion — see docs/contracts/evidence-artifact-types.md.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_evidence_artifacts
 
       - name: Bridge derivation — generated trees are a fixpoint of src/
         # skill-quality-gates Phase 4: symlink targets stay inside the
         # derivation sources; a second regeneration changes nothing.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_bridge_derivation
 
       - name: Never-silent — no shipped artefact directs a concealed miss
         # road-to-rule-delivery-integrity P4.4. Description passes, direction
         # fails: the discriminator is whether the negation stands BEFORE the
         # phrase, which is what keeps the self-repair-loop Iron Law green.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_never_silent
 
       - name: Detector corpus — three fixture classes per self-repair detector
@@ -432,7 +404,6 @@ jobs:
         # obligations: a detector carrying only `fire` cases looks perfect while
         # opening records on praise, which is what detectUserReport did until the
         # hardening landed. A missing class fails.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_detector_corpus
 
       - name: Eval specifications — a gate on the measurement inputs
@@ -443,7 +414,6 @@ jobs:
         # advisory period could classify. Discrimination rests on --self-test
         # (7 cases, 5 rejecting), which is what a preventive gate over a clean
         # corpus has to rest on.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_eval_specs
 
       - name: Beta review deadlines — a lapsed contract is visible on the PR
@@ -452,7 +422,6 @@ jobs:
         # — the failure class two comments in this same file already record twice.
         # The frozen 2026-08-25 baseline of 85 inherited lapses warns and does not
         # fail; a FRESH lapse fails, which is what a pull request needs to see.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_beta_review_markers
       - name: Owner-question ids — one heading per OQ number
         # road-to-a-green-that-saw-what-it-certifies 1.1. Two branches that each
@@ -460,7 +429,6 @@ jobs:
         # never sees the duplicate; OQ-36 and OQ-37 reached main twice that way.
         # No pull_request guard: the step must also run under merge_group, where
         # the duplicate first exists.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_owner_question_ids
       - name: Cross-skill links resolve in the DELIVERED tree
         # road-to-inbox-harvest-2026-08-f-skill-selection-evidence 2.2.
@@ -470,7 +438,6 @@ jobs:
         # deliberately does not close on `\)`, because two of the 976 links carry
         # an anchor and a link checker with a two-link blind spot reports clean
         # while missing the shape most likely to rot.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_skill_link_reach
 
       - name: Canonical terms — the house dialect, held by a ratchet
@@ -478,7 +445,6 @@ jobs:
         # `sweep_authorised: false` in src/config/canonical-terms.yml is a live
         # council constraint, so the gate reds only when the count RISES above
         # its recorded baseline. Report-only for existing debt, blocking for new.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_canonical_terms
       - name: Memory-twin parity — the two shipped copies may not drift apart
         # road-to-memory-twin-reconciliation Phase 3. package.json files[] ships
@@ -486,7 +452,6 @@ jobs:
         # gate nothing compared them — the divergence was found by a redundancy
         # audit rather than by CI. Non-comment lines only, so the deliberately
         # different headers do not fire it.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_memory_twin_parity
 
       - name: Host portability — grants and subagent types that resolve to nothing
@@ -494,26 +459,21 @@ jobs:
         # defects are SILENT: a loader ignores an unrecognised grant key, so the
         # artefact reads restricted and inherits everything; a dispatch to an
         # undefined subagent type fails on the turn that needed it.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_host_portability
 
       - name: Supported-tools matrix ↔ adapter registry
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_supported_tools_matrix
 
       - name: Host loadability — generated trees actually load
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_host_loadability --root .
 
       - name: Host loadability smoke (optional — self-skips without the claude CLI)
         # Real-host leg: claude plugin validate + temp-home install +
         # metadata cross-consistency. Required before releases via
         # `task smoke-host-loadability REQUIRE=1` (release flow).
-        if: ${{ !cancelled() }}
         run: bash src/scripts/smoke_host_loadability.sh
 
       - name: Check cross-references
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_references
 
       - name: Evaluator-output contract conformance
@@ -521,11 +481,9 @@ jobs:
         # comment below already records: this is the only required status check,
         # so a red here actually blocks a merge. Cost is negligible — the gate
         # reads recorded fixtures and runs no verifier.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_evaluator_schema
 
       - name: Review-artifact independence declaration
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_review_schema
 
       # Both gates below were registered `enforced` and ran in NO workflow, so
@@ -546,15 +504,12 @@ jobs:
       # (`floor_asserted_in`). Its output ends with the ten slowest gates, so
       # the next drift is visible in the log rather than in a comment.
       - name: CI ↔ local gate parity
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_ci_local_parity --quiet
 
       - name: Gate coverage floors
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_gate_coverage
 
       - name: No leftover conflict markers / unmerged paths
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_no_conflict_markers
 
       - name: Guard — no new legacy path under src/ (ADR-051)
@@ -568,7 +523,7 @@ jobs:
         # commit) are present without a `git fetch`. The PR head, not HEAD: HEAD
         # is the synthetic merge commit, and a line the base added independently
         # would vanish from a base...merge diff.
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -581,26 +536,21 @@ jobs:
         # road-to-shared-design-tokens Phase 2: src/ui/tokens.css and the
         # emitted agent-switch block are generator outputs of
         # tokens/event4u-agent-tokens.json — hand-edits must fail here.
-        if: ${{ !cancelled() }}
         run: |
           node tokens/build-ac.mjs --check
           node tokens/build-as.mjs --check
           node tokens/check-contrast.mjs
 
       - name: Check package portability
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_portability
 
       - name: Check condensation quality
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_condensation
 
       - name: Check projected rule routes resolve
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_projected_rule_routes
 
       - name: Check Iron Law prominence
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_iron_law_prominence
 
       - name: Roadmap-estate ratchet + one-in-one-out (estate-drawdown T2/T3)
@@ -608,7 +558,6 @@ jobs:
         # here means the estate could not be counted, and a ratchet that passes
         # when it could not read its corpus is the false green this repo's
         # gate-coverage manifest exists to prevent.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_estate_count
 
       - name: Added verify clauses state an expectation (diff-scoped)
@@ -623,14 +572,12 @@ jobs:
         #     ./scripts-run src/scripts/check_verify_expectation_delta --replay 30
         # No warn-and-allow wrapper: exit 2 here means the diff could not be
         # read, and a diff-scoped gate with no diff passes every possible tree.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_verify_expectation_delta
 
       - name: Added-verify-clause gate self-test
         # The negative control the gate-coverage row points at instead of a
         # planted canary: a canary cannot express this gate's violation, which
         # is a property of the DIFF rather than of any file in the tree.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_verify_expectation_delta --self-test
 
       - name: Held objects cited in live blockers carry an arrival count
@@ -642,7 +589,6 @@ jobs:
         # is a backlog rather than a control, so this prints and does not block;
         # the promotion to `--enforce` is a one-word edit after a green run on
         # main, which is the condition recorded with its measurement.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_held_object_arrivals
 
       - name: Continuity-surface ratchet + behavioural inventory
@@ -650,20 +596,17 @@ jobs:
         # same reason: exit 2 here means the inventory could not be read against
         # the tree, and a surface count that passes when it read nothing is
         # exactly the false green the gate-coverage manifest exists to prevent.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_continuity_surface
 
       - name: Continuity-surface gate self-test
         # The negative control the row in gate-coverage.yml points at instead of
         # a planted canary: 7 cases, 4 rejecting, covering every failure class in
         # both directions against throwaway repositories.
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_continuity_surface --self-test
 
       - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
         # Exit-code contract §6: 2 = internal error → degraded advisory
         # (warn-and-allow — a broken gate never blocks its own fix).
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/lint_plan_risk_register || {
             rc=$?
@@ -688,7 +631,7 @@ jobs:
         # is present because this job checks out with `fetch-depth: 0` (see the
         # checkout step — at the default depth 1 the parents are NOT fetched,
         # which is precisely how this step self-disabled before).
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         run: |
           ./scripts-run src/scripts/check_completion_review \
             --advisory --base "${{ github.event.pull_request.base.sha }}" || {
@@ -715,7 +658,7 @@ jobs:
         #
         # Base sha passed directly for the same no-fetch reason as the step
         # above.
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         run: |
           ./scripts-run src/scripts/dispatch_r2_reviewer \
             --verify-current --base "${{ github.event.pull_request.base.sha }}" || {
@@ -731,7 +674,6 @@ jobs:
         # road-to-delivered-cost-truth AC-7. Tokens only: the suite does not know
         # the consumer's contract, so a monetary figure would be extrapolated
         # from an invented rate.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/check_no_currency_in_cost_surfaces || {
             rc=$?
@@ -749,7 +691,6 @@ jobs:
         # roots from — two lists describing one boundary is the drift shape this
         # repository already pays for. Exit 2 is degraded-advisory, matching
         # every sibling step.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/check_prefix_stable_mutation || {
             rc=$?
@@ -765,7 +706,6 @@ jobs:
         # council verdict: failing every transform in src/ buys a first-run
         # backlog whose usual answer is a broad allowlist, and this repository
         # has measured an allowlist emptying a gate.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/check_loss_class_declared || {
             rc=$?
@@ -779,7 +719,6 @@ jobs:
       - name: Benchmark reports carry the required cache fields
         # road-to-runtime-context-floors 4.1. Uncomputable is a stated reason,
         # never a blank and never a zero.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/check_benchmark_report_fields || {
             rc=$?
@@ -806,7 +745,6 @@ jobs:
         # scan scope is exit 1 inside the gate for the same reason the step
         # below states — otherwise a moved corpus root downgrades the hard half
         # to advisory without anyone noticing.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/lint_composition_review || {
             rc=$?
@@ -829,7 +767,6 @@ jobs:
         # broken gate never blocks its own fix. Exit 1 blocks, and a dead scan
         # scope is deliberately exit 1 rather than 2 — otherwise a moved reviews
         # root would silently downgrade this gate to advisory.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/check_review_dispositions || {
             rc=$?
@@ -849,7 +786,6 @@ jobs:
         # Same exit-code contract § 6: 2 = internal error → warn-and-allow, so a
         # broken gate never blocks its own fix. A dead scan scope is exit 1, not
         # 2 — otherwise a moved evidence root would downgrade this to advisory.
-        if: ${{ !cancelled() }}
         run: |
           ./scripts-run src/scripts/lint_evidence_artifacts --all || {
             rc=$?
@@ -861,14 +797,12 @@ jobs:
           }
 
       - name: Check always-rule budget (warn 80% / fail 90%)
-        if: ${{ !cancelled() }}
         run: task check-always-budget
 
       - name: Runtime dependency floors are settled minors (ETARGET unreachable)
         # npm resolves `dependencies` on the CONSUMER's machine, before our bin
         # is executed — a floor pinned to a just-published patch cannot be
         # retried or explained at runtime, only prevented here.
-        if: ${{ !cancelled() }}
         run: task check-dependency-floors
 
       - name: Payload budget — compressed tarball + per-skill share + binary eligibility
@@ -886,7 +820,6 @@ jobs:
         # `src/**` path filter above already covers the manifest, the predicate
         # and the vendored grammars themselves — named here so a future filter
         # narrowing does not silently drop the coverage.
-        if: ${{ !cancelled() }}
         run: task check-pack-size
 
       - name: Payload delta vs base — reported, never gated
@@ -898,7 +831,7 @@ jobs:
         # `continue-on-error` is deliberate and is the whole design: this is a
         # report. The absolute cap above owns the refusal, and a reporter that
         # can red the build is a second cap with no derivation behind it.
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         run: |
           git fetch --quiet --depth=200 origin "${{ github.base_ref }}" || true
@@ -917,7 +850,6 @@ jobs:
         # and regenerates it in-job — invoking the script directly would read a
         # stale (or absent) report. Until 2026-07-30 this gate ran only in local
         # `task ci`, which is why a +10.3% eager-rule drift went unseen for 23 days.
-        if: ${{ !cancelled() }}
         run: task check-token-regression
 
       - name: Lint workflow files (actionlint)
@@ -933,7 +865,7 @@ jobs:
         # review; gating on them here would either block unrelated work or invite
         # a blanket ignore-list. Linting what the PR changed is what catches the
         # #1059 class, which is the reason this step exists.
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -959,7 +891,6 @@ jobs:
         # edited may not stay local-only while the gate that BLOCKS those edits
         # runs on every PR. Both council members required this, from opposite
         # verdicts. It merges with the narrowing, never before it.
-        if: ${{ !cancelled() }}
         run: task lint-rule-budget
 
       - name: Check kernel-rule bundle (one rule per PR; label override)
@@ -971,7 +902,7 @@ jobs:
         # `--no-renames` and exits 3 when the diff cannot be read. The job
         # checks out with `fetch-depth: 0`, so the base commit is present and
         # no `git fetch` (and no auth-extraheader race) is involved.
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
@@ -1008,27 +939,19 @@ jobs:
       # its `_lib` imports resolve from the base worktree, because ESM resolves
       # relative imports against the importing file.
       - name: Kernel / governance-hook edits carry a ratification artifact
-        if: ${{ !cancelled() && (github.event_name == 'pull_request') }}
+        if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           GIT_CONFIG_COUNT: '1'
           GIT_CONFIG_KEY_0: diff.renames
           GIT_CONFIG_VALUE_0: 'false'
-        # A record that exists with a verdict other than `ratified` is an OWNER
-        # decision, not a defect the author can fix (ADR-281 § 5, ADR-282). The
-        # step still fails exactly as before; the annotation only names which of
-        # the two it is, so a red check stops reading like a broken branch. The
-        # marker is the one `src/config/ci-mirror.json` classifies locally.
         run: |
           GATE=src/scripts/check_kernel_edit_ratified.ts
           BASE_DIR="$RUNNER_TEMP/ratification-base"
-          LOG="$RUNNER_TEMP/ratification.log"
-          set +e
           if git cat-file -e "$BASE_SHA:$GATE" 2>/dev/null; then
             git worktree add --detach "$BASE_DIR" "$BASE_SHA" >/dev/null
             echo "Judging with the BASE revision's gate ($BASE_SHA)."
-            npx tsx "$BASE_DIR/$GATE" --root "$PWD" --base-ref "$BASE_SHA" 2>&1 | tee "$LOG"
-            rc=${PIPESTATUS[0]}
+            npx tsx "$BASE_DIR/$GATE" --root "$PWD" --base-ref "$BASE_SHA"
           else
             # The bootstrap PR — the one that INTRODUCES the gate. There is no
             # base copy to judge with, so the head's own gate runs and the
@@ -1037,36 +960,24 @@ jobs:
             # than hidden: this branch is sound exactly once.
             echo "::warning::BOOTSTRAP — no gate at the base revision; running the head's copy."
             echo "The independence of this run rests on the ratification artifact and human review."
-            ./scripts-run src/scripts/check_kernel_edit_ratified --base-ref "$BASE_SHA" 2>&1 | tee "$LOG"
-            rc=${PIPESTATUS[0]}
+            ./scripts-run src/scripts/check_kernel_edit_ratified --base-ref "$BASE_SHA"
           fi
-          set -e
-          if [ "$rc" -ne 0 ] && grep -qP '^\s*record \S+ — verdict: (?!ratified\b)\S+' "$LOG"; then
-            record=$(grep -oP '^\s*record \K\S+' "$LOG" | head -1)
-            echo "::error title=Owner decision required (ratification)::${record} records a verdict other than ratified. The merge is the owner's; this is not a defect in the branch."
-            { echo "### ⏸ Owner decision required"; echo; echo "\`${record}\` — the merge is the owner's (ADR-281 § 5)."; } >> "$GITHUB_STEP_SUMMARY"
-          fi
-          exit "$rc"
 
       - name: Lint marketplace.json
-        if: ${{ !cancelled() }}
         run: task lint-marketplace
 
       - name: Lint AGENTS.md (Thin-Root contract)
-        if: ${{ !cancelled() }}
         run: task lint-agents-md
 
       # Wired explicitly rather than relying on the `ci:` task list: no workflow
       # invokes `task ci`, so a gate registered only there never runs remotely.
       - name: Lint settings A/B/C classes (every template leaf is classified)
-        if: ${{ !cancelled() }}
         run: task lint-settings-classes
 
       # Same reason, and it is why the sibling `check-reach-staleness` has been
       # local-only since it shipped: registering a gate in `taskfiles/*.yml` and
       # in the `ci:` list gives it zero remote reach.
       - name: Corpus staleness + CSV integrity (declared cadence, declared columns)
-        if: ${{ !cancelled() }}
         run: task check-corpus-staleness
 
       # Third instance of the same pattern, and the first one a MECHANISM caught
@@ -1076,7 +987,6 @@ jobs:
       # ratchet, which its own failure message calls a defect. Passes on the
       # tree it lands on.
       - name: Design-antipattern catalog ↔ rule parity
-        if: ${{ !cancelled() }}
         run: task lint-design-antipattern-parity
 
       # Fourth instance, wired at birth rather than after the ratchet caught it.
@@ -1086,35 +996,27 @@ jobs:
       # a human pre-flight checkbox, so a local-only registration would repeat
       # the failure mode with a different reader.
       - name: Scheduled deprecations are checked by arithmetic, not by memory
-        if: ${{ !cancelled() }}
         run: task lint-scheduled-deprecations
 
       - name: Cloud bundle dry-run (source invariants)
-        if: ${{ !cancelled() }}
         run: task ci-cloud-bundle
 
       - name: Linear digest dry-run (no per-rule drift, under budget)
-        if: ${{ !cancelled() }}
         run: task ci-linear-digest
 
       - name: Build discovery manifest (R3 Phase 2.1)
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
       - name: Lint discovery manifest — schema + checksum + vocab (R3 Phase 2.2)
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_discovery_manifest --quiet
 
       - name: Discovery scanner determinism (R3 Phase 2.3)
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/check_discovery_determinism
 
       - name: Lint README
-        if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/readme_linter README.md --root .
 
       - name: Check for unexpected changes
-        if: ${{ !cancelled() }}
         run: |
           if ! git diff --quiet; then
             echo "::error::Generated files are out of sync with source-of-truth."

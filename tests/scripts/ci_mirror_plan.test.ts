@@ -5,8 +5,8 @@
  *      with a reason — nothing is skipped silently;
  *   2. the gates that turned PR #2949 red four pushes in a row are among the
  *      mirrored steps, so the next instance is caught before the push;
- *   3. the two long gate jobs keep running after a failure, so one CI run
- *      reports every red step instead of the first.
+ *   3. Rule Backstops keeps running after a failure, so one CI run reports
+ *      every red step instead of the first.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -79,8 +79,10 @@ describe('ci_mirror plan — the real workflows', () => {
 
 describe('collect-all — CI reports every failure of a run, not the first', () => {
     const SETUP = /^(Check out repository|Set up Node|Install Node deps|Set up Task|Fetch the baseline branch)$/;
+    // consistency.yml is not listed: every edit to it is ratification-gated
+    // (check_kernel_edit_ratified watches it whole), so it keeps Actions' stop-
+    // at-first-failure; the local mirror collects all of its failures instead.
     it.each([
-        ['consistency.yml', 'consistency'],
         ['rule-backstops.yml', 'rule-backstops'],
     ])('%s: every gate step runs after an earlier failure', (file, job) => {
         const doc = parseYaml(fs.readFileSync(path.join(ROOT, '.github/workflows', file), 'utf8')) as {

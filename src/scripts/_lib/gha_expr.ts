@@ -201,6 +201,11 @@ export function evaluate(src: string, ctx: ExprContext): ExprValue {
 
 const STATUS_FN = /\b(always|success|failure|cancelled)\s*\(/;
 
+/** Whether an `if:` names a status function, so it decides its own run-after-failure behaviour. */
+export function hasStatusFunction(raw: string | boolean | undefined): boolean {
+    return typeof raw === 'string' && STATUS_FN.test(raw);
+}
+
 /**
  * Evaluate an `if:` value: a bare expression or one wrapped in `${{ }}`.
  * As on Actions, a condition that names no status function is implicitly
