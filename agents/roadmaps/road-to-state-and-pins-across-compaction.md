@@ -5,7 +5,7 @@ review_by: 2026-12-08
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner search: grep -rlE 'session pin|sessionPin|checkpoint.*compact|recall.*transcript|known_bad|fast-check' across agents/roadmaps/*.md, later/ and stubs/ returned no owner (stubs/road-to-target-project-bootstrap-enforce mentions fast-check only as a consumer-grading signal; later/road-to-a-stop-that-holds-carried 1.4 owns the hooks-only kill-switch table, not a src-wide ledger). Added to later/, not active: its first phase waits on a council round, and the round that produced it (inbox-2026-11-zb) emitted one active roadmap already."
-estate_growth_exempt: "Pulled from later/ on 2026-11-08 at the owner's instruction (\"hol die roadmap aus later und starte phase 1\"); its entry condition is met (road-to-a-compaction-the-session-survives is archived). Grows active_roadmaps by one and concern_count by one: the compact-checkpoint concern Phase 1.2 asks for, which writes and measures and injects nothing. active_roadmaps stays far under the owner cap of 25."
+estate_growth_exempt: "Phase 2 (2026-11-08, owner instruction \"starte phase 2\") adds one open blocker, pin-sessions-accrue: 2.4 needs real sessions that used pins, and the capture ships in the same change, so the measurement cannot exist yet. Phase 1 earlier grew active_roadmaps and concern_count by one each when this roadmap was pulled from later/ at the owner's instruction. active_roadmaps stays far under the owner cap of 25."
 relates:
   - slug: road-to-a-compaction-the-session-survives
     relation: extends
@@ -84,22 +84,58 @@ of re-reading or guessing.
       verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
 ## Phase 2 — Session pins the user set, restored verbatim
 
-- [ ] **2.1** Capture only from `user_prompt_submit` text carrying an explicit
+- [x] **2.1** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Capture only from `user_prompt_submit` text carrying an explicit
       line-start marker (`pin:`), never from tool output or file content, so
       injected content can neither create nor remove a pin. No model decides
       what is a pin.
+      Shipped in `language-mirror`: `pin:` / `unpin:` at column zero of the
+      human-typed lead only — fenced code, pasted blocks, a pasted document,
+      host-injected regions and synthetic turns are dropped first, so neither
+      tool output nor a subagent's message can add or remove one. Per-session
+      file keyed on a digest of the session id; kill switch
+      `AGENT_CONFIG_NO_SESSION_PINS=1`. The pin module is its own chunk.
       verify: `npx vitest run tests/scripts/session_pins.test.ts` -> 0
-- [ ] **2.2** Restore through the existing `language-mirror` marker pattern
+      production entry: `src/scripts/language_mirror_hook.ts`
+- [x] **2.2** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Restore through the existing `language-mirror` marker pattern
       (arm at `pre_compact`, one re-emit after) — no second mechanism; pass pins
       to subagents through `subagent-constraints`.
+      The marker restores the language pin and the pins in one line, plus one
+      restatement on the next prompt. Best-effort, bounded: at most three pin
+      lines per compaction, because the marker is taken by atomic rename and
+      every prompt-path line is recorded under the record's lock first. Claim
+      recovery, its ledger and a fallback counter were dropped on 2026-11-09
+      (owner decision). A marker that cannot be taken is reported, not acted
+      on. Pins restore without a language pin; a missing pin chunk costs only
+      the pins. Subagents receive the parent's pins ahead of the digest.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts tests/scripts/session_pins.test.ts` -> 0
-- [ ] **2.3** Cap 12 pins × 300 chars; overflow tells the user, never truncates
+      production entry: `src/scripts/language_mirror_hook.ts`
+- [x] **2.3** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Cap 12 pins × 300 chars; overflow tells the user, never truncates
       silently.
+      Plus 4,096 JSON-escaped bytes together, so 12 pins of 300 plain ASCII
+      characters fit (quotes and backslashes count two bytes each) and
+      a multi-byte or quote-heavy set cannot push the restore past the host's
+      10,000-character line. A refused pin is refused whole and named; the
+      notice itself is bounded (3 names per list, the rest counted).
       verify: `npx vitest run tests/scripts/session_pins.test.ts` -> 0
+      production entry: `src/scripts/language_mirror_hook.ts`
 - [ ] **2.4** Add a pin probe to `compaction_census` and re-run it on sessions
       that used pins; pre-registered target: pin text present in ≥ 95 % of
       summaries-plus-restore.
+      Probe shipped and the target pre-registered in the evidence file (≥ 95 %
+      over ≥ 20 boundaries from ≥ 3 sessions); first reading 0 of 176
+      boundaries held a pin, because the capture is new. <!-- blocked-by: pin-sessions-accrue | asked: no — not a decision; it waits on real pin sessions, and the closing summary of the run that shipped the capture tells the owner -->
       verify: `test -f agents/evidence/analysis/session-pin-presence.md` -> 0
+- [ ] **2.5** Council round 56 on the merged Phase 2 change, pins only. Round
+      55 (anthropic REFUSE, openai REQUEST_CHANGES) faulted the stale-lock fix,
+      which was reverted and moved to `road-to-verified-stale-lock-reclaim`;
+      the owner merged without a further round (2026-11-09). Packet built like
+      round 55 (`agents/evidence/council/session-pins-phase-2-20261108.round55.question.md`)
+      minus the lock sections; findings fixed in a follow-up PR.
+      verify: `test -f agents/evidence/council/session-pins-phase-2-20261108.round56.question.md` -> 0
+- [ ] **2.6** Ratification record for the Phase 2 budget raises in
+      `src/config/hook-bundle-budget.json` (dispatch 1,594,900 B, pin chunk
+      34,900 B, subagent chunk 28,500 B), after 2.5 converges.
+      verify: `./scripts-run src/scripts/check_preamble_payload_budget --verify-approvals` -> 0
 ## Phase 3 — Recall from the session's own transcript
 
 Council 2026-11-08 (2/2, split on the surface only): not `memory:lookup`; one
@@ -163,6 +199,15 @@ host-attested session binding exists. Record:
 - **Recommendation:** collect at least 20 compactions first; a high `orphaned` share argues for the attempt-specific guarantee, a near-total `match` share for the latest-snapshot one.
 - **If you do nothing:** the marker keeps measuring and nothing is injected, which is today's behaviour — no regression, no gain.
 - **Resolved when:** a host-provided per-compaction token shared by `pre_compact` and `session_start(compact)` exists, or 1.3's fault tests show a stale checkpoint cannot become eligible — and the council records the chosen guarantee (1.4).
+
+### blocker: pin-sessions-accrue
+- **Status:** open
+- **Owner:** user — only a person typing `pin:` in real sessions produces the data.
+- **Blocks:** 2.4.
+- **What to do:** use `pin:` in real sessions until at least 20 compactions with pins held have happened across 3 sessions, then run `npx tsx src/scripts/compaction_census.ts` and add the reading to `agents/evidence/analysis/session-pin-presence.md`.
+- **Recommendation:** pin the constraints you already repeat after compactions; the census needs no other setup.
+- **If you do nothing:** pins work but their survival rate stays unmeasured; the pre-registered target cannot be checked.
+- **Resolved when:** the census reports at least 20 boundaries with pins from at least 3 sessions and the evidence file records the rate against the 95 % target.
 
 ### blocker: recall-session-binding
 - **Status:** open
