@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Question — is the scoring of bench task `trapC-ambig-01` valid for a paired layer comparison?
 
 subject: trapc-oracle-validity-20261109
