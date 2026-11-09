@@ -97,3 +97,41 @@ describe('compaction_census', () => {
         expect(out).not.toContain('private words');
     });
 });
+
+describe('compaction_census — session pin probe (2.4)', () => {
+    const typed = (text: string): string => line({ type: 'user', sessionId: 's', message: { content: text } });
+    const boundary = line({ type: 'system', subtype: 'compact_boundary', sessionId: 's', compactMetadata: { trigger: 'auto' } });
+    const summary = (text: string): string =>
+        line({ type: 'user', isCompactSummary: true, sessionId: 's', message: { content: [{ type: 'text', text }] } });
+    const hook = (content: string): string =>
+        line({ type: 'attachment', sessionId: 's', attachment: { type: 'hook_additional_context', content: [content] } });
+    const tool = line({ type: 'user', sessionId: 's', message: { content: [{ type: 'tool_result', content: 'pin: from a tool' }] } });
+
+    it('counts a pin present in the summary or the restore before the next typed prompt', () => {
+        const t = [typed('pin: alpha rule\npin: beta rule'), boundary, summary('kept: alpha rule'), hook('<session-pins>\n- beta rule\n</session-pins>'), typed('next')].join('\n');
+        expect(censusTexts([t], []).pins).toEqual({ boundaries_with_pins: 1, expected: 2, present: 2 });
+    });
+
+    it('counts a pin missing from both as absent', () => {
+        const t = [typed('pin: alpha rule\npin: beta rule'), boundary, summary('kept: alpha rule'), typed('next')].join('\n');
+        expect(censusTexts([t], []).pins).toEqual({ boundaries_with_pins: 1, expected: 2, present: 1 });
+    });
+
+    it('a pin the user types again after the boundary is not a restore', () => {
+        const t = [typed('pin: alpha rule'), boundary, summary('nothing'), typed('pin: alpha rule')].join('\n');
+        expect(censusTexts([t], []).pins).toEqual({ boundaries_with_pins: 1, expected: 1, present: 0 });
+    });
+
+    it('tool output never creates a pin, and unpin removes one before the boundary', () => {
+        const t = [tool, typed('pin: a1\npin: a2'), typed('unpin: a1'), boundary, summary('a2')].join('\n');
+        expect(censusTexts([t], []).pins).toEqual({ boundaries_with_pins: 1, expected: 1, present: 1 });
+    });
+
+    it('a boundary with no pins held is not counted', () => {
+        expect(censusTexts([[typed('hi'), boundary, summary('x')].join('\n')], []).pins).toEqual({
+            boundaries_with_pins: 0,
+            expected: 0,
+            present: 0,
+        });
+    });
+});

@@ -7,9 +7,10 @@
 // exact same bytes (the Python json.dumps(indent=2) + "\n" contract).
 // Skipped without python3 for the parity layer only.
 import * as fs from 'node:fs';
+import fsDefault from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     atomic_write_json,
@@ -23,6 +24,7 @@ import {
     prune_stale_session_states,
     REPLAY_ENV_VAR,
     restore_claimed_state,
+    update_text_under_lock,
     session_state_file,
     update_json_under_lock,
 } from '../../../src/scripts/hooks/state_io.js';
@@ -569,5 +571,152 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
         expect(fs.existsSync(stale)).toBe(false);
         expect(fs.existsSync(`${stale}.lock`)).toBe(false);
         expect(fs.existsSync(`${stale}.lock.held`)).toBe(false);
+    });
+});
+
+describe('update_text_under_lock — strict exclusion', () => {
+    function deniedGuard(): { mockRestore: () => void } {
+        const real = fsDefault.openSync;
+        return vi.spyOn(fsDefault, 'openSync').mockImplementation(((p: fs.PathLike, flags?: fs.OpenMode, mode?: fs.Mode) => {
+            if (String(p).endsWith('.held') && flags === 'wx') {
+                const e = new Error('denied') as NodeJS.ErrnoException;
+                e.code = 'EACCES';
+                throw e;
+            }
+            return real(p, flags ?? 'r', mode);
+        }) as typeof fs.openSync);
+    }
+
+    it('a strict caller gets "failed" and the file is untouched when the guard cannot be created', () => {
+        const target = path.join(tmp, 'pins.json');
+        fs.writeFileSync(target, 'before\n');
+        let called = false;
+        const spy = deniedGuard();
+        let r: unknown;
+        try {
+            r = update_text_under_lock(target, () => {
+                called = true;
+                return 'after\n';
+            }, { strict: true });
+        } finally {
+            spy.mockRestore();
+        }
+        expect(r).toBe('failed');
+        expect(called).toBe(false);
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    });
+
+    it('a non-strict caller keeps the pre-existing behaviour and writes without the guard', () => {
+        const target = path.join(tmp, 'other.json');
+        fs.writeFileSync(target, 'before\n');
+        const spy = deniedGuard();
+        try {
+            update_text_under_lock(target, () => 'after\n');
+        } finally {
+            spy.mockRestore();
+        }
+        expect(fs.readFileSync(target, 'utf8')).toBe('after\n');
+    });
+});
+
+describe('update_text_under_lock — a stale guard that cannot be removed', () => {
+    it.each([[true], [false]])('strict=%s: gives up at the acquisition deadline instead of spinning forever', (strict) => {
+        const target = path.join(tmp, `stuck-${strict}.json`);
+        fs.writeFileSync(target, 'before\n');
+        const held = `${target}.lock.held`;
+        fs.writeFileSync(held, '');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        const real = fsDefault.rmSync;
+        const spy = vi.spyOn(fsDefault, 'rmSync').mockImplementation(((p: fs.PathLike, o?: fs.RmOptions) => {
+            if (String(p) === held) throw Object.assign(new Error('EPERM'), { code: 'EPERM' });
+            return real(p, o);
+        }) as typeof fs.rmSync);
+        const t = Date.now();
+        let r: unknown;
+        try {
+            r = update_text_under_lock(target, () => 'after\n', { strict });
+        } finally {
+            spy.mockRestore();
+        }
+        expect(r).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(15_000);
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    }, 30_000);
+});
+
+// Two reclaimers that judge the same abandoned guard can both remove it and both
+// acquire. A strict caller cannot afford that, so it never breaks a guard.
+describe('update_text_under_lock — a strict caller never reclaims a stale guard', () => {
+    it.each([[true], [false]])('blocking=%s: an abandoned guard is left in place and the write is refused', (blocking) => {
+        const target = path.join(tmp, `abandoned-${blocking}.json`);
+        fs.writeFileSync(target, 'before\n');
+        const held = `${target}.lock.held`;
+        fs.writeFileSync(held, 'abandoned');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        const t = Date.now();
+        const r = update_text_under_lock(target, () => 'after\n', { strict: true, blocking });
+        expect(r).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(15_000);
+        expect(fs.readFileSync(held, 'utf8')).toBe('abandoned');
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    }, 30_000);
+
+    it('a non-strict caller still reclaims it', () => {
+        const target = path.join(tmp, 'abandoned-lax.json');
+        fs.writeFileSync(target, 'before\n');
+        const held = `${target}.lock.held`;
+        fs.writeFileSync(held, 'abandoned');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        expect(update_text_under_lock(target, () => 'after\n')).toBe('written');
+        expect(fs.readFileSync(target, 'utf8')).toBe('after\n');
+    });
+});
+
+describe('update_text_under_lock — a guard that can be neither created nor read', () => {
+    it.each([[true], [false]])('strict=%s: a dangling .held symlink gives up at the deadline instead of spinning forever', (strict) => {
+        const target = path.join(tmp, `dangling-${strict}.json`);
+        fs.writeFileSync(target, 'before\n');
+        fs.symlinkSync(path.join(tmp, 'nowhere'), `${target}.lock.held`); // open wx: EEXIST; stat: ENOENT
+        const t = Date.now();
+        const r = update_text_under_lock(target, () => 'after\n', { strict });
+        expect(r).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(15_000);
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    }, 30_000);
+});
+
+describe('update_text_under_lock — a non-blocking caller never waits', () => {
+    function stuckStale(held: string): { mockRestore: () => void } {
+        fs.writeFileSync(held, '');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        const real = fsDefault.rmSync;
+        const rm = vi.spyOn(fsDefault, 'rmSync').mockImplementation(((p: fs.PathLike, o?: fs.RmOptions) => {
+            if (String(p) === held) throw Object.assign(new Error('EPERM'), { code: 'EPERM' });
+            return real(p, o);
+        }) as typeof fs.rmSync);
+        return { mockRestore: () => rm.mockRestore() };
+    }
+    it.each([
+        ['a fresh guard held by a peer', (held: string) => { fs.writeFileSync(held, ''); return { mockRestore: () => undefined }; }],
+        ['a dangling guard', (held: string) => { fs.symlinkSync(path.join(path.dirname(held), 'nowhere'), held); return { mockRestore: () => undefined }; }],
+        ['a stale guard that cannot be removed', stuckStale],
+    ])('%s: "failed" at once, target untouched', (_l, arrange) => {
+        const target = path.join(tmp, `nb-${Math.random().toString(36).slice(2)}.json`);
+        fs.writeFileSync(target, 'before\n');
+        const spy = arrange(`${target}.lock.held`);
+        const t = Date.now();
+        let r: unknown;
+        try {
+            r = update_text_under_lock(target, () => 'after\n', { strict: true, blocking: false });
+        } finally {
+            spy.mockRestore();
+        }
+        expect(r).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(500);
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
     });
 });

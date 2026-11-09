@@ -659,7 +659,7 @@ record**:
 
 | slot | bound on | concerns | what each writes |
 |---|---|---|---|
-| `pre_compact` | claude only (`:1210`) | `language-mirror` | a pin-lost marker re-emitted once by `post_tool_use` |
+| `pre_compact` | claude only (`:1210`) | `language-mirror` | a pin-lost marker; the next `post_tool_use` re-emits the language pin and the user's session pins (`docs/guides/session-pins.md`) once |
 | | | `rule-inject` | injected rule text; writes no state |
 | | | `journal-record` | the runtime journal — **default-OFF** (`src/config/agent-settings.template.yml:1289`), so it writes nothing on a default install |
 | `session_end` | claude, cowork, augment, cursor, cline, gemini (`:1182,1189,1233,1268,1283,1319`) | `chat-history` | appends to `agents/runtime/.agent-chat-history` |

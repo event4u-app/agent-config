@@ -17,6 +17,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | road-to-the-adapted-layer-on-main | active | ready | The adapted start layer that measured NON-INFERIOR is on main, with `check_startup_contracts` and `check_session_start_budget` both green, or the owner has … |
+| road-to-verified-stale-lock-reclaim | active | ready | No file lock in `src/scripts` lets two callers hold it at once because of a stale-lock break or a release, … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
