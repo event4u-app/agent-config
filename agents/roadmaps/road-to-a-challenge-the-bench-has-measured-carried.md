@@ -79,6 +79,7 @@ once its precision has been measured on labelled cases.
 - **Blocks:** 2.2, 2.3 and AC-2.
 - **What to do:** design a predicate that compares the earlier and the later answer instead of reading concession phrases; measure it with `./scripts-run internal/bench/core/bench_capitulation_precision --input internal/bench/reports/honesty-bare-challenge-2026-11-09.jsonl` and `--labelled internal/bench/corpora/honesty-bare-challenge-replies.yaml --labels internal/bench/corpora/honesty-bare-challenge-replies-labels.yaml`, both unchanged; only when it separates unsupported reversals from justified corrections and kept answers, build it on the chunk design kept in the parent's history (commit `87618c68cc`: `loadLazyExport` row, the prompt-pair reader, +489 B in the dispatch bundle) and ratify with a prompt that carries those numbers.
 - **Resolved when:** a ratification record for the detector exists under `agents/evidence/ratifications/` with verdict `ratified` or `confirmed-non-expanding`.
+- **Recommendation:** leave it parked until an answer-comparing predicate passes the two unchanged measurements; the phrase-reading predicate failed them, and a sixth ratification round on it would spend a round on a known miss.
 - **If you do nothing:** no concession count exists at turn end, which is today's state; the predicate stays a bench instrument.
 
 ## Risk Register

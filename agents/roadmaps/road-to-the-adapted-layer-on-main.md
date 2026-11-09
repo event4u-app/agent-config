@@ -5,7 +5,7 @@ tree_pin: 3445cf41d6
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: "Owner request of 2026-11-09 to park the session with every open item findable on main. The third look (ask-scope variant) reads NON-INFERIOR under the owner's exclusion reading, so the adapted form is a release candidate; its payload lives only on the pushed measurement branch `bench/variant-ask-scope-20261109`, and no other roadmap names the steps that would bring it to main. The two parked parents hold the measurements, not this landing work."
-estate_offset_exempt: "No active roadmap is done or parkable in this change: the session is being parked by the owner, and archiving unrelated work to make room would hide it. The parents that hold the measurements are already in later/, so there is nothing to merge this into."
+estate_offset_exempt: "No active roadmap is done or parkable in this change: the session is being parked by the owner, and archiving unrelated work to make room would hide it. The parents that hold the measurements are already in later/, so there is nothing to merge this into. Owner search: a grep over agents/roadmaps/{*,later,stubs} for `variant-ask-scope` and `adapted-layer` returns nothing."
 relates:
   - slug: road-to-a-start-as-light-as-the-field
     relation: extends
@@ -89,7 +89,7 @@ fresh pre-registration before it can ship.
 - **Class:** 3 — human-only. A ship decision on a benchmarked default is the owner's; steps 1.1 and 1.2 prepare the options and are agent work.
 - **Owner:** the repository owner.
 - **Blocks:** 1.3, and through it Phase 2.
-- **What to do:** run 1.1 and 1.2, then put their options to the owner in one numbered block.
+- **What to do:** run `./scripts-run src/scripts/check_startup_contracts` and `./scripts-run src/scripts/check_session_start_budget` on a branch carrying `ced3e99b3b` and `51add0fc53`, then choose one of: (a) fix the check, (b) fix the contract text and re-measure, (c) trim 1,544 chars elsewhere, (d) raise the budget, (e) do not ship.
 - **Resolved when:** the owner section of the result file names the chosen
   path for both gates.
 - **Recommendation:** run 1.1 and 1.2 first; a decision without the diagnosis
