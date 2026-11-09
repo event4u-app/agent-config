@@ -63,7 +63,7 @@ named in the same set: removing before proving.
 
 <!-- asked: 2026-11-08 | record: agents/roadmaps/later/road-to-a-setup-that-decides-itself-carried.md -->
 
-- **Status:** open, raised 2026-11-08 by round inbox-2026-11-zc.
+- **Status:** open, raised 2026-11-08 by round inbox-2026-11-zc. 2026-11-09: the comparison has a result file, `agents/evidence/metrics/full-vs-reduced-layer-result-20261109.md`. It reads **INFERIOR**, so by 1.1 a further cut is off the table: the loss has to be traced first. The blocker stays open until the owner decides how the inferior result is handled (keep the reduced default and trace the loss, or restore full).
 - **Class:** 1. The condition is a result another file produces; no decision is owed here.
 - **Owner:** `road-to-a-setup-that-decides-itself-carried` step 5.2.
 - **Run:** `ls agents/evidence/metrics/ | grep -i full-vs-reduced`. The blocker clears when a result file exists.
