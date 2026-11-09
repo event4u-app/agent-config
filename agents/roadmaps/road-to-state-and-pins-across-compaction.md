@@ -230,7 +230,7 @@ host-attested session binding exists. Record:
 | L3 | product-owned | owner | Only the owner issues a `known_bad` advisory. Its rollback target may be older than the installed version; it is shown as a notice and never installed automatically. | Owner answer "1" in session on 2026-11-08, recorded in PR #2923. | the owner delegates advisory issuance, or a notice is acted on as an install |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -238,6 +238,7 @@ host-attested session binding exists. Record:
 | 2 | Restores add standing payload | implementation | Restored state or pins injected on every turn would grow the always-on context. | Injection only on the re-arm event `session_start(compact)`, never always-on (1.5, 2.2). | Phase 1 — A checkpoint the session wrote for itself |
 | 3 | Pins become an injection vector | implementation | Text from tool output or files could create or remove a pin and steer later turns. | Pins come only from user-prompt text with an explicit marker (2.1). | Phase 2 — Session pins the user set, restored verbatim |
 | 4 | Stale state restored as current | implementation | A checkpoint from an earlier compaction attempt matches the next one and restores outdated status. | Injection waits on an attempt-specific guarantee (1.4); fields restored only as historical observations. | Phase 1 — A checkpoint the session wrote for itself |
+| 5 | A dead hook freezes a session's pins | implementation | Pin writes never break a stale lock guard (round 56), so a hook process that dies holding it leaves that session's pins unchangeable and unrestorable. | Every attempt reports the lock failure instead of writing unguarded; a new session is unaffected; retention removes a gone session's files; the general reclaim protocol is carried by road-to-verified-stale-lock-reclaim. | Phase 2 — Session pins the user set, restored verbatim |
 
 ## Acceptance Criteria
 

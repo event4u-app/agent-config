@@ -61,6 +61,15 @@ stale-lock break or a release, under any interleaving of three contenders.
 - [ ] 2.4 `_lib/project_registry.ts`: the directory lock, with the protocol extended to directories first.
 - [ ] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-09 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A green harness that missed an interleaving | implementation | The race only shows under one ordering of stat, rename, link and remove across three contenders; a harness that samples timings can pass while the window stays open. | Deterministic injection points between every filesystem call, no timing (1.1); every recorded interleaving that admits two holders becomes a regression case. | Phase 1 — protocol decision |
+| 2 | Trading the race for a deadlock | implementation | A protocol that never breaks a stale guard cannot double-grant, but a dead holder then blocks its callers for good, as the strict pin callers do today. | 1.2 records the residual per site and which callers may block; each site in Phase 2 states its choice and tests it. | Phase 2 — the five sites |
+| 3 | A native lock breaks the install | product | A native advisory-lock addon would add a compiled dependency to a package consumers install with npx. | D1 weighs it against a single-writer process and a documented residual; no native dependency without its install matrix green. | Decisions |
+
 ## Closes when
 
 Every step is `[x]`, each site's harness run was seen red before its fix, and
