@@ -31,6 +31,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { loadConfig as loadMirrorConfig, planJobs as planMirrorJobs } from './ci_mirror.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 export const REPO = path.resolve(path.dirname(_FILE), '..', '..');
@@ -322,6 +323,17 @@ export function analyse(repo = REPO, manifest?: Manifest): ParityReport {
         for (const g of extract_gates(hook)) prePush.add(g);
         for (const t of extract_tasks(hook)) {
             for (const g of local_closure([t], tasks)) prePush.add(g);
+        }
+        // The hook runs `ci_mirror`, which replays the steps of the jobs named in
+        // src/config/ci-mirror.json; every gate in those steps runs before the push.
+        if (hook.includes('src/scripts/ci_mirror') && fs.existsSync(path.join(REPO, 'src', 'config', 'ci-mirror.json'))) {
+            for (const plan of planMirrorJobs(REPO, loadMirrorConfig(REPO))) {
+                const text = plan.steps.filter((st) => st.kind === 'run').map((st) => st.run ?? '').join('\n');
+                for (const g of extract_gates(text)) prePush.add(g);
+                for (const t of extract_tasks(text)) {
+                    for (const g of local_closure([t], tasks)) prePush.add(g);
+                }
+            }
         }
     }
     const ci_not_in_preflight = [...ciGates]

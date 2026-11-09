@@ -18,6 +18,10 @@ is rewritten by `.augment/scripts/update_roadmap_progress.ts`.
 - Archiving or moving a roadmap to `skipped/`
 - Adding, renaming, or removing a phase
 
+Regenerating is not committing. Where the dashboard is gitignored, as in this
+package's own repository, it is never staged: CI refuses a committed copy, and
+the pre-commit hook refuses a staged one.
+
 Command:
 
 ```bash

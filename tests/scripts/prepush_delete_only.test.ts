@@ -59,8 +59,7 @@ function run(refs: string, cwdIn?: string): string {
       env: {
         PATH: "/usr/bin:/bin",
         HOME: cwd,
-        AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT: "1",
-        AGENT_CONFIG_SKIP_PREPUSH_STATIC: "1",
+        AGENT_CONFIG_SKIP_PREPUSH_MIRROR: "1",
       },
     });
   } catch (e) {
@@ -73,7 +72,7 @@ describe("pre-push — delete-only push", () => {
   it("extracts a hook body that actually looks like the hook", () => {
     const body = extractPrePush(INSTALLER);
     expect(body).toContain("#!/usr/bin/env bash");
-    expect(body).toContain("Preflight");
+    expect(body).toContain("CI mirror");
     // Guard against the extractor silently grabbing a one-line slice.
     expect(body.split("\n").length).toBeGreaterThan(40);
   });
@@ -82,7 +81,7 @@ describe("pre-push — delete-only push", () => {
     const out = run(`(delete) ${ZERO} refs/heads/release/14.0.0 ${REAL}\n`);
     expect(out).toContain(MARKER);
     // Proof it short-circuited rather than merely printing on the way through.
-    expect(out).not.toContain("Preflight");
+    expect(out).not.toContain("CI mirror");
   });
 
   it("skips when several refs are all deletions", () => {
@@ -141,7 +140,7 @@ describe("pre-push — tag-only push", () => {
   it("skips every content gate when the tagged commit is on a remote branch", () => {
     const out = run(`refs/tags/19.0.0 ${onRemote} refs/tags/19.0.0 ${ZERO}\n`, repo);
     expect(out).toContain(TAG_MARKER);
-    expect(out).not.toContain("Preflight");
+    expect(out).not.toContain("CI mirror");
   });
 
   it("does NOT skip a tag on a commit no remote branch carries", () => {
