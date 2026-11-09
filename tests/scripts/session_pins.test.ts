@@ -905,7 +905,8 @@ describe('council round 8 — one transaction per event over one restore record'
                         child.stdout.on('data', (d: Buffer) => (o += d.toString()));
                         child.on('error', reject);
                         // A crashed worker contributes no line; it must fail the test, not satisfy a bound.
-                        child.on('exit', (code) => (code === 0 ? resolve(o) : reject(new Error(`worker ${kind} exited ${code}`))));
+                        // 'close', not 'exit': stdout may still be draining when the process exits.
+                        child.on('close', (code) => (code === 0 ? resolve(o) : reject(new Error(`worker ${kind} exited ${code}`))));
                     }),
             ),
         );

@@ -71,6 +71,9 @@ shortened.
   the tool-call restore after the compaction tells you instead. Each
   restatement states the pins as they stand after that prompt, so a pin you
   remove in it is not restated.
+- Pin state is written only under a file lock that is never broken. If a hook
+  process dies while holding it, the session's pins can no longer be changed
+  or restored, and every attempt says so; a new session is not affected.
 - A subagent started while the pin file cannot be read is told that the
   session has pins it could not read, and to ask before a change they might
   constrain.

@@ -645,6 +645,36 @@ describe('update_text_under_lock — a stale guard that cannot be removed', () =
     }, 30_000);
 });
 
+// Two reclaimers that judge the same abandoned guard can both remove it and both
+// acquire. A strict caller cannot afford that, so it never breaks a guard.
+describe('update_text_under_lock — a strict caller never reclaims a stale guard', () => {
+    it.each([[true], [false]])('blocking=%s: an abandoned guard is left in place and the write is refused', (blocking) => {
+        const target = path.join(tmp, `abandoned-${blocking}.json`);
+        fs.writeFileSync(target, 'before\n');
+        const held = `${target}.lock.held`;
+        fs.writeFileSync(held, 'abandoned');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        const t = Date.now();
+        const r = update_text_under_lock(target, () => 'after\n', { strict: true, blocking });
+        expect(r).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(15_000);
+        expect(fs.readFileSync(held, 'utf8')).toBe('abandoned');
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    }, 30_000);
+
+    it('a non-strict caller still reclaims it', () => {
+        const target = path.join(tmp, 'abandoned-lax.json');
+        fs.writeFileSync(target, 'before\n');
+        const held = `${target}.lock.held`;
+        fs.writeFileSync(held, 'abandoned');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        expect(update_text_under_lock(target, () => 'after\n')).toBe('written');
+        expect(fs.readFileSync(target, 'utf8')).toBe('after\n');
+    });
+});
+
 describe('update_text_under_lock — a guard that can be neither created nor read', () => {
     it.each([[true], [false]])('strict=%s: a dangling .held symlink gives up at the deadline instead of spinning forever', (strict) => {
         const target = path.join(tmp, `dangling-${strict}.json`);

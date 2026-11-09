@@ -451,6 +451,15 @@ function _acquire_lock(
         if (Date.now() - start > LOCK_ACQUIRE_DEADLINE_MS) return give_up();
         continue;
       }
+      if (age_ms >= LOCK_STALE_MS && options.strict === true) {
+        // Two callers that judge the same abandoned guard can both remove it
+        // and both acquire (stat-then-remove deletes whatever is there by
+        // then). A strict caller prefers a reported failure: it never breaks a
+        // guard. Session pins are the only strict caller, so an abandoned
+        // guard there blocks that session's pins (each attempt reported) until
+        // the retention prune removes the gone session's files.
+        return give_up();
+      }
       if (age_ms >= LOCK_STALE_MS) {
         // A genuine staleness check: the companion itself has been untouched
         // for longer than any live critical section here can last. Removing it
