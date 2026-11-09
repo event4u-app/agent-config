@@ -33,9 +33,10 @@ owner has decided in writing why it does not ship.
 
 - **Payload:** two commits on the pushed branch `bench/variant-ask-scope-20261109`
   (`ced3e99b3b` contract stubs, `51add0fc53` scoped ask-first line). They
-  touch four files only: `src/agent-src/startup-contracts/rules/downstream-changes.md`,
-  `src/agent-src/startup-contracts/rules/think-before-action.md` and their
-  `dist/agent-src/` projections (+26 lines). The branch base is older than
+  touch four files only: new startup-contract stubs for `downstream-changes`
+  and `think-before-action` under `src/agent-src/startup-contracts/rules/`,
+  plus their `dist/agent-src/` projections (+26 lines). The stubs do not
+  exist on main yet. The branch base is older than
   main, so it is cherry-picked, never merged.
 - **Gate 1:** `check_startup_contracts` fails on the adapted form.
 - **Gate 2:** `check_session_start_budget` reads 81,544 of 80,000 chars
