@@ -33,6 +33,10 @@
  * definition that stops skipping stops receiving the digest. A type that is not
  * a plain id (a plugin's `plugin:agent`, a path) is not looked up.
  *
+ * Every subagent, whatever its definition, also receives the parent session's
+ * pins (`_lib/session_pins.ts`) ahead of the digest; a session without pins
+ * changes nothing here.
+ *
  * Ships in its own chunk (decision A9), `yaml` external like `chat_history`'s:
  * the dispatch bundle carries only its `LAZY_CONCERNS` row. Kill switch: `AGENT_CONFIG_SUBAGENT_CONSTRAINTS=off`.
  */
@@ -44,6 +48,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { lawSections, ruleBody } from '../_lib/rule_law_section.js';
+import { pinsDisabled, pinsForSubagent } from '../_lib/session_pins.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 import { readHookStdin } from './hook_stdin.js';
 
@@ -509,8 +514,40 @@ export function digestFor(envelope: unknown, env: NodeJS.ProcessEnv = process.en
     const projectDir =
         str(envelope, 'workspace_root', 'project_root') ?? str(payload, 'cwd') ?? env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
     const configDir = env['CLAUDE_CONFIG_DIR'] || path.join(os.homedir(), '.claude');
-    if (!definitionSkipsInstructions(projectDir, agentType, configDir)) return null;
-    return instructionDigest(projectDir, EMISSION_MAX_BYTES, configDir);
+    const sessionId = str(envelope, 'session_id') ?? str(payload, 'session_id');
+    const pins = pinsDisabled(env) || sessionId === null ? '' : subagentPinsText(pinsForSubagent(projectDir, sessionId));
+    if (!definitionSkipsInstructions(projectDir, agentType, configDir)) return pins === '' ? null : pins;
+    if (pins === '') return instructionDigest(projectDir, EMISSION_MAX_BYTES, configDir);
+    // Pins go first: they are the user's own words for this session, and the
+    // 12 x 300 cap keeps them far under the line ceiling, so the digest keeps
+    // the rest of the room.
+    const separator = '\n\n';
+    const room = EMISSION_MAX_BYTES - escBytes(pins + separator);
+    if (room > 0) return pins + separator + instructionDigest(projectDir, room, configDir);
+    // Unreachable under today's caps (a test holds the margin); said rather than silent if a cap moves.
+    process.stderr.write('subagent-constraints: session pins filled the reply; the instruction digest was left out\n');
+    return pins;
+}
+
+/**
+ * The parent session's pins, handed to every subagent it starts
+ * (road-to-state-and-pins-across-compaction 2.2) — a subagent starts without
+ * the conversation the pins were typed in, whatever its definition says.
+ */
+export function subagentPinsText(pins: readonly string[] | null): string {
+    if (pins === null) {
+        return (
+            "<session-pins>\nThe session that started you has pinned constraints, but they could not be read. " +
+            'Before any change the user might have constrained, say so and ask.\n</session-pins>'
+        );
+    }
+    if (pins.length === 0) return '';
+    return [
+        '<session-pins>',
+        'Constraints the user pinned in the session that started you. They apply to your work too:',
+        ...pins.map((p) => `- ${p}`),
+        '</session-pins>',
+    ].join('\n');
 }
 
 export function main(): number {

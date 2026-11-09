@@ -66,6 +66,12 @@
  * `fr_FR` to English because the classifier has no French would pin a language
  * the user never wrote, which is worse than carrying no pin.
  *
+ * SESSION PINS ride the same marker (road-to-state-and-pins-across-compaction
+ * Phase 2): a prompt line starting `pin:` is captured on this event, and the one
+ * `post_tool_use` after a compaction restores the pins with the language pin.
+ * The pin module ships as its own chunk (`hooks/session_pins_loader.ts`); its
+ * header carries the capture rules and the caps.
+ *
  * Never blocks (`fail_closed: false`, `severity: advisory`). Exit 0 always.
  */
 import fs from "node:fs";
@@ -88,6 +94,12 @@ import {
   isSyntheticPrompt,
   stripInjectedRegions,
 } from "./_lib/prompt_shape.js";
+import { loadSessionPins } from "./hooks/session_pins_loader.js";
+import { admitStamp, readRestoreRecord, restoreOwed } from "./_lib/session_pins_record.js";
+import type { SessionPins } from "./_lib/session_pins.js";
+
+/** How the pin module is reached; injectable because a test runner cannot `require` the TS source. */
+export type PinsLoader = () => SessionPins | null;
 
 const EXIT_ALLOW = 0;
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
@@ -634,11 +646,11 @@ function _migrateLegacyMarker(consumer_root: string): void {
   }
 }
 
-export function _setPinLost(consumer_root: string, session_id: string): void {
+export function _setPinLost(consumer_root: string, session_id: string, stamp: string = new Date().toISOString()): void {
   if (is_replay_mode()) return;
   _migrateLegacyMarker(consumer_root);
   try {
-    atomic_write_text(path.join(consumer_root, pinLostMarker(session_id)), new Date().toISOString());
+    atomic_write_text(path.join(consumer_root, pinLostMarker(session_id)), stamp);
   } catch (err) {
     // The COST is unchanged and still bounded — one un-restored pin, never a
     // broken turn. What changed on 2026-09-04 is that it stops being silent.
@@ -661,20 +673,50 @@ export function _pinLost(consumer_root: string, session_id: string): boolean {
   }
 }
 
-function _clearPinLost(consumer_root: string, session_id: string): void {
-  // R2 round 2, finding 8: the replay guard covered only the WRITE. A replayed
-  // `post_tool_use` therefore deleted a live marker it was forbidden to create,
-  // and the real session lost the single re-emit this whole mechanism exists to
-  // deliver — replay destroying live state while blocked from writing it, which
-  // is worse than either direction alone.
-  if (is_replay_mode()) return;
+/**
+ * Consume this session's pin-lost marker and return the stamp it carried ('' when
+ * unreadable), or null when there is none or it cannot be taken. Taken BEFORE
+ * the restore runs, so a compaction gets at most one tool-call restore: a marker
+ * that cannot be taken is reported and not acted on, never re-fired on every
+ * tool call. A process that dies after this point loses its tool-call restore;
+ * the prompt path's own boundary covers the pins, and the language pin's
+ * distance re-emit covers the language. Best-effort, bounded — not exactly-once.
+ *
+ * R2 round 2, finding 8: a replayed `post_tool_use` must not delete a live
+ * marker it is forbidden to create, so replay reads and never removes.
+ */
+function _takePinLost(consumer_root: string, session_id: string): string | null {
+  const marker = path.join(consumer_root, pinLostMarker(session_id));
+  const readStamp = (file: string): string | null => {
+    try {
+      return fs.readFileSync(file, "utf8").trim();
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+      process.stderr.write(`language-mirror: compaction stamp unreadable (${_errText(err)})\n`);
+      return "";
+    }
+  };
+  if (is_replay_mode()) return readStamp(marker);
+  // Taken by an atomic rename onto one fixed per-session name, so this call owns
+  // exactly the marker that was there: a `pre_compact` writing while it runs
+  // (outside this lock) creates a new marker it never touches. A process dying
+  // before the cleanup below leaves that one file, which the next take replaces.
+  const taken = `${marker}.taken`;
   try {
-    fs.rmSync(path.join(consumer_root, pinLostMarker(session_id)), { force: true });
-  } catch {
-    // If it cannot be cleared the next tool call re-emits once more. One
-    // duplicate line is the failure mode; a loop is not, because the marker
-    // is only ever SET by a compaction event.
+    fs.renameSync(marker, taken);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      process.stderr.write(`language-mirror: pin-lost marker not removable (${_errText(err)}) — no restore for it\n`);
+    }
+    return null;
   }
+  const stamp = readStamp(taken) ?? "";
+  try {
+    fs.rmSync(taken, { force: true });
+  } catch (err) {
+    process.stderr.write(`language-mirror: taken marker not cleaned up (${_errText(err)})\n`);
+  }
+  return stamp;
 }
 
 /**
@@ -686,6 +728,8 @@ export function _reEmitAfterCompaction(
   consumer_root: string,
   session_id: string,
   write_json: StateWriter = atomic_write_json,
+  env: NodeJS.ProcessEnv = process.env,
+  load_pins: PinsLoader = loadSessionPins,
 ): number {
   if (!hasStableSessionId(session_id)) {
     return EXIT_ALLOW; // BLOCKER 2 — nothing was persisted, so nothing to restore.
@@ -698,21 +742,36 @@ export function _reEmitAfterCompaction(
   // one holds the lock. Everything below reads,
   // decides and writes inside the lock, so two overlapping post_tool_use calls
   // cannot both advance past the same counter value nor both emit at the
-  // threshold.
-  return _withToolWriteLock(consumer_root, session_id, EXIT_ALLOW, () => {    const previous = _loadState(path.join(consumer_root, statePathFor(session_id)));
+  // threshold — and cannot both take the marker.
+  return _withToolWriteLock(consumer_root, session_id, EXIT_ALLOW, () => {
+    const stamp = _takePinLost(consumer_root, session_id);
+    return stamp === null ? EXIT_ALLOW : restoreTaken(stamp);
+  });
+
+  function restoreTaken(takenStamp: string): number {
+    const previous = _loadState(path.join(consumer_root, statePathFor(session_id)));
     const language = previous.language as Verdict | undefined;
     const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
-    // Clear FIRST: if the write below throws, the marker must not survive to
-    // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
-    _clearPinLost(consumer_root, session_id);
-    if (language !== "de" && language !== "en") {
-      return EXIT_ALLOW;
+    // Session pins ride the same marker (road-to-state-and-pins-across-compaction
+    // 2.2): one restore per compaction event, no second mechanism. They are
+    // owned by their own per-session file, so they restore even when no
+    // language is pinned. Loaded only when this session has a pin file; a
+    // missing module is then a failed restore the user is told about, never an
+    // empty one.
+    let pins = "";
+    if (!pinsOff(env) && mayHavePins(consumer_root, session_id)) {
+      const unavailable = "Session pins: could NOT be restored after this compaction — the pin module could not be loaded. Tell the user.";
+      try {
+        pins = safeLoad(load_pins)?.restoreFor(consumer_root, session_id, env, takenStamp) ?? unavailable;
+      } catch (err) {
+        process.stderr.write(`session-pins: restore failed (${_errText(err)})\n`);
+        pins = "Session pins: could NOT be restored after this compaction — the pin module failed. Tell the user.";
+      }
     }
     // A foreign session's pin is not this session's to restore — same reading as
     // `nextState`, for the same shared-state reason.
-    if (!_ownsPin(previous, session_id)) {
-      return EXIT_ALLOW;
-    }
+    let restoreLanguage =
+      (language === "de" || language === "en") && _ownsPin(previous, session_id);
     // The pin is about to be fresh in context again, so the distance counter
     // starts over. Without this the two re-emit triggers would drift apart and
     // a post-compaction session could re-state the pin twice in a row.
@@ -721,19 +780,25 @@ export function _reEmitAfterCompaction(
     // A reset that does not land leaves the counter at 149, so the next successful
     // tool-hook write reaches 150 and emits a SECOND reminder — which contradicts
     // the "compaction wins" invariant this file documents. Same fail-closed policy
-    // as the distance path: no durable reset, no emit.
-    if (!_resetDistance(consumer_root, previous, session_id, write_json)) {
+    // as the distance path: no durable reset, no language emit.
+    if (restoreLanguage && !_resetDistance(consumer_root, previous, session_id, write_json)) {
+      restoreLanguage = false;
+    }
+    if (!restoreLanguage && pins === "") {
       return EXIT_ALLOW;
     }
+    const lang = language as Exclude<Verdict, "und">;
     process.stdout.write(
       `${JSON.stringify({
         decision: "warn",
-        reason: noticeText(language, source),
-        additional_context: pinText(language, source),
+        reason: restoreLanguage ? noticeText(lang, source) : "Session pins restored after compaction.",
+        additional_context: [restoreLanguage ? pinText(lang, source) : "", pins]
+          .filter((part) => part !== "")
+          .join("\n\n"),
       })}\n`,
     );
     return EXIT_WARN;
-  });
+  }
 }
 
 /**
@@ -1041,16 +1106,56 @@ export function _onToolUse(
   consumer_root: string,
   session_id: string,
   write_json: StateWriter = atomic_write_json,
+  env: NodeJS.ProcessEnv = process.env,
+  load_pins: PinsLoader = loadSessionPins,
 ): number {
   if (_pinLost(consumer_root, session_id)) {
-    return _reEmitAfterCompaction(consumer_root, session_id, write_json);
+    const code = _reEmitAfterCompaction(consumer_root, session_id, write_json, env, load_pins);
+    // A marker still in place after the attempt was not taken (it cannot be,
+    // or a peer holds the lock): the language pin's distance re-emit must not
+    // be starved by it.
+    if (code !== EXIT_ALLOW || !_pinLost(consumer_root, session_id)) return code;
   }
   return _reEmitAfterDistance(consumer_root, session_id, write_json);
 }
 
+/**
+ * A prompt that could carry a pin directive. Checked here, in the bundle, so
+ * the pin chunk is loaded for such prompts only; the chunk decides which lines
+ * count, and a missing chunk is said, never swallowed.
+ */
+const PIN_DIRECTIVE = /^(?:un)?pin:/im;
+/**
+ * A loader that throws is a missing module, never a crashed hook. A chunk that
+ * lacks part of the API (a version skew) throws at its call site instead, and
+ * every call site below is guarded and treats that the same way.
+ */
+const safeLoad = (load: PinsLoader): SessionPins | null => {
+  try {
+    return load();
+  } catch (err) {
+    process.stderr.write(`session-pins: pin module not loadable (${_errText(err)})\n`);
+    return null;
+  }
+};
+const PINS_DIR = path.join("agents", "state", "session-pins");
+// A replay touches no pin state and injects no pin text, including the
+// fallback notices the hook writes itself when the module is missing or fails.
+const pinsOff = (env: NodeJS.ProcessEnv): boolean => is_replay_mode() || (env["AGENT_CONFIG_NO_SESSION_PINS"] ?? "").trim() === "1";
+const pinFile = (root: string, sid: string): string => path.join(root, session_state_file(PINS_DIR, sid));
+/** Only a definite `ENOENT` means "no pins"; any other failure is uncertain and goes to the module, which reports it. */
+const mayHavePins = (root: string, sid: string): boolean => {
+  try {
+    fs.lstatSync(pinFile(root, sid));
+    return true;
+  } catch (err) {
+    return (err as NodeJS.ErrnoException).code !== "ENOENT";
+  }
+};
+
 export function run(
   stdin_text: string,
-  options: { consumer_root: string; env?: NodeJS.ProcessEnv; write_json?: StateWriter },
+  options: { consumer_root: string; env?: NodeJS.ProcessEnv; write_json?: StateWriter; load_pins?: PinsLoader },
 ): number {
   let envelope: JsonObject = {};
   if (stdin_text.trim()) {
@@ -1082,11 +1187,46 @@ export function run(
   // and this marker is the entire difference between the two.
   const event = typeof envelope["event"] === "string" ? envelope["event"] : "";
   if (event === "pre_compact") {
-    _setPinLost(options.consumer_root, _sessionId(envelope));
+    // One unique stamp names this compaction, written to the pin-lost marker
+    // (read by the tool-call restore) and, for session pins, to the boundary
+    // (read by the prompt path) — two separate writes, each reported when it
+    // fails. Either one that lands is enough to restore the pins; when both
+    // fail, the compaction is not restored and stderr says so twice.
+    const sid = _sessionId(envelope);
+    const stamp = `${new Date().toISOString()} ${process.pid} ${Math.random()}`;
+    _setPinLost(options.consumer_root, sid, stamp);
+    if (hasStableSessionId(sid) && !is_replay_mode() && !pinsOff(options.env ?? process.env) && mayHavePins(options.consumer_root, sid)) {
+      try {
+        atomic_write_text(`${pinFile(options.consumer_root, sid).slice(0, -5)}.boundary`, stamp);
+      } catch (err) {
+        process.stderr.write(`session-pins: compaction boundary not written (${_errText(err)})\n`);
+      }
+    }
     return EXIT_ALLOW;
   }
   if (event === "post_tool_use") {
-    return _onToolUse(options.consumer_root, _sessionId(envelope), options.write_json);
+    // Tool calls are activity too: a session running tools without prompts and
+    // with no language pinned would otherwise age its pins out of retention.
+    const tsid = _sessionId(envelope);
+    if (hasStableSessionId(tsid) && !is_replay_mode() && !pinsOff(options.env ?? process.env)) {
+      try {
+        const now = new Date();
+        fs.utimesSync(pinFile(options.consumer_root, tsid), now, now);
+      } catch (err) {
+        // No pin file is the normal case; anything else would let retention
+        // prune a tool-only session's pins, so it is said.
+        if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+          process.stderr.write(`session-pins: activity touch failed (${_errText(err)})\n`);
+        }
+      }
+    }
+    return _onToolUse(
+      options.consumer_root,
+      _sessionId(envelope),
+      options.write_json,
+      options.env ?? process.env,
+      options.load_pins ?? loadSessionPins,
+    );
   }
 
   const prompt = _extractPrompt(payload);
@@ -1097,6 +1237,26 @@ export function run(
   // the same reasoning as an undetermined prompt below, and for the same reason
   // this hook exists at all.
   if (isSyntheticPrompt(prompt)) {
+    // Its pin lines are never applied, but they are not dropped without a word.
+    const sid = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
+    const env = options.env ?? process.env;
+    if (hasStableSessionId(sid) && !pinsOff(env) && PIN_DIRECTIVE.test(prompt)) {
+      let notice: string | null = null;
+      try {
+        const mod = safeLoad(options.load_pins ?? loadSessionPins);
+        notice =
+          mod === null
+            ? "Session pins: the pin module could not be loaded; pin:/unpin: lines in a host-generated prompt are NOT applied either way. Tell the user."
+            : mod.captureFor(options.consumer_root, sid, prompt, env);
+      } catch (err) {
+        process.stderr.write(`session-pins: capture failed (${_errText(err)})\n`);
+        notice = "Session pins: the pin module failed; pin:/unpin: lines in a host-generated prompt are NOT applied either way. Tell the user.";
+      }
+      if (notice !== null) {
+        process.stdout.write(`${JSON.stringify({ decision: "warn", reason: "Session pins not applied.", additional_context: notice })}\n`);
+        return EXIT_WARN;
+      }
+    }
     return EXIT_ALLOW;
   }
 
@@ -1154,9 +1314,107 @@ export function run(
     }
   }
 
+  // Session pins (road-to-state-and-pins-across-compaction 2.1): captured from
+  // this prompt's `pin:` lines only. The notice is emitted on the turn a
+  // directive arrives and never otherwise — no standing bytes.
+  // A missing module is told apart from a prompt whose `pin:` lines were all
+  // excluded (fenced, pasted) or switched off: only the first is a failure.
+  const env = options.env ?? process.env;
+  const pinModule = PIN_DIRECTIVE.test(prompt) && !pinsOff(env) ? safeLoad(options.load_pins ?? loadSessionPins) : undefined;
+  // A compaction since the last prompt leaves a pending marker: this prompt
+  // restates the pins (`followUp`), after its own capture so a pin removed now
+  // is never restated.
+  const base = stateful ? pinFile(options.consumer_root, session_id).slice(0, -5) : "";
+  // Only an open compaction (undelivered) or an owed restatement turns this
+  // on — a record whose debt is paid must not keep loading the module.
+  let owed = false;
+  let boundaryStamp = "";
+  if (stateful && !pinsOff(env)) {
+    // The same reader the chunk's transition uses, so the two cannot disagree.
+    let record: ReturnType<typeof readRestoreRecord> = null;
+    try {
+      record = readRestoreRecord(fs.readFileSync(`${base}.restore.json`, "utf8"), session_id);
+    } catch (err) {
+      // Absent is nothing owed; unreadable is handed to the module.
+      record = (err as NodeJS.ErrnoException).code === "ENOENT" ? null : "invalid";
+    }
+    try {
+      boundaryStamp = admitStamp(fs.readFileSync(`${base}.boundary`, "utf8"));
+    } catch (err) {
+      // Absent or unreadable: nothing for the prompt path to open — the
+      // tool-call restore carries its own stamp — but unreadable is said.
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+        process.stderr.write(`session-pins: compaction boundary unreadable (${_errText(err)}); the tool-call restore covers it\n`);
+      }
+    }
+    owed = restoreOwed(record, boundaryStamp);
+  }
+  const restatePending = stateful && !pinsOff(env) && owed;
+  // Every substantive prompt marks the pins as belonging to a live session, so
+  // retention measures activity even when no language is pinned.
+  if (stateful && !is_replay_mode() && !pinsOff(env)) {
+    try {
+      const now = new Date();
+      fs.utimesSync(pinFile(options.consumer_root, session_id), now, now);
+    } catch (err) {
+      // No pin file is the normal case; anything else would let retention
+      // prune an active session's pins, so it is said.
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+        process.stderr.write(`session-pins: activity touch failed (${_errText(err)})\n`);
+      }
+    }
+  }
+  const pinNotice =
+    pinModule === undefined
+      ? null
+      : pinModule === null
+        ? "Session pins: the pin module could not be loaded, so any pin: or unpin: line in this prompt was NOT applied. Tell the user."
+        : (() => {
+            try {
+              return pinModule.captureFor(options.consumer_root, session_id, prompt, env, restatePending);
+            } catch (err) {
+              process.stderr.write(`session-pins: capture failed (${_errText(err)})\n`);
+              return "Session pins: the pin module failed, so any pin: or unpin: line in this prompt was NOT applied. Tell the user.";
+            }
+          })();
+  let pinFollowUp = "";
+  if (restatePending) {
+    const mod = pinModule ?? safeLoad(options.load_pins ?? loadSessionPins);
+    const restated = (() => {
+      try {
+        return mod?.followUp(options.consumer_root, session_id, env);
+      } catch (err) {
+        // A module that loaded and then threw is a defect, not a missing file: say which.
+        process.stderr.write(`session-pins: restatement failed (${_errText(err)})\n`);
+        return undefined;
+      }
+    })();
+    if (restated !== undefined) {
+      pinFollowUp = restated;
+    } else {
+      // The chunk could not run. Said on stderr only: nothing records this
+      // prompt, so a context line here would repeat on every prompt. The
+      // tool-call restore of the compaction tells the user instead.
+      process.stderr.write("session-pins: the pins could not be restated after the last compaction (module unavailable)\n");
+    }
+  }
+  const pinText_ = [pinNotice ?? "", pinFollowUp].filter((t) => t !== "").join("\n\n");
+  const pinOut = pinText_ === "" ? null : pinText_;
+
   if (effective === "de" || effective === "en") {
+    const context = pinText(effective, effectiveSource);
     process.stdout.write(
-      `${JSON.stringify({ decision: "warn", reason: noticeText(effective, effectiveSource), additional_context: pinText(effective, effectiveSource) })}\n`,
+      `${JSON.stringify({
+        decision: "warn",
+        reason: noticeText(effective, effectiveSource),
+        additional_context: pinOut === null ? context : `${context}\n\n${pinOut}`,
+      })}\n`,
+    );
+    return EXIT_WARN;
+  }
+  if (pinOut !== null) {
+    process.stdout.write(
+      `${JSON.stringify({ decision: "warn", reason: "Session pins updated.", additional_context: pinOut })}\n`,
     );
     return EXIT_WARN;
   }
