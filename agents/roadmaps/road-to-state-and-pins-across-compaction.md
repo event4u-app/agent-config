@@ -144,7 +144,7 @@ of re-reading or guessing.
       start), enforcement (a forbidden action is blocked). Pins give the first
       two, and delivery is unmeasured until 2.4; they give no enforcement. A
       pin that must hold as a block points to the hook that blocks it.
-      verify: `grep -rn "pin:" docs README.md` lists every user-facing description, and each states that pins are not enforcement.
+      verify: every user-facing description of pins under `docs/` and in `README.md` states that pins are not enforcement.
 - [ ] **2.8** After 2.4 reads its target: pre-register a probe of whether a
       delivered pin changes what a subagent does — a task whose obvious path
       breaks a pinned constraint, with and without the pin, held-out prompts,
