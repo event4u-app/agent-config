@@ -1,0 +1,282 @@
+You are a blind scorer for a launch-audit benchmark. Below are: the scoring rules (Sections 5 and 6 of a frozen protocol), the benchmark's manifest of real defects and its decoy, the site's files, and ONE audit report written about that site by an unknown auditor. Score the report against the manifest exactly as the rules say. Do not guess who or what wrote the report.
+
+Return ONLY one JSON object, no prose around it, with this shape:
+
+{
+  "output_id": "<the id given below>",
+  "truth_scorable": true | false,
+  "truth_scorability_note": "<one sentence; why not, when false>",
+  "findings": [
+    {"n": 1, "claim": "<the atomic asserted defect, short>", "location": "<file(s) or site-wide>", "duplicate_of": null | <n>, "matches_row": "<manifest row id>" | null, "decoy": true | false, "note": "<one sentence of evidence>"}
+  ],
+  "decoy_flagged": true | false,
+  "matched_rows": ["<row id>", ...],
+  "false_positives": <count of deduplicated findings with no match, decoy flags included>
+}
+
+Use the manifest's own row identifiers. List every atomic asserted defect in the report, including those in summaries and recommendations; mark duplicates with duplicate_of rather than dropping them.
+
+Output id: out-4
+Site: local-business
+
+## Scoring rules
+
+## 5. Shared ground truth and location requirement
+
+Only after all six outputs and their hashes are sealed does a separate scoring coordinator receive the hidden manifest. Both arms use exactly the same real-defect rows and the same decoy row, without filtering by the treatment's capabilities or applicability declarations. No row can be deleted because neither arm found it. Unlisted findings cannot be added to the truth set after seeing outputs.
+
+Scorers first assess whether the manifest identifies distinct real defects, their fixture and affected location/scope, and the decoy clearly enough to apply this rubric using the packaged evidence. Require at least one real row overall, coverage of the intended three-fixture evaluation, and a uniquely identifiable decoy. If a row requires evidence supplied to neither arm, cannot be distinguished from another row, or cannot be adjudicated from the shared evidence, the shared truth is not scorable: UNDERPOWERED. Do not quietly remove that row, repair fixtures, or obtain extra evidence for only one arm.
+
+A match requires both the correct defect and the correct affected page/file. Accept relative-path normalization (`./`, slash direction) and an unambiguous route-to-file mapping established by the supplied files. Line numbers are helpful but not required. A correct issue on the wrong page receives no credit. For a genuinely site-wide manifest row, an explicit site-wide assertion suffices; for an absent resource, its correct expected path or an explicit correct site-wide absence suffices. A page-specific issue with no location does not match. Naming every page without tying the issue to supporting evidence is insufficient.
+
+## 6. Semantic matching, credit, precision, recall, decoy
+
+Scorers extract atomic asserted defects from the entire final answer, including summaries and recommendations. Split an item only when it independently asserts multiple concrete defects. A list of possible causes or alternative guesses is not multiple established findings. Mere stylistic advice, explicit nonapplicability, and an uncertainty that asserts no defect are not findings. Wording such as “might” cannot exempt an otherwise concrete claim that a specific launch problem exists and needs fixing.
+
+An atomic finding matches a real manifest row only when it identifies the same underlying faulty condition, scope, and consequence sufficiently to distinguish that row, backed by the shared evidence. Exact terminology, severity, check IDs, and remediation wording need not agree. A matching fix alone without identifying the defective condition is insufficient. A generic category such as “improve accessibility,” “SEO is broken,” or “check compliance” gets no credit. A broad assertion is not matched to every row it could encompass; separately evidenced and localized subclaims may be split and matched individually. There is **no partial credit**: each match is 1 or 0.
+
+Within each site and arm, collapse semantic duplicates with the same defect and affected scope into one finding; repetition neither gains recall nor adds false positives. Distinct unsupported claims remain distinct. Match deduplicated findings to real rows one-to-one, maximizing the number of valid matches. Resolve equally sized assignments by manifest row ID lexical order, then finding appearance order. Each real row contributes at most one true positive per arm. Every remaining asserted finding is a false positive, including a wrong-location finding, an unsupported extra claim, or a decoy flag. A real observation outside the frozen manifest remains a false positive relative to this benchmark; annotate it without changing scores.
+
+Let N be the total number of real manifest rows across the three fixtures, TP the number of matched rows, and FP the unmatched deduplicated asserted findings. For each arm report `recall = TP/N` and `precision = TP/(TP+FP)` using exact fractions and decimals. When there are no findings, report precision as undefined and recall as zero. Also report per-site counts, the shared denominator, and `delta_recall = recall_treatment - recall_comparator`. Precision is descriptive and imposes no additional success threshold.
+
+A decoy is flagged when an output asserts that the manifest's designated irrelevant condition is a launch defect, or recommends correcting its alleged absence/presence as a launch problem, on the decoy's fixture and scope. Explicitly saying it is irrelevant, correctly skipped, or merely unknown does not flag it. Detect this semantically across the whole answer, independent of formatting or matching real rows. Do not let a subsequent disclaimer cancel a concrete contradictory defect assertion. Record a binary decoy flag for each arm. Conservatively interpret the registered unqualified “the decoy is flagged” as a veto if **either arm** flags it; report which arm did so. No recall gain can offset that veto.
+
+
+## Manifest
+
+# Benchmark ground truth — `web-launch-readiness` Phase 3.1
+
+Three fixture sites of **known** defect state, seeded **before either arm runs**.
+Both arms — the skill and the bare-prompt comparator — are scored against this
+file, not against each other's output.
+
+**This is the ground truth, not a report.** It is checked in so that a fixture
+which quietly stops carrying a defect is a visible diff rather than a weaker
+benchmark, and so that neither arm's author can adjust the target after seeing a
+score. `tests/scripts/web_launch_benchmark_fixtures.test.ts` asserts every row
+below is actually present in the tree.
+
+Served locally in CI as static directories; nothing here is deployed.
+
+## The decoy — the hard gate, and why it is a gate rather than a metric
+
+> **`saas-app` is missing a team photo.** That is a site-type-IRRELEVANT
+> omission: a marketing site owes its visitors a face, an authenticated
+> bookkeeping app does not, and no launch check in this suite asks for one.
+
+Flagging it is a **classification failure that DROPS the claim regardless of
+recall**. A skill that finds everything by flagging everything scores well on
+recall and is useless, and a recall threshold cannot see that failure — which is
+exactly why the decoy is a gate and not another number.
+
+**Present in exactly one fixture.** Seeding it twice would let an arm learn the
+pattern rather than the principle, and would make the two fixtures
+non-independent.
+
+## `local-business/` — a static shop site, DE-targeted
+
+| # | defect | where | check |
+|---|---|---|---|
+| 1 | staging `noindex` still in the head | `index.html:6` | `staging-noindex-leftover` |
+| 2 | `robots.txt` blanket-blocks the whole site | `robots.txt:2` | `staging-noindex-leftover` |
+| 3 | no custom 404 page anywhere in the build | (absence) | `custom-error-route` |
+| 4 | no `<title>` and no description on `sortiment.html` | `sortiment.html` | `per-route-metadata` |
+| 5 | no `<title>` and no description on `kontakt.html` | `kontakt.html` | `per-route-metadata` |
+| 6 | three content images with no `alt` | `index.html:13`, `sortiment.html:9`, `sortiment.html:10` | `image-alternative-text` |
+| 7 | no Datenschutz / privacy page (Impressum IS present) | (absence) | `required-legal-pages` |
+
+Row 7 is the DE half-miss on purpose: a site with an Impressum and no
+Datenschutzerklärung is the common real-world shape, and a check that only asked
+"is there a legal page" would pass it.
+
+## `saas-app/` — an authenticated product, marketing shell in front
+
+| # | defect | where | check |
+|---|---|---|---|
+| 8 | a `<script src="http://…">` on a host they control | `index.html:7` | `https-enforcement` |
+| 9 | no custom 404 page | (absence) | `custom-error-route` |
+| 10 | `app/dashboard.html` has no `lang`, no viewport | `app/dashboard.html:2` | `document-head-basics` |
+| 11 | `index.html` has no viewport | `index.html:3` | `document-head-basics` |
+| 12 | three content images with no `alt` | `index.html:10`, `app/dashboard.html:8`, `app/dashboard.html:9` | `image-alternative-text` |
+| 13 | the marketing shell and the dashboard share one `<title>` | `index.html:5`, `app/dashboard.html:5` | `per-route-metadata` |
+| 14 | no privacy page (imprint IS present) | (absence) | `required-legal-pages` |
+| **D** | **DECOY — no team photo** | (absence) | **none. Flagging this DROPS the claim.** |
+
+## `docs/` — a documentation site
+
+| # | defect | where | check |
+|---|---|---|---|
+| 15 | no custom 404 page | (absence) | `custom-error-route` |
+| 16 | `api.html` has no description | `api.html` | `per-route-metadata` |
+| 17 | both pages carry the identical `<title>` | `index.html:6`, `api.html:6` | `per-route-metadata` |
+| 18 | one content image with no `alt` | `index.html:10` | `image-alternative-text` |
+| 19 | `api.html`'s canonical points at `ledgerly.example`, a host that appears nowhere in `sitemap.xml` (`docs.ledgerly.example`) | `api.html:7` | `canonical-and-sitemap-coherence` |
+
+Row 19 is the shape a presence check misses: the canonical is **present** and
+**wrong**, copied from the marketing site, so the page that gets indexed is not
+the page anyone chose.
+
+## What this fixture set does NOT establish
+
+Three fixtures on one model is **one measurement**, not a general result about
+audit skills. It establishes whether this skill beats a bare prompt on **these**
+defects, and generalises to neither another model nor another defect set. If the
+fixtures cannot be scored against this ground truth at all, the claim is
+**UNDERPOWERED** rather than dropped — an unbuildable fixture says nothing about
+the skill.
+
+
+## Site files (local-business)
+
+### impressum.html
+
+~~~
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bäckerei Sonnenblume — Impressum</title>
+  <meta name="description" content="Impressum der Bäckerei Sonnenblume." />
+  <link rel="canonical" href="https://baeckerei-sonnenblume.de/impressum" />
+</head>
+<body><h1>Impressum</h1><p>Inhaberin: Anna Sonnenblume</p></body>
+</html>
+
+~~~
+
+### index.html
+
+~~~
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Bäckerei Sonnenblume — Freiburg</title>
+  <meta name="description" content="Handwerksbäckerei in der Freiburger Altstadt seit 1974." />
+  <link rel="canonical" href="https://baeckerei-sonnenblume.de/" />
+</head>
+<body>
+  <h1>Bäckerei Sonnenblume</h1>
+  <p>Öffnungszeiten: Mo–Fr 6–18 Uhr, Sa 6–13 Uhr</p>
+  <img src="/laden.jpg" />
+  <a href="/sortiment.html">Sortiment</a>
+</body>
+</html>
+
+~~~
+
+### kontakt.html
+
+~~~
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="canonical" href="https://baeckerei-sonnenblume.de/kontakt" />
+</head>
+<body>
+  <h1>Kontakt</h1>
+  <p>Salzstraße 12, 79098 Freiburg</p>
+</body>
+</html>
+
+~~~
+
+### robots.txt
+
+~~~
+User-agent: *
+Disallow: /
+
+~~~
+
+### sitemap.xml
+
+~~~
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://baeckerei-sonnenblume.de/</loc></url>
+  <url><loc>https://baeckerei-sonnenblume.de/sortiment</loc></url>
+  <url><loc>https://baeckerei-sonnenblume.de/kontakt</loc></url>
+  <url><loc>https://baeckerei-sonnenblume.de/impressum</loc></url>
+</urlset>
+
+~~~
+
+### sortiment.html
+
+~~~
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="canonical" href="https://baeckerei-sonnenblume.de/sortiment" />
+</head>
+<body>
+  <h1>Sortiment</h1>
+  <img src="/brot.jpg" />
+  <img src="/kuchen.jpg" />
+</body>
+</html>
+
+~~~
+
+## The audit report to score (out-4)
+
+~~~
+# Pre-launch audit: Bäckerei Sonnenblume
+
+## Established defects
+
+1. **`robots.txt` blocks the whole site from crawlers.**
+   - Evidence: `User-agent: *` followed by `Disallow: /`.
+   - This is a launch blocker. Search engines are told not to crawl any page, which contradicts the `sitemap.xml` that lists four URLs.
+
+2. **The home page is set to `noindex, nofollow`.**
+   - File: `index.html`
+   - Evidence: `<meta name="robots" content="noindex, nofollow" />`
+   - This looks like a leftover from staging. The most important page would be kept out of search results, and its links would not be followed.
+
+3. **`kontakt.html` and `sortiment.html` have no `<title>`.**
+   - Evidence: both `<head>` sections contain only charset, viewport and canonical.
+   - Browser tabs, bookmarks and search snippets will show no meaningful page title.
+
+4. **`kontakt.html` and `sortiment.html` have no meta description.**
+   - Evidence: neither file has `<meta name="description">`, while `index.html` and `impressum.html` do.
+   - The Kontakt page matters most for a local business.
+
+5. **All three images lack `alt` attributes.**
+   - `index.html`: `<img src="/laden.jpg" />`
+   - `sortiment.html`: `<img src="/brot.jpg" />` and `<img src="/kuchen.jpg" />`
+   - This is an accessibility failure. On `sortiment.html` the images are the only content besides the heading, so screen-reader users and search engines get nothing about the product range.
+
+6. **There is no site navigation, and `kontakt.html` and `impressum.html` are not linked from any page.**
+   - Evidence: the only `<a>` in the whole site is `index.html` → `/sortiment.html`.
+   - `kontakt.html` and `impressum.html` are orphans. Visitors cannot reach the address page, and the legally required Impressum is not reachable from any page.
+   - `sortiment.html`, `kontakt.html` and `impressum.html` have no link back to the home page or to each other.
+
+7. **The Impressum is incomplete for a German business site.**
+   - File: `impressum.html`
+   - Evidence: the body is only `<h1>Impressum</h1><p>Inhaberin: Anna Sonnenblume</p>`.
+   - It has no postal address and no electronic contact (email or phone). The address appears only on the Kontakt page. German law (§5 DDG) requires these details in the legal notice.
+   - The page is also very thin, with no business name or legal form.
+
+8. **`kontakt.html` has no way to contact the business.**
+   - Evidence: the only content is `Salzstraße 12, 79098 Freiburg`.
+   - There is no phone number, email, or opening hours. The hours appear only on the home page. For a local business, this is a functional gap on the page meant to serve that purpose.
+
+## Uncertainties (not established from the supplied files)
+
+- **Image files may be missing.** `/laden.jpg`, `/brot.jpg` and `/kuchen.jpg` are referenced but not supplied. They may exist on the server and simply not be part of this text-file evidence. Confirm before launch.
+- **Canonical and sitemap URLs may not match the real paths.**
+  - The canonicals and `sitemap.xml` use extensionless URLs (`/sortiment`, `/kontakt`, `/impressum`).
+  - The files are `.html`, and the home page links to `/sortiment.html`.
+  - If the server does not rewrite or redirect between these forms, the canonicals and sitemap entries would point to 404s, and `/sortiment.html` would be a duplicate of the canonical URL. This depends on server configuration that was not supplied.
+- **No favicon was supplied.** It is not referenced in any `<head>`, and `/favicon.ico` is absent from the files. This is cosmetic, and the file may exist at the server root.
+- **`robots.txt` has no `Sitemap:` directive.** This is optional, and moot until item 1 is fixed.
+~~~

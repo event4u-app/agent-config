@@ -1,0 +1,363 @@
+You are the adjudicator for a blind launch-audit benchmark. Two independent reviewers scored the same audit report against the same manifest under the same rules, and they disagree. Read the package (rules, manifest, site files, report) and both reviewers' complete records below. Resolve every difference — claim extraction, deduplication, row matches, false positives, decoy flags and scorability — under the rules, and say why for each. Do not guess who wrote the report.
+
+Return ONLY one JSON object, in the same shape the reviewers used, plus a field "rulings": [{"point": "<what differed>", "ruling": "<your decision>", "why": "<one sentence>"}].
+
+## Package
+You are a blind scorer for a launch-audit benchmark. Below are: the scoring rules (Sections 5 and 6 of a frozen protocol), the benchmark's manifest of real defects and its decoy, the site's files, and ONE audit report written about that site by an unknown auditor. Score the report against the manifest exactly as the rules say. Do not guess who or what wrote the report.
+
+Return ONLY one JSON object, no prose around it, with this shape:
+
+{
+  "output_id": "<the id given below>",
+  "truth_scorable": true | false,
+  "truth_scorability_note": "<one sentence; why not, when false>",
+  "findings": [
+    {"n": 1, "claim": "<the atomic asserted defect, short>", "location": "<file(s) or site-wide>", "duplicate_of": null | <n>, "matches_row": "<manifest row id>" | null, "decoy": true | false, "note": "<one sentence of evidence>"}
+  ],
+  "decoy_flagged": true | false,
+  "matched_rows": ["<row id>", ...],
+  "false_positives": <count of deduplicated findings with no match, decoy flags included>
+}
+
+Use the manifest's own row identifiers. List every atomic asserted defect in the report, including those in summaries and recommendations; mark duplicates with duplicate_of rather than dropping them.
+
+Output id: out-2
+Site: saas-app
+
+## Scoring rules
+
+## 5. Shared ground truth and location requirement
+
+Only after all six outputs and their hashes are sealed does a separate scoring coordinator receive the hidden manifest. Both arms use exactly the same real-defect rows and the same decoy row, without filtering by the treatment's capabilities or applicability declarations. No row can be deleted because neither arm found it. Unlisted findings cannot be added to the truth set after seeing outputs.
+
+Scorers first assess whether the manifest identifies distinct real defects, their fixture and affected location/scope, and the decoy clearly enough to apply this rubric using the packaged evidence. Require at least one real row overall, coverage of the intended three-fixture evaluation, and a uniquely identifiable decoy. If a row requires evidence supplied to neither arm, cannot be distinguished from another row, or cannot be adjudicated from the shared evidence, the shared truth is not scorable: UNDERPOWERED. Do not quietly remove that row, repair fixtures, or obtain extra evidence for only one arm.
+
+A match requires both the correct defect and the correct affected page/file. Accept relative-path normalization (`./`, slash direction) and an unambiguous route-to-file mapping established by the supplied files. Line numbers are helpful but not required. A correct issue on the wrong page receives no credit. For a genuinely site-wide manifest row, an explicit site-wide assertion suffices; for an absent resource, its correct expected path or an explicit correct site-wide absence suffices. A page-specific issue with no location does not match. Naming every page without tying the issue to supporting evidence is insufficient.
+
+## 6. Semantic matching, credit, precision, recall, decoy
+
+Scorers extract atomic asserted defects from the entire final answer, including summaries and recommendations. Split an item only when it independently asserts multiple concrete defects. A list of possible causes or alternative guesses is not multiple established findings. Mere stylistic advice, explicit nonapplicability, and an uncertainty that asserts no defect are not findings. Wording such as “might” cannot exempt an otherwise concrete claim that a specific launch problem exists and needs fixing.
+
+An atomic finding matches a real manifest row only when it identifies the same underlying faulty condition, scope, and consequence sufficiently to distinguish that row, backed by the shared evidence. Exact terminology, severity, check IDs, and remediation wording need not agree. A matching fix alone without identifying the defective condition is insufficient. A generic category such as “improve accessibility,” “SEO is broken,” or “check compliance” gets no credit. A broad assertion is not matched to every row it could encompass; separately evidenced and localized subclaims may be split and matched individually. There is **no partial credit**: each match is 1 or 0.
+
+Within each site and arm, collapse semantic duplicates with the same defect and affected scope into one finding; repetition neither gains recall nor adds false positives. Distinct unsupported claims remain distinct. Match deduplicated findings to real rows one-to-one, maximizing the number of valid matches. Resolve equally sized assignments by manifest row ID lexical order, then finding appearance order. Each real row contributes at most one true positive per arm. Every remaining asserted finding is a false positive, including a wrong-location finding, an unsupported extra claim, or a decoy flag. A real observation outside the frozen manifest remains a false positive relative to this benchmark; annotate it without changing scores.
+
+Let N be the total number of real manifest rows across the three fixtures, TP the number of matched rows, and FP the unmatched deduplicated asserted findings. For each arm report `recall = TP/N` and `precision = TP/(TP+FP)` using exact fractions and decimals. When there are no findings, report precision as undefined and recall as zero. Also report per-site counts, the shared denominator, and `delta_recall = recall_treatment - recall_comparator`. Precision is descriptive and imposes no additional success threshold.
+
+A decoy is flagged when an output asserts that the manifest's designated irrelevant condition is a launch defect, or recommends correcting its alleged absence/presence as a launch problem, on the decoy's fixture and scope. Explicitly saying it is irrelevant, correctly skipped, or merely unknown does not flag it. Detect this semantically across the whole answer, independent of formatting or matching real rows. Do not let a subsequent disclaimer cancel a concrete contradictory defect assertion. Record a binary decoy flag for each arm. Conservatively interpret the registered unqualified “the decoy is flagged” as a veto if **either arm** flags it; report which arm did so. No recall gain can offset that veto.
+
+
+## Manifest
+
+# Benchmark ground truth — `web-launch-readiness` Phase 3.1
+
+Three fixture sites of **known** defect state, seeded **before either arm runs**.
+Both arms — the skill and the bare-prompt comparator — are scored against this
+file, not against each other's output.
+
+**This is the ground truth, not a report.** It is checked in so that a fixture
+which quietly stops carrying a defect is a visible diff rather than a weaker
+benchmark, and so that neither arm's author can adjust the target after seeing a
+score. `tests/scripts/web_launch_benchmark_fixtures.test.ts` asserts every row
+below is actually present in the tree.
+
+Served locally in CI as static directories; nothing here is deployed.
+
+## The decoy — the hard gate, and why it is a gate rather than a metric
+
+> **`saas-app` is missing a team photo.** That is a site-type-IRRELEVANT
+> omission: a marketing site owes its visitors a face, an authenticated
+> bookkeeping app does not, and no launch check in this suite asks for one.
+
+Flagging it is a **classification failure that DROPS the claim regardless of
+recall**. A skill that finds everything by flagging everything scores well on
+recall and is useless, and a recall threshold cannot see that failure — which is
+exactly why the decoy is a gate and not another number.
+
+**Present in exactly one fixture.** Seeding it twice would let an arm learn the
+pattern rather than the principle, and would make the two fixtures
+non-independent.
+
+## `local-business/` — a static shop site, DE-targeted
+
+| # | defect | where | check |
+|---|---|---|---|
+| 1 | staging `noindex` still in the head | `index.html:6` | `staging-noindex-leftover` |
+| 2 | `robots.txt` blanket-blocks the whole site | `robots.txt:2` | `staging-noindex-leftover` |
+| 3 | no custom 404 page anywhere in the build | (absence) | `custom-error-route` |
+| 4 | no `<title>` and no description on `sortiment.html` | `sortiment.html` | `per-route-metadata` |
+| 5 | no `<title>` and no description on `kontakt.html` | `kontakt.html` | `per-route-metadata` |
+| 6 | three content images with no `alt` | `index.html:13`, `sortiment.html:9`, `sortiment.html:10` | `image-alternative-text` |
+| 7 | no Datenschutz / privacy page (Impressum IS present) | (absence) | `required-legal-pages` |
+
+Row 7 is the DE half-miss on purpose: a site with an Impressum and no
+Datenschutzerklärung is the common real-world shape, and a check that only asked
+"is there a legal page" would pass it.
+
+## `saas-app/` — an authenticated product, marketing shell in front
+
+| # | defect | where | check |
+|---|---|---|---|
+| 8 | a `<script src="http://…">` on a host they control | `index.html:7` | `https-enforcement` |
+| 9 | no custom 404 page | (absence) | `custom-error-route` |
+| 10 | `app/dashboard.html` has no `lang`, no viewport | `app/dashboard.html:2` | `document-head-basics` |
+| 11 | `index.html` has no viewport | `index.html:3` | `document-head-basics` |
+| 12 | three content images with no `alt` | `index.html:10`, `app/dashboard.html:8`, `app/dashboard.html:9` | `image-alternative-text` |
+| 13 | the marketing shell and the dashboard share one `<title>` | `index.html:5`, `app/dashboard.html:5` | `per-route-metadata` |
+| 14 | no privacy page (imprint IS present) | (absence) | `required-legal-pages` |
+| **D** | **DECOY — no team photo** | (absence) | **none. Flagging this DROPS the claim.** |
+
+## `docs/` — a documentation site
+
+| # | defect | where | check |
+|---|---|---|---|
+| 15 | no custom 404 page | (absence) | `custom-error-route` |
+| 16 | `api.html` has no description | `api.html` | `per-route-metadata` |
+| 17 | both pages carry the identical `<title>` | `index.html:6`, `api.html:6` | `per-route-metadata` |
+| 18 | one content image with no `alt` | `index.html:10` | `image-alternative-text` |
+| 19 | `api.html`'s canonical points at `ledgerly.example`, a host that appears nowhere in `sitemap.xml` (`docs.ledgerly.example`) | `api.html:7` | `canonical-and-sitemap-coherence` |
+
+Row 19 is the shape a presence check misses: the canonical is **present** and
+**wrong**, copied from the marketing site, so the page that gets indexed is not
+the page anyone chose.
+
+## What this fixture set does NOT establish
+
+Three fixtures on one model is **one measurement**, not a general result about
+audit skills. It establishes whether this skill beats a bare prompt on **these**
+defects, and generalises to neither another model nor another defect set. If the
+fixtures cannot be scored against this ground truth at all, the claim is
+**UNDERPOWERED** rather than dropped — an unbuildable fixture says nothing about
+the skill.
+
+
+## Site files (saas-app)
+
+### app/dashboard.html
+
+~~~
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ledgerly — close your books faster</title>
+</head>
+<body>
+  <h1>Dashboard</h1>
+  <img src="/icons/chart.svg" />
+  <img src="/icons/export.svg" />
+</body>
+</html>
+
+~~~
+
+### imprint.html
+
+~~~
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ledgerly — Imprint</title>
+  <meta name="description" content="Company details and the responsible contact." />
+</head>
+<body><h1>Imprint</h1></body>
+</html>
+
+~~~
+
+### index.html
+
+~~~
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Ledgerly — close your books faster</title>
+  <meta name="description" content="Bookkeeping automation for small finance teams." />
+  <script src="http://cdn.ledgerly.example/widget.js"></script>
+</head>
+<body>
+  <h1>Ledgerly</h1>
+  <img src="/product-screenshot.png" />
+  <a href="/app/dashboard.html">Open the app</a>
+</body>
+</html>
+
+~~~
+
+### robots.txt
+
+~~~
+User-agent: *
+Disallow: /app/
+
+~~~
+
+## The audit report to score (out-2)
+
+~~~
+# Pre-launch audit: Ledgerly (site type `saas-app`, region not declared)
+
+This is a static read of the supplied files against `web-launch-readiness.json` and the logic in `check_web_launch_readiness.ts`. I did not run the command, and I did not read the third-party origin register or the crawler register.
+
+Four checks do not apply to `saas-app` and are skipped for that reason, not as findings: `per-route-metadata`, `canonical-and-sitemap-coherence`, `snippet-eligibility`, and (for this site's files) nothing else. Because of this, `app/dashboard.html` sharing a title with `index.html` and lacking a description is not a defect.
+
+## Established defects
+
+1. **Insecure (HTTP) script on the home page** (`https-enforcement`, critical)
+   - File: `index.html`, line 7.
+   - Defect: the page loads a script over plain HTTP, so it is mixed content and the secure-page guarantee is lost. Browsers may block it, which would break the widget, or load it unprotected.
+   - Evidence: `<script src="http://cdn.ledgerly.example/widget.js"></script>`
+   - Fix: serve it over `https://`.
+
+2. **Images with no `alt` attribute** (`image-alternative-text`, high)
+   - Files and evidence:
+     - `app/dashboard.html`, line 9: `<img src="/icons/chart.svg" />`
+     - `app/dashboard.html`, line 10: `<img src="/icons/export.svg" />`
+     - `index.html`, line 11: `<img src="/product-screenshot.png" />`
+   - Defect: the attribute is absent altogether, not set to `alt=""` as a deliberate decorative marking. This check applies to every site type.
+
+3. **Missing `lang` and viewport declarations** (`document-head-basics`, high)
+   - `app/dashboard.html`:
+     - Line 2 is `<html>` with no `lang`.
+     - The head has no `<meta name="viewport">`.
+     - Charset is present.
+   - `index.html`:
+     - It has `lang` and charset.
+     - It has no `<meta name="viewport">`. The head runs from `<meta charset>` through `<title>`, `<meta name="description">` and the script.
+   - `imprint.html` is complete.
+
+4. **No custom 404 page** (`custom-error-route`, high)
+   - Expected path: a `404.html` or `not-found` page. Both are absent site-wide.
+   - The supplied tree has four files: `app/dashboard.html`, `imprint.html`, `index.html` and `robots.txt`. None is a 404 page.
+   - The tree contains HTML pages, so there is a readable route surface and the absence is decidable.
+
+5. **No privacy page** (`required-legal-pages`, situational tier)
+   - Expected path: `privacy.html` or `datenschutz.html`, or an equivalent privacy page. It is absent site-wide.
+   - Evidence: only `imprint.html` matches the legal path patterns.
+   - Defect: the check reports the page as missing.
+   - Scope: no region is declared, so this stays at the situational base tier. I draw no conclusion that any specific law requires the page. If `--region de` were declared, the config would escalate this check to critical.
+
+## Uncertainties (not counted as defects)
+
+- **Origin of the home-page script:** `cdn.ledgerly.example` is not in any register I can read, so `third-party-load-in-markup` and `privacy-page-provider-coverage` are undecidable for it. The HTTP defect in item 1 stands either way.
+- **Jurisdiction:** the region is undeclared, so the severity of item 5 and the escalations for the third-party and privacy checks cannot be settled. The `imprint.html` content is minimal and has no statute citation or placeholder token.
+- **Runtime behaviour:** static source cannot show runtime-injected tags, consent behaviour, or head tags set by a script.
+
+## Checks that passed
+
+- `staging-noindex-leftover`: `robots.txt` disallows only `/app/`, which is not a blanket disallow, and no `noindex` meta appears.
+- `analytics-and-consent-wiring`: no analytics tag was found.
+- `superseded-statute-in-legal-page`: no superseded citation.
+- `placeholder-in-legal-page`: no bracketed placeholder tokens.
+- `structured-data-parses`: no JSON-LD blocks to fail.
+
+The command itself is default-off unless enabled or run with `--force`. That is a property of the tool, not a site defect.
+~~~
+
+## Reviewer 1 record
+{"output_id":"out-2","truth_scorable":true,"truth_scorability_note":"The manifest rows, their locations and the single decoy are distinct and can be checked against the supplied files.","findings":[{"n":1,"claim":"index.html loads a script over plain HTTP (mixed content)","location":"index.html:7","duplicate_of":null,"matches_row":"8","decoy":false,"note":"Names the http://cdn.ledgerly.example script in index.html line 7 under https-enforcement."},{"n":2,"claim":"Three content images have no alt attribute","location":"app/dashboard.html, index.html","duplicate_of":null,"matches_row":"12","decoy":false,"note":"Lists both dashboard images and the index.html image, with the alt attribute absent."},{"n":3,"claim":"app/dashboard.html has no lang and no viewport","location":"app/dashboard.html","duplicate_of":null,"matches_row":"10","decoy":false,"note":"States dashboard.html line 2 has no lang and the head has no viewport meta."},{"n":4,"claim":"index.html has no viewport meta","location":"index.html","duplicate_of":null,"matches_row":"11","decoy":false,"note":"States index.html has lang and charset but no viewport meta."},{"n":5,"claim":"No custom 404 page","location":"site-wide (absence)","duplicate_of":null,"matches_row":"9","decoy":false,"note":"Gives the expected path as 404.html or a not-found page and says it is absent site-wide."},{"n":6,"claim":"No privacy page; only the imprint exists","location":"site-wide (absence)","duplicate_of":null,"matches_row":"14","decoy":false,"note":"Gives privacy.html or datenschutz.html as the expected path and notes that only imprint.html is present."}],"decoy_flagged":false,"matched_rows":["8","9","10","11","12","14"],"false_positives":0}
+
+## Reviewer 2 record
+{
+  "output_id": "out-2",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects across all three fixtures and a unique decoy, and the supplied files support adjudicating this site's findings.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "The home page loads a script over HTTP.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "8",
+      "decoy": false,
+      "note": "The script src explicitly uses http://cdn.ledgerly.example/widget.js."
+    },
+    {
+      "n": 2,
+      "claim": "The dashboard chart image lacks alt.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "12",
+      "decoy": false,
+      "note": "The chart image lacks an alt attribute and receives the single available match to row 12 by appearance order."
+    },
+    {
+      "n": 3,
+      "claim": "The dashboard export image lacks alt.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported observation is distinct from the chart image, but row 12 has already received its one permitted match."
+    },
+    {
+      "n": 4,
+      "claim": "The home-page product screenshot lacks alt.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported observation concerns another image, but row 12 has already received its one permitted match."
+    },
+    {
+      "n": 5,
+      "claim": "The dashboard lacks a lang declaration.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "10",
+      "decoy": false,
+      "note": "The dashboard opens with a bare html element and receives the single available match to row 10 by appearance order."
+    },
+    {
+      "n": 6,
+      "claim": "The dashboard lacks a viewport declaration.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The viewport declaration is absent, but this independently asserted defect cannot receive another match to row 10."
+    },
+    {
+      "n": 7,
+      "claim": "The home page lacks a viewport declaration.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "11",
+      "decoy": false,
+      "note": "The supplied home-page head contains no viewport meta element."
+    },
+    {
+      "n": 8,
+      "claim": "The site has no custom 404 page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "9",
+      "decoy": false,
+      "note": "The report explicitly identifies the site-wide absence of a custom error page in the supplied tree."
+    },
+    {
+      "n": 9,
+      "claim": "The site has no privacy page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "14",
+      "decoy": false,
+      "note": "The supplied tree includes an imprint but no privacy page, as the report explicitly states."
+    },
+    {
+      "n": 10,
+      "claim": "The home-page script has an HTTP defect.",
+      "location": "index.html",
+      "duplicate_of": 1,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The uncertainties section repeats that the HTTP defect stands regardless of the script provider's classification."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["8", "9", "10", "11", "12", "14"],
+  "false_positives": 3
+}

@@ -1,0 +1,289 @@
+{
+  "output_id": "out-4",
+  "truth_scorable": true,
+  "truth_scorability_note": "The manifest identifies distinct defects, affected fixtures and locations across all three sites, and a unique decoy sufficiently clearly to apply the rubric.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "robots.txt blocks crawling of the entire site.",
+      "location": "robots.txt",
+      "duplicate_of": null,
+      "matches_row": "2",
+      "decoy": false,
+      "note": "User-agent: * followed by Disallow: / establishes row 2."
+    },
+    {
+      "n": 2,
+      "claim": "The home page retains noindex, nofollow.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "1",
+      "decoy": false,
+      "note": "The quoted robots meta tag establishes row 1."
+    },
+    {
+      "n": 3,
+      "claim": "Kontakt has no title.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": "5",
+      "decoy": false,
+      "note": "This localized metadata omission matches row 5, which receives credit only once."
+    },
+    {
+      "n": 4,
+      "claim": "Sortiment has no title.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": "4",
+      "decoy": false,
+      "note": "This localized metadata omission matches row 4, which receives credit only once."
+    },
+    {
+      "n": 5,
+      "claim": "Kontakt has no meta description.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This distinct supported omission remains unmatched because row 5 is assigned to the earlier title finding."
+    },
+    {
+      "n": 6,
+      "claim": "Sortiment has no meta description.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This distinct supported omission remains unmatched because row 4 is assigned to the earlier title finding."
+    },
+    {
+      "n": 7,
+      "claim": "All three content images lack alt attributes.",
+      "location": "index.html; sortiment.html",
+      "duplicate_of": null,
+      "matches_row": "6",
+      "decoy": false,
+      "note": "The report identifies the complete image group and affected files specified by row 6."
+    },
+    {
+      "n": 8,
+      "claim": "The site lacks site navigation.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The asserted site-wide navigation deficiency is outside the manifest."
+    },
+    {
+      "n": 9,
+      "claim": "Kontakt has no incoming links from any page.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "No supplied page links to Kontakt, but this defect is outside the manifest."
+    },
+    {
+      "n": 10,
+      "claim": "Impressum has no incoming links from any page.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "No supplied page links to Impressum, but this defect is outside the manifest."
+    },
+    {
+      "n": 11,
+      "claim": "Kontakt is an orphan page.",
+      "location": "kontakt.html",
+      "duplicate_of": 9,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Calling Kontakt an orphan repeats its lack of incoming links."
+    },
+    {
+      "n": 12,
+      "claim": "Impressum is an orphan page.",
+      "location": "impressum.html",
+      "duplicate_of": 10,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Calling Impressum an orphan repeats its lack of incoming links."
+    },
+    {
+      "n": 13,
+      "claim": "Visitors cannot reach the address page through site links.",
+      "location": "kontakt.html",
+      "duplicate_of": 9,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This consequence restates Kontakt's asserted absence of incoming links."
+    },
+    {
+      "n": 14,
+      "claim": "The Impressum is not reachable from any page.",
+      "location": "impressum.html",
+      "duplicate_of": 10,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This repeats the asserted absence of incoming links to Impressum."
+    },
+    {
+      "n": 15,
+      "claim": "Sortiment lacks links home or to the other pages.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This page has no outgoing links, a distinct observation outside the manifest."
+    },
+    {
+      "n": 16,
+      "claim": "Kontakt lacks links home or to the other pages.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Missing outgoing links differs from missing incoming links and is outside the manifest."
+    },
+    {
+      "n": 17,
+      "claim": "Impressum lacks links home or to the other pages.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Missing outgoing links differs from missing incoming links and is outside the manifest."
+    },
+    {
+      "n": 18,
+      "claim": "Impressum lacks a postal address.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The omission is supported but is outside the manifest."
+    },
+    {
+      "n": 19,
+      "claim": "Impressum lacks electronic contact details.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The page supplies neither email nor phone, but this omission is outside the manifest."
+    },
+    {
+      "n": 20,
+      "claim": "Impressum lacks a business name.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The body omits the business name although the title contains it, and this asserted defect is outside the manifest."
+    },
+    {
+      "n": 21,
+      "claim": "Impressum lacks a legal form.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The report separately asserts this omission, which has no manifest match."
+    },
+    {
+      "n": 22,
+      "claim": "Kontakt lacks phone or email contact details.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The missing direct-contact channel is asserted as a functional defect outside the manifest."
+    },
+    {
+      "n": 23,
+      "claim": "Kontakt lacks opening hours.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This independently asserted omission is supported but outside the manifest."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["1", "2", "4", "5", "6"],
+  "false_positives": 14,
+  "rulings": [
+    {
+      "point": "Shared truth scorability",
+      "ruling": "Retain truth_scorable=true.",
+      "why": "The manifest supplies distinguishable conditions and locations across the three fixtures and uniquely identifies the saas-app team-photo decoy."
+    },
+    {
+      "point": "Metadata claim extraction",
+      "ruling": "Extract four findings: missing title and missing description on each of Kontakt and Sortiment.",
+      "why": "These are independently asserted concrete omissions on distinct pages, so Reviewer 1's two cross-page findings are insufficiently atomic."
+    },
+    {
+      "point": "Metadata matching and deduplication",
+      "ruling": "Assign the title findings to rows 5 and 4 and count both description findings as unmatched.",
+      "why": "Title and description omissions are distinct defects rather than semantic duplicates, and the one-to-one rule with appearance-order tie-breaking gives each bundled manifest row to its earlier eligible finding."
+    },
+    {
+      "point": "Image claim extraction",
+      "ruling": "Retain one collective finding matching row 6.",
+      "why": "The report asserts one shared missing-alt condition over exactly the three-image scope grouped in row 6 and supplies every affected location."
+    },
+    {
+      "point": "Navigation claim extraction",
+      "ruling": "Extract the site-wide navigation claim, two incoming-link omissions, and three page-specific outgoing-link omissions separately.",
+      "why": "These assertions concern different conditions or affected scopes and cannot all be collapsed into Reviewer 1's single finding."
+    },
+    {
+      "point": "Repeated orphan and reachability claims",
+      "ruling": "Mark the orphan assertions and subsequent unreachable-page assertions as duplicates of the corresponding incoming-link findings.",
+      "why": "They repeat the same defect on the same page and therefore add neither matches nor false positives."
+    },
+    {
+      "point": "Impressum claim extraction",
+      "ruling": "Extract separate omissions of postal address, electronic contact details, business name, and legal form.",
+      "why": "The report independently asserts four concrete deficiencies, including the legal-form claim omitted by Reviewer 1."
+    },
+    {
+      "point": "Impressum matching",
+      "ruling": "Leave all Impressum-content findings unmatched.",
+      "why": "Manifest row 7 concerns an absent privacy page rather than incomplete content on the existing Impressum."
+    },
+    {
+      "point": "Kontakt claim extraction",
+      "ruling": "Extract missing direct-contact details and missing opening hours separately.",
+      "why": "A contact channel and opening hours are independently asserted functional omissions, while phone and email are presented as alternative contact methods."
+    },
+    {
+      "point": "Broad summaries and explanatory consequences",
+      "ruling": "Do not add independent findings for generic incompleteness, thinness, or the stated consequences of already extracted defects.",
+      "why": "Those statements introduce no additional concrete faulty condition beyond the localized omissions already recorded."
+    },
+    {
+      "point": "Uncertainties section",
+      "ruling": "Extract no findings from this section.",
+      "why": "Missing images and URL failures are explicitly unresolved possibilities, the favicon is described as cosmetic and potentially present, and the Sitemap directive is expressly optional."
+    },
+    {
+      "point": "Unreported real rows",
+      "ruling": "Do not match rows 3 or 7.",
+      "why": "The report asserts neither the absence of a custom 404 page nor the absence of a privacy page."
+    },
+    {
+      "point": "Decoy status",
+      "ruling": "Retain decoy_flagged=false and decoy=false for every finding.",
+      "why": "The report makes no launch-defect assertion about a missing team photo on the designated saas-app fixture."
+    },
+    {
+      "point": "Final matches and false-positive count",
+      "ruling": "Record five matched rows and fourteen false positives.",
+      "why": "There are nineteen deduplicated asserted findings, five receive valid one-to-one matches, and every remaining finding counts as a false positive under the frozen manifest."
+    }
+  ]
+}

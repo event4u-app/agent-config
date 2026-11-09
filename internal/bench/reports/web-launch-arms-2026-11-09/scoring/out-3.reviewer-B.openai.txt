@@ -1,0 +1,64 @@
+{
+  "output_id": "out-3",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects across three fixtures and a unique decoy, with sufficient supplied evidence to score this docs report.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "API canonical uses the wrong host and conflicts with the sitemap URL.",
+      "location": "api.html, sitemap.xml",
+      "duplicate_of": null,
+      "matches_row": "19",
+      "decoy": false,
+      "note": "The API canonical uses ledgerly.example while its sitemap entry uses docs.ledgerly.example."
+    },
+    {
+      "n": 2,
+      "claim": "The API page repeats the home page title and is consequently mislabeled.",
+      "location": "api.html, index.html",
+      "duplicate_of": null,
+      "matches_row": "17",
+      "decoy": false,
+      "note": "Both files use the identical getting-started title despite representing different pages."
+    },
+    {
+      "n": 3,
+      "claim": "The API page has no meta description.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": "16",
+      "decoy": false,
+      "note": "The supplied API head contains no description metadata."
+    },
+    {
+      "n": 4,
+      "claim": "The architecture image lacks alternative text.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "18",
+      "decoy": false,
+      "note": "The image element has no alt attribute."
+    },
+    {
+      "n": 5,
+      "claim": "The image lacks width and height attributes, risking layout shift.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The attributes are absent, but this observation is outside the frozen manifest."
+    },
+    {
+      "n": 6,
+      "claim": "The docs pages lack internal links and navigation between them.",
+      "location": "index.html, api.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Neither supplied page contains an anchor element, but missing navigation is outside the frozen manifest."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["16", "17", "18", "19"],
+  "false_positives": 2
+}

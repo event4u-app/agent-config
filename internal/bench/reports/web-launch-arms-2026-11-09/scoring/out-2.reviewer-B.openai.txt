@@ -1,0 +1,100 @@
+{
+  "output_id": "out-2",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects across all three fixtures and a unique decoy, and the supplied files support adjudicating this site's findings.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "The home page loads a script over HTTP.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "8",
+      "decoy": false,
+      "note": "The script src explicitly uses http://cdn.ledgerly.example/widget.js."
+    },
+    {
+      "n": 2,
+      "claim": "The dashboard chart image lacks alt.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "12",
+      "decoy": false,
+      "note": "The chart image lacks an alt attribute and receives the single available match to row 12 by appearance order."
+    },
+    {
+      "n": 3,
+      "claim": "The dashboard export image lacks alt.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported observation is distinct from the chart image, but row 12 has already received its one permitted match."
+    },
+    {
+      "n": 4,
+      "claim": "The home-page product screenshot lacks alt.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported observation concerns another image, but row 12 has already received its one permitted match."
+    },
+    {
+      "n": 5,
+      "claim": "The dashboard lacks a lang declaration.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "10",
+      "decoy": false,
+      "note": "The dashboard opens with a bare html element and receives the single available match to row 10 by appearance order."
+    },
+    {
+      "n": 6,
+      "claim": "The dashboard lacks a viewport declaration.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The viewport declaration is absent, but this independently asserted defect cannot receive another match to row 10."
+    },
+    {
+      "n": 7,
+      "claim": "The home page lacks a viewport declaration.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "11",
+      "decoy": false,
+      "note": "The supplied home-page head contains no viewport meta element."
+    },
+    {
+      "n": 8,
+      "claim": "The site has no custom 404 page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "9",
+      "decoy": false,
+      "note": "The report explicitly identifies the site-wide absence of a custom error page in the supplied tree."
+    },
+    {
+      "n": 9,
+      "claim": "The site has no privacy page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "14",
+      "decoy": false,
+      "note": "The supplied tree includes an imprint but no privacy page, as the report explicitly states."
+    },
+    {
+      "n": 10,
+      "claim": "The home-page script has an HTTP defect.",
+      "location": "index.html",
+      "duplicate_of": 1,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The uncertainties section repeats that the HTTP defect stands regardless of the script provider's classification."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["8", "9", "10", "11", "12", "14"],
+  "false_positives": 3
+}

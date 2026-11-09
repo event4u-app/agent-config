@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: later
+status: complete
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -82,10 +82,10 @@ state. It is not roadmap completion.
 
 ## The two steps, verbatim from the parent
 
-- [ ] **3.2 Run the comparator arm** — identical model, bare audit prompt, same
+- [x] **3.2 Run the comparator arm** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_web_launch_arms.ts --> — identical model, bare audit prompt, same
       site access.
       verify: both arms' raw outputs are archived with the run.
-- [ ] **3.3 Resolve the claim** — PROVE, DROP, or UNDERPOWERED. The decoy gate
+- [x] **3.3 Resolve the claim** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> — PROVE, DROP, or UNDERPOWERED. The decoy gate
       is checked first: a decoy false positive is DROP regardless of the recall
       delta.
       verify: the verdict PR flips the claim status; on DROP the skill stays
@@ -211,7 +211,7 @@ remains ineligible to freeze.
 - **Resolved when:** a session that did NOT author the checks, the fixtures or
   the ground truth has frozen all seven protocol items above in writing, before
   seeing either arm's output.
-- **Status:** open — **unchanged, and deliberately so.** The parent's rescope
+- **Status:** resolved 2026-11-09 — a ground-truth-blind OpenAI session froze all seven items in a commit pushed before either arm ran (`internal/bench/web-launch-benchmark/FREEZE-RECORD-2026-11-09.md`, protocol SHA-256 `aa675ae0…a51a`). Verdict PROVE, scoped: `internal/bench/web-launch-benchmark/RESULT-2026-11-09.md`. Before that: open — **unchanged, and deliberately so.** The parent's rescope
   did not resolve this blocker and could not: it moved the *closure* decision,
   not the *independence* condition. The 2026-08-25 council was asked to freeze
   the seven items and declined, on the ground that a ground-truth-aware seat
@@ -233,12 +233,12 @@ remains ineligible to freeze.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — All seven protocol items are frozen in writing, in a commit that
+- [x] AC-1 — All seven protocol items are frozen in writing, in a commit that
       precedes any arm's execution.
-- [ ] AC-2 — Both arms' prompts, settings, raw outputs and scoring decisions are
+- [x] AC-2 — Both arms' prompts, settings, raw outputs and scoring decisions are
       archived with the run.
-- [ ] AC-3 — The decoy gate is evaluated FIRST, and its result is recorded
+- [x] AC-3 — The decoy gate is evaluated FIRST, and its result is recorded
       whether or not the recall comparison is reached.
-- [ ] AC-4 — The claim carries PROVE, DROP or UNDERPOWERED, and on DROP the
+- [x] AC-4 — The claim carries PROVE, DROP or UNDERPOWERED, and on DROP the
       skill stays default-off with the null recorded as the outcome rather than
       noted in passing.

@@ -53,7 +53,7 @@ function shippedTrackedFiles(): string[] {
     const files = pkg.files ?? [];
     const prefixes = files.filter((f) => f.endsWith('/')).map((f) => f.replace(/\/+$/, '') + '/');
     const exact = new Set(files.filter((f) => !f.endsWith('/')));
-    const tracked = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf-8' })
+    const tracked = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 })
         .split('\n')
         .filter(Boolean);
     return tracked.filter((t) => exact.has(t) || prefixes.some((p) => t.startsWith(p)));
