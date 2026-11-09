@@ -57,30 +57,44 @@ wording of the two contracts byte-identical needs no new measurement. A fix
 that changes that wording is a new variant and needs a re-measure under a
 fresh pre-registration before it can ship.
 
-- [ ] **1.1 Diagnose `check_startup_contracts`.** Cherry-pick the two commits
+- [x] **1.1 Diagnose `check_startup_contracts`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Cherry-pick the two commits
       onto a branch from main, run
       `./scripts-run src/scripts/check_startup_contracts`, and record which
       assertion fails and why.
       verify: the failing assertion and its cause are written under this step.
-- [ ] **1.2 Find the 1,544 chars.** Run `check_session_start_budget` on the
+      Done 2026-11-09: both rules are refused as "not a consequence-class or
+      safety-floor rule" — the check has no optional contract, and a clause
+      audit is missing next. The wording is not what fails
+      (`agents/evidence/analysis/adapted-layer-gate-diagnosis-2026-11-09.md`).
+- [x] **1.2 Find the 1,544 chars.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run `check_session_start_budget` on the
       cherry-picked branch and list candidates that cut ≥1,544 chars outside
       the two benchmarked contracts (other start-layer text), or the cost of
       raising the budget.
       verify: a table of candidates with char deltas under this step.
+      Done 2026-11-09: main 79,845, adapted 81,544. Candidates (Δ chars): the
+      `source_path:` prefix −2,200; pack floors only with their pack −5,479;
+      frontmatter block up to −9,624; budget raise to 82,000. Table and notes
+      in the same evidence file.
 - [ ] **1.3 Owner decision on both gates.** <!-- blocked-by: adapted-layer-gate-decisions -->
       Present 1.1 and 1.2 as options (fix the check, fix the text, trim
       elsewhere, raise the budget, or do not ship), each marked whether it
       keeps the benchmarked wording.
       verify: the decision is recorded in the result file's owner section.
-- [ ] **1.4 Pre-model aborts settled before data.** Write into
+- [x] **1.4 Pre-model aborts settled before data.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/eval_publication.ts --> Write into
       `docs/contracts/eval-measurement-integrity.md` the convention the owner
       applied post-data on 2026-11-09: a run that ends before any model call
-      (startup-hook timeout, harness crash) is an environment failure, not a
-      trial; it is rerun up to a bound named in the pre-registration and
-      reported with its abort reason, never scored. Give it an executable half
-      beside `_lib/eval_publication.ABORT_REASONS` with a test that sees a
-      pre-model abort excluded and a post-call timeout kept.
+      is an environment failure, rerun up to a pre-registered bound and
+      reported, never scored. Executable half beside `ABORT_REASONS`, with a
+      test that excludes a pre-model abort and keeps a post-call timeout.
       verify: the contract's "Where each rule is executable" table has the row, and its test passes.
+      Done 2026-11-09: contract section plus `countedTrials`; tests seen red first.
+      reach exempt: `_lib/eval_publication.ts` has no importer in `src/` or `internal/`; 1.6 wires this one into the runner before 1.5 may use it.
+- [ ] **1.6 Wire the rule into the runner.** `internal/bench/core/bench_ab_v2_run.ts`
+      writes each run's `load_check` (`ok: false` when the stream has no
+      `system/init` event); map that to `reachedModel`, rerun a pre-model abort
+      up to the bound the pre-registration names, and score through
+      `countedTrials`. Must land before 1.5's run.
+      verify: a runner test where a stream with no init event is rerun and not scored, and one with a post-call timeout is scored.
 - [ ] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- blocked-by: adapted-layer-gate-decisions -->
       Pre-register, before any transcript, a run on fresh seeds (and unseen
       tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
@@ -115,8 +129,7 @@ fresh pre-registration before it can ship.
 - **What to do:** run `./scripts-run src/scripts/check_startup_contracts` and `./scripts-run src/scripts/check_session_start_budget` on a branch carrying `ced3e99b3b` and `51add0fc53`, then choose one of: (a) fix the check, (b) fix the contract text and re-measure, (c) trim 1,544 chars elsewhere, (d) raise the budget, (e) do not ship (the reduced form stays), (f) restore the full layer for the release while the adapted form is pursued, (g) ship only after the 1.5 fresh confirmation. (f) and (g) combine with (a)-(d).
 - **Resolved when:** the owner section of the result file names the chosen
   path for both gates.
-- **Recommendation:** run 1.1 and 1.2 first; a decision without the diagnosis
-  is a guess.
+- **Recommendation:** 1.1 and 1.2 are done (2026-11-09). Gate 1 is the check, not the text: (a) — let a measured non-class rule carry a contract, with its clause audit — keeps the benchmarked wording. Gate 2: the `source_path:` prefix cut (−2,200) clears it without touching rule text. Take (g) as well: the third look rests on a post-data reading, and 1.4 now freezes that rule for the next run.
 - **If you do nothing:** the shipped start layer stays the reduced form that
   read INFERIOR in the first look.
 

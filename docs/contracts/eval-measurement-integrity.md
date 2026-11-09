@@ -61,6 +61,28 @@ tarball, installs it into a throwaway prefix, and runs consumer probes from the
 installed tree. A benchmark arm that claims to measure "the package" uses that
 path or states plainly that it measured the source tree instead.
 
+## A run that never reached the model is not a trial
+
+**An attempt that ended before any model call — a startup-hook timeout, a
+harness crash — measured the environment, not the arm. It is rerun, up to a
+bound the pre-registration names before data, and it is reported with its
+abort reason; it is never scored.**
+
+The rule exists because the alternative was decided once after the data: on
+2026-11-09 two `trapC-ambig-01` runs timed out in the startup hook, the frozen
+protocol did not say whether they counted as blind asks, and the verdict moved
+between INCONCLUSIVE and NON-INFERIOR on that reading alone. A reading chosen
+after the result is known is the weakest kind of evidence a benchmark can
+offer, however reasonable the choice.
+
+Two limits keep it from becoming a way to drop inconvenient runs. An abort
+counts as pre-model only on positive evidence (`reachedModel: false` on the
+receipt); an abort that does not say is kept as the trial. And a timeout
+after a model call stays the trial, exactly as attempt-one accounting keeps
+any other first attempt. A case whose every attempt within the bound missed
+the model is listed as an environment failure, so the denominator stays
+visible.
+
 ## The non-inference section
 
 **Every measurement artifact carries a section enumerating the inferences its
@@ -95,6 +117,7 @@ answered.
 | Attempt-one-only accounting | `_lib/eval_publication.firstAttempts` |
 | Completeness before publication | `_lib/eval_publication.completenessVerdict` |
 | An abort is a truthful receipt | `_lib/eval_publication.ABORT_REASONS` |
+| A pre-model abort is not a trial | `_lib/eval_publication.countedTrials` |
 | Coverage excludes non-self-activating artifacts | `_lib/eval_publication.coverageExcludingNonActivating` |
 | A declared indeterminate branch | `_lib/eval_publication.evaluateThreshold` |
 | The measurement inputs are gated | `src/scripts/lint_eval_specs.ts` |

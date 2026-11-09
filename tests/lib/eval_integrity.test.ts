@@ -18,6 +18,7 @@ import {
     ABORT_REASONS,
     baselineIdentity,
     completenessVerdict,
+    countedTrials,
     coverageExcludingNonActivating,
     discriminationDeficit,
     evaluateThreshold,
@@ -296,6 +297,72 @@ describe('attempt-one accounting and the completeness precondition', () => {
                     .publishable,
             ).toBe(true);
         }
+    });
+});
+
+describe('a pre-model abort is an environment failure, never a trial', () => {
+    const r = (over: Partial<Receipt>): Receipt => ({
+        caseId: 'c1',
+        configuration: 'cfg',
+        attempt: 1,
+        outcome: 'pass',
+        ...over,
+    });
+    const preModel = (attempt: number): Receipt =>
+        r({ attempt, outcome: 'aborted', failureReason: 'timeout', reachedModel: false });
+
+    it('counts the first attempt that reached the model, after a pre-model abort', () => {
+        const got = countedTrials([preModel(1), r({ attempt: 2, outcome: 'fail' })], 2);
+        expect(got.trials).toHaveLength(1);
+        expect(got.trials[0]?.attempt).toBe(2);
+        expect(got.trials[0]?.outcome).toBe('fail');
+        expect(got.environmentFailures).toHaveLength(0);
+        expect(got.excludedPreModel).toBe(1);
+    });
+
+    it('keeps a timeout that came after a model call as the trial', () => {
+        const got = countedTrials(
+            [
+                r({ attempt: 1, outcome: 'aborted', failureReason: 'timeout', reachedModel: true }),
+                r({ attempt: 2, outcome: 'pass' }),
+            ],
+            2,
+        );
+        expect(got.trials).toHaveLength(1);
+        expect(got.trials[0]?.outcome).toBe('aborted');
+        expect(got.excludedPreModel).toBe(0);
+    });
+
+    it('never excludes an abort that does not say it missed the model', () => {
+        const got = countedTrials(
+            [r({ attempt: 1, outcome: 'aborted', failureReason: 'timeout' }), r({ attempt: 2 })],
+            2,
+        );
+        expect(got.trials[0]?.attempt).toBe(1);
+    });
+
+    it('stops at the declared rerun bound and reports the case, never scoring it', () => {
+        const got = countedTrials([preModel(1), preModel(2), preModel(3), r({ attempt: 4 })], 2);
+        expect(got.trials).toHaveLength(0);
+        expect(got.environmentFailures).toEqual([{ configuration: 'cfg', caseId: 'c1', preModelAborts: 3 }]);
+    });
+
+    it('reports a case whose every attempt missed the model', () => {
+        const got = countedTrials([preModel(1)], 2);
+        expect(got.trials).toHaveLength(0);
+        expect(got.environmentFailures).toEqual([{ configuration: 'cfg', caseId: 'c1', preModelAborts: 1 }]);
+    });
+
+    it('keeps cases and configurations apart', () => {
+        const got = countedTrials(
+            [preModel(1), r({ attempt: 2 }), r({ caseId: 'c2' }), r({ configuration: 'other' })],
+            2,
+        );
+        expect(got.trials.map((t) => `${t.configuration}/${t.caseId}/${String(t.attempt)}`).sort()).toEqual([
+            'cfg/c1/2',
+            'cfg/c2/1',
+            'other/c1/1',
+        ]);
     });
 });
 
