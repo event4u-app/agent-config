@@ -167,6 +167,56 @@ export function baselineIdentity(id: BaselineIdentity): string {
 
 // ── Phase 5.1 / 5.2 — first attempts, and the completeness precondition ─────
 
+export interface CountedTrials {
+    /** One receipt per (configuration, case): the first attempt that reached the model. */
+    trials: Receipt[];
+    /** Cases with no attempt that reached the model within the rerun bound — reported, never scored. */
+    environmentFailures: { configuration: string; caseId: string; preModelAborts: number }[];
+    /** Pre-model aborts skipped on the way to a counted trial. */
+    excludedPreModel: number;
+}
+
+/**
+ * A run that ended before any model call measured the environment, not the
+ * arm, so it is not a trial: the next attempt is, up to `maxReruns` reruns.
+ * The bound is declared in the pre-registration before data, which is what
+ * keeps this from becoming a post-data reading of an inconvenient run.
+ * An abort after a model call stays the trial, as `firstAttempts` keeps it.
+ */
+export function countedTrials(receipts: readonly Receipt[], maxReruns: number): CountedTrials {
+    const groups = new Map<string, Receipt[]>();
+    for (const r of receipts) {
+        const key = r.configuration + FIELD_SEP + r.caseId;
+        const g = groups.get(key);
+        if (g === undefined) groups.set(key, [r]);
+        else g.push(r);
+    }
+    const out: CountedTrials = { trials: [], environmentFailures: [], excludedPreModel: 0 };
+    for (const group of groups.values()) {
+        const ordered = [...group].sort((a, b) => a.attempt - b.attempt);
+        let skipped = 0;
+        let trial: Receipt | undefined;
+        for (const r of ordered) {
+            const preModel = r.outcome === 'aborted' && r.reachedModel === false;
+            if (!preModel) {
+                trial = r;
+                break;
+            }
+            skipped += 1;
+            if (skipped > maxReruns) break;
+        }
+        const first = ordered[0] as Receipt;
+        if (trial === undefined) {
+            out.environmentFailures.push({ configuration: first.configuration, caseId: first.caseId, preModelAborts: skipped });
+        } else {
+            out.trials.push(trial);
+            out.excludedPreModel += skipped;
+        }
+    }
+    return out;
+}
+
+
 export interface Receipt {
     caseId: string;
     configuration: string;
@@ -175,6 +225,11 @@ export interface Receipt {
     outcome: 'pass' | 'fail' | 'aborted';
     /** Required when `outcome` is `aborted`, and must be an allow-listed reason. */
     failureReason?: string | undefined;
+    /**
+     * `false` only when the run is known to have ended before any model call. Absent
+     * means unknown, which is read as reached: an exclusion needs positive evidence.
+     */
+    reachedModel?: boolean | undefined;
 }
 
 /**
