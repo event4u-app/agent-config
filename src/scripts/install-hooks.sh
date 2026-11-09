@@ -134,13 +134,15 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # session open, and GitHub dropped it (`Connection reset by peer`).
 delete_only=1
 tags_only=1
+pushed_shas=""
+
 saw_ref=0
 while read -r _local_ref local_sha remote_ref _remote_sha; do
     [ -z "${local_sha:-}" ] && continue
     saw_ref=1
     # Any non-zero character means a real object is being pushed.
     case "$local_sha" in
-        *[!0]*) delete_only=0 ;;
+        *[!0]*) delete_only=0; pushed_shas="$pushed_shas $local_sha" ;;
     esac
     case "$remote_ref" in
         refs/tags/*)
@@ -339,22 +341,27 @@ if ! ./scripts-run src/scripts/check_no_conflict_markers --quiet; then
     exit 1
 fi
 
-# CI MIRROR — the CI gate jobs themselves, replayed on this machine.
+# CI MIRROR — a green replay of the CI gate jobs must be on record for every
+# pushed commit.
 #
-# This replaced three hand-kept subsets: `task consistency`, the 22-gate
-# `task preflight`, and a changed-files typecheck. CI ran ~380 gates, so a
-# green hook predicted nothing, and each CI job stopped at its first red step,
-# so every fix-push revealed the next red one. PR #2949 took four pushes for
-# four failures that were all decidable here.
+# The mirror (src/scripts/ci_mirror.ts) replaced three hand-kept subsets of CI
+# (`task consistency`, the 22-gate `task preflight`, a changed-files
+# typecheck), which left 295 CI gates able to fail only after a push. It reads
+# the jobs named in src/config/ci-mirror.json straight from the workflow
+# files, replays them in throwaway worktrees, reports every failure at once,
+# and on a green, complete run records a stamp for that commit under the
+# shared git directory.
 #
-# `ci_mirror` reads the steps of the jobs named in src/config/ci-mirror.json
-# straight from the workflow files — there is no second list to drift — runs
-# them in throwaway worktrees of HEAD (the working tree is never touched), and
-# reports EVERY failure at once. A refused ratification record is reported as
-# an owner decision and does not block the push: the author cannot fix it, and
-# CI keeps the step red until the owner decides.
+# THE REPLAY DOES NOT RUN IN THIS HOOK, and that is measured, not a choice of
+# taste: `git push` opens the connection to the remote BEFORE it runs pre-push,
+# and GitHub closes an idle push connection after a few minutes. A 5-minute
+# replay here ended green and the push still failed ("Connection to github.com
+# closed by remote host", exit 141) — twice. So this block only checks, in
+# milliseconds, that the stamp exists; the replay runs first, on its own:
 #
-# Cost: measured in src/config/ci-local-parity.yml (`pre_push_budget_seconds`).
+#     ./scripts-run src/scripts/ci_mirror      # ≈5 min, then `git push`
+#
+# A refused ratification record is an owner decision there and does not block.
 # Emergency bypass, printed on every use: AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1.
 for legacy in AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT AGENT_CONFIG_SKIP_PREPUSH_STATIC; do
     if [ "${!legacy:-}" = "1" ]; then
@@ -362,18 +369,27 @@ for legacy in AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT AGENT_CONFIG_SKIP_PREPUSH_STAT
         echo "    the static pass. A refused ratification no longer needs a bypass."
     fi
 done
-echo "🔍 CI mirror — replaying the CI gate jobs locally (src/config/ci-mirror.json)..."
+echo "🔍 CI mirror — is a green replay on record for the pushed commit(s)?"
 if [ "${AGENT_CONFIG_SKIP_PREPUSH_MIRROR:-}" = "1" ]; then
     echo "⚠️  CI mirror SKIPPED via AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 — this push is unverified,"
     echo "    and CI is its first gate."
-elif ! command -v task >/dev/null 2>&1; then
-    echo "❌  'task' (go-task) not found. The CI jobs call it, so they cannot be replayed."
-    echo "    Install it (https://taskfile.dev), or AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 for an"
-    echo "    emergency push."
-    fail=1
-elif ! ./scripts-run src/scripts/ci_mirror; then
-    echo "❌  These are the failures CI would report on this push. Fix them all, commit, push again."
-    fail=1
+else
+    stamp_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)/ci-mirror"
+    missing=""
+    for sha in $pushed_shas; do
+        commit=$(git rev-parse --verify --quiet "${sha}^{commit}" 2>/dev/null || echo "$sha")
+        [ -f "$stamp_dir/$commit.json" ] || missing="$missing ${commit:0:10}"
+    done
+    if [ -n "$missing" ]; then
+        echo "❌  No green CI-mirror replay on record for:$missing"
+        echo "    Run it first (about 5 minutes), then push again:"
+        echo "        ./scripts-run src/scripts/ci_mirror"
+        echo "    It cannot run inside this hook: git holds the connection to GitHub open"
+        echo "    while the hook runs, and GitHub closes it after a few idle minutes."
+        fail=1
+    else
+        echo "✅  green replay on record — CI's locally reproducible gates already passed for this commit."
+    fi
 fi
 
 if [ $fail -ne 0 ]; then

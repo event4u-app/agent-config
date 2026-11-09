@@ -152,15 +152,19 @@ task install -- --target <dir> # Run the installer orchestrator on a target
 task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push CI mirror, chat-history bridges)
 ```
 
-The **pre-push hook replays the CI gate jobs** with `src/scripts/ci_mirror.ts`:
-it reads the steps of the jobs named in `src/config/ci-mirror.json` straight
-from the workflow files, runs them in throwaway worktrees of HEAD (your working
-tree is never touched), and reports **every** failure CI would report, in one
-run. Run it by hand with `./scripts-run src/scripts/ci_mirror`; `--list` prints
-the plan, `--job <workflow>:<job>` narrows it. A refused ratification record is
-reported as an owner decision and does not block the push. Derived-output drift
-still shows up as the consistency job's `git diff` step — fix it with
-`task consistency-fix`, commit, re-push. The hook auto-installs on
+**Before `git push`, run the CI mirror**: `./scripts-run src/scripts/ci_mirror`
+(about 5 minutes). It reads the steps of the jobs named in
+`src/config/ci-mirror.json` straight from the workflow files, runs them in
+throwaway worktrees of HEAD (your working tree is never touched), and reports
+**every** failure CI would report, in one run. A green, complete run records a
+stamp for that commit; the **pre-push hook** only checks that the stamp exists,
+in milliseconds, and refuses with the command when it does not. The replay
+cannot run inside the hook: `git push` holds the connection to GitHub open while
+the hook runs, and GitHub closes it after a few idle minutes. `--list` prints
+the plan, `--job <workflow>:<job>` narrows it (and writes no stamp). A refused
+ratification record is reported as an owner decision and does not block.
+Derived-output drift shows up as the consistency job's `git diff` step — fix it
+with `task consistency-fix`, commit, re-run. The hook auto-installs on
 `npm install` in a git clone (the `prepare` script); run `task install-hooks`
 manually if you skipped install scripts. Emergency bypass, printed on use:
 `AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1`, or `git push --no-verify`.

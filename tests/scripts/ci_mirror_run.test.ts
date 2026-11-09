@@ -81,17 +81,21 @@ beforeAll(async () => {
     const logs = path.join(root, 'logs');
     fs.mkdirSync(logs);
     process.env.GIT_DIR = '/nonexistent/as-set-by-git-inside-a-hook';
-    const plan = planJobs(root, CONFIG)[0];
-    if (!plan) throw new Error('fixture job did not plan');
-    result = await runJob(plan, {
-        baseRef: 'main', baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40), headRef: 'topic',
-        prNumber: '1', runnerTemp: root, workspace: root,
-    }, root, logs);
+    try {
+        const plan = planJobs(root, CONFIG)[0];
+        if (!plan) throw new Error('fixture job did not plan');
+        result = await runJob(plan, {
+            baseRef: 'main', baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40), headRef: 'topic',
+            prNumber: '1', runnerTemp: root, workspace: root,
+        }, root, logs);
+    } finally {
+        // Restored here, not in afterAll: a later describe in this file runs git.
+        if (savedGitDir === undefined) delete process.env.GIT_DIR;
+        else process.env.GIT_DIR = savedGitDir;
+    }
 }, 60_000);
 
 afterAll(() => {
-    if (savedGitDir === undefined) delete process.env.GIT_DIR;
-    else process.env.GIT_DIR = savedGitDir;
     fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -250,5 +254,20 @@ jobs:
         });
         expect(peak).toBe(2);
         expect(out).toEqual([50, 10, 40, 20, 30, 0]);
+    });
+});
+
+describe('ci_mirror — the push stamp', () => {
+    it('records a green replay under the shared git directory, per full commit id', async () => {
+        const { execFileSync } = await import('node:child_process');
+        const { stampPath, writeStamp } = await import('../../src/scripts/ci_mirror.js');
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ci-mirror-stamp-')));
+        execFileSync('git', ['init', '-q'], { cwd: dir });
+        const sha = 'a'.repeat(40);
+        const file = writeStamp(dir, sha, 'b'.repeat(40), []);
+        expect(file).toBe(path.join(dir, '.git', 'ci-mirror', `${sha}.json`));
+        expect(fs.existsSync(stampPath(dir, sha))).toBe(true);
+        expect(() => stampPath(dir, 'HEAD')).toThrow(/not a full commit id/);
+        fs.rmSync(dir, { recursive: true, force: true });
     });
 });
