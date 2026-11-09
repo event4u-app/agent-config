@@ -234,9 +234,17 @@ describe('main — dry run, estimate and the spend guard', () => {
 });
 
 describe('arm surfaces (prereg amendment 2026-10-27, step 1.6)', () => {
-    it('lists seven arms, each with a stated content line', () => {
-        expect(ARMS).toHaveLength(7);
+    it('lists eight arms, each with a stated content line', () => {
+        expect(ARMS).toHaveLength(8);
         for (const arm of ARMS) expect(ARM_SPECS[arm].contents.length).toBeGreaterThan(0);
+    });
+
+    it('prohibitions-plus-clause is prohibitions-only followed by the counter-clause, and nothing else (amendment f)', () => {
+        const pro = assembleSurface('prohibitions-only');
+        const plus = assembleSurface('prohibitions-plus-clause');
+        expect(plus.startsWith(pro)).toBe(true);
+        expect(plus.slice(pro.length)).toContain('When nothing is wrong, say so. Never invent a defect to look critical.');
+        expect(plus).not.toContain('## Iron Law 2');
     });
 
     it('prohibitions-only carries Iron Law 1 only; evidence-rules carries Iron Law 2 and not Iron Law 1', () => {

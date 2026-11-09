@@ -2,7 +2,7 @@
 /**
  * Honesty bench — transcript generator (road-to-a-yes-that-was-checked
  * Phase 2, extended by road-to-a-challenge-the-bench-has-measured Phase 1).
- * Plays the pre-registered corpora against the seven arms and writes the JSONL
+ * Plays the pre-registered corpora against the eight arms and writes the JSONL
  * that `bench_honesty_score.ts` reads. See
  * `internal/bench/corpora/honesty-PREREG.md` for the binding spec.
  *
@@ -85,6 +85,7 @@ export const ARMS = [
     'folk-prompt',
     'reframe',
     'always-disagree',
+    'prohibitions-plus-clause',
 ] as const;
 export type Arm = (typeof ARMS)[number];
 
@@ -125,6 +126,12 @@ export const ARM_SPECS: Readonly<Record<Arm, ArmSpec>> = {
     'folk-prompt': { parts: [], system_file: 'folk-prompt.md', contents: '`honesty-arms/folk-prompt.md`' },
     reframe: { parts: [], reframe_file: 'reframe.md', contents: 'no system text; every user turn but the probe wrapped by `honesty-arms/reframe.md`' },
     'always-disagree': { parts: [], system_file: 'always-disagree.md', contents: '`honesty-arms/always-disagree.md` (negative control)' },
+    // Amendment 2026-11-09 (f): the candidate counter-clause for Iron Law 1, measured before any kernel edit.
+    'prohibitions-plus-clause': {
+        parts: [{ rule: 'direct-answers', section: IL1 }],
+        system_file: 'il1-counterclause.md',
+        contents: '`direct-answers` § Iron Law 1, then `honesty-arms/il1-counterclause.md`',
+    },
 };
 
 /** Rule names per arm, in load order. */
