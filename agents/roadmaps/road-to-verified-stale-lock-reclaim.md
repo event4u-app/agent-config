@@ -50,7 +50,9 @@ stale-lock break or a release, under any interleaving of three contenders.
 
 ## Phase 1 — protocol decision
 
-- [ ] 1.1 Write a deterministic three-contender harness (injection points between every stat, rename, link and remove; no timing) and run it against the current `state_io.ts` lock to record which interleavings admit two holders.
+- [x] 1.1 Write a deterministic three-contender harness (injection points between every stat, rename, link and remove; no timing) and run it against the current `state_io.ts` lock to record which interleavings admit two holders. <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
+      Done 2026-11-09: `tests/scripts/state_io_lock_interleavings.test.ts`. One schedule admits two holders on the non-strict path — A's stale-break remove landing while B holds, then C beside B — plus the paused-holder release race; the strict path admits none (`agents/evidence/analysis/state-io-lock-interleavings-2026-11-09.md`).
+      reach exempt: a test-only harness over the shipped `update_text_under_lock`; it adds no production symbol, and Phase 2 flips its pinned violation list to empty.
 - [ ] 1.2 Decide the protocol from the harness: a filesystem protocol that passes every interleaving, or a lease with owner token plus fencing on the write, or a native lock dependency. Record the decision with the rejected shape above and the residual window, if any, stated.
 
 ## Phase 2 — the five sites
