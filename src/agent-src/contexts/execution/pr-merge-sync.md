@@ -204,7 +204,7 @@ it now means two humans edited the same policy sentence — read both sides.
 | Class | Files | Resolution |
 |---|---|---|
 | Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
-| Generated artefacts | `agents/roadmaps-progress.md` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
+| Generated artefacts | `agents/roadmaps-progress.md` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output — except an ignored file (this package's dashboard): regenerate, never stage. |
 | Archive move vs. edit | `agents/roadmaps/{archive,later,skipped}/**` — one side renamed or deleted, the other edited | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
 | Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
 

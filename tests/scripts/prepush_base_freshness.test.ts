@@ -24,7 +24,7 @@ const PUSH = `refs/heads/topic ${REAL} refs/heads/topic ${ZERO}\n`;
 
 const FRESHNESS = "Base freshness";
 const BLOCKED = "Push blocked — the branch is behind its base";
-const CONSISTENCY = "Consistency —";
+const CONSISTENCY = "CI mirror —";
 
 let hook: string;
 
@@ -59,7 +59,7 @@ function run(verdict: 0 | 1 | "absent", env: Record<string, string> = {}, said =
       { mode: 0o755 },
     );
   }
-  // A `task` that succeeds, so the consistency block takes its REAL branch
+  // A `task` that succeeds, so the CI-mirror block takes its REAL branch
   // rather than its "go-task not found" warning — the ordering assertion below
   // is about the gate that runs, not about the message that replaces it.
   const bin = path.join(cwd, "bin");
@@ -73,8 +73,6 @@ function run(verdict: 0 | 1 | "absent", env: Record<string, string> = {}, said =
       env: {
         PATH: `${bin}:/usr/bin:/bin`,
         HOME: cwd,
-        AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT: "1",
-        AGENT_CONFIG_SKIP_PREPUSH_STATIC: "1",
         ...env,
       },
     });
@@ -144,7 +142,7 @@ describe("pre-push — base freshness", () => {
     expect(out).not.toContain(CONSISTENCY);
   });
 
-  it("runs BEFORE consistency, so the regeneration is not paid against a stale base", () => {
+  it("runs BEFORE the CI mirror, so the mirror is not paid against a stale base", () => {
     const out = run(0);
     expect(out).toContain(FRESHNESS);
     expect(out).toContain(CONSISTENCY);
