@@ -6,10 +6,10 @@
 
 ## Overall
 
-**84 / 190 steps done · 44%**
+**85 / 190 steps done · 45%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-a-map-that-knows-what-happened.md](roadmaps/road-to-a-map-that-knows-what-happened.md) | 5 | 69 | 40 | 13 | 16 | 0 | [2](#blockers-road-to-a-map-that-knows-what-happened) | ██░░░░░░░░ 25% |
 | 5 | [road-to-a-session-start-under-the-host-limit.md](roadmaps/road-to-a-session-start-under-the-host-limit.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-a-session-start-under-the-host-limit) | ████████░░ 80% |
 | 6 | [road-to-routing-assurance-live-floors-carried.md](roadmaps/road-to-routing-assurance-live-floors-carried.md) | 2 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-routing-assurance-live-floors-carried) | ████░░░░░░ 44% |
-| 7 | [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md) | 4 | 19 | 13 | 6 | 0 | 0 | [3](#blockers-road-to-state-and-pins-across-compaction) | ███░░░░░░░ 32% |
+| 7 | [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md) | 4 | 19 | 12 | 7 | 0 | 0 | [3](#blockers-road-to-state-and-pins-across-compaction) | ████░░░░░░ 37% |
 | 8 | [road-to-verified-stale-lock-reclaim.md](roadmaps/road-to-verified-stale-lock-reclaim.md) | 2 | 7 | 7 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -345,12 +345,12 @@ _1 blocker resolved._
 
 ### [road-to-state-and-pins-across-compaction.md](roadmaps/road-to-state-and-pins-across-compaction.md)
 
-**Road to state and pins across compaction** — 6 / 19 done (32%)
+**Road to state and pins across compaction** — 7 / 19 done (37%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | A checkpoint the session wrote for itself | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
-| 2 | Session pins the user set, restored verbatim | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
+| 2 | Session pins the user set, restored verbatim | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
 | 3 | Recall from the session's own transcript | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Governance imports, each small | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 

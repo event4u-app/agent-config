@@ -125,17 +125,19 @@ of re-reading or guessing.
       over ≥ 20 boundaries from ≥ 3 sessions); first reading 0 of 176
       boundaries held a pin, because the capture is new. <!-- blocked-by: pin-sessions-accrue | asked: no — not a decision; it waits on real pin sessions, and the closing summary of the run that shipped the capture tells the owner -->
       verify: `test -f agents/evidence/analysis/session-pin-presence.md` -> 0
-- [ ] **2.5** Council round 56 on the merged Phase 2 change, pins only. Round
-      55 (anthropic REFUSE, openai REQUEST_CHANGES) faulted the stale-lock fix,
-      which was reverted and moved to `road-to-verified-stale-lock-reclaim`;
-      the owner merged without a further round (2026-11-09). Packet built like
-      round 55 (`agents/evidence/council/session-pins-phase-2-20261108.round55.question.md`)
-      minus the lock sections; findings fixed in a follow-up PR.
-      verify: `test -f agents/evidence/council/session-pins-phase-2-20261108.round56.question.md` -> 0
-- [ ] **2.6** Ratification record for the Phase 2 budget raises in
-      `src/config/hook-bundle-budget.json` (dispatch 1,594,900 B, pin chunk
-      34,900 B, subagent chunk 28,500 B), after 2.5 converges.
-      verify: `./scripts-run src/scripts/check_preamble_payload_budget --verify-approvals` -> 0
+- [ ] **2.5** A council round on the merged Phase 2 change, pins only, after
+      the round-56 fix. Round 56 (both seats refused / requested changes)
+      named one point, the inherited stale-lock reclaim race for strict
+      callers; fixed after it (a strict caller never breaks a guard, test seen
+      red first) and not re-reviewed. Owner merged on 2026-11-09. Packet as
+      `agents/evidence/council/session-pins-phase-2-20261108.round56.question.md`,
+      with the round-56 replies' smaller points (repeated marker diagnostics,
+      no combined worst-case line test, retention of unreadable pin files).
+      verify: `test -f agents/evidence/council/session-pins-phase-2-20261108.round57.question.md` -> 0
+- [x] **2.6** Ratification record for the Phase 2 budget raises
+      (`agents/evidence/ratifications/session-pins-phase-2-20261109.md`,
+      verdict `refused`, merged on the owner's word per ADR-282).
+      verify: `test -f agents/evidence/ratifications/session-pins-phase-2-20261109.md` -> 0
 ## Phase 3 — Recall from the session's own transcript
 
 Council 2026-11-08 (2/2, split on the surface only): not `memory:lookup`; one
