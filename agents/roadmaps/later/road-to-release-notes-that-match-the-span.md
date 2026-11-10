@@ -60,7 +60,7 @@ What the review found, with what was re-checked on `main@ada1f46a85`:
       verify: a test where a `feat!:` commit with a footer and a `ci:` commit without one produce exactly the footer's line.
 - [ ] **1.2 Correct the 20.0.0 citation.** `BREAKING_CHANGES.md:76` and
       `docs/MIGRATION.md:50` cite `96a46ef`.
-      verify: `grep -n 7690bd9 BREAKING_CHANGES.md docs/MIGRATION.md` returns nothing.
+      verify: `grep -c 7690bd9 BREAKING_CHANGES.md docs/MIGRATION.md` -> 0
 - [ ] **1.3 The 20.2.0 MIGRATION section.** Name the default flip to the reduced
       layer, its evidence (`agents/evidence/metrics/adapted-layer-confirmation-{haiku,sonnet}-result-20261110.md`)
       and the way back (`agent-config install --full`).

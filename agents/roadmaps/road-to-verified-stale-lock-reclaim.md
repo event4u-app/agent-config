@@ -69,13 +69,14 @@ stale-lock break or a release, under any interleaving of three contenders.
 - [ ] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-09 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A green harness that missed an interleaving | implementation | The race only shows under one ordering of stat, rename, link and remove across three contenders; a harness that samples timings can pass while the window stays open. | Deterministic injection points between every filesystem call, no timing (1.1); every recorded interleaving that admits two holders becomes a regression case. | Phase 1 — protocol decision |
 | 2 | Trading the race for a deadlock | implementation | A protocol that never breaks a stale guard cannot double-grant, but a dead holder then blocks its callers for good, as the strict pin callers do today. | 1.2 records the residual per site and which callers may block; each site in Phase 2 states its choice and tests it. | Phase 2 — the five sites |
 | 3 | A native lock breaks the install | product | A native advisory-lock addon would add a compiled dependency to a package consumers install with npx. | D1 weighs it against a single-writer process and a documented residual; no native dependency without its install matrix green. | Decisions |
+| 4 | A superseded holder keeps writing | implementation | A holder paused past `staleMs` writes after a peer has taken a higher generation; the lock alone cannot stop that write. | 2.6 either fences each write with the held generation or names the limit at every site | Phase 2 — the five sites |
 
 ## Closes when
 

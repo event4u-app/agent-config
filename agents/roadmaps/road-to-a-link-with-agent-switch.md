@@ -296,7 +296,7 @@ cross-account continuation.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
