@@ -92,6 +92,18 @@ export function atomicWriteFile(
  * crash. Newline is enforced — caller passes the bare payload.
  */
 export function atomicAppendLine(target: string, line: string): void {
+    atomicAppendLines(target, [line]);
+}
+
+/**
+ * Append several lines in ONE read-modify-write — same crash guarantee as
+ * {@link atomicAppendLine}, but the file is read, rewritten and fsynced once
+ * for the whole batch. A caller appending N lines one by one pays O(N × size)
+ * I/O plus N fsyncs; a global install logs ~20k entries, which made the
+ * per-line path the bulk of its runtime.
+ */
+export function atomicAppendLines(target: string, lines: readonly string[]): void {
+    if (lines.length === 0) return;
     let existing = '';
     try {
         existing = readFileSync(target, 'utf8');
@@ -99,7 +111,7 @@ export function atomicAppendLine(target: string, line: string): void {
         existing = '';
     }
     const sep = existing.length > 0 && !existing.endsWith('\n') ? '\n' : '';
-    atomicWriteFile(target, `${existing}${sep}${line}\n`);
+    atomicWriteFile(target, `${existing}${sep}${lines.join('\n')}\n`);
 }
 
 function randSuffix(): string {

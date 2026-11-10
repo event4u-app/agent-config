@@ -587,3 +587,105 @@ describe('upgrade — step decoupling (global fails, rest still runs)', () => {
         expect(globalCall).toContain('--no-ui');
     });
 });
+
+// ---------------------------------------------------------------------------
+// Output level: quiet by default, full output behind --verbose / --debug.
+// ---------------------------------------------------------------------------
+
+describe('upgrade — quiet by default, --verbose / --debug for full output', () => {
+    interface Run {
+        rc: number;
+        out: string;
+        err: string;
+        calls: string[];
+        captured: string[];
+    }
+
+    async function run(args: string[], doctorJson = '', doctorRc = 0): Promise<Run> {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-quiet-'));
+        const project = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-quiet-proj-'));
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        try {
+            const { main } = await import('../../../src/scripts/_cli/cmd_upgrade.js');
+            let out = '';
+            let err = '';
+            const calls: string[] = [];
+            const captured: string[] = [];
+            const rc = await main(args, {
+                installed: '1.0.0',
+                fetcher: () => '2.0.0',
+                project_root: project,
+                runner: (cmd: string[]) => (calls.push(cmd.join(' ')), 0),
+                capture: (cmd: string[]) => (captured.push(cmd.join(' ')), { status: doctorRc, stdout: doctorJson }),
+                out: { write: (t: string) => void (out += t) },
+                err: { write: (t: string) => void (err += t) },
+            });
+            return { rc, out, err, calls, captured };
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+            fs.rmSync(home, { recursive: true, force: true });
+            fs.rmSync(project, { recursive: true, force: true });
+        }
+    }
+
+    it('default run passes the quiet flags to npm and the global step', async () => {
+        const r = await run([]);
+        expect(r.rc).toBe(0);
+        const npm = r.calls.find((c) => c.startsWith('npm install -g'));
+        expect(npm).toContain('--loglevel=warn');
+        expect(npm).toContain('--no-audit');
+        expect(r.calls.find((c) => / global /.test(c))).toContain('--quiet');
+        expect(r.out).not.toContain('npm install -g');
+    });
+
+    it('default run prints only the warn/fail doctor findings', async () => {
+        const json = JSON.stringify({
+            checks: [
+                { id: 'scope', status: 'ok', message: 'fine', remedy: '' },
+                { id: 'claude-plugin', status: 'fail', message: 'duplicate surface', remedy: 'claude plugin uninstall x' },
+                { id: 'wrappers', status: 'warn', message: 'missing wrappers', remedy: '' },
+            ],
+        });
+        const r = await run([], json, 1);
+        expect(r.captured).toHaveLength(1);
+        expect(r.captured[0]).toContain('doctor --json');
+        expect(r.out).toContain('claude-plugin: duplicate surface');
+        expect(r.out).toContain('fix: claude plugin uninstall x');
+        expect(r.out).toContain('wrappers: missing wrappers');
+        expect(r.out).not.toContain('scope: fine');
+        expect(r.err).toContain('fixes listed above');
+    });
+
+    it('a long finding is clipped to one line; the full report keeps it whole', async () => {
+        const long = 'x'.repeat(5000);
+        const r = await run([], JSON.stringify({ checks: [{ id: 'big', status: 'warn', message: long, remedy: '' }] }), 1);
+        const line = r.out.split('\n').find((l) => l.includes('big:'));
+        expect(line).toBeDefined();
+        expect(line!.length).toBeLessThan(260);
+        expect(line!.endsWith('…')).toBe(true);
+    });
+
+    it('doctor drift lists are counted in the quiet summary', async () => {
+        const r = await run([], JSON.stringify({ missing: ['a', 'b'], modified: [], foreign: ['c'], checks: [] }), 1);
+        expect(r.out).toContain('drift: 2 missing, 1 foreign');
+    });
+
+    it('unreadable doctor JSON points at the full report instead of guessing', async () => {
+        const r = await run([], 'not json', 1);
+        expect(r.err).toContain('run `agent-config doctor` for the full report');
+    });
+
+    for (const flag of ['--verbose', '--debug']) {
+        it(`${flag} restores the full output: commands echoed, no quiet flags, full doctor`, async () => {
+            const r = await run([flag]);
+            expect(r.rc).toBe(0);
+            expect(r.calls.find((c) => c.startsWith('npm install -g'))).not.toContain('--loglevel');
+            expect(r.calls.find((c) => / global /.test(c))).not.toContain('--quiet');
+            expect(r.out).toContain('→ npm install -g @event4u/agent-config@latest');
+            expect(r.calls.some((c) => / doctor$/.test(c))).toBe(true);
+            expect(r.captured).toHaveLength(0);
+        });
+    }
+});

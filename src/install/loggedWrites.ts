@@ -31,6 +31,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'n
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 
 import { getLogPath } from './paths.js';
+import { flushTxLog } from './txlog.js';
 
 /** Absolute target path → every digest the log records this installer writing there. */
 export type LoggedWrites = ReadonlyMap<string, ReadonlySet<string>>;
@@ -113,6 +114,8 @@ function writesIn(file: string): ReadonlyArray<readonly [string, string]> {
 
 /** Every `write` the transaction log records, keyed by canonical path. */
 export function loggedWriteDigests(logPath: string = getLogPath()): LoggedWrites {
+    // Read-your-writes: entries this process queued must be on disk first.
+    flushTxLog(logPath);
     const writes = new Map<string, Set<string>>();
     for (const file of logFiles(logPath)) {
         for (const [target, sha] of writesIn(file)) {

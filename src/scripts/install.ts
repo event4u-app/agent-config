@@ -138,7 +138,7 @@ import {
 import { main as cmdMigrateMain } from './_cli/cmd_migrate.js';
 import { SCOPE_DETECT_AI_DIRS, SCOPE_DETECT_MANIFESTS } from '../install/detect.js';
 import { getLogPath } from '../install/paths.js';
-import { appendTxLog } from '../install/txlog.js';
+import { bufferTxLog } from '../install/txlog.js';
 
 // ---------------------------------------------------------------------------
 // Python-runtime parity helpers
@@ -2618,14 +2618,15 @@ function _escapes_package_root(resolved: string, package_root: string | null): b
 }
 
 /**
- * Append one `write`/`skip` entry to the transaction log, through the same
- * `appendTxLog` module the recovery-dismiss route calls — one writer, two
- * callers, identical entry shape. Failure is swallowed: the log is a recovery
- * aid, never a condition for the install itself to proceed.
+ * Queue one `write`/`skip` entry for the transaction log, through the same
+ * `txlog` module the recovery-dismiss route appends with — identical entry
+ * shape. Batched: appending per copied file rewrote and fsynced the whole log
+ * each time, most of a global install's runtime. Failure is swallowed: the log
+ * is a recovery aid, never a condition for the install itself to proceed.
  */
 function _log_tx_entry(kind: 'write' | 'skip', target: string): void {
     try {
-        appendTxLog(getLogPath(), {
+        bufferTxLog(getLogPath(), {
             ts: new Date().toISOString(),
             kind,
             path: target,
@@ -3254,15 +3255,10 @@ function install_global(
     const classification = installed_lock.classify_mismatch(installed_version, recorded);
 
     if (classification === 'downgrade' && !force) {
-        if (!state.QUIET) {
-            process.stdout.write('\n');
-            warn('Refusing global install: lockfile records a newer version.');
-            info(`  Lockfile:           ${read_path}`);
-            info(`  Recorded version:   ${recorded}`);
-            info(`  Current package:    ${installed_version}`);
-            info('  Fix:                upgrade the package, or re-run with `--force`');
-            process.stdout.write('\n');
-        }
+        // warn, not info: survives --quiet — it is the only explanation of this exit 1.
+        warn('Refusing global install: lockfile records a newer version.');
+        warn(`  Lockfile: ${read_path} · recorded ${recorded} · current package ${installed_version}`);
+        warn('  Fix: upgrade the package, or re-run with `--force`');
         return 1;
     }
 
@@ -3478,7 +3474,7 @@ function install_global(
     try {
         _write_settings_surface_snapshot(installed_version);
     } catch (e) {
-        if (!state.QUIET) warn(`settings-surface snapshot failed — ${String(e)}`);
+        warn(`settings-surface snapshot failed — ${String(e)}`);
     }
 
     // Catalogue-budget warning (road-to-skill-catalogue-budget Phase 1).

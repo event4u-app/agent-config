@@ -29,6 +29,7 @@ import { gunzipSync } from 'node:zlib';
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { getLogPath } from './paths.js';
+import { flushTxLog } from './txlog.js';
 const WRITE_MARKER = '"kind":"write"';
 const fileCache = new Map();
 const dirRealpaths = new Map();
@@ -110,6 +111,8 @@ function writesIn(file) {
 }
 /** Every `write` the transaction log records, keyed by canonical path. */
 export function loggedWriteDigests(logPath = getLogPath()) {
+    // Read-your-writes: entries this process queued must be on disk first.
+    flushTxLog(logPath);
     const writes = new Map();
     for (const file of logFiles(logPath)) {
         for (const [target, sha] of writesIn(file)) {
