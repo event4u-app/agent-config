@@ -25,7 +25,7 @@ subscription account named in the report. Every delta is **adapted minus full**.
 
 | Item | Frozen value |
 |---|---|
-| Tree | the head of branch `feat/adapted-layer-landing` after it merges the `main` commit carrying this file. Its diff against that `main` commit touches only: `src/agent-src/startup-contracts/rules/downstream-changes.md`, `src/agent-src/startup-contracts/rules/think-before-action.md` and their `dist/agent-src/` projections (the contract wording of the third look, byte-identical to `51add0fc53`); `src/scripts/check_startup_contracts.ts`, `src/config/startup-contract-clauses.json`, `src/scripts/install.ts`, `dist/install/install.mjs`, and their tests |
+| Tree | the head of branch `feat/adapted-layer-landing` after it merges the `main` commit carrying this file. Its diff against that `main` commit touches only: `src/agent-src/startup-contracts/rules/downstream-changes.md`, `src/agent-src/startup-contracts/rules/think-before-action.md` and their `dist/agent-src/` projections (the contract wording of the third look, byte-identical to `51add0fc53`); `src/scripts/check_startup_contracts.ts`, `src/config/startup-contract-clauses.json`, `src/scripts/install.ts`, `dist/install/install.mjs`, and their tests | <!-- ref-ignore -->
 | `package` arm | image `bench-ac`: the default install of that tree — the adapted reduced layer, `source_path:` without the `dist/agent-src/rules/` prefix |
 | `package-full` arm | image `bench-ac-full`: the same tarball installed with `init --full` |
 | `package-padded` arm | the `package` image plus inert prose injected as `--append-system-prompt-file`, `--pad-chars` long |
