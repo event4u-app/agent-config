@@ -632,8 +632,7 @@ describe('7.5 record lifetime and interleaving', () => {
 
     it('a held lock defers the write; a stale one is broken', () => {
         raise();
-        // A ticket that names no process: held while fresh, broken once stale.
-        const held = `${switchRecordPath(sess(), stateEnv)}.lock.x`;
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
         fs.writeFileSync(held, '');
         expect(updateSwitchRecord(sess(), () => null, stateEnv)).toBe(false);
         expect(readSwitchRecord(sess(), stateEnv)?.id).toBe(ID);
@@ -695,12 +694,10 @@ describe('7.x council round 1 findings', () => {
         setRequest();
         noticeReply(deps());
         setRequest({ state: 'approved', decision: doneNow.decision });
-        const file = switchRecordPath(sess(), stateEnv);
-        const tickets = (): string[] => fs.readdirSync(path.dirname(file)).filter((n) => n.startsWith(`${path.basename(file)}.lock.`));
-        let held: string[] = [];
-        expect(checkpointBeforeMove(sess(), () => ((held = tickets()), true), stateEnv, { env: binEnv })).toBe(true);
-        expect(held).toHaveLength(1);
-        expect(tickets()).toEqual([]);
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
+        let locked = false;
+        expect(checkpointBeforeMove(sess(), () => (locked = fs.existsSync(held)), stateEnv, { env: binEnv })).toBe(true);
+        expect(locked).toBe(true);
     });
 
     it('a failed write leaves the obligation for the next Stop', () => {
@@ -726,12 +723,12 @@ describe('7.x council round 1 findings', () => {
         hot();
         setRequest();
         noticeReply(deps());
-        const held = `${switchRecordPath(sess(), stateEnv)}.lock.someone-else`;
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
         let replaced = false;
         updateSwitchRecord(
             sess(),
             (cur) => {
-                // Another process leaves its ticket while this one holds the lock.
+                // The holder stalls; another process breaks the lock as stale and takes it.
                 fs.writeFileSync(held, 'someone-else');
                 replaced = true;
                 return cur;

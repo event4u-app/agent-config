@@ -251,7 +251,7 @@ Carried from council rounds 1–6 of the Phase 7 budget raise
 (`agents/evidence/council/agent-switch-hardening-ratification-r{1..6}-20261108.question.md`,
 all `refused`; merged on the owner's word with the question opt-in, D5).
 
-- [x] **8.1 A writer the lock cannot evict.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> A Stop whose checkpoint build
+- [ ] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
       outlives the two-second stale break can lose its lock to a second Stop and
       still publish an older snapshot after it (round 6). Serialize in a way
       that cannot evict a live writer, or write checkpoint generations so an
@@ -262,7 +262,13 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       a waiter gives up and leaves the write to the next Stop.
       `tests/scripts/agent_switch_interprocess.test.ts` § 8.1, red against the
       age-only break.
-- [x] **8.2 Interprocess evidence.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> The concurrency tests run in one process
+      Reopened 2026-11-10: council round 5 of 8.4 asked to review the lock
+      separately; the rewrite left the 8.4 change for its own pull request.
+      Open from that round: a live holder that loses its ticket after fifteen
+      minutes, the previous version's check-then-unlink across an install, and
+      deterministic tests paused between the stale check and the unlink in both
+      version directions.
+- [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
       and the checkpoint.
@@ -272,6 +278,7 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       against the fake agent-switch at one instant; all three red with the lock
       removed, in three runs. Not the full dispatcher: its process start costs
       seconds per run and adds nothing to the lock under test.
+      Reopened 2026-11-10 with 8.1: the tests ship with the lock rewrite.
 - [ ] **8.3 Consent at execution, closed.** Ask agent-switch to mark
       `switch_decide` with `requiresUserInteraction` (counterpart roadmap
       `road-to-the-agent-config-link`), then show a live interactive prompt on
@@ -284,10 +291,11 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       (for example the link in its own lazily loaded chunk with its own measured
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
-      Progress: the link is its own lazy chunk (`switch_link`, 29,329 B);
-      `quota_notice` 27,162 B, ceiling lowered to 29,900; the chunk group
-      `agent-switch-link-opted-in` caps both at 62,100 B. Council rounds 1-4
-      refused; findings and fixes are in
+      Progress: the link is its own lazy chunk (`switch_link`, 27,500 B);
+      `quota_notice` 27,128 B, ceiling lowered to 29,900; the chunk group
+      `agent-switch-link-opted-in` caps both at 60,100 B. Council rounds 1-5
+      refused, round 5 on bundling the lock rewrite, which then left this step
+      for 8.1; findings and fixes are in
       `agents/evidence/council/agent-switch-link-chunk-ratification-r*-20261110.question.md`.
       Open: the ratification record for the budget and plumbing change.
 - [ ] **8.5 Remove what was written.** The write path accepts any command for the
