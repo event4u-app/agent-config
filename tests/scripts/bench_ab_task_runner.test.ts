@@ -179,20 +179,21 @@ describe('hook events in a stream-json run', () => {
 
 describe('bench_ab_task_runner — a timeout keeps its stream', () => {
     const init = '{"type":"system","subtype":"init","model":"claude-sonnet-5-5"}';
+    const reached = (run: ReturnType<typeof runner.timeout_result>): boolean => reached_model(run as unknown as Record<string, unknown>);
 
     it('a stream-mode timeout with no init event and no tokens reads as never reaching the model', () => {
         const run = runner.timeout_result('', 180, 181.2, { stream: true });
-        expect(run['stream']).toBe('');
-        expect(reached_model(run)).toBe(false);
+        expect(run.stream).toBe('');
+        expect(reached(run)).toBe(false);
     });
 
     it('a stream-mode timeout after the init event reads as reached, so it is scored', () => {
-        expect(reached_model(runner.timeout_result(init + '\n', 180, 181.2, { stream: true }))).toBe(true);
+        expect(reached(runner.timeout_result(init + '\n', 180, 181.2, { stream: true }))).toBe(true);
     });
 
     it('a json-mode timeout carries no stream and stays counted, as before', () => {
         const run = runner.timeout_result('', 180, 181.2, {});
-        expect(run['stream']).toBeUndefined();
-        expect(reached_model(run)).toBe(true);
+        expect(run.stream).toBeUndefined();
+        expect(reached(run)).toBe(true);
     });
 });

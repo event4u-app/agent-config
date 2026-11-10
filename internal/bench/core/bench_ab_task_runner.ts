@@ -339,7 +339,7 @@ export function live_args(prompt: string, opts: RunLiveOpts = {}): string[] {
  * because `reached_model` reads a missing stream as reached: without it a
  * timeout before the first model call is scored instead of rerun.
  */
-export function timeout_result(stdout: string, timeoutS: number, wallS: number, opts: RunLiveOpts): Record<string, unknown> {
+export function timeout_result(stdout: string, timeoutS: number, wallS: number, opts: RunLiveOpts): RunResult {
     return {
         mode: 'live',
         reason: `timeout after ${timeoutS}s`,
