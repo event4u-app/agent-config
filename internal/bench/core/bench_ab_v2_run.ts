@@ -254,7 +254,7 @@ export function lift_audit_arms(arms: readonly string[]): string[] {
     });
 }
 
-export function injected_text(inject: string | null, placebo_chars: number): string | null {
+export function injected_text(inject: string | null, placebo_chars: number, pad_chars = 0): string | null {
     const fixed = inject === null ? undefined : FIXED_INJECTIONS[inject];
     if (fixed !== undefined) return fixed;
     if (inject === 'ladder') {
@@ -265,6 +265,10 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     }
     if (inject === 'placebo') {
         return placebo_prose(placebo_chars);
+    }
+    if (inject === 'layer-pad') {
+        if (pad_chars <= 0) throw new Error('arm package-padded needs --pad-chars <full layer chars minus reduced layer chars>');
+        return placebo_prose(pad_chars);
     }
     if (inject === 'hardened') {
         return hardened_blocks_text();
@@ -328,6 +332,8 @@ interface RunOneOpts {
     max_budget: number | null;
     timeout: number;
     placebo_chars: number;
+    /** `package-padded` only: inert prose length, the full minus the reduced layer. */
+    pad_chars?: number;
     sp_dir: string;
     max_depth?: number | null; // recursion arm only — hard cap on correction rounds (default 1)
     host?: string; // 'claude' (default) | 'codex' — P2 non-Claude replication (ADR-110 roadmap Phase 4)
@@ -584,7 +590,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const host = opts.host ?? 'claude';
     const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0, opts.container && !spec.host_only ? undefined : plugin_scope(spec), spec.strip_paths);
     if (spec.act_hook) install_act_hook(clone, spec.act_hook);
-    const sp_text = injected_text(spec.inject, opts.placebo_chars);
+    const sp_text = injected_text(spec.inject, opts.placebo_chars, opts.pad_chars ?? 0);
     let run: Dict;
     let cf: Dict = {};
     if (host === 'codex') {
@@ -707,9 +713,9 @@ export interface RecursiveAttempt {
  * so a selftest failure means the wiring is broken, never that a synthetic
  * constant drifted under a threshold.
  */
-export function selftest_usage(arm: string, seed: number, placebo_chars: number): TokensBreakdown {
+export function selftest_usage(arm: string, seed: number, placebo_chars: number, pad_chars = 0): TokensBreakdown {
     const spec = ARMS[arm] as ArmSpec | undefined;
-    const injected = spec ? (injected_text(spec.inject, placebo_chars)?.length ?? 0) : 0;
+    const injected = spec ? (injected_text(spec.inject, placebo_chars, pad_chars)?.length ?? 0) : 0;
     const plugin = spec && spec.setting_sources === null ? 4000 : 0;
     return {
         input_tokens: 1000 + plugin + Math.floor(injected / 4),
@@ -731,13 +737,13 @@ export function selftest_run(
     task: Dict,
     arm: string,
     opts: RunOneOpts,
-    usage_fn: (arm: string, seed: number, placebo_chars: number) => TokensBreakdown = selftest_usage,
+    usage_fn: (arm: string, seed: number, placebo_chars: number, pad_chars?: number) => TokensBreakdown = selftest_usage,
 ): Dict {
     const spec = ARMS[arm] as ArmSpec;
     const seed = opts.seed ?? 0;
     // Real fixture clone — this is also what exercises delta #7's per-trial key.
     const [clone, fixture] = reset_fixture(task, arm, seed, undefined, spec.strip_paths);
-    const sp_text = injected_text(spec.inject, opts.placebo_chars);
+    const sp_text = injected_text(spec.inject, opts.placebo_chars, opts.pad_chars ?? 0);
     const run: Dict = {
         errored: false,
         reason: null,
@@ -745,7 +751,7 @@ export function selftest_run(
         num_turns: 1,
         wall_time_seconds: 0,
         tokens: 0,
-        tokens_breakdown: usage_fn(arm, seed, opts.placebo_chars),
+        tokens_breakdown: usage_fn(arm, seed, opts.placebo_chars, opts.pad_chars ?? 0),
         // The synthetic envelope bills exactly the pinned model, so `model_check`
         // passes for a healthy run and fails if the pin is ever dropped.
         models_seen: opts.model ? [opts.model] : [],
@@ -1071,6 +1077,10 @@ export function main(argv: string[] | null = null): number {
 
     const budget = new SweepBudget(args.max_usd, tier_rates);
     const brake = quota_brake(3);
+    if (arms.includes('package-padded') && args.pad_chars <= 0) {
+        process.stderr.write('arm package-padded needs --pad-chars <full layer chars minus reduced layer chars>\n');
+        return 1;
+    }
     const layerArm = arms.find((a) => (ARMS[a] as ArmSpec).ac_layer !== undefined);
     if (layerArm !== undefined && args.isolation !== 'container') {
         process.stderr.write(`arm ${layerArm}: a rule-layer arm runs only with --isolation container\n`);
@@ -1088,6 +1098,7 @@ export function main(argv: string[] | null = null): number {
                 max_budget,
                 timeout: args.timeout,
                 placebo_chars,
+                pad_chars: args.pad_chars,
                 sp_dir,
                 host: args.host,
                 seed: _seed,
@@ -1125,6 +1136,7 @@ export function main(argv: string[] | null = null): number {
         isolation: args.isolation,
         account: ctr?.ctx.account ?? null,
         pre_model_reruns: args.pre_model_reruns,
+        pad_chars: args.pad_chars,
         images: (ctr?.images ?? null) as unknown as Json,
         // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
         // one. Both the tier marker and the filename say so, because a number is
@@ -1204,6 +1216,8 @@ interface ParsedArgs {
     account: string | null;
     /** Container sweeps: reruns of a trial that ended before any model call; the pre-registration names it. */
     pre_model_reruns: number;
+    /** `package-padded`: inert prose length, pre-registered. */
+    pad_chars: number;
 }
 
 class ArgExit extends Error {}
@@ -1226,8 +1240,9 @@ function parse_args(argv: string[]): ParsedArgs {
         isolation: 'host',
         account: null,
         pre_model_reruns: 0,
+        pad_chars: 0,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--account NAME] [--pre-model-reruns N] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--isolation {host,container}] [--account NAME] [--pre-model-reruns N] [--pad-chars N] [--no-checkpoint] [--fresh] [--corpus {trackb,artifact}]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1305,6 +1320,10 @@ function parse_args(argv: string[]): ParsedArgs {
             out.pre_model_reruns = _pyInt(a === '--pre-model-reruns' ? need(i, '--pre-model-reruns') : a.slice('--pre-model-reruns='.length), '--pre-model-reruns');
             if (a === '--pre-model-reruns') i += 1;
             if (out.pre_model_reruns < 0) argErr('argument --pre-model-reruns: must be >= 0');
+        } else if (a === '--pad-chars' || a.startsWith('--pad-chars=')) {
+            out.pad_chars = _pyInt(a === '--pad-chars' ? need(i, '--pad-chars') : a.slice('--pad-chars='.length), '--pad-chars');
+            if (a === '--pad-chars') i += 1;
+            if (out.pad_chars < 0) argErr('argument --pad-chars: must be >= 0');
         } else if (a === '--no-checkpoint') {
             out.checkpoint = false;
         } else if (a === '--fresh') {
