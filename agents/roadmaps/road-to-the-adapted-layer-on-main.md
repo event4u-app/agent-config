@@ -98,7 +98,7 @@ fresh pre-registration before it can ship.
       verify: a runner test where a stream with no init event is rerun and not scored, and one with a post-call timeout is scored.
       Done 2026-11-09: `--pre-model-reruns N` (default 0), recorded in the report.
       production entry: `internal/bench/core/bench_ab_v2_run.ts`
-- [x] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> The owner took it (2026-11-10). Pre-registered in `agents/evidence/preregistration/adapted-layer-confirmation-protocol-20261110.md`: seven held-out tasks, a guard task, Haiku 4.5 and Sonnet 5.5, three arms.
+- [x] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/startup-contract-clauses.json --> The owner took it (2026-11-10). Pre-registered in `agents/evidence/preregistration/adapted-layer-confirmation-protocol-20261110.md`: seven held-out tasks, a guard task, Haiku 4.5 and Sonnet 5.5, three arms.
       Pre-register, before any transcript, a run on fresh seeds (and unseen
       tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
       and Sonnet 5.5, with a third arm: the reduced layer padded with neutral
