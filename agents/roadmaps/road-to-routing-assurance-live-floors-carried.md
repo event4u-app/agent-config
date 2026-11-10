@@ -16,6 +16,8 @@ relates:
 > (1) its step 4.4, measured once and breached, carried by AI council verdict;
 > (2) the stable regressions its 5.3 canary found
 > (`agents/evidence/metrics/routing-canary-20261103.md` § Rerun).
+>
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): an external review grades the two skills that still do not activate (`react-shadcn-ui`, `project-analysis-core`) P0, and asks that the arrival and fetch of every relevant rule be measured (P0). Both land on Phase 1 as it stands.
 
 ## Phase 1 — five units the canary left unresolved
 
