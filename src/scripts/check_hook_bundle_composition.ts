@@ -69,6 +69,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { buildScript } from './check_hook_bundle_content.js';
+import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { buildChunk, HOOK_CHUNKS } from './hook_chunks.mjs';
 import { rewriteOutfile } from './rebuild_hook_bundle.js';
 
@@ -628,11 +629,19 @@ function selfTest(): number {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2), root: string = REPO_ROOT): number {
-    if (argv.includes('--self-test')) {
+    const parsed = parseGateArgs('check_hook_bundle_composition', argv, {
+        'self-test': { type: 'boolean' },
+        metafile: { type: 'string' },
+        'base-ref': { type: 'string' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return USAGE_EXIT;
+    }
+    if (parsed.values['self-test'] === true) {
         return selfTest();
     }
-    const at = argv.indexOf('--metafile');
-    const fixture = at >= 0 ? argv[at + 1] : undefined;
+    const fixture = parsed.values.metafile;
 
     let budget: Budget;
     try {
@@ -676,8 +685,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
             return 2;
         }
     }
-    const baseAt = argv.indexOf('--base-ref');
-    const baseBudget = readBaseBudget(root, baseAt >= 0 ? argv[baseAt + 1] : undefined);
+    const baseBudget = readBaseBudget(root, parsed.values['base-ref']);
     if (baseBudget === undefined) {
         // In CI an unresolvable base is a broken checkout, not a registration
         // diff: refusing there is the difference between a rule and a notice.
