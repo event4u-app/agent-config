@@ -1558,6 +1558,13 @@ cmd_settings_check() {
 # after a release. Flags: --path <file> | --dry-run | --check | --profile.
 # Exit 0 in-sync / updated, 2 drift under --check or bad input.
 cmd_settings_sync() {
+  # Bundle first: `upgrade` runs this per settings file, and a global install
+  # ships no tsx — the tsx path fell to `npx tsx` and its warning every time.
+  local aux
+  aux="$(delegate_aux_bundle 'sync_agent_settings.js')"
+  if [[ -n "$aux" ]]; then
+    exec node "$aux" "$@"
+  fi
   exec_ts "$PACKAGE_ROOT/src/scripts/sync_agent_settings.ts" "$@"
 }
 

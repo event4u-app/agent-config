@@ -280,6 +280,7 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         expect(aux, 'package.json needs a build:delegate-aux script').not.toBe('');
         expect(aux).toContain('src/scripts/_lib/pin_resolver.ts');
         expect(aux).toContain('src/scripts/check_update_banner.ts');
+        expect(aux).toContain('src/scripts/sync_agent_settings.ts');
         expect(aux).toContain('--outdir=dist/cli-delegate');
         expect(reachableFromBuild(scripts, 'build:delegate-aux'), 'build must reach build:delegate-aux').toBe(true);
 
@@ -301,6 +302,16 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
             expect(code, `${fn} must not reach npx`).not.toContain('npx');
             expect(body, `${fn} must prefer the delegate bundle`).toContain('delegate_aux_bundle');
         }
+    });
+
+    it('settings:sync prefers its delegate bundle over tsx', () => {
+        // `agent-config upgrade` calls it per settings file; a global install
+        // has no tsx, so the tsx-only path fell to `npx tsx` and its warning.
+        const dispatch = fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', '_dispatch.bash'), 'utf-8');
+        const start = dispatch.indexOf('cmd_settings_sync() {');
+        expect(start).toBeGreaterThan(-1);
+        const body = dispatch.slice(start, dispatch.indexOf('\n}\n', start));
+        expect(body).toContain("delegate_aux_bundle 'sync_agent_settings.js'");
     });
 
     it('every dispatcher-referenced script resolves and imports only runtime deps', () => {
