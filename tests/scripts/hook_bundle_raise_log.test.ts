@@ -17,7 +17,11 @@ import {
     buildChunkBytes,
     chunkCoverageFindings,
     chunkFindings,
+    chunkGroupCoverageFindings,
+    chunkGroupFindings,
+    chunkGroupRaiseFindings,
     chunkRaiseFindings,
+    parseChunkGroupBudgets,
     raiseEntryProblems,
     raiseFindings,
 } from '../../src/scripts/check_hook_bundle_composition.js';
@@ -123,6 +127,65 @@ describe('chunk ceilings', () => {
     it('a chunk lowering or a newly registered chunk needs no entry', () => {
         expect(chunkRaiseFindings(chunked(28000, []), chunked(20000, []))).toEqual([]);
         expect(chunkRaiseFindings(budget(1550000, []), chunked(28000, []))).toEqual([]);
+    });
+});
+
+describe('chunk group ceilings', () => {
+    const A = 'src/scripts/quota_notice_hook.ts';
+    const B = 'src/scripts/switch_link.ts';
+    const grouped = (max: number, log: object[]): string =>
+        JSON.stringify({
+            max_bytes: 1550000,
+            max_yaml_packages: 1,
+            chunks: [
+                { entry: A, max_bytes: 100 },
+                { entry: B, max_bytes: 100 },
+            ],
+            chunk_groups: [{ name: 'link', entries: [A, B], max_bytes: max }],
+            raise_log: log,
+        });
+    const groupEntry = (from: number, to: number): object => ({ ...entry(from, to), chunk_group: 'link' });
+    const group = { name: 'link', entries: [A, B], maxBytes: 150 };
+
+    it('the summed bytes over the group ceiling are a finding, at or under it are not', () => {
+        expect(chunkGroupFindings(new Map([[A, 75], [B, 75]]), [group])).toEqual([]);
+        const over = chunkGroupFindings(new Map([[A, 76], [B, 75]]), [group]);
+        expect(over).toHaveLength(1);
+        expect(over[0]).toContain('151 bytes together');
+    });
+
+    it('a group whose chunks were not all measured is a finding, never a pass', () => {
+        expect(chunkGroupFindings(new Map([[A, 10]]), [group])).toEqual([`chunk group link was not measured: ${B}`]);
+    });
+
+    it('a group naming a chunk without its own ceiling is a finding', () => {
+        expect(chunkGroupCoverageFindings([group], [{ entry: A, maxBytes: 100 }])).toHaveLength(1);
+        expect(chunkGroupCoverageFindings([group], [{ entry: A, maxBytes: 100 }, { entry: B, maxBytes: 100 }])).toEqual([]);
+    });
+
+    it('refuses a malformed group: one entry, a repeated entry, a missing ceiling, a repeated name', () => {
+        const bad = (g: object[]): (() => unknown) => () => parseChunkGroupBudgets({ chunk_groups: g });
+        expect(bad([{ name: 'x', entries: [A], max_bytes: 10 }])).toThrow(/two or more distinct/);
+        expect(bad([{ name: 'x', entries: [A, A], max_bytes: 10 }])).toThrow(/two or more distinct/);
+        expect(bad([{ name: 'x', entries: [A, B] }])).toThrow(/positive integer max_bytes/);
+        expect(bad([group, group].map((g) => ({ name: g.name, entries: g.entries, max_bytes: g.maxBytes })))).toThrow(/twice/);
+    });
+
+    it('a group raise needs a new entry naming the group and the new ceiling; a lowering or a new group does not', () => {
+        expect(chunkGroupRaiseFindings(grouped(150, []), grouped(160, []))).toHaveLength(1);
+        expect(chunkGroupRaiseFindings(grouped(150, []), grouped(160, [entry(150, 160)]))).toHaveLength(1);
+        expect(chunkGroupRaiseFindings(grouped(150, []), grouped(160, [groupEntry(150, 160)]))).toEqual([]);
+        expect(chunkGroupRaiseFindings(grouped(150, []), grouped(140, []))).toEqual([]);
+        expect(chunkGroupRaiseFindings(budget(1550000, []), grouped(150, []))).toEqual([]);
+    });
+
+    it('the shipped budget’s groups name only chunks that carry their own ceiling', () => {
+        const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/config/hook-bundle-budget.json'), 'utf-8')) as Record<string, unknown> & {
+            chunks: Array<{ entry: string; max_bytes: number }>;
+        };
+        const groups = parseChunkGroupBudgets(raw);
+        expect(groups.map((g) => g.name)).toContain('agent-switch-link-opted-in');
+        expect(chunkGroupCoverageFindings(groups, raw.chunks.map((c) => ({ entry: c.entry, maxBytes: c.max_bytes })))).toEqual([]);
     });
 });
 
