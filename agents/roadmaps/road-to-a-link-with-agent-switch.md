@@ -257,17 +257,11 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       that cannot evict a live writer, or write checkpoint generations so an
       older one never replaces a newer one.
       verify: a two-process test with a writer held past the stale break.
-      Done: the lock names its holder's process and is never broken while that
-      process runs (dead holder at once, unnamed after 2 s, any after 15 min);
-      a waiter gives up and leaves the write to the next Stop.
-      `tests/scripts/agent_switch_interprocess.test.ts` § 8.1, red against the
-      age-only break.
-      Reopened 2026-11-10: council round 5 of 8.4 asked to review the lock
-      separately; the rewrite left the 8.4 change for its own pull request.
-      Open from that round: a live holder that loses its ticket after fifteen
-      minutes, the previous version's check-then-unlink across an install, and
-      deterministic tests paused between the stale check and the unlink in both
-      version directions.
+      Reopened 2026-11-10: council round 5 of 8.4 asked to review the ticket
+      lock separately, so it left 8.4 for its own pull request. Open: a live
+      holder losing its ticket after 15 min, the older version's
+      check-then-unlink across an install, and tests paused between stale
+      check and unlink in both version directions.
 - [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
