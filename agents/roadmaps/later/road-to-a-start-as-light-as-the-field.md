@@ -75,6 +75,7 @@ named in the same set: removing before proving.
       reduced and the full layer, paired seeds, scored on task success, rule
       arrival and total price per run.
       verify: one report with all five arms and a cost-per-success column.
+      Budget released by the owner on 2026-11-10 (`agents/evidence/owner-directives/2026-11-10-five-arm-bench-budget.md`); pre-registered in `agents/evidence/preregistration/five-arm-comparison-protocol-20261110.md`.
 
 ## Blockers
 
