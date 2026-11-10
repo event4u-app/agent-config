@@ -12,7 +12,9 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    contractBearingRules,
     contractProblems,
+    measuredProblems,
     orphanContracts,
     readRuleTexts,
     requiredRules,
@@ -82,9 +84,40 @@ describe('contractProblems', () => {
     });
 });
 
+describe('a contract a measurement earned, outside the class', () => {
+    // road-to-the-adapted-layer-on-main: downstream-changes and
+    // think-before-action carry contracts because a pre-registered run measured
+    // that form, not because the consequence class selects them. The evidence
+    // path is what licenses the contract; without it the rule is outside the set.
+    const withMeasured = (measured: Record<string, string>): ContractConfig => ({ ...config(), measured });
+
+    it('admits a measured rule whose evidence file exists, and then audits it like any other', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'csc-measured-'));
+        fs.writeFileSync(path.join(root, 'result.md'), 'measured');
+        const cfg = withMeasured({ r: 'result.md' });
+        expect(measuredProblems(root, cfg)).toEqual([]);
+        expect(contractBearingRules([], root, cfg)).toEqual(['r']);
+        expect(contractProblems(contractBearingRules([], root, cfg), texts(), cfg)).toEqual([]);
+        expect(contractProblems(contractBearingRules([], root, cfg), texts(), { ...cfg, rules: {} }).some((m) => m.includes('no clause audit'))).toBe(true);
+    });
+
+    it('refuses a measured rule whose evidence does not exist, and keeps it out of the set', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'csc-measured-'));
+        const cfg = withMeasured({ r: 'missing.md' });
+        expect(measuredProblems(root, cfg).some((m) => m.includes('missing.md'))).toBe(true);
+        expect(contractBearingRules([], root, cfg)).toEqual([]);
+    });
+
+    it('refuses a measured entry for a rule the class already requires', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'csc-measured-'));
+        fs.writeFileSync(path.join(root, 'result.md'), 'measured');
+        expect(measuredProblems(root, withMeasured({ r: 'result.md' }), ['r']).some((m) => m.includes('already'))).toBe(true);
+    });
+});
+
 describe('committed tree', () => {
     const cfg = JSON.parse(fs.readFileSync(path.join(REPO, 'src/config/startup-contract-clauses.json'), 'utf8')) as ContractConfig;
-    const required = requiredRules(REPO);
+    const required = contractBearingRules(requiredRules(REPO), REPO, cfg);
     const all = readRuleTexts(REPO);
 
     it('passes the gate', () => {

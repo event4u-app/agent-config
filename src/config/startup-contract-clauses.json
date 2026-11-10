@@ -1,7 +1,7 @@
 {
-  "$comment": "Clause audit of the startup contracts (road-to-a-session-start-under-the-host-limit 1.1). source = byte-exact span of src/rules/<id>.md; witness = byte-exact span of its ## Startup contract. Checked by check_startup_contracts.",
+  "$comment": "Clause audit of the startup contracts (road-to-a-session-start-under-the-host-limit 1.1). source = byte-exact span of src/rules/<id>.md; witness = byte-exact span of its ## Startup contract. Checked by check_startup_contracts. total_max_chars 34000 -> 36000 on 2026-11-09 for the two measured contracts (road-to-the-adapted-layer-on-main, owner decision option 1); the session-start budget (check_session_start_budget, 80,000) is the binding ceiling.",
   "per_rule_max_chars": 2000,
-  "total_max_chars": 34000,
+  "total_max_chars": 36000,
   "rules": {
     "autonomous-execution": {
       "clauses": [
@@ -6234,6 +6234,144 @@
           "unresolved_ref": null
         }
       ]
+    },
+    "downstream-changes": {
+      "clauses": [
+        {
+          "id": "c1",
+          "kind": "trigger",
+          "source": "After EVERY code edit, find **ALL downstream changes** needed.",
+          "in_law": false,
+          "response": "none",
+          "witness": "after every code edit",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c2",
+          "kind": "obligation",
+          "source": "EVERY EDIT IS INCOMPLETE UNTIL ALL DOWNSTREAM CHANGES ARE MADE.",
+          "in_law": true,
+          "response": "none",
+          "witness": "find ALL downstream changes",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c3",
+          "kind": "prohibition",
+          "source": "Do NOT move on to the next task, claim completion, or suggest\ncommitting until every caller, test, import, and reference is updated.",
+          "in_law": false,
+          "response": "stop",
+          "witness": "move on to the next task, claim completion, or suggest committing until every caller, test, import, and reference is updated",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c4",
+          "kind": "obligation",
+          "source": "NAME THE EXACT WRONG CONSTRUCT. SEARCH THE TREE. REPORT THE COUNT AND THE FILES.",
+          "in_law": true,
+          "response": "none",
+          "witness": "grep the tree for the exact wrong construct and report how many sites matched and which",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c5",
+          "kind": "escalation",
+          "source": "### Always ask the user first when:",
+          "in_law": false,
+          "response": "ask",
+          "witness": "before starting a breaking change nobody asked for",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c6",
+          "kind": "exception",
+          "source": "Fixing a bug (the current behavior is wrong)",
+          "in_law": false,
+          "response": "none",
+          "witness": "A change the user explicitly requested is already answered",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c7",
+          "kind": "obligation",
+          "source": "6. **No doc drift**",
+          "in_law": false,
+          "response": "none",
+          "witness": "no doc drift",
+          "unresolved_ref": null
+        }
+      ]
+    },
+    "think-before-action": {
+      "clauses": [
+        {
+          "id": "c1",
+          "kind": "obligation",
+          "source": "ANALYZE BEFORE CODING. VERIFY WITH REAL TOOLS. NEVER GUESS.",
+          "in_law": true,
+          "response": "none",
+          "witness": "analyze before coding",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c2",
+          "kind": "prohibition",
+          "source": "NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.",
+          "in_law": true,
+          "response": "stop",
+          "witness": "blind trial-and-error; at most 2 retries per approach",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c3",
+          "kind": "prohibition",
+          "source": "Do NOT modify code you do not fully understand",
+          "in_law": false,
+          "response": "none",
+          "witness": "modify code you do not fully understand",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c4",
+          "kind": "obligation",
+          "source": "**Multi-step task → restate as verifiable success criteria first**",
+          "in_law": false,
+          "response": "none",
+          "witness": "a multi-step task is restated as verifiable success criteria first",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c5",
+          "kind": "escalation",
+          "source": "Unclear requirements → precise clarification question, not hidden assumptions.",
+          "in_law": false,
+          "response": "ask",
+          "witness": "unclear requirements → a precise clarification question",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c6",
+          "kind": "escalation",
+          "source": "do NOT pick one silently — ask.",
+          "in_law": false,
+          "response": "ask",
+          "witness": "pick one of several coexisting frameworks or patterns silently — ask",
+          "unresolved_ref": null
+        },
+        {
+          "id": "c7",
+          "kind": "obligation",
+          "source": "Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface",
+          "in_law": false,
+          "response": "none",
+          "witness": "exercise the changed surface with the concrete tool for it",
+          "unresolved_ref": null
+        }
+      ]
     }
+  },
+  "measured": {
+    "downstream-changes": "agents/evidence/metrics/ask-scope-vs-full-layer-result-20261109.md",
+    "think-before-action": "agents/evidence/metrics/ask-scope-vs-full-layer-result-20261109.md"
   }
 }
