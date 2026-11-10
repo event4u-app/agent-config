@@ -251,6 +251,18 @@ the link over the CLI verbs below, never the MCP client.
   `AGENT_CONFIG_NO_SWITCH_QUESTION=1` stops raise, relay and checkpoint,
   including for a request raised before it was set, and wins over the opt-in;
   the quota notice stays as it was. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` stops both.
+  The link's code is its own lazily loaded chunk (`switch_link.chunk.cjs`): a
+  prompt without the opt-in never loads it, and the Stop path loads it only for
+  a session with a record. A chunk that is missing or does not match its
+  digest is not loaded, and the session behaves as without agent-switch. The
+  chunk and its two callers each compile a call-surface version
+  (`SWITCH_LINK_API` in `_lib/switch_record_path.ts`), and the chunk answers only a caller of the
+  same version, so a chunk built against another call surface is not called
+  even when its digest matches. That is API compatibility, not build identity,
+  and loading the chunk to ask runs only its module body, which defines
+  functions and does nothing else. A
+  Stop that cannot load it writes nothing and leaves an owed checkpoint for the
+  next Stop.
 - **One record per session** under the user-global quota state holds the
   request id and what was told; it is the only state AC keeps about a request.
   It expires a day after the request's `expiresAt` and never later than seven

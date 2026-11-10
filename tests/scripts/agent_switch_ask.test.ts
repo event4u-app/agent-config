@@ -6,10 +6,12 @@
  * answers lives in a file the test rewrites between prompts, the way
  * agent-switch's own store changes between two of a session's prompts.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -24,7 +26,12 @@ import {
     updateSwitchRecord,
 } from '../../src/scripts/_lib/switch_relay.js';
 import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
-import { noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
+import { buildChunk } from '../../src/scripts/hook_chunks.mjs';
+import { sidecarPathFor } from '../../src/scripts/hooks/bundle_digest.js';
+import { loadChunkExport } from '../../src/scripts/hooks/lazy_load.js';
+import { SWITCH_LINK_API } from '../../src/scripts/_lib/switch_record_path.js';
+import type { linkFor } from '../../src/scripts/switch_link.js';
+import { loadSwitchTurn, noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
 import { loadMoveCheckpoint, moveCheckpoint } from '../../src/scripts/hooks/session_eol_hook.js';
 
 const FAKE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'fake_agent_switch.mjs');
@@ -329,7 +336,7 @@ describe('4.4 hand the work over', () => {
         expect(calls('show')).toEqual([]);
     });
 
-    it('the Stop path loads the link only for a session with a record, and from the quota-notice chunk', () => {
+    it('the Stop path loads the link only for a session with a record, and from the switch-link chunk', () => {
         const sess = hashSessionId('sess-a');
         let loads = 0;
         const load = (): typeof checkpointBeforeMove => {
@@ -910,5 +917,131 @@ describe('7.6 the question is opt-in', () => {
         setRequest();
         noticeReply(deps({ env: { ...ON, AGENT_CONFIG_NO_SWITCH_QUESTION: '1' } }));
         expect(calls('request')).toEqual([]);
+    });
+});
+
+describe('8.4 the link in its own chunk', () => {
+    const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+    function counting(): { load: () => ReturnType<typeof loadSwitchTurn>; loads: () => number } {
+        let n = 0;
+        return {
+            load: () => {
+                n++;
+                return loadSwitchTurn();
+            },
+            loads: () => n,
+        };
+    }
+
+    it('a prompt without the opt-in does not load the link; one with it does', () => {
+        hot();
+        setRequest();
+        const off = counting();
+        noticeReply(deps({ env: {}, loadSwitchTurn: off.load }));
+        expect(off.loads()).toBe(0);
+        const on = counting();
+        noticeReply(deps({ loadSwitchTurn: on.load }));
+        expect(on.loads()).toBe(1);
+        expect(calls('request')).toHaveLength(1);
+    });
+
+    it('a link that cannot be loaded asks nothing and keeps today’s notice', () => {
+        hot();
+        setRequest();
+        const r = noticeReply(deps({ loadSwitchTurn: () => null }));
+        expect(calls('request')).toEqual([]);
+        expect(r.lines.some((l) => /^AC: 5h window 85 %/.test(l))).toBe(true);
+    });
+
+    /** Both chunks as the package ships them, side by side, each with its digest. */
+    function built(linkSidecar: 'match' | 'mismatch'): (deps: QuotaNoticeDeps) => { lines: string[] } {
+        const dir = path.join(home, `chunks-${linkSidecar}`);
+        fs.mkdirSync(dir, { recursive: true });
+        for (const [entry, base] of [
+            ['src/scripts/quota_notice_hook.ts', 'quota_notice.chunk.cjs'],
+            ['src/scripts/switch_link.ts', 'switch_link.chunk.cjs'],
+        ] as const) {
+            const out = path.join(dir, base);
+            buildChunk(REPO, entry, out);
+            const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+            const recorded = base === 'switch_link.chunk.cjs' && linkSidecar === 'mismatch' ? sha.replace(/^./, sha[0] === '0' ? '1' : '0') : sha;
+            fs.writeFileSync(sidecarPathFor(out), `${recorded}  ${base}\n`);
+        }
+        const mod = createRequire(import.meta.url)(path.join(dir, 'quota_notice.chunk.cjs')) as { noticeReply: (d: QuotaNoticeDeps) => { lines: string[] } };
+        return mod.noticeReply;
+    }
+
+    it('the shipped quota-notice chunk loads the shipped link chunk beside it', () => {
+        hot();
+        setRequest();
+        const reply = built('match')(deps());
+        expect(calls('request')).toHaveLength(1);
+        expect(reply.lines.some((l) => l.includes(ID))).toBe(true);
+    }, 60_000);
+
+    it('a link chunk that does not match its digest is not loaded', () => {
+        hot();
+        setRequest();
+        const reply = built('mismatch')(deps());
+        expect(calls('request')).toEqual([]);
+        expect(reply.lines.some((l) => /^AC: 5h window 85 %/.test(l))).toBe(true);
+    }, 60_000);
+
+    it('the Stop path’s loader takes the shipped link chunk only when its digest verifies', () => {
+        const dir = path.join(home, 'stop-chunk');
+        fs.mkdirSync(dir, { recursive: true });
+        const out = path.join(dir, 'switch_link.chunk.cjs');
+        buildChunk(REPO, 'src/scripts/switch_link.ts', out);
+        const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+        // As the dispatch bundle beside it would ask for the chunk.
+        const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
+        const load = (): unknown =>
+            loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', '../switch_link', 'linkFor', self, true)?.(SWITCH_LINK_API)?.checkpointBeforeMove;
+        const sidecar = sidecarPathFor(out);
+        const cases: Array<[string, string | null, boolean]> = [
+            ['matching', `${sha}  switch_link.chunk.cjs\n`, true],
+            ['missing', null, false],
+            ['malformed', 'not a digest\n', false],
+            ['mismatched', `${sha.replace(/^./, sha[0] === '0' ? '1' : '0')}  switch_link.chunk.cjs\n`, false],
+        ];
+        for (const [name, text, loads] of cases) {
+            fs.rmSync(sidecar, { force: true });
+            if (text !== null) fs.writeFileSync(sidecar, text);
+            expect([name, typeof load() === 'function']).toEqual([name, loads]);
+        }
+    }, 60_000);
+
+    it('a link chunk from a build with another call surface is not called, though its digest matches', () => {
+        const dir = path.join(home, 'other-build');
+        fs.mkdirSync(dir, { recursive: true });
+        const out = path.join(dir, 'switch_link.chunk.cjs');
+        buildChunk(REPO, 'src/scripts/switch_link.ts', out);
+        const text = fs.readFileSync(out, 'utf-8');
+        const stamp = `SWITCH_LINK_API = ${String(SWITCH_LINK_API)};`;
+        expect(text.split(stamp)).toHaveLength(2);
+        fs.writeFileSync(out, text.replace(stamp, `SWITCH_LINK_API = ${String(SWITCH_LINK_API + 1)};`));
+        const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+        fs.writeFileSync(sidecarPathFor(out), `${sha}  switch_link.chunk.cjs\n`);
+        const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
+        const linkForOther = loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', '../switch_link', 'linkFor', self, true);
+        expect(typeof linkForOther).toBe('function');
+        expect(linkForOther?.(SWITCH_LINK_API)).toBeNull();
+        expect(linkForOther?.(SWITCH_LINK_API + 1)?.checkpointBeforeMove).toBeTypeOf('function');
+    }, 60_000);
+
+    it('a Stop that cannot load the link writes nothing and leaves the checkpoint owed to the next Stop', () => {
+        const sess = hashSessionId('sess-a');
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: { kind: 'approve', target: 'claude/b', how: 'after-turn', by: 'ac:claude-code', at: 'x' } });
+        let written = 0;
+        const write = (): boolean => (written++, true);
+        expect(moveCheckpoint(sess, write, stateEnv, () => null)).toBe(false);
+        expect(written).toBe(0);
+        expect(readSwitchRecord(sess, stateEnv)?.checkpointed).toBe(false);
+        expect(moveCheckpoint(sess, write, stateEnv, () => (h, w, st) => checkpointBeforeMove(h, w, st, { env: binEnv }))).toBe(true);
+        expect(written).toBe(1);
     });
 });

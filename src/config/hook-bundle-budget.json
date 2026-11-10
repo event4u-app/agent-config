@@ -330,9 +330,15 @@
         },
         {
             "entry": "src/scripts/quota_notice_hook.ts",
-            "max_bytes": 49400,
+            "max_bytes": 29900,
             "registered_at": "2026-10-25",
-            "derivation": "Measured 20,703 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask with its per-call pending marker and read-path expiry from ratification rounds 1-5, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice."
+            "derivation": "Measured 20,703 bytes on 2026-10-25 (road-to-a-quota-the-user-sees-coming 3.2-4.3: the quota and metered notices, the metered spawn ask with its per-call pending marker and read-path expiry from ratification rounds 1-5, the quota ledger reader, the pressure model, the billing-class reader and the billing-grant check), no `yaml` (it reads JSON only). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Two manifest concerns share the script (`quota-notice` on claude `user_prompt_submit`, `metered-spawn-ask` on claude `pre_tool_use` for Agent/Task), so the bundle carries one LAZY_CONCERNS row for both; the row fits inside the room the compacted LAZY_CONCERNS table freed, so the dispatch ceiling is not raised. A missing chunk falls back to the spawn path and costs latency, never a notice. LOWERED to 29,900 on 2026-11-10 (road-to-a-link-with-agent-switch 8.4): the agent-switch link moved into its own chunk, src/scripts/switch_link.ts, which this one loads only while the switch question is on, through `hooks/lazy_load.ts` rather than the lazy-concern table; measured 27,162 bytes after the move against 47,877 before it, and the ceiling is that reading plus about 10 %, rounded; 27,128 bytes once the record lock rewrite left this change for its own (council round 5 asked to review the lock separately)."
+        },
+        {
+            "entry": "src/scripts/switch_link.ts",
+            "max_bytes": 30300,
+            "registered_at": "2026-11-10",
+            "derivation": "Measured 27,500 bytes on 2026-11-10 (road-to-a-link-with-agent-switch 8.4), with the record lock as on main: council round 5 asked to review the lock rewrite separately, so it left this change (29,329 B with it). The chunk holds the agent-switch link: the prompt's switch turn (raise, relay, back-off) and the Stop path's checkpoint, with the record and its lock (`_lib/switch_relay.ts`), the link's spawn (`_lib/agent_switch_link.ts`, `_lib/spawn_env.ts`) and the atomic writer. No `yaml`. The ceiling is that reading plus about 10 %, rounded, the margin of the quota_notice and self_repair rows. WHY IT IS A CHUNK: in the quota_notice chunk the link took that chunk to 47,877 B against a 41,000 B ceiling a ratification never accepted raising (Phase 7, rounds 1-6 refused); the switch question is opt-in (D5), so a prompt without it should not parse the link at all. `quota-notice` loads `switchTurn` from here only when the question is on, and the Stop path loads `checkpointBeforeMove` only for a session with a switch record. A missing or mis-digested chunk means no switch question and no checkpoint before a move, the same as running without agent-switch; a checkpoint already owed stays owed for the next Stop. WHAT IT COSTS: a prompt without the opt-in, the default, parses 27,128 B instead of 47,877 B; a prompt with it parses both chunks, 54,628 B instead of 47,877 B (+6,751 B, +14 %): the loader (`hooks/lazy_load.ts` and `hooks/bundle_digest.ts`, about 2,600 B), helpers both chunks carry (`_lib/user_global_paths.ts`, part of `_lib/quota_ledger.ts`, about 1,600 B), and the call-surface code. The two ceilings add up to 60,200 B; the chunk group `agent-switch-link-opted-in` bounds the two together at 60,100 B."
         },
         {
             "entry": "src/scripts/hooks/intake_pass_hook.ts",
@@ -366,6 +372,19 @@
         }
     ],
     "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",
+    "chunk_groups": [
+        {
+            "name": "agent-switch-link-opted-in",
+            "entries": [
+                "src/scripts/quota_notice_hook.ts",
+                "src/scripts/switch_link.ts"
+            ],
+            "max_bytes": 60100,
+            "registered_at": "2026-11-10",
+            "derivation": "What a prompt with the switch question on parses: the quota_notice chunk and the switch_link chunk it loads. Measured 54,628 bytes together on 2026-11-10 (27,128 + 27,500), against 47,877 bytes for quota_notice alone when it carried the link (+6,751 B, +14 %): the chunk loader with its digest check (`hooks/lazy_load.ts`, `hooks/bundle_digest.ts`, about 2,600 B), helpers both chunks carry (about 1,600 B), and the call-surface code the ratification rounds of the split asked for; the record lock rewrite, 56,491 B with it, left for its own change after council round 5. The ceiling is that reading plus about 10 %, rounded, below the 63,500 B a council seat named as acceptable if the gate enforces it (agents/evidence/council/agent-switch-link-chunk-ratification-r3-20261110.question.md). A prompt without the opt-in parses quota_notice alone, which its own ceiling bounds."
+        }
+    ],
+    "chunk_groups_note": "A chunk group bounds the summed bytes of chunks one caller loads together, so a feature split across chunks cannot grow in total while each part stays under its own ceiling. Each named chunk keeps its own ceiling; a group raise needs a raise_log entry whose `chunk_group` is the group's name, by the chunk rule.",
     "max_yaml_packages": 1,
     "max_yaml_packages_note": "The dispatch path reads YAML for the hook manifest, the host-lowering table and the settings contract. One reader covers all three. Two cost 95,846 bytes for a single call site and were invisible until an external rescore counted them — which is why this is a cap rather than prose. The package set the cap counts over is YAML_PACKAGES in the gate.",
     "what_this_does_not_bound": "Latency. A smaller bundle is not a measured speed-up; src/config/hook-latency-budget.json owns the wall-clock axis and is not derived from this file. Nor does it bound dist/install/install.mjs or dist/mcp/server.mjs, which carry their own module graphs."

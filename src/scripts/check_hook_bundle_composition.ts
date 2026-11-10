@@ -69,6 +69,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { buildScript } from './check_hook_bundle_content.js';
+import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { buildChunk, HOOK_CHUNKS } from './hook_chunks.mjs';
 import { rewriteOutfile } from './rebuild_hook_bundle.js';
 
@@ -274,6 +275,123 @@ export function chunkRaiseFindings(baseRaw: string | null, workingRaw: string): 
 }
 
 /** Read the committed budget. Throws rather than defaulting — a guessed ceiling bounds nothing. */
+/**
+ * A ceiling over the sum of several chunks: the bytes a caller that loads all
+ * of them parses. Per-chunk ceilings alone let a feature split across chunks
+ * grow in total while each part stays under its own.
+ */
+export interface ChunkGroupBudget {
+    readonly name: string;
+    readonly entries: readonly string[];
+    readonly maxBytes: number;
+}
+
+/** The group ceilings from a budget file's text, from its optional `chunk_groups` list. */
+export function parseChunkGroupBudgets(raw: Record<string, unknown>): ChunkGroupBudget[] {
+    const list = raw['chunk_groups'];
+    if (list === undefined) return [];
+    if (!Array.isArray(list)) throw new Error(`${BUDGET_REL}: chunk_groups must be a list`);
+    const groups = list.map((g, i) => {
+        const name = isRecord(g) ? g['name'] : undefined;
+        const entries = isRecord(g) ? g['entries'] : undefined;
+        const max = isRecord(g) ? g['max_bytes'] : undefined;
+        if (
+            typeof name !== 'string' ||
+            name === '' ||
+            !Array.isArray(entries) ||
+            entries.length < 2 ||
+            !entries.every((e) => typeof e === 'string') ||
+            new Set(entries).size !== entries.length ||
+            typeof max !== 'number' ||
+            !Number.isInteger(max) ||
+            max <= 0
+        ) {
+            throw new Error(
+                `${BUDGET_REL}: chunk_groups[${String(i)}] needs a name, two or more distinct chunk entries and a positive integer max_bytes`,
+            );
+        }
+        return { name, entries: entries as string[], maxBytes: max };
+    });
+    const seen = new Set<string>();
+    for (const g of groups) {
+        if (seen.has(g.name)) throw new Error(`${BUDGET_REL}: chunk_groups lists ${g.name} twice`);
+        seen.add(g.name);
+    }
+    return groups;
+}
+
+export function readChunkGroupBudgets(root: string): ChunkGroupBudget[] {
+    return parseChunkGroupBudgets(JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>);
+}
+
+/** A group naming a chunk that has no ceiling of its own bounds nothing that is measured. */
+export function chunkGroupCoverageFindings(groups: readonly ChunkGroupBudget[], budgets: readonly ChunkBudget[]): string[] {
+    const budgeted = new Set(budgets.map((b) => b.entry));
+    return groups.flatMap((g) =>
+        g.entries.filter((e) => !budgeted.has(e)).map((e) => `chunk group ${g.name} names ${e}, which has no chunk ceiling in ${BUDGET_REL}`),
+    );
+}
+
+/** Over-ceiling findings for the summed bytes of each group. */
+export function chunkGroupFindings(measured: ReadonlyMap<string, number>, groups: readonly ChunkGroupBudget[]): string[] {
+    const out: string[] = [];
+    for (const g of groups) {
+        const missing = g.entries.filter((e) => !measured.has(e));
+        if (missing.length > 0) {
+            out.push(`chunk group ${g.name} was not measured: ${missing.join(', ')}`);
+            continue;
+        }
+        const bytes = g.entries.reduce((sum, e) => sum + (measured.get(e) ?? 0), 0);
+        if (bytes > g.maxBytes) {
+            out.push(
+                `chunk group ${g.name} is ${String(bytes)} bytes together, ceiling is ${String(g.maxBytes)} ` +
+                    `(over by ${String(bytes - g.maxBytes)}). Shrink a chunk, or raise the group's max_bytes in ${BUDGET_REL} ` +
+                    'WITH a raise_log entry naming the group (`chunk_group`) and what was added.',
+            );
+        }
+    }
+    return out;
+}
+
+/** A group ceiling raised against the base needs a new raise_log entry whose `chunk_group` is the group and whose `to` is the new ceiling. */
+export function chunkGroupRaiseFindings(baseRaw: string | null, workingRaw: string): string[] {
+    if (baseRaw === null) return [];
+    const base = JSON.parse(baseRaw) as Record<string, unknown>;
+    const working = JSON.parse(workingRaw) as Record<string, unknown>;
+    const before = new Map(parseChunkGroupBudgets(base).map((g) => [g.name, g.maxBytes]));
+    const seen = new Set((Array.isArray(base['raise_log']) ? (base['raise_log'] as unknown[]) : []).map((e) => JSON.stringify(e)));
+    const gained = (Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : []).filter(
+        (e) => !seen.has(JSON.stringify(e)),
+    );
+    const out: string[] = [];
+    const after = new Map(parseChunkGroupBudgets(working).map((g) => [g.name, g.entries]));
+    // Dropping a group, or a chunk from one, narrows what the sum covers: that needs a recorded reason too.
+    for (const g of parseChunkGroupBudgets(base)) {
+        const now = after.get(g.name);
+        const dropped = now === undefined ? g.entries : g.entries.filter((e) => !now.includes(e));
+        if (dropped.length === 0) continue;
+        if (!gained.some((e) => isRecord(e) && e['chunk_group'] === g.name)) {
+            out.push(
+                now === undefined
+                    ? `chunk group ${g.name} was removed with no new raise_log entry for it`
+                    : `chunk group ${g.name} dropped ${dropped.join(', ')} with no new raise_log entry for it`,
+            );
+        }
+    }
+    for (const g of parseChunkGroupBudgets(working)) {
+        const from = before.get(g.name);
+        if (from === undefined || g.maxBytes <= from) continue;
+        const logged = gained.find((e) => isRecord(e) && e['chunk_group'] === g.name && e['to'] === g.maxBytes);
+        if (logged === undefined) {
+            out.push(`chunk group ${g.name} ceiling raised from ${String(from)} to ${String(g.maxBytes)} with no new raise_log entry for it`);
+        } else {
+            const problems = raiseEntryProblems(logged as Record<string, unknown>, from);
+            if (problems.length > 0) out.push(`the raise_log entry for chunk group ${g.name} is incomplete: ${problems.join('; ')}.`);
+        }
+    }
+    return out;
+}
+
 export function readBudget(root: string): Budget {
     const abs = path.join(root, BUDGET_REL);
     const raw = JSON.parse(fs.readFileSync(abs, 'utf-8')) as Record<string, unknown>;
@@ -511,11 +629,19 @@ function selfTest(): number {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2), root: string = REPO_ROOT): number {
-    if (argv.includes('--self-test')) {
+    const parsed = parseGateArgs('check_hook_bundle_composition', argv, {
+        'self-test': { type: 'boolean' },
+        metafile: { type: 'string' },
+        'base-ref': { type: 'string' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return USAGE_EXIT;
+    }
+    if (parsed.values['self-test'] === true) {
         return selfTest();
     }
-    const at = argv.indexOf('--metafile');
-    const fixture = at >= 0 ? argv[at + 1] : undefined;
+    const fixture = parsed.values.metafile;
 
     let budget: Budget;
     try {
@@ -543,6 +669,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
 
     const findings = verdict(analysis, budget);
     const chunkSizes = new Map<string, number>();
+    let groups: ChunkGroupBudget[] = [];
     if (fixture === undefined) {
         try {
             const budgets = readChunkBudgets(root);
@@ -551,13 +678,14 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
                 if (HOOK_CHUNKS.some((c) => c.entry === b.entry)) chunkSizes.set(b.entry, buildChunkBytes(root, b.entry));
             }
             findings.push(...chunkFindings(chunkSizes, budgets));
+            groups = readChunkGroupBudgets(root);
+            findings.push(...chunkGroupCoverageFindings(groups, budgets), ...chunkGroupFindings(chunkSizes, groups));
         } catch (e) {
             process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
             return 2;
         }
     }
-    const baseAt = argv.indexOf('--base-ref');
-    const baseBudget = readBaseBudget(root, baseAt >= 0 ? argv[baseAt + 1] : undefined);
+    const baseBudget = readBaseBudget(root, parsed.values['base-ref']);
     if (baseBudget === undefined) {
         // In CI an unresolvable base is a broken checkout, not a registration
         // diff: refusing there is the difference between a rule and a notice.
@@ -573,7 +701,11 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         process.stdout.write('raise rule: no base revision resolved — the max_bytes raise check was not evaluated\n');
     } else {
         const workingBudget = fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8');
-        findings.push(...raiseFindings(baseBudget, workingBudget), ...chunkRaiseFindings(baseBudget, workingBudget));
+        findings.push(
+            ...raiseFindings(baseBudget, workingBudget),
+            ...chunkRaiseFindings(baseBudget, workingBudget),
+            ...chunkGroupRaiseFindings(baseBudget, workingBudget),
+        );
     }
     // Reported on BOTH paths, red included: a census that goes quiet exactly
     // when the gate fires is the shape `reportScanned` exists to prevent.
@@ -591,6 +723,10 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
                 `[${analysis.yamlPackages.join(', ')}], ${String(analysis.modules)} modules\n`,
         );
         for (const [entry, bytes] of chunkSizes) process.stdout.write(`✅  chunk ${entry}: ${String(bytes)} B\n`);
+        for (const g of groups) {
+            const bytes = g.entries.reduce((sum, e) => sum + (chunkSizes.get(e) ?? 0), 0);
+            process.stdout.write(`✅  chunk group ${g.name}: ${String(bytes)} B / ${String(g.maxBytes)} B\n`);
+        }
         return 0;
     }
     process.stderr.write('❌  hook bundle composition is out of budget\n');

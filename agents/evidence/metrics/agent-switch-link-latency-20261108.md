@@ -107,3 +107,10 @@ the documentation or revert the change when any of these is observed:
    that pays link stalls — the link never rests there.
 7. The `quota_notice` chunk outgrows its ceiling in
    `src/config/hook-bundle-budget.json` again without a reviewed raise.
+   Since 8.4 (2026-11-10) the link is its own chunk, `switch_link`; the criterion
+   applies to that chunk's ceiling, to `quota_notice`'s, lowered to 29,900 B,
+   and to the chunk group `agent-switch-link-opted-in` (60,100 B together).
+8. With the opt-in on, the switch question never appears on a hot window, or a
+   checkpoint stays owed across Stops, while `agent-switch` answers — the
+   `switch_link` chunk is not loading (missing, mis-digested, or another call
+   surface).

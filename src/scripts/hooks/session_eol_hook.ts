@@ -78,10 +78,11 @@ import {
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { CONTEXT_NOTICE_PCT, sessionContextFill } from '../_lib/pressure.js';
 import { hashSessionId, readQuotaLedger } from '../_lib/quota_ledger.js';
-import { switchRecordPath } from '../_lib/switch_record_path.js';
+import { SWITCH_LINK_API, switchRecordPath } from '../_lib/switch_record_path.js';
 import type { checkpointBeforeMove } from '../_lib/switch_relay.js';
+import type { linkFor } from '../switch_link.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
-import { loadLazyExport } from './lazy_concern.js';
+import { loadChunkExport } from './lazy_load.js';
 import { current_branch } from '../_lib/git_common_dir.js';
 import { derive_session_tag } from '../_lib/session_tag.js';
 import { localDay, pruneStaleMarkers, pruneStalePointers, writeSessionPointer } from '../retro_queue.js';
@@ -170,18 +171,19 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
 }
 
 /**
- * The link half of the checkpoint lives in the `quota_notice` chunk, not in this
- * bundle; it is loaded only for a session that has a switch record at all.
+ * The link half of the checkpoint lives in the `switch_link` chunk, not in this
+ * bundle; it is loaded only for a session that has a switch record at all,
+ * and used only when it was built against the same call surface.
  */
-export function loadMoveCheckpoint(): typeof checkpointBeforeMove | null {
-    return loadLazyExport<typeof checkpointBeforeMove>('src/scripts/quota_notice_hook.ts', 'checkpointBeforeMove');
+export function loadMoveCheckpoint(): typeof checkpointBeforeMove | undefined {
+    return loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', '../switch_link', 'linkFor', import.meta.url)?.(SWITCH_LINK_API)?.checkpointBeforeMove;
 }
 
 export function moveCheckpoint(
     sessionHash: string,
     write: () => boolean,
     stateEnv?: EnvMap | null,
-    load: () => typeof checkpointBeforeMove | null = loadMoveCheckpoint,
+    load: () => typeof checkpointBeforeMove | null | undefined = loadMoveCheckpoint,
 ): boolean {
     if (!fs.existsSync(switchRecordPath(sessionHash, stateEnv))) return false;
     return load()?.(sessionHash, write, stateEnv) ?? false;

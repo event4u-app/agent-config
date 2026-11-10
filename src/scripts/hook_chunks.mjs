@@ -91,6 +91,13 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/quota_notice_hook.ts',
         outfile: 'dist/hooks/quota_notice.chunk.cjs',
     }),
+    // The agent-switch link: loaded by
+    // `quota-notice` only with the switch question on, and by the Stop path only
+    // for a session with a switch record. Reads no YAML.
+    Object.freeze({
+        entry: 'src/scripts/switch_link.ts',
+        outfile: 'dist/hooks/switch_link.chunk.cjs',
+    }),
     // `session_start` on claude alone; the thin pass and the ownership ledger
     // it reads stay off every other dispatch's parse. `yaml` external for the
     // reason given at `chat_history`, which `require`s the same copy earlier on

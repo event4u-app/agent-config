@@ -6,6 +6,9 @@ import * as path from 'node:path';
 import { fix_hint, log_dispatch_issue } from './dispatch_issues.js';
 import { EXIT_BLOCK } from './exit_codes.js';
 import { emitFor } from './host_semantics.js';
+import { type IntegrityVerdict, verifyBundle } from './bundle_digest.js';
+
+export { hashFile, parseSidecar, sidecarPathFor, verifyBundle, type IntegrityVerdict } from './bundle_digest.js';
 
 /**
  * bundle_integrity — does the dispatcher's own bundle still match what the
@@ -41,12 +44,6 @@ import { emitFor } from './host_semantics.js';
  * write — the cases where somebody changed one file and not the other.
  */
 
-/** What a verification produced. */
-export type IntegrityVerdict =
-    | { state: 'ok'; sha: string }
-    | { state: 'mismatch'; expected: string; actual: string }
-    | { state: 'unverifiable'; reason: string };
-
 /**
  * The cheap identity of a file — what a later dispatch compares instead of
  * re-hashing 1.5 MB.
@@ -67,53 +64,6 @@ export interface BundleStamp {
     sha: string;
     size: number;
     mtimeMs: number;
-}
-
-/** Read the expected digest out of a `shasum -a 256` style sidecar. */
-export function parseSidecar(text: string): string | null {
-    // `<64 hex>  <filename>` — the two-space form `shasum` emits. Tolerant of
-    // any run of whitespace and of a trailing newline, because an operator who
-    // regenerates the file by hand should not be punished for one space.
-    const m = /^([0-9a-f]{64})\s/u.exec(text.trim());
-    return m === null ? null : (m[1] as string);
-}
-
-/** Where the sidecar for a given bundle lives. */
-export function sidecarPathFor(bundlePath: string): string {
-    return bundlePath.replace(/\.js$/u, '') + '.sha256';
-}
-
-/** SHA-256 of a file's bytes, or null when it cannot be read. */
-export function hashFile(p: string): string | null {
-    try {
-        return createHash('sha256').update(fs.readFileSync(p)).digest('hex');
-    } catch {
-        return null;
-    }
-}
-
-/**
- * Compare a bundle against its sidecar.
- *
- * Pure apart from the two reads, so the caller's caching and the verdict logic
- * can be tested without a dispatch.
- */
-export function verifyBundle(bundlePath: string): IntegrityVerdict {
-    const sidecar = sidecarPathFor(bundlePath);
-    let expected: string | null;
-    try {
-        expected = parseSidecar(fs.readFileSync(sidecar, 'utf-8'));
-    } catch {
-        return { state: 'unverifiable', reason: `no sidecar at ${path.basename(sidecar)}` };
-    }
-    if (expected === null) {
-        return { state: 'unverifiable', reason: `sidecar at ${path.basename(sidecar)} is malformed` };
-    }
-    const actual = hashFile(bundlePath);
-    if (actual === null) {
-        return { state: 'unverifiable', reason: `bundle at ${path.basename(bundlePath)} is unreadable` };
-    }
-    return actual === expected ? { state: 'ok', sha: actual } : { state: 'mismatch', expected, actual };
 }
 
 /** The cheap identity of the bundle right now, or null when it is not there. */

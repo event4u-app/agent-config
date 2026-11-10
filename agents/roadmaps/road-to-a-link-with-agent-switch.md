@@ -257,11 +257,22 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       that cannot evict a live writer, or write checkpoint generations so an
       older one never replaces a newer one.
       verify: a two-process test with a writer held past the stale break.
+      Reopened 2026-11-10: council round 5 of 8.4 asked to review the ticket
+      lock separately, so it left 8.4 for its own pull request. Open: a live
+      holder losing its ticket after 15 min, the older version's
+      check-then-unlink across an install, and tests paused between stale
+      check and unlink in both version directions.
 - [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
       and the checkpoint.
       verify: the two-process tests.
+      Done: relay claim, back-off count and checkpoint, each with two or three
+      `node` processes running the hook halves (`fixtures/switch_relay_driver.ts`)
+      against the fake agent-switch at one instant; all three red with the lock
+      removed, in three runs. Not the full dispatcher: its process start costs
+      seconds per run and adds nothing to the lock under test.
+      Reopened 2026-11-10 with 8.1: the tests ship with the lock rewrite.
 - [ ] **8.3 Consent at execution, closed.** Ask agent-switch to mark
       `switch_decide` with `requiresUserInteraction` (counterpart roadmap
       `road-to-the-agent-config-link`), then show a live interactive prompt on
@@ -274,6 +285,13 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       (for example the link in its own lazily loaded chunk with its own measured
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
+      Progress: the link is its own lazy chunk (`switch_link`, 27,500 B);
+      `quota_notice` 27,128 B, ceiling lowered to 29,900; the chunk group
+      `agent-switch-link-opted-in` caps both at 60,100 B. Council rounds 1-5
+      refused, round 5 on bundling the lock rewrite, which then left this step
+      for 8.1; findings and fixes are in
+      `agents/evidence/council/agent-switch-link-chunk-ratification-r*-20261110.question.md`.
+      Open: the ratification record for the budget and plumbing change.
 - [ ] **8.5 Remove what was written.** The write path accepts any command for the
       MCP entry (`mcp_bridge.ts:281-305`), the remove path matches only the bare
       `agent-switch mcp serve`, so an entry written in another form survives a

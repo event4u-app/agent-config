@@ -50,13 +50,8 @@
  * concern runs synchronously, and a literal specifier would be inlined by
  * esbuild, which is the cost this exists to avoid.
  */
-import * as fs from 'node:fs';
-import { createRequire } from 'node:module';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { verifyBundle } from './bundle_integrity.js';
 import type { ConcernMain } from './concern_registry_types.js';
+import { chunkSpecifier, isBundled, loadChunkExport } from './lazy_load.js';
 
 /**
  * Manifest `script:` path → the chunk basename beside `dist/hooks/dispatch.js`,
@@ -78,37 +73,10 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
     'src/scripts/hooks/compact_checkpoint_hook.ts': lazy('compact_checkpoint.chunk.cjs', 'compact_checkpoint_hook'),
 });
 
-declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
-
-function isBundled(): boolean {
-    return typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
-}
-
 /** Where a lazy concern loads from: the sibling chunk when bundled, the source module otherwise. */
 export function lazyConcernSpecifier(script: string, selfUrl: string, bundled: boolean): string | null {
     const entry = LAZY_CONCERNS[script];
-    if (entry === undefined) return null;
-    const selfPath = fileURLToPath(selfUrl);
-    const dir = path.dirname(selfPath);
-    if (bundled) return path.join(dir, entry.chunk);
-    const ext = selfPath.endsWith('.ts') ? '.ts' : '.js';
-    return path.join(dir, `${entry.source}${ext}`);
-}
-
-/**
- * From the source tree the concern is TypeScript whose imports name `.js`
- * siblings, which a plain `require` cannot resolve outside a `tsx` process.
- * `tsx`'s own require resolves them; the specifier is computed so esbuild never
- * pulls `tsx` into the bundle, where this branch is not taken.
- */
-function sourceRequire(req: NodeJS.Require): (id: string, from: string) => unknown {
-    try {
-        const api = req(['tsx', 'cjs', 'api'].join('/')) as { require?: (id: string, from: string) => unknown };
-        if (typeof api.require === 'function') return api.require;
-    } catch {
-        // tsx absent: a plain require is the only reader left.
-    }
-    return (id: string) => req(id);
+    return entry === undefined ? null : chunkSpecifier(entry.chunk, entry.source, selfUrl, bundled);
 }
 
 /**
@@ -132,21 +100,8 @@ export function loadLazyExport<T>(
     selfUrl: string = import.meta.url,
     bundled: boolean = isBundled(),
 ): T | null {
-    try {
-        const specifier = lazyConcernSpecifier(script, selfUrl, bundled);
-        if (specifier === null || !fs.existsSync(specifier)) return null;
-        // No sidecar, a malformed one or a mismatch: the chunk is not the one built.
-        if (bundled && verifyBundle(specifier).state !== 'ok') return null;
-        const req = createRequire(selfUrl);
-        const mod = (bundled ? req(specifier) : sourceRequire(req)(specifier, fileURLToPath(selfUrl))) as Record<
-            string,
-            unknown
-        >;
-        const fn = mod[name];
-        return typeof fn === 'function' ? (fn as T) : null;
-    } catch {
-        return null;
-    }
+    const entry = LAZY_CONCERNS[script];
+    return entry === undefined ? null : loadChunkExport<T>(entry.chunk, entry.source, name, selfUrl, bundled);
 }
 
 const cache = new Map<string, ConcernMain | null>();
