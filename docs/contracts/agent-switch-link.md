@@ -276,16 +276,38 @@ the link over the CLI verbs below, never the MCP client.
   record as it is then, so neither undoes the other's and a deleted record
   stays deleted. Each relayed line is claimed under that lock before it is
   shown, so two prompts running at once show it once in normal operation; a
-  prompt that dies after its claim loses that line, and the lock's stale break
-  below can let two prompts claim it. A raise never replaces a record that is
+  prompt that dies after its claim loses that line. A raise never replaces a record that is
   still there. The run checkpoint is built and written while the record lock is
   held, so Stops write in order and one that finds the obligation completed
   meanwhile does not write an older snapshot over it; a Stop that cannot take
   the lock writes nothing. The record is forgotten only after a write that
   reported success; a write that fails, throws or is cut short leaves the
-  obligation for the next Stop. A lock is released only by its holder. The lock is
-  advisory and its stale break (older than two seconds) is a check followed by
-  a removal, so two breakers at the same instant can remove a fresh lock. The
+  obligation for the next Stop. The lock is a set of tickets: each contender
+  creates its own file `<record>.lock.<pid>.<time>.<random>`, then lists the
+  tickets, removes every breakable one, and holds the lock only when no other
+  ticket is left and it can also take the single `<record>.lock` file the
+  version before tickets used; otherwise it removes its own and retries after
+  a random pause. Taking that file keeps a hook of the older version, still
+  running across an install or a rollback, and this one out of each other in
+  both directions. The older version breaks that file once its mtime is two
+  seconds old, so this version dates it fifteen minutes ahead while it holds
+  it, and gives it back when it cannot date it; this version judges the file by its holder's pid, so it waits up to
+  thirty minutes, not fifteen, only when that pid was reused. A ticket is only ever removed by its own unique name, so breaking an
+  abandoned one cannot remove a successor's, and two contenders cannot both
+  hold: each lists after creating, so the later lister sees the earlier ticket.
+  A live holder's ticket is kept for fifteen minutes, however slow it is; a
+  waiter gives up after about a quarter of a second and leaves the work to the
+  next hook. A ticket whose process has ended is removed at once, one that
+  names no process after two seconds, and one older than fifteen minutes
+  regardless: the code under the lock only reads and writes local files, so a
+  holder that old is taken to be a reused process id, and if it is in fact
+  still writing it loses its exclusion. Two contenders that collide both back
+  off, so under contention an update can be skipped; it never runs under two
+  holders at once.
+  Process liveness is read in the caller's process-id namespace, so hooks of
+  one state directory running in different namespaces (a container sharing
+  the host's home) are not covered. The lock is advisory: it binds only the
+  hooks that take it. The
   code holding it reads and writes files only: the record, the back-off count,
   and the checkpoint build and write; every agent-switch call runs outside it. An unwritable state directory keeps
   no back-off count, so the link does not rest there. Record, back-off and lock files no
