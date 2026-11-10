@@ -222,6 +222,93 @@ describe('8.1 a writer the lock cannot evict', () => {
     });
 });
 
+describe('the lock across an install: the older single lock file', () => {
+    const legacy = (): string => `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock`;
+    const deadPid = (): number => Number(spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' }).stdout);
+
+    it('a hook of the older version holding the single lock file keeps this one out', () => {
+        raised();
+        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
+        try {
+            const token = `${String(holder.pid)}.${String(Date.now())}.old`;
+            fs.writeFileSync(legacy(), token);
+            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
+            expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
+            expect(fs.readFileSync(legacy(), 'utf-8')).toBe(token);
+        } finally {
+            holder.kill();
+        }
+    });
+
+    it('while this version holds, the single lock file is taken, so the older version’s exclusive create fails', () => {
+        raised();
+        let seen: string | null = null;
+        let oldCouldTake = true;
+        updateSwitchRecord(
+            hashSessionId(SESSION),
+            (cur) => {
+                seen = fs.readFileSync(legacy(), 'utf-8');
+                try {
+                    fs.writeFileSync(legacy(), 'old', { flag: 'wx' });
+                } catch {
+                    oldCouldTake = false;
+                }
+                return cur;
+            },
+            stateEnv,
+        );
+        expect(seen).toMatch(new RegExp(`^${String(process.pid)}\\.`));
+        expect(oldCouldTake).toBe(false);
+        expect(fs.existsSync(legacy())).toBe(false);
+    });
+
+    it('a dead holder’s single lock file is broken', () => {
+        raised();
+        fs.writeFileSync(legacy(), `${deadPid()}.1.old`);
+        expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(true);
+        expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)).toBeNull();
+    });
+
+    it('every breakable ticket is removed, whatever the listing order, while a live one still keeps the lock', () => {
+        raised();
+        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
+        try {
+            const base = `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock.`;
+            const dead = [deadPid(), deadPid(), deadPid()].map((pid) => ticket(pid));
+            const unnamed = ['0.old', 'a.old', 'zz.old'].map((t) => base + t);
+            const old = new Date(Date.now() - 10_000);
+            for (const t of [...dead, ...unnamed]) {
+                fs.writeFileSync(t, '');
+                fs.utimesSync(t, old, old);
+            }
+            // With six breakable tickets around a live one, a scan that stops at
+            // the first live ticket leaves some behind in most listing orders.
+            const live = `${base}${String(holder.pid)}.5.x`;
+            fs.writeFileSync(live, '');
+            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
+            expect([...dead, ...unnamed].filter((t) => fs.existsSync(t))).toEqual([]);
+            expect(fs.existsSync(live)).toBe(true);
+        } finally {
+            holder.kill();
+        }
+    });
+
+    it('a live holder’s ticket older than fifteen minutes is taken as a reused pid and broken', () => {
+        raised();
+        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
+        try {
+            const held = ticket(holder.pid ?? 0);
+            fs.writeFileSync(held, '');
+            const old = new Date(Date.now() - 16 * 60_000);
+            fs.utimesSync(held, old, old);
+            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(true);
+            expect(fs.existsSync(held)).toBe(false);
+        } finally {
+            holder.kill();
+        }
+    });
+});
+
 describe('8.2 two hook processes at once', () => {
     it('relay: a decision made in agent-switch is told by exactly one of two prompts', async () => {
         raised();

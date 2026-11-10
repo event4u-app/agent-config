@@ -292,17 +292,57 @@ function ticketBreakable(ticket: string, token: string): boolean {
 }
 
 /**
+ * Take `<file>.lock`, the single lock file of the scheme before tickets, as
+ * well. A hook of that version still running across an install or a rollback
+ * creates it exclusively and so waits for this holder, and this holder waits
+ * for it. Only the ticket holder gets here, so a break of this file races an
+ * older hook at most, never another ticket holder.
+ */
+function takeLegacyLock(legacy: string, token: string): boolean {
+    try {
+        fs.writeFileSync(legacy, token, { flag: 'wx', mode: 0o600 });
+        return true;
+    } catch {
+        // held, or another failure: judge the holder below
+    }
+    let held: string;
+    try {
+        held = fs.readFileSync(legacy, 'utf-8');
+    } catch {
+        return false;
+    }
+    if (!ticketBreakable(legacy, held)) return false;
+    fs.rmSync(legacy, { force: true });
+    try {
+        fs.writeFileSync(legacy, token, { flag: 'wx', mode: 0o600 });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function releaseLegacyLock(legacy: string, token: string): void {
+    try {
+        if (fs.readFileSync(legacy, 'utf-8') === token) fs.rmSync(legacy, { force: true });
+    } catch {
+        // already gone
+    }
+}
+
+/**
  * Run `fn` holding the lock on `file`, or return `null` when it could not be
  * had. Each contender creates its own ticket `<file>.lock.<token>`, then lists
- * the tickets: it holds the lock when no other ticket remains after removing
- * the breakable ones, and otherwise removes its own and retries after a random
- * pause. A ticket is only ever removed by its unique name, so breaking an
- * abandoned one can never remove a successor's, and two contenders cannot both
- * hold: each lists after creating, so the later lister sees the earlier ticket.
+ * the tickets, removes every breakable one, and holds the lock when no other
+ * ticket is left and it could also take the older `<file>.lock`; otherwise it
+ * removes its own ticket and retries after a random pause. A ticket is only
+ * ever removed by its unique name, so breaking an abandoned one can never
+ * remove a successor's, and two contenders cannot both hold: each lists after
+ * creating, so the later lister sees the earlier ticket.
  */
 function locked<T>(file: string, fn: () => T): { value: T } | null {
     const dir = path.dirname(file);
     const prefix = `${path.basename(file)}.lock.`;
+    const legacy = `${file}.lock`;
     const token = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
     const mine = path.join(dir, prefix + token);
     for (let i = 0; i < LOCK_TRIES; i++) {
@@ -310,15 +350,14 @@ function locked<T>(file: string, fn: () => T): { value: T } | null {
         try {
             fs.mkdirSync(dir, { recursive: true });
             fs.writeFileSync(mine, '', { flag: 'wx', mode: 0o600 });
-            free = fs
-                .readdirSync(dir)
-                .filter((n) => n.startsWith(prefix) && n !== prefix + token)
-                .every((n) => {
-                    const other = path.join(dir, n);
-                    if (!ticketBreakable(other, n.slice(prefix.length))) return false;
-                    fs.rmSync(other, { force: true });
-                    return true;
-                });
+            let others = 0;
+            for (const n of fs.readdirSync(dir)) {
+                if (!n.startsWith(prefix) || n === prefix + token) continue;
+                const other = path.join(dir, n);
+                if (ticketBreakable(other, n.slice(prefix.length))) fs.rmSync(other, { force: true });
+                else others++;
+            }
+            free = others === 0 && takeLegacyLock(legacy, token);
         } catch {
             free = false;
         }
@@ -326,6 +365,7 @@ function locked<T>(file: string, fn: () => T): { value: T } | null {
             try {
                 return { value: fn() };
             } finally {
+                releaseLegacyLock(legacy, token);
                 fs.rmSync(mine, { force: true });
             }
         }
