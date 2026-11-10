@@ -1,20 +1,17 @@
 ---
 complexity: lightweight
-status: later
+status: ready
 review_by: 2026-12-10
 tree_pin: ada1f46a85
-entry_condition:
-  what: "a free active slot (8 of 25 active on 2026-11-10) and an implementer"
-  when: "before the next release that carries a breaking change or a consumer-default flip"
-  who: implementer
-estate_growth_exempt: "+1 later_roadmaps on 2026-11-10, round inbox-2026-11-wo: release notes that name what the span changed. Searched agents/roadmaps/*.md, later/ and stubs/ with grep -rlF for `major_surface`, `BREAKING CHANGE:`, `release_impact_entry`, `MIGRATION`, `behind main`, `Default changes`: the only hits are later/road-to-records-that-match-their-code (its release phase is closed) and later/road-to-17-0-follow-ups (one #2573 line, carried there). No roadmap owns the notes-against-span check. Parked, not active, per the owner directive of 2026-10-24."
+estate_growth_exempt: "Activated on 2026-11-10 by the owner's instruction ('3, beides aktiv machen'), with 11 of 25 active after the move. No roadmap owned these items (round inbox-2026-11-wo; the search is in the PR that parked it, #2968)."
+estate_offset_exempt: "Activated on 2026-11-10 by the owner's instruction ('3, beides aktiv machen'), with 11 of 25 active after the move; every step is open and the release surfaces it fixes ship in the next release, so nothing is archived to offset it."
 execution:
   mode: phase-checkpoints
 relates:
   - slug: later/road-to-records-that-match-their-code
     relation: extends
     note: "Its release phase closed the record side. This file covers what the generator still derives from commit subjects and the span check it never had."
-  - slug: later/road-to-gates-that-check-what-they-claim
+  - slug: road-to-gates-that-check-what-they-claim
     relation: disjoint
     note: "That file owns the gate residues; this one owns the release surfaces only. 1.2 there fixes the major-detection comment; 1.1 here fixes the breaking block that reads it."
 ---

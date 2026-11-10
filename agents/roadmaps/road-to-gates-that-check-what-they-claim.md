@@ -1,13 +1,10 @@
 ---
 complexity: structural
-status: later
+status: ready
 review_by: 2026-12-10
 tree_pin: ada1f46a85
-entry_condition:
-  what: "a free active slot (8 of 25 active on 2026-11-10) and an implementer; 2.8 is dated and does not wait for the slot"
-  when: "now — Phase 1 is a day of work and every item has been re-reported for two or more releases"
-  who: implementer
-estate_growth_exempt: "+1 later_roadmaps on 2026-11-10, round inbox-2026-11-wo: gate residues an external review re-reports release after release. Searched agents/roadmaps/*.md, later/ and stubs/ with grep -rlF for `major_surface`, `removedDefaultAssets`, `consumer_impact`, `approvalsAtBase`, `bypass record`, `WIP_CAP`, `hook-bundle-budget`, `credential`, `review/changes`, `ci_mirror`: the residues of records-that-match-their-code 3.1/3.4 sit behind closed steps; the no-verify parser is later/road-to-a-hard-floor-the-shell-cannot-talk-past 1.3, which this file does not duplicate; no roadmap owns the rest. Parked, not active, per the owner directive of 2026-10-24."
+estate_growth_exempt: "Activated on 2026-11-10 by the owner's instruction ('3, beides aktiv machen'), with 11 of 25 active after the move. No roadmap owned these items (round inbox-2026-11-wo; the search is in the PR that parked it, #2968)."
+estate_offset_exempt: "Activated on 2026-11-10 by the owner's instruction ('3, beides aktiv machen'), with 11 of 25 active after the move; its gate residues are live on main and re-reported each release, so nothing is archived to offset it."
 execution:
   mode: phase-checkpoints
 relates:
