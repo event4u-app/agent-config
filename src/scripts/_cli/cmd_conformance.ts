@@ -167,11 +167,12 @@ export function _installLogExpected(projectRoot: string): boolean {
  * banner, where the per-row symbol is the only signal.
  *
  * Reach, updated 2026-09-15 — Phase 3 landed: the headless installer
- * (`src/scripts/install.ts`, `_copy_dir_dereferencing_symlinks`) now appends
- * a `write` or `skip` entry per copied/skipped path, through the same
- * `appendTxLog` module the recovery-dismiss route calls. So a headless
- * install now leaves the `unknown` branch above and reads `ok` on its own
- * evidence rather than on the absence of any. `unknown` is still the answer
+ * (`src/scripts/install.ts`, `_copy_dir_dereferencing_symlinks`) now opens
+ * each run with a `run` marker and appends a `write` per copy of new bytes and
+ * a `skip` per preserved path, through the same `txlog` module the
+ * recovery-dismiss route calls. So a headless install — an unchanged re-run
+ * included, through its marker — leaves the `unknown` branch above and reads
+ * `ok` on its own evidence rather than on the absence of any. `unknown` is still the answer
  * for an install that predates this change, or for the wizard's browser
  * path, which does not call the headless copy function; `fail` is still
  * unreachable because nothing writes an `abort` yet.
@@ -180,7 +181,9 @@ export function _check_txlog_clean(
     logPath: string = installLogPath(),
     projectRoot: string | null = null,
 ): Dict {
-    const entries = fs.existsSync(logPath) ? readRecentEntries(logPath) : [];
+    // Unconditional: entries this process queued may not be on disk yet, and
+    // readRecentEntries flushes them first (an absent log reads as []).
+    const entries = readRecentEntries(logPath);
     if (entries.length === 0) {
         // One branch for all three no-usable-entries shapes — absent, empty,
         // and unreadable. Splitting them let a zero-byte or fully-corrupt log

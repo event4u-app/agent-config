@@ -123,7 +123,8 @@ Tier 1 — power-user (release shape, audit, migration):
                              Flags: --check (read-only) | --to <version> (explicit pin)
   upgrade                    Install the latest @event4u/agent-config globally
                              (npm i -g) and refresh the global install + plugin.
-                             Flags: --check (report only) | --dry-run
+                             Quiet by default; --verbose / --debug for full output.
+                             Flags: --check (report only) | --dry-run | --verbose
   refresh                    Idempotent re-install, no version change.
                              --global (root + plugin) | --project (bridge
                              marker + overrides + .gitignore). Scope required.
@@ -1558,6 +1559,13 @@ cmd_settings_check() {
 # after a release. Flags: --path <file> | --dry-run | --check | --profile.
 # Exit 0 in-sync / updated, 2 drift under --check or bad input.
 cmd_settings_sync() {
+  # Bundle first: `upgrade` runs this per settings file, and a global install
+  # ships no tsx — the tsx path fell to `npx tsx` and its warning every time.
+  local aux
+  aux="$(delegate_aux_bundle 'sync_agent_settings.js')"
+  if [[ -n "$aux" ]]; then
+    exec node "$aux" "$@"
+  fi
   exec_ts "$PACKAGE_ROOT/src/scripts/sync_agent_settings.ts" "$@"
 }
 

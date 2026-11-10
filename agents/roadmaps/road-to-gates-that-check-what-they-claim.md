@@ -1,13 +1,10 @@
 ---
 complexity: structural
-status: later
+status: ready
 review_by: 2026-12-10
 tree_pin: ada1f46a85
-entry_condition:
-  what: "a free active slot (8 of 25 active on 2026-11-10) and an implementer; 2.8 is dated and does not wait for the slot"
-  when: "now — Phase 1 is a day of work and every item has been re-reported for two or more releases"
-  who: implementer
-estate_growth_exempt: "+1 later_roadmaps on 2026-11-10, round inbox-2026-11-wo: gate residues an external review re-reports release after release. Searched agents/roadmaps/*.md, later/ and stubs/ with grep -rlF for `major_surface`, `removedDefaultAssets`, `consumer_impact`, `approvalsAtBase`, `bypass record`, `WIP_CAP`, `hook-bundle-budget`, `credential`, `review/changes`, `ci_mirror`: the residues of records-that-match-their-code 3.1/3.4 sit behind closed steps; the no-verify parser is later/road-to-a-hard-floor-the-shell-cannot-talk-past 1.3, which this file does not duplicate; no roadmap owns the rest. Parked, not active, per the owner directive of 2026-10-24."
+estate_growth_exempt: "Activated on 2026-11-10 by the owner's instruction ('3, beides aktiv machen'), with 11 of 25 active after the move. No roadmap owned these items (round inbox-2026-11-wo; the search is in the PR that parked it, #2968)."
+estate_offset_exempt: "Activated on 2026-11-10 by the owner's instruction ('3, beides aktiv machen'), with 11 of 25 active after the move; its gate residues are live on main and re-reported each release, so nothing is archived to offset it."
 execution:
   mode: phase-checkpoints
 relates:
@@ -129,14 +126,14 @@ say exactly what it does not check.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| C1 | destructive-owned | agent (closure, round inbox-2026-11-wo) | False positive: "merge-base" names the revision a check reads. No step merges, pushes, deletes or force-writes anything. | typed-op:53 | a step gains an action on a remote |
-| C2 | destructive-owned | agent | Same: 2.2 changes what an existing check reads at the merge-base. | typed-op:91 | as C1 |
-| C3 | destructive-owned | agent | Same: 2.3 reports merges after the fact and writes records; it never merges. Each backfilled record says it was written after the fact (Risk 2). | typed-op:95 | as C1 |
-| C4 | destructive-owned | agent | Same: 2.4 adds a refusal to a ceiling change; it lowers or raises nothing itself. | typed-op:100 | as C1 |
+| C1 | reversible-technical | agent | The scanner typed this `destructive-owned` (typed-op); read as a false positive: "merge-base" names the revision a check reads. No step merges, pushes, deletes or force-writes anything. | typed-op:53 | a step gains an action on a remote |
+| C2 | reversible-technical | agent | The scanner typed this `destructive-owned`; read as a false positive, as C1: 2.2 changes what an existing check reads at the merge-base. | typed-op:91 | as C1 |
+| C3 | reversible-technical | agent | The scanner typed this `destructive-owned`; read as a false positive, as C1: 2.3 reports merges after the fact and writes records; it never merges. Each backfilled record says it was written after the fact (Risk 2). | typed-op:95 | as C1 |
+| C4 | reversible-technical | agent | The scanner typed this `destructive-owned`; read as a false positive, as C1: 2.4 adds a refusal to a ceiling change; it lowers or raises nothing itself. | typed-op:100 | as C1 |
 | C5 | deterministic | agent | 2.7's verify names its contents: 30 head SHAs, both verdicts per job, both counts. | unfalsifiable-verify:111 | — |
 | C6 | contested-technical | agent | AC-1's "or" applies to 1.1 alone; every Phase 2 item becomes a check with a test. | unpicked-alternative:139 | — |
-| D1 | owner | owner | Widen the major detection to every consumer-facing name, beyond `removedDefaultAssets`? | 1.2 | open, asked in round inbox-2026-11-wo |
-| D2 | owner | owner | OQ-56: does the standing bypass directive allow `--admin`, and is a deny hook built? (`agents/owner-questions.md:88`) | 2.8 context | open since 2026-11-01 |
+| D1 | product-owned | owner | Widen the major detection to every consumer-facing name, beyond `removedDefaultAssets`? | 1.2 | open, asked in round inbox-2026-11-wo |
+| D2 | product-owned | owner | OQ-56: does the standing bypass directive allow `--admin`, and is a deny hook built? (`agents/owner-questions.md:88`) | 2.8 context | open since 2026-11-01 |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->

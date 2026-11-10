@@ -20,8 +20,9 @@
  * by every means except running it. It found the fourth command (`refresh`)
  * after the first three had been fixed by hand.
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -187,6 +188,26 @@ describe('agent-src + aux delegate bundles', () => {
         }
         expect(broken).toEqual([]);
     }, 120_000);
+
+    it('the settings-sync bundle runs from the bundle directory', () => {
+        // `agent-config upgrade` runs `settings:sync` once per settings file. A
+        // global install ships no tsx, so without this bundle every upgrade fell
+        // back to `npx tsx` and printed its three-line warning. The template is
+        // resolved relative to the module, so a dry run proves the bundle
+        // finds it from dist/cli-delegate/ too.
+        const bundle = path.join(OUT_DIR, 'sync_agent_settings.js');
+        expect(fs.existsSync(bundle), 'no sync_agent_settings bundle emitted').toBe(true);
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-bundle-'));
+        try {
+            const target = path.join(dir, '.agent-settings.yml');
+            fs.writeFileSync(target, 'cost_profile: minimal\n');
+            const r = spawnSync(process.execPath, [bundle, '--path', target, '--dry-run'], { encoding: 'utf-8' });
+            expect(r.status, r.stderr).toBe(0);
+            expect(r.stdout.length).toBeGreaterThan(0);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 60_000);
 
     it('the update banner bundle runs', () => {
         // `check_update_banner` and `_lib/pin_resolver` run before/after EVERY

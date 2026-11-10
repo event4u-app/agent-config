@@ -10375,8 +10375,8 @@ function foreignSidecarMessage(target, sidecar) {
 
 // src/install/loggedWrites.ts
 import { gunzipSync } from "node:zlib";
-import { existsSync as existsSync5, readdirSync as readdirSync5, readFileSync as readFileSync10, realpathSync as realpathSync3, statSync as statSync4 } from "node:fs";
-import { basename as basename3, dirname as dirname4, join as join13, relative as relative2, resolve as resolve4, sep as sep3 } from "node:path";
+import { existsSync as existsSync6, readdirSync as readdirSync5, readFileSync as readFileSync12, realpathSync as realpathSync3, statSync as statSync5 } from "node:fs";
+import { basename as basename3, dirname as dirname5, join as join14, relative as relative2, resolve as resolve4, sep as sep3 } from "node:path";
 
 // src/install/paths.ts
 import { homedir as homedir7, tmpdir } from "node:os";
@@ -10404,13 +10404,204 @@ function getLogPath(home) {
   return join12(getInstallRoot(home), INSTALL_LOG_FILENAME);
 }
 
+// src/install/txlog.ts
+import { createGzip } from "node:zlib";
+import { closeSync as closeSync4, createReadStream, createWriteStream, existsSync as existsSync5, openSync as openSync4, readFileSync as readFileSync11, readSync, renameSync as renameSync5, statSync as statSync4, unlinkSync as unlinkSync5 } from "node:fs";
+import { pipeline } from "node:stream/promises";
+
+// src/install/atomic.ts
+import {
+  closeSync as closeSync3,
+  fsyncSync,
+  mkdirSync as mkdirSync5,
+  openSync as openSync3,
+  readFileSync as readFileSync10,
+  renameSync as renameSync4,
+  unlinkSync as unlinkSync4,
+  writeSync
+} from "node:fs";
+import { dirname as dirname4, join as join13 } from "node:path";
+function atomicWriteFile(target, data, options = {}) {
+  const mode = options.mode ?? 420;
+  const parent = dirname4(target);
+  mkdirSync5(parent, { recursive: true });
+  const tmp = join13(parent, `.tmp.${process.pid}.${randSuffix()}`);
+  let fd = null;
+  try {
+    fd = openSync3(tmp, "w", mode);
+    const buf = typeof data === "string" ? Buffer.from(data, "utf8") : data;
+    writeSync(fd, buf, 0, buf.length, 0);
+    fsyncSync(fd);
+    closeSync3(fd);
+    fd = null;
+    renameSync4(tmp, target);
+  } catch (err) {
+    if (fd !== null) {
+      try {
+        closeSync3(fd);
+      } catch {
+      }
+    }
+    try {
+      unlinkSync4(tmp);
+    } catch {
+    }
+    throw err;
+  }
+}
+function atomicAppendLines(target, lines) {
+  if (lines.length === 0) return;
+  let existing = "";
+  try {
+    existing = readFileSync10(target, "utf8");
+  } catch {
+    existing = "";
+  }
+  const sep12 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
+  atomicWriteFile(target, `${existing}${sep12}${lines.join("\n")}
+`);
+}
+function randSuffix() {
+  return Math.floor(Math.random() * 281474976710655).toString(16).padStart(12, "0");
+}
+
+// src/install/txlog.ts
+var ROTATION_MAX_BYTES = 10 * 1024 * 1024;
+var ROTATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1e3;
+var BUFFER_FLUSH_THRESHOLD = 1e3;
+var pending = /* @__PURE__ */ new Map();
+var exitFlushInstalled = false;
+function bufferTxLog(logPath, entry) {
+  let queue = pending.get(logPath);
+  if (queue === void 0) {
+    queue = [];
+    pending.set(logPath, queue);
+  }
+  queue.push(entry);
+  if (!exitFlushInstalled) {
+    exitFlushInstalled = true;
+    process.on("exit", () => flushTxLog());
+    for (const sig of ["SIGINT", "SIGTERM"]) {
+      process.once(sig, () => {
+        flushTxLog();
+        if (process.listenerCount(sig) === 0) process.kill(process.pid, sig);
+      });
+    }
+  }
+  if (queue.length >= BUFFER_FLUSH_THRESHOLD) {
+    flushTxLog(logPath);
+  }
+}
+var runMarked = /* @__PURE__ */ new Set();
+function markRun(logPath) {
+  if (runMarked.has(logPath)) return;
+  runMarked.add(logPath);
+  bufferTxLog(logPath, { ts: (/* @__PURE__ */ new Date()).toISOString(), kind: "run", path: "", sha256: null, note: "install run" });
+}
+function flushTxLog(logPath) {
+  const targets = logPath === void 0 ? [...pending.keys()] : [logPath];
+  for (const target of targets) {
+    const queued = takePending(target);
+    if (queued.length === 0) continue;
+    try {
+      writeBatch(target, queued);
+    } catch {
+      requeue(target, queued);
+    }
+  }
+}
+function takePending(logPath) {
+  const queued = pending.get(logPath) ?? [];
+  pending.delete(logPath);
+  return queued;
+}
+function requeue(logPath, entries) {
+  if (entries.length === 0) return;
+  pending.set(logPath, [...entries, ...pending.get(logPath) ?? []]);
+}
+function writeBatch(logPath, entries) {
+  if (shouldRotate(logPath)) {
+    rotateLogSync(logPath);
+  }
+  atomicAppendLines(logPath, entries.map((e) => JSON.stringify(e)));
+}
+function shouldRotate(logPath, now = /* @__PURE__ */ new Date()) {
+  if (!existsSync5(logPath)) {
+    return false;
+  }
+  let size = 0;
+  try {
+    size = statSync4(logPath).size;
+  } catch {
+    return false;
+  }
+  if (size >= ROTATION_MAX_BYTES) {
+    return true;
+  }
+  const firstTs = readFirstTimestamp(logPath);
+  if (firstTs === null) {
+    return false;
+  }
+  return now.getTime() - firstTs >= ROTATION_MAX_AGE_MS;
+}
+function rotateLogSync(logPath) {
+  if (!existsSync5(logPath)) {
+    return;
+  }
+  const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+  const rotated = logPath.replace(/\.jsonl$/, `.${stamp}.jsonl`);
+  renameSync5(logPath, rotated);
+  void gzipInPlace(rotated).catch(() => {
+  });
+}
+async function gzipInPlace(source) {
+  const target = `${source}.gz`;
+  await pipeline(createReadStream(source), createGzip(), createWriteStream(target));
+  try {
+    unlinkSync5(source);
+  } catch {
+  }
+}
+var FIRST_LINE_PROBE_BYTES = 64 * 1024;
+function readFirstTimestamp(logPath) {
+  try {
+    const fd = openSync4(logPath, "r");
+    let head = "";
+    try {
+      const buf = Buffer.alloc(FIRST_LINE_PROBE_BYTES);
+      const n = readSync(fd, buf, 0, buf.length, 0);
+      head = buf.subarray(0, n).toString("utf8");
+    } finally {
+      closeSync4(fd);
+    }
+    const firstLine = head.split("\n", 1)[0] ?? "";
+    const parsed = tryParseEntry(firstLine);
+    if (parsed === null) return null;
+    const t = Date.parse(parsed.ts);
+    return Number.isFinite(t) ? t : null;
+  } catch {
+    return null;
+  }
+}
+function tryParseEntry(line) {
+  try {
+    const obj = JSON.parse(line);
+    if (typeof obj.ts !== "string" || typeof obj.kind !== "string" || typeof obj.path !== "string") {
+      return null;
+    }
+    return obj;
+  } catch {
+    return null;
+  }
+}
+
 // src/install/loggedWrites.ts
 var WRITE_MARKER = '"kind":"write"';
 var fileCache = /* @__PURE__ */ new Map();
 var dirRealpaths = /* @__PURE__ */ new Map();
 function canonicalPath(p) {
   const abs = resolve4(p);
-  const dir = dirname4(abs);
+  const dir = dirname5(abs);
   let real = dirRealpaths.get(dir);
   if (real === void 0) {
     try {
@@ -10420,14 +10611,14 @@ function canonicalPath(p) {
     }
     dirRealpaths.set(dir, real);
   }
-  return join13(real, basename3(abs));
+  return join14(real, basename3(abs));
 }
 function logFiles(logPath) {
-  const dir = dirname4(logPath);
-  if (!existsSync5(dir)) return [];
+  const dir = dirname5(logPath);
+  if (!existsSync6(dir)) return [];
   const stem = basename3(logPath).replace(/\.jsonl$/, "");
   try {
-    return readdirSync5(dir).filter((n) => n.startsWith(stem) && (n.endsWith(".jsonl") || n.endsWith(".jsonl.gz"))).map((n) => join13(dir, n)).sort();
+    return readdirSync5(dir).filter((n) => n.startsWith(stem) && (n.endsWith(".jsonl") || n.endsWith(".jsonl.gz"))).map((n) => join14(dir, n)).sort();
   } catch {
     return [];
   }
@@ -10435,7 +10626,7 @@ function logFiles(logPath) {
 function writesIn(file) {
   let stamp;
   try {
-    const st = statSync4(file);
+    const st = statSync5(file);
     stamp = `${st.size}:${Math.trunc(st.mtimeMs)}`;
   } catch {
     return [];
@@ -10444,7 +10635,7 @@ function writesIn(file) {
   if (cached2 !== void 0 && cached2.stamp === stamp) return cached2.entries;
   let text = "";
   try {
-    const raw = readFileSync10(file);
+    const raw = readFileSync12(file);
     text = (file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8");
   } catch {
     text = "";
@@ -10465,6 +10656,7 @@ function writesIn(file) {
   return entries;
 }
 function loggedWriteDigests(logPath = getLogPath()) {
+  flushTxLog(logPath);
   const writes = /* @__PURE__ */ new Map();
   for (const file of logFiles(logPath)) {
     for (const [target, sha] of writesIn(file)) {
@@ -10474,6 +10666,20 @@ function loggedWriteDigests(logPath = getLogPath()) {
     }
   }
   return writes;
+}
+var known = null;
+function isNewWrite(target, sha2562, logPath = getLogPath()) {
+  if (known === null || known.logPath !== logPath) {
+    const writes = /* @__PURE__ */ new Map();
+    for (const [p, shas2] of loggedWriteDigests(logPath)) writes.set(p, new Set(shas2));
+    known = { logPath, writes };
+  }
+  const key = canonicalPath(target);
+  let shas = known.writes.get(key);
+  if (shas?.has(sha2562)) return false;
+  if (shas === void 0) known.writes.set(key, shas = /* @__PURE__ */ new Set());
+  shas.add(sha2562);
+  return true;
 }
 function onlyDeployed(anchor2, currentFiles, log) {
   return (target) => {
@@ -10887,9 +11093,9 @@ function overwriteWithBackup(p, original, data, io) {
 
 // src/install/manifestFiles.ts
 var YAML3 = __toESM(require_dist(), 1);
-import { existsSync as existsSync7, readFileSync as readFileSync12 } from "node:fs";
+import { existsSync as existsSync8, readFileSync as readFileSync14 } from "node:fs";
 import { homedir as homedir8 } from "node:os";
-import { isAbsolute as isAbsolute3, join as join15, resolve as resolve6 } from "node:path";
+import { isAbsolute as isAbsolute3, join as join16, resolve as resolve6 } from "node:path";
 function fileEntry(p, kind, hashContent) {
   return { path: p, kind, sha256: hashContent ? sha256OfFile(p) : null };
 }
@@ -10912,7 +11118,7 @@ function filesByToolFromBridges(tools, projectRoot, scope, bridgeMarker) {
   for (const toolId of [...tools].sort()) {
     const marker = bridgeMarker(toolId, scope);
     if (!marker) continue;
-    const markerPath = isAbsolute3(marker) ? marker : join15(projectRoot, marker);
+    const markerPath = isAbsolute3(marker) ? marker : join16(projectRoot, marker);
     out[toolId] = [fileEntry(markerPath, "bridge", false)];
   }
   return out;
@@ -10920,7 +11126,7 @@ function filesByToolFromBridges(tools, projectRoot, scope, bridgeMarker) {
 function expanduser6(p) {
   if (p === "~") return homedir8();
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return join15(homedir8(), p.slice(2));
+    return join16(homedir8(), p.slice(2));
   }
   return p;
 }
@@ -10930,10 +11136,10 @@ function resolveRecorded(raw, projectRoot) {
 }
 function readRecordedByTool(manifestPath, projectRoot) {
   const out = /* @__PURE__ */ new Map();
-  if (!existsSync7(manifestPath)) return out;
+  if (!existsSync8(manifestPath)) return out;
   let doc;
   try {
-    doc = YAML3.parse(readFileSync12(manifestPath, "utf8"));
+    doc = YAML3.parse(readFileSync14(manifestPath, "utf8"));
   } catch {
     return out;
   }
@@ -11947,63 +12153,6 @@ var YAML4 = __toESM(require_dist(), 1);
 import { spawnSync as spawnSync2 } from "node:child_process";
 import * as fs21 from "node:fs";
 import * as path21 from "node:path";
-
-// src/install/atomic.ts
-import {
-  closeSync as closeSync3,
-  fsyncSync,
-  mkdirSync as mkdirSync7,
-  openSync as openSync3,
-  readFileSync as readFileSync19,
-  renameSync as renameSync6,
-  unlinkSync as unlinkSync6,
-  writeSync
-} from "node:fs";
-import { dirname as dirname9, join as join23 } from "node:path";
-function atomicWriteFile(target, data, options = {}) {
-  const mode = options.mode ?? 420;
-  const parent = dirname9(target);
-  mkdirSync7(parent, { recursive: true });
-  const tmp = join23(parent, `.tmp.${process.pid}.${randSuffix()}`);
-  let fd = null;
-  try {
-    fd = openSync3(tmp, "w", mode);
-    const buf = typeof data === "string" ? Buffer.from(data, "utf8") : data;
-    writeSync(fd, buf, 0, buf.length, 0);
-    fsyncSync(fd);
-    closeSync3(fd);
-    fd = null;
-    renameSync6(tmp, target);
-  } catch (err) {
-    if (fd !== null) {
-      try {
-        closeSync3(fd);
-      } catch {
-      }
-    }
-    try {
-      unlinkSync6(tmp);
-    } catch {
-    }
-    throw err;
-  }
-}
-function atomicAppendLine(target, line) {
-  let existing = "";
-  try {
-    existing = readFileSync19(target, "utf8");
-  } catch {
-    existing = "";
-  }
-  const sep12 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
-  atomicWriteFile(target, `${existing}${sep12}${line}
-`);
-}
-function randSuffix() {
-  return Math.floor(Math.random() * 281474976710655).toString(16).padStart(12, "0");
-}
-
-// src/scripts/_lib/claude_settings_hooks.ts
 function _yaml_parse(text) {
   return YAML4.parse(text);
 }
@@ -20610,13 +20759,13 @@ var recordProcessor = (schema, ctx, _json, params) => {
         ...params,
         path: [...params.path, "propertyNames"]
       });
-      let pending = pendingRecords.get(ctx);
-      if (!pending) {
-        pending = [];
-        pendingRecords.set(ctx, pending);
+      let pending2 = pendingRecords.get(ctx);
+      if (!pending2) {
+        pending2 = [];
+        pendingRecords.set(ctx, pending2);
         ctx.deferred.push(() => rewriteKeyNames(ctx));
       }
-      pending.push(schema);
+      pending2.push(schema);
     }
     json.additionalProperties = processSchema(def.valueType, ctx, {
       ...params,
@@ -23163,79 +23312,6 @@ var SCOPE_DETECT_AI_DIRS = [
   ".kilocode"
 ];
 
-// src/install/txlog.ts
-import { createGzip } from "node:zlib";
-import { createReadStream, createWriteStream, existsSync as existsSync21, readFileSync as readFileSync40, renameSync as renameSync9, statSync as statSync16, unlinkSync as unlinkSync8 } from "node:fs";
-import { pipeline } from "node:stream/promises";
-var ROTATION_MAX_BYTES = 10 * 1024 * 1024;
-var ROTATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1e3;
-function appendTxLog(logPath, entry) {
-  if (shouldRotate(logPath)) {
-    rotateLogSync(logPath);
-  }
-  atomicAppendLine(logPath, JSON.stringify(entry));
-}
-function shouldRotate(logPath, now = /* @__PURE__ */ new Date()) {
-  if (!existsSync21(logPath)) {
-    return false;
-  }
-  let size = 0;
-  try {
-    size = statSync16(logPath).size;
-  } catch {
-    return false;
-  }
-  if (size >= ROTATION_MAX_BYTES) {
-    return true;
-  }
-  const firstTs = readFirstTimestamp(logPath);
-  if (firstTs === null) {
-    return false;
-  }
-  return now.getTime() - firstTs >= ROTATION_MAX_AGE_MS;
-}
-function rotateLogSync(logPath) {
-  if (!existsSync21(logPath)) {
-    return;
-  }
-  const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-  const rotated = logPath.replace(/\.jsonl$/, `.${stamp}.jsonl`);
-  renameSync9(logPath, rotated);
-  void gzipInPlace(rotated).catch(() => {
-  });
-}
-async function gzipInPlace(source) {
-  const target = `${source}.gz`;
-  await pipeline(createReadStream(source), createGzip(), createWriteStream(target));
-  try {
-    unlinkSync8(source);
-  } catch {
-  }
-}
-function readFirstTimestamp(logPath) {
-  try {
-    const raw = readFileSync40(logPath, "utf8");
-    const firstLine = raw.split("\n", 1)[0] ?? "";
-    const parsed = tryParseEntry(firstLine);
-    if (parsed === null) return null;
-    const t = Date.parse(parsed.ts);
-    return Number.isFinite(t) ? t : null;
-  } catch {
-    return null;
-  }
-}
-function tryParseEntry(line) {
-  try {
-    const obj = JSON.parse(line);
-    if (typeof obj.ts !== "string" || typeof obj.kind !== "string" || typeof obj.path !== "string") {
-      return null;
-    }
-    return obj;
-  } catch {
-    return null;
-  }
-}
-
 // src/scripts/install.ts
 var _HERE3 = fileURLToPath6(import.meta.url);
 var SystemExitError = class extends Error {
@@ -25071,12 +25147,10 @@ function _escapes_package_root(resolved, package_root) {
 }
 function _log_tx_entry(kind, target) {
   try {
-    appendTxLog(getLogPath(), {
-      ts: (/* @__PURE__ */ new Date()).toISOString(),
-      kind,
-      path: target,
-      sha256: kind === "write" ? sha256OfFile(target) : null
-    });
+    markRun(getLogPath());
+    const sha2562 = kind === "write" ? sha256OfFile(target) : null;
+    if (sha2562 !== null && !isNewWrite(target, sha2562)) return;
+    bufferTxLog(getLogPath(), { ts: (/* @__PURE__ */ new Date()).toISOString(), kind, path: target, sha256: sha2562 });
   } catch {
   }
 }
@@ -25501,15 +25575,9 @@ function install_global(tools, force, project_root = null, core_only = false) {
   const [, recorded] = check_version(installed_version, { path: read_path });
   const classification = classify_mismatch(installed_version, recorded);
   if (classification === "downgrade" && !force) {
-    if (!state.QUIET) {
-      process4.stdout.write("\n");
-      warn("Refusing global install: lockfile records a newer version.");
-      info(`  Lockfile:           ${read_path}`);
-      info(`  Recorded version:   ${recorded}`);
-      info(`  Current package:    ${installed_version}`);
-      info("  Fix:                upgrade the package, or re-run with `--force`");
-      process4.stdout.write("\n");
-    }
+    warn("Refusing global install: lockfile records a newer version.");
+    warn(`  Lockfile: ${read_path} \xB7 recorded ${recorded} \xB7 current package ${installed_version}`);
+    warn("  Fix: upgrade the package, or re-run with `--force`");
     return 1;
   }
   if (["upgrade", "unparseable"].includes(classification) && !state.QUIET) {
@@ -25667,7 +25735,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
   try {
     _write_settings_surface_snapshot(installed_version);
   } catch (e) {
-    if (!state.QUIET) warn(`settings-surface snapshot failed \u2014 ${String(e)}`);
+    warn(`settings-surface snapshot failed \u2014 ${String(e)}`);
   }
   if (!state.QUIET) {
     try {
