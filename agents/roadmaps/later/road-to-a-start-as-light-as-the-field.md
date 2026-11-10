@@ -64,6 +64,10 @@ Steps 1.4 to 1.7 (discriminating tasks, the `trapC-ambig-01` re-test, length as 
 primary, the five-arm comparison) moved on 2026-11-10 to the active
 `road-to-a-package-measured-against-no-rules`, on the owner's instruction. The
 next cut here reads that file's result first.
+Its five-arm reading (2026-11-10) is **INCONCLUSIVE** for `package − vanilla`
+(+0.049 J, 90 % CI [−0.003, +0.100]), and the reduced layer beat the full layer
+by +0.111 J [+0.063, +0.160]
+(`agents/evidence/metrics/five-arm-comparison-result-20261110.md`).
 
 ## Blockers
 
