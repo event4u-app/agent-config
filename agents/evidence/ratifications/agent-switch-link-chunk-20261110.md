@@ -2,12 +2,12 @@
 proposed_by: claude-opus-5-5
 implemented_by: claude-opus-5-5
 reviewed_by: ai-council
-subject: a466a15741a0bfe2d1a55eb6f2b5cb5dd0ce5b6403411809b69c30be7ed98d56
+subject: f2fef9ce4cc0098f600f24dc7edca4ea2ca840e967913b9f0f5be3c0062e3931
 providers: [anthropic, openai]
-verdict: refused
+verdict: ratified
 seats:
-  anthropic: refused
-  openai: refused
+  anthropic: ratified
+  openai: ratified
 effective_after: merge
 ---
 
@@ -15,169 +15,160 @@ effective_after: merge
 
 # Modification review
 
-Move the agent-switch link out of the quota_notice lazy chunk into its own switch_link chunk (road-to-a-link-with-agent-switch 8.4): quota_notice ceiling lowered from 49,400 to 29,900 B (measured 27,162 B), new switch_link ceiling 32,200 B, and a new gate feature, chunk_groups, capping both together at 62,100 B (measured 56,491 B); the digest check moves verbatim into bundle_digest.ts so a chunk does not carry the YAML reader. Same change, not gated: the record lock becomes per-holder tickets that also hold the previous version's lock file, dated ahead. Council rounds 1-5 refused (both seats, dealbreaker); each round's defects were fixed. Remaining after round 5: the previous version's own check-then-unlink cannot be made conditional from this change, so exclusion across versions has a residual window while a hook of that version still runs across an install or rollback; one seat accepted the enforced combined allowance, one did not.
+Move the agent-switch link out of the quota_notice lazy chunk into its own switch_link chunk (road-to-a-link-with-agent-switch 8.4): quota_notice ceiling lowered from 49,400 to 29,900 B (measured 27,128 B), new switch_link ceiling 30,300 B (measured 27,500 B), and a new gate feature, chunk_groups, capping both together at 60,100 B (measured 54,628 B); the digest check moves verbatim into bundle_digest.ts so a chunk does not carry the YAML reader. Council rounds 1-5 refused; round 5 asked, as round 4 did, to review the record lock rewrite separately, so it left this change for its own pull request and round 6 reviewed the split alone.
 
-Verdict `refused`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/agent-switch-link-chunk-ratification-r5-20261110.question.md`, committed at `913daecc832e9f3ffac56dfebf38637a465e8733` and naming this record's subject.
+Verdict `ratified`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/agent-switch-link-chunk-ratification-r6-20261110.question.md`, committed at `5afd90fe623360354a6cd9f25f59191d9f5ad1d5` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
 ## Each seat, verbatim
 
-### anthropic — `refused`
+### anthropic — `ratified`
 
 ```text
-## Review of Prior Critiques
+# Independent Review — agent-switch link chunk split (round 2, subject f2fef9ce)
 
-### 1. Which prior points I agree with
+## Prior Round Assessment
+
+### Points I AGREE with:
 
 **Reviewer A:**
-- ✓ The residual race during version mixing is real and lacks specific rollback triggers ("Rollback criterion 8 watches for it" is vague)
-- ✓ The 62,100 B group ceiling needs justification - "a council seat named 63,500 B acceptable" is hearsay without evidence
-- ✓ Lock and chunk split should be separated per round 4 feedback
-- ✓ The 15-minute lock hold (vs 2 seconds) is a 450× increase in potential contention window
+- The 14% overhead (6,751 B) is substantial and warrants scrutiny
+- ~1,600 B of duplicated helpers is technical debt that could be shared
+- Missing production monitoring for chunk load failures
+- No latency SLO for the digest check operation itself
+- Filesystem compromise defeats SHA-256 verification (both files are local)
 
 **Reviewer B:**
-- ✓ The lock change still permits what it's supposed to prevent (older-over-newer snapshots)
-- ✓ `ticketBreakable` deliberately expires genuinely live holders after 15 minutes
-- ✓ The older version's check-then-unlink cannot be controlled by this change
-- ✓ Split should be ratified separately from lock protocol change
-- ✓ Missing deterministic tests that pause a contender after its stale check
+- Default-path byte reduction (43%, 20,749 B) is a meaningful improvement
+- Chunk group mechanism makes aggregate cost visible and enforceable
+- `require(specifier)` executes module init BEFORE `linkFor` checks compatibility — protects calls but not execution
+- Removal-log validation is weak: accepts any entry naming `chunk_group` without substantive reason
+- The branch revert specification is operationally imprecise vs. exact commits
 
-### 2. Disagreements
+### Points I DISAGREE with:
 
-None. Both reviewers identified real defects I independently confirm.
+**Reviewer A's conclusion (refused):**
+The 49,400 B ceiling was refused for forcing ALL prompts to parse the link. Making it opt-in fundamentally changes the tradeoff. The overhead is the price of: (1) user choice, (2) default reduction, (3) integrity verification, (4) aggregate budgeting. Rejecting 60,100 B because it exceeds a ceiling meant to block mandatory inclusion treats different contexts as equivalent.
 
-### 3. New points not raised in round 1
+**Optimization demand:** Reviewer A asks for <2,000 B overhead to respect the "original refusal." But that refusal addressed mandatory inclusion; this addresses opt-in choice. The comparison is category error.
 
-**Process violation:**
-Round 4 had both seats explicitly request "ship lock separately." The response was "commits stay separable" but this round 5 review bundles them for ratification. This contradicts direct feedback and prevents isolating lock risks from chunk budget decisions.
+### New points not raised in round 1:
 
-**Dual correctness gaps in lock:**
-The 15-minute timeout (`LOCK_ABANDONED_MS`) is a *separate* correctness issue from version mixing:
-- Version mixing: old hooks can break new holders mid-write (window: install/rollback only)
-- 15-minute expiry: new hooks deliberately expire *live* holders (window: any slow Stop, any time)
+1. **Precedent question:** This establishes that opt-in features may carry infrastructure overhead beyond the feature's base cost. The group mechanism makes this visible/bounded, but future splits could claim similar "necessary" overheads. Is that acceptable doctrine?
 
-A genuinely slow Stop (network hiccup, large snapshot, resource contention) running >15 minutes loses exclusion and publishes an older checkpoint after its successor. No rollback criterion watches for this design choice specifically - criterion 8's "older over newer" doesn't distinguish version-mixing from timeout-caused races.
+2. **Silent degradation cascade:** Missing chunk → no question → checkpoint stays owed → next Stop (if it loads) writes it. A persistent installation error creates an indefinite owed-checkpoint state, observable only through rollback criterion 8 or user reports. No alert fires between "chunk absent" and "behavior wrong."
 
-**The chunk split is sound:**
-Separated from lock concerns:
-- Default reduction: 47,877 B → 27,162 B (43%) is measurably beneficial
-- Opted-in parsing: 56,491 B with digest verification and API versioning
-- Group enforcement prevents independent part growth
-- Digest check split from YAML reader is architecturally clean
+3. **Helper duplication as measurable debt:** The 1,600 B of duplicated helpers (`user_global_paths`, partial `quota_ledger`) is quantified technical debt. Ratifying 60,100 B with that debt unaddressed sets a ceiling that could be 58,500 B if cleaned up. Should the gate bound the minimum achievable size rather than current implementation?
 
-The 62,100 B group figure needs the council decision as evidence, but the mechanism is reviewable.
+4. **Source mode verification gap persistence:** Development skips digest checks "because no built chunk exists." True, but a compromised development tree runs unverified chunks that later ship. The gap is intentional but creates a window.
 
-**Missing measurement evidence:**
-The diff omits:
-- Complete gate implementation (only incremental changes shown)
-- Full caller changes to verify opt-in boundaries
-- Independent verification of load-failure fallback paths
-
-Round 4's "provide complete diffs" feedback partially addressed.
+5. **API version check location:** `linkFor(api)` checks after `require()` executes module initialization. A malicious or buggy chunk from a different build runs initialization code before compatibility rejection. The API check protects function calls, not load-time side effects.
 
 ---
 
-**STANCE: refused | CONFIDENCE: high | DEALBREAKER: yes**
+## Direct Answers
 
-**Strongest argument for refusal:**
-Bundling the lock change with the chunk split directly contradicts round 4's unanimous "ship lock separately" feedback from both seats. Beyond that process violation, the lock has *two* distinct correctness gaps: (1) the acknowledged version-mixing race lacks a precise rollback trigger ("criterion 8 watches for it" via symptoms, not thresholds), and (2) the 15-minute deliberate expiry of live holders (`LOCK_ABANDONED_MS`) can cause older-over-newer without any version mixing, yet no criterion distinguishes this case. Hook plumbing on the gate's list requires stronger than "we'll watch for symptoms."
+### 1. Behaviour changes
+**Stated:** Default parses 27,128 B; opt-in parses 54,628 B (two chunks + loader + digest). Missing/mismatched chunk = silent fallback.
 
-**Strongest counter-argument:**
-The existing lock already breaks live holders after 2 seconds. This change improves ordinary operation (unique-name unlinks, PID liveness checks, 15min vs 2s hold strength) and explicitly bounds its residual weakness to a narrow window (version mixing during install/rollback). The chunk split delivers a measurable 43% reduction for default users. Requiring perfect safety during version transitions may preserve worse behavior indefinitely, and symptom-based rollback (checkpoint ordering) directly watches the harmful outcome.
+**Unstated consequence:** An installation error (chunk absent, wrong digest, or API mismatch) appears as "feature disabled" with no immediate diagnostic. Checkpoint debt accumulates across Stops until one succeeds. Latency impact: sync digest check (SHA-256 over ~27.5 KB) added to opted-in prompt path.
 
-**Concrete next steps:**
+### 2. Authority/safety boundaries
+**Narrower:** Default 43% reduction; digest + API checks guard chunk use.  
+**Wider:** Opt-in +14% (+6,751 B); group 60,100 B exceeds refused 49,400 B by +10,700 B; two-file install; source mode skips verification.
 
-1. **Ratify the chunk split separately** with evidence of the 63,500 B council decision. The split is technically sound: digest verification, API versioning, group enforcement, measurable default benefit.
+**Critical:** SHA-256 is local consistency, not authentication. Filesystem compromise defeats it.
 
-2. **For the lock protocol:**
-   - Add deterministic tests: pause a contender after its stale check but before its unlink, inject a live holder's lock, resume the unlink, assert no concurrent writes
-   - Test both version directions (old breaks new, new breaks old)
-   - Specify precise rollback triggers: e.g., "any observed older-over-newer snapshot during install/rollback window triggers immediate rollback"
-   - Address the 15-minute live-holder expiry: either remove it (rely on PID checks only), or fence publication (reject writes from expired holders), or prove via resource profiling that legitimate Stops never exceed 15 minutes
+### 3. Weakening judges?
+**No.** Gate gains group enforcement; `quota_notice` ceiling lowered; tests added, none weakened. But: removal-log validation accepts any entry naming `chunk_group`; gate doesn't discover actual chunk loads (membership manually declared).
 
-3. **If bundling is required:** provide written justification for overriding the round 4 "ship separately" feedback and show how the combined risk is bounded
+### 4. Other hosts/projections
+Source mode bypasses digest. `require()` runs module init before `linkFor` checks API. Opt-out via env vars. API mismatch = silent degradation.
 
-4. **Provide complete context:** full gate implementation, all caller changes, council decision on 63,500 B group ceiling
+### 5. Revertibility
+Clear: merge commit or branch commits. Eight rollback criteria. Authority: repository access. **Imprecision:** "commits after X excluding main merges" less precise than commit list.
+
+### 6. Falsifying observations & omitted criteria
+**Falsifies:** Measured bytes exceed ceilings; default no faster in production.  
+**Omitted:** Digest check latency SLO; production monitoring for load failures; persistent failure being invisible; regression below 500ms threshold.
+
+### 7. Smaller change?
+**Could be 2,000-3,000 B smaller:** Share loader (~−1,300 B), shared helpers (~−800 B), call surface simplification (~−1,000 B). Result: ~51,500-52,500 B group, still over 49,400 B.  
+**Larger buys:** Default savings, group mechanism, digest integrity, opt-in choice.
+
+### 8. Standing instruction weight
+Default: REDUCES (−20,749 B). Opt-in: INCREASES (+6,751 B). Permanent: loader/digest/API/groups machinery. **Not shown:** Contract/roadmap/evidence token cost (diff omitted them).
+
+### 9. Untrusted steering
+Filesystem compromise, env control, API manipulation, source mode gap. **Bounds:** Group ceiling, digest, API version. **Missing:** Rate limiting on load attempts; monitoring repeated failures.
+
+---
+
+## Assessment
+
+**I AGREE the 60,100 B group ceiling is acceptable, with conditions.**
+
+### Strongest argument FOR ratification:
+
+The refused 49,400 B ceiling addressed **mandatory inclusion** forcing all prompts to parse the link. This change makes it **opt-in**: defaults parse 27,128 B (34% under the original 41,000 B ceiling, 43% under 47,877 B), and only users who choose the feature pay the 54,628 B cost. The 6,751 B overhead buys: (1) default savings for 100% of non-opted prompts, (2) integrity verification, (3) API compatibility checking, (4) a gate mechanism that bounds aggregate growth. Treating the opt-in group as equivalent to the refused mandatory ceiling conflates different problems. The group makes the cost explicit and bounded; users decide if the feature is worth it.
+
+### Strongest counter-argument:
+
+Splitting a 47,877 B feature costs +6,751 B (+14%) in infrastructure. That overhead includes ~1,600 B of duplicated helpers (technical debt), ~2,600 B of loader/digest (necessary), and ~2,551 B of call surface (API contract). The technical debt portion could be eliminated, bringing the group to ~58,500 B. Ratifying 60,100 B locks in that debt as acceptable. The precedent is: opt-in features may add 14% infrastructure overhead, and we'll call it "the price of choice." That doctrine could justify future overheads. If the line was 49,400 B for good reason, opt-in doesn't erase it—it shifts who pays, not what's too large.
+
+### Concrete next steps (RATIFIED path):
+
+1. **Ratify the 60,100 B group**, explicitly noting it includes ~1,600 B of duplicated helpers (`user_global_paths`, partial `quota_ledger`) as documented technical debt to address separately.
+
+2. **Strengthen removal-log validation** (`chunkGroupRaiseFindings`): require entries that remove groups or drop members to state the substantive reason, not just name the `chunk_group`.
+
+3. **Add production observability:**
+   - Monitor chunk load failures (missing, digest mismatch, API mismatch)
+   - Alert on persistent failure for a session (rollback criterion 8)
+   - Measure digest check latency (p50, p95) to validate < 5ms assumption
+
+4. **Document the precedent:** Opt-in features may carry infrastructure overhead; group ceilings bound the total; overhead must be justified by default savings + user choice.
+
+5. **Follow-up optimization:** Track the 1,600 B technical debt; address in a separate change to bring the group to ~58,500 B without re-splitting.
+
+6. **Correct loader comment** (`hooks/bundle_digest.ts:55`): "the chunk is … the one built" should say "the chunk matches its local sidecar" (Reviewer B's point).
+
+STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no
 ```
 
-### openai — `refused`
+### openai — `ratified`
 
 ```text
-**Assessment: mixed; I refuse the combined change as presented.** The lazy split offers a credible default-path improvement, and explicitly budgeting the opted-in total is sound. The lock change still permits concurrent publication, and the supplied excerpts do not independently establish the complete gate and caller behavior.
+**Assessment: mixed; I would ratify the explicitly disclosed 60,100 B allowance.** This verdict concerns the supplied diff; the build sizes, subject digest and test outcomes remain reported evidence, not independently verified results.
 
-**Strongest argument:** `takeLegacyLock` still checks one file and then removes whichever file occupies that pathname. Tickets serialize newer contenders, but older processes ignore tickets. A supported mixed-version execution can therefore lose exclusion and publish an older checkpoint after a newer one.
+**Strongest argument:** the split removes 20,749 B from the default prompt path, while `chunkGroupFindings` enforces a combined budget for opted-in prompts. That addresses the default-path cost without concealing the optional path’s expansion.
 
-**Strongest counter-argument:** the existing two-second age rule is substantially worse. The proposed protocol improves ordinary operation, and an already-running older executable cannot be repaired retroactively. Accepting a documented transitional risk could be reasonable if activation drains old processes and evidence establishes the remaining bounds.
+**Strongest counter-argument:** the change adds synchronous verification, another installation dependency and silent failure modes to a feature whose checkpoint matters. The byte reduction is demonstrated by the reported measurements; an overall reliability or latency improvement is not.
 
-1. **Behavior changes and implications**
+I agree with **Reviewer B** that byte counts do not establish latency, API compatibility is checked after module initialization, runtime bytes differ from standing instruction weight, and group-removal logging is weaker than ceiling-raise validation. I agree with **Reviewer A** that opted-in cost increases and source mode lacks sidecar verification.
 
-   Default prompts load substantially fewer chunk bytes; opted-in prompts load 18% more. These are byte measurements, not demonstrated latency improvements.
+I disagree with A’s assertions that the default necessarily becomes faster and the opted-in path necessarily slower. Neither follows directly from bundle size. A’s proposed overhead targets and estimated savings are unsupported by this diff. The earlier refusal also does not establish that every optional aggregate must remain below 49,400 B; the expanded allowance requires an explicit verdict, which this review supplies.
 
-   Missing or incompatible link chunks suppress both the question and checkpoint work. Retaining an owed checkpoint supports retries, but does not establish eventual completion: persistent load failure can leave it owed indefinitely.
+1. **Behaviour.** `quota_notice_hook.ts:183` conditionally loads the link; the Stop caller loads a separate chunk. Failure suppresses the question or defers an owed checkpoint. `loadLazyExport` now delegates to the digest-checking loader, so the effect potentially extends to **every existing lazy concern**, not merely agent-switch. Their failure and fallback behaviour deserves regression coverage.
 
-   The lock changes from age-based exclusion to tickets plus a legacy compatibility file. `ticketBreakable` nevertheless expires a genuinely live holder after fifteen minutes. That holder can resume and publish after its successor unless publication has another protection.
+2. **Boundaries.** The default chunk budget narrows; the opted-in aggregate allowance widens. Sidecar verification establishes local consistency, not provenance. `linkFor` protects function calls against declared API mismatch; it cannot prevent initialization of an incompatible module.
 
-2. **Authority and safety boundaries**
+3. **Judging mechanisms.** No supplied test change demonstrates a silently weakened assertion. The aggregate expansion is disclosed rather than hidden. However, `chunkGroupRaiseFindings` accepts removal or member deletion with merely a new object naming the group; unlike a ceiling raise, it does not validate a substantive explanation. This weakens the new mechanism’s audit quality.
 
-   The default chunk ceiling narrows to 29,900 B. The opted-in allowance expands from the previously requested 49,400 B to 62,100 B—approximately 26%. That is an explicit expansion requiring ratification.
+4. **Other projections.** Source execution deliberately avoids sidecars. That is a separate trust model, not automatically an exploitable bypass. The excerpt does not establish packaging coverage across all installed hosts. Manually declared groups also cannot detect a newly loaded chunk omitted from their membership.
 
-   `verifyBundle` establishes consistency with a local sidecar. It does not authenticate the producer or establish build identity. `SWITCH_LINK_API` establishes declared compatibility only.
+5. **Undoing it.** A maintainer with merge authority can revert the eventual merge commit, accounting for subsequent dependencies. Record that exact revision when available. The environment kill switch disables the feature but does not restore the previous implementation or complete outstanding checkpoints.
 
-3. **Does it weaken its judges?**
+6. **Falsification and omissions.** Default loading of the link would contradict the isolation claim; measured sizes above the limits would contradict budget compliance. Existing rollback criteria cover persistent checkpoint failure, but need an observable signal: silent failure makes detection difficult. Add a relative opted-in latency regression criterion alongside the absolute 500 ms threshold.
 
-   No silent test deletion, skipping, assertion weakening, or fixture manipulation is visible in the supplied diff. Unknown-flag rejection and group-removal accounting strengthen enforcement.
+7. **Smaller alternatives.** Deduplicating helpers or choosing another extraction boundary could reduce overhead, but the supplied evidence does not establish achievable savings. The larger change buys default-path isolation and enforceable aggregate accounting. Avoid weakening verification merely to meet an arbitrary overhead target.
 
-   However, the opted-in allowance increases. Disclosure makes that reviewable; it does not make it non-expanding. The complete group implementation and previous baseline are omitted, so I cannot independently confirm all enforcement claims or compliance with the quoted standard.
+8. **Standing instructions.** No increase in universally loaded instruction text is demonstrated. Omitted contract and evidence edits prevent a complete assessment. Chunk bytes are execution footprint, not instruction tokens.
 
-4. **Other hosts or projections**
+9. **Untrusted steering.** Fixed loader paths prevent prompt text from directly selecting a module. Relayed agent-switch text remains an indirect influence; labeling it as data helps communicate intent but supplies no enforcement boundary. Existing response validation and subprocess bounds remain relevant.
 
-   No alternate-host bypass is demonstrated, but coverage across the advertised twenty tools is also not established here. Source-mode loading deliberately skips sidecar verification in `loadChunkExport`; that is an explicit alternate execution path whose intended trust boundary needs documentation.
+Concrete next steps: validate removal-log explanations, verify installation and update packaging of the chunk and sidecar, exercise existing lazy concerns through the shared loader, and measure both paths in fresh processes. Add a bounded diagnostic for repeated load failures. These are targeted follow-ups; the disclosed byte allowance itself is defensible.
 
-   Older hook processes are a concrete alternate participant that does not honor tickets.
-
-5. **Reversibility**
-
-   Repository maintainers with merge authority can revert the PR merge commit, using the appropriate mainline parent, or revert the identified implementation commits while preserving the main merge.
-
-   Reverting source does not stop running hooks or reverse checkpoint writes. Operational rollback therefore also needs process draining and verification that record formats remain readable against `d2475e82f8`.
-
-6. **Falsification and omitted criteria**
-
-   The performance benefit is false if representative default prompt latency does not improve despite reduced bytes. Correctness claims fail on duplicate effects, older-over-newer publication, or checkpoint debt that persists after healthy subsequent Stops.
-
-   Missing operational detail includes how these outcomes are detected, who acts, and how activation or rollback handles running processes. The stated criteria already read naturally as “any occurrence”; prescribing a numerical failure allowance is unnecessary.
-
-   Disabling the opt-in is an appropriate kill switch for future link activity, but does not cancel an in-flight writer.
-
-7. **Smaller alternative and concrete next steps**
-
-   Review and ship the split, digest extraction, loader, and enforced group budget separately. Provide their complete caller and gate diffs, build measurements, and representative latency results.
-
-   Review the lock independently. Require old processes to drain before activation, or establish publication protection that every possible writer honors. Add deterministic tests paused between stale observation and unlink in both version directions, plus a suspended live holder resumed after expiration. Separately committed changes help reversion, but do not provide independent ratification.
-
-8. **Standing instruction weight**
-
-   No additional model-facing standing instruction text is shown. Bundle bytes are executable loading cost, not instruction or context weight. Maintenance complexity increases through the compatibility protocol, API-version discipline, and group budgets.
-
-9. **Untrusted steering**
-
-   Fixed chunk names limit direct module-path steering. The omitted callers prevent verification of session-path validation, subprocess arguments, environment handling, and relay-content treatment.
-
-   A matching chunk and sidecar remain executable local content. Their protection depends on installation-directory permissions and installer trust, beyond the digest check itself.
-
-Regarding the prior critiques:
-
-- **Agree with Reviewer A** on the byte tradeoff, mixed-version race, and benefit of separating the lock.
-- **Disagree with A’s §8:** parsing bytes are not standing instruction weight. Its demand for a rollback frequency threshold also overstates the gap; detection and response procedures matter more.
-- **Agree with Reviewer B** on the bidirectional legacy race, live-holder expiration, missing complete diffs, and limits of sidecars.
-- **Refine B’s fencing alternative:** a new ownership check alone cannot constrain an older writer that ignores it, and a check before writing can itself race. The proposed protection must demonstrate how stale publication becomes impossible across every supported writer.
-
-STANCE: refused | CONFIDENCE: med | DEALBREAKER: yes
+STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no
 ```
-
-## For the owner's decision
-
-- **Expected gain.** A prompt without the switch question, the default, parses 27,162 B of `quota_notice` instead of 47,877 B, and the chunk is under the 41,000 B it was asked to return to. With the question on, the combined cost is stated and enforced by a new chunk-group ceiling (62,100 B for 56,491 B measured) instead of hiding in one chunk. A slow Stop is no longer evicted from the record lock after two seconds, and breaking an abandoned lock can no longer remove a successor's.
-- **Risk.** With the question on, a prompt parses 8,614 B (+18 %) more than before. While a hook of the previous version still runs across an install or a rollback, its own check-then-unlink of `<record>.lock` can interleave with another breaker, so two hooks can enter the record together; this change cannot alter that version's code. A missing, mis-digested or other-surface `switch_link` chunk turns the switch question and the pre-move checkpoint off until it is fixed; an owed checkpoint stays owed.
-- **Rollback.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1`, or leaving `AGENT_CONFIG_SWITCH_QUESTION` unset, stops both halves with no reinstall. A full rollback is a revert of the merge commit, which returns `quota_notice` to its 49,400 B ceiling and the lock to the previous version; the lock, the split, the group gate and the loader move are separate commits for a partial revert. Rollback criteria are in `agents/evidence/metrics/agent-switch-link-latency-20261108.md` (criteria 7-9 for this change).
