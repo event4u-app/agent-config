@@ -179,6 +179,19 @@ describe('chunk group ceilings', () => {
         expect(chunkGroupRaiseFindings(budget(1550000, []), grouped(150, []))).toEqual([]);
     });
 
+    it('removing a group, or a chunk from one, needs a new entry naming the group', () => {
+        const without = JSON.stringify({ max_bytes: 1550000, max_yaml_packages: 1, chunks: [], raise_log: [] });
+        expect(chunkGroupRaiseFindings(grouped(150, []), without)).toEqual(['chunk group link was removed with no new raise_log entry for it']);
+        const C = 'src/scripts/_lib/egress_engine.ts';
+        const three = (log: object[]): string =>
+            JSON.stringify({ max_bytes: 1550000, max_yaml_packages: 1, chunk_groups: [{ name: 'link', entries: [A, B, C], max_bytes: 150 }], raise_log: log });
+        expect(chunkGroupRaiseFindings(three([]), grouped(150, []))).toEqual([`chunk group link dropped ${C} with no new raise_log entry for it`]);
+        expect(chunkGroupRaiseFindings(three([]), grouped(150, [groupEntry(150, 150)]))).toEqual([]);
+        // A renamed group is the old one removed.
+        const renamed = JSON.stringify({ max_bytes: 1550000, max_yaml_packages: 1, chunk_groups: [{ name: 'other', entries: [A, B], max_bytes: 150 }], raise_log: [] });
+        expect(chunkGroupRaiseFindings(grouped(150, []), renamed)).toHaveLength(1);
+    });
+
     it('the shipped budget’s groups name only chunks that carry their own ceiling', () => {
         const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/config/hook-bundle-budget.json'), 'utf-8')) as Record<string, unknown> & {
             chunks: Array<{ entry: string; max_bytes: number }>;

@@ -363,6 +363,20 @@ export function chunkGroupRaiseFindings(baseRaw: string | null, workingRaw: stri
         (e) => !seen.has(JSON.stringify(e)),
     );
     const out: string[] = [];
+    const after = new Map(parseChunkGroupBudgets(working).map((g) => [g.name, g.entries]));
+    // Dropping a group, or a chunk from one, narrows what the sum covers: that needs a recorded reason too.
+    for (const g of parseChunkGroupBudgets(base)) {
+        const now = after.get(g.name);
+        const dropped = now === undefined ? g.entries : g.entries.filter((e) => !now.includes(e));
+        if (dropped.length === 0) continue;
+        if (!gained.some((e) => isRecord(e) && e['chunk_group'] === g.name)) {
+            out.push(
+                now === undefined
+                    ? `chunk group ${g.name} was removed with no new raise_log entry for it`
+                    : `chunk group ${g.name} dropped ${dropped.join(', ')} with no new raise_log entry for it`,
+            );
+        }
+    }
     for (const g of parseChunkGroupBudgets(working)) {
         const from = before.get(g.name);
         if (from === undefined || g.maxBytes <= from) continue;
