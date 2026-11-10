@@ -13,7 +13,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
+| road-to-a-package-measured-against-no-rules | active | ready | A published, pre-registered answer to whether the package solves more tasks than no rules and a minimal prompt, and at … |
 | road-to-a-session-start-under-the-host-limit | active | ready | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
+| road-to-gates-that-check-what-they-claim | active | ready | Every gate an external review has re-reported for two or more releases either checks what its name and its header … |
+| road-to-release-notes-that-match-the-span | active | ready | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | road-to-verified-stale-lock-reclaim | active | ready | No file lock in `src/scripts` lets two callers hold it at once because of a stale-lock break or a release, … |
@@ -104,7 +107,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md` § `claim: reference-loop-upgrade-value`). |
 | road-to-floor-source-tags-with-payload-room | later | later | Floor source tags. |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
-| road-to-gates-that-check-what-they-claim | later | later | Every gate an external review has re-reported for two or more releases either checks what its name and its header … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
 | road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
 | road-to-governed-evidence-production | later | later | The four evidence obligations the governed-harness programme could not discharge are owned here, whole and unweakened, and each is either … |
@@ -148,7 +150,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-records-that-match-their-code | later | ready | Record and code agree. |
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
-| road-to-release-notes-that-match-the-span | later | later | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
 | road-to-rewrites-that-keep-their-facts-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
