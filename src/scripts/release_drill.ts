@@ -292,6 +292,7 @@ interface WorldConfig {
      * hold.
      */
     release_verify_fails?: boolean;
+    mirror_fails?: boolean;
 }
 
 /**
@@ -362,6 +363,7 @@ class FakeWorld {
     branch_exists_remote = true;
     /** Whether the simulated `task release:verify` reports a red local gate. */
     private readonly release_verify_fails: boolean;
+    private readonly mirror_fails: boolean;
     /** Live PR body (release-truth Phase 1: refreshed from the changelog at head). */
     pr_body = '';
 
@@ -399,6 +401,7 @@ class FakeWorld {
         this.surface_check_stale = cfg.surface_check_stale ?? null;
         this.pr_merged = cfg.pr_already_merged ?? false;
         this.release_verify_fails = cfg.release_verify_fails ?? false;
+        this.mirror_fails = cfg.mirror_fails ?? false;
     }
 
     exec(args: readonly string[]): ExecResult {
@@ -497,6 +500,14 @@ class FakeWorld {
                 return { status: 1, stdout: '', stderr: '❌  1 release gate(s) would fail the release PR: release-shape.\n' };
             }
             return OK;
+        }
+
+        // ── CI mirror ────────────────────────────────────────────────────
+        // The pre-push mirror run on the release head; red only on request.
+        if (cmd === './scripts-run src/scripts/ci_mirror') {
+            return this.mirror_fails
+                ? { status: 1, stdout: '', stderr: '❌ CI mirror: 1 blocking failure(s).\n' }
+                : OK;
         }
 
         // ── gh ───────────────────────────────────────────────────────────
@@ -945,6 +956,32 @@ const SCENARIOS: Record<string, Scenario> = {
                 'CI was watched after the local gates refused',
                 f,
             );
+            return f;
+        },
+    },
+
+    'mirror-stamps-the-release-head-before-push': {
+        summary:
+            'step 4: the CI mirror runs on the release head before the push, so the pre-push hook finds its stamp',
+        config: {},
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            const mirror = w.calls.indexOf('./scripts-run src/scripts/ci_mirror');
+            const push = w.calls.findIndex((c) => c.startsWith('git push'));
+            _expect(mirror !== -1, 'the CI mirror never ran before the push', f);
+            _expect(push === -1 || mirror < push, 'the CI mirror ran after the push it has to stamp', f);
+            return f;
+        },
+    },
+    'red-mirror-refuses-before-push': {
+        summary: 'step 4: a red CI mirror stops the run BEFORE the branch is pushed',
+        config: { mirror_fails: true },
+        expect_success: false,
+        verify: (w, err) => {
+            const f: string[] = [];
+            _expect((err ?? '').includes('ci_mirror'), `died for the wrong reason: ${err ?? '(no error)'}`, f);
+            _expect(!w.calls.some((c) => c.startsWith('git push')), 'the release branch was pushed after a red mirror', f);
             return f;
         },
     },
