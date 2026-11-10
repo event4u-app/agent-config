@@ -11,7 +11,7 @@ import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -28,6 +28,7 @@ import {
 import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
 import { buildChunk } from '../../src/scripts/hook_chunks.mjs';
 import { sidecarPathFor } from '../../src/scripts/hooks/bundle_digest.js';
+import { loadLazyExport } from '../../src/scripts/hooks/lazy_concern.js';
 import { loadSwitchTurn, noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
 import { loadMoveCheckpoint, moveCheckpoint } from '../../src/scripts/hooks/session_eol_hook.js';
 
@@ -629,7 +630,8 @@ describe('7.5 record lifetime and interleaving', () => {
 
     it('a held lock defers the write; a stale one is broken', () => {
         raise();
-        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
+        // A ticket that names no process: held while fresh, broken once stale.
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock.x`;
         fs.writeFileSync(held, '');
         expect(updateSwitchRecord(sess(), () => null, stateEnv)).toBe(false);
         expect(readSwitchRecord(sess(), stateEnv)?.id).toBe(ID);
@@ -691,10 +693,12 @@ describe('7.x council round 1 findings', () => {
         setRequest();
         noticeReply(deps());
         setRequest({ state: 'approved', decision: doneNow.decision });
-        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
-        let locked = false;
-        expect(checkpointBeforeMove(sess(), () => (locked = fs.existsSync(held)), stateEnv, { env: binEnv })).toBe(true);
-        expect(locked).toBe(true);
+        const file = switchRecordPath(sess(), stateEnv);
+        const tickets = (): string[] => fs.readdirSync(path.dirname(file)).filter((n) => n.startsWith(`${path.basename(file)}.lock.`));
+        let held: string[] = [];
+        expect(checkpointBeforeMove(sess(), () => ((held = tickets()), true), stateEnv, { env: binEnv })).toBe(true);
+        expect(held).toHaveLength(1);
+        expect(tickets()).toEqual([]);
     });
 
     it('a failed write leaves the obligation for the next Stop', () => {
@@ -720,12 +724,12 @@ describe('7.x council round 1 findings', () => {
         hot();
         setRequest();
         noticeReply(deps());
-        const held = `${switchRecordPath(sess(), stateEnv)}.lock`;
+        const held = `${switchRecordPath(sess(), stateEnv)}.lock.someone-else`;
         let replaced = false;
         updateSwitchRecord(
             sess(),
             (cur) => {
-                // The holder stalls; another process breaks the lock as stale and takes it.
+                // Another process leaves its ticket while this one holds the lock.
                 fs.writeFileSync(held, 'someone-else');
                 replaced = true;
                 return cur;
@@ -984,4 +988,42 @@ describe('8.4 the link in its own chunk', () => {
         expect(calls('request')).toEqual([]);
         expect(reply.lines.some((l) => /^AC: 5h window 85 %/.test(l))).toBe(true);
     }, 60_000);
+
+    it('the Stop path’s loader takes the shipped link chunk only when its digest verifies', () => {
+        const dir = path.join(home, 'stop-chunk');
+        fs.mkdirSync(dir, { recursive: true });
+        const out = path.join(dir, 'switch_link.chunk.cjs');
+        buildChunk(REPO, 'src/scripts/switch_link.ts', out);
+        const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+        // As the dispatch bundle beside it would ask for the chunk.
+        const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
+        const load = (): unknown => loadLazyExport('src/scripts/switch_link.ts', 'checkpointBeforeMove', self, true);
+        const sidecar = sidecarPathFor(out);
+        const cases: Array<[string, string | null, boolean]> = [
+            ['matching', `${sha}  switch_link.chunk.cjs\n`, true],
+            ['missing', null, false],
+            ['malformed', 'not a digest\n', false],
+            ['mismatched', `${sha.replace(/^./, sha[0] === '0' ? '1' : '0')}  switch_link.chunk.cjs\n`, false],
+        ];
+        for (const [name, text, loads] of cases) {
+            fs.rmSync(sidecar, { force: true });
+            if (text !== null) fs.writeFileSync(sidecar, text);
+            expect([name, typeof load() === 'function']).toEqual([name, loads]);
+        }
+    }, 60_000);
+
+    it('a Stop that cannot load the link writes nothing and leaves the checkpoint owed to the next Stop', () => {
+        const sess = hashSessionId('sess-a');
+        hot();
+        setRequest();
+        noticeReply(deps());
+        setRequest({ state: 'approved', decision: { kind: 'approve', target: 'claude/b', how: 'after-turn', by: 'ac:claude-code', at: 'x' } });
+        let written = 0;
+        const write = (): boolean => (written++, true);
+        expect(moveCheckpoint(sess, write, stateEnv, () => null)).toBe(false);
+        expect(written).toBe(0);
+        expect(readSwitchRecord(sess, stateEnv)?.checkpointed).toBe(false);
+        expect(moveCheckpoint(sess, write, stateEnv, () => (h, w, st) => checkpointBeforeMove(h, w, st, { env: binEnv }))).toBe(true);
+        expect(written).toBe(1);
+    });
 });

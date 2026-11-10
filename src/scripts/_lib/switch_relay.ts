@@ -34,7 +34,7 @@ const BACKOFF_AFTER = 3;
 const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
 /** Age after which a lock whose holder cannot be identified counts as abandoned. */
 const LOCK_STALE_MS = 2000;
-/** Age after which even a live holder's lock is broken: the locked code only touches local files, so its pid is taken as reused. */
+/** Age after which even a live holder's ticket is removed (see `ticketBreakable`). */
 const LOCK_ABANDONED_MS = 15 * 60_000;
 const LOCK_TRIES = 50;
 const LOCK_WAIT_MS = 5;
@@ -271,18 +271,17 @@ function holderAlive(token: string): boolean | null {
 }
 
 /**
- * Whether a held lock may be broken. A live holder is never evicted, however
- * slow: a Stop still building its checkpoint would otherwise publish an
- * older snapshot after its successor's. The waiter gives up instead and leaves
- * the work to the next hook. A dead holder's lock is broken at once; one that
- * names no process falls back to its age.
+ * Whether another holder's ticket may be removed. A dead holder's goes at once;
+ * one that names no process after `LOCK_STALE_MS`. A live holder keeps its
+ * ticket for `LOCK_ABANDONED_MS`: a Stop still building its checkpoint would
+ * otherwise publish an older snapshot after its successor's. Past that the
+ * ticket is removed too, because the locked code touches local files only and
+ * a pid still running after fifteen minutes is taken as reused.
  */
-function lockBreakable(held: string): boolean {
-    let token: string;
+function ticketBreakable(ticket: string, token: string): boolean {
     let age: number;
     try {
-        token = fs.readFileSync(held, 'utf-8');
-        age = Date.now() - fs.statSync(held).mtimeMs;
+        age = Date.now() - fs.statSync(ticket).mtimeMs;
     } catch {
         return false;
     }
@@ -293,32 +292,45 @@ function lockBreakable(held: string): boolean {
 }
 
 /**
- * Run `fn` holding `<file>.lock`, or return `null` when the lock could not be
- * had. The lock file carries a token naming this holder's process, and only a
- * holder whose token is still in it removes it, so a release never deletes a
- * lock someone else took after breaking it (see `lockBreakable`).
+ * Run `fn` holding the lock on `file`, or return `null` when it could not be
+ * had. Each contender creates its own ticket `<file>.lock.<token>`, then lists
+ * the tickets: it holds the lock when no other ticket remains after removing
+ * the breakable ones, and otherwise removes its own and retries after a random
+ * pause. A ticket is only ever removed by its unique name, so breaking an
+ * abandoned one can never remove a successor's, and two contenders cannot both
+ * hold: each lists after creating, so the later lister sees the earlier ticket.
  */
 function locked<T>(file: string, fn: () => T): { value: T } | null {
-    const held = `${file}.lock`;
+    const dir = path.dirname(file);
+    const prefix = `${path.basename(file)}.lock.`;
     const token = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
+    const mine = path.join(dir, prefix + token);
     for (let i = 0; i < LOCK_TRIES; i++) {
+        let free = false;
         try {
-            fs.mkdirSync(path.dirname(file), { recursive: true });
-            fs.writeFileSync(held, token, { flag: 'wx', mode: 0o600 });
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(mine, '', { flag: 'wx', mode: 0o600 });
+            free = fs
+                .readdirSync(dir)
+                .filter((n) => n.startsWith(prefix) && n !== prefix + token)
+                .every((n) => {
+                    const other = path.join(dir, n);
+                    if (!ticketBreakable(other, n.slice(prefix.length))) return false;
+                    fs.rmSync(other, { force: true });
+                    return true;
+                });
         } catch {
-            if (lockBreakable(held)) fs.rmSync(held, { force: true });
-            pause(LOCK_WAIT_MS);
-            continue;
+            free = false;
         }
-        try {
-            return { value: fn() };
-        } finally {
+        if (free) {
             try {
-                if (fs.readFileSync(held, 'utf-8') === token) fs.rmSync(held, { force: true });
-            } catch {
-                // already gone
+                return { value: fn() };
+            } finally {
+                fs.rmSync(mine, { force: true });
             }
         }
+        fs.rmSync(mine, { force: true });
+        pause(LOCK_WAIT_MS * (0.5 + Math.random()));
     }
     return null;
 }

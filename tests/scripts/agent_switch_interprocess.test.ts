@@ -114,6 +114,11 @@ function writes(): string[] {
     return fs.existsSync(writeLog) ? fs.readFileSync(writeLog, 'utf-8').split('\n').filter((l) => l !== '') : [];
 }
 
+/** The lock ticket a holder with this pid would leave. */
+function ticket(pid: number): string {
+    return `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock.${pid}.1.x`;
+}
+
 interface Job {
     op: 'prompt' | 'stop';
     startAt?: number;
@@ -164,22 +169,53 @@ describe('8.1 a writer the lock cannot evict', () => {
     it('a lock whose holder has ended is broken at once', () => {
         raised();
         const gone = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' });
-        const held = `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock`;
-        fs.writeFileSync(held, `${gone.stdout}.1.x`);
+        const held = ticket(Number(gone.stdout));
+        fs.writeFileSync(held, '');
         expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(true);
         expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)).toBeNull();
+        expect(fs.existsSync(held)).toBe(false);
     });
 
-    it('a live holder’s lock is kept past the stale break', () => {
+    it('breaking a dead holder’s lock never removes a live holder’s ticket beside it', () => {
         raised();
-        const held = `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock`;
+        const gone = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' });
         const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
         try {
-            fs.writeFileSync(held, `${holder.pid}.1.x`);
+            fs.writeFileSync(ticket(Number(gone.stdout)), '');
+            const live = ticket(holder.pid ?? 0);
+            fs.writeFileSync(live, '');
+            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
+            expect(fs.existsSync(live)).toBe(true);
+            expect(fs.existsSync(ticket(Number(gone.stdout)))).toBe(false);
+            expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
+        } finally {
+            holder.kill();
+        }
+    });
+
+    it('three Stops breaking a dead holder’s lock at once write the checkpoint once', async () => {
+        raised();
+        setRequest(APPROVED);
+        const gone = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' });
+        fs.writeFileSync(ticket(Number(gone.stdout)), '');
+        const at = together();
+        const wrote = await Promise.all(['A', 'B', 'C'].map((label) => hook({ op: 'stop', startAt: at, holdMs: 300, label })));
+        expect(wrote.filter((w) => w === true)).toHaveLength(1);
+        expect(writes()).toHaveLength(2);
+        expect(writes()[0]?.split(':')[0]).toBe(writes()[1]?.split(':')[0]);
+    }, 20_000);
+
+    it('a live holder’s ticket is kept past the stale break', () => {
+        raised();
+        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
+        try {
+            const held = ticket(holder.pid ?? 0);
+            fs.writeFileSync(held, '');
             const old = new Date(Date.now() - 10_000);
             fs.utimesSync(held, old, old);
             expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
             expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
+            expect(fs.existsSync(held)).toBe(true);
         } finally {
             holder.kill();
         }
