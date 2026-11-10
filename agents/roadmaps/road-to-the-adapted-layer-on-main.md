@@ -75,11 +75,12 @@ fresh pre-registration before it can ship.
       `source_path:` prefix −2,200; pack floors only with their pack −5,479;
       frontmatter block up to −9,624; budget raise to 82,000. Table and notes
       in the same evidence file.
-- [ ] **1.3 Owner decision on both gates.** <!-- blocked-by: adapted-layer-gate-decisions -->
+- [x] **1.3 Owner decision on both gates.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Present 1.1 and 1.2 as options (fix the check, fix the text, trim
       elsewhere, raise the budget, or do not ship), each marked whether it
       keeps the benchmarked wording.
       verify: the decision is recorded in the result file's owner section.
+      Done 2026-11-10: option 1 — (a) extend the check, (c) the `source_path` prefix, (g) confirm first. Recorded in the result file § Owner decision on the two gates.
 - [x] **1.4 Pre-model aborts settled before data.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/eval_publication.ts --> Write into
       `docs/contracts/eval-measurement-integrity.md` the convention the owner
       applied post-data on 2026-11-09: a run that ends before any model call
@@ -97,7 +98,7 @@ fresh pre-registration before it can ship.
       verify: a runner test where a stream with no init event is rerun and not scored, and one with a post-call timeout is scored.
       Done 2026-11-09: `--pre-model-reruns N` (default 0), recorded in the report.
       production entry: `internal/bench/core/bench_ab_v2_run.ts`
-- [ ] **1.5 A fresh confirmation, if the owner takes option (g).** <!-- blocked-by: adapted-layer-gate-decisions -->
+- [ ] **1.5 A fresh confirmation, if the owner takes option (g).** The owner took it (2026-11-10). Pre-registered in `agents/evidence/preregistration/adapted-layer-confirmation-protocol-20261110.md`: seven held-out tasks, a guard task, Haiku 4.5 and Sonnet 5.5, three arms.
       Pre-register, before any transcript, a run on fresh seeds (and unseen
       tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
       and Sonnet 5.5, with a third arm: the reduced layer padded with neutral
@@ -124,7 +125,7 @@ fresh pre-registration before it can ship.
 
 <!-- asked: 2026-11-09 | record: agents/evidence/metrics/ask-scope-vs-full-layer-result-20261109.md -->
 
-- **Status:** open, raised 2026-11-09 with the owner's exclusion reading.
+- **Status:** resolved — 2026-11-10, the owner chose option 1: (a) extend the check, (c) trim the `source_path` prefix, (g) confirm first (result file § Owner decision on the two gates).
 - **Class:** 3 — human-only. A ship decision on a benchmarked default is the owner's; steps 1.1 and 1.2 prepare the options and are agent work.
 - **Owner:** the repository owner.
 - **Blocks:** 1.3, and through it Phase 2.

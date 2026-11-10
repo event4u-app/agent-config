@@ -120,6 +120,10 @@ export const ARMS: Record<string, ArmSpec> = {
     // The same package on the full rule layer (`init --full`), for the
     // full-vs-reduced comparison before the release that makes reduced the default.
     'package-full': { setting_sources: null, inject: null, ac_layer: 'full' },
+    // The reduced layer padded with inert prose to the full layer's length
+    // (`--pad-chars`, pre-registered): separates what the reduced form loses in
+    // content from what it loses by being shorter.
+    'package-padded': { setting_sources: null, inject: 'layer-pad', min_lift_ratio: null },
     // Controls for the container path: `vanilla-b` is `vanilla` under a second
     // name (an A/A pair), `vanilla-host` is `vanilla` kept on the host CLI when the
     // rest of the sweep runs in containers.
