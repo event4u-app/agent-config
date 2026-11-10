@@ -285,8 +285,8 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
       Progress: the link is its own lazy chunk, `src/scripts/switch_link.ts`
-      (29,311 B, ceiling 32,200); `quota_notice` measures 28,588 B, ceiling
-      lowered to 31,400. With the opt-in a prompt parses both, 57,899 B
+      (29,369 B, ceiling 32,200); `quota_notice` measures 28,588 B, ceiling
+      lowered to 31,400. With the opt-in a prompt parses both, 57,957 B
       against 47,877 before. Loaded only with the opt-in, and by the Stop path only
       for a session with a record; the digest check moved to
       `hooks/bundle_digest.ts` so the chunk does not carry the YAML reader.

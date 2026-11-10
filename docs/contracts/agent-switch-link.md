@@ -291,7 +291,7 @@ the link over the CLI verbs below, never the MCP client.
   running across an install or a rollback, and this one out of each other in
   both directions. The older version breaks that file once its mtime is two
   seconds old, so this version dates it fifteen minutes ahead while it holds
-  it; this version judges the file by its holder's pid, so it waits up to
+  it, and gives it back when it cannot date it; this version judges the file by its holder's pid, so it waits up to
   thirty minutes, not fifteen, only when that pid was reused. A ticket is only ever removed by its own unique name, so breaking an
   abandoned one cannot remove a successor's, and two contenders cannot both
   hold: each lists after creating, so the later lister sees the earlier ticket.
