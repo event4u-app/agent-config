@@ -502,7 +502,6 @@ class FakeWorld {
             return OK;
         }
 
-        // ── CI mirror ────────────────────────────────────────────────────
         // The pre-push mirror run on the release head; red only on request.
         if (cmd === './scripts-run src/scripts/ci_mirror') {
             return this.mirror_fails
