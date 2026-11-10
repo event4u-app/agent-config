@@ -139,6 +139,7 @@ import { main as cmdMigrateMain } from './_cli/cmd_migrate.js';
 import { SCOPE_DETECT_AI_DIRS, SCOPE_DETECT_MANIFESTS } from '../install/detect.js';
 import { getLogPath } from '../install/paths.js';
 import { bufferTxLog } from '../install/txlog.js';
+import { isNewWrite } from '../install/loggedWrites.js';
 
 // ---------------------------------------------------------------------------
 // Python-runtime parity helpers
@@ -2620,18 +2621,14 @@ function _escapes_package_root(resolved: string, package_root: string | null): b
 /**
  * Queue one `write`/`skip` entry for the transaction log, through the same
  * `txlog` module the recovery-dismiss route appends with — identical entry
- * shape. Batched: appending per copied file rewrote and fsynced the whole log
- * each time, most of a global install's runtime. Failure is swallowed: the log
- * is a recovery aid, never a condition for the install itself to proceed.
+ * shape. Batched, and a write the log already records is skipped. Failure is
+ * swallowed: the log is a recovery aid, never a condition for the install.
  */
 function _log_tx_entry(kind: 'write' | 'skip', target: string): void {
     try {
-        bufferTxLog(getLogPath(), {
-            ts: new Date().toISOString(),
-            kind,
-            path: target,
-            sha256: kind === 'write' ? sha256OfFile(target) : null,
-        });
+        const sha256 = kind === 'write' ? sha256OfFile(target) : null;
+        if (sha256 !== null && !isNewWrite(target, sha256)) return; // the log already proves these bytes
+        bufferTxLog(getLogPath(), { ts: new Date().toISOString(), kind, path: target, sha256 });
     } catch {
         /* swallow — the log is a recovery aid, not a precondition */
     }

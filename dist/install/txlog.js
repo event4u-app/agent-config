@@ -11,7 +11,9 @@
  * null hash; `src/scripts/install.ts`, through `_log_tx_entry`, appends a
  * `write` or `skip` entry per path it copies, preserves or stages a sidecar
  * for, and a `write` entry per deployed Claude rule the host-form rewrite and
- * the thinning pass rewrite after the copy. The installer queues its entries
+ * the thinning pass rewrite after the copy — except a `write` whose exact
+ * bytes the log already records at that path (`loggedWrites.isNewWrite`), so
+ * an unchanged re-deploy adds nothing. The installer queues its entries
  * through `bufferTxLog` (batched appends — see there); the other writers call
  * `appendTxLog`. Both serialize the same `TxLogEntry`, so the entry shape is
  * identical by construction rather than by convention.

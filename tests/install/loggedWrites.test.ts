@@ -8,7 +8,7 @@ import { gzipSync } from 'node:zlib';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { canonicalPath, loggedWriteDigests, onlyDeployed, wroteTheseBytes } from '../../src/install/loggedWrites.js';
+import { canonicalPath, isNewWrite, loggedWriteDigests, onlyDeployed, wroteTheseBytes } from '../../src/install/loggedWrites.js';
 import { decideDeployWrite, logProofApplies } from '../../src/install/preserve.js';
 
 function hex(content: string): string {
@@ -142,5 +142,48 @@ describe('loggedWrites — the write decision', () => {
         const migration = { ...base, recordedSha256: null, ledgerListed: true, packagedSha256: hex('package-v2') };
         expect(decideDeployWrite(migration)).toBe('preserve');
         expect(decideDeployWrite({ ...migration, loggedWrite: true })).toBe('write');
+    });
+});
+
+// A write the log already proves needs no second entry: rotated logs are never
+// pruned, so the earlier entry stays readable. Re-logging every unchanged file
+// made each global install write ~10 MB and rotate the log on every run.
+describe('loggedWrites — isNewWrite', () => {
+    let dir: string;
+    let log: string;
+
+    beforeEach(() => {
+        dir = mkdtempSync(join(tmpdir(), 'is-new-write-'));
+        log = join(dir, 'install-log.jsonl');
+    });
+
+    afterEach(() => {
+        rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('a write the active or a rotated log already records is not new', () => {
+        const a = join(dir, 'a.md');
+        const b = join(dir, 'b.md');
+        writeFileSync(log, `${line('write', a, hex('a'))}\n`);
+        writeFileSync(
+            join(dir, 'install-log.2026-09-01T00-00-00-000Z.jsonl.gz'),
+            gzipSync(`${line('write', b, hex('b'))}\n`),
+        );
+        expect(isNewWrite(a, hex('a'), log)).toBe(false);
+        expect(isNewWrite(b, hex('b'), log)).toBe(false);
+    });
+
+    it('changed bytes or an unknown path are new — and only once per run', () => {
+        const a = join(dir, 'a.md');
+        writeFileSync(log, `${line('write', a, hex('a'))}\n`);
+        expect(isNewWrite(a, hex('a-v2'), log)).toBe(true);
+        expect(isNewWrite(a, hex('a-v2'), log)).toBe(false);
+        expect(isNewWrite(join(dir, 'new.md'), hex('n'), log)).toBe(true);
+    });
+
+    it('a skip entry is no proof', () => {
+        const a = join(dir, 'a.md');
+        writeFileSync(log, `${line('skip', a, null)}\n`);
+        expect(isNewWrite(a, hex('a'), log)).toBe(true);
     });
 });
