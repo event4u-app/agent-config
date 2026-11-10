@@ -1,0 +1,199 @@
+{
+  "output_id": "out-4",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects, affected locations across all three fixtures, and a unique decoy clearly enough to score this report.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "robots.txt blocks all crawlers from the entire site.",
+      "location": "robots.txt",
+      "duplicate_of": null,
+      "matches_row": "2",
+      "decoy": false,
+      "note": "User-agent: * and Disallow: / establish the blanket block."
+    },
+    {
+      "n": 2,
+      "claim": "The home page retains noindex, nofollow.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "1",
+      "decoy": false,
+      "note": "The supplied robots meta tag contains noindex, nofollow."
+    },
+    {
+      "n": 3,
+      "claim": "Kontakt has no title.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": "5",
+      "decoy": false,
+      "note": "The missing title identifies the affected metadata defect, with its missing description separately asserted in finding 5."
+    },
+    {
+      "n": 4,
+      "claim": "Sortiment has no title.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": "4",
+      "decoy": false,
+      "note": "The missing title identifies the affected metadata defect, with its missing description separately asserted in finding 6."
+    },
+    {
+      "n": 5,
+      "claim": "Kontakt has no meta description.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported, distinct metadata omission cannot receive another match because row 5 is already assigned to finding 3."
+    },
+    {
+      "n": 6,
+      "claim": "Sortiment has no meta description.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This supported, distinct metadata omission cannot receive another match because row 4 is already assigned to finding 4."
+    },
+    {
+      "n": 7,
+      "claim": "All three content images lack alt attributes.",
+      "location": "index.html; sortiment.html",
+      "duplicate_of": null,
+      "matches_row": "6",
+      "decoy": false,
+      "note": "The report identifies all three image elements and their correct files."
+    },
+    {
+      "n": 8,
+      "claim": "The site lacks navigation.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The supplied pages contain only one navigation link, but navigation deficiencies are outside the manifest."
+    },
+    {
+      "n": 9,
+      "claim": "Kontakt has no incoming links from any page.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "No supplied page links to Kontakt, an observation outside the manifest."
+    },
+    {
+      "n": 10,
+      "claim": "Impressum has no incoming links from any page.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "No supplied page links to Impressum, an observation outside the manifest."
+    },
+    {
+      "n": 11,
+      "claim": "Kontakt is an orphan page that visitors cannot reach through site links.",
+      "location": "kontakt.html",
+      "duplicate_of": 9,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This repeats the absence of incoming links asserted in finding 9."
+    },
+    {
+      "n": 12,
+      "claim": "Impressum is an orphan page unreachable through site links.",
+      "location": "impressum.html",
+      "duplicate_of": 10,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This repeats the absence of incoming links asserted in finding 10."
+    },
+    {
+      "n": 13,
+      "claim": "Sortiment lacks links back home or to the other pages.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Sortiment contains no links, but this defect is outside the manifest."
+    },
+    {
+      "n": 14,
+      "claim": "Kontakt lacks links back home or to the other pages.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Kontakt contains no links, but this defect is outside the manifest."
+    },
+    {
+      "n": 15,
+      "claim": "Impressum lacks links back home or to the other pages.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Impressum contains no links, but this defect is outside the manifest."
+    },
+    {
+      "n": 16,
+      "claim": "Impressum lacks a postal address.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Its body contains only a heading and proprietor name, but incomplete imprint content is outside the manifest."
+    },
+    {
+      "n": 17,
+      "claim": "Impressum lacks electronic contact details.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Neither email nor phone appears on the page, but this omission is outside the manifest."
+    },
+    {
+      "n": 18,
+      "claim": "Impressum lacks a business name.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The body omits the business name although the document title contains it, and this claim is outside the manifest."
+    },
+    {
+      "n": 19,
+      "claim": "Impressum lacks a legal form.",
+      "location": "impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The supplied page states no legal form, but this alleged launch defect is outside the manifest."
+    },
+    {
+      "n": 20,
+      "claim": "Kontakt lacks phone or email contact details.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The page contains only a postal address, but missing direct contact details are outside the manifest."
+    },
+    {
+      "n": 21,
+      "claim": "Kontakt lacks opening hours.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "Opening hours appear only on the home page, and their absence from Kontakt is outside the manifest."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["1", "2", "4", "5", "6"],
+  "false_positives": 14
+}

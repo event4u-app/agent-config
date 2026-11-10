@@ -1,0 +1,105 @@
+{
+  "output_id": "out-5",
+  "truth_scorable": true,
+  "truth_scorability_note": "The manifest identifies distinct defects across three fixtures and a unique decoy, and the packaged docs files suffice to adjudicate this report.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "No custom 404 page exists in the build.",
+      "location": "site-wide; expected root 404.html",
+      "duplicate_of": null,
+      "matches_row": "15",
+      "decoy": false,
+      "note": "The supplied file inventory contains no custom 404 or not-found page."
+    },
+    {
+      "n": 2,
+      "claim": "The API page lacks a meta description.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": "16",
+      "decoy": false,
+      "note": "The API page head contains no description metadata."
+    },
+    {
+      "n": 3,
+      "claim": "Both pages share an identical title.",
+      "location": "index.html, api.html",
+      "duplicate_of": null,
+      "matches_row": "17",
+      "decoy": false,
+      "note": "Both files use the title Ledgerly docs — getting started."
+    },
+    {
+      "n": 4,
+      "claim": "The API page title incorrectly describes getting started.",
+      "location": "api.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The report independently asserts a title-content mismatch supported by the API reference heading, but that defect is outside the frozen manifest."
+    },
+    {
+      "n": 5,
+      "claim": "The architecture diagram lacks an alt attribute.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "18",
+      "decoy": false,
+      "note": "The architecture diagram img element lacks alt; exact line numbers are not required."
+    },
+    {
+      "n": 6,
+      "claim": "The API canonical uses a different host from its sitemap URL.",
+      "location": "api.html, sitemap.xml",
+      "duplicate_of": null,
+      "matches_row": "19",
+      "decoy": false,
+      "note": "The canonical uses ledgerly.example while the corresponding sitemap entry uses docs.ledgerly.example."
+    },
+    {
+      "n": 7,
+      "claim": "The supplied build output lacks a 404 file.",
+      "location": "site-wide; expected root 404.html",
+      "duplicate_of": 1,
+      "matches_row": "15",
+      "decoy": false,
+      "note": "The hosting uncertainty paragraph repeats the established build omission without asserting a hosting defect."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["15", "16", "17", "18", "19"],
+  "false_positives": 1,
+  "rulings": [
+    {
+      "point": "Whether the wrong API title is a separate atomic defect",
+      "ruling": "Extract it separately as finding 4, without a manifest match.",
+      "why": "Title duplication across pages and title accuracy on api.html are independently asserted faulty conditions with different scopes, and either could exist without the other."
+    },
+    {
+      "point": "Whether the hosting uncertainty paragraph adds an extracted finding",
+      "ruling": "Record its repeated build omission as finding 7, duplicate_of 1.",
+      "why": "The paragraph explicitly reiterates the concrete missing-file defect even while leaving hosting behavior unknown."
+    },
+    {
+      "point": "Deduplication and false-positive count",
+      "ruling": "Count one false positive.",
+      "why": "The title accuracy claim is outside the manifest, while the repeated 404 omission collapses into finding 1 and adds no false positive."
+    },
+    {
+      "point": "Row matches and location differences",
+      "ruling": "Retain matches to rows 15, 16, 17, 18 and 19.",
+      "why": "Each matched claim identifies the required condition and affected scope, and inaccurate line numbers do not invalidate correct file identification."
+    },
+    {
+      "point": "Scorability and decoy classification",
+      "ruling": "The truth is scorable and the decoy is not flagged.",
+      "why": "The package identifies the required truth set clearly, and the report makes no launch-defect assertion about the saas-app team-photo decoy."
+    },
+    {
+      "point": "Other statements in the report",
+      "ruling": "Extract no additional defects.",
+      "why": "The remaining statements describe passing checks, explicit nonapplicability, remediation alternatives for an existing finding, or uncertainties asserting no additional defect."
+    }
+  ]
+}

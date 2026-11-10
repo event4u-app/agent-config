@@ -1,0 +1,51 @@
+{
+  "site": "docs",
+  "arm": "treatment",
+  "attempts": [
+    {
+      "at": "2026-11-09T03:03:17.776Z",
+      "status": 200,
+      "request_id": "req_011CgrcPEpuwdBSN5o8CVfrS",
+      "temperature_sent": false,
+      "response": "{\"model\":\"claude-sonnet-5-5\",\"id\":\"[redacted message id, sha256=b8b2f3458ca260bbadf24f46eac401c662b95b364986029c556a34455672a296]\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"thinking\",\"thinking\":\"\",\"signature\":\"[redacted provider signature, sha256=640c439fa2f67044a3162d71b04edfb1a9bfc85786c45e40e0041fb1368463a0]\"},{\"type\":\"text\",\"text\":\"# Pre-launch audit: Ledgerly docs (site type: `docs`)\\n\\nThis is a read of the supplied files against the supplied check configuration. I did not run the command or load any page. I applied only the checks whose `applies_to` includes `docs`.\\n\\n## Established defects\\n\\n**1. No custom 404 page (`custom-error-route`, tier high)**\\n- Affected path: `404.html`, expected at the site root. It is absent site-wide.\\n- Defect: the supplied tree contains only `api.html`, `index.html`, `robots.txt` and `sitemap.xml`. There is no `404.html` or `not-found` page. The site does have a static route surface (two HTML pages and a sitemap), so the missing file is a real finding, not a blind spot.\\n- Evidence: the file list has no 404 or not-found page.\\n\\n**2. `api.html` has no meta description (`per-route-metadata`, tier high)**\\n- Affected path: `api.html`\\n- Defect: the `<head>` (lines 3–9) has charset, viewport, title and canonical, but no `<meta name=\\\"description\\\">`. `index.html` has one, so the omission is specific to this page.\\n- Evidence: `api.html` has no `<meta name=\\\"description\\\" ...>` anywhere.\\n\\n**3. Duplicate, wrong title across routes (`per-route-metadata`, tier high)**\\n- Affected paths: `api.html` (line 6) and `index.html` (line 6)\\n- Defect: both pages use the identical title `Ledgerly docs — getting started`. The check counts a title shared by more than one page as present but not per-route. On `api.html` the title is also wrong, because the page's `<h1>` is \\\"API reference\\\".\\n- Evidence: `<title>Ledgerly docs — getting started</title>` appears in both files.\\n\\n**4. Image without `alt` (`image-alternative-text`, tier high)**\\n- Affected path: `index.html`, line 12\\n- Defect: the architecture diagram has no `alt` attribute. It looks like a content image, so it needs descriptive text. If it is purely decorative, it needs an explicit `alt=\\\"\\\"`.\\n- Evidence: `<img src=\\\"/diagram-architecture.svg\\\" />`\\n\\n**5. Canonical URL disagrees with the sitemap (`canonical-and-sitemap-coherence`, tier medium)**\\n- Affected paths: `api.html` (line 8), `sitemap.xml`\\n- Defect: the canonical for the API page is on a different host from the one the sitemap and `robots.txt` use. The canonical points at `ledgerly.example`, while the sitemap lists `docs.ledgerly.example`. This sends search engines conflicting signals about the preferred URL.\\n- Evidence:\\n  - `api.html`: `<link rel=\\\"canonical\\\" href=\\\"https://ledgerly.example/api\\\" />`\\n  - `sitemap.xml`: `<loc>https://docs.ledgerly.example/api</loc>`\\n  - `index.html` is coherent: its canonical `https://docs.ledgerly.example/` matches its sitemap entry.\\n\\n## Checks that found nothing in the supplied files\\n\\n- `staging-noindex-leftover`: no noindex meta. `robots.txt` disallows only `/drafts/`, not the whole site.\\n- `https-enforcement` (markup): no `http://` asset URLs.\\n- `document-head-basics`: `lang`, charset and viewport are present on both pages.\\n- `third-party-load-in-markup`, `snippet-eligibility`, `structured-data-parses`: no third-party loads, no `nosnippet` or `max-snippet:0`, and no JSON-LD blocks.\\n\\n## Uncertainties (not counted as defects)\\n\\n- **HTTP-to-HTTPS redirect:** the check's verification step is a `curl` against the live host. That is edge or server configuration, which the supplied files cannot show.\\n- **Hosting-level 404:** the host might serve its own error page. Defect 1 is based on the absence of a 404 file in the supplied build output only.\\n- **Skipped checks:** the legal-page, analytics-consent, superseded-statute, placeholder and privacy-coverage checks do not apply to `docs` and are not findings. No region was declared, so no jurisdictional escalation applies.\"}],\"container\":null,\"stop_reason\":\"end_turn\",\"stop_sequence\":null,\"stop_details\":null,\"usage\":{\"input_tokens\":38656,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":0},\"output_tokens\":2206,\"output_tokens_details\":{\"thinking_tokens\":812},\"service_tier\":\"standard\",\"inference_geo\":\"global\",\"speed\":\"standard\"},\"diagnostics\":null}"
+    }
+  ],
+  "final": {
+    "model": "claude-sonnet-5-5",
+    "id": "[redacted message id, sha256=b8b2f3458ca260bbadf24f46eac401c662b95b364986029c556a34455672a296]",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "",
+        "signature": "[redacted provider signature, sha256=640c439fa2f67044a3162d71b04edfb1a9bfc85786c45e40e0041fb1368463a0]"
+      },
+      {
+        "type": "text",
+        "text": "# Pre-launch audit: Ledgerly docs (site type: `docs`)\n\nThis is a read of the supplied files against the supplied check configuration. I did not run the command or load any page. I applied only the checks whose `applies_to` includes `docs`.\n\n## Established defects\n\n**1. No custom 404 page (`custom-error-route`, tier high)**\n- Affected path: `404.html`, expected at the site root. It is absent site-wide.\n- Defect: the supplied tree contains only `api.html`, `index.html`, `robots.txt` and `sitemap.xml`. There is no `404.html` or `not-found` page. The site does have a static route surface (two HTML pages and a sitemap), so the missing file is a real finding, not a blind spot.\n- Evidence: the file list has no 404 or not-found page.\n\n**2. `api.html` has no meta description (`per-route-metadata`, tier high)**\n- Affected path: `api.html`\n- Defect: the `<head>` (lines 3–9) has charset, viewport, title and canonical, but no `<meta name=\"description\">`. `index.html` has one, so the omission is specific to this page.\n- Evidence: `api.html` has no `<meta name=\"description\" ...>` anywhere.\n\n**3. Duplicate, wrong title across routes (`per-route-metadata`, tier high)**\n- Affected paths: `api.html` (line 6) and `index.html` (line 6)\n- Defect: both pages use the identical title `Ledgerly docs — getting started`. The check counts a title shared by more than one page as present but not per-route. On `api.html` the title is also wrong, because the page's `<h1>` is \"API reference\".\n- Evidence: `<title>Ledgerly docs — getting started</title>` appears in both files.\n\n**4. Image without `alt` (`image-alternative-text`, tier high)**\n- Affected path: `index.html`, line 12\n- Defect: the architecture diagram has no `alt` attribute. It looks like a content image, so it needs descriptive text. If it is purely decorative, it needs an explicit `alt=\"\"`.\n- Evidence: `<img src=\"/diagram-architecture.svg\" />`\n\n**5. Canonical URL disagrees with the sitemap (`canonical-and-sitemap-coherence`, tier medium)**\n- Affected paths: `api.html` (line 8), `sitemap.xml`\n- Defect: the canonical for the API page is on a different host from the one the sitemap and `robots.txt` use. The canonical points at `ledgerly.example`, while the sitemap lists `docs.ledgerly.example`. This sends search engines conflicting signals about the preferred URL.\n- Evidence:\n  - `api.html`: `<link rel=\"canonical\" href=\"https://ledgerly.example/api\" />`\n  - `sitemap.xml`: `<loc>https://docs.ledgerly.example/api</loc>`\n  - `index.html` is coherent: its canonical `https://docs.ledgerly.example/` matches its sitemap entry.\n\n## Checks that found nothing in the supplied files\n\n- `staging-noindex-leftover`: no noindex meta. `robots.txt` disallows only `/drafts/`, not the whole site.\n- `https-enforcement` (markup): no `http://` asset URLs.\n- `document-head-basics`: `lang`, charset and viewport are present on both pages.\n- `third-party-load-in-markup`, `snippet-eligibility`, `structured-data-parses`: no third-party loads, no `nosnippet` or `max-snippet:0`, and no JSON-LD blocks.\n\n## Uncertainties (not counted as defects)\n\n- **HTTP-to-HTTPS redirect:** the check's verification step is a `curl` against the live host. That is edge or server configuration, which the supplied files cannot show.\n- **Hosting-level 404:** the host might serve its own error page. Defect 1 is based on the absence of a 404 file in the supplied build output only.\n- **Skipped checks:** the legal-page, analytics-consent, superseded-statute, placeholder and privacy-coverage checks do not apply to `docs` and are not findings. No region was declared, so no jurisdictional escalation applies."
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 38656,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 2206,
+      "output_tokens_details": {
+        "thinking_tokens": 812
+      },
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard"
+    },
+    "diagnostics": null
+  }
+}

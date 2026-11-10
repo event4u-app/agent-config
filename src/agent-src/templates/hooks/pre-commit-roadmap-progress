@@ -62,7 +62,13 @@ if $roadmap_relevant; then
     echo "      $ac_bin roadmap:progress" >&2
     echo "      task roadmap-progress" >&2
     echo "" >&2
-    echo "    Then \`git add agents/roadmaps-progress.md\` and retry the commit." >&2
+    if git check-ignore -q --no-index agents/roadmaps-progress.md 2>/dev/null; then
+      # An ignored dashboard is a local view: staging it takes `git add -f`
+      # and a CI that runs `--untracked-mode` refuses the commit.
+      echo "    The dashboard is gitignored here — do NOT stage it; retry the commit." >&2
+    else
+      echo "    Then \`git add agents/roadmaps-progress.md\` and retry the commit." >&2
+    fi
     echo "" >&2
     echo "    To bypass once (NOT recommended):" >&2
     echo "      git commit --no-verify" >&2

@@ -109,7 +109,7 @@ describe('the list path and the watch list', () => {
         const members = gate.consequenceRuleSlugsOfCheckout();
         const env = { ...process.env };
         for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR']) delete env[k];
-        const tracked = spawnSync('git', ['-C', REPO, 'ls-files', '-z'], { encoding: 'utf8', env })
+        const tracked = spawnSync('git', ['-C', REPO, 'ls-files', '-z'], { encoding: 'utf8', env, maxBuffer: 256 * 1024 * 1024 })
             .stdout.split('\u0000')
             .filter((p) => p.endsWith('.md') && members.has(path.posix.basename(p, '.md')))
             .filter((p) => !/^(?:agents|docs|tests)\//u.test(p));

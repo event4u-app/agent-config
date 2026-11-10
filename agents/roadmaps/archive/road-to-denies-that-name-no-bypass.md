@@ -26,7 +26,7 @@ of these defects is small, and each has a reproduction recorded below.
 
 ## Phase 1 — refusals that do not teach the bypass
 
-- [ ] **1.1 The credential guard stops printing its kill switch.**
+- [x] **1.1 The credential guard stops printing its kill switch.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       `src/scripts/hooks/block_credential_reads.ts:125` ends its refusal with
       `maintainer override: ${KILL_SWITCH}=1`, where `KILL_SWITCH` is the env var
       that disables it (`:68`). The refusal keeps its reason and the alternative,
@@ -34,7 +34,8 @@ of these defects is small, and each has a reproduction recorded below.
       The test file gains a case asserting the refusal contains no
       `AGENT_CONFIG_ALLOW_`, shown red first.
       verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 0
-- [ ] **1.2 `lint_deny_text` resolves the constants a deny interpolates.** Today
+      Done 2026-11-08: the refusal ends `(block-credential-reads)`; the new test was shown red first.
+- [x] **1.2 `lint_deny_text` resolves the constants a deny interpolates.** Today <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       it reports "no blocking concern names its own bypass (9 concern(s)
       scanned)" with exit 0 over the defect in 1.1, because it reads the template
       literal unresolved (`src/scripts/lint_deny_text.ts:14-18`, `:212`). It
@@ -42,20 +43,29 @@ of these defects is small, and each has a reproduction recorded below.
       and its header states what it can and cannot see.
       verify: the lint fails on the tree before 1.1 lands and passes after; its
       test carries a template-literal fixture.
-- [ ] **1.3 No deny tells the agent to remove its own entry.**
+      Done 2026-11-08: red on the tree before 1.1/1.3 with four findings, not two. The
+      sibling search found `block_speaking_inbox_dir.ts` printing its switch the same way.
+      Council rounds 1-4 kept finding regex misses, so the gate now evaluates string
+      expressions from the TypeScript AST; that found a fifth site
+      (`block_config_weakening.ts`, a `+` chain naming the manifest). Self-test 20/20.
+- [x] **1.3 No deny tells the agent to remove its own entry.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       `block_no_verify.ts:721` and `block_kernel_rule_writes.ts:248-249` say "disable
       or remove the entry in src/scripts/hook_manifest.yaml". The bypass is a
       human action, so the text names the owner path (a maintainer PR) and not the
       file edit. The 1.2 lint adds the manifest path to what a deny may not name.
       verify: the lint fails on the old wording; the two hooks' tests pass.
-- [ ] **1.4 The deny drill fails when there is nothing to drill.**
+      Done 2026-11-08: both denies now name a maintainer change reviewed in its own PR.
+- [x] **1.4 The deny drill fails when there is nothing to drill.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       `tests/hooks/rule_trips.test.ts:19-24` skips green, with a warning, when the
       built bundle is absent. On CI an absent bundle is an error.
       verify: the test fails with `CI=1` and no bundle, and passes with the bundle.
+      Done 2026-11-08, narrower than reported: the vitest global setup rebuilds a
+      missing bundle, so under vitest the skip was not reachable. The test now throws
+      on CI if that rebuild ever fails instead of skipping green.
 
 ## Phase 2 — fences and fallbacks
 
-- [ ] **2.1 Recalled memory is fenced so the text cannot close the fence.**
+- [x] **2.1 Recalled memory is fenced so the text cannot close the fence.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       `src/scripts/hooks/memory_recall_hook.ts:430-438` wraps each description in
       `"…"`; a description containing `"` ends the quote early. Use the shared
       boundary helper the subagent capsule already has
@@ -63,7 +73,9 @@ of these defects is small, and each has a reproduction recorded below.
       both import it.
       verify: a recall test with a description carrying `"` and an instruction
       after it keeps the instruction inside the fence; shown red first.
-- [ ] **2.2 An empty session id refuses instead of sharing a file.**
+      Done 2026-11-08 by a same-width `"` → `'` replacement, not the capsule helper:
+      that helper defangs a tag, not a quote. Sibling search for the construct: 1 site.
+- [x] **2.2 An empty session id refuses instead of sharing a file.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/block_credential_reads.ts -->
       `src/scripts/git_authorization_hook.ts:116-121` (`ledgerFileFor`) and
       `:124-128` (`pendingFileFor`) both fall back to one shared file when the
       session id is empty, so two sessions read each other's authorization record.
@@ -71,6 +83,9 @@ of these defects is small, and each has a reproduction recorded below.
       the first site; the second was found by reproduction.
       The test file gains an empty-id case asserting no shared file is read or written.
       verify: `npx vitest run tests/scripts/git_authorization.test.ts` -> 0
+      Done 2026-11-08. Premise corrected: nothing enforces git authorization since
+      ADR-254, so the shared file leaked turn stamps, grants and pending records, never
+      a push. Council (2026-11-08, two seats): remove both fallbacks. No id → no record.
 
 ## Non-goals
 
@@ -90,7 +105,7 @@ of these defects is small, and each has a reproduction recorded below.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No blocking concern's refusal names the variable or file edit that
+- [x] AC-1 — No blocking concern's refusal names the variable or file edit that
       disables it, and `lint_deny_text` proves it over resolved text.
-- [ ] AC-2 — Recalled memory and session-scoped approval records cannot be
+- [x] AC-2 — Recalled memory and session-scoped approval records cannot be
       reached from outside their own fence or session.

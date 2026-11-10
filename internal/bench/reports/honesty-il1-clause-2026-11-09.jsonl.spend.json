@@ -1,0 +1,9 @@
+{
+  "pricing_row": "claude-sonnet-5-5",
+  "calls": 407,
+  "input_tokens": 131101,
+  "output_tokens": 193107,
+  "cache_creation_input_tokens": 4374,
+  "cache_read_input_tokens": 8748,
+  "usd": 2.2051
+}

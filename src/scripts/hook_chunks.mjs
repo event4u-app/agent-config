@@ -33,6 +33,9 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/reference_duty.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
+    // Required by `language-mirror` on a `pin:` prompt and after a compaction
+    // alone (`session_pins_loader.ts`).
+    Object.freeze({ entry: 'src/scripts/_lib/session_pins.ts', outfile: 'dist/hooks/session_pins.chunk.cjs' }),
     // Required by `design-pass` on a UI write alone (`design_consistency_loader.ts`).
     Object.freeze({
         entry: 'src/scripts/_lib/design_consistency_pass.ts',

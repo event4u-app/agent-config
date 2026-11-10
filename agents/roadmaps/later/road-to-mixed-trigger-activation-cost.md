@@ -42,9 +42,8 @@ execution:
 > that demand this roadmap specifically — it is a floor on the recurrence, not
 > a count of asks. Written here so the next round meets a number.
 
-> **Blocked until:** the host exposes an `InstructionsLoaded` observer that a
-> session can read (step 3.3's instrument; absent from the 2.1.229 binary's token
-> extraction, so building against it today would be designing on an assumption).
+> **Resume when:** `road-to-cost-parity-1-rule-payload-diet`'s per-rule norm-line lint exists (step 2.3), or the owner resolves blocker `b-behavioural-bench-spend` (steps 3.1/3.2).
+> **Unblocked 2026-11-09:** the host now exposes `InstructionsLoaded`; `hooks/hooks.json` binds it and the observer records load reasons (`agents/evidence/analysis/instructions-loaded-observer-2026-11-09.md`), which closed step 3.3.
 > **The other open step is not this one's dependency, and is recorded here so the
 > conjunction stays out of the resume line:** step 2.3's just-in-time carrier
 > waits on `road-to-cost-parity-1-rule-payload-diet`'s per-rule norm-line lint and
@@ -403,7 +402,7 @@ latency claim would get: pre-registered, paired, refutable.
       hypothesis is published as a null and the report is re-attributed — to
       context size, the stop gate, or the environment — with the numbers attached.
       Blocked on `b-behavioural-bench-spend`.
-- [ ] **3.3** Instrument both arms with an observer on the host's
+- [x] **3.3** Instrument both arms with an observer on the host's <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `InstructionsLoaded` event, which fires per loaded `CLAUDE.md` /
       `.claude/rules/*.md` with a load-reason matcher (`session_start`,
       `path_glob_match`, `include`, `compact`). This measures which rules

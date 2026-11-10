@@ -335,6 +335,25 @@ export function live_args(prompt: string, opts: RunLiveOpts = {}): string[] {
 }
 
 /**
+ * A run cut off by the timeout. In stream mode it keeps what the stream got,
+ * because `reached_model` reads a missing stream as reached: without it a
+ * timeout before the first model call is scored instead of rerun.
+ */
+export function timeout_result(stdout: string, timeoutS: number, wallS: number, opts: RunLiveOpts): RunResult {
+    return {
+        mode: 'live',
+        reason: `timeout after ${timeoutS}s`,
+        transcript: stdout + '\n[TIMEOUT]',
+        exit_code: -1,
+        wall_time_seconds: _pyRound(wallS, 3),
+        tokens: 0,
+        tokens_breakdown: {},
+        errored: true,
+        ...(opts.stream ? streamFields(stdout, expectsHooks(opts)) : {}),
+    };
+}
+
+/**
  * Invoke claude in print/one-shot mode against the task prompt.
  *
  * `setting_sources` (e.g. "project,local") drops the global plugin for the
@@ -378,18 +397,7 @@ export function run_live(
     const isTimeout =
         (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
         (result.signal === 'SIGTERM' && Boolean(result.error));
-    if (isTimeout) {
-        return {
-            mode: 'live',
-            reason: `timeout after ${timeoutS}s`,
-            transcript: (result.stdout ?? '') + '\n[TIMEOUT]',
-            exit_code: -1,
-            wall_time_seconds: _pyRound(_monotonic() - started, 3),
-            tokens: 0,
-            tokens_breakdown: {},
-            errored: true,
-        };
-    }
+    if (isTimeout) return timeout_result(result.stdout ?? '', timeoutS, _monotonic() - started, opts);
     const duration = _monotonic() - started;
     // Parse the JSON envelope: `result` is the model text; `usage` holds tokens.
     const stdout = result.stdout ?? '';

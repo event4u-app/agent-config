@@ -38,7 +38,8 @@ export interface BenchCallResult {
 
 export interface AnthropicBenchOptions {
     model: string;
-    temperature: number;
+    /** `null` sends no temperature: the model's default, for a model the API refuses one for. */
+    temperature: number | null;
     maxTokens: number;
     /** Attempts per call on 429 / 5xx / overloaded before the run fails. */
     maxAttempts?: number;
@@ -59,7 +60,7 @@ export function buildBody(opts: AnthropicBenchOptions, system: string, messages:
     return {
         model: opts.model,
         max_tokens: opts.maxTokens,
-        temperature: opts.temperature,
+        ...(opts.temperature === null ? {} : { temperature: opts.temperature }),
         ...(system === '' ? {} : { system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }] }),
         messages: messages.map((m, i) => ({
             role: m.role,

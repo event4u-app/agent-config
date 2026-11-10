@@ -57,6 +57,13 @@ export interface ContractConfig {
     readonly per_rule_max_chars: number;
     readonly total_max_chars: number;
     readonly rules: Readonly<Record<string, { readonly clauses: readonly Clause[] }>>;
+    /**
+     * Rules outside the consequence class that carry a contract because a
+     * pre-registered measurement earned that form: rule id → the repository
+     * path of the result file. The path is the licence; a missing file keeps
+     * the rule out of the set.
+     */
+    readonly measured?: Readonly<Record<string, string>>;
 }
 
 export interface RuleText {
@@ -80,6 +87,25 @@ export function requiredRules(repoRoot: string): string[] {
     return [...ids].filter((id) => !KERNEL_RULE_ID_SET.has(id)).sort();
 }
 
+/** Problems with the `measured` entries: a missing result file, or a rule the class already requires. */
+export function measuredProblems(repoRoot: string, config: ContractConfig, required: readonly string[] = []): string[] {
+    const out: string[] = [];
+    for (const [id, evidence] of Object.entries(config.measured ?? {})) {
+        if (required.includes(id)) out.push(`${id}: listed as measured but the consequence class already requires it`);
+        if (!fs.existsSync(path.join(repoRoot, evidence))) out.push(`${id}: measured contract cites ${evidence}, which does not exist`);
+    }
+    return out;
+}
+
+/** The required rules plus every measured rule whose result file exists, sorted. */
+export function contractBearingRules(required: readonly string[], repoRoot: string, config: ContractConfig): string[] {
+    const ids = new Set(required);
+    for (const [id, evidence] of Object.entries(config.measured ?? {})) {
+        if (fs.existsSync(path.join(repoRoot, evidence))) ids.add(id);
+    }
+    return [...ids].sort();
+}
+
 /** Every problem with the contracts, as one message each. Empty means green. */
 export function contractProblems(
     required: readonly string[],
@@ -93,7 +119,7 @@ export function contractProblems(
         const t = texts.get(id);
         const entry = config.rules[id];
         if (!required.includes(id)) {
-            problems.push(`${id}: carries a startup contract or an audit entry but is not a consequence-class or safety-floor rule`);
+            problems.push(`${id}: carries a startup contract or an audit entry but is not a consequence-class, safety-floor or measured rule`);
             continue;
         }
         if (t === undefined || t.contract === null) {
@@ -218,14 +244,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return USAGE_EXIT;
     }
     const config = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, CONFIG_REL), 'utf8')) as ContractConfig;
-    const required = requiredRules(REPO_ROOT);
+    const classRequired = requiredRules(REPO_ROOT);
+    const required = contractBearingRules(classRequired, REPO_ROOT, config);
     reportScanned({
         gate: 'check_startup_contracts',
         scanned: required.length,
         units: 'contract-bearing rule(s)',
         roots: [RULES_REL],
     });
-    const problems = [...contractProblems(required, readRuleTexts(REPO_ROOT), config), ...orphanContracts(REPO_ROOT)];
+    const problems = [
+        ...measuredProblems(REPO_ROOT, config, classRequired),
+        ...contractProblems(required, readRuleTexts(REPO_ROOT), config),
+        ...orphanContracts(REPO_ROOT),
+    ];
     for (const p of problems) process.stderr.write(`❌  ${p}\n`);
     if (problems.length === 0 && parsed.values.quiet !== true) {
         const clauses = Object.values(config.rules).reduce((n, r) => n + r.clauses.length, 0);

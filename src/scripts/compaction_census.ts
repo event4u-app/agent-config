@@ -27,6 +27,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { applyDirectives, extractDirectives } from './_lib/session_pins.js';
+
 export interface Probe {
     readonly label: string;
     readonly pattern: RegExp;
@@ -41,6 +43,12 @@ export interface CompactionCensus {
     presence: Record<string, number>;
     tokens: { pre_median: number | null; post_median: number | null };
     host_versions: { min: string | null; max: string | null };
+    /**
+     * Session pins (road-to-state-and-pins-across-compaction 2.4): per boundary
+     * with pins held, how many pin texts reappear in the summary or in the hook
+     * context recorded before the next typed prompt. Counts only.
+     */
+    pins: { boundaries_with_pins: number; expected: number; present: number };
 }
 
 type Rec = Record<string, unknown>;
@@ -54,6 +62,24 @@ function textOf(rec: Rec): string {
     return content
         .map((part) => (part && typeof part === 'object' && typeof (part as Rec)['text'] === 'string' ? ((part as Rec)['text'] as string) : ''))
         .join('');
+}
+
+/** A user record's text when it is a prompt the human typed (string content), else null. */
+function typedPrompt(rec: Rec): string | null {
+    const msg = rec['message'];
+    if (!msg || typeof msg !== 'object') return null;
+    const content = (msg as Rec)['content'];
+    return typeof content === 'string' ? content : null;
+}
+
+/** Hook-injected context the host recorded as an attachment. */
+function hookContextOf(rec: Rec): string {
+    const a = rec['attachment'];
+    if (rec['type'] !== 'attachment' || !a || typeof a !== 'object') return '';
+    if ((a as Rec)['type'] !== 'hook_additional_context') return '';
+    const c = (a as Rec)['content'];
+    if (typeof c === 'string') return c;
+    return Array.isArray(c) ? c.filter((x): x is string => typeof x === 'string').join('\n') : '';
 }
 
 function median(xs: number[]): number | null {
@@ -88,6 +114,7 @@ export function censusTexts(texts: readonly string[], probes: readonly Probe[]):
         presence: Object.fromEntries(probes.map((p) => [p.label, 0])),
         tokens: { pre_median: null, post_median: null },
         host_versions: { min: null, max: null },
+        pins: { boundaries_with_pins: 0, expected: 0, present: 0 },
     };
     const pre: number[] = [];
     const post: number[] = [];
@@ -95,6 +122,13 @@ export function censusTexts(texts: readonly string[], probes: readonly Probe[]):
         let sawBoundary = false;
         let last: string | null = null;
         let open: { before: string | null; summarised: boolean } | null = null;
+        let held: readonly string[] = [];
+        let window: { pins: readonly string[]; seen: Set<string> } | null = null;
+        const closeWindow = (): void => {
+            if (window === null) return;
+            out.pins.present += window.seen.size;
+            window = null;
+        };
         for (const line of text.split('\n')) {
             if (!line.trim()) continue;
             let rec: Rec;
@@ -104,6 +138,12 @@ export function censusTexts(texts: readonly string[], probes: readonly Probe[]):
                 continue;
             }
             if (rec['type'] === 'system' && rec['subtype'] === 'compact_boundary') {
+                closeWindow();
+                if (held.length > 0) {
+                    out.pins.boundaries_with_pins++;
+                    out.pins.expected += held.length;
+                    window = { pins: held, seen: new Set() };
+                }
                 if (open && open.before !== null) out.identity.unobserved++;
                 sawBoundary = true;
                 out.boundaries++;
@@ -121,6 +161,18 @@ export function censusTexts(texts: readonly string[], probes: readonly Probe[]):
                 }
                 continue;
             }
+            const typed = rec['type'] === 'user' && rec['isCompactSummary'] !== true && rec['isMeta'] !== true;
+            const typedText = typed ? typedPrompt(rec) : null;
+            if (typedText !== null) {
+                // The next typed prompt ends the restore window, before its own
+                // pins count — a pin typed again is not a pin restored.
+                closeWindow();
+                held = applyDirectives(held, extractDirectives(typedText)).pins;
+            } else if (window !== null) {
+                const w: { pins: readonly string[]; seen: Set<string> } = window;
+                const body = rec['isCompactSummary'] === true ? textOf(rec) : hookContextOf(rec);
+                if (body !== '') for (const pin of w.pins) if (body.includes(pin)) w.seen.add(pin);
+            }
             if (open && !open.summarised && rec['isCompactSummary'] === true) {
                 open.summarised = true;
                 out.summaries++;
@@ -137,6 +189,7 @@ export function censusTexts(texts: readonly string[], probes: readonly Probe[]):
                 last = sid;
             }
         }
+        closeWindow();
         if (open && open.before !== null) out.identity.unobserved++;
         if (sawBoundary) out.files++;
     }

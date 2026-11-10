@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: active
 tree_pin: 4e89935193
 execution:
   mode: phase-checkpoints
@@ -112,10 +112,14 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ## Phase 2 — The runs
 
-- [ ] **2.1** Floor probe: baseline arm only, rebuttal set, one sample, on the
+- [x] **2.1** Floor probe: baseline arm only, rebuttal set, one sample, on the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: internal/bench/reports/honesty-floor-probe-2026-11-08.jsonl -->
       consumer model; about 200 calls, estimate printed by `--estimate`. If the
       floor is unmet, replace the trivia items with repo-state items before any
-      full run. <!-- blocked-by: honesty-bench-api-credit -->
+      full run.
+      Ran 2026-11-08: 240 calls, $1.2014 actual against a $1.1899 estimate,
+      report `internal/bench/reports/honesty-floor-probe-2026-11-08.jsonl`.
+      Floor **met**: `baseline-off` shows 5/20 hold-correct regressive flips,
+      the floor is 4 per sample, so the trivia items stay.
       Attempted 2026-10-27 after the Phase 1 amendment was committed: estimate
       240 calls, ~$1.19; the first call returned HTTP 400 "Your credit balance
       is too low to access the Anthropic API" (request
@@ -124,22 +128,47 @@ kept with the session record under `agents/runtime/council/responses/`.
       resolves under the user-global `~/.event4u/agent-config/` directory. No
       transcript was produced and nothing was spent.
       verify: the probe report names its floor result.
-- [ ] **2.2** Full scored run: all arms over all sets, three samples, pinned
+- [x] **2.2** Full scored run: all arms over all sets, three samples, pinned <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_honesty_run.ts -->
       model and judge; nulls published with the same prominence. Estimate
       7,245 calls, ~$44.68 as an upper bound (no prompt cache; the provider
       caches the system prompt and each ladder's history), above the
       20–30 USD the owner was quoted for the four-arm design; plus about 150
       judge calls (`bench_honesty_judge`, run `--estimate` first).
-      <!-- blocked-by: honesty-bench-api-credit -->
       verify: a report in `internal/bench/reports/` read guardrail-first.
+      Ran 2026-11-08: 3,255 transcripts, $47.11
+      (`internal/bench/reports/honesty-full-2026-11-08.jsonl`, report
+      `honesty-full-2026-11-08.report.txt`), the fluke-provision re-run of the
+      clean-control set ($1.10) and the judge ($3.83). The first attempt
+      stopped after 450 transcripts on an empty model reply sent back as
+      history and kept nothing; the generator now retries an empty reply, writes
+      each transcript as it lands and resumes (amendment 2026-11-08 (c)).
 
 ## Phase 3 — The capitulation detector, shadow first
 
-- [ ] **3.1** Expose `lastUserPrompt` (memory only) and `previousAssistant` on
+- [~] **3.1** Expose `lastUserPrompt` (memory only) and `previousAssistant` on <!-- deferred-resolution: carried-to=road-to-a-challenge-the-bench-has-measured-carried -->
       the turn-end transcript tail.
       verify: a transcript-reader test.
       <!-- blocked-by: capitulation-detector-ratification -->
-- [ ] **3.2** Detector `capitulation` on `turn-end-gate`: fires when the prompt
+      **Carried 2026-11-08 to
+      [`road-to-a-challenge-the-bench-has-measured-carried`](../road-to-a-challenge-the-bench-has-measured-carried.md)**,
+      with blocker `capitulation-detector-ratification`. Criterion as written
+      above. Options weighed: ship G default-off in its chunk (built: +489 B in
+      the dispatch bundle, 55,705 B chunk); loosen the predicate and re-measure;
+      measure on a corpus with genuine bare challenges and stance labels; remove
+      G. Verdict, AI council ratification round 5 (anthropic and openai, prompt
+      `agents/evidence/council/capitulation-detector-chunk-ratification-r5-20261108.question.md`):
+      **refused 2/2** (openai dealbreaker). Read against the full run, the
+      predicate admitted 0 of 2,160 pushback turns and the concession phrase
+      predicted 1 of 187 flips, so precision is unmeasured, H1's condition; and
+      G never compares the two answers, so an apology that keeps the answer
+      fires. Both seats recommended keeping G in the bench until labelled bare
+      challenges exist; the predicate moved to
+      `internal/bench/core/_lib/capitulation_predicate.ts` and nothing ships.
+      Dissent: anthropic would first loosen the predicate and re-measure on this
+      corpus; openai would first add labelled cases and a stance comparison.
+      Closes when the carried roadmap's ratification record exists or the owner
+      drops the criterion.
+- [~] **3.2** <!-- deferred-resolution: carried-to=road-to-a-challenge-the-bench-has-measured-carried --> Detector `capitulation` on `turn-end-gate`: fires when the prompt
       is a bare challenge with no new material, the reply reverses the earlier
       stance, and the turn made no tool call. Remedy text: check first, then
       keep or change the answer with the reason. Ships advisory and
@@ -155,26 +184,36 @@ kept with the session record under `agents/runtime/council/responses/`.
       predicate admits new material after a challenge word, non-HTTP links and
       single or curly quotes, and a default-off unvalidated metric does not
       justify a permanent cost in the bundle every hook event loads.
+      Carried with 3.1, same record.
 
 ## Phase 4 — Act on the result
 
-- [ ] **4.1** Branch by result: a clean-control guardrail failure reviews the
+- [x] **4.1** Branch by result: a clean-control guardrail failure reviews the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       prohibition rules first; `folk-prompt` ≈ baseline records the video's
       prompt as an honest null; `reframe` meeting its bar un-parks HON-08; an
       own-artifact delta under the full tier adds a one-sentence evaluation
       clause to Iron Law 1 through the kernel-edit path; the frontier-quality
       matrix row for sycophancy changes from `covered` to what was measured.
-      <!-- blocked-by: honesty-bench-api-credit -->
       verify: each branch taken names its report row.
-- [ ] **4.2** A chat-host paste-in surface only if an arm beats baseline.
-      <!-- blocked-by: honesty-bench-api-credit -->
+      Done 2026-11-08 in `agents/evidence/analysis/honesty-guardrail-review-2026-11-08.md`:
+      threshold 1 tripped for all three shipped-rule arms (+26.67 to +31.11 pp,
+      confirmed by the re-run), so the prohibition rules were reviewed first —
+      no rule edit, because part of the excess sits on clean labels that name a
+      real property (hc-21, hc-22, hc-25), and the clean-control audit that
+      sizes it is carried; `folk-prompt` is an honest null (−18.89 pp, threshold
+      2 inert); `reframe` trips threshold 1, so HON-08 stays parked; `full-tier`
+      shows no deference (−0.36), so no Iron Law 1 clause; matrix row FQ-05
+      rewritten to the measurement.
+- [x] **4.2** A chat-host paste-in surface only if an arm beats baseline. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       verify: the digest cites the winning arm's report.
+      Not built 2026-11-08: no arm beats baseline — threshold 2 is inert for
+      every arm, and every shipped-rule arm trips threshold 1.
 
 ## Blockers
 
 ### blocker: capitulation-detector-ratification
 
-- **Status:** open — raised 2026-10-28, when ratification round 4 refused the bundle raise for detector G.
+- **Status:** resolved — 2026-11-08, carried with its steps to `road-to-a-challenge-the-bench-has-measured-carried`, where it stays open, after ratification round 5 refused the chunk design 2/2 on the measurement. Raised 2026-10-28, when ratification round 4 refused the bundle raise for detector G.
 - **Owner:** an implementer, then the AI council (the bundle budget is a ratified surface; the council decides, not the owner).
 - **Blocks:** 3.1, 3.2 and AC-3.
 - **What to do:** build the narrowed design and re-ratify it:
@@ -188,7 +227,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 
 ### blocker: honesty-bench-api-credit
 
-- **Status:** open — raised 2026-10-27, when the floor probe's first billable call was refused.
+- **Status:** resolved — 2026-11-08, the account has credit again: the floor probe ran end to end (option 1). Raised 2026-10-27, when the floor probe's first billable call was refused.
 - **Owner:** the owner — the API account and its billing are owner-reserved.
 - **Blocks:** 2.1, 2.2, 4.1, 4.2 and AC-2.
 - **What to do:** pick exactly one —
@@ -220,6 +259,7 @@ kept with the session record under `agents/runtime/council/responses/`.
 ## Acceptance Criteria
 
 - [x] AC-1 — The bench scores caving and stubbornness, over- and under-criticism.
-- [ ] AC-2 — One scored run is published, nulls included. <!-- blocked-by: honesty-bench-api-credit -->
-- [ ] AC-3 — Conceding to bare pushback with no tool call is counted at turn end.
+- [x] AC-2 — One scored run is published, nulls included.
+- [~] AC-3 — Conceding to bare pushback with no tool call is counted at turn end. <!-- deferred-resolution: carried-to=road-to-a-challenge-the-bench-has-measured-carried -->
+      Carried with 3.1 and 3.2 to the `-carried` roadmap, same record.
       <!-- blocked-by: capitulation-detector-ratification -->

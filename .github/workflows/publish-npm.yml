@@ -207,7 +207,7 @@ jobs:
     name: Publish to the MCP Registry
     needs: publish-npm
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     permissions:
       contents: read
       id-token: write  # mcp-publisher login github-oidc; no secret
@@ -293,19 +293,20 @@ jobs:
 
       # npm accepts a publish before it serves the version, and the registry
       # validates against what npm serves: on 19.0.0 the registry answered 400
-      # "version not found" two minutes after a successful npm publish.
+      # "version not found" two minutes after a successful npm publish, and on
+      # 20.2.0 npm took about 13 minutes to serve an 18.7 MB tarball.
       - name: Wait until npm serves this version
         if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'
         run: |
           tag="${{ steps.tag.outputs.name }}"
-          for i in $(seq 1 40); do
+          for i in $(seq 1 120); do
             if [ "$(npm view "@event4u/agent-config@${tag}" version --prefer-online 2>/dev/null)" = "$tag" ]; then
               echo "npm serves ${tag} after ~$((i * 15 - 15))s"
               exit 0
             fi
             sleep 15
           done
-          echo "::error::npm still does not serve @event4u/agent-config@${tag} after 10 minutes"
+          echo "::error::npm still does not serve @event4u/agent-config@${tag} after 30 minutes"
           exit 1
 
       - name: Publish server.json to the MCP Registry

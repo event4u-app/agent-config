@@ -1,0 +1,147 @@
+{
+  "output_id": "out-2",
+  "truth_scorable": true,
+  "truth_scorability_note": "The manifest identifies distinct defects across three fixtures and a unique decoy, and the supplied site files support adjudicating this report.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "The home page loads a script over HTTP.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "8",
+      "decoy": false,
+      "note": "The report identifies the HTTP script URL in index.html, matching row 8."
+    },
+    {
+      "n": 2,
+      "claim": "The dashboard chart image lacks alt.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "12",
+      "decoy": false,
+      "note": "This independently evidenced image omission receives row 12's single match by finding appearance order."
+    },
+    {
+      "n": 3,
+      "claim": "The dashboard export image lacks alt.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This is a distinct supported image omission, but row 12 can match only one finding."
+    },
+    {
+      "n": 4,
+      "claim": "The home-page product screenshot lacks alt.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This is a distinct supported image omission, but row 12 has already received its single match."
+    },
+    {
+      "n": 5,
+      "claim": "The dashboard lacks a lang declaration.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": "10",
+      "decoy": false,
+      "note": "The report identifies the dashboard's bare html element, receiving row 10's single match by appearance order."
+    },
+    {
+      "n": 6,
+      "claim": "The dashboard lacks a viewport declaration.",
+      "location": "app/dashboard.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This independently asserted omission is supported, but row 10 can match only one finding."
+    },
+    {
+      "n": 7,
+      "claim": "The home page lacks a viewport declaration.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "11",
+      "decoy": false,
+      "note": "The report correctly identifies the missing viewport declaration in index.html."
+    },
+    {
+      "n": 8,
+      "claim": "The site has no custom 404 page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "9",
+      "decoy": false,
+      "note": "The report explicitly asserts site-wide absence and identifies expected custom error-page paths."
+    },
+    {
+      "n": 9,
+      "claim": "The site has no privacy page.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "14",
+      "decoy": false,
+      "note": "The report explicitly identifies the missing privacy page while acknowledging the existing imprint."
+    },
+    {
+      "n": 10,
+      "claim": "The home-page script has an HTTP defect.",
+      "location": "index.html",
+      "duplicate_of": 1,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The uncertainties section repeats the established HTTP defect without asserting a new faulty condition."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["8", "9", "10", "11", "12", "14"],
+  "false_positives": 3,
+  "rulings": [
+    {
+      "point": "Grouping the three missing-alt observations",
+      "ruling": "Extract three distinct findings, as Reviewer 2 did.",
+      "why": "Each separately identified image independently lacks an attribute, so the atomic-extraction rule requires splitting despite the manifest grouping them into one row."
+    },
+    {
+      "point": "Grouping the dashboard's missing lang and viewport",
+      "ruling": "Extract two distinct findings, as Reviewer 2 did.",
+      "why": "The missing language and viewport declarations are independently asserted concrete defects and are not semantic duplicates."
+    },
+    {
+      "point": "Assigning matches to bundled manifest rows",
+      "ruling": "Assign row 12 to the chart-image finding and row 10 to the missing-lang finding.",
+      "why": "These localized claims identify faulty conditions expressly included in their respective rows, and the one-to-one assignment rule resolves competing valid findings by appearance order."
+    },
+    {
+      "point": "Repeated HTTP assertion in the uncertainties section",
+      "ruling": "Include finding 10 as a duplicate of finding 1.",
+      "why": "The entire report must be extracted, and the statement that the HTTP defect stands repeats the same condition and affected scope."
+    },
+    {
+      "point": "False-positive count",
+      "ruling": "Count three false positives.",
+      "why": "The export-image, product-screenshot and dashboard-viewport findings remain unmatched after one-to-one assignment, and the rules count every unmatched deduplicated assertion even when supported by the files."
+    },
+    {
+      "point": "Other matches and location evidence",
+      "ruling": "Retain matches to rows 8, 9, 11 and 14.",
+      "why": "The report supplies the correct files or explicit site-wide absences, and inaccurate image line numbers do not invalidate otherwise unambiguous locations."
+    },
+    {
+      "point": "Excluded title, description and uncertainty statements",
+      "ruling": "Extract no additional findings and award no match to row 13.",
+      "why": "The report explicitly denies that the shared title and absent description are defects, while its remaining uncertainties and passed checks assert no additional launch defect."
+    },
+    {
+      "point": "Decoy classification",
+      "ruling": "Retain decoy_flagged as false.",
+      "why": "The report never asserts that the missing team photo is a defect or recommends correcting it."
+    },
+    {
+      "point": "Truth scorability",
+      "ruling": "Retain truth_scorable as true.",
+      "why": "The manifest distinguishes the real rows across the intended three fixtures and uniquely identifies the decoy, with sufficient packaged evidence to adjudicate this site's findings."
+    }
+  ]
+}

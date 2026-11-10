@@ -879,3 +879,24 @@ describe('kernel wording-variant arms', () => {
         expect(() => variant_candidate_text('../ask-when-uncertain.x')).toThrow(/candidate/);
     });
 });
+
+describe('package-padded — the reduced layer padded to the full layer length', () => {
+    // road-to-the-adapted-layer-on-main 1.5: separates content loss from
+    // first-turn size. Same image and settings as `package`, plus inert prose
+    // of the pre-registered length.
+    it('is the package arm plus a layer-pad injection', () => {
+        expect(ARMS['package-padded']).toMatchObject({ setting_sources: null, inject: 'layer-pad' });
+        expect(ARMS['package-padded']?.ac_layer).toBeUndefined();
+    });
+
+    it('injects inert prose of at least the requested length, and no more than one line over', () => {
+        const text = injected_text('layer-pad', 2000, 50_000) ?? '';
+        expect(text.length).toBeGreaterThanOrEqual(50_000);
+        expect(text.length).toBeLessThan(50_400);
+        expect(text).not.toMatch(/\b(must|never|always|should)\b/i);
+    });
+
+    it('refuses to run without a pad length rather than injecting nothing', () => {
+        expect(() => injected_text('layer-pad', 2000, 0)).toThrow(/--pad-chars/);
+    });
+});

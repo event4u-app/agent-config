@@ -1,0 +1,91 @@
+{
+  "output_id": "out-6",
+  "truth_scorable": true,
+  "truth_scorability_note": "Matze, the manifest identifies distinct defects, affected scopes across all three fixtures, and a unique decoy clearly enough to apply the rubric.",
+  "findings": [
+    {
+      "n": 1,
+      "claim": "Home page retains staging noindex and nofollow directives.",
+      "location": "index.html",
+      "duplicate_of": null,
+      "matches_row": "1",
+      "decoy": false,
+      "note": "The home page contains the asserted robots meta directive."
+    },
+    {
+      "n": 2,
+      "claim": "robots.txt blocks crawling throughout the site.",
+      "location": "robots.txt",
+      "duplicate_of": null,
+      "matches_row": "2",
+      "decoy": false,
+      "note": "User-agent: * and Disallow: / establish the blanket crawl block."
+    },
+    {
+      "n": 3,
+      "claim": "No custom 404 page exists.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "3",
+      "decoy": false,
+      "note": "The supplied build contains no custom error page."
+    },
+    {
+      "n": 4,
+      "claim": "Contact page lacks a title and meta description.",
+      "location": "kontakt.html",
+      "duplicate_of": null,
+      "matches_row": "5",
+      "decoy": false,
+      "note": "The contact page head contains neither metadata element."
+    },
+    {
+      "n": 5,
+      "claim": "Product page lacks a title and meta description.",
+      "location": "sortiment.html",
+      "duplicate_of": null,
+      "matches_row": "4",
+      "decoy": false,
+      "note": "The product page head contains neither metadata element."
+    },
+    {
+      "n": 6,
+      "claim": "Three content images lack alt attributes.",
+      "location": "index.html; sortiment.html",
+      "duplicate_of": null,
+      "matches_row": "6",
+      "decoy": false,
+      "note": "The report identifies all three image elements covered by the manifest row."
+    },
+    {
+      "n": 7,
+      "claim": "robots.txt blocks all four URLs advertised by the sitemap.",
+      "location": "robots.txt; sitemap.xml",
+      "duplicate_of": 2,
+      "matches_row": null,
+      "decoy": false,
+      "note": "This repeats the same blanket crawl block and is resolved by the same correction."
+    },
+    {
+      "n": 8,
+      "claim": "No privacy or Datenschutz page exists.",
+      "location": "site-wide",
+      "duplicate_of": null,
+      "matches_row": "7",
+      "decoy": false,
+      "note": "The supplied files include an Impressum but no privacy page."
+    },
+    {
+      "n": 9,
+      "claim": "No page links to the Impressum.",
+      "location": "index.html; kontakt.html; sortiment.html; impressum.html",
+      "duplicate_of": null,
+      "matches_row": null,
+      "decoy": false,
+      "note": "The missing navigation link is supported by the files but is outside the frozen manifest."
+    }
+  ],
+  "decoy_flagged": false,
+  "matched_rows": ["1", "2", "3", "4", "5", "6", "7"],
+  "false_positives": 1
+}

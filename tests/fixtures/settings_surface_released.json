@@ -1,5 +1,5 @@
 {
-  "version": "20.1.0",
+  "version": "20.2.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -338,7 +338,7 @@
     },
     "hooks.design_consistency.shadow": {
       "type": "boolean",
-      "default": true
+      "default": false
     },
     "hooks.design_pass.enabled": {
       "type": "boolean",
@@ -528,6 +528,10 @@
     "reasoning.enabled": {
       "type": "boolean",
       "default": true
+    },
+    "reconstruction.observation_providers": {
+      "type": "array",
+      "default": []
     },
     "retro.enabled": {
       "type": "boolean",

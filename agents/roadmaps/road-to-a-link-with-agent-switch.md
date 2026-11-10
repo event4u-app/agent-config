@@ -299,6 +299,12 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       seconds; combined cost not enforced); the file is now dated ahead while
       held, and the gate has a chunk-group ceiling, 63,500 B for the two.
       Open: the ratification record for the budget and plumbing change.
+- [ ] **8.5 Remove what was written.** The write path accepts any command for the
+      MCP entry (`mcp_bridge.ts:281-305`), the remove path matches only the bare
+      `agent-switch mcp serve`, so an entry written in another form survives a
+      remove. Accept only the contract form on write, or compare against the
+      lockfile on remove. Round inbox-2026-11-wo, graded "gering" by the review.
+      verify: a test where an entry written with a path prefix is removed.
 
 ## Decisions
 
@@ -315,7 +321,7 @@ cross-account continuation.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-11-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

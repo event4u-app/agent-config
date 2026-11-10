@@ -10,7 +10,7 @@ review_by: 2026-12-28
 > (bundles, artifact tasks, graders, ladders, entry points) lands there; the
 > run that buys real numbers waits here.
 >
-> **Arrivals:** 2 — latest `inbox-2026-11-d` (2026-11-01): the 19.2.0 review
+> **Arrivals:** 3 — latest `inbox-2026-11-wo` (2026-11-10): all three sources ask again for AC against no rules and a minimal prompt on real projects (graded P0 twice), "the next score jump must come from independent evidence". Third arrival: put to the owner in that round's reply as a spend question. Before that, latest `inbox-2026-11-d` (2026-11-01): the 19.2.0 review
 > set finds the five showcase claims still `unbacked` (`docs/CLAIMS.md`), backed
 > flat at 63 across 19.0.0 → 19.2.0 while unbacked grows (46 → 51 → 55,
 > re-counted), and asks for "one measured claim per release". Re-verified: the

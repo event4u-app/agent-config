@@ -1,0 +1,94 @@
+{
+    "_doc": "Which CI jobs `ci_mirror` replays locally before a push. The gate list itself lives ONLY in the named workflow files: the mirror reads their steps, so a gate added to a workflow is mirrored with no edit here. This file names jobs, the steps that cannot run locally (each with its reason), the steps whose refusal is an owner decision rather than a defect, and the few local-only gates no workflow runs (each with its reason) — they replay as one extra job in the caller's checkout. tests/scripts/ci_mirror_plan.test.ts fails when a step of a mirrored job is neither runnable locally nor listed below.",
+    "jobs": [
+        {
+            "workflow": "consistency.yml",
+            "job": "consistency"
+        },
+        {
+            "workflow": "rule-backstops.yml",
+            "job": "rule-backstops"
+        },
+        {
+            "workflow": "standing-payload-delta.yml",
+            "job": "standing-payload-delta"
+        },
+        {
+            "workflow": "tests.yml",
+            "job": "static-checks"
+        },
+        {
+            "workflow": "skill-lint.yml",
+            "job": "skill-lint"
+        },
+        {
+            "workflow": "skill-lint.yml",
+            "job": "originality-gate"
+        }
+    ],
+    "ci_only_steps": [
+        {
+            "workflow": "consistency.yml",
+            "job": "consistency",
+            "step": "Lint workflow files (actionlint)",
+            "reason": "Needs bash 4 (`mapfile`) and downloads the actionlint binary at run time; macOS ships bash 3.2. It only lints workflow files the PR changed, so CI remains its one runner."
+        },
+        {
+            "workflow": "tests.yml",
+            "job": "static-checks",
+            "step": "hook-latency bench gate (pre-registered budget, real path)",
+            "reason": "Measures hook wall-clock against a millisecond budget. Locally the mirror runs its jobs in parallel on a working laptop, so the reading measures machine load, not the change; the CI runner is the instrument the budget was registered on."
+        }
+    ],
+    "owner_decision_steps": [
+        {
+            "workflow": "consistency.yml",
+            "job": "consistency",
+            "step": "Kernel / governance-hook edits carry a ratification artifact",
+            "marker": "^\\s*record \\S+ — verdict: (?!ratified\\b)\\S+",
+            "meaning": "A ratification record exists and its verdict is not `ratified`: the merge is the owner's (ADR-281 § 5, ADR-282). A missing or invalid record does not match the marker and stays a blocking failure, because the author can fix that."
+        }
+    ],
+    "local_only_steps": [
+        {
+            "name": "PR CI is about this head",
+            "run": "./scripts-run src/scripts/check_pr_ci_current --pre-push --quiet",
+            "reason": "Compares the open PR's remote head and check state with the local branch — a question only the pushing machine can ask."
+        },
+        {
+            "name": "Single delivery (report mode)",
+            "run": "./scripts-run src/scripts/check_single_delivery --quiet",
+            "reason": "Reads the host layer under the user's home directory, which no runner has."
+        },
+        {
+            "name": "Hook bundle content",
+            "run": "./scripts-run src/scripts/check_hook_bundle_content",
+            "reason": "Was preflight-only; no workflow runs it."
+        },
+        {
+            "name": "topics.yml lint",
+            "run": "./scripts-run src/scripts/lint_topics_yaml",
+            "reason": "CI runs it only inside check-visibility-drift.yml, whose other steps need a GitHub token, so that job is not replayed."
+        },
+        {
+            "name": "Install bundle has no build-machine path leakage",
+            "run": "./scripts-run src/scripts/check_bundle_path_leakage",
+            "reason": "CI runs it only inside the Install Script Tests OS matrix (tests.yml), which the mirror does not replay; it is cheap and reads committed files."
+        },
+        {
+            "name": "Installer imports no module-level process.exit()",
+            "run": "./scripts-run src/scripts/check_installer_import_purity",
+            "reason": "Same as the path-leakage gate: CI runs it only inside the Install Script Tests matrix."
+        },
+        {
+            "name": "Platform anchor (rulesets)",
+            "run": "./scripts-run src/scripts/check_platform_anchor",
+            "reason": "Reads repository rulesets, which needs the `administration` permission no workflow token has (rule-backstops.yml says why); a maintainer's gh login can."
+        },
+        {
+            "name": "Hook bundle freshness",
+            "run": "./scripts-run src/scripts/check_hook_bundle_freshness",
+            "reason": "Its verdict depends on whether a self-hosted hook bundle is built, which differs between a checkout and CI (standing-payload-delta.yml records the exclusion)."
+        }
+    ]
+}

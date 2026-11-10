@@ -87,8 +87,15 @@
 # `local_only` or `both` that exceeds it is reported, not silently added to the hook.
 
 # Wall-clock ceiling for the pre-push gate set, in seconds. Derived from the
-# measured bucket-A sum (14.5s) plus headroom; the existing hook already costs
-# `task consistency` + eslint + tsc, so this is a bounded increase, not a new tax.
+# measured bucket-A sum (14.5s) plus headroom.
+#
+# The CI replay is NOT part of this budget, and cannot be: `git push` holds the
+# connection to GitHub open while pre-push runs, and GitHub closed it after a
+# green 5-minute replay (2026-11-09, exit 141, twice). The replay
+# (src/scripts/ci_mirror.ts, measured 315-367s with 3 jobs at a time on an
+# M-series laptop) runs before `git push` and leaves a per-commit stamp; the
+# hook only checks that the stamp exists. With it, 23 CI gates remain that can
+# only fail after a push, down from 295.
 pre_push_budget_seconds: 25
 
 # Gates CI runs that no local chain reaches — each needs a reason it cannot or

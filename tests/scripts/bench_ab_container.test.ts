@@ -8,12 +8,15 @@ import {
     CONTAINER_SYSPROMPT,
     container_argv,
     container_env,
+    image_for,
     is_quota_exhausted,
     load_check,
     quota_brake,
     read_oauth_token,
+    reached_model,
     redact,
     TOKEN_ENV,
+    with_pre_model_reruns,
 } from '../../internal/bench/core/_lib/bench_ab_container.js';
 import { live_args } from '../../internal/bench/core/bench_ab_task_runner.js';
 
@@ -113,6 +116,80 @@ describe('load_check', () => {
     });
 });
 
+describe('a run that never reached the model', () => {
+    const initStream = `${JSON.stringify({ type: 'system', subtype: 'init', skills: [], plugins: [] })}\n{"type":"result"}`;
+    const hookOnly = '{"type":"system","subtype":"hook_started"}\n[TIMEOUT]';
+    const preModel = { errored: true, reason: 'timeout after 180s', stream: hookOnly, tokens_breakdown: { input_tokens: 0, output_tokens: 0 } };
+
+    it('reads a hook-only stream with no tokens spent as never reaching the model', () => {
+        expect(reached_model(preModel)).toBe(false);
+    });
+
+    it('reads a timeout after the init event as a run that reached the model', () => {
+        expect(reached_model({ ...preModel, stream: initStream })).toBe(true);
+    });
+
+    it('needs both signals: tokens spent mean the model was reached, init event or not', () => {
+        expect(reached_model({ ...preModel, tokens_breakdown: { input_tokens: 1200 } })).toBe(true);
+    });
+
+    it('takes an explicit reached_model on a trial record over the stream', () => {
+        expect(reached_model({ errored: true, reached_model: false })).toBe(false);
+        expect(reached_model({ ...preModel, reached_model: true })).toBe(true);
+    });
+
+    it('reads a record with no stream and no explicit field as reached — no evidence, no exclusion', () => {
+        const { stream: _s, ...noStream } = preModel;
+        expect(reached_model(noStream)).toBe(true);
+    });
+
+    it('never calls a run that did not error a pre-model abort', () => {
+        expect(reached_model({ ...preModel, errored: false })).toBe(true);
+    });
+
+    it('reruns a pre-model abort and returns the first attempt that reached the model', () => {
+        const runs = [preModel, { errored: false, stream: initStream, marker: 'second' }];
+        let i = 0;
+        const out = with_pre_model_reruns(() => runs[i++] as Record<string, unknown>, 2);
+        expect(i).toBe(2);
+        expect(out['marker']).toBe('second');
+        expect(out['pre_model_aborts']).toBe(1);
+        expect(out['environment_failure']).toBeUndefined();
+    });
+
+    it('does not rerun a post-call timeout', () => {
+        let i = 0;
+        const out = with_pre_model_reruns(() => {
+            i += 1;
+            return { ...preModel, stream: initStream };
+        }, 2);
+        expect(i).toBe(1);
+        expect(out['pre_model_aborts']).toBe(0);
+    });
+
+    it('stops at the bound and marks the trial an environment failure, errored so no statistic scores it', () => {
+        let i = 0;
+        const out = with_pre_model_reruns(() => {
+            i += 1;
+            return preModel;
+        }, 2);
+        expect(i).toBe(3);
+        expect(out['environment_failure']).toBe(true);
+        expect(out['errored']).toBe(true);
+        expect(String(out['reason'])).toMatch(/environment_failure: 3 pre-model abort/);
+    });
+
+    it('with no reruns allowed, runs once and still names the environment failure', () => {
+        let i = 0;
+        const out = with_pre_model_reruns(() => {
+            i += 1;
+            return preModel;
+        }, 0);
+        expect(i).toBe(1);
+        expect(out['environment_failure']).toBe(true);
+    });
+});
+
 describe('quota brake', () => {
     const empty = { errored: true, reason: 'exit 1', tokens_breakdown: {} };
     const limited = { errored: true, reason: 'error', transcript: "You've hit your usage limit", tokens_breakdown: { input_tokens: 40 } };
@@ -177,5 +254,22 @@ describe('token pool', async () => {
         expect(next_account_hint(pool, 'a')).toMatch(/--account <name> \(configured: b\)/);
         expect(next_account_hint(pool, 'a')).not.toContain('tok-');
         expect(next_account_hint([{ name: 'a', token: 'x' }], 'a')).toMatch(/no other account/);
+    });
+});
+
+describe('image_for', () => {
+    const ctx = { base_image: 'base', ac_image: 'reduced', token: TOKEN, package_skills: new Set<string>() };
+
+    it('runs a package arm on the default image and a control arm on the base image', () => {
+        expect(image_for(ctx, { setting_sources: null })).toBe('reduced');
+        expect(image_for(ctx, { setting_sources: 'project,local' })).toBe('base');
+    });
+
+    it('runs the full-layer arm on the full image', () => {
+        expect(image_for({ ...ctx, ac_full_image: 'full' }, { setting_sources: null, ac_layer: 'full' })).toBe('full');
+    });
+
+    it('refuses the full-layer arm when that image was not built, rather than running it on the default one', () => {
+        expect(() => image_for(ctx, { setting_sources: null, ac_layer: 'full' })).toThrow(/--with-full-layer/);
     });
 });

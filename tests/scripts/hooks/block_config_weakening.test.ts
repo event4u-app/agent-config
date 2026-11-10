@@ -120,7 +120,8 @@ describe('block_config_weakening — decide', () => {
         expect(d.action).toBe('block');
         expect(d.reason).toContain('the LINTER is wrong');
         // The deny names a human action outside the session (kernel-guard shape).
-        expect(d.reason).toContain('hook_manifest.yaml');
+        expect(d.reason).toContain('human action outside this session');
+        expect(d.reason).not.toContain('hook_manifest.yaml');
     });
 
     it('never blocks an advisory surface, however large the edit', () => {
