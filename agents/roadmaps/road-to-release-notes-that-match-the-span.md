@@ -88,7 +88,7 @@ What the review found, with what was re-checked on `main@ada1f46a85`:
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| C1 | contested-technical | agent (closure, round inbox-2026-11-wo) | "Named in the section" and "listed as internal" are both legal outcomes per commit; only a commit in neither is refused. Not a choice between designs. | unpicked-alternative:75 | a release lists most consumer commits as internal |
+| C1 | contested-technical | agent | "Named in the section" and "listed as internal" are both legal outcomes per commit; only a commit in neither is refused. Not a choice between designs. | unpicked-alternative:75 | a release lists most consumer commits as internal |
 | C2 | deterministic | agent | 2.3's verify was rewritten to a test on a span holding a `Revert "…"` commit. | unfalsifiable-verify:85 | — |
 
 ## Risk Register

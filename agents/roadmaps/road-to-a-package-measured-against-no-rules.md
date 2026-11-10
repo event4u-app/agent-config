@@ -89,9 +89,9 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| C1 | deterministic | agent (closure, 2026-11-10) | 1.1's verify is checked by recomputing each selected task's pooled J from the Stage A report; a task outside the band without a fill-up mark fails it. | unfalsifiable-verify:45 | — |
+| C1 | deterministic | agent | 1.1's verify is checked by recomputing each selected task's pooled J from the Stage A report; a task outside the band without a fill-up mark fails it. | unfalsifiable-verify:45 | — |
 | C2 | deterministic | agent | 1.2's verify reads three report fields and the spend; any one of them off fails it. | unfalsifiable-verify:50 | — |
-| D1 | owner | owner | Fund Phase 2 and the 3.2 run? Asked with a price after Phase 1 reads. | Phase 2 note, blocker real-task-run-budget | — |
+| D1 | business-owned | owner | Fund Phase 2 and the 3.2 run? Asked with a price after Phase 1 reads. | Phase 2 note, blocker real-task-run-budget | — |
 
 ## Blockers
 
