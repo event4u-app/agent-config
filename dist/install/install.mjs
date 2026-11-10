@@ -25000,6 +25000,26 @@ installed_at: ${stamp}
   return written;
 }
 var PACKAGE_TAG_ID = "event4u/agent-config";
+var RULES_SOURCE_PREFIX = path44.join("dist", "agent-src", "rules") + path44.sep;
+function installed_source_value(source, package_root) {
+  if (source === null) return null;
+  let resolved_src;
+  try {
+    resolved_src = resolvePath(source);
+  } catch {
+    resolved_src = source;
+  }
+  if (package_root === null) return resolved_src;
+  let root;
+  try {
+    root = resolvePath(package_root);
+  } catch {
+    root = package_root;
+  }
+  const rel = path44.relative(root, resolved_src);
+  if (rel === "" || rel.startsWith("..") || path44.isAbsolute(rel)) return resolved_src;
+  return rel.startsWith(RULES_SOURCE_PREFIX) ? rel.slice(RULES_SOURCE_PREFIX.length) : rel;
+}
 function _inject_package_tag(target, source, package_root) {
   if (path44.extname(target) !== ".md") return;
   let text;
@@ -25020,25 +25040,7 @@ function _inject_package_tag(target, source, package_root) {
   if (close_idx === null) return;
   let fm_lines = lines.slice(1, close_idx);
   const body_lines = lines.slice(close_idx);
-  let source_value = null;
-  if (source !== null) {
-    let resolved_src;
-    try {
-      resolved_src = resolvePath(source);
-    } catch {
-      resolved_src = source;
-    }
-    if (package_root !== null) {
-      const rel = path44.relative(resolvePath(package_root), resolved_src);
-      if (rel !== "" && !rel.startsWith("..") && !path44.isAbsolute(rel)) {
-        source_value = rel;
-      } else {
-        source_value = resolved_src;
-      }
-    } else {
-      source_value = resolved_src;
-    }
-  }
+  const source_value = installed_source_value(source, package_root);
   const _set_key = (block, key, value) => {
     const prefix = `${key}:`;
     const rendered = `${key}: ${value}
@@ -26922,6 +26924,7 @@ export {
   ensure_vscode_bridge,
   ensure_windsurf_bridge,
   finalize_claude_model_tiers,
+  installed_source_value,
   jsonDumpsCompact,
   jsonDumpsIndent,
   main2 as main,
