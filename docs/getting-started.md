@@ -56,6 +56,10 @@ agent-config config --project   # open the project configuration surface
 agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge presence
 ```
 
+`agent-config upgrade` is quiet by default — one line per step, plus any
+warn/fail findings from `doctor`. `--verbose` (alias `--debug`) shows every
+command and the full npm, installer, and doctor output.
+
 `agent-config upgrade --unattended --dry-run` reports whether the latest
 release would pass the unattended gates — at least 72 h old, not deprecated,
 an `engines.node` this machine satisfies, an npm provenance attestation, and no

@@ -123,7 +123,8 @@ Tier 1 — power-user (release shape, audit, migration):
                              Flags: --check (read-only) | --to <version> (explicit pin)
   upgrade                    Install the latest @event4u/agent-config globally
                              (npm i -g) and refresh the global install + plugin.
-                             Flags: --check (report only) | --dry-run
+                             Quiet by default; --verbose / --debug for full output.
+                             Flags: --check (report only) | --dry-run | --verbose
   refresh                    Idempotent re-install, no version change.
                              --global (root + plugin) | --project (bridge
                              marker + overrides + .gitignore). Scope required.

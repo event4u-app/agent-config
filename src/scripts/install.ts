@@ -3255,15 +3255,10 @@ function install_global(
     const classification = installed_lock.classify_mismatch(installed_version, recorded);
 
     if (classification === 'downgrade' && !force) {
-        if (!state.QUIET) {
-            process.stdout.write('\n');
-            warn('Refusing global install: lockfile records a newer version.');
-            info(`  Lockfile:           ${read_path}`);
-            info(`  Recorded version:   ${recorded}`);
-            info(`  Current package:    ${installed_version}`);
-            info('  Fix:                upgrade the package, or re-run with `--force`');
-            process.stdout.write('\n');
-        }
+        // warn, not info: survives --quiet — it is the only explanation of this exit 1.
+        warn('Refusing global install: lockfile records a newer version.');
+        warn(`  Lockfile: ${read_path} · recorded ${recorded} · current package ${installed_version}`);
+        warn('  Fix: upgrade the package, or re-run with `--force`');
         return 1;
     }
 
@@ -3479,7 +3474,7 @@ function install_global(
     try {
         _write_settings_surface_snapshot(installed_version);
     } catch (e) {
-        if (!state.QUIET) warn(`settings-surface snapshot failed — ${String(e)}`);
+        warn(`settings-surface snapshot failed — ${String(e)}`);
     }
 
     // Catalogue-budget warning (road-to-skill-catalogue-budget Phase 1).

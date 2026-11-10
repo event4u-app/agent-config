@@ -47,7 +47,14 @@
  *
  * - `--check` — report installed vs latest; install nothing. Exit 0.
  * - `--dry-run` — print the exact commands that would run; execute none.
- * - (no flag) — perform the upgrade.
+ * - `--verbose` / `--debug` — full output of every step (the pre-quiet
+ *   behaviour): each command echoed, npm and installer output unfiltered, the
+ *   full doctor report.
+ * - (no flag) — perform the upgrade, quietly: one short line per step, npm at
+ *   `--loglevel=warn`, the installer and settings sync with `--quiet` (their
+ *   warnings and errors still print), and doctor reduced to its warn/fail
+ *   findings plus a drift count. `agent-config update`, which runs this
+ *   in-process, inherits the quiet default.
  *
  * Exit codes: `0` success / already-latest / check / dry-run · `1` a step
  * failed.
@@ -175,6 +182,69 @@ function shutilWhich(name: string): string | null {
 
 type Runner = (cmd: string[]) => number;
 
+/** Run a command with stdout captured (stderr still inherited). */
+type Capturer = (cmd: string[]) => { status: number; stdout: string };
+
+function _default_capture(cmd: string[]): { status: number; stdout: string } {
+    const r = spawnSync(cmd[0] as string, cmd.slice(1), {
+        stdio: ['ignore', 'pipe', 'inherit'],
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    if (r.error) {
+        _stderr.write(`agent-config upgrade: cannot run ${cmd[0]}: ${osErrorStr(r.error)}\n`);
+        return { status: 1, stdout: '' };
+    }
+    return { status: r.status ?? 1, stdout: r.stdout ?? '' };
+}
+
+interface DoctorCheck {
+    id?: unknown;
+    status?: unknown;
+    message?: unknown;
+    remedy?: unknown;
+}
+
+/**
+ * The quiet upgrade's health section: only the doctor checks that need the
+ * user (`warn` / `fail`), one line each plus its fix. `null` when the JSON is
+ * unreadable, so the caller can point at the full report instead.
+ */
+function _doctor_findings(json: string): string[] | null {
+    let checks: DoctorCheck[];
+    let parsed: Record<string, unknown>;
+    try {
+        parsed = JSON.parse(json) as Record<string, unknown>;
+        if (!Array.isArray(parsed['checks'])) return null;
+        checks = parsed['checks'] as DoctorCheck[];
+    } catch {
+        return null;
+    }
+    const lines: string[] = [];
+    // The drift lists also make doctor exit non-zero; a count, not the paths.
+    const drift = ['missing', 'modified', 'foreign', 'tag_drift']
+        .map((k) => [k, Array.isArray(parsed[k]) ? (parsed[k] as unknown[]).length : 0] as const)
+        .filter(([, n]) => n > 0);
+    if (drift.length > 0) {
+        lines.push(`  ⚠️  drift: ${drift.map(([k, n]) => `${n} ${k}`).join(', ')}`);
+    }
+    for (const c of checks) {
+        if (c.status !== 'fail' && c.status !== 'warn') continue;
+        const mark = c.status === 'fail' ? '❌' : '⚠️ ';
+        lines.push(`  ${mark} ${String(c.id ?? '?')}: ${_clip(String(c.message ?? ''))}`);
+        if (typeof c.remedy === 'string' && c.remedy !== '') lines.push(`      fix: ${_clip(c.remedy)}`);
+    }
+    return lines;
+}
+
+/** Longest finding text the quiet summary prints; the full report has the rest. */
+const FINDING_MAX_CHARS = 200;
+
+function _clip(text: string): string {
+    const flat = text.replace(/\s+/g, ' ').trim();
+    return flat.length <= FINDING_MAX_CHARS ? flat : `${flat.slice(0, FINDING_MAX_CHARS - 1)}…`;
+}
+
 function _default_runner(cmd: string[]): number {
     const r = spawnSync(cmd[0] as string, cmd.slice(1), { stdio: 'inherit' });
     if (r.error) {
@@ -258,6 +328,7 @@ function _maybe_refresh_git_hook(
     runner: (cmd: string[]) => number,
     out: OutSink,
     err: OutSink,
+    verbose = true,
 ): void {
     const hook = path.join(project_root, '.git', 'hooks', 'pre-commit');
     let text: string;
@@ -270,7 +341,7 @@ function _maybe_refresh_git_hook(
         return; // not our hook — never overwrite a foreign pre-commit
     }
     const cmd = [_agent_config_bin(), 'hooks:install', '--force'];
-    _print(out, '→ ' + cmd.join(' '));
+    _print(out, verbose ? '→ ' + cmd.join(' ') : '→ refreshing the pre-commit hook …');
     let rc: number;
     try {
         rc = runner(cmd);
@@ -329,10 +400,13 @@ function _sync_settings_files(
     runner: (cmd: string[]) => number,
     out: OutSink,
     err: OutSink,
+    verbose = true,
 ): void {
+    if (!verbose && targets.length > 0) _print(out, '→ syncing settings …');
     for (const target of targets) {
         const cmd = [_agent_config_bin(), 'settings:sync', '--path', target];
-        _print(out, '→ ' + cmd.join(' '));
+        if (verbose) _print(out, '→ ' + cmd.join(' '));
+        else cmd.push('--quiet');
         let rc: number;
         try {
             rc = runner(cmd);
@@ -383,9 +457,11 @@ function _refresh_claude_plugin(
     runner: (cmd: string[]) => number,
     out: OutSink,
     err: OutSink,
+    verbose = true,
 ): void {
+    if (!verbose && steps.length > 0) _print(out, '→ refreshing the Claude Code plugin …');
     for (const cmd of steps) {
-        _print(out, '→ ' + cmd.join(' '));
+        if (verbose) _print(out, '→ ' + cmd.join(' '));
         let rc: number;
         try {
             rc = runner(cmd);
@@ -410,13 +486,14 @@ function _refresh_claude_plugin(
 interface Args {
     check: boolean;
     dry_run: boolean;
+    verbose: boolean;
     converge: boolean;
     unattended: boolean;
     skip: string | null;
 }
 
 const PROG = 'agent-config upgrade';
-const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--converge] [--unattended] [--skip VERSION]\n`;
+const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--verbose|--debug] [--converge] [--unattended] [--skip VERSION]\n`;
 
 function _argError(msg: string): never {
     _stderr.write(USAGE);
@@ -425,7 +502,7 @@ function _argError(msg: string): never {
 }
 
 function _parse(argv: string[]): Args {
-    const args: Args = { check: false, dry_run: false, converge: false, unattended: false, skip: null };
+    const args: Args = { check: false, dry_run: false, verbose: false, converge: false, unattended: false, skip: null };
     const positionals: string[] = [];
     let i = 0;
     while (i < argv.length) {
@@ -450,6 +527,14 @@ function _parse(argv: string[]): Args {
                 _argError(`argument --dry-run: ignored explicit argument '${inlineVal}'`);
             }
             args.dry_run = true;
+            i += 1;
+            continue;
+        }
+        if (flag === '--verbose' || flag === '--debug') {
+            if (inlineVal !== null) {
+                _argError(`argument ${flag}: ignored explicit argument '${inlineVal}'`);
+            }
+            args.verbose = true;
             i += 1;
             continue;
         }
@@ -501,6 +586,8 @@ function _parse(argv: string[]): Args {
 
 interface MainOptions {
     runner?: Runner;
+    /** Captured-stdout runner (quiet doctor). Defaults to `runner` when one is injected. */
+    capture?: Capturer;
     fetcher?: () => string | null | Promise<string | null>;
     installed?: string | null;
     project_root?: string | null;
@@ -516,6 +603,9 @@ interface MainOptions {
 
 export async function main(argv: string[] | null = null, options: MainOptions = {}): Promise<number> {
     const runner = options.runner ?? _default_runner;
+    const capture: Capturer =
+        options.capture ??
+        (options.runner !== undefined ? (cmd) => ({ status: runner(cmd), stdout: '' }) : _default_capture);
     const fetcher = options.fetcher ?? (() => update_check.fetch_latest_from_npm());
     const out = options.out ?? _stdout;
     const err = options.err ?? _stderr;
@@ -556,11 +646,23 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         return 0;
     }
 
+    const verbose = args.verbose;
     const target = `${PACKAGE_NAME}@${options.version ?? 'latest'}`;
-    const npm_cmd: string[] = ['npm', 'install', '-g', target];
+    // --no-audit / --no-fund: a global CLI install needs neither the audit
+    // round-trip nor the funding banner. Quiet mode keeps npm to warnings and
+    // errors — `npm WARN deprecated` on the target release must stay visible.
+    const npm_cmd: string[] = ['npm', 'install', '-g', target, '--no-audit', '--no-fund'];
+    if (!verbose) npm_cmd.push('--loglevel=warn');
     // --no-ui: the setup wizard is an onboarding surface, not an upgrade
     // step — its foreground server used to block the upgrade until Ctrl-C.
+    // --quiet: the per-tool deploy report is debug detail; the installer's
+    // warnings print regardless.
     const global_cmd: string[] = [_agent_config_bin(), 'global', '--no-ui'];
+    if (!verbose) global_cmd.push('--quiet');
+    /** `→ <command>` in verbose mode, a short step label otherwise. */
+    const announce = (cmd: string[], label: string): void => {
+        _print(out, verbose ? '→ ' + cmd.join(' ') : `→ ${label}`);
+    };
     const steps: string[][] = [npm_cmd, global_cmd];
 
     const project_root = options.project_root ?? process.cwd();
@@ -576,14 +678,16 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
             _print(out, '  ' + cmd.join(' '));
         }
         for (const target of sync_targets) {
-            _print(out, '  ' + [_agent_config_bin(), 'settings:sync', '--path', target].join(' '));
+            const sync = [_agent_config_bin(), 'settings:sync', '--path', target];
+            if (!verbose) sync.push('--quiet');
+            _print(out, '  ' + sync.join(' '));
         }
         return 0;
     }
 
     // Step 1 — the new package version. Nothing after makes sense without
     // it, so this is the only hard-abort step.
-    _print(out, '→ ' + npm_cmd.join(' '));
+    announce(npm_cmd, `installing ${target} …`);
     const npm_rc = runner(npm_cmd);
     if (npm_rc !== 0) {
         _print(
@@ -604,7 +708,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // Re-running would preserve again, so it is never advised for this case.
     const preserved_steps: string[] = [];
     for (const cmd of steps.slice(1)) {
-        _print(out, '→ ' + cmd.join(' '));
+        announce(cmd, 'deploying to your AI tools …');
         const rc = runner(cmd);
         if (rc === EXIT_COMPLETED_WITH_CONFLICTS) {
             preserved_steps.push(cmd.join(' '));
@@ -627,7 +731,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // the upgrade — gated on the plugin actually being installed (empty step
     // list otherwise). Deprecation window of the single-surface model: once
     // the plugin is retired this block disappears with it.
-    _refresh_claude_plugin(plugin_steps, runner, out, err);
+    _refresh_claude_plugin(plugin_steps, runner, out, err, verbose);
 
     // Duplicate-surface convergence (road-to-install-path-convergence
     // Phase 3). Consent model (council Q2, 2026-07-07):
@@ -661,27 +765,48 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
 
     // Bring existing settings files up to the NEW template (additive; the
     // subprocess resolves the freshly installed binary + template).
-    _sync_settings_files(sync_targets, runner, out, err);
+    _sync_settings_files(sync_targets, runner, out, err, verbose);
 
     _maybe_refresh_project_wrapper(project_root, out, err);
 
     // Re-stamp OUR installed .git/hooks/pre-commit from the new template
     // (marker-guarded; foreign hooks are never touched).
-    _maybe_refresh_git_hook(project_root, runner, out, err);
+    _maybe_refresh_git_hook(project_root, runner, out, err, verbose);
 
     // Doctor runs LAST, every time, non-fatal: its duplicate-surface and
     // hook-wiring findings ARE the upgrade summary's health section — a
     // mixed state (stale plugin, missing hooks) is named in the same run
     // instead of waiting for the user to think of running doctor.
-    const doctor_cmd = [_agent_config_bin(), 'doctor'];
-    _print(out, '→ ' + doctor_cmd.join(' '));
-    const doctor_rc = runner(doctor_cmd);
-    if (doctor_rc !== 0) {
-        _print(
-            err,
-            `⚠️  agent-config doctor reported findings (exit ${doctor_rc}) — ` +
-                'see the check output above for per-item fixes.',
-        );
+    let doctor_rc: number;
+    if (verbose) {
+        const doctor_cmd = [_agent_config_bin(), 'doctor'];
+        _print(out, '→ ' + doctor_cmd.join(' '));
+        doctor_rc = runner(doctor_cmd);
+        if (doctor_rc !== 0) {
+            _print(
+                err,
+                `⚠️  agent-config doctor reported findings (exit ${doctor_rc}) — ` +
+                    'see the check output above for per-item fixes.',
+            );
+        }
+    } else {
+        const doctor_cmd = [_agent_config_bin(), 'doctor', '--json'];
+        announce(doctor_cmd, 'checking health (doctor) …');
+        const res = capture(doctor_cmd);
+        doctor_rc = res.status;
+        const findings = res.stdout === '' ? null : _doctor_findings(res.stdout);
+        if (findings !== null && findings.length > 0) {
+            for (const line of findings) _print(out, line);
+        }
+        if (doctor_rc !== 0) {
+            _print(
+                err,
+                `⚠️  agent-config doctor reported findings (exit ${doctor_rc}) — ` +
+                    (findings !== null && findings.length > 0
+                        ? 'fixes listed above; full report: `agent-config doctor`.'
+                        : 'run `agent-config doctor` for the full report.'),
+            );
+        }
     }
 
     if (failed_essential.length > 0) {
