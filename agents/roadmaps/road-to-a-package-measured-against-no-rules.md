@@ -42,23 +42,32 @@ separated the arms on each model, so a task-selection stage comes first.
 
 ## Phase 1 — Five arms on one corpus (funded)
 
-- [ ] **1.1 Stage A, the pilot.** Run the two-arm pilot on 38 tasks and apply the
+- [x] **1.1 Stage A, the pilot.** Run the two-arm pilot on 38 tasks and apply the <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       selection rule of
       `agents/evidence/preregistration/five-arm-comparison-protocol-20261110.md`
       § 2.
       verify: a selection note under `agents/evidence/metrics/` naming 6-12 tasks, each with its pooled pilot J inside [0.10, 0.90] or marked as a fill-up.
-- [ ] **1.2 Stage B, the comparison.** Run all five arms on the selected tasks
+- [x] **1.2 Stage B, the comparison.** Run all five arms on the selected tasks <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       under § 3, at most $65.
       verify: the report names claude-sonnet-5-5, tree_dirty false and five arms, and its spend is at most 65 USD.
-- [ ] **1.3 The reading.** A result file applies § 4: the primary
+- [x] **1.3 The reading.** A result file applies § 4: the primary <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `package − vanilla` reading, the four secondary contrasts, cost per solved
       task with its bootstrap interval, tokens, turns and wall time per arm.
       `docs/CLAIMS.md` changes only as § 5 allows.
       verify: `agents/evidence/metrics/five-arm-comparison-result-20261110.md` states BETTER, WORSE or INCONCLUSIVE against the frozen rule.
-- [ ] **1.4 Tasks that discriminate.** Moved from start-as-light 1.4. If Stage A
+- [x] **1.4 Tasks that discriminate.** Moved from start-as-light 1.4. If Stage A <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       selects fewer than five tasks strictly inside (0, 1), write the tasks that
       are missing for the corpus so the next cut rests on more than two.
       verify: a pilot report listing per-task mean J per arm with at least five tasks inside (0, 1).
+      Note 2026-11-10: Stage A selected 8 tasks with no fill-up
+      (`agents/evidence/metrics/five-arm-pilot-selection-20261110.md`). Stage B
+      ran 720 runs for $34.57 and reads **INCONCLUSIVE**: `package − vanilla`
+      +0.049 J, 90 % CI [−0.003, +0.100]
+      (`agents/evidence/metrics/five-arm-comparison-result-20261110.md`). The
+      reduced layer beat the minimal prompt, the kernel alone and the full layer
+      on this corpus. It cost about twice as much per solved task as no rules.
+      Every arm has at least six of the eight tasks inside (0, 1), so 1.4's
+      condition did not fire. No CLAIMS line was written.
 
 ## Phase 2 — The two readings the confirmation left open
 
@@ -116,7 +125,7 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 
 ## Acceptance Criteria
 
-- [ ] AC-1: Phase 1's reading is published whatever it says.
+- [x] AC-1: Phase 1's reading is published whatever it says.
 - [ ] AC-2: Every next step is chosen by task success per token, minute and
       correction loop, measured against no rules and a minimal prompt, not by
       adding rules or agents (the direction constraint of round inbox-2026-11-wo).
