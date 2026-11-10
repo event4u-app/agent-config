@@ -16,6 +16,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { reached_model } from '../../internal/bench/core/_lib/bench_ab_container.js';
 import * as runner from '../../internal/bench/core/bench_ab_task_runner.js';
 
 
@@ -173,5 +174,25 @@ describe('hook events in a stream-json run', () => {
         expect(runner.expectsHooks({ setting_sources: null })).toBe(true);
         expect(runner.expectsHooks({ setting_sources: 'project,local' })).toBe(false);
         expect(runner.expectsHooks({ setting_sources: 'project,local', expect_hooks: true })).toBe(true);
+    });
+});
+
+describe('bench_ab_task_runner — a timeout keeps its stream', () => {
+    const init = '{"type":"system","subtype":"init","model":"claude-sonnet-5-5"}';
+
+    it('a stream-mode timeout with no init event and no tokens reads as never reaching the model', () => {
+        const run = runner.timeout_result('', 180, 181.2, { stream: true });
+        expect(run['stream']).toBe('');
+        expect(reached_model(run)).toBe(false);
+    });
+
+    it('a stream-mode timeout after the init event reads as reached, so it is scored', () => {
+        expect(reached_model(runner.timeout_result(init + '\n', 180, 181.2, { stream: true }))).toBe(true);
+    });
+
+    it('a json-mode timeout carries no stream and stays counted, as before', () => {
+        const run = runner.timeout_result('', 180, 181.2, {});
+        expect(run['stream']).toBeUndefined();
+        expect(reached_model(run)).toBe(true);
     });
 });
