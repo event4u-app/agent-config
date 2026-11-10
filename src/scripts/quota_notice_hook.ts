@@ -147,8 +147,8 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
 
 /**
  * The link's half lives in its own chunk: it is parsed only on a prompt
- * with the switch question on. A missing chunk, or one from another build,
- * means no question, as without agent-switch.
+ * with the switch question on. A missing chunk, or one built against another
+ * call surface, means no question, as without agent-switch.
  */
 export function loadSwitchTurn(): typeof switchTurn | null {
     return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.switchTurn ?? null;

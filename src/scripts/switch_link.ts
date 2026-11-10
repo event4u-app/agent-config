@@ -31,7 +31,7 @@ import {
 } from './_lib/switch_relay.js';
 import type { NoticeReply, QuotaNoticeDeps } from './quota_notice_hook.js';
 
-/** What a caller built with `api` may call, or `null` when its build differs from this chunk's. */
+/** What a caller compiled with call-surface version `api` may call, or `null` when it differs from this chunk's. */
 export function linkFor(api: number): { readonly switchTurn: typeof switchTurn; readonly checkpointBeforeMove: typeof checkpointBeforeMove } | null {
     return api === SWITCH_LINK_API ? { switchTurn, checkpointBeforeMove } : null;
 }

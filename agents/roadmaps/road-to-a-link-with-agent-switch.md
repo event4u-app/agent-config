@@ -285,8 +285,8 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
       Progress: the link is its own lazy chunk, `src/scripts/switch_link.ts`
-      (29,154 B, ceiling 32,100); `quota_notice` measures 28,588 B, ceiling
-      lowered to 31,400. With the opt-in a prompt parses both, 57,742 B
+      (29,311 B, ceiling 32,200); `quota_notice` measures 28,588 B, ceiling
+      lowered to 31,400. With the opt-in a prompt parses both, 57,899 B
       against 47,877 before. Loaded only with the opt-in, and by the Stop path only
       for a session with a record; the digest check moved to
       `hooks/bundle_digest.ts` so the chunk does not carry the YAML reader.
@@ -295,6 +295,9 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       refused (older and newer lock blind to each other across an install;
       caller and chunk not bound to one build); the ticket holder also takes
       the older lock file, and caller and chunk share a call-surface version.
+      Round 3 refused (the older version still broke that file after two
+      seconds; combined cost not enforced); the file is now dated ahead while
+      held, and the gate has a chunk-group ceiling, 63,500 B for the two.
       Open: the ratification record for the budget and plumbing change.
 
 ## Decisions

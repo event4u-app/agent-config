@@ -257,8 +257,10 @@ the link over the CLI verbs below, never the MCP client.
   digest is not loaded, and the session behaves as without agent-switch. The
   chunk and its two callers each compile a call-surface version
   (`_lib/switch_link_api.ts`), and the chunk answers only a caller of the
-  same version, so a chunk from another build is not called even when its
-  digest matches. A
+  same version, so a chunk built against another call surface is not called
+  even when its digest matches. That is API compatibility, not build identity,
+  and loading the chunk to ask runs only its module body, which defines
+  functions and does nothing else. A
   Stop that cannot load it writes nothing and leaves an owed checkpoint for the
   next Stop.
 - **One record per session** under the user-global quota state holds the
@@ -287,8 +289,10 @@ the link over the CLI verbs below, never the MCP client.
   version before tickets used; otherwise it removes its own and retries after
   a random pause. Taking that file keeps a hook of the older version, still
   running across an install or a rollback, and this one out of each other in
-  both directions (the older version breaks it after two seconds, as it
-  always did). A ticket is only ever removed by its own unique name, so breaking an
+  both directions. The older version breaks that file once its mtime is two
+  seconds old, so this version dates it fifteen minutes ahead while it holds
+  it; this version judges the file by its holder's pid, so it waits up to
+  thirty minutes, not fifteen, only when that pid was reused. A ticket is only ever removed by its own unique name, so breaking an
   abandoned one cannot remove a successor's, and two contenders cannot both
   hold: each lists after creating, so the later lister sees the earlier ticket.
   A live holder's ticket is kept for fifteen minutes, however slow it is; a
