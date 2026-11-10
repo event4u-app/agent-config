@@ -112,23 +112,26 @@ fresh pre-registration before it can ship.
 
 ## Phase 2 — land it
 
-- [ ] **2.1 Land the candidate.** Cherry-pick plus the fixes chosen in 1.3,
+- [x] **2.1 Land the candidate.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_task_runner.ts --> Cherry-pick plus the fixes chosen in 1.3,
       regenerate projections (`task sync`, `task generate-tools`), both gates
       green, PR merged.
       verify: `./scripts-run src/scripts/check_startup_contracts` -> 0
       verify: `./scripts-run src/scripts/check_session_start_budget` -> 0
-- [ ] **2.2 Close the parent blocker.** Update
+      Done 2026-11-10: #2964, merge commit `2aeb0e73f9`; CI green on 56 checks, `check_startup_contracts` 0, session start 79,444 / 80,000.
+- [x] **2.2 Close the parent blocker.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_task_runner.ts --> Update
       `road-to-a-start-as-light-as-the-field` (blocker
       `start-cut-waits-on-full-vs-reduced`) and the 5.2 note in
       `road-to-a-setup-that-decides-itself-carried` with the landing commit.
       verify: both notes cite the merge commit.
-- [ ] **2.3 A timeout keeps its stream.** The claude task runner's timeout
+      Done 2026-11-10: both notes cite `2aeb0e73f9`. The parent blocker stays open on its own condition, the 5.2 result file, which this landing does not produce.
+- [x] **2.3 A timeout keeps its stream.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/bench_ab_task_runner.ts --> The claude task runner's timeout
       result carries no `stream`, and `reached_model` reads a missing stream as
       reached, so a pre-model timeout is scored instead of rerun (two such trials
       in the Sonnet confirmation). Return the partial stdout as `stream` on a
       stream-mode timeout. Its own PR, after 2.1.
       verify: a runner test where a timeout with no init event and no tokens reads `reached_model` false.
       production entry: `internal/bench/core/bench_ab_task_runner.ts`
+      Done 2026-11-10: `timeout_result` returns the partial stream in stream mode; the test goes red with the stream field removed. The Codex runner's timeout path runs in json mode and carries no stream, so it is unchanged.
 
 ## Blockers
 
@@ -159,7 +162,7 @@ fresh pre-registration before it can ship.
 
 ## Acceptance Criteria
 
-- [ ] AC-1: Main carries the adapted contracts with both gates green, or the
+- [x] AC-1: Main carries the adapted contracts with both gates green, or the
       owner's written decision not to ship them.
-- [ ] AC-2: Any wording change to the benchmarked contracts is backed by a new
+- [x] AC-2: Any wording change to the benchmarked contracts is backed by a new
       pre-registered measurement before it lands.
