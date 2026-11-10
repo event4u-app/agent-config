@@ -167,11 +167,12 @@ export function _installLogExpected(projectRoot: string): boolean {
  * banner, where the per-row symbol is the only signal.
  *
  * Reach, updated 2026-09-15 — Phase 3 landed: the headless installer
- * (`src/scripts/install.ts`, `_copy_dir_dereferencing_symlinks`) now appends
- * a `write` or `skip` entry per copied/skipped path, through the same
- * `appendTxLog` module the recovery-dismiss route calls. So a headless
- * install now leaves the `unknown` branch above and reads `ok` on its own
- * evidence rather than on the absence of any. `unknown` is still the answer
+ * (`src/scripts/install.ts`, `_copy_dir_dereferencing_symlinks`) now opens
+ * each run with a `run` marker and appends a `write` per copy of new bytes and
+ * a `skip` per preserved path, through the same `txlog` module the
+ * recovery-dismiss route calls. So a headless install — an unchanged re-run
+ * included, through its marker — leaves the `unknown` branch above and reads
+ * `ok` on its own evidence rather than on the absence of any. `unknown` is still the answer
  * for an install that predates this change, or for the wizard's browser
  * path, which does not call the headless copy function; `fail` is still
  * unreachable because nothing writes an `abort` yet.

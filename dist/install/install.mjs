@@ -10492,6 +10492,12 @@ function bufferTxLog(logPath, entry) {
     flushTxLog(logPath);
   }
 }
+var runMarked = /* @__PURE__ */ new Set();
+function markRun(logPath) {
+  if (runMarked.has(logPath)) return;
+  runMarked.add(logPath);
+  bufferTxLog(logPath, { ts: (/* @__PURE__ */ new Date()).toISOString(), kind: "run", path: "", sha256: null, note: "install run" });
+}
 function flushTxLog(logPath) {
   const targets = logPath === void 0 ? [...pending.keys()] : [logPath];
   for (const target of targets) {
@@ -10660,6 +10666,20 @@ function loggedWriteDigests(logPath = getLogPath()) {
     }
   }
   return writes;
+}
+var known = null;
+function isNewWrite(target, sha2562, logPath = getLogPath()) {
+  if (known === null || known.logPath !== logPath) {
+    const writes = /* @__PURE__ */ new Map();
+    for (const [p, shas2] of loggedWriteDigests(logPath)) writes.set(p, new Set(shas2));
+    known = { logPath, writes };
+  }
+  const key = canonicalPath(target);
+  let shas = known.writes.get(key);
+  if (shas?.has(sha2562)) return false;
+  if (shas === void 0) known.writes.set(key, shas = /* @__PURE__ */ new Set());
+  shas.add(sha2562);
+  return true;
 }
 function onlyDeployed(anchor2, currentFiles, log) {
   return (target) => {
@@ -25127,12 +25147,10 @@ function _escapes_package_root(resolved, package_root) {
 }
 function _log_tx_entry(kind, target) {
   try {
-    bufferTxLog(getLogPath(), {
-      ts: (/* @__PURE__ */ new Date()).toISOString(),
-      kind,
-      path: target,
-      sha256: kind === "write" ? sha256OfFile(target) : null
-    });
+    markRun(getLogPath());
+    const sha2562 = kind === "write" ? sha256OfFile(target) : null;
+    if (sha2562 !== null && !isNewWrite(target, sha2562)) return;
+    bufferTxLog(getLogPath(), { ts: (/* @__PURE__ */ new Date()).toISOString(), kind, path: target, sha256: sha2562 });
   } catch {
   }
 }

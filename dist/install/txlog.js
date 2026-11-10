@@ -11,10 +11,16 @@
  * null hash; `src/scripts/install.ts`, through `_log_tx_entry`, appends a
  * `write` or `skip` entry per path it copies, preserves or stages a sidecar
  * for, and a `write` entry per deployed Claude rule the host-form rewrite and
- * the thinning pass rewrite after the copy. The installer queues its entries
+ * the thinning pass rewrite after the copy — except a `write` whose exact
+ * bytes the log already records at that path (`loggedWrites.isNewWrite`), so
+ * an unchanged re-deploy adds nothing. The installer queues its entries
  * through `bufferTxLog` (batched appends — see there); the other writers call
  * `appendTxLog`. Both serialize the same `TxLogEntry`, so the entry shape is
  * identical by construction rather than by convention.
+ *
+ * Each installer run opens with one `run` marker (`markRun`), so the tail is
+ * always the latest run even when it wrote nothing new — recovery's write
+ * counts therefore cover new bytes only, not every file a run touched.
  *
  * WHAT READS IT: recovery (the active log only) and `./loggedWrites.ts`, which
  * reads every `write` digest in the active log AND its rotated siblings as
@@ -91,6 +97,25 @@ export function bufferTxLog(logPath, entry) {
     if (queue.length >= BUFFER_FLUSH_THRESHOLD) {
         flushTxLog(logPath);
     }
+}
+const runMarked = new Set();
+/**
+ * Queue one `run` marker per process and log, ahead of the run's other entries.
+ *
+ * An unchanged re-deploy logs no `write` (see `loggedWrites.isNewWrite`), so
+ * without a marker the tail would still be the previous run: an `abort` there
+ * would keep reading as an interrupted install after a clean re-run, and an
+ * emptied active log would stay empty.
+ */
+export function markRun(logPath) {
+    if (runMarked.has(logPath))
+        return;
+    runMarked.add(logPath);
+    bufferTxLog(logPath, { ts: new Date().toISOString(), kind: 'run', path: '', sha256: null, note: 'install run' });
+}
+/** Tests only: let one process simulate several install runs. */
+export function _resetRunMarker() {
+    runMarked.clear();
 }
 /** Write every buffered entry (for one log, or all of them). Never throws. */
 export function flushTxLog(logPath) {

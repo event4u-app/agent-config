@@ -9,9 +9,11 @@
  * so the next run calls the same untouched file "user-modified".
  *
  * The proof was on disk the whole time. `src/scripts/install.ts` appends a
- * `write` entry carrying the SHA-256 of the target's bytes immediately after
- * every copy. A file whose bytes equal a digest the log records this installer
- * writing to that exact path is the installer's own output, unedited. A path
+ * `write` entry carrying the SHA-256 of the target's bytes after every copy
+ * whose bytes the log does not already record at that path (`isNewWrite`).
+ * Rotated logs are never pruned, so the first entry keeps proving those bytes.
+ * A file whose bytes equal a digest the log records this installer writing to
+ * that exact path is the installer's own output, unedited. A path
  * with no matching record keeps the existing answer. WHEN that proof may decide
  * is narrower than "whenever it matches" — see `decideDeployWrite`.
  *
@@ -22,7 +24,7 @@
  *
  * COST. Parsed per FILE and cached on that file's size and mtime. A rotated
  * archive never changes, so only the active log is re-read when it grows — and
- * an install appends to it after every file it touches, so a cache keyed on the
+ * an install appends to it as it writes new bytes, so a cache keyed on the
  * whole set would re-parse the entire history once per candidate.
  */
 import { gunzipSync } from 'node:zlib';
@@ -123,6 +125,32 @@ export function loggedWriteDigests(logPath = getLogPath()) {
         }
     }
     return writes;
+}
+let known = null;
+/**
+ * Whether a `write` of `sha256` to `target` still needs a log entry.
+ *
+ * False when the log — active or rotated — already records exactly that write:
+ * rotated logs are never pruned, so the earlier entry keeps proving the bytes,
+ * and a second one adds nothing. True otherwise, and the write is remembered,
+ * so it is logged once per run. Re-logging every unchanged file made each
+ * global install append ~10 MB and rotate the log on every run.
+ */
+export function isNewWrite(target, sha256, logPath = getLogPath()) {
+    if (known === null || known.logPath !== logPath) {
+        const writes = new Map();
+        for (const [p, shas] of loggedWriteDigests(logPath))
+            writes.set(p, new Set(shas));
+        known = { logPath, writes };
+    }
+    const key = canonicalPath(target);
+    let shas = known.writes.get(key);
+    if (shas?.has(sha256))
+        return false;
+    if (shas === undefined)
+        known.writes.set(key, (shas = new Set()));
+    shas.add(sha256);
+    return true;
 }
 /**
  * Wrap a log writer so it records only paths this run's copy deploys.
