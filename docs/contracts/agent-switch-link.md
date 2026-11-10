@@ -254,7 +254,11 @@ the link over the CLI verbs below, never the MCP client.
   The link's code is its own lazily loaded chunk (`switch_link.chunk.cjs`): a
   prompt without the opt-in never loads it, and the Stop path loads it only for
   a session with a record. A chunk that is missing or does not match its
-  digest is not loaded, and the session behaves as without agent-switch; a
+  digest is not loaded, and the session behaves as without agent-switch. The
+  chunk and its two callers each compile a call-surface version
+  (`_lib/switch_link_api.ts`), and the chunk answers only a caller of the
+  same version, so a chunk from another build is not called even when its
+  digest matches. A
   Stop that cannot load it writes nothing and leaves an owed checkpoint for the
   next Stop.
 - **One record per session** under the user-global quota state holds the
@@ -278,9 +282,13 @@ the link over the CLI verbs below, never the MCP client.
   reported success; a write that fails, throws or is cut short leaves the
   obligation for the next Stop. The lock is a set of tickets: each contender
   creates its own file `<record>.lock.<pid>.<time>.<random>`, then lists the
-  tickets, and holds the lock only when no other ticket is left after removing
-  the breakable ones; otherwise it removes its own and retries after a random
-  pause. A ticket is only ever removed by its own unique name, so breaking an
+  tickets, removes every breakable one, and holds the lock only when no other
+  ticket is left and it can also take the single `<record>.lock` file the
+  version before tickets used; otherwise it removes its own and retries after
+  a random pause. Taking that file keeps a hook of the older version, still
+  running across an install or a rollback, and this one out of each other in
+  both directions (the older version breaks it after two seconds, as it
+  always did). A ticket is only ever removed by its own unique name, so breaking an
   abandoned one cannot remove a successor's, and two contenders cannot both
   hold: each lists after creating, so the later lister sees the earlier ticket.
   A live holder's ticket is kept for fifteen minutes, however slow it is; a
@@ -291,8 +299,7 @@ the link over the CLI verbs below, never the MCP client.
   holder that old is taken to be a reused process id, and if it is in fact
   still writing it loses its exclusion. Two contenders that collide both back
   off, so under contention an update can be skipped; it never runs under two
-  holders at once. A `.lock` file left by a version before the ticket scheme
-  is not honoured, and is removed with the other state after eight days.
+  holders at once.
   Process liveness is read in the caller's process-id namespace, so hooks of
   one state directory running in different namespaces (a container sharing
   the host's home) are not covered. The lock is advisory: it binds only the

@@ -29,6 +29,8 @@ import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
 import { buildChunk } from '../../src/scripts/hook_chunks.mjs';
 import { sidecarPathFor } from '../../src/scripts/hooks/bundle_digest.js';
 import { loadLazyExport } from '../../src/scripts/hooks/lazy_concern.js';
+import { SWITCH_LINK_API } from '../../src/scripts/_lib/switch_link_api.js';
+import type { linkFor } from '../../src/scripts/switch_link.js';
 import { loadSwitchTurn, noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
 import { loadMoveCheckpoint, moveCheckpoint } from '../../src/scripts/hooks/session_eol_hook.js';
 
@@ -997,7 +999,8 @@ describe('8.4 the link in its own chunk', () => {
         const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
         // As the dispatch bundle beside it would ask for the chunk.
         const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
-        const load = (): unknown => loadLazyExport('src/scripts/switch_link.ts', 'checkpointBeforeMove', self, true);
+        const load = (): unknown =>
+            loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor', self, true)?.(SWITCH_LINK_API)?.checkpointBeforeMove;
         const sidecar = sidecarPathFor(out);
         const cases: Array<[string, string | null, boolean]> = [
             ['matching', `${sha}  switch_link.chunk.cjs\n`, true],
@@ -1010,6 +1013,24 @@ describe('8.4 the link in its own chunk', () => {
             if (text !== null) fs.writeFileSync(sidecar, text);
             expect([name, typeof load() === 'function']).toEqual([name, loads]);
         }
+    }, 60_000);
+
+    it('a link chunk from a build with another call surface is not called, though its digest matches', () => {
+        const dir = path.join(home, 'other-build');
+        fs.mkdirSync(dir, { recursive: true });
+        const out = path.join(dir, 'switch_link.chunk.cjs');
+        buildChunk(REPO, 'src/scripts/switch_link.ts', out);
+        const text = fs.readFileSync(out, 'utf-8');
+        const stamp = `SWITCH_LINK_API = ${String(SWITCH_LINK_API)};`;
+        expect(text.split(stamp)).toHaveLength(2);
+        fs.writeFileSync(out, text.replace(stamp, `SWITCH_LINK_API = ${String(SWITCH_LINK_API + 1)};`));
+        const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+        fs.writeFileSync(sidecarPathFor(out), `${sha}  switch_link.chunk.cjs\n`);
+        const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
+        const linkForOther = loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor', self, true);
+        expect(typeof linkForOther).toBe('function');
+        expect(linkForOther?.(SWITCH_LINK_API)).toBeNull();
+        expect(linkForOther?.(SWITCH_LINK_API + 1)?.checkpointBeforeMove).toBeTypeOf('function');
     }, 60_000);
 
     it('a Stop that cannot load the link writes nothing and leaves the checkpoint owed to the next Stop', () => {

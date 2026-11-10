@@ -108,4 +108,4 @@ the documentation or revert the change when any of these is observed:
 7. The `quota_notice` chunk outgrows its ceiling in
    `src/config/hook-bundle-budget.json` again without a reviewed raise.
    Since 8.4 (2026-11-10) the link is its own chunk, `switch_link`; the criterion
-   applies to that chunk's ceiling and to `quota_notice`'s, lowered to 31,300 B.
+   applies to that chunk's ceiling and to `quota_notice`'s, lowered to 31,400 B.

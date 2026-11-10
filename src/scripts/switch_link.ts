@@ -8,8 +8,10 @@
 import * as fs from 'node:fs';
 
 import type { WindowPressure } from './_lib/pressure.js';
+import { SWITCH_LINK_API } from './_lib/switch_link_api.js';
 import { switchRecordPath } from './_lib/switch_record_path.js';
 import {
+    checkpointBeforeMove,
     isTerminal,
     linkResting,
     newTally,
@@ -29,7 +31,10 @@ import {
 } from './_lib/switch_relay.js';
 import type { NoticeReply, QuotaNoticeDeps } from './quota_notice_hook.js';
 
-export { checkpointBeforeMove } from './_lib/switch_relay.js';
+/** What a caller built with `api` may call, or `null` when its build differs from this chunk's. */
+export function linkFor(api: number): { readonly switchTurn: typeof switchTurn; readonly checkpointBeforeMove: typeof checkpointBeforeMove } | null {
+    return api === SWITCH_LINK_API ? { switchTurn, checkpointBeforeMove } : null;
+}
 
 /**
  * The switch request of this session (Phase 4): relay what changed on the one

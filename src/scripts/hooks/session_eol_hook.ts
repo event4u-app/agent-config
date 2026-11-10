@@ -78,8 +78,10 @@ import {
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { CONTEXT_NOTICE_PCT, sessionContextFill } from '../_lib/pressure.js';
 import { hashSessionId, readQuotaLedger } from '../_lib/quota_ledger.js';
+import { SWITCH_LINK_API } from '../_lib/switch_link_api.js';
 import { switchRecordPath } from '../_lib/switch_record_path.js';
 import type { checkpointBeforeMove } from '../_lib/switch_relay.js';
+import type { linkFor } from '../switch_link.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
 import { loadLazyExport } from './lazy_concern.js';
 import { current_branch } from '../_lib/git_common_dir.js';
@@ -171,10 +173,11 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
 
 /**
  * The link half of the checkpoint lives in the `switch_link` chunk, not in this
- * bundle; it is loaded only for a session that has a switch record at all.
+ * bundle; it is loaded only for a session that has a switch record at all,
+ * and used only when it was built against the same call surface.
  */
 export function loadMoveCheckpoint(): typeof checkpointBeforeMove | null {
-    return loadLazyExport<typeof checkpointBeforeMove>('src/scripts/switch_link.ts', 'checkpointBeforeMove');
+    return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.checkpointBeforeMove ?? null;
 }
 
 export function moveCheckpoint(

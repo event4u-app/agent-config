@@ -55,7 +55,8 @@ import {
 import { forAccount, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import { switchQuestionOff } from './_lib/switch_relay.js';
 import { loadLazyExport } from './hooks/lazy_concern.js';
-import type { switchTurn } from './switch_link.js';
+import { SWITCH_LINK_API } from './_lib/switch_link_api.js';
+import type { linkFor, switchTurn } from './switch_link.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
@@ -146,11 +147,11 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
 
 /**
  * The link's half lives in its own chunk: it is parsed only on a prompt
- * with the switch question on. A missing chunk means no question, as without
- * agent-switch.
+ * with the switch question on. A missing chunk, or one from another build,
+ * means no question, as without agent-switch.
  */
 export function loadSwitchTurn(): typeof switchTurn | null {
-    return loadLazyExport<typeof switchTurn>('src/scripts/switch_link.ts', 'switchTurn');
+    return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.switchTurn ?? null;
 }
 
 export function noticeReply(deps: QuotaNoticeDeps): NoticeReply {
