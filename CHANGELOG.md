@@ -501,11 +501,20 @@ An entry belongs under a dated release section, not here — see
 > keeps the active era under the 250-line drift cap enforced by
 > `tests/test_changelog_eras.py`.
 
-# Era: 20.1.x — current
+# Era: pre-20.2.0 — archived
 
-> Started at `20.1.0`. Full entries live inline below.
+> All entries before `20.2.0` live in
+> [`docs/archive/CHANGELOG-pre-20.2.0.md`](docs/archive/CHANGELOG-pre-20.2.0.md).
+> The archive is read-only; git tags remain the canonical
+> source for what shipped. Splitting them out of the main file
+> keeps the active era under the 250-line drift cap enforced by
+> `tests/test_changelog_eras.py`.
+
+# Era: 20.2.x — current
+
+> Started at `20.2.0`. Full entries live inline below.
 > The drift test caps this era at 250 lines of entry body; growth past
-> that forces a new era split (`# Era: 20.2.x`, etc.) — see
+> that forces a new era split (`# Era: 20.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
 ## [20.2.0](https://github.com/event4u-app/agent-config/compare/20.1.0...20.2.0) (2026-11-10)
@@ -1292,29 +1301,6 @@ An entry belongs under a dated release section, not here — see
 * **roadmap:** regenerate the owned digest after archiving road-to-a-noted-that-is-a-write ([586a1d4](https://github.com/event4u-app/agent-config/commit/586a1d4e68e5b67b16daa5829190365450b738f4))
 
 Tests: 40166 (+2756 since 20.1.0)
-
-## [20.1.0](https://github.com/event4u-app/agent-config/compare/20.0.0...20.1.0) (2026-11-04)
-
-### Release highlights
-
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** do not re-dispatch tag workflows the tag push already started (5a762d3).
-- **Honest nulls:** _none_
-- **Known limitations:** _none_ in shipped code — the highlights gate matched label text in test fixtures (8b69b9e); #2843 scopes the scan to shipped files.
-
-> **Governance mix:** governance-only 0 vs consumer-only 2 (mixed 0, maintenance 1; taxonomy 1.1.0; range ba83f4684fed..b06428236ad1).
-
-### Features
-
-* **analyze:inbox:** expand named targets to their change set and chain --process/--pr/--merge ([96c0ef9](https://github.com/event4u-app/agent-config/commit/96c0ef92f881171bc3a8dc4d21fe44c460efb609))
-
-### Bug Fixes
-
-* **analyze:inbox:** keep argument-hint under the 120-char schema limit ([179d0f1](https://github.com/event4u-app/agent-config/commit/179d0f1468cff0553c5c0f902bc9690d94085800))
-* **release:** do not re-dispatch tag workflows the tag push already started ([5a762d3](https://github.com/event4u-app/agent-config/commit/5a762d337b572e6728f8e98217408162517b7f7d))
-
-Tests: 37410 (+66 since 20.0.0)
 
 # Era: pre-4.0.0 — archived
 
