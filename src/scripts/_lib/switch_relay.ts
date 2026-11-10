@@ -306,10 +306,12 @@ function createLegacyLock(legacy: string, token: string): boolean {
     try {
         const ahead = new Date(Date.now() + LOCK_ABANDONED_MS);
         fs.utimesSync(legacy, ahead, ahead);
+        return true;
     } catch {
-        // still held; only an older hook could then break it after two seconds
+        // Undated, an older hook would break it after two seconds: give it back.
+        releaseLegacyLock(legacy, token);
+        return false;
     }
-    return true;
 }
 
 /**
