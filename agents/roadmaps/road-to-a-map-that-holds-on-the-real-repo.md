@@ -31,7 +31,7 @@ estate_growth_exempt: "Growth in this change is the three roadmaps of inbox roun
 > knowledge, answer and feedback stages went to the two sibling roadmaps in
 > `relates:`. Step IDs keep the plan's stage letters in brackets for traceability.
 >
-> **Arrivals:** 2 — latest `inbox-2026-10-bk` (2026-10-29): a 19.0.0 release review asks to finish this file first (P0) and names one gap it does not hold: the manifest's `state` field still reads `fresh` for a map drawn at another commit (4.7); a later plan version adds secret-shape and pre-registration detail (4.8, 5.8) and a logging stage that went to `road-to-a-map-that-knows-what-happened` Phase 5. Before that: 1 — `inbox-2026-10-bf` (2026-10-28).
+> **Arrivals:** 3 — latest `inbox-2026-11-wo` (2026-11-10): the 20.2.0 review still finds a test that fails when run as root (graded P3, carried since 16.5.0). Before that, latest `inbox-2026-10-bk` (2026-10-29): a 19.0.0 release review asks to finish this file first (P0) and names one gap it does not hold: the manifest's `state` field still reads `fresh` for a map drawn at another commit (4.7); a later plan version adds secret-shape and pre-registration detail (4.8, 5.8) and a logging stage that went to `road-to-a-map-that-knows-what-happened` Phase 5. Before that: 1 — `inbox-2026-10-bf` (2026-10-28).
 
 ## Context
 

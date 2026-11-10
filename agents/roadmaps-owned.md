@@ -104,6 +104,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-first-reference-analysis-observation | later | later | Spend exactly one of the two remaining observation slots of the pre-registered claim `reference-loop-upgrade-value` (`docs/CLAIMS.md` § `claim: reference-loop-upgrade-value`). |
 | road-to-floor-source-tags-with-payload-room | later | later | Floor source tags. |
 | road-to-forecasts-that-know-their-sources | later | later | AC can analyse a market or a match the way a careful analyst does: it knows where each kind of … |
+| road-to-gates-that-check-what-they-claim | later | later | Every gate an external review has re-reported for two or more releases either checks what its name and its header … |
 | road-to-gateway-harvest | later | later | Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B) |
 | road-to-generated-files-and-unattended-asks | later | later | The agent does not hand-edit a file the consumer's toolchain generates, and a run nobody is watching does not wait … |
 | road-to-governed-evidence-production | later | later | The four evidence obligations the governed-harness programme could not discharge are owned here, whole and unweakened, and each is either … |
@@ -147,6 +148,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-records-that-match-their-code | later | ready | Record and code agree. |
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
+| road-to-release-notes-that-match-the-span | later | later | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
 | road-to-rewrites-that-keep-their-facts-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |

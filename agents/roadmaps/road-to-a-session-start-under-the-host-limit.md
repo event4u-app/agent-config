@@ -21,7 +21,7 @@ relates:
 > persisted after 19.0.0, and the measurement and council round of the same day
 > recorded below.
 
-> **Arrivals:** 3 — latest `inbox-2026-11-za` (2026-11-07): asks for the D14 verdict (2.2) as the one decision between the package and ~16k tokens per session. Earlier: `inbox-2026-11-z` (2026-11-07): a census of ~99k tokens at
+> **Arrivals:** 4 — latest `inbox-2026-11-wo` (2026-11-10): a review asks whether the host's instruction-limit notice is gone now that the adapted layer has shipped. 4.1 is measurable since release 20.2.0. Before that, latest `inbox-2026-11-za` (2026-11-07): asks for the D14 verdict (2.2) as the one decision between the package and ~16k tokens per session. Earlier: `inbox-2026-11-z` (2026-11-07): a census of ~99k tokens at
 > session start, 91 % rules, and a request to stop loading floors whose pack is inactive.
 > It widens 2.2 by three floors this file did not name (step 2.4).
 
@@ -189,6 +189,7 @@ road-to-a-setup-that-decides-itself, 2026-10-25.
 - [ ] **4.1 Measure the host notice on a fresh 200K-window session.**
       verify: a fresh session after an agent-config upgrade run shows no
       instruction-limit notice in a repository with a project layer of ~13k.
+      Measurable since 2026-11-10: release 20.2.0 ships the adapted layer (#2964, 79,444 chars at session start).
 - [ ] **4.2 Dispose of road-to-an-installed-layer-that-is-thinned.** Its done
       state assumed the thinned form removes the notice; 4.1 settles whether
       anything in it is still open work.

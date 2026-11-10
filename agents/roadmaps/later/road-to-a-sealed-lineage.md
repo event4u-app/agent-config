@@ -34,7 +34,7 @@ estate_offset_exempt: "Adds a later/ roadmap only; the active estate is unchange
 > of an external evolution proposal (v4 at 19.1.0, v5 at 19.2.0), verified at
 > `2ccb435632`.
 >
-> **Arrivals:** 2 — latest `inbox-2026-11-d` (2026-11-01): v5 of the proposal;
+> **Arrivals:** 3 — latest `inbox-2026-11-wo` (2026-11-10): the 20.0.0 review restates v6 of the proposal: relations and metadata are still stored in plain text (the five lineage files are unchanged since 2026-10-24). v6 adds phases 3 to 7 (typed evidence, a watch state machine, gap scoring, an outcome ledger, a private viewer); they stay notes here until 2.2's oracle exists, as v6 itself proposes. Before that, latest `inbox-2026-11-d` (2026-11-01): v5 of the proposal;
 > v4 arrived in the same round one release earlier.
 
 ## Goal

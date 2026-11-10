@@ -19,6 +19,8 @@ relates:
 > **Source:** `agents/tmp.old/inbox-2026-11-zb/` — the parts of the round's
 > plans that need a council verdict, a host probe or an owner decision before
 > they can run. Tree facts verified at `main@ceea998a0d` on 2026-11-08.
+>
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): an external review grades measuring pins after a real compaction and at subagent start P0, and asks for memory and compaction survival on real multi-session tasks (P1). 2.4 and 2.8 already own both.
 
 ## Goal
 
