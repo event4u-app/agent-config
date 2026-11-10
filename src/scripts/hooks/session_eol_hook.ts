@@ -170,11 +170,11 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
 }
 
 /**
- * The link half of the checkpoint lives in the `quota_notice` chunk, not in this
+ * The link half of the checkpoint lives in the `switch_link` chunk, not in this
  * bundle; it is loaded only for a session that has a switch record at all.
  */
 export function loadMoveCheckpoint(): typeof checkpointBeforeMove | null {
-    return loadLazyExport<typeof checkpointBeforeMove>('src/scripts/quota_notice_hook.ts', 'checkpointBeforeMove');
+    return loadLazyExport<typeof checkpointBeforeMove>('src/scripts/switch_link.ts', 'checkpointBeforeMove');
 }
 
 export function moveCheckpoint(

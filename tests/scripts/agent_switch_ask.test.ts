@@ -6,7 +6,9 @@
  * answers lives in a file the test rewrites between prompts, the way
  * agent-switch's own store changes between two of a session's prompts.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,7 +26,9 @@ import {
     updateSwitchRecord,
 } from '../../src/scripts/_lib/switch_relay.js';
 import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
-import { noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
+import { buildChunk } from '../../src/scripts/hook_chunks.mjs';
+import { sidecarPathFor } from '../../src/scripts/hooks/bundle_digest.js';
+import { loadSwitchTurn, noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
 import { loadMoveCheckpoint, moveCheckpoint } from '../../src/scripts/hooks/session_eol_hook.js';
 
 const FAKE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures', 'fake_agent_switch.mjs');
@@ -329,7 +333,7 @@ describe('4.4 hand the work over', () => {
         expect(calls('show')).toEqual([]);
     });
 
-    it('the Stop path loads the link only for a session with a record, and from the quota-notice chunk', () => {
+    it('the Stop path loads the link only for a session with a record, and from the switch-link chunk', () => {
         const sess = hashSessionId('sess-a');
         let loads = 0;
         const load = (): typeof checkpointBeforeMove => {
@@ -911,4 +915,73 @@ describe('7.6 the question is opt-in', () => {
         noticeReply(deps({ env: { ...ON, AGENT_CONFIG_NO_SWITCH_QUESTION: '1' } }));
         expect(calls('request')).toEqual([]);
     });
+});
+
+describe('8.4 the link in its own chunk', () => {
+    const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+    function counting(): { load: () => ReturnType<typeof loadSwitchTurn>; loads: () => number } {
+        let n = 0;
+        return {
+            load: () => {
+                n++;
+                return loadSwitchTurn();
+            },
+            loads: () => n,
+        };
+    }
+
+    it('a prompt without the opt-in does not load the link; one with it does', () => {
+        hot();
+        setRequest();
+        const off = counting();
+        noticeReply(deps({ env: {}, loadSwitchTurn: off.load }));
+        expect(off.loads()).toBe(0);
+        const on = counting();
+        noticeReply(deps({ loadSwitchTurn: on.load }));
+        expect(on.loads()).toBe(1);
+        expect(calls('request')).toHaveLength(1);
+    });
+
+    it('a link that cannot be loaded asks nothing and keeps today’s notice', () => {
+        hot();
+        setRequest();
+        const r = noticeReply(deps({ loadSwitchTurn: () => null }));
+        expect(calls('request')).toEqual([]);
+        expect(r.lines.some((l) => /^AC: 5h window 85 %/.test(l))).toBe(true);
+    });
+
+    /** Both chunks as the package ships them, side by side, each with its digest. */
+    function built(linkSidecar: 'match' | 'mismatch'): (deps: QuotaNoticeDeps) => { lines: string[] } {
+        const dir = path.join(home, `chunks-${linkSidecar}`);
+        fs.mkdirSync(dir, { recursive: true });
+        for (const [entry, base] of [
+            ['src/scripts/quota_notice_hook.ts', 'quota_notice.chunk.cjs'],
+            ['src/scripts/switch_link.ts', 'switch_link.chunk.cjs'],
+        ] as const) {
+            const out = path.join(dir, base);
+            buildChunk(REPO, entry, out);
+            const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+            const recorded = base === 'switch_link.chunk.cjs' && linkSidecar === 'mismatch' ? sha.replace(/^./, sha[0] === '0' ? '1' : '0') : sha;
+            fs.writeFileSync(sidecarPathFor(out), `${recorded}  ${base}\n`);
+        }
+        const mod = createRequire(import.meta.url)(path.join(dir, 'quota_notice.chunk.cjs')) as { noticeReply: (d: QuotaNoticeDeps) => { lines: string[] } };
+        return mod.noticeReply;
+    }
+
+    it('the shipped quota-notice chunk loads the shipped link chunk beside it', () => {
+        hot();
+        setRequest();
+        const reply = built('match')(deps());
+        expect(calls('request')).toHaveLength(1);
+        expect(reply.lines.some((l) => l.includes(ID))).toBe(true);
+    }, 60_000);
+
+    it('a link chunk that does not match its digest is not loaded', () => {
+        hot();
+        setRequest();
+        const reply = built('mismatch')(deps());
+        expect(calls('request')).toEqual([]);
+        expect(reply.lines.some((l) => /^AC: 5h window 85 %/.test(l))).toBe(true);
+    }, 60_000);
 });

@@ -55,7 +55,7 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { verifyBundle } from './bundle_integrity.js';
+import { verifyBundle } from './bundle_digest.js';
 import type { ConcernMain } from './concern_registry_types.js';
 
 /**
@@ -72,6 +72,8 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
     'src/scripts/update_notice_hook.ts': lazy('update_notice.chunk.cjs', '../update_notice_hook'),
     'src/scripts/star_ask_hook.ts': lazy('star_ask.chunk.cjs', '../star_ask_hook'),
     'src/scripts/quota_notice_hook.ts': lazy('quota_notice.chunk.cjs', '../quota_notice_hook'),
+    // Not a concern: the agent-switch link, loaded by `quota-notice` and the Stop path.
+    'src/scripts/switch_link.ts': lazy('switch_link.chunk.cjs', '../switch_link'),
     'src/scripts/hooks/layer_promotion_hook.ts': lazy('layer_promotion.chunk.cjs', 'layer_promotion_hook'),
     'src/scripts/hooks/intake_pass_hook.ts': lazy('intake_pass.chunk.cjs', 'intake_pass_hook'),
     'src/scripts/self_repair_hook.ts': lazy('self_repair.chunk.cjs', '../self_repair_hook'),
