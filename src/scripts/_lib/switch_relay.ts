@@ -292,6 +292,27 @@ function ticketBreakable(ticket: string, token: string): boolean {
 }
 
 /**
+ * Create `<file>.lock` for this holder, dated `LOCK_ABANDONED_MS` ahead. The
+ * version before tickets breaks that file once its mtime is two seconds old,
+ * whoever holds it; dated ahead, it does not look old to that version while
+ * this holder runs. This version judges the file by its holder's pid first.
+ */
+function createLegacyLock(legacy: string, token: string): boolean {
+    try {
+        fs.writeFileSync(legacy, token, { flag: 'wx', mode: 0o600 });
+    } catch {
+        return false;
+    }
+    try {
+        const ahead = new Date(Date.now() + LOCK_ABANDONED_MS);
+        fs.utimesSync(legacy, ahead, ahead);
+    } catch {
+        // still held; only an older hook could then break it after two seconds
+    }
+    return true;
+}
+
+/**
  * Take `<file>.lock`, the single lock file of the scheme before tickets, as
  * well. A hook of that version still running across an install or a rollback
  * creates it exclusively and so waits for this holder, and this holder waits
@@ -299,12 +320,7 @@ function ticketBreakable(ticket: string, token: string): boolean {
  * older hook at most, never another ticket holder.
  */
 function takeLegacyLock(legacy: string, token: string): boolean {
-    try {
-        fs.writeFileSync(legacy, token, { flag: 'wx', mode: 0o600 });
-        return true;
-    } catch {
-        // held, or another failure: judge the holder below
-    }
+    if (createLegacyLock(legacy, token)) return true;
     let held: string;
     try {
         held = fs.readFileSync(legacy, 'utf-8');
@@ -313,12 +329,7 @@ function takeLegacyLock(legacy: string, token: string): boolean {
     }
     if (!ticketBreakable(legacy, held)) return false;
     fs.rmSync(legacy, { force: true });
-    try {
-        fs.writeFileSync(legacy, token, { flag: 'wx', mode: 0o600 });
-        return true;
-    } catch {
-        return false;
-    }
+    return createLegacyLock(legacy, token);
 }
 
 function releaseLegacyLock(legacy: string, token: string): void {

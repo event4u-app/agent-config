@@ -16,6 +16,7 @@ import { appendQuotaSnapshot, hashSessionId } from '../../src/scripts/_lib/quota
 import { readSwitchRecord, updateSwitchRecord } from '../../src/scripts/_lib/switch_relay.js';
 import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
 import { noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
+import { locked as lockedBeforeTickets } from './fixtures/switch_relay_v1_lock.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FAKE = path.join(HERE, 'fixtures', 'fake_agent_switch.mjs');
@@ -232,6 +233,9 @@ describe('the lock across an install: the older single lock file', () => {
         try {
             const token = `${String(holder.pid)}.${String(Date.now())}.old`;
             fs.writeFileSync(legacy(), token);
+            // Older than the two seconds after which that version breaks any lock.
+            const old = new Date(Date.now() - 10_000);
+            fs.utimesSync(legacy(), old, old);
             expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
             expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
             expect(fs.readFileSync(legacy(), 'utf-8')).toBe(token);
@@ -261,6 +265,23 @@ describe('the lock across an install: the older single lock file', () => {
         expect(oldCouldTake).toBe(false);
         expect(fs.existsSync(legacy())).toBe(false);
     });
+
+    it('a hook of the older version, running its whole acquire loop, does not break a holder of this version past two seconds', async () => {
+        raised();
+        setRequest(APPROVED);
+        const slow = hook({ op: 'stop', holdMs: 3500, label: 'A' });
+        await until(() => writes().includes('A:start'));
+        await new Promise((r) => setTimeout(r, 2300));
+        const older = lockedBeforeTickets(switchRecordPath(hashSessionId(SESSION), stateEnv), () => {
+            fs.appendFileSync(writeLog, 'OLD:entered\n');
+            return true;
+        });
+        expect(await slow).toBe(true);
+        expect(older).toBeNull();
+        expect(writes()).toEqual(['A:start', 'A:written']);
+        // Released: the older version takes it again.
+        expect(lockedBeforeTickets(switchRecordPath(hashSessionId(SESSION), stateEnv), () => true)).toEqual({ value: true });
+    }, 20_000);
 
     it('a dead holder’s single lock file is broken', () => {
         raised();
