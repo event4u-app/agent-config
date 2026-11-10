@@ -194,6 +194,7 @@ export {
     _required_contexts_from_rules,
     release_pr_body,
 } from './release_publication.js';
+import { pre_push_argvs } from './_lib/release_pre_push.js';
 import { refresh_pr_body_and_surface_check } from './_lib/release_surface_check.js';
 import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
@@ -217,7 +218,6 @@ import {
     checkout_release_branch,
     _render_test_trend_line,
     guard_release_curation,
-    local_release_gate_argv,
     measure_mix_obligation,
     die,
     gh,
@@ -984,8 +984,8 @@ function execute(
         // the remote is already at head (a no-op push still runs the pre-push
         // hook, which then refuses over pending CI) and merges one that moved.
         // Not a `_step`: a second `[4/11]` makes the cited evidence anchors ambiguous.
-        process.stdout.write('        · verifying release gates locally (`task release:verify -- --cheap`)\n');
-        run(local_release_gate_argv());
+        process.stdout.write('        · verifying release gates locally, then the CI mirror on the release head\n');
+        for (const argv of pre_push_argvs()) run(argv);
 
         _step(4, total, `Push ${branch} to ${REMOTE}`);
         push_release_branch(branch);
