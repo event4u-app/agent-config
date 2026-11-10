@@ -180,7 +180,9 @@ export function _check_txlog_clean(
     logPath: string = installLogPath(),
     projectRoot: string | null = null,
 ): Dict {
-    const entries = fs.existsSync(logPath) ? readRecentEntries(logPath) : [];
+    // Unconditional: entries this process queued may not be on disk yet, and
+    // readRecentEntries flushes them first (an absent log reads as []).
+    const entries = readRecentEntries(logPath);
     if (entries.length === 0) {
         // One branch for all three no-usable-entries shapes — absent, empty,
         // and unreadable. Splitting them let a zero-byte or fully-corrupt log

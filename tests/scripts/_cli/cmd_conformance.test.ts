@@ -158,6 +158,10 @@ describe('_check_txlog_clean', () => {
         mkdirSync(src, { recursive: true });
         writeFileSync(join(src, 'file.md'), '# x\n');
         _copy_dir_dereferencing_symlinks(src, join(tmp, 'dest'), false);
+        // The installer batches its log entries; a finished install has
+        // flushed them (on exit at the latest) — this fixture is a finished one.
+        const { flushTxLog } = await import('../../../src/install/txlog.js');
+        flushTxLog();
         mkdirSync(join(tmp, 'agents'), { recursive: true });
         writeFileSync(join(tmp, 'agents', 'installed-tools.lock'), 'schema_version: 2\ntools: []\n');
         return { fakeHome, logPath: join(fakeHome, '.event4u', 'agent-config', 'install-log.jsonl') };
