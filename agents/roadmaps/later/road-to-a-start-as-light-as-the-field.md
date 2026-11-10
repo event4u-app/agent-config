@@ -29,6 +29,8 @@ relates:
 
 > **Source:** `agents/tmp.old/inbox-2026-11-zc/` (topics t2 and t3: an external
 > start-size comparison and the reviewer report relayed by the operator).
+>
+> **Arrivals:** 2 — latest `inbox-2026-11-wo` (2026-11-10): three reviews ask, before the next cut, for tasks that discriminate (two of seven separated the arms on each model), for `trapC-ambig-01` to be re-tested after it left the primary endpoint, for the padded arm's length effect on Sonnet (−0.052) to be reproduced as a primary, and for a multi-arm comparison (no rules, a minimal prompt, the kernel, the reduced and the full layer) on success, rule arrival and total price. The confirmation landed with #2964; 1.4 to 1.7 carry the rest.
 
 ## Goal
 
@@ -57,6 +59,22 @@ named in the same set: removing before proving.
       standing order for this set: delete only as a last resort.
       verify: every removal record names the adapted variant it measured.
       Note 2026-11-09: first adapted variant measured (contract stubs for two rules): INCONCLUSIVE by the per-task veto, see the blocker status. No removal was recorded on it. Note 2026-11-09, later: a second adapted variant (the `downstream-changes` ask-first line scoped to unrequested breaking changes) ran under `agents/evidence/preregistration/ask-scope-vs-full-layer-protocol-20261109.md` and reads **INCONCLUSIVE** (`agents/evidence/metrics/ask-scope-vs-full-layer-result-20261109.md`): primary LB −0.028, no per-task veto, but the blind-ask guard is undetermined by two `trapC-ambig-01` runs that timed out before any model call. No removal was recorded on it. The owner later adopted the exclusion reading, which makes it NON-INFERIOR (see the blocker status).
+
+- [ ] **1.4 Tasks that discriminate.** Before a further cut, grow the held-out
+      set until at least five tasks score strictly between 0 and 1 on each arm and
+      model, so a pass rests on more than two tasks.
+      verify: a pilot report listing per-task mean J per arm with at least five tasks inside (0, 1).
+- [ ] **1.5 The dropped task, re-tested.** Write an ask rubric for `trapC-ambig-01`
+      and re-run it with 16 seeds on the full and the adapted layer, pre-registered.
+      verify: a result file under `agents/evidence/metrics/` citing its pre-registration.
+- [ ] **1.6 Length as a primary.** Pre-register the padded-versus-reduced
+      comparison on Sonnet as the primary endpoint, so the −0.052 secondary
+      reading is confirmed or dropped.
+      verify: a result file that states the reading against a margin fixed before data.
+- [ ] **1.7 Five arms, one set.** No rules, a minimal prompt, the kernel only, the
+      reduced and the full layer, paired seeds, scored on task success, rule
+      arrival and total price per run.
+      verify: one report with all five arms and a cost-per-success column.
 
 ## Blockers
 

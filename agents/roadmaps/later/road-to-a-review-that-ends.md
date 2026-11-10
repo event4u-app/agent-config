@@ -33,6 +33,8 @@ relates:
 > sized for two hours take days; apply only what a step needs, skip nothing it
 > needs; AC must become effective again. Both plans named the unbounded
 > completion review as the largest single multiplier.
+>
+> **Arrivals:** 2 — latest `inbox-2026-11-wo` (2026-11-10): the same reviewer revises its ask: after 3.1 showed new defects past round five, it no longer wants a blind cap, but severity, repeats, review-introduced defects and cost per fixed defect measured first, then a risk-based stop. 3.1b carries the missing half.
 
 ## Context
 
@@ -137,6 +139,11 @@ round refused), 20 on `compact-checkpoint-concern-20261108`, 11 on
       cost per real defect fixed.
       verify: an artefact under `agents/evidence/analysis/` with one table per subject and a pooled yield-by-round row.
       Done 2026-11-09 (`agents/evidence/analysis/ratification-yield-by-round-2026-11-09.md`): 197 / 48 / 25 defects over 56 / 20 / 11 rounds. Pooled new defects per round: 5.33, 4.33, 3.00 for rounds 1-3, then 2.73 (rounds 6-10) and 2.76 (11-20); unlike the completion review, the curve does not fall after round 5. 36 of 87 rounds carry a defect traced to the previous fix. Spend per round is not recorded anywhere, so cost per fixed defect cannot be computed.
+- [ ] **3.1b Record what 3.1 could not read.** Every ratification round writes its
+      council spend and a severity per defect into its record, so the next 3.1 run
+      yields cost per fixed defect and yield by severity. Round inbox-2026-11-wo:
+      the reviewer now asks for these before any cap, which 3.2 should be shown.
+      verify: the next ratification record carries `spend_usd` and a severity per defect, and 3.1's script reads them.
 - [ ] **3.2 Owner decision on a ratification cap.** <!-- blocked-by: ratification-round-cap-is-an-owner-contract-change -->
       Present 3.1's table with the options under the blocker.
       verify: the decision is recorded under `docs/decisions/` or in the blocker entry.

@@ -10,6 +10,8 @@ execution:
 > 9,654-line reviewer corpus (ten independent sessions), its own triage
 > write-up, and two revisions of this proposal. The triage lives at
 > `agents/evidence/analysis/feedback-14-8-0-triage.md`.
+>
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): two reviews and one bench feedback state the same direction: the next quality step should come from a higher success rate on real tasks at lower tokens, time and correction loops, measured against no rules and a minimal prompt, not from more rules or agents; one asks to find and simplify components with little measured benefit, since most of 20.2.0 was governance-only change.
 
 > **Parked 2026-08-22. Resume when** BOTH conditions hold, measured and written
 > down, not asserted: (a) the standing-payload delta ledger has **≥ 4 weeks of

@@ -5,6 +5,8 @@ review_by: 2026-12-07
 
 # Stub: road to a test selection measured in minutes
 
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): the 20.2.0 review notes PR CI runs only selected tests, `mode: none` reads green, and the miss rate is unmeasured; it asks for the miss rate and for `mode: none` to run the full suite.
+
 > **Stub — not active work.** Created 2026-11-07 from round `inbox-2026-11-za`: two
 > reviews of the CI test selection (PR #2894, required since 2026-11-07) ask for its
 > real effect, not its replay. It is a stub because the evidence needs elapsed time —

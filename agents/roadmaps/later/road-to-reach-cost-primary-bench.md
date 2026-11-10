@@ -6,6 +6,8 @@ parent_roadmap: road-to-internet-reach
 
 # Roadmap: Reach — test the cost thesis properly (the signal the capability bench was not built to decide)
 
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): three reviews in one round ask for cost per correctly completed task under production-like conditions, and one bench feedback names it the remaining gap now that token counts exist (#2964: −58 % Haiku, −66 % Sonnet input tokens per run). That is this file's primary metric; its Phase 1 is unchanged.
+
 > Decide, with a pre-registration whose PRIMARY metric is token cost, whether
 > prescription-based reach is worth shipping for cost alone — the claim the first
 > reach benchmark measured but was explicitly not authorised to make.
