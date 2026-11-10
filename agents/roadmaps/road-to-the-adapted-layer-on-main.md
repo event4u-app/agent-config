@@ -98,13 +98,17 @@ fresh pre-registration before it can ship.
       verify: a runner test where a stream with no init event is rerun and not scored, and one with a post-call timeout is scored.
       Done 2026-11-09: `--pre-model-reruns N` (default 0), recorded in the report.
       production entry: `internal/bench/core/bench_ab_v2_run.ts`
-- [ ] **1.5 A fresh confirmation, if the owner takes option (g).** The owner took it (2026-11-10). Pre-registered in `agents/evidence/preregistration/adapted-layer-confirmation-protocol-20261110.md`: seven held-out tasks, a guard task, Haiku 4.5 and Sonnet 5.5, three arms.
+- [x] **1.5 A fresh confirmation, if the owner takes option (g).** The owner took it (2026-11-10). Pre-registered in `agents/evidence/preregistration/adapted-layer-confirmation-protocol-20261110.md`: seven held-out tasks, a guard task, Haiku 4.5 and Sonnet 5.5, three arms.
       Pre-register, before any transcript, a run on fresh seeds (and unseen
       tasks where the corpus has them) under the 1.4 convention, on Haiku 4.5
       and Sonnet 5.5, with a third arm: the reduced layer padded with neutral
       text to the full layer's length, so content loss and first-turn size are
       separated. Rough cost $20–45 per model.
       verify: the pre-registration is on `main` before the run's report, and the report prints a verdict per model and per arm.
+      Done 2026-11-10: NON-INFERIOR on both — Haiku [−0.010, +0.050], Sonnet
+      [+0.013, +0.106] (`adapted-layer-confirmation-{haiku,sonnet}-result-20261110.md`).
+      Found on the way: a timeout carries no `stream`, so 1.4's rerun never fires
+      on it (step 2.3).
 
 ## Phase 2 — land it
 
@@ -118,6 +122,13 @@ fresh pre-registration before it can ship.
       `start-cut-waits-on-full-vs-reduced`) and the 5.2 note in
       `road-to-a-setup-that-decides-itself-carried` with the landing commit.
       verify: both notes cite the merge commit.
+- [ ] **2.3 A timeout keeps its stream.** The claude task runner's timeout
+      result carries no `stream`, and `reached_model` reads a missing stream as
+      reached, so a pre-model timeout is scored instead of rerun (two such trials
+      in the Sonnet confirmation). Return the partial stdout as `stream` on a
+      stream-mode timeout. Its own PR, after 2.1.
+      verify: a runner test where a timeout with no init event and no tokens reads `reached_model` false.
+      production entry: `internal/bench/core/bench_ab_task_runner.ts`
 
 ## Blockers
 
