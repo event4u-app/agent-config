@@ -175,3 +175,9 @@ Regarding the prior critiques:
 
 STANCE: refused | CONFIDENCE: med | DEALBREAKER: yes
 ```
+
+## For the owner's decision
+
+- **Expected gain.** A prompt without the switch question, the default, parses 27,162 B of `quota_notice` instead of 47,877 B, and the chunk is under the 41,000 B it was asked to return to. With the question on, the combined cost is stated and enforced by a new chunk-group ceiling (62,100 B for 56,491 B measured) instead of hiding in one chunk. A slow Stop is no longer evicted from the record lock after two seconds, and breaking an abandoned lock can no longer remove a successor's.
+- **Risk.** With the question on, a prompt parses 8,614 B (+18 %) more than before. While a hook of the previous version still runs across an install or a rollback, its own check-then-unlink of `<record>.lock` can interleave with another breaker, so two hooks can enter the record together; this change cannot alter that version's code. A missing, mis-digested or other-surface `switch_link` chunk turns the switch question and the pre-move checkpoint off until it is fixed; an owed checkpoint stays owed.
+- **Rollback.** `AGENT_CONFIG_NO_SWITCH_QUESTION=1`, or leaving `AGENT_CONFIG_SWITCH_QUESTION` unset, stops both halves with no reinstall. A full rollback is a revert of the merge commit, which returns `quota_notice` to its 49,400 B ceiling and the lock to the previous version; the lock, the split, the group gate and the loader move are separate commits for a partial revert. Rollback criteria are in `agents/evidence/metrics/agent-switch-link-latency-20261108.md` (criteria 7-9 for this change).
