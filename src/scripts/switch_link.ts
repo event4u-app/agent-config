@@ -8,8 +8,7 @@
 import * as fs from 'node:fs';
 
 import type { WindowPressure } from './_lib/pressure.js';
-import { SWITCH_LINK_API } from './_lib/switch_link_api.js';
-import { switchRecordPath } from './_lib/switch_record_path.js';
+import { SWITCH_LINK_API, switchRecordPath } from './_lib/switch_record_path.js';
 import {
     checkpointBeforeMove,
     isTerminal,

@@ -55,7 +55,7 @@ import {
 import { forAccount, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import { switchQuestionOff } from './_lib/switch_relay.js';
 import { loadLazyExport } from './hooks/lazy_concern.js';
-import { SWITCH_LINK_API } from './_lib/switch_link_api.js';
+import { SWITCH_LINK_API } from './_lib/switch_record_path.js';
 import type { linkFor, switchTurn } from './switch_link.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';

@@ -5,8 +5,8 @@
  * pulling the gate's host tables, and their YAML reader, into its own bytes.
  */
 import { createHash } from 'node:crypto';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 
 /** What a verification produced. */
 export type IntegrityVerdict =
@@ -31,7 +31,7 @@ export function sidecarPathFor(bundlePath: string): string {
 /** SHA-256 of a file's bytes, or null when it cannot be read. */
 export function hashFile(p: string): string | null {
     try {
-        return createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+        return createHash('sha256').update(readFileSync(p)).digest('hex');
     } catch {
         return null;
     }
@@ -47,16 +47,16 @@ export function verifyBundle(bundlePath: string): IntegrityVerdict {
     const sidecar = sidecarPathFor(bundlePath);
     let expected: string | null;
     try {
-        expected = parseSidecar(fs.readFileSync(sidecar, 'utf-8'));
+        expected = parseSidecar(readFileSync(sidecar, 'utf-8'));
     } catch {
-        return { state: 'unverifiable', reason: `no sidecar at ${path.basename(sidecar)}` };
+        return { state: 'unverifiable', reason: `no sidecar at ${basename(sidecar)}` };
     }
     if (expected === null) {
-        return { state: 'unverifiable', reason: `sidecar at ${path.basename(sidecar)} is malformed` };
+        return { state: 'unverifiable', reason: `sidecar at ${basename(sidecar)} is malformed` };
     }
     const actual = hashFile(bundlePath);
     if (actual === null) {
-        return { state: 'unverifiable', reason: `bundle at ${path.basename(bundlePath)} is unreadable` };
+        return { state: 'unverifiable', reason: `bundle at ${basename(bundlePath)} is unreadable` };
     }
     return actual === expected ? { state: 'ok', sha: actual } : { state: 'mismatch', expected, actual };
 }

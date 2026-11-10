@@ -78,8 +78,7 @@ import {
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { CONTEXT_NOTICE_PCT, sessionContextFill } from '../_lib/pressure.js';
 import { hashSessionId, readQuotaLedger } from '../_lib/quota_ledger.js';
-import { SWITCH_LINK_API } from '../_lib/switch_link_api.js';
-import { switchRecordPath } from '../_lib/switch_record_path.js';
+import { SWITCH_LINK_API, switchRecordPath } from '../_lib/switch_record_path.js';
 import type { checkpointBeforeMove } from '../_lib/switch_relay.js';
 import type { linkFor } from '../switch_link.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
@@ -176,15 +175,15 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
  * bundle; it is loaded only for a session that has a switch record at all,
  * and used only when it was built against the same call surface.
  */
-export function loadMoveCheckpoint(): typeof checkpointBeforeMove | null {
-    return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.checkpointBeforeMove ?? null;
+export function loadMoveCheckpoint(): typeof checkpointBeforeMove | undefined {
+    return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.checkpointBeforeMove;
 }
 
 export function moveCheckpoint(
     sessionHash: string,
     write: () => boolean,
     stateEnv?: EnvMap | null,
-    load: () => typeof checkpointBeforeMove | null = loadMoveCheckpoint,
+    load: () => typeof checkpointBeforeMove | null | undefined = loadMoveCheckpoint,
 ): boolean {
     if (!fs.existsSync(switchRecordPath(sessionHash, stateEnv))) return false;
     return load()?.(sessionHash, write, stateEnv) ?? false;

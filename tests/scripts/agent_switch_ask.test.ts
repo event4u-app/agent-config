@@ -29,7 +29,7 @@ import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
 import { buildChunk } from '../../src/scripts/hook_chunks.mjs';
 import { sidecarPathFor } from '../../src/scripts/hooks/bundle_digest.js';
 import { loadLazyExport } from '../../src/scripts/hooks/lazy_concern.js';
-import { SWITCH_LINK_API } from '../../src/scripts/_lib/switch_link_api.js';
+import { SWITCH_LINK_API } from '../../src/scripts/_lib/switch_record_path.js';
 import type { linkFor } from '../../src/scripts/switch_link.js';
 import { loadSwitchTurn, noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
 import { loadMoveCheckpoint, moveCheckpoint } from '../../src/scripts/hooks/session_eol_hook.js';

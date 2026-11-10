@@ -256,7 +256,7 @@ the link over the CLI verbs below, never the MCP client.
   a session with a record. A chunk that is missing or does not match its
   digest is not loaded, and the session behaves as without agent-switch. The
   chunk and its two callers each compile a call-surface version
-  (`_lib/switch_link_api.ts`), and the chunk answers only a caller of the
+  (`SWITCH_LINK_API` in `_lib/switch_record_path.ts`), and the chunk answers only a caller of the
   same version, so a chunk built against another call surface is not called
   even when its digest matches. That is API compatibility, not build identity,
   and loading the chunk to ask runs only its module body, which defines
