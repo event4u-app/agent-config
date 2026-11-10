@@ -82,7 +82,7 @@ import { SWITCH_LINK_API, switchRecordPath } from '../_lib/switch_record_path.js
 import type { checkpointBeforeMove } from '../_lib/switch_relay.js';
 import type { linkFor } from '../switch_link.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
-import { loadLazyExport } from './lazy_concern.js';
+import { loadChunkExport } from './lazy_load.js';
 import { current_branch } from '../_lib/git_common_dir.js';
 import { derive_session_tag } from '../_lib/session_tag.js';
 import { localDay, pruneStaleMarkers, pruneStalePointers, writeSessionPointer } from '../retro_queue.js';
@@ -176,7 +176,7 @@ export function payloadSessionId(payload: JsonObject, envelope: JsonObject): str
  * and used only when it was built against the same call surface.
  */
 export function loadMoveCheckpoint(): typeof checkpointBeforeMove | undefined {
-    return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.checkpointBeforeMove;
+    return loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', '../switch_link', 'linkFor', import.meta.url)?.(SWITCH_LINK_API)?.checkpointBeforeMove;
 }
 
 export function moveCheckpoint(

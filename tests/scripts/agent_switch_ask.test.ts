@@ -28,7 +28,7 @@ import {
 import { switchRecordPath } from '../../src/scripts/_lib/switch_record_path.js';
 import { buildChunk } from '../../src/scripts/hook_chunks.mjs';
 import { sidecarPathFor } from '../../src/scripts/hooks/bundle_digest.js';
-import { loadLazyExport } from '../../src/scripts/hooks/lazy_concern.js';
+import { loadChunkExport } from '../../src/scripts/hooks/lazy_load.js';
 import { SWITCH_LINK_API } from '../../src/scripts/_lib/switch_record_path.js';
 import type { linkFor } from '../../src/scripts/switch_link.js';
 import { loadSwitchTurn, noticeReply, type QuotaNoticeDeps } from '../../src/scripts/quota_notice_hook.js';
@@ -1000,7 +1000,7 @@ describe('8.4 the link in its own chunk', () => {
         // As the dispatch bundle beside it would ask for the chunk.
         const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
         const load = (): unknown =>
-            loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor', self, true)?.(SWITCH_LINK_API)?.checkpointBeforeMove;
+            loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', '../switch_link', 'linkFor', self, true)?.(SWITCH_LINK_API)?.checkpointBeforeMove;
         const sidecar = sidecarPathFor(out);
         const cases: Array<[string, string | null, boolean]> = [
             ['matching', `${sha}  switch_link.chunk.cjs\n`, true],
@@ -1027,7 +1027,7 @@ describe('8.4 the link in its own chunk', () => {
         const sha = createHash('sha256').update(fs.readFileSync(out)).digest('hex');
         fs.writeFileSync(sidecarPathFor(out), `${sha}  switch_link.chunk.cjs\n`);
         const self = pathToFileURL(path.join(dir, 'dispatch.cjs')).href;
-        const linkForOther = loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor', self, true);
+        const linkForOther = loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', '../switch_link', 'linkFor', self, true);
         expect(typeof linkForOther).toBe('function');
         expect(linkForOther?.(SWITCH_LINK_API)).toBeNull();
         expect(linkForOther?.(SWITCH_LINK_API + 1)?.checkpointBeforeMove).toBeTypeOf('function');

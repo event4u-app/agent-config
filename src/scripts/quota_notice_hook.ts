@@ -54,7 +54,7 @@ import {
 } from './_lib/pressure.js';
 import { forAccount, hashSessionId, quotaStateDir, readQuotaLedger, type QuotaSnapshot } from './_lib/quota_ledger.js';
 import { switchQuestionOff } from './_lib/switch_relay.js';
-import { loadLazyExport } from './hooks/lazy_concern.js';
+import { loadChunkExport } from './hooks/lazy_load.js';
 import { SWITCH_LINK_API } from './_lib/switch_record_path.js';
 import type { linkFor, switchTurn } from './switch_link.js';
 import type { EnvMap } from './_lib/user_global_paths.js';
@@ -151,7 +151,7 @@ export function noticeLines(deps: QuotaNoticeDeps): string[] {
  * call surface, means no question, as without agent-switch.
  */
 export function loadSwitchTurn(): typeof switchTurn | null {
-    return loadLazyExport<typeof linkFor>('src/scripts/switch_link.ts', 'linkFor')?.(SWITCH_LINK_API)?.switchTurn ?? null;
+    return loadChunkExport<typeof linkFor>('switch_link.chunk.cjs', './switch_link', 'linkFor', import.meta.url)?.(SWITCH_LINK_API)?.switchTurn ?? null;
 }
 
 export function noticeReply(deps: QuotaNoticeDeps): NoticeReply {
