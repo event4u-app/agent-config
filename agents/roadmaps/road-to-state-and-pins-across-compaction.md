@@ -138,13 +138,14 @@ of re-reading or guessing.
       (`agents/evidence/ratifications/session-pins-phase-2-20261109.md`,
       verdict `refused`, merged on the owner's word per ADR-282).
       verify: `test -f agents/evidence/ratifications/session-pins-phase-2-20261109.md` -> 0
-- [ ] **2.7** Name the three guarantees apart wherever pins are described
+- [x] **2.7** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Name the three guarantees apart wherever pins are described
       (round `inbox-2026-11-wn`, 2026-11-09): persistence (the pin is stored),
       delivery (it reaches the agent after compaction and the subagent at
       start), enforcement (a forbidden action is blocked). Pins give the first
       two, and delivery is unmeasured until 2.4; they give no enforcement. A
       pin that must hold as a block points to the hook that blocks it.
       verify: every user-facing description of pins under `docs/` and in `README.md` states that pins are not enforcement.
+      Done 2026-11-09: `docs/guides/session-pins.md` § What a pin guarantees — the one user-facing description; `README.md` and the other guides do not describe pins.
 - [ ] **2.8** After 2.4 reads its target: pre-register a probe of whether a
       delivered pin changes what a subagent does — a task whose obvious path
       breaks a pinned constraint, with and without the pin, held-out prompts,

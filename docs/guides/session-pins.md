@@ -5,6 +5,23 @@ after the host compacts it — "do not touch the migrations", "answer in German"
 "never push to main". Without a pin, such a sentence lives only in the
 conversation, and a compaction may fold it into a summary that drops it.
 
+## What a pin guarantees, and what it does not
+
+Three different promises are easy to run together:
+
+| Level | Meaning | Pins |
+|---|---|---|
+| Persistence | the constraint is stored | yes |
+| Delivery | it reaches the agent after a compaction, and a subagent at start | yes, best-effort — measured only once enough real sessions with pins exist |
+| Enforcement | a forbidden action is blocked | **no** |
+
+A pin puts your sentence back in front of the agent; it does not stop the
+agent from acting against it. `pin: never push to main` is a reminder the agent
+reads, not a guard. A constraint that must hold as a block belongs in a hook
+that refuses the action — for pushes and other irreversible steps, the
+host's permission rules or this package's `pre_tool_use` guards — and a pin can
+point at it.
+
 ## Setting and removing pins
 
 Type the marker at the start of a line in your own prompt:

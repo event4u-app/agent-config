@@ -130,12 +130,13 @@ each fix. Counted on `main@14a2d4f134` from
 round refused), 20 on `compact-checkpoint-concern-20261108`, 11 on
 `denies-name-no-bypass-20261108`. Nothing counts or ends them.
 
-- [ ] **3.1 Yield by ratification round.** For every subject with ≥ 3 rounds,
+- [x] **3.1 Yield by ratification round.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> For every subject with ≥ 3 rounds,
       per round: new defects raised, of those fixed in the next push, and of
       those introduced by the previous round's fix — the F6 table, for this
       loop. Add the council spend per round where the ledger has it, giving
       cost per real defect fixed.
       verify: an artefact under `agents/evidence/analysis/` with one table per subject and a pooled yield-by-round row.
+      Done 2026-11-09 (`agents/evidence/analysis/ratification-yield-by-round-2026-11-09.md`): 197 / 48 / 25 defects over 56 / 20 / 11 rounds. Pooled new defects per round: 5.33, 4.33, 3.00 for rounds 1-3, then 2.73 (rounds 6-10) and 2.76 (11-20); unlike the completion review, the curve does not fall after round 5. 36 of 87 rounds carry a defect traced to the previous fix. Spend per round is not recorded anywhere, so cost per fixed defect cannot be computed.
 - [ ] **3.2 Owner decision on a ratification cap.** <!-- blocked-by: ratification-round-cap-is-an-owner-contract-change -->
       Present 3.1's table with the options under the blocker.
       verify: the decision is recorded under `docs/decisions/` or in the blocker entry.
