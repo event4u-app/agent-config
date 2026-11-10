@@ -256,3 +256,22 @@ Questions:
 2. Does their failed load_check void the sweep under the validity check, given they are errored trials on a non-primary task?
 3. What must the result document state about this, regardless of the reading chosen?
 ~~~
+
+## Owner decision on the two gates, 2026-11-10
+
+Asked in session on 2026-11-09 with three options; the owner answered **"1"** on
+2026-11-10:
+
+> 1. Gate-Check erweitern, `source_path`-Präfix kürzen (−2.200) und vorher einen frischen Bestätigungslauf auf Haiku und Sonnet machen (etwa 20–45 $ pro Modell). <!-- md-language-check: ignore -->
+
+(*Extend the gate check, shorten the `source_path` prefix, and run a fresh
+confirmation on Haiku and Sonnet first, about $20–45 per model.*)
+
+- **Gate 1:** `check_startup_contracts` admits a rule outside the consequence class
+  when a measured result file licenses it (`measured` in
+  `src/config/startup-contract-clauses.json`); both rules carry clause audits. The
+  contract wording stays byte-identical to the measured one.
+- **Gate 2:** the installer drops `dist/agent-src/rules/` from each installed rule's
+  `source_path:`; the adapted layer then reads 79,444 of 80,000 chars.
+- **Shipping** waits on the confirmation pre-registered in
+  `agents/evidence/preregistration/adapted-layer-confirmation-protocol-20261110.md`.
