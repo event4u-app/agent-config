@@ -32,7 +32,10 @@ const RECORD_GRACE_MS = 24 * HOUR_MS;
 const BACKOFF_AFTER = 3;
 /** How long it rests when the next reset is not known; agent-switch's own default request lifetime. */
 const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
+/** Age after which a lock whose holder cannot be identified counts as abandoned. */
 const LOCK_STALE_MS = 2000;
+/** Age after which even a live holder's lock is broken: the locked code only touches local files, so its pid is taken as reused. */
+const LOCK_ABANDONED_MS = 15 * 60_000;
 const LOCK_TRIES = 50;
 const LOCK_WAIT_MS = 5;
 const ID_RE = /^[0-9a-f]{16}$/;
@@ -255,12 +258,45 @@ function pause(ms: number): void {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
+/** Whether the process named by a lock token still runs; `null` when the token names none. */
+function holderAlive(token: string): boolean | null {
+    const pid = Number(token.split('.')[0]);
+    if (!Number.isInteger(pid) || pid <= 0) return null;
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (e) {
+        return (e as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
+/**
+ * Whether a held lock may be broken. A live holder is never evicted, however
+ * slow: a Stop still building its checkpoint would otherwise publish an
+ * older snapshot after its successor's. The waiter gives up instead and leaves
+ * the work to the next hook. A dead holder's lock is broken at once; one that
+ * names no process falls back to its age.
+ */
+function lockBreakable(held: string): boolean {
+    let token: string;
+    let age: number;
+    try {
+        token = fs.readFileSync(held, 'utf-8');
+        age = Date.now() - fs.statSync(held).mtimeMs;
+    } catch {
+        return false;
+    }
+    const alive = holderAlive(token);
+    if (alive === false) return true;
+    if (alive === null) return age > LOCK_STALE_MS;
+    return age > LOCK_ABANDONED_MS;
+}
+
 /**
  * Run `fn` holding `<file>.lock`, or return `null` when the lock could not be
- * had. The lock file carries a token of this holder, and only a holder whose
- * token is still in it removes it: a holder older than LOCK_STALE_MS is taken
- * to have died and its lock is broken, and if it was only slow, its release
- * must not delete the lock its successor now holds.
+ * had. The lock file carries a token naming this holder's process, and only a
+ * holder whose token is still in it removes it, so a release never deletes a
+ * lock someone else took after breaking it (see `lockBreakable`).
  */
 function locked<T>(file: string, fn: () => T): { value: T } | null {
     const held = `${file}.lock`;
@@ -270,11 +306,7 @@ function locked<T>(file: string, fn: () => T): { value: T } | null {
             fs.mkdirSync(path.dirname(file), { recursive: true });
             fs.writeFileSync(held, token, { flag: 'wx', mode: 0o600 });
         } catch {
-            try {
-                if (Date.now() - fs.statSync(held).mtimeMs > LOCK_STALE_MS) fs.rmSync(held, { force: true });
-            } catch {
-                // released meanwhile
-            }
+            if (lockBreakable(held)) fs.rmSync(held, { force: true });
             pause(LOCK_WAIT_MS);
             continue;
         }
