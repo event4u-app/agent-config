@@ -85,7 +85,14 @@ What the review found, with what was re-checked on `main@ada1f46a85`:
 - [ ] **2.3 Unreleased and honest nulls.** Curated `[Unreleased]` entries move
       into the release section, and the honest-nulls line is derived from reverts
       and recorded nulls in the span, never left as "_none_" by default.
-      verify: replayed on the 20.0.0 span, the line names the reverted change.
+      verify: a test where a span holding a `Revert "…"` commit produces an honest-nulls line naming that commit.
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| C1 | contested-technical | agent (closure, round inbox-2026-11-wo) | "Named in the section" and "listed as internal" are both legal outcomes per commit; only a commit in neither is refused. Not a choice between designs. | unpicked-alternative:75 | a release lists most consumer commits as internal |
+| C2 | deterministic | agent | 2.3's verify was rewritten to a test on a span holding a `Revert "…"` commit. | unfalsifiable-verify:85 | — |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->

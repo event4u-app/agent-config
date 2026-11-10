@@ -111,17 +111,23 @@ say exactly what it does not check.
 - [ ] **2.7 The mirror measured against CI.** For 30 consecutive pushes, record
       the mirror's verdict per job beside CI's. Then name the false-greens and
       false-reds, including the stale-bridge read of 2026-11-10.
-      verify: an artefact under `agents/evidence/analysis/` with the 30-row table and both rates.
+      verify: an artefact under `agents/evidence/analysis/` listing 30 head SHAs, the mirror's and CI's verdict per job for each, and the false-green and false-red counts.
 - [ ] **2.8 The #2768 bypass review.** The council review of the #2768 bypass is
       due 2026-11-14 under the standing bypass directive.
       verify: `agents/evidence/council/bypass-2768-review-*.md` exists, dated on or before 2026-11-14.
 
 ## Decisions
 
-| # | Decision | Owner | State |
-|---|---|---|---|
-| D1 | Widen the major detection to every consumer-facing name (beyond `removedDefaultAssets`)? | owner | open, asked in round inbox-2026-11-wo |
-| D2 | OQ-56: does the standing bypass directive allow `--admin`, and is a deny hook built? (`agents/owner-questions.md:88`) | owner | open since 2026-11-01 |
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| C1 | destructive-owned | agent (closure, round inbox-2026-11-wo) | False positive: "merge-base" names the revision a check reads. No step merges, pushes, deletes or force-writes anything. | typed-op:53 | a step gains an action on a remote |
+| C2 | destructive-owned | agent | Same: 2.2 changes what an existing check reads at the merge-base. | typed-op:91 | as C1 |
+| C3 | destructive-owned | agent | Same: 2.3 reports merges after the fact and writes records; it never merges. Each backfilled record says it was written after the fact (Risk 2). | typed-op:95 | as C1 |
+| C4 | destructive-owned | agent | Same: 2.4 adds a refusal to a ceiling change; it lowers or raises nothing itself. | typed-op:100 | as C1 |
+| C5 | deterministic | agent | 2.7's verify names its contents: 30 head SHAs, both verdicts per job, both counts. | unfalsifiable-verify:111 | — |
+| C6 | contested-technical | agent | AC-1's "or" applies to 1.1 alone; every Phase 2 item becomes a check with a test. | unpicked-alternative:139 | — |
+| D1 | owner | owner | Widen the major detection to every consumer-facing name, beyond `removedDefaultAssets`? | 1.2 | open, asked in round inbox-2026-11-wo |
+| D2 | owner | owner | OQ-56: does the standing bypass directive allow `--admin`, and is a deny hook built? (`agents/owner-questions.md:88`) | 2.8 context | open since 2026-11-01 |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
