@@ -107,7 +107,10 @@ say exactly what it does not check.
       verify: a fixture tree with an untracked `.env` produces that line and no diff of it.
 - [ ] **2.6 A backed claim has reachable evidence.** A CLAIMS row reads `backed`
       only while its raw data and cited commits are reachable from `main`.
-      verify: a test where a row citing an unreachable commit reads `unbacked`.
+      The staleness check reads the evidence clauses too, not only the
+      `claim:` line (`_lib/claims_stale_verified.ts:24-31`; the shadow-bar
+      claim at `docs/CLAIMS.md:1391` was never flagged).
+      verify: a test where a row citing an unreachable commit reads `unbacked`, and one whose evidence clause is stale is flagged.
 - [ ] **2.7 The mirror measured against CI.** For 30 consecutive pushes, record
       the mirror's verdict per job beside CI's. Then name the false-greens and
       false-reds, including the stale-bridge read of 2026-11-10.
@@ -115,6 +118,12 @@ say exactly what it does not check.
 - [ ] **2.8 The #2768 bypass review.** The council review of the #2768 bypass is
       due 2026-11-14 under the standing bypass directive.
       verify: `agents/evidence/council/bypass-2768-review-*.md` exists, dated on or before 2026-11-14.
+- [ ] **2.9 An owner decision is closed by the owner.** An owner-class decision
+      that a run wrote into a PR body blocks that PR's merge until it is
+      answered, and a delegation quoted only in an agent-written file does not
+      count as the owner's (owner-reserved D5 of the archived
+      run-the-invocation-already-answered roadmap was closed that way).
+      verify: a test where a PR body carrying an unanswered owner decision is refused at merge, and one where the answer is recorded passes.
 
 ## Decisions
 

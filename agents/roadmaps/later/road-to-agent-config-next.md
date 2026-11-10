@@ -259,3 +259,7 @@ clearing them still leaves the owner-reserved clause open.
 - [ ] AC-4 — The reusable residue is scoped to two named sections, so the
       twelve-roadmap version cannot be re-imported by a reader who only has
       this file.
+- [ ] AC-5 — When this file resumes, the next step is chosen by task success
+      on real work per token, minute and correction loop, measured against no
+      rules and a minimal prompt, and not by adding rules or agents. This is the
+      direction constraint stated by every source of round inbox-2026-11-wo.
