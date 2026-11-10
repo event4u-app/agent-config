@@ -25003,20 +25003,16 @@ var PACKAGE_TAG_ID = "event4u/agent-config";
 var RULES_SOURCE_PREFIX = path44.join("dist", "agent-src", "rules") + path44.sep;
 function installed_source_value(source, package_root) {
   if (source === null) return null;
-  let resolved_src;
-  try {
-    resolved_src = resolvePath(source);
-  } catch {
-    resolved_src = source;
-  }
+  const resolve24 = (p) => {
+    try {
+      return resolvePath(p);
+    } catch {
+      return p;
+    }
+  };
+  const resolved_src = resolve24(source);
   if (package_root === null) return resolved_src;
-  let root;
-  try {
-    root = resolvePath(package_root);
-  } catch {
-    root = package_root;
-  }
-  const rel = path44.relative(root, resolved_src);
+  const rel = path44.relative(resolve24(package_root), resolved_src);
   if (rel === "" || rel.startsWith("..") || path44.isAbsolute(rel)) return resolved_src;
   return rel.startsWith(RULES_SOURCE_PREFIX) ? rel.slice(RULES_SOURCE_PREFIX.length) : rel;
 }

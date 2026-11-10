@@ -2525,29 +2525,13 @@ const PACKAGE_TAG_ID = 'event4u/agent-config';
 
 const RULES_SOURCE_PREFIX = path.join('dist', 'agent-src', 'rules') + path.sep;
 
-/**
- * The `source_path:` value stamped into an installed file: package-relative,
- * absolute when the source lies outside the package. A packaged rule drops the
- * shared `dist/agent-src/rules/` prefix — the value is ownership evidence that
- * nothing parses, and the prefix cost every session start about 2,200 chars
- * across the unconditional rule layer.
- */
+/** `source_path:` for an installed file: package-relative (a rule without `dist/agent-src/rules/`, ~2,200 chars per session start), absolute outside the package. Ownership evidence; nothing parses it. */
 export function installed_source_value(source: string | null, package_root: string | null): string | null {
     if (source === null) return null;
-    let resolved_src: string;
-    try {
-        resolved_src = resolvePath(source);
-    } catch {
-        resolved_src = source;
-    }
+    const resolve = (p: string): string => { try { return resolvePath(p); } catch { return p; } };
+    const resolved_src = resolve(source);
     if (package_root === null) return resolved_src;
-    let root: string;
-    try {
-        root = resolvePath(package_root);
-    } catch {
-        root = package_root;
-    }
-    const rel = path.relative(root, resolved_src);
+    const rel = path.relative(resolve(package_root), resolved_src);
     if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return resolved_src;
     return rel.startsWith(RULES_SOURCE_PREFIX) ? rel.slice(RULES_SOURCE_PREFIX.length) : rel;
 }
