@@ -27,6 +27,8 @@ estate_offset_exempt: "The parent sat in later/ on main and is archived here, wh
 > whose full honesty run, guardrail review and every other step closed. The
 > parent's items 3.1, 3.2 and AC-3 were `[~]` there with the carry recorded at
 > the item; they are restated here as open work.
+>
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): two reviews ask for the measured (g) counter-clause in the kernel (P1, "only your PR is missing") with a re-measurement after, and one grades reducing reviewer false positives P0. 3.5 stays the owner's kernel PR.
 
 ## Goal
 

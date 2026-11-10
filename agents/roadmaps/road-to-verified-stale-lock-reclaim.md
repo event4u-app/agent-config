@@ -18,6 +18,8 @@ relates:
 > `agents/roadmaps/{*,later,stubs}` for `_acquire_lock|LOCK_STALE_MS|stale-lock reclaim`
 > finds only `road-to-state-and-pins-across-compaction`, whose step 2.5 records the
 > round-56 point and carries no lock work.
+>
+> **Arrivals:** 1 — latest `inbox-2026-11-wo` (2026-11-10): an external review grades the generation lock P0 and asks for fencing or guarded writes before it reaches the five sites. 2.6 carries it.
 
 ## Goal
 
@@ -64,6 +66,7 @@ stale-lock break or a release, under any interleaving of three contenders.
 - [ ] 2.3 `_lib/egress_session_table.ts` and `ai_council/budget_guard.ts`: same protocol, same harness.
 - [ ] 2.4 `_lib/project_registry.ts`: the directory lock, with the protocol extended to directories first.
 - [ ] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper.
+- [ ] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-09 | reviewer: claude/host -->

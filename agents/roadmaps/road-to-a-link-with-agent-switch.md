@@ -274,6 +274,12 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       (for example the link in its own lazily loaded chunk with its own measured
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
+- [ ] **8.5 Remove what was written.** The write path accepts any command for the
+      MCP entry (`mcp_bridge.ts:281-305`), the remove path matches only the bare
+      `agent-switch mcp serve`, so an entry written in another form survives a
+      remove. Accept only the contract form on write, or compare against the
+      lockfile on remove. Round inbox-2026-11-wo, graded "gering" by the review.
+      verify: a test where an entry written with a path prefix is removed.
 
 ## Decisions
 
