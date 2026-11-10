@@ -284,20 +284,11 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       (for example the link in its own lazily loaded chunk with its own measured
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
-      Progress: the link is its own lazy chunk, `src/scripts/switch_link.ts`
-      (29,369 B, ceiling 32,200); `quota_notice` measures 28,588 B, ceiling
-      lowered to 31,400. With the opt-in a prompt parses both, 57,957 B
-      against 47,877 before. Loaded only with the opt-in, and by the Stop path only
-      for a session with a record; the digest check moved to
-      `hooks/bundle_digest.ts` so the chunk does not carry the YAML reader.
-      Council round 1 refused (lock break could remove a successor's lock;
-      combined cost unstated); the lock is now per-holder tickets. Round 2
-      refused (older and newer lock blind to each other across an install;
-      caller and chunk not bound to one build); the ticket holder also takes
-      the older lock file, and caller and chunk share a call-surface version.
-      Round 3 refused (the older version still broke that file after two
-      seconds; combined cost not enforced); the file is now dated ahead while
-      held, and the gate has a chunk-group ceiling, 63,500 B for the two.
+      Progress: the link is its own lazy chunk (`switch_link`, 29,329 B);
+      `quota_notice` 27,162 B, ceiling lowered to 29,900; the chunk group
+      `agent-switch-link-opted-in` caps both at 62,100 B. Council rounds 1-4
+      refused; findings and fixes are in
+      `agents/evidence/council/agent-switch-link-chunk-ratification-r*-20261110.question.md`.
       Open: the ratification record for the budget and plumbing change.
 - [ ] **8.5 Remove what was written.** The write path accepts any command for the
       MCP entry (`mcp_bridge.ts:281-305`), the remove path matches only the bare
