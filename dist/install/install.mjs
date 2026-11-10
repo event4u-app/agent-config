@@ -10492,6 +10492,12 @@ function bufferTxLog(logPath, entry) {
     flushTxLog(logPath);
   }
 }
+var runMarked = /* @__PURE__ */ new Set();
+function markRun(logPath) {
+  if (runMarked.has(logPath)) return;
+  runMarked.add(logPath);
+  bufferTxLog(logPath, { ts: (/* @__PURE__ */ new Date()).toISOString(), kind: "run", path: "", sha256: null, note: "install run" });
+}
 function flushTxLog(logPath) {
   const targets = logPath === void 0 ? [...pending.keys()] : [logPath];
   for (const target of targets) {
@@ -25141,6 +25147,7 @@ function _escapes_package_root(resolved, package_root) {
 }
 function _log_tx_entry(kind, target) {
   try {
+    markRun(getLogPath());
     const sha2562 = kind === "write" ? sha256OfFile(target) : null;
     if (sha2562 !== null && !isNewWrite(target, sha2562)) return;
     bufferTxLog(getLogPath(), { ts: (/* @__PURE__ */ new Date()).toISOString(), kind, path: target, sha256: sha2562 });

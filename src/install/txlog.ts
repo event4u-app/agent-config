@@ -18,6 +18,10 @@
  * `appendTxLog`. Both serialize the same `TxLogEntry`, so the entry shape is
  * identical by construction rather than by convention.
  *
+ * Each installer run opens with one `run` marker (`markRun`), so the tail is
+ * always the latest run even when it wrote nothing new — recovery's write
+ * counts therefore cover new bytes only, not every file a run touched.
+ *
  * WHAT READS IT: recovery (the active log only) and `./loggedWrites.ts`, which
  * reads every `write` digest in the active log AND its rotated siblings as
  * proof that bytes on disk are the installer's own output.
@@ -51,7 +55,7 @@ export interface TxLogEntry {
     /** ISO-8601 UTC timestamp of the event. */
     readonly ts: string;
     /** Event kind \u2014 `write` is the only success path; `abort` flags client disconnect. */
-    readonly kind: 'write' | 'skip' | 'abort' | 'rollback';
+    readonly kind: 'write' | 'skip' | 'abort' | 'rollback' | 'run';
     /** Absolute target path the entry refers to. */
     readonly path: string;
     /** SHA-256 of the bytes written (null for skip/abort/rollback). */
@@ -114,6 +118,27 @@ export function bufferTxLog(logPath: string, entry: TxLogEntry): void {
     if (queue.length >= BUFFER_FLUSH_THRESHOLD) {
         flushTxLog(logPath);
     }
+}
+
+const runMarked = new Set<string>();
+
+/**
+ * Queue one `run` marker per process and log, ahead of the run's other entries.
+ *
+ * An unchanged re-deploy logs no `write` (see `loggedWrites.isNewWrite`), so
+ * without a marker the tail would still be the previous run: an `abort` there
+ * would keep reading as an interrupted install after a clean re-run, and an
+ * emptied active log would stay empty.
+ */
+export function markRun(logPath: string): void {
+    if (runMarked.has(logPath)) return;
+    runMarked.add(logPath);
+    bufferTxLog(logPath, { ts: new Date().toISOString(), kind: 'run', path: '', sha256: null, note: 'install run' });
+}
+
+/** Tests only: let one process simulate several install runs. */
+export function _resetRunMarker(): void {
+    runMarked.clear();
 }
 
 /** Write every buffered entry (for one log, or all of them). Never throws. */

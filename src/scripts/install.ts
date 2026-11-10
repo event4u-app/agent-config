@@ -138,7 +138,7 @@ import {
 import { main as cmdMigrateMain } from './_cli/cmd_migrate.js';
 import { SCOPE_DETECT_AI_DIRS, SCOPE_DETECT_MANIFESTS } from '../install/detect.js';
 import { getLogPath } from '../install/paths.js';
-import { bufferTxLog } from '../install/txlog.js';
+import { bufferTxLog, markRun } from '../install/txlog.js';
 import { isNewWrite } from '../install/loggedWrites.js';
 
 // ---------------------------------------------------------------------------
@@ -2626,6 +2626,7 @@ function _escapes_package_root(resolved: string, package_root: string | null): b
  */
 function _log_tx_entry(kind: 'write' | 'skip', target: string): void {
     try {
+        markRun(getLogPath());
         const sha256 = kind === 'write' ? sha256OfFile(target) : null;
         if (sha256 !== null && !isNewWrite(target, sha256)) return; // the log already proves these bytes
         bufferTxLog(getLogPath(), { ts: new Date().toISOString(), kind, path: target, sha256 });
