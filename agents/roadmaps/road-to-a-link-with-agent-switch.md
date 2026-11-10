@@ -251,17 +251,27 @@ Carried from council rounds 1–6 of the Phase 7 budget raise
 (`agents/evidence/council/agent-switch-hardening-ratification-r{1..6}-20261108.question.md`,
 all `refused`; merged on the owner's word with the question opt-in, D5).
 
-- [ ] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
+- [x] **8.1 A writer the lock cannot evict.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> A Stop whose checkpoint build
       outlives the two-second stale break can lose its lock to a second Stop and
       still publish an older snapshot after it (round 6). Serialize in a way
       that cannot evict a live writer, or write checkpoint generations so an
       older one never replaces a newer one.
       verify: a two-process test with a writer held past the stale break.
-- [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
+      Done: the lock names its holder's process and is never broken while that
+      process runs (dead holder at once, unnamed after 2 s, any after 15 min);
+      a waiter gives up and leaves the write to the next Stop.
+      `tests/scripts/agent_switch_interprocess.test.ts` § 8.1, red against the
+      age-only break.
+- [x] **8.2 Interprocess evidence.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
       and the checkpoint.
       verify: the two-process tests.
+      Done: relay claim, back-off count and checkpoint, each with two or three
+      `node` processes running the hook halves (`fixtures/switch_relay_driver.ts`)
+      against the fake agent-switch at one instant; all three red with the lock
+      removed, in three runs. Not the full dispatcher: its process start costs
+      seconds per run and adds nothing to the lock under test.
 - [ ] **8.3 Consent at execution, closed.** Ask agent-switch to mark
       `switch_decide` with `requiresUserInteraction` (counterpart roadmap
       `road-to-the-agent-config-link`), then show a live interactive prompt on
@@ -274,6 +284,12 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       (for example the link in its own lazily loaded chunk with its own measured
       budget) or have the raise ratified.
       verify: the budget gate at the chosen ceiling, and a ratification record.
+      Progress: the link is its own lazy chunk, `src/scripts/switch_link.ts`
+      (27,951 B, ceiling 30,800); `quota_notice` measures 26,290 B, ceiling
+      lowered to 29,000. Loaded only with the opt-in, and by the Stop path only
+      for a session with a record; the digest check moved to
+      `hooks/bundle_digest.ts` so the chunk does not carry the YAML reader.
+      Open: the ratification record for the budget and plumbing change.
 
 ## Decisions
 
