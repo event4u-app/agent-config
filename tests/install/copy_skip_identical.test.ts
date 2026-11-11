@@ -92,7 +92,7 @@ describe('installer copy — identical targets are left untouched', () => {
         expect(readFileSync(join(dest, 'a.md'), 'utf8')).toBe(good);
     });
 
-    it.skipIf(process.platform === 'win32')('re-copies when only the permission bits changed', async () => {
+    it('carries a permission change over even when the bytes are identical', async () => {
         const { _copy_dir_dereferencing_symlinks } = await import('../../src/scripts/install.js');
         writeFileSync(join(src, 'run.sh'), '#!/bin/sh\necho hi\n');
         chmodSync(join(src, 'run.sh'), 0o644);
@@ -101,6 +101,9 @@ describe('installer copy — identical targets are left untouched', () => {
         chmodSync(join(src, 'run.sh'), 0o755);
         _copy_dir_dereferencing_symlinks(src, dest, true, join(home, 'pkg'));
 
-        expect(statSync(join(dest, 'run.sh')).mode & 0o111).not.toBe(0);
+        // Stated as equality with the source so it holds on every platform:
+        // where the bits exist the copy must have happened, where they do not
+        // both sides read the same.
+        expect(statSync(join(dest, 'run.sh')).mode).toBe(statSync(join(src, 'run.sh')).mode);
     });
 });
