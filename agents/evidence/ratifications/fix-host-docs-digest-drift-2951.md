@@ -76,6 +76,17 @@ refinements, is the path the refusing seat named.
   values and regenerated JSON from `origin/main` `417e7b56df`); the watch then
   reports `copilot/any` CHANGED again.
 
+### Owner decision, 2026-11-11
+
+Asked in-session after round 2 (ADR-281 § 5). The owner ruled that the agent's
+reading counts as the fill for this row, because it binds no slot
+(`slots: {}`, `json_shape: none`) — the same basis as the #2805 and #2710
+re-establishments. The verdict above stays `refused`: an agent cannot turn a
+refused record green. The merge goes through the owner's own per-case bypass on
+the forge, recorded afterwards under `agents/evidence/bypass-records/` per
+`docs/contracts/ratification-artifact.md` § Emergency use. openai's three
+wording refinements were not applied, so the reviewed subject stays the same.
+
 ## Independence
 
 `proposed_by` and `implemented_by` are the same session; `reviewed_by` is the
