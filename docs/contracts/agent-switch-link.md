@@ -297,7 +297,10 @@ the link over the CLI verbs below, never the MCP client.
   about a quarter of a second and leaves the work to the next hook. The cost is
   liveness: a holder that crashed and whose pid was reused keeps the lock until
   that other process ends, and the link writes nothing for that record
-  meanwhile. Two contenders that collide both back off, so under contention an
+  meanwhile, for as long as the record lives (up to seven days, then the
+  prune). It shows as a record whose request is approved or done and that is
+  not `checkpointed`, with a ticket naming a process that is not a hook of
+  this package; removing that ticket, or turning the opt-in off, ends it. Two contenders that collide both back off, so under contention an
   update can be skipped; it never runs under two holders at once.
   `<record>.lock` is the path the version before tickets (20.2.0) used as its
   single lock file. This version holds it as a directory with one entry named
@@ -322,38 +325,45 @@ the link over the CLI verbs below, never the MCP client.
 
 ### Install and rollback
 
-Across an install or a rollback a hook of 20.2.0 and one of this version can
-run at once. Neither can take the lock the other holds: this version stays out
-of a single lock file, and 20.2.0 can neither create nor remove the directory.
-What this version cannot change is 20.2.0's own lock: two of its hooks can
-still both hold when one is slower than two seconds, as they can with no hook
-of this version on the machine. That ends when the last hook of 20.2.0 has
-exited, without any step by the user.
+The lock excludes two hooks of this version from each other. It does not
+exclude a hook of 20.2.0 that is already inside its locked code: another hook
+of 20.2.0 can find that one's lock file two seconds old and remove it, and a
+hook of this version can then take the lock while the evicted one still runs.
+What this version guarantees across versions is narrower: it never removes a
+20.2.0 lock file and stays out while one is there, and 20.2.0 can neither
+create nor remove the directory this version holds. Exclusion across versions
+therefore holds only once no hook of 20.2.0 runs, which the cutover below
+establishes; it is a precondition of an install over 20.2.0, not an option.
 
+- **Cutover.** In this order, with nothing re-enabled before the last step:
+  1. Turn the link off for every launcher of a hook: remove
+     `AGENT_CONFIG_SWITCH_QUESTION` from every shell profile, service and IDE
+     setting that sets it, or set `AGENT_CONFIG_NO_SWITCH_QUESTION=1` there,
+     and restart each application that launches hooks (a running one keeps
+     the environment it started with).
+  2. Confirm with `ps -A -o pid,args` that no process whose arguments name
+     `hooks/dispatch.js` started before step 1 still runs; wait for any that
+     does to exit.
+  3. Remove every regular file `*.lock` under the quota state directory's
+     `switch/`; for a rollback to 20.2.0 also every `*.lock` directory and
+     every `*.lock.*` ticket there (20.2.0 cannot remove a directory at
+     `<record>.lock`).
+  4. Install the target version.
+  5. Turn the link on again where it was on.
 - **Liveness cost.** A single lock file whose 20.2.0 holder crashed is never
   removed by this version, so the link writes nothing for that record until
-  the file is removed by the cutover below. A record belongs to one session,
-  so it is that session's link; a new session has a new record.
-- **Cutover, to clear such files.** The opt-in is the launch barrier: unset
-  `AGENT_CONFIG_SWITCH_QUESTION` (or set `AGENT_CONFIG_NO_SWITCH_QUESTION=1`)
-  for every host, so no hook of either version enters the link; confirm with
-  `ps -A -o pid,args` that no process running `hooks/dispatch.js` remains
-  from before; remove every regular file `*.lock` under the quota state
-  directory's `switch/`; install; set the opt-in again.
-- **Rollback trigger.** The maintainer who sees either of these rolls back:
-  a resumed run reads a checkpoint older than one already read for that run
-  in an earlier session (its `written_at` goes back with no clock change on
-  the machine in between); or three Stops in a row of one session owe a
-  checkpoint (an approved or done request whose record is not `checkpointed`)
-  and write none while `<record>.lock` or a ticket names a process that is
-  not a hook of this package. Both are read from the files under `switch/` and
-  the run's checkpoints; there is no automatic detector.
-- **Rollback to 20.2.0.** Run the cutover above, installing 20.2.0, and also
-  remove every `*.lock` directory and every `*.lock.*` ticket under `switch/`:
-  20.2.0 cannot remove a directory at `<record>.lock`, so one left by a holder
-  of this version that crashed would keep that record locked for 20.2.0.
-  20.2.0 reads the records this version writes (a test reads them with its
-  reader, kept verbatim); the record and checkpoint formats are unchanged.
+  step 3 of a cutover removes it. A record belongs to one session; a new
+  session has a new record.
+- **Rollback trigger.** The maintainer who sees either of these rolls back
+  with the cutover: a resumed run reads a checkpoint older than one already
+  read for that run in an earlier session (its `written_at` goes back, with no
+  clock change on the machine in between); or, at one look at `switch/`, a
+  record whose request agent-switch reports approved or done is not
+  `checkpointed` while `<record>.lock` or a ticket names a process that is not
+  a hook of this package. There is no automatic detector.
+- **Formats.** 20.2.0 reads the records this version writes (a test reads one
+  with 20.2.0's reader, kept verbatim); the lock does not change the record
+  or checkpoint formats.
 
 ## CLI fallback
 
