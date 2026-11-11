@@ -114,3 +114,8 @@ the documentation or revert the change when any of these is observed:
    checkpoint stays owed across Stops, while `agent-switch` answers — the
    `switch_link` chunk is not loading (missing, mis-digested, or another call
    surface).
+9. Around an install or a rollback, a resumed run's checkpoint is older than
+   one already written for it, or an owed checkpoint stays unwritten while
+   `<record>.lock` or a ticket under `switch/` names a process that is not a
+   hook of this package. Procedure, including the lock cleanup a rollback to
+   20.2.0 needs: `docs/contracts/agent-switch-link.md` § Install and rollback.

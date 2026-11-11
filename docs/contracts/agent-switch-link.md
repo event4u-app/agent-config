@@ -285,33 +285,67 @@ the link over the CLI verbs below, never the MCP client.
   obligation for the next Stop. The lock is a set of tickets: each contender
   creates its own file `<record>.lock.<pid>.<time>.<random>`, then lists the
   tickets, removes every breakable one, and holds the lock only when no other
-  ticket is left and it can also take the single `<record>.lock` file the
-  version before tickets used; otherwise it removes its own and retries after
-  a random pause. Taking that file keeps a hook of the older version, still
-  running across an install or a rollback, and this one out of each other in
-  both directions. The older version breaks that file once its mtime is two
-  seconds old, so this version dates it fifteen minutes ahead while it holds
-  it, and gives it back when it cannot date it; this version judges the file by its holder's pid, so it waits up to
-  thirty minutes, not fifteen, only when that pid was reused. A ticket is only ever removed by its own unique name, so breaking an
-  abandoned one cannot remove a successor's, and two contenders cannot both
-  hold: each lists after creating, so the later lister sees the earlier ticket.
-  A live holder's ticket is kept for fifteen minutes, however slow it is; a
-  waiter gives up after about a quarter of a second and leaves the work to the
-  next hook. A ticket whose process has ended is removed at once, one that
-  names no process after two seconds, and one older than fifteen minutes
-  regardless: the code under the lock only reads and writes local files, so a
-  holder that old is taken to be a reused process id, and if it is in fact
-  still writing it loses its exclusion. Two contenders that collide both back
-  off, so under contention an update can be skipped; it never runs under two
-  holders at once.
-  Process liveness is read in the caller's process-id namespace, so hooks of
-  one state directory running in different namespaces (a container sharing
-  the host's home) are not covered. The lock is advisory: it binds only the
-  hooks that take it. The
-  code holding it reads and writes files only: the record, the back-off count,
-  and the checkpoint build and write; every agent-switch call runs outside it. An unwritable state directory keeps
-  no back-off count, so the link does not rest there. Record, back-off and lock files no
-  session has touched for eight days are removed when a request is raised.
+  ticket is left and it can also take `<record>.lock`; otherwise it removes its
+  own and retries after a random pause. A ticket is only ever removed by its
+  own unique name, so breaking an abandoned one cannot remove a successor's,
+  and two contenders cannot both hold: each lists after creating, so the later
+  lister sees the earlier ticket. A ticket is breakable when its process has
+  ended, when it names no process and is older than two seconds, or when the
+  process now under its pid has run for less time than the ticket exists, read
+  from `ps -o etime=`, which means the pid was reused. A live holder's ticket
+  is never broken, however slow or suspended the holder is, so it cannot lose
+  its exclusion and publish an older snapshot after a successor's; a waiter
+  gives up after about a quarter of a second and leaves the work to the next
+  hook. Where `ps` cannot be read, as on Windows, a running process under the
+  ticket's pid counts as its holder, so a crashed holder whose pid was reused
+  keeps the lock until that process ends: the link then writes nothing for
+  that record meanwhile. Two contenders that collide both back off, so under
+  contention an update can be skipped; it never runs under two holders at once.
+  `<record>.lock` is the path the version before tickets (20.2.0) used as its
+  single lock file. This version holds it as a directory with one entry named
+  by the holder's token. That version creates the file exclusively, which
+  fails while the directory is there, and breaks a stale one with a plain
+  removal, which fails on a directory, so a hook of that version still running
+  across an install or a rollback can never take the lock from a holder of
+  this one. Only the ticket holder takes, removes or reaps `<record>.lock`. It
+  reaps one whose holder is gone by moving it aside and removing it only if it
+  still names that holder; a file a hook of the older version took in between
+  is linked back. What remains between versions is the older version's own
+  check-then-remove: two hooks of 20.2.0 can still both hold, as they can with
+  no hook of this version running, and only while they run (see Install and
+  rollback). Process liveness is read in the caller's process-id namespace,
+  so hooks of one state directory running in different namespaces (a
+  container sharing the host's home) are not covered. The lock is advisory:
+  it binds only the hooks that take it. The code holding it reads and writes
+  files only: the record, the back-off count, and the checkpoint build and
+  write; every agent-switch call runs outside it. An unwritable state
+  directory keeps no back-off count, so the link does not rest there. Record
+  and back-off files and tickets of ended holders no session has touched for
+  eight days are removed when a request is raised; `<record>.lock` is left to
+  the next ticket holder.
+
+### Install and rollback
+
+Only a hook process started from 20.2.0 can still use the single lock file.
+Its two hooks of one session can both hold when one is slower than two
+seconds, so around an install or a rollback the link can write an older
+checkpoint over a newer one only while a hook of 20.2.0 runs.
+
+- **Install over 20.2.0.** Nothing to drain: once the last hook started from
+  20.2.0 has exited, no process uses the single lock file.
+- **Rollback trigger.** Roll back when one of these is seen, and the
+  maintainer who sees it acts on it: a resumed run whose checkpoint is older
+  than one already written for it (its `written_at` goes back), or a record
+  whose owed checkpoint stays unwritten across Stops while `<record>.lock` or
+  a ticket names a process that is not a hook of this package. Either is
+  read from the files under the quota state directory's `switch/`; there is
+  no automatic detector.
+- **Rollback to 20.2.0.** Install 20.2.0, wait until the hooks started from
+  this version have exited (a Stop of either version finishes within its
+  host's hook timeout), then remove every `*.lock` directory and every
+  `*.lock.*` ticket under `switch/`. 20.2.0 cannot remove a directory at
+  `<record>.lock`, so a holder of this version that crashed would otherwise
+  keep that record locked for 20.2.0, which then writes nothing for it.
 
 ## CLI fallback
 
