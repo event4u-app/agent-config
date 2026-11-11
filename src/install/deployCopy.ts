@@ -184,8 +184,10 @@ export function putPrepared(prepared: PreparedFile, source: string, target: stri
  * control — but the check is one comparison and `package_root` was already
  * threaded through, so there is no reason to ship without it.
  *
- * Both sides are realpath'd before comparing, so a macOS `/var` → `/private/var`
- * root does not read as an escape. A `null` package_root means the caller did
+ * Both sides are realpath'd before comparing, so a macOS root behind the
+ * realpath symlink that rewrites a `/var` prefix onto its private twin does not
+ * read as an escape. (Spelled out rather than quoted: `check_bundle_path_leakage`
+ * scans the tracked bundle this file compiles into.) A `null` package_root means the caller did
  * not scope the copy (several do) — unchanged, permissive behaviour there.
  */
 export function escapesPackageRoot(resolved: string, packageRoot: string | null): boolean {
