@@ -204,14 +204,16 @@ export function recordGlobalDeploy(r: GlobalDeployRecord): GlobalDeployOutcome {
         digests.set(rel, { installed_sha256: prior.installed_sha256, packaged_sha256: null });
     }
 
+    // Released before the entry is mutated: from here until a save lands, the
+    // object says more than the file does, and a throw in between must not
+    // leave it standing as "what the file holds".
+    held = null;
     global_deploy_inventory.record_deploy(r.toolId, r.anchorRaw, new Set(r.currentFiles), inventory, digests);
     // An entry that came out as it went in is already what the file says.
-    if (before === null || before !== global_deploy_inventory.entry_fingerprint(inventory, r.toolId)) {
-        held = null;
-        global_deploy_inventory.save_inventory(inventory, ledgerPath);
-        const signature = ledgerSignature(ledgerPath);
-        if (signature !== null) held = { path: ledgerPath, signature, inventory };
-    }
+    const unchanged = before !== null && before === global_deploy_inventory.entry_fingerprint(inventory, r.toolId);
+    if (!unchanged) global_deploy_inventory.save_inventory(inventory, ledgerPath);
+    const signature = ledgerSignature(ledgerPath);
+    if (signature !== null) held = { path: ledgerPath, signature, inventory };
     return { reaped: [...new Set(reaped)].sort(), retained };
 }
 

@@ -11501,13 +11501,12 @@ function recordGlobalDeploy(r) {
     if (rel === null || prior === void 0) continue;
     digests.set(rel, { installed_sha256: prior.installed_sha256, packaged_sha256: null });
   }
+  held = null;
   record_deploy(r.toolId, r.anchorRaw, new Set(r.currentFiles), inventory, digests);
-  if (before === null || before !== entry_fingerprint(inventory, r.toolId)) {
-    held = null;
-    save_inventory(inventory, ledgerPath);
-    const signature = ledgerSignature(ledgerPath);
-    if (signature !== null) held = { path: ledgerPath, signature, inventory };
-  }
+  const unchanged = before !== null && before === entry_fingerprint(inventory, r.toolId);
+  if (!unchanged) save_inventory(inventory, ledgerPath);
+  const signature = ledgerSignature(ledgerPath);
+  if (signature !== null) held = { path: ledgerPath, signature, inventory };
   return { reaped: [...new Set(reaped)].sort(), retained };
 }
 function retainedFileMessage(target) {

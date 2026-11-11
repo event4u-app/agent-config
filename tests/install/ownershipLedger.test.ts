@@ -300,3 +300,95 @@ describe('step 2.4 / AC-5 — a genuinely unrecorded pre-existing file is still 
         ).toBe('write');
     });
 });
+
+// The ledger is held between records and saved only when an entry changed.
+// Each case below is a way that could go wrong: a skipped save that was owed,
+// a held copy that outlived the file it came from, a digest taken on trust.
+describe('ledger hold — one record per tool without re-reading or rewriting it', () => {
+    const inode = (): bigint => fs.statSync(inventoryFile, { bigint: true }).ino;
+
+    it('leaves the ledger file alone when the entry came out as it went in', () => {
+        write('rules/a.md', 'one');
+        record();
+        const first = inode();
+        const text = fs.readFileSync(inventoryFile, 'utf8');
+
+        record();
+
+        // save_inventory replaces the file by rename, so an unchanged inode
+        // means no save ran.
+        expect(inode()).toBe(first);
+        expect(fs.readFileSync(inventoryFile, 'utf8')).toBe(text);
+    });
+
+    it('saves when a deployed file changed between two records', () => {
+        write('rules/a.md', 'one');
+        record();
+        write('rules/a.md', 'two');
+
+        record();
+
+        expect(digestsOf().get('rules/a.md')?.installed_sha256).toBe(sha('two'));
+    });
+
+    it('re-reads a ledger something else replaced, and keeps what that writer recorded', () => {
+        write('rules/a.md', 'one');
+        record();
+        const other = inv.load_inventory(inventoryFile);
+        inv.record_deploy('other-tool', '/elsewhere', new Set(['x.md']), other);
+        inv.save_inventory(other, inventoryFile);
+        write('rules/a.md', 'two');
+
+        record();
+
+        const after = inv.load_inventory(inventoryFile) as { tools: Record<string, unknown> };
+        expect(Object.keys(after.tools).sort()).toEqual(['cursor', 'other-tool']);
+        expect(digestsOf().get('rules/a.md')?.installed_sha256).toBe(sha('two'));
+    });
+
+    it('does not carry an unsaved entry forward when the save fails', () => {
+        write('rules/a.md', 'one');
+        record();
+        write('rules/a.md', 'two');
+        const broken = path.join(tmp, 'not-a-dir');
+        fs.writeFileSync(broken, '');
+        // A ledger path under a regular file cannot be created or written.
+        expect(() => record({ inventoryPath: path.join(broken, 'deployed-files.json') })).toThrow();
+
+        record();
+
+        expect(digestsOf().get('rules/a.md')?.installed_sha256).toBe(sha('two'));
+    });
+
+    it('records the digest the copy hands over, and reads the file where it hands none', () => {
+        write('rules/a.md', 'on disk a');
+        write('rules/b.md', 'on disk b');
+
+        record({
+            currentFiles: new Set(['rules/a.md', 'rules/b.md']),
+            deployedDigest: (abs) => (abs.endsWith('a.md') ? sha('from the copy') : undefined),
+        });
+
+        expect(digestsOf().get('rules/a.md')?.installed_sha256).toBe(sha('from the copy'));
+        expect(digestsOf().get('rules/b.md')?.installed_sha256).toBe(sha('on disk b'));
+    });
+});
+
+describe('ledger paths — resolved through a symlinked anchor, present or not', () => {
+    it('lists each file under both spellings, an absent one included', () => {
+        const real = fs.realpathSync(anchor);
+        const link = path.join(tmp, 'link');
+        fs.symlinkSync(real, link);
+        write('rules/a.md', 'one');
+        const ledger = inv.load_inventory(inventoryFile);
+        inv.record_deploy('cursor', link, new Set(['rules/a.md', 'rules/gone.md', 'absent-dir/x.md']), ledger);
+        inv.save_inventory(ledger, inventoryFile);
+
+        const listed = inv.recorded_absolute_files(inv.load_inventory(inventoryFile));
+
+        for (const rel of ['rules/a.md', 'rules/gone.md', 'absent-dir/x.md']) {
+            expect(listed.has(path.join(link, rel))).toBe(true);
+            expect(listed.has(path.join(real, rel))).toBe(true);
+        }
+    });
+});
