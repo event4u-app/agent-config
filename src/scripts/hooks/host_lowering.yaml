@@ -367,13 +367,16 @@ hosts:
         # `userPromptTransformed`, …). Re-dated only; nothing is armed.
         #
         # RE-READ 2026-11-11 after the digest watch flagged a changed body again
-        # (issue #2951). The page still documents the eight events above at
-        # `~/.copilot/hooks/` and the same `preToolUse` refusal contract: exit 2,
-        # a crash or any other non-zero exit denies the tool call even over a
-        # stdout `allow`; a command-hook timeout is always fail-open; an HTTP
-        # `preToolUse` hook is fail-open. It also names `permissionRequest`, on
-        # which exit 2 is a deny as well, and says the CLI no longer reads
-        # hooks from `~/.copilot/config.json`. Re-dated only; nothing is armed.
+        # (issue #2951). The page still documents the eight events above, with
+        # `~/.copilot/hooks/` as the default user-level directory on macOS and
+        # Linux, and the same `preToolUse` refusal contract: exit 2, a crash or
+        # any other non-zero exit denies the tool call even over a stdout
+        # `allow`; a command-hook timeout is always fail-open; an HTTP
+        # `preToolUse` hook is fail-open on a network error, timeout or non-2xx
+        # response. It also names `permissionRequest`, on which exit 2 is a deny
+        # as well, and says the CLI no longer reads hooks from
+        # `~/.copilot/config.json`. Verification metadata refreshed; no slots
+        # enabled.
         verified:
           docs_at: 2026-11-11
           docs_url: https://docs.github.com/en/copilot/reference/hooks-reference.md
