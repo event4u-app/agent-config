@@ -114,10 +114,9 @@ the documentation or revert the change when any of these is observed:
    checkpoint stays owed across Stops, while `agent-switch` answers — the
    `switch_link` chunk is not loading (missing, mis-digested, or another call
    surface).
-9. Around an install or a rollback, a resumed run's checkpoint is older than
-   one already written for it, or an owed checkpoint stays unwritten while
+9. A resumed run reads a checkpoint older than one already read for that run
+   (its `written_at` goes back with no clock change in between), or three
+   Stops in a row of one session owe a checkpoint and write none while
    `<record>.lock` or a ticket under `switch/` names a process that is not a
-   hook of this package; or the link writes nothing for longer than fifteen
-   minutes after an install because the drain does not end. Procedure,
-   including the lock cleanup a rollback to 20.2.0 needs:
-   `docs/contracts/agent-switch-link.md` § Install and rollback.
+   hook of this package. Procedure, cutover and the lock cleanup a rollback to
+   20.2.0 needs: `docs/contracts/agent-switch-link.md` § Install and rollback.

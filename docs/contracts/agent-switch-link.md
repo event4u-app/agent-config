@@ -305,9 +305,11 @@ the link over the CLI verbs below, never the MCP client.
   while the directory is there, and breaks a stale one with a plain removal,
   which fails on a directory. Only the ticket holder takes or removes the
   directory, and it removes one only when its holder is gone. A single lock
-  file found there is that version's and is never removed by a hook of this
-  version after the drain: the hook stays out and writes nothing (see Install
-  and rollback). Process liveness is read in the caller's process-id
+  file found there is 20.2.0's and is never removed by this version, whether
+  its holder runs or not: 20.2.0 may have checked it and be about to remove
+  it, and a removal by this version could hit a file another hook of 20.2.0
+  took in between. The hook stays out and writes nothing; the lock fails
+  closed (see Install and rollback). Process liveness is read in the caller's process-id
   namespace, so hooks of one state directory running in different namespaces
   (a container sharing the host's home) are not covered. The lock is advisory:
   it binds only the hooks that take it. The code holding it reads and writes
@@ -320,41 +322,38 @@ the link over the CLI verbs below, never the MCP client.
 
 ### Install and rollback
 
-20.2.0 breaks its lock file with a check of its age followed by a removal, so
-no protocol of a later version is safe while a hook of 20.2.0 still runs:
-whatever that hook checked may be replaced before it removes it. This version
-therefore drains before it locks.
+Across an install or a rollback a hook of 20.2.0 and one of this version can
+run at once. Neither can take the lock the other holds: this version stays out
+of a single lock file, and 20.2.0 can neither create nor remove the directory.
+What this version cannot change is 20.2.0's own lock: two of its hooks can
+still both hold when one is slower than two seconds, as they can with no hook
+of this version on the machine. That ends when the last hook of 20.2.0 has
+exited, without any step by the user.
 
-- **The drain.** A hook of this version takes no lock, and so writes nothing,
-  until no hook process started before its own install still runs. The
-  install is the change time of the file the hook process was started from; a
-  hook is a process whose command line names `hooks/dispatch.js`, read from
-  `ps -A -o pid=,etime=,args=`. A hook started less than a second after the
-  install counts as an earlier one. Once none runs, the hook removes every
-  single lock file under the quota state directory's `switch/` (none has a
-  holder left) and writes a marker named by the install's change time, so
-  `ps` runs only until the answer is yes; the marker is pruned after eight
-  days like any state file, and the check then runs once more. A hook that is
-  suspended keeps the drain open for as long as it is. Where `ps` cannot be
-  read, as on Windows, the install counts as drained fifteen minutes after
-  it, which a hook suspended for longer than that outlasts. A wall-clock step
-  between the install and the check shifts both readings it compares and can
-  misjudge by the size of the step.
-- **Rollback trigger.** Roll back when one of these is seen, and the
-  maintainer who sees it acts on it: a resumed run whose checkpoint is older
-  than one already written for it (its `written_at` goes back), or a record
-  whose owed checkpoint stays unwritten across Stops while `<record>.lock` or
-  a ticket names a process that is not a hook of this package. Either is
-  read from the files under `switch/`; there is no automatic detector.
-- **Rollback to 20.2.0.** Install 20.2.0. A hook of this version still running
-  then stays out of every record where a hook of 20.2.0 holds the lock file,
-  and keeps 20.2.0 out of one it holds itself. Once `ps` shows no hook started
-  before the rollback, remove every `*.lock` directory and every `*.lock.*`
-  ticket under `switch/`: 20.2.0 cannot remove a directory at `<record>.lock`,
-  so a holder of this version that crashed would otherwise keep that record
-  locked for 20.2.0, which then writes nothing for it. 20.2.0 reads the
-  record and checkpoint files this version writes; their format is unchanged
-  by the lock.
+- **Liveness cost.** A single lock file whose 20.2.0 holder crashed is never
+  removed by this version, so the link writes nothing for that record until
+  the file is removed by the cutover below. A record belongs to one session,
+  so it is that session's link; a new session has a new record.
+- **Cutover, to clear such files.** The opt-in is the launch barrier: unset
+  `AGENT_CONFIG_SWITCH_QUESTION` (or set `AGENT_CONFIG_NO_SWITCH_QUESTION=1`)
+  for every host, so no hook of either version enters the link; confirm with
+  `ps -A -o pid,args` that no process running `hooks/dispatch.js` remains
+  from before; remove every regular file `*.lock` under the quota state
+  directory's `switch/`; install; set the opt-in again.
+- **Rollback trigger.** The maintainer who sees either of these rolls back:
+  a resumed run reads a checkpoint older than one already read for that run
+  in an earlier session (its `written_at` goes back with no clock change on
+  the machine in between); or three Stops in a row of one session owe a
+  checkpoint (an approved or done request whose record is not `checkpointed`)
+  and write none while `<record>.lock` or a ticket names a process that is
+  not a hook of this package. Both are read from the files under `switch/` and
+  the run's checkpoints; there is no automatic detector.
+- **Rollback to 20.2.0.** Run the cutover above, installing 20.2.0, and also
+  remove every `*.lock` directory and every `*.lock.*` ticket under `switch/`:
+  20.2.0 cannot remove a directory at `<record>.lock`, so one left by a holder
+  of this version that crashed would keep that record locked for 20.2.0.
+  20.2.0 reads the records this version writes (a test reads them with its
+  reader, kept verbatim); the record and checkpoint formats are unchanged.
 
 ## CLI fallback
 
