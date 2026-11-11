@@ -241,7 +241,7 @@ describe('8.1 a writer the lock cannot evict', () => {
     }, 20_000);
 });
 
-describe('the lock across an install: the older single lock file', () => {
+describe('the lock across an install, after the drain: the older single lock file', () => {
     const legacy = (): string => `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock`;
     const deadPid = (): number => Number(spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' }).stdout);
 
@@ -304,14 +304,7 @@ describe('the lock across an install: the older single lock file', () => {
         expect(lockedBeforeTickets(switchRecordPath(hashSessionId(SESSION), stateEnv), () => true)).toEqual({ value: true });
     }, 20_000);
 
-    it('a dead holder’s single lock file is broken', () => {
-        raised();
-        fs.writeFileSync(legacy(), `${deadPid()}.1.old`);
-        expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(true);
-        expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)).toBeNull();
-    });
-
-    it('every breakable ticket is removed, whatever the listing order, while a live one still keeps the lock', () => {
+    it('every breakable ticket around a live one is removed, and the live one still keeps the lock', () => {
         raised();
         const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
         try {
@@ -335,20 +328,6 @@ describe('the lock across an install: the older single lock file', () => {
         }
     });
 
-    it('a ticket older than the process its pid now names is taken as a reused pid and broken', () => {
-        raised();
-        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
-        try {
-            const held = ticket(holder.pid ?? 0);
-            fs.writeFileSync(held, '');
-            const old = new Date(Date.now() - 60 * 60_000);
-            fs.utimesSync(held, old, old);
-            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(true);
-            expect(fs.existsSync(held)).toBe(false);
-        } finally {
-            holder.kill();
-        }
-    });
 });
 
 describe('8.2 two hook processes at once', () => {
