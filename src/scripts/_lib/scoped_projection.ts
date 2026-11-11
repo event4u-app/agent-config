@@ -198,11 +198,12 @@ export function is_pruned_under_scoped(
     md_path: string,
     active_ids: ReadonlySet<string>,
     kept: ReadonlySet<string> = new Set(),
+    packs_of: (md_path: string) => Set<string> = surface_tiers.frontmatter_packs,
 ): boolean {
     if (path.basename(md_path) === 'SKILL.md' && kept.has(path.basename(path.dirname(md_path)))) {
         return false;
     }
-    const packs = surface_tiers.frontmatter_packs(md_path);
+    const packs = packs_of(md_path);
     if (packs.size === 0) return false;
     for (const id of packs) {
         if (active_ids.has(id)) return false;
@@ -220,15 +221,27 @@ export function declared_skills(md_path: string): string[] {
     }
     if (!text.startsWith('---')) return [];
     const end = text.indexOf('\n---', 3);
-    const fm = yamlSafeLoad(end !== -1 ? text.slice(3, end) : text.slice(3));
-    if (!isPlainObject(fm)) return [];
+    const block = end !== -1 ? text.slice(3, end) : text.slice(3);
+    const known = declared_by_block.get(block);
+    if (known !== undefined) return [...known];
+    const fm = yamlSafeLoad(block);
     const out: string[] = [];
-    for (const key of ['skills', 'requires_skills']) {
-        const v = fm[key];
-        if (Array.isArray(v)) out.push(...v.filter((s): s is string => typeof s === 'string'));
+    if (isPlainObject(fm)) {
+        for (const key of ['skills', 'requires_skills']) {
+            const v = fm[key];
+            if (Array.isArray(v)) out.push(...v.filter((s): s is string => typeof s === 'string'));
+        }
     }
-    return out;
+    declared_by_block.set(block, out);
+    return [...out];
 }
+
+/**
+ * Frontmatter block → the skills it declares. A scoped install holds one copy
+ * of each artefact per host with identical frontmatter, and the YAML parse is
+ * the cost — so it is paid once per distinct block, not once per copy.
+ */
+const declared_by_block = new Map<string, string[]>();
 
 /**
  * Every skill name a surviving artefact declares, transitively: a declared
@@ -238,6 +251,7 @@ export function declared_skills(md_path: string): string[] {
 export function declared_skill_closure(
     artefacts: Iterable<string>,
     active_ids: ReadonlySet<string>,
+    packs_of: (md_path: string) => Set<string> = surface_tiers.frontmatter_packs,
 ): Set<string> {
     const all = [...artefacts];
     const skill_md = new Map<string, string>();
@@ -245,7 +259,7 @@ export function declared_skill_closure(
         if (path.basename(p) === 'SKILL.md') skill_md.set(path.basename(path.dirname(p)), p);
     }
     const kept = new Set<string>();
-    let frontier = all.filter((p) => !is_pruned_under_scoped(p, active_ids));
+    let frontier = all.filter((p) => !is_pruned_under_scoped(p, active_ids, undefined, packs_of));
     while (frontier.length > 0) {
         const next: string[] = [];
         for (const p of frontier) {
@@ -253,7 +267,7 @@ export function declared_skill_closure(
                 if (kept.has(name)) continue;
                 kept.add(name);
                 const target = skill_md.get(name);
-                if (target !== undefined && is_pruned_under_scoped(target, active_ids)) next.push(target);
+                if (target !== undefined && is_pruned_under_scoped(target, active_ids, undefined, packs_of)) next.push(target);
             }
         }
         frontier = next;
@@ -410,13 +424,16 @@ export function prune_modules_by(
     for (const tool_id of Object.keys(deploy_results)) {
         const [written, skipped, status, paths] = deploy_results[tool_id] as DeployTuple;
         const pruned_skill_dirs = new Set<string>();
+        // One verdict per skill directory, kept or pruned — not one per file in it.
+        const judged = new Set<string>();
         for (const p of paths) {
             const parts = p.split(path.sep);
             if (parts.includes('skills')) {
                 const i = parts.indexOf('skills');
                 if (i + 1 < parts.length) {
                     const skill_root = parts.slice(0, i + 2).join(path.sep);
-                    if (!pruned_skill_dirs.has(skill_root)) {
+                    if (!judged.has(skill_root)) {
+                        judged.add(skill_root);
                         const skillmd = path.join(skill_root, 'SKILL.md');
                         if (fs.existsSync(skillmd) && is_pruned(skillmd)) {
                             pruned_skill_dirs.add(skill_root);
@@ -473,8 +490,20 @@ export function prune_scoped_modules(
     const artefacts = Object.values(deploy_results)
         .flatMap(([, , , paths]) => paths)
         .filter((p) => path.basename(p) === 'SKILL.md' || (p.split(path.sep).includes('commands') && path.extname(p) === '.md'));
-    const kept = declared_skill_closure(artefacts, active_ids);
-    return prune_modules_by(deploy_results, (p) => is_pruned_under_scoped(p, active_ids, kept));
+    // Each artefact's frontmatter is asked for up to three times (the closure's
+    // seed, its frontier, then the prune itself) and nothing rewrites it in
+    // between, so one read per file serves the whole pass.
+    const seen = new Map<string, Set<string>>();
+    const packs_of = (p: string): Set<string> => {
+        let packs = seen.get(p);
+        if (packs === undefined) {
+            packs = surface_tiers.frontmatter_packs(p);
+            seen.set(p, packs);
+        }
+        return packs;
+    };
+    const kept = declared_skill_closure(artefacts, active_ids, packs_of);
+    return prune_modules_by(deploy_results, (p) => is_pruned_under_scoped(p, active_ids, kept, packs_of));
 }
 
 /**

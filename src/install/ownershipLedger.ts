@@ -59,6 +59,13 @@ export interface GlobalDeployRecord {
     readonly staged: ReadonlyMap<string, string | null>;
     /** The digest recorded BEFORE this run for an absolute target. */
     readonly recordedFor: (target: string) => string | null | undefined;
+    /**
+     * Digest of the bytes this run left at an absolute path, when the caller
+     * still holds it from the copy. Saves re-reading every deployed file just
+     * to record it. A caller that rewrites files after the copy must not pass
+     * this — the digest would describe bytes that are no longer there.
+     */
+    readonly deployedDigest?: (abs: string) => string | undefined;
     /** Inventory location override (tests); default `inventory_path()`. */
     readonly inventoryPath?: string | null;
 }
@@ -103,8 +110,40 @@ function relUnder(anchor: string, abs: string): string | null {
  * staged this run are part of what "should exist", or the reaper would delete
  * the package content it was just told to stage.
  */
+/**
+ * The ledger as this process last read or wrote it, with the identity of the
+ * file it came from.
+ *
+ * A global deploy records once per tool, and the ledger lists every deployed
+ * file of every host — several megabytes. Re-parsing it per tool, and
+ * re-rendering and rewriting it when the tool's entry came out identical, was a
+ * measurable share of an upgrade. The held copy is reused only while inode,
+ * size and nanosecond mtime of the file still match, so a ledger replaced by
+ * anything else is read again.
+ */
+let held: { readonly path: string; readonly signature: string; readonly inventory: global_deploy_inventory.Inventory } | null = null;
+
+function ledgerSignature(p: string): string | null {
+    try {
+        const st = fs.statSync(p, { bigint: true });
+        return `${st.ino}:${st.size}:${st.mtimeNs}`;
+    } catch {
+        return null;
+    }
+}
+
+function loadLedger(p: string): global_deploy_inventory.Inventory {
+    const signature = ledgerSignature(p);
+    if (held !== null && signature !== null && held.path === p && held.signature === signature) return held.inventory;
+    const inventory = global_deploy_inventory.load_inventory(p);
+    held = signature === null ? null : { path: p, signature, inventory };
+    return inventory;
+}
+
 export function recordGlobalDeploy(r: GlobalDeployRecord): GlobalDeployOutcome {
-    const inventory = global_deploy_inventory.load_inventory(r.inventoryPath ?? null);
+    const ledgerPath = r.inventoryPath ?? global_deploy_inventory.inventory_path();
+    const inventory = loadLedger(ledgerPath);
+    const before = held === null ? null : global_deploy_inventory.entry_fingerprint(inventory, r.toolId);
     const previous = global_deploy_inventory.recorded_digests(r.toolId, r.anchor, inventory);
 
     const sidecars = new Map<string, string>();
@@ -150,7 +189,7 @@ export function recordGlobalDeploy(r: GlobalDeployRecord): GlobalDeployOutcome {
             digests.set(rel, { installed_sha256: installed, packaged_sha256: staged ?? installed });
             continue;
         }
-        const onDisk = global_deploy_inventory.file_sha256(abs);
+        const onDisk = r.deployedDigest?.(abs) ?? global_deploy_inventory.file_sha256(abs);
         if (onDisk === null) continue;
         digests.set(rel, { installed_sha256: onDisk, packaged_sha256: onDisk });
     }
@@ -166,7 +205,13 @@ export function recordGlobalDeploy(r: GlobalDeployRecord): GlobalDeployOutcome {
     }
 
     global_deploy_inventory.record_deploy(r.toolId, r.anchorRaw, new Set(r.currentFiles), inventory, digests);
-    global_deploy_inventory.save_inventory(inventory, r.inventoryPath ?? null);
+    // An entry that came out as it went in is already what the file says.
+    if (before === null || before !== global_deploy_inventory.entry_fingerprint(inventory, r.toolId)) {
+        held = null;
+        global_deploy_inventory.save_inventory(inventory, ledgerPath);
+        const signature = ledgerSignature(ledgerPath);
+        if (signature !== null) held = { path: ledgerPath, signature, inventory };
+    }
     return { reaped: [...new Set(reaped)].sort(), retained };
 }
 
