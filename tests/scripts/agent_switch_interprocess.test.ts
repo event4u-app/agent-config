@@ -115,6 +115,9 @@ function writes(): string[] {
     return fs.existsSync(writeLog) ? fs.readFileSync(writeLog, 'utf-8').split('\n').filter((l) => l !== '') : [];
 }
 
+/** A process that has run longer than any ticket a test dates back: pid 1. */
+const LONG_RUNNING = 1;
+
 /** The lock ticket a holder with this pid would leave. */
 function ticket(pid: number): string {
     return `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock.${pid}.1.x`;
@@ -125,6 +128,7 @@ interface Job {
     startAt?: number;
     holdMs?: number;
     label?: string;
+    pidFile?: string;
 }
 
 /** Start one hook half in its own process; resolves with what it printed. */
@@ -206,21 +210,35 @@ describe('8.1 a writer the lock cannot evict', () => {
         expect(writes()[0]?.split(':')[0]).toBe(writes()[1]?.split(':')[0]);
     }, 20_000);
 
-    it('a live holder’s ticket is kept past the stale break', () => {
+    it('a live holder’s ticket is kept however old it is, with no expiry', () => {
         raised();
-        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
-        try {
-            const held = ticket(holder.pid ?? 0);
-            fs.writeFileSync(held, '');
-            const old = new Date(Date.now() - 10_000);
-            fs.utimesSync(held, old, old);
-            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
-            expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
-            expect(fs.existsSync(held)).toBe(true);
-        } finally {
-            holder.kill();
-        }
+        const held = ticket(LONG_RUNNING);
+        fs.writeFileSync(held, '');
+        const old = new Date(Date.now() - 60 * 60_000);
+        fs.utimesSync(held, old, old);
+        expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
+        expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
+        expect(fs.existsSync(held)).toBe(true);
     });
+
+    it('a Stop suspended while it holds keeps its lock; a Stop meanwhile writes nothing; it writes once resumed', async () => {
+        raised();
+        setRequest(APPROVED);
+        const pidFile = path.join(home, 'a.pid');
+        const slow = hook({ op: 'stop', holdMs: 500, label: 'A', pidFile });
+        await until(() => writes().includes('A:start') && fs.existsSync(pidFile));
+        const pid = Number(fs.readFileSync(pidFile, 'utf-8'));
+        process.kill(pid, 'SIGSTOP');
+        try {
+            // Past the two-second stale break, with the holder not running at all.
+            await new Promise((r) => setTimeout(r, 2300));
+            expect(await hook({ op: 'stop', label: 'B' })).toBe(false);
+        } finally {
+            process.kill(pid, 'SIGCONT');
+        }
+        expect(await slow).toBe(true);
+        expect(writes()).toEqual(['A:start', 'A:written']);
+    }, 20_000);
 });
 
 describe('the lock across an install: the older single lock file', () => {
@@ -229,40 +247,43 @@ describe('the lock across an install: the older single lock file', () => {
 
     it('a hook of the older version holding the single lock file keeps this one out', () => {
         raised();
-        const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
-        try {
-            const token = `${String(holder.pid)}.${String(Date.now())}.old`;
-            fs.writeFileSync(legacy(), token);
-            // Older than the two seconds after which that version breaks any lock.
-            const old = new Date(Date.now() - 10_000);
-            fs.utimesSync(legacy(), old, old);
-            expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
-            expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
-            expect(fs.readFileSync(legacy(), 'utf-8')).toBe(token);
-        } finally {
-            holder.kill();
-        }
+        const token = `${String(LONG_RUNNING)}.${String(Date.now())}.old`;
+        fs.writeFileSync(legacy(), token);
+        // Older than the two seconds after which that version breaks any lock.
+        const old = new Date(Date.now() - 10_000);
+        fs.utimesSync(legacy(), old, old);
+        expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(false);
+        expect(readSwitchRecord(hashSessionId(SESSION), stateEnv)?.id).toBe(ID);
+        expect(fs.readFileSync(legacy(), 'utf-8')).toBe(token);
     });
 
-    it('while this version holds, the single lock file is taken, so the older version’s exclusive create fails', () => {
+    it('while this version holds, `<record>.lock` is its directory, which the older version can neither create nor remove', () => {
         raised();
-        let seen: string | null = null;
+        let seen: string[] = [];
         let oldCouldTake = true;
+        let oldCouldBreak = true;
         updateSwitchRecord(
             hashSessionId(SESSION),
             (cur) => {
-                seen = fs.readFileSync(legacy(), 'utf-8');
+                seen = fs.readdirSync(legacy());
                 try {
                     fs.writeFileSync(legacy(), 'old', { flag: 'wx' });
                 } catch {
                     oldCouldTake = false;
                 }
+                try {
+                    fs.rmSync(legacy(), { force: true });
+                } catch {
+                    oldCouldBreak = false;
+                }
                 return cur;
             },
             stateEnv,
         );
-        expect(seen).toMatch(new RegExp(`^${String(process.pid)}\\.`));
+        expect(seen).toHaveLength(1);
+        expect(seen[0]).toMatch(new RegExp(`^${String(process.pid)}\\.`));
         expect(oldCouldTake).toBe(false);
+        expect(oldCouldBreak).toBe(false);
         expect(fs.existsSync(legacy())).toBe(false);
     });
 
@@ -314,13 +335,13 @@ describe('the lock across an install: the older single lock file', () => {
         }
     });
 
-    it('a live holder’s ticket older than fifteen minutes is taken as a reused pid and broken', () => {
+    it('a ticket older than the process its pid now names is taken as a reused pid and broken', () => {
         raised();
         const holder = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
         try {
             const held = ticket(holder.pid ?? 0);
             fs.writeFileSync(held, '');
-            const old = new Date(Date.now() - 16 * 60_000);
+            const old = new Date(Date.now() - 60 * 60_000);
             fs.utimesSync(held, old, old);
             expect(updateSwitchRecord(hashSessionId(SESSION), () => null, stateEnv)).toBe(true);
             expect(fs.existsSync(held)).toBe(false);

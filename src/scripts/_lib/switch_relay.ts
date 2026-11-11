@@ -13,6 +13,7 @@
  * each shown once, and a request is no longer read once it reached a terminal state.
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -34,8 +35,6 @@ const BACKOFF_AFTER = 3;
 const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
 /** Age after which a lock whose holder cannot be identified counts as abandoned. */
 const LOCK_STALE_MS = 2000;
-/** Age after which even a live holder's ticket is removed (see `ticketBreakable`). */
-const LOCK_ABANDONED_MS = 15 * 60_000;
 const LOCK_TRIES = 50;
 const LOCK_WAIT_MS = 5;
 const ID_RE = /^[0-9a-f]{16}$/;
@@ -258,87 +257,110 @@ function pause(ms: number): void {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-/** Whether the process named by a lock token still runs; `null` when the token names none. */
-function holderAlive(token: string): boolean | null {
+/** Per token, whether `ps` showed its pid reused; a verdict holds for as long as the token exists. */
+const reusedPid = new Map<string, boolean>();
+
+/**
+ * Whether the holder named by `token`, on a lock entry `age` ms old, is gone:
+ * its process has ended, or the process under that pid has run for less time
+ * than the entry exists, so the pid was reused. `null` when the token names no
+ * process. A live holder is never gone, however old its entry: a lock taken
+ * from it would let it publish an older snapshot after its successor's. When
+ * the start of the process cannot be read (no `ps`, as on Windows) it is taken
+ * to be the holder, so a crashed holder whose pid was reused keeps the lock
+ * until that other process ends.
+ */
+function holderGone(token: string, age: number): boolean | null {
     const pid = Number(token.split('.')[0]);
     if (!Number.isInteger(pid) || pid <= 0) return null;
     try {
         process.kill(pid, 0);
-        return true;
     } catch (e) {
-        return (e as NodeJS.ErrnoException).code === 'EPERM';
+        if ((e as NodeJS.ErrnoException).code !== 'EPERM') return true;
     }
+    if (age <= LOCK_STALE_MS) return false;
+    if (!reusedPid.has(token)) {
+        // `[[dd-]hh:]mm:ss` the process has run; anything else keeps the holder.
+        const ran = spawnSync('ps', ['-o', 'etime=', '-p', String(pid)], { encoding: 'utf-8', timeout: 1000 }).stdout?.trim() ?? '';
+        if (!/^[\d:-]+$/.test(ran)) return false;
+        const [s = 0, m = 0, h = 0, d = 0] = ran.split(/[-:]/).reverse().map(Number);
+        reusedPid.set(token, (((d * 24 + h) * 60 + m) * 60 + s) * 1000 + LOCK_STALE_MS < age);
+    }
+    return reusedPid.get(token) ?? false;
 }
 
-/**
- * Whether another holder's ticket may be removed. A dead holder's goes at once;
- * one that names no process after `LOCK_STALE_MS`. A live holder keeps its
- * ticket for `LOCK_ABANDONED_MS`: a Stop still building its checkpoint would
- * otherwise publish an older snapshot after its successor's. Past that the
- * ticket is removed too, because the locked code touches local files only and
- * a pid still running after fifteen minutes is taken as reused.
- */
-function ticketBreakable(ticket: string, token: string): boolean {
+/** Whether a lock entry may be removed: its holder is gone, or it names none and is older than `LOCK_STALE_MS`. */
+function breakable(entry: string, token: string | null): boolean {
     let age: number;
     try {
-        age = Date.now() - fs.statSync(ticket).mtimeMs;
+        age = Date.now() - fs.statSync(entry).mtimeMs;
     } catch {
         return false;
     }
-    const alive = holderAlive(token);
-    if (alive === false) return true;
-    if (alive === null) return age > LOCK_STALE_MS;
-    return age > LOCK_ABANDONED_MS;
+    return holderGone(token ?? '', age) ?? age > LOCK_STALE_MS;
+}
+
+/** The holder `<file>.lock` names: the entry inside this version's directory, or the older version's file content. */
+function outerHolder(outer: string): string | null {
+    try {
+        return fs.readdirSync(outer)[0] ?? null;
+    } catch {
+        try {
+            return fs.readFileSync(outer, 'utf-8');
+        } catch {
+            return null;
+        }
+    }
 }
 
 /**
- * Create `<file>.lock` for this holder, dated `LOCK_ABANDONED_MS` ahead. The
- * version before tickets breaks that file once its mtime is two seconds old,
- * whoever holds it; dated ahead, it does not look old to that version while
- * this holder runs. This version judges the file by its holder's pid first.
+ * Remove `<file>.lock` when its holder is gone. It is moved aside first and
+ * removed only if it still names the holder judged gone: a hook of the older
+ * version may have broken and retaken it in between, and that file is put back
+ * unless the path was taken again meanwhile, which only a second hook of the
+ * older version can do.
  */
-function createLegacyLock(legacy: string, token: string): boolean {
+function reapOuter(outer: string, token: string): boolean {
+    const held = outerHolder(outer);
+    if (!breakable(outer, held)) return false;
+    const aside = `${outer.slice(0, -5)}.reap.${token}`;
     try {
-        fs.writeFileSync(legacy, token, { flag: 'wx', mode: 0o600 });
+        fs.renameSync(outer, aside);
     } catch {
         return false;
     }
+    const same = outerHolder(aside) === held;
     try {
-        const ahead = new Date(Date.now() + LOCK_ABANDONED_MS);
-        fs.utimesSync(legacy, ahead, ahead);
+        if (!same) fs.linkSync(aside, outer);
+    } catch {
+        // taken again meanwhile
+    }
+    fs.rmSync(aside, { recursive: true, force: true });
+    return same;
+}
+
+/**
+ * Take `<file>.lock` as a directory holding one entry named by this holder's
+ * token. The version before tickets used `<file>.lock` as its single lock file:
+ * it creates that file exclusively, which fails while the directory is there,
+ * and breaks a stale one with a plain removal, which fails on a directory. So a
+ * hook of that version still running across an install or a rollback can never
+ * take the lock from a holder of this one, however long it holds; it gives up
+ * and leaves the work to the next hook. Only the ticket holder gets here, so no
+ * other hook of this version touches the path meanwhile.
+ */
+function takeOuter(outer: string, token: string): boolean {
+    try {
+        fs.mkdirSync(outer);
+    } catch {
+        return reapOuter(outer, token) && takeOuter(outer, token);
+    }
+    try {
+        fs.writeFileSync(path.join(outer, token), '');
         return true;
     } catch {
-        // Undated, an older hook would break it after two seconds: give it back.
-        releaseLegacyLock(legacy, token);
+        fs.rmSync(outer, { recursive: true, force: true });
         return false;
-    }
-}
-
-/**
- * Take `<file>.lock`, the single lock file of the scheme before tickets, as
- * well. A hook of that version still running across an install or a rollback
- * creates it exclusively and so waits for this holder, and this holder waits
- * for it. Only the ticket holder gets here, so a break of this file races an
- * older hook at most, never another ticket holder.
- */
-function takeLegacyLock(legacy: string, token: string): boolean {
-    if (createLegacyLock(legacy, token)) return true;
-    let held: string;
-    try {
-        held = fs.readFileSync(legacy, 'utf-8');
-    } catch {
-        return false;
-    }
-    if (!ticketBreakable(legacy, held)) return false;
-    fs.rmSync(legacy, { force: true });
-    return createLegacyLock(legacy, token);
-}
-
-function releaseLegacyLock(legacy: string, token: string): void {
-    try {
-        if (fs.readFileSync(legacy, 'utf-8') === token) fs.rmSync(legacy, { force: true });
-    } catch {
-        // already gone
     }
 }
 
@@ -346,16 +368,18 @@ function releaseLegacyLock(legacy: string, token: string): void {
  * Run `fn` holding the lock on `file`, or return `null` when it could not be
  * had. Each contender creates its own ticket `<file>.lock.<token>`, then lists
  * the tickets, removes every breakable one, and holds the lock when no other
- * ticket is left and it could also take the older `<file>.lock`; otherwise it
- * removes its own ticket and retries after a random pause. A ticket is only
- * ever removed by its unique name, so breaking an abandoned one can never
- * remove a successor's, and two contenders cannot both hold: each lists after
- * creating, so the later lister sees the earlier ticket.
+ * ticket is left and it could also take `<file>.lock`; otherwise it removes its
+ * own ticket and retries after a random pause. A ticket is only ever removed by
+ * its unique name, so breaking an abandoned one can never remove a successor's,
+ * and two contenders cannot both hold: each lists after creating, so the later
+ * lister sees the earlier ticket. A live holder's ticket is never broken, so a
+ * holder that is slow or suspended keeps the lock and every waiter writes
+ * nothing; `<file>.lock` is its own directory, so its release removes it whole.
  */
 function locked<T>(file: string, fn: () => T): { value: T } | null {
     const dir = path.dirname(file);
     const prefix = `${path.basename(file)}.lock.`;
-    const legacy = `${file}.lock`;
+    const outer = `${file}.lock`;
     const token = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
     const mine = path.join(dir, prefix + token);
     for (let i = 0; i < LOCK_TRIES; i++) {
@@ -367,10 +391,10 @@ function locked<T>(file: string, fn: () => T): { value: T } | null {
             for (const n of fs.readdirSync(dir)) {
                 if (!n.startsWith(prefix) || n === prefix + token) continue;
                 const other = path.join(dir, n);
-                if (ticketBreakable(other, n.slice(prefix.length))) fs.rmSync(other, { force: true });
+                if (breakable(other, n.slice(prefix.length))) fs.rmSync(other, { force: true });
                 else others++;
             }
-            free = others === 0 && takeLegacyLock(legacy, token);
+            free = others === 0 && takeOuter(outer, token);
         } catch {
             free = false;
         }
@@ -378,7 +402,7 @@ function locked<T>(file: string, fn: () => T): { value: T } | null {
             try {
                 return { value: fn() };
             } finally {
-                releaseLegacyLock(legacy, token);
+                fs.rmSync(outer, { recursive: true, force: true });
                 fs.rmSync(mine, { force: true });
             }
         }
@@ -419,9 +443,10 @@ export function updateSwitchRecord(
 const PRUNE_AFTER_MS = 8 * 24 * HOUR_MS;
 
 /**
- * Remove records, back-off files and locks no session has touched for eight
- * days. Expiry on read covers a session that comes back; this covers one that
- * never does. Run on a raise, which happens at most once per window and reset.
+ * Remove records, back-off files and lock tickets no session has touched for
+ * eight days; a ticket whose holder still runs is kept. Expiry on read covers a
+ * session that comes back; this covers one that never does. Run on a raise,
+ * which happens at most once per window and reset.
  */
 export function pruneSwitchState(stateEnv?: EnvMap | null, now: number = Date.now()): void {
     const dir = path.dirname(switchRecordPath('x', stateEnv));
@@ -429,7 +454,13 @@ export function pruneSwitchState(stateEnv?: EnvMap | null, now: number = Date.no
         for (const name of fs.readdirSync(dir)) {
             const p = path.join(dir, name);
             try {
-                if (now - fs.statSync(p).mtimeMs > PRUNE_AFTER_MS) fs.rmSync(p, { force: true });
+                if (now - fs.statSync(p).mtimeMs <= PRUNE_AFTER_MS) continue;
+                // A ticket is kept while its holder runs, however old it is.
+                // `<record>.lock` is left to the next ticket holder, the one
+                // hook that may remove it (see `takeOuter`).
+                const at = name.indexOf('.lock.');
+                if (name.endsWith('.lock') || (at >= 0 && !breakable(p, name.slice(at + 6)))) continue;
+                fs.rmSync(p, { recursive: true, force: true });
             } catch {
                 // removed meanwhile
             }
