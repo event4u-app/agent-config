@@ -251,17 +251,17 @@ Carried from council rounds 1–6 of the Phase 7 budget raise
 (`agents/evidence/council/agent-switch-hardening-ratification-r{1..6}-20261108.question.md`,
 all `refused`; merged on the owner's word with the question opt-in, D5).
 
-- [ ] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
+- [~] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
       outlives the two-second stale break can lose its lock to a second Stop and
       still publish an older snapshot after it (round 6). Serialize in a way
       that cannot evict a live writer, or write checkpoint generations so an
       older one never replaces a newer one.
       verify: a two-process test with a writer held past the stale break.
-      Reopened 2026-11-10: council round 5 of 8.4 asked to review the ticket
-      lock separately, so it left 8.4 for its own pull request. Open: a live
-      holder losing its ticket after 15 min, the older version's
-      check-then-unlink across an install, and tests paused between stale
-      check and unlink in both version directions.
+      Built 2026-11-11 on its own pull request: tickets a live holder never
+      loses, `<record>.lock` a directory 20.2.0 cannot remove, no removal of a
+      20.2.0 lock file, a cutover required over 20.2.0. Lock reviews r1-r3
+      (`agents/evidence/council/agent-switch-lock-review-r*-20261111.question.md`)
+      refused: the liveness cost, and 20.2.0's own eviction. Merge is the owner's call.
 - [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
@@ -272,7 +272,7 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       against the fake agent-switch at one instant; all three red with the lock
       removed, in three runs. Not the full dispatcher: its process start costs
       seconds per run and adds nothing to the lock under test.
-      Reopened 2026-11-10 with 8.1: the tests ship with the lock rewrite.
+      Reopened 2026-11-10 with 8.1; the tests ship with the lock rewrite.
 - [ ] **8.3 Consent at execution, closed.** Ask agent-switch to mark
       `switch_decide` with `requiresUserInteraction` (counterpart roadmap
       `road-to-the-agent-config-link`), then show a live interactive prompt on
