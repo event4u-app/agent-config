@@ -353,7 +353,7 @@ Owner: `src/scripts/check_role_doc_links.ts`.
 - `docs/skills-catalog.md` (4) — `src/scripts/generate_catalog.ts`, `src/scripts/sync_pr_branch.ts`, `tests/scripts/generate_catalog.test.ts`, `tests/scripts/sync_pr_branch.test.ts`
 - `docs/spawn-site-policy.md` (1) — `src/scripts/_lib/environment_detector.ts`
 - `docs/spikes/scale-history-spikes.md` (2) — `src/scripts/lint_persistence.ts`, `tests/scripts/lint_persistence.test.ts`
-- `docs/threat-model.md` (5) — `src/scripts/_lib/environment_detector.ts`, `src/scripts/install.ts`, `tests/install/copy_symlink_confinement.test.ts`, `tests/scripts/_lib_subagent_spawn.test.ts`, `tests/scripts/ai_council/spawn_env.test.ts`
+- `docs/threat-model.md` (4) — `src/scripts/_lib/environment_detector.ts`, `tests/install/copy_symlink_confinement.test.ts`, `tests/scripts/_lib_subagent_spawn.test.ts`, `tests/scripts/ai_council/spawn_env.test.ts`
 - `docs/us-vs-the-category.md` (1) — `src/scripts/check_supervision_claim_atomicity.ts`
 - `docs/value.md` (3) — `src/scripts/lint_value_dashboard.ts`, `src/scripts/render_value_md.ts`, `tests/scripts/render_value_md.test.ts`
 - `docs/walkthroughs/daily-workspace-a11y.md` (1) — `tests/e2e/workspace-launcher.spec.ts`
