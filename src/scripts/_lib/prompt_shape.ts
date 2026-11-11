@@ -161,6 +161,21 @@ const REGION_NOTE =
   /\b(content (above|below) is from|treat (it|this|that|the (content|text|above|following)) as data)\b/i;
 
 /**
+ * The terminal-pane echo Claude Desktop's Code tab writes into the prompt when
+ * the user runs a command there — issue #2950. The tags arrive INLINE on one
+ * line (`<bash-input>…</bash-input><bash-stdout>…</bash-stdout>`), which the
+ * line-anchored `REGION_OPEN` below never matches, and the app's own bracketed
+ * advisory inside `<bash-stdout>` carried enough English markers to pin English
+ * in a German session.
+ *
+ * Named literally rather than generalised to every inline `<tag>…</tag>`: a user
+ * typing markup in a sentence is plausible, and furniture is identified by its
+ * own name (the same reasoning as `REGION_NOTE`). Only a CLOSED region goes; an
+ * unclosed tag stays, as with the bare-tag arm below.
+ */
+const TERMINAL_PANE_REGION = /<(bash-input|bash-stdout|bash-stderr)>[\s\S]*?<\/\1>/g;
+
+/**
  * Remove host-injected wrapper regions — `<launch-selected-element>` and
  * friends — leaving the text the human actually typed around them.
  *
@@ -199,7 +214,7 @@ const REGION_NOTE =
  * scanning past the wrong close would.
  */
 export function stripInjectedRegions(text: string): string {
-  const lines = text.split("\n");
+  const lines = text.replace(TERMINAL_PANE_REGION, "").split("\n");
   const kept: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
