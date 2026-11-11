@@ -1652,6 +1652,20 @@ describe("inline terminal-pane regions (#2950)", () => {
     expect(classify(en).language).toBe("en");
   });
 
+  it("German text on both sides of an inline region still decides", () => {
+    const p =
+      "bitte prüfe das <bash-stdout>these are the files that were there</bash-stdout> und mach dann weiter mit der liste";
+    expect(stripInjectedRegions(p)).not.toMatch(/these are the files/);
+    expect(classify(p).language).toBe("de");
+  });
+
+  it("inline terminal regions and a standalone host wrapper are both removed", () => {
+    const p = TERMINAL_PANE_LINE + "\n" + ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
+    const kept = stripInjectedRegions(p);
+    expect(kept).not.toMatch(/bash-|launch-selected-element|No output was captured/);
+    expect(classify(p).language).toBe("de");
+  });
+
   it("an unclosed inline tag is left in place", () => {
     const p = "<bash-stdout>the output that was there and should have been kept";
     expect(stripInjectedRegions(p)).toBe(p);
