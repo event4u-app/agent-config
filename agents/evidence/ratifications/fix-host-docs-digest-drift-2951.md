@@ -67,6 +67,15 @@ session nor the council may make. A human reread of the body matching the new
 digest, recorded on the branch, followed by a round 3 over the wording
 refinements, is the path the refusing seat named.
 
+- **Expected gain:** the weekly watch goes green again (issue #2951), and the
+  row's digest names the body that was actually read on 2026-11-11.
+- **Risk:** the watcher's baseline moves to a body whose reading was done by an
+  agent; if that reading were wrong, the next alarm fires only when the page
+  moves again. No hook is armed: `slots: {}`, `json_shape: none`.
+- **Rollback:** revert `e5a31617b0` and `38d12e5a70` (restores the 2026-11-07
+  values and regenerated JSON from `origin/main` `417e7b56df`); the watch then
+  reports `copilot/any` CHANGED again.
+
 ## Independence
 
 `proposed_by` and `implemented_by` are the same session; `reviewed_by` is the
