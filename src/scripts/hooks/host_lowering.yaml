@@ -372,8 +372,8 @@ hosts:
         # a crash or any other non-zero exit denies the tool call even over a
         # stdout `allow`; a command-hook timeout is always fail-open; an HTTP
         # `preToolUse` hook is fail-open. It also names `permissionRequest`, on
-        # which exit 2 is a deny as well, and no longer reads hooks from
-        # `~/.copilot/config.json`. Re-dated only; nothing is armed.
+        # which exit 2 is a deny as well, and says the CLI no longer reads
+        # hooks from `~/.copilot/config.json`. Re-dated only; nothing is armed.
         verified:
           docs_at: 2026-11-11
           docs_url: https://docs.github.com/en/copilot/reference/hooks-reference.md
