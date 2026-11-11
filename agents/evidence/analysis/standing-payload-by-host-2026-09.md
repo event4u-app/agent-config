@@ -44,7 +44,7 @@ would look identical here.
 | `cursor` | `.cursor/rules` | per-rule tree | 475556 | 118889 | `src/scripts/condense.ts:1160` |
 | `gemini` | `GEMINI.md` | single file (tracked:AGENTS.md) | 2982 | 746 | `src/scripts/condense.ts:1458` |
 | `windsurf` | `.windsurfrules` | single file (render) | 387142 | 96786 | `src/scripts/condense.ts:1202` |
-| `codex` | `.codex/agent-config.md` | single file (refused) | refused | refused | `src/scripts/install.ts:1364` |
+| `codex` | `.codex/agent-config.md` | single file (refused) | refused | refused | `src/scripts/install.ts:1365` |
 
 **Where the single-file figures come from.** Each is RENDERED by the emitter that writes
 the surface, or read from a file tracked in git — never read off an untracked generated
