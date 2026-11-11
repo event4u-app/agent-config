@@ -1602,3 +1602,84 @@ describe("host-injected wrapper regions", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Inline terminal-pane regions — issue #2950 (agent-config 20.1.0).
+//
+// Claude Desktop's Code tab hands a command the user ran from the terminal pane
+// to `UserPromptSubmit` as ONE line: `<bash-input>…</bash-input><bash-stdout>…
+// </bash-stdout><bash-stderr></bash-stderr>`. The bracketed advisory inside
+// `<bash-stdout>` is written by the app, and its English markers pinned English
+// in a German session — `REGION_OPEN` only matches a tag alone on its line, so
+// the inline shape was never stripped.
+// ---------------------------------------------------------------------------
+
+const TERMINAL_PANE_LINE =
+  "<bash-input>jq '.permissions' ~/.claude/settings.json > /tmp/s.json && mv /tmp/s.json ~/.claude/settings.json</bash-input>" +
+  "<bash-stdout>[No output was captured. The command ran in the terminal pane (tab 0); if it should have printed something, use read_terminal with tab_id \"0\" to check.]</bash-stdout>" +
+  "<bash-stderr></bash-stderr>";
+
+describe("inline terminal-pane regions (#2950)", () => {
+  it("a prompt made only of inline terminal regions classifies as und", () => {
+    expect(classify(TERMINAL_PANE_LINE).language).toBe("und");
+  });
+
+  it("the same regions on their own lines are not scored either", () => {
+    const multiLine = [
+      "<bash-input>",
+      "jq '.x' file.json",
+      "</bash-input>",
+      "<bash-stdout>",
+      "[No output was captured. The command ran in the terminal pane; if it should have printed something, use read_terminal.]",
+      "</bash-stdout>",
+    ].join("\n");
+    expect(classify(multiLine).language).toBe("und");
+  });
+
+  it("a multi-line stdout opened inline is removed whole", () => {
+    const p =
+      "<bash-input>ls</bash-input><bash-stdout>these are the files\nthat were there and they have been listed\n</bash-stdout>\nmach bitte weiter mit den tickets und prüfe die regeln";
+    const kept = stripInjectedRegions(p);
+    expect(kept).not.toMatch(/bash-|these are the files|have been listed/);
+    expect(kept).toContain("mach bitte weiter mit den tickets und prüfe die regeln");
+    expect(classify(p).language).toBe("de");
+  });
+
+  it("text typed beside the inline regions is kept and decides", () => {
+    const p = TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?";
+    expect(classify(p).language).toBe("de");
+    const en = TERMINAL_PANE_LINE + "\nwhy is this empty and where is the output?";
+    expect(classify(en).language).toBe("en");
+  });
+
+  it("German text on both sides of an inline region still decides", () => {
+    const p =
+      "bitte prüfe das <bash-stdout>these are the files that were there</bash-stdout> und mach dann weiter mit der liste";
+    expect(stripInjectedRegions(p)).not.toMatch(/these are the files/);
+    expect(classify(p).language).toBe("de");
+  });
+
+  it("inline terminal regions and a standalone host wrapper are both removed", () => {
+    const p = TERMINAL_PANE_LINE + "\n" + ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
+    const kept = stripInjectedRegions(p);
+    expect(kept).not.toMatch(/bash-|launch-selected-element|No output was captured/);
+    expect(classify(p).language).toBe("de");
+  });
+
+  it("an unclosed inline tag is left in place", () => {
+    const p = "<bash-stdout>the output that was there and should have been kept";
+    expect(stripInjectedRegions(p)).toBe(p);
+  });
+
+  it("the reported three-turn sequence keeps the German pin", () => {
+    run(envelope("Die Freigabe ist drin, mach bitte weiter mit den Tickets"), {
+      consumer_root: tmp,
+      env: {},
+    });
+    expect(readState().language).toBe("de");
+    run(envelope(TERMINAL_PANE_LINE), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+    run(envelope("Ja, angleichen"), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+  });
+});
