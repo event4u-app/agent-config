@@ -13,7 +13,6 @@
  * each shown once, and a request is no longer read once it reached a terminal state.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -35,8 +34,6 @@ const BACKOFF_AFTER = 3;
 const BACKOFF_FALLBACK_MS = 5 * HOUR_MS;
 /** Age after which a lock whose holder cannot be identified counts as abandoned. */
 const LOCK_STALE_MS = 2000;
-/** Where `ps` cannot be read, how long after an install its earlier hooks are taken to have ended. */
-const DRAIN_UNSEEN_MS = 15 * 60_000;
 const LOCK_TRIES = 50;
 const LOCK_WAIT_MS = 5;
 const ID_RE = /^[0-9a-f]{16}$/;
@@ -291,67 +288,18 @@ function breakable(entry: string, token: string | null): boolean {
 }
 
 /**
- * Whether no hook process started before this hook's own install still runs,
- * in which case the version before tickets (20.2.0) is gone from this machine
- * and its single lock files are abandoned. Until then this version takes no
- * lock, so it writes nothing and leaves the work to a later hook: that version
- * breaks its lock file with a check followed by a removal, which no protocol of
- * this one can make safe while it runs. The install is the change time of the
- * file this process was started from; a hook is a process running
- * `hooks/dispatch.js`. The answer is kept in a marker named by the install's
- * change time, so `ps` runs only until it is yes. Where `ps` cannot be read, as on Windows, the install
- * counts as drained `DRAIN_UNSEEN_MS` after it, which a hook that is suspended
- * for longer than that outlasts.
- */
-function drained(dir: string): boolean {
-    let at: number;
-    try {
-        at = fs.statSync(fs.realpathSync(process.argv[1] ?? '')).ctimeMs;
-    } catch {
-        return false;
-    }
-    const marker = path.join(dir, `.drained.${Math.trunc(at)}`);
-    if (fs.existsSync(marker)) return true;
-    const ps = spawnSync('ps', ['-A', '-o', 'pid=,etime=,args='], { encoding: 'utf-8', timeout: 2000 });
-    if (ps.status !== 0) {
-        if (Date.now() - at < DRAIN_UNSEEN_MS) return false;
-    } else {
-        for (const line of ps.stdout.split('\n')) {
-            const m = /^\s*(\d+)\s+([\d:-]+)\s.*hooks\/dispatch\.js/.exec(line);
-            if (m === null || Number(m[1]) === process.pid) continue;
-            // `[[dd-]hh:]mm:ss` it has run, whole seconds: started up to a second before this reading.
-            const [s = 0, mi = 0, h = 0, d = 0] = (m[2] ?? '').split(/[-:]/).reverse().map(Number);
-            if (Date.now() - (((d * 24 + h) * 60 + mi) * 60 + s) * 1000 < at + 1000) return false;
-        }
-    }
-    try {
-        fs.mkdirSync(dir, { recursive: true });
-        for (const n of fs.readdirSync(dir)) {
-            const p = path.join(dir, n);
-            if (n.endsWith('.lock') && fs.statSync(p).isFile()) fs.rmSync(p, { force: true });
-        }
-        fs.writeFileSync(marker, '');
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-/** `drained` for the switch state directory; the hooks reach it through `locked`. */
-export function drainSwitchLock(stateEnv?: EnvMap | null): boolean {
-    return drained(path.dirname(switchRecordPath('x', stateEnv)));
-}
-
-/**
  * Take `<file>.lock` as a directory holding one entry named by this holder's
  * token. 20.2.0 used that path as its single lock file: it creates the file
  * exclusively, which fails while the directory is there, and breaks a stale one
  * with a plain removal, which fails on a directory, so a hook of that version
- * started after the drain, by a rollback, can never take the lock from a holder
- * of this one. A file found there is that version's lock and is left alone:
- * this version stays out and writes nothing. A directory whose holder is gone
- * is removed; only the ticket holder gets here, and 20.2.0 cannot touch a
- * directory, so nothing replaces it in between.
+ * running across an install or a rollback can never take the lock from a
+ * holder of this one. A file found there is that version's lock and is never
+ * removed by this one, whether its holder runs or not: 20.2.0 may have checked
+ * it and be about to remove it, and any removal by this version could hit a
+ * file a hook of 20.2.0 took in between. This version stays out and writes
+ * nothing; the lock fails closed. A directory whose holder is gone is removed;
+ * only the ticket holder gets here, and 20.2.0 cannot touch a directory, so
+ * nothing replaces it in between.
  */
 function takeOuter(outer: string, token: string): boolean {
     try {
@@ -377,11 +325,10 @@ function takeOuter(outer: string, token: string): boolean {
 
 /**
  * Run `fn` holding the lock on `file`, or return `null` when it could not be
- * had. Nothing is taken before `drainSwitchLock` says yes. Each contender
- * creates its own ticket `<file>.lock.<token>`, then lists the tickets, removes
- * every breakable one, and holds the lock when no other ticket is left and it
- * could also take `<file>.lock`; otherwise it removes its own ticket and
- * retries after a random pause. A ticket is only ever removed by its unique
+ * had. Each contender creates its own ticket `<file>.lock.<token>`, then
+ * lists the tickets, removes every breakable one, and holds the lock when no
+ * other ticket is left and it could also take `<file>.lock`; otherwise it
+ * removes its own ticket and retries after a random pause. A ticket is only ever removed by its unique
  * name, so breaking an abandoned one can never remove a successor's, and two
  * contenders cannot both hold: each lists after creating, so the later lister
  * sees the earlier ticket. A live holder's ticket is never broken, so a holder
@@ -389,7 +336,6 @@ function takeOuter(outer: string, token: string): boolean {
  */
 function locked<T>(file: string, fn: () => T): { value: T } | null {
     const dir = path.dirname(file);
-    if (!drained(dir)) return null;
     const prefix = `${path.basename(file)}.lock.`;
     const outer = `${file}.lock`;
     const token = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;

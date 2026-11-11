@@ -241,7 +241,7 @@ describe('8.1 a writer the lock cannot evict', () => {
     }, 20_000);
 });
 
-describe('the lock across an install, after the drain: the older single lock file', () => {
+describe('the lock across an install: the older single lock file', () => {
     const legacy = (): string => `${switchRecordPath(hashSessionId(SESSION), stateEnv)}.lock`;
     const deadPid = (): number => Number(spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' }).stdout);
 

@@ -3,33 +3,17 @@
  * before tickets (20.2.0), whose steps are those of
  * fixtures/switch_relay_v1_lock.ts: an exclusive create of `<record>.lock`,
  * and on failure a stale check of its mtime followed by a plain removal.
- * This version takes no lock until no hook started before its install runs
- * (the drain), and after it never removes that version's lock file.
- * Its own file, because it replaces `ps` (through `spawnSync`) for the module.
+ * This version holds that path as a directory and never removes a file there.
  */
 import * as cp from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const seam = vi.hoisted(() => ({ ps: null as string | null | undefined }));
-
-vi.mock('node:child_process', async (importOriginal) => {
-    const real = await importOriginal<typeof cp>();
-    return {
-        ...real,
-        spawnSync: (...args: Parameters<typeof cp.spawnSync>) => {
-            if (args[0] !== 'ps' || seam.ps === undefined) return real.spawnSync(...args);
-            // `null`: no `ps` on this host.
-            if (seam.ps === null) return { pid: 0, output: [], stdout: '', stderr: '', status: null, signal: null, error: new Error('ENOENT') };
-            return { pid: 0, output: [], stdout: seam.ps, stderr: '', status: 0, signal: null };
-        },
-    };
-});
-
-const { drainSwitchLock, updateSwitchRecord } = await import('../../src/scripts/_lib/switch_relay.js');
+const { readSwitchRecord, updateSwitchRecord, writeSwitchRecord } = await import('../../src/scripts/_lib/switch_relay.js');
+const { parseRecord: parseRecordBeforeTickets } = await import('./fixtures/switch_relay_v1_record.js');
 const { switchRecordPath } = await import('../../src/scripts/_lib/switch_record_path.js');
 
 const SESSION = 'a'.repeat(16);
@@ -37,7 +21,6 @@ let home: string;
 let stateEnv: Record<string, string>;
 let record: string;
 let outer: string;
-let argv1: string | undefined;
 
 beforeEach(() => {
     home = fs.mkdtempSync(path.join(os.tmpdir(), 'as-interleave-'));
@@ -45,12 +28,8 @@ beforeEach(() => {
     record = switchRecordPath(SESSION, stateEnv);
     outer = `${record}.lock`;
     fs.mkdirSync(path.dirname(record), { recursive: true });
-    argv1 = process.argv[1];
-    seam.ps = '';
 });
 afterEach(() => {
-    seam.ps = undefined;
-    process.argv[1] = argv1 ?? '';
     fs.rmSync(home, { recursive: true, force: true });
 });
 
@@ -74,63 +53,9 @@ function lockedRun(fn: () => void = () => {}): boolean {
     return ran;
 }
 const entries = (): string[] => fs.readdirSync(path.dirname(record)).filter((n) => n.includes('.lock'));
-/** This process as if just installed: the file it was started from was created now. */
-function freshInstall(): void {
-    const self = path.join(home, 'dispatch.js');
-    fs.writeFileSync(self, '');
-    process.argv[1] = self;
-}
-
-describe('the drain', () => {
-    it('while a hook started before this install runs, no lock is taken and the older lock file stays', () => {
-        freshInstall();
-        fs.writeFileSync(outer, `${deadPid()}.1.old`);
-        seam.ps = `  4242 01:00 node /home/u/.event4u/agent-config/runtime/current/dist/hooks/dispatch.js --event stop\n`;
-        expect(lockedRun()).toBe(false);
-        expect(drainSwitchLock(stateEnv)).toBe(false);
-        expect(fs.readFileSync(outer, 'utf-8')).toMatch(/\.old$/);
-    });
-
-    it('once none runs, the older lock files are removed and the lock is taken; the answer is kept', () => {
-        freshInstall();
-        fs.writeFileSync(outer, `${deadPid()}.1.old`);
-        const backoffLock = record.replace(/\.json$/, '.backoff.json.lock');
-        fs.writeFileSync(backoffLock, `${deadPid()}.1.old`);
-        // A hook started after the install (which the second's slack needs to have passed), and a process that is no hook.
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1100);
-        seam.ps = `  4242 00:00 node /x/dist/hooks/dispatch.js\n  4343 40-00:00:00 /usr/sbin/sshd\n`;
-        expect(lockedRun()).toBe(true);
-        expect(fs.existsSync(outer)).toBe(false);
-        expect(fs.existsSync(backoffLock)).toBe(false);
-        seam.ps = `  4242 999-00:00:00 node /x/dist/hooks/dispatch.js\n`;
-        expect(drainSwitchLock(stateEnv)).toBe(true);
-    });
-
-    it('a hook started a moment before the install counts as one of the earlier install', () => {
-        freshInstall();
-        seam.ps = `  4242 00:01 node /x/dist/hooks/dispatch.js\n`;
-        expect(drainSwitchLock(stateEnv)).toBe(false);
-    });
-
-    it('without `ps`, an install counts as drained fifteen minutes after it, not before', () => {
-        seam.ps = null;
-        freshInstall();
-        expect(drainSwitchLock(stateEnv)).toBe(false);
-        expect(lockedRun()).toBe(false);
-        // A file created long before: the system shell.
-        process.argv[1] = '/bin/sh';
-        expect(Date.now() - fs.statSync(fs.realpathSync('/bin/sh')).ctimeMs).toBeGreaterThan(15 * 60_000);
-        expect(drainSwitchLock(stateEnv)).toBe(true);
-    });
-});
-
-describe('after the drain', () => {
-    beforeEach(() => {
-        expect(drainSwitchLock(stateEnv)).toBe(true);
-    });
-
-    it('a hook of the older version, paused between its stale check and its removal, cannot remove this version’s lock', () => {
-        // A rolled-back hook holds the older file and has run for ten seconds: stale to that version.
+describe('one lock across 20.2.0 and this version', () => {
+    it('a hook of 20.2.0, paused between its stale check and its removal, can neither remove nor take the lock of a holder of this version', () => {
+        // A hook of 20.2.0 holds the older file and has run for ten seconds: stale to that version.
         fs.writeFileSync(outer, '1.1.old');
         backdate(outer, 10_000);
         expect(Date.now() - fs.statSync(outer).mtimeMs > 2000).toBe(true); // the paused hook's stale check
@@ -196,4 +121,11 @@ describe('after the drain', () => {
             holder.kill();
         }
     });
+});
+
+it('20.2.0 reads the record this version writes, field for field', () => {
+    const rec = { id: '0123456789abcdef', decision_told: true, checkpointed: true, outcome_told: false, expires_at: Date.now() + 60_000 };
+    writeSwitchRecord(SESSION, rec, stateEnv);
+    expect(readSwitchRecord(SESSION, stateEnv)).toEqual(rec);
+    expect(parseRecordBeforeTickets(fs.readFileSync(record, 'utf-8'), fs.statSync(record).mtimeMs)).toEqual(rec);
 });
