@@ -4,13 +4,44 @@
  * fixtures/switch_relay_v1_lock.ts: an exclusive create of `<record>.lock`,
  * and on failure a stale check of its mtime followed by a plain removal.
  * This version holds that path as a directory and never removes a file there.
+ * Its own file, because it pauses the lock at its steps by wrapping
+ * `readdirSync` and `mkdirSync` for the module.
  */
 import * as cp from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+/** One-shot pause points: run before the lock's next listing of the state directory, or its next create of `<record>.lock`. */
+const seam = vi.hoisted(() => ({
+    beforeList: null as (() => void) | null,
+    beforeOuter: null as (() => void) | null,
+}));
+
+vi.mock('node:fs', async (importOriginal) => {
+    const real = await importOriginal<typeof fs>();
+    return {
+        ...real,
+        readdirSync: ((p: fs.PathLike, ...rest: unknown[]) => {
+            if (String(p).endsWith(`${path.sep}switch`) && seam.beforeList !== null) {
+                const hook = seam.beforeList;
+                seam.beforeList = null;
+                hook();
+            }
+            return (real.readdirSync as (...a: unknown[]) => unknown)(p, ...rest);
+        }) as typeof fs.readdirSync,
+        mkdirSync: ((p: fs.PathLike, ...rest: unknown[]) => {
+            if (String(p).endsWith('.json.lock') && seam.beforeOuter !== null) {
+                const hook = seam.beforeOuter;
+                seam.beforeOuter = null;
+                hook();
+            }
+            return (real.mkdirSync as (...a: unknown[]) => unknown)(p, ...rest);
+        }) as typeof fs.mkdirSync,
+    };
+});
 
 const { readSwitchRecord, updateSwitchRecord, writeSwitchRecord } = await import('../../src/scripts/_lib/switch_relay.js');
 const { parseRecord: parseRecordBeforeTickets } = await import('./fixtures/switch_relay_v1_record.js');
@@ -30,6 +61,8 @@ beforeEach(() => {
     fs.mkdirSync(path.dirname(record), { recursive: true });
 });
 afterEach(() => {
+    seam.beforeList = null;
+    seam.beforeOuter = null;
     fs.rmSync(home, { recursive: true, force: true });
 });
 
@@ -128,4 +161,50 @@ it('20.2.0 reads the record this version writes, field for field', () => {
     writeSwitchRecord(SESSION, rec, stateEnv);
     expect(readSwitchRecord(SESSION, stateEnv)).toEqual(rec);
     expect(parseRecordBeforeTickets(fs.readFileSync(record, 'utf-8'), fs.statSync(record).mtimeMs)).toEqual(rec);
+});
+
+describe('two holders of this version, each paused at a step of the other', () => {
+    it('a contender that runs its whole acquire between another’s ticket and its listing backs off; the other holds', () => {
+        let second: boolean | null = null;
+        seam.beforeList = () => {
+            second = lockedRun();
+        };
+        expect(lockedRun()).toBe(true);
+        expect(second).toBe(false);
+        expect(entries()).toEqual([]);
+    });
+
+    it('a contender that runs between another’s listing and its create of `<record>.lock` backs off; the other holds', () => {
+        let second: boolean | null = null;
+        seam.beforeOuter = () => {
+            second = lockedRun();
+        };
+        expect(lockedRun()).toBe(true);
+        expect(second).toBe(false);
+        expect(entries()).toEqual([]);
+    });
+
+    it('a contender that runs while another is inside backs off', () => {
+        let second: boolean | null = null;
+        expect(
+            lockedRun(() => {
+                second = lockedRun();
+            }),
+        ).toBe(true);
+        expect(second).toBe(false);
+    });
+});
+
+it('the residual 20.2.0 brings: a 20.2.0 hook evicted by another one is still inside when this version takes the lock', () => {
+    // 20.2.0 hook A holds the file and has been inside for ten seconds.
+    fs.writeFileSync(outer, '1.1.old-a');
+    backdate(outer, 10_000);
+    // 20.2.0 hook B fails its exclusive create, finds the file stale and removes it (fixtures/switch_relay_v1_lock.ts).
+    expect(() => fs.writeFileSync(outer, 'b', { flag: 'wx' })).toThrow();
+    expect(Date.now() - fs.statSync(outer).mtimeMs > 2000).toBe(true);
+    fs.rmSync(outer, { force: true });
+    // Before B retries, a hook of this version takes the lock: A, which 20.2.0
+    // itself evicted, is still inside. Only a cutover with no 20.2.0 hook left
+    // rules this out (docs/contracts/agent-switch-link.md § Install and rollback).
+    expect(lockedRun()).toBe(true);
 });
