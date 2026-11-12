@@ -76,7 +76,7 @@ import { claude_config_dir } from './claude_plugin.js';
 import { readCodexAuth } from './codex_auth.js';
 import { claudeKeychainService, codexHome, geminiHome, userHome } from './provider_home.js';
 import { hardenedSpawnEnv } from './spawn_env.js';
-import { resolve_with_fallback, type EnvMap } from './user_global_paths.js';
+import { event4u_root, resolve_with_fallback, type EnvMap } from './user_global_paths.js';
 
 /** Where a present credential was found. Never a claim that it works. */
 export type AuthSource = 'cli-subscription' | 'cli-api-key' | 'key-file' | 'env-key';
@@ -293,6 +293,56 @@ function defaultProbeVersion(binary: string): string | null {
     }
 }
 
+/**
+ * Memo of `--version` answers on disk, keyed by the binary's real path, mtime
+ * and size: a host CLI that has not changed answers the same, and asking every
+ * one again cost `doctor` (and so every `upgrade`) seconds — each probe starts a
+ * Node or Python runtime. A binary updated in place changes its key.
+ */
+export function withVersionCache(probe: VersionProbe, file: string): { probe: VersionProbe; flush(): void } {
+    let entries: Record<string, { key: string; raw: string | null }> = {};
+    try {
+        const parsed = JSON.parse(fs.readFileSync(file, 'utf-8')) as unknown;
+        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) entries = parsed as typeof entries;
+    } catch {
+        // absent or unreadable: probe everything, rewrite below
+    }
+    let dirty = false;
+    const keyOf = (binary: string): string | null => {
+        try {
+            const real = fs.realpathSync(binary);
+            const st = fs.statSync(real);
+            return `${real}:${st.mtimeMs}:${st.size}`;
+        } catch {
+            return null;
+        }
+    };
+    return {
+        probe(binary: string): string | null {
+            const key = keyOf(binary);
+            const hit = entries[binary];
+            if (key !== null && hit !== undefined && hit.key === key) return hit.raw;
+            const raw = probe(binary);
+            if (key !== null) {
+                entries[binary] = { key, raw };
+                dirty = true;
+            }
+            return raw;
+        },
+        flush(): void {
+            if (!dirty) return;
+            try {
+                fs.mkdirSync(path.dirname(file), { recursive: true });
+                const tmp = `${file}.${process.pid}.tmp`;
+                fs.writeFileSync(tmp, JSON.stringify(entries) + '\n');
+                fs.renameSync(tmp, file);
+            } catch {
+                // a memo that cannot be written only costs the next run its speed
+            }
+        },
+    };
+}
+
 function isFile(p: string): boolean {
     try {
         return fs.statSync(p).isFile();
@@ -353,7 +403,13 @@ function detectHosts(opts: DetectEnvironmentOptions): DetectedHost[] {
         ...(opts.home !== undefined ? { home: opts.home } : {}),
         pathEnv: opts.pathEnv,
     });
-    const probe = opts.probeVersion ?? defaultProbeVersion;
+    // The memo serves the live machine only: an injected probe or home is a
+    // test or fixture asking for exactly what it passed.
+    const memo =
+        opts.probeVersion === undefined && opts.home === undefined
+            ? withVersionCache(defaultProbeVersion, path.join(event4u_root(), 'state', 'host-versions.json'))
+            : null;
+    const probe = opts.probeVersion ?? memo?.probe ?? defaultProbeVersion;
     const out: DetectedHost[] = [];
     for (const id of knownToolIds()) {
         const binary = resolveToolBinary(id, opts.pathEnv);
@@ -371,6 +427,7 @@ function detectHosts(opts: DetectEnvironmentOptions): DetectedHost[] {
         }
         out.push({ id, installed: installedMap[id] ?? false, binary, version });
     }
+    memo?.flush();
     return out;
 }
 
