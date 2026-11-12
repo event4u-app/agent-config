@@ -124,13 +124,14 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 - **If you do nothing:** the only comparison against no rules is the corpus one.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-12 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A corpus result read as a product claim | product | A BETTER on a discipline corpus could be quoted as "AC beats no rules" in general | § 5 of the protocol scopes any claim to this corpus, model and tree; Phase 3 is the real-task answer | Phase 1 — Five arms on one corpus (funded) |
 | 2 | A pilot that selects too few tasks | implementation | If the corpus has under six tasks inside the band, Stage B rests on fill-ups near the ceiling | The fill-up rule is frozen, and 1.4 writes the missing tasks before the next cut | Phase 1 — Five arms on one corpus (funded) |
 | 3 | Real-task tests written by the measured party | product | Tests authored with knowledge of an arm grade that arm | 3.1 requires tests from a session that never sees an arm, recorded | Phase 3 — Real tasks |
+| 4 | A confirmation chosen after a near-miss | product | Running 1.5 only because Stage B nearly crossed zero invites pooling the two runs into one BETTER | 1.5's protocol reads only its own pairs, forbids pooling, and stated its power before data | Phase 1 — Five arms on one corpus (funded) |
 
 ## Acceptance Criteria
 
