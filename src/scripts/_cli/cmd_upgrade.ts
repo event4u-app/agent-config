@@ -20,10 +20,10 @@
  *
  * 1. `npm install -g @event4u/agent-config@latest` — refresh the global binary
  *    on PATH (the binary the Claude plugin hook resolves).
- * 2. `agent-config global --no-ui --tools=<recorded>` (→ `install --global`) —
- *    refresh the global root (`~/.event4u/agent-config/`) + regenerate plugin
- *    hooks, for the tools the lockfile records (none recorded → the installer's
- *    own default). `--no-ui`
+ * 2. `agent-config global --no-ui` (→ `install --global`) — refresh the global
+ *    root (`~/.event4u/agent-config/`) + regenerate plugin hooks, with
+ *    `AGENT_CONFIG_RECORDED_TOOLS=1` so the installer redeploys the tools the
+ *    lockfile records rather than every host it supports. `--no-ui`
  *    suppresses the setup-wizard auto-launch: the wizard is an onboarding
  *    surface, not an upgrade step, and a foreground wizard server would block
  *    the remaining upgrade steps until Ctrl-C (which then failed the run).
@@ -187,10 +187,10 @@ function shutilWhich(name: string): string | null {
 
 type Runner = (cmd: string[]) => number;
 
-/** Run a command with stdout captured; stderr is dropped — doctor --json says everything on stdout. */
-type Capturer = (cmd: string[]) => { status: number; stdout: string };
+/** Run a command with stdout and stderr captured; doctor --json reports on stdout, stderr only matters when it crashed. */
+type Capturer = (cmd: string[]) => { status: number; stdout: string; stderr?: string };
 
-function _default_capture(cmd: string[]): { status: number; stdout: string } {
+function _default_capture(cmd: string[]): { status: number; stdout: string; stderr?: string } {
     const r = spawnSync(cmd[0] as string, cmd.slice(1), {
         stdio: ['ignore', 'pipe', 'pipe'],
         encoding: 'utf8',
@@ -200,7 +200,7 @@ function _default_capture(cmd: string[]): { status: number; stdout: string } {
         _stderr.write(`agent-config upgrade: cannot run ${cmd[0]}: ${osErrorStr(r.error)}\n`);
         return { status: 1, stdout: '' };
     }
-    return { status: r.status ?? 1, stdout: r.stdout ?? '' };
+    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
 
 interface DoctorCheck {
@@ -211,8 +211,8 @@ interface DoctorCheck {
 }
 
 /**
- * The quiet upgrade's health section: only the doctor checks that need the
- * user (`warn` / `fail`), one line each plus its fix. `null` when the JSON is
+ * The quiet upgrade's health section: each `fail` with its fix, a drift
+ * count, and one line naming the `warn` checks. `null` when the JSON is
  * unreadable, so the caller can point at the full report instead.
  */
 function _doctor_findings(json: string): string[] | null {
@@ -282,7 +282,7 @@ function _quiet_runner(log: (line: string) => void): Runner {
     };
 }
 
-/** Tools the global lockfile records — the set `upgrade` redeploys. */
+/** Tools the global lockfile records — what the quiet summary lists. */
 function _recorded_tools(): string[] {
     try {
         const data = installed_lock.read_lockfile(installed_lock.lockfile_path()) as { tools?: unknown } | null;
@@ -378,6 +378,14 @@ function _maybe_refresh_project_wrapper(project_root: string, out: OutSink, _err
     }
 }
 
+function _has_our_git_hook(project_root: string): boolean {
+    try {
+        return fs.readFileSync(path.join(project_root, '.git', 'hooks', 'pre-commit'), 'utf-8').includes('pre-commit-roadmap-progress');
+    } catch {
+        return false;
+    }
+}
+
 /**
  * Refresh the consumer's installed `.git/hooks/pre-commit` gate after a
  * global upgrade — but only when the hook is OURS (identified by the
@@ -388,14 +396,6 @@ function _maybe_refresh_project_wrapper(project_root: string, out: OutSink, _err
  * no-op'd for exactly this reason. Non-fatal: a failure warns and names
  * the manual command.
  */
-function _has_our_git_hook(project_root: string): boolean {
-    try {
-        return fs.readFileSync(path.join(project_root, '.git', 'hooks', 'pre-commit'), 'utf-8').includes('pre-commit-roadmap-progress');
-    } catch {
-        return false;
-    }
-}
-
 function _maybe_refresh_git_hook(
     project_root: string,
     runner: (cmd: string[]) => number,
@@ -714,9 +714,6 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     const verbose = args.verbose;
     const started = Date.now();
     const target = `${PACKAGE_NAME}@${options.version ?? 'latest'}`;
-    // Redeploy the tools this install records, not every host the package
-    // supports: without --tools the global step deployed to all of them.
-    const recorded = _recorded_tools();
     // --no-audit / --no-fund: a global CLI install needs neither the audit
     // round-trip nor the funding banner. Quiet mode keeps npm to warnings and
     // errors — `npm WARN deprecated` on the target release must stay visible.
@@ -727,7 +724,6 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // --quiet: the per-tool deploy report is debug detail; the installer's
     // warnings print regardless.
     const global_cmd: string[] = [_agent_config_bin(), 'global', '--no-ui'];
-    if (recorded.length > 0) global_cmd.push(`--tools=${recorded.join(',')}`);
     global_cmd.push(verbose ? '--verbose' : '--quiet');
     const steps: string[][] = [npm_cmd, global_cmd];
 
@@ -750,7 +746,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         else bar.log(line);
     });
     const stepErr: OutSink = bar === null ? err : lineSink((line) => bar.interleave(() => _print(err, line)));
-    const exec: Runner = options.runner ?? (bar === null ? runner : _quiet_runner((line) => _print(stepOut, line)));
+    const exec: Runner = options.runner ?? (bar === null ? runner : _quiet_runner((line) => bar.log(line)));
     /** `→ <command>` in verbose mode, a short step label otherwise. */
     const announce = (cmd: string[], label: string): void => {
         _print(stepOut, verbose ? '→ ' + cmd.join(' ') : `→ ${label}`);
@@ -801,7 +797,16 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     const preserved_steps: string[] = [];
     for (const cmd of steps.slice(1)) {
         announce(cmd, 'deploying to your AI tools …');
-        const rc = exec(cmd);
+        // Redeploy what the install records, not every host the package supports.
+        // An env var rather than --tools: a version that does not know it ignores
+        // it, and the installer drops a recorded id it no longer deploys.
+        process.env['AGENT_CONFIG_RECORDED_TOOLS'] = '1';
+        let rc: number;
+        try {
+            rc = exec(cmd);
+        } finally {
+            delete process.env['AGENT_CONFIG_RECORDED_TOOLS'];
+        }
         if (rc === EXIT_COMPLETED_WITH_CONFLICTS) {
             preserved_steps.push(cmd.join(' '));
             _print(
@@ -891,6 +896,8 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         doctor_rc = res.status;
         const findings = res.stdout === '' ? null : _doctor_findings(res.stdout);
         bar?.finish(`done in ${formatDuration(Date.now() - started)}`);
+        // No report at all: what it printed on its way down is the only clue.
+        if (findings === null && res.stderr) for (const line of res.stderr.trimEnd().split('\n').slice(-15)) _print(err, line);
         for (const line of _summary_lines(_recorded_tools())) _print(out, line);
         if (findings !== null && findings.length > 0) {
             for (const line of findings) _print(out, line);

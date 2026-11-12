@@ -92,7 +92,10 @@ import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrim
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import { GLOBAL_HINT_TOOLS, exportHintCommand } from '../install/exportHint.js';
-import { InstallProgress, deployedToolLines } from '../install/installProgress.js';
+import { InstallProgress, deployedToolLines, recordedOrAll } from '../install/installProgress.js';
+
+/** Set by `agent-config init` / `global` (env, so an older installer just ignores it). */
+const PROGRESS_ASKED = process.env['AGENT_CONFIG_INSTALL_PROGRESS'] === '1';
 import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -404,11 +407,7 @@ function warn(msg: string): void {
 
 /** Mirror of Python `fail()`: prints the doctor hint, then `sys.exit(1)`. */
 function fail(msg: string): never {
-    toStderr(`  ❌  ${msg}\n`);
-    process.stderr.write(
-        '      Diagnose: `./agent-config doctor` ' +
-            '(or `--check <id>` for a single category)\n',
-    );
+    toStderr(`  ❌  ${msg}\n      Diagnose: \`./agent-config doctor\` (or \`--check <id>\` for a single category)\n`);
     throw new SystemExitError(1);
 }
 
@@ -1916,7 +1915,7 @@ interface Options {
     gemini_user_hooks: boolean;
     project: string | null;
     package: string | null;
-    quiet: boolean; progress: boolean;
+    quiet: boolean;
     tools: string; // post-merge it's always a string
     ai: string | null;
     packs: string[]; // normalized to list post-parse
@@ -3386,12 +3385,7 @@ function install_global(
         failed_tools.size > 0 ? merged_tools.filter((t) => !failed_tools.has(t)) : merged_tools;
     if (failed_tools.size > 0 && !arrayStrEqual(corrected_tools, merged_tools)) {
         installed_lock.write_lockfile(installed_version, corrected_tools, { path: write_path });
-        if (!state.QUIET) {
-            warn(
-                'Lockfile corrected after deploy postcheck — dropped ' +
-                    `${[...failed_tools].sort().join(', ')} (verification failed).`,
-            );
-        }
+        warn(`Lockfile corrected after deploy postcheck — dropped ${[...failed_tools].sort().join(', ')} (verification failed).`);
     }
 
     stampHostLayerFingerprint(installed_version, corrected_tools, write_path,
@@ -3618,7 +3612,7 @@ const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--interactive': 'interactive',
     '--no-ui': 'no_ui',
     '--dry-run': 'dry_run',
-    '--full': 'full', '--enrol': 'enrol', '--progress': 'progress',
+    '--full': 'full', '--enrol': 'enrol',
 };
 
 const _VALUE_FLAGS: Record<string, keyof Options> = {
@@ -3668,7 +3662,7 @@ function parse_options(argv: string[]): Options {
         interactive: false,
         no_ui: false,
         dry_run: false,
-        full: false, enrol: false, progress: false,
+        full: false, enrol: false,
         apply_payload: null,
         layer: null,
     };
@@ -4457,8 +4451,8 @@ function main(argv: string[]): number {
     {
         const [will_launch, why_not] = _wizard_should_launch(opts);
         if (will_launch) {
-            if (!state.QUIET && !opts.progress) info('Setup wizard will launch automatically after install.');
-        } else if (!state.QUIET && !opts.progress) {
+            if (!state.QUIET && !PROGRESS_ASKED) info('Setup wizard will launch automatically after install.');
+        } else if (!state.QUIET && !PROGRESS_ASKED) {
             info(`Setup wizard auto-launch disabled (${why_not}).`);
         }
     }
@@ -4478,13 +4472,13 @@ function main(argv: string[]): number {
     const [detected, detect_reason] = detect_scope(detect_root);
     const custom_path: string | null = opts.custom_path ? resolvePath(opts.custom_path) : null;
     const scope = _resolve_scope(opts, detected, detect_reason, custom_path);
-    if (opts.progress && scope === 'global') [state.QUIET, state.PROGRESS] = [true, true]; // project installs keep their report
     _enforce_consumer_global_only(scope);
     _enforce_not_source_repo(scope, detect_root);
 
     let parsed_tools = _parse_tools(opts.tools);
     const tools_was_all = _tools_was_all(opts.tools);
     parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all);
+    if (scope === 'global' && process.env['AGENT_CONFIG_RECORDED_TOOLS'] === '1') parsed_tools = recordedOrAll(parsed_tools, installed_lock.read_lockfile());
 
     // Refuse a silently doubled Claude Code rule corpus. Runs before EITHER
     // scope branch writes: a global install can double an existing project layer
@@ -4504,6 +4498,7 @@ function main(argv: string[]): number {
             const rc = _run_migrate_to_global(detect_root);
             if (rc !== 0) return rc;
         }
+        if (PROGRESS_ASKED) [state.QUIET, state.PROGRESS] = [true, true]; // after the gates, so their remedies still print
         tracker.begin(detect_root);
         const rc = tracker.finalizeRc(
             install_global(parsed_tools, opts.force, detect_root, opts.core_only),

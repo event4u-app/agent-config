@@ -15,7 +15,7 @@ export type DeployOutcome = readonly [number, number, string, ...unknown[]];
 export interface ToolLineContext {
     readonly anchors: Readonly<Record<string, string>>;
     readonly claudeDesktopBundlesDir: () => string;
-    readonly exportHint: (toolId: string) => string;
+    readonly exportHint: (toolId: string) => string | null;
 }
 
 /** One line per tool: where its content went, or why it has none at user scope. */
@@ -27,9 +27,21 @@ export function deployedToolLines(results: Readonly<Record<string, DeployOutcome
         if (status === 'deployed' && id === 'claude-desktop') return `${head}${ctx.claudeDesktopBundlesDir()} (${written} bundles)`;
         if (status === 'deployed') return `${head}${anchor} (${written} files, ${skipped} skipped)`;
         if (status === 'marker') return `${head}${anchor}agent-config.md (${written ? 'written' : 'skipped'})`;
-        if (status === 'hint') return `${head}no user-scope convention; per project: \`${ctx.exportHint(id)}\``;
+        if (status === 'hint') return `${head}no user-scope convention; per project: \`${ctx.exportHint(id) ?? ''}\``;
+        if (status === 'deploy_failed') return `${head}${anchor} — FAILED its post-deploy check; re-run with --verbose`;
         return `${head}no global-scope content yet (project-scope install supported)`;
     });
+}
+
+/**
+ * The tools `upgrade` redeploys: those the lockfile records, among the ones this
+ * version deploys (a renamed or retired id drops out instead of failing the
+ * run); all of them when it records none of those.
+ */
+export function recordedOrAll(all: ReadonlySet<string>, lock: unknown): Set<string> {
+    const recorded = (lock as { tools?: unknown } | null)?.tools;
+    const kept = new Set(Array.isArray(recorded) ? recorded.filter((t): t is string => typeof t === 'string' && all.has(t)) : []);
+    return kept.size > 0 ? kept : new Set(all);
 }
 
 /** `~/…` for a path under the home directory. */
@@ -75,9 +87,14 @@ export class InstallProgress {
         const took = formatDuration((opts.now ?? Date.now)() - this.started);
         this.bar.finish(`done in ${took}`);
         const lines = deployedToolLines(opts.results, opts.ctx);
+        const failed = Object.values(opts.results).filter((r) => r[2] === 'deploy_failed').length;
         this.out.write(`  Installed to: ${tildePath(opts.root)}\n`);
         this.out.write(`  AI tools (${lines.length}):\n`);
         for (const line of lines) this.out.write(`    ${line}\n`);
-        this.out.write(`✅  agent-config ${opts.to} ready (${took}). Full report: add --verbose.\n`);
+        this.out.write(
+            failed > 0
+                ? `⚠️  agent-config ${opts.to} installed, but ${failed} tool(s) failed — see above (${took}).\n`
+                : `✅  agent-config ${opts.to} ready (${took}). Full report: add --verbose.\n`,
+        );
     }
 }

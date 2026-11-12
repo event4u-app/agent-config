@@ -11245,7 +11245,8 @@ import * as path14 from "node:path";
 var FILLED = "\u2588";
 var EMPTY = "\u2591";
 function isInteractive(stream, env = process.env) {
-  return stream.isTTY === true && env["TERM"] !== "dumb" && env["CI"] === void 0;
+  const ci = (env["CI"] ?? "").toLowerCase();
+  return stream.isTTY === true && env["TERM"] !== "dumb" && (ci === "" || ci === "false" || ci === "0");
 }
 function renderBar(done, total, width) {
   const clamped = total <= 0 ? 1 : Math.min(1, Math.max(0, done / total));
@@ -11319,9 +11320,15 @@ function deployedToolLines(results, ctx) {
     if (status === "deployed" && id === "claude-desktop") return `${head}${ctx.claudeDesktopBundlesDir()} (${written} bundles)`;
     if (status === "deployed") return `${head}${anchor2} (${written} files, ${skipped} skipped)`;
     if (status === "marker") return `${head}${anchor2}agent-config.md (${written ? "written" : "skipped"})`;
-    if (status === "hint") return `${head}no user-scope convention; per project: \`${ctx.exportHint(id)}\``;
+    if (status === "hint") return `${head}no user-scope convention; per project: \`${ctx.exportHint(id) ?? ""}\``;
+    if (status === "deploy_failed") return `${head}${anchor2} \u2014 FAILED its post-deploy check; re-run with --verbose`;
     return `${head}no global-scope content yet (project-scope install supported)`;
   });
+}
+function recordedOrAll(all, lock) {
+  const recorded = lock?.tools;
+  const kept = new Set(Array.isArray(recorded) ? recorded.filter((t) => typeof t === "string" && all.has(t)) : []);
+  return kept.size > 0 ? kept : new Set(all);
 }
 function tildePath(p, home = os7.homedir()) {
   return home !== "" && (p === home || p.startsWith(home + path14.sep)) ? "~" + p.slice(home.length) : p;
@@ -11358,14 +11365,18 @@ var InstallProgress = class {
     const took = formatDuration((opts.now ?? Date.now)() - this.started);
     this.bar.finish(`done in ${took}`);
     const lines = deployedToolLines(opts.results, opts.ctx);
+    const failed = Object.values(opts.results).filter((r) => r[2] === "deploy_failed").length;
     this.out.write(`  Installed to: ${tildePath(opts.root)}
 `);
     this.out.write(`  AI tools (${lines.length}):
 `);
     for (const line of lines) this.out.write(`    ${line}
 `);
-    this.out.write(`\u2705  agent-config ${opts.to} ready (${took}). Full report: add --verbose.
-`);
+    this.out.write(
+      failed > 0 ? `\u26A0\uFE0F  agent-config ${opts.to} installed, but ${failed} tool(s) failed \u2014 see above (${took}).
+` : `\u2705  agent-config ${opts.to} ready (${took}). Full report: add --verbose.
+`
+    );
   }
 };
 
@@ -23445,6 +23456,7 @@ var SCOPE_DETECT_AI_DIRS = [
 ];
 
 // src/scripts/install.ts
+var PROGRESS_ASKED = process4.env["AGENT_CONFIG_INSTALL_PROGRESS"] === "1";
 var _HERE3 = fileURLToPath6(import.meta.url);
 var SystemExitError = class extends Error {
   constructor(code) {
@@ -23646,10 +23658,8 @@ function warn(msg) {
 }
 function fail(msg) {
   toStderr(`  \u274C  ${msg}
+      Diagnose: \`./agent-config doctor\` (or \`--check <id>\` for a single category)
 `);
-  process4.stderr.write(
-    "      Diagnose: `./agent-config doctor` (or `--check <id>` for a single category)\n"
-  );
   throw new SystemExitError(1);
 }
 function detect_package_root(project_root) {
@@ -25796,11 +25806,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
   const corrected_tools = failed_tools.size > 0 ? merged_tools.filter((t) => !failed_tools.has(t)) : merged_tools;
   if (failed_tools.size > 0 && !arrayStrEqual(corrected_tools, merged_tools)) {
     write_lockfile(installed_version, corrected_tools, { path: write_path });
-    if (!state.QUIET) {
-      warn(
-        `Lockfile corrected after deploy postcheck \u2014 dropped ${[...failed_tools].sort().join(", ")} (verification failed).`
-      );
-    }
+    warn(`Lockfile corrected after deploy postcheck \u2014 dropped ${[...failed_tools].sort().join(", ")} (verification failed).`);
   }
   stampHostLayerFingerprint(
     installed_version,
@@ -25966,8 +25972,7 @@ var _STORE_TRUE_FLAGS = {
   "--no-ui": "no_ui",
   "--dry-run": "dry_run",
   "--full": "full",
-  "--enrol": "enrol",
-  "--progress": "progress"
+  "--enrol": "enrol"
 };
 var _VALUE_FLAGS = {
   "--profile": "profile",
@@ -26017,7 +26022,6 @@ function parse_options(argv) {
     dry_run: false,
     full: false,
     enrol: false,
-    progress: false,
     apply_payload: null,
     layer: null
   };
@@ -26707,8 +26711,8 @@ function main2(argv) {
   {
     const [will_launch, why_not] = _wizard_should_launch(opts);
     if (will_launch) {
-      if (!state.QUIET && !opts.progress) info("Setup wizard will launch automatically after install.");
-    } else if (!state.QUIET && !opts.progress) {
+      if (!state.QUIET && !PROGRESS_ASKED) info("Setup wizard will launch automatically after install.");
+    } else if (!state.QUIET && !PROGRESS_ASKED) {
       info(`Setup wizard auto-launch disabled (${why_not}).`);
     }
   }
@@ -26726,12 +26730,12 @@ function main2(argv) {
   const [detected, detect_reason] = detect_scope(detect_root);
   const custom_path = opts.custom_path ? resolvePath(opts.custom_path) : null;
   const scope = _resolve_scope(opts, detected, detect_reason, custom_path);
-  if (opts.progress && scope === "global") [state.QUIET, state.PROGRESS] = [true, true];
   _enforce_consumer_global_only(scope);
   _enforce_not_source_repo(scope, detect_root);
   let parsed_tools = _parse_tools(opts.tools);
   const tools_was_all = _tools_was_all(opts.tools);
   parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all);
+  if (scope === "global" && process4.env["AGENT_CONFIG_RECORDED_TOOLS"] === "1") parsed_tools = recordedOrAll(parsed_tools, read_lockfile());
   if (parsed_tools.has("claude-code") && !_gate_rule_layer_overlap(detect_root, opts.layer, opts.dry_run)) {
     return 2;
   }
@@ -26742,6 +26746,7 @@ function main2(argv) {
       const rc3 = _run_migrate_to_global(detect_root);
       if (rc3 !== 0) return rc3;
     }
+    if (PROGRESS_ASKED) [state.QUIET, state.PROGRESS] = [true, true];
     tracker.begin(detect_root);
     const rc2 = tracker.finalizeRc(
       install_global(parsed_tools, opts.force, detect_root, opts.core_only)

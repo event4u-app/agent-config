@@ -617,7 +617,7 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
                 installed: '1.0.0',
                 fetcher: () => '2.0.0',
                 project_root: project,
-                runner: (cmd: string[]) => (calls.push(cmd.join(' ')), 0),
+                runner: (cmd: string[]) => (calls.push(cmd.join(' ') + (process.env['AGENT_CONFIG_RECORDED_TOOLS'] === '1' ? ' [recorded-tools]' : '')), 0),
                 capture: (cmd: string[]) => (captured.push(cmd.join(' ')), { status: doctorRc, stdout: doctorJson }),
                 out: { write: (t: string) => void (out += t) },
                 err: { write: (t: string) => void (err += t) },
@@ -681,14 +681,13 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
 
     const LOCK = 'schema_version: 1\nagent_config_version: "1.0.0"\ntools:\n  - claude-code\n  - cursor\n';
 
-    it('redeploys the tools the install recorded, not every host the package knows', async () => {
+    it('asks the global step for the recorded tools through the env, and only that step', async () => {
         const r = await run([], '', 0, LOCK);
-        expect(r.calls.find((c) => / global /.test(c))).toContain('--tools=claude-code,cursor');
-    });
-
-    it('without a recorded tool list the global step keeps its own default', async () => {
-        const r = await run([]);
-        expect(r.calls.find((c) => / global /.test(c))).not.toContain('--tools');
+        const global = r.calls.find((c) => / global /.test(c));
+        expect(global).toContain('[recorded-tools]');
+        expect(global).not.toContain('--tools');
+        expect(r.calls.filter((c) => c.includes('[recorded-tools]'))).toHaveLength(1);
+        expect(process.env['AGENT_CONFIG_RECORDED_TOOLS']).toBeUndefined();
     });
 
     it('prints the version change, one line per step, then where the tools are', async () => {
@@ -704,7 +703,8 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.out).toMatch(/Installed to: /);
         expect(r.out).toContain('AI tools (2):');
         expect(r.out).toMatch(/claude-code +→ ~\/\.claude\//);
-        expect(r.out).toMatch(/✅  agent-config 1\.0\.0 upgraded in [\d.]+ (ms|s)\.\n$/);
+        // The fake runner does not rewrite the lockfile, so it still names 1.0.0.
+        expect(r.out).toMatch(/✅  agent-config \S+ upgraded in [\d.]+ (ms|s)\.\n$/);
     });
 
     it('optional hints alone (doctor exit 2, no project install) are not reported as a problem', async () => {

@@ -1506,7 +1506,25 @@ cmd_migrate() {
 cmd_init() {
   local script
   script="$(resolve_script "src/scripts/install")" || return 1
-  exec bash "$script" --progress "$@"
+  _install_progress_args "$@"
+  exec bash "$script" ${INSTALL_ARGS[@]+"${INSTALL_ARGS[@]}"}
+}
+
+# The installer draws a progress bar + summary unless the caller asked for the
+# full report (--verbose, or its alias --debug, which the installer itself does
+# not know) or for silence. An env var, not a flag: an installer that predates
+# it ignores it instead of refusing the run.
+_install_progress_args() {
+  INSTALL_ARGS=()
+  local a progress=1
+  for a in "$@"; do
+    case "$a" in
+      --debug) INSTALL_ARGS+=(--verbose); progress=0 ;;
+      --verbose|--quiet|--dry-run|--apply-payload|--apply-payload=*) INSTALL_ARGS+=("$a"); progress=0 ;;
+      *) INSTALL_ARGS+=("$a") ;;
+    esac
+  done
+  if [[ $progress -eq 1 ]]; then export AGENT_CONFIG_INSTALL_PROGRESS=1; else unset AGENT_CONFIG_INSTALL_PROGRESS; fi
 }
 
 # `agent-config global` — user-scope install entry point. Forwards to the
@@ -1518,7 +1536,8 @@ cmd_init() {
 cmd_global() {
   local script
   script="$(resolve_script "src/scripts/install")" || return 1
-  exec bash "$script" --global --progress "$@"
+  _install_progress_args "$@"
+  exec bash "$script" --global ${INSTALL_ARGS[@]+"${INSTALL_ARGS[@]}"}
 }
 
 # `agent-config export` — write a tool's canonical content into a

@@ -3,7 +3,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { InstallProgress, deployedToolLines, tildePath, versionHeadline } from '../../src/install/installProgress.js';
+import { InstallProgress, deployedToolLines, recordedOrAll, tildePath, versionHeadline } from '../../src/install/installProgress.js';
 
 const ctx = {
     anchors: { 'claude-code': '~/.claude/', cursor: '~/.cursor/', kiro: '~/.kiro/' },
@@ -36,6 +36,23 @@ describe('installProgress — what an install shows by default', () => {
             'kiro            → ~/.kiro/agent-config.md (written)',
             'zz              → no global-scope content yet (project-scope install supported)',
         ]);
+    });
+
+    it('recordedOrAll keeps the recorded tools this version deploys, else all', () => {
+        const all = new Set(['claude-code', 'cursor', 'kiro']);
+        expect([...recordedOrAll(all, { tools: ['cursor', 'retired-tool'] })]).toEqual(['cursor']);
+        expect([...recordedOrAll(all, { tools: ['retired-tool'] })].sort()).toEqual([...all].sort());
+        expect([...recordedOrAll(all, null)].sort()).toEqual([...all].sort());
+        expect([...recordedOrAll(all, { tools: 'claude-code' })].sort()).toEqual([...all].sort());
+    });
+
+    it('a tool that failed its post-deploy check is named, and the run does not say ready', () => {
+        let out = '';
+        const p = new InstallProgress({ from: null, to: '2.0.0', tools: 1, out: { write: (s) => void (out += s) }, tty: false, now: () => 0 });
+        p.done({ to: '2.0.0', root: '/r', results: { cursor: [3, 0, 'deploy_failed'] }, ctx, now: () => 0 });
+        expect(out).toContain('cursor          → ~/.cursor/ — FAILED its post-deploy check');
+        expect(out).toContain('⚠️  agent-config 2.0.0 installed, but 1 tool(s) failed');
+        expect(out).not.toContain('ready');
     });
 
     it('tildePath shortens only paths under home', () => {
