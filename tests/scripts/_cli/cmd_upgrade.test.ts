@@ -601,8 +601,9 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         captured: string[];
     }
 
-    async function run(args: string[], doctorJson = '', doctorRc = 0): Promise<Run> {
+    async function run(args: string[], doctorJson = '', doctorRc = 0, lockfile = ''): Promise<Run> {
         const home = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-quiet-'));
+        if (lockfile !== '') fs.writeFileSync(path.join(home, 'installed.lock'), lockfile);
         const project = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-quiet-proj-'));
         const saved = process.env['EVENT4U_CONFIG_HOME'];
         process.env['EVENT4U_CONFIG_HOME'] = home;
@@ -640,7 +641,7 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.out).not.toContain('npm install -g');
     });
 
-    it('default run prints only the warn/fail doctor findings', async () => {
+    it('default run prints failures with their fix and names warnings in one line', async () => {
         const json = JSON.stringify({
             checks: [
                 { id: 'scope', status: 'ok', message: 'fine', remedy: '' },
@@ -653,14 +654,15 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.captured[0]).toContain('doctor --json');
         expect(r.out).toContain('claude-plugin: duplicate surface');
         expect(r.out).toContain('fix: claude plugin uninstall x');
-        expect(r.out).toContain('wrappers: missing wrappers');
-        expect(r.out).not.toContain('scope: fine');
+        expect(r.out).not.toContain('missing wrappers');
+        expect(r.out).toContain('1 optional hint(s): wrappers');
+        expect(r.out).not.toContain('scope');
         expect(r.err).toContain('fixes listed above');
     });
 
     it('a long finding is clipped to one line; the full report keeps it whole', async () => {
         const long = 'x'.repeat(5000);
-        const r = await run([], JSON.stringify({ checks: [{ id: 'big', status: 'warn', message: long, remedy: '' }] }), 1);
+        const r = await run([], JSON.stringify({ checks: [{ id: 'big', status: 'fail', message: long, remedy: '' }] }), 1);
         const line = r.out.split('\n').find((l) => l.includes('big:'));
         expect(line).toBeDefined();
         expect(line!.length).toBeLessThan(260);
@@ -677,15 +679,73 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.err).toContain('run `agent-config doctor` for the full report');
     });
 
+    const LOCK = 'schema_version: 1\nagent_config_version: "1.0.0"\ntools:\n  - claude-code\n  - cursor\n';
+
+    it('redeploys the tools the install recorded, not every host the package knows', async () => {
+        const r = await run([], '', 0, LOCK);
+        expect(r.calls.find((c) => / global /.test(c))).toContain('--tools=claude-code,cursor');
+    });
+
+    it('without a recorded tool list the global step keeps its own default', async () => {
+        const r = await run([]);
+        expect(r.calls.find((c) => / global /.test(c))).not.toContain('--tools');
+    });
+
+    it('prints the version change, one line per step, then where the tools are', async () => {
+        const r = await run([], JSON.stringify({ checks: [] }), 0, LOCK);
+        const lines = r.out.split('\n');
+        expect(lines[0]).toBe('agent-config 1.0.0 → 2.0.0');
+        // The step count follows the machine (a Claude plugin adds one); the order does not.
+        expect(lines[1]).toMatch(/^  \[1\/(\d)\] installing @event4u\/agent-config@latest …$/);
+        expect(lines[2]).toMatch(/^  \[2\/\d\] deploying to your AI tools …$/);
+        const health = lines.find((l) => l.includes('checking health'));
+        const total = /^  \[1\/(\d)\]/.exec(lines[1]!)![1];
+        expect(health).toBe(`  [${total}/${total}] checking health (doctor) …`);
+        expect(r.out).toMatch(/Installed to: /);
+        expect(r.out).toContain('AI tools (2):');
+        expect(r.out).toMatch(/claude-code +→ ~\/\.claude\//);
+        expect(r.out).toMatch(/✅  agent-config 1\.0\.0 upgraded in [\d.]+ (ms|s)\.\n$/);
+    });
+
+    it('optional hints alone (doctor exit 2, no project install) are not reported as a problem', async () => {
+        const json = JSON.stringify({ checks: [{ id: 'git-identity', status: 'warn', message: 'no identity', remedy: 'git config' }] });
+        const r = await run([], json, 2, LOCK);
+        expect(r.out).toContain('1 optional hint(s): git-identity');
+        expect(r.err).toBe('');
+        expect(r.out).toMatch(/upgraded in [\d.]+ (ms|s)\.\n$/);
+    });
+
     for (const flag of ['--verbose', '--debug']) {
         it(`${flag} restores the full output: commands echoed, no quiet flags, full doctor`, async () => {
             const r = await run([flag]);
             expect(r.rc).toBe(0);
             expect(r.calls.find((c) => c.startsWith('npm install -g'))).not.toContain('--loglevel');
             expect(r.calls.find((c) => / global /.test(c))).not.toContain('--quiet');
+            expect(r.calls.find((c) => / global /.test(c))).toContain('--verbose');
             expect(r.out).toContain('→ npm install -g @event4u/agent-config@latest');
             expect(r.calls.some((c) => / doctor$/.test(c))).toBe(true);
             expect(r.captured).toHaveLength(0);
         });
     }
+});
+
+describe('upgrade — the quiet runner keeps a step from tearing the bar', () => {
+    async function quiet(script: string): Promise<{ rc: number; logged: string[] }> {
+        const { _quiet_runner } = await import('../../../src/scripts/_cli/cmd_upgrade.js');
+        const logged: string[] = [];
+        const rc = _quiet_runner((l: string) => logged.push(l))([process.execPath, '-e', script]);
+        return { rc, logged };
+    }
+
+    it('a step that succeeded shows only its warnings and errors', async () => {
+        const r = await quiet("console.log('copied 900 files'); console.error('  ⚠️  kept your edit'); console.log('npm warn deprecated x')");
+        expect(r.rc).toBe(0);
+        expect(r.logged).toEqual(['npm warn deprecated x', '  ⚠️  kept your edit']);
+    });
+
+    it('a step that failed shows everything it printed', async () => {
+        const r = await quiet("console.log('step one'); console.error('boom'); process.exit(4)");
+        expect(r.rc).toBe(4);
+        expect(r.logged).toEqual(['step one', 'boom']);
+    });
 });
