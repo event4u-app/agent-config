@@ -526,6 +526,54 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 20.4.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [20.4.0](https://github.com/event4u-app/agent-config/compare/20.3.0...20.4.0) (2026-11-12)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** the version memo drops failed probes and expires; git's list ignores GIT_LITERAL_PATHSPECS (3e3c479); progress and recorded tools through the env; a failed deploy is never "ready" (5d058d0); leave the pinned wrapper as it is; track the tool-id gap as a stub (398a483); the bash wrapper accepts every tool id install.ts deploys (d281ee0).
+- **Honest nulls:** _none_
+- **Known limitations:** the version memo drops failed probes and expires; git's list ignores GIT_LITERAL_PATHSPECS (src/scripts/_lib/environment_detector.ts declares a residual) (3e3c479); progress and recorded tools through the env; a failed deploy is never "ready" (src/scripts/install.ts declares a residual) (5d058d0); a progress bar and a short summary for init and global (src/scripts/install.ts declares a residual) (42b9d60); remember host --version answers until the binary changes (src/scripts/_lib/environment_detector.ts declares a residual) (91242a5).
+
+> **Governance mix:** governance-only 1 vs consumer-only 1 (mixed 4, maintenance 7; taxonomy 1.1.0; range bdf47e1bd424..76a27116069b).
+
+### Features
+
+* **upgrade:** progress bar, recorded tools only, doctor reduced to what needs the user ([f848e9d](https://github.com/event4u-app/agent-config/commit/f848e9dfbd249f99cc35b55f26c9cd3c911090df))
+* **install:** a progress bar and a short summary for init and global ([42b9d60](https://github.com/event4u-app/agent-config/commit/42b9d60c27ed98979dc69d38682cda11dd77d31f))
+* **upgrade:** pass the upgrade on to every agent-switch account ([1e39cd8](https://github.com/event4u-app/agent-config/commit/1e39cd81b0e53a122f9a2be190a8eae5729244ed))
+
+### Bug Fixes
+
+* **doctor:** the version memo drops failed probes and expires; git's list ignores GIT_LITERAL_PATHSPECS ([3e3c479](https://github.com/event4u-app/agent-config/commit/3e3c4796a620033c72e0621fff03e234b078ded5))
+* **install:** progress and recorded tools through the env; a failed deploy is never "ready" ([5d058d0](https://github.com/event4u-app/agent-config/commit/5d058d0c7e7d4c3f07d81ba3b86d327ab85fc1d5))
+* **install:** the bash wrapper accepts every tool id install.ts deploys ([d281ee0](https://github.com/event4u-app/agent-config/commit/d281ee0c29c17c2d848b0f96e00002a6985ed24a))
+
+### Performance
+
+* **doctor:** remember host --version answers until the binary changes ([91242a5](https://github.com/event4u-app/agent-config/commit/91242a5266c344b6bc05b3407635fe9066aa55a1))
+* **doctor:** read the markdown git lists for artifact-location, nothing outside a work tree ([0182736](https://github.com/event4u-app/agent-config/commit/01827368d08ddac587073690f9af1f4eba46c6b3))
+
+### Reverts
+
+* **install:** leave the pinned wrapper as it is; track the tool-id gap as a stub ([398a483](https://github.com/event4u-app/agent-config/commit/398a48317da00d02c1ab0a4172aeaab96e78c928))
+
+### Documentation
+
+* **agent-switch:** profiles now receive AC's user scope, rules included ([5a11058](https://github.com/event4u-app/agent-config/commit/5a11058e04ac7ea19e26391a3cd5980042601667))
+
+### Tests
+
+* **install:** bench keeps its logs, sorts versions numerically, waits for its registry ([bd3161d](https://github.com/event4u-app/agent-config/commit/bd3161dec34fc88141aed056f6367453e89c4965))
+* **install:** time and check a fresh install and an upgrade in a clean container ([b37f480](https://github.com/event4u-app/agent-config/commit/b37f480bf8e4ee5d490ca7fbb7cfd05202752c86))
+
+### Chores
+
+* **roadmap:** regenerate the owned digest for the tool-id stub ([b5e48dc](https://github.com/event4u-app/agent-config/commit/b5e48dc1d4c2f46045dbf416bf4ac8cdd4acb34d))
+
+Tests: 40265 (+30 since 20.3.0)
+
 ## [20.3.0](https://github.com/event4u-app/agent-config/compare/20.2.0...20.3.0) (2026-11-11)
 
 ### Release highlights
