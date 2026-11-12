@@ -34,7 +34,9 @@
  *
  * The npx cache is warmed via
  * `npx --yes @event4u/agent-config@<new> --version` so the next invocation is
- * offline-fast. The P2 state file is refreshed in lockstep — the new
+ * offline-fast — unless the global install is already at the pinned version,
+ * where the CLI never re-execs through npx and the warm would only download
+ * the package a second time. The P2 state file is refreshed in lockstep — the new
  * `installed_version` is recorded so the banner does not yell about the old
  * pin.
  *
@@ -572,7 +574,15 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
 
     // `npx --yes <pkg>@<v> --version` would hit the registry; skip it offline
     // so the air-gap guarantee holds end-to-end.
-    if (!offline) {
+    //
+    // The npx cache is read only by a CLI that has to re-exec at the pin
+    // (`pin_resolver`). A global install already at the pinned version IS the
+    // pinned CLI and never re-execs, so warming the cache would fetch and
+    // unpack the whole package a second time for nothing to read. Asked again
+    // here, not reused from above: the upgrade just moved it.
+    const global_now = (options.global_version ?? _global_install_version)();
+    const global_is_pin = global_now !== null && _normalize(global_now) === latest;
+    if (!offline && !global_is_pin) {
         cache_warmer(latest);
     }
     _refresh_state(latest, latest, state_path);

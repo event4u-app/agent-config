@@ -129,6 +129,36 @@ function resolve_path(p: string): string {
 }
 
 /** Python `Path.exists()` — follows symlinks; False for a dangling symlink. */
+/**
+ * `resolve_path` for many paths that share ancestors — the same answer for
+ * one `lstat` per distinct path instead of one per component of each.
+ *
+ * The ledger lists every deployed file of every host, and resolving each in
+ * full stats its whole ancestry again. Only a symlink can resolve somewhere
+ * its parent does not, so anything else is its parent's resolution (computed
+ * once) plus its own name. An absent path lands in that same arm:
+ * `resolve_path` resolves the longest existing prefix and appends the rest,
+ * which is exactly the parent's resolution plus the name.
+ */
+function leaf_resolver(): (p: string) => string {
+  const seen = new Map<string, string>();
+  const resolve = (p: string): string => {
+    const known = seen.get(p);
+    if (known !== undefined) return known;
+    let is_link = false;
+    try {
+      is_link = fs.lstatSync(p).isSymbolicLink();
+    } catch {
+      is_link = false;
+    }
+    const dir = path.dirname(p);
+    const real = is_link || dir === p ? resolve_path(p) : path.join(resolve(dir), path.basename(p));
+    seen.set(p, real);
+    return real;
+  };
+  return resolve;
+}
+
 function path_exists(p: string): boolean {
   try {
     fs.statSync(p);
@@ -264,11 +294,18 @@ function render_json(value: unknown, indent: number, depth: number): string {
  * does: standard escapes plus `\uXXXX` for any codepoint > 0x7e. Astral
  * codepoints are emitted as UTF-16 surrogate pairs, matching CPython.
  */
+const NON_ASCII = /[^\x00-\x7e]/;
+
 function json_string_ascii(s: string): string {
   // JSON.stringify handles the standard escapes (\", \\, \n, \t, control
   // chars) and surrogate-pair structure; we then escape any remaining
   // non-ASCII code units to \uXXXX, which is exactly Python's ensure_ascii.
   const base = JSON.stringify(s);
+  // Nearly every string here is an ASCII path or digest, and the ledger is
+  // re-rendered once per deployed tool — skip the per-character pass for them.
+  if (!NON_ASCII.test(base)) {
+    return base;
+  }
   let out = "";
   for (let i = 0; i < base.length; i += 1) {
     const code = base.charCodeAt(i);
@@ -327,21 +364,30 @@ export function expected_deploy_files(
   }
 
   const _walk = (node: string, prefix: string): void => {
-    const entries = fs.readdirSync(node).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    for (const name of entries) {
+    // The directory listing already carries each entry's type, so the walk
+    // needs no `lstat` per file.
+    const entries = fs
+      .readdirSync(node, { withFileTypes: true })
+      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    for (const lst of entries) {
+      const name = lst.name;
       const entry = path.join(node, name);
       const rel = join_rel(prefix, name);
-      const lst = fs.lstatSync(entry);
       if (lst.isDirectory() && !lst.isSymbolicLink()) {
         _walk(entry, rel);
         continue;
       }
       // Resolve the entry; symlinked dirs are walked through their target.
+      // Only a symlink can resolve to a directory here — a plain entry that
+      // is not one was just ruled out — so the follow-up stat is paid for
+      // links alone, not for every file of every host's tree.
       let resolved_is_dir = false;
-      try {
-        resolved_is_dir = fs.statSync(entry).isDirectory();
-      } catch {
-        resolved_is_dir = false;
+      if (lst.isSymbolicLink()) {
+        try {
+          resolved_is_dir = fs.statSync(entry).isDirectory();
+        } catch {
+          resolved_is_dir = false;
+        }
       }
       if (resolved_is_dir) {
         _walk(fs.realpathSync(entry), rel);
@@ -532,6 +578,12 @@ export function reap_tagged_orphans(
       continue;
     }
     for (const md of rglob_md(root)) {
+      // A file this deploy maintains is never an orphan, and that is nearly
+      // all of them — decided from the name alone, before any stat.
+      const rel = relative_to_posix(md, anchor_resolved);
+      if (current_files.has(rel)) {
+        continue;
+      }
       let md_lst: fs.Stats;
       try {
         md_lst = fs.lstatSync(md);
@@ -539,10 +591,6 @@ export function reap_tagged_orphans(
         continue;
       }
       if (md_lst.isDirectory()) {
-        continue;
-      }
-      const rel = relative_to_posix(md, anchor_resolved);
-      if (current_files.has(rel)) {
         continue;
       }
       try {
@@ -636,6 +684,16 @@ export interface LedgerDigest {
 }
 
 /** SHA-256 of the bytes at `p`, or `null` when they cannot be read. */
+/**
+ * Canonical text of one tool's ledger entry plus the schema version — the only
+ * two things `record_deploy` writes. Equal before and after a record means the
+ * file on disk already says what a save would.
+ */
+export function entry_fingerprint(inventory: Inventory, tool_id: string): string {
+  const tools = inventory["tools"] as Record<string, unknown> | undefined;
+  return json_dumps_sorted([inventory["schema_version"] ?? null, tools?.[tool_id] ?? null], 0);
+}
+
 export function file_sha256(p: string): string | null {
   try {
     return createHash("sha256").update(fs.readFileSync(p)).digest("hex");
@@ -713,6 +771,7 @@ export function recorded_absolute_digests(
   const inv = inventory ?? load_inventory();
   const tools = (inv["tools"] as Record<string, unknown> | undefined) ?? {};
   const out = new Map<string, string>();
+  const resolve = leaf_resolver();
   if (typeof tools !== "object" || tools === null || Array.isArray(tools)) return out;
   for (const entry of Object.values(tools)) {
     if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
@@ -723,7 +782,7 @@ export function recorded_absolute_digests(
     for (const [rel, rec] of digests_of_entry(e)) {
       const lexical = path.resolve(expanded, rel);
       out.set(lexical, rec.installed_sha256);
-      out.set(resolve_path(lexical), rec.installed_sha256);
+      out.set(resolve(lexical), rec.installed_sha256);
     }
   }
   return out;
@@ -784,20 +843,17 @@ function relative_to_posix(child: string, parent: string): string {
 function rglob_md(root: string): string[] {
   const out: string[] = [];
   const walk = (dir: string): void => {
-    let names: string[];
+    let entries: fs.Dirent[];
     try {
-      names = fs.readdirSync(dir).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+      entries = fs
+        .readdirSync(dir, { withFileTypes: true })
+        .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
     } catch {
       return;
     }
-    for (const name of names) {
+    for (const lst of entries) {
+      const name = lst.name;
       const full = path.join(dir, name);
-      let lst: fs.Stats;
-      try {
-        lst = fs.lstatSync(full);
-      } catch {
-        continue;
-      }
       if (lst.isDirectory() && !lst.isSymbolicLink()) {
         walk(full);
       } else if (name.endsWith(".md")) {
@@ -916,6 +972,7 @@ export function recorded_absolute_files(
   const inv = inventory ?? load_inventory();
   const tools = (inv["tools"] as Record<string, unknown> | undefined) ?? {};
   const out = new Set<string>();
+  const resolve = leaf_resolver();
   if (typeof tools !== "object" || tools === null || Array.isArray(tools)) return out;
   for (const entry of Object.values(tools)) {
     if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
@@ -928,7 +985,7 @@ export function recorded_absolute_files(
       if (typeof rel !== "string") continue;
       const lexical = path.resolve(expanded, rel);
       out.add(lexical);
-      out.add(resolve_path(lexical));
+      out.add(resolve(lexical));
     }
   }
   return out;

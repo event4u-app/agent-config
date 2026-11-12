@@ -112,6 +112,14 @@ export interface ConflictState {
      * why the run used to abort there.
      */
     staged: Map<string, string | null>;
+    /**
+     * Directory → its realpath, resolved once per run.
+     *
+     * Every target asks for its own realpath and its sidecar's, and a full
+     * resolution stats each path component: on a deploy of a few thousand
+     * files per host that was the single largest source of syscalls.
+     */
+    realDirs: Map<string, string>;
 }
 
 export interface ConflictTracker {
@@ -127,7 +135,7 @@ export interface ConflictTracker {
      * optional argument would let a new one skip that branch silently instead
      * of having to decide.
      */
-    resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision;
+    resolve(target: string, force: boolean, would: WouldWrite, onDiskSha256?: string | null): DeployWriteDecision;
     /** The digest recorded before this run for `target` — what decided a preservation. */
     recordedDigest(target: string): string | null | undefined;
     /** Stage package content beside a preserved target, then record and report it. */
@@ -156,7 +164,30 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         preserved: [],
         migrated: new Set(),
         staged: new Map(),
+        realDirs: new Map(),
     };
+
+    /**
+     * `resolvePath(target)`, paying one `lstat` instead of one per component.
+     *
+     * Same answer in all three cases: an absent path resolves to its lexical
+     * form (what `resolvePath` falls back to), a symlink is resolved in full,
+     * and anything else is its directory's realpath plus its own name.
+     */
+    function realOf(target: string): string {
+        const plain = path.resolve(target);
+        let isLink: boolean;
+        try {
+            isLink = fs.lstatSync(plain).isSymbolicLink();
+        } catch {
+            return plain;
+        }
+        if (isLink) return resolvePath(plain);
+        const dir = path.dirname(plain);
+        let real = conflictState.realDirs.get(dir);
+        if (real === undefined) conflictState.realDirs.set(dir, (real = resolvePath(dir)));
+        return path.join(real, path.basename(plain));
+    }
 
     /**
      * Recorded digest for `target`, or `undefined` when this tree cannot say.
@@ -178,7 +209,7 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         conflictState.recorded ??= recordedHashesWithLedger(conflictState.root);
         const plain = path.resolve(target);
         if (conflictState.recorded.has(plain)) return conflictState.recorded.get(plain);
-        const real = resolvePath(target);
+        const real = realOf(target);
         return real === plain ? undefined : conflictState.recorded.get(real);
     }
 
@@ -193,7 +224,7 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
     function ledgerLists(target: string): boolean {
         conflictState.ledgerFiles ??= ledgerListedPaths();
         const files = conflictState.ledgerFiles;
-        return files.has(path.resolve(target)) || files.has(resolvePath(target));
+        return files.has(path.resolve(target)) || files.has(realOf(target));
     }
 
     /**
@@ -340,6 +371,7 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
             conflictState.preserved = [];
             conflictState.migrated = new Set();
             conflictState.staged = new Map();
+            conflictState.realDirs = new Map();
         },
 
         /**
@@ -347,18 +379,29 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
          * plan: this runs immediately before the caller copies over `target`,
          * so a file edited between planning and writing is still classified
          * from the bytes that are actually about to be destroyed.
+         *
+         * A caller that has just read the target for its own purposes passes
+         * that digest instead of having the file read a second time. The
+         * obligation is unchanged: it must describe the bytes on disk NOW.
          */
-        resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision {
-            const exists = pathExists(target);
+        resolve(target: string, force: boolean, would: WouldWrite, known?: string | null): DeployWriteDecision {
+            // A digest in hand means the caller read the file a moment ago.
+            const exists = typeof known === 'string' || pathExists(target);
             const recordedSha256 = exists ? recordedHashFor(target) : undefined;
+            const onDiskSha256 = exists ? (known !== undefined ? known : sha256OfFile(target)) : null;
             const unproven = {
                 exists,
                 recordedSha256,
-                onDiskSha256: exists ? sha256OfFile(target) : null,
+                onDiskSha256,
                 force,
                 ledgerListed: exists && ledgerLists(target),
+                // Read only by the `recorded-modified` arm, which a digest equal
+                // to the recorded one never reaches — so the sidecar lookup is
+                // skipped for every file nobody touched.
                 recordedIsStaged:
-                    typeof recordedSha256 === 'string' && recordedSha256 === recordedHashFor(sidecarPathFor(target)),
+                    typeof recordedSha256 === 'string' &&
+                    recordedSha256 !== onDiskSha256 &&
+                    recordedSha256 === recordedHashFor(sidecarPathFor(target)),
             };
             // The log is opened only where the record alone would preserve
             // without cause, and read once per run: this run's own appends

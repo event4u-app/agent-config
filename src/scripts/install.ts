@@ -89,6 +89,7 @@ import * as scoped_projection from './_lib/scoped_projection.js';
 import { createConflictTracker } from '../install/conflictTracker.js';
 import { manualSnippet, mergeHostConfigFile, parseHostConfig, writeHostConfig } from '../install/hostConfigMerge.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
+import { PACKAGE_TAG_ID, escapesPackageRoot, prepareFile, putPrepared, readBytesOrNull, realRoot, sha256OfBytes, tagFrontmatter, type PreparedCache } from '../install/deployCopy.js';
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import { GLOBAL_HINT_TOOLS, exportHintCommand } from '../install/exportHint.js';
@@ -2528,17 +2529,15 @@ function _write_per_tool_project_anchors(
     return written;
 }
 
-const PACKAGE_TAG_ID = 'event4u/agent-config';
-
 const RULES_SOURCE_PREFIX = path.join('dist', 'agent-src', 'rules') + path.sep;
 
 /** `source_path:` for an installed file: package-relative (a rule without `dist/agent-src/rules/`, ~2,200 chars per session start), absolute outside the package. Ownership evidence; nothing parses it. */
-export function installed_source_value(source: string | null, package_root: string | null): string | null {
+export function installed_source_value(source: string | null, package_root: string | null, source_is_real = false): string | null {
     if (source === null) return null;
     const resolve = (p: string): string => { try { return resolvePath(p); } catch { return p; } };
-    const resolved_src = resolve(source);
+    const resolved_src = source_is_real ? source : resolve(source);
     if (package_root === null) return resolved_src;
-    const rel = path.relative(resolve(package_root), resolved_src);
+    const rel = path.relative(realRoot(package_root) ?? path.resolve(package_root), resolved_src);
     if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return resolved_src;
     return rel.startsWith(RULES_SOURCE_PREFIX) ? rel.slice(RULES_SOURCE_PREFIX.length) : rel;
 }
@@ -2555,73 +2554,8 @@ function _inject_package_tag(
     } catch {
         return;
     }
-    if (!text.startsWith('---\n') && !text.startsWith('---\r\n')) return;
-    const lines = splitlinesKeepends(text);
-    let close_idx: number | null = null;
-    for (let i = 1; i < lines.length; i += 1) {
-        if ((lines[i] as string).replace(/[\r\n]+$/, '') === '---') {
-            close_idx = i;
-            break;
-        }
-    }
-    if (close_idx === null) return;
-    let fm_lines = lines.slice(1, close_idx);
-    const body_lines = lines.slice(close_idx);
-
-    const source_value = installed_source_value(source, package_root);
-
-    const _set_key = (block: string[], key: string, value: string): string[] => {
-        const prefix = `${key}:`;
-        const rendered = `${key}: ${value}\n`;
-        for (let idx = 0; idx < block.length; idx += 1) {
-            if ((block[idx] as string).startsWith(prefix)) {
-                block[idx] = rendered;
-                return block;
-            }
-        }
-        block.push(rendered);
-        return block;
-    };
-
-    fm_lines = _set_key(fm_lines, 'package', PACKAGE_TAG_ID);
-    if (source_value !== null) {
-        fm_lines = _set_key(fm_lines, 'source_path', source_value);
-    }
-    const new_text = [lines[0], ...fm_lines, ...body_lines].join('');
-    if (new_text !== text) {
-        writeText(target, new_text);
-    }
-}
-
-/**
- * Would dereferencing `entry` escape the package root?
- *
- * `_copy_dir_dereferencing_symlinks` copies the REALPATH of every entry, so a
- * symlink in the shipped tree pointing outside the package would copy an
- * arbitrary readable file into the deploy destination — and those destinations
- * are agent-readable instruction dirs (`~/.claude/rules/`, `~/.codeium/…`). A
- * tampered tarball carrying `rules/x.md -> ~/.ssh/id_rsa` would land that file
- * where an agent reads rules.
- *
- * Defence-in-depth for `docs/threat-model.md` row b (supply-chain compromise):
- * the package is the install-time trust anchor, so this is not the primary
- * control — but the check is one comparison and `package_root` was already
- * threaded through, so there is no reason to ship without it.
- *
- * Both sides are realpath'd before comparing, so a macOS `/var` → `/private/var`
- * root does not read as an escape. A `null` package_root means the caller did
- * not scope the copy (several do) — unchanged, permissive behaviour there.
- */
-function _escapes_package_root(resolved: string, package_root: string | null): boolean {
-    if (package_root === null) return false;
-    let root: string;
-    try {
-        root = fs.realpathSync(package_root);
-    } catch {
-        // Unresolvable root — cannot judge containment, so do not block the copy.
-        return false;
-    }
-    return !global_deploy_inventory.is_ancestor(root, resolved);
+    const tagged = tagFrontmatter(text, installed_source_value(source, package_root));
+    if (tagged !== text) writeText(target, tagged);
 }
 
 /**
@@ -2630,10 +2564,10 @@ function _escapes_package_root(resolved: string, package_root: string | null): b
  * shape. Batched, and a write the log already records is skipped. Failure is
  * swallowed: the log is a recovery aid, never a condition for the install.
  */
-function _log_tx_entry(kind: 'write' | 'skip', target: string): void {
+function _log_tx_entry(kind: 'write' | 'skip', target: string, known_sha256?: string): void {
     try {
         markRun(getLogPath());
-        const sha256 = kind === 'write' ? sha256OfFile(target) : null;
+        const sha256 = kind === 'write' ? (known_sha256 ?? sha256OfFile(target)) : null;
         if (sha256 !== null && !isNewWrite(target, sha256)) return; // the log already proves these bytes
         bufferTxLog(getLogPath(), { ts: new Date().toISOString(), kind, path: target, sha256 });
     } catch {
@@ -2652,6 +2586,12 @@ function _log_tx_entry(kind: 'write' | 'skip', target: string): void {
  * "should exist", so filtering one side only either leaves excluded files behind
  * forever or deletes files the copy just wrote.
  */
+/** Target → digest of the bytes the copy left there, for the ledger of the tool being deployed. */
+const _deployed_sha = new Map<string, string>();
+
+/** Sources prepared by the global deploy in flight (`deployCopy.ts::PreparedCache`); `null` outside one. */
+let _prepared: PreparedCache | null = null;
+
 function _copy_dir_dereferencing_symlinks(
     src: string,
     dest: string,
@@ -2663,6 +2603,25 @@ function _copy_dir_dereferencing_symlinks(
     let skipped = 0;
     const written_paths: string[] = [];
     if (!pathExists(src)) return [0, 0, written_paths];
+    // One file, classified and put in a single pass (`deployCopy.ts`); `false`
+    // = preserved. The target is read once, and that read feeds both the
+    // ownership verdict and the "already holds these bytes" check.
+    const put = (resolved: string, target: string): boolean => {
+        const prepared = prepareFile(resolved, target, () => installed_source_value(resolved, package_root, true), _prepared);
+        const on_disk = readBytesOrNull(target);
+        // Bytes equal to what this run writes need no digest of their own.
+        const on_disk_sha = on_disk === null ? undefined : on_disk.equals(prepared.out) ? prepared.sha256 : sha256OfBytes(on_disk);
+        if (tracker.resolve(target, force, { from: resolved, packageRoot: package_root }, on_disk_sha) === 'preserve') {
+            tracker.preserve(target, resolved, package_root);
+            _log_tx_entry('skip', target);
+            return false;
+        }
+        const sha256 = putPrepared(prepared, resolved, target, on_disk);
+        _log_tx_entry('write', target, sha256);
+        _deployed_sha.set(target, sha256);
+        written_paths.push(target);
+        return true;
+    };
     if (!isDir(src)) {
         if (file_filter !== null && !file_filter(src)) return [0, 0, written_paths];
         let resolved_src = src;
@@ -2671,62 +2630,56 @@ function _copy_dir_dereferencing_symlinks(
         } catch {
             resolved_src = src;
         }
-        if (_escapes_package_root(resolved_src, package_root)) {
+        if (escapesPackageRoot(resolved_src, package_root)) {
             warn(`refused: ${src} dereferences outside the package root — not copied`);
             return [0, 0, written_paths];
         }
         mkdirp(path.dirname(dest));
-        const decision = tracker.resolve(dest, force, { from: resolved_src, packageRoot: package_root });
-        if (decision === 'preserve') {
-            tracker.preserve(dest, resolved_src, package_root);
-            _log_tx_entry('skip', dest);
-            return [0, 1, written_paths];
-        }
-        fs.copyFileSync(src, dest); // follow_symlinks=True is fs.copyFileSync default
-        _inject_package_tag(dest, src, package_root);
-        _log_tx_entry('write', dest);
-        written_paths.push(dest);
-        return [1, 0, written_paths];
+        return put(resolved_src, dest) ? [1, 0, written_paths] : [0, 1, written_paths];
     }
     mkdirp(dest);
+    const real_src = resolvePath(src);
+    const made = new Set<string>([dest]);
     // Python uses src.rglob("*") (os.scandir order, non-deterministic). We use
     // a sorted depth-first walk to match the sibling inventory twin
     // (expected_deploy_files) and yield a deterministic manifest files[] order.
-    const walk = (node: string): string[] => {
-        const acc: string[] = [];
-        const names = fs
-            .readdirSync(node)
-            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-        for (const name of names) {
-            const entry = path.join(node, name);
-            acc.push(entry);
-            const lst = fs.lstatSync(entry);
-            if (lst.isDirectory() && !lst.isSymbolicLink()) {
-                acc.push(...walk(entry));
-            }
+    const walk = (node: string, acc: Array<[string, fs.Dirent]>): Array<[string, fs.Dirent]> => {
+        const entries = fs
+            .readdirSync(node, { withFileTypes: true })
+            .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+        for (const lst of entries) {
+            const entry = path.join(node, lst.name);
+            acc.push([entry, lst]);
+            if (lst.isDirectory()) walk(entry, acc);
         }
         return acc;
     };
-    for (const entry of walk(src)) {
+    for (const [entry, lst] of walk(src, [])) {
         const rel = path.relative(src, entry);
         const target = path.join(dest, rel);
-        const lst = fs.lstatSync(entry);
-        if (lst.isDirectory() && !lst.isSymbolicLink()) {
+        if (lst.isDirectory()) {
             mkdirp(target);
+            made.add(target);
             continue;
         }
         let resolvedIsDir = false;
-        let resolved = entry;
-        try {
-            resolved = fs.realpathSync(entry);
-            resolvedIsDir = fs.statSync(entry).isDirectory();
-        } catch {
-            resolvedIsDir = false;
+        // Only a symlink can resolve elsewhere: the walk never descends through
+        // one, so every other entry sits under the root's own realpath and
+        // needs no per-file resolution.
+        let resolved = path.join(real_src, rel);
+        if (lst.isSymbolicLink()) {
+            resolved = entry;
+            try {
+                resolved = fs.realpathSync(entry);
+                resolvedIsDir = fs.statSync(entry).isDirectory();
+            } catch {
+                resolvedIsDir = false;
+            }
         }
         // Containment is checked on the RESOLVED path, before either the
         // recursion or the copy — a symlinked directory escaping the root would
         // otherwise pull its whole subtree in.
-        if (_escapes_package_root(resolved, package_root)) {
+        if (escapesPackageRoot(resolved, package_root)) {
             warn(`refused: ${entry} dereferences outside the package root — not copied`);
             continue;
         }
@@ -2741,7 +2694,7 @@ function _copy_dir_dereferencing_symlinks(
             );
             written += sub_w;
             skipped += sub_s;
-            written_paths.push(...sub_p);
+            for (const p of sub_p) written_paths.push(p);
             continue;
         }
         // The predicate sees the SOURCE path (the rule-scope predicate reads the
@@ -2751,19 +2704,13 @@ function _copy_dir_dereferencing_symlinks(
         if (file_filter !== null && !file_filter(entry)) {
             continue;
         }
-        const decision = tracker.resolve(target, force, { from: resolved, packageRoot: package_root });
-        if (decision === 'preserve') {
-            tracker.preserve(target, resolved, package_root);
-            skipped += 1;
-            _log_tx_entry('skip', target);
-            continue;
+        const parent = path.dirname(target);
+        if (!made.has(parent)) {
+            mkdirp(parent);
+            made.add(parent);
         }
-        mkdirp(path.dirname(target));
-        fs.copyFileSync(resolved, target);
-        _inject_package_tag(target, resolved, package_root);
-        _log_tx_entry('write', target);
-        written += 1;
-        written_paths.push(target);
+        if (put(resolved, target)) written += 1;
+        else skipped += 1;
     }
     return [written, skipped, written_paths];
 }
@@ -2923,6 +2870,7 @@ function _deploy_global_content(
         let skipped_total = 0;
         const written_paths: string[] = [];
         let current_files = new Set<string>();
+        _deployed_sha.clear();
         for (const [src_rel, dest_sub] of plan) {
             const src = path.join(package_root, src_rel);
             const dest = dest_sub ? path.join(anchor, dest_sub) : anchor;
@@ -3011,6 +2959,8 @@ function _deploy_global_content(
             destSubs: plan.map(([, dest_sub]) => dest_sub), packageTag: PACKAGE_TAG_ID,
             preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged,
             recordedFor: tracker.recordedDigest,
+            // Claude Code's rules are rewritten and thinned after the copy, so its digests are read back from disk.
+            ...(tool_id === 'claude-code' ? {} : { deployedDigest: (abs: string) => _deployed_sha.get(abs) }),
         });
         for (const p of retained) warn(retainedFileMessage(p));
         if (reaped.length > 0 && !state.QUIET) {
@@ -3231,9 +3181,22 @@ function _rule_filter_for_source(
     scope: RuleScope,
 ): global_deploy_inventory.FileFilter | null {
     if (src_rel !== RULE_SOURCE_REL) return null;
-    return (srcFile: string): boolean =>
-        ruleFileArrives(srcFile, scope) && !isExclusivelyPackageOnly(srcFile);
+    // Every tool deploys the same rule tree under the same scope, and each
+    // verdict costs a frontmatter parse — so it is decided once per file.
+    let verdicts = _rule_verdicts.get(scope);
+    if (verdicts === undefined) _rule_verdicts.set(scope, (verdicts = new Map()));
+    const seen = verdicts;
+    return (srcFile: string): boolean => {
+        let arrives = seen.get(srcFile);
+        if (arrives === undefined) {
+            arrives = ruleFileArrives(srcFile, scope) && !isExclusivelyPackageOnly(srcFile);
+            seen.set(srcFile, arrives);
+        }
+        return arrives;
+    };
 }
+
+const _rule_verdicts = new WeakMap<RuleScope, Map<string, boolean>>();
 
 /** Pack prune that keeps every skill a surviving artefact declares (ADR-289). */
 const _prune_scoped_modules = scoped_projection.prune_scoped_modules;
@@ -3333,7 +3296,13 @@ function install_global(
     }
 
     const package_root = _resolve_package_root_for_global();
-    let deploy_results = _deploy_global_content(tools, force, package_root, written);
+    let deploy_results: Record<string, DeployResult>;
+    _prepared = new Map();
+    try {
+        deploy_results = _deploy_global_content(tools, force, package_root, written);
+    } finally {
+        _prepared = null;
+    }
     state.BAR?.finishing();
 
     // Core-only mode (road-to-install-contract-stability Phase 2 Step 2): prune

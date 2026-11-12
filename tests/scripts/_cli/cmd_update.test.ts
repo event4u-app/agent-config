@@ -311,3 +311,41 @@ describe('cmd_update — keeps the pin and the global install in step', () => {
         }
     });
 });
+
+// ---------------------------------------------------------------------------
+// the npx cache is warmed only for a CLI that will have to re-exec at the pin
+// ---------------------------------------------------------------------------
+
+describe('cmd_update — warms the npx cache only when something will read it', () => {
+    async function warmed(global: string | null): Promise<string[]> {
+        const b = freshBox();
+        seedSettings(b.root);
+        const warmedFor: string[] = [];
+        const { main } = await import('../../../src/scripts/_cli/cmd_update.js');
+        const rc = await main(['--to', '7.2.0'], {
+            cwd: b.root,
+            installed_version: '5.0.0',
+            version_checker: () => true,
+            cache_warmer: (v) => void warmedFor.push(v),
+            state_path: path.join(b.home, 'update-check.json'),
+            global_version: () => global,
+            upgrader: async () => 0,
+            out: { write: () => undefined },
+            err: { write: () => undefined },
+        });
+        expect(rc).toBe(0);
+        return warmedFor;
+    }
+
+    it('skips the second package download when the global install is already at the pin', async () => {
+        expect(await warmed('7.2.0')).toEqual([]);
+    });
+
+    it('still warms it when the global install is at another version', async () => {
+        expect(await warmed('9.0.0')).toEqual(['7.2.0']);
+    });
+
+    it('still warms it when there is no global install', async () => {
+        expect(await warmed(null)).toEqual(['7.2.0']);
+    });
+});

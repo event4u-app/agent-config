@@ -42,7 +42,32 @@ export function createConflictTracker(host) {
         preserved: [],
         migrated: new Set(),
         staged: new Map(),
+        realDirs: new Map(),
     };
+    /**
+     * `resolvePath(target)`, paying one `lstat` instead of one per component.
+     *
+     * Same answer in all three cases: an absent path resolves to its lexical
+     * form (what `resolvePath` falls back to), a symlink is resolved in full,
+     * and anything else is its directory's realpath plus its own name.
+     */
+    function realOf(target) {
+        const plain = path.resolve(target);
+        let isLink;
+        try {
+            isLink = fs.lstatSync(plain).isSymbolicLink();
+        }
+        catch {
+            return plain;
+        }
+        if (isLink)
+            return resolvePath(plain);
+        const dir = path.dirname(plain);
+        let real = conflictState.realDirs.get(dir);
+        if (real === undefined)
+            conflictState.realDirs.set(dir, (real = resolvePath(dir)));
+        return path.join(real, path.basename(plain));
+    }
     /**
      * Recorded digest for `target`, or `undefined` when this tree cannot say.
      *
@@ -65,7 +90,7 @@ export function createConflictTracker(host) {
         const plain = path.resolve(target);
         if (conflictState.recorded.has(plain))
             return conflictState.recorded.get(plain);
-        const real = resolvePath(target);
+        const real = realOf(target);
         return real === plain ? undefined : conflictState.recorded.get(real);
     }
     /**
@@ -79,7 +104,7 @@ export function createConflictTracker(host) {
     function ledgerLists(target) {
         conflictState.ledgerFiles ??= ledgerListedPaths();
         const files = conflictState.ledgerFiles;
-        return files.has(path.resolve(target)) || files.has(resolvePath(target));
+        return files.has(path.resolve(target)) || files.has(realOf(target));
     }
     /**
      * The digest of the bytes this run would write to `target`.
@@ -216,23 +241,35 @@ export function createConflictTracker(host) {
             conflictState.preserved = [];
             conflictState.migrated = new Set();
             conflictState.staged = new Map();
+            conflictState.realDirs = new Map();
         },
         /**
          * The on-disk digest is computed HERE rather than carried from the
          * plan: this runs immediately before the caller copies over `target`,
          * so a file edited between planning and writing is still classified
          * from the bytes that are actually about to be destroyed.
+         *
+         * A caller that has just read the target for its own purposes passes
+         * that digest instead of having the file read a second time. The
+         * obligation is unchanged: it must describe the bytes on disk NOW.
          */
-        resolve(target, force, would) {
-            const exists = pathExists(target);
+        resolve(target, force, would, known) {
+            // A digest in hand means the caller read the file a moment ago.
+            const exists = typeof known === 'string' || pathExists(target);
             const recordedSha256 = exists ? recordedHashFor(target) : undefined;
+            const onDiskSha256 = exists ? (known !== undefined ? known : sha256OfFile(target)) : null;
             const unproven = {
                 exists,
                 recordedSha256,
-                onDiskSha256: exists ? sha256OfFile(target) : null,
+                onDiskSha256,
                 force,
                 ledgerListed: exists && ledgerLists(target),
-                recordedIsStaged: typeof recordedSha256 === 'string' && recordedSha256 === recordedHashFor(sidecarPathFor(target)),
+                // Read only by the `recorded-modified` arm, which a digest equal
+                // to the recorded one never reaches — so the sidecar lookup is
+                // skipped for every file nobody touched.
+                recordedIsStaged: typeof recordedSha256 === 'string' &&
+                    recordedSha256 !== onDiskSha256 &&
+                    recordedSha256 === recordedHashFor(sidecarPathFor(target)),
             };
             // The log is opened only where the record alone would preserve
             // without cause, and read once per run: this run's own appends
