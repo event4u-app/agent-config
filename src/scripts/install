@@ -32,7 +32,7 @@
 #                     to all). Used by `agent-config upgrade`.
 #   --force           Overwrite existing bridge files
 #   --dry-run         Show what payload sync would do (does not run bridges)
-#   --verbose|--debug Full per-step report (init/global default: progress bar)
+#   --verbose         Detailed payload sync output
 #   --quiet           Suppress non-error output
 #   --skip-sync       Skip payload sync (install.sh)
 #   --skip-bridges    Skip bridge files (install.ts)
@@ -106,10 +106,9 @@ USER_TYPE=""
 NO_UI=false
 FULL=false
 ENROL=false
-PROGRESS=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.ts).
-VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro qoder opencode trae antigravity codebuddy droid warp all"
+VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
     sed -n '3,71p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
@@ -135,13 +134,6 @@ Supported --tools IDs (default: all):
   zed              .zed/agent-config.md marker (Zed reads .rules at project root)
   jetbrains        .jetbrains/agent-config.md marker (JetBrains AI Assistant)
   kiro             .kiro/steering/agent-config.md marker (Kiro auto-discovery)
-  qoder            ~/.qoder/ (global install)
-  opencode         ~/.opencode/ (global install)
-  trae             ~/.trae/ (global install)
-  antigravity      ~/.agents/ (global install)
-  codebuddy        ~/.codebuddy/ (global install)
-  droid            ~/.factory/ (global install)
-  warp             ~/.warp/ (global install)
   all              every ID above (the default; backward-compatible)
 
 Examples:
@@ -189,8 +181,7 @@ while [[ $# -gt 0 ]]; do
         --no-ui)         NO_UI=true; shift ;;
         --force)         FORCE=true; shift ;;
         --dry-run)       DRY_RUN=true; shift ;;
-        --verbose|--debug) VERBOSE=true; shift ;;
-        --progress)      PROGRESS=true; shift ;;
+        --verbose)       VERBOSE=true; shift ;;
         --quiet)         QUIET=true; shift ;;
         --skip-sync)     SKIP_SYNC=true; shift ;;
         --skip-bridges)  SKIP_BRIDGES=true; shift ;;
@@ -479,8 +470,6 @@ run_bridges() {
     [[ -n "$USER_TYPE" ]] && args+=(--user-type="$USER_TYPE")
     $FORCE && args+=(--force)
     $QUIET && args+=(--quiet)
-    # The bar replaces the report; --verbose / --quiet each ask for something else.
-    $PROGRESS && ! $VERBOSE && ! $QUIET && args+=(--progress)
     $GLOBAL && args+=(--global)
     [[ -n "$SCOPE" ]] && args+=(--scope="$SCOPE")
     [[ -n "$CUSTOM_PATH" ]] && args+=(--custom-path="$CUSTOM_PATH")
