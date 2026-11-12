@@ -33,7 +33,8 @@ if [[ "${INSIDE_BENCH_CONTAINER:-}" != "1" ]]; then
     command -v docker >/dev/null || { echo "docker is required" >&2; exit 2; }
     WORK="$(mktemp -d)"
     trap 'rm -rf "$WORK"' EXIT
-    OUT_DIR="${OUT_DIR:-$WORK/out}"
+    # Outside $WORK: the logs are what a failure points at, so they outlive the run.
+    OUT_DIR="${OUT_DIR:-$(mktemp -d)}"
     mkdir -p "$OUT_DIR" "$WORK/pkgs"
     if [[ "$MODE" == "candidate" ]]; then
         tarball="${TARBALL:-}"
@@ -56,13 +57,13 @@ if [[ "${INSIDE_BENCH_CONTAINER:-}" != "1" ]]; then
         done
         [[ -n "${TARBALL:-}" ]] || rm -f "$tarball"
     fi
+    echo "logs: $OUT_DIR" >&2
     docker run --rm \
         -e INSIDE_BENCH_CONTAINER=1 -e MAX_LINES="$MAX_LINES" \
         -e BASELINE_FROM="${BASELINE_FROM:-}" -e BASELINE_TO="${BASELINE_TO:-}" \
         -v "$REPO_ROOT/tests/docker/install_upgrade_bench.sh:/bench.sh:ro" \
         -v "$WORK/pkgs:/pkgs:ro" -v "$OUT_DIR:/out" \
         "$IMAGE" bash /bench.sh "$MODE"
-    echo "logs: $OUT_DIR" >&2
     exit 0
 fi
 
@@ -90,7 +91,8 @@ for (const f of files) {
         integrity: 'sha512-' + crypto.createHash('sha512').update(buf).digest('base64'),
         shasum: crypto.createHash('sha1').update(buf).digest('hex') } };
 }
-const latest = Object.keys(versions).sort().pop();
+const num = (v) => v.split('.').map(Number);
+const latest = Object.keys(versions).sort((a, b) => { const x = num(a), y = num(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; }).pop();
 http.createServer((req, res) => {
     if (req.url.startsWith('/t/')) { res.end(fs.readFileSync(path.join('/pkgs', path.basename(req.url)))); return; }
     if (decodeURIComponent(req.url).replace(/^\//, '') === '@event4u/agent-config') {
@@ -102,10 +104,10 @@ http.createServer((req, res) => {
 }).listen(4873, '127.0.0.1');
 JS
     node /registry.js &
-    sleep 1
+    for _ in $(seq 50); do curl -fs http://127.0.0.1:4873/@event4u%2fagent-config >/dev/null && break; sleep 0.1; done
     npm config set --location=global @event4u:registry http://127.0.0.1:4873/
-    FROM="$(ls /pkgs | sed -n 's/^agent-config-\(.*\)\.tgz$/\1/p' | sort | head -1)"
-    TO="$(ls /pkgs | sed -n 's/^agent-config-\(.*\)\.tgz$/\1/p' | sort | tail -1)"
+    FROM="$(ls /pkgs | sed -n 's/^agent-config-\(.*\)\.tgz$/\1/p' | sort -V | head -1)"
+    TO="$(ls /pkgs | sed -n 's/^agent-config-\(.*\)\.tgz$/\1/p' | sort -V | tail -1)"
 else
     FROM="${BASELINE_FROM:-20.2.0}"
     TO="${BASELINE_TO:-$(npm view @event4u/agent-config version)}"
