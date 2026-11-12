@@ -247,7 +247,9 @@ function release_lock(deps: Pick<UnattendedDeps, 'lockPath' | 'pid'>): void {
 function install_steps(spec: string, deps: UnattendedDeps): string[][] {
     return [
         ['npm', 'install', '-g', spec],
-        [deps.agentConfigBin, 'global', '--no-ui'],
+        // --verbose: the unattended log is the only record of what was deployed,
+        // so it keeps the full report instead of the interactive progress bar.
+        [deps.agentConfigBin, 'global', '--no-ui', '--verbose'],
         ...deps.globalSettings.map((target) => [deps.agentConfigBin, 'settings:sync', '--path', target]),
     ];
 }
