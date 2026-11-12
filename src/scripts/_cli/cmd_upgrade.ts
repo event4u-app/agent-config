@@ -40,6 +40,9 @@
  *    installed binary so the NEW template is the merge source. Non-fatal:
  *    a sync failure warns and names the manual command, never fails the
  *    upgrade. Never creates a settings file that did not exist.
+ * 3b. When `agent-switch` is on PATH, `agent-switch sync --quiet` — it passes
+ *    what this upgrade wrote to `~/.claude` (rules, settings, the plugin) on
+ *    to every account and Claude Desktop profile it manages. Non-fatal.
  * 4. If run from inside a consumer project that already has a `./agent-config`
  *    wrapper, re-stamp that wrapper from the canonical template.
  *
@@ -483,6 +486,43 @@ function _refresh_claude_plugin(
     }
 }
 
+/**
+ * agent-switch keeps one config dir per account. Its `sync` passes what this
+ * upgrade just wrote to `~/.claude` (rules, settings, the plugin) on to every
+ * account and Claude Desktop profile it manages. No agent-switch → no step.
+ */
+function _agent_switch_sync_steps(): string[][] {
+    const bin = shutilWhich('agent-switch');
+    return bin === null ? [] : [[bin, 'sync', '--quiet']];
+}
+
+/** Non-fatal, like the plugin refresh: the upgrade already succeeded. */
+function _sync_agent_switch(
+    steps: readonly string[][],
+    runner: (cmd: string[]) => number,
+    out: OutSink,
+    err: OutSink,
+    verbose = true,
+): void {
+    for (const cmd of steps) {
+        _print(out, verbose ? '→ ' + cmd.join(' ') : '→ passing the update on to your agent-switch accounts …');
+        let rc: number;
+        try {
+            rc = runner(cmd);
+        } catch (exc) {
+            rc = 127;
+            _print(err, `cannot run ${cmd[0]}: ${osErrorStr(exc)}`);
+        }
+        if (rc !== 0) {
+            _print(
+                err,
+                `⚠️  agent-config upgrade: agent-switch could not pass the update on to every account (exit ${rc}) — ` +
+                    'run `agent-switch sync` to retry, `agent-switch sync status` for details.',
+            );
+        }
+    }
+}
+
 interface Args {
     check: boolean;
     dry_run: boolean;
@@ -668,6 +708,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     const project_root = options.project_root ?? process.cwd();
     const sync_targets = _settings_sync_targets(project_root);
     const plugin_steps = _claude_plugin_refresh_steps();
+    const agent_switch_steps = _agent_switch_sync_steps();
 
     if (args.dry_run) {
         _print(out, 'agent-config upgrade — dry run, would execute:');
@@ -681,6 +722,9 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
             const sync = [_agent_config_bin(), 'settings:sync', '--path', target];
             if (!verbose) sync.push('--quiet');
             _print(out, '  ' + sync.join(' '));
+        }
+        for (const cmd of agent_switch_steps) {
+            _print(out, '  ' + cmd.join(' '));
         }
         return 0;
     }
@@ -766,6 +810,10 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     // Bring existing settings files up to the NEW template (additive; the
     // subprocess resolves the freshly installed binary + template).
     _sync_settings_files(sync_targets, runner, out, err, verbose);
+
+    // After the global deploy, the plugin refresh and the settings sync, so
+    // agent-switch passes on the finished state, not a half-written one.
+    _sync_agent_switch(agent_switch_steps, runner, out, err, verbose);
 
     _maybe_refresh_project_wrapper(project_root, out, err);
 

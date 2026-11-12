@@ -254,6 +254,7 @@ const TS_SYNC_HARNESS = `
     const sink = (b) => ({ write: (t) => { if (b === 'o') out += t; else err += t; } });
     const runner = (cmd) => {
         calls.push(cmd.join(' '));
+        if (process.env.UPGRADE_TEST_FAIL && cmd.join(' ').includes(process.env.UPGRADE_TEST_FAIL)) return 5;
         return cmd.includes('settings:sync') ? rcSync : rcMain;
     };
     const code = await m.main(args, {
@@ -301,6 +302,77 @@ function parseSyncSeam(raw: string): SyncSeamResult {
 // installed plugin → marketplace update + plugin update run via the injected
 // runner, after the global step.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// agent-switch keeps one config dir per account; after an upgrade it passes the
+// new state on to every account (`agent-switch sync`). Hermetic PATH: a fake
+// `agent-switch` present or absent, nothing else from the developer's machine.
+// ---------------------------------------------------------------------------
+
+describe('upgrade — agent-switch sync', () => {
+    let home: string;
+    let shimDir: string;
+    let harnessPath: string;
+
+    function seam(args: string[], withAgentSwitch: boolean, fail = ''): SyncSeamResult {
+        if (withAgentSwitch) {
+            fs.writeFileSync(path.join(shimDir, 'agent-switch'), '#!/bin/sh\nexit 0\n');
+            fs.chmodSync(path.join(shimDir, 'agent-switch'), 0o755);
+            if (process.platform === 'win32') fs.writeFileSync(path.join(shimDir, 'agent-switch.cmd'), '@exit /b 0\r\n');
+        }
+        const r = spawnSync(TSX_BIN, [harnessPath, '0', '0', home, ...args], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                CLAUDE_CONFIG_DIR: home,
+                EVENT4U_CONFIG_HOME: home,
+                PATH: [shimDir, path.dirname(process.execPath), '/usr/bin', '/bin'].join(path.delimiter),
+                UPGRADE_TEST_FAIL: fail,
+            },
+        });
+        return parseSyncSeam(r.stdout ?? '');
+    }
+
+    beforeEach(() => {
+        home = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-as-home-'));
+        shimDir = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-as-shim-'));
+        harnessPath = path.join(harnessDir, 'agent-switch-harness.mjs');
+        fs.writeFileSync(harnessPath, TS_SYNC_HARNESS);
+    });
+    afterEach(() => {
+        fs.rmSync(home, { recursive: true, force: true });
+        fs.rmSync(shimDir, { recursive: true, force: true });
+    });
+
+    it('agent-switch on PATH → `agent-switch sync --quiet` runs after the global step', () => {
+        const r = seam([], true);
+        expect(r.exit).toBe('0');
+        const syncIdx = r.calls.findIndex((c) => /agent-switch sync --quiet$/.test(c));
+        const globalIdx = r.calls.findIndex((c) => c.includes(' global'));
+        expect(syncIdx).toBeGreaterThan(globalIdx);
+        expect(globalIdx).toBeGreaterThanOrEqual(0);
+    });
+
+    it('no agent-switch → no sync step', () => {
+        const r = seam([], false);
+        expect(r.exit).toBe('0');
+        expect(r.calls.filter((c) => c.includes('agent-switch'))).toHaveLength(0);
+    });
+
+    it('a failing sync warns with the retry command and never fails the upgrade', () => {
+        const r = seam([], true, 'agent-switch sync');
+        expect(r.exit).toBe('0');
+        expect(r.err).toContain('run `agent-switch sync` to retry');
+    });
+
+    it('--dry-run lists the sync step without executing anything', () => {
+        const r = seam(['--dry-run'], true);
+        expect(r.exit).toBe('0');
+        expect(r.calls).toHaveLength(0);
+        expect(r.out).toMatch(/agent-switch sync --quiet/);
+    });
+});
 
 describe('upgrade — claude plugin refresh', () => {
     let claudeHome: string;
