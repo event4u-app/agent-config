@@ -69,6 +69,14 @@ separated the arms on each model, so a task-selection stage comes first.
       Every arm has at least six of the eight tasks inside (0, 1), so 1.4's
       condition did not fire. No CLAIMS line was written.
 
+- [ ] **1.5 Confirm the primary.** Funded by the owner on 2026-11-12. Run
+      `vanilla` and `package` with 63 seeds on the same eight tasks and images,
+      under
+      `agents/evidence/preregistration/five-arm-confirmation-protocol-20261112.md`,
+      at most $42. The run is read on its own pairs and never pooled with
+      Stage B. `docs/CLAIMS.md` changes only as that protocol's § 3 allows.
+      verify: `agents/evidence/metrics/five-arm-confirmation-result-20261112.md` states BETTER, WORSE or INCONCLUSIVE from at least 403 pairs, or says the run was cut short.
+
 ## Phase 2 — The two readings the confirmation left open
 
 - [ ] **2.1 The dropped task, re-tested.** Moved from start-as-light 1.5. Write an
@@ -101,6 +109,7 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 | C1 | deterministic | agent | 1.1's verify is checked by recomputing each selected task's pooled J from the Stage A report; a task outside the band without a fill-up mark fails it. | unfalsifiable-verify:45 | — |
 | C2 | deterministic | agent | 1.2's verify reads three report fields and the spend; any one of them off fails it. | unfalsifiable-verify:50 | — |
 | D1 | business-owned | owner | Fund Phase 2 and the 3.2 run? Asked with a price after Phase 1 reads. | Phase 2 note, blocker real-task-run-budget | — |
+| D2 | business-owned | owner | Fund a standalone confirmation of the INCONCLUSIVE primary: vanilla against package, 63 seeds, up to $42 ("ok, mach das", 2026-11-12). | agents/evidence/owner-directives/2026-11-12-five-arm-confirmation-budget.md | — |
 
 ## Blockers
 
