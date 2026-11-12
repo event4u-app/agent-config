@@ -26,6 +26,7 @@ import {
     knownProviders,
     resetEnvironmentCache,
     strongestAuth,
+    withVersionCache,
     type DetectEnvironmentOptions,
     type EnvironmentReport,
 } from '../../../src/scripts/_lib/environment_detector.js';
@@ -540,5 +541,79 @@ describe('one provider table', () => {
         const table = { half: { cli: 'half-cli', community: false, envKey: 'HALF_API_KEY' } } as unknown as typeof PROVIDER_TABLE;
         expect(providerRow('half', table)).toBeNull();
         expect(providerRow('missing', table)).toBeNull();
+    });
+});
+
+describe('withVersionCache — an unchanged host binary is asked once', () => {
+    const made: string[] = [];
+    afterEach(() => {
+        for (const d of made.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+    });
+
+    function fixture(): { bin: string; file: string } {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vercache-'));
+        made.push(dir);
+        const bin = path.join(dir, 'tool');
+        fs.writeFileSync(bin, '#!/bin/sh\necho 1.0.0\n');
+        return { bin, file: path.join(dir, 'state', 'host-versions.json') };
+    }
+
+    it('answers a second run from the memo without probing', () => {
+        const { bin, file } = fixture();
+        let calls = 0;
+        const probe = (): string => (calls++, 'tool 1.2.3');
+        const first = withVersionCache(probe, file);
+        expect(first.probe(bin)).toBe('tool 1.2.3');
+        first.flush();
+        const second = withVersionCache(probe, file);
+        expect(second.probe(bin)).toBe('tool 1.2.3');
+        expect(calls).toBe(1);
+    });
+
+    it('probes again once the binary changed on disk', () => {
+        const { bin, file } = fixture();
+        let calls = 0;
+        const probe = (): string => `tool ${++calls}.0.0`;
+        const first = withVersionCache(probe, file);
+        first.probe(bin);
+        first.flush();
+        fs.writeFileSync(bin, '#!/bin/sh\necho 2.0.0 and longer\n');
+        expect(withVersionCache(probe, file).probe(bin)).toBe('tool 2.0.0');
+        expect(calls).toBe(2);
+    });
+
+    it('a failed probe is not kept, so the next run asks again', () => {
+        const { bin, file } = fixture();
+        let calls = 0;
+        const first = withVersionCache(() => (calls++, null), file);
+        first.probe(bin);
+        first.flush();
+        expect(withVersionCache(() => (calls++, 'tool 1.0.0'), file).probe(bin)).toBe('tool 1.0.0');
+        expect(calls).toBe(2);
+    });
+
+    it('an entry expires after a day — a version-manager shim never changes on disk', () => {
+        const { bin, file } = fixture();
+        let calls = 0;
+        let t = 0;
+        const probe = (): string => `tool ${++calls}.0.0`;
+        const first = withVersionCache(probe, file, () => t);
+        first.probe(bin);
+        first.flush();
+        t = 23 * 60 * 60 * 1000;
+        expect(withVersionCache(probe, file, () => t).probe(bin)).toBe('tool 1.0.0');
+        t = 25 * 60 * 60 * 1000;
+        expect(withVersionCache(probe, file, () => t).probe(bin)).toBe('tool 2.0.0');
+    });
+
+    it('a missing binary is probed and never cached', () => {
+        const { file } = fixture();
+        let calls = 0;
+        const memo = withVersionCache(() => (calls++, null), file);
+        memo.probe('/nonexistent/tool');
+        memo.flush();
+        withVersionCache(() => (calls++, null), file).probe('/nonexistent/tool');
+        expect(calls).toBe(2);
+        expect(fs.existsSync(file)).toBe(false);
     });
 });

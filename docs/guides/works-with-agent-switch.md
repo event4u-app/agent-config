@@ -93,11 +93,14 @@ directory, resolved in one place (`src/scripts/_lib/provider_home.ts`):
   gives agent-switch one stable shape to read
   ([contract](../contracts/session-list.md)).
 
-Not yet established: whether AC's user-scope rules reach a profile session.
-AC installs them to `~/.claude/` and `~/.codex/`, and agent-switch shares
-`skills/`, `commands/`, `agents/` and `settings.json` from there, but not
-`rules/`. Whether the host reads `<profile>/rules` needs a run with real
-accounts first.
+AC installs its user scope to `~/.claude/` and `~/.codex/`. agent-switch
+passes that on to every profile and Claude Desktop profile it manages:
+settings are merged, `skills/`, `commands/` and `agents/` are linked, `rules/`
+is copied file by file, and plugins are installed or updated under each
+profile's config dir. `agent-config upgrade` runs `agent-switch sync --quiet`
+as its last step when `agent-switch` is on `PATH`, so an upgrade reaches every
+account at once instead of at each account's next start. A failing sync warns
+and never fails the upgrade; `agent-switch sync status` shows each account.
 
 ## The link: limits and the switch question
 

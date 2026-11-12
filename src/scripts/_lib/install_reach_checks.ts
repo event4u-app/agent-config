@@ -557,7 +557,10 @@ export function checkMcpConsentResidual(): WiringCheck {
  */
 export function checkArtifactLocation(projectRoot: string): WiringCheck {
     const id = 'artifact-location';
-    const { findings, scanned } = scanArtifactLocation(projectRoot);
+    const { findings, scanned, source } = scanArtifactLocation(projectRoot, { gitOnly: true });
+    if (source === 'none') {
+        return { id, status: 'skipped', message: 'no git file list here (not inside a git work tree, or git refused it) — nothing scanned', remedy: '' };
+    }
     if (scanned === 0) {
         return { id, status: 'skipped', message: 'no markdown file in this tree', remedy: '' };
     }

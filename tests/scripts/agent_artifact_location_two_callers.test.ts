@@ -5,6 +5,7 @@
  * BOTH verdicts; a caller that kept a private copy would stay green here, which
  * is the drift this file exists to catch.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -18,6 +19,8 @@ const made: string[] = [];
 function emptyTreeWithOneDoc(): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'artloc-two-'));
     made.push(dir);
+    // A repository, as both callers meet one: doctor reads nothing outside a work tree.
+    spawnSync('git', ['init', '-q', dir]);
     fs.writeFileSync(path.join(dir, 'notes.md'), '# plain notes\n');
     return dir;
 }
@@ -51,7 +54,7 @@ describe('artifact-location detector — two callers, one implementation', () =>
             const real = await importOriginal<typeof DetectorModule>();
             return {
                 ...real,
-                scan: () => ({ findings: [{ rel: 'notes.md', signals: ['a planted signal'] }], scanned: 1 }),
+                scan: () => ({ findings: [{ rel: 'notes.md', signals: ['a planted signal'] }], scanned: 1, source: 'git' }),
             };
         });
         expect(await verdicts(emptyTreeWithOneDoc())).toEqual({ gate: 1, doctor: 'warn' });

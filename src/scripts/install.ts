@@ -93,6 +93,10 @@ import { PACKAGE_TAG_ID, escapesPackageRoot, prepareFile, putPrepared, readBytes
 import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import { GLOBAL_HINT_TOOLS, exportHintCommand } from '../install/exportHint.js';
+import { InstallProgress, deployedToolLines, recordedOrAll } from '../install/installProgress.js';
+
+/** Set by `agent-config init` / `global` (env, so an older installer just ignores it). */
+const PROGRESS_ASKED = process.env['AGENT_CONFIG_INSTALL_PROGRESS'] === '1';
 import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -358,7 +362,7 @@ const LEGACY_RENAME_MAP: Record<string, string> = {
 const state = {
     QUIET: false,
     PROGRESS_NDJSON: false,
-    FULL_PIN: false, ENROL: false,
+    FULL_PIN: false, ENROL: false, PROGRESS: false, BAR: null as InstallProgress | null,
 };
 
 function _emit_progress(obj: Record<string, unknown>): void {
@@ -392,17 +396,19 @@ function skip(msg: string): void {
     if (!state.QUIET) process.stdout.write(`  ⏭️  ${msg}\n`);
 }
 
+/** stderr with the progress bar (if any) cleared around it. */
+function toStderr(text: string): void {
+    if (state.BAR) state.BAR.interleave(() => process.stderr.write(text));
+    else process.stderr.write(text);
+}
+
 function warn(msg: string): void {
-    process.stderr.write(`  ⚠️  ${msg}\n`);
+    toStderr(`  ⚠️  ${msg}\n`);
 }
 
 /** Mirror of Python `fail()`: prints the doctor hint, then `sys.exit(1)`. */
 function fail(msg: string): never {
-    process.stderr.write(`  ❌  ${msg}\n`);
-    process.stderr.write(
-        '      Diagnose: `./agent-config doctor` ' +
-            '(or `--check <id>` for a single category)\n',
-    );
+    toStderr(`  ❌  ${msg}\n      Diagnose: \`./agent-config doctor\` (or \`--check <id>\` for a single category)\n`);
     throw new SystemExitError(1);
 }
 
@@ -2843,6 +2849,7 @@ function _deploy_global_content(
     // mid-run if the file changed underneath.
     const rule_scope = _resolve_global_rule_scope(package_root);
     for (const tool_id of [...tools].sort()) {
+        state.BAR?.tool(tool_id);
         if (tool_id === 'claude-desktop') {
             results[tool_id] = _deploy_claude_desktop(force, package_root, lockfile_path);
             continue;
@@ -3223,6 +3230,7 @@ function install_global(
         return 1;
     }
 
+    if (state.PROGRESS) state.BAR = new InstallProgress({ from: recorded, to: installed_version, tools: tools.size });
     if (['upgrade', 'unparseable'].includes(classification) && !state.QUIET) {
         info(`🔄 Upgrading lockfile from ${recorded} to ${installed_version}, redeploying tools`);
     }
@@ -3295,6 +3303,7 @@ function install_global(
     } finally {
         _prepared = null;
     }
+    state.BAR?.finishing();
 
     // Core-only mode (road-to-install-contract-stability Phase 2 Step 2): prune
     // lab-tier skills/commands from the just-deployed tree so the installed
@@ -3345,12 +3354,7 @@ function install_global(
         failed_tools.size > 0 ? merged_tools.filter((t) => !failed_tools.has(t)) : merged_tools;
     if (failed_tools.size > 0 && !arrayStrEqual(corrected_tools, merged_tools)) {
         installed_lock.write_lockfile(installed_version, corrected_tools, { path: write_path });
-        if (!state.QUIET) {
-            warn(
-                'Lockfile corrected after deploy postcheck — dropped ' +
-                    `${[...failed_tools].sort().join(', ')} (verification failed).`,
-            );
-        }
+        warn(`Lockfile corrected after deploy postcheck — dropped ${[...failed_tools].sort().join(', ')} (verification failed).`);
     }
 
     stampHostLayerFingerprint(installed_version, corrected_tools, write_path,
@@ -3371,31 +3375,11 @@ function install_global(
         });
     }
 
+    const tool_ctx = { anchors: USER_SCOPE_PATHS, claudeDesktopBundlesDir: _claude_desktop_bundles_dir, exportHint: exportHintCommand };
     if (!state.QUIET) {
         process.stdout.write('\n');
         info('Deployed per-tool content:');
-        for (const tool_id of Object.keys(deploy_results).sort()) {
-            const [w, s, status] = deploy_results[tool_id] as DeployResult;
-            const anchor = USER_SCOPE_PATHS[tool_id] ?? '';
-            if (status === 'deployed' && tool_id === 'claude-desktop') {
-                const bundles_dir = _claude_desktop_bundles_dir();
-                process.stdout.write(`      ${tool_id.padEnd(15)} → ${bundles_dir} (${w} bundles)\n`);
-            } else if (status === 'deployed') {
-                process.stdout.write(`      ${tool_id.padEnd(15)} → ${anchor} (${w} files, ${s} skipped)\n`);
-            } else if (status === 'marker') {
-                process.stdout.write(
-                    `      ${tool_id.padEnd(15)} → ${anchor}agent-config.md (${w ? 'written' : 'skipped'})\n`,
-                );
-            } else if (status === 'hint') {
-                process.stdout.write(
-                    `      ${tool_id.padEnd(15)} → no user-scope convention; per project: \`${exportHintCommand(tool_id)}\`\n`,
-                );
-            } else {
-                process.stdout.write(
-                    `      ${tool_id.padEnd(15)} → no global-scope content yet (project-scope install supported)\n`,
-                );
-            }
-        }
+        for (const line of deployedToolLines(deploy_results, tool_ctx)) process.stdout.write(`      ${line}\n`);
     }
 
     // Skipped inside the agent-config source repo (detected by
@@ -3461,6 +3445,7 @@ function install_global(
         }
     }
 
+    state.BAR?.done({ to: installed_version, root: user_global_paths.event4u_root(), results: deploy_results, ctx: tool_ctx });
     if (!state.QUIET) {
         process.stdout.write('\n');
         success(`Global install completed (v${installed_version}).`);
@@ -4435,8 +4420,8 @@ function main(argv: string[]): number {
     {
         const [will_launch, why_not] = _wizard_should_launch(opts);
         if (will_launch) {
-            if (!state.QUIET) info('Setup wizard will launch automatically after install.');
-        } else if (!state.QUIET) {
+            if (!state.QUIET && !PROGRESS_ASKED) info('Setup wizard will launch automatically after install.');
+        } else if (!state.QUIET && !PROGRESS_ASKED) {
             info(`Setup wizard auto-launch disabled (${why_not}).`);
         }
     }
@@ -4462,6 +4447,7 @@ function main(argv: string[]): number {
     let parsed_tools = _parse_tools(opts.tools);
     const tools_was_all = _tools_was_all(opts.tools);
     parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all);
+    if (scope === 'global' && process.env['AGENT_CONFIG_RECORDED_TOOLS'] === '1') parsed_tools = recordedOrAll(parsed_tools, installed_lock.read_lockfile());
 
     // Refuse a silently doubled Claude Code rule corpus. Runs before EITHER
     // scope branch writes: a global install can double an existing project layer
@@ -4481,6 +4467,7 @@ function main(argv: string[]): number {
             const rc = _run_migrate_to_global(detect_root);
             if (rc !== 0) return rc;
         }
+        if (PROGRESS_ASKED) [state.QUIET, state.PROGRESS] = [true, true]; // after the gates, so their remedies still print
         tracker.begin(detect_root);
         const rc = tracker.finalizeRc(
             install_global(parsed_tools, opts.force, detect_root, opts.core_only),

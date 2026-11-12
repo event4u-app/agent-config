@@ -254,6 +254,7 @@ const TS_SYNC_HARNESS = `
     const sink = (b) => ({ write: (t) => { if (b === 'o') out += t; else err += t; } });
     const runner = (cmd) => {
         calls.push(cmd.join(' '));
+        if (process.env.UPGRADE_TEST_FAIL && cmd.join(' ').includes(process.env.UPGRADE_TEST_FAIL)) return 5;
         return cmd.includes('settings:sync') ? rcSync : rcMain;
     };
     const code = await m.main(args, {
@@ -301,6 +302,77 @@ function parseSyncSeam(raw: string): SyncSeamResult {
 // installed plugin → marketplace update + plugin update run via the injected
 // runner, after the global step.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// agent-switch keeps one config dir per account; after an upgrade it passes the
+// new state on to every account (`agent-switch sync`). Hermetic PATH: a fake
+// `agent-switch` present or absent, nothing else from the developer's machine.
+// ---------------------------------------------------------------------------
+
+describe('upgrade — agent-switch sync', () => {
+    let home: string;
+    let shimDir: string;
+    let harnessPath: string;
+
+    function seam(args: string[], withAgentSwitch: boolean, fail = ''): SyncSeamResult {
+        if (withAgentSwitch) {
+            fs.writeFileSync(path.join(shimDir, 'agent-switch'), '#!/bin/sh\nexit 0\n');
+            fs.chmodSync(path.join(shimDir, 'agent-switch'), 0o755);
+            if (process.platform === 'win32') fs.writeFileSync(path.join(shimDir, 'agent-switch.cmd'), '@exit /b 0\r\n');
+        }
+        const r = spawnSync(TSX_BIN, [harnessPath, '0', '0', home, ...args], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                CLAUDE_CONFIG_DIR: home,
+                EVENT4U_CONFIG_HOME: home,
+                PATH: [shimDir, path.dirname(process.execPath), '/usr/bin', '/bin'].join(path.delimiter),
+                UPGRADE_TEST_FAIL: fail,
+            },
+        });
+        return parseSyncSeam(r.stdout ?? '');
+    }
+
+    beforeEach(() => {
+        home = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-as-home-'));
+        shimDir = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-as-shim-'));
+        harnessPath = path.join(harnessDir, 'agent-switch-harness.mjs');
+        fs.writeFileSync(harnessPath, TS_SYNC_HARNESS);
+    });
+    afterEach(() => {
+        fs.rmSync(home, { recursive: true, force: true });
+        fs.rmSync(shimDir, { recursive: true, force: true });
+    });
+
+    it('agent-switch on PATH → `agent-switch sync --quiet` runs after the global step', () => {
+        const r = seam([], true);
+        expect(r.exit).toBe('0');
+        const syncIdx = r.calls.findIndex((c) => /agent-switch sync --quiet$/.test(c));
+        const globalIdx = r.calls.findIndex((c) => c.includes(' global'));
+        expect(syncIdx).toBeGreaterThan(globalIdx);
+        expect(globalIdx).toBeGreaterThanOrEqual(0);
+    });
+
+    it('no agent-switch → no sync step', () => {
+        const r = seam([], false);
+        expect(r.exit).toBe('0');
+        expect(r.calls.filter((c) => c.includes('agent-switch'))).toHaveLength(0);
+    });
+
+    it('a failing sync warns with the retry command and never fails the upgrade', () => {
+        const r = seam([], true, 'agent-switch sync');
+        expect(r.exit).toBe('0');
+        expect(r.err).toContain('run `agent-switch sync` to retry');
+    });
+
+    it('--dry-run lists the sync step without executing anything', () => {
+        const r = seam(['--dry-run'], true);
+        expect(r.exit).toBe('0');
+        expect(r.calls).toHaveLength(0);
+        expect(r.out).toMatch(/agent-switch sync --quiet/);
+    });
+});
 
 describe('upgrade — claude plugin refresh', () => {
     let claudeHome: string;
@@ -601,8 +673,9 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         captured: string[];
     }
 
-    async function run(args: string[], doctorJson = '', doctorRc = 0): Promise<Run> {
+    async function run(args: string[], doctorJson = '', doctorRc = 0, lockfile = ''): Promise<Run> {
         const home = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-quiet-'));
+        if (lockfile !== '') fs.writeFileSync(path.join(home, 'installed.lock'), lockfile);
         const project = fs.mkdtempSync(path.join(os.tmpdir(), 'upgrade-quiet-proj-'));
         const saved = process.env['EVENT4U_CONFIG_HOME'];
         process.env['EVENT4U_CONFIG_HOME'] = home;
@@ -616,7 +689,7 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
                 installed: '1.0.0',
                 fetcher: () => '2.0.0',
                 project_root: project,
-                runner: (cmd: string[]) => (calls.push(cmd.join(' ')), 0),
+                runner: (cmd: string[]) => (calls.push(cmd.join(' ') + (process.env['AGENT_CONFIG_RECORDED_TOOLS'] === '1' ? ' [recorded-tools]' : '')), 0),
                 capture: (cmd: string[]) => (captured.push(cmd.join(' ')), { status: doctorRc, stdout: doctorJson }),
                 out: { write: (t: string) => void (out += t) },
                 err: { write: (t: string) => void (err += t) },
@@ -640,7 +713,7 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.out).not.toContain('npm install -g');
     });
 
-    it('default run prints only the warn/fail doctor findings', async () => {
+    it('default run prints failures with their fix and names warnings in one line', async () => {
         const json = JSON.stringify({
             checks: [
                 { id: 'scope', status: 'ok', message: 'fine', remedy: '' },
@@ -653,14 +726,15 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.captured[0]).toContain('doctor --json');
         expect(r.out).toContain('claude-plugin: duplicate surface');
         expect(r.out).toContain('fix: claude plugin uninstall x');
-        expect(r.out).toContain('wrappers: missing wrappers');
-        expect(r.out).not.toContain('scope: fine');
+        expect(r.out).not.toContain('missing wrappers');
+        expect(r.out).toContain('1 optional hint(s): wrappers');
+        expect(r.out).not.toContain('scope');
         expect(r.err).toContain('fixes listed above');
     });
 
     it('a long finding is clipped to one line; the full report keeps it whole', async () => {
         const long = 'x'.repeat(5000);
-        const r = await run([], JSON.stringify({ checks: [{ id: 'big', status: 'warn', message: long, remedy: '' }] }), 1);
+        const r = await run([], JSON.stringify({ checks: [{ id: 'big', status: 'fail', message: long, remedy: '' }] }), 1);
         const line = r.out.split('\n').find((l) => l.includes('big:'));
         expect(line).toBeDefined();
         expect(line!.length).toBeLessThan(260);
@@ -677,15 +751,73 @@ describe('upgrade — quiet by default, --verbose / --debug for full output', ()
         expect(r.err).toContain('run `agent-config doctor` for the full report');
     });
 
+    const LOCK = 'schema_version: 1\nagent_config_version: "1.0.0"\ntools:\n  - claude-code\n  - cursor\n';
+
+    it('asks the global step for the recorded tools through the env, and only that step', async () => {
+        const r = await run([], '', 0, LOCK);
+        const global = r.calls.find((c) => / global /.test(c));
+        expect(global).toContain('[recorded-tools]');
+        expect(global).not.toContain('--tools');
+        expect(r.calls.filter((c) => c.includes('[recorded-tools]'))).toHaveLength(1);
+        expect(process.env['AGENT_CONFIG_RECORDED_TOOLS']).toBeUndefined();
+    });
+
+    it('prints the version change, one line per step, then where the tools are', async () => {
+        const r = await run([], JSON.stringify({ checks: [] }), 0, LOCK);
+        const lines = r.out.split('\n');
+        expect(lines[0]).toBe('agent-config 1.0.0 → 2.0.0');
+        // The step count follows the machine (a Claude plugin adds one); the order does not.
+        expect(lines[1]).toMatch(/^  \[1\/(\d)\] installing @event4u\/agent-config@latest …$/);
+        expect(lines[2]).toMatch(/^  \[2\/\d\] deploying to your AI tools …$/);
+        const health = lines.find((l) => l.includes('checking health'));
+        const total = /^  \[1\/(\d)\]/.exec(lines[1]!)![1];
+        expect(health).toBe(`  [${total}/${total}] checking health (doctor) …`);
+        expect(r.out).toMatch(/Installed to: /);
+        expect(r.out).toContain('AI tools (2):');
+        expect(r.out).toMatch(/claude-code +→ ~\/\.claude\//);
+        // The fake runner does not rewrite the lockfile, so it still names 1.0.0.
+        expect(r.out).toMatch(/✅  agent-config \S+ upgraded in [\d.]+ (ms|s)\.\n$/);
+    });
+
+    it('optional hints alone (doctor exit 2, no project install) are not reported as a problem', async () => {
+        const json = JSON.stringify({ checks: [{ id: 'git-identity', status: 'warn', message: 'no identity', remedy: 'git config' }] });
+        const r = await run([], json, 2, LOCK);
+        expect(r.out).toContain('1 optional hint(s): git-identity');
+        expect(r.err).toBe('');
+        expect(r.out).toMatch(/upgraded in [\d.]+ (ms|s)\.\n$/);
+    });
+
     for (const flag of ['--verbose', '--debug']) {
         it(`${flag} restores the full output: commands echoed, no quiet flags, full doctor`, async () => {
             const r = await run([flag]);
             expect(r.rc).toBe(0);
             expect(r.calls.find((c) => c.startsWith('npm install -g'))).not.toContain('--loglevel');
             expect(r.calls.find((c) => / global /.test(c))).not.toContain('--quiet');
+            expect(r.calls.find((c) => / global /.test(c))).toContain('--verbose');
             expect(r.out).toContain('→ npm install -g @event4u/agent-config@latest');
             expect(r.calls.some((c) => / doctor$/.test(c))).toBe(true);
             expect(r.captured).toHaveLength(0);
         });
     }
+});
+
+describe('upgrade — the quiet runner keeps a step from tearing the bar', () => {
+    async function quiet(script: string): Promise<{ rc: number; logged: string[] }> {
+        const { _quiet_runner } = await import('../../../src/scripts/_cli/cmd_upgrade.js');
+        const logged: string[] = [];
+        const rc = _quiet_runner((l: string) => logged.push(l))([process.execPath, '-e', script]);
+        return { rc, logged };
+    }
+
+    it('a step that succeeded shows only its warnings and errors', async () => {
+        const r = await quiet("console.log('copied 900 files'); console.error('  ⚠️  kept your edit'); console.log('npm warn deprecated x')");
+        expect(r.rc).toBe(0);
+        expect(r.logged).toEqual(['npm warn deprecated x', '  ⚠️  kept your edit']);
+    });
+
+    it('a step that failed shows everything it printed', async () => {
+        const r = await quiet("console.log('step one'); console.error('boom'); process.exit(4)");
+        expect(r.rc).toBe(4);
+        expect(r.logged).toEqual(['step one', 'boom']);
+    });
 });
