@@ -1506,7 +1506,7 @@ cmd_migrate() {
 cmd_init() {
   local script
   script="$(resolve_script "src/scripts/install")" || return 1
-  exec bash "$script" "$@"
+  exec bash "$script" --progress "$@"
 }
 
 # `agent-config global` — user-scope install entry point. Forwards to the
@@ -1518,7 +1518,7 @@ cmd_init() {
 cmd_global() {
   local script
   script="$(resolve_script "src/scripts/install")" || return 1
-  exec bash "$script" --global "$@"
+  exec bash "$script" --global --progress "$@"
 }
 
 # `agent-config export` — write a tool's canonical content into a
