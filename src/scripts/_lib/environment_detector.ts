@@ -297,10 +297,18 @@ function defaultProbeVersion(binary: string): string | null {
  * Memo of `--version` answers on disk, keyed by the binary's real path, mtime
  * and size: a host CLI that has not changed answers the same, and asking every
  * one again cost `doctor` (and so every `upgrade`) seconds — each probe starts a
- * Node or Python runtime. A binary updated in place changes its key.
+ * Node or Python runtime. A binary updated in place changes its key; an entry
+ * also expires after a day, because a version-manager shim (Volta, asdf, mise)
+ * stays byte-identical while the CLI behind it moves. A failed probe (timeout,
+ * no output) is never kept, so one slow cold start does not stick.
  */
-export function withVersionCache(probe: VersionProbe, file: string): { probe: VersionProbe; flush(): void } {
-    let entries: Record<string, { key: string; raw: string | null }> = {};
+export function withVersionCache(
+    probe: VersionProbe,
+    file: string,
+    now: () => number = Date.now,
+): { probe: VersionProbe; flush(): void } {
+    const ttlMs = 24 * 60 * 60 * 1000;
+    let entries: Record<string, { key: string; raw: string; at: number }> = {};
     try {
         const parsed = JSON.parse(fs.readFileSync(file, 'utf-8')) as unknown;
         if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) entries = parsed as typeof entries;
@@ -321,10 +329,10 @@ export function withVersionCache(probe: VersionProbe, file: string): { probe: Ve
         probe(binary: string): string | null {
             const key = keyOf(binary);
             const hit = entries[binary];
-            if (key !== null && hit !== undefined && hit.key === key) return hit.raw;
+            if (key !== null && hit !== undefined && hit.key === key && now() - hit.at < ttlMs) return hit.raw;
             const raw = probe(binary);
-            if (key !== null) {
-                entries[binary] = { key, raw };
+            if (key !== null && raw !== null) {
+                entries[binary] = { key, raw, at: now() };
                 dirty = true;
             }
             return raw;

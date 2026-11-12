@@ -120,6 +120,7 @@ describe('doctor artifact-location — a fixture consumer monorepo', () => {
         const row = checkArtifactLocation(loose);
         expect(row.status).toBe('skipped');
         expect(row.message).toMatch(/not inside a git work tree/);
+        expect(row.message).toMatch(/nothing scanned/);
     });
 
     it('a git-ignored roadmap-shaped file is not reported; an untracked one is', () => {

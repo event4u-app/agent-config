@@ -582,6 +582,30 @@ describe('withVersionCache — an unchanged host binary is asked once', () => {
         expect(calls).toBe(2);
     });
 
+    it('a failed probe is not kept, so the next run asks again', () => {
+        const { bin, file } = fixture();
+        let calls = 0;
+        const first = withVersionCache(() => (calls++, null), file);
+        first.probe(bin);
+        first.flush();
+        expect(withVersionCache(() => (calls++, 'tool 1.0.0'), file).probe(bin)).toBe('tool 1.0.0');
+        expect(calls).toBe(2);
+    });
+
+    it('an entry expires after a day — a version-manager shim never changes on disk', () => {
+        const { bin, file } = fixture();
+        let calls = 0;
+        let t = 0;
+        const probe = (): string => `tool ${++calls}.0.0`;
+        const first = withVersionCache(probe, file, () => t);
+        first.probe(bin);
+        first.flush();
+        t = 23 * 60 * 60 * 1000;
+        expect(withVersionCache(probe, file, () => t).probe(bin)).toBe('tool 1.0.0');
+        t = 25 * 60 * 60 * 1000;
+        expect(withVersionCache(probe, file, () => t).probe(bin)).toBe('tool 2.0.0');
+    });
+
     it('a missing binary is probed and never cached', () => {
         const { file } = fixture();
         let calls = 0;

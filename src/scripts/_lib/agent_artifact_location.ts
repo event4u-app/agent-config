@@ -133,7 +133,8 @@ function gitMarkdown(root: string): string[] | null {
     const r = spawnSync(
         'git',
         ['-C', root, 'ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', ':(icase)*.md'],
-        { encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 },
+        // GIT_LITERAL_PATHSPECS would turn the icase pathspec into a literal name that matches nothing.
+        { encoding: 'utf8', maxBuffer: 512 * 1024 * 1024, env: { ...process.env, GIT_LITERAL_PATHSPECS: '0' } },
     );
     if (r.error !== undefined || r.status !== 0) return null;
     const out = new Set<string>();

@@ -60,6 +60,9 @@ describe('progress helpers', () => {
         expect(isInteractive({ isTTY: false }, {})).toBe(false);
         expect(isInteractive({ isTTY: true }, { TERM: 'dumb' })).toBe(false);
         expect(isInteractive({ isTTY: true }, { CI: 'true' })).toBe(false);
+        expect(isInteractive({ isTTY: true }, { CI: '1' })).toBe(false);
+        expect(isInteractive({ isTTY: true }, { CI: 'false' })).toBe(true);
+        expect(isInteractive({ isTTY: true }, { CI: '0' })).toBe(true);
     });
 
     it('formatDuration', () => {

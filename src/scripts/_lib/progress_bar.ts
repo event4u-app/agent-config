@@ -24,9 +24,10 @@ export interface ProgressOptions {
 const FILLED = '█';
 const EMPTY = '░';
 
-/** A stream the bar may redraw on: a TTY that is not `TERM=dumb`. */
+/** A stream the bar may redraw on: a TTY, not `TERM=dumb`, not a CI run. */
 export function isInteractive(stream: { isTTY?: boolean }, env: NodeJS.ProcessEnv = process.env): boolean {
-    return stream.isTTY === true && env['TERM'] !== 'dumb' && env['CI'] === undefined;
+    const ci = (env['CI'] ?? '').toLowerCase();
+    return stream.isTTY === true && env['TERM'] !== 'dumb' && (ci === '' || ci === 'false' || ci === '0');
 }
 
 export function renderBar(done: number, total: number, width: number): string {
