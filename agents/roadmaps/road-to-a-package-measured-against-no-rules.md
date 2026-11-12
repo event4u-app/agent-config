@@ -69,6 +69,14 @@ separated the arms on each model, so a task-selection stage comes first.
       Every arm has at least six of the eight tasks inside (0, 1), so 1.4's
       condition did not fire. No CLAIMS line was written.
 
+- [ ] **1.5 Confirm the primary.** Funded by the owner on 2026-11-12. Run
+      `vanilla` and `package` with 63 seeds on the same eight tasks and images,
+      under
+      `agents/evidence/preregistration/five-arm-confirmation-protocol-20261112.md`,
+      at most $42. The run is read on its own pairs and never pooled with
+      Stage B. `docs/CLAIMS.md` changes only as that protocol's § 3 allows.
+      verify: `agents/evidence/metrics/five-arm-confirmation-result-20261112.md` states BETTER, WORSE or INCONCLUSIVE from at least 403 pairs, or says the run was cut short.
+
 ## Phase 2 — The two readings the confirmation left open
 
 - [ ] **2.1 The dropped task, re-tested.** Moved from start-as-light 1.5. Write an
@@ -101,6 +109,7 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 | C1 | deterministic | agent | 1.1's verify is checked by recomputing each selected task's pooled J from the Stage A report; a task outside the band without a fill-up mark fails it. | unfalsifiable-verify:45 | — |
 | C2 | deterministic | agent | 1.2's verify reads three report fields and the spend; any one of them off fails it. | unfalsifiable-verify:50 | — |
 | D1 | business-owned | owner | Fund Phase 2 and the 3.2 run? Asked with a price after Phase 1 reads. | Phase 2 note, blocker real-task-run-budget | — |
+| D2 | business-owned | owner | Fund a standalone confirmation of the INCONCLUSIVE primary: vanilla against package, 63 seeds, up to $42 ("ok, mach das", 2026-11-12). | agents/evidence/owner-directives/2026-11-12-five-arm-confirmation-budget.md | — |
 
 ## Blockers
 
@@ -115,13 +124,14 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 - **If you do nothing:** the only comparison against no rules is the corpus one.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-12 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A corpus result read as a product claim | product | A BETTER on a discipline corpus could be quoted as "AC beats no rules" in general | § 5 of the protocol scopes any claim to this corpus, model and tree; Phase 3 is the real-task answer | Phase 1 — Five arms on one corpus (funded) |
 | 2 | A pilot that selects too few tasks | implementation | If the corpus has under six tasks inside the band, Stage B rests on fill-ups near the ceiling | The fill-up rule is frozen, and 1.4 writes the missing tasks before the next cut | Phase 1 — Five arms on one corpus (funded) |
 | 3 | Real-task tests written by the measured party | product | Tests authored with knowledge of an arm grade that arm | 3.1 requires tests from a session that never sees an arm, recorded | Phase 3 — Real tasks |
+| 4 | A confirmation chosen after a near-miss | product | Running 1.5 only because Stage B nearly crossed zero invites pooling the two runs into one BETTER | 1.5's protocol reads only its own pairs, forbids pooling, and stated its power before data | Phase 1 — Five arms on one corpus (funded) |
 
 ## Acceptance Criteria
 
