@@ -278,6 +278,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-merge-confirmation-doctrine | stubs | — | road to the direct-order merge-confirmation doctrine |
 | road-to-multi-host-screenshot-census | stubs | — | road to the multi-host screenshot census |
 | road-to-obligation-exposure-instrumentation | stubs | — | Road to obligation-exposure instrumentation |
+| road-to-one-tool-id-list-for-the-installer | stubs | — | road to one tool-id list for the installer |
 | road-to-org-telemetry-enablement | stubs | — | road to org telemetry enablement |
 | road-to-org-telemetry-sink | stubs | — | road to the org telemetry sink |
 | road-to-override-efficacy-paired-run | stubs | — | the paired-session efficacy run |
