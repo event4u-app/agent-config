@@ -108,7 +108,7 @@ FULL=false
 ENROL=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.ts).
-VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
+VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro qoder opencode trae antigravity codebuddy droid warp all"
 
 show_help() {
     sed -n '3,71p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
@@ -134,6 +134,13 @@ Supported --tools IDs (default: all):
   zed              .zed/agent-config.md marker (Zed reads .rules at project root)
   jetbrains        .jetbrains/agent-config.md marker (JetBrains AI Assistant)
   kiro             .kiro/steering/agent-config.md marker (Kiro auto-discovery)
+  qoder            ~/.qoder/ (global install)
+  opencode         ~/.opencode/ (global install)
+  trae             ~/.trae/ (global install)
+  antigravity      ~/.agents/ (global install)
+  codebuddy        ~/.codebuddy/ (global install)
+  droid            ~/.factory/ (global install)
+  warp             ~/.warp/ (global install)
   all              every ID above (the default; backward-compatible)
 
 Examples:

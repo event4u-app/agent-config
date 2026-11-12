@@ -67,6 +67,16 @@ describe('install — pure helpers', () => {
         expect(inst._tools_was_all('')).toBe(false);
     });
 
+    // `upgrade` re-runs `agent-config global --tools=<recorded>`, and the bash
+    // wrapper validates that list before install.ts sees it: an id the wrapper
+    // lacks made every upgrade of an install that recorded it fail at parse.
+    it('the bash wrapper accepts exactly the tool ids install.ts deploys', () => {
+        const wrapper = fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'install'), 'utf8');
+        const m = /^VALID_TOOLS="([^"]*)"$/m.exec(wrapper);
+        expect(m).not.toBeNull();
+        expect(m![1]!.split(' ').sort()).toEqual([...inst._VALID_TOOLS].sort());
+    });
+
     it('_parse_tools expands all and rejects unknown / empty (via fail→SystemExit)', () => {
         const parsed = inst._parse_tools('claude-code,cursor');
         expect(parsed.has('claude-code')).toBe(true);
