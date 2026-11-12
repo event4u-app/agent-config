@@ -34,8 +34,15 @@ afterEach(() => {
     for (const d of made.splice(0)) fs.rmSync(d, { recursive: true, force: true });
 });
 
+/** A consumer tree is a repository: the check reads what git lists there. */
+function gitInit(root: string): string {
+    const r = spawnSync('git', ['init', '-q', root], { encoding: 'utf8' });
+    if (r.status !== 0) throw new Error(`git init failed: ${r.stderr}`);
+    return root;
+}
+
 function fixtureMonorepo(): string {
-    const root = mkTmp('artloc-mono-');
+    const root = gitInit(mkTmp('artloc-mono-'));
     const files: Record<string, string> = {
         'package.json': '{"name":"mono","private":true}\n',
         'apps/x/docs/roadmaps/road-to-y.md': ROADMAP,
@@ -58,6 +65,7 @@ function digest(root: string): string {
         for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
             const full = path.join(dir, e.name);
             h.update(path.relative(root, full));
+            if (e.name === '.git') continue;
             if (e.isDirectory()) walk(full);
             else h.update(fs.readFileSync(full));
         }
@@ -95,10 +103,38 @@ describe('doctor artifact-location — a fixture consumer monorepo', () => {
     }, 150_000);
 
     it('a clean tree is ok and an empty one is skipped', () => {
-        const clean = mkTmp('artloc-clean-');
+        const clean = gitInit(mkTmp('artloc-clean-'));
         fs.mkdirSync(path.join(clean, 'agents', 'roadmaps'), { recursive: true });
         fs.writeFileSync(path.join(clean, 'agents', 'roadmaps', 'road-to-z.md'), ROADMAP);
         expect(checkArtifactLocation(clean).status).toBe('ok');
-        expect(checkArtifactLocation(mkTmp('artloc-empty-')).status).toBe('skipped');
+        expect(checkArtifactLocation(gitInit(mkTmp('artloc-empty-'))).status).toBe('skipped');
+    });
+
+    // `upgrade` runs doctor from wherever the user typed it — often the home
+    // directory. A walk there read every markdown file the user owns (61,560
+    // from /tmp, 4+ minutes from a real home) and reported their notes.
+    it('a directory outside any git work tree is skipped without being read', () => {
+        const loose = mkTmp('artloc-loose-');
+        fs.mkdirSync(path.join(loose, 'notes'), { recursive: true });
+        fs.writeFileSync(path.join(loose, 'notes', 'road-to-y.md'), ROADMAP);
+        const row = checkArtifactLocation(loose);
+        expect(row.status).toBe('skipped');
+        expect(row.message).toMatch(/not inside a git work tree/);
+    });
+
+    it('a git-ignored roadmap-shaped file is not reported; an untracked one is', () => {
+        const root = gitInit(mkTmp('artloc-ignored-'));
+        const write = (rel: string, body: string): void => {
+            fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+            fs.writeFileSync(path.join(root, rel), body);
+        };
+        write('.gitignore', 'scratch/\n');
+        write('scratch/road-to-local.md', ROADMAP);
+        write('docs/road-to-shared.md', ROADMAP);
+        const row = checkArtifactLocation(root);
+        expect(row.status).toBe('warn');
+        expect(row.message).toMatch(/^1 roadmap-shaped file\(s\)/);
+        expect(row.message).toContain('docs/road-to-shared.md');
+        expect(row.message).not.toContain('scratch/');
     });
 });

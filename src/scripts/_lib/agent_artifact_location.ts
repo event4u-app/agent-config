@@ -11,6 +11,7 @@
  * test alone is stated in the gate's header.
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -100,6 +101,53 @@ export interface ScanResult {
     readonly findings: readonly Finding[];
     /** Every `.md` file the walk visited — the scope, not the matches. */
     readonly scanned: number;
+    /**
+     * Where the file list came from: `git` (tracked + untracked, `.gitignore`
+     * honoured), `walk` (no work tree, full directory walk), or `none` (no work
+     * tree and the caller asked for git only — nothing was read).
+     */
+    readonly source: 'git' | 'walk' | 'none';
+}
+
+export interface ScanOptions {
+    /**
+     * Read nothing when `root` is not inside a git work tree. `doctor` sets it:
+     * it runs from wherever the user stands, and a walk of a home directory
+     * read every markdown file the user owns for minutes.
+     */
+    readonly gitOnly?: boolean;
+}
+
+/** Skipped by segment so the git list keeps the walk's exclusions. */
+function inSkippedDir(rel: string): boolean {
+    const parts = rel.split('/');
+    return parts.slice(0, -1).some((p) => SKIP_DIRS.has(p));
+}
+
+/**
+ * The markdown files git knows under `root` — tracked, plus untracked ones not
+ * ignored — or `null` outside a work tree. Ignored files are local state
+ * (`.harvest-local/`, scratch notes), not the tree's prose.
+ */
+function gitMarkdown(root: string): string[] | null {
+    const r = spawnSync(
+        'git',
+        ['-C', root, 'ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', ':(icase)*.md'],
+        { encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 },
+    );
+    if (r.error !== undefined || r.status !== 0) return null;
+    const out = new Set<string>();
+    for (const rel of r.stdout.split('\0')) {
+        if (rel === '' || inSkippedDir(rel)) continue;
+        const full = path.join(root, ...rel.split('/'));
+        try {
+            if (!fs.lstatSync(full).isFile()) continue;
+        } catch {
+            continue; // tracked but deleted in the working tree
+        }
+        out.add(full);
+    }
+    return [...out].sort();
 }
 
 function walkMarkdown(root: string): string[] {
@@ -150,9 +198,12 @@ function isUnder(child: string, root: string): boolean {
     return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
 }
 
-export function scan(root: string): ScanResult {
+export function scan(root: string, opts: ScanOptions = {}): ScanResult {
     const roadmapRoot = path.join(root, ...ROADMAP_ROOT_REL.split('/'));
-    const files = walkMarkdown(root);
+    const listed = gitMarkdown(root);
+    if (listed === null && opts.gitOnly === true) return { findings: [], scanned: 0, source: 'none' };
+    const source = listed === null ? 'walk' : 'git';
+    const files = listed ?? walkMarkdown(root);
     const findings: Finding[] = [];
     for (const f of files) {
         if (isUnder(f, roadmapRoot)) continue;
@@ -173,5 +224,5 @@ export function scan(root: string): ScanResult {
             signals: shape.signals,
         });
     }
-    return { findings, scanned: files.length };
+    return { findings, scanned: files.length, source };
 }
