@@ -37,25 +37,34 @@ a command or the next step acts on it and medium when nothing does.
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 75e53f05d96ec1c142ed702566b87ddb847f3d0e, review
-  artefacts excluded), scope hash `6fa37a2e3ef57a89e9802c33e686374d913fbc2d957db925c7d7ed1e882d54f0`
+- diff: `diff.patch` — the review scope (branch head 08da1d11a6c4942d1f0e3c09ee0d5d25b73dfe03, review
+  artefacts excluded), scope hash `68840ff399aabafa8973c3fdb884ec8341753ccb19c2f8e3f0ea6e5a996fecec`
 - roadmap under review: `roadmap.md` — NO acceptance criteria could be EXTRACTED from it, in either recognised form (an `## Acceptance criteria` heading, or inline `- **AC-n:**` bullets), so `acceptance-criteria.md` is empty. Two different things produce that result and the dispatcher cannot tell them apart: the roadmap declares none, or it declares them in a shape the extractor does not recognise. Open `roadmap.md`, decide which, and report a finding if the criteria are there.
 
 Changed files:
 
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r1-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r10-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r11-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r12-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r13-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r14-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r15-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r2-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r3-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r4-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r5-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r6-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r7-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r8-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r9-20261113.question.md
 - agents/evidence/ratifications/verified-stale-lock-reclaim-20261113.md
 - agents/roadmaps/road-to-verified-stale-lock-reclaim.md
 - src/config/hook-bundle-budget.json
 - src/scripts/_lib/egress_session_table.ts
 - src/scripts/_lib/generation_lock.ts
 - src/scripts/_lib/project_registry.ts
+- src/scripts/_lib/session_pins.ts
 - src/scripts/advisories.ts
 - src/scripts/ai_council/budget_guard.ts
 - src/scripts/ai_council/cli_call_budget.ts
@@ -90,7 +99,7 @@ Fill the findings table in `feat-road-to-verified-stale-lock-reclaim.findings.md
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 6fa37a2e3ef57a89e9802c33e686374d913fbc2d957db925c7d7ed1e882d54f0, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 68840ff399aabafa8973c3fdb884ec8341753ccb19c2f8e3f0ea6e5a996fecec, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
