@@ -97,6 +97,7 @@ import {
 import { loadSessionPins } from "./hooks/session_pins_loader.js";
 import { admitStamp, readRestoreRecord, restoreOwed } from "./_lib/session_pins_record.js";
 import type { SessionPins } from "./_lib/session_pins.js";
+import { release, tryAcquire, type Held } from "./_lib/generation_lock.js";
 
 /** How the pin module is reached; injectable because a test runner cannot `require` the TS source. */
 export type PinsLoader = () => SessionPins | null;
@@ -851,8 +852,8 @@ export function _pruneStaleSessions(
  * How long a lock file may sit before it is treated as abandoned.
  *
  * A whole hook run is milliseconds, so anything this old belongs to a process
- * that died holding it. Deliberately NOT retried after a break: a retry loop
- * re-opens exactly the window the lock exists to close.
+ * that died holding it. One attempt, never a wait: a busy lock returns the
+ * caller's silent value.
  */
 export const LOCK_STALE_MS = 30_000;
 
@@ -887,8 +888,14 @@ export const LOCK_STALE_MS = 30_000;
  * A lock that cannot be taken means a peer is mid-update: return the caller's
  * silent value. A lost reminder is recoverable, a double reminder is the shape
  * § 6.2 refuses.
+ *
+ * The lock is the generation lock (`_lib/generation_lock.ts`): breaking an
+ * abandoned lock never removes a path a peer may hold. Its limit applies here
+ * unfenced: a holder paused past `LOCK_STALE_MS` writes after a peer superseded
+ * it, which the re-read of the pin inside `_writeDistance` narrows but does not
+ * close.
  */
-function _withToolWriteLock<T>(
+export function _withToolWriteLock<T>(
   consumer_root: string,
   session_id: string,
   when_busy: T,
@@ -896,44 +903,18 @@ function _withToolWriteLock<T>(
   now_ms: number = Date.now(),
 ): T {
   const lock = `${path.join(consumer_root, statePathFor(session_id))}.lock`;
-  let fd: number;
-  const acquire = (): number | null => {
-    try {
-      fs.mkdirSync(path.dirname(lock), { recursive: true });
-      return fs.openSync(lock, "wx");
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") return null;
-      let age: number;
-      try {
-        age = now_ms - fs.statSync(lock).mtimeMs;
-      } catch {
-        return null; // vanished under us — a peer is actively working
-      }
-      if (age < LOCK_STALE_MS) return null;
-      try {
-        fs.rmSync(lock, { force: true });
-        return fs.openSync(lock, "wx");
-      } catch {
-        return null; // a peer broke it first and now holds it
-      }
-    }
-  };
-  const held = acquire();
+  let held: Held | null;
+  try {
+    fs.mkdirSync(path.dirname(lock), { recursive: true });
+    held = tryAcquire(lock, { staleMs: LOCK_STALE_MS, now: () => now_ms });
+  } catch {
+    return when_busy;
+  }
   if (held === null) return when_busy;
-  fd = held;
   try {
     return body();
   } finally {
-    try {
-      fs.closeSync(fd);
-    } catch {
-      /* already closed */
-    }
-    try {
-      fs.rmSync(lock, { force: true });
-    } catch {
-      /* a peer broke a stale lock and owns the path now */
-    }
+    release(held);
   }
 }
 

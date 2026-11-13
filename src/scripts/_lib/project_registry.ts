@@ -18,6 +18,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { canonicalOrigin, projectsDir, remoteUrl, repoIdentity } from '../code_graph/repo_identity.js';
+import { acquire, release } from './generation_lock.js';
 import { git_common_dir } from './git_common_dir.js';
 import { write_atomic } from './fs_atomic.js';
 import type { EnvMap } from './user_global_paths.js';
@@ -115,37 +116,27 @@ export function writeRegistry(reg: Registry, opts: RegistryOptions = {}): void {
 const LOCK_WAIT_MS = 2_000;
 const LOCK_STALE_MS = 30_000;
 
-function sleep(ms: number): void {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
-
-/** Read, change and write under the registry lock; the change sees the latest file. */
+/**
+ * Read, change and write under the registry lock; the change sees the latest file.
+ *
+ * The lock is a directory generation lock (`generation_lock.ts`): an abandoned
+ * `registry.lock` is superseded by `registry.lock.<g>`, never removed from under
+ * a peer, and the release ages its generation instead of removing it. Its limit,
+ * unfenced here: a holder paused past `LOCK_STALE_MS` writes after a peer
+ * superseded it, and the later write wins.
+ */
 export function updateRegistry<T>(fn: (reg: Registry) => T, opts: RegistryOptions = {}): T {
     const lock = path.join(registryDir(opts), 'registry.lock');
     fs.mkdirSync(path.dirname(lock), { recursive: true });
-    const deadline = Date.now() + LOCK_WAIT_MS;
-    for (;;) {
-        try {
-            fs.mkdirSync(lock);
-            break;
-        } catch (e) {
-            if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
-            try {
-                if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) fs.rmSync(lock, { recursive: true, force: true });
-            } catch {
-                /* released meanwhile */
-            }
-            if (Date.now() > deadline) throw new Error(`project registry is locked: ${lock}`);
-            sleep(25);
-        }
-    }
+    const held = acquire(lock, { staleMs: LOCK_STALE_MS, dir: true, waitMs: LOCK_WAIT_MS, spinMs: 25 });
+    if (held === null) throw new Error(`project registry is locked: ${lock}`);
     try {
         const reg = readRegistry(opts);
         const out = fn(reg);
         writeRegistry(reg, opts);
         return out;
     } finally {
-        fs.rmSync(lock, { recursive: true, force: true });
+        release(held);
     }
 }
 
