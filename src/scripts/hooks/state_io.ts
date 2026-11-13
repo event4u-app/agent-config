@@ -26,20 +26,21 @@
  *
  * Cross-platform notes
  * --------------------
- * - Node has no `flock`. We emulate the exclusive lock with an
- *   `O_CREAT | O_EXCL` lockfile (`.dispatcher.lock`) acquired with a
- *   bounded spin, then released by truncating back to empty so the
- *   sentinel file still lives alongside the target (the Python `fcntl`
- *   path leaves the lock file in place too). The atomic publish is the
+ * - Node has no `flock`. The exclusive lock is the generation lock
+ *   (`_lib/generation_lock.ts`): `O_CREAT | O_EXCL` companions
+ *   `.dispatcher.lock.held[.<g>]` acquired with a bounded spin; a release
+ *   ages its own companion and leaves it in place. The atomic publish is the
  *   `renameSync`; torn-write risk is bounded the same way as POSIX.
- * - The lock file lives under `agents/runtime/state/` which is gitignored.
- * - The lock is process-scoped, not session-scoped: each call opens,
- *   locks, writes, releases, closes. No long-lived file handles.
+ * - The lock files live under `agents/runtime/state/` which is gitignored.
+ * - The lock is process-scoped, not session-scoped: each call locks,
+ *   writes, releases. No long-lived file handles.
  */
 
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+
+import { acquire, release, type Held } from "../_lib/generation_lock.js";
 
 export const LOCK_BASENAME = ".dispatcher.lock";
 
@@ -340,170 +341,59 @@ export const LOCK_ACQUIRE_DEADLINE_MS = 5_000;
 /** One spin's sleep. Small enough that the deadline is a real bound. */
 const LOCK_SPIN_SLEEP_MS = 2;
 
-/** Real sleep without async — `Atomics.wait` on a throwaway buffer. */
-function _sleep(ms: number): void {
-  const sab = new Int32Array(new SharedArrayBuffer(4));
-  Atomics.wait(sab, 0, 0, ms);
-}
-
 /**
  * Take the cross-process lock for `lock_path`, or report that it is held.
  *
- * Node has no `flock`, so exclusion comes from an `O_EXCL` companion
- * (`<lock>.held`) removed on release; the visible sentinel is kept.
+ * The protocol is the generation lock (`_lib/generation_lock.ts`): a stale
+ * guard is superseded by creating the next generation with `O_EXCL`, never by
+ * removing the path a peer may hold, and a release ages its own generation
+ * instead of removing it. The stat-then-remove reclaim it replaces let two
+ * callers that judged one abandoned guard both acquire, and an unconditional
+ * release delete the guard of the peer that had superseded a paused holder
+ * (`tests/scripts/lock_sites_interleavings.test.ts`).
  *
- * ## What was wrong before, precisely
+ * The companion's AGE decides reclamation, never how long this caller waited:
+ * reclamation needs `LOCK_STALE_MS` of inactivity, which only an abandoned lock
+ * reaches. A blocking caller that reaches its deadline reports failure; a
+ * non-blocking one (`post_tool_use`, which must never wait) makes one attempt,
+ * and still supersedes an abandoned guard on it.
  *
- * The reclaim branch was commented `// Stale companion — reclaim it` and
- * examined the companion in NO way: no mtime, no age, no owner. It fired on
- * `Date.now() - start > deadlineMs` — a property of how long THIS caller had
- * waited, not of the companion's health. So it was a patience check wearing the
- * name of a staleness check, and a caller that merely waited long enough
- * deleted a perfectly live peer's lock.
+ * Breaking is now safe for `strict` callers too, so they break an abandoned
+ * guard like everyone else: refusing it left a dead holder blocking that
+ * session's pins until the retention prune. `strict` still refuses to proceed
+ * without a guard when the companion cannot be created at all.
  *
- * Two consequences followed, and the second is the worse one:
+ * Limit, named here because the lock cannot close it: a holder paused past
+ * `LOCK_STALE_MS` keeps writing after a peer has superseded it. No caller here
+ * fences its publish with the held generation; every critical section is a
+ * read, a mutate and a rename, measured in milliseconds against 30 seconds.
  *
- *   - `start` was never reset before `continue`, and the deadline test sat
- *     BEFORE the sleep. So the first timeout made the sleep permanently
- *     unreachable: every later iteration took the reclaim branch and looped
- *     with no pause at all. A pauseless spin was the end state of any call that
- *     touched the deadline once.
- *   - Two callers both past their deadline evicted each other's companion
- *     without bound — each one's "reclaim" destroyed the exclusion the other
- *     had just acquired, so neither held a lock while both believed they did.
- *
- * ## What holds now
- *
- * The companion's AGE decides reclamation, and nothing else. A fresh companion
- * is never removed, by any caller, at any wait duration — a blocking caller
- * that reaches its deadline reports failure instead of evicting. Reclamation
- * requires `LOCK_STALE_MS` of inactivity, which only an abandoned lock reaches,
- * so mutual eviction is gone rather than merely rarer.
- *
- * Every retry path either sleeps or has just made real progress (the companion
- * vanished, or a genuinely abandoned one was removed), so no path reaches a
- * sleepless retry loop.
- *
- * ## `blocking: false` — the hot-path acquire
- *
- * `post_tool_use` runs on every tool call and must never wait. A non-blocking
- * caller returns on the first `EEXIST` with no spin at all, so it cannot cross
- * a deadline — which makes the reclaim branch UNREACHABLE for it rather than
- * merely rarer. That is why the roadmap treats the non-blocking acquire as
- * subsuming the reclaim fix rather than complementing it; the reclaim fix is
- * still needed for the blocking callers, which is why both landed.
- *
- * An abandoned companion is still reclaimed on the non-blocking path: skipping
- * that would let one crashed process wedge the hot path for 30 seconds, which
- * is the wedge the never-block contract exists to prevent.
- *
- * Returns the sentinel fd, or `null` when the lock is held by a live peer.
- * `null` is NOT a failure to handle generically — the two callers below take
- * deliberately opposite actions on it, for reasons stated at each.
+ * Returns the held generation, `null` when a live peer holds it (or a strict
+ * caller could not create a guard), or `false` when a non-strict caller
+ * proceeds unguarded because the companion cannot be created (a read-only
+ * mount, a vanished parent): the failure mode there is a lost guard, and the
+ * alternative is a lost write. The callers below take deliberately different
+ * actions on `null`, for reasons stated at each.
  */
 function _acquire_lock(
   lock_path: string,
   options: { blocking?: boolean; strict?: boolean } = {},
-): number | null {
-  const blocking = options.blocking ?? true;
-  // Open (and keep) the sentinel lock file with O_CREAT | O_RDWR — never
-  // truncated, just an fd, exactly like the Python fcntl path. The file
-  // stays on disk alongside the target after release.
-  const fd = fs.openSync(lock_path, "a", 0o644);
-  const held = lock_path + ".held";
-  const give_up = (): null => {
-    try {
-      fs.closeSync(fd);
-    } catch {
-      /* ignore */
-    }
-    return null;
-  };
-  const start = Date.now();
-  for (;;) {
-    try {
-      const heldFd = fs.openSync(held, "wx", 0o644);
-      fs.closeSync(heldFd);
-      return fd;
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") {
-        // Unexpected error (a read-only mount, a vanished parent) — proceed
-        // without the companion guard rather than wedge the never-block hook
-        // contract. Pre-existing behaviour, deliberately retained: the failure
-        // mode here is a lost guard, and the alternative is a lost write.
-        // `strict` callers (session pins) prefer the reported failure: a write
-        // without exclusion can silently drop a user's constraint.
-        return options.strict === true ? give_up() : fd;
-      }
-      // EEXIST: somebody holds it. Decide from the COMPANION, never from how
-      // long we have waited.
-      let age_ms: number;
-      try {
-        age_ms = Date.now() - fs.statSync(held).mtimeMs;
-      } catch {
-        // Usually vanished between the open and the stat — the holder just
-        // released. But a guard that persistently refuses both creation and
-        // stat (a dangling symlink, a denied directory) would spin here
-        // forever, so this retry is paced and bounded like every other — and a
-        // non-blocking caller does not wait for it at all.
-        if (!blocking) return give_up();
-        _sleep(LOCK_SPIN_SLEEP_MS);
-        if (Date.now() - start > LOCK_ACQUIRE_DEADLINE_MS) return give_up();
-        continue;
-      }
-      if (age_ms >= LOCK_STALE_MS && options.strict === true) {
-        // Two callers that judge the same abandoned guard can both remove it
-        // and both acquire (stat-then-remove deletes whatever is there by
-        // then). A strict caller prefers a reported failure: it never breaks a
-        // guard. Session pins are the only strict caller, so an abandoned
-        // guard there blocks that session's pins (each attempt reported) until
-        // the retention prune removes the gone session's files.
-        return give_up();
-      }
-      if (age_ms >= LOCK_STALE_MS) {
-        // A genuine staleness check: the companion itself has been untouched
-        // for longer than any live critical section here can last. Removing it
-        // is progress, so the immediate retry is bounded.
-        let removed = true;
-        try {
-          fs.rmSync(held, { force: true });
-        } catch {
-          // A peer reclaimed it first (the retry sees the new one), or it cannot
-          // be removed at all — then retrying at once would spin forever.
-          removed = false;
-        }
-        if (removed) continue;
-        if (!blocking) return give_up();
-        _sleep(LOCK_SPIN_SLEEP_MS);
-        if (Date.now() - start > LOCK_ACQUIRE_DEADLINE_MS) return give_up();
-        continue;
-      }
-      // A LIVE peer holds it.
-      if (!blocking) {
-        return give_up();
-      }
-      if (Date.now() - start > LOCK_ACQUIRE_DEADLINE_MS) {
-        // Waited long enough. Report failure — never evict a fresh companion,
-        // which is exactly the eviction that made two impatient callers destroy
-        // each other's exclusion.
-        return give_up();
-      }
-      _sleep(LOCK_SPIN_SLEEP_MS);
-    }
+): Held | false | null {
+  try {
+    return acquire(`${lock_path}.held`, {
+      staleMs: LOCK_STALE_MS,
+      waitMs: options.blocking === false ? 0 : LOCK_ACQUIRE_DEADLINE_MS,
+      spinMs: LOCK_SPIN_SLEEP_MS,
+    });
+  } catch {
+    return options.strict === true ? null : false;
   }
 }
 
-function _release_lock(fd: number, lock_path: string): void {
+function _release_lock(held: Held | false): void {
+  if (held === false) return;
   try {
-    fs.closeSync(fd);
-  } catch {
-    /* ignore */
-  }
-  // Drop the O_EXCL companion so the next writer can re-acquire; the
-  // visible `.dispatcher.lock` sentinel is left in place (the fcntl path
-  // keeps its lock file alongside the target too).
-  try {
-    fs.rmSync(lock_path + ".held", { force: true });
+    release(held);
   } catch {
     /* ignore */
   }
@@ -513,12 +403,10 @@ function _release_lock(fd: number, lock_path: string): void {
  * Publish `text` at `target` atomically. CALLER MUST HOLD THE LOCK.
  *
  * Split out of `_atomic_write_text` so a read-modify-write can hold ONE lock
- * across all three steps. The `O_EXCL` companion in `_acquire_lock` is not
- * reentrant: nesting an acquire inside a held lock spins to the 5-second
- * deadline, reclaims its own companion as stale, and proceeds — so it would
- * "work" while costing five seconds per call and silently dropping the mutual
- * exclusion it was there for. That is why this is a separate function rather
- * than a nested call.
+ * across all three steps. The lock in `_acquire_lock` is not reentrant: an
+ * acquire nested inside a held lock sees its own fresh guard as a live peer and
+ * waits out the 5-second deadline. That is why this is a separate function
+ * rather than a nested call.
  */
 function _publish_text_locked(target: string, text: string): void {
   const tmp = target + `.tmp.${process.pid}`;
@@ -549,16 +437,15 @@ function _publish_text_locked(target: string, text: string): void {
  * the peer's lock intact.
  */
 function _atomic_write_text(target: string, text: string): void {
-  const lock_path = _lock_path(path.dirname(target));
-  const fd = _acquire_lock(lock_path);
-  if (fd === null) {
+  const held = _acquire_lock(_lock_path(path.dirname(target)));
+  if (held === null) {
     _publish_text_locked(target, text);
     return;
   }
   try {
     _publish_text_locked(target, text);
   } finally {
-    _release_lock(fd, lock_path);
+    _release_lock(held);
   }
 }
 
@@ -883,10 +770,13 @@ export function prune_stale_session_states(
       //
       // Safe to remove unconditionally at this point: the state file is gone,
       // so no live writer can be holding a lock for it — and a writer that
-      // arrives afterwards creates both anew.
-      for (const suffix of [".lock", ".lock.held"]) {
+      // arrives afterwards creates both anew. The guard is a generation family
+      // (`.lock.held`, `.lock.held.<g>`), so every member goes.
+      const own = path.basename(full);
+      for (const n of entries) {
+        if (n !== `${own}.lock` && n !== `${own}.lock.held` && !n.startsWith(`${own}.lock.held.`)) continue;
         try {
-          fs.rmSync(`${full}${suffix}`, { force: true });
+          fs.rmSync(path.join(dir, n), { force: true });
         } catch {
           /* never a reason to fail a prune */
         }
@@ -1088,16 +978,15 @@ export function update_text_under_lock(
   // one commit earlier; leaving it there would have made
   // `dispatch-issues.jsonl` serialise against every unrelated
   // `atomic_write_text` in the state dir.
-  const lock_path = _target_lock_path(targetPath);
-  let fd: number | null;
+  let held: Held | false | null;
   try {
-    fd = _acquire_lock(lock_path, { blocking: options.blocking ?? true, strict: options.strict === true });
+    held = _acquire_lock(_target_lock_path(targetPath), { blocking: options.blocking ?? true, strict: options.strict === true });
   } catch {
     return "failed";
   }
   // FAIL CLOSED, for the same reason the JSON sibling does: an append without
   // exclusion is the truncating write this function exists to prevent.
-  if (fd === null) return "failed";
+  if (held === null) return "failed";
   try {
     let loaded: string | null = null;
     try {
@@ -1114,7 +1003,7 @@ export function update_text_under_lock(
   } catch {
     return "failed";
   } finally {
-    _release_lock(fd, lock_path);
+    _release_lock(held);
   }
 }
 
@@ -1133,10 +1022,9 @@ export function update_json_under_lock<T>(
   }
   // FILE-keyed, not directory-keyed — see `_target_lock_path` for the measured
   // reason and for why `_atomic_write_text` deliberately keeps the shared one.
-  const lock_path = _target_lock_path(targetPath);
-  let fd: number | null;
+  let held: Held | false | null;
   try {
-    fd = _acquire_lock(lock_path, { blocking: options.blocking ?? true });
+    held = _acquire_lock(_target_lock_path(targetPath), { blocking: options.blocking ?? true });
   } catch {
     return "failed";
   }
@@ -1145,7 +1033,7 @@ export function update_json_under_lock<T>(
   // lock is reported rather than worked around. Reported as `failed` and not as
   // a fourth `busy` state on purpose: every fail-closed caller takes the same
   // action on both (stay silent), and a state nobody branches on goes stale.
-  if (fd === null) return "failed";
+  if (held === null) return "failed";
   try {
     let loaded: Partial<T> = {};
     try {
@@ -1165,6 +1053,6 @@ export function update_json_under_lock<T>(
   } catch {
     return "failed";
   } finally {
-    _release_lock(fd, lock_path);
+    _release_lock(held);
   }
 }
