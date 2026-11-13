@@ -29,7 +29,9 @@
  *
  * What it does not do: a holder paused past the stale threshold keeps running
  * after a peer superseded it. That is a lease without fencing, and no lock
- * without a fenced write closes it.
+ * without a fenced write closes it. It holds for every holder, strict or not:
+ * `breakStale: false` stops the caller that passes it from superseding, and
+ * protects a holder only on a lock every caller takes that way.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -39,6 +41,8 @@ export interface GenerationLockOptions {
     /**
      * `false`: never supersede a generation that went stale while held; take
      * over only one its holder released. A dead holder then blocks the lock.
+     * It binds this caller only; a holder is safe from supersession only if
+     * every caller of the lock passes it.
      */
     breakStale?: boolean;
     /** Each generation is a directory (`mkdir`) instead of a file. */
@@ -105,8 +109,8 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
     let g = 0;
     if (top !== undefined) {
         const age = (yield ['age', companion(lockPath, top)]) as number | null;
-        // Gone between the listing and the stat: only a superseder removes a
-        // generation, so a higher one exists and holds.
+        // Gone between the listing and the stat: a superseder removed it, so a
+        // higher one exists (a pruner removes only below the highest, too).
         // The listing reads 15 digits at most; a generation past them would be
         // invisible to it, so the family is exhausted there rather than skipped.
         if (age === null || age < staleMs || top >= MAX_GENERATION) return null;

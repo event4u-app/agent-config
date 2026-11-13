@@ -2001,6 +2001,17 @@ describe('council round 35 — bounds that hold for the lifetime of what can spe
         expect(fs.existsSync(liveBoundary)).toBe(true);
     });
 
+    // The pin locks protect a paused holder from supersession only because every
+    // caller of them is strict (state_io's `breakStale: false` binds the caller
+    // that passes it). A non-strict call added here would quietly end that.
+    it('every lock taken on a pin path is taken strict', () => {
+        const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'scripts', '_lib', 'session_pins.ts'), 'utf8');
+        const calls = src.match(/update_(?:text|json)_under_lock\(/g) ?? [];
+        const options = src.match(/\{ strict: true(?:, blocking: false)? \}\);|\{\s*strict: true,\s*\}\);/g) ?? [];
+        expect(calls.length).toBeGreaterThan(0);
+        expect(options.length).toBe(calls.length);
+    });
+
     it('retention never removes the highest generation of a gone session\'s lock', () => {
         savePins(tmp, 'gone', ['drop'], new Date().toISOString());
         savePins(tmp, 'gone', ['drop', 'again'], new Date().toISOString());

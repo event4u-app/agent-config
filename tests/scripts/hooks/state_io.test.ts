@@ -698,6 +698,25 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
         expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
     }, 30_000);
 
+    // Round 11: `strict` stops the strict caller from superseding; it does not
+    // protect a strict holder from a non-strict caller of the same lock. The
+    // session-pin paths are taken by strict callers only.
+    it('a strict holder paused past the threshold is superseded by a non-strict caller, never by a strict one', () => {
+        const target = path.join(tmp, 'mixed.json');
+        let inner: Record<string, string> = {};
+        update_text_under_lock(target, () => {
+            const held = fs.readdirSync(tmp).filter((n) => n.startsWith('mixed.json.lock.held'));
+            const old = (Date.now() - 2 * 30_000) / 1000;
+            for (const n of held) fs.utimesSync(path.join(tmp, n), old, old); // this holder pauses
+            inner = {
+                strict: update_text_under_lock(target, () => 'strict\n', { strict: true, blocking: false }),
+                lax: update_text_under_lock(target, () => 'lax\n', { blocking: false }),
+            };
+            return null;
+        }, { strict: true });
+        expect(inner).toEqual({ strict: 'failed', lax: 'written' });
+    });
+
     it('a released guard is taken over at once', () => {
         const target = path.join(tmp, 'released-strict.json');
         expect(update_text_under_lock(target, () => 'one\n', { strict: true })).toBe('written');

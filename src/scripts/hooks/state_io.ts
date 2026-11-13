@@ -366,7 +366,10 @@ const LOCK_SPIN_SLEEP_MS = 2;
  * without a guard when none can be created or the lock cannot be listed.
  *
  * Limit, named here because the lock cannot close it: a holder paused past
- * `LOCK_STALE_MS` keeps writing after a peer has superseded it. No caller here
+ * `LOCK_STALE_MS` keeps writing after a peer has superseded it — a strict
+ * holder too, if a non-strict caller takes the same lock. The session-pin
+ * paths are taken by strict callers only (`_lib/session_pins.ts`), so a pin
+ * holder is never superseded. No caller here
  * fences its publish with the held generation; every critical section is a
  * read, a mutate and a rename, measured in milliseconds against 30 seconds.
  *
