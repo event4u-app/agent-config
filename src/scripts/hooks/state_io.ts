@@ -429,6 +429,9 @@ function _publish_text_locked(target: string, text: string): void {
  * Pairing the two decisions in one place rather than picking one globally is
  * what keeps each caller's real failure mode addressed.
  *
+ * The same holds when no guard can be created or listed at all (`false`):
+ * the write lands unguarded, as it did before for an uncreatable guard.
+ *
  * This also preserves the pre-existing behaviour exactly. The old code reached
  * the same outcome by DELETING the peer's companion and proceeding, which wrote
  * the file and destroyed the peer's exclusion. This writes the file and leaves

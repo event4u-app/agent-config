@@ -2,8 +2,9 @@
  * A file or directory lock whose stale-break never removes a path another
  * caller may hold.
  *
- * Measured by `tests/scripts/generation_lock_interleavings.test.ts`; every
- * site that uses it by `tests/scripts/lock_sites_interleavings.test.ts`.
+ * Measured by `tests/scripts/generation_lock_interleavings.test.ts`; five of
+ * the modules that use it also by `tests/scripts/lock_sites_interleavings.test.ts`.
+ * Exclusion holds among callers of this protocol only (see generation 0 below).
  *
  * The guard is a family `<guard>`, `<guard>.1`, `<guard>.2`, …: generation 0 is
  * the bare path each caller passes, the name its stat-then-remove lock used. An
