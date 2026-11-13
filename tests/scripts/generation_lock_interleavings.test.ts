@@ -324,6 +324,11 @@ describe('generation lock — failures and options', () => {
         expect(fs.readdirSync(dir)).toEqual([path.basename(lockPath)]);
     });
 
+    it('a guard file is created owner-only', () => {
+        tryAcquire(lockPath, { staleMs: STALE_MS });
+        expect(fs.statSync(lockPath).mode & 0o777).toBe(0o600);
+    });
+
     it('names that are not canonical generations are not generations', () => {
         for (const n of ['01', '1.5', 'Infinity', '1e3', '']) fs.writeFileSync(`${lockPath}.${n}`, '');
         expect(execute(['list', lockPath])).toEqual([]);

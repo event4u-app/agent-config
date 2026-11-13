@@ -92,7 +92,7 @@ export function execute([op, f]: Step, now: () => number = Date.now): StepResult
         if (op === 'remove') return void fs.rmSync(f, { recursive: true, force: true });
         if (op === 'expire') return void fs.utimesSync(f, 0, 0);
         if (op === 'mkdir') fs.mkdirSync(f);
-        else fs.closeSync(fs.openSync(f, 'wx'));
+        else fs.closeSync(fs.openSync(f, 'wx', 0o600));
         return true;
     } catch (err) {
         if (op === 'age') return null;
@@ -124,9 +124,10 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
     // Back off if our listing was out of date and a later generation holds, or
     // if the generation we superseded is no longer the stale one we judged:
     // only its superseder removes it, and only after this check, so a winner
-    // always still finds it stale. Gone or fresh means a pruner retired the
-    // family and numbering restarted, so a caller that created that name since
-    // could hold beside us.
+    // always still finds it stale. Nothing in this protocol removes a family's
+    // highest generation, so gone or fresh means something outside it did (an
+    // older process, a manual delete); numbering may then have restarted, and a
+    // caller that created that name since could hold beside us.
     const again = top === undefined ? staleMs : ((yield ['age', companion(lockPath, top)]) as number | null) ?? 0;
     if ((after[after.length - 1] ?? g) > g || again < staleMs) {
         // Release, never remove: ours may be the highest generation, and the

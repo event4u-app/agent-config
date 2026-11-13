@@ -2006,10 +2006,20 @@ describe('council round 35 — bounds that hold for the lifetime of what can spe
     // that passes it). A non-strict call added here would quietly end that.
     it('every lock taken on a pin path is taken strict', () => {
         const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'scripts', '_lib', 'session_pins.ts'), 'utf8');
-        const calls = src.match(/update_(?:text|json)_under_lock\(/g) ?? [];
-        const options = src.match(/\{ strict: true(?:, blocking: false)? \}\);|\{\s*strict: true,\s*\}\);/g) ?? [];
+        // Each call's own argument list, matched by parentheses, so one call's
+        // options can never stand in for another's.
+        const argsOf = (at: number): string => {
+            let depth = 0;
+            for (let i = at; i < src.length; i += 1) {
+                if (src[i] === '(') depth += 1;
+                else if (src[i] === ')' && (depth -= 1) === 0) return src.slice(at, i + 1);
+            }
+            throw new Error('unbalanced call');
+        };
+        const calls = [...src.matchAll(/update_(?:text|json)_under_lock\(/g)].map((m) => argsOf((m.index ?? 0) + m[0].length - 1));
         expect(calls.length).toBeGreaterThan(0);
-        expect(options.length).toBe(calls.length);
+        // The options are the last argument: an object literal ending the call.
+        for (const c of calls) expect(c).toMatch(/,\s*\{[^{}]*\bstrict:\s*true\b[^{}]*\}\s*,?\s*\)$/);
     });
 
     it('retention never removes the highest generation of a gone session\'s lock', () => {
