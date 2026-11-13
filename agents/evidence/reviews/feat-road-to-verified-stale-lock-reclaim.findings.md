@@ -1,12 +1,12 @@
 # Findings: feat-road-to-verified-stale-lock-reclaim
-<!-- completion-review: v1 | reviewed: 2026-11-13 | scope: 52d62b56d59becd52bcccd5b207464f93bcfa0ce14eaa63d9a5c9510b53929f0 | diff: ca023b350ab12ab018b1b1ee6c9b425b1dc1c38a | reviewer: r2-fresh-subagent-feat-road-to-verified-stale-lock-reclaim | prompt_hash: 35b46a69ea3b9b1f0faa09458491b1675f3b0542c41c16bc3eeb101c183eedee | round: 5 -->
+<!-- completion-review: v1 | reviewed: 2026-11-13 | scope: 51a9251d6449da7064e4addd3e992751dcd9b0037db67f44ee5d7bec517069b5 | diff: d166447256da508752aa9585bae2737b2e32ea4b | reviewer: r2-fresh-subagent-feat-road-to-verified-stale-lock-reclaim | prompt_hash: 35b46a69ea3b9b1f0faa09458491b1675f3b0542c41c16bc3eeb101c183eedee | round: 5 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-feat-road-to-verified-stale-lock-reclaim"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-11-13 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: ca023b350ab12ab018b1b1ee6c9b425b1dc1c38a
-  scope_hash: 52d62b56d59becd52bcccd5b207464f93bcfa0ce14eaa63d9a5c9510b53929f0
+  diff_sha: d166447256da508752aa9585bae2737b2e32ea4b
+  scope_hash: 51a9251d6449da7064e4addd3e992751dcd9b0037db67f44ee5d7bec517069b5
   roadmap: agents/roadmaps/road-to-verified-stale-lock-reclaim.md
   roadmap_hash: 19474929c763ff7567351b4c5049bd27f947ebf4f3bce586b1fc11ca600e6dfe
   ac_hash: none
