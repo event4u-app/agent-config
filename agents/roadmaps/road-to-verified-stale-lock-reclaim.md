@@ -61,15 +61,30 @@ stale-lock break or a release, under any interleaving of three contenders.
 
 ## Phase 2 — the five sites
 
-- [ ] 2.1 `hooks/state_io.ts` acquire and release: the decided protocol, the 1.1 harness green, a link-back or restore failure never deletes a live lock, every retry bounded by the 5 s deadline and the non-blocking contract.
-- [ ] 2.2 `language_mirror_hook.ts` `_withToolWriteLock`: same protocol, same harness.
-- [ ] 2.3 `_lib/egress_session_table.ts` and `ai_council/budget_guard.ts`: same protocol, same harness.
-- [ ] 2.4 `_lib/project_registry.ts`: the directory lock, with the protocol extended to directories first.
-- [ ] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper.
-- [ ] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
+- [x] 2.1 `hooks/state_io.ts` acquire and release: the decided protocol, the 1.1 harness green, a link-back or restore failure never deletes a live lock, every retry bounded by the 5 s deadline and the non-blocking contract.
+      Done 2026-11-13: `_acquire_lock` calls `acquire` from `_lib/generation_lock.ts`; the release ages its generation. The helper grew a waiting `acquire` whose deadline counts sleep (so it bounds attempts too), best-effort removal of lower generations, and generation 0 named after each site's existing guard (`<lock>.held` here), so a process still on the old code sees a first-generation holder. A strict caller now breaks an abandoned guard too — the double grant that made it refuse is gone, and refusing left a dead holder blocking that session's pins until the prune. The 1.1 harness list is empty; the generalised harness `tests/scripts/lock_sites_interleavings.test.ts` (every `fs` call on the guard an injection point, three callers, an abandoned start and a paused-holder start) was run red first on `24f323151a`: non-blocking `A@8 break-lands-in-B → B+C`, `A@7 release-lands-in-B → B+C`, and the blocking variant red on both starts. Green after; the blocking variant is not kept in the suite (its 2,500-spin wait per nested schedule; the test file says why).
+- [x] 2.2 `language_mirror_hook.ts` `_withToolWriteLock`: same protocol, same harness.
+      Done 2026-11-13: `tryAcquire` on `<state>.lock` (one attempt, as before). Red first: `A@6 break-lands-in-B → B+C`, `A@5 release-lands-in-B → B+C`; green after.
+- [x] 2.3 `_lib/egress_session_table.ts` and `ai_council/budget_guard.ts`: same protocol, same harness.
+      Done 2026-11-13: both on `acquire` with their own waits (egress 1 s, ledger 3 s). Red first: egress `A@6 break-lands-in-B → B+C` and `A@5 release-lands-in-B → B+C`; ledger `A@8 break-lands-in-B → B+C` and `A@7 release-lands-in-B → B+C`. Green after.
+- [x] 2.4 `_lib/project_registry.ts`: the directory lock, with the protocol extended to directories first.
+      Done 2026-11-13: `dir: true` makes each generation a `mkdir`; `registry.lock` stays generation 0. Red first: `A@6 break-lands-in-B → B+C`, `A@9 release-lands-in-B → B+C`; green after.
+- [x] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper.
+      Done 2026-11-13: the search found three sites this step did not list. `advisories.ts` (the rename-aside shape round 55 rejected) and `ai_council/cli_call_budget.ts` (whose break compared `performance.now()` with an epoch mtime and so never fired) moved to the generation lock. The one remaining match, `code_graph/refresh_lock.ts:145`, is a different mechanism and stays: the stale judgement there is repeated under a second `mkdir` mutex, a release is nonce-checked, and its interleaving tests were ratified on 2026-10-24. A wider search for the defect class (exclusive create plus remove or rename) found one more rename-aside lock, `worktree_cleanup_check.ts` `takeRemovalLock`, moved too, and four that Phase 3 carries.
+- [x] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
+      Done 2026-11-13, the second option: each of the eight call sites states the unfenced limit at the lock, with what narrows it there (a millisecond critical section, the pin re-read, `git worktree remove` re-checking).
+
+## Phase 3 — the same defect class outside the grep
+
+Found by the 2.5 wider search on 2026-11-13; each keeps its own liveness rule (a pid, a lease), so each needs its own harness run rather than a mechanical swap.
+
+- [ ] 3.1 `_lib/roadmap_slug_lock.ts` (~190): rename-aside on a lock judged dead, plus a `write_atomic` overwrite when the read lands between a peer's create and its write.
+- [ ] 3.2 `_cli/upgrade_unattended.ts` (~214): rename-aside on a lock judged dead; the put-back `linkSync` fails with `EEXIST` and displaces a newer holder.
+- [ ] 3.3 `_lib/collector_supervision.ts` (~417): a dead incumbent pid, then remove and re-create; two fencers that judged one pid can both win.
+- [ ] 3.4 `quota_notice_hook.ts` (~99, ~276): claim markers expired by age and removed before the exclusive create; two callers re-claiming one key after eight days can both win.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-11-13 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -77,11 +92,13 @@ stale-lock break or a release, under any interleaving of three contenders.
 | 2 | Trading the race for a deadlock | implementation | A protocol that never breaks a stale guard cannot double-grant, but a dead holder then blocks its callers for good, as the strict pin callers do today. | 1.2 records the residual per site and which callers may block; each site in Phase 2 states its choice and tests it. | Phase 2 — the five sites |
 | 3 | A native lock breaks the install | product | A native advisory-lock addon would add a compiled dependency to a package consumers install with npx. | D1 weighs it against a single-writer process and a documented residual; no native dependency without its install matrix green. | Decisions |
 | 4 | A superseded holder keeps writing | implementation | A holder paused past `staleMs` writes after a peer has taken a higher generation; the lock alone cannot stop that write. | 2.6 either fences each write with the held generation or names the limit at every site | Phase 2 — the five sites |
+| 5 | A pid-keyed lock swapped mechanically | implementation | The Phase 3 locks judge liveness by pid or lease, not by age alone; replacing them with the age-only generation lock would break a live holder that is merely slow. | Each 3.x step keeps its liveness rule and runs the site harness red first. | Phase 3 — the same defect class outside the grep |
 
 ## Closes when
 
 Every step is `[x]`, each site's harness run was seen red before its fix, and
-the 2.5 search reports zero matches.
+the 2.5 search reports zero matches outside the helper and the ratified
+`code_graph/refresh_lock.ts` (2.5).
 
 ## Decisions
 
