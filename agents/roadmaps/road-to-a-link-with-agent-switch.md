@@ -251,18 +251,21 @@ Carried from council rounds 1–6 of the Phase 7 budget raise
 (`agents/evidence/council/agent-switch-hardening-ratification-r{1..6}-20261108.question.md`,
 all `refused`; merged on the owner's word with the question opt-in, D5).
 
-- [~] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
+- [x] **8.1 A writer the lock cannot evict.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> A Stop whose checkpoint build
       outlives the two-second stale break can lose its lock to a second Stop and
       still publish an older snapshot after it (round 6). Serialize in a way
       that cannot evict a live writer, or write checkpoint generations so an
       older one never replaces a newer one.
       verify: a two-process test with a writer held past the stale break.
-      Built 2026-11-11 on its own pull request: tickets a live holder never
-      loses, `<record>.lock` a directory 20.2.0 cannot remove, no removal of a
-      20.2.0 lock file, a cutover required over 20.2.0. Lock reviews r1-r3
+      Done: per-holder tickets a live holder never loses, merged on the owner's
+      word in #2976 against lock reviews r1-r3
       (`agents/evidence/council/agent-switch-lock-review-r*-20261111.question.md`)
-      refused: the liveness cost, and 20.2.0's own eviction. Merge is the owner's call.
-- [ ] **8.2 Interprocess evidence.** The concurrency tests run in one process
+      and released in 20.3.0. The version-change window stays the contract's
+      manual cutover; an automatic drain at activation was refused in r2 and is
+      not built, since only an opt-in user still on 20.2.0 meets the window.
+      Residual: a crashed 20.2.0 holder's file or a reused pid blocks that
+      session's record until the cutover or the record's prune.
+- [x] **8.2 Interprocess evidence.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
       and the checkpoint.
@@ -272,7 +275,7 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       against the fake agent-switch at one instant; all three red with the lock
       removed, in three runs. Not the full dispatcher: its process start costs
       seconds per run and adds nothing to the lock under test.
-      Reopened 2026-11-10 with 8.1; the tests ship with the lock rewrite.
+      Shipped with the lock in #2976, plus `switch_relay_lock_interleave`.
 - [ ] **8.3 Consent at execution, closed.** Ask agent-switch to mark
       `switch_decide` with `requiresUserInteraction` (counterpart roadmap
       `road-to-the-agent-config-link`), then show a live interactive prompt on
