@@ -5487,10 +5487,10 @@ index 0000000000000000000000000000000000000000..5930f73742244736d2dafde5d9023815
 +STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no
 +```
 diff --git a/agents/roadmaps/road-to-verified-stale-lock-reclaim.md b/agents/roadmaps/road-to-verified-stale-lock-reclaim.md
-index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..0ec96bd08f9345aeee9d54708edbcc9cb2c75f59 100644
+index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..b34ef2a3f22aa7068de311da452e4ad6c4fd601d 100644
 --- a/agents/roadmaps/road-to-verified-stale-lock-reclaim.md
 +++ b/agents/roadmaps/road-to-verified-stale-lock-reclaim.md
-@@ -61,15 +61,30 @@ stale-lock break or a release, under any interleaving of three contenders.
+@@ -61,15 +61,31 @@ stale-lock break or a release, under any interleaving of three contenders.
  
  ## Phase 2 — the five sites
  
@@ -5509,7 +5509,7 @@ index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..0ec96bd08f9345aeee9d54708edbcc9c
 +- [x] 2.4 `_lib/project_registry.ts`: the directory lock, with the protocol extended to directories first.
 +      Done 2026-11-13: `dir: true` makes each generation a `mkdir`; `registry.lock` stays generation 0. Red first: `A@6 break-lands-in-B → B+C`, `A@9 release-lands-in-B → B+C`; green after.
 +- [x] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper.
-+      Done 2026-11-13: the search found three sites this step did not list. `advisories.ts` (the rename-aside shape round 55 rejected) and `ai_council/cli_call_budget.ts` (whose break compared `performance.now()` with an epoch mtime and so never fired) moved to the generation lock. The one remaining match, `code_graph/refresh_lock.ts:145`, is a different mechanism and stays: the stale judgement there is repeated under a second `mkdir` mutex, a release is nonce-checked, and its interleaving tests were ratified on 2026-10-24. A wider search for the defect class (exclusive create plus remove or rename) found one more rename-aside lock, `worktree_cleanup_check.ts` `takeRemovalLock`, moved too, and four that Phase 3 carries.
++      Done 2026-11-13: the search found three sites this step did not list. `advisories.ts` (the rename-aside shape round 55 rejected) and `ai_council/cli_call_budget.ts` (whose break compared `performance.now()` with an epoch mtime and so never fired) moved to the generation lock. The one remaining match, `code_graph/refresh_lock.ts:145`, is a different mechanism and stays: the stale judgement there is repeated under a second `mkdir` mutex, a release is nonce-checked, and its interleaving tests were ratified on 2026-10-24. A wider search for the defect class (exclusive create plus remove or rename) found one more rename-aside lock, `worktree_cleanup_check.ts` `takeRemovalLock`, moved too, and four that Phase 3 carries. These three converted sites (`advisories`, `cli_call_budget`, `worktree_cleanup_check`) are not in the site harness and were not run red first; they rest on their own suites, the helper's step explorer, and for the CLI budget a test that an abandoned lock is superseded at once (on origin/main it waited out the second and proceeded unlocked). A release now ages a lock file instead of removing it, so the session-state and egress-table pruners remove each lock generation with its file (R2 completion review, finding 1).
 +- [x] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
 +      Done 2026-11-13, the second option: each of the eight call sites states the unfenced limit at the lock, with what narrows it there (a millisecond critical section, the pin re-read, `git worktree remove` re-checking).
 +
@@ -5521,6 +5521,7 @@ index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..0ec96bd08f9345aeee9d54708edbcc9c
 +- [ ] 3.2 `_cli/upgrade_unattended.ts` (~214): rename-aside on a lock judged dead; the put-back `linkSync` fails with `EEXIST` and displaces a newer holder.
 +- [ ] 3.3 `_lib/collector_supervision.ts` (~417): a dead incumbent pid, then remove and re-create; two fencers that judged one pid can both win.
 +- [ ] 3.4 `quota_notice_hook.ts` (~99, ~276): claim markers expired by age and removed before the exclusive create; two callers re-claiming one key after eight days can both win.
++- [ ] 3.5 `_lib/generation_lock.ts` `tryAcquire`: a listing that throws after this caller's create leaves its fresh generation behind with no holder; a strict caller then never supersedes it until the retention prune. Expire the created generation before rethrowing (R2 completion review, finding 3; deferred because the helper is a ratified hook-plumbing file and the fix carries its own byte figure).
  
  ## Risk Register
 -<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
@@ -5528,7 +5529,7 @@ index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..0ec96bd08f9345aeee9d54708edbcc9c
  
  | Rank | Item | Risk type | Description | Mitigation | Anchored under |
  |------|------|-----------|-------------|------------|----------------|
-@@ -77,11 +92,13 @@ stale-lock break or a release, under any interleaving of three contenders.
+@@ -77,11 +93,13 @@ stale-lock break or a release, under any interleaving of three contenders.
  | 2 | Trading the race for a deadlock | implementation | A protocol that never breaks a stale guard cannot double-grant, but a dead holder then blocks its callers for good, as the strict pin callers do today. | 1.2 records the residual per site and which callers may block; each site in Phase 2 states its choice and tests it. | Phase 2 — the five sites |
  | 3 | A native lock breaks the install | product | A native advisory-lock addon would add a compiled dependency to a package consumers install with npx. | D1 weighs it against a single-writer process and a documented residual; no native dependency without its install matrix green. | Decisions |
  | 4 | A superseded holder keeps writing | implementation | A holder paused past `staleMs` writes after a peer has taken a higher generation; the lock alone cannot stop that write. | 2.6 either fences each write with the held generation or names the limit at every site | Phase 2 — the five sites |
@@ -5536,8 +5537,9 @@ index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..0ec96bd08f9345aeee9d54708edbcc9c
  
  ## Closes when
  
- Every step is `[x]`, each site's harness run was seen red before its fix, and
+-Every step is `[x]`, each site's harness run was seen red before its fix, and
 -the 2.5 search reports zero matches.
++Every step is `[x]`, each Phase 2 site's harness run was seen red before its fix, and
 +the 2.5 search reports zero matches outside the helper and the ratified
 +`code_graph/refresh_lock.ts` (2.5).
  
@@ -5574,7 +5576,7 @@ index 5b405df712144b14e761e44b9026eee5dcf4e18c..5a0fc367540941f3aac275d1570fc800
              "derivation": "Measured 34,414 bytes on 2026-11-09 (an unpin that matches nothing named in the brief notice too, capture under a strict file lock that never replaces an unreadable file, eligibility computed in linear time from fence, paste and injected-region spans of the original text (attributed envelopes included, opener recognition with no attribute grammar, a lead that ends at the first line containing anything tag-like or at a host frame recognised mid-prompt, a forward-only paste-tag scanner, fences read by a prefix scan, directives that were not applied counted and reported, a directive line carrying a closing tag, an attributed opener or a bare opener closed on a later line refused, checked in linear time), lone surrogates normalised, caps, lossless per-session state that is never overwritten when it cannot be read whole, a reported restore failure, pins inert in a replay (no capture, restore, restatement or subagent read), the once-per-compaction delivery and restatement coordinated across prompt and tool order with one restore record per session changed only under the per-file lock, tried once and never waited for, each delivery adding the compaction's stamp to a set of acknowledged stamps in that lock (the most recent 512), a record that exists but cannot be read left untouched and acted on by nothing on either path, one admission rule for every compaction stamp so an oversized one is unknown and never recorded, pins read inside that transaction, the tool-call restore keyed on its own stamp and never re-delivering a delivered record, a once-a-day retention prune that keeps a live session's restore record by its pin file's activity and removes a gone session's boundary and lock files, the subagent reader, activity-based retention, restore text, and the parts of `_lib/prompt_shape` and `hooks/state_io` they import). The ceiling is that reading plus about 3 %, rounded, with no growth queued. Loaded by `language-mirror` through `hooks/session_pins_loader.ts` on a prompt carrying a `pin:` or `unpin:` line, on a prompt that owes a delivery or restatement, and on the one tool call after a compaction; a missing chunk is reported on the capture turn and on the tool-call restore, and costs the pin restore, never the language restore or the dispatch."
          },
 diff --git a/src/scripts/_lib/egress_session_table.ts b/src/scripts/_lib/egress_session_table.ts
-index 055c34bfaf55de53962813108536fbdec65daa38..3f2f28dd0488b342eaa557ae0b235a6854d36933 100644
+index 055c34bfaf55de53962813108536fbdec65daa38..9cd75547d924563f70d2cddd6bcb5d05c20ceb1c 100644
 --- a/src/scripts/_lib/egress_session_table.ts
 +++ b/src/scripts/_lib/egress_session_table.ts
 @@ -18,6 +18,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
@@ -5641,6 +5643,15 @@ index 055c34bfaf55de53962813108536fbdec65daa38..3f2f28dd0488b342eaa557ae0b235a68
      }
  }
  
+@@ -503,6 +489,8 @@ export function pruneSessionTables(dir: string, now: number = Date.now()): numbe
+         }
+         if (now - at > EGRESS_SESSION_RETENTION_MS) {
+             fs.rmSync(file, { force: true });
++            // Its lock generations go with it: a release ages them, never removes them.
++            for (const n of names) if (/^\.lock(\.\d+)?$/.test(n.slice(name.length)) && n.startsWith(name)) fs.rmSync(path.join(dir, n), { force: true });
+             removed += 1;
+         }
+     }
 diff --git a/src/scripts/_lib/generation_lock.ts b/src/scripts/_lib/generation_lock.ts
 index 9352cb681a4171df01436f2e0797c0e23139f540..f7a1ee9105b071f0a2cd3045b3540337db4a77eb 100644
 --- a/src/scripts/_lib/generation_lock.ts
@@ -6168,7 +6179,7 @@ index 655d464460e3a9653992632dadf0dfb6bbd69789..044110965daf737566091abc8c564b9c
 -    }
 -}
 diff --git a/src/scripts/hooks/state_io.ts b/src/scripts/hooks/state_io.ts
-index 43f560081d3c224ddd842dad1c0e40456aab4e23..cb8322311d3042d1bb63a105e005a7ec753544d3 100644
+index 43f560081d3c224ddd842dad1c0e40456aab4e23..0d416ca68e582ffbe1c4d758bdbd984a68be9bba 100644
 --- a/src/scripts/hooks/state_io.ts
 +++ b/src/scripts/hooks/state_io.ts
 @@ -26,21 +26,22 @@
@@ -6466,24 +6477,25 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..cb8322311d3042d1bb63a105e005a7ec
    }
  }
  
-@@ -883,10 +772,13 @@ export function prune_stale_session_states(
+@@ -883,10 +772,14 @@ export function prune_stale_session_states(
        //
        // Safe to remove unconditionally at this point: the state file is gone,
        // so no live writer can be holding a lock for it — and a writer that
 -      // arrives afterwards creates both anew.
 -      for (const suffix of [".lock", ".lock.held"]) {
-+      // arrives afterwards creates both anew. The guard is a generation family
-+      // (`.lock.held`, `.lock.held.<g>`), so every member goes.
++      // arrives afterwards creates both anew. A guard is a generation family a
++      // release ages but never removes (`.lock[.held][.<g>]`), so every member
++      // goes.
 +      const own = path.basename(full);
 +      for (const n of entries) {
-+        if (n !== `${own}.lock` && n !== `${own}.lock.held` && !n.startsWith(`${own}.lock.held.`)) continue;
++        if (!n.startsWith(own) || !/^\.lock(\.held)?(\.\d+)?$/.test(n.slice(own.length))) continue;
          try {
 -          fs.rmSync(`${full}${suffix}`, { force: true });
 +          fs.rmSync(path.join(dir, n), { force: true });
          } catch {
            /* never a reason to fail a prune */
          }
-@@ -1088,16 +980,16 @@ export function update_text_under_lock(
+@@ -1088,16 +981,16 @@ export function update_text_under_lock(
    // one commit earlier; leaving it there would have made
    // `dispatch-issues.jsonl` serialise against every unrelated
    // `atomic_write_text` in the state dir.
@@ -6505,7 +6517,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..cb8322311d3042d1bb63a105e005a7ec
    try {
      let loaded: string | null = null;
      try {
-@@ -1114,7 +1006,7 @@ export function update_text_under_lock(
+@@ -1114,7 +1007,7 @@ export function update_text_under_lock(
    } catch {
      return "failed";
    } finally {
@@ -6514,7 +6526,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..cb8322311d3042d1bb63a105e005a7ec
    }
  }
  
-@@ -1133,10 +1025,9 @@ export function update_json_under_lock<T>(
+@@ -1133,10 +1026,9 @@ export function update_json_under_lock<T>(
    }
    // FILE-keyed, not directory-keyed — see `_target_lock_path` for the measured
    // reason and for why `_atomic_write_text` deliberately keeps the shared one.
@@ -6527,7 +6539,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..cb8322311d3042d1bb63a105e005a7ec
    } catch {
      return "failed";
    }
-@@ -1145,7 +1036,8 @@ export function update_json_under_lock<T>(
+@@ -1145,7 +1037,8 @@ export function update_json_under_lock<T>(
    // lock is reported rather than worked around. Reported as `failed` and not as
    // a fourth `busy` state on purpose: every fail-closed caller takes the same
    // action on both (stay silent), and a state nobody branches on goes stale.
@@ -6537,7 +6549,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..cb8322311d3042d1bb63a105e005a7ec
    try {
      let loaded: Partial<T> = {};
      try {
-@@ -1165,6 +1057,6 @@ export function update_json_under_lock<T>(
+@@ -1165,6 +1058,6 @@ export function update_json_under_lock<T>(
    } catch {
      return "failed";
    } finally {
@@ -7138,7 +7150,7 @@ index d5976f6e9cdddce97d0f951295ab8466ff4e417b..7fc2254d5857d01afbe61c88c796b319
          // A holder whose guard went stale while it held can overlap one
          // superseder: that is the lease without fencing the module names. What
 diff --git a/tests/scripts/hooks/state_io.test.ts b/tests/scripts/hooks/state_io.test.ts
-index 8adc33472f893eee2af5ed67b4014042039a2d5e..c90a9456a01f7a4e27f396061f77eef18bcf2cde 100644
+index 8adc33472f893eee2af5ed67b4014042039a2d5e..17f415a9d6822cbc23d8e0b37261af7006477a76 100644
 --- a/tests/scripts/hooks/state_io.test.ts
 +++ b/tests/scripts/hooks/state_io.test.ts
 @@ -56,8 +56,8 @@ describe('state_io — atomic_write_json', () => {
@@ -7165,7 +7177,28 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c90a9456a01f7a4e27f396061f77eef1
      });
  
      it('writes Python-style indent=2 JSON with trailing newline', () => {
-@@ -606,21 +608,44 @@ describe('update_text_under_lock — strict exclusion', () => {
+@@ -563,14 +565,18 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
+         fs.writeFileSync(stale, '{}', 'utf8');
+         fs.writeFileSync(`${stale}.lock`, '', 'utf8');
+         fs.writeFileSync(`${stale}.lock.held`, '', 'utf8');
++        // Generation-lock members a release leaves behind, aged rather than
++        // removed: `<lock>.<g>` (a guard passed bare) and `<lock>.held.<g>`.
++        for (const g of ['.lock.2', '.lock.held.3']) fs.writeFileSync(`${stale}${g}`, '', 'utf8');
++        fs.writeFileSync(`${stale}.lock.note`, '', 'utf8'); // not a generation: kept
+         const old = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+         fs.utimesSync(stale, old, old);
+ 
+         const removed = prune_stale_session_states(dir(), Date.now(), 7);
+         expect(removed).toBe(1);
+         expect(fs.existsSync(stale)).toBe(false);
+-        expect(fs.existsSync(`${stale}.lock`)).toBe(false);
+-        expect(fs.existsSync(`${stale}.lock.held`)).toBe(false);
++        for (const g of ['.lock', '.lock.held', '.lock.2', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
++        expect(fs.existsSync(`${stale}.lock.note`)).toBe(true);
+     });
+ });
+ 
+@@ -606,21 +612,44 @@ describe('update_text_under_lock — strict exclusion', () => {
          expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
      });
  
@@ -7214,7 +7247,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c90a9456a01f7a4e27f396061f77eef1
          const target = path.join(tmp, `stuck-${strict}.json`);
          fs.writeFileSync(target, 'before\n');
          const held = `${target}.lock.held`;
-@@ -639,14 +664,16 @@ describe('update_text_under_lock — a stale guard that cannot be removed', () =
+@@ -639,14 +668,16 @@ describe('update_text_under_lock — a stale guard that cannot be removed', () =
          } finally {
              spy.mockRestore();
          }
@@ -7236,7 +7269,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c90a9456a01f7a4e27f396061f77eef1
  describe('update_text_under_lock — a strict caller never reclaims a stale guard', () => {
      it.each([[true], [false]])('blocking=%s: an abandoned guard is left in place and the write is refused', (blocking) => {
          const target = path.join(tmp, `abandoned-${blocking}.json`);
-@@ -663,6 +690,13 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
+@@ -663,6 +694,13 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
          expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
      }, 30_000);
  
@@ -7250,7 +7283,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c90a9456a01f7a4e27f396061f77eef1
      it('a non-strict caller still reclaims it', () => {
          const target = path.join(tmp, 'abandoned-lax.json');
          fs.writeFileSync(target, 'before\n');
-@@ -675,6 +709,46 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
+@@ -675,6 +713,46 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
      });
  });
  
@@ -7297,7 +7330,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c90a9456a01f7a4e27f396061f77eef1
  describe('update_text_under_lock — a guard that can be neither created nor read', () => {
      it.each([[true], [false]])('strict=%s: a dangling .held symlink gives up at the deadline instead of spinning forever', (strict) => {
          const target = path.join(tmp, `dangling-${strict}.json`);
-@@ -689,21 +763,9 @@ describe('update_text_under_lock — a guard that can be neither created nor rea
+@@ -689,21 +767,9 @@ describe('update_text_under_lock — a guard that can be neither created nor rea
  });
  
  describe('update_text_under_lock — a non-blocking caller never waits', () => {
@@ -7354,10 +7387,10 @@ index 6c560e21ed84cc747770971ed77b3142a307969f..6f55104fbeca6b6de26c4a85c502c434
    it("never fires when no pin exists", () => {
 diff --git a/tests/scripts/lock_sites_interleavings.test.ts b/tests/scripts/lock_sites_interleavings.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..64b75fe291cb821e61447adb1b3234b7b32a0152
+index 0000000000000000000000000000000000000000..d98447d618ec49c07e1fc2440f6e40c74d7382b8
 --- /dev/null
 +++ b/tests/scripts/lock_sites_interleavings.test.ts
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,143 @@
 +// Every file lock that breaks a stale guard, run through the same three-caller
 +// interleaving harness (road-to-verified-stale-lock-reclaim, Phase 2).
 +//
@@ -7382,7 +7415,8 @@ index 0000000000000000000000000000000000000000..64b75fe291cb821e61447adb1b3234b7
 +import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 +
 +import { _withLedgerLock } from '../../src/scripts/ai_council/budget_guard.js';
-+import { updateTable, sessionTablePath } from '../../src/scripts/_lib/egress_session_table.js';
++import { withStateLock } from '../../src/scripts/ai_council/cli_call_budget.js';
++import { pruneSessionTables, updateTable, sessionTablePath } from '../../src/scripts/_lib/egress_session_table.js';
 +import { updateRegistry } from '../../src/scripts/_lib/project_registry.js';
 +import { update_text_under_lock } from '../../src/scripts/hooks/state_io.js';
 +import { _withToolWriteLock, statePathFor } from '../../src/scripts/language_mirror_hook.js';
@@ -7470,6 +7504,35 @@ index 0000000000000000000000000000000000000000..64b75fe291cb821e61447adb1b3234b7
 +        const hits = site().explore('paused-holder');
 +        expect(hits.filter((h) => !/→ A\+[BC]$/.test(h))).toEqual([]);
 +    }, 120_000);
++});
++
++// A release ages its generation instead of removing it, so a site whose file is
++// pruned must prune its lock family with it, or one lock file per session stays.
++describe('the egress table pruner', () => {
++    it('removes a retired table together with its lock generations', () => {
++        const dir = path.join(tmp, 'table');
++        const t = { dir, sessionId: 's1', workspaceRoot: path.join(tmp, 'ws'), now: Date.parse('2020-01-01T00:00:00Z') };
++        updateTable(t, () => undefined);
++        updateTable(t, () => undefined);
++        expect(fs.readdirSync(dir).some((n) => n.includes('.lock'))).toBe(true);
++        expect(pruneSessionTables(dir)).toBe(1);
++        expect(fs.readdirSync(dir)).toEqual([]);
++    });
++});
++
++// The CLI call budget's break compared `performance.now()` with an epoch mtime
++// and never fired; on the generation lock it does.
++describe('the CLI call budget lock', () => {
++    it('supersedes a lock abandoned for longer than its one-second threshold', () => {
++        const target = path.join(tmp, 'cli-calls.json');
++        fs.writeFileSync(`${target}.lock`, '');
++        const old = (Date.now() - 5_000) / 1000;
++        fs.utimesSync(`${target}.lock`, old, old);
++        const t = Date.now();
++        expect(withStateLock(target, () => 'ran')).toBe('ran');
++        expect(Date.now() - t).toBeLessThan(500);
++        expect(fs.existsSync(`${target}.lock.1`)).toBe(true);
++    });
 +});
 diff --git a/tests/scripts/session_pins.test.ts b/tests/scripts/session_pins.test.ts
 index bbb436d9f4523476a4685363876f5323bf926cd0..4c0e2507e7059e2c5d5638128a2813ee6360eb26 100644

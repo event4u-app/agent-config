@@ -37,8 +37,8 @@ a command or the next step acts on it and medium when nothing does.
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 3e7cc296a94bdd5345352d9379d7768fc14dea12, review
-  artefacts excluded), scope hash `f877e002c8d01f1342722d90d64123c0f14be00d71415cfa121c06444bc445bd`
+- diff: `diff.patch` — the review scope (branch head 75e53f05d96ec1c142ed702566b87ddb847f3d0e, review
+  artefacts excluded), scope hash `6fa37a2e3ef57a89e9802c33e686374d913fbc2d957db925c7d7ed1e882d54f0`
 - roadmap under review: `roadmap.md` — NO acceptance criteria could be EXTRACTED from it, in either recognised form (an `## Acceptance criteria` heading, or inline `- **AC-n:**` bullets), so `acceptance-criteria.md` is empty. Two different things produce that result and the dispatcher cannot tell them apart: the roadmap declares none, or it declares them in a shape the extractor does not recognise. Open `roadmap.md`, decide which, and report a finding if the criteria are there.
 
 Changed files:
@@ -90,7 +90,7 @@ Fill the findings table in `feat-road-to-verified-stale-lock-reclaim.findings.md
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope f877e002c8d01f1342722d90d64123c0f14be00d71415cfa121c06444bc445bd, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 6fa37a2e3ef57a89e9802c33e686374d913fbc2d957db925c7d7ed1e882d54f0, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
