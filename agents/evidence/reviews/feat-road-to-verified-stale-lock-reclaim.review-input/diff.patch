@@ -12055,7 +12055,7 @@ index 0000000000000000000000000000000000000000..4f00debcb0325f223bcf83555ad08db5
 +STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no
 +```
 diff --git a/agents/roadmaps/road-to-verified-stale-lock-reclaim.md b/agents/roadmaps/road-to-verified-stale-lock-reclaim.md
-index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..33dc56c087eb07f74b1078dc27925266286f45b4 100644
+index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..c9a4b66cdc15d0fa04c5c695ccd3d63915d01b74 100644
 --- a/agents/roadmaps/road-to-verified-stale-lock-reclaim.md
 +++ b/agents/roadmaps/road-to-verified-stale-lock-reclaim.md
 @@ -61,15 +61,32 @@ stale-lock break or a release, under any interleaving of three contenders.
@@ -12089,8 +12089,8 @@ index f5b08d1e9ba55affd4aa3ad9d587b1c88ae4ba46..33dc56c087eb07f74b1078dc27925266
 +- [ ] 3.2 `_cli/upgrade_unattended.ts` (~214): rename-aside on a lock judged dead; the put-back `linkSync` fails with `EEXIST` and displaces a newer holder.
 +- [ ] 3.3 `_lib/collector_supervision.ts` (~417): a dead incumbent pid, then remove and re-create; two fencers that judged one pid can both win.
 +- [ ] 3.4 `quota_notice_hook.ts` (~99, ~276): claim markers expired by age and removed before the exclusive create; two callers re-claiming one key after eight days can both win.
++- [ ] 3.5 `_lib/generation_lock.ts` `tryAcquire`: a listing that throws after this caller's create leaves its fresh generation behind with no holder; a strict caller then never supersedes it until the retention prune releases it. Expire the created generation before rethrowing (R2 completion review, finding 3; deferred because the helper is a ratified hook-plumbing file and the fix carries its own byte figure).
 +- [ ] 3.6 Retire a lock family whole: the pruners leave the highest generation of each retired lock (one empty file per lock per retired session, and every listing reads the directory they sit in). Removing it needs a retirement step that excludes in-flight acquirers, or generation names that are never reused (R2 completion review finding 1, ratification round 9).
-+- [ ] 3.5 `_lib/generation_lock.ts` `tryAcquire`: a listing that throws after this caller's create leaves its fresh generation behind with no holder; a strict caller then never supersedes it until the retention prune. Expire the created generation before rethrowing (R2 completion review, finding 3; deferred because the helper is a ratified hook-plumbing file and the fix carries its own byte figure).
  
  ## Risk Register
 -<!-- risk-review: v1 | reviewed: 2026-11-10 | reviewer: claude/host -->
@@ -12665,7 +12665,7 @@ index 80a61e87a13ff420b5ff7bf38852d295dec3c280..dd929a7192972bc63a2742750c06a966
      return results;
  }
 diff --git a/src/scripts/ai_council/budget_guard.ts b/src/scripts/ai_council/budget_guard.ts
-index 08c286b589c8556e3fdbae7b46bd1dcc346ab1d4..33061ee747ee32441061da2371f7d09d15700c71 100644
+index 08c286b589c8556e3fdbae7b46bd1dcc346ab1d4..0a9dc30ac89b2b7e5b41a1821487a30fc82ff9ae 100644
 --- a/src/scripts/ai_council/budget_guard.ts
 +++ b/src/scripts/ai_council/budget_guard.ts
 @@ -46,6 +46,7 @@ import { randomUUID } from 'node:crypto';
@@ -12676,7 +12676,7 @@ index 08c286b589c8556e3fdbae7b46bd1dcc346ab1d4..33061ee747ee32441061da2371f7d09d
  import * as user_global_paths from '../_lib/user_global_paths.js';
  
  export const LEDGER_FILENAME = 'council-spend.jsonl';
-@@ -630,50 +631,29 @@ function _terminalIds(entries: readonly SpendEntry[]): Set<string> {
+@@ -630,50 +631,35 @@ function _terminalIds(entries: readonly SpendEntry[]): Set<string> {
  export const RESERVATION_LOCK_WAIT_MS = 3000;
  const RESERVATION_LOCK_STALE_MS = 10_000;
  
@@ -12724,7 +12724,13 @@ index 08c286b589c8556e3fdbae7b46bd1dcc346ab1d4..33061ee747ee32441061da2371f7d09d
 -            return null;
 -        }
 -        _sleepMs(15);
-+    const held = acquire(`${p}.lock`, { staleMs: RESERVATION_LOCK_STALE_MS, waitMs, spinMs: 15 });
++    let held;
++    try {
++        held = acquire(`${p}.lock`, { staleMs: RESERVATION_LOCK_STALE_MS, waitMs, spinMs: 15 });
++    } catch {
++        // A lock that cannot be created or listed is a refusal too, never a throw.
++        held = null;
++    }
 +    if (held === null) {
 +        return null;
      }
@@ -12831,9 +12837,18 @@ index 655d464460e3a9653992632dadf0dfb6bbd69789..044110965daf737566091abc8c564b9c
 -    }
 -}
 diff --git a/src/scripts/hooks/state_io.ts b/src/scripts/hooks/state_io.ts
-index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aab2177d96 100644
+index 43f560081d3c224ddd842dad1c0e40456aab4e23..7b0dc5a28efefd1dbc91d79c26b24feef2bfe985 100644
 --- a/src/scripts/hooks/state_io.ts
 +++ b/src/scripts/hooks/state_io.ts
+@@ -9,7 +9,7 @@
+  * Per `docs/contracts/hook-architecture-v1.md`, Concurrency, every concern
+  * that writes a state file under `agents/` MUST:
+  *
+- * 1. Acquire an exclusive lock on `<state_dir>/.dispatcher.lock` — the SAME
++ * 1. Acquire an exclusive lock, the generation family `<state_dir>/.dispatcher.lock.held[.<g>]` (or, for a read-modify-write, `<target>.lock.held[.<g>]`) — the SAME
+  *    directory the target file lives in, derived from the target's own
+  *    path (`path.dirname`), never a single fixed location: one concern's
+  *    target under `agents/runtime/state/` locks there, another's target
 @@ -26,21 +26,22 @@
   *
   * Cross-platform notes
@@ -12860,7 +12875,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
  import fs from "node:fs";
  import path from "node:path";
  
-+import { acquire, companion, execute, release, type Held } from "../_lib/generation_lock.js";
++import { acquire, execute, release, tryAcquire, type Held } from "../_lib/generation_lock.js";
 +
  export const LOCK_BASENAME = ".dispatcher.lock";
  
@@ -12947,7 +12962,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
 + * while held, only one its holder released: a superseded holder that resumes
 + * would write past its successor, and for a pin that is a silently dropped
 + * constraint. A dead holder therefore blocks that session's pins, each attempt
-+ * reported, until the retention prune. `strict` also refuses to proceed
++ * reported, until the retention prune releases its generation. `strict` also refuses to proceed
 + * without a guard when none can be created or the lock cannot be listed.
 + *
 + * Limit, named here because the lock cannot close it: a holder paused past
@@ -13130,7 +13145,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
    }
  }
  
-@@ -883,10 +773,16 @@ export function prune_stale_session_states(
+@@ -883,10 +773,21 @@ export function prune_stale_session_states(
        //
        // Safe to remove unconditionally at this point: the state file is gone,
        // so no live writer can be holding a lock for it — and a writer that
@@ -13139,18 +13154,23 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
 +      // arrives afterwards creates both anew. A guard is a generation family
 +      // (`<lock>`, `<lock>.<g>`; `.lock` for the language-mirror tool lock,
 +      // `.lock.held` for the one here) that a release ages but never removes.
-+      // Every member but the highest goes. The highest stays, one empty file
-+      // per retired lock: removing it would restart the numbering under a
-+      // caller still holding an old listing, and judging it stale before
-+      // removing it is the stat-then-remove race this lock replaced.
++      // The pruner takes the lock like any caller and releases it at once: a
++      // stale holder's generation is superseded, the ones below it removed,
++      // and one released generation stays, one empty file per retired lock.
++      // Removing the highest would restart the numbering under a caller still
++      // holding an old listing, and judging it stale before removing it is the
++      // stat-then-remove race this lock replaced; a dead holder left in place
++      // would block a strict caller of that session for good. A live holder
++      // keeps its lock, and a lock that has no generation is left uncreated.
 +      for (const lock of [`${full}.lock`, `${full}.lock.held`]) {
          try {
 -          fs.rmSync(`${full}${suffix}`, { force: true });
-+          for (const g of (execute(["list", lock]) as number[]).slice(0, -1)) execute(["remove", companion(lock, g)]);
++          const held = (execute(["list", lock]) as number[]).length > 0 && tryAcquire(lock, { staleMs: LOCK_STALE_MS, now: () => now_ms });
++          if (held) release(held);
          } catch {
            /* never a reason to fail a prune */
          }
-@@ -1088,16 +984,16 @@ export function update_text_under_lock(
+@@ -1088,16 +989,16 @@ export function update_text_under_lock(
    // one commit earlier; leaving it there would have made
    // `dispatch-issues.jsonl` serialise against every unrelated
    // `atomic_write_text` in the state dir.
@@ -13172,7 +13192,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
    try {
      let loaded: string | null = null;
      try {
-@@ -1114,7 +1010,7 @@ export function update_text_under_lock(
+@@ -1114,7 +1015,7 @@ export function update_text_under_lock(
    } catch {
      return "failed";
    } finally {
@@ -13181,7 +13201,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
    }
  }
  
-@@ -1133,10 +1029,9 @@ export function update_json_under_lock<T>(
+@@ -1133,10 +1034,9 @@ export function update_json_under_lock<T>(
    }
    // FILE-keyed, not directory-keyed — see `_target_lock_path` for the measured
    // reason and for why `_atomic_write_text` deliberately keeps the shared one.
@@ -13194,7 +13214,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
    } catch {
      return "failed";
    }
-@@ -1145,7 +1040,8 @@ export function update_json_under_lock<T>(
+@@ -1145,7 +1045,8 @@ export function update_json_under_lock<T>(
    // lock is reported rather than worked around. Reported as `failed` and not as
    // a fourth `busy` state on purpose: every fail-closed caller takes the same
    // action on both (stay silent), and a state nobody branches on goes stale.
@@ -13204,7 +13224,7 @@ index 43f560081d3c224ddd842dad1c0e40456aab4e23..2810ad3366e59b81c1ff4e1ebb24c4aa
    try {
      let loaded: Partial<T> = {};
      try {
-@@ -1165,6 +1061,6 @@ export function update_json_under_lock<T>(
+@@ -1165,6 +1066,6 @@ export function update_json_under_lock<T>(
    } catch {
      return "failed";
    } finally {
@@ -14048,7 +14068,7 @@ index d5976f6e9cdddce97d0f951295ab8466ff4e417b..455221f6cc1f4f46fe7101f78155c3e6
          // A holder whose guard went stale while it held can overlap one
          // superseder: that is the lease without fencing the module names. What
 diff --git a/tests/scripts/hooks/state_io.test.ts b/tests/scripts/hooks/state_io.test.ts
-index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d83432450195f 100644
+index 8adc33472f893eee2af5ed67b4014042039a2d5e..6ee065715d5f6b741d0b026b85b5678e4e66875b 100644
 --- a/tests/scripts/hooks/state_io.test.ts
 +++ b/tests/scripts/hooks/state_io.test.ts
 @@ -56,8 +56,8 @@ describe('state_io — atomic_write_json', () => {
@@ -14075,7 +14095,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d8343
      });
  
      it('writes Python-style indent=2 JSON with trailing newline', () => {
-@@ -563,14 +565,21 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
+@@ -563,14 +565,27 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
          fs.writeFileSync(stale, '{}', 'utf8');
          fs.writeFileSync(`${stale}.lock`, '', 'utf8');
          fs.writeFileSync(`${stale}.lock.held`, '', 'utf8');
@@ -14091,16 +14111,21 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d8343
          const removed = prune_stale_session_states(dir(), Date.now(), 7);
          expect(removed).toBe(1);
          expect(fs.existsSync(stale)).toBe(false);
--        expect(fs.existsSync(`${stale}.lock`)).toBe(false);
++        // The pruner takes each lock and releases it. `.lock`'s highest (2) is a
++        // dead holder's: superseded by 3, the generations below removed, and 3
++        // released, so a strict caller takes over instead of being blocked for
++        // good. `.lock.held`'s highest (4) is fresh, a live holder: untouched.
++        // The numbering never restarts.
+         expect(fs.existsSync(`${stale}.lock`)).toBe(false);
 -        expect(fs.existsSync(`${stale}.lock.held`)).toBe(false);
-+        // Every member of each family but its highest goes; the highest stays,
-+        // so the numbering never restarts under a caller with an old listing.
-+        for (const g of ['.lock', '.lock.held', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
-+        for (const g of ['.lock.2', '.lock.held.4', '.lock.note']) expect(fs.existsSync(`${stale}${g}`)).toBe(true);
++        expect(fs.existsSync(`${stale}.lock.2`)).toBe(false);
++        expect(fs.statSync(`${stale}.lock.3`).mtimeMs).toBe(0);
++        for (const g of ['.lock.held', '.lock.held.3', '.lock.held.4', '.lock.note']) expect(fs.existsSync(`${stale}${g}`)).toBe(true);
++        expect(fs.statSync(`${stale}.lock.held.4`).mtimeMs).toBeGreaterThan(0);
      });
  });
  
-@@ -606,21 +615,44 @@ describe('update_text_under_lock — strict exclusion', () => {
+@@ -606,21 +621,44 @@ describe('update_text_under_lock — strict exclusion', () => {
          expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
      });
  
@@ -14149,7 +14174,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d8343
          const target = path.join(tmp, `stuck-${strict}.json`);
          fs.writeFileSync(target, 'before\n');
          const held = `${target}.lock.held`;
-@@ -639,14 +671,16 @@ describe('update_text_under_lock — a stale guard that cannot be removed', () =
+@@ -639,14 +677,16 @@ describe('update_text_under_lock — a stale guard that cannot be removed', () =
          } finally {
              spy.mockRestore();
          }
@@ -14171,7 +14196,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d8343
  describe('update_text_under_lock — a strict caller never reclaims a stale guard', () => {
      it.each([[true], [false]])('blocking=%s: an abandoned guard is left in place and the write is refused', (blocking) => {
          const target = path.join(tmp, `abandoned-${blocking}.json`);
-@@ -658,11 +692,38 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
+@@ -658,11 +698,38 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
          const t = Date.now();
          const r = update_text_under_lock(target, () => 'after\n', { strict: true, blocking });
          expect(r).toBe('failed');
@@ -14211,7 +14236,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d8343
      it('a non-strict caller still reclaims it', () => {
          const target = path.join(tmp, 'abandoned-lax.json');
          fs.writeFileSync(target, 'before\n');
-@@ -675,6 +736,46 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
+@@ -675,6 +742,46 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
      });
  });
  
@@ -14258,7 +14283,7 @@ index 8adc33472f893eee2af5ed67b4014042039a2d5e..c0d5c4193e68c3b64de94192a62d8343
  describe('update_text_under_lock — a guard that can be neither created nor read', () => {
      it.each([[true], [false]])('strict=%s: a dangling .held symlink gives up at the deadline instead of spinning forever', (strict) => {
          const target = path.join(tmp, `dangling-${strict}.json`);
-@@ -689,21 +790,9 @@ describe('update_text_under_lock — a guard that can be neither created nor rea
+@@ -689,21 +796,9 @@ describe('update_text_under_lock — a guard that can be neither created nor rea
  });
  
  describe('update_text_under_lock — a non-blocking caller never waits', () => {
@@ -14315,10 +14340,10 @@ index 6c560e21ed84cc747770971ed77b3142a307969f..6f55104fbeca6b6de26c4a85c502c434
    it("never fires when no pin exists", () => {
 diff --git a/tests/scripts/lock_sites_interleavings.test.ts b/tests/scripts/lock_sites_interleavings.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..433ea294ccce51915468d8b08702958d89878851
+index 0000000000000000000000000000000000000000..46e7599ebf163376fa61de6c65b560c6cbbe2843
 --- /dev/null
 +++ b/tests/scripts/lock_sites_interleavings.test.ts
-@@ -0,0 +1,173 @@
+@@ -0,0 +1,192 @@
 +// Every file lock that breaks a stale guard, run through the same three-caller
 +// interleaving harness (road-to-verified-stale-lock-reclaim, Phase 2).
 +//
@@ -14340,7 +14365,7 @@ index 0000000000000000000000000000000000000000..433ea294ccce51915468d8b08702958d
 +import os from 'node:os';
 +import path from 'node:path';
 +
-+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 +
 +import { _withLedgerLock } from '../../src/scripts/ai_council/budget_guard.js';
 +import { withStateLock } from '../../src/scripts/ai_council/cli_call_budget.js';
@@ -14475,6 +14500,25 @@ index 0000000000000000000000000000000000000000..433ea294ccce51915468d8b08702958d
 +        expect(peer).not.toBeNull();
 +        expect(pruneSessionTables(dir)).toBe(1);
 +        expect(fs.readdirSync(dir).filter((n) => n.includes('.lock'))).toHaveLength(1);
++    });
++});
++
++// A filesystem error on the ledger lock is a refusal, as a timed-out wait is,
++// never a throw: the reservation callers have no try.
++describe('the council ledger lock', () => {
++    it('refuses rather than throws when its lock directory cannot be listed', () => {
++        const ledger = path.join(tmp, 'council', 'spend.jsonl');
++        fs.mkdirSync(path.dirname(ledger), { recursive: true });
++        const real = fs.readdirSync;
++        const spy = vi.spyOn(fs, 'readdirSync').mockImplementation(((...a: Parameters<typeof fs.readdirSync>) => {
++            if (String(a[0]) === path.dirname(ledger)) throw Object.assign(new Error('EACCES'), { code: 'EACCES' });
++            return real(...a);
++        }) as typeof fs.readdirSync);
++        try {
++            expect(_withLedgerLock(ledger, 50, () => 'ran')).toBeNull();
++        } finally {
++            spy.mockRestore();
++        }
 +    });
 +});
 +

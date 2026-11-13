@@ -84,8 +84,8 @@ Found by the 2.5 wider search on 2026-11-13; each keeps its own liveness rule (a
 - [ ] 3.2 `_cli/upgrade_unattended.ts` (~214): rename-aside on a lock judged dead; the put-back `linkSync` fails with `EEXIST` and displaces a newer holder.
 - [ ] 3.3 `_lib/collector_supervision.ts` (~417): a dead incumbent pid, then remove and re-create; two fencers that judged one pid can both win.
 - [ ] 3.4 `quota_notice_hook.ts` (~99, ~276): claim markers expired by age and removed before the exclusive create; two callers re-claiming one key after eight days can both win.
+- [ ] 3.5 `_lib/generation_lock.ts` `tryAcquire`: a listing that throws after this caller's create leaves its fresh generation behind with no holder; a strict caller then never supersedes it until the retention prune releases it. Expire the created generation before rethrowing (R2 completion review, finding 3; deferred because the helper is a ratified hook-plumbing file and the fix carries its own byte figure).
 - [ ] 3.6 Retire a lock family whole: the pruners leave the highest generation of each retired lock (one empty file per lock per retired session, and every listing reads the directory they sit in). Removing it needs a retirement step that excludes in-flight acquirers, or generation names that are never reused (R2 completion review finding 1, ratification round 9).
-- [ ] 3.5 `_lib/generation_lock.ts` `tryAcquire`: a listing that throws after this caller's create leaves its fresh generation behind with no holder; a strict caller then never supersedes it until the retention prune. Expire the created generation before rethrowing (R2 completion review, finding 3; deferred because the helper is a ratified hook-plumbing file and the fix carries its own byte figure).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-13 | reviewer: claude/host -->
