@@ -251,7 +251,7 @@ Carried from council rounds 1–6 of the Phase 7 budget raise
 (`agents/evidence/council/agent-switch-hardening-ratification-r{1..6}-20261108.question.md`,
 all `refused`; merged on the owner's word with the question opt-in, D5).
 
-- [x] **8.1 A writer the lock cannot evict.** A Stop whose checkpoint build
+- [x] **8.1 A writer the lock cannot evict.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> A Stop whose checkpoint build
       outlives the two-second stale break can lose its lock to a second Stop and
       still publish an older snapshot after it (round 6). Serialize in a way
       that cannot evict a live writer, or write checkpoint generations so an
@@ -265,7 +265,7 @@ all `refused`; merged on the owner's word with the question opt-in, D5).
       not built, since only an opt-in user still on 20.2.0 meets the window.
       Residual: a crashed 20.2.0 holder's file or a reused pid blocks that
       session's record until the cutover or the record's prune.
-- [x] **8.2 Interprocess evidence.** The concurrency tests run in one process
+- [x] **8.2 Interprocess evidence.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/switch_relay.ts --> The concurrency tests run in one process
       with reentrant callbacks and a racing fake agent-switch. Add tests that
       overlap two real hook processes for the relay claim, the back-off count
       and the checkpoint.
