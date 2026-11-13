@@ -679,9 +679,9 @@ export function pruneStalePins(consumer_root: string, now_ms: number): number {
         const pinFile = digest === undefined ? '' : path.join(dir, `${digest}.json`);
         return pinFile !== '' && fs.existsSync(pinFile) ? Math.max(own, sessionActivityMs(consumer_root, pinFile)) : own;
     });
-    // The boundary and lock sentinels are not `.json`, so the
-    // pass above leaves them; each goes once its session's pin file is gone and
-    // it is itself past retention.
+    // The boundary and old lock sentinels are not `.json`, so the pass above
+    // leaves them; each goes once its session's pin file is gone and it is
+    // itself past retention. Lock generations are the pass above's to prune.
     const cutoff = now_ms - PIN_RETENTION_DAYS * 24 * 60 * 60 * 1000;
     let names: string[] = [];
     try {
@@ -691,7 +691,11 @@ export function pruneStalePins(consumer_root: string, now_ms: number): number {
     }
     for (const name of names) {
         const digest = /^([0-9a-f]{32})\./.exec(name)?.[1];
-        if (digest === undefined || name === `${digest}.json` || fs.existsSync(path.join(dir, `${digest}.json`))) continue;
+        // A lock generation (`.lock.held[.<g>]`, the state_io lock these files
+        // are written under) is never removed by age: the pass above keeps each
+        // lock's highest one on purpose (hooks/state_io.ts). A bare `.lock` is
+        // the retired sentinel of the lock before it and goes like the rest.
+        if (digest === undefined || name === `${digest}.json` || /\.lock\.held(\.\d+)?$/.test(name) || fs.existsSync(path.join(dir, `${digest}.json`))) continue;
         const file = path.join(dir, name);
         try {
             if (fs.statSync(file).mtimeMs < cutoff) {

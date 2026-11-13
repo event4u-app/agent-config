@@ -134,14 +134,16 @@ describe.each(Object.keys(SITES))('%s', (name) => {
 // A release ages its generation instead of removing it, so a site whose file is
 // pruned must prune its lock family with it, or one lock file per session stays.
 describe('the egress table pruner', () => {
-    it('removes a retired table together with its lock generations', () => {
+    it('removes a retired table and every lock generation but the highest', () => {
         const dir = path.join(tmp, 'table');
         const t = { dir, sessionId: 's1', workspaceRoot: path.join(tmp, 'ws'), now: Date.parse('2020-01-01T00:00:00Z') };
         updateTable(t, () => undefined);
         updateTable(t, () => undefined);
         expect(fs.readdirSync(dir).some((n) => n.includes('.lock'))).toBe(true);
+        expect(fs.readdirSync(dir).filter((n) => n.includes('.lock'))).toHaveLength(1);
+        fs.writeFileSync(`${sessionTablePath(dir, 's1')}.lock`, ''); // a lower leftover
         expect(pruneSessionTables(dir)).toBe(1);
-        expect(fs.readdirSync(dir)).toEqual([]);
+        expect(fs.readdirSync(dir)).toEqual([`${path.basename(sessionTablePath(dir, 's1'))}.lock.1`]);
     });
 
     it('keeps a lock generation that may be held, while the table is pruned', () => {

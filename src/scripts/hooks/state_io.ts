@@ -40,7 +40,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { acquire, release, type Held } from "../_lib/generation_lock.js";
+import { acquire, companion, execute, release, type Held } from "../_lib/generation_lock.js";
 
 export const LOCK_BASENAME = ".dispatcher.lock";
 
@@ -770,16 +770,16 @@ export function prune_stale_session_states(
       //
       // Safe to remove unconditionally at this point: the state file is gone,
       // so no live writer can be holding a lock for it — and a writer that
-      // arrives afterwards creates both anew. A guard is a generation family a
-      // release ages but never removes (`.lock[.held][.<g>]`), so every member
-      // goes — except one touched within the stale window, which a writer that
-      // resumed this session may hold right now.
-      const own = path.basename(full);
-      for (const n of entries) {
-        if (!n.startsWith(own) || !/^\.lock(\.held)?(\.\d+)?$/.test(n.slice(own.length))) continue;
-        const g = path.join(dir, n);
+      // arrives afterwards creates both anew. A guard is a generation family
+      // (`<lock>`, `<lock>.<g>`; `.lock` for the language-mirror tool lock,
+      // `.lock.held` for the one here) that a release ages but never removes.
+      // Every member but the highest goes. The highest stays, one empty file
+      // per retired lock: removing it would restart the numbering under a
+      // caller still holding an old listing, and judging it stale before
+      // removing it is the stat-then-remove race this lock replaced.
+      for (const lock of [`${full}.lock`, `${full}.lock.held`]) {
         try {
-          if (now_ms - fs.statSync(g).mtimeMs >= LOCK_STALE_MS) fs.rmSync(g, { force: true });
+          for (const g of (execute(["list", lock]) as number[]).slice(0, -1)) execute(["remove", companion(lock, g)]);
         } catch {
           /* never a reason to fail a prune */
         }

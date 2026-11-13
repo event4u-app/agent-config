@@ -18,7 +18,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { acquire, release } from './generation_lock.js';
+import { acquire, companion, execute, release } from './generation_lock.js';
 import { detect, EGRESS_RULES, type EgressClass, type EgressRule, type EgressSpan } from './egress_rules.js';
 import { formatToken, parseTokens, replaceValues, TOKEN_FP_LENGTH, TokenScope } from './egress_token.js';
 import { event4u_root, type EnvMap } from './user_global_paths.js';
@@ -489,15 +489,13 @@ export function pruneSessionTables(dir: string, now: number = Date.now()): numbe
         }
         if (now - at > EGRESS_SESSION_RETENTION_MS) {
             fs.rmSync(file, { force: true });
-            // Its lock generations go with it — a release ages them, never removes
-            // them — except one touched within the stale window, which may be held.
-            for (const n of names) {
-                const g = path.join(dir, n);
-                try {
-                    if (n.startsWith(name) && /^\.lock(\.\d+)?$/.test(n.slice(name.length)) && Date.now() - fs.statSync(g).mtimeMs >= LOCK_STALE_MS) fs.rmSync(g, { force: true });
-                } catch {
-                    // vanished meanwhile
-                }
+            // Its lock generations but the highest go with it; the highest stays,
+            // or the numbering would restart under a caller still holding an old
+            // listing (see the session-state pruner in hooks/state_io.ts).
+            try {
+                for (const g of (execute(['list', `${file}.lock`]) as number[]).slice(0, -1)) execute(['remove', companion(`${file}.lock`, g)]);
+            } catch {
+                // the listing failed: nothing is removed
             }
             removed += 1;
         }

@@ -571,16 +571,15 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
         fs.writeFileSync(`${stale}.lock.note`, '', 'utf8'); // not a generation: kept
         const old = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         for (const f of ['', '.lock', '.lock.held', '.lock.2', '.lock.held.3']) fs.utimesSync(`${stale}${f}`, old, old);
-        // A generation touched within the stale window may be held by a writer
-        // that resumed this session: it stays.
         fs.writeFileSync(`${stale}.lock.held.4`, '', 'utf8');
 
         const removed = prune_stale_session_states(dir(), Date.now(), 7);
         expect(removed).toBe(1);
         expect(fs.existsSync(stale)).toBe(false);
-        for (const g of ['.lock', '.lock.held', '.lock.2', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
-        expect(fs.existsSync(`${stale}.lock.held.4`)).toBe(true);
-        expect(fs.existsSync(`${stale}.lock.note`)).toBe(true);
+        // Every member of each family but its highest goes; the highest stays,
+        // so the numbering never restarts under a caller with an old listing.
+        for (const g of ['.lock', '.lock.held', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
+        for (const g of ['.lock.2', '.lock.held.4', '.lock.note']) expect(fs.existsSync(`${stale}${g}`)).toBe(true);
     });
 });
 

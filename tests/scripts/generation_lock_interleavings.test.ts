@@ -150,19 +150,38 @@ function time(): Actor {
     };
 }
 
+type PruneMode = 'keep-highest' | 'whole-family';
+
 /**
- * One action: a pruner retires the family, removing every generation that is
- * stale — released or abandoned — as the session-state and egress pruners do.
+ * A pruner, one filesystem step per action. `keep-highest` is what the
+ * session-state and egress pruners do: list the family, then remove every
+ * member below the highest. `whole-family` is the shape ratification round 9
+ * refused: judge each member's age, then remove it if it was stale.
  */
-function prune(): Actor {
-    let done = false;
+function prune(mode: PruneMode): Actor {
+    const queue: (() => void)[] = [];
+    let listed = false;
     return {
         name: 'P',
         step: (): boolean => {
-            if (done) return false;
-            done = true;
-            for (const [f, m] of [...files]) if (NOW - m >= STALE_MS) files.delete(f);
-            return false;
+            if (!listed) {
+                listed = true;
+                const gens = run(['list', lockPath]) as number[];
+                const doomed = mode === 'keep-highest' ? gens.slice(0, -1) : gens;
+                for (const g of doomed) {
+                    const f = companion(lockPath, g);
+                    if (mode === 'whole-family') {
+                        let stale = false;
+                        queue.push(() => void (stale = (run(['age', f]) as number | null ?? 0) >= STALE_MS));
+                        queue.push(() => void (stale && run(['remove', f])));
+                    } else {
+                        queue.push(() => void run(['remove', f]));
+                    }
+                }
+                return queue.length > 0;
+            }
+            queue.shift()?.();
+            return queue.length > 0;
         },
     };
 }
@@ -172,15 +191,15 @@ function prune(): Actor {
  * could still run. Replays each prefix from a fresh directory, so every schedule
  * starts from the same state. Returns the distinct violating holder sets.
  */
-function explore(proto: Protocol, start: Start, withTime: boolean, maxPreemptions: number, withPrune = false): string[] {
+function explore(proto: Protocol, start: Start, withTime: boolean, maxPreemptions: number, pruners: PruneMode[] = [], callers = ['A', 'B', 'C']): string[] {
     const found = new Set<string>();
     let schedules = 0;
     const run = (choices: number[]): { enabled: boolean[]; last: number } => {
         setUp(start);
         const world: World = { inCs: new Set(), violations: [] };
-        const actors = ['A', 'B', 'C'].map((n) => caller(n, proto, world));
+        const actors = callers.map((n) => caller(n, proto, world));
         if (withTime) actors.push(time());
-        if (withPrune) actors.push(prune());
+        for (const m of pruners) actors.push(prune(m));
         const alive = actors.map(() => true);
         let last = -1;
         for (const c of choices) {
@@ -335,7 +354,7 @@ describe('generation lock — failures and options', () => {
         expect(acquire(lockPath, { staleMs: STALE_MS, breakStale: false, waitMs: 5_000, spinMs: 2 })).toBe(false);
         expect(Date.now() - t).toBeLessThan(500);
         release(a);
-        expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })?.generation).toBe(1);
+        expect((tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false }) as Held).generation).toBe(1);
     });
 });
 
@@ -345,15 +364,14 @@ describe('the explorer catches what it must', () => {
     });
 
     it('a release that removes its generation admits two holders', () => {
-        expect(explore(RELEASE_REMOVES, 'abandoned', false, 3, false).length).toBeGreaterThanOrEqual(0);
-        // A release that removes its generation restarts numbering; the check
+                // A release that removes its generation restarts numbering; the check
         // that the superseded generation still exists now absorbs it, so the
         // candidate's acquire tolerates it. Without that check it does not:
         expect(explore({ ...NO_RECHECK, release: RELEASE_REMOVES.release }, 'abandoned', false, 3)).not.toEqual([]);
     });
 
     it('a pruner that retires the family admits two holders without the recheck', () => {
-        expect(explore(NO_RECHECK, 'released', false, 3, true)).not.toEqual([]);
+        expect(explore(NO_RECHECK, 'released', false, 3, ['whole-family'])).not.toEqual([]);
     });
 
     it('a recheck by name alone is not enough: a recreated generation reuses the name', () => {
@@ -378,18 +396,53 @@ describe('the explorer catches what it must', () => {
             },
             release: CANDIDATE.release,
         };
-        expect(explore(NAME_ONLY, 'empty', false, 3, true)).not.toEqual([]);
+        expect(explore(NAME_ONLY, 'empty', false, 3, ['whole-family'])).not.toEqual([]);
     });
 });
 
 describe('generation lock — every schedule of three callers', () => {
-    it.each(['empty', 'abandoned', 'released'] as const)('a pruner retiring the family admits no second holder, starting %s', (start) => {
-        expect(explore(CANDIDATE, start, false, 3, true)).toEqual([]);
+    it.each(['empty', 'abandoned', 'released'] as const)('a pruner that keeps the highest generation admits no second holder, starting %s', (start) => {
+        expect(explore(CANDIDATE, start, false, 3, ['keep-highest'])).toEqual([]);
     });
 
-    it.each(['empty', 'abandoned', 'released'] as const)('a pruner and a paused holder: only the paused one overlaps, starting %s', (start) => {
-        const v = explore(CANDIDATE, start, true, 3, true);
+    it.each(['empty', 'abandoned', 'released'] as const)('two such pruners at once admit no second holder, starting %s', (start) => {
+        expect(explore(CANDIDATE, start, false, 3, ['keep-highest', 'keep-highest'], ['A', 'B'])).toEqual([]);
+    });
+
+    it.each(['empty', 'abandoned', 'released'] as const)('a keep-highest pruner and a paused holder: only the paused one overlaps, starting %s', (start) => {
+        const v = explore(CANDIDATE, start, true, 2, ['keep-highest']);
         expect(v.every((h) => h.split('+').length === 2)).toBe(true);
+    });
+
+    // Round 9's schedule, scripted step by step: a pruner P judges generation 0
+    // stale and pauses; A supersedes it, works and releases; a second pruner
+    // retires A's generation; B acquires a fresh generation 0; P resumes and
+    // removes it; C acquires beside B. Judging and removing is the
+    // stat-then-remove race again, which is why the pruners keep the highest.
+    it.each([
+        ['whole-family', ['B', 'C']],
+        ['keep-highest', ['B']],
+    ] as const)('round 9 schedule with a %s pruner: holders %j', (mode, holders) => {
+        files = new Map([[lockPath, 0]]);
+        const acquireNow = (): Held | null | false => {
+            const it = acquireSteps(lockPath, STALE_MS);
+            let r = it.next();
+            while (r.done !== true) r = it.next(run(r.value));
+            return r.value;
+        };
+        // P judges (whole-family) or lists (keep-highest) before anything moves.
+        const pDoomed = mode === 'whole-family' ? [lockPath].filter((f) => (run(['age', f]) as number) >= STALE_MS) : (run(['list', lockPath]) as number[]).slice(0, -1).map((g) => companion(lockPath, g));
+        const a = acquireNow() as Held;
+        expect(a).toBeTruthy();
+        run(['expire', companion(lockPath, a.generation)]);
+        // Q retires the family in one go.
+        const gens = run(['list', lockPath]) as number[];
+        for (const g of mode === 'whole-family' ? gens : gens.slice(0, -1)) run(['remove', companion(lockPath, g)]);
+        const held: string[] = [];
+        if (acquireNow()) held.push('B');
+        for (const f of pDoomed) run(['remove', f]);
+        if (acquireNow()) held.push('C');
+        expect(held).toEqual(holders);
     });
 
     it.each(['empty', 'abandoned', 'released'] as const)('no two holders without a pause, starting %s', (start) => {

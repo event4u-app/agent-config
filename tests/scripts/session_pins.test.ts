@@ -2000,6 +2000,17 @@ describe('council round 35 — bounds that hold for the lifetime of what can spe
         expect(fs.existsSync(`${restorePath(tmp, 'gone')}.lock`)).toBe(false);
         expect(fs.existsSync(liveBoundary)).toBe(true);
     });
+
+    it('retention never removes the highest generation of a gone session\'s lock', () => {
+        savePins(tmp, 'gone', ['drop'], new Date().toISOString());
+        savePins(tmp, 'gone', ['drop', 'again'], new Date().toISOString());
+        const family = (): string[] => fs.readdirSync(path.dirname(statePath(tmp, 'gone'))).filter((n) => n.startsWith(`${path.basename(statePath(tmp, 'gone'))}.lock.held`));
+        expect(family()).toHaveLength(1);
+        fs.utimesSync(statePath(tmp, 'gone'), OLD, OLD);
+        pruneStalePins(tmp, Date.now());
+        expect(fs.existsSync(statePath(tmp, 'gone'))).toBe(false);
+        expect(family()).toHaveLength(1);
+    });
 });
 
 describe('council round 44 — replay, the language restore, linear envelope checks', () => {
