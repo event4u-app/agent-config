@@ -565,14 +565,18 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
         fs.writeFileSync(stale, '{}', 'utf8');
         fs.writeFileSync(`${stale}.lock`, '', 'utf8');
         fs.writeFileSync(`${stale}.lock.held`, '', 'utf8');
+        // Generation-lock members a release leaves behind, aged rather than
+        // removed: `<lock>.<g>` (a guard passed bare) and `<lock>.held.<g>`.
+        for (const g of ['.lock.2', '.lock.held.3']) fs.writeFileSync(`${stale}${g}`, '', 'utf8');
+        fs.writeFileSync(`${stale}.lock.note`, '', 'utf8'); // not a generation: kept
         const old = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         fs.utimesSync(stale, old, old);
 
         const removed = prune_stale_session_states(dir(), Date.now(), 7);
         expect(removed).toBe(1);
         expect(fs.existsSync(stale)).toBe(false);
-        expect(fs.existsSync(`${stale}.lock`)).toBe(false);
-        expect(fs.existsSync(`${stale}.lock.held`)).toBe(false);
+        for (const g of ['.lock', '.lock.held', '.lock.2', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
+        expect(fs.existsSync(`${stale}.lock.note`)).toBe(true);
     });
 });
 

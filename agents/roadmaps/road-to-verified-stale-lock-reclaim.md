@@ -70,7 +70,7 @@ stale-lock break or a release, under any interleaving of three contenders.
 - [x] 2.4 `_lib/project_registry.ts`: the directory lock, with the protocol extended to directories first.
       Done 2026-11-13: `dir: true` makes each generation a `mkdir`; `registry.lock` stays generation 0. Red first: `A@6 break-lands-in-B → B+C`, `A@9 release-lands-in-B → B+C`; green after.
 - [x] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper.
-      Done 2026-11-13: the search found three sites this step did not list. `advisories.ts` (the rename-aside shape round 55 rejected) and `ai_council/cli_call_budget.ts` (whose break compared `performance.now()` with an epoch mtime and so never fired) moved to the generation lock. The one remaining match, `code_graph/refresh_lock.ts:145`, is a different mechanism and stays: the stale judgement there is repeated under a second `mkdir` mutex, a release is nonce-checked, and its interleaving tests were ratified on 2026-10-24. A wider search for the defect class (exclusive create plus remove or rename) found one more rename-aside lock, `worktree_cleanup_check.ts` `takeRemovalLock`, moved too, and four that Phase 3 carries.
+      Done 2026-11-13: the search found three sites this step did not list. `advisories.ts` (the rename-aside shape round 55 rejected) and `ai_council/cli_call_budget.ts` (whose break compared `performance.now()` with an epoch mtime and so never fired) moved to the generation lock. The one remaining match, `code_graph/refresh_lock.ts:145`, is a different mechanism and stays: the stale judgement there is repeated under a second `mkdir` mutex, a release is nonce-checked, and its interleaving tests were ratified on 2026-10-24. A wider search for the defect class (exclusive create plus remove or rename) found one more rename-aside lock, `worktree_cleanup_check.ts` `takeRemovalLock`, moved too, and four that Phase 3 carries. These three converted sites (`advisories`, `cli_call_budget`, `worktree_cleanup_check`) are not in the site harness and were not run red first; they rest on their own suites, the helper's step explorer, and for the CLI budget a test that an abandoned lock is superseded at once (on origin/main it waited out the second and proceeded unlocked). A release now ages a lock file instead of removing it, so the session-state and egress-table pruners remove each lock generation with its file (R2 completion review, finding 1).
 - [x] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
       Done 2026-11-13, the second option: each of the eight call sites states the unfenced limit at the lock, with what narrows it there (a millisecond critical section, the pin re-read, `git worktree remove` re-checking).
 
@@ -82,6 +82,7 @@ Found by the 2.5 wider search on 2026-11-13; each keeps its own liveness rule (a
 - [ ] 3.2 `_cli/upgrade_unattended.ts` (~214): rename-aside on a lock judged dead; the put-back `linkSync` fails with `EEXIST` and displaces a newer holder.
 - [ ] 3.3 `_lib/collector_supervision.ts` (~417): a dead incumbent pid, then remove and re-create; two fencers that judged one pid can both win.
 - [ ] 3.4 `quota_notice_hook.ts` (~99, ~276): claim markers expired by age and removed before the exclusive create; two callers re-claiming one key after eight days can both win.
+- [ ] 3.5 `_lib/generation_lock.ts` `tryAcquire`: a listing that throws after this caller's create leaves its fresh generation behind with no holder; a strict caller then never supersedes it until the retention prune. Expire the created generation before rethrowing (R2 completion review, finding 3; deferred because the helper is a ratified hook-plumbing file and the fix carries its own byte figure).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-13 | reviewer: claude/host -->
@@ -96,7 +97,7 @@ Found by the 2.5 wider search on 2026-11-13; each keeps its own liveness rule (a
 
 ## Closes when
 
-Every step is `[x]`, each site's harness run was seen red before its fix, and
+Every step is `[x]`, each Phase 2 site's harness run was seen red before its fix, and
 the 2.5 search reports zero matches outside the helper and the ratified
 `code_graph/refresh_lock.ts` (2.5).
 

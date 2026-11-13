@@ -22,7 +22,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { _withLedgerLock } from '../../src/scripts/ai_council/budget_guard.js';
-import { updateTable, sessionTablePath } from '../../src/scripts/_lib/egress_session_table.js';
+import { withStateLock } from '../../src/scripts/ai_council/cli_call_budget.js';
+import { pruneSessionTables, updateTable, sessionTablePath } from '../../src/scripts/_lib/egress_session_table.js';
 import { updateRegistry } from '../../src/scripts/_lib/project_registry.js';
 import { update_text_under_lock } from '../../src/scripts/hooks/state_io.js';
 import { _withToolWriteLock, statePathFor } from '../../src/scripts/language_mirror_hook.js';
@@ -110,4 +111,33 @@ describe.each(Object.keys(SITES))('%s', (name) => {
         const hits = site().explore('paused-holder');
         expect(hits.filter((h) => !/→ A\+[BC]$/.test(h))).toEqual([]);
     }, 120_000);
+});
+
+// A release ages its generation instead of removing it, so a site whose file is
+// pruned must prune its lock family with it, or one lock file per session stays.
+describe('the egress table pruner', () => {
+    it('removes a retired table together with its lock generations', () => {
+        const dir = path.join(tmp, 'table');
+        const t = { dir, sessionId: 's1', workspaceRoot: path.join(tmp, 'ws'), now: Date.parse('2020-01-01T00:00:00Z') };
+        updateTable(t, () => undefined);
+        updateTable(t, () => undefined);
+        expect(fs.readdirSync(dir).some((n) => n.includes('.lock'))).toBe(true);
+        expect(pruneSessionTables(dir)).toBe(1);
+        expect(fs.readdirSync(dir)).toEqual([]);
+    });
+});
+
+// The CLI call budget's break compared `performance.now()` with an epoch mtime
+// and never fired; on the generation lock it does.
+describe('the CLI call budget lock', () => {
+    it('supersedes a lock abandoned for longer than its one-second threshold', () => {
+        const target = path.join(tmp, 'cli-calls.json');
+        fs.writeFileSync(`${target}.lock`, '');
+        const old = (Date.now() - 5_000) / 1000;
+        fs.utimesSync(`${target}.lock`, old, old);
+        const t = Date.now();
+        expect(withStateLock(target, () => 'ran')).toBe('ran');
+        expect(Date.now() - t).toBeLessThan(500);
+        expect(fs.existsSync(`${target}.lock.1`)).toBe(true);
+    });
 });

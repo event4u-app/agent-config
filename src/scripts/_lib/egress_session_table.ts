@@ -489,6 +489,8 @@ export function pruneSessionTables(dir: string, now: number = Date.now()): numbe
         }
         if (now - at > EGRESS_SESSION_RETENTION_MS) {
             fs.rmSync(file, { force: true });
+            // Its lock generations go with it: a release ages them, never removes them.
+            for (const n of names) if (/^\.lock(\.\d+)?$/.test(n.slice(name.length)) && n.startsWith(name)) fs.rmSync(path.join(dir, n), { force: true });
             removed += 1;
         }
     }

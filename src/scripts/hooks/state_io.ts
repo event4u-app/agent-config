@@ -772,11 +772,12 @@ export function prune_stale_session_states(
       //
       // Safe to remove unconditionally at this point: the state file is gone,
       // so no live writer can be holding a lock for it — and a writer that
-      // arrives afterwards creates both anew. The guard is a generation family
-      // (`.lock.held`, `.lock.held.<g>`), so every member goes.
+      // arrives afterwards creates both anew. A guard is a generation family a
+      // release ages but never removes (`.lock[.held][.<g>]`), so every member
+      // goes.
       const own = path.basename(full);
       for (const n of entries) {
-        if (n !== `${own}.lock` && n !== `${own}.lock.held` && !n.startsWith(`${own}.lock.held.`)) continue;
+        if (!n.startsWith(own) || !/^\.lock(\.held)?(\.\d+)?$/.test(n.slice(own.length))) continue;
         try {
           fs.rmSync(path.join(dir, n), { force: true });
         } catch {
