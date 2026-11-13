@@ -46,7 +46,7 @@ import { parse as parseYaml } from 'yaml';
 import { clone as _clone } from './bench_ab_clone.js';
 import * as bench_ab_cache from './_lib/bench_ab_cache.js';
 import { score_task } from './_lib/bench_ab_scoring.js';
-import { container_argv, container_env, redact, type ContainerSpec } from './_lib/bench_ab_container.js';
+import { container_argv, container_env, container_name, redact, stop_container, type ContainerSpec } from './_lib/bench_ab_container.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // internal/bench/core/bench_ab_task_runner.ts → parents[2] is the repo root.
@@ -210,6 +210,8 @@ interface RunResult {
     hook_events?: Record<string, number>;
     /** Whether the hooks seen match what the arm's setting sources load. */
     hook_instrument?: HookInstrument;
+    /** False when a container outlived its client and `docker rm -f` failed: it may still be writing to the clone. */
+    container_stopped?: boolean;
 }
 
 export type HookInstrument = 'ok' | 'no-hook-event' | 'unexpected-hook-event';
@@ -366,7 +368,7 @@ export function run_live(
     timeoutS: number,
     opts: RunLiveOpts = {},
 ): RunResult {
-    const ctr = opts.container ?? null;
+    const ctr = opts.container ? { ...opts.container, name: opts.container.name ?? container_name() } : null;
     if (ctr) opts = { ...opts, stream: true };
     const binary = ctr ? 'docker' : claude_executable();
     if (binary === null) {
@@ -388,16 +390,28 @@ export function run_live(
         cwd: cloneRoot,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
+        // SIGTERM alone does not hold the timeout: spawnSync blocks until the child
+        // exits, and a child that ignores SIGTERM (the docker client waiting on its
+        // container) ran 915 s and 15,301 s past a 180 s timeout.
+        killSignal: 'SIGKILL',
+        // Node's 1 MiB default fails a long stream-json run with ENOBUFS.
+        maxBuffer: 64 * 1024 * 1024,
         ...(ctr ? { env: container_env(process.env, ctr.token) } : opts.env ? { env: { ...process.env, ...opts.env } } : {}),
     });
+    // Any death of the docker client (timeout, ENOBUFS, an outside kill) leaves the container running.
+    const containerStopped = ctr && (result.error || result.signal !== null) ? stop_container(ctr.name) : true;
+    if (!containerStopped) process.stderr.write(`bench_ab: could not remove container ${ctr?.name ?? ''}; it may still write to ${cloneRoot}\n`);
     if (ctr) {
         result.stdout = redact(result.stdout ?? '', ctr.token);
         result.stderr = redact(result.stderr ?? '', ctr.token);
     }
     const isTimeout =
         (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
-        (result.signal === 'SIGTERM' && Boolean(result.error));
-    if (isTimeout) return timeout_result(result.stdout ?? '', timeoutS, _monotonic() - started, opts);
+        (result.signal === 'SIGKILL' && Boolean(result.error));
+    if (isTimeout) {
+        const run = timeout_result(result.stdout ?? '', timeoutS, _monotonic() - started, opts);
+        return containerStopped ? run : { ...run, container_stopped: false };
+    }
     const duration = _monotonic() - started;
     // Parse the JSON envelope: `result` is the model text; `usage` holds tokens.
     const stdout = result.stdout ?? '';

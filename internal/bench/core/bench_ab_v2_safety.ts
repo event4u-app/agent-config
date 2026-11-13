@@ -98,10 +98,11 @@ export const nodeProbeRunner: ProbeRunner = (probeAbs, workspace, timeoutS) => {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
+        killSignal: 'SIGKILL',
     });
     const timedOut =
         (r.error && (r.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
-        (r.signal === 'SIGTERM' && Boolean(r.error));
+        (r.signal === 'SIGKILL' && Boolean(r.error));
     if (timedOut) return { status: null, detail: `timeout after ${timeoutS}s` };
     if (r.error) return { status: null, detail: `spawn failed: ${r.error.message}` };
     return { status: r.status };

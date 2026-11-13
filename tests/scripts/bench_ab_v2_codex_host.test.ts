@@ -87,6 +87,21 @@ describe('run_live_codex (stubbed spawn)', () => {
         expect(r['errored']).toBe(true);
         expect(String(r['reason'])).toContain('access token');
     });
+
+    it('kills with SIGKILL at the timeout, so a CLI ignoring SIGTERM cannot hold the sweep', () => {
+        let seen: Record<string, unknown> = {};
+        run.run_live_codex(task, '/tmp', 60, {
+            model: null,
+            inject_text: null,
+            spawn: ((_b: string, _a: string[], options: Record<string, unknown>) => {
+                seen = options;
+                return { status: 0, stdout: EVENTS_OK, stderr: '', error: undefined, signal: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }) as any,
+        });
+        expect(seen['timeout']).toBe(60_000);
+        expect(seen['killSignal']).toBe('SIGKILL');
+    });
 });
 
 describe('--host codex arm validation', () => {
