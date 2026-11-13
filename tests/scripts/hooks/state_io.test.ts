@@ -608,16 +608,23 @@ describe('update_text_under_lock — strict exclusion', () => {
         expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
     });
 
-    it('a non-strict caller keeps the pre-existing behaviour and writes without the guard', () => {
+    // Changed in ratification round 5: a read-modify-write without exclusion is
+    // the lost update it exists to prevent, so a non-strict one refuses too.
+    // Only the whole-file writer still publishes unguarded.
+    it('a non-strict read-modify-write refuses too; the whole-file writer still writes', () => {
         const target = path.join(tmp, 'other.json');
         fs.writeFileSync(target, 'before\n');
         const spy = deniedGuard();
+        let r: unknown;
         try {
-            update_text_under_lock(target, () => 'after\n');
+            r = update_text_under_lock(target, () => 'after\n');
+            atomic_write_text(path.join(tmp, 'whole.json'), 'whole\n');
         } finally {
             spy.mockRestore();
         }
-        expect(fs.readFileSync(target, 'utf8')).toBe('after\n');
+        expect(r).toBe('failed');
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+        expect(fs.readFileSync(path.join(tmp, 'whole.json'), 'utf8')).toBe('whole\n');
     });
 });
 
@@ -699,6 +706,46 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
         fs.utimesSync(held, old, old);
         expect(update_text_under_lock(target, () => 'after\n')).toBe('written');
         expect(fs.readFileSync(target, 'utf8')).toBe('after\n');
+    });
+});
+
+// A lock that cannot be listed gives no exclusion; a read-modify-write refuses
+// rather than overlap another, and the whole-file writer still publishes.
+describe('state_io — a lock directory that cannot be listed', () => {
+    function unlistable(): { mockRestore: () => void } {
+        const real = fsDefault.readdirSync;
+        return vi.spyOn(fsDefault, 'readdirSync').mockImplementation(((p: fs.PathLike, o?: unknown) => {
+            if (String(p) === tmp) throw Object.assign(new Error('EACCES'), { code: 'EACCES' });
+            return (real as (p: fs.PathLike, o?: unknown) => unknown)(p, o);
+        }) as typeof fs.readdirSync);
+    }
+
+    it.each([
+        ['update_text_under_lock', (t: string) => update_text_under_lock(t, () => 'after\n')],
+        ['update_json_under_lock', (t: string) => update_json_under_lock<Record<string, unknown>>(t, () => ({ after: true }))],
+    ])('%s fails closed and leaves the target untouched', (_n, write) => {
+        const target = path.join(tmp, 'unlistable.json');
+        fs.writeFileSync(target, 'before\n');
+        const spy = unlistable();
+        let r: unknown;
+        try {
+            r = write(target);
+        } finally {
+            spy.mockRestore();
+        }
+        expect(r).toBe('failed');
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    });
+
+    it('atomic_write_text still publishes, unguarded', () => {
+        const target = path.join(tmp, 'unlistable-whole.json');
+        const spy = unlistable();
+        try {
+            atomic_write_text(target, 'whole\n');
+        } finally {
+            spy.mockRestore();
+        }
+        expect(fs.readFileSync(target, 'utf8')).toBe('whole\n');
     });
 });
 

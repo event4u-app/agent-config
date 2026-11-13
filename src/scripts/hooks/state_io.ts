@@ -371,11 +371,12 @@ const LOCK_SPIN_SLEEP_MS = 2;
  * read, a mutate and a rename, measured in milliseconds against 30 seconds.
  *
  * Returns the held generation, `null` when a live peer holds it (or a strict
- * caller could not create a guard), or `false` when a non-strict caller
- * proceeds unguarded because no guard can be created or listed (a read-only
- * mount, a vanished parent, a directory it cannot read): the failure mode there is a lost guard, and the
- * alternative is a lost write. The callers below take deliberately different
- * actions on `null`, for reasons stated at each.
+ * caller could not create or list a guard), or `false` when no guard can be
+ * created or listed for a non-strict caller (a read-only mount, a vanished
+ * parent, a directory it cannot read). Only the whole-file writer proceeds on
+ * `false`, where the failure mode is a lost guard and the alternative a lost
+ * write; the read-modify-write callers refuse it like `null`. The callers below
+ * take deliberately different actions, for reasons stated at each.
  */
 function _acquire_lock(
   lock_path: string,
@@ -986,8 +987,9 @@ export function update_text_under_lock(
     return "failed";
   }
   // FAIL CLOSED, for the same reason the JSON sibling does: an append without
-  // exclusion is the truncating write this function exists to prevent.
-  if (held === null) return "failed";
+  // exclusion is the truncating write this function exists to prevent. That
+  // includes `false`, a guard that cannot be created or listed at all.
+  if (!held) return "failed";
   try {
     let loaded: string | null = null;
     try {
@@ -1034,7 +1036,8 @@ export function update_json_under_lock<T>(
   // lock is reported rather than worked around. Reported as `failed` and not as
   // a fourth `busy` state on purpose: every fail-closed caller takes the same
   // action on both (stay silent), and a state nobody branches on goes stale.
-  if (held === null) return "failed";
+  // `false` (no guard can be created or listed) fails closed the same way.
+  if (!held) return "failed";
   try {
     let loaded: Partial<T> = {};
     try {
