@@ -414,6 +414,49 @@ describe('generation lock — every schedule of three callers', () => {
         expect(v.every((h) => h.split('+').length === 2)).toBe(true);
     });
 
+    // Round 10's schedule: A creates generation 0 and pauses before its check
+    // until 0 is stale; B supersedes it with 1; a keep-highest pruner removes
+    // 0; B's recheck finds 0 gone and backs off. If backing off REMOVES 1 the
+    // family is empty, A's check passes on an empty listing, and C creates 0
+    // beside A. Backing off releases 1 instead, so the family keeps it.
+    it.each([
+        ['remove', ['A', 'C']],
+        ['expire', ['C']],
+    ] as const)('round 10 schedule when a caller backing off %ss its generation: holders %j', (backOff, holders) => {
+        files = new Map();
+        const steps = (lp: string): Generator<Step, Held | null | false, StepResult> =>
+            backOff === 'expire'
+                ? acquireSteps(lp, STALE_MS)
+                : (function* () {
+                      const it = acquireSteps(lp, STALE_MS);
+                      let r = it.next();
+                      while (r.done !== true) r = it.next(yield (r.value[0] === 'expire' ? ['remove', r.value[1]] : r.value) as Step);
+                      return r.value;
+                  })();
+        const finish = (it: Generator<Step, Held | null | false, StepResult>, first: IteratorResult<Step, Held | null | false>): Held | null | false => {
+            let r = first;
+            while (r.done !== true) r = it.next(run(r.value));
+            return r.value;
+        };
+        const a = steps(lockPath);
+        let ra = a.next();
+        ra = a.next(run(ra.value as Step)); // list: []
+        ra = a.next(run(ra.value as Step)); // create 0
+        files.set(companion(lockPath, 0), NOW - 2 * STALE_MS); // A paused until 0 went stale
+        const b = steps(lockPath);
+        let rb = b.next();
+        rb = b.next(run(rb.value as Step)); // list: [0]
+        rb = b.next(run(rb.value as Step)); // age 0: stale
+        rb = b.next(run(rb.value as Step)); // create 1
+        for (const g of (run(['list', lockPath]) as number[]).slice(0, -1)) run(['remove', companion(lockPath, g)]); // pruner removes 0
+        expect(finish(b, rb)).toBeNull(); // B's recheck: 0 gone, B backs off
+        const held: string[] = [];
+        if (finish(a, ra)) held.push('A');
+        const c = steps(lockPath);
+        if (finish(c, c.next())) held.push('C');
+        expect(held).toEqual(holders);
+    });
+
     // Round 9's schedule, scripted step by step: a pruner P judges generation 0
     // stale and pauses; A supersedes it, works and releases; a second pruner
     // retires A's generation; B acquires a fresh generation 0; P resumes and

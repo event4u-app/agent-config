@@ -15,8 +15,10 @@
  * `O_EXCL` — two breakers race on one name, so exactly one wins — and only the
  * winner then removes the generations below its own, by name. A release never
  * removes anything: it ages the caller's own generation to the epoch, so the
- * next caller supersedes it at once and generation numbers never restart
- * unless a pruner retires the whole family (see the check after the create). After
+ * next caller supersedes it at once. Nobody removes the highest generation —
+ * a superseder removes only those below its own, a caller that backs off
+ * releases its own, and a pruner keeps the highest — so a family never
+ * empties and its numbering never restarts. After
  * every create the caller checks that no higher generation exists, and backs
  * off if one does. A listing that fails throws rather than reading as "no
  * generation", which would let a caller create beside a live holder.
@@ -123,7 +125,9 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
     // could hold beside us.
     const again = top === undefined ? staleMs : ((yield ['age', companion(lockPath, top)]) as number | null) ?? 0;
     if ((after[after.length - 1] ?? g) > g || again < staleMs) {
-        yield ['remove', companion(lockPath, g)];
+        // Release, never remove: ours may be the highest generation, and the
+        // family must never empty, or numbering restarts (as above).
+        yield ['expire', companion(lockPath, g)];
         return null;
     }
     for (const lower of gens) yield ['remove', companion(lockPath, lower)];
