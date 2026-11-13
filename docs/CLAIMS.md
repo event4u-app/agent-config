@@ -397,6 +397,15 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-11-05
 - measured_on: ab-v2 scorer after the 2026-10-28 task-validity repair; reports 2026-11-04T21-50-27Z (weak, package), 2026-11-04T22-57-15Z and 2026-11-05T03-11-36Z (strong)
 
+### claim: package-beats-no-rules-on-selected-tasks
+- claim: On eight discriminating tasks of the ab-v2 discipline corpus, on claude-sonnet-5-5 and tree 7713a5fd12, the installed package (the adapted reduced layer) scores higher than no rules. A pre-registered confirmation of 504 pairs reads +0.039 J, with a 90 % CI of [+0.007, +0.071]. It costs about 1.85 times as much per solved task ($0.057 against $0.031).
+- kind: quant
+- evidence: agents/evidence/metrics/five-arm-confirmation-result-20261112.md#Reading: BETTER
+- non_inference: It covers eight tasks selected for difficulty, not the corpus, where 29 of 38 tasks sit at the ceiling. It does not cover real tasks, other models or later trees. It says nothing about cost, where the package is about twice as expensive. The package lost about 0.25 J on trapA-overeng-03 and safeF-guard-02.
+- status: backed
+- last_verified: 2026-11-13
+- measured_on: report 2026-11-13T05-54-06Z (ab-v2, container isolation, images from 7713a5fd12), protocol agents/evidence/preregistration/five-arm-confirmation-protocol-20261112.md
+
 ### claim: essential-tier-cost-factor
 - claim: Post-repair (2026-11-04, claude-haiku-4-5, trapE-scope-01/02, 12 seeds), the essential cut (kernel + downstream-changes, injected as `rules-kernel-dc`) is the only arm with a significant weak-host discipline lift: 0.739 → 1.000 on the 23 complete pairs, Δ +0.261, p=0.036, at 2.9× vanilla tokens, against 7.1× for the full tier (−0.125, p=0.353) and 7.8× for the installed package (p=0.181). It is an injected rule set — on Claude `discipline_profile` changes nothing at runtime (agents/roadmaps/stubs/road-to-a-discipline-profile-that-loads.md). PRE-REPAIR (kept, not re-scored): the essential cut keeps a significant weak-host discipline lift at a fraction of the full load's tokens, and the lift is FAMILY- and HOST-SCOPED — measured on three hosts: claude-haiku-4-5 (weak) shows the family-scoped lift (trapE 0.533→1.000, 7/7 discordant, corpus cost 1.71x); claude-sonnet-4-6 (strong) is a ceiling null; gpt-5-mini (non-Claude weak, codex prompt-prepend surface) FAILED replication with headroom (corpus Δ=+0.024 p=0.70, capability trend n.s. — no harm claimed, injection-surface confound documented). Therefore discipline_profile: auto enables the lift only where measured (vendor-granular unknown_defaults). Non-claims — the balanced router profile was removed after a NULL measurement (p=0.81, n=24); no full-tier recommendation exists; no cross-vendor lift is claimed.
 - kind: quant
