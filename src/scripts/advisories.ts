@@ -64,6 +64,7 @@ import {
     emptyLedger,
     validateAcceptance,
 } from './_lib/advisory_verdicts.js';
+import { release, tryAcquire, type Held } from './_lib/generation_lock.js';
 import { readRegistry, recordProject } from './_lib/project_registry.js';
 import { event4u_root } from './_lib/user_global_paths.js';
 import {
@@ -158,42 +159,19 @@ export async function refreshMany(allRoots: string[], deps: RefreshDeps = {}): P
     if (todo.length === 0) return results;
 
     fs.mkdirSync(mdir, { recursive: true });
-    const lock = path.join(mdir, 'refresh.lock');
+    // A generation lock (`_lib/generation_lock.ts`): a refresh abandoned for ten
+    // minutes is superseded, never removed from under the run that took over.
+    // Its limit, unfenced here: a run paused past ten minutes keeps writing
+    // after a peer superseded it, and the later write wins.
+    let held: Held | null;
     try {
-        fs.writeFileSync(lock, `${process.pid} ${now.toISOString()}\n`, { flag: 'wx' });
+        held = tryAcquire(path.join(mdir, 'refresh.lock'), { staleMs: 10 * 60000, now: () => now.getTime() });
     } catch {
-        let stale = true;
-        try {
-            stale = now.getTime() - fs.statSync(lock).mtimeMs > 10 * 60000;
-        } catch {
-            /* vanished between the two calls: treat as stale */
-        }
-        let took = false;
-        if (stale) {
-            // Remove the stale lock, then take it with the same exclusive create:
-            // of two processes that both saw it stale, only one wins.
-            // Move aside only the lock that was judged stale: one another process
-            // took over in between carries a new stamp and is put back.
-            try {
-                const judged = fs.readFileSync(lock, 'utf-8');
-                const aside = `${lock}.${process.pid}.stale`;
-                fs.renameSync(lock, aside);
-                if (fs.readFileSync(aside, 'utf-8') === judged) fs.unlinkSync(aside);
-                else fs.renameSync(aside, lock);
-            } catch {
-                /* the other process removed it first */
-            }
-            try {
-                fs.writeFileSync(lock, `${process.pid} ${now.toISOString()}\n`, { flag: 'wx' });
-                took = true;
-            } catch {
-                took = false;
-            }
-        }
-        if (!took) {
-            for (const p of todo) if (p.prev !== null) results.push({ state: p.prev, fetched: false, reason: 'refresh-in-progress' });
-            return results;
-        }
+        held = null;
+    }
+    if (held === null) {
+        for (const p of todo) if (p.prev !== null) results.push({ state: p.prev, fetched: false, reason: 'refresh-in-progress' });
+        return results;
     }
     try {
         // Unchanged files are not read again (1.2): the cache's own inventory is
@@ -303,11 +281,7 @@ export async function refreshMany(allRoots: string[], deps: RefreshDeps = {}): P
         }
         recordProjects(mdir, inventories.map((p) => ({ root: p.root, fingerprint: p.inv.fingerprint })), now);
     } finally {
-        try {
-            fs.unlinkSync(lock);
-        } catch {
-            /* already gone */
-        }
+        release(held);
     }
     return results;
 }
