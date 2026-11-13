@@ -87,6 +87,15 @@ const SITES: Record<string, () => LockSite> = {
 describe.each(Object.keys(SITES))('%s', (name) => {
     const site = (): Harness => (harness = installHarness((SITES[name] as () => LockSite)()));
 
+    // Every refusal below would also pass a lock that never lets anyone in.
+    it('a lone caller enters, and so does the next one after its release', () => {
+        const s = (SITES[name] as () => LockSite)();
+        let entered = 0;
+        s.call(() => void (entered += 1));
+        s.call(() => void (entered += 1));
+        expect(entered).toBe(2);
+    });
+
     it('the harness reaches the lock: a lone caller passes several injection points', () => {
         expect(site().pointsOfSoloRun('abandoned')).toBeGreaterThan(2);
     });
