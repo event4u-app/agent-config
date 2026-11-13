@@ -164,9 +164,12 @@ export interface AcquireOptions extends GenerationLockOptions {
 /**
  * Attempt until held or until `waitMs` has passed on the wall clock — not
  * until the sleeps add up to it: every attempt lists the directory and every
- * sleep overshoots, which overran a 5 s deadline by seconds. The guarantee is
- * that no attempt starts after the deadline (the first always runs, and each
- * sleep is capped at the time left); an attempt in progress may overrun it.
+ * sleep overshoots, which overran a 5 s deadline by seconds. The deadline is
+ * checked before every retry (the first attempt always runs, and each sleep is
+ * capped at the time left), so no retry is begun once it has passed; an
+ * attempt in progress, or a process suspended between the check and the
+ * attempt, may still overrun it. `Date.now()` is the clock, so a clock step
+ * moves the deadline with it.
  * A create that fails for any reason but `EEXIST` throws: whether to proceed
  * unguarded or refuse is the caller's decision.
  */
