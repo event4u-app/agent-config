@@ -518,6 +518,8 @@ export function run_live_codex(
         cwd: cloneRoot,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
+        // SIGTERM alone lets a child that ignores it hold the sweep past its timeout.
+        killSignal: 'SIGKILL',
         env,
     });
     const wall = (Date.now() - started) / 1000;

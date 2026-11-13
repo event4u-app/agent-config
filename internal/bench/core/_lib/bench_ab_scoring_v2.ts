@@ -605,11 +605,12 @@ function _runShell(
         cwd,
         encoding: 'utf-8',
         timeout: timeoutS * 1000,
+        killSignal: 'SIGKILL',
         env: { ...process.env, [VERIFIER_NONCE_ENV]: nonce },
     });
     const isTimeout =
         (result.error && (result.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') ||
-        (result.signal === 'SIGTERM' && Boolean(result.error));
+        (result.signal === 'SIGKILL' && Boolean(result.error));
     if (isTimeout) {
         return { ok: false, reason: 'timeout' };
     }

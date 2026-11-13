@@ -152,7 +152,7 @@ export function claude_host(iso: ArmIsolation, spec: ArmSpec, opts: { model: str
         if (binary === null) return { session_id: null, errored: true, reason: 'claude CLI not found', tokens: null, turns: null };
         const cmd = host_cmd(prompt, spec, opts, iso.host_flags, resume);
         const env = host_env(process.env, iso.env, opts.token ?? null);
-        return host_call((args) => spawnSync(binary, args, { cwd: iso.workspace, encoding: 'utf-8', timeout: opts.timeout * 1000, env }), cmd, HANG_RETRIES);
+        return host_call((args) => spawnSync(binary, args, { cwd: iso.workspace, encoding: 'utf-8', timeout: opts.timeout * 1000, killSignal: 'SIGKILL', env }), cmd, HANG_RETRIES);
     };
     return { start: async (p) => call(p, null), resume: async (id, p) => call(p, id) };
 }
