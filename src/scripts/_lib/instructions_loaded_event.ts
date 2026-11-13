@@ -18,9 +18,9 @@ export interface CaptureLine {
     readonly name: string | null;
     readonly reason: string | null;
     readonly file: string | null;
-    /** The path ran through a `.claude/rules/` directory. */
+    /** The path ran through a `.claude/rules/` directory, or the `rules/` of `CLAUDE_CONFIG_DIR`. */
     readonly rules: boolean;
-    /** The path sat under the user's own `~/.claude/`. */
+    /** The path sat under the user's own `~/.claude/`, or under `CLAUDE_CONFIG_DIR`. */
     readonly user: boolean;
 }
 
@@ -38,6 +38,12 @@ export function captureInstructionsLoaded(payload: unknown, ts: string, home: st
     // Only an absolute path with no `.`/`..` segment and no doubled separator is read at all.
     const norm = /^([A-Za-z]:)?\//.test(raw) && !/\/\.{0,2}\//.test(raw) ? raw : '';
     const h = home.replace(/\\/g, '/').replace(/\/+$/, '');
+    // An account profile moves the user layer to `CLAUDE_CONFIG_DIR`, whose rules sit in `rules/`
+    // with no `.claude` segment. Read as a project file, every standing law looks missing there
+    // and the layer is demoted to full on a machine where nothing is wrong.
+    const cfgRaw = String(env['CLAUDE_CONFIG_DIR'] ?? '').replace(/\\/g, '/').replace(/\/+$/, '');
+    const cfg = /^([A-Za-z]:)?\//.test(cfgRaw) ? cfgRaw : '';
+    const inProfile = cfg !== '' && norm.startsWith(`${cfg}/`);
     return {
         v: 2,
         ts,
@@ -47,7 +53,7 @@ export function captureInstructionsLoaded(payload: unknown, ts: string, home: st
         name: idShaped(p['hook_event_name']),
         reason: idShaped(p['load_reason']),
         file: idShaped(norm.slice(norm.lastIndexOf('/') + 1)),
-        rules: norm.includes('/.claude/rules/'),
-        user: h !== '' && norm.startsWith(`${h}/.claude/`),
+        rules: norm.includes('/.claude/rules/') || (inProfile && norm.startsWith(`${cfg}/rules/`)),
+        user: inProfile || (h !== '' && norm.startsWith(`${h}/.claude/`)),
     };
 }

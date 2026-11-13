@@ -46,6 +46,26 @@ describe('classifyInstructionsLoaded', () => {
         expect(load('/repo/CLAUDE.md')).toMatchObject({ kind: 'memory', scope: 'project' });
     });
 
+    it('reads a rule under CLAUDE_CONFIG_DIR as the user layer, which is where an account profile keeps it', () => {
+        const profile = '/home/dev/.agent-switch/claude/work/config';
+        const at = (file_path: string, dir: string | undefined) =>
+            classifyInstructionsLoaded(
+                { session_id: 's1', hook_event_name: 'InstructionsLoaded', file_path, load_reason: 'session_start' },
+                { ts: '2026-11-13T00:00:00Z', home: HOME, env: { ...ENV, ...(dir === undefined ? {} : { CLAUDE_CONFIG_DIR: dir }) } },
+            );
+        for (const dir of [profile, `${profile}/`]) {
+            expect(at(`${profile}/rules/scope-control.md`, dir), dir).toMatchObject({ event: 'loaded', kind: 'rule', scope: 'user' });
+            expect(at(`${profile}/CLAUDE.md`, dir), dir).toMatchObject({ kind: 'memory', scope: 'user' });
+        }
+        // The default directory still counts while a profile is active: the host reads a link by its target.
+        expect(at(USER_RULE('scope-control'), profile)).toMatchObject({ kind: 'rule', scope: 'user' });
+        // No profile, a relative one, or a sibling directory: the path is not the user layer.
+        expect(at(`${profile}/rules/a.md`, undefined)).toMatchObject({ kind: 'other', scope: 'project' });
+        expect(at(`${profile}/rules/a.md`, 'claude/work/config')).toMatchObject({ kind: 'other', scope: 'project' });
+        expect(at(`${profile}-other/rules/a.md`, profile)).toMatchObject({ kind: 'other', scope: 'project' });
+        expect(at('/repo/.claude/rules/a.md', profile)).toMatchObject({ kind: 'rule', scope: 'project' });
+    });
+
     it('records every payload it cannot read as unknown', () => {
         expect(line('not an object')).toMatchObject({ event: 'unknown', session: null });
         expect(line({ session_id: 's1', hook_event_name: 'Stop' })).toMatchObject({ event: 'unknown', why: 'event-mismatch' });
