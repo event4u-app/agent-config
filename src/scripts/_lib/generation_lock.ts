@@ -15,7 +15,8 @@
  * `O_EXCL` — two breakers race on one name, so exactly one wins — and only the
  * winner then removes the generations below its own, by name. A release never
  * removes anything: it ages the caller's own generation to the epoch, so the
- * next caller supersedes it at once and generation numbers never restart. After
+ * next caller supersedes it at once and generation numbers never restart
+ * unless a pruner retires the whole family (see the check after the create). After
  * every create the caller checks that no higher generation exists, and backs
  * off if one does. A listing that fails throws rather than reading as "no
  * generation", which would let a caller create beside a live holder.
@@ -114,8 +115,14 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
     }
     if (!((yield [dir ? 'mkdir' : 'create', companion(lockPath, g)]) as boolean)) return null;
     const after = (yield ['list', lockPath]) as number[];
-    if ((after[after.length - 1] ?? g) > g) {
-        // Our listing was out of date and a later generation already holds.
+    // Back off if our listing was out of date and a later generation holds, or
+    // if the generation we superseded is no longer the stale one we judged:
+    // only its superseder removes it, and only after this check, so a winner
+    // always still finds it stale. Gone or fresh means a pruner retired the
+    // family and numbering restarted, so a caller that created that name since
+    // could hold beside us.
+    const again = top === undefined ? staleMs : ((yield ['age', companion(lockPath, top)]) as number | null) ?? 0;
+    if ((after[after.length - 1] ?? g) > g || again < staleMs) {
         yield ['remove', companion(lockPath, g)];
         return null;
     }

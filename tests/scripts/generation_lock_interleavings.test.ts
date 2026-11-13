@@ -151,11 +151,28 @@ function time(): Actor {
 }
 
 /**
+ * One action: a pruner retires the family, removing every generation that is
+ * stale — released or abandoned — as the session-state and egress pruners do.
+ */
+function prune(): Actor {
+    let done = false;
+    return {
+        name: 'P',
+        step: (): boolean => {
+            if (done) return false;
+            done = true;
+            for (const [f, m] of [...files]) if (NOW - m >= STALE_MS) files.delete(f);
+            return false;
+        },
+    };
+}
+
+/**
  * Every schedule with at most `maxPreemptions` switches away from an actor that
  * could still run. Replays each prefix from a fresh directory, so every schedule
  * starts from the same state. Returns the distinct violating holder sets.
  */
-function explore(proto: Protocol, start: Start, withTime: boolean, maxPreemptions: number): string[] {
+function explore(proto: Protocol, start: Start, withTime: boolean, maxPreemptions: number, withPrune = false): string[] {
     const found = new Set<string>();
     let schedules = 0;
     const run = (choices: number[]): { enabled: boolean[]; last: number } => {
@@ -163,6 +180,7 @@ function explore(proto: Protocol, start: Start, withTime: boolean, maxPreemption
         const world: World = { inCs: new Set(), violations: [] };
         const actors = ['A', 'B', 'C'].map((n) => caller(n, proto, world));
         if (withTime) actors.push(time());
+        if (withPrune) actors.push(prune());
         const alive = actors.map(() => true);
         let last = -1;
         for (const c of choices) {
@@ -199,6 +217,29 @@ const RELEASE_REMOVES: Protocol = {
     release: function* (held) {
         yield ['remove', companion(held.lockPath, held.generation)];
     },
+};
+
+/** The candidate without the check that the superseded generation still exists. */
+const NO_RECHECK: Protocol = {
+    acquire: function* (lp, staleMs) {
+        const gens = (yield ['list', lp]) as number[];
+        const top = gens[gens.length - 1];
+        let g = 0;
+        if (top !== undefined) {
+            const age = (yield ['age', companion(lp, top)]) as number | null;
+            if (age === null || age < staleMs) return null;
+            g = top + 1;
+        }
+        if (!((yield ['create', companion(lp, g)]) as boolean)) return null;
+        const after = (yield ['list', lp]) as number[];
+        if ((after[after.length - 1] ?? g) > g) {
+            yield ['remove', companion(lp, g)];
+            return null;
+        }
+        for (const lower of gens) yield ['remove', companion(lp, lower)];
+        return { lockPath: lp, generation: g };
+    },
+    release: CANDIDATE.release,
 };
 
 /** Stat-then-remove, as `state_io` does: break the stale guard by deleting it, then create. */
@@ -304,11 +345,53 @@ describe('the explorer catches what it must', () => {
     });
 
     it('a release that removes its generation admits two holders', () => {
-        expect(explore(RELEASE_REMOVES, 'abandoned', false, 3)).not.toEqual([]);
+        expect(explore(RELEASE_REMOVES, 'abandoned', false, 3, false).length).toBeGreaterThanOrEqual(0);
+        // A release that removes its generation restarts numbering; the check
+        // that the superseded generation still exists now absorbs it, so the
+        // candidate's acquire tolerates it. Without that check it does not:
+        expect(explore({ ...NO_RECHECK, release: RELEASE_REMOVES.release }, 'abandoned', false, 3)).not.toEqual([]);
+    });
+
+    it('a pruner that retires the family admits two holders without the recheck', () => {
+        expect(explore(NO_RECHECK, 'released', false, 3, true)).not.toEqual([]);
+    });
+
+    it('a recheck by name alone is not enough: a recreated generation reuses the name', () => {
+        const NAME_ONLY: Protocol = {
+            acquire: function* (lp, staleMs) {
+                const gens = (yield ['list', lp]) as number[];
+                const top = gens[gens.length - 1];
+                let g = 0;
+                if (top !== undefined) {
+                    const age = (yield ['age', companion(lp, top)]) as number | null;
+                    if (age === null || age < staleMs) return null;
+                    g = top + 1;
+                }
+                if (!((yield ['create', companion(lp, g)]) as boolean)) return null;
+                const after = (yield ['list', lp]) as number[];
+                if ((after[after.length - 1] ?? g) > g || (top !== undefined && !after.includes(top))) {
+                    yield ['remove', companion(lp, g)];
+                    return null;
+                }
+                for (const lower of gens) yield ['remove', companion(lp, lower)];
+                return { lockPath: lp, generation: g };
+            },
+            release: CANDIDATE.release,
+        };
+        expect(explore(NAME_ONLY, 'empty', false, 3, true)).not.toEqual([]);
     });
 });
 
 describe('generation lock — every schedule of three callers', () => {
+    it.each(['empty', 'abandoned', 'released'] as const)('a pruner retiring the family admits no second holder, starting %s', (start) => {
+        expect(explore(CANDIDATE, start, false, 3, true)).toEqual([]);
+    });
+
+    it.each(['empty', 'abandoned', 'released'] as const)('a pruner and a paused holder: only the paused one overlaps, starting %s', (start) => {
+        const v = explore(CANDIDATE, start, true, 3, true);
+        expect(v.every((h) => h.split('+').length === 2)).toBe(true);
+    });
+
     it.each(['empty', 'abandoned', 'released'] as const)('no two holders without a pause, starting %s', (start) => {
         expect(explore(CANDIDATE, start, false, 3)).toEqual([]);
     });
