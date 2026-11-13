@@ -82,11 +82,22 @@ separated the arms on each model, so a task-selection stage comes first.
       `package-beats-no-rules-on-selected-tasks`. The package lost about
       0.25 J again on `trapA-overeng-03` and `safeF-guard-02`. It costs about
       1.85 times as much per solved task.
-- [ ] **1.6 Make the runner's timeout hold.** Two `package` trials of the
+- [x] **1.6 Make the runner's timeout hold.** Two `package` trials of the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_container.ts -->
       confirmation are marked `timeout after 180s`, but they took 915 s and
       15,301 s of wall time. Find why `bench_ab_v2_run` did not stop them at
       its own timeout, and fix it with a test that fails first.
       verify: a test in `tests/scripts/` where a run that outlives its timeout ends within the timeout plus a stated grace, and a passing `task test` run.
+      Cause: `spawnSync` sends one SIGTERM, blocks until the child exits, and
+      still reports `ETIMEDOUT` (reproduced with a fake CLI; the docker client
+      as the holder is inferred). Fixed in `run_live` with SIGKILL and a named
+      container removed on any client death; details in the commit.
+      `tests/scripts/bench_ab_timeout_holds.test.ts` holds timeout plus 3 s.
+- [ ] **1.7 Stop a host-mode trial's whole process tree.** SIGKILL ends the
+      host CLI but not the processes it started (MCP servers, test runs), which
+      keep working in the clone that is then scored. Container mode is not
+      affected: `docker rm -f` ends the tree. Launch host trials in their own
+      process group and signal the group, SIGTERM then SIGKILL.
+      verify: a test in `tests/scripts/` where a host CLI's child outliving the timeout is gone after the run returns, and a passing `task test` run.
 
 ## Phase 2 — The two readings the confirmation left open
 
@@ -144,6 +155,7 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 | 3 | Real-task tests written by the measured party | product | Tests authored with knowledge of an arm grade that arm | 3.1 requires tests from a session that never sees an arm, recorded | Phase 3 — Real tasks |
 | 4 | A confirmation chosen after a near-miss | product | Running 1.5 only because Stage B nearly crossed zero invites pooling the two runs into one BETTER | 1.5's protocol reads only its own pairs, forbids pooling, and stated its power before data | Phase 1 — Five arms on one corpus (funded) |
 | 5 | A hung trial skews the effort figures | implementation | A run that outlives its timeout inflates mean wall time and holds the sweep for hours, as two confirmation trials did | The confirmation reports median wall time; 1.6 makes the timeout hold before the next paid run | Phase 1 — Five arms on one corpus (funded) |
+| 6 | A killed host trial leaves processes in its clone | implementation | After a host-mode timeout, child processes of the CLI keep editing the clone while it is scored | Paid runs use container mode, where the tree is removed; 1.7 closes host mode | Phase 1 — Five arms on one corpus (funded) |
 
 ## Acceptance Criteria
 

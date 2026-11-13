@@ -12,6 +12,8 @@
  * `ANTHROPIC_API_KEY` is removed from the docker client's environment: the CLI
  * prefers an API key over the subscription token without saying so.
  */
+import { spawnSync } from 'node:child_process';
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -35,6 +37,8 @@ export interface ContainerSpec {
     image: string;
     cpus?: string;
     memory?: string;
+    /** `--name` for the container, so a timed-out trial can be removed: killing the docker client does not stop it. */
+    name?: string;
 }
 
 /**
@@ -51,6 +55,7 @@ export function container_argv(spec: ContainerSpec, clone: string, cli_args: rea
         '-w', CONTAINER_WORKDIR,
         '-e', TOKEN_ENV,
     ];
+    if (spec.name) argv.push('--name', spec.name);
     const cli = [...cli_args];
     const i = cli.indexOf('--append-system-prompt-file');
     if (i >= 0 && cli[i + 1]) {
@@ -60,6 +65,17 @@ export function container_argv(spec: ContainerSpec, clone: string, cli_args: rea
     const s = cli.indexOf('--setting-sources');
     if (s >= 0) cli.splice(s, 2);
     return [...argv, spec.image, 'claude', ...cli];
+}
+
+/** A container name unique to this process and call. */
+export function container_name(): string {
+    return `bench-ab-${process.pid}-${crypto.randomBytes(6).toString('hex')}`;
+}
+
+/** Force-remove a container by name; false when docker refused or did not answer within 30 s. */
+export function stop_container(name: string, spawn: typeof spawnSync = spawnSync): boolean {
+    const r = spawn('docker', ['rm', '-f', name], { encoding: 'utf-8', timeout: 30_000, killSignal: 'SIGKILL' });
+    return r.status === 0;
 }
 
 /** The docker client's environment: the caller's, minus overriding credentials, plus the token. */

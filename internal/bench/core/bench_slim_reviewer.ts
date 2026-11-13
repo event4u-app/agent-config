@@ -468,6 +468,7 @@ function callArm(arm: ArmId, prompt: string, cwd: string, o: Opts, rates: Parame
         cwd,
         encoding: 'utf8',
         timeout: 600_000,
+        killSignal: 'SIGKILL',
         maxBuffer: 64 * 1024 * 1024,
     });
     fs.rmSync(path.dirname(agentsFile), { recursive: true, force: true });
