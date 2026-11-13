@@ -117,11 +117,11 @@ function _lock_path(state_dir: string): string {
  * still take the same lock, so the four-process mutual-exclusion test is
  * unaffected.
  *
- * The sentinel and its companion sit next to the state file as
- * `<digest>.json.lock` / `.lock.held`. Neither ends in `.json`, so
- * `prune_stale_session_states` skips both by its existing filter; that pruner
- * now removes them alongside the state file it prunes, so this does not trade a
- * lock for unbounded sentinel growth.
+ * The lock's generations sit next to the state file as
+ * `<digest>.json.lock.held[.<g>]`. None ends in `.json`, so
+ * `prune_stale_session_states` skips them by its existing filter; when it
+ * prunes the state file it takes and releases this lock, which leaves one
+ * released generation per retired file (roadmap step 3.6 tracks removing it).
  */
 function _target_lock_path(target_path: string): string {
   return `${target_path}.lock`;
@@ -233,8 +233,8 @@ function _py_json_dumps(value: unknown, indent: number): string {
  * Write `payload` as JSON to `target` atomically and concurrency-safely.
  *
  * `target` MUST sit under an `agents/runtime/state/` directory (or any other
- * directory the caller treats as the lock scope). The lock file is
- * `<target.parent>/.dispatcher.lock`. Caller does not need to create
+ * directory the caller treats as the lock scope). The lock is the generation
+ * family `<target.parent>/.dispatcher.lock.held[.<g>]`. Caller does not need to create
  * the directory in advance — this function ensures it.
  *
  * Under `AGENT_CONFIG_REPLAY=1` the call is a no-op so fixture
@@ -765,16 +765,9 @@ export function prune_stale_session_states(
         continue;
       }
       fs.rmSync(tomb, { force: true });
-      // The per-file lock sentinel belongs to the state file, so it is pruned
-      // WITH it. Without this, `update_json_under_lock`'s file-keyed lock
-      // (see `_target_lock_path`) would leave one sentinel per retired session
-      // forever: neither name ends in `.json`, so the filter above skips both
-      // and nothing else walks this directory. Trading a serialised write path
-      // for an unbounded file count is not a fix.
-      //
-      // Safe to remove unconditionally at this point: the state file is gone,
-      // so no live writer can be holding a lock for it — and a writer that
-      // arrives afterwards creates both anew. A guard is a generation family
+      // The state file's locks are handled WITH it: no lock name ends in
+      // `.json`, so the filter above skips them and nothing else walks this
+      // directory. A guard is a generation family
       // (`<lock>`, `<lock>.<g>`; `.lock` for the language-mirror tool lock,
       // `.lock.held` for the one here) that a release ages but never removes.
       // The pruner takes the lock like any caller and releases it at once: a
