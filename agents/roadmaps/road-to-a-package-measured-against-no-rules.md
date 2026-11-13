@@ -87,18 +87,12 @@ separated the arms on each model, so a task-selection stage comes first.
       15,301 s of wall time. Find why `bench_ab_v2_run` did not stop them at
       its own timeout, and fix it with a test that fails first.
       verify: a test in `tests/scripts/` where a run that outlives its timeout ends within the timeout plus a stated grace, and a passing `task test` run.
-      Cause, reproduced with a fake CLI: `spawnSync` sends one SIGTERM at the
-      timeout, then blocks until the child exits, and still reports
-      `ETIMEDOUT`. That the real docker client was the child holding on is
-      inferred, not reproduced against a daemon. Fix: `killSignal: 'SIGKILL'`
-      in `run_live`, a named container removed with `docker rm -f` whenever the
-      client dies (a failed removal is marked `container_stopped: false`), a
-      64 MiB output buffer, and the same kill signal on the codex,
-      artifact-sweep, slim-reviewer, safety-probe and verifier calls.
-      `tests/scripts/bench_ab_timeout_holds.test.ts` holds the client to the
-      timeout plus a 3 s grace; it ran 10.3 s before the fix and fails again
-      with the kill signal removed. A real `docker rm -f` can add up to 30 s,
-      which the recorded wall time now includes.
+      Cause: `spawnSync` sends one SIGTERM, blocks until the child exits, and
+      still reports `ETIMEDOUT` (reproduced with a fake CLI; the docker client
+      as the holder is inferred). Fixed in `run_live` with SIGKILL and a named
+      container removed on any client death; details in the commit.
+      `tests/scripts/bench_ab_timeout_holds.test.ts` holds timeout plus 3 s.
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_container.ts -->
 - [ ] **1.7 Stop a host-mode trial's whole process tree.** SIGKILL ends the
       host CLI but not the processes it started (MCP servers, test runs), which
       keep working in the clone that is then scored. Container mode is not
