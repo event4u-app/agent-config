@@ -56,9 +56,14 @@ const FLOOR_MS = 5;
 function grows(fn: (text: string) => unknown, make: (n: number) => string, n: number, runs = 3): { small: number; big: number; linear: boolean } {
     const smallText = make(n / SCALE);
     const bigText = make(n);
-    const small = fastest(() => fn(smallText), runs);
+    // The small input is timed SCALE times back to back: one call can take 0.1 ms,
+    // near the timer's resolution, and a ratio over that is noise (a CI run read 53x).
+    const smallBatch = fastest(() => {
+        for (let i = 0; i < SCALE; i++) fn(smallText);
+    }, runs);
+    const small = smallBatch / SCALE;
     const big = fastest(() => fn(bigText), runs);
-    return { small, big, linear: big < FLOOR_MS || big / Math.max(small, 0.01) < MAX_GROWTH };
+    return { small, big, linear: big < FLOOR_MS || big / smallBatch < MAX_GROWTH / SCALE };
 }
 
 describe('cssBlocks equals the regex it replaced', () => {
