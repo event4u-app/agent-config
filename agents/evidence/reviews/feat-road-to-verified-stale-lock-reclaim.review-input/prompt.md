@@ -37,8 +37,8 @@ a command or the next step acts on it and medium when nothing does.
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 8e24a81947c72f0191589d01166879e436bd5e11, review
-  artefacts excluded), scope hash `f0586ab6d63b4fde0a1a8c2fe94bb674c8eb1465894ace3acd288baf21d4b7fe`
+- diff: `diff.patch` — the review scope (branch head ca023b350ab12ab018b1b1ee6c9b425b1dc1c38a, review
+  artefacts excluded), scope hash `52d62b56d59becd52bcccd5b207464f93bcfa0ce14eaa63d9a5c9510b53929f0`
 - roadmap under review: `roadmap.md` — NO acceptance criteria could be EXTRACTED from it, in either recognised form (an `## Acceptance criteria` heading, or inline `- **AC-n:**` bullets), so `acceptance-criteria.md` is empty. Two different things produce that result and the dispatcher cannot tell them apart: the roadmap declares none, or it declares them in a shape the extractor does not recognise. Open `roadmap.md`, decide which, and report a finding if the criteria are there.
 
 Changed files:
@@ -50,6 +50,9 @@ Changed files:
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r13-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r14-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r15-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r16-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r17-20261113.question.md
+- agents/evidence/council/verified-stale-lock-reclaim-ratification-r18-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r2-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r3-20261113.question.md
 - agents/evidence/council/verified-stale-lock-reclaim-ratification-r4-20261113.question.md
@@ -99,7 +102,7 @@ Fill the findings table in `feat-road-to-verified-stale-lock-reclaim.findings.md
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope f0586ab6d63b4fde0a1a8c2fe94bb674c8eb1465894ace3acd288baf21d4b7fe, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 52d62b56d59becd52bcccd5b207464f93bcfa0ce14eaa63d9a5c9510b53929f0, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel

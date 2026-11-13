@@ -73,7 +73,7 @@ stale-lock break or a release, under any interleaving of three contenders.
       Done 2026-11-13: `dir: true` makes each generation a `mkdir`; `registry.lock` stays generation 0. Red first: `A@6 break-lands-in-B → B+C`, `A@9 release-lands-in-B → B+C`; green after.
 - [x] 2.5 Sibling search: `grep -rnE "statSync\((lock|lockPath|held)\)\.mtimeMs" src/scripts` returns 0 matches outside the shared helper and the ratified `code_graph/refresh_lock.ts` (exception added 2026-11-13, reason below).
       Done 2026-11-13: the search found three sites this step did not list. `advisories.ts` (the rename-aside shape round 55 rejected) and `ai_council/cli_call_budget.ts` (whose break compared `performance.now()` with an epoch mtime and so never fired) moved to the generation lock. The one remaining match, `code_graph/refresh_lock.ts:145`, is a different mechanism and stays: the stale judgement there is repeated under a second `mkdir` mutex, a release is nonce-checked, and its interleaving tests were ratified on 2026-10-24. A wider search for the defect class (exclusive create plus remove or rename) found one more rename-aside lock, `worktree_cleanup_check.ts` `takeRemovalLock`, moved too, and four that Phase 3 carries. These three converted sites (`advisories`, `cli_call_budget`, `worktree_cleanup_check`) are not in the site harness and were not run red first; they rest on their own suites, the helper's step explorer, and for the CLI budget a test that an abandoned lock is superseded at once (on origin/main it waited out the second and proceeded unlocked). A release now ages a lock file instead of removing it, so the session-state and egress-table pruners remove a retired file's lock generations with it — every one but the highest, which stays as one empty file per retired lock (ratification round 9: removing it restarts the numbering, and judging it stale first is the stat-then-remove race again); 3.6 carries that residue.
-- [x] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts:21-23` states it for the helper only). Round inbox-2026-11-wo.
+- [x] 2.6 Fencing, or the limit named where the lock is used: either each of the five sites passes the held generation into its write and the write refuses a stale generation, or each site's header states that a holder paused past `staleMs` keeps writing after it is superseded (`_lib/generation_lock.ts` header, "What it does not do", states it for the helper only). Round inbox-2026-11-wo.
       Done 2026-11-13, the second option: each of the eight call sites states the unfenced limit at the lock, with what narrows it there (a millisecond critical section, the pin re-read, `git worktree remove` re-checking).
 
 ## Phase 3 — the same defect class outside the grep
@@ -100,7 +100,7 @@ Found by the 2.5 wider search on 2026-11-13; each keeps its own liveness rule (a
 
 ## Closes when
 
-Every step is `[x]`, each Phase 2 site's harness run was seen red before its fix, and
+Every step is `[x]`, the harness run of each of the five sites steps 2.1-2.4 name was seen red before its fix (the sites 2.5 added are covered as 2.5 states), and
 the 2.5 search reports zero matches outside the helper and the ratified
 `code_graph/refresh_lock.ts` (2.5).
 
