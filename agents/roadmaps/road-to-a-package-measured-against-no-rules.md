@@ -82,7 +82,7 @@ separated the arms on each model, so a task-selection stage comes first.
       `package-beats-no-rules-on-selected-tasks`. The package lost about
       0.25 J again on `trapA-overeng-03` and `safeF-guard-02`. It costs about
       1.85 times as much per solved task.
-- [x] **1.6 Make the runner's timeout hold.** Two `package` trials of the
+- [x] **1.6 Make the runner's timeout hold.** Two `package` trials of the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_container.ts -->
       confirmation are marked `timeout after 180s`, but they took 915 s and
       15,301 s of wall time. Find why `bench_ab_v2_run` did not stop them at
       its own timeout, and fix it with a test that fails first.
@@ -92,7 +92,6 @@ separated the arms on each model, so a task-selection stage comes first.
       as the holder is inferred). Fixed in `run_live` with SIGKILL and a named
       container removed on any client death; details in the commit.
       `tests/scripts/bench_ab_timeout_holds.test.ts` holds timeout plus 3 s.
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: internal/bench/core/_lib/bench_ab_container.ts -->
 - [ ] **1.7 Stop a host-mode trial's whole process tree.** SIGKILL ends the
       host CLI but not the processes it started (MCP servers, test runs), which
       keep working in the clone that is then scored. Container mode is not
