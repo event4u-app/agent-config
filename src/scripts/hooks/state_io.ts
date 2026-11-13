@@ -369,7 +369,8 @@ const LOCK_SPIN_SLEEP_MS = 2;
  * `LOCK_STALE_MS` keeps writing after a peer has superseded it — a strict
  * holder too, if a non-strict caller takes the same lock. The session-pin
  * paths are taken by strict callers only (`_lib/session_pins.ts`), so a pin
- * holder is never superseded. No caller here
+ * holder is superseded only by the retention prune, once its session is past
+ * retention. No caller here
  * fences its publish with the held generation; every critical section is a
  * read, a mutate and a rename, measured in milliseconds against 30 seconds.
  *

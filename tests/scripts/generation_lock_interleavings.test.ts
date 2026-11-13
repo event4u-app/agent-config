@@ -343,6 +343,16 @@ describe('generation lock — failures and options', () => {
         expect(fs.readdirSync(dir)).toEqual([path.basename(companion(lockPath, MAX_GENERATION))]);
     });
 
+    it('a waiting acquire ends on the wall clock, not after its sleeps add up', () => {
+        // Each attempt lists the directory and each sleep overshoots, so counting
+        // sleep alone overran a 5 s deadline by 2-7 s (measured 2026-11-13).
+        for (let i = 0; i < 2000; i += 1) fs.writeFileSync(path.join(dir, `f${String(i)}.json`), '');
+        tryAcquire(lockPath, { staleMs: STALE_MS });
+        const t = Date.now();
+        expect(acquire(lockPath, { staleMs: STALE_MS, waitMs: 500, spinMs: 2 })).toBeNull();
+        expect(Date.now() - t).toBeLessThan(600);
+    });
+
     it('a zero spin still ends at the deadline', () => {
         const a = tryAcquire(lockPath, { staleMs: STALE_MS });
         expect(a).not.toBeNull();

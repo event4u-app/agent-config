@@ -156,25 +156,26 @@ export function tryAcquire(lockPath: string, options: GenerationLockOptions): He
 }
 
 export interface AcquireOptions extends GenerationLockOptions {
-    /** Total sleep between attempts before giving up; 0 makes exactly one attempt. */
+    /** Wall-clock time to keep attempting before giving up; 0 makes exactly one attempt. */
     waitMs?: number;
     spinMs?: number;
 }
 
 /**
- * Attempt until held or until `waitMs` of sleep has been spent. The deadline
- * counts sleep, not the wall clock, so it bounds the number of attempts too.
+ * Attempt until held or until `waitMs` has passed on the wall clock — not
+ * until the sleeps add up to it: every attempt lists the directory and every
+ * sleep overshoots, which overran a 5 s deadline by seconds.
  * A create that fails for any reason but `EEXIST` throws: whether to proceed
  * unguarded or refuse is the caller's decision.
  */
 export function acquire(lockPath: string, options: AcquireOptions & { breakStale?: true }): Held | null;
 export function acquire(lockPath: string, options: AcquireOptions): Held | null | false;
 export function acquire(lockPath: string, options: AcquireOptions): Held | null | false {
-    const spin = Math.max(1, options.spinMs ?? 5);
-    for (let slept = 0; ; slept += spin) {
+    const end = Date.now() + (options.waitMs ?? 0);
+    for (;;) {
         const held = tryAcquire(lockPath, options);
-        if (held !== null || slept >= (options.waitMs ?? 0)) return held;
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, spin);
+        if (held !== null || Date.now() >= end) return held;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, Math.max(1, options.spinMs ?? 5));
     }
 }
 
