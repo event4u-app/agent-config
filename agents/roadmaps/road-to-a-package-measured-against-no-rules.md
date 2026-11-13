@@ -69,13 +69,24 @@ separated the arms on each model, so a task-selection stage comes first.
       Every arm has at least six of the eight tasks inside (0, 1), so 1.4's
       condition did not fire. No CLAIMS line was written.
 
-- [ ] **1.5 Confirm the primary.** Funded by the owner on 2026-11-12. Run
+- [x] **1.5 Confirm the primary.** Funded by the owner on 2026-11-12. Run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: agents/evidence/metrics/five-arm-confirmation-result-20261112.md -->
       `vanilla` and `package` with 63 seeds on the same eight tasks and images,
       under
       `agents/evidence/preregistration/five-arm-confirmation-protocol-20261112.md`,
       at most $42. The run is read on its own pairs and never pooled with
       Stage B. `docs/CLAIMS.md` changes only as that protocol's § 3 allows.
       verify: `agents/evidence/metrics/five-arm-confirmation-result-20261112.md` states BETTER, WORSE or INCONCLUSIVE from at least 403 pairs, or says the run was cut short.
+      Note 2026-11-13: **BETTER** on 504 of 504 pairs, 1,008 runs for
+      $37.24. `package − vanilla` is +0.039 J, 90 % CI [+0.007, +0.071],
+      read without pooling. `docs/CLAIMS.md` carries the scoped
+      `package-beats-no-rules-on-selected-tasks`. The package lost about
+      0.25 J again on `trapA-overeng-03` and `safeF-guard-02`. It costs about
+      1.85 times as much per solved task.
+- [ ] **1.6 Make the runner's timeout hold.** Two `package` trials of the
+      confirmation are marked `timeout after 180s`, but they took 915 s and
+      15,301 s of wall time. Find why `bench_ab_v2_run` did not stop them at
+      its own timeout, and fix it with a test that fails first.
+      verify: a test in `tests/scripts/` where a run that outlives its timeout ends within the timeout plus a stated grace, and a passing `task test` run.
 
 ## Phase 2 — The two readings the confirmation left open
 
