@@ -383,19 +383,17 @@ function _acquire_lock(
   options: { blocking?: boolean; strict?: boolean } = {},
 ): Held | false | null {
   try {
+    // A strict caller's `false` (a stale holder it never supersedes) is a
+    // refusal like a live peer's `null`; `false` below means unguarded.
     return acquire(`${lock_path}.held`, {
       staleMs: LOCK_STALE_MS,
       breakStale: options.strict !== true,
       waitMs: options.blocking === false ? 0 : LOCK_ACQUIRE_DEADLINE_MS,
       spinMs: LOCK_SPIN_SLEEP_MS,
-    });
+    }) || null;
   } catch {
     return options.strict === true ? null : false;
   }
-}
-
-function _release_lock(held: Held | false): void {
-  if (held !== false) release(held);
 }
 
 /**
@@ -447,7 +445,7 @@ function _atomic_write_text(target: string, text: string): void {
   try {
     _publish_text_locked(target, text);
   } finally {
-    _release_lock(held);
+    if (held) release(held);
   }
 }
 
@@ -774,12 +772,14 @@ export function prune_stale_session_states(
       // so no live writer can be holding a lock for it — and a writer that
       // arrives afterwards creates both anew. A guard is a generation family a
       // release ages but never removes (`.lock[.held][.<g>]`), so every member
-      // goes.
+      // goes — except one touched within the stale window, which a writer that
+      // resumed this session may hold right now.
       const own = path.basename(full);
       for (const n of entries) {
         if (!n.startsWith(own) || !/^\.lock(\.held)?(\.\d+)?$/.test(n.slice(own.length))) continue;
+        const g = path.join(dir, n);
         try {
-          fs.rmSync(path.join(dir, n), { force: true });
+          if (now_ms - fs.statSync(g).mtimeMs >= LOCK_STALE_MS) fs.rmSync(g, { force: true });
         } catch {
           /* never a reason to fail a prune */
         }
@@ -1007,7 +1007,7 @@ export function update_text_under_lock(
   } catch {
     return "failed";
   } finally {
-    _release_lock(held);
+    release(held);
   }
 }
 
@@ -1058,6 +1058,6 @@ export function update_json_under_lock<T>(
   } catch {
     return "failed";
   } finally {
-    _release_lock(held);
+    release(held);
   }
 }

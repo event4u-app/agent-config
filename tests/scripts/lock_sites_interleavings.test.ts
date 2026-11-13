@@ -28,6 +28,8 @@ import { updateRegistry } from '../../src/scripts/_lib/project_registry.js';
 import { update_text_under_lock } from '../../src/scripts/hooks/state_io.js';
 import { _withToolWriteLock, statePathFor } from '../../src/scripts/language_mirror_hook.js';
 
+import { tryAcquire } from '../../src/scripts/_lib/generation_lock.js';
+
 import { installHarness, type Harness, type LockSite } from './_lock_interleaving_harness.js';
 
 let tmp = '';
@@ -85,6 +87,22 @@ const SITES: Record<string, () => LockSite> = {
     },
 };
 
+// A strict caller never supersedes a stale guard, so its `abandoned` exploration
+// below is empty by construction; this is the property that row stands for.
+describe('state_io strict caller over an abandoned guard', () => {
+    it('never enters, blocking or not, and returns at once', () => {
+        const target = path.join(tmp, 'state.json');
+        fs.writeFileSync(`${target}.lock.held`, '');
+        const old = (Date.now() - 3_600_000) / 1000;
+        fs.utimesSync(`${target}.lock.held`, old, old);
+        let entered = 0;
+        const t = Date.now();
+        for (const blocking of [false, true]) update_text_under_lock(target, () => (entered++, null), { strict: true, blocking });
+        expect(entered).toBe(0);
+        expect(Date.now() - t).toBeLessThan(1_000);
+    });
+});
+
 describe.each(Object.keys(SITES))('%s', (name) => {
     const site = (): Harness => (harness = installHarness((SITES[name] as () => LockSite)()));
 
@@ -124,6 +142,16 @@ describe('the egress table pruner', () => {
         expect(fs.readdirSync(dir).some((n) => n.includes('.lock'))).toBe(true);
         expect(pruneSessionTables(dir)).toBe(1);
         expect(fs.readdirSync(dir)).toEqual([]);
+    });
+
+    it('keeps a lock generation that may be held, while the table is pruned', () => {
+        const dir = path.join(tmp, 'table');
+        const t = { dir, sessionId: 's1', workspaceRoot: path.join(tmp, 'ws'), now: Date.parse('2020-01-01T00:00:00Z') };
+        updateTable(t, () => undefined);
+        const peer = tryAcquire(`${sessionTablePath(dir, 's1')}.lock`, { staleMs: 5_000 });
+        expect(peer).not.toBeNull();
+        expect(pruneSessionTables(dir)).toBe(1);
+        expect(fs.readdirSync(dir).filter((n) => n.includes('.lock'))).toHaveLength(1);
     });
 });
 

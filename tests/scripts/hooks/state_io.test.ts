@@ -570,12 +570,16 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
         for (const g of ['.lock.2', '.lock.held.3']) fs.writeFileSync(`${stale}${g}`, '', 'utf8');
         fs.writeFileSync(`${stale}.lock.note`, '', 'utf8'); // not a generation: kept
         const old = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        fs.utimesSync(stale, old, old);
+        for (const f of ['', '.lock', '.lock.held', '.lock.2', '.lock.held.3']) fs.utimesSync(`${stale}${f}`, old, old);
+        // A generation touched within the stale window may be held by a writer
+        // that resumed this session: it stays.
+        fs.writeFileSync(`${stale}.lock.held.4`, '', 'utf8');
 
         const removed = prune_stale_session_states(dir(), Date.now(), 7);
         expect(removed).toBe(1);
         expect(fs.existsSync(stale)).toBe(false);
         for (const g of ['.lock', '.lock.held', '.lock.2', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
+        expect(fs.existsSync(`${stale}.lock.held.4`)).toBe(true);
         expect(fs.existsSync(`${stale}.lock.note`)).toBe(true);
     });
 });
@@ -636,7 +640,7 @@ describe('update_text_under_lock — strict exclusion', () => {
 // with the next generation and removes the lower one afterwards, best-effort. A
 // stale guard that cannot be removed therefore no longer blocks anyone.
 describe('update_text_under_lock — a stale guard that cannot be removed', () => {
-    it('strict=true: is never superseded, so the write is refused at the deadline', () => {
+    it('strict=true: is never superseded, so the write is refused', () => {
         const target = path.join(tmp, 'stuck-strict.json');
         fs.writeFileSync(target, 'before\n');
         const held = `${target}.lock.held`;
@@ -689,7 +693,8 @@ describe('update_text_under_lock — a strict caller never reclaims a stale guar
         const t = Date.now();
         const r = update_text_under_lock(target, () => 'after\n', { strict: true, blocking });
         expect(r).toBe('failed');
-        expect(Date.now() - t).toBeLessThan(15_000);
+        // Refused at once, not after the acquire deadline: the guard will not go away.
+        expect(Date.now() - t).toBeLessThan(LOCK_ACQUIRE_DEADLINE_MS / 5);
         expect(fs.readFileSync(held, 'utf8')).toBe('abandoned');
         expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
     }, 30_000);

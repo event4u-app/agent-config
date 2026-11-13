@@ -31,7 +31,7 @@ import {
 const STALE_MS = 30_000;
 
 interface Protocol {
-    acquire: (lockPath: string, staleMs: number) => Generator<Step, Held | null, StepResult>;
+    acquire: (lockPath: string, staleMs: number) => Generator<Step, Held | null | false, StepResult>;
     release: (held: Held) => Generator<Step, void, StepResult>;
 }
 
@@ -100,7 +100,7 @@ interface World {
 function caller(name: string, proto: Protocol, world: World): Actor {
     const it = proto.acquire(lockPath, STALE_MS);
     let pending = it.next();
-    let held: Held | null = null;
+    let held: Held | null | false = null;
     let phase: 'acquire' | 'enter' | 'leave' | 'release' | 'done' = 'acquire';
     return {
         name,
@@ -109,7 +109,7 @@ function caller(name: string, proto: Protocol, world: World): Actor {
                 case 'acquire':
                     if (pending.done === true) {
                         held = pending.value;
-                        phase = held === null ? 'done' : 'enter';
+                        phase = held === null || held === false ? 'done' : 'enter';
                         return phase !== 'done';
                     }
                     pending = it.next(run(pending.value));
@@ -288,7 +288,11 @@ describe('generation lock — failures and options', () => {
         const a = tryAcquire(lockPath, { staleMs: STALE_MS }) as Held;
         const old = (Date.now() - 2 * STALE_MS) / 1000;
         fs.utimesSync(lockPath, old, old);
-        expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })).toBeNull();
+        // `false`, not `null`: the holder went stale, so a waiting caller stops at once.
+        expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })).toBe(false);
+        const t = Date.now();
+        expect(acquire(lockPath, { staleMs: STALE_MS, breakStale: false, waitMs: 5_000, spinMs: 2 })).toBe(false);
+        expect(Date.now() - t).toBeLessThan(500);
         release(a);
         expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })?.generation).toBe(1);
     });

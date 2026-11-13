@@ -96,7 +96,7 @@ export function execute([op, f]: Step, now: () => number = Date.now): StepResult
 }
 
 /** The acquire protocol, one filesystem step per yield. */
-export function* acquireSteps(lockPath: string, staleMs: number, dir = false, breakStale = true): Generator<Step, Held | null, StepResult> {
+export function* acquireSteps(lockPath: string, staleMs: number, dir = false, breakStale = true): Generator<Step, Held | null | false, StepResult> {
     const gens = (yield ['list', lockPath]) as number[];
     const top = gens[gens.length - 1];
     let g = 0;
@@ -106,7 +106,10 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
         // generation, so a higher one exists and holds.
         // The listing reads 15 digits at most; a generation past them would be
         // invisible to it, so the family is exhausted there rather than skipped.
-        if (age === null || age < staleMs || (!breakStale && age !== Infinity) || top >= MAX_GENERATION) return null;
+        if (age === null || age < staleMs || top >= MAX_GENERATION) return null;
+        // Stale while held, and this caller never supersedes that: `false`, so
+        // a waiting caller stops at once instead of retrying a guard that stays.
+        if (!breakStale && age !== Infinity) return false;
         g = top + 1;
     }
     if (!((yield [dir ? 'mkdir' : 'create', companion(lockPath, g)]) as boolean)) return null;
@@ -120,8 +123,14 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
     return { lockPath, generation: g };
 }
 
-/** One non-blocking attempt. Returns the held generation, or `null` when a live peer holds it. */
-export function tryAcquire(lockPath: string, options: GenerationLockOptions): Held | null {
+/**
+ * One non-blocking attempt. Returns the held generation, `null` when a live
+ * peer holds it, or `false` (only with `breakStale: false`) when the holder
+ * went stale without releasing.
+ */
+export function tryAcquire(lockPath: string, options: GenerationLockOptions & { breakStale?: true }): Held | null;
+export function tryAcquire(lockPath: string, options: GenerationLockOptions): Held | null | false;
+export function tryAcquire(lockPath: string, options: GenerationLockOptions): Held | null | false {
     const it = acquireSteps(lockPath, options.staleMs, options.dir, options.breakStale);
     let r = it.next();
     while (r.done !== true) r = it.next(execute(r.value, options.now));
@@ -140,7 +149,9 @@ export interface AcquireOptions extends GenerationLockOptions {
  * A create that fails for any reason but `EEXIST` throws: whether to proceed
  * unguarded or refuse is the caller's decision.
  */
-export function acquire(lockPath: string, options: AcquireOptions): Held | null {
+export function acquire(lockPath: string, options: AcquireOptions & { breakStale?: true }): Held | null;
+export function acquire(lockPath: string, options: AcquireOptions): Held | null | false;
+export function acquire(lockPath: string, options: AcquireOptions): Held | null | false {
     const spin = Math.max(1, options.spinMs ?? 5);
     for (let slept = 0; ; slept += spin) {
         const held = tryAcquire(lockPath, options);
