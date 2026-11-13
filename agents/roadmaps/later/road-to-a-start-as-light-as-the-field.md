@@ -68,6 +68,9 @@ Its five-arm reading (2026-11-10) is **INCONCLUSIVE** for `package − vanilla`
 (+0.049 J, 90 % CI [−0.003, +0.100]), and the reduced layer beat the full layer
 by +0.111 J [+0.063, +0.160]
 (`agents/evidence/metrics/five-arm-comparison-result-20261110.md`).
+A pre-registered confirmation (2026-11-13, 504 pairs) then read **BETTER** for
+`package − vanilla`: +0.039 J [+0.007, +0.071]
+(`agents/evidence/metrics/five-arm-confirmation-result-20261112.md`).
 
 ## Blockers
 
