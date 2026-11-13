@@ -164,7 +164,9 @@ export interface AcquireOptions extends GenerationLockOptions {
 /**
  * Attempt until held or until `waitMs` has passed on the wall clock — not
  * until the sleeps add up to it: every attempt lists the directory and every
- * sleep overshoots, which overran a 5 s deadline by seconds.
+ * sleep overshoots, which overran a 5 s deadline by seconds. The guarantee is
+ * that no attempt starts after the deadline (the first always runs, and each
+ * sleep is capped at the time left); an attempt in progress may overrun it.
  * A create that fails for any reason but `EEXIST` throws: whether to proceed
  * unguarded or refuse is the caller's decision.
  */
@@ -172,11 +174,12 @@ export function acquire(lockPath: string, options: AcquireOptions & { breakStale
 export function acquire(lockPath: string, options: AcquireOptions): Held | null | false;
 export function acquire(lockPath: string, options: AcquireOptions): Held | null | false {
     const end = Date.now() + (options.waitMs ?? 0);
-    for (;;) {
-        const held = tryAcquire(lockPath, options);
-        if (held !== null || Date.now() >= end) return held;
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, Math.max(1, options.spinMs ?? 5));
+    let held = tryAcquire(lockPath, options);
+    for (let left = end - Date.now(); held === null && left > 0; left = end - Date.now()) {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, Math.min(left, options.spinMs ?? 5));
+        if (Date.now() < end) held = tryAcquire(lockPath, options);
     }
+    return held;
 }
 
 /** The release protocol, one step: age the caller's own generation to the epoch; remove nothing. Never throws. */

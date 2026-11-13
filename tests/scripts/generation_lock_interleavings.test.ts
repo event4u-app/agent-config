@@ -353,6 +353,24 @@ describe('generation lock — failures and options', () => {
         expect(Date.now() - t).toBeLessThan(600);
     });
 
+    it('no attempt starts after the deadline, even when a sleep crosses it', () => {
+        tryAcquire(lockPath, { staleMs: STALE_MS });
+        const real = fs.readdirSync;
+        let listings = 0;
+        const spy = vi.spyOn(fs, 'readdirSync').mockImplementation(((...a: Parameters<typeof fs.readdirSync>) => {
+            listings += 1;
+            return real(...a);
+        }) as typeof fs.readdirSync);
+        try {
+            // A 10 ms spin against a 5 ms deadline: one attempt, a sleep capped
+            // at what is left, and no second attempt.
+            expect(acquire(lockPath, { staleMs: STALE_MS, waitMs: 5, spinMs: 10 })).toBeNull();
+        } finally {
+            spy.mockRestore();
+        }
+        expect(listings).toBe(1);
+    });
+
     it('a zero spin still ends at the deadline', () => {
         const a = tryAcquire(lockPath, { staleMs: STALE_MS });
         expect(a).not.toBeNull();
