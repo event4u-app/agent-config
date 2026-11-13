@@ -52,29 +52,7 @@ total 34512
 total 35870
 ```
 
-```diff
-diff --git a/src/config/hook-bundle-budget.json b/src/config/hook-bundle-budget.json
-index 5b405df712..3efb655039 100644
---- a/src/config/hook-bundle-budget.json
-+++ b/src/config/hook-bundle-budget.json
-@@ -270,0 +271,10 @@
-+        },
-+        {
-+            "date": "2026-11-13",
-+            "chunk": "src/scripts/_lib/session_pins.ts",
-+            "from": 34900,
-+            "to": 35950,
-+            "by": "agent, feat/road-to-verified-stale-lock-reclaim (road-to-verified-stale-lock-reclaim 2.1)",
-+            "what_was_added": "The generation lock (`_lib/generation_lock.ts`, 2,821 B in this chunk) behind `state_io`'s file lock, which the pin capture and restore run under. The stat-then-remove reclaim it replaces let two callers that judged one abandoned guard both acquire, and an unconditional release delete the guard of a peer that had superseded a paused holder; `tests/scripts/lock_sites_interleavings.test.ts` shows both schedules on origin/main and none after. Measured by this gate's own chunk build: 34,512 B on origin/main 24f323151a, 35,870 B with the change, +1,358 B (`state_io` itself fell from 6,323 to 4,748 B; `session_pins` itself grew 38 B, which keeps its housekeeping off lock generations).",
-+            "why_it_could_not_be_avoided": "Room was made first: the step executor was rewritten to tuple steps and a single try, and the release generator dropped, taking the helper from 2,925 to 2,477 B before ratification round 1 added a listing failure that throws, canonical generation names, a floor on the spin and a strict mode that never supersedes a stale holder, round 2 a bound on the generation number, the completion review a strict refusal that does not wait, and ratification round 8 a recheck that the superseded generation is still the stale one (2,821 B), and the old reclaim and its sleep helper left `state_io`. What remains is the protocol itself, which every lock site now shares; a chunk cannot share it with the dispatch bundle, so the pin chunk carries its own copy. The dispatch bundle stays under its 1,595,100 ceiling with no raise.",
-+            "what_would_have_caught_it": "Nothing missed it: the gate fired on the first local reading of the change. Sized to the measurement plus 80 B."
-@@ -294 +304 @@
--            "max_bytes": 34900,
-+            "max_bytes": 35950,
-@@ -296 +306 @@
--            "derivation": "Measured 34,414 bytes on 2026-11-09 (an unpin that matches nothing named in the brief notice too, capture under a strict file lock that never replaces an unreadable file, eligibility computed in linear time from fence, paste and injected-region spans of the original text (attributed envelopes included, opener recognition with no attribute grammar, a lead that ends at the first line containing anything tag-like or at a host frame recognised mid-prompt, a forward-only paste-tag scanner, fences read by a prefix scan, directives that were not applied counted and reported, a directive line carrying a closing tag, an attributed opener or a bare opener closed on a later line refused, checked in linear time), lone surrogates normalised, caps, lossless per-session state that is never overwritten when it cannot be read whole, a reported restore failure, pins inert in a replay (no capture, restore, restatement or subagent read), the once-per-compaction delivery and restatement coordinated across prompt and tool order with one restore record per session changed only under the per-file lock, tried once and never waited for, each delivery adding the compaction's stamp to a set of acknowledged stamps in that lock (the most recent 512), a record that exists but cannot be read left untouched and acted on by nothing on either path, one admission rule for every compaction stamp so an oversized one is unknown and never recorded, pins read inside that transaction, the tool-call restore keyed on its own stamp and never re-delivering a delivered record, a once-a-day retention prune that keeps a live session's restore record by its pin file's activity and removes a gone session's boundary and lock files, the subagent reader, activity-based retention, restore text, and the parts of `_lib/prompt_shape` and `hooks/state_io` they import). The ceiling is that reading plus about 3 %, rounded, with no growth queued. Loaded by `language-mirror` through `hooks/session_pins_loader.ts` on a prompt carrying a `pin:` or `unpin:` line, on a prompt that owes a delivery or restatement, and on the one tool call after a compaction; a missing chunk is reported on the capture turn and on the tool-call restore, and costs the pin restore, never the language restore or the dispatch."
-+            "derivation": "Measured 34,414 bytes on 2026-11-09 (an unpin that matches nothing named in the brief notice too, capture under a strict file lock that never replaces an unreadable file, eligibility computed in linear time from fence, paste and injected-region spans of the original text (attributed envelopes included, opener recognition with no attribute grammar, a lead that ends at the first line containing anything tag-like or at a host frame recognised mid-prompt, a forward-only paste-tag scanner, fences read by a prefix scan, directives that were not applied counted and reported, a directive line carrying a closing tag, an attributed opener or a bare opener closed on a later line refused, checked in linear time), lone surrogates normalised, caps, lossless per-session state that is never overwritten when it cannot be read whole, a reported restore failure, pins inert in a replay (no capture, restore, restatement or subagent read), the once-per-compaction delivery and restatement coordinated across prompt and tool order with one restore record per session changed only under the per-file lock, tried once and never waited for, each delivery adding the compaction's stamp to a set of acknowledged stamps in that lock (the most recent 512), a record that exists but cannot be read left untouched and acted on by nothing on either path, one admission rule for every compaction stamp so an oversized one is unknown and never recorded, pins read inside that transaction, the tool-call restore keyed on its own stamp and never re-delivering a delivered record, a once-a-day retention prune that keeps a live session's restore record by its pin file's activity and removes a gone session's boundary and lock files, the subagent reader, activity-based retention, restore text, and the parts of `_lib/prompt_shape` and `hooks/state_io` they import). The ceiling is that reading plus about 3 %, rounded, with no growth queued. Loaded by `language-mirror` through `hooks/session_pins_loader.ts` on a prompt carrying a `pin:` or `unpin:` line, on a prompt that owes a delivery or restatement, and on the one tool call after a compaction; a missing chunk is reported on the capture turn and on the tool-call restore, and costs the pin restore, never the language restore or the dispatch. Raised 2026-11-13 to 35,950: the generation lock behind state_io's file lock (measured 35,870 B against 34,512 B on origin/main 24f323151a), plus 80 B; the raise_log entry of that date carries the reasoning."
-```
+The budget entry is unchanged since round 11, whose prompt shows it in full: the session-pins chunk `max_bytes` 34,900 → 35,950, with a `raise_log` entry and a derivation sentence naming the measurement; the dispatch ceiling unchanged.
 
 ## Verification at `9738bf7d72`
 
@@ -419,55 +397,9 @@ export function release(held: Held): void {
         if (digest === undefined || name === `${digest}.json` || /\.lock\.held(\.\d+)?$/.test(name) || fs.existsSync(path.join(dir, `${digest}.json`))) continue;
 ```
 
-## `state_io.ts` lock code (doc comments omitted; round 8's prompt shows them)
+## `state_io.ts` lock code
 
-```ts
-function _acquire_lock(
-  lock_path: string,
-  options: { blocking?: boolean; strict?: boolean } = {},
-): Held | false | null {
-  try {
-    // A strict caller's `false` (a stale holder it never supersedes) is a
-    // refusal like a live peer's `null`; `false` below means unguarded.
-    return acquire(`${lock_path}.held`, {
-      staleMs: LOCK_STALE_MS,
-      breakStale: options.strict !== true,
-      waitMs: options.blocking === false ? 0 : LOCK_ACQUIRE_DEADLINE_MS,
-      spinMs: LOCK_SPIN_SLEEP_MS,
-    }) || null;
-  } catch {
-    return options.strict === true ? null : false;
-  }
-}
-
-function _publish_text_locked(target: string, text: string): void {
-  const tmp = target + `.tmp.${process.pid}`;
-  fs.writeFileSync(tmp, text, { encoding: "utf-8" });
-  fs.renameSync(tmp, target);
-}
-
-function _atomic_write_text(target: string, text: string): void {
-  const held = _acquire_lock(_lock_path(path.dirname(target)));
-  if (held === null) {
-    _publish_text_locked(target, text);
-    return;
-  }
-  try {
-    _publish_text_locked(target, text);
-  } finally {
-    if (held) release(held);
-  }
-}
-393:      breakStale: options.strict !== true,
-443:  const held = _acquire_lock(_lock_path(path.dirname(target)));
-451:    if (held) release(held);
-989:    held = _acquire_lock(_target_lock_path(targetPath), { blocking: options.blocking ?? true, strict: options.strict === true });
-996:  if (!held) return "failed";
-1013:    release(held);
-1034:    held = _acquire_lock(_target_lock_path(targetPath), { blocking: options.blocking ?? true });
-1044:  if (!held) return "failed";
-1064:    release(held);
-```
+Unchanged since round 11 except the limit note shown in the diff above; round 11's prompt carries it (`agents/evidence/council/verified-stale-lock-reclaim-ratification-r11-20261113.question.md`).
 
 ## The other seven sites (`git diff -U0 origin/main...9738bf7d72 -- src`, helper, budget, `state_io` and `session_pins` excluded)
 
