@@ -16,10 +16,10 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    acquire,
     acquireSteps,
     companion,
     release,
-    releaseSteps,
     tryAcquire,
     type Held,
     type Step,
@@ -33,7 +33,13 @@ interface Protocol {
     release: (held: Held) => Generator<Step, void, StepResult>;
 }
 
-const CANDIDATE: Protocol = { acquire: acquireSteps, release: releaseSteps };
+/** `release` is one step; this is that step, so the explorer can schedule it. */
+const CANDIDATE: Protocol = {
+    acquire: acquireSteps,
+    release: function* (held) {
+        yield ['expire', companion(held.lockPath, held.generation)];
+    },
+};
 
 let dir = '';
 let lockPath = '';
@@ -42,26 +48,27 @@ const NOW = 1_000_000;
 /** The lock directory as name → mtime, so a schedule replays in microseconds. */
 let files = new Map<string, number>();
 
-function run(step: Step): StepResult {
-    switch (step.op) {
+function run([op, file]: Step): StepResult {
+    switch (op) {
         case 'list':
             return [...files.keys()]
-                .filter((f) => f.startsWith(`${lockPath}.held.`))
-                .map((f) => Number(f.slice(`${lockPath}.held.`.length)))
+                .filter((f) => f === lockPath || f.startsWith(`${lockPath}.`))
+                .map((f) => (f === lockPath ? 0 : Number(f.slice(`${lockPath}.`.length))))
                 .sort((a, b) => a - b);
         case 'age': {
-            const m = files.get(step.file);
+            const m = files.get(file);
             return m === undefined ? null : NOW - m;
         }
         case 'create':
-            if (files.has(step.file)) return false;
-            files.set(step.file, NOW);
+        case 'mkdir':
+            if (files.has(file)) return false;
+            files.set(file, NOW);
             return true;
         case 'remove':
-            files.delete(step.file);
+            files.delete(file);
             return undefined;
         case 'expire':
-            if (files.has(step.file)) files.set(step.file, 0);
+            if (files.has(file)) files.set(file, 0);
             return undefined;
     }
 }
@@ -130,7 +137,7 @@ function time(): Actor {
         step: (): boolean => {
             if (done) return false;
             done = true;
-            const gens = run({ op: 'list', lockPath }) as number[];
+            const gens = run(['list', lockPath]) as number[];
             const top = gens[gens.length - 1];
             if (top !== undefined) files.set(companion(lockPath, top), NOW - 2 * STALE_MS);
             return false;
@@ -185,23 +192,23 @@ function explore(proto: Protocol, start: Start, withTime: boolean, maxPreemption
 const RELEASE_REMOVES: Protocol = {
     acquire: acquireSteps,
     release: function* (held) {
-        yield { op: 'remove', file: companion(held.lockPath, held.generation) };
+        yield ['remove', companion(held.lockPath, held.generation)];
     },
 };
 
 /** Stat-then-remove, as `state_io` does: break the stale guard by deleting it, then create. */
 const STAT_THEN_REMOVE: Protocol = {
     acquire: function* (lp, staleMs) {
-        const file = `${lp}.held.3`;
-        if ((yield { op: 'create', file }) as boolean) return { lockPath: lp, generation: 3 };
-        const age = (yield { op: 'age', file }) as number | null;
+        const file = `${lp}.3`;
+        if ((yield ['create', file]) as boolean) return { lockPath: lp, generation: 3 };
+        const age = (yield ['age', file]) as number | null;
         if (age === null || age < staleMs) return null;
-        yield { op: 'remove', file };
-        if ((yield { op: 'create', file }) as boolean) return { lockPath: lp, generation: 3 };
+        yield ['remove', file];
+        if ((yield ['create', file]) as boolean) return { lockPath: lp, generation: 3 };
         return null;
     },
     release: function* (held) {
-        yield { op: 'remove', file: companion(held.lockPath, held.generation) };
+        yield ['remove', companion(held.lockPath, held.generation)];
     },
 };
 
@@ -217,10 +224,23 @@ afterEach(() => {
 describe('generation lock — single caller', () => {
     it('acquires, excludes a live peer, and is acquirable again after release', () => {
         const a = tryAcquire(lockPath, { staleMs: STALE_MS });
-        expect(a?.generation).toBe(1);
+        expect(a?.generation).toBe(0);
+        expect(fs.existsSync(lockPath)).toBe(true);
         expect(tryAcquire(lockPath, { staleMs: STALE_MS })).toBeNull();
         release(a as Held);
-        expect(tryAcquire(lockPath, { staleMs: STALE_MS })?.generation).toBe(2);
+        expect(tryAcquire(lockPath, { staleMs: STALE_MS })?.generation).toBe(1);
+        expect(fs.existsSync(lockPath)).toBe(false);
+    });
+
+    it('a waiting acquire gives up on a live holder and takes a released one', () => {
+        const a = acquire(lockPath, { staleMs: STALE_MS, waitMs: 10, spinMs: 5 });
+        expect(acquire(lockPath, { staleMs: STALE_MS, waitMs: 10, spinMs: 5 })).toBeNull();
+        release(a as Held);
+        expect(acquire(lockPath, { staleMs: STALE_MS, waitMs: 10, spinMs: 5 })?.generation).toBe(1);
+    });
+
+    it('a create failing for any reason but EEXIST is thrown to the caller', () => {
+        expect(() => acquire(path.join(dir, 'missing', 'lock'), { staleMs: STALE_MS })).toThrow(/ENOENT/);
     });
 });
 
