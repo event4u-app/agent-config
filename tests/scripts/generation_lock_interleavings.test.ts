@@ -13,12 +13,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     acquire,
     acquireSteps,
     companion,
+    execute,
     release,
     tryAcquire,
     type Held,
@@ -41,6 +42,9 @@ const CANDIDATE: Protocol = {
     },
 };
 
+/** A caller that never supersedes a guard that went stale while held. */
+const STRICT: Protocol = { acquire: (lp, staleMs) => acquireSteps(lp, staleMs, false, false), release: CANDIDATE.release };
+
 let dir = '';
 let lockPath = '';
 const NOW = 1_000_000;
@@ -57,7 +61,7 @@ function run([op, file]: Step): StepResult {
                 .sort((a, b) => a - b);
         case 'age': {
             const m = files.get(file);
-            return m === undefined ? null : NOW - m;
+            return m === undefined ? null : m === 0 ? Infinity : NOW - m;
         }
         case 'create':
         case 'mkdir':
@@ -244,6 +248,42 @@ describe('generation lock — single caller', () => {
     });
 });
 
+describe('generation lock — failures and options', () => {
+    it('a listing that fails throws instead of reading as no generation', () => {
+        const live = tryAcquire(lockPath, { staleMs: STALE_MS });
+        expect(live).not.toBeNull();
+        const spy = vi.spyOn(fs, 'readdirSync').mockImplementation(() => {
+            throw Object.assign(new Error('EACCES'), { code: 'EACCES' });
+        });
+        try {
+            expect(() => tryAcquire(lockPath, { staleMs: STALE_MS })).toThrow(/EACCES/);
+        } finally {
+            spy.mockRestore();
+        }
+        expect(fs.readdirSync(dir)).toEqual([path.basename(lockPath)]);
+    });
+
+    it('names that are not canonical generations are not generations', () => {
+        for (const n of ['01', '1.5', 'Infinity', '1e3', '']) fs.writeFileSync(`${lockPath}.${n}`, '');
+        expect(execute(['list', lockPath])).toEqual([]);
+    });
+
+    it('a zero spin still ends at the deadline', () => {
+        const a = tryAcquire(lockPath, { staleMs: STALE_MS });
+        expect(a).not.toBeNull();
+        expect(acquire(lockPath, { staleMs: STALE_MS, waitMs: 5, spinMs: 0 })).toBeNull();
+    });
+
+    it('breakStale false refuses a guard that went stale while held and takes a released one', () => {
+        const a = tryAcquire(lockPath, { staleMs: STALE_MS }) as Held;
+        const old = (Date.now() - 2 * STALE_MS) / 1000;
+        fs.utimesSync(lockPath, old, old);
+        expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })).toBeNull();
+        release(a);
+        expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })?.generation).toBe(1);
+    });
+});
+
 describe('the explorer catches what it must', () => {
     it('stat-then-remove admits two holders over an abandoned guard', () => {
         expect(explore(STAT_THEN_REMOVE, 'abandoned', false, 3)).not.toEqual([]);
@@ -257,6 +297,10 @@ describe('the explorer catches what it must', () => {
 describe('generation lock — every schedule of three callers', () => {
     it.each(['empty', 'abandoned', 'released'] as const)('no two holders without a pause, starting %s', (start) => {
         expect(explore(CANDIDATE, start, false, 3)).toEqual([]);
+    });
+
+    it.each(['empty', 'abandoned', 'released'] as const)('a caller that never breaks a stale guard admits no overlap at all, starting %s', (start) => {
+        expect(explore(STRICT, start, true, 3)).toEqual([]);
     });
 
     it.each(['empty', 'abandoned', 'released'] as const)('with a paused holder, only the paused one overlaps, starting %s', (start) => {

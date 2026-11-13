@@ -625,7 +625,20 @@ describe('update_text_under_lock — strict exclusion', () => {
 // with the next generation and removes the lower one afterwards, best-effort. A
 // stale guard that cannot be removed therefore no longer blocks anyone.
 describe('update_text_under_lock — a stale guard that cannot be removed', () => {
-    it.each([[true], [false]])('strict=%s: is superseded, and the write lands at once', (strict) => {
+    it('strict=true: is never superseded, so the write is refused at the deadline', () => {
+        const target = path.join(tmp, 'stuck-strict.json');
+        fs.writeFileSync(target, 'before\n');
+        const held = `${target}.lock.held`;
+        fs.writeFileSync(held, '');
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(held, old, old);
+        const t = Date.now();
+        expect(update_text_under_lock(target, () => 'after\n', { strict: true })).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(15_000);
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    }, 30_000);
+
+    it.each([[false]])('strict=%s: is superseded, and the write lands at once', (strict) => {
         const target = path.join(tmp, `stuck-${strict}.json`);
         fs.writeFileSync(target, 'before\n');
         const held = `${target}.lock.held`;
@@ -651,25 +664,33 @@ describe('update_text_under_lock — a stale guard that cannot be removed', () =
     }, 30_000);
 });
 
-// Breaking an abandoned guard used to let two reclaimers both acquire, so a
-// strict caller never broke one and a dead holder blocked its session's pins
-// until the retention prune. The generation lock breaks without that race, so a
-// strict caller now supersedes an abandoned guard like everyone else.
-describe('update_text_under_lock — a strict caller supersedes an abandoned guard', () => {
-    it.each([[true], [false]])('blocking=%s: the abandoned guard is superseded and the write lands', (blocking) => {
+// A strict caller never supersedes a guard that went stale while held: a
+// superseded holder that resumes would write past its successor. It does take
+// over a guard its holder released.
+describe('update_text_under_lock — a strict caller never reclaims a stale guard', () => {
+    it.each([[true], [false]])('blocking=%s: an abandoned guard is left in place and the write is refused', (blocking) => {
         const target = path.join(tmp, `abandoned-${blocking}.json`);
         fs.writeFileSync(target, 'before\n');
         const held = `${target}.lock.held`;
         fs.writeFileSync(held, 'abandoned');
         const old = (Date.now() - 10 * 60 * 1000) / 1000;
         fs.utimesSync(held, old, old);
+        const t = Date.now();
         const r = update_text_under_lock(target, () => 'after\n', { strict: true, blocking });
-        expect(r).toBe('written');
-        expect(fs.readFileSync(target, 'utf8')).toBe('after\n');
-        expect(fs.existsSync(held)).toBe(false);
+        expect(r).toBe('failed');
+        expect(Date.now() - t).toBeLessThan(15_000);
+        expect(fs.readFileSync(held, 'utf8')).toBe('abandoned');
+        expect(fs.readFileSync(target, 'utf8')).toBe('before\n');
+    }, 30_000);
+
+    it('a released guard is taken over at once', () => {
+        const target = path.join(tmp, 'released-strict.json');
+        expect(update_text_under_lock(target, () => 'one\n', { strict: true })).toBe('written');
+        expect(update_text_under_lock(target, () => 'two\n', { strict: true, blocking: false })).toBe('written');
+        expect(fs.readFileSync(target, 'utf8')).toBe('two\n');
     });
 
-    it('a non-strict caller reclaims it too', () => {
+    it('a non-strict caller still reclaims it', () => {
         const target = path.join(tmp, 'abandoned-lax.json');
         fs.writeFileSync(target, 'before\n');
         const held = `${target}.lock.held`;

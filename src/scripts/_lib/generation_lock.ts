@@ -6,16 +6,18 @@
  * site that uses it by `tests/scripts/lock_sites_interleavings.test.ts`.
  *
  * The guard is a family `<guard>`, `<guard>.1`, `<guard>.2`, …: generation 0 is
- * the bare path each caller passes, which is the name its stat-then-remove lock
- * used, so a process still running that older code sees a first-generation
- * holder. The holder is whoever created the highest generation. Acquiring creates generation 0 when
- * none exists; breaking a stale highest generation `g` creates `g + 1` with
+ * the bare path each caller passes, the name its stat-then-remove lock used. An
+ * older process therefore sees a generation-0 holder, but nothing more: once a
+ * higher generation holds, it can create generation 0 beside it, so mixed
+ * versions on one lock are not excluded. The holder is whoever created the
+ * highest generation. Acquiring creates generation 0 when none exists; breaking a stale highest generation `g` creates `g + 1` with
  * `O_EXCL` — two breakers race on one name, so exactly one wins — and only the
  * winner then removes the generations below its own, by name. A release never
  * removes anything: it ages the caller's own generation to the epoch, so the
  * next caller supersedes it at once and generation numbers never restart. After
  * every create the caller checks that no higher generation exists, and backs
- * off if one does.
+ * off if one does. A listing that fails throws rather than reading as "no
+ * generation", which would let a caller create beside a live holder.
  *
  * The protocol is written as a sequence of filesystem steps (`acquireSteps`)
  * so the interleaving harness can run several callers step by step against a
@@ -30,6 +32,11 @@ import path from 'node:path';
 
 export interface GenerationLockOptions {
     staleMs: number;
+    /**
+     * `false`: never supersede a generation that went stale while held; take
+     * over only one its holder released. A dead holder then blocks the lock.
+     */
+    breakStale?: boolean;
     /** Each generation is a directory (`mkdir`) instead of a file. */
     dir?: boolean;
     /** Clock, injectable for tests. */
@@ -44,7 +51,7 @@ export interface Held {
 /** One filesystem step: `create` makes a file, `mkdir` a directory, both exclusively. */
 export type Step = readonly ['list' | 'age' | 'create' | 'mkdir' | 'remove' | 'expire', string];
 
-/** What a step returns: a generation list, an age in ms (`null` when absent), or whether a create won. */
+/** What a step returns: a generation list, an age in ms (`null` when absent, `Infinity` once released), or whether a create won. */
 export type StepResult = number[] | number | null | boolean | undefined;
 
 export function companion(lockPath: string, g: number): string {
@@ -53,9 +60,9 @@ export function companion(lockPath: string, g: number): string {
 
 /**
  * Execute one step against the real filesystem. A create that lost the race is
- * `false`, and any other create failure is the caller's to judge. Elsewhere a
- * failure reads as absence: no listing is no generation, a vanished guard has
- * no age, and a lower or expired generation left behind holds nothing.
+ * `false`; any other create or listing failure is the caller's to judge.
+ * Elsewhere a failure reads as absence: a vanished guard has no age, and a
+ * lower or expired generation left behind holds nothing.
  */
 export function execute([op, f]: Step, now: () => number = Date.now): StepResult {
     try {
@@ -63,27 +70,29 @@ export function execute([op, f]: Step, now: () => number = Date.now): StepResult
             const own = path.basename(f);
             return fs
                 .readdirSync(path.dirname(f))
-                .map((n) => (n === own ? 0 : n.startsWith(`${own}.`) ? Number(n.slice(own.length + 1)) : -1))
+                .map((n) => (n === own ? 0 : n.startsWith(`${own}.`) && /^[1-9]\d{0,14}$/.test(n.slice(own.length + 1)) ? Number(n.slice(own.length + 1)) : -1))
                 .filter((g) => g >= 0)
                 .sort((a, b) => a - b);
         }
-        if (op === 'age') return now() - fs.statSync(f).mtimeMs;
+        if (op === 'age') {
+            const m = fs.statSync(f).mtimeMs;
+            return m === 0 ? Infinity : now() - m;
+        }
         if (op === 'remove') return void fs.rmSync(f, { recursive: true, force: true });
         if (op === 'expire') return void fs.utimesSync(f, 0, 0);
         if (op === 'mkdir') fs.mkdirSync(f);
         else fs.closeSync(fs.openSync(f, 'wx'));
         return true;
     } catch (err) {
-        if (op === 'list') return [];
         if (op === 'age') return null;
-        if (op !== 'create' && op !== 'mkdir') return undefined;
+        if (op === 'remove' || op === 'expire') return undefined;
         if ((err as NodeJS.ErrnoException).code === 'EEXIST') return false;
         throw err;
     }
 }
 
 /** The acquire protocol, one filesystem step per yield. */
-export function* acquireSteps(lockPath: string, staleMs: number, dir = false): Generator<Step, Held | null, StepResult> {
+export function* acquireSteps(lockPath: string, staleMs: number, dir = false, breakStale = true): Generator<Step, Held | null, StepResult> {
     const gens = (yield ['list', lockPath]) as number[];
     const top = gens[gens.length - 1];
     let g = 0;
@@ -91,7 +100,7 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false): G
         const age = (yield ['age', companion(lockPath, top)]) as number | null;
         // Gone between the listing and the stat: only a superseder removes a
         // generation, so a higher one exists and holds.
-        if (age === null || age < staleMs) return null;
+        if (age === null || age < staleMs || (!breakStale && age !== Infinity)) return null;
         g = top + 1;
     }
     if (!((yield [dir ? 'mkdir' : 'create', companion(lockPath, g)]) as boolean)) return null;
@@ -107,7 +116,7 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false): G
 
 /** One non-blocking attempt. Returns the held generation, or `null` when a live peer holds it. */
 export function tryAcquire(lockPath: string, options: GenerationLockOptions): Held | null {
-    const it = acquireSteps(lockPath, options.staleMs, options.dir);
+    const it = acquireSteps(lockPath, options.staleMs, options.dir, options.breakStale);
     let r = it.next();
     while (r.done !== true) r = it.next(execute(r.value, options.now));
     return r.value;
@@ -126,7 +135,7 @@ export interface AcquireOptions extends GenerationLockOptions {
  * unguarded or refuse is the caller's decision.
  */
 export function acquire(lockPath: string, options: AcquireOptions): Held | null {
-    const spin = options.spinMs ?? 5;
+    const spin = Math.max(1, options.spinMs ?? 5);
     for (let slept = 0; ; slept += spin) {
         const held = tryAcquire(lockPath, options);
         if (held !== null || slept >= (options.waitMs ?? 0)) return held;

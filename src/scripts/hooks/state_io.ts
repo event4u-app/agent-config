@@ -358,10 +358,12 @@ const LOCK_SPIN_SLEEP_MS = 2;
  * non-blocking one (`post_tool_use`, which must never wait) makes one attempt,
  * and still supersedes an abandoned guard on it.
  *
- * Breaking is now safe for `strict` callers too, so they break an abandoned
- * guard like everyone else: refusing it left a dead holder blocking that
- * session's pins until the retention prune. `strict` still refuses to proceed
- * without a guard when the companion cannot be created at all.
+ * A `strict` caller (session pins) never supersedes a guard that went stale
+ * while held, only one its holder released: a superseded holder that resumes
+ * would write past its successor, and for a pin that is a silently dropped
+ * constraint. A dead holder therefore blocks that session's pins, each attempt
+ * reported, until the retention prune. `strict` also refuses to proceed
+ * without a guard when none can be created or the lock cannot be listed.
  *
  * Limit, named here because the lock cannot close it: a holder paused past
  * `LOCK_STALE_MS` keeps writing after a peer has superseded it. No caller here
@@ -370,8 +372,8 @@ const LOCK_SPIN_SLEEP_MS = 2;
  *
  * Returns the held generation, `null` when a live peer holds it (or a strict
  * caller could not create a guard), or `false` when a non-strict caller
- * proceeds unguarded because the companion cannot be created (a read-only
- * mount, a vanished parent): the failure mode there is a lost guard, and the
+ * proceeds unguarded because no guard can be created or listed (a read-only
+ * mount, a vanished parent, a directory it cannot read): the failure mode there is a lost guard, and the
  * alternative is a lost write. The callers below take deliberately different
  * actions on `null`, for reasons stated at each.
  */
@@ -382,6 +384,7 @@ function _acquire_lock(
   try {
     return acquire(`${lock_path}.held`, {
       staleMs: LOCK_STALE_MS,
+      breakStale: options.strict !== true,
       waitMs: options.blocking === false ? 0 : LOCK_ACQUIRE_DEADLINE_MS,
       spinMs: LOCK_SPIN_SLEEP_MS,
     });
