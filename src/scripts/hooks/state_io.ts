@@ -394,12 +394,7 @@ function _acquire_lock(
 }
 
 function _release_lock(held: Held | false): void {
-  if (held === false) return;
-  try {
-    release(held);
-  } catch {
-    /* ignore */
-  }
+  if (held !== false) release(held);
 }
 
 /**

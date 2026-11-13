@@ -20,6 +20,7 @@ import {
     acquireSteps,
     companion,
     execute,
+    MAX_GENERATION,
     release,
     tryAcquire,
     type Held,
@@ -266,6 +267,15 @@ describe('generation lock — failures and options', () => {
     it('names that are not canonical generations are not generations', () => {
         for (const n of ['01', '1.5', 'Infinity', '1e3', '']) fs.writeFileSync(`${lockPath}.${n}`, '');
         expect(execute(['list', lockPath])).toEqual([]);
+    });
+
+    it('the last listed generation is never superseded by one the listing would not see', () => {
+        fs.writeFileSync(companion(lockPath, MAX_GENERATION), '');
+        fs.utimesSync(companion(lockPath, MAX_GENERATION), 0, 0);
+        expect(execute(['list', lockPath])).toEqual([MAX_GENERATION]);
+        expect(tryAcquire(lockPath, { staleMs: STALE_MS })).toBeNull();
+        expect(tryAcquire(lockPath, { staleMs: STALE_MS, breakStale: false })).toBeNull();
+        expect(fs.readdirSync(dir)).toEqual([path.basename(companion(lockPath, MAX_GENERATION))]);
     });
 
     it('a zero spin still ends at the deadline', () => {

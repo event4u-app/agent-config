@@ -54,6 +54,9 @@ export type Step = readonly ['list' | 'age' | 'create' | 'mkdir' | 'remove' | 'e
 /** What a step returns: a generation list, an age in ms (`null` when absent, `Infinity` once released), or whether a create won. */
 export type StepResult = number[] | number | null | boolean | undefined;
 
+/** The highest generation the listing recognises (`[1-9][0-9]{0,14}`). */
+export const MAX_GENERATION = 999_999_999_999_999;
+
 export function companion(lockPath: string, g: number): string {
     return g === 0 ? lockPath : `${lockPath}.${String(g)}`;
 }
@@ -70,7 +73,7 @@ export function execute([op, f]: Step, now: () => number = Date.now): StepResult
             const own = path.basename(f);
             return fs
                 .readdirSync(path.dirname(f))
-                .map((n) => (n === own ? 0 : n.startsWith(`${own}.`) && /^[1-9]\d{0,14}$/.test(n.slice(own.length + 1)) ? Number(n.slice(own.length + 1)) : -1))
+                .map((n) => (n === own ? 0 : /^\.[1-9]\d{0,14}$/.test(n.slice(own.length)) && n.startsWith(own) ? Number(n.slice(own.length + 1)) : -1))
                 .filter((g) => g >= 0)
                 .sort((a, b) => a - b);
         }
@@ -100,7 +103,9 @@ export function* acquireSteps(lockPath: string, staleMs: number, dir = false, br
         const age = (yield ['age', companion(lockPath, top)]) as number | null;
         // Gone between the listing and the stat: only a superseder removes a
         // generation, so a higher one exists and holds.
-        if (age === null || age < staleMs || (!breakStale && age !== Infinity)) return null;
+        // The listing reads 15 digits at most; a generation past them would be
+        // invisible to it, so the family is exhausted there rather than skipped.
+        if (age === null || age < staleMs || (!breakStale && age !== Infinity) || top >= MAX_GENERATION) return null;
         g = top + 1;
     }
     if (!((yield [dir ? 'mkdir' : 'create', companion(lockPath, g)]) as boolean)) return null;
@@ -143,7 +148,7 @@ export function acquire(lockPath: string, options: AcquireOptions): Held | null 
     }
 }
 
-/** The release protocol, one step: age the caller's own generation to the epoch; remove nothing. */
+/** The release protocol, one step: age the caller's own generation to the epoch; remove nothing. Never throws. */
 export function release(held: Held): void {
     execute(['expire', companion(held.lockPath, held.generation)]);
 }

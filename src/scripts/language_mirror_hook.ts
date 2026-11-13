@@ -914,11 +914,7 @@ export function _withToolWriteLock<T>(
   try {
     return body();
   } finally {
-    try {
-      release(held);
-    } catch {
-      /* the next caller supersedes an unreleased generation once it is stale */
-    }
+    release(held);
   }
 }
 
