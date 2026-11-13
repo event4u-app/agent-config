@@ -576,10 +576,16 @@ describe('state_io — the RMW lock is scoped to the state file, not the directo
         const removed = prune_stale_session_states(dir(), Date.now(), 7);
         expect(removed).toBe(1);
         expect(fs.existsSync(stale)).toBe(false);
-        // Every member of each family but its highest goes; the highest stays,
-        // so the numbering never restarts under a caller with an old listing.
-        for (const g of ['.lock', '.lock.held', '.lock.held.3']) expect(fs.existsSync(`${stale}${g}`)).toBe(false);
-        for (const g of ['.lock.2', '.lock.held.4', '.lock.note']) expect(fs.existsSync(`${stale}${g}`)).toBe(true);
+        // The pruner takes each lock and releases it. `.lock`'s highest (2) is a
+        // dead holder's: superseded by 3, the generations below removed, and 3
+        // released, so a strict caller takes over instead of being blocked for
+        // good. `.lock.held`'s highest (4) is fresh, a live holder: untouched.
+        // The numbering never restarts.
+        expect(fs.existsSync(`${stale}.lock`)).toBe(false);
+        expect(fs.existsSync(`${stale}.lock.2`)).toBe(false);
+        expect(fs.statSync(`${stale}.lock.3`).mtimeMs).toBe(0);
+        for (const g of ['.lock.held', '.lock.held.3', '.lock.held.4', '.lock.note']) expect(fs.existsSync(`${stale}${g}`)).toBe(true);
+        expect(fs.statSync(`${stale}.lock.held.4`).mtimeMs).toBeGreaterThan(0);
     });
 });
 

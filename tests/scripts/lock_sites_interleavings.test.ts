@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { _withLedgerLock } from '../../src/scripts/ai_council/budget_guard.js';
 import { withStateLock } from '../../src/scripts/ai_council/cli_call_budget.js';
@@ -154,6 +154,25 @@ describe('the egress table pruner', () => {
         expect(peer).not.toBeNull();
         expect(pruneSessionTables(dir)).toBe(1);
         expect(fs.readdirSync(dir).filter((n) => n.includes('.lock'))).toHaveLength(1);
+    });
+});
+
+// A filesystem error on the ledger lock is a refusal, as a timed-out wait is,
+// never a throw: the reservation callers have no try.
+describe('the council ledger lock', () => {
+    it('refuses rather than throws when its lock directory cannot be listed', () => {
+        const ledger = path.join(tmp, 'council', 'spend.jsonl');
+        fs.mkdirSync(path.dirname(ledger), { recursive: true });
+        const real = fs.readdirSync;
+        const spy = vi.spyOn(fs, 'readdirSync').mockImplementation(((...a: Parameters<typeof fs.readdirSync>) => {
+            if (String(a[0]) === path.dirname(ledger)) throw Object.assign(new Error('EACCES'), { code: 'EACCES' });
+            return real(...a);
+        }) as typeof fs.readdirSync);
+        try {
+            expect(_withLedgerLock(ledger, 50, () => 'ran')).toBeNull();
+        } finally {
+            spy.mockRestore();
+        }
     });
 });
 

@@ -646,7 +646,13 @@ export function _withLedgerLock<T>(p: string, waitMs: number, fn: () => T): T | 
     if (!_ensureLedgerDir(p)) {
         return null;
     }
-    const held = acquire(`${p}.lock`, { staleMs: RESERVATION_LOCK_STALE_MS, waitMs, spinMs: 15 });
+    let held;
+    try {
+        held = acquire(`${p}.lock`, { staleMs: RESERVATION_LOCK_STALE_MS, waitMs, spinMs: 15 });
+    } catch {
+        // A lock that cannot be created or listed is a refusal too, never a throw.
+        held = null;
+    }
     if (held === null) {
         return null;
     }

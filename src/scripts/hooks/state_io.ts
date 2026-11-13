@@ -9,7 +9,7 @@
  * Per `docs/contracts/hook-architecture-v1.md`, Concurrency, every concern
  * that writes a state file under `agents/` MUST:
  *
- * 1. Acquire an exclusive lock on `<state_dir>/.dispatcher.lock` — the SAME
+ * 1. Acquire an exclusive lock, the generation family `<state_dir>/.dispatcher.lock.held[.<g>]` (or, for a read-modify-write, `<target>.lock.held[.<g>]`) — the SAME
  *    directory the target file lives in, derived from the target's own
  *    path (`path.dirname`), never a single fixed location: one concern's
  *    target under `agents/runtime/state/` locks there, another's target
@@ -40,7 +40,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { acquire, companion, execute, release, type Held } from "../_lib/generation_lock.js";
+import { acquire, execute, release, tryAcquire, type Held } from "../_lib/generation_lock.js";
 
 export const LOCK_BASENAME = ".dispatcher.lock";
 
@@ -362,7 +362,7 @@ const LOCK_SPIN_SLEEP_MS = 2;
  * while held, only one its holder released: a superseded holder that resumes
  * would write past its successor, and for a pin that is a silently dropped
  * constraint. A dead holder therefore blocks that session's pins, each attempt
- * reported, until the retention prune. `strict` also refuses to proceed
+ * reported, until the retention prune releases its generation. `strict` also refuses to proceed
  * without a guard when none can be created or the lock cannot be listed.
  *
  * Limit, named here because the lock cannot close it: a holder paused past
@@ -776,13 +776,18 @@ export function prune_stale_session_states(
       // arrives afterwards creates both anew. A guard is a generation family
       // (`<lock>`, `<lock>.<g>`; `.lock` for the language-mirror tool lock,
       // `.lock.held` for the one here) that a release ages but never removes.
-      // Every member but the highest goes. The highest stays, one empty file
-      // per retired lock: removing it would restart the numbering under a
-      // caller still holding an old listing, and judging it stale before
-      // removing it is the stat-then-remove race this lock replaced.
+      // The pruner takes the lock like any caller and releases it at once: a
+      // stale holder's generation is superseded, the ones below it removed,
+      // and one released generation stays, one empty file per retired lock.
+      // Removing the highest would restart the numbering under a caller still
+      // holding an old listing, and judging it stale before removing it is the
+      // stat-then-remove race this lock replaced; a dead holder left in place
+      // would block a strict caller of that session for good. A live holder
+      // keeps its lock, and a lock that has no generation is left uncreated.
       for (const lock of [`${full}.lock`, `${full}.lock.held`]) {
         try {
-          for (const g of (execute(["list", lock]) as number[]).slice(0, -1)) execute(["remove", companion(lock, g)]);
+          const held = (execute(["list", lock]) as number[]).length > 0 && tryAcquire(lock, { staleMs: LOCK_STALE_MS, now: () => now_ms });
+          if (held) release(held);
         } catch {
           /* never a reason to fail a prune */
         }
