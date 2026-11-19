@@ -998,7 +998,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - kind: qual
 - evidence: exec:vitest run tests/install/council_fallback_installed_copy_real_install.test.ts -> 0
 - status: backed
-- last_verified: 2026-10-19
+- last_verified: 2026-11-19
 <!-- EVIDENCE MOVED 2026-10-19: from the unit suite tests/scripts/ai_council/council_cli.test.ts, which fakes the transports inside the process, to a packed and installed copy driven through its own bin with `claude`, `codex` and `curl` substituted at the process boundary. No shipped code carries a seam for it. The unit suite still runs in the node-tests job; it is no longer what backs a claim about an installed copy. -->
 
 **The condition was added 2026-08-19, after a review found the unconditional
