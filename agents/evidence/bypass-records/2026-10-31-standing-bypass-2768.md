@@ -7,7 +7,7 @@ ruleset_version_before: 54936982
 ruleset_version_after: 54936982
 restore_by: 2026-11-07T11:31:07+01:00
 restored_at: superseded-by-owner-ruling agents/evidence/owner-directives/2026-10-25-standing-pull-request-bypass.md
-council_review: pending
+council_review: agents/evidence/council/bypass-2768-review-20261119.md
 ---
 <!-- evidence-type: bypass-record -->
 
@@ -35,7 +35,7 @@ request whose payload step runs.
   `approval_event` still reads "NONE VERIFIED"; the owner's choice is not that
   review. The chain ends as the #2755 record states: `repaid_at` at the
   watermark, or `expires_at` 2027-01-27.
-- **`council_review`:** `pending` — no council review of this bypass has run yet.
+- **`council_review`:** ran 2026-11-19, `agents/evidence/council/bypass-2768-review-20261119.md` (anthropic REJECT, openai REQUEST_CHANGES; findings open).
 
 ## What the merge changed
 
