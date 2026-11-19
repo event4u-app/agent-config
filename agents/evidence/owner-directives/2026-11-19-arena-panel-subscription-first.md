@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Owner directive — 2026-11-19: arena, panel, subscription first
 
 Recorded from one owner session (four owner turns). Condensed, owner's words

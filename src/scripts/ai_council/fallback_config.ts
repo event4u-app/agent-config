@@ -81,24 +81,22 @@ export interface FallbackBuilderDeps {
  */
 export function buildFallback(raw: unknown, d: FallbackBuilderDeps): FallbackConfig {
     if (!d.isDict(raw)) return { api_on_quota: false, api_on_cli_loss: 'ask' };
-    const loss = raw['api_on_cli_loss'];
-    if (loss !== undefined && !d.isBool(loss) && loss !== 'ask') {
-        throw d.error(`\`fallback.api_on_cli_loss\`=${d.repr(loss)} must be \`true\`, \`false\` or \`'ask'\` (got ${d.typeName(loss)}).`);
-    }
-    const api_on_cli_loss: boolean | 'ask' = loss === undefined ? 'ask' : (loss as boolean | 'ask');
-    const v = raw['api_on_quota'];
-    if (v === undefined) return { api_on_quota: false, api_on_cli_loss };
-    if (d.isBool(v)) return { api_on_quota: v, api_on_cli_loss };
+    return {
+        api_on_quota: spendKey(raw, 'api_on_quota', d) ?? false,
+        api_on_cli_loss: spendKey(raw, 'api_on_cli_loss', d) ?? 'ask',
+    };
+}
+
+/** One spend key: absent → `undefined` (the caller's default), else `true`, `false` or `'ask'`. */
+function spendKey(raw: Record<string, unknown>, key: string, d: FallbackBuilderDeps): ApiOnQuota | undefined {
+    const v = raw[key];
     // `'ask'` is the ONLY string this accepts, and the narrowness is the
     // point: the paragraph above refuses `"yes"` because an operator writing
     // it is trying to authorise spend, and widening to "any truthy-looking
     // string" to let `ask` through would readmit exactly that. A third named
     // value is not a lenient parse.
-    if (d.isStr(v) && v === 'ask') return { api_on_quota: 'ask', api_on_cli_loss };
-    throw d.error(
-        `\`fallback.api_on_quota\`=${d.repr(v)} must be \`false\`, \`true\` or \`'ask'\` ` +
-            `(got ${d.typeName(v)}).`,
-    );
+    if (v === undefined || d.isBool(v) || v === 'ask') return v;
+    throw d.error(`\`fallback.${key}\`=${d.repr(v)} must be \`false\`, \`true\` or \`'ask'\` (got ${d.typeName(v)}).`);
 }
 
 /**

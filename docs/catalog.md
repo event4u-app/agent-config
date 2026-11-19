@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **758 public artefacts** shipped by
+Consumer-facing catalog of all **762 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -456,7 +456,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (214)
+## Commands (218)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -490,6 +490,7 @@ are excluded.
 | command | [`analyze-premortem`](../dist/agent-src/commands/analyze/premortem.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-reference`](../dist/agent-src/commands/analyze/reference.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../dist/agent-src/commands/analyze/roadmap-repos.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository. |
+| command | [`arena`](../dist/agent-src/commands/arena.md) | cluster: arena | Run an arena — competing solutions in script-scored matches, default 10 lines, an eliminated idea can come back at most twice |
 | command | [`audit`](../dist/agent-src/commands/audit.md) | cluster: audit | Security advisories, code and agent actions for this project |
 | command | [`brand`](../dist/agent-src/commands/brand.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../dist/agent-src/commands/brand/identity.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
@@ -597,6 +598,9 @@ are excluded.
 | command | [`package`](../dist/agent-src/commands/package.md) | cluster: package | Package orchestrator — routes to test (verify the package install) and reset (restore installed state) |
 | command | [`package-reset`](../dist/agent-src/commands/package/reset.md) | cluster: package | /package-reset |
 | command | [`package-test`](../dist/agent-src/commands/package/test.md) | cluster: package | /package-test |
+| command | [`panel`](../dist/agent-src/commands/panel.md) | cluster: panel | Panel orchestrator — routes to decide (lenses vote on decisions) and review (reviewers, verifying jurors, merger) |
+| command | [`panel-decide`](../dist/agent-src/commands/panel/decide.md) | cluster: panel | Put open decisions in front of independent judges with fixed lenses; one synthesis tallies the votes, keeps the dissent and adds no preference |
+| command | [`panel-review`](../dist/agent-src/commands/panel/review.md) | cluster: panel | Let angle reviewers hunt findings in one artifact, jurors verify each against the source and reject the unverifiable, one merger dedupes and ranks |
 | command | [`post-as`](../dist/agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as-ghostwriter`](../dist/agent-src/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as-me`](../dist/agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |

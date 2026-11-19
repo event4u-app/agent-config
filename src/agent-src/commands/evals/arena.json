@@ -1,0 +1,11 @@
+{
+  "command": "arena",
+  "intent": "Let competing solutions to one task fight it out in a resumable bracket whose losses a paid jury can vote back in",
+  "cases": [
+    { "prompt": "let ten solutions to the CSV import fight it out, best one wins", "expected": "arena" },
+    { "prompt": "run an arena on the caching strategy for the price API", "expected": "arena" },
+    { "prompt": "bracket of competing implementations, an eliminated idea may come back", "expected": "arena" },
+    { "prompt": "have several independent judges vote on these open plan points", "expected": "panel-decide" },
+    { "prompt": "get a second opinion from other model families on this diff", "expected": "council" }
+  ]
+}

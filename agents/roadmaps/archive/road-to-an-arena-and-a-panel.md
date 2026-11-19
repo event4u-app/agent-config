@@ -46,56 +46,56 @@ configuration.
 
 ## Phase 1 — Arena entry
 
-- [x] **1.1** `bracket` registered in `src/cli/registry.ts` and `_dispatch.bash`
+- [x] **1.1** `bracket` registered in `src/cli/registry.ts` and `_dispatch.bash` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/registry.ts -->
       (help line included); `agent-config bracket plan --tier S1` answers.
-- [x] **1.2** `/judge bracket` calls `agent-config bracket` instead of the
+- [x] **1.2** `/judge bracket` calls `agent-config bracket` instead of the <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       in-repo script path.
-- [x] **1.3** Cluster `arena` locked in `docs/contracts/command-clusters.md`;
+- [x] **1.3** Cluster `arena` locked in `docs/contracts/command-clusters.md`; <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `/arena` head command routes to the bracket procedure; verb `arena` in
       `command-verbs.yml` with an ADR-041 addendum.
 
 ## Phase 2 — Appeal jury, staged (D2)
 
-- [x] **2.1** Mode `off | shadow | binding`, default `shadow` — a driver flag
+- [x] **2.1** Mode `off | shadow | binding`, default `shadow` — a driver flag <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/cli.ts -->
       (`--jury-mode`), not a settings key: the mode is per run and `binding` is
       code-gated by `BINDING_UNLOCKED`, so a setting would add a surface with no
       decision left in it.
-- [x] **2.2** Engine: a jury decision helper that takes juror verdicts (both
+- [x] **2.2** Engine: a jury decision helper that takes juror verdicts (both <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bracket/engine.ts -->
       orders each), counts only seats whose billing is `subscription` or
       `per-token`, requires ≥ 2 families and a strict majority; anything else
       is `inconclusive`. In `shadow` the record is attached to the card or
       decline and never decides; in `binding` it decides and `inconclusive`
       leaves the elimination with no card spent.
-- [x] **2.3** Pre-registered claim `paid-appeal-jury` in `docs/CLAIMS.md`
+- [x] **2.3** Pre-registered claim `paid-appeal-jury` in `docs/CLAIMS.md` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       (decisive-vote rate, position-swap consistency; thresholds fixed before
       the first run). `binding` stays refused by the CLI until the claim reads
       `backed`.
-- [x] **2.4** AC-9 test amended to admit exactly the bracket consumer, only once
+- [x] **2.4** AC-9 test amended to admit exactly the bracket consumer, only once <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       2.3 is backed — until then the jury helper lives in `src/scripts/bracket/`
       and does not import `jury_aggregate.ts`.
-- [x] **2.5** Retire the stub `road-to-an-appeal-jury-wired` (absorbed by Phase 2).
+- [x] **2.5** Retire the stub `road-to-an-appeal-jury-wired` (absorbed by Phase 2). <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 3 — Panel (D3)
 
-- [x] **3.1** Cluster `panel` (`decide`, `review`), verb in `command-verbs.yml`.
-- [x] **3.2** `/panel decide`: points × lenses (default 4: practice, theory,
+- [x] **3.1** Cluster `panel` (`decide`, `review`), verb in `command-verbs.yml`. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/discovery/command-verbs.yml -->
+- [x] **3.2** `/panel decide`: points × lenses (default 4: practice, theory, <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       system, skeptic; overridable), structured vote schema, one synthesis that
       tallies (consensus ≥ 3 of 4), records dissent and owner-only, adds no
       preference.
-- [x] **3.3** `/panel review`: N angle reviewers (line + quote per finding),
+- [x] **3.3** `/panel review`: N angle reviewers (line + quote per finding), <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       jurors verify pairs against the source and reject the unverifiable, one
       merger dedupes, re-checks, ranks.
-- [x] **3.4** Both state: a same-model fan-out is a panel, never a council.
+- [x] **3.4** Both state: a same-model fan-out is a panel, never a council. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 4 — Subscriptions first (D4)
 
-- [x] **4.1** New key `fallback.api_on_cli_loss` (default `false`): the four
+- [x] **4.1** New key `fallback.api_on_cli_loss` (unset = ask once per run, D6): the four <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/fallback_config.ts -->
       no-double-charge classes fall through to the metered rung only when set.
-- [x] **4.2** `council:status` prints the new posture.
-- [x] **4.3** `docs/contracts/ai-council-config.md` § Mid-flight fallback updated.
-- [x] **4.4** Owner's own config: the ignored `defaults.mode: api` removed.
+- [x] **4.2** `council:status` prints the new posture. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/council_fallback_posture.ts -->
+- [x] **4.3** `docs/contracts/ai-council-config.md` § Mid-flight fallback updated. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **4.4** Owner's own config: the ignored `defaults.mode: api` removed. <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 5 — Profiles (D5)
 
-- [x] **5.1** Arena and panel name `road-to-a-link-with-agent-switch` 5.1/5.3 as
+- [x] **5.1** Arena and panel name `road-to-a-link-with-agent-switch` 5.1/5.3 as <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       the account path; no account choice in either command.

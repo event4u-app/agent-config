@@ -47,6 +47,19 @@ a document to check is `review`; unclear → ask once with the two options.
 another's vote, and the synthesis counts instead of opining — so agreement means
 independent agreement, and a split stays visible as a split.
 
+## Non-interactive & auto-detection
+
+`/panel` honors the [`non-interactive-contract`](../contexts/execution/non-interactive-contract.md)
+(surface detection, confidence tiers, `--yes`/`--json`, abort schemas,
+the `auto_detect` kill-switch, rollback). Detection table:
+
+| Basis (signal) | Sub-command | Confidence |
+|---|---|---|
+| Explicit sub given (`/panel review`) | that one | — (detection skipped) |
+| A list of open questions or plan points to settle | `panel/decide` | HIGH |
+| One document, diff or contract to check for defects | `panel/review` | HIGH |
+| Both or neither | ask once with the two options | LOW |
+
 ## Not this command
 
 - Competing **solutions** to one task, best survives → `/arena`.

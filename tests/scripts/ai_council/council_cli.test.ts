@@ -1394,7 +1394,7 @@ describe('mid-flight fallback — end to end from a config file', () => {
     function hermetic(options: CliFallbackOptions, answer = 'answered over api'): CliFallbackOptions {
         return {
             api_on_quota: options.api_on_quota,
-            api_on_cli_loss: options.api_on_cli_loss,
+            ...(options.api_on_cli_loss !== undefined ? { api_on_cli_loss: options.api_on_cli_loss } : {}),
             ...(options.parked !== undefined ? { parked: options.parked } : {}),
             ...(options.on_event !== undefined ? { on_event: options.on_event } : {}),
             construct: (provider: string) => {
