@@ -145,6 +145,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'self-repair:status', disposition: 'delegate', synopsis: 'List queued agent-config defect records (read-only).' },
     { name: 'self-repair:release', disposition: 'delegate', synopsis: 'Publish one defect record as a PR, or an issue when a PR is impossible (Hard-Floor gated).' },
     { name: 'decision:memo', disposition: 'delegate', synopsis: 'Record or list an autonomously-resolved question so it stays reviewable (local-only).' },
+    { name: 'bracket', disposition: 'delegate', synopsis: 'Drive an /arena bracket run (plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status); state under agents/runtime/bracket/.' },
     { name: 'run:supervise', disposition: 'delegate', synopsis: 'Report runs whose session died with open steps left. Never merges, pushes, or closes.' },
 ] as const;
 

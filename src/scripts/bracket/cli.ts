@@ -11,7 +11,13 @@
  *   collect --run ID --match M --verdict FILE
  *   correct --run ID --match M --reason misread-check|unsupported-fatal
  *   card    --run ID --line L --seat-id X --seat-family F --seat-billing B [--new-evidence] [--jury FILE]
- *   decline --run ID --line L
+ *   decline --run ID --line L [--jury FILE]
+ *           card/decline without --jury: pass --no-jury "<reason>" (e.g. "one paid family"); it is logged
+ *   jury    --run ID --line L --jury FILE [--new-evidence] [--jury-mode binding]
+ *           FILE: JSON array of juror votes `{ seat: {id,family,billing}, ab, ba }`,
+ *           ab/ba ∈ readmit|deny (the eliminated line shown first / second).
+ *           `card`/`decline` record it as the shadow jury; `jury` lets it decide
+ *           and is refused until `binding` is unlocked (appeal_jury.ts).
  *   status  --run ID [--json]
  *
  * State lives under `agents/runtime/bracket/<run>/` (gitignored): `bracket.json`,
@@ -23,6 +29,7 @@ import * as path from 'node:path';
 import { classifyContentClass } from '../ai_council/content_ceiling.js';
 import { is_near_duplicate } from '../ai_council/debate_gates.js';
 import {
+    appealByJury,
     BracketError,
     collect,
     correct,
@@ -37,9 +44,9 @@ import {
     sha256,
     type BracketState,
     type Billing,
-    type JuryInput,
     type NextAction,
 } from './engine.js';
+import { resolveJuryMode, tallyAppealJury, type JurorVote, type JuryRecord } from './appeal_jury.js';
 import { freeSeatAllowance } from './seats.js';
 import { callsFor, resolveTier, saturationStop, tier, TIER_IDS, type TierId } from './tiers.js';
 
@@ -54,6 +61,25 @@ function need(args: string[], name: string): string {
     const v = flag(args, name);
     if (v === undefined || v === '') throw new BracketError('missing-flag', `--${name} is required`);
     return v;
+}
+
+function shadowJury(args: string[]): JuryRecord | null {
+    const file = flag(args, 'jury');
+    if (file === undefined) return null;
+    if (resolveJuryMode(flag(args, 'jury-mode')) === 'off') return null;
+    return tallyAppealJury(JSON.parse(readFileSync(file, 'utf8')) as JurorVote[]);
+}
+
+/**
+ * A shadow decision without a jury is logged with its reason, so the claim's
+ * corpus can tell an intentional opt-out from a missing paid family from a
+ * skipped jury.
+ */
+function noteMissingJury(s: BracketState, args: string[]): void {
+    if (flag(args, 'jury') !== undefined) return;
+    const mode = resolveJuryMode(flag(args, 'jury-mode'));
+    const why = mode === 'off' ? 'jury-mode off' : (flag(args, 'no-jury') ?? 'no reason given');
+    s.log.push(`${need(args, 'line')} appeal decided without a shadow jury (${why})`);
 }
 
 function asTier(v: string | undefined): TierId | undefined {
@@ -204,20 +230,33 @@ export function main(argv: string[]): number {
         }
         case 'card': {
             const s = load(need(args, 'run'));
-            const juryFile = flag(args, 'jury');
             playCard(s, need(args, 'line'), {
                 seat: { id: need(args, 'seat-id'), family: need(args, 'seat-family'), billing: need(args, 'seat-billing') as Billing },
                 newEvidence: args.includes('--new-evidence'),
-                jury: juryFile ? (JSON.parse(readFileSync(juryFile, 'utf8')) as JuryInput) : null,
+                jury: shadowJury(args),
             });
+            noteMissingJury(s, args);
             save(s);
             out(describe(next(s), s.runId));
             return 0;
         }
         case 'decline': {
             const s = load(need(args, 'run'));
-            declineAppeal(s, need(args, 'line'));
+            declineAppeal(s, need(args, 'line'), shadowJury(args));
+            noteMissingJury(s, args);
             save(s);
+            out(describe(next(s), s.runId));
+            return 0;
+        }
+        case 'jury': {
+            if (resolveJuryMode(flag(args, 'jury-mode') ?? 'binding') !== 'binding') {
+                throw new BracketError('jury-not-binding', '`jury` decides an appeal; use card/decline --jury to record a shadow vote');
+            }
+            const s = load(need(args, 'run'));
+            const votes = JSON.parse(readFileSync(need(args, 'jury'), 'utf8')) as JurorVote[];
+            const l = appealByJury(s, need(args, 'line'), { votes, newEvidence: args.includes('--new-evidence') });
+            save(s);
+            out(l === null ? 'jury: elimination stands' : `jury: ${l.id} readmitted`);
             out(describe(next(s), s.runId));
             return 0;
         }

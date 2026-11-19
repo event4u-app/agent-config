@@ -51,6 +51,7 @@ describe('free seats by content class', () => {
         const a = freeSeatAllowance(10, 'public-artifact', false);
         expect(a.freeCompetitors).toBe(5);
         expect(a.freeJurySeats).toBe(4);
+        expect(a.planLine).toMatch(/never counted/);
     });
     it('allows only local seats for project content with proven local weights', () => {
         expect(freeSeatAllowance(10, 'project-content', true).kind).toBe('local');

@@ -210,7 +210,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-adr-134-expiry | stubs | — | ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it |
 | road-to-adr-number-uniqueness | stubs | — | road to an ADR number that cannot be claimed twice |
 | road-to-agents-layout-memory-quarantine | stubs | — | road to a disposition for `agents/memory-quarantine/` |
-| road-to-an-appeal-jury-wired | stubs | — | an appeal jury wired into the bracket |
 | road-to-artefact-family-registry | stubs | — | a declared artefact-family registry |
 | road-to-assurance-benchmark | stubs | — | Road to an assurance benchmark — stub |
 | road-to-batch-elicitation-kernel-delta | stubs | — | road to the batch-elicitation kernel delta |

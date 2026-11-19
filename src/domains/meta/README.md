@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 311
+- **artefacts**: 315
 
-## Commands (164)
+## Commands (168)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -32,6 +32,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`analyze-pr`** — Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
 - **`analyze-reference`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`analyze-roadmap-repos`** — Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository.
+- **`arena`** — Run an arena — competing solutions in script-scored matches, default 10 lines, an eliminated idea can come back at most twice
 - **`audit`** — Security advisories, code and agent actions for this project
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
@@ -103,6 +104,9 @@ Artefacts that maintain this package (agent-config itself).
 - **`package`** — Package orchestrator — routes to test (verify the package install) and reset (restore installed state)
 - **`package-reset`** — /package-reset
 - **`package-test`** — /package-test
+- **`panel`** — Panel orchestrator — routes to decide (lenses vote on decisions) and review (reviewers, verifying jurors, merger)
+- **`panel-decide`** — Put open decisions in front of independent judges with fixed lenses; one synthesis tallies the votes, keeps the dissent and adds no preference
+- **`panel-review`** — Let angle reviewers hunt findings in one artifact, jurors verify each against the source and reject the unverifiable, one merger dedupes and ranks
 - **`post-as`** — Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer).
 - **`post-as-ghostwriter`** — Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer.
 - **`post-as-me`** — Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.

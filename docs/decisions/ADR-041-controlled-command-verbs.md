@@ -124,6 +124,22 @@ makes, not a command surface to enumerate.
 > invocation routable via `migrate`. The grandfather row stays until the alias
 > window closes (6.1).
 
+## Amendment — 2026-11-19 · `arena` and `panel` (owner directive)
+
+> **Accepted** · 2026-11-19 by the owner
+> (`agents/evidence/owner-directives/2026-11-19-arena-panel-subscription-first.md`,
+> D1 and D3). Two nouns join `approved_verbs` the way `council` and `judge` did:
+> each names a family of fan-out judgement the user asks for by that word.
+> `arena` is the visible entry onto the existing bracket engine (`/judge
+> bracket`, `src/scripts/bracket/`) — the word the owner used for it since
+> 2026-10-31, under which nobody found it. `panel` names the
+> independent-judges workflow the owner had been running improvised as
+> "arena" (`decide`: points × lenses with a tallying synthesis; `review`:
+> angle reviewers, verifying jurors, a merger). Renaming either onto an existing
+> verb was considered and rejected: `judge` already carries the single-verdict
+> family and `council` is reserved for cross-model polling, which a same-model
+> fan-out must never be called.
+
 ## References
 
 - [`src/config/discovery/command-verbs.yml`](../../config/discovery/command-verbs.yml) — the allowlist + banned prefixes + grandfathered exceptions.
