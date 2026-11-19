@@ -526,6 +526,68 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 20.4.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [20.5.0](https://github.com/event4u-app/agent-config/compare/20.4.0...20.5.0) (2026-11-19)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** clear the mirror gates for arena/panel and subscription-first (cdca2a3); read rules under CLAUDE_CONFIG_DIR as the user layer (af9804d); time the small cssBlocks sample as a batch so the growth ratio is not noise (9e4cfad); hold the trial timeout with SIGKILL and remove the container (2aed630); repoint the codex writer citation to install.ts:1366 (ca1d186); release the held ledger before its entry is mutated (7cb97a6); +1 more.
+- **Honest nulls:** _none_
+- **Known limitations:** build each deployed file once and leave identical targets alone (src/scripts/install.ts declares a residual) (492dc03).
+
+> **Governance mix:** governance-only 14 vs consumer-only 4 (mixed 7, maintenance 5; taxonomy 1.1.0; range d8bc98191978..99d4f7d65708).
+
+### Features
+
+* **bracket:** paid appeal jury in shadow mode, /arena and /panel commands ([099bff4](https://github.com/event4u-app/agent-config/commit/099bff42040040b846a44050e4e0be45a7edd546))
+* **council:** subscription seats first, API only on stored consent ([2648668](https://github.com/event4u-app/agent-config/commit/26486683a40442e672c6daaa632202e9adecce48))
+
+### Bug Fixes
+
+* **claims:** re-verify council-fallback-loses-zero-seats after the opt-in rewording ([6d3e5f7](https://github.com/event4u-app/agent-config/commit/6d3e5f7b8c24bfd5ba24bb3a8574659e49bdd0b4))
+* **roadmap:** shadow receipts for steps 2.3 and 2.5 ([0969247](https://github.com/event4u-app/agent-config/commit/096924713def8db5500ffc980cb36ade9e8faf30))
+* **ci:** clear the mirror gates for arena/panel and subscription-first ([cdca2a3](https://github.com/event4u-app/agent-config/commit/cdca2a34e5fd130e2521242f83186df92da58def))
+* **arrival:** read rules under CLAUDE_CONFIG_DIR as the user layer ([af9804d](https://github.com/event4u-app/agent-config/commit/af9804d9982862723d87d8dbb878e64a3e13fdf0))
+* **test:** time the small cssBlocks sample as a batch so the growth ratio is not noise ([9e4cfad](https://github.com/event4u-app/agent-config/commit/9e4cfad6ff52d1a17ec0d8df3b9a238844a1a33a))
+* **bench:** hold the trial timeout with SIGKILL and remove the container ([2aed630](https://github.com/event4u-app/agent-config/commit/2aed630d90145e448ad492e7132f8df6393d1378))
+* **report:** repoint the codex writer citation to install.ts:1366 ([ca1d186](https://github.com/event4u-app/agent-config/commit/ca1d18643bf2d06d42635a430adb1a1ab9533669))
+* **install:** release the held ledger before its entry is mutated ([7cb97a6](https://github.com/event4u-app/agent-config/commit/7cb97a676c638b45c615a9ec3d899bf241ac84e5))
+* **install:** keep a build-machine path shape out of the deployCopy bundle ([68ef995](https://github.com/event4u-app/agent-config/commit/68ef995a47ac3f8542a86a006e95ed4c4af50a91))
+
+### Performance
+
+* **update:** skip the npx cache warm when the global install is at the pin ([4f0f179](https://github.com/event4u-app/agent-config/commit/4f0f179dd141600df700c2f60e99c4d81f572124))
+* **install:** stop re-reading and re-writing the ledger per tool ([137e7e4](https://github.com/event4u-app/agent-config/commit/137e7e4b49a93bf717e84cf1baf88a99d4c68d69))
+* **install:** build each deployed file once and leave identical targets alone ([492dc03](https://github.com/event4u-app/agent-config/commit/492dc033fb201bf1d1888cc9f88c8699b03e926f))
+
+### Documentation
+
+* **roadmap:** put the step 1.6 receipt on its checkbox line ([f9f1a50](https://github.com/event4u-app/agent-config/commit/f9f1a50a9cdbc6c5c0d91c9626a23d20dc351113))
+* **roadmap:** shorten step 1.6 and add its receipt ([56f3d4e](https://github.com/event4u-app/agent-config/commit/56f3d4e714ff69a76827254753a8115b33859823))
+* **roadmap:** close step 1.6 and track host-mode process trees as 1.7 ([15c8658](https://github.com/event4u-app/agent-config/commit/15c8658cb7a4bae1422c14e080745c83ffe50a60))
+* **agent-switch-link:** receipts for closed steps 8.1 and 8.2 ([cede9c9](https://github.com/event4u-app/agent-config/commit/cede9c9c51236802784dda2d51d4a000a9105f45))
+* **agent-switch-link:** close 8.1 and 8.2, the lock shipped in 20.3.0 ([9859555](https://github.com/event4u-app/agent-config/commit/98595559bcb4d1f2a35327f890dcc0eb498b6ca8))
+* **proof:** regenerate the proof page for the new backed claim ([9340ea6](https://github.com/event4u-app/agent-config/commit/9340ea62fce15ea4850f9f8e5028b71846daddfd))
+* **roadmap:** re-review the measurement risk register for step 1.6 ([dda069a](https://github.com/event4u-app/agent-config/commit/dda069a7ca7d943620f3ac2cff5d549564bdc0f9))
+* **roadmap:** close step 1.5 on its BETTER reading and track the runner timeout ([0c93462](https://github.com/event4u-app/agent-config/commit/0c934622a38a05479723195340d651e8ece7e248))
+* **reports:** re-derive the backed-claims denominator to 65 ([cc350e3](https://github.com/event4u-app/agent-config/commit/cc350e3867a619a98f2a56f5271d1108349e347b))
+* **claims:** add the scoped package-beats-no-rules claim ([acd748d](https://github.com/event4u-app/agent-config/commit/acd748d2a80183ac3219925b0b67a2296ac2707b))
+* **bench:** record the five-arm confirmation, BETTER on its own 504 pairs ([9e74dcd](https://github.com/event4u-app/agent-config/commit/9e74dcdbe7f090f1c978bea11db04af13555b24b))
+* **roadmap:** re-review the measurement risk register for step 1.5 ([8d30c57](https://github.com/event4u-app/agent-config/commit/8d30c5758071b453fb5e8bb09a07103405dce9bb))
+* **bench:** pre-register the five-arm confirmation, vanilla against package ([131c996](https://github.com/event4u-app/agent-config/commit/131c996c8f50d04f8cf6f8a59a341c3f681fec59))
+* **evidence:** record the owner's budget for the five-arm confirmation ([b27ac4b](https://github.com/event4u-app/agent-config/commit/b27ac4b68b0e8a7fa71bd0c0367955a2e5ee3e3f))
+
+### Tests
+
+* **install:** assert the permission carry-over on every platform ([d14f72b](https://github.com/event4u-app/agent-config/commit/d14f72b62ab85331e0f6212ca882471b88681515))
+
+### Chores
+
+* **evidence:** after-the-fact council review of the #2768 bypass ([fca5243](https://github.com/event4u-app/agent-config/commit/fca52434b7d3638c6028c44b1635cc8287a0698d))
+
+Tests: 40242 (-23 since 20.4.0)
+
 ## [20.4.0](https://github.com/event4u-app/agent-config/compare/20.3.0...20.4.0) (2026-11-12)
 
 ### Release highlights
