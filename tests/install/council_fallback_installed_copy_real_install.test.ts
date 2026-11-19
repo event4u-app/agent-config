@@ -155,6 +155,10 @@ function runInstalledCouncil(maxTotalUsd: string): Pass {
             'enabled: true',
             'cost_budget:',
             `  max_total_usd: ${maxTotalUsd}`,
+            // Since 2026-11-19 a lost cli transport retries metered only on the
+            // operator's word (subscriptions first); this claim is about that path.
+            'fallback:',
+            '  api_on_cli_loss: true',
             'members:',
             '  anthropic:',
             '    enabled: true',

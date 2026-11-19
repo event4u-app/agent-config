@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**214 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**218 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -94,6 +94,7 @@ _Check it. Self-review, judge, fix/quality, and threat-model a change before it 
 
 **Default path:** `review/changes` → `judge` → `fix/quality` → `threat-model`
 
+- `arena` — Run an arena — competing solutions in script-scored matches, default 10 lines, an eliminated idea can come…
 - `audit` — Security advisories, code and agent actions for this project
 - `fix-ci` — Fetch CI errors from GitHub Actions and fix them
 - `fix-quality` — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
@@ -103,6 +104,9 @@ _Check it. Self-review, judge, fix/quality, and threat-model a change before it 
 - `judge-on-diff` — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 - `judge-solo` — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - `judge-steps` — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
+- `panel` — Panel orchestrator — routes to decide (lenses vote on decisions) and review (reviewers, verifying jurors, m…
+- `panel-decide` — Put open decisions in front of independent judges with fixed lenses; one synthesis tallies the votes, keeps…
+- `panel-review` — Let angle reviewers hunt findings in one artifact, jurors verify each against the source and reject the unv…
 - `review` — Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute re…
 - `review-changes` — Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tes…
 - `security-audit-config` — Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injecti…

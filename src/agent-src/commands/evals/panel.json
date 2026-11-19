@@ -1,0 +1,11 @@
+{
+  "command": "panel",
+  "intent": "Independent-judges dispatcher — decide open points under fixed lenses, or verify findings against the source",
+  "cases": [
+    { "prompt": "let independent judges vote on the open questions in section 13", "expected": "panel-decide" },
+    { "prompt": "have sixteen reviewers check this contract and jurors verify their findings", "expected": "panel-review" },
+    { "prompt": "a jury of agents should tally these design decisions", "expected": "panel-decide" },
+    { "prompt": "several competing solutions to one task, best survives", "expected": "arena" },
+    { "prompt": "ask other model families what they think", "expected": "council" }
+  ]
+}

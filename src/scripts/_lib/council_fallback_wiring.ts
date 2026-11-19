@@ -23,6 +23,8 @@ type Dict = Record<string, unknown>;
 /** Anything the twin factory needs that `council_cli.ts` owns. */
 export interface FallbackWiringDeps {
     readonly apiOnQuota: ApiOnQuota;
+    /** `fallback.api_on_cli_loss`; absent is `'ask'`. */
+    readonly apiOnCliLoss?: boolean | 'ask';
     /** Run-scoped billing grant in force. Read only under `'ask'`. */
     readonly billingGrant?: boolean;
     /** Does this provider have an api constructor at all? */
@@ -90,6 +92,7 @@ export function buildFallbackOptions(deps: FallbackWiringDeps): CliFallbackOptio
     const parked: string[] = [];
     return {
         api_on_quota: deps.apiOnQuota,
+        api_on_cli_loss: deps.apiOnCliLoss ?? 'ask',
         billing_grant: deps.billingGrant === true,
         parked,
         // The orchestrator is a pure library and holds no sink; this is it.
@@ -176,6 +179,7 @@ export function wireCouncilFallback(
     const cfg = d.isDict(ai['fallback']) ? ai['fallback'] : {};
     out.options = buildFallbackOptions({
         apiOnQuota: parseApiOnQuota(cfg['api_on_quota']),
+        apiOnCliLoss: typeof cfg['api_on_cli_loss'] === 'boolean' ? (cfg['api_on_cli_loss'] as boolean) : 'ask',
         billingGrant: hasBillingGrant(d.repoRoot),
         hasApiRung: d.hasApiRung,
         memberConfig: (p) => ((d.membersCfg[p] as Dict) || {}) as Dict,

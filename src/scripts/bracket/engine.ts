@@ -7,13 +7,15 @@
  * that is due. The script computes every result — a judge supplies rubric
  * scores and a pick, never the winner.
  *
- * The appeal jury is an optional, recorded INPUT and never imported from
- * the shadow jury aggregator: it is pinned shadow-only until its ledger
- * accumulates (AC-9 of its roadmap). The card itself is played by a paid seat.
+ * The appeal jury (`appeal_jury.ts`, road-to-an-arena-and-a-panel Phase 2) is
+ * paid seats only. In `shadow` its record rides on the card or decline and never
+ * decides; `appealByJury` is the binding path, refused by the driver until its
+ * claim is backed. It never imports the AC-9-pinned council jury aggregator.
  */
 import { createHash } from 'node:crypto';
 
 import { judgeBothOrders, type PairwiseJudge } from '../ai_council/judge_position_bias.js';
+import { countsAsPaid, tallyAppealJury, type JurorVote, type JuryRecord } from './appeal_jury.js';
 
 export const BILLINGS = ['subscription', 'per-token', 'free-quota', 'self-hosted'] as const;
 export type Billing = (typeof BILLINGS)[number];
@@ -71,6 +73,8 @@ export interface Match {
     notes: string[];
     signals: string[];
     appeal: AppealState | null;
+    /** The appeal jury's record, when one sat on this match's appeal. */
+    jury?: JuryRecord;
 }
 
 export interface BracketState {
@@ -392,16 +396,17 @@ export function correct(s: BracketState, matchId: string, reason: 'misread-check
     return m;
 }
 
-export interface JuryInput {
-    readonly resolution: 'a' | 'b' | 'tie' | 'inconsistent';
-    readonly seats: readonly Seat[];
-}
-
 export interface CardOptions {
     readonly seat: Seat;
     readonly newEvidence: boolean;
-    /** Advisory input; recorded, never decisive. */
-    readonly jury?: JuryInput | null;
+    /** Shadow jury record: stored and noted, never decisive. */
+    readonly jury?: JuryRecord | null;
+}
+
+function noteJury(m: Match, jury: JuryRecord | null | undefined, label: string): string {
+    if (!jury) return '';
+    m.jury = jury;
+    return ` (${label}: ${jury.outcome} — ${jury.reason})`;
 }
 
 /** The "you go through" card: ≤ 2 per lineage, a paid seat, never an overturn. */
@@ -415,28 +420,63 @@ export function playCard(s: BracketState, lineIdArg: string, o: CardOptions): Li
     if (spent >= MAX_CARDS) throw new BracketError('cards-exhausted', `lineage ${l.lineage} spent ${spent} cards`);
     if (spent === 1 && !o.newEvidence) throw new BracketError('second-card-needs-evidence', 'the second card needs new evidence');
     if (!(BILLINGS as readonly string[]).includes(o.seat.billing)) throw new BracketError('bad-billing', `unknown billing ${o.seat.billing}`);
-    if (o.seat.billing === 'free-quota') throw new BracketError('free-seat-card', 'a free-quota seat never plays the card (ADR-257)');
+    if (!countsAsPaid(o.seat)) throw new BracketError('unpaid-seat-card', `only a paid seat plays the card; ${o.seat.billing} is not paid (ADR-257, D2)`);
     if (l.lastLoss?.upheldFatal) throw new BracketError('fatal-stands', `${l.id} lost on an upheld FATAL`);
-    if (o.jury) {
-        const fams = new Set(o.jury.seats.map((x) => x.family));
-        if (o.jury.seats.length > MAX_JURY_SEATS || fams.size < 2 || !o.jury.seats.some((x) => x.billing !== 'free-quota')) {
-            throw new BracketError('jury-shape', 'appeal jury needs ≤ 5 seats, ≥ 2 families and ≥ 1 paid seat');
-        }
-    }
     l.cards += 1;
     l.status = 'alive';
     m.appeal = 'card';
-    m.notes.push(`card ${spent + 1} for ${l.id} by ${o.seat.id}${o.jury ? ` (jury: ${o.jury.resolution})` : ''}`);
+    m.notes.push(`card ${spent + 1} for ${l.id} by ${o.seat.id}${noteJury(m, o.jury, 'shadow jury')}`);
     s.log.push(`card ${spent + 1}/${MAX_CARDS} → ${l.id} returns against a new opponent`);
     return l;
 }
 
-export function declineAppeal(s: BracketState, lineIdArg: string): void {
+export function declineAppeal(s: BracketState, lineIdArg: string, jury?: JuryRecord | null): void {
     const l = line(s, lineIdArg);
     const m = l.lastLoss === null ? null : match(s, l.lastLoss.match);
     if (m === null || m.appeal !== 'open') throw new BracketError('no-open-appeal', `${l.id} has no open appeal`);
     m.appeal = 'declined';
+    const note = noteJury(m, jury, 'shadow jury');
+    if (note) m.notes.push(`declined${note}`);
     s.log.push(`${l.id} appeal declined`);
+}
+
+export interface JuryAppealOptions {
+    readonly votes: readonly JurorVote[];
+    readonly newEvidence: boolean;
+}
+
+/**
+ * Binding path: the paid jury decides. `readmit` plays the card on behalf of
+ * the jury; `deny` declines; `inconclusive` leaves the elimination standing and
+ * spends no card — never a silent fall-back to one seat. Returns the readmitted
+ * line, or `null`.
+ */
+export function appealByJury(s: BracketState, lineIdArg: string, o: JuryAppealOptions): Line | null {
+    const jury = tallyAppealJury(o.votes);
+    const l = line(s, lineIdArg);
+    const m = l.lastLoss === null ? null : match(s, l.lastLoss.match);
+    if (l.status !== 'eliminated' || m === null || m.appeal !== 'open') {
+        throw new BracketError('no-open-appeal', `${l.id} has no open appeal`);
+    }
+    const spent = s.lines.filter((x) => x.lineage === l.lineage).reduce((n, x) => n + x.cards, 0);
+    if (spent >= MAX_CARDS) throw new BracketError('cards-exhausted', `lineage ${l.lineage} spent ${spent} cards`);
+    if (jury.outcome !== 'readmit') {
+        m.appeal = 'declined';
+        m.jury = jury;
+        m.notes.push(
+            jury.outcome === 'inconclusive'
+                ? `jury inconclusive (${jury.reason}) — elimination stands, no card spent`
+                : `jury denied (${jury.reason})`,
+        );
+        s.log.push(`${l.id} appeal ${jury.outcome === 'inconclusive' ? 'inconclusive' : 'denied'} by jury`);
+        return null;
+    }
+    const seat = o.votes.find((v) => countsAsPaid(v.seat))?.seat;
+    if (seat === undefined) throw new BracketError('jury-shape', 'a readmitting jury has a paid seat');
+    const out = playCard(s, l.id, { seat, newEvidence: o.newEvidence });
+    m.jury = jury;
+    m.notes.push(`jury readmitted (${jury.reason})`);
+    return out;
 }
 
 export type NextAction =

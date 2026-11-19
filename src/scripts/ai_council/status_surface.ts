@@ -50,6 +50,7 @@ export function resolvedTransportFor(
     member: SeatLike,
     report?: EnvironmentReport,
     contentClass?: ContentClass | null,
+    subscriptionFirst = true,
 ): ReturnType<typeof resolveMemberTransport> {
     if (member.route !== undefined && member.route !== null) {
         const resolved = resolveRouteTransport({
@@ -72,6 +73,7 @@ export function resolvedTransportFor(
         policyExclusion: member.policy_exclusion ?? null,
         seatCeiling: member.content_ceiling ?? DEFAULT_SEAT_CEILING,
         contentClass: contentClass ?? null,
+        subscriptionFirst,
     });
 }
 

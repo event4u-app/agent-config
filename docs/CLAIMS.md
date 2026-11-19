@@ -504,7 +504,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 214 commands.
+- claim: 218 commands.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -994,11 +994,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified:
 
 ### claim: council-fallback-loses-zero-seats
-- claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so.
+- claim: With `fallback.api_on_cli_loss: true` (opt-in since 2026-11-19, subscriptions first), an eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so.
 - kind: qual
 - evidence: exec:vitest run tests/install/council_fallback_installed_copy_real_install.test.ts -> 0
 - status: backed
-- last_verified: 2026-10-19
+- last_verified: 2026-11-19
 <!-- EVIDENCE MOVED 2026-10-19: from the unit suite tests/scripts/ai_council/council_cli.test.ts, which fakes the transports inside the process, to a packed and installed copy driven through its own bin with `claude`, `codex` and `curl` substituted at the process boundary. No shipped code carries a seam for it. The unit suite still runs in the node-tests job; it is no longer what backs a claim about an installed copy. -->
 
 **The condition was added 2026-08-19, after a review found the unconditional
@@ -1574,6 +1574,13 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-10-31 (road-to-a-loss-that-can-be-appealed step 5.3), BEFORE any live run; the simulated rescue (C2a) is a fixture reading in `agents/evidence/analysis/bracket-appeal-card-simulation-2026-10-31.md` and is NOT this claim. BAR: >= 30 % of cards. FALSIFICATION: below the bar the card stays on (owner directive) and its signals narrow to pick-overruled plus an inconsistent jury.
 - status: unbacked
 - last_verified: 2026-10-31
+
+### claim: paid-appeal-jury
+- claim: In `/arena` shadow runs, a jury of paid seats from at least two model families reaches a decisive readmit-or-deny verdict on at least 80 % of appeals, and each juror's answer survives the presentation-order swap on at least 75 % of its appeals.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-11-19 (road-to-an-arena-and-a-panel step 2.3), BEFORE any shadow run; owner directive `agents/evidence/owner-directives/2026-11-19-arena-panel-subscription-first.md` D2, staged form recommended unanimously by the AI council the same day. CORPUS: appeals of real `/arena` runs recorded with `--jury` under the default `--jury-mode shadow`, n >= 20 appeals over >= 5 runs. STATISTIC: `tallyAppealJury` in `src/scripts/bracket/appeal_jury.ts` — decisive = outcome readmit or deny; consistency = share of a juror's votes with `ab == ba`. BARS: decisive >= 0.80, per-juror consistency >= 0.75 (own analysis from the council's proposed range; neither bar is fitted to a reading because none exists). REPORTED, NOT A BAR: agreement with the single paid card seat — that seat's call cannot establish whether an appeal was decided correctly. FALSIFICATION: either bar missed on a corpus meeting the n floor. ON PASS: `BINDING_UNLOCKED` flips and the AC-9 test admits exactly this consumer, in one change. ON NULL: the jury stays shadow; the card stays with the single paid seat. Free and self-hosted jurors are outside this claim and never counted.
+- status: unbacked
+- last_verified: 2026-11-19
 
 ### claim: bracket-beats-single-judge
 - claim: At equal N, the bracket winner beats the one-shot `do-competitively` winner in a blind both-orders comparison in at least 60 % of tasks.

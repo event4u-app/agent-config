@@ -186,6 +186,7 @@ describe('orchestrator — mid-flight cli→api fallback', () => {
         const res = consult([cliSeat('auth_expired')], q, null, {
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: (p) => {
                     constructed.push(p);
                     return apiTwin();
@@ -208,6 +209,7 @@ describe('orchestrator — mid-flight cli→api fallback', () => {
         const res = consult([cliSeat('cli_quota_exhausted')], q, null, {
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: (p) => {
                     constructed.push(p);
                     return apiTwin();
@@ -245,7 +247,8 @@ describe('orchestrator — mid-flight cli→api fallback', () => {
 
     it('construct → null (strict api_key_ref contract refused) surfaces the original failure', () => {
         const res = consult([cliSeat('auth_expired')], q, null, {
-            cli_fallback: { api_on_quota: false, construct: () => null },
+            cli_fallback: { api_on_quota: false,
+                api_on_cli_loss: true, construct: () => null },
         });
         expect(res[0]!.error).toBe('auth_expired');
         expect(res[0]!.metadata['transport']).toBe('cli');
@@ -257,6 +260,7 @@ describe('orchestrator — mid-flight cli→api fallback', () => {
             rounds: 3,
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () => {
                     constructions += 1;
                     // The twin itself keeps failing so every round re-enters
@@ -279,6 +283,7 @@ describe('orchestrator — mid-flight cli→api fallback', () => {
             {
                 cli_fallback: {
                     api_on_quota: false,
+                api_on_cli_loss: true,
                     construct: (p) => {
                         constructed.push(p);
                         return apiTwin();
@@ -342,6 +347,7 @@ describe('orchestrator — fallback across rounds (sticky substitution)', () => 
         const res = consult([deadCli('auth_expired')], q, null, {
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () =>
                     new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' }),
             },
@@ -371,6 +377,7 @@ describe('orchestrator — fallback across rounds (sticky substitution)', () => 
             rounds: 3,
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: (p) => {
                     constructed.push(p);
                     return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
@@ -395,6 +402,7 @@ describe('orchestrator — fallback across rounds (sticky substitution)', () => 
             },
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () =>
                     new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' }),
             },
@@ -424,6 +432,7 @@ describe('orchestrator — fallback across rounds (sticky substitution)', () => 
             },
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: (p) => {
                     constructed.push(p);
                     return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
@@ -466,6 +475,7 @@ describe('orchestrator — fallback observability', () => {
             rounds: 3,
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
                 on_event: (e) => events.push(e),
             },
@@ -479,7 +489,8 @@ describe('orchestrator — fallback observability', () => {
     it('a provider with no constructible api rung emits outcome no_twin', () => {
         const events: Ev[] = [];
         const res = consult([deadCli()], q, null, {
-            cli_fallback: { api_on_quota: false, construct: () => null, on_event: (e) => events.push(e) },
+            cli_fallback: { api_on_quota: false,
+                api_on_cli_loss: true, construct: () => null, on_event: (e) => events.push(e) },
         });
         expect(events).toEqual([
             { provider: 'anthropic', failure: 'auth_rejected', outcome: 'no_twin', api_on_quota: false },
@@ -493,6 +504,7 @@ describe('orchestrator — fallback observability', () => {
         consult([deadCli('timeout')], q, null, {
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
                 on_event: (e) => events.push(e),
             },
@@ -505,6 +517,7 @@ describe('orchestrator — fallback observability', () => {
             rounds: 2,
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
             },
         });
@@ -518,6 +531,7 @@ describe('orchestrator — fallback observability', () => {
         const res = consult([deadCli()], q, null, {
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () => new Mock('anthropic', 'claude-sonnet-4-6', { text: 'ok' }),
             },
         });
@@ -545,6 +559,7 @@ describe('orchestrator — fallback on the debate path', () => {
             max_rounds: 3,
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: (p) => {
                     constructed.push(p);
                     return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
@@ -570,6 +585,7 @@ describe('orchestrator — fallback on the debate path', () => {
             },
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: (p) => {
                     constructed.push(p);
                     return new Mock('anthropic', 'claude-sonnet-4-6', { text: 'via api' });
@@ -652,6 +668,7 @@ describe('orchestrator — cost gating', () => {
             table,
             cli_fallback: {
                 api_on_quota: false,
+                api_on_cli_loss: true,
                 construct: () =>
                     new Mock('anthropic', 'claude-sonnet-4-5', { text: 'via api' }),
             },

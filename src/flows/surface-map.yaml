@@ -100,6 +100,10 @@ commands:
     - judge/solo
     - judge/steps
     - judge/bracket
+    - arena
+    - panel
+    - panel/decide
+    - panel/review
     - fix/quality
     - review
     - review/changes

@@ -30,8 +30,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
 | `provenance.kind` | `human` | 17 |
-| `provenance.kind` | `agentic` | 137 |
-| `provenance.kind` | `mixed` | 37 |
+| `provenance.kind` | `agentic` | 136 |
+| `provenance.kind` | `mixed` | 38 |
 | `provenance.kind` | `unknown` | 60 |
 | frontmatter | absent | 0 |
 
@@ -79,7 +79,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-038-canonical-settings-path.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/decisions/ADR-039-claude-skills-untracked.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | measurement @ ADR-039-claude-skills-untracked.md:30, ADR-039-claude-skills-untracked.md:83, ADR-039-claude-skills-untracked.md:85, ADR-039-claude-skills-untracked.md:98<br>council @ ADR-039-claude-skills-untracked.md:90, ADR-039-claude-skills-untracked.md:92, ADR-039-claude-skills-untracked.md:93 | provenance: — · evidence: — |
 | `docs/decisions/ADR-040-execution-model-projection-time-filtering.md` | `agentic` (`agentic_mode: council`) | `E2` — repeated or comparative measurement | `incomplete` | council @ ADR-040-execution-model-projection-time-filtering.md:47, ADR-040-execution-model-projection-time-filtering.md:96, ADR-040-execution-model-projection-time-filtering.md:165<br>measurement @ ADR-040-execution-model-projection-time-filtering.md:53<br>repeated @ ADR-040-execution-model-projection-time-filtering.md:206 | provenance: — · evidence: — |
-| `docs/decisions/ADR-041-controlled-command-verbs.md` | `agentic` (`agentic_mode: council`) | `E0` — council / agreement markers only — consensus is not evidence | `incomplete` | council @ ADR-041-controlled-command-verbs.md:41 | provenance: — · evidence: — |
+| `docs/decisions/ADR-041-controlled-command-verbs.md` | `mixed` (`agentic_mode: council`) | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | council @ ADR-041-controlled-command-verbs.md:41<br>owner @ ADR-041-controlled-command-verbs.md:127 | provenance: — · evidence: — |
 | `docs/decisions/ADR-042-runtime-resolver-decision-gate.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | measurement @ ADR-042-runtime-resolver-decision-gate.md:40, ADR-042-runtime-resolver-decision-gate.md:72<br>council @ ADR-042-runtime-resolver-decision-gate.md:58 | provenance: — · evidence: — |
 | `docs/decisions/ADR-043-monorepo-collapse-to-src-domains.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-043-monorepo-collapse-to-src-domains.md:20, ADR-043-monorepo-collapse-to-src-domains.md:21, ADR-043-monorepo-collapse-to-src-domains.md:60, ADR-043-monorepo-collapse-to-src-domains.md:125, ADR-043-monorepo-collapse-to-src-domains.md:126<br>measurement @ ADR-043-monorepo-collapse-to-src-domains.md:47 | provenance: — · evidence: — |
 | `docs/decisions/ADR-044-command-naming-scheme-hyphenated.md` | `agentic` (`agentic_mode: council`) | `E0` — council / agreement markers only — consensus is not evidence | `incomplete` | council @ ADR-044-command-naming-scheme-hyphenated.md:40, ADR-044-command-naming-scheme-hyphenated.md:109, ADR-044-command-naming-scheme-hyphenated.md:110, ADR-044-command-naming-scheme-hyphenated.md:202, ADR-044-command-naming-scheme-hyphenated.md:203 | provenance: — · evidence: — |

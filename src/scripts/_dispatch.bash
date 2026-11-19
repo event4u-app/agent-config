@@ -213,6 +213,9 @@ Tier 1 — power-user (release shape, audit, migration):
                              --chosen <c> --reasoning <r> --resolver <who>
                              --confidence <high|medium|low>
                                     decision:memo list --run <id>
+  bracket                    Drive an /arena bracket run: competing solutions,
+                             script-scored matches, appealable losses.
+                             Usage: bracket plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status [options]
   run:supervise              Report runs whose session died with open steps
                              left. Report-only; --relaunch is the acting path.
                              NEVER merges, pushes, or closes anything.
@@ -1457,6 +1460,15 @@ cmd_decision_memo() {
   exec_ts "$script" "$sub" "$@"
 }
 
+# `bracket <sub>` — the /arena (= /judge bracket) driver: one state file per run
+# under agents/runtime/bracket/<run>/ (gitignored), one named next action. Spawns
+# nothing and calls no model; the agent dispatches the lines and judges.
+cmd_bracket() {
+  local script
+  script="$(resolve_script "src/scripts/bracket/cli.ts")" || return 1
+  exec_ts "$script" "$@"
+}
+
 # `run:supervise` — the out-of-process watcher for runs whose session died
 # with open steps left. Report-only by default; the acting path is behind
 # --relaunch because starting a session spends tokens with nobody watching.
@@ -1804,6 +1816,7 @@ main() {
     self-repair:release)     cmd_self_repair release "$@" ;;
     decision:memo)           cmd_decision_memo "$@" ;;
     run:supervise)           cmd_run_supervise "$@" ;;
+    bracket)                 cmd_bracket "$@" ;;
     update)                  cmd_update "$@" ;;
     upgrade)                 cmd_upgrade "$@" ;;
     refresh)                 cmd_refresh "$@" ;;

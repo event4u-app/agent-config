@@ -137,6 +137,15 @@ export interface ResolveTransportOptions {
     readonly seatCeiling?: ContentClass | null;
     /** The class of what this pass would send. Omitted → `project-content`. */
     readonly contentClass?: ContentClass | null;
+    /**
+     * Subscriptions first (owner decision 2026-11-19, D6). When true, an
+     * installed subscription CLI whose login was not detected stays on the cli
+     * rung even though a key resolves: it is a broken subscription seat, not
+     * "no subscription", so a real auth failure reaches the run's
+     * `fallback.api_on_cli_loss` policy instead of silently costing USD. No CLI
+     * installed at all still falls to the key — that is the no-seat case.
+     */
+    readonly subscriptionFirst?: boolean;
 }
 
 /** Auth sources that mean "the provider CLI can authenticate". */
@@ -261,6 +270,17 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
     }
 
     const keyPresent = opts.apiKeyPresent ?? hasSource(report, provider, KEY_AUTH_SOURCES);
+    if (binary !== null && keyPresent && opts.subscriptionFirst === true) {
+        return {
+            available: true,
+            transport: 'cli',
+            billing,
+            authSource,
+            makesProviderCall: true,
+            reason: null,
+            absentReason: null,
+        };
+    }
     if (keyPresent) {
         return {
             available: true,
@@ -297,6 +317,8 @@ export interface ResolveMemberTransportOptions {
     readonly policyExclusion?: PolicyExclusion | null;
     readonly seatCeiling?: ContentClass | null;
     readonly contentClass?: ContentClass | null;
+    /** Forwarded to `resolveTransport`. */
+    readonly subscriptionFirst?: boolean;
 }
 
 export interface ResolvedMemberTransport extends ResolvedTransport {
@@ -341,6 +363,7 @@ export function resolveMemberTransport(
         policyExclusion: opts.policyExclusion ?? null,
         seatCeiling: opts.seatCeiling ?? null,
         contentClass: opts.contentClass ?? null,
+        subscriptionFirst: opts.subscriptionFirst === true,
     });
     return { ...resolved, configuredMode };
 }

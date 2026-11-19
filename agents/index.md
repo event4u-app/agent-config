@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **759 artefacts** in this package.
+Maintainer-facing index of all **763 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -441,7 +441,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (214)
+## Commands (218)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -475,6 +475,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-reference`](../src/domains/analysis-workbench/analyze/reference/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../src/domains/analysis-workbench/analyze/roadmap-repos/command.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository. |
+| command | [`arena`](../src/domains/engineering-base/arena/command.md) | cluster: arena | Run an arena — competing solutions in script-scored matches, default 10 lines, an eliminated idea can come back at most twice |
 | command | [`audit`](../src/domains/engineering-base/audit/command.md) | cluster: audit | Security advisories, code and agent actions for this project |
 | command | [`brand`](../src/domains/brand/brand/command.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../src/domains/brand/brand/identity/command.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
@@ -582,6 +583,9 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`package`](../src/domains/meta/package/command.md) | cluster: package | Package orchestrator — routes to test (verify the package install) and reset (restore installed state) |
 | command | [`package-reset`](../src/domains/meta/package/reset/command.md) | cluster: package | /package-reset |
 | command | [`package-test`](../src/domains/meta/package/test/command.md) | cluster: package | /package-test |
+| command | [`panel`](../src/domains/engineering-base/panel/command.md) | cluster: panel | Panel orchestrator — routes to decide (lenses vote on decisions) and review (reviewers, verifying jurors, merger) |
+| command | [`panel-decide`](../src/domains/engineering-base/panel/decide/command.md) | cluster: panel | Put open decisions in front of independent judges with fixed lenses; one synthesis tallies the votes, keeps the dissent and adds no preference |
+| command | [`panel-review`](../src/domains/engineering-base/panel/review/command.md) | cluster: panel | Let angle reviewers hunt findings in one artifact, jurors verify each against the source and reject the unverifiable, one merger dedupes and ranks |
 | command | [`post-as`](../src/domains/gtm-marketing/post-as/command.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as-ghostwriter`](../src/domains/gtm-marketing/post-as/ghostwriter/command.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as-me`](../src/domains/gtm-marketing/post-as/me/command.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |

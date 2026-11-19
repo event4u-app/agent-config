@@ -27,6 +27,7 @@ import {
     type Verdict,
 } from '../../../src/scripts/bracket/engine.js';
 import { simulateOnce } from '../../../src/scripts/bracket/simulate.js';
+import { tallyAppealJury } from '../../../src/scripts/bracket/appeal_jury.js';
 
 const PAID: Seat = { id: 'p', family: 'fam-a', billing: 'per-token' };
 const FREE: Seat = { id: 'f', family: 'fam-b', billing: 'free-quota' };
@@ -152,12 +153,17 @@ describe('the appeal card', () => {
         declineAppeal(s, m.loser ?? '');
         expect(next(s)).toEqual({ kind: 'done', winner: m.winner });
     });
-    it('an attached jury must span two families and keep a paid seat', () => {
+    it('a free-only shadow jury is recorded as inconclusive and does not decide', () => {
         const s = started(2);
         const m = collect(s, s.matches[0]?.id ?? '', verdict(6, 6.2));
-        expect(() =>
-            playCard(s, m.loser ?? '', { seat: PAID, newEvidence: false, jury: { resolution: 'a', seats: [FREE, { ...FREE, id: 'g', family: 'fam-c' }] } }),
-        ).toThrow(/paid seat/);
+        const jury = tallyAppealJury([
+            { seat: FREE, ab: 'deny', ba: 'deny' },
+            { seat: { ...FREE, id: 'g', family: 'fam-c' }, ab: 'deny', ba: 'deny' },
+        ]);
+        playCard(s, m.loser ?? '', { seat: PAID, newEvidence: false, jury });
+        expect(m.appeal).toBe('card');
+        expect(m.jury?.outcome).toBe('inconclusive');
+        expect(m.jury?.counted).toBe(0);
     });
 });
 

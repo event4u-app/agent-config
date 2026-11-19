@@ -12,7 +12,11 @@ import { MAX_JURY_SEATS } from './engine.js';
 export interface SeatAllowance {
     /** Competitor lines a free route may fill. */
     readonly freeCompetitors: number;
-    /** Appeal-jury seats a free route may fill; at least one seat stays paid. */
+    /**
+     * Appeal-jury seats a free route may SIT in. Their votes are recorded and
+     * never counted: only paid seats decide a readmission (owner directive
+     * 2026-11-19, D2; `appeal_jury.ts`).
+     */
     readonly freeJurySeats: number;
     /** `free` = external free routes, `local` = proven self-hosted weights only. */
     readonly kind: 'free' | 'local' | 'none';
@@ -26,7 +30,7 @@ export function freeSeatAllowance(n: number, content: ContentClass, localProven:
             freeCompetitors: free,
             freeJurySeats: MAX_JURY_SEATS - 1,
             kind: 'free',
-            planLine: `free seats: up to ${free} of ${n} lines and ${MAX_JURY_SEATS - 1} of ${MAX_JURY_SEATS} jury seats (content is a public artifact; ≥ 2 families required)`,
+            planLine: `free seats: up to ${free} of ${n} lines and ${MAX_JURY_SEATS - 1} of ${MAX_JURY_SEATS} jury seats, recorded but never counted (content is a public artifact; the tally needs ≥ 2 paid families)`,
         };
     }
     if (localProven) {
@@ -34,7 +38,7 @@ export function freeSeatAllowance(n: number, content: ContentClass, localProven:
             freeCompetitors: Math.floor(n / 2),
             freeJurySeats: MAX_JURY_SEATS - 1,
             kind: 'local',
-            planLine: `free seats: local models only (project content, local weights proven); ≥ 1 paid seat stays on the jury`,
+            planLine: `free seats: local models only (project content, local weights proven); local jurors are recorded, only paid jurors are counted`,
         };
     }
     return {

@@ -45,6 +45,8 @@ approved_verbs:
   - optimize
   - roadmap
   - retro      # /retro — examine finished work (ADR-292, addendum to ADR-041 § 5)
+  - arena      # /arena — the appealable bracket (ADR-041 amendment 2026-11-19)
+  - panel      # /panel — independent judges, decide | review (ADR-041 amendment 2026-11-19)
 
 # Leading tokens banned for NEW visible commands regardless of the allowlist.
 banned_prefixes:

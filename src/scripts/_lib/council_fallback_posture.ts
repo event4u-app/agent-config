@@ -15,7 +15,12 @@
 
 import type { ApiOnQuota } from '../ai_council/transport_resolver.js';
 
-export type FallbackPosture = 'api' | 'none' | 'n/a';
+/**
+ * `withheld`: an api rung exists and its key resolves, but
+ * `fallback.api_on_cli_loss` is not set — subscriptions first (owner directive
+ * 2026-11-19, D4), so a lost cli transport loses the seat instead of spending.
+ */
+export type FallbackPosture = 'api' | 'ask' | 'withheld' | 'none' | 'n/a';
 
 export interface PostureInput {
     /** Resolved transport for this member; `null` when it did not resolve. */
@@ -34,6 +39,8 @@ export interface PostureInput {
      * a rung that is not there.
      */
     readonly keylessResolves: (() => boolean) | undefined;
+    /** `fallback.api_on_cli_loss`. Absent is `'ask'` (D6). */
+    readonly apiOnCliLoss?: boolean | 'ask';
 }
 
 /**
@@ -42,6 +49,13 @@ export interface PostureInput {
  * rather than an inapplicable question.
  */
 export function fallbackPostureFor(input: PostureInput): FallbackPosture {
+    const rung = rungFor(input);
+    if (rung !== 'api') return rung;
+    const loss = input.apiOnCliLoss ?? 'ask';
+    return loss === true ? 'api' : loss === false ? 'withheld' : 'ask';
+}
+
+function rungFor(input: PostureInput): FallbackPosture {
     if (input.transport !== 'cli') return 'n/a';
     if (!input.hasApiRung) return 'none';
     if (input.apiKeyRef !== null) return input.refResolves === true ? 'api' : 'none';
@@ -69,8 +83,12 @@ export function renderPostureLines(
         ([name, p]) =>
             `  fallback         ${name}: ` +
             (p === 'api'
-                ? 'would fall back to api'
-                : 'no api rung — a lost cli transport loses the seat'),
+                ? 'would fall back to api (fallback.api_on_cli_loss: true)'
+                : p === 'ask'
+                  ? 'api key present; a lost subscription seat parks and asks once per run (store an answer: fallback.api_on_cli_loss: true | false)'
+                  : p === 'withheld'
+                  ? 'api key present, metered fallback withheld — subscriptions first; a lost cli transport loses the seat (opt in: fallback.api_on_cli_loss: true)'
+                  : 'no api rung — a lost cli transport loses the seat'),
     );
     // Separate from the per-seat lines: not a per-seat property but the one
     // billing-class decision, governing every seat at once.
@@ -115,7 +133,7 @@ export function renderBillingGateLines(
             : `~$${opts.estimatedUsd.toFixed(2)}`;
     return [
         '',
-        'HUMAN GATE — plan quota exhausted, metered spend not authorised',
+        'HUMAN GATE — subscription seat lost or plan quota exhausted, metered spend not authorised',
         `  parked seats     ${seats.join(', ')}`,
         `  retry cost       ${cost}`,
         // The command is printed rather than described because the whole

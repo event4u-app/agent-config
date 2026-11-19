@@ -28,7 +28,7 @@ file, so it survives compaction — the driver always names the one action that 
 ### 1. Plan, and show the plan
 
 ```bash
-./scripts-run src/scripts/bracket/cli plan [--tier S1] [--agent-tier S2] \
+agent-config bracket plan [--tier S1] [--agent-tier S2] \
   [--security-surface "<row>"] [--owner-reserved "<row>"] \
   [--content public-artifact|project-content] [--local-proven]
 ```
@@ -52,7 +52,7 @@ The plan line names the tier, its signal, the line ceiling, the call ceiling
 ### 2. Initialise and generate
 
 ```bash
-./scripts-run src/scripts/bracket/cli init --run <id> --task <file> --tier S1 [--seed N] [--angles <file>]
+agent-config bracket init --run <id> --task <file> --tier S1 [--seed N] [--angles <file>]
 ```
 
 Dispatch one subagent per line in waves of `min(subagents.max_parallel, host cap)`,
@@ -65,8 +65,8 @@ where allowed, add another model family instead of more of the same.
 ### 3. Judge matches
 
 ```bash
-./scripts-run src/scripts/bracket/cli advance --run <id>
-./scripts-run src/scripts/bracket/cli collect --run <id> --match <M> --verdict <file.json>
+agent-config bracket advance --run <id>
+agent-config bracket collect --run <id> --match <M> --verdict <file.json>
 ```
 
 Per match: run the project's own deterministic checks (tests, type-checker, linter)
@@ -90,6 +90,17 @@ correct, FATAL rebutted, audit sample). For each:
   card while an upheld FATAL stands. The returnee meets a new opponent; the winner
   stays in. With no council and no local model on project content, the card seat is
   a paid judge one tier higher, reported as a **second look**, never as a council.
+- **The appeal jury (shadow).** Beside the card seat, ask up to 5 jurors from
+  ≥ 2 **paid** families (subscriptions first; spread over agent-switch profiles
+  when linked) the same question twice — the eliminated line shown first, then
+  second. Write their answers as JSON (`[{ "seat": {id,family,billing}, "ab":
+  "readmit|deny", "ba": "readmit|deny" }]`) and pass `--jury <file>` to `card`
+  or `decline`. The vote is **recorded, never used**: the card seat still
+  decides. Free or local jurors may sit and are recorded; they are never counted.
+  A split, an order-flipping juror or one paid family is `inconclusive`.
+  `--jury-mode off` skips it; a jury that could not sit (one paid family, no
+  subscription seat free) is `--no-jury "<reason>"` — both are logged. The binding form (`agent-config bracket jury`) is
+  refused until the claim `paid-appeal-jury` is backed.
 
 ### 5. Close honestly
 

@@ -134,7 +134,7 @@ export function synthesizeAiCouncilBlock(cfg: CouncilConfig): Dict {
         // was forwarded no config file could turn quota fall-through on. The
         // documentation, the contract section and the tests all described a
         // switch that production could not flip.
-        fallback: { api_on_quota: cfg.fallback.api_on_quota },
+        fallback: { api_on_quota: cfg.fallback.api_on_quota, api_on_cli_loss: cfg.fallback.api_on_cli_loss },
         necessity_classifier: {
             enabled: cfg.necessity_classifier.enabled,
             mode: cfg.necessity_classifier.mode,
