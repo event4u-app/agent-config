@@ -66,14 +66,14 @@ configuration.
       is `inconclusive`. In `shadow` the record is attached to the card or
       decline and never decides; in `binding` it decides and `inconclusive`
       leaves the elimination with no card spent.
-- [x] **2.3** Pre-registered claim `paid-appeal-jury` in `docs/CLAIMS.md` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.3** Pre-registered claim `paid-appeal-jury` in `docs/CLAIMS.md` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       (decisive-vote rate, position-swap consistency; thresholds fixed before
       the first run). `binding` stays refused by the CLI until the claim reads
       `backed`.
 - [x] **2.4** AC-9 test amended to admit exactly the bracket consumer, only once <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       2.3 is backed — until then the jury helper lives in `src/scripts/bracket/`
       and does not import `jury_aggregate.ts`.
-- [x] **2.5** Retire the stub `road-to-an-appeal-jury-wired` (absorbed by Phase 2). <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **2.5** Retire the stub `road-to-an-appeal-jury-wired` (absorbed by Phase 2). <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 ## Phase 3 — Panel (D3)
 
