@@ -657,7 +657,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             globalMode: global_mode ?? null,
             binaryOverride: (cfg['binary'] as string | null) ?? null,
             seatCeiling: classifyContentClass(cfg['content_ceiling'], DEFAULT_SEAT_CEILING),
-            contentClass: opts.content_class ?? DEFAULT_CONTENT_CLASS,
+            contentClass: opts.content_class ?? DEFAULT_CONTENT_CLASS, subscriptionFirst: (_isDict(ai['fallback']) ? (ai['fallback'] as Dict)['api_on_cli_loss'] : undefined) !== true,
             // `exactOptionalPropertyTypes` rejects an explicit `undefined` —
             // see `resolveMemberTransport`'s own forwarding call for the
             // same pattern.
@@ -2009,7 +2009,7 @@ function _emit_shadow_slo_banner(): void {
 /** Gather what `fallbackPostureFor` needs; the decision itself is pure. */
 function _posture(
     name: string,
-    member: { readonly binary: string | null; readonly api_key_ref: string | null },
+    member: { readonly binary: string | null; readonly api_key_ref: string | null }, apiOnCliLoss: boolean | 'ask' = 'ask',
 ): FallbackPosture {
     const t = _resolvedTransportFor(name, member);
     const keyless: Readonly<Record<string, () => boolean>> = {
@@ -2024,7 +2024,7 @@ function _posture(
             member.api_key_ref === null
                 ? undefined
                 : _member_api_key_present({ api_key_ref: member.api_key_ref }),
-        keylessResolves: keyless[name],
+        keylessResolves: keyless[name], apiOnCliLoss,
     });
 }
 
@@ -2090,9 +2090,9 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                     }),
                 ),
                 fallback: {
-                    api_on_quota: cfg?.fallback.api_on_quota ?? false,
+                    api_on_quota: cfg?.fallback.api_on_quota ?? false, api_on_cli_loss: cfg?.fallback.api_on_cli_loss ?? 'ask',
                     posture: Object.fromEntries(
-                        enabledMembers.map(([n, m]) => [n, _posture(n, m)]),
+                        enabledMembers.map(([n, m]) => [n, _posture(n, m, cfg?.fallback.api_on_cli_loss ?? 'ask')]),
                     ),
                 },
                 disabled_seats: _disabledSeats(cfg),
@@ -2146,7 +2146,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             _stdout(`  disabled seat    ${name}: ${reason}\n`);
         }
         for (const line of renderPostureLines(
-            enabledMembers.map(([n, m]) => [n, _posture(n, m)] as const),
+            enabledMembers.map(([n, m]) => [n, _posture(n, m, cfg.fallback.api_on_cli_loss)] as const),
             cfg.fallback.api_on_quota,
         )) {
             _stdout(`${line}\n`);

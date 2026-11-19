@@ -199,6 +199,21 @@ read-only environment report from `src/scripts/_lib/environment_detector.ts`.
   provider (or was rejected at the request boundary with no generation
   performed). A `timeout` or a 5xx does **not** fall through under any
   configuration: a half-completed call must never be paid for twice.
+  **Since 2026-11-19 those four classes need the operator's word too:** they
+  never double-charge, but they flip a subscription seat onto metered USD, and a
+  resolvable key is not consent to spend (owner directives D4 + D6, subscriptions
+  first). `fallback.api_on_cli_loss` is three-valued like `api_on_quota`:
+  `true` falls through, `false` loses the seat (`council:status`: `metered
+  fallback withheld`), and **absent** is `'ask'` — the seat is PARKED and the
+  round closes with the billing question, whose yes is the run-scoped grant
+  (`council:grant-billing`), never a stored setting. Quota exhaustion stays under
+  `fallback.api_on_quota`.
+- **Subscriptions first at resolution, too.** Under `auto`, an installed
+  subscription CLI whose login was not detected resolves to the **cli** rung
+  even when a key resolves — a broken subscription seat, not "no subscription" —
+  unless `api_on_cli_loss: true`. A real auth failure then meets the policy
+  above. No CLI installed at all is the no-seat case and still resolves to the
+  key, and an explicit `mode: api` seat is never touched.
   Consumed by `orchestrator.ts::_run_round` via `ConsultOptions.cli_fallback`;
   `council_cli.ts::build_members` supplies the api-twin factory (out-param
   `fallback_out`), which enforces the same strict `api_key_ref` construction

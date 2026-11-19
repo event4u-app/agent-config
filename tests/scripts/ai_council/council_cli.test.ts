@@ -1394,6 +1394,9 @@ describe('mid-flight fallback — end to end from a config file', () => {
     function hermetic(options: CliFallbackOptions, answer = 'answered over api'): CliFallbackOptions {
         return {
             api_on_quota: options.api_on_quota,
+            api_on_cli_loss: options.api_on_cli_loss,
+            ...(options.parked !== undefined ? { parked: options.parked } : {}),
+            ...(options.on_event !== undefined ? { on_event: options.on_event } : {}),
             construct: (provider: string) => {
                 const real: ExternalAIClient | null = options.construct(provider);
                 if (real === null) return null;
@@ -1422,13 +1425,14 @@ describe('mid-flight fallback — end to end from a config file', () => {
         };
     }
 
-    const CONFIG = (apiOnQuota: boolean): string =>
+    const CONFIG = (apiOnQuota: boolean, apiOnCliLoss: boolean | null = false): string =>
         [
             'enabled: true',
             'cost_budget:',
             '  max_total_usd: 20.0',
             'fallback:',
             `  api_on_quota: ${apiOnQuota}`,
+            ...(apiOnCliLoss === null ? [] : [`  api_on_cli_loss: ${apiOnCliLoss}`]),
             'members:',
             '  anthropic:',
             '    enabled: true',
@@ -1479,13 +1483,43 @@ describe('mid-flight fallback — end to end from a config file', () => {
         expect(responses[0]!.metadata['fallback_from']).toBeUndefined();
     });
 
-    it('an auth failure keeps the seat with the opt-in OFF — the base classes never needed it', () => {
+    it('an auth failure loses the seat when api_on_cli_loss is false — a key is not consent to spend (D4)', () => {
         process.env[KEY_VAR] = 'sk-test-key';
-        const options = fallbackOptionsFromConfig(CONFIG(false));
+        const options = fallbackOptionsFromConfig(CONFIG(false, false));
         // `auth_expired`, not raw stderr prose: `CliClient` normalises the
         // binary's stderr to a short code before setting `error`, and
         // `classifyCliFailure` matches the code. Handing it prose here would
         // classify as `other` and test nothing.
+        const seat = new DeadCliSeat('auth_expired');
+        const responses = consult(
+            [seat],
+            new CouncilQuestion({ mode: 'prompt', user_prompt: 'q' }),
+            null,
+            { cli_fallback: hermetic(options) },
+        );
+        expect(responses[0]!.error).not.toBeNull();
+        expect(responses[0]!.metadata['fallback_reason']).toBeUndefined();
+        expect(options.parked).toEqual([]);
+    });
+
+    it('with nothing stored, an auth failure PARKS the seat for the run question (D6 case 3)', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(false, null));
+        expect(options.api_on_cli_loss).toBe('ask');
+        const seat = new DeadCliSeat('auth_expired');
+        const responses = consult(
+            [seat],
+            new CouncilQuestion({ mode: 'prompt', user_prompt: 'q' }),
+            null,
+            { cli_fallback: hermetic(options) },
+        );
+        expect(responses[0]!.metadata['fallback_reason']).toBeUndefined();
+        expect(options.parked).toEqual(['anthropic']);
+    });
+
+    it('an auth failure keeps the seat when api_on_cli_loss is set', () => {
+        process.env[KEY_VAR] = 'sk-test-key';
+        const options = fallbackOptionsFromConfig(CONFIG(false, true));
         const seat = new DeadCliSeat('auth_expired');
         const responses = consult(
             [seat],

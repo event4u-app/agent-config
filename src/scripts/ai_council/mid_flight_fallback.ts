@@ -53,6 +53,12 @@ export interface CliFallbackOptions {
     /** `ai_council.fallback.api_on_quota` — see `FallbackPolicy.apiOnQuota`. */
     readonly api_on_quota: ApiOnQuota;
     /**
+     * `ai_council.fallback.api_on_cli_loss` — `true` retries a lost
+     * subscription seat metered, `false` loses it, `'ask'` (and absent) parks
+     * it unless a run-scoped billing grant is in force (D6).
+     */
+    readonly api_on_cli_loss?: boolean | 'ask';
+    /**
      * True when a run-scoped billing grant is in force for THIS run. Read only
      * under `api_on_quota: 'ask'`; absence means park, never proceed.
      */
@@ -185,6 +191,17 @@ export function establishTwin(input: EstablishInput): EstablishOutcome {
         return { parked: true, provider: member.name, reason: failure, original_error: error };
     }
     if (!isFallbackEligibleUnder(failure, policy)) return null;
+    // Subscriptions first (owner decisions 2026-11-19, D4 + D6). The classes
+    // above never double-charge, but they flip a subscription seat onto metered
+    // USD; that flip needs the operator's word — stored, or asked for this run.
+    if (failure !== 'quota_exhausted') {
+        const loss = fallback.api_on_cli_loss ?? 'ask';
+        if (loss === false) return null;
+        if (loss === 'ask' && fallback.billing_grant !== true) {
+            fallback.on_event?.({ provider: member.name, failure, outcome: 'awaiting_grant', api_on_quota: fallback.api_on_quota });
+            return { parked: true, provider: member.name, reason: failure, original_error: error };
+        }
+    }
     if (ledger.attempt(member.name, failure, policy) !== 'api') return null;
 
     const twin = fallback.construct(member.name);

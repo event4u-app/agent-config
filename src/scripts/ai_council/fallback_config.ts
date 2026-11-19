@@ -33,6 +33,15 @@ export interface FallbackConfig {
      * run. See `transport_resolver.ts` § `ApiOnQuota` and `_lib/billing_grant`.
      */
     readonly api_on_quota: ApiOnQuota;
+    /**
+     * May a LOST subscription seat (`binary_missing`, `auth_rejected`,
+     * `cli_unsupported`, `model_unservable`) retry on the metered api rung?
+     * `true` yes, `false` no — the seat is lost. Absent is `'ask'` (owner
+     * decision 2026-11-19, D6): the seat is parked and the run asks once; the
+     * answer is the run-scoped billing grant, never stored. A resolvable key is
+     * not consent to spend. Quota exhaustion stays under `api_on_quota`.
+     */
+    readonly api_on_cli_loss: boolean | 'ask';
 }
 
 /**
@@ -71,16 +80,21 @@ export interface FallbackBuilderDeps {
  * silently reading that as `false` would be as wrong as reading it as `true`.
  */
 export function buildFallback(raw: unknown, d: FallbackBuilderDeps): FallbackConfig {
-    if (!d.isDict(raw)) return { api_on_quota: false };
+    if (!d.isDict(raw)) return { api_on_quota: false, api_on_cli_loss: 'ask' };
+    const loss = raw['api_on_cli_loss'];
+    if (loss !== undefined && !d.isBool(loss) && loss !== 'ask') {
+        throw d.error(`\`fallback.api_on_cli_loss\`=${d.repr(loss)} must be \`true\`, \`false\` or \`'ask'\` (got ${d.typeName(loss)}).`);
+    }
+    const api_on_cli_loss: boolean | 'ask' = loss === undefined ? 'ask' : (loss as boolean | 'ask');
     const v = raw['api_on_quota'];
-    if (v === undefined) return { api_on_quota: false };
-    if (d.isBool(v)) return { api_on_quota: v };
+    if (v === undefined) return { api_on_quota: false, api_on_cli_loss };
+    if (d.isBool(v)) return { api_on_quota: v, api_on_cli_loss };
     // `'ask'` is the ONLY string this accepts, and the narrowness is the
     // point: the paragraph above refuses `"yes"` because an operator writing
     // it is trying to authorise spend, and widening to "any truthy-looking
     // string" to let `ask` through would readmit exactly that. A third named
     // value is not a lenient parse.
-    if (d.isStr(v) && v === 'ask') return { api_on_quota: 'ask' };
+    if (d.isStr(v) && v === 'ask') return { api_on_quota: 'ask', api_on_cli_loss };
     throw d.error(
         `\`fallback.api_on_quota\`=${d.repr(v)} must be \`false\`, \`true\` or \`'ask'\` ` +
             `(got ${d.typeName(v)}).`,

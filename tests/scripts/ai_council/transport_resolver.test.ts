@@ -199,6 +199,31 @@ describe('auto chain details', () => {
         expect(r2.reason).toContain('credential is present');
     });
 
+    // Owner decision 2026-11-19 (D6): an installed subscription CLI whose login
+    // was not detected is a BROKEN subscription seat, not "no subscription".
+    // Under subscriptions-first it stays on the cli rung, so a real auth failure
+    // reaches the run's api_on_cli_loss policy instead of silently costing USD.
+    it('subscriptions first: an installed CLI without a detected login stays cli even when a key resolves', () => {
+        const binaryNoAuthKey = report({
+            hosts: [host('claude-code', '/usr/local/bin/claude')],
+            auth: [auth('anthropic', 'key-file')],
+        });
+        const r = resolveTransport({ provider: 'anthropic', mode: 'auto', report: binaryNoAuthKey, subscriptionFirst: true });
+        expect(r.transport).toBe('cli');
+        const legacy = resolveTransport({ provider: 'anthropic', mode: 'auto', report: binaryNoAuthKey });
+        expect(legacy.transport).toBe('api');
+    });
+
+    it('subscriptions first: no CLI installed at all is "no subscription seat" — the key may serve (D6 case 1)', () => {
+        const r = resolveTransport({ provider: 'anthropic', mode: 'auto', report: KEYS_ONLY, subscriptionFirst: true });
+        expect(r.transport).toBe('api');
+    });
+
+    it('subscriptions first never overrides an explicit api seat', () => {
+        const both = report({ hosts: [host('claude-code', '/usr/local/bin/claude')], auth: [auth('anthropic', 'key-file')] });
+        expect(resolveTransport({ provider: 'anthropic', mode: 'api', report: both, subscriptionFirst: true }).transport).toBe('api');
+    });
+
     it('honours a member binary override when the CLI is not on PATH', () => {
         const authOnly = report({ auth: [auth('anthropic', 'cli-subscription')] });
         const r = resolveTransport({
