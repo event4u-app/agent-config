@@ -36,6 +36,7 @@ import { loadSessionPins, SESSION_PINS_CHUNK, sessionPinsSpecifier } from '../..
 import { digestFor, EMISSION_MAX_BYTES, replyLine, subagentPinsText } from '../../src/scripts/hooks/subagent_constraints_hook.js';
 import { shapeEmissions } from '../../src/scripts/hooks/injection_budget.js';
 import { readRestoreRecord, restoreOwed } from '../../src/scripts/_lib/session_pins_record.js';
+import { release, tryAcquire, type Held } from '../../src/scripts/_lib/generation_lock.js';
 
 let tmp: string;
 let out: string[];
@@ -951,11 +952,10 @@ describe('council round 9/10 — generations, paid debts, and the lock-failure b
         run(prompt('pin: x1'), { consumer_root: tmp, env: ENV });
         run(event('pre_compact'), { consumer_root: tmp, env: ENV });
         run(event('post_tool_use'), { consumer_root: tmp, env: ENV });
-        // Hold the record's lock companion fresh, as a live peer would.
+        // Hold the record's lock as a live peer would.
         const record = statePath(tmp, 's1').replace(/\.json$/, '.restore.json');
-        const held = fs.readdirSync(path.dirname(record)).map((f) => path.join(path.dirname(record), f)).find((f) => f.endsWith('.held'));
-        const companion = held ?? `${record}.lock.held`;
-        fs.writeFileSync(companion, '');
+        const peer = tryAcquire(`${record}.lock.held`, { staleMs: 30_000 });
+        expect(peer).not.toBeNull();
         out = [];
         const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
         try {
@@ -963,7 +963,7 @@ describe('council round 9/10 — generations, paid debts, and the lock-failure b
             expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain('not lockable');
         } finally {
             err.mockRestore();
-            fs.rmSync(companion, { force: true });
+            release(peer as Held);
         }
         expect(out.join('')).not.toContain('x1');
         run(prompt('ok'), { consumer_root: tmp, env: ENV });
@@ -1511,7 +1511,7 @@ describe('council round 21 — fence membership first, well-formed text, strict 
         const before = fs.readFileSync(statePath(tmp, 's1'), 'utf8');
         const real = fsDefault.openSync;
         const spy = vi.spyOn(fsDefault, 'openSync').mockImplementation(((p: fs.PathLike, flags?: fs.OpenMode, mode?: fs.Mode) => {
-            if (String(p).endsWith('.held') && flags === 'wx') {
+            if (/\.held(\.\d+)?$/.test(String(p)) && flags === 'wx') {
                 const e = new Error('denied') as NodeJS.ErrnoException;
                 e.code = 'EACCES';
                 throw e;
@@ -1999,6 +1999,38 @@ describe('council round 35 — bounds that hold for the lifetime of what can spe
         expect(fs.existsSync(goneBoundary)).toBe(false);
         expect(fs.existsSync(`${restorePath(tmp, 'gone')}.lock`)).toBe(false);
         expect(fs.existsSync(liveBoundary)).toBe(true);
+    });
+
+    // The pin locks protect a paused holder from supersession only because every
+    // caller of them is strict (state_io's `breakStale: false` binds the caller
+    // that passes it). A non-strict call added here would quietly end that.
+    it('every lock taken on a pin path is taken strict', () => {
+        const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'scripts', '_lib', 'session_pins.ts'), 'utf8');
+        // Each call's own argument list, matched by parentheses, so one call's
+        // options can never stand in for another's.
+        const argsOf = (at: number): string => {
+            let depth = 0;
+            for (let i = at; i < src.length; i += 1) {
+                if (src[i] === '(') depth += 1;
+                else if (src[i] === ')' && (depth -= 1) === 0) return src.slice(at, i + 1);
+            }
+            throw new Error('unbalanced call');
+        };
+        const calls = [...src.matchAll(/update_(?:text|json)_under_lock\(/g)].map((m) => argsOf((m.index ?? 0) + m[0].length - 1));
+        expect(calls.length).toBeGreaterThan(0);
+        // The options are the last argument: an object literal ending the call.
+        for (const c of calls) expect(c).toMatch(/,\s*\{[^{}]*\bstrict:\s*true\b[^{}]*\}\s*,?\s*\)$/);
+    });
+
+    it('retention never removes the highest generation of a gone session\'s lock', () => {
+        savePins(tmp, 'gone', ['drop'], new Date().toISOString());
+        savePins(tmp, 'gone', ['drop', 'again'], new Date().toISOString());
+        const family = (): string[] => fs.readdirSync(path.dirname(statePath(tmp, 'gone'))).filter((n) => n.startsWith(`${path.basename(statePath(tmp, 'gone'))}.lock.held`));
+        expect(family()).toHaveLength(1);
+        fs.utimesSync(statePath(tmp, 'gone'), OLD, OLD);
+        pruneStalePins(tmp, Date.now());
+        expect(fs.existsSync(statePath(tmp, 'gone'))).toBe(false);
+        expect(family()).toHaveLength(1);
     });
 });
 

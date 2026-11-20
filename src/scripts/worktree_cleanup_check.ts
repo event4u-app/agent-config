@@ -43,6 +43,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { load_agent_settings, settings_layer_states, user_global_settings_paths } from './_lib/agent_settings.js';
+import { release, tryAcquire, type Held } from './_lib/generation_lock.js';
 import { read_live_records, register_dir } from './_lib/session_register.js';
 import { git, gitEnv, timeLeftMs, tryGit, withDeadline } from './_lib/worktree_git.js';
 import { localOnlyIgnored } from './_lib/worktree_ignored.js';
@@ -883,48 +884,25 @@ const LOCK_STALE_MS = 10 * 60 * 1000;
  * Take the per-repository removal lock, or `null` when another pass holds it.
  * Two session starts in two worktrees of one repository must not both judge and
  * remove the same tree; the second one simply does nothing this time.
+ *
+ * A generation lock (`_lib/generation_lock.ts`): a stale lock is superseded,
+ * never renamed aside or removed while another pass may have taken it over, and
+ * the release ages this pass's own generation only. Its limit, unfenced here: a
+ * pass that outlived the stale window keeps removing beside its successor, and
+ * `git worktree remove` re-checks each tree itself.
  */
 function takeRemovalLock(mainPath: string, now: Date): (() => void) | null {
     const dir = commonDir(mainPath);
     if (dir === null) return null;
-    const file = path.join(dir, REMOVAL_LOCK);
-    // The token names THIS holder: release deletes the lock only while it is
-    // still ours, so a pass that outlived the stale window cannot delete the
-    // lock a later pass took over.
-    const token = `${process.pid} ${now.toISOString()} ${Math.random().toString(36).slice(2)}`;
-    const tryCreate = (): boolean => {
-        try {
-            fs.writeFileSync(file, `${token}\n`, { flag: 'wx' });
-            return true;
-        } catch {
-            return false;
-        }
-    };
-    if (!tryCreate()) {
-        try {
-            if (now.getTime() - fs.statSync(file).mtimeMs < LOCK_STALE_MS) return null;
-            // Unlink only the stale lock that was judged: a pass that took it over
-            // in between wrote a new token, and that lock is not ours to delete.
-            const judged = fs.readFileSync(file, 'utf-8');
-            const aside = `${file}.${process.pid}.stale`;
-            fs.renameSync(file, aside);
-            if (fs.readFileSync(aside, 'utf-8') !== judged) {
-                fs.renameSync(aside, file);
-                return null;
-            }
-            fs.unlinkSync(aside);
-        } catch {
-            return null;
-        }
-        if (!tryCreate()) return null;
+    let held: Held | null;
+    try {
+        held = tryAcquire(path.join(dir, REMOVAL_LOCK), { staleMs: LOCK_STALE_MS, now: () => now.getTime() });
+    } catch {
+        return null;
     }
-    return () => {
-        try {
-            if (fs.readFileSync(file, 'utf-8').trim() === token) fs.unlinkSync(file);
-        } catch {
-            /* already gone — a stale-lock sweep by another pass */
-        }
-    };
+    if (held === null) return null;
+    const own = held;
+    return () => release(own);
 }
 
 /**
@@ -961,8 +939,8 @@ export function applyRemovals(
         )
         .slice(0, opts.limit ?? Number.POSITIVE_INFINITY);
     if (rows.length === 0) return [];
-    const release = takeRemovalLock(mainPath, now);
-    if (release === null) return [];
+    const unlock = takeRemovalLock(mainPath, now);
+    if (unlock === null) return [];
     const outcomes: RemovalOutcome[] = [];
     const dir = commonDir(mainPath);
     // Write-ahead: an `intent` line with the tip goes down BEFORE the removal and
@@ -1040,7 +1018,7 @@ export function applyRemovals(
         // unmounted volume would lose its registration without ever having been
         // judged. `git worktree remove` already drops the entry it removes.
     } finally {
-        release();
+        unlock();
     }
     return outcomes;
 }

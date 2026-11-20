@@ -1023,7 +1023,8 @@ Two consequences worth stating rather than leaving to be re-derived:
 
 Concerns that write a state file under `agents/` MUST use the pattern:
 
-1. Acquire `fcntl.flock(LOCK_EX)` on `<state_dir>/.dispatcher.lock` — the
+1. Acquire the exclusive generation lock `<state_dir>/.dispatcher.lock.held[.<g>]`
+   (`src/scripts/_lib/generation_lock.ts`, through `hooks/state_io.ts`) — the
    same directory the target file lives in, never a single fixed location.
    A concern targeting `agents/runtime/state/foo.json` locks there; one
    targeting `agents/state/bar.json` locks in `agents/state/` instead.
@@ -1031,10 +1032,10 @@ Concerns that write a state file under `agents/` MUST use the pattern:
 3. `os.replace(tmp, dest)` — POSIX-atomic on the same filesystem.
 4. Release the lock.
 
-The single `.dispatcher.lock` is intentional: serialising state
+The single `.dispatcher.lock` family is intentional: serialising state
 writes across concerns is cheaper than per-file locks, and concerns
 already run sequentially within one dispatcher invocation. The lock
-file is gitignored.
+files are gitignored.
 
 ### One exception — per-session read-modify-write
 
