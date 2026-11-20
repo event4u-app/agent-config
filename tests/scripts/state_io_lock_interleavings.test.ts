@@ -1,5 +1,8 @@
 // Deterministic interleaving harness for the `state_io` file lock
-// (road-to-verified-stale-lock-reclaim step 1.1).
+// (road-to-verified-stale-lock-reclaim step 1.1). It pinned the stat-then-remove
+// defect; since step 2.1 `state_io` runs the generation lock and the list is
+// empty. Every lock site runs the generalised harness in
+// `lock_sites_interleavings.test.ts`.
 //
 // The lock code is synchronous, so a second caller cannot be scheduled between
 // two of its filesystem calls by ordinary concurrency. Instead every call on the
@@ -44,7 +47,7 @@ function point(op: Op = 'cs', phase: 'before' | 'after' = 'before'): void {
 
 function observed<A extends unknown[], R>(op: Op, f: (...a: A) => R): (...a: A) => R {
     return (...a: A): R => {
-        if (String(a[0]).endsWith('.held')) {
+        if (/\.held(\.\d+)?$/.test(String(a[0]))) {
             point(op, 'before');
             try {
                 return f(...a);
@@ -88,7 +91,7 @@ function reset(): void {
     holders.clear();
     maxHolders = 0;
     doubleHolds.length = 0;
-    real.rmSync(held, { force: true });
+    for (const n of fs.readdirSync(dir)) if (n.startsWith(path.basename(held))) real.rmSync(path.join(dir, n), { force: true });
 }
 
 function pointsOfSoloRun(strict: boolean): number {
@@ -167,15 +170,13 @@ describe('state_io lock — three callers over an abandoned lock', () => {
         expect(maxHolders).toBe(1);
     });
 
-    it('a breaking caller (non-strict) admits two holders — the recorded defect', () => {
+    it('a breaking caller (non-strict) admits no second holder', () => {
         const hits = exploreAbandoned(false);
-        // Characterisation of today's code. Phase 2 of the roadmap turns this
-        // into `toEqual([])`; until then the list is the finding.
         if (process.env['LOCK_HARNESS_PRINT'] === '1') process.stdout.write(`${hits.join('\n')}\n`);
-        expect(hits).toEqual(['A@4 rm-lands-in-B → B+C']);
+        expect(hits).toEqual([]);
     });
 
-    it('a strict caller never breaks a guard, so no schedule admits two holders', () => {
+    it('a strict caller admits no second holder', () => {
         expect(exploreAbandoned(true)).toEqual([]);
     });
 });
@@ -204,12 +205,11 @@ describe('state_io lock — a release that lands while a peer holds', () => {
         return maxHolders;
     }
 
-    it('non-strict: two holders (B and C)', () => {
-        expect(releaseRace(false)).toBe(2);
-        expect(doubleHolds.map((h) => h.join('+'))).toContain('B+C');
+    it('non-strict: the landing release removes nothing B holds', () => {
+        expect(releaseRace(false)).toBe(1);
     });
 
-    it('strict: B never breaks the aged guard, so nobody holds beside anyone', () => {
+    it('strict: the landing release removes nothing B holds', () => {
         expect(releaseRace(true)).toBe(1);
     });
 });

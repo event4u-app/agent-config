@@ -17,6 +17,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { acquire, release, type Held } from '../_lib/generation_lock.js';
+
 /**
  * Attribution sidecar suffix, appended to the counter's own state path.
  *
@@ -141,6 +143,9 @@ export function writeStateAtomically(target: string, payload: string): void {
  *   expires the update proceeds unlocked. Losing one increment is the
  *   pre-existing behaviour and beats stalling a dispatch.
  * - **Stale-lock breaking.** A crashed holder must not wedge the counter forever.
+ *   The lock is a generation lock (`_lib/generation_lock.ts`), so a break never
+ *   removes a lock a peer holds; a holder past the one-second threshold is
+ *   superseded and keeps writing beside its successor, unfenced.
  * - **In-process calls need none of this** — the callers are synchronous and Node
  *   is single-threaded, so same-process bookings are already serialised. The
  *   window this closes is strictly cross-process: a council invocation and an
@@ -148,37 +153,17 @@ export function writeStateAtomically(target: string, payload: string): void {
  */
 export function withStateLock<T>(target: string, fn: () => T): T {
     const lockPath = `${target}.lock`;
-    const waitMs = 1000;
-    let held = false;
-    const started = _monotonicish();
-    while (_monotonicish() - started < waitMs) {
-        try {
-            fs.mkdirSync(path.dirname(lockPath), { recursive: true });
-            fs.closeSync(fs.openSync(lockPath, 'wx'));
-            held = true;
-            break;
-        } catch {
-            try {
-                if (_monotonicish() - fs.statSync(lockPath).mtimeMs > waitMs) {
-                    fs.unlinkSync(lockPath);
-                    continue;
-                }
-            } catch {
-                // Vanished between the failed create and the stat — retry.
-            }
-            _spin(20);
-        }
+    let held: Held | null = null;
+    try {
+        fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+        held = acquire(lockPath, { staleMs: 1000, waitMs: 1000, spinMs: 20 });
+    } catch {
+        // No lock can be created here: proceed unlocked, as on a timeout.
     }
     try {
         return fn();
     } finally {
-        if (held) {
-            try {
-                fs.unlinkSync(lockPath);
-            } catch {
-                // A removed lock is the desired end state either way.
-            }
-        }
+        if (held !== null) release(held);
     }
 }
 
@@ -336,19 +321,8 @@ function _isObject(x: unknown): x is Record<string, unknown> {
     return typeof x === 'object' && x !== null && !Array.isArray(x);
 }
 
-/** Monotonic-ish millisecond clock for lock ages and temp-file names. */
+/** Monotonic-ish millisecond clock for temp-file names. */
 function _monotonicish(): number {
     return performance.now();
 }
 
-/**
- * Synchronous back-off. Necessary rather than chosen: the whole booking path is
- * synchronous, so making it async to await a sub-second contention window would
- * change every caller.
- */
-function _spin(ms: number): void {
-    const until = _monotonicish() + ms;
-    while (_monotonicish() < until) {
-        // deliberate busy-wait
-    }
-}

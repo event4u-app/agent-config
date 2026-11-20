@@ -18,6 +18,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { acquire, companion, execute, release } from './generation_lock.js';
 import { detect, EGRESS_RULES, type EgressClass, type EgressRule, type EgressSpan } from './egress_rules.js';
 import { formatToken, parseTokens, replaceValues, TOKEN_FP_LENGTH, TokenScope } from './egress_token.js';
 import { event4u_root, type EnvMap } from './user_global_paths.js';
@@ -154,10 +155,6 @@ function expired(table: SessionTable, now: number): boolean {
     return !Number.isFinite(at) || now - at > EGRESS_SESSION_RETENTION_MS;
 }
 
-function sleepMs(ms: number): void {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
-
 const LOCK_STALE_MS = 5000;
 
 export interface TableTarget {
@@ -173,28 +170,18 @@ export interface TableTarget {
 }
 
 /** Read-modify-write under an exclusive lock; the file is written whole and renamed into place. */
-function updateTable<T>(t: TableTarget, fn: (table: SessionTable) => T): T {
+export function updateTable<T>(t: TableTarget, fn: (table: SessionTable) => T): T {
     const rel = path.relative(path.resolve(t.workspaceRoot ?? process.cwd()), path.resolve(t.dir));
     if (!rel.startsWith('..') && !path.isAbsolute(rel)) {
         throw new Error('egress session table: refusing a table directory inside the workspace');
     }
     fs.mkdirSync(t.dir, { recursive: true, mode: 0o700 });
     const file = sessionTablePath(t.dir, t.sessionId);
-    const lock = `${file}.lock`;
-    let fd: number | null = null;
-    for (let i = 0; fd === null; i++) {
-        try {
-            fd = fs.openSync(lock, 'wx', 0o600);
-        } catch {
-            try {
-                if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) fs.rmSync(lock, { force: true });
-            } catch {
-                // released meanwhile
-            }
-            if (i >= 200) throw new Error('egress session table: lock not acquired');
-            sleepMs(5);
-        }
-    }
+    // The generation lock: an abandoned lock is superseded, never removed from
+    // under a peer. Its limit, unfenced here: a holder paused past
+    // LOCK_STALE_MS writes after a peer superseded it, and the later rename wins.
+    const held = acquire(`${file}.lock`, { staleMs: LOCK_STALE_MS, waitMs: 1000, spinMs: 5 });
+    if (held === null) throw new Error('egress session table: lock not acquired');
     try {
         const now = new Date(t.now ?? Date.now()).toISOString();
         const session = sha256(`session\u0000${t.sessionId}`);
@@ -218,8 +205,7 @@ function updateTable<T>(t: TableTarget, fn: (table: SessionTable) => T): T {
         fs.renameSync(tmp, file);
         return out;
     } finally {
-        fs.closeSync(fd);
-        fs.rmSync(lock, { force: true });
+        release(held);
     }
 }
 
@@ -503,6 +489,14 @@ export function pruneSessionTables(dir: string, now: number = Date.now()): numbe
         }
         if (now - at > EGRESS_SESSION_RETENTION_MS) {
             fs.rmSync(file, { force: true });
+            // Its lock generations but the highest go with it; the highest stays,
+            // or the numbering would restart under a caller still holding an old
+            // listing (see the session-state pruner in hooks/state_io.ts).
+            try {
+                for (const g of (execute(['list', `${file}.lock`]) as number[]).slice(0, -1)) execute(['remove', companion(`${file}.lock`, g)]);
+            } catch {
+                // the listing failed: nothing is removed
+            }
             removed += 1;
         }
     }

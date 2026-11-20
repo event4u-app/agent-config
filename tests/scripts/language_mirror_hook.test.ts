@@ -65,6 +65,7 @@ import {
   _pruneStaleSessions,
 } from "../../src/scripts/language_mirror_hook.js";
 import { stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
+import { tryAcquire } from "../../src/scripts/_lib/generation_lock.js";
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
 // prompt_chars: 6627, de_markers: 0, en_markers: 63` in a German session. Those
@@ -1026,7 +1027,8 @@ describe("the distance trigger", () => {
   it("stale-snapshot protection: a peer holding the lock makes the tool write silent", () => {
     pinDe();
     toolCalls(REEMIT_AFTER_TOOL_CALLS - 1);
-    fs.writeFileSync(`${statePath()}.lock`, "", "utf8");
+    const peer = tryAcquire(`${statePath()}.lock`, { staleMs: LOCK_STALE_MS });
+    expect(peer).not.toBeNull();
     // Would be EXIT_WARN with the counter reset to 0 if the lock were ignored,
     // which is the both-emit-at-the-threshold case the seat named.
     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
@@ -1049,7 +1051,9 @@ describe("the distance trigger", () => {
   it("stale-snapshot protection: the lock is released, not leaked", () => {
     pinDe();
     expect(toolCalls(1)).toBe(0);
-    expect(fs.existsSync(`${statePath()}.lock`)).toBe(false);
+    // A release ages its generation rather than removing it, so the next
+    // caller takes the lock at once.
+    expect(tryAcquire(`${statePath()}.lock`, { staleMs: LOCK_STALE_MS })).not.toBeNull();
   });
 
   it("never fires when no pin exists", () => {
