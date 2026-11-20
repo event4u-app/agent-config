@@ -224,6 +224,44 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-badrow', 'summary.json'))).toBe(true);
     });
 
+    for (const [label, row] of [
+        ['null', null],
+        ['a string', 'x'],
+        ['missing its id, though later than everything', { completed_at: '2026-11-20T13:00:00Z' }],
+    ] as const) {
+        it(`last_feedback: a \`latest\` row that is ${label} is ignored and the history still counts`, () => {
+            const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+            const sess = path.join(stateDir, 'session-rows');
+            fs.mkdirSync(sess, { recursive: true });
+            fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+            fs.writeFileSync(
+                path.join(sess, 'summary.json'),
+                JSON.stringify({
+                    invocations: [{ invocation: 'pid-x', completed_at: '2026-11-20T12:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }],
+                    latest: { 'chat-history': row },
+                }),
+            );
+            const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+            expect(chat?.last_feedback?.endsWith(path.join('session-rows', 'summary.json'))).toBe(true);
+        });
+    }
+
+    it('last_feedback: a row without an id, later than a valid history entry, does not outrank a newer detailed file', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-noid');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T12:30:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [{ invocation: 'pid-x', completed_at: '2026-11-20T12:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }],
+                latest: { 'chat-history': { completed_at: '2026-11-20T13:00:00Z' } }, // the writer would never keep this row
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-noid', 'chat-history.json'))).toBe(true);
+    });
+
     describe('last_feedback on an equal instant', () => {
         const AT = '2026-11-20T10:00:00.000Z';
         const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {

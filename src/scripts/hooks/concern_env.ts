@@ -43,7 +43,8 @@ let restoreFailed: string | null = null;
  * at the next open, or by a successful close (a full replace supersedes it).
  * Kept apart from {@link restoreFailed}: that one is this dispatch's verdict and
  * may be skipped when an error is already in flight; this one outlives the
- * dispatch, so the next scope in the same process recovers it before any
+ * dispatch (within the process — a new process starts from its own clean
+ * environment), so the next scope in the same process recovers it before any
  * concern runs, and refuses to open when it cannot.
  */
 let pendingRestore: NodeJS.ProcessEnv | null = null;

@@ -110,8 +110,12 @@ export function withLatestRuns(
     return out;
 }
 
-/** A held `latest` row that honours the contract: a string id and a readable completion instant. */
-function isLatestRun(v: unknown): v is LatestRun & { completed_at: string } {
+/**
+ * A `latest` row that honours the contract: a string id and a readable
+ * completion instant. The writer keeps only such rows, and `hooks_doctor` reads
+ * only such rows, so the two never disagree on which row counts.
+ */
+export function isLatestRun(v: unknown): v is LatestRun & { completed_at: string } {
     if (v === null || typeof v !== 'object') return false;
     const r = v as { invocation?: unknown; completed_at?: unknown };
     return typeof r.invocation === 'string' && typeof r.completed_at === 'string' && !Number.isNaN(Date.parse(r.completed_at));

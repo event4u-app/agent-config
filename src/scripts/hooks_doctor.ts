@@ -36,7 +36,7 @@ import {
   read_dispatch_issues,
 } from "./hooks/dispatch_issues.js";
 import { type JsonObject, type JsonValue, _load_yaml } from "./hooks/dispatch_hook.js";
-import { compareRuns } from "./hooks/feedback_policy.js";
+import { compareRuns, isLatestRun } from "./hooks/feedback_policy.js";
 import * as hooks_status from "./hooks_status.js";
 import {
   DETECTOR_IDS,
@@ -205,7 +205,7 @@ function _summary_last_run(summary: string, concern: string): { at: string; invo
   try {
     const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
       invocations?: Array<{ invocation?: unknown; completed_at?: unknown; concerns?: Array<{ concern?: unknown; completed_at?: unknown }> }>;
-      latest?: Record<string, { invocation?: unknown; completed_at?: unknown } | undefined>;
+      latest?: Record<string, unknown>;
     };
     let last: { at: string; invocation: string | null } | null = null;
     const offer = (at: string, invocation: string | null): void => {
@@ -215,11 +215,12 @@ function _summary_last_run(summary: string, concern: string): { at: string; invo
     // The capped history still counts — a run an older writer recorded there may be newer than
     // the first `latest` row — except the row's own dispatch, already counted on the finer clock.
     const readable = (v: unknown): v is string => typeof v === "string" && !Number.isNaN(Date.parse(v));
-    const kept = doc.latest !== null && typeof doc.latest === "object" ? doc.latest[concern] : undefined;
-    // Only a usable row may stand in for its dispatch's history entry.
+    const kept = doc.latest !== null && typeof doc.latest === "object" && !Array.isArray(doc.latest) ? doc.latest[concern] : undefined;
+    // Only a row the writer would keep (`isLatestRun`) counts, and only it may stand in for its
+    // dispatch's history entry; any other row is ignored and the history is read as usual.
     let keptId: string | null = null;
-    if (kept !== undefined && readable(kept.completed_at)) {
-      keptId = typeof kept.invocation === "string" ? kept.invocation : null;
+    if (isLatestRun(kept)) {
+      keptId = kept.invocation;
       offer(kept.completed_at, keptId);
     }
     for (const inv of doc.invocations ?? []) {
