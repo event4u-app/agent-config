@@ -275,7 +275,7 @@
             "to": 1595500,
             "by": "agent, feat/global-session-catalog",
             "what_was_added": "The `session-register` call into the new `session_catalog` lazy chunk: one `loadChunkExport` call with its four arguments, the end-of-session flag and the claimed-slug read, invoked after the register's own work on each lifecycle slot. Measured 1,595,393 B with the change against 1,595,089 B on origin/main 2eef08c00b (both readings by this gate with APFS-cloned node_modules): +304 B.",
-            "why_it_could_not_be_avoided": "The base sat 11 B under the ceiling, so any call site crossed it. The catalog body itself (39,137 B) already lives in its own chunk with its own ceiling, the envelope parsing was moved into that chunk, and the `sessions:catalog` CLI was split out of `sessions_cli.ts` because that module is in the dispatch graph; what remains is the call. The ceiling moves by the delta rounded up to the next 100 B, with no growth queued.",
+            "why_it_could_not_be_avoided": "The base sat 11 B under the ceiling, so any call site crossed it. The catalog body itself (41,486 B) already lives in its own chunk with its own ceiling, the envelope parsing was moved into that chunk, and the `sessions:catalog` CLI was split out of `sessions_cli.ts` because that module is in the dispatch graph; what remains is the call. The ceiling moves by the delta rounded up to the next 100 B, with no growth queued.",
             "what_would_have_caught_it": "Nothing missed it: the gate fired on the first local run of the change."
         }
     ],
@@ -384,9 +384,9 @@
         },
         {
             "entry": "src/scripts/_lib/session_catalog.ts",
-            "max_bytes": 43100,
+            "max_bytes": 45700,
             "registered_at": "2026-11-20",
-            "derivation": "Measured 39,137 bytes on 2026-11-20 (the machine-wide session catalog: envelope reading, transcript binding to the session and profile with a descriptor identity check, owner-token locks, title masking, per-session record update, incremental transcript ingest, index publication and Markdown rendering, plus the register and agent-switch profile helpers it imports). The ceiling is that reading plus about 10 %, rounded, the margin of the quota_notice and self_repair rows, with no growth queued. WHY IT IS A CHUNK: inlined, it took the dispatch bundle about 13 KB over its 1,595,100 B ceiling (measured with APFS-cloned node_modules against 1,595,089 B on origin/main 2eef08c00b); the 2026-10-18 council doctrine moves new hook work into a chunk instead of raising that ceiling. Loaded by `session-register` on its four lifecycle slots through `hooks/lazy_load.ts`; a missing or mis-digested chunk costs the catalog entry, never the register."
+            "derivation": "Measured 41,486 bytes on 2026-11-20 (the machine-wide session catalog: envelope reading, transcript binding to the session and profile with a descriptor identity check, pid-and-token locks reclaimed only from dead owners, end markers, title masking, per-session record update, incremental transcript ingest, index publication and Markdown rendering, plus the register and agent-switch profile helpers it imports). The ceiling is that reading plus about 10 %, rounded, the margin of the quota_notice and self_repair rows, with no growth queued. WHY IT IS A CHUNK: inlined, it took the dispatch bundle about 13 KB over its 1,595,100 B ceiling (measured with APFS-cloned node_modules against 1,595,089 B on origin/main 2eef08c00b); the 2026-10-18 council doctrine moves new hook work into a chunk instead of raising that ceiling. Loaded by `session-register` on its four lifecycle slots through `hooks/lazy_load.ts`; a missing or mis-digested chunk costs the catalog entry, never the register."
         },
         {
             "entry": "src/scripts/_lib/reference_duty.ts",

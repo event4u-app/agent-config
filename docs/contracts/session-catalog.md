@@ -17,7 +17,7 @@ session up without browsing every profile directory and transcript.
 |---|---|
 | `sessions.json` | **Canonical index.** The contract external readers consume. |
 | `SESSIONS.md` | Human view of the same snapshot. Derived, never parsed back. |
-| `runtime/session-catalog/<session>.json` | One record per session; internal. |
+| `runtime/session-catalog/<host>--<session>.json` | One record per host and session id; internal. |
 
 All files are written owner-only (`0600`, directory `0700`) by atomic rename.
 Nothing here is tracked by git or sent anywhere.
@@ -32,7 +32,10 @@ The `session-register` hook concern, on every slot it is already bound to:
 `session_start`, `user_prompt_submit`, `stop` and `session_end`. Each event
 updates that session's own record under a per-session lock (a heartbeat that
 finds it held is skipped; `session_end` waits up to 2 s), after the register's
-own work. Then the index is republished: always on start, `stop` and end, at
+own work. Locks are files holding the owner's pid and a token; a lock is taken
+over only when its owner process is gone, and released only by its owner.
+Session ids must be plain identifiers; the catalog relies on hosts issuing
+unique ids (UUIDs) per host. Then the index is republished: always on start, `stop` and end, at
 most once per 15 s on the prompt-time heartbeat. Publication is serialised by a
 lock plus a dirty marker, so concurrent sessions do not interleave scans; a
 deferred update lands with the next publish by any session. The index is
@@ -121,12 +124,16 @@ Field notes:
   repositories are not observed.
 - **`usage`** — cumulative, de-duplicated per assistant message. `context_tokens`
   is the prompt size of the latest main-thread assistant message.
-- **`transcript_path`** — read only when it is a regular `.jsonl` file (no
-  symlink, verified again on the opened descriptor), its file name contains the
-  session id, and it lies inside the session's profile directory when that is
-  known. A different path for the same session restarts the totals.
+- **`transcript_path`** — read only when, with every symlink resolved, it is a
+  regular `.jsonl` file named `<session>.jsonl` or `…-<session>.jsonl` inside
+  the session's profile root (`CLAUDE_CONFIG_DIR` / `CODEX_HOME`, else
+  `~/.claude` / `~/.codex`; other hosts are not read), and the opened
+  descriptor is the same inode as the validated file. A different path for the
+  same session restarts the totals.
 - **`ended_at`** — set by `session_end`; only a later `session_start` or prompt
-  (a resume under the same id) clears it, never a late `stop`.
+  (a resume under the same id) clears it, never a late `stop`. If the record
+  stays locked through the end, an end marker records it and the next writer
+  or publisher applies it.
 - **`resume`** — `null` on hosts whose CLI cannot resume by id, and for a
   session id that is not a plain identifier. `argv` is what a program should
   spawn; `command` is the same, shell-quoted. `env` only ever carries the

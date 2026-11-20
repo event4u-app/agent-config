@@ -82,11 +82,14 @@ const MAX_REPOS = 50;
 const MAX_BRANCHES_PER_REPO = 20;
 const MAX_MODELS = 10;
 
-/** A lock directory older than this is treated as left behind by a dead process. */
-const LOCK_STALE_MS = 30_000;
+/** Upper bound on any lock's life, against a recycled owner pid. */
+const LOCK_STALE_MS = 10 * 60_000;
 
 /** How long `session_end` waits for a heartbeat of the same session to finish. */
 const END_LOCK_WAIT_MS = 2_000;
+
+/** How long a forced publish waits for the publish lock. */
+const PUBLISH_WAIT_MS = 1_000;
 
 /** Heartbeat renders closer together than this are deferred to the dirty marker. */
 export const PUBLISH_THROTTLE_MS = 15_000;
@@ -389,7 +392,15 @@ export function derive_status(entry: Pick<CatalogEntry, 'ended_at' | 'last_seen'
 // Locks
 // ---------------------------------------------------------------------------
 
-/** Returns an ownership token, or null when the lock is held. */
+/**
+ * Cross-process lock as a file created with `wx`, holding `<pid> <token>`.
+ *
+ * A lock is reclaimed only when its owner process is gone (or, against pid
+ * reuse, older than LOCK_STALE_MS), never because a live holder is slow. The
+ * reclaimer moves the dead lock aside with an atomic rename and checks that it
+ * moved the lock it judged dead; if a peer had already replaced it, the moved
+ * lock is linked back (`link` refuses to overwrite) before backing off.
+ */
 function try_lock(lock: string, wait_ms = 0): string | null {
     const deadline = Date.now() + wait_ms;
     for (;;) {
@@ -400,22 +411,40 @@ function try_lock(lock: string, wait_ms = 0): string | null {
     }
 }
 
+function lock_owner_alive(body: string, mtime_ms: number): boolean {
+    const pid = Number(body.split(' ')[0]);
+    if (Date.now() - mtime_ms > LOCK_STALE_MS) return false;
+    if (!Number.isInteger(pid) || pid <= 0) return false;
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (e) {
+        return (e as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
 function try_lock_once(lock: string): string | null {
-    const token = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const token = `${process.pid} ${Date.now()}-${Math.random().toString(36).slice(2)}`;
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
-            fs.mkdirSync(lock, { mode: 0o700 });
-            fs.writeFileSync(path.join(lock, 'owner'), token, { mode: 0o600 });
+            fs.writeFileSync(lock, token, { flag: 'wx', mode: 0o600 });
             return token;
         } catch {
             try {
-                const age = Date.now() - fs.statSync(lock).mtimeMs;
-                if (age <= LOCK_STALE_MS) return null;
-                // Rename is atomic: of two reclaimers exactly one moves the stale
-                // lock aside, the other's rename fails and it backs off.
-                const aside = `${lock}.stale-${token}`;
+                const seen = fs.readFileSync(lock, 'utf-8');
+                if (lock_owner_alive(seen, fs.statSync(lock).mtimeMs)) return null;
+                const aside = `${lock}.dead-${process.pid}-${Math.random().toString(36).slice(2)}`;
                 fs.renameSync(lock, aside);
-                fs.rmSync(aside, { recursive: true, force: true });
+                if (fs.readFileSync(aside, 'utf-8') !== seen) {
+                    try {
+                        fs.linkSync(aside, lock);
+                    } catch {
+                        /* a third process holds it now; the moved lock's owner will find its lock gone */
+                    }
+                    fs.rmSync(aside, { force: true });
+                    return null;
+                }
+                fs.rmSync(aside, { force: true });
             } catch {
                 return null;
             }
@@ -427,15 +456,24 @@ function try_lock_once(lock: string): string | null {
 /** Remove the lock only while it is still ours — never a successor's. */
 function unlock(lock: string, token: string): void {
     try {
-        if (fs.readFileSync(path.join(lock, 'owner'), 'utf-8') !== token) return;
-        fs.rmSync(lock, { recursive: true, force: true });
+        if (fs.readFileSync(lock, 'utf-8') !== token) return;
+        fs.rmSync(lock, { force: true });
     } catch {
-        /* a lock that cannot be removed goes stale and is reclaimed */
+        /* a lock that cannot be removed is reclaimed once its owner is gone */
     }
 }
 
-function record_lock(dir: string, session_id: string): string {
-    return path.join(dir, `.${safe_stem(session_id)}.lock`);
+/** Records are keyed by host and id: two hosts may use the same id space. */
+export function record_stem(host: string, session_id: string): string {
+    return safe_stem(`${host.trim().toLowerCase()}--${session_id}`);
+}
+
+function record_lock(dir: string, stem: string): string {
+    return path.join(dir, `.${stem}.lock`);
+}
+
+function end_marker(dir: string, stem: string): string {
+    return path.join(dir, `.${stem}.ended`);
 }
 
 function write_private(file: string, data: string): void {
@@ -461,9 +499,9 @@ function is_entry(v: unknown): v is CatalogEntry {
     return typeof o['session_id'] === 'string' && typeof o['last_seen'] === 'string';
 }
 
-export function read_entry(dir: string, session_id: string): CatalogEntry | null {
+export function read_entry(dir: string, session_id: string, host = 'claude'): CatalogEntry | null {
     try {
-        const parsed: unknown = JSON.parse(fs.readFileSync(path.join(dir, `${safe_stem(session_id)}.json`), 'utf-8'));
+        const parsed: unknown = JSON.parse(fs.readFileSync(path.join(dir, `${record_stem(host, session_id)}.json`), 'utf-8'));
         return is_entry(parsed) ? parsed : null;
     } catch {
         return null;
@@ -593,6 +631,7 @@ export function ingest_transcript(
     cap_bytes: number,
     now_iso: string,
     cache: Map<string, string | null>,
+    expect: { ino: number; dev: number } | null = null,
 ): void {
     let fd: number | null = null;
     try {
@@ -613,8 +652,8 @@ export function ingest_transcript(
         // O_NOFOLLOW + identity check: the file opened is the file validated.
         fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
         const opened = fs.fstatSync(fd);
-        const checked = fs.lstatSync(file);
-        if (!opened.isFile() || opened.ino !== checked.ino || opened.dev !== checked.dev) return;
+        const want = expect ?? fs.lstatSync(file);
+        if (!opened.isFile() || opened.ino !== want.ino || opened.dev !== want.dev) return;
         const read = fs.readSync(fd, buf, 0, len, cur.offset);
         const last_nl = buf.lastIndexOf(0x0a, read - 1);
         if (last_nl < 0) {
@@ -728,16 +767,40 @@ export function ingest_transcript(
  * The host-supplied transcript path is untrusted input: only a regular
  * `.jsonl` file is read, never a symlink, a device or a directory.
  */
-function valid_transcript(p: string | null, session_id: string, config_dir: string | null): string | null {
-    if (p === null || !SESSION_ID_RE.test(session_id)) return null;
-    const abs = path.resolve(p);
-    if (path.extname(abs) !== '.jsonl') return null;
-    // Bound to this session: hosts name the transcript after the session id.
-    if (!path.basename(abs).includes(session_id)) return null;
-    // And to this profile, when the host config dir is known.
-    if (config_dir !== null && !abs.startsWith(`${config_dir}${path.sep}`)) return null;
+interface CheckedTranscript {
+    path: string;
+    ino: number;
+    dev: number;
+}
+
+/** The host's profile root, from the env override or the host default; null for hosts not read. */
+function profile_root(host: string, config_dir: string | null): string | null {
+    const h = host.toLowerCase();
+    if (config_dir !== null) return config_dir;
+    if (h === 'claude') return path.join(os.homedir(), '.claude');
+    if (h === 'codex') return path.join(os.homedir(), '.codex');
+    return null;
+}
+
+function transcript_name_matches(base: string, session_id: string): boolean {
+    return base === `${session_id}.jsonl` || base.endsWith(`-${session_id}.jsonl`);
+}
+
+/**
+ * The host-supplied transcript path is untrusted input. Accepted only when,
+ * after resolving every symlink, it is a regular `.jsonl` file named for this
+ * session and inside this session's profile root. The inode/device seen here
+ * are what the opened descriptor must match.
+ */
+function valid_transcript(p: string | null, session_id: string, root: string | null): CheckedTranscript | null {
+    if (p === null || root === null) return null;
     try {
-        return fs.lstatSync(abs).isFile() ? abs : null;
+        const real = fs.realpathSync(path.resolve(p));
+        const real_root = fs.realpathSync(root);
+        if (!real.startsWith(`${real_root}${path.sep}`)) return null;
+        if (!transcript_name_matches(path.basename(real), session_id)) return null;
+        const st = fs.lstatSync(real);
+        return st.isFile() ? { path: real, ino: st.ino, dev: st.dev } : null;
     } catch {
         return null;
     }
@@ -787,16 +850,33 @@ export function catalog_update(
     const now = ev.now ?? new Date();
     const now_iso = iso_now(now);
     let entry: CatalogEntry | null = null;
+    // Input boundary: the id becomes a file name and a resume argument.
+    if (!SESSION_ID_RE.test(ev.session_id)) return null;
     try {
         const dir = catalog_dir(env);
         ensure_private_dir(dir);
-        const lock = record_lock(dir, ev.session_id);
+        const stem = record_stem(ev.platform, ev.session_id);
+        const lock = record_lock(dir, stem);
         const ending = ev.event === 'session_end';
         // A heartbeat may skip; the end mark must not be lost to a still-running `stop`.
         const token = try_lock(lock, ending ? END_LOCK_WAIT_MS : 0);
-        if (token === null) return null;
+        if (token === null) {
+            if (ending) {
+                // Last resort: a marker the next writer or publisher applies.
+                write_private(end_marker(dir, stem), now_iso);
+                publish_index({ env, now, force: true });
+            }
+            return null;
+        }
         try {
-            entry = read_entry(dir, ev.session_id) ?? fresh_entry(ev, now_iso);
+            entry = read_entry(dir, ev.session_id, ev.platform) ?? fresh_entry(ev, now_iso);
+            try {
+                const marked = fs.readFileSync(end_marker(dir, stem), 'utf-8').trim();
+                if (entry.ended_at === null && ms(marked) !== null) entry.ended_at = marked;
+                fs.unlinkSync(end_marker(dir, stem));
+            } catch {
+                /* no marker */
+            }
             entry.schema_version = CATALOG_SCHEMA_VERSION;
             entry.host = ev.platform || entry.host;
             entry.last_seen = now_iso;
@@ -820,8 +900,9 @@ export function catalog_update(
             const checkout = str(ev.checkout);
             if (checkout !== null && checkout !== cwd) note_repo(entry, checkout, now_iso, cache);
 
-            const transcript = valid_transcript(str(ev.transcript_path), ev.session_id, entry.config_dir);
-            if (transcript !== null) {
+            const checked = valid_transcript(str(ev.transcript_path), ev.session_id, profile_root(entry.host, entry.config_dir));
+            if (checked !== null) {
+                const transcript = checked.path;
                 if (entry.transcript_path !== transcript) {
                     // A different file: the old cursor and totals describe the old one.
                     delete entry._ingest;
@@ -834,6 +915,7 @@ export function catalog_update(
                     ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES,
                     now_iso,
                     cache,
+                    checked,
                 );
             }
             entry.entrypoint = entry.entrypoint ?? str(env['CLAUDE_CODE_ENTRYPOINT']);
@@ -841,14 +923,14 @@ export function catalog_update(
             entry.repos.sort((a, b) => (ms(b.last_seen) ?? 0) - (ms(a.last_seen) ?? 0));
             entry.resume = build_resume(entry);
 
-            write_private(path.join(dir, `${safe_stem(ev.session_id)}.json`), `${JSON.stringify(entry, null, 2)}\n`);
+            write_private(path.join(dir, `${stem}.json`), `${JSON.stringify(entry, null, 2)}\n`);
         } finally {
             unlock(lock, token);
         }
         // `stop` is the last event before a quiet period, so it always publishes;
         // only the prompt-time heartbeat is throttled.
         const force = ev.event !== 'user_prompt_submit';
-        publish_index({ env, now, force });
+        publish_index({ env, now, force, wait_ms: force ? PUBLISH_WAIT_MS : 0 });
     } catch {
         /* fail open */
     }
@@ -892,14 +974,16 @@ export interface PublishOptions {
     force?: boolean;
     /** Prune records past the retention window. Default true. */
     prune?: boolean;
+    /** How long a forced publish waits for a running publisher. */
+    wait_ms?: number;
 }
 
 /**
  * Delete an expired record under its session's lock, after re-reading it: a
  * heartbeat that refreshed the record since the scan keeps it.
  */
-function prune_record(dir: string, file: string, session_id: string, cutoff: number): void {
-    const lock = record_lock(dir, session_id);
+function prune_record(dir: string, file: string, cutoff: number): void {
+    const lock = record_lock(dir, path.basename(file, '.json'));
     const token = try_lock(lock);
     if (token === null) return;
     try {
@@ -924,8 +1008,17 @@ export function build_index(options: PublishOptions = {}): CatalogIndex {
     for (const { file, entry: e } of read_all_entry_files(dir)) {
         const seen = ms(e.last_seen) ?? 0;
         if (seen < cutoff) {
-            if (prune) prune_record(dir, file, e.session_id, cutoff);
+            if (prune) prune_record(dir, file, cutoff);
             continue;
+        }
+        const stem = path.basename(file, '.json');
+        if (e.ended_at === null) {
+            try {
+                const marked = fs.readFileSync(end_marker(dir, stem), 'utf-8').trim();
+                if (ms(marked) !== null) e.ended_at = marked;
+            } catch {
+                /* no marker */
+            }
         }
         const { _ingest, _title_source, ...pub } = e;
         void _ingest;
@@ -971,7 +1064,9 @@ export function publish_index(options: PublishOptions = {}): boolean {
             }
         }
         const lock = path.join(dir, '.publish.lock');
-        const token = try_lock(lock);
+        // A forced publish waits briefly: the holder may already be past its last
+        // dirty check, and the final state of a turn must not wait for a later event.
+        const token = try_lock(lock, options.wait_ms ?? 0);
         if (token === null) return true; // the holder re-scans while `.dirty` exists
         try {
             for (let pass = 0; pass < 3; pass++) {
