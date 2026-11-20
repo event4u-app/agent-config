@@ -166,6 +166,27 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-one', 'chat-history.json'))).toBe(true);
     });
 
+    it('last_feedback: a newer run an older writer left only in the history is not hidden by the first `latest` row', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-upgrade');
+        fs.mkdirSync(sess, { recursive: true });
+        // A block file at 11:00; the history (older writer, no `latest`) recorded a quiet run at 12:00;
+        // then a delayed 10:00 dispatch on the new writer created the first `latest` row.
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [
+                    { invocation: 'pid-legacy', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'chat-history' }] },
+                    { invocation: 'pid-late', completed_at: '2026-11-20T10:00:01Z', concerns: [{ concern: 'chat-history' }] },
+                ],
+                latest: { 'chat-history': { invocation: 'pid-late', completed_at: '2026-11-20T10:00:00Z', exit_code: 0, decision: 'allow' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-upgrade', 'summary.json'))).toBe(true);
+    });
+
     describe('last_feedback on an equal instant', () => {
         const AT = '2026-11-20T10:00:00.000Z';
         const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {

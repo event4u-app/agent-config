@@ -200,7 +200,7 @@ function _recorded_at(file: string): { at: string; invocation: string | null } |
   }
 }
 
-/** Latest `completed_at` (and its `invocation`) of `concern` in the summary: its `latest` row or the invocations that ran it. */
+/** Latest `completed_at` (and its `invocation`) of `concern` in the summary, over its `latest` row and the invocations that ran it. */
 function _summary_last_run(summary: string, concern: string): { at: string; invocation: string | null } | null {
   try {
     const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
@@ -208,18 +208,23 @@ function _summary_last_run(summary: string, concern: string): { at: string; invo
       latest?: Record<string, { invocation?: unknown; completed_at?: unknown } | undefined>;
     };
     let last: { at: string; invocation: string | null } | null = null;
-    // `latest` (uncapped, keep-newer, the concern's own completion time — the same clock as its
-    // per-concern file) is authoritative when present; the capped history serves older writers.
+    const offer = (at: string, invocation: string | null): void => {
+      if (last === null || compareRuns(Date.parse(at), invocation, Date.parse(last.at), last.invocation) > 0) last = { at, invocation };
+    };
+    // `latest` carries the concern's own completion time (the clock its per-concern file uses).
+    // The capped history still counts — a run an older writer recorded there may be newer than
+    // the first `latest` row — except the row's own dispatch, already counted on the finer clock.
     const kept = doc.latest !== null && typeof doc.latest === "object" ? doc.latest[concern] : undefined;
+    const keptId = kept !== undefined && typeof kept.invocation === "string" ? kept.invocation : null;
     if (kept !== undefined && typeof kept.completed_at === "string" && !Number.isNaN(Date.parse(kept.completed_at))) {
-      return { at: kept.completed_at, invocation: typeof kept.invocation === "string" ? kept.invocation : null };
+      offer(kept.completed_at, keptId);
     }
     for (const inv of doc.invocations ?? []) {
       if (typeof inv.completed_at !== "string" || Number.isNaN(Date.parse(inv.completed_at))) continue;
       if (!(inv.concerns ?? []).some((c) => c.concern === concern)) continue;
-      if (last === null || Date.parse(inv.completed_at) > Date.parse(last.at)) {
-        last = { at: inv.completed_at, invocation: typeof inv.invocation === "string" ? inv.invocation : null };
-      }
+      const id = typeof inv.invocation === "string" ? inv.invocation : null;
+      if (keptId !== null && id === keptId) continue;
+      offer(inv.completed_at, id);
     }
     return last;
   } catch {
