@@ -90,10 +90,13 @@ describe('hook runtime load set', () => {
         );
         const payload = path.join(root, 'pre.json');
         fs.writeFileSync(payload, JSON.stringify({ session_id: 'env-fail', hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: path.join(workspace, 'x.txt') }, cwd: workspace }));
-        const script = `"${process.execPath}" --require "${preload}" "${bundle}" --platform claude --event pre_tool_use --project-dir "${workspace}" < "${payload}" >/dev/null 2>&1; ${tail}`;
+        const diag = path.join(root, 'dispatch-stderr.txt');
+        const script = `"${process.execPath}" --require "${preload}" "${bundle}" --platform claude --event pre_tool_use --project-dir "${workspace}" < "${payload}" >/dev/null 2>"${diag}"; ${tail}`;
         const r = spawnSync('bash', ['-c', script], { encoding: 'utf-8', env: { ...process.env, LD_PRELOAD: '', AGENT_CONFIG_REPLAY: '1' } });
         expect(r.status).toBe(2);
         expect(r.stderr).toContain('this tool call is refused');
+        // The intended fault was the one reached: the dispatcher died on the injected env write.
+        expect(fs.readFileSync(diag, 'utf-8')).toContain('injected env write failure');
     }, 60_000);
 
     it('the tracer sees a runtime createRequire load — the class this check exists for', () => {

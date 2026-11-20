@@ -33,6 +33,22 @@ interface Scope {
 /** Innermost last. A nested dispatch (a re-entry from inside a concern) pushes its own scope. */
 const stack: Scope[] = [];
 
+/** Set when a scope's closing restore failed; read and cleared by {@link assertConcernEnvRestored}. */
+let restoreFailed: string | null = null;
+
+/**
+ * Throws when the last scope close could not restore the environment, then
+ * clears the mark. Called AFTER the `finally` that closes the scope, so it runs
+ * only when no dispatch error is already in flight (that one propagates
+ * unchanged): a dispatch whose environment could not be put back gives no
+ * verdict, and the host command refuses the call.
+ */
+export function assertConcernEnvRestored(): void {
+    const failed = restoreFailed;
+    restoreFailed = null;
+    if (failed !== null) throw new Error(`concern environment not restored: ${failed}`);
+}
+
 /** Make `process.env` equal `target`: drop keys it lacks, set the ones that differ. */
 function replaceEnv(target: NodeJS.ProcessEnv): void {
     for (const k of Object.keys(process.env)) {
@@ -107,6 +123,7 @@ export function openConcernEnvScope(packageRoot: string): () => void {
         try {
             replaceEnv(scope.prev);
         } catch (err) {
+            restoreFailed = err instanceof Error ? err.message : String(err);
             reportQuietly('environment restore failed', err);
         }
     };

@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { enterConcernEnv, openConcernEnvScope, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
+import { assertConcernEnvRestored, enterConcernEnv, openConcernEnvScope, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
 
 const ROOT = '/pkg-root';
 let saved: NodeJS.ProcessEnv;
@@ -185,6 +185,35 @@ describe('concern_env — one scope per dispatch', () => {
                 expect(spy.mock.calls.some((c) => String(c[0]).includes('environment rollback failed'))).toBe(true);
             } finally {
                 spy.mockRestore();
+            }
+        });
+
+        it('a failed closing restore makes the dispatch refuse, without masking an error already in flight', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                // No error in flight: the close fails, and the check after the finally throws.
+                const close = openConcernEnvScope(ROOT);
+                failing = true;
+                close();
+                failing = false;
+                expect(() => assertConcernEnvRestored()).toThrow(/concern environment not restored/);
+                expect(() => assertConcernEnvRestored()).not.toThrow(); // the mark is cleared
+                // An error in flight: it propagates unchanged, and the close's failure does not replace it.
+                const dispatch = (): void => {
+                    const c = openConcernEnvScope(ROOT);
+                    try {
+                        failing = true;
+                        throw new Error('the dispatch error');
+                    } finally {
+                        c();
+                        failing = false;
+                    }
+                };
+                expect(() => dispatch()).toThrow(/the dispatch error/);
+            } finally {
+                spy.mockRestore();
+                try { assertConcernEnvRestored(); } catch { /* cleared for the next test */ }
             }
         });
 
