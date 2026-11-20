@@ -20,7 +20,7 @@ transcript.
 |---|---|
 | `sessions.json` | Machine form (schema below). |
 | `SESSIONS.md` | Human view of the same snapshot. Never parsed back. |
-| `runtime/session-catalog-cache.json` | Parse cache; internal, safe to delete. |
+| `runtime/session-catalog-cache.v1.json` | Parse cache; internal, safe to delete. |
 
 No hook writes any of these. The hosts already keep every session as a
 transcript, so the command reads those directly:

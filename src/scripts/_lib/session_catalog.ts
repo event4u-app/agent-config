@@ -26,6 +26,7 @@ import path from 'node:path';
 
 import { rawKeyPrefixPattern } from './egress_rules.js';
 import { write_atomic } from './fs_atomic.js';
+import { claudeHomeInfo, codexHomeInfo } from './provider_home.js';
 import { type SessionProfile, iso_now, ttl_seconds_for } from './session_register.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE, type EnvMap, event4u_root } from './user_global_paths.js';
 
@@ -151,7 +152,7 @@ export function index_md_path(env: EnvMap = process.env, home?: string): string 
 }
 
 function cache_path(env: EnvMap, home?: string): string {
-    return path.join(catalog_root(env, home), 'runtime', 'session-catalog-cache.json');
+    return path.join(catalog_root(env, home), 'runtime', `session-catalog-cache.v${CATALOG_SCHEMA_VERSION}.json`);
 }
 
 /** Where live-register records can be: the machine root and this process's (possibly per-profile) root. */
@@ -366,6 +367,9 @@ export interface Source {
 
 /** Every Claude Code and Codex profile directory this machine has. */
 export function discover_sources(env: EnvMap = process.env, home: string = os.homedir()): Source[] {
+    // The hosts' default dirs, resolved like every other provider home (no env override here).
+    const default_claude = claudeHomeInfo({ HOME: home }).path;
+    const default_codex = codexHomeInfo({ HOME: home }).path;
     const out: Source[] = [];
     const seen = new Set<string>();
     const add = (host: CatalogHost, dir: string, profile: SessionProfile | null): void => {
@@ -378,7 +382,7 @@ export function discover_sources(env: EnvMap = process.env, home: string = os.ho
         }
         if (seen.has(`${host}:${real}`)) return;
         seen.add(`${host}:${real}`);
-        out.push({ host, config_dir: real, profile, default_dir: path.join(home, host === 'claude' ? '.claude' : '.codex') });
+        out.push({ host, config_dir: real, profile, default_dir: host === 'claude' ? default_claude : default_codex });
     };
     const as_root = str(env['AGENT_SWITCH_HOME']) ?? path.join(home, '.agent-switch');
     for (const host of ['claude', 'codex'] as const) {
@@ -388,10 +392,10 @@ export function discover_sources(env: EnvMap = process.env, home: string = os.ho
     }
     const claude_env = str(env['CLAUDE_CONFIG_DIR']);
     if (claude_env !== null) add('claude', claude_env, { provider: 'claude', name: path.basename(path.resolve(claude_env)), via: 'env' });
-    add('claude', path.join(home, '.claude'), { provider: 'claude', name: 'default', via: 'env' });
+    add('claude', default_claude, { provider: 'claude', name: 'default', via: 'env' });
     const codex_env = str(env['CODEX_HOME']);
     if (codex_env !== null) add('codex', codex_env, { provider: 'codex', name: path.basename(path.resolve(codex_env)), via: 'env' });
-    add('codex', path.join(home, '.codex'), { provider: 'codex', name: 'default', via: 'env' });
+    add('codex', default_codex, { provider: 'codex', name: 'default', via: 'env' });
     return out;
 }
 
