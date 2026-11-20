@@ -117,22 +117,26 @@ export function packageRoot(modulePath: string): string | null {
 /**
  * Parse an esbuild metafile and attribute the output built from {@link ENTRY_REL}.
  *
- * Refuses rather than defaulting: an output with no `bytes` or no `inputs`
- * would otherwise read as a clean zero-byte bundle, which is the silent green
- * this gate exists to replace. A metafile carrying exactly one entry output is
- * accepted whatever its entry is named (the self-test fixtures).
+ * Refuses rather than defaulting: an output with no `bytes`, no `inputs`, or an
+ * input with no `bytesInOutput` would otherwise read as a clean bundle, which is
+ * the silent green this gate exists to replace. With `requireEntry` (the gate's
+ * own build) the output MUST be the one built from {@link ENTRY_REL}; without
+ * it (a `--metafile` fixture) a single entry output is accepted whatever its
+ * entry is named.
  */
-export function analyzeMetafile(json: string): Analysis {
+export function analyzeMetafile(json: string, opts: { requireEntry?: boolean } = {}): Analysis {
     const meta = JSON.parse(json) as {
         outputs?: Record<string, { entryPoint?: string; bytes?: number; inputs?: Record<string, { bytesInOutput?: number }> }>;
     };
     const entries = Object.values(meta.outputs ?? {}).filter((o) => typeof o.entryPoint === 'string');
-    const out = entries.find((o) => o.entryPoint === ENTRY_REL) ?? (entries.length === 1 ? entries[0] : undefined);
+    const out =
+        entries.find((o) => o.entryPoint === ENTRY_REL) ??
+        (opts.requireEntry !== true && entries.length === 1 ? entries[0] : undefined);
     if (out === undefined) {
         throw new Error(
             entries.length === 0
                 ? 'metafile carries no entry-point output — refusing to report a composition for a build that produced nothing'
-                : `metafile carries ${String(entries.length)} entry outputs and none is ${ENTRY_REL}`,
+                : `metafile carries ${String(entries.length)} entry output(s) and none is ${ENTRY_REL}`,
         );
     }
     if (typeof out.bytes !== 'number' || out.inputs === undefined || Object.keys(out.inputs).length === 0) {
@@ -141,8 +145,11 @@ export function analyzeMetafile(json: string): Analysis {
     const packageBytes = new Map<string, number>();
     const roots = new Map<string, Set<string>>();
     for (const [p, v] of Object.entries(out.inputs)) {
+        if (typeof v.bytesInOutput !== 'number') {
+            throw new Error(`input ${p} carries no bytesInOutput — refusing to attribute it as zero`);
+        }
         const pkg = owningPackage(p);
-        const bytes = v.bytesInOutput ?? 0;
+        const bytes = v.bytesInOutput;
         if (pkg === null || bytes <= 0) continue;
         packageBytes.set(pkg, (packageBytes.get(pkg) ?? 0) + bytes);
         const root = packageRoot(p);
@@ -334,7 +341,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
 
     let analysis: Analysis;
     try {
-        analysis = analyzeMetafile(json);
+        analysis = analyzeMetafile(json, { requireEntry: fixture === undefined });
     } catch (e) {
         process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
         return 1;

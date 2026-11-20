@@ -85,12 +85,36 @@ describe('concern_env — one scope per dispatch', () => {
         close();
     });
 
-    it('a nested open is a no-op and does not end the outer scope', () => {
-        const close = openConcernEnvScope(ROOT);
-        const inner = openConcernEnvScope(ROOT);
-        inner();
+    it('a re-entrant dispatch is a scope of its own: inner concerns never see the outer concern\'s changes', () => {
+        const closeOuter = openConcernEnvScope(ROOT);
+        const leaveOuter = enterConcernEnv(ROOT);
+        process.env['OUTER_CONCERN_SET'] = 'outer';
+        // The outer concern re-enters dispatch synchronously.
+        const closeInner = openConcernEnvScope(ROOT);
+        const leaveInnerA = enterConcernEnv(ROOT);
+        process.env['INNER_A_SET'] = 'a';
+        leaveInnerA();
+        expect(process.env['INNER_A_SET']).toBeUndefined();
+        expect(process.env['OUTER_CONCERN_SET']).toBe('outer'); // the inner scope hardened the env as it stood
+        closeInner();
+        expect(process.env['OUTER_CONCERN_SET']).toBe('outer'); // the outer concern gets its env back
+        leaveOuter();
+        expect(process.env['OUTER_CONCERN_SET']).toBeUndefined(); // and is reset on leaving, as any concern
         expect(process.env['LD_PRELOAD']).toBeUndefined();
-        close();
+        closeOuter();
+        expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+    });
+
+    it('closing twice, or out of order, never leaves a scope behind', () => {
+        const closeOuter = openConcernEnvScope(ROOT);
+        const closeInner = openConcernEnvScope(ROOT);
+        closeOuter();
+        closeInner();
+        closeOuter();
+        expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+        const leave = enterConcernEnv(ROOT); // no scope open: the per-concern fallback
+        expect(process.env['LD_PRELOAD']).toBeUndefined();
+        leave();
         expect(process.env['LD_PRELOAD']).toBe('/evil.so');
     });
 });

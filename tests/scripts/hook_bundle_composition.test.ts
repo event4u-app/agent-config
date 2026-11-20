@@ -124,6 +124,19 @@ describe('check_hook_bundle_composition — analyzeMetafile', () => {
         expect(() => analyzeMetafile(ambiguous)).toThrow(/none is/u);
     });
 
+    it('on the gate\'s own build, a single output built from another entry is refused, not measured', () => {
+        const wrong = JSON.stringify({ outputs: { o: { entryPoint: 'src/other.ts', bytes: 5, inputs: { 'src/other.ts': { bytesInOutput: 5 } } } } });
+        expect(() => analyzeMetafile(wrong, { requireEntry: true })).toThrow(/none is/u);
+        expect(analyzeMetafile(wrong).bytes).toBe(5);
+    });
+
+    it('refuses an input with no bytesInOutput instead of counting it as zero', () => {
+        const json = JSON.stringify({
+            outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 9, inputs: { 'node_modules/left-pad/x.js': {} } } },
+        });
+        expect(() => analyzeMetafile(json)).toThrow(/bytesInOutput/u);
+    });
+
     it('throws on a metafile with no entry-point output rather than reporting zero', () => {
         expect(() => analyzeMetafile(JSON.stringify({ inputs: {}, outputs: {} }))).toThrow(/entry/u);
     });

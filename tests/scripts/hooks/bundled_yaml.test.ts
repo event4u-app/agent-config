@@ -48,7 +48,7 @@ describe('bundled yaml handoff', () => {
         loaded = 0; // the banner itself requires node:url before it swaps `require`
         expect(r('yaml')).toBe(marker);
         expect(loaded).toBe(0);
-        expect(typeof r.resolve).toBe('function');
+        expect(r.resolve('yaml')).toBe(realRequire.resolve('yaml'));
         expect(r('node:path')).toBe(realRequire('node:path'));
         expect(loaded).toBe(1);
     });

@@ -143,9 +143,12 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
   } catch {
     return null;
   }
-  let best: { p: string; at: string; detail: boolean } | null = null;
-  const consider = (p: string, at: string | null, detail: boolean): void => {
-    if (at === null) return;
+  // Compared as instants, never as strings: two writers may differ in
+  // fractional-second precision.
+  let best: { p: string; at: number; detail: boolean } | null = null;
+  const consider = (p: string, iso: string | null, detail: boolean): void => {
+    const at = iso === null ? Number.NaN : Date.parse(iso);
+    if (Number.isNaN(at)) return;
     if (best === null || at > best.at || (at === best.at && detail && !best.detail)) best = { p, at, detail };
   };
   for (const sess of sessions) {
@@ -164,7 +167,9 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
 function _recorded_at(file: string): string | null {
   let mtime: string;
   try {
-    mtime = fs.statSync(file).mtime.toISOString();
+    const st = fs.statSync(file);
+    if (!st.isFile()) return null;
+    mtime = st.mtime.toISOString();
   } catch {
     return null;
   }
@@ -184,9 +189,9 @@ function _summary_last_run(summary: string, concern: string): string | null {
     };
     let last: string | null = null;
     for (const inv of doc.invocations ?? []) {
-      if (typeof inv.completed_at !== "string") continue;
+      if (typeof inv.completed_at !== "string" || Number.isNaN(Date.parse(inv.completed_at))) continue;
       if (!(inv.concerns ?? []).some((c) => c.concern === concern)) continue;
-      if (last === null || inv.completed_at > last) last = inv.completed_at;
+      if (last === null || Date.parse(inv.completed_at) > Date.parse(last)) last = inv.completed_at;
     }
     return last;
   } catch {

@@ -28,7 +28,8 @@ interface Scope {
     readonly hardened: NodeJS.ProcessEnv;
 }
 
-let active: Scope | null = null;
+/** Innermost last. A nested dispatch (a re-entry from inside a concern) pushes its own scope. */
+const stack: Scope[] = [];
 
 /** Make `process.env` equal `target`: drop keys it lacks, set the ones that differ. */
 function replaceEnv(target: NodeJS.ProcessEnv): void {
@@ -50,33 +51,43 @@ function drifted(target: NodeJS.ProcessEnv): boolean {
 }
 
 /**
- * Open the dispatch-wide scope. Returns the close function, which restores the
- * environment the dispatch started with. The caller closes it in a `finally`,
- * so a dispatch that throws still restores the environment and leaves no scope
- * open for the next dispatch in the same process.
+ * Open a dispatch scope: save the environment as it is now, apply its hardened
+ * copy. Returns the close function, which restores the saved environment and
+ * never throws (a failed restore is reported on stderr, so a `finally` that
+ * calls it cannot replace the dispatch's own outcome). The caller closes it in a
+ * `finally`, so a dispatch that throws still restores and leaves no scope open.
  *
- * A nested open (a synchronous re-entry into dispatch from inside a concern)
- * returns a no-op closer and runs under the outer scope's hardened copy; the
- * outer close restores. Each concern still gets a drift reset on leaving.
+ * A nested open — a synchronous re-entry into dispatch from inside a concern —
+ * is a scope of its own: it saves the outer concern's environment as it stands,
+ * hardens THAT, and its close puts it back. Inner concerns are reset to the inner
+ * hardened copy between each other; the outer concern gets its own environment
+ * back when the inner dispatch returns, and is reset on leaving as usual.
  */
 export function openConcernEnvScope(packageRoot: string): () => void {
-    if (active !== null) return () => undefined;
-    const prev = { ...process.env };
-    const hardened = hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot });
-    replaceEnv(hardened);
-    const scope: Scope = { prev, hardened };
-    active = scope;
+    const scope: Scope = { prev: { ...process.env }, hardened: hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot }) };
+    replaceEnv(scope.hardened);
+    stack.push(scope);
+    let closed = false;
     return () => {
-        if (active !== scope) return;
-        replaceEnv(scope.prev);
-        active = null;
+        if (closed) return;
+        closed = true;
+        const at = stack.lastIndexOf(scope);
+        // Already ended by an enclosing scope's close: that close restored an
+        // older environment, which this one must not overwrite.
+        if (at < 0) return;
+        stack.splice(at);
+        try {
+            replaceEnv(scope.prev);
+        } catch (err) {
+            process.stderr.write(`concern_env: environment restore failed: ${err instanceof Error ? err.message : String(err)}\n`);
+        }
     };
 }
 
 /** Enter the environment for one concern; call the returned function when it has run. */
 export function enterConcernEnv(packageRoot: string): () => void {
-    const scope = active;
-    if (scope === null) return openConcernEnvScope(packageRoot);
+    const scope = stack[stack.length - 1];
+    if (scope === undefined) return openConcernEnvScope(packageRoot);
     return () => {
         if (drifted(scope.hardened)) replaceEnv(scope.hardened);
     };

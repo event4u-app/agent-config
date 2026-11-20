@@ -104,6 +104,40 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-quiet', 'summary.json'))).toBe(true);
     });
 
+    it('last_feedback ranks a summary by the target concern\'s own last run, not by a later run of another concern', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const a = path.join(stateDir, 'session-warn');
+        const b = path.join(stateDir, 'session-quiet');
+        fs.mkdirSync(a, { recursive: true });
+        fs.mkdirSync(b, { recursive: true });
+        // The warn falls BETWEEN the summary's run of chat-history (10:00) and its later run of another concern (12:00).
+        fs.writeFileSync(path.join(a, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z' }));
+        fs.writeFileSync(
+            path.join(b, 'summary.json'),
+            JSON.stringify({
+                invocations: [
+                    { completed_at: '2026-11-20T10:00:00Z', concerns: [{ concern: 'chat-history' }] },
+                    { completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other' }] },
+                ],
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-warn', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback compares instants, not strings of different precision', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const a = path.join(stateDir, 'session-a');
+        const b = path.join(stateDir, 'session-b');
+        fs.mkdirSync(a, { recursive: true });
+        fs.mkdirSync(b, { recursive: true });
+        // As strings '…10:00:00.500Z' sorts BEFORE '…10:00:00Z'; as instants it is later.
+        fs.writeFileSync(path.join(a, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00.500Z' }));
+        fs.writeFileSync(path.join(b, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00Z' }));
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-a', 'chat-history.json'))).toBe(true);
+    });
+
     it('surfaces the concern state file', () => {
         const stateDir = path.join(tmp, 'agents', 'runtime', 'state');
         fs.mkdirSync(stateDir, { recursive: true });
