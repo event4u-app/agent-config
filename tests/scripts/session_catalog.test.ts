@@ -28,6 +28,7 @@ import {
     strip_userinfo,
     surface_from_entrypoint,
 } from '../../src/scripts/_lib/session_catalog.js';
+import { iso_now } from '../../src/scripts/_lib/session_register.js';
 import { cmd_catalog } from '../../src/scripts/sessions_catalog_cli.js';
 
 let tmp: string;
@@ -352,6 +353,62 @@ describe('review fixes', () => {
         expect(row.resume!.command).toBe('claude --resume sess-rs-0001');
         expect(row.resume!.env).toEqual({});
         expect(row.usage).toBeNull();
+    });
+
+    it('resumes a session whose live version was pruned', () => {
+        const now = new Date();
+        const old = new Date(now.getTime() - (RETENTION_DAYS + 1) * 86_400_000);
+        const base = { session_id: 'sess-pr-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'session_start', now: old }, env);
+        catalog_update({ ...base, event: 'stop', now: old }, env);
+        build_index({ env, now });
+        const e = catalog_update({ ...base, event: 'user_prompt_submit', now }, env);
+        expect(e).not.toBeNull();
+        expect(read_entry(catalog_dir(env), 'sess-pr-0001')!.last_seen).toBe(e!.last_seen);
+    });
+
+    it('does not let an older prompt that lost the race reopen a later end', () => {
+        const t0 = new Date('2026-11-20T10:00:00Z');
+        const t1 = new Date('2026-11-20T10:00:05Z');
+        const base = { session_id: 'sess-or-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'session_end', now: t1 }, env);
+        const e = catalog_update({ ...base, event: 'user_prompt_submit', now: t0 }, env)!;
+        expect(e.ended_at).not.toBeNull();
+        expect(e.last_seen).toBe(iso_now(t1));
+    });
+
+    it('never replaces a published index with an older scan', () => {
+        const base = { session_id: 'sess-pv-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'session_start' }, env);
+        catalog_update({ ...base, event: 'stop' }, env);
+        const published = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8'));
+        const row = published.sessions.find((r: { session_id: string }) => r.session_id === 'sess-pv-0001');
+        row.record_version = 99;
+        fs.writeFileSync(index_json_path(env), JSON.stringify(published));
+        expect(publish_index({ env, force: true, now: new Date(Date.now()) })).toBe(false);
+        expect(JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0].record_version).toBe(99);
+    });
+
+    it('follows a .git pointer only into a real linked-worktree entry', () => {
+        const fake = path.join(tmp, 'fake');
+        fs.mkdirSync(path.join(fake, 'src'), { recursive: true });
+        const target = path.join(tmp, 'secret-dir');
+        fs.mkdirSync(target);
+        fs.writeFileSync(path.join(target, 'HEAD'), 'ref: refs/heads/leaked\n');
+        fs.writeFileSync(path.join(fake, '.git'), `gitdir: ${target}\n`);
+        const e = catalog_update({ session_id: 'sess-gp-0001', platform: 'claude', event: 'stop', cwd: fake }, env)!;
+        expect(e.repos[0]!.last_branch).toBeNull();
+        expect(e.repos[0]!.branches).toEqual([]);
+    });
+
+    it('restarts the totals when the transcript is replaced at the same path', () => {
+        const t = tr('sess-rp-0001');
+        fs.writeFileSync(t, assistant('m1', USAGE) + assistant('m2', USAGE));
+        const ev = { session_id: 'sess-rp-0001', platform: 'claude', event: 'stop', transcript_path: t };
+        catalog_update(ev, env);
+        fs.rmSync(t);
+        fs.writeFileSync(t, assistant('n1', USAGE) + assistant('n2', USAGE) + assistant('n3', USAGE));
+        expect(catalog_update(ev, env)!.usage!.assistant_messages).toBe(3);
     });
 
     it('keeps two hosts with the same id apart', () => {

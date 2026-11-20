@@ -45,7 +45,10 @@ The index is republished on start, `stop` and end, and at most once per 15 s
 on the prompt-time heartbeat. A publisher scans, writes both files by atomic
 rename (`SESSIONS.md` first, `sessions.json` last), and re-scans; if any
 record changed meanwhile it publishes again, for up to 3 s, so the files
-converge on the newest records once writes stop. The CLI rebuilds
+converge on the newest records once writes stop. Each row carries the
+`record_version` it was built from, and a publisher whose scan is older than
+the index on disk for any record does not write, so a delayed publisher
+never replaces a newer index. The CLI rebuilds
 from the records on every call, and `agent-config sessions:catalog --render`
 republishes.
 
@@ -68,6 +71,7 @@ only when its last activity is older than 30 days.
       "session_id": "4d11cee1-…",
       "status": "active",
       "idle_seconds": 42,
+      "record_version": 7,
       "host": "claude",
       "provider": "anthropic",
       "surface": "cli",
@@ -146,7 +150,11 @@ Field notes:
   profile directory variable. It is rebuilt from validated fields on every
   read, never taken from a stored record.
 - **`repos[].remote`, `last_branch`** — read from the checkout's git metadata
-  with non-blocking, size-capped reads of regular files only.
+  with non-blocking, size-capped reads of regular files only, never through a
+  symlink; a `.git` pointer file is followed only into a linked-worktree entry
+  (`<common>/worktrees/<name>`) that points back at the checkout.
+- **`record_version`** — the version of the per-session record the row was
+  built from.
 
 ## Coverage by host
 

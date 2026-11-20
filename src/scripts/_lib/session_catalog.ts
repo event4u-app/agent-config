@@ -142,6 +142,9 @@ export interface CatalogResume {
 export interface CatalogIngest {
     offset: number;
     recent_ids: string[];
+    /** Identity of the file the offset belongs to. */
+    ino?: number;
+    dev?: number;
 }
 
 export interface CatalogEntry {
@@ -186,6 +189,8 @@ export interface CatalogEntry {
 export type PublishedEntry = Omit<CatalogEntry, '_ingest' | '_title_source'> & {
     status: CatalogStatus;
     idle_seconds: number;
+    /** Version of the record this row was built from; a publisher never replaces a higher one. */
+    record_version: number;
 };
 
 export interface CatalogIndex {
@@ -308,7 +313,7 @@ export function clean_title(t: string): string {
 function read_small(file: string, max = 64 * 1024): string | null {
     let fd: number | null = null;
     try {
-        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NONBLOCK ?? 0));
+        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NONBLOCK ?? 0) | (fs.constants.O_NOFOLLOW ?? 0));
         const st = fs.fstatSync(fd);
         if (!st.isFile() || st.size > max) return null;
         const buf = Buffer.alloc(st.size);
@@ -321,29 +326,37 @@ function read_small(file: string, max = 64 * 1024): string | null {
     }
 }
 
-/** The checkout's own git dir (a `.git` directory, or the target of a `.git` pointer file). */
-function safe_git_dir(root: string): string | null {
+/**
+ * The checkout's git dir and common dir, following a `.git` pointer file only
+ * into the shape git itself creates for a linked worktree,
+ * `<common>/worktrees/<name>`, and only when that worktree entry points back
+ * at this checkout. Any other pointer is not followed, so a checkout cannot
+ * steer metadata reads to arbitrary files.
+ */
+function safe_git_dirs(root: string): { git_dir: string; common_dir: string } | null {
     const dot = path.join(root, '.git');
     try {
         const st = fs.lstatSync(dot);
-        if (st.isDirectory()) return dot;
+        if (st.isDirectory()) return { git_dir: dot, common_dir: dot };
         if (!st.isFile()) return null;
+        const m = (read_small(dot) ?? '').match(/^gitdir:\s*(.+)\s*$/m);
+        if (m === null) return null;
+        const gd = fs.realpathSync(path.resolve(root, m[1]!.trim()));
+        if (path.basename(path.dirname(gd)) !== 'worktrees') return null;
+        const back = read_small(path.join(gd, 'gitdir'));
+        if (back === null || fs.realpathSync(path.dirname(back.trim())) !== fs.realpathSync(root)) return null;
+        return { git_dir: gd, common_dir: path.dirname(path.dirname(gd)) };
     } catch {
         return null;
     }
-    const m = (read_small(dot) ?? '').match(/^gitdir:\s*(.+)\s*$/m);
-    return m === null ? null : path.resolve(root, m[1]!.trim());
 }
 
 function safe_common_dir(root: string): string | null {
-    const gd = safe_git_dir(root);
-    if (gd === null) return null;
-    const common = read_small(path.join(gd, 'commondir'));
-    return common === null ? gd : path.resolve(gd, common.trim());
+    return safe_git_dirs(root)?.common_dir ?? null;
 }
 
 function safe_branch(root: string): string | null {
-    const gd = safe_git_dir(root);
+    const gd = safe_git_dirs(root)?.git_dir ?? null;
     const head = gd === null ? null : read_small(path.join(gd, 'HEAD'));
     const m = (head ?? '').trim().match(/^ref:\s*refs\/heads\/(.+)$/);
     return m === null ? null : m[1]!.trim();
@@ -712,7 +725,14 @@ export function ingest_transcript(
     const fd = opened.fd;
     try {
         const size = opened.size;
-        const cur: CatalogIngest = entry._ingest ?? { offset: 0, recent_ids: [] };
+        let cur: CatalogIngest = entry._ingest ?? { offset: 0, recent_ids: [] };
+        if (cur.ino !== undefined && (cur.ino !== opened.ino || cur.dev !== opened.dev)) {
+            // Same path, different file: the old totals describe a file that is gone.
+            cur = { offset: 0, recent_ids: [] };
+            entry.usage = null;
+        }
+        cur.ino = opened.ino;
+        cur.dev = opened.dev;
         if (size < cur.offset) {
             // Truncated or replaced: the old totals describe a file that no longer exists.
             cur.offset = 0;
@@ -834,6 +854,8 @@ export interface OpenedTranscript {
     fd: number;
     path: string;
     size: number;
+    ino: number;
+    dev: number;
 }
 
 /** The host's profile root, from the env override or the host default; null for hosts not read. */
@@ -877,7 +899,7 @@ export function open_transcript(p: string | null, session_id: string, root: stri
             // Resolved twice: a directory swapped between the two lookups changes one of them.
             fs.realpathSync(abs) === real
         ) {
-            const opened = { fd, path: real, size: st.size };
+            const opened = { fd, path: real, size: st.size, ino: st.ino, dev: st.dev };
             fd = null;
             return opened;
         }
@@ -930,13 +952,19 @@ function apply_event(
     now_iso: string,
 ): void {
     const ending = ev.event === 'session_end';
+    const at = ms(now_iso) ?? 0;
     entry.schema_version = CATALOG_SCHEMA_VERSION;
     entry.host = ev.platform || entry.host;
-    entry.last_seen = now_iso;
+    // An event that lost a race retries against newer state; it must not move
+    // time backward or reopen an end that happened after it.
+    if (at >= (ms(entry.last_seen) ?? 0)) entry.last_seen = now_iso;
     // Only a real start or a new prompt reopens an ended session (a resume);
     // a late `stop` racing the end must not.
-    if (ending) entry.ended_at = now_iso;
-    else if (ev.event === 'session_start' || ev.event === 'user_prompt_submit') entry.ended_at = null;
+    if (ending) {
+        if (entry.ended_at === null || at >= (ms(entry.ended_at) ?? 0)) entry.ended_at = now_iso;
+    } else if ((ev.event === 'session_start' || ev.event === 'user_prompt_submit') && at >= (ms(entry.ended_at) ?? 0)) {
+        entry.ended_at = null;
+    }
     if (ev.profile !== undefined && ev.profile !== null) entry.profile = ev.profile;
     entry.config_dir = config_dir_for(entry.host, env) ?? entry.config_dir;
     entry.provider = provider_for(entry.host, entry.profile);
@@ -997,10 +1025,13 @@ export function catalog_update(
         const stem = record_stem(ev.platform, ev.session_id);
         const attempts = ev.event === 'session_end' ? CAS_ATTEMPTS_END : CAS_ATTEMPTS;
         for (let attempt = 0; attempt < attempts; attempt++) {
-            const current = read_latest(dir, stem);
+            const versions = list_versions(dir).get(stem) ?? [];
+            const current = read_latest(dir, stem, versions);
             const entry = current?.entry ?? fresh_entry(ev, now_iso);
             apply_event(entry, ev, env, now_iso);
-            const version = (current?.version ?? 0) + 1;
+            // Above every name in use, tombstones included: a record whose live
+            // version was pruned still moves forward instead of colliding.
+            const version = (versions[0]?.version ?? 0) + 1;
             const file = path.join(dir, `${stem}.v${version}.json`);
             if (!create_exclusive(file, `${JSON.stringify(entry, null, 2)}\n`)) continue;
             remove_older(dir, stem, version);
@@ -1062,7 +1093,10 @@ function prune_record(dir: string, stem: string, cutoff: number): void {
     for (const v of list_versions(dir).get(stem) ?? []) {
         try {
             const raw = fs.readFileSync(v.file, 'utf-8');
-            if (raw === '') continue; // tombstones age out in remove_older
+            if (raw === '') {
+                if (Date.now() - fs.statSync(v.file).mtimeMs > TOMBSTONE_TTL_MS) fs.rmSync(v.file, { force: true });
+                continue;
+            }
             const entry = normalize_entry(JSON.parse(raw));
             if (entry !== null && (ms(entry.last_seen) ?? 0) >= cutoff) continue;
             fs.rmSync(v.file, { force: true });
@@ -1099,6 +1133,7 @@ function build_index_with_fingerprint(options: PublishOptions): { index: Catalog
             ...pub,
             status: derive_status(e, now),
             idle_seconds: Math.max(0, Math.round((now.getTime() - seen) / 1000)),
+            record_version: version,
         });
     }
     rows.sort((a, b) => (ms(b.last_seen) ?? 0) - (ms(a.last_seen) ?? 0));
@@ -1116,6 +1151,23 @@ function build_index_with_fingerprint(options: PublishOptions): { index: Catalog
         },
         fingerprint: seen_versions.sort().join('\n'),
     };
+}
+
+function is_older_than_published(index: CatalogIndex, json_path: string): boolean {
+    let published: unknown;
+    try {
+        published = JSON.parse(fs.readFileSync(json_path, 'utf-8'));
+    } catch {
+        return false;
+    }
+    const rows = (published as { sessions?: unknown }).sessions;
+    if (!Array.isArray(rows)) return false;
+    const mine = new Map(index.sessions.map((r) => [`${r.host}--${r.session_id}`, r.record_version]));
+    for (const r of rows as Record<string, unknown>[]) {
+        const v = mine.get(`${String(r['host'])}--${String(r['session_id'])}`);
+        if (v !== undefined && typeof r['record_version'] === 'number' && r['record_version'] > v) return true;
+    }
+    return false;
 }
 
 function current_fingerprint(dir: string): string {
@@ -1147,11 +1199,16 @@ export function publish_index(options: PublishOptions = {}): boolean {
         const deadline = Date.now() + PUBLISH_DEADLINE_MS;
         for (;;) {
             const { index, fingerprint } = build_index_with_fingerprint({ ...options, env });
-            // The Markdown view first, the JSON index last: a reader of the index
-            // never sees it ahead of the view it describes.
-            write_private(index_md_path(env), render_markdown(index));
-            write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
-            if (current_fingerprint(dir) === fingerprint) return true;
+            // A publisher that paused after its scan must not replace a newer
+            // publication: if the index on disk already carries a higher version
+            // of any record, this scan is stale — scan again instead of writing.
+            if (!is_older_than_published(index, json_path)) {
+                // The Markdown view first, the JSON index last: a reader of the
+                // index never sees it ahead of the view it describes.
+                write_private(index_md_path(env), render_markdown(index));
+                write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
+                if (current_fingerprint(dir) === fingerprint) return true;
+            }
             if (Date.now() >= deadline) return false;
         }
     } catch {
