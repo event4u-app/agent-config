@@ -123,58 +123,74 @@ function _concern_state_file(state_dir: string, concern: string): string | null 
 }
 
 /**
- * Return the most-recent dispatcher feedback file for the concern,
- * walking `agents/runtime/state/.dispatcher/<session>/<concern>.json`.
- * Since 2026-11-20 a concern that only ever allowed quietly has no file of its
- * own (`hooks/feedback_policy.ts`); its last run is then the newest session
- * `summary.json` that lists it.
+ * Return the dispatcher feedback file that holds the concern's most recent run,
+ * walking `agents/runtime/state/.dispatcher/<session>/`.
+ *
+ * Since 2026-11-20 a quiet allow has no `<concern>.json` of its own
+ * (`hooks/feedback_policy.ts`); `summary.json` carries every run. So both are
+ * candidates, ranked by the run's RECORDED `completed_at` — never by file mtime,
+ * which a summary advances whenever any other concern runs. The per-concern file
+ * wins a tie, because it holds the detail.
  */
 function _latest_feedback(state_dir: string, concern: string): string | null {
   const dispatcher_dir = path.join(state_dir, ".dispatcher");
   if (!_isDir(dispatcher_dir)) {
     return null;
   }
-  const candidates: Array<{ p: string; mtime: number }> = [];
   let sessions: string[];
   try {
     sessions = fs.readdirSync(dispatcher_dir);
   } catch {
     return null;
   }
+  let best: { p: string; at: string; detail: boolean } | null = null;
+  const consider = (p: string, at: string | null, detail: boolean): void => {
+    if (at === null) return;
+    if (best === null || at > best.at || (at === best.at && detail && !best.detail)) best = { p, at, detail };
+  };
   for (const sess of sessions) {
-    const candidate = path.join(dispatcher_dir, sess, `${concern}.json`);
-    try {
-      const st = fs.statSync(candidate);
-      if (st.isFile()) {
-        candidates.push({ p: candidate, mtime: st.mtimeMs });
-        continue;
-      }
-    } catch {
-      /* not a file */
-    }
+    const own = path.join(dispatcher_dir, sess, `${concern}.json`);
+    consider(own, _recorded_at(own), true);
     const summary = path.join(dispatcher_dir, sess, "summary.json");
-    try {
-      const st = fs.statSync(summary);
-      if (st.isFile() && _summary_lists(summary, concern)) {
-        candidates.push({ p: summary, mtime: st.mtimeMs });
-      }
-    } catch {
-      /* no summary */
-    }
+    consider(summary, _summary_last_run(summary, concern), false);
   }
-  if (candidates.length === 0) {
-    return null;
-  }
-  candidates.sort((a, b) => b.mtime - a.mtime);
-  return candidates[0]!.p;
+  return best === null ? null : (best as { p: string }).p;
 }
 
-function _summary_lists(summary: string, concern: string): boolean {
+/**
+ * `completed_at` of a per-concern feedback file; its mtime when the file records
+ * none (older writers); null when the file is absent.
+ */
+function _recorded_at(file: string): string | null {
+  let mtime: string;
   try {
-    const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as { invocations?: Array<{ concerns?: Array<{ concern?: unknown }> }> };
-    return (doc.invocations ?? []).some((inv) => (inv.concerns ?? []).some((c) => c.concern === concern));
+    mtime = fs.statSync(file).mtime.toISOString();
   } catch {
-    return false;
+    return null;
+  }
+  try {
+    const doc = JSON.parse(fs.readFileSync(file, "utf-8")) as { completed_at?: unknown };
+    return typeof doc.completed_at === "string" ? doc.completed_at : mtime;
+  } catch {
+    return mtime;
+  }
+}
+
+/** Latest `completed_at` among the summary's invocations that ran `concern`. */
+function _summary_last_run(summary: string, concern: string): string | null {
+  try {
+    const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
+      invocations?: Array<{ completed_at?: unknown; concerns?: Array<{ concern?: unknown }> }>;
+    };
+    let last: string | null = null;
+    for (const inv of doc.invocations ?? []) {
+      if (typeof inv.completed_at !== "string") continue;
+      if (!(inv.concerns ?? []).some((c) => c.concern === concern)) continue;
+      if (last === null || inv.completed_at > last) last = inv.completed_at;
+    }
+    return last;
+  } catch {
+    return null;
   }
 }
 

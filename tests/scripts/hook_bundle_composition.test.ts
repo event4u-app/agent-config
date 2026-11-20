@@ -92,6 +92,38 @@ describe('check_hook_bundle_composition — analyzeMetafile', () => {
         expect(unlistedPackages(a, BUDGET)).toEqual([]);
     });
 
+    it('fails a package bundled from two copies on disk, a nested duplicate under the same name', () => {
+        const a = analyzeMetafile(
+            metafile(1000, { 'node_modules/yaml/dist/index.js': 600, 'node_modules/x/node_modules/yaml/dist/index.js': 400 }),
+        );
+        expect(a.duplicated).toEqual(['yaml']);
+        expect(verdict(a, BUDGET).some((f) => f.includes('more than one copy'))).toBe(true);
+    });
+
+    it('refuses an entry output with no byte count or no inputs instead of reading it as empty', () => {
+        const noBytes = JSON.stringify({ outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', inputs: { 'src/x.ts': { bytesInOutput: 1 } } } } });
+        const noInputs = JSON.stringify({ outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 10, inputs: {} } } });
+        expect(() => analyzeMetafile(noBytes)).toThrow(/byte count or no inputs/u);
+        expect(() => analyzeMetafile(noInputs)).toThrow(/byte count or no inputs/u);
+    });
+
+    it('measures the dispatch entry when the metafile carries several entry outputs', () => {
+        const json = JSON.stringify({
+            outputs: {
+                other: { entryPoint: 'src/other.ts', bytes: 5, inputs: { 'src/other.ts': { bytesInOutput: 5 } } },
+                main: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 7, inputs: { 'src/a.ts': { bytesInOutput: 7 } } },
+            },
+        });
+        expect(analyzeMetafile(json).bytes).toBe(7);
+        const ambiguous = JSON.stringify({
+            outputs: {
+                a: { entryPoint: 'src/a.ts', bytes: 5, inputs: { 'src/a.ts': { bytesInOutput: 5 } } },
+                b: { entryPoint: 'src/b.ts', bytes: 7, inputs: { 'src/b.ts': { bytesInOutput: 7 } } },
+            },
+        });
+        expect(() => analyzeMetafile(ambiguous)).toThrow(/none is/u);
+    });
+
     it('throws on a metafile with no entry-point output rather than reporting zero', () => {
         expect(() => analyzeMetafile(JSON.stringify({ inputs: {}, outputs: {} }))).toThrow(/entry/u);
     });

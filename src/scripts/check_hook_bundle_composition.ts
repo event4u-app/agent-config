@@ -78,6 +78,8 @@ export interface Analysis {
     readonly modules: number;
     /** Bytes in the output, summed per owning npm package (zero-byte packages omitted). */
     readonly packageBytes: ReadonlyMap<string, number>;
+    /** Packages whose bytes come from more than one copy on disk (a nested duplicate), sorted. */
+    readonly duplicated: readonly string[];
 }
 
 /**
@@ -98,27 +100,56 @@ export function owningPackage(modulePath: string): string | null {
     return head.startsWith('@') ? `${head}/${parts[1] ?? ''}` : head;
 }
 
-/** Parse an esbuild metafile and attribute its one entry-point output. */
+/** The entry the bundle is built from; the metafile output carrying it is the one measured. */
+export const ENTRY_REL = 'src/scripts/hooks/dispatch_entry.ts';
+
+/**
+ * The directory a package's bytes come from (`…/node_modules/<pkg>`), so two
+ * copies of one package name — a nested duplicate — count as two roots.
+ */
+export function packageRoot(modulePath: string): string | null {
+    const pkg = owningPackage(modulePath);
+    if (pkg === null) return null;
+    const at = modulePath.lastIndexOf('node_modules/');
+    return modulePath.slice(0, at + 'node_modules/'.length + pkg.length);
+}
+
+/**
+ * Parse an esbuild metafile and attribute the output built from {@link ENTRY_REL}.
+ *
+ * Refuses rather than defaulting: an output with no `bytes` or no `inputs`
+ * would otherwise read as a clean zero-byte bundle, which is the silent green
+ * this gate exists to replace. A metafile carrying exactly one entry output is
+ * accepted whatever its entry is named (the self-test fixtures).
+ */
 export function analyzeMetafile(json: string): Analysis {
     const meta = JSON.parse(json) as {
         outputs?: Record<string, { entryPoint?: string; bytes?: number; inputs?: Record<string, { bytesInOutput?: number }> }>;
     };
-    const outputs = Object.values(meta.outputs ?? {});
-    const out = outputs.find((o) => typeof o.entryPoint === 'string');
+    const entries = Object.values(meta.outputs ?? {}).filter((o) => typeof o.entryPoint === 'string');
+    const out = entries.find((o) => o.entryPoint === ENTRY_REL) ?? (entries.length === 1 ? entries[0] : undefined);
     if (out === undefined) {
         throw new Error(
-            'metafile carries no entry-point output — refusing to report a composition for a build that produced nothing',
+            entries.length === 0
+                ? 'metafile carries no entry-point output — refusing to report a composition for a build that produced nothing'
+                : `metafile carries ${String(entries.length)} entry outputs and none is ${ENTRY_REL}`,
         );
     }
+    if (typeof out.bytes !== 'number' || out.inputs === undefined || Object.keys(out.inputs).length === 0) {
+        throw new Error('the entry output carries no byte count or no inputs — refusing to read it as an empty bundle');
+    }
     const packageBytes = new Map<string, number>();
-    const inputs = out.inputs ?? {};
-    for (const [p, v] of Object.entries(inputs)) {
+    const roots = new Map<string, Set<string>>();
+    for (const [p, v] of Object.entries(out.inputs)) {
         const pkg = owningPackage(p);
         const bytes = v.bytesInOutput ?? 0;
         if (pkg === null || bytes <= 0) continue;
         packageBytes.set(pkg, (packageBytes.get(pkg) ?? 0) + bytes);
+        const root = packageRoot(p);
+        if (root !== null) roots.set(pkg, (roots.get(pkg) ?? new Set<string>()).add(root));
     }
-    return { bytes: out.bytes ?? 0, modules: Object.keys(inputs).length, packageBytes };
+    const duplicated = [...roots].filter(([, r]) => r.size > 1).map(([pkg]) => pkg).sort();
+    return { bytes: out.bytes, modules: Object.keys(out.inputs).length, packageBytes, duplicated };
 }
 
 /** Packages contributing bytes that the budget does not list, sorted. */
@@ -170,6 +201,12 @@ export function verdict(a: Analysis, budget: Budget): string[] {
             `npm package(s) in the bundle that ${BUDGET_REL} does not list: ${detail}. Every dispatch loads ` +
                 'them. Use a package the bundle already carries, load it lazily outside the bundle, or add it to ' +
                 '`allowed_packages` as a reviewed dependency decision.',
+        );
+    }
+    if (a.duplicated.length > 0) {
+        findings.push(
+            `package(s) bundled from more than one copy on disk: ${a.duplicated.join(', ')}. Every dispatch parses ` +
+                'both. Dedupe the dependency so one copy is bundled.',
         );
     }
     if (a.bytes > budget.maxBytes) {

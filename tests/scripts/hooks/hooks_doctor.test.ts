@@ -79,6 +79,31 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-b', 'chat-history.json'))).toBe(true);
     });
 
+    it('last_feedback ranks by the recorded run time: a newer quiet run in a summary beats an older warn file', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const a = path.join(stateDir, 'session-warn');
+        const b = path.join(stateDir, 'session-quiet');
+        fs.mkdirSync(a, { recursive: true });
+        fs.mkdirSync(b, { recursive: true });
+        fs.writeFileSync(path.join(a, 'chat-history.json'), JSON.stringify({ concern: 'chat-history', completed_at: '2026-11-20T10:00:00Z' }));
+        const summary = path.join(b, 'summary.json');
+        fs.writeFileSync(
+            summary,
+            JSON.stringify({
+                schema_version: 2,
+                invocations: [
+                    { completed_at: '2026-11-20T11:00:00Z', concerns: [{ concern: 'chat-history', exit_code: 0 }] },
+                    { completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other', exit_code: 0 }] },
+                ],
+            }),
+        );
+        // The summary's mtime is OLDER than the warn file's: ranking must not use it.
+        const past = Date.now() / 1000 - 3600;
+        fs.utimesSync(summary, past, past);
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-quiet', 'summary.json'))).toBe(true);
+    });
+
     it('surfaces the concern state file', () => {
         const stateDir = path.join(tmp, 'agents', 'runtime', 'state');
         fs.mkdirSync(stateDir, { recursive: true });

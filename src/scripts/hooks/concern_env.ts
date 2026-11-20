@@ -33,7 +33,7 @@ let active: Scope | null = null;
 /** Make `process.env` equal `target`: drop keys it lacks, set the ones that differ. */
 function replaceEnv(target: NodeJS.ProcessEnv): void {
     for (const k of Object.keys(process.env)) {
-        if (!(k in target)) delete process.env[k];
+        if (!Object.hasOwn(target, k)) delete process.env[k];
     }
     for (const [k, v] of Object.entries(target)) {
         if (v !== undefined && process.env[k] !== v) process.env[k] = v;
@@ -44,14 +44,20 @@ function drifted(target: NodeJS.ProcessEnv): boolean {
     const keys = Object.keys(process.env);
     if (keys.length !== Object.keys(target).length) return true;
     for (const k of keys) {
-        if (process.env[k] !== target[k]) return true;
+        if (!Object.hasOwn(target, k) || process.env[k] !== target[k]) return true;
     }
     return false;
 }
 
 /**
  * Open the dispatch-wide scope. Returns the close function, which restores the
- * environment the dispatch started with. A nested open is a no-op.
+ * environment the dispatch started with. The caller closes it in a `finally`,
+ * so a dispatch that throws still restores the environment and leaves no scope
+ * open for the next dispatch in the same process.
+ *
+ * A nested open (a synchronous re-entry into dispatch from inside a concern)
+ * returns a no-op closer and runs under the outer scope's hardened copy; the
+ * outer close restores. Each concern still gets a drift reset on leaving.
  */
 export function openConcernEnvScope(packageRoot: string): () => void {
     if (active !== null) return () => undefined;

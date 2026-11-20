@@ -55,6 +55,36 @@ describe('concern_env — one scope per dispatch', () => {
         expect(process.env['LD_PRELOAD']).toBe('/evil.so');
     });
 
+    it('a dispatch that throws inside the scope still restores, and the next dispatch opens a real scope', () => {
+        const dispatch = (fail: boolean): void => {
+            const close = openConcernEnvScope(ROOT);
+            try {
+                const leave = enterConcernEnv(ROOT);
+                process.env['LEAKED_BY_A'] = '1';
+                if (fail) throw new Error('concern loop blew up');
+                leave();
+            } finally {
+                close();
+            }
+        };
+        expect(() => dispatch(true)).toThrow(/blew up/);
+        expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+        expect(process.env['LEAKED_BY_A']).toBeUndefined();
+        const close = openConcernEnvScope(ROOT);
+        expect(process.env['LD_PRELOAD']).toBeUndefined();
+        close();
+        expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+    });
+
+    it('an inherited name on the hardened copy does not keep a variable alive', () => {
+        const close = openConcernEnvScope(ROOT);
+        const leave = enterConcernEnv(ROOT);
+        process.env['toString'] = 'set-by-concern';
+        leave();
+        expect(Object.hasOwn(process.env, 'toString')).toBe(false);
+        close();
+    });
+
     it('a nested open is a no-op and does not end the outer scope', () => {
         const close = openConcernEnvScope(ROOT);
         const inner = openConcernEnvScope(ROOT);
