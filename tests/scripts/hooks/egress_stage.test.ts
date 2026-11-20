@@ -455,5 +455,25 @@ describe("end to end through the dispatcher", () => {
     const entry = summary.invocations.flatMap((i) => i.concerns).find((c) => c["concern"] === "rewriter") as Record<string, unknown>;
     expect(entry["raw_exit_code"]).toBe(0);
     expect(entry["decision"]).toBe("allow");
+    expect(fs.existsSync(path.join(dir, "rewriter.json"))).toBe(false);
+  });
+
+  it("a quiet allow whose summary write fails replaces an older block in its own file", () => {
+    const ws = path.join(tmp, "ws-quiet-fallback");
+    const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), "quiet-fallback");
+    fs.mkdirSync(path.join(dir, "summary.json"), { recursive: true }); // a directory: the summary write fails
+    fs.writeFileSync(
+      path.join(dir, "rewriter.json"),
+      JSON.stringify({ concern: "rewriter", exit_code: 2, raw_exit_code: 2, decision: "block", reason: "older", completed_at: "2026-01-01T00:00:00.000Z" }),
+    );
+    dispatch(ws, "protect", "pre_tool_use", "PreToolUse", {
+      session_id: "quiet-fallback",
+      tool_name: "Bash",
+      tool_input: { command: "ls" },
+    });
+    const own = JSON.parse(fs.readFileSync(path.join(dir, "rewriter.json"), "utf8")) as Record<string, unknown>;
+    expect(own["decision"]).toBe("allow");
+    expect(own["raw_exit_code"]).toBe(0);
+    expect(typeof own["invocation"]).toBe("string");
   });
 });

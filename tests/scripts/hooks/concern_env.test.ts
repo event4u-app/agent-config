@@ -333,6 +333,38 @@ describe('concern_env — one scope per dispatch', () => {
             }
         });
 
+        it('a nested close that fails during unwind, followed by an outer close that restores, leaves no stale mark', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const before = { ...(process.env as Record<string, string>) };
+                const outer = (): void => {
+                    const closeOuter = openConcernEnvScope(ROOT);
+                    try {
+                        const closeInner = openConcernEnvScope(ROOT); // a re-entrant dispatch
+                        try {
+                            process.env['SET_INSIDE_INNER'] = '1'; // the inner restore has to undo this
+                            failing = true;
+                            throw new Error('the inner dispatch error');
+                        } finally {
+                            closeInner(); // fails; the error in flight skips the inner check
+                            failing = false;
+                        }
+                    } finally {
+                        closeOuter(); // succeeds: the environment is whole again
+                    }
+                };
+                expect(() => outer()).toThrow(/the inner dispatch error/);
+                expect({ ...(process.env as Record<string, string>) }).toEqual(before);
+                // The next clean dispatch gets its own verdict, not the inner one's.
+                const close = openConcernEnvScope(ROOT);
+                close();
+                expect(() => assertConcernEnvRestored()).not.toThrow();
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
         it('a scope whose hardening fails half-way rolls back what it applied and throws', () => {
             installFailingEnv();
             const before = { ...(process.env as Record<string, string>) };

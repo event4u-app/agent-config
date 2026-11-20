@@ -813,21 +813,9 @@ function _write_feedback(
     process.stderr.write(`dispatch_hook: feedback dir unavailable: ${msg}\n`);
     return;
   }
-  // `invocation` is pid + monotonic clock: unique per dispatch without a shared
-  // counter. Per-concern files carry it too, so a reader can tell a tie apart.
+  // pid + monotonic clock: unique per dispatch; per-concern files carry it too (doctor ties).
   const invocation = `${String(process.pid)}-${process.hrtime.bigint().toString()}`;
-  for (const entry of entries) {
-    if (isQuietAllow(entry)) continue; // summary.json carries it: feedback_policy.ts
-    const target = path.join(fb_dir, `${entry["concern"]}.json`);
-    try {
-      update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, { ...entry, invocation }));
-    } catch (exc) {
-      const msg = exc instanceof Error ? exc.message : String(exc);
-      process.stderr.write(
-        `dispatch_hook: feedback write failed for ${entry["concern"]}: ${msg}\n`,
-      );
-    }
-  }
+  let summaryWritten = false;
   const SUMMARY_KEYS = new Set([
     "concern",
     "exit_code",
@@ -881,8 +869,7 @@ function _write_feedback(
     // 200 rollups per session dir, and capping THAT needs a directory scan on
     // the hot path. A capped list needs one locked read-modify-write, which is
     // the same primitive `rule-trips.json` now uses for the same reason.
-    //
-    update_json_under_lock<JsonObject>(path.join(fb_dir, "summary.json"), (loaded) => {
+    summaryWritten = update_json_under_lock<JsonObject>(path.join(fb_dir, "summary.json"), (loaded) => {
       const priorRaw = (loaded as JsonObject)["invocations"];
       const prior = Array.isArray(priorRaw) ? priorRaw : [];
       const next = [...prior, { invocation, ...summary }];
@@ -893,10 +880,19 @@ function _write_feedback(
         // `dispatch-issues.jsonl` uses, so a reader learns one convention.
         invocations: next.slice(Math.max(0, next.length - SUMMARY_INVOCATION_CAP)),
       };
-    });
+    }) === "written"; // it reports a failure; it does not throw one
+    if (!summaryWritten) process.stderr.write("dispatch_hook: summary write failed\n");
   } catch (exc) {
     const msg = exc instanceof Error ? exc.message : String(exc);
     process.stderr.write(`dispatch_hook: summary write failed: ${msg}\n`);
+  }
+  // A quiet allow skips its own file only if the summary carrying it was written;
+  // else a failed summary could leave an older block standing as the latest.
+  for (const entry of entries) {
+    if (summaryWritten && isQuietAllow(entry)) continue; // feedback_policy.ts
+    const target = path.join(fb_dir, `${entry["concern"]}.json`);
+    const written = update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, { ...entry, invocation }));
+    if (written === "failed") process.stderr.write(`dispatch_hook: feedback write failed for ${entry["concern"]}\n`);
   }
 }
 

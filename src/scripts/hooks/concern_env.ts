@@ -143,8 +143,10 @@ export function openConcernEnvScope(packageRoot: string): () => void {
         stack.splice(at);
         try {
             replaceEnv(scope.prev);
-            // A full replace supersedes whatever a nested close failed to restore.
+            // A full replace supersedes whatever a nested close failed to restore:
+            // the environment is restored now, so neither mark may outlive it.
             pendingRestore = null;
+            restoreFailed = null;
         } catch (err) {
             pendingRestore = scope.prev;
             restoreFailed = err instanceof Error ? err.message : String(err);
