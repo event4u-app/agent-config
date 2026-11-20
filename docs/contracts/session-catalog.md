@@ -7,8 +7,8 @@ stability: experimental
 One machine-wide list of every Claude Code and Codex session on this machine,
 newest activity first: which host and profile it runs under, which model, where
 it was started, which repositories and branches it touched, how many tokens it
-used (its subagents' included), the size of its latest prompt, whether it is
-live, and how to resume it. It
+used (with its subagents' usage reported separately), the size of its latest
+prompt, whether it is live, and how to resume it. It
 exists so a user — or an account manager such as agent-switch — can see what
 is active and pick a session up without browsing every profile directory and
 transcript.
@@ -35,11 +35,12 @@ for every profile directory it finds: each agent-switch profile
 `$CLAUDE_CONFIG_DIR`, `$CODEX_HOME`, `~/.claude` and `~/.codex`, each once.
 Liveness comes from the live session register (`runtime/sessions/`) that the
 `session-register` hook already maintains. That hook writes under
-`EVENT4U_CONFIG_HOME`, which a profile manager may set per profile, so the
-command reads every register it can find: the machine root, its own root, any
-`runtime/sessions` directory inside an agent-switch profile, and the
-directories listed in `AGENT_CONFIG_SESSION_REGISTER_DIRS`
-(`path.delimiter`-separated). A record matches a session by host and id.
+`EVENT4U_CONFIG_HOME`. A profile manager may set that per profile (agent-switch
+does not today, and plans to); such roots cannot be discovered from here, so
+they are listed in `AGENT_CONFIG_SESSION_REGISTER_DIRS` (`path.delimiter`-
+separated). The command reads the machine root, its own root and that list.
+A record matches a session by host and id, and — when both the record and the
+transcript's profile come from agent-switch — by profile name too.
 
 Transcripts are parsed incrementally from the cache (keyed by file inode and
 offset), most recently written first, up to 256 MB of new transcript per call.
@@ -48,11 +49,12 @@ title, model, context and paths are shown, its token count carries
 `usage_complete: false` (a `+` in `SESSIONS.md`), and the next call continues.
 Transcripts not written in the last 30 days are not listed.
 
-The root deliberately ignores `EVENT4U_CONFIG_HOME`: agent-switch sets that per
-profile, and a per-profile catalog would split the one list across profiles.
+The root deliberately ignores `EVENT4U_CONFIG_HOME`: a profile manager may set
+that per profile, and a per-profile catalog would split the one list across
+profiles.
 `AGENT_CONFIG_SESSION_CATALOG_HOME` overrides the root (tests use it). Output
-files are written owner-only (`0600`) by atomic rename, and their directory is
-set to `0700` on every write.
+files are written owner-only (`0600`) by atomic rename; a directory the
+command creates is `0700`, and an existing one keeps its mode.
 
 ## `sessions.json` — schema version 1
 
@@ -142,11 +144,16 @@ Field notes:
   de-duplicated by message id. Codex: the latest cumulative `token_count`;
   `assistant_messages` counts those usage reports. `usage_complete` is true
   when the whole transcript was parsed, or — Codex only — when the latest
-  cumulative snapshot was read from the end of the file; otherwise the totals
+  cumulative snapshot was read from the end of the file (only complete lines
+  are read; a trailing partial line is ignored). Measured on 1,355 real Codex
+  transcripts on 2026-11-20: in all 1,317 whose end held a snapshot, it equalled
+  the full parse; the other 38 are reported incomplete. Otherwise the totals
   are a lower bound and the next call continues.
 - **`subagent_usage`** — Claude: the summed usage of the session's subagent
-  transcripts, kept apart from `usage`; `subagents` counts them and
-  `subagent_usage_complete` says whether all were parsed.
+  transcripts, kept apart from `usage` (add the two for a session total);
+  `subagents` counts them and `subagent_usage_complete` says whether all were
+  parsed. Main threads are parsed before any subagent under the shared budget.
+  Repos a subagent worked in or wrote to count for the session's `repos`.
 - **`context_tokens`** — the prompt size of the latest main-thread message.
   `context_window` is reported by Codex only; for Claude it is `null`, because
   the effective window depends on model and host settings the transcript does

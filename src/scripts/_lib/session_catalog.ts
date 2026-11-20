@@ -148,9 +148,9 @@ export interface CatalogIndex {
 export const CATALOG_HOME_ENV = 'AGENT_CONFIG_SESSION_CATALOG_HOME';
 
 /**
- * The root deliberately ignores `EVENT4U_CONFIG_HOME`: agent-switch sets that
- * per profile, and a per-profile catalog would defeat the one list across
- * every profile this exists to provide.
+ * The root deliberately ignores `EVENT4U_CONFIG_HOME`: a profile manager may
+ * set that per profile, and a per-profile catalog would defeat the one list
+ * across every profile this exists to provide.
  */
 export function catalog_root(env: EnvMap = process.env, home: string = os.homedir()): string {
     const override = env[CATALOG_HOME_ENV];
@@ -173,42 +173,18 @@ function cache_path(env: EnvMap, home?: string): string {
 /** Extra live-register directories, `path.delimiter`-separated, for config roots this command cannot find itself. */
 export const REGISTER_DIRS_ENV = 'AGENT_CONFIG_SESSION_REGISTER_DIRS';
 
-/** Directories a profile tree holds that can be large and never hold an agent-config root. */
-const REGISTER_WALK_SKIP: ReadonlySet<string> = new Set([
-    'projects', 'sessions', 'shell-snapshots', 'todos', 'file-history', 'plugins', 'debug', 'statsig', 'logs', 'cache', 'node_modules',
-]);
-
 /**
  * Every place a live-register record can be. The session-register hook writes
- * under `EVENT4U_CONFIG_HOME`, which a profile manager may set per profile, so
- * one root is not enough: the machine root, this process's root, an explicit
- * list, and any `runtime/sessions` directory inside an agent-switch profile
- * (bounded walk, large host directories skipped).
+ * under `EVENT4U_CONFIG_HOME`; a profile manager may set that per profile
+ * (agent-switch plans to), and such roots cannot be discovered from here — they
+ * are listed in `AGENT_CONFIG_SESSION_REGISTER_DIRS`. Read: the machine root,
+ * this process's own root, and that list.
  */
 export function live_register_dirs(env: EnvMap, home: string = os.homedir()): string[] {
     const dirs = new Set<string>([path.join(catalog_root(env, home), 'runtime', 'sessions')]);
     if (env[CATALOG_HOME_ENV] === undefined) dirs.add(path.join(event4u_root(env), 'runtime', 'sessions'));
     for (const d of (env[REGISTER_DIRS_ENV] ?? '').split(path.delimiter)) {
         if (d.trim() !== '') dirs.add(path.resolve(d.trim()));
-    }
-    const as_root = str(env['AGENT_SWITCH_HOME']) ?? path.join(home, '.agent-switch');
-    const walk = (dir: string, depth: number): void => {
-        if (depth > 4) return;
-        for (const name of list_dir(dir)) {
-            const child = path.join(dir, name);
-            const register = name === 'sessions' && path.basename(dir) === 'runtime';
-            if (!register && REGISTER_WALK_SKIP.has(name)) continue;
-            try {
-                if (!fs.lstatSync(child).isDirectory()) continue;
-            } catch {
-                continue;
-            }
-            if (register) dirs.add(child);
-            else walk(child, depth + 1);
-        }
-    };
-    for (const host of ['claude', 'codex'] as const) {
-        for (const profile of list_dir(path.join(as_root, host))) walk(path.join(as_root, host, profile), 0);
     }
     return [...dirs];
 }
@@ -832,14 +808,9 @@ function read_cache(file: string): Cache {
 
 /** Atomic replace into an owner-only directory; the temp file is created 0600. */
 function write_private(file: string, data: string): void {
-    const dir = path.dirname(file);
-    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-    try {
-        // `mkdir` sets the mode only on creation; an existing directory is narrowed too.
-        fs.chmodSync(dir, 0o700);
-    } catch {
-        /* not ours to change; the files inside are still created 0600 */
-    }
+    // New directories are created 0700; existing ones are shared with other
+    // agent-config parts and keep their mode.
+    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
     write_atomic(file, data);
 }
 
@@ -850,11 +821,13 @@ function write_private(file: string, data: string): void {
 interface LiveRecord {
     last_seen: number;
     roadmap_slug: string | null;
+    /** agent-switch profile name the record was written under, when it says so. */
+    as_profile: string | null;
 }
 
-/** Live records keyed `<host>:<session id>`; a record with no known platform matches either host. */
-function read_live(dirs: string[], now: Date): Map<string, LiveRecord> {
-    const out = new Map<string, LiveRecord>();
+/** Live records keyed `<host>:<session id>`; a record with no known platform is a candidate for either host. */
+function read_live(dirs: string[], now: Date): Map<string, LiveRecord[]> {
+    const out = new Map<string, LiveRecord[]>();
     for (const dir of dirs) for (const name of list_dir(dir)) {
         if (!name.endsWith('.json')) continue;
         let o: Record<string, unknown> | null = null;
@@ -868,13 +841,33 @@ function read_live(dirs: string[], now: Date): Map<string, LiveRecord> {
         const platform = str(o?.['platform']) ?? 'generic';
         if (id === null || seen === null) continue;
         if ((now.getTime() - seen) / 1000 > ttl_seconds_for(platform)) continue;
+        const prof = obj(o?.['profile']);
+        const rec: LiveRecord = {
+            last_seen: seen,
+            roadmap_slug: str(o?.['roadmap_slug']),
+            as_profile: prof?.['via'] === 'agent-switch' ? str(prof['name']) : null,
+        };
         for (const host of platform === 'claude' || platform === 'codex' ? [platform] : ['claude', 'codex']) {
             const key = `${host}:${id}`;
-            const prev = out.get(key);
-            if (prev === undefined || prev.last_seen < seen) out.set(key, { last_seen: seen, roadmap_slug: str(o?.['roadmap_slug']) });
+            out.set(key, [...(out.get(key) ?? []), rec]);
         }
     }
     return out;
+}
+
+/**
+ * The live record for a transcript: same host and id, and — when both the
+ * record and the transcript's profile come from agent-switch — the same
+ * profile, so two profiles of one host can never share a liveness verdict.
+ */
+function live_for(live: Map<string, LiveRecord[]>, t: TranscriptFile): LiveRecord | null {
+    const mine = t.source.profile?.via === 'agent-switch' ? t.source.profile.name : null;
+    let best: LiveRecord | null = null;
+    for (const r of live.get(`${t.source.host}:${t.session_id}`) ?? []) {
+        if (mine !== null && r.as_profile !== null && r.as_profile !== mine) continue;
+        if (best === null || r.last_seen > best.last_seen) best = r;
+    }
+    return best;
 }
 
 // ---------------------------------------------------------------------------
@@ -950,23 +943,34 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
         subs.set(key, [...(subs.get(key) ?? []), t]);
     }
 
-    for (const t of all) {
-        if (t.subagent) continue;
-        const { st, complete } = read(t);
+    // Two passes under the one budget: every main thread first (newest first),
+    // then subagents, so a large agent tree cannot starve other sessions.
+    const mains = all.filter((t) => !t.subagent);
+    const main_reads = new Map(mains.map((t) => [t.file, read(t)]));
+    const sub_reads = new Map<string, { st: ParsedState; complete: boolean }>();
+    for (const t of mains) {
+        for (const a of subs.get(`${t.source.config_dir}:${t.session_id}`) ?? []) sub_reads.set(a.file, read(a));
+    }
+
+    for (const t of mains) {
+        const { st: main_st, complete } = main_reads.get(t.file)!;
         let sub_usage: CatalogUsage | null = null;
         let sub_complete = true;
         let sub_mtime = 0;
         const agents = subs.get(`${t.source.config_dir}:${t.session_id}`) ?? [];
+        // Repos a subagent worked in or wrote to belong to the session too.
+        const st: ParsedState = agents.length === 0 ? main_st : { ...main_st, paths: [...main_st.paths] };
         for (const a of agents) {
-            const r = read(a);
+            const r = sub_reads.get(a.file)!;
             sub_complete &&= r.complete;
             sub_mtime = Math.max(sub_mtime, a.mtime_ms);
+            for (const p of r.st.paths) note_path(st, p);
             if (r.st.usage === null) continue;
             const u: CatalogUsage = sub_usage ?? empty_usage();
             for (const k of Object.keys(u) as (keyof CatalogUsage)[]) u[k] += r.st.usage[k];
             sub_usage = u;
         }
-        const rec = live.get(`${t.source.host}:${t.session_id}`) ?? null;
+        const rec = live_for(live, t);
         const activity = Math.max(t.mtime_ms, sub_mtime, rec?.last_seen ?? 0);
         const idle = Math.max(0, Math.round((now.getTime() - activity) / 1000));
         const status: CatalogStatus = idle <= ACTIVE_WINDOW_SECONDS ? 'active' : rec !== null ? 'idle' : 'inactive';
@@ -1095,14 +1099,22 @@ export function render_markdown(index: CatalogIndex, detail_rows = 25): string {
     ];
     for (const s of index.sessions) {
         const repos = s.repos.slice(0, 3).map(repo_label).join(', ') + (s.repos.length > 3 ? `, +${s.repos.length - 3}` : '');
-        const tokens = `${fmt_tokens(s.usage?.total_tokens)}${s.usage_complete ? '' : '+'}`;
+        const tokens =
+            `${fmt_tokens(s.usage?.total_tokens)}${s.usage_complete ? '' : '+'}` +
+            (s.subagent_usage !== null ? ` (+${fmt_tokens(s.subagent_usage.total_tokens)}${s.subagent_usage_complete ? '' : '+'} sub)` : '');
         lines.push(
             `| ${s.status}${s.live ? ' (live)' : ''} | ${fmt_age(s.idle_seconds)} | ${md_text(`${s.host} · ${s.surface}`)} | ` +
                 `${md_text(profile_label(s.profile))} | ${md_text(s.model)} | ${md_text(s.title)} | ${md_text(repos || '—')} | ` +
                 `${md_text(tokens)} | ${md_text(context_label(s))} | ${md_code(s.session_id)} |`,
         );
     }
-    lines.push('', '`+` after a token count: the transcript is not fully counted yet; the next run continues.', '', '## Details', '');
+    lines.push(
+        '',
+        'Tokens: main thread, then `(+… sub)` for subagents. `+` after a count: not fully counted yet; the next run continues.',
+        '',
+        '## Details',
+        '',
+    );
     for (const s of index.sessions.slice(0, detail_rows)) {
         lines.push(`### ${md_text(s.title ?? s.session_id)}`, '');
         lines.push(

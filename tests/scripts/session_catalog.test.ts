@@ -263,27 +263,67 @@ describe('liveness and resume', () => {
 });
 
 describe('review follow-ups', () => {
-    it('reads live registers kept under each profile and keys them by host', () => {
+    it('reads live registers from the explicit list, keyed by host and agent-switch profile', () => {
         const ids = [ID1, ID2, 'cccccccc-3333-4333-8333-333333333333'];
         const hours_ago = new Date(Date.now() - 2 * 3600 * 1000);
+        const roots: string[] = [];
         ['p1', 'p2', 'p3'].forEach((profile, i) => {
             const f = claude_transcript(ids[i]!, assistant('m1'), profile);
             fs.utimesSync(f, hours_ago, hours_ago);
-            // A per-profile agent-config root, as a profile manager may set it.
-            const reg = path.join(home, '.agent-switch', 'claude', profile, 'event4u', 'runtime', 'sessions');
+            const reg = path.join(tmp, `root-${profile}`, 'runtime', 'sessions');
             fs.mkdirSync(reg, { recursive: true });
-            fs.writeFileSync(path.join(reg, `${ids[i]}.json`), JSON.stringify({ session_id: ids[i], platform: 'claude', last_seen: hours_ago.toISOString() }));
+            fs.writeFileSync(
+                path.join(reg, `${ids[i]}.json`),
+                JSON.stringify({ session_id: ids[i], platform: 'claude', last_seen: hours_ago.toISOString(), profile: { provider: 'claude', name: profile, via: 'agent-switch' } }),
+            );
+            roots.push(reg);
         });
-        // A codex register record with a colliding id must not mark the claude session live.
-        const codexReg = path.join(tmp, 'other-root');
-        fs.mkdirSync(codexReg);
-        const t = claude_transcript('dddddddd-4444-4444-8444-444444444444', assistant('m1'), 'p4');
-        fs.utimesSync(t, hours_ago, hours_ago);
-        fs.writeFileSync(path.join(codexReg, 'x.json'), JSON.stringify({ session_id: 'dddddddd-4444-4444-8444-444444444444', platform: 'codex', last_seen: hours_ago.toISOString() }));
-        const index = build_index({ env: { ...env, AGENT_CONFIG_SESSION_REGISTER_DIRS: codexReg }, home });
+        // Same id, other host, and same id under another agent-switch profile: neither may mark it live.
+        const shared = 'dddddddd-4444-4444-8444-444444444444';
+        fs.utimesSync(claude_transcript(shared, assistant('m1'), 'p4'), hours_ago, hours_ago);
+        const other = path.join(tmp, 'root-other');
+        fs.mkdirSync(other);
+        fs.writeFileSync(path.join(other, 'a.json'), JSON.stringify({ session_id: shared, platform: 'codex', last_seen: hours_ago.toISOString() }));
+        fs.writeFileSync(
+            path.join(other, 'b.json'),
+            JSON.stringify({ session_id: shared, platform: 'claude', last_seen: hours_ago.toISOString(), profile: { provider: 'claude', name: 'p1', via: 'agent-switch' } }),
+        );
+        const index = build_index({ env: { ...env, AGENT_CONFIG_SESSION_REGISTER_DIRS: [...roots, other].join(path.delimiter) }, home });
         const live = Object.fromEntries(index.sessions.map((s) => [s.session_id, s.live]));
         expect(ids.map((id) => live[id])).toEqual([true, true, true]);
-        expect(live['dddddddd-4444-4444-8444-444444444444']).toBe(false);
+        expect(live[shared]).toBe(false);
+    });
+
+    it('leaves the mode of an existing output directory alone', () => {
+        const out = path.join(tmp, 'out');
+        fs.mkdirSync(out, { recursive: true, mode: 0o755 });
+        fs.chmodSync(out, 0o755);
+        publish_index({ env, home });
+        expect(fs.statSync(out).mode & 0o777).toBe(0o755);
+        expect(fs.statSync(index_json_path(env, home)).mode & 0o077).toBe(0);
+    });
+
+    it('counts repos a subagent wrote to, and parses every main thread before any subagent', () => {
+        const lib = make_repo('lib', 'develop');
+        const main = claude_transcript(ID1, assistant('m1'));
+        const sub = path.join(path.dirname(main), ID1, 'subagents');
+        fs.mkdirSync(sub, { recursive: true });
+        fs.writeFileSync(
+            path.join(sub, 'agent-a1.jsonl'),
+            assistant('s1', { isSidechain: true }, [{ type: 'tool_use', name: 'Write', input: { file_path: path.join(lib, 'src', 'y.ts') } }]),
+        );
+        const older = claude_transcript(ID2, assistant('m9'));
+        const earlier = new Date(Date.now() - 3600 * 1000);
+        fs.utimesSync(older, earlier, earlier);
+        expect(find(ID1)!.repos.map((r) => r.name).sort()).toEqual(['app', 'lib']);
+        // A budget that covers both main threads but not the subagent.
+        const budget = fs.statSync(main).size + fs.statSync(older).size;
+        fs.rmSync(path.join(tmp, 'out', 'runtime'), { recursive: true, force: true });
+        const index = build_index({ env, home, budget_bytes: budget });
+        const byId = Object.fromEntries(index.sessions.map((s) => [s.session_id, s]));
+        expect(byId[ID1]!.usage_complete).toBe(true);
+        expect(byId[ID2]!.usage_complete).toBe(true);
+        expect(byId[ID1]!.subagent_usage_complete).toBe(false);
     });
 
     it('marks Codex usage complete only when the latest cumulative snapshot was read', () => {
