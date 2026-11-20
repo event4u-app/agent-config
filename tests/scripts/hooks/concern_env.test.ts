@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { assertConcernEnvRestored, enterConcernEnv, openConcernEnvScope, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
+import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
 
 const ROOT = '/pkg-root';
 let saved: NodeJS.ProcessEnv;
@@ -311,6 +311,28 @@ describe('concern_env — one scope per dispatch', () => {
             }
         });
 
+        it('a concern spawned after a failed reset gets the hardened baseline, not the drift it left', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const close = openConcernEnvScope(ROOT);
+                const leaveA = enterConcernEnv(ROOT);
+                process.env['LEFT_BY_A'] = '1';
+                process.env['LD_PRELOAD'] = '/evil.so';
+                failing = true;
+                leaveA(); // the reset fails: the live environment keeps A's changes
+                expect(process.env['LEFT_BY_A']).toBe('1');
+                const env = concernSpawnEnv(ROOT); // works while writes still fail: it writes nothing
+                const child = spawnSync(process.execPath, ['-e', "process.stdout.write(JSON.stringify([process.env.LEFT_BY_A ?? 'unset', process.env.LD_PRELOAD ?? 'unset', process.env.AGENT_CONFIG_PACKAGE_ROOT ?? 'unset', process.env.CONCERN_ENV_KEEP ?? 'unset']))"], { encoding: 'utf-8', env });
+                failing = false;
+                close();
+                expect(JSON.parse(child.stdout)).toEqual(['unset', 'unset', ROOT, 'kept']);
+            } finally {
+                failing = false;
+                spy.mockRestore();
+            }
+        });
+
         it('a scope whose hardening fails half-way rolls back what it applied and throws', () => {
             installFailingEnv();
             const before = { ...(process.env as Record<string, string>) };
@@ -324,6 +346,14 @@ describe('concern_env — one scope per dispatch', () => {
             leave();
             expect(process.env['LD_PRELOAD']).toBe('/evil.so');
         });
+    });
+
+    it('outside a scope, a spawned concern gets the hardened copy of the live environment', () => {
+        const env = concernSpawnEnv(ROOT);
+        expect(env['LD_PRELOAD']).toBeUndefined();
+        expect(env['CONCERN_ENV_KEEP']).toBe('kept');
+        expect(env['AGENT_CONFIG_PACKAGE_ROOT']).toBe(ROOT);
+        expect(process.env['LD_PRELOAD']).toBe('/evil.so'); // nothing written
     });
 
     it('a release that outlives its scope does nothing', () => {

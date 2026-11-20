@@ -38,7 +38,6 @@ import { runBundleIntegrityGate } from "./bundle_integrity.js";
 import { writeConcernTimings, type ConcernTimingSample } from "./concern_timings.js";
 import { tableFingerprint } from "./table_fingerprint.js";
 
-import { hardenedSpawnEnv } from "../_lib/spawn_env.js";
 import {
   feedback_dir,
   is_replay_mode,
@@ -72,7 +71,7 @@ import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
-import { assertConcernEnvRestored, enterConcernEnv, openConcernEnvScope } from './concern_env.js';
+import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope } from './concern_env.js';
 import { isQuietAllow, keepNewerOutcome } from './feedback_policy.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
@@ -709,7 +708,8 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   // Consumer-runtime concern dispatch: scrub code-execution-injection env
   // vectors (loader / git-config / NODE_OPTIONS / …) before spawning each
   // concern, then set the package-root marker as an explicit override.
-  const concern_env = hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT });
+  // Inside a dispatch scope: its hardened baseline, never the live (possibly drifted) environment.
+  const concern_env = concernSpawnEnv(REPO_ROOT);
 
   const started = performance.now();
   const { command, args: spawnArgs } = _resolve_tsx_invocation(script, cmd.slice(1));

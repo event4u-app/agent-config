@@ -154,6 +154,19 @@ export function openConcernEnvScope(packageRoot: string): () => void {
 }
 
 /**
+ * The environment a concern spawned as its own process gets. Inside a scope it
+ * is a copy of the scope's hardened baseline — never the live environment, which
+ * an earlier in-process concern may have left drifted if its reset failed — so a
+ * child never inherits another concern's changes, repaired or not. Outside a
+ * scope, the hardened copy of the live environment, as before.
+ */
+export function concernSpawnEnv(packageRoot: string): NodeJS.ProcessEnv {
+    const scope = stack[stack.length - 1];
+    if (scope === undefined) return hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot });
+    return { ...scope.hardened, AGENT_CONFIG_PACKAGE_ROOT: packageRoot };
+}
+
+/**
  * Enter the environment for one concern; call the returned function when it has
  * run. The release resets only while its scope is still the innermost one: a
  * release that outlives its scope (the scope already closed) does nothing, so it
