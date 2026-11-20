@@ -74,27 +74,30 @@ actually loads.
 
 ## Phase 1 — The ceiling stops being a ratchet
 
-- [ ] **1.1 Package allowlist replaces the YAML cap.** The composition gate
+- [x] **1.1 Package allowlist replaces the YAML cap.** The composition gate
       fails when an npm package contributes bytes to the bundle that is not on
       a committed allowlist; the closed `YAML_PACKAGES` list and
       `max_yaml_packages` go.
       verify: tests where an unlisted package fails, a listed one passes, and a second YAML package (`js-yaml`) fails as before.
-- [ ] **1.2 One wide backstop.** One absolute bundle ceiling at the post-fix
+      Done 2026-11-20: `allowed_packages: ["yaml"]`; `tests/scripts/hook_bundle_composition.test.ts` (21 green) and the gate's self-test (4/4).
+- [x] **1.2 One wide backstop.** One absolute bundle ceiling at the post-fix
       reading plus 20 %, rounded; per-chunk and chunk-group ceilings,
-      `shrink_only` and the `raise_log` obligation end. The log moves verbatim
-      to `agents/evidence/analysis/` as history.
+      `shrink_only` and the `raise_log` obligation end. The log stays in git at
+      the pin and is summarised in `agents/evidence/analysis/`.
       verify: gate self-test covers under, over and missing-budget; the budget file is under 3 KB; `hook_bundle_raise_log.test.ts` is retired with its subject.
+      Done 2026-11-20: `max_bytes` 1,915,000 (1,595,089 + 20 %), file 2.2 KB, chunk sizes printed as "reported, not gated"; history in `agents/evidence/analysis/hook-bundle-budget-retired-2026-11-20.md`.
 - [ ] **1.3 The budget file leaves the ratification watched set** (owner D2).
       `check_kernel_edit_ratified.ts` stops matching `hook-bundle-budget.json`;
       the change to the gate carries the ratification record the gate demands.
       verify: the gate's tests show a budget-file-only diff passes without a record, and a `dispatch_hook.ts` diff still needs one.
-- [ ] **1.4 Reconcile the shrink-only premise elsewhere.** Amend step 2.4 of
+- [x] **1.4 Reconcile the shrink-only premise elsewhere.** Amend step 2.4 of
       `road-to-gates-that-check-what-they-claim` (the hook bundle is no longer a
       shrink-only ceiling) and the source comments that cite the ceiling as a
       reason (`rule_inject_hook.ts:1085`, `lazy_concern.ts:37`,
       `rule_injection.ts:126,281`, `vendor_defaults.ts:17`,
       `instructions_observer_hook.ts:52`).
       verify: `rg -F 'hook-bundle-budget'` over `src/` returns only the gate, the budget file's readers and comments that state the backstop.
+      Done 2026-11-20: gates roadmap 2.4 scoped; three comments that described a live hard ceiling rewritten. `lazy_concern.ts:37` and `instructions_observer_hook.ts:52` stay — they record what was decided then, which is still true.
 
 ## Phase 2 — Fixed costs out of every event
 

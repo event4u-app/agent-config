@@ -1,60 +1,47 @@
 #!/usr/bin/env tsx
 /**
- * Composition gate for the self-hosted hook bundle: ONE YAML reader, and a
- * byte ceiling.
+ * Composition gate for the self-hosted hook bundle: which npm packages are in
+ * it, and one wide byte backstop.
  *
  * WHY THIS EXISTS — measured, not hypothetical.
  *
  * Every concern is inlined into one `dist/hooks/dispatch.js` that every hook
  * event loads, so a dependency added for ONE concern is paid by all of them on
- * every dispatch. On 2026-10-01 the bundle carried two YAML parsers: `yaml`,
- * pulled by six modules including the dispatcher itself, and `js-yaml`, pulled
- * by one call site in `block_config_weakening.ts` — 95,846 bytes, 6.13 % of a
- * 1,564,211-byte bundle. Beside it, `host_lowering.ts`'s own header said the
- * `yaml` reader was "the ONLY remaining YAML reader on that path".
- *
- * Nothing in this tree could see either fact. The freshness gate compares
- * mtimes, the content gate compares digests, and neither has an opinion about
- * what is INSIDE the bundle. So the second parser reached a release and was
- * found by an external rescore counting bytes — a review finding where it
- * should have been a red check. This gate is that red check.
+ * every dispatch. On 2026-10-01 the bundle carried two YAML parsers: `yaml` and
+ * `js-yaml`, the second pulled by one call site — 95,846 bytes that reached a
+ * release as a review finding rather than as a red check.
  *
  * WHAT IT CHECKS
  *
- *   1. At most `max_yaml_packages` YAML packages contribute bytes to the
- *      bundle. The package set is {@link YAML_PACKAGES} — a closed list, so a
- *      third parser arriving under a name nobody listed is NOT caught here, and
- *      that limit is stated rather than implied.
- *   2. The bundle's byte count is at or under `max_bytes`.
+ *   1. Every npm package contributing bytes to the bundle is on the committed
+ *      `allowed_packages` list. A new package — a second YAML reader included —
+ *      is a red check with one line to add, reviewed like any dependency. This
+ *      replaces the closed list of YAML package names the gate used to count
+ *      over, which could not see a parser under a name nobody listed.
+ *   2. The bundle's byte count is at or under `max_bytes`, a backstop with real
+ *      headroom against slow creep.
  *
- * Both bounds live in `src/config/hook-bundle-budget.json`, never in this file:
- * a number a reviewer has to read a script to find is a number nobody reviews.
+ * WHAT IT NO LONGER DOES (owner directive 2026-11-20, D1). It held the ceiling
+ * a few bytes above the reading with `shrink_only`, a `raise_log` obligation and
+ * 18 per-chunk ceilings, so it fired on every in-bundle feature rather than on
+ * regressions: 28 raises in six weeks, the smallest 94 bytes. Own-code growth is
+ * what features are. Chunk sizes are printed, not gated.
  *
- * WHY IT BUILDS RATHER THAN READS. `dist/hooks/` is untracked, so a gate that
- * read the bundle on disk would be local-only like `check_hook_bundle_content`
- * — and the thing being bounded is what the SOURCE produces, which is a
- * property of the commit rather than of a machine. So this builds its own
- * bundle with `--metafile` and measures that. It runs identically in CI and
- * locally, and it never touches the live bundle.
+ * WHY IT BUILDS RATHER THAN READS. `dist/hooks/` is untracked, so this builds
+ * its own bundle with `--metafile` from `package.json`'s `build:hooks` script
+ * (only `--outfile=` rewritten, via `rewriteOutfile`), and measures that.
  *
- * The esbuild invocation is NOT duplicated here: it is read from
- * `package.json`'s `build:hooks` script with only `--outfile=` rewritten, via
- * the same `rewriteOutfile` helper `rebuild_hook_bundle` and
- * `check_hook_bundle_content` use, so the flag set has exactly one home. The
- * trailing `&& node src/scripts/write_bundle_digest.mjs` is stripped — this
- * gate must not write a sidecar for a probe bundle nobody executes.
- *
- * WHAT IT DOES NOT DO. It says nothing about LATENCY. A smaller bundle is not
- * a measured speed-up; `src/config/hook-latency-budget.json` owns that axis and
- * no number here is derived from it. It says nothing about the install or MCP
- * bundles, which carry their own module graphs.
+ * WHAT IT DOES NOT DO. It says nothing about LATENCY
+ * (`src/config/hook-latency-budget.json`), and nothing about a module loaded at
+ * RUNTIME outside the bundle — a `createRequire` call esbuild leaves alone
+ * contributes 0 bytes here; `check_hook_load_set` catches that class.
  *
  * Usage:
  *     ./scripts-run src/scripts/check_hook_bundle_composition
  *     ./scripts-run src/scripts/check_hook_bundle_composition --metafile <path>
  *     ./scripts-run src/scripts/check_hook_bundle_composition --self-test
  *
- * Exit codes: 0 = within budget · 1 = over the ceiling or a second reader ·
+ * Exit codes: 0 = within budget · 1 = over the backstop or an unlisted package ·
  * 2 = the build or the budget file failed.
  */
 // ledger-exempt: single-artefact transaction — one bundle build yielding one
@@ -79,21 +66,9 @@ export const SELF_REL = path.join('src', 'scripts', 'check_hook_bundle_compositi
 export const BUDGET_REL = path.join('src', 'config', 'hook-bundle-budget.json');
 const LIVE_REL = path.join('dist', 'hooks', 'dispatch.js');
 
-/**
- * The YAML readers this tree has ever carried, by package name.
- *
- * A CLOSED LIST, and the consequence is worth stating: a fourth parser arriving
- * under a name not listed here contributes bytes the ceiling catches and the
- * parser cap does not. The alternative — treating any package whose name
- * contains "yaml" as a reader — would match a YAML-adjacent utility that is not
- * a parser, and a cap that fires on the wrong package is worse than one that
- * misses an unlisted one, because the first teaches people to raise the cap.
- */
-export const YAML_PACKAGES: readonly string[] = ['yaml', 'js-yaml', 'yaml-js', 'yamljs'];
-
 export interface Budget {
     readonly maxBytes: number;
-    readonly maxYamlPackages: number;
+    readonly allowedPackages: readonly string[];
 }
 
 export interface Analysis {
@@ -101,10 +76,8 @@ export interface Analysis {
     readonly bytes: number;
     /** Modules that contributed to it — the unit `scanned:` reports. */
     readonly modules: number;
-    /** Bytes in the output, summed per owning npm package. */
+    /** Bytes in the output, summed per owning npm package (zero-byte packages omitted). */
     readonly packageBytes: ReadonlyMap<string, number>;
-    /** Listed YAML packages contributing more than zero bytes, sorted. */
-    readonly yamlPackages: readonly string[];
 }
 
 /**
@@ -141,56 +114,23 @@ export function analyzeMetafile(json: string): Analysis {
     const inputs = out.inputs ?? {};
     for (const [p, v] of Object.entries(inputs)) {
         const pkg = owningPackage(p);
-        if (pkg === null) continue;
-        packageBytes.set(pkg, (packageBytes.get(pkg) ?? 0) + (v.bytesInOutput ?? 0));
+        const bytes = v.bytesInOutput ?? 0;
+        if (pkg === null || bytes <= 0) continue;
+        packageBytes.set(pkg, (packageBytes.get(pkg) ?? 0) + bytes);
     }
-    const yamlPackages = YAML_PACKAGES.filter((p) => (packageBytes.get(p) ?? 0) > 0).sort();
-    return {
-        bytes: out.bytes ?? 0,
-        modules: Object.keys(inputs).length,
-        packageBytes,
-        yamlPackages,
-    };
+    return { bytes: out.bytes ?? 0, modules: Object.keys(inputs).length, packageBytes };
 }
 
-/** A conditional chunk's own ceiling: the bytes `build:hook-chunks` emits for `entry`. */
-export interface ChunkBudget {
-    readonly entry: string;
-    readonly maxBytes: number;
-}
-
-/**
- * The chunk ceilings, from the budget's optional `chunks` list. A chunk moves
- * bytes out of the dispatch bundle; without a ceiling of its own it would only
- * move uncontrolled growth somewhere nobody measures (council 2026-10-18).
- */
-export function readChunkBudgets(root: string): ChunkBudget[] {
-    const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>;
-    const list = raw['chunks'];
-    if (list === undefined) return [];
-    if (!Array.isArray(list)) throw new Error(`${BUDGET_REL}: chunks must be a list`);
-    const budgets = list.map((c, i) => {
-        const entry = isRecord(c) ? c['entry'] : undefined;
-        const max = isRecord(c) ? c['max_bytes'] : undefined;
-        if (typeof entry !== 'string' || typeof max !== 'number' || !Number.isInteger(max) || max <= 0) {
-            throw new Error(`${BUDGET_REL}: chunks[${String(i)}] needs a string entry and a positive integer max_bytes`);
-        }
-        return { entry, maxBytes: max };
-    });
-    const seen = new Set<string>();
-    for (const b of budgets) {
-        if (seen.has(b.entry)) throw new Error(`${BUDGET_REL}: chunks lists ${b.entry} twice`);
-        seen.add(b.entry);
-    }
-    return budgets;
+/** Packages contributing bytes that the budget does not list, sorted. */
+export function unlistedPackages(a: Analysis, budget: Budget): string[] {
+    const allowed = new Set(budget.allowedPackages);
+    return [...a.packageBytes.keys()].filter((p) => !allowed.has(p)).sort();
 }
 
 /**
  * Build the chunk for `entry` from the one chunk definition (`hook_chunks.mjs`,
- * which `build:hook-chunks` runs) to a throwaway path, and return its size. The
- * gate and the shipped build call the same function with the same options, so
- * what is measured is what ships. Throws when no chunk is defined for the entry
- * — a ceiling on a chunk nothing builds bounds nothing.
+ * which `build:hook-chunks` runs) to a throwaway path, and return its size.
+ * Throws when no chunk is defined for the entry.
  */
 export function buildChunkBytes(root: string, entry: string): number {
     if (!HOOK_CHUNKS.some((c) => c.entry === entry)) {
@@ -206,318 +146,39 @@ export function buildChunkBytes(root: string, entry: string): number {
     }
 }
 
-/**
- * Every defined chunk carries exactly one ceiling and every ceiling names a
- * defined chunk — so a chunk added to `hook_chunks.mjs` cannot ship unmeasured,
- * and a ceiling cannot outlive the chunk it bounded.
- */
-export function chunkCoverageFindings(defined: readonly string[], budgets: readonly ChunkBudget[]): string[] {
-    const out: string[] = [];
-    const twice = (xs: readonly string[]): string[] => [...new Set(xs.filter((x, i) => xs.indexOf(x) !== i))];
-    for (const d of twice(defined)) out.push(`chunk ${d} is defined more than once in hook_chunks.mjs`);
-    for (const d of twice(budgets.map((b) => b.entry))) out.push(`chunk ${d} has more than one ceiling in ${BUDGET_REL}`);
-    const budgeted = new Set(budgets.map((b) => b.entry));
-    for (const d of defined) if (!budgeted.has(d)) out.push(`chunk ${d} is built by hook_chunks.mjs but has no ceiling in ${BUDGET_REL}`);
-    for (const b of budgets) if (!defined.includes(b.entry)) out.push(`ceiling for ${b.entry} names no chunk hook_chunks.mjs builds`);
-    return out;
-}
-
-/** Over-ceiling findings for measured chunks. */
-export function chunkFindings(measured: ReadonlyMap<string, number>, budgets: readonly ChunkBudget[]): string[] {
-    const out: string[] = [];
-    for (const b of budgets) {
-        const bytes = measured.get(b.entry);
-        if (bytes === undefined) out.push(`chunk ${b.entry} was not measured`);
-        else if (bytes > b.maxBytes) {
-            out.push(
-                `chunk ${b.entry} is ${String(bytes)} bytes, ceiling is ${String(b.maxBytes)} ` +
-                    `(over by ${String(bytes - b.maxBytes)}). Shrink it, or raise its max_bytes in ${BUDGET_REL} ` +
-                    'WITH a raise_log entry naming the chunk and what was added.',
-            );
-        }
-    }
-    return out;
-}
-
-/**
- * A chunk ceiling raised against the base revision needs a new raise_log entry
- * whose `chunk` is the entry and whose `to` is the new ceiling — the main
- * ceiling's rule, applied per chunk.
- */
-export function chunkRaiseFindings(baseRaw: string | null, workingRaw: string): string[] {
-    if (baseRaw === null) return [];
-    const base = JSON.parse(baseRaw) as Record<string, unknown>;
-    const working = JSON.parse(workingRaw) as Record<string, unknown>;
-    const ceilings = (raw: Record<string, unknown>): Map<string, number> =>
-        new Map(
-            (Array.isArray(raw['chunks']) ? (raw['chunks'] as unknown[]) : [])
-                .filter(isRecord)
-                .map((c) => [String(c['entry']), Number(c['max_bytes'])]),
-        );
-    const before = ceilings(base);
-    const seen = new Set((Array.isArray(base['raise_log']) ? (base['raise_log'] as unknown[]) : []).map((e) => JSON.stringify(e)));
-    const gained = (Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : []).filter(
-        (e) => !seen.has(JSON.stringify(e)),
-    );
-    const out: string[] = [];
-    for (const [entry, to] of ceilings(working)) {
-        const from = before.get(entry);
-        if (from === undefined || to <= from) continue;
-        const logged = gained.find((e) => isRecord(e) && e['chunk'] === entry && e['to'] === to);
-        if (logged === undefined) {
-            out.push(`chunk ${entry} ceiling raised from ${String(from)} to ${String(to)} with no new raise_log entry for it`);
-        } else {
-            const problems = raiseEntryProblems(logged as Record<string, unknown>, from);
-            if (problems.length > 0) out.push(`the raise_log entry for chunk ${entry} is incomplete: ${problems.join('; ')}.`);
-        }
-    }
-    return out;
-}
-
 /** Read the committed budget. Throws rather than defaulting — a guessed ceiling bounds nothing. */
-/**
- * A ceiling over the sum of several chunks: the bytes a caller that loads all
- * of them parses. Per-chunk ceilings alone let a feature split across chunks
- * grow in total while each part stays under its own.
- */
-export interface ChunkGroupBudget {
-    readonly name: string;
-    readonly entries: readonly string[];
-    readonly maxBytes: number;
-}
-
-/** The group ceilings from a budget file's text, from its optional `chunk_groups` list. */
-export function parseChunkGroupBudgets(raw: Record<string, unknown>): ChunkGroupBudget[] {
-    const list = raw['chunk_groups'];
-    if (list === undefined) return [];
-    if (!Array.isArray(list)) throw new Error(`${BUDGET_REL}: chunk_groups must be a list`);
-    const groups = list.map((g, i) => {
-        const name = isRecord(g) ? g['name'] : undefined;
-        const entries = isRecord(g) ? g['entries'] : undefined;
-        const max = isRecord(g) ? g['max_bytes'] : undefined;
-        if (
-            typeof name !== 'string' ||
-            name === '' ||
-            !Array.isArray(entries) ||
-            entries.length < 2 ||
-            !entries.every((e) => typeof e === 'string') ||
-            new Set(entries).size !== entries.length ||
-            typeof max !== 'number' ||
-            !Number.isInteger(max) ||
-            max <= 0
-        ) {
-            throw new Error(
-                `${BUDGET_REL}: chunk_groups[${String(i)}] needs a name, two or more distinct chunk entries and a positive integer max_bytes`,
-            );
-        }
-        return { name, entries: entries as string[], maxBytes: max };
-    });
-    const seen = new Set<string>();
-    for (const g of groups) {
-        if (seen.has(g.name)) throw new Error(`${BUDGET_REL}: chunk_groups lists ${g.name} twice`);
-        seen.add(g.name);
-    }
-    return groups;
-}
-
-export function readChunkGroupBudgets(root: string): ChunkGroupBudget[] {
-    return parseChunkGroupBudgets(JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>);
-}
-
-/** A group naming a chunk that has no ceiling of its own bounds nothing that is measured. */
-export function chunkGroupCoverageFindings(groups: readonly ChunkGroupBudget[], budgets: readonly ChunkBudget[]): string[] {
-    const budgeted = new Set(budgets.map((b) => b.entry));
-    return groups.flatMap((g) =>
-        g.entries.filter((e) => !budgeted.has(e)).map((e) => `chunk group ${g.name} names ${e}, which has no chunk ceiling in ${BUDGET_REL}`),
-    );
-}
-
-/** Over-ceiling findings for the summed bytes of each group. */
-export function chunkGroupFindings(measured: ReadonlyMap<string, number>, groups: readonly ChunkGroupBudget[]): string[] {
-    const out: string[] = [];
-    for (const g of groups) {
-        const missing = g.entries.filter((e) => !measured.has(e));
-        if (missing.length > 0) {
-            out.push(`chunk group ${g.name} was not measured: ${missing.join(', ')}`);
-            continue;
-        }
-        const bytes = g.entries.reduce((sum, e) => sum + (measured.get(e) ?? 0), 0);
-        if (bytes > g.maxBytes) {
-            out.push(
-                `chunk group ${g.name} is ${String(bytes)} bytes together, ceiling is ${String(g.maxBytes)} ` +
-                    `(over by ${String(bytes - g.maxBytes)}). Shrink a chunk, or raise the group's max_bytes in ${BUDGET_REL} ` +
-                    'WITH a raise_log entry naming the group (`chunk_group`) and what was added.',
-            );
-        }
-    }
-    return out;
-}
-
-/** A group ceiling raised against the base needs a new raise_log entry whose `chunk_group` is the group and whose `to` is the new ceiling. */
-export function chunkGroupRaiseFindings(baseRaw: string | null, workingRaw: string): string[] {
-    if (baseRaw === null) return [];
-    const base = JSON.parse(baseRaw) as Record<string, unknown>;
-    const working = JSON.parse(workingRaw) as Record<string, unknown>;
-    const before = new Map(parseChunkGroupBudgets(base).map((g) => [g.name, g.maxBytes]));
-    const seen = new Set((Array.isArray(base['raise_log']) ? (base['raise_log'] as unknown[]) : []).map((e) => JSON.stringify(e)));
-    const gained = (Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : []).filter(
-        (e) => !seen.has(JSON.stringify(e)),
-    );
-    const out: string[] = [];
-    const after = new Map(parseChunkGroupBudgets(working).map((g) => [g.name, g.entries]));
-    // Dropping a group, or a chunk from one, narrows what the sum covers: that needs a recorded reason too.
-    for (const g of parseChunkGroupBudgets(base)) {
-        const now = after.get(g.name);
-        const dropped = now === undefined ? g.entries : g.entries.filter((e) => !now.includes(e));
-        if (dropped.length === 0) continue;
-        if (!gained.some((e) => isRecord(e) && e['chunk_group'] === g.name)) {
-            out.push(
-                now === undefined
-                    ? `chunk group ${g.name} was removed with no new raise_log entry for it`
-                    : `chunk group ${g.name} dropped ${dropped.join(', ')} with no new raise_log entry for it`,
-            );
-        }
-    }
-    for (const g of parseChunkGroupBudgets(working)) {
-        const from = before.get(g.name);
-        if (from === undefined || g.maxBytes <= from) continue;
-        const logged = gained.find((e) => isRecord(e) && e['chunk_group'] === g.name && e['to'] === g.maxBytes);
-        if (logged === undefined) {
-            out.push(`chunk group ${g.name} ceiling raised from ${String(from)} to ${String(g.maxBytes)} with no new raise_log entry for it`);
-        } else {
-            const problems = raiseEntryProblems(logged as Record<string, unknown>, from);
-            if (problems.length > 0) out.push(`the raise_log entry for chunk group ${g.name} is incomplete: ${problems.join('; ')}.`);
-        }
-    }
-    return out;
-}
-
 export function readBudget(root: string): Budget {
-    const abs = path.join(root, BUDGET_REL);
-    const raw = JSON.parse(fs.readFileSync(abs, 'utf-8')) as Record<string, unknown>;
+    const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>;
     const maxBytes = raw['max_bytes'];
-    const maxYaml = raw['max_yaml_packages'];
+    const allowed = raw['allowed_packages'];
     if (typeof maxBytes !== 'number' || !Number.isInteger(maxBytes) || maxBytes <= 0) {
         throw new Error(`${BUDGET_REL}: max_bytes must be a positive integer, got ${JSON.stringify(maxBytes)}`);
     }
-    if (typeof maxYaml !== 'number' || !Number.isInteger(maxYaml) || maxYaml < 1) {
-        throw new Error(
-            `${BUDGET_REL}: max_yaml_packages must be an integer >= 1, got ${JSON.stringify(maxYaml)}`,
-        );
+    if (!Array.isArray(allowed) || !allowed.every((p) => typeof p === 'string' && p !== '')) {
+        throw new Error(`${BUDGET_REL}: allowed_packages must be a list of package names, got ${JSON.stringify(allowed)}`);
     }
-    return { maxBytes, maxYamlPackages: maxYaml };
+    return { maxBytes, allowedPackages: allowed as string[] };
 }
 
 /** Findings, one line each. Empty means within budget. */
 export function verdict(a: Analysis, budget: Budget): string[] {
     const findings: string[] = [];
-    if (a.yamlPackages.length > budget.maxYamlPackages) {
-        const detail = a.yamlPackages
-            .map((p) => `${p} (${String(a.packageBytes.get(p) ?? 0)} B)`)
-            .join(', ');
+    const unlisted = unlistedPackages(a, budget);
+    if (unlisted.length > 0) {
+        const detail = unlisted.map((p) => `${p} (${String(a.packageBytes.get(p) ?? 0)} B)`).join(', ');
         findings.push(
-            `${String(a.yamlPackages.length)} YAML readers in the bundle, cap is ` +
-                `${String(budget.maxYamlPackages)}: ${detail}. Every dispatch loads all of them. ` +
-                'Move the odd caller onto the reader the dispatcher already uses.',
+            `npm package(s) in the bundle that ${BUDGET_REL} does not list: ${detail}. Every dispatch loads ` +
+                'them. Use a package the bundle already carries, load it lazily outside the bundle, or add it to ' +
+                '`allowed_packages` as a reviewed dependency decision.',
         );
     }
     if (a.bytes > budget.maxBytes) {
         findings.push(
-            `bundle is ${String(a.bytes)} bytes, ceiling is ${String(budget.maxBytes)} ` +
-                `(over by ${String(a.bytes - budget.maxBytes)}). Shrink the bundle, or raise ` +
-                `max_bytes in ${BUDGET_REL} WITH an entry in its raise_log naming what was added.`,
+            `bundle is ${String(a.bytes)} bytes, backstop is ${String(budget.maxBytes)} ` +
+                `(over by ${String(a.bytes - budget.maxBytes)}). Look at what grew before moving max_bytes in ${BUDGET_REL}.`,
         );
     }
     return findings;
-}
-
-/**
- * The raise rule, enforced against the base revision.
- *
- * `road-to-a-ratification-fence-that-follows-its-imports` 3.2. The budget's
- * `shrink_only_note` used to say a raise needs a `raise_log` entry and that
- * "the gate prints the rule but cannot enforce it, because a raise and a
- * lowering are the same edit to a number". Against the base revision they are
- * not: a working `max_bytes` above the base's is a raise, and it passes only if
- * `raise_log` gained an entry — one absent from the base's log — whose `to`
- * equals the new ceiling. A lowering needs nothing. The comparison is the
- * merged value against the base, because that is what ships; a ceiling raised
- * and lowered inside one branch is judged by where it ends.
- *
- * `baseRaw` is the base revision's budget file, or `null` when it has none
- * (the registration diff), which is not a raise.
- */
-export function raiseFindings(baseRaw: string | null, workingRaw: string): string[] {
-    if (baseRaw === null) {
-        return [];
-    }
-    const base = JSON.parse(baseRaw) as Record<string, unknown>;
-    const working = JSON.parse(workingRaw) as Record<string, unknown>;
-    const baseMax = base['max_bytes'];
-    const workingMax = working['max_bytes'];
-    if (typeof baseMax !== 'number' || typeof workingMax !== 'number' || workingMax <= baseMax) {
-        return [];
-    }
-    const baseLog = Array.isArray(base['raise_log']) ? (base['raise_log'] as unknown[]) : [];
-    const workingLog = Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : [];
-    const seen = new Set(baseLog.map((e) => JSON.stringify(e)));
-    const gained = workingLog.filter((e) => !seen.has(JSON.stringify(e)));
-    const matching = gained.find((e) => isRecord(e) && e['to'] === workingMax);
-    if (matching === undefined) {
-        return [
-            `max_bytes raised from ${String(baseMax)} to ${String(workingMax)} against the base revision ` +
-                `with no new raise_log entry whose \`to\` is ${String(workingMax)}. A raise needs a recorded ` +
-                `reason in ${BUDGET_REL}'s raise_log naming what was added and why it could not be avoided.`,
-        ];
-    }
-    const problems = raiseEntryProblems(matching as Record<string, unknown>, baseMax);
-    return problems.length === 0
-        ? []
-        : [`the raise_log entry for ${String(workingMax)} is incomplete: ${problems.join('; ')}.`];
-}
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-    return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-/** The prose fields an entry must carry, matching the entry the log already holds. */
-const RAISE_REASON_FIELDS = ['what_was_added', 'why_it_could_not_be_avoided'] as const;
-
-/**
- * What a raise entry must say. A bare `{ "to": N }` matched the first version
- * of this rule, which a ratification reviewer refused on: a log entry with no
- * reason is the empty log the rule exists to refuse, wearing a key.
- */
-export function raiseEntryProblems(entry: Record<string, unknown>, baseMax: number): string[] {
-    const problems: string[] = [];
-    if (entry['from'] !== baseMax) {
-        problems.push(`\`from\` must be the base ceiling ${String(baseMax)}`);
-    }
-    if (typeof entry['date'] !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(entry['date'])) {
-        problems.push('`date` must be YYYY-MM-DD');
-    }
-    for (const field of RAISE_REASON_FIELDS) {
-        const v = entry[field];
-        if (typeof v !== 'string' || v.trim().length < 20) {
-            problems.push(`\`${field}\` must say what happened, in at least a sentence`);
-        }
-    }
-    return problems;
-}
-
-/** The base revision's budget file, `null` when absent there, `undefined` when no base resolves. */
-function readBaseBudget(root: string, explicit: string | undefined): string | null | undefined {
-    const candidates = explicit !== undefined ? [explicit] : ['origin/main', 'main'];
-    for (const ref of candidates) {
-        const ok = spawnSync('git', ['rev-parse', '--verify', '--quiet', ref], {
-            cwd: root,
-            stdio: ['ignore', 'ignore', 'ignore'],
-        });
-        if (ok.status !== 0) continue;
-        const shown = spawnSync('git', ['show', `${ref}:${BUDGET_REL}`], { cwd: root, encoding: 'utf-8' });
-        return shown.status === 0 ? shown.stdout : null;
-    }
-    return undefined;
 }
 
 /**
@@ -539,9 +200,8 @@ export function buildMetafile(root: string): string {
         if (rewritten === null) {
             throw new Error(`\`build:hooks\` no longer writes ${LIVE_REL} — refusing to build to a guessed path`);
         }
-        // Strip the digest sidecar step: it would write `dispatch.sha256` beside
-        // a probe bundle nobody executes, and on failure it would mask the build
-        // error with a file-not-found.
+        // Strip the steps after esbuild (digest sidecar, chunk build): they would
+        // write beside a probe bundle nobody executes.
         const esbuildOnly = rewritten.split('&& node ')[0] ?? rewritten;
         const built = spawnSync('sh', ['-c', `${esbuildOnly.trim()} --metafile=${metaFile}`], {
             cwd: root,
@@ -574,26 +234,21 @@ function selfTest(): number {
             'dist/hooks/dispatch.js': {
                 entryPoint: 'src/scripts/hooks/dispatch_entry.ts',
                 bytes,
-                inputs: Object.fromEntries(
-                    Object.entries(inputs).map(([k, v]) => [k, { bytesInOutput: v }]),
-                ),
+                inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, { bytesInOutput: v }])),
             },
         },
     });
     const budget = readBudget(REPO_ROOT);
-    const clean = write('clean.json', meta(budget.maxBytes, { 'node_modules/yaml/dist/index.js': 10 }));
-    const twoReaders = write(
-        'two-readers.json',
-        meta(1000, {
-            'node_modules/yaml/dist/index.js': 600,
-            'node_modules/js-yaml/dist/js-yaml.mjs': 400,
-        }),
+    const listed = budget.allowedPackages[0] ?? 'yaml';
+    const clean = write('clean.json', meta(budget.maxBytes, { [`node_modules/${listed}/dist/index.js`]: 10 }));
+    const secondReader = write(
+        'second-reader.json',
+        meta(1000, { [`node_modules/${listed}/dist/index.js`]: 600, 'node_modules/js-yaml/dist/js-yaml.mjs': 400 }),
     );
     const oneOver = write('one-over.json', meta(budget.maxBytes + 1, { 'src/x.ts': 1 }));
     const empty = write('empty.json', { inputs: {}, outputs: {} });
 
-    const drive = (fixture: string): number =>
-        runGateCli(REPO_ROOT, SELF_REL, ['--metafile', fixture], REPO_ROOT);
+    const drive = (fixture: string): number => runGateCli(REPO_ROOT, SELF_REL, ['--metafile', fixture], REPO_ROOT);
 
     try {
         return runSelfTest({
@@ -601,21 +256,9 @@ function selfTest(): number {
             minCases: 4,
             minRejectCases: 3,
             cases: [
-                {
-                    name: 'one YAML reader, exactly at the ceiling → accepted',
-                    expect: 'accept',
-                    run: () => drive(clean),
-                },
-                {
-                    name: 'a second YAML reader → rejected',
-                    expect: 'reject',
-                    run: () => drive(twoReaders),
-                },
-                {
-                    name: 'one byte over the ceiling → rejected',
-                    expect: 'reject',
-                    run: () => drive(oneOver),
-                },
+                { name: 'listed packages only, exactly at the backstop → accepted', expect: 'accept', run: () => drive(clean) },
+                { name: 'an unlisted package (a second YAML reader) → rejected', expect: 'reject', run: () => drive(secondReader) },
+                { name: 'one byte over the backstop → rejected', expect: 'reject', run: () => drive(oneOver) },
                 {
                     name: 'a metafile with no entry-point output → rejected, never reported as 0 bytes',
                     expect: 'reject',
@@ -632,7 +275,6 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     const parsed = parseGateArgs('check_hook_bundle_composition', argv, {
         'self-test': { type: 'boolean' },
         metafile: { type: 'string' },
-        'base-ref': { type: 'string' },
     });
     if (!parsed.ok) {
         process.stderr.write(`${parsed.message}\n`);
@@ -644,15 +286,9 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     const fixture = parsed.values.metafile;
 
     let budget: Budget;
-    try {
-        budget = readBudget(root);
-    } catch (e) {
-        process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
-        return 2;
-    }
-
     let json: string;
     try {
+        budget = readBudget(root);
         json = fixture === undefined ? buildMetafile(root) : fs.readFileSync(fixture, 'utf-8');
     } catch (e) {
         process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
@@ -669,43 +305,13 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
 
     const findings = verdict(analysis, budget);
     const chunkSizes = new Map<string, number>();
-    let groups: ChunkGroupBudget[] = [];
     if (fixture === undefined) {
         try {
-            const budgets = readChunkBudgets(root);
-            findings.push(...chunkCoverageFindings(HOOK_CHUNKS.map((c) => c.entry), budgets));
-            for (const b of budgets) {
-                if (HOOK_CHUNKS.some((c) => c.entry === b.entry)) chunkSizes.set(b.entry, buildChunkBytes(root, b.entry));
-            }
-            findings.push(...chunkFindings(chunkSizes, budgets));
-            groups = readChunkGroupBudgets(root);
-            findings.push(...chunkGroupCoverageFindings(groups, budgets), ...chunkGroupFindings(chunkSizes, groups));
+            for (const c of HOOK_CHUNKS) chunkSizes.set(c.entry, buildChunkBytes(root, c.entry));
         } catch (e) {
             process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
             return 2;
         }
-    }
-    const baseBudget = readBaseBudget(root, parsed.values['base-ref']);
-    if (baseBudget === undefined) {
-        // In CI an unresolvable base is a broken checkout, not a registration
-        // diff: refusing there is the difference between a rule and a notice.
-        // Locally a missing base is ordinary (a fresh clone without origin), so
-        // it is said rather than failed.
-        if (process.env['GITHUB_ACTIONS'] === 'true') {
-            process.stderr.write(
-                'check_hook_bundle_composition: no base revision resolved in CI — the max_bytes raise ' +
-                    'rule cannot be evaluated, and this gate fails closed rather than skip it\n',
-            );
-            return 2;
-        }
-        process.stdout.write('raise rule: no base revision resolved — the max_bytes raise check was not evaluated\n');
-    } else {
-        const workingBudget = fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8');
-        findings.push(
-            ...raiseFindings(baseBudget, workingBudget),
-            ...chunkRaiseFindings(baseBudget, workingBudget),
-            ...chunkGroupRaiseFindings(baseBudget, workingBudget),
-        );
     }
     // Reported on BOTH paths, red included: a census that goes quiet exactly
     // when the gate fires is the shape `reportScanned` exists to prevent.
@@ -716,17 +322,13 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         roots: [LIVE_REL],
     });
 
+    const packages = [...analysis.packageBytes].map(([p, b]) => `${p} ${String(b)} B`).join(', ');
     if (findings.length === 0) {
         process.stdout.write(
-            `✅  hook bundle: ${String(analysis.bytes)} B / ${String(budget.maxBytes)} B ceiling, ` +
-                `${String(analysis.yamlPackages.length)} YAML reader(s) ` +
-                `[${analysis.yamlPackages.join(', ')}], ${String(analysis.modules)} modules\n`,
+            `✅  hook bundle: ${String(analysis.bytes)} B / ${String(budget.maxBytes)} B backstop, ` +
+                `packages [${packages}], ${String(analysis.modules)} modules\n`,
         );
-        for (const [entry, bytes] of chunkSizes) process.stdout.write(`✅  chunk ${entry}: ${String(bytes)} B\n`);
-        for (const g of groups) {
-            const bytes = g.entries.reduce((sum, e) => sum + (chunkSizes.get(e) ?? 0), 0);
-            process.stdout.write(`✅  chunk group ${g.name}: ${String(bytes)} B / ${String(g.maxBytes)} B\n`);
-        }
+        for (const [entry, bytes] of chunkSizes) process.stdout.write(`    chunk ${entry}: ${String(bytes)} B (reported, not gated)\n`);
         return 0;
     }
     process.stderr.write('❌  hook bundle composition is out of budget\n');

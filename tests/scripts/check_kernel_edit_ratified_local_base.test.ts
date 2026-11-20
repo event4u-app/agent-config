@@ -215,7 +215,7 @@ describe('a module joining the dispatcher closure', () => {
 
     it('a plumbing file matched by name, outside any closure, is gated in both shapes', () => {
         const base = buildChange();
-        const budget = 'src/config/hook-bundle-budget.json';
+        const budget = 'src/config/hook-latency-budget.json';
         write(budget, '{ "ceiling": 1 }\n');
         commitAll(root, 'budget');
         git(['worktree', 'add', '--detach', baseDir, base]);

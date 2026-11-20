@@ -1081,10 +1081,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         // to, so an agent told its rule corpus is missing can say so. The cost
         // is one short line per turn for as long as the install stays broken,
         // which is bounded and deliberate. Bounding it further — once per
-        // session, via the seen-set — needs a state write this concern cannot
-        // currently afford (`src/config/hook-bundle-budget.json` left 30 bytes
-        // of headroom at this commit), and is recorded in the roadmap rather
-        // than silently skipped.
+        // session, via the seen-set — needs a state write that was not affordable
+        // under the byte ratchet in force when this was written (retired
+        // 2026-11-20; `src/config/hook-bundle-budget.json` is a wide backstop
+        // now), and is recorded in the roadmap rather than silently skipped.
         process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: src.gap })}\n`);
         return EXIT_WARN;
     }

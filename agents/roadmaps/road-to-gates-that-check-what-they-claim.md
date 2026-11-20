@@ -53,8 +53,9 @@ say exactly what it does not check.
   have no entry under `bypass-records/`. #2816 does carry an owner override in
   its ratification record (`ratifications/web-launch-write-time-20261102.md:211-216`),
   which the review missed, but no check reads that section.
-- **Shrink-only ceilings:** `hook-bundle-budget.json` has `max_bytes 1594900`
-  with `shrink_only: true`, raised seven times since 2026-11-01. `WIP_CAP = 25`
+- **Shrink-only ceilings:** `hook-bundle-budget.json` had `max_bytes 1594900`
+  with `shrink_only: true`, raised seven times since 2026-11-01 (retired
+  2026-11-20 for an allowlist and a wide backstop). `WIP_CAP = 25`
   (`_lib/estate_wip.ts:8`) is changeable in the same commit as the directive
   that justifies it.
 - **`/review:changes`** diffs untracked files including a non-ignored `.env`
@@ -96,7 +97,9 @@ say exactly what it does not check.
       verify: replayed over the last 30 merges, the check names exactly the merges without either record.
 - [ ] **2.4 Ceilings move only on a named value.** A raise of a shrink-only
       ceiling or of `WIP_CAP` needs a directive at the merge-base that names the
-      new value.
+      new value. The hook bundle is out of scope since 2026-11-20: its budget is
+      a package allowlist and a wide backstop, no longer shrink-only (owner
+      directive `2026-11-20-hook-bundle-budget-and-hook-economy`, D1).
       verify: a test where a raise in the same commit as its directive is refused.
 - [ ] **2.5 The review skips credential files.** `/review:changes` lists `.env`
       and other credential-shaped untracked files as "not diffed (credential

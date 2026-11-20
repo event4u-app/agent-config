@@ -98,14 +98,15 @@ describe('the fence follows the dispatcher import closure', () => {
         expect(evaluate([UNRELATED_CONCERN], root, 2).exitCode).toBe(0);
     });
 
-    it('the stdin-failure policy and the bundle budget are watched too', () => {
+    it('the stdin-failure policy and the latency budget are watched; the bundle budget is not', () => {
         const gated = classifyPaths([
             'src/scripts/hooks/stdin_failure_policy.ts',
+            'src/config/hook-latency-budget.json',
             'src/config/hook-bundle-budget.json',
         ]);
         expect(gated.plumbing).toEqual([
             'src/scripts/hooks/stdin_failure_policy.ts',
-            'src/config/hook-bundle-budget.json',
+            'src/config/hook-latency-budget.json',
         ]);
     });
 
