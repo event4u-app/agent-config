@@ -106,11 +106,13 @@ actually loads.
       template usable unbundled.
       verify: the load trace of `pre_tool_use`, `post_tool_use`, `user_prompt_submit` and `stop` shows no `node_modules/yaml`; settings tests pass.
       Done 2026-11-20: `settings.ts` imports `yaml` statically; a second path the source plans did not name — every chunk with `yaml` external `require`d it from `node_modules` on `post_tool_use`, `user_prompt_submit` and `stop` — now resolves to the bundle's copy through `hooks/bundled_yaml.ts` and the chunk banner. Trace on five events: zero `node_modules` loads. `agent_settings.ts`'s lazy requires are not reached on these events and stay. Also fixed a date-bound test (`templates_telemetry_remote`) red on main since 2026-11-16.
-- [ ] **2.2 The entry bundle is compile-cached.** `dist/hooks/dispatch.js`
+- [~] **2.2 The entry bundle is compile-cached.** `dist/hooks/dispatch.js`
       becomes a stub that enables the cache fail-open and imports the bundle
       from a sibling file; host commands, digest, freshness and
       direct-invocation checks keep working.
       verify: a second dispatch shows a populated cache; digest, freshness and content gates and the install staging tests pass; five parallel cold dispatches succeed.
+      <!-- deferred-resolution: carried-to=road-to-a-hook-system-with-isolated-guards -->
+      Partly done 2026-11-20: the `agent-config dispatch:hook` launcher now enables the cache before it imports the bundle (`src/cli/agent-config.ts`), so that path caches the bundle: p50 70 → 59 ms, interleaved n = 30, darwin. The direct path the staged runtime uses (`node dist/hooks/dispatch.js`) is carried under K1: a stub in place of `dispatch.js` moves the digest, the runtime integrity check, the freshness and content gates, the prepack check and the plumbing-write guard (about 40 files reference the path) — not one of them may be weakened, and that is its own change. Measured gain it would buy there: 108 → 93 ms p50.
 - [ ] **2.3 Environment hardened once per dispatch.** Harden at dispatch start,
       restore at dispatch end; a concern that mutates the environment does not
       leak it to the next concern.

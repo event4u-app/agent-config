@@ -9,6 +9,7 @@ entry_condition:
   who: "owner (E4), then any maintainer session"
 estate_offset_exempt: "Owner instruction 2026-11-20 asked for the whole hook system to be reworked (agents/evidence/owner-directives/2026-11-20-hook-bundle-budget-and-hook-economy.md, D3). Owner search: grep -rlF -e 'PostToolBatch' -e 'onFailure' -e 'HookContext' -e 'advisory registry' over agents/roadmaps/*.md, later/ and stubs/ at 2eef08c00b returned nothing; the parts closable in one run are the active road-to-a-hook-system-that-pays-for-what-it-does."
 estate_growth_exempt: "+1 later_roadmaps: the owner asked for the whole hook system to be reworked (2026-11-20); this half needs an owner answer (E4) and a live host probe, so it is parked rather than dropped."
+parent_roadmap: road-to-a-hook-system-that-pays-for-what-it-does
 relates:
   - slug: road-to-a-hook-system-that-pays-for-what-it-does
     relation: depends
@@ -54,6 +55,16 @@ contract instead of an emulated CLI.
 | ID | Question |
 |---|---|
 | E4 | Phase 1 changes what happens when advisory code is broken: tool calls proceed on the guards' verdict instead of being refused. The manifest already declares those concerns `fail_closed: false`. Is that the intended fail-closed scope? |
+
+## Phase 0 — Carried from the parent
+
+- [ ] **0.1 Compile-cache the bundle on the direct path.** Carried from
+      `road-to-a-hook-system-that-pays-for-what-it-does` 2.2 (K1). The launcher
+      path already caches; `node dist/hooks/dispatch.js` (the staged runtime's
+      host command) does not. A stub entry or `NODE_COMPILE_CACHE` in the
+      generated host commands, keeping the digest, runtime integrity,
+      freshness, content, prepack and plumbing-write guarantees.
+      verify: a second direct dispatch shows a populated cache; every one of those gates' tests passes unchanged in what it refuses.
 
 ## Phase 1 — Guards that advisory code cannot take down (needs E4)
 
