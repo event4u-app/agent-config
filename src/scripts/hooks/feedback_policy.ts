@@ -7,7 +7,9 @@
  * the next dispatch (road-to-a-hook-system-that-pays-for-what-it-does 2.4).
  * Only an outcome worth looking at on its own keeps a file now, so a
  * `<concern>.json` means "this concern's latest NON-QUIET outcome", not its latest
- * outcome. Nothing deletes it: a delete would race a newer write from a parallel
+ * outcome — except when the dispatch's summary write failed: then a quiet allow
+ * is written too, so the file never shows an older block as the latest outcome
+ * that no summary contradicts. Nothing deletes it: a delete would race a newer write from a parallel
  * dispatch in the same session. A write goes through the per-file lock and keeps
  * whichever outcome COMPLETED later ({@link keepNewerOutcome}), so two warnings
  * published in reverse completion order cannot leave the older one standing.
