@@ -54,6 +54,7 @@ contract instead of an emulated CLI.
 
 | ID | Question |
 |---|---|
+| E5 | `hook-bundle-budget.json` on the ratification gate's watched set. Owner directive D2 (2026-11-20) takes it off. The two-provider ratification of the PR that replaced the byte ratchet (rounds 6–7, 2026-11-20) refused that part and proposed instead: only EXPANSIONS stay ratified — a new allowlist entry or a higher `max_bytes`, judged against the base revision — while lowering and removal need nothing. 1) off entirely, as D2 says; 2) expansion-only; 3) stays fully watched. |
 | E4 | Phase 1 changes what happens when advisory code is broken: tool calls proceed on the guards' verdict instead of being refused. The manifest already declares those concerns `fail_closed: false`. Is that the intended fail-closed scope? |
 
 ## Phase 0 — Carried from the parent
@@ -65,6 +66,13 @@ contract instead of an emulated CLI.
       generated host commands, keeping the digest, runtime integrity,
       freshness, content, prepack and plumbing-write guarantees.
       verify: a second direct dispatch shows a populated cache; every one of those gates' tests passes unchanged in what it refuses.
+
+- [ ] **0.2 The budget file and the ratification gate, per E5.** Carried from
+      the parent's 1.3. Implement the owner's answer: remove
+      `hook-bundle-budget.json` from `PLUMBING_SOURCE_RE` (option 1), or add a
+      base-anchored expansion rule to the gate (option 2), or close this step
+      (option 3). The change to the gate carries its own ratification record.
+      verify: per option, gate tests for a budget-only lowering, an allowlist addition, a backstop raise, and a mixed budget-and-dispatcher diff.
 
 ## Phase 1 — Guards that advisory code cannot take down (needs E4)
 

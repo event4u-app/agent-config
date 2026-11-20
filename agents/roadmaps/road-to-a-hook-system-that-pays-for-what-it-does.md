@@ -86,10 +86,12 @@ actually loads.
       the pin and is summarised in `agents/evidence/analysis/`.
       verify: gate self-test covers under, over and missing-budget; the budget file is under 3 KB; `hook_bundle_raise_log.test.ts` is retired with its subject.
       Done 2026-11-20: `max_bytes` 1,915,000 (1,595,089 + 20 %), file 2.2 KB, chunk sizes printed as "reported, not gated"; history in `agents/evidence/analysis/hook-bundle-budget-retired-2026-11-20.md`.
-- [ ] **1.3 The budget file leaves the ratification watched set** (owner D2).
+- [~] **1.3 The budget file leaves the ratification watched set** (owner D2).
       `check_kernel_edit_ratified.ts` stops matching `hook-bundle-budget.json`;
       the change to the gate carries the ratification record the gate demands.
       verify: the gate's tests show a budget-file-only diff passes without a record, and a `dispatch_hook.ts` diff still needs one.
+      <!-- deferred-resolution: carried-to=road-to-a-hook-system-with-isolated-guards -->
+      Carried 2026-11-20 after seven rounds of the two-provider ratification this PR needed. Both seats accepted every technical part; from round 6 on they refused the governance part: with the file off the watched set, adding a package or raising the backstop needs no ratification at all. Their alternative — only expansions (an allowlist addition, a higher `max_bytes`) stay ratified, lowering and removal do not — changes what the owner decided, so it is the owner's call (E5 on the parked roadmap). Meanwhile the file stays watched; with a 20 % backstop and a one-package allowlist that is a rare event, not the per-feature friction it was.
 - [x] **1.4 Reconcile the shrink-only premise elsewhere.** Amend step 2.4 of
       `road-to-gates-that-check-what-they-claim` (the hook bundle is no longer a
       shrink-only ceiling) and the source comments that cite the ceiling as a
@@ -147,7 +149,7 @@ actually loads.
 | 1 | The stub breaks installed hosts | implementation | 2.2 changes what `dispatch.js` is; a staged runtime, a digest check or a direct-invocation guard could refuse every tool call | Host commands are unchanged; digest, freshness, content and staging tests run before the step closes; fallback K2 below | Phase 2 — Fixed costs out of every event |
 | 2 | Leaking environment between concerns | implementation | 2.3 could let one concern's environment change reach the next | The step's own test plants exactly that leak | Phase 2 — Fixed costs out of every event |
 | 3 | Losing the dependency-pull signal | product | Dropping per-chunk ceilings could let a concern drag a large dependency in again | The package allowlist (1.1) and the load-set check (3.2) catch the dependency class deterministically; the backstop catches creep | Phase 1 — The ceiling stops being a ratchet |
-| 4 | Weakening the ratification gate beyond the budget | product | 1.3 edits the gate itself | Only the one path leaves the watched set; a test pins that dispatcher and manifest diffs still need a record | Phase 1 — The ceiling stops being a ratchet |
+| 4 | Weakening the ratification gate beyond the budget | product | 1.3 edits the gate itself | Not done here: the gate is unchanged in this PR and the watched-set question went to the owner (1.3, carried) | Phase 1 — The ceiling stops being a ratchet |
 
 ## Kill criteria
 

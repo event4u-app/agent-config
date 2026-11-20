@@ -34,7 +34,7 @@
  * `host_lowering.yaml`, their compiled siblings `hook_manifest.json` and
  * `host_lowering.json`, the dispatcher `hooks/dispatch_hook.ts`, the
  * kernel-rule list `_lib/kernel_rules.ts`, a `*-dispatcher.sh`, the token,
- * and latency budget files (see `PLUMBING_SOURCE_RE`), and every module
+ * latency and bundle budget files (see `PLUMBING_SOURCE_RE`), and every module
  * the dispatcher imports that decides an exit code (derived at run time, see
  * `derivedPlumbing`) — a rule of the high-consequence class beyond the kernel
  * (the members of `rule-consequence-class.json`, see `CONSEQUENCE_CLASS_PATH`)
@@ -307,7 +307,7 @@ const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
  * is the diff where only the JSON moves.
  */
 const PLUMBING_SOURCE_RE =
-    /^(?:src\/scripts\/hook_manifest\.(?:yaml|json)|src\/scripts\/hooks\/host_lowering\.(?:yaml|json)|src\/scripts\/hooks\/dispatch_hook\.ts|src\/scripts\/_lib\/kernel_rules\.ts|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency)-budget\.json)$/;
+    /^(?:src\/scripts\/hook_manifest\.(?:yaml|json)|src\/scripts\/hooks\/host_lowering\.(?:yaml|json)|src\/scripts\/hooks\/dispatch_hook\.ts|src\/scripts\/_lib\/kernel_rules\.ts|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency|bundle)-budget\.json)$/;
 
 /**
  * The derived half of the plumbing set: every module in the static import
@@ -324,11 +324,9 @@ const PLUMBING_SOURCE_RE =
  * Concerns stay outside: the walk stops at the concern table, and a governance
  * concern is already gated by `GOVERNANCE_HOOK_RE`.
  *
- * `hook-bundle-budget.json` joined the pattern for D3 (2026-10) and LEFT it on
- * 2026-11-20 (owner directive `2026-11-20-hook-bundle-budget-and-hook-economy`,
- * D2): the file now holds a package allowlist and a wide backstop rather than a
- * shrink-only ceiling, so a change to it is a reviewed dependency decision, not
- * a loosened kernel budget. The token and latency budgets stay watched.
+ * `hook-bundle-budget.json` joins the pattern for D3: its ceiling was raised on
+ * its own registration day, and a raised ceiling is a looser budget reached one
+ * file earlier than the bundle it bounds.
  */
 let _repoDerived: readonly string[] | null = null;
 export function derivedPlumbing(root: string = REPO): readonly string[] {

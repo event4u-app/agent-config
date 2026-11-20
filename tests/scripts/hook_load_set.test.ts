@@ -72,6 +72,30 @@ describe('hook runtime load set', () => {
         }, 60_000);
     }
 
+    it('a dispatch whose concern environment cannot be hardened is refused by the generated host command', () => {
+        // The verdict tail of the PreToolUse command `hooks/hooks.json` installs.
+        const hooksJson = JSON.parse(fs.readFileSync(path.join(REPO, 'hooks', 'hooks.json'), 'utf-8')) as {
+            hooks: { PreToolUse: Array<{ hooks: Array<{ command: string }> }> };
+        };
+        const command = hooksJson.hooks.PreToolUse[0]?.hooks[0]?.command ?? '';
+        const tail = command.slice(command.indexOf('RC=$?'));
+        expect(tail.startsWith('RC=$?')).toBe(true);
+        // A preload that makes every env write fail once dispatch starts; LD_PRELOAD in the
+        // env forces the hardening to delete it, so the scope open must throw.
+        const preload = path.join(root, 'env-writes-fail.cjs');
+        fs.writeFileSync(
+            preload,
+            "const t = { ...process.env }; const fail = () => { throw new Error('injected env write failure'); };\n" +
+                'process.env = new Proxy(t, { set: fail, deleteProperty: fail });\n',
+        );
+        const payload = path.join(root, 'pre.json');
+        fs.writeFileSync(payload, JSON.stringify({ session_id: 'env-fail', hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: path.join(workspace, 'x.txt') }, cwd: workspace }));
+        const script = `"${process.execPath}" --require "${preload}" "${bundle}" --platform claude --event pre_tool_use --project-dir "${workspace}" < "${payload}" >/dev/null 2>&1; ${tail}`;
+        const r = spawnSync('bash', ['-c', script], { encoding: 'utf-8', env: { ...process.env, LD_PRELOAD: '', AGENT_CONFIG_REPLAY: '1' } });
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('this tool call is refused');
+    }, 60_000);
+
     it('the tracer sees a runtime createRequire load — the class this check exists for', () => {
         const plant = path.join(root, 'dist', 'hooks', 'plant.mjs');
         fs.writeFileSync(

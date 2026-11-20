@@ -1,6 +1,12 @@
 // feedback_policy — only an outcome worth reading on its own keeps a
 // per-concern feedback file (road-to-a-hook-system-that-pays-for-what-it-does 2.4).
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
+import { update_json_under_lock } from '../../../src/scripts/hooks/state_io.js';
 
 import { isQuietAllow, keepNewerOutcome } from '../../../src/scripts/hooks/feedback_policy.js';
 
@@ -36,5 +42,21 @@ describe('feedback_policy — keepNewerOutcome', () => {
         expect(keepNewerOutcome({ completed_at: '2026-11-20T10:00:00.500Z' }, { completed_at: '2026-11-20T10:00:00Z' })).toBeNull();
         const e = { completed_at: 'not a date' };
         expect(keepNewerOutcome({ completed_at: '2026-11-20T10:00:00Z' }, e)).toBe(e);
+    });
+});
+
+describe('feedback_policy — through the locked update on a real file', () => {
+    it('reverse-order publishes leave the later-completed warning on disk', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fb-order-'));
+        try {
+            const f = path.join(dir, 'c.json');
+            const later = { concern: 'c', decision: 'warn', completed_at: '2026-11-20T10:00:02Z' };
+            const earlier = { concern: 'c', decision: 'warn', completed_at: '2026-11-20T10:00:01Z' };
+            expect(update_json_under_lock(f, (loaded) => keepNewerOutcome(loaded, later))).toBe('written');
+            expect(update_json_under_lock(f, (loaded) => keepNewerOutcome(loaded, earlier))).toBe('skipped');
+            expect(JSON.parse(fs.readFileSync(f, 'utf-8')).completed_at).toBe(later.completed_at);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     });
 });
