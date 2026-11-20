@@ -91,6 +91,19 @@ export function reportQuietly(what: string, err: unknown): void {
 }
 
 /**
+ * Pay a restore an earlier dispatch in this process still owes, before the next
+ * one reads anything — including on paths that return before a scope opens.
+ * Throws when it cannot; the dispatch then gives no verdict and is refused.
+ * A no-op when nothing is owed, which is every fresh process.
+ */
+export function recoverConcernEnv(): void {
+    if (pendingRestore === null) return;
+    replaceEnv(pendingRestore);
+    pendingRestore = null;
+    restoreFailed = null;
+}
+
+/**
  * Open a dispatch scope. Returns the close function, which puts back the
  * environment as it was when the scope opened and never throws (a failed
  * restore is reported, so a `finally` that calls it cannot replace the
@@ -105,13 +118,8 @@ export function reportQuietly(what: string, err: unknown): void {
  * returns.
  */
 export function openConcernEnvScope(packageRoot: string): () => void {
-    if (pendingRestore !== null) {
-        // A previous close could not put its environment back. Recover it first;
-        // if that fails too, throw, and no concern runs on a dirty baseline.
-        replaceEnv(pendingRestore);
-        pendingRestore = null;
-        restoreFailed = null;
-    }
+    // A previous close could not put its environment back: recover it first, or throw.
+    recoverConcernEnv();
     const prev = { ...process.env };
     const enclosing = stack[stack.length - 1];
     const hardened =

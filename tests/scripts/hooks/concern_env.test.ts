@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
+import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope, recoverConcernEnv, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
 
 const ROOT = '/pkg-root';
 let saved: NodeJS.ProcessEnv;
@@ -364,6 +364,43 @@ describe('concern_env — one scope per dispatch', () => {
                 spy.mockRestore();
             }
         });
+
+        it('recoverConcernEnv pays an owed restore on its own, throws while it cannot, and is a no-op when nothing is owed', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const before = { ...(process.env as Record<string, string>) };
+                expect(() => recoverConcernEnv()).not.toThrow(); // nothing owed
+                const close = openConcernEnvScope(ROOT);
+                failing = true;
+                close(); // owes `before`
+                expect(() => recoverConcernEnv()).toThrow(/injected env write failure/);
+                failing = false;
+                recoverConcernEnv();
+                expect({ ...(process.env as Record<string, string>) }).toEqual(before);
+                expect(() => assertConcernEnvRestored()).not.toThrow(); // paid: no stale mark
+                recoverConcernEnv(); // and only once
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
+        it('the dispatcher pays an owed restore before anything else, so no early return bypasses it', async () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const { main } = await import('../../../src/scripts/hooks/dispatch_hook.js');
+                const close = openConcernEnvScope(ROOT);
+                failing = true;
+                close();
+                // Still failing: the dispatch refuses before parsing its arguments, reading stdin or returning early.
+                expect(() => main(['--platform', 'claude', '--event', 'no-such-event'])).toThrow(/injected env write failure/);
+                failing = false;
+                recoverConcernEnv();
+            } finally {
+                spy.mockRestore();
+            }
+        }, 60_000);
 
         it('a scope whose hardening fails half-way rolls back what it applied and throws', () => {
             installFailingEnv();

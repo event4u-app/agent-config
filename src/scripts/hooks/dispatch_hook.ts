@@ -71,7 +71,7 @@ import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
-import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope } from './concern_env.js';
+import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope, recoverConcernEnv } from './concern_env.js';
 import { isQuietAllow, keepNewerOutcome, withLatestRuns } from './feedback_policy.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
@@ -890,10 +890,9 @@ function _write_feedback(
     const msg = exc instanceof Error ? exc.message : String(exc);
     process.stderr.write(`dispatch_hook: summary write failed: ${msg}\n`);
   }
-  // A quiet allow skips its own file only if the summary carrying it was written;
-  // else a failed summary could leave an older block standing as the latest.
+  // Quiet allows skip their own file only if the summary carrying them was written (feedback_policy.ts).
   for (const entry of entries) {
-    if (summaryWritten && isQuietAllow(entry)) continue; // feedback_policy.ts
+    if (summaryWritten && isQuietAllow(entry)) continue;
     const target = path.join(fb_dir, `${entry["concern"]}.json`);
     const written = update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, { ...entry, invocation }));
     if (written === "failed") process.stderr.write(`dispatch_hook: feedback write failed for ${entry["concern"]}\n`);
@@ -1057,6 +1056,7 @@ function _parse_args(argv: string[]): Args {
 }
 
 export function main(argv?: string[]): number {
+  recoverConcernEnv(); // first: an owed restore is paid before anything below reads the environment
   const args = _parse_args(argv ?? process.argv.slice(2));
 
   // Honour --project-dir: chdir so workspace_root (envelope) and every
