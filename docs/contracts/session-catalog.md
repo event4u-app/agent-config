@@ -183,7 +183,9 @@ absent.
 ## Privacy
 
 No prompt or reply text is stored. `title` is the host's generated title, or
-one the user set, capped at 120 characters with token-shaped runs masked.
+one the user set, capped at 120 characters with token-shaped runs masked;
+ordinary words in a title are not masked, so a title can name what the
+conversation was about.
 Remote URLs have their userinfo, query and fragment removed. In `SESSIONS.md`
 every value is escaped or code-quoted, so no stored text can change the
 document's structure. Paths are local and
