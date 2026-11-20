@@ -7,8 +7,8 @@ stability: experimental
 One machine-wide list of every Claude Code and Codex session on this machine,
 newest activity first: which host and profile it runs under, which model, where
 it was started, which repositories and branches it touched, how many tokens it
-used (with its subagents' usage reported separately), the size of its latest
-prompt, whether it is live, and how to resume it. It
+used (with its subagents' usage reported separately), which subagents it ran
+and where, the size of its latest prompt, whether it is live, and how to resume it. It
 exists so a user — or an account manager such as agent-switch — can see what
 is active and pick a session up without browsing every profile directory and
 transcript.
@@ -21,7 +21,7 @@ transcript.
 |---|---|
 | `sessions.json` | Machine form (schema below). |
 | `SESSIONS.md` | Human view of the same snapshot. Never parsed back. |
-| `runtime/session-catalog-cache.v1.json` | Parse cache; internal, safe to delete. |
+| `runtime/session-catalog-cache.v2.json` | Parse cache; internal, safe to delete. Its version is independent of the output schema; a cache of an older version is removed. |
 
 No hook writes any of these. The hosts already keep every session as a
 transcript, so the command reads those directly:
@@ -47,7 +47,9 @@ offset), most recently written first, up to 256 MB of new transcript per call.
 A transcript the budget did not reach is read only at its head and tail —
 title, model, context and paths are shown, its token count carries
 `usage_complete: false` (a `+` in `SESSIONS.md`), and the next call continues.
-Transcripts not written in the last 30 days are not listed.
+Transcripts not written in the last 14 days are not listed, and their cache
+entries are dropped; the transcripts themselves are the host's and are never
+deleted.
 
 The root deliberately ignores `EVENT4U_CONFIG_HOME`: a profile manager may set
 that per profile, and a per-profile catalog would split the one list across
@@ -63,7 +65,7 @@ command creates is `0700`, and an existing one keeps its mode.
   "schema_version": 1,
   "generated_at": "2026-11-20T10:00:00+00:00",
   "active_window_seconds": 900,
-  "retention_days": 30,
+  "retention_days": 14,
   "counts": { "active": 2, "idle": 1, "inactive": 40, "live": 3, "total": 43 },
   "sessions": [
     {
@@ -93,7 +95,8 @@ command creates is `0700`, and an existing one keeps its mode.
           "remote": "https://github.com/acme/app.git",
           "linked_worktree": false,
           "branches": ["main", "feat/x"],
-          "last_branch": "feat/x"
+          "last_branch": "feat/x",
+          "last_used_at": "2026-11-20T09:59:30+00:00"
         }
       ],
       "usage": {
@@ -103,7 +106,24 @@ command creates is `0700`, and an existing one keeps its mode.
       },
       "usage_complete": true,
       "subagent_usage": null,
-      "subagents": 0,
+      "subagents": 1,
+      "subagent_list": [
+        {
+          "id": "ad833e7605eb77157",
+          "agent_type": "general-purpose",
+          "description": "H3X-216 Gruppe löschen behält Pfeile",
+          "background": true,
+          "finished": null,
+          "last_activity": "2026-11-20T09:59:12+00:00",
+          "status": "active",
+          "idle_seconds": 48,
+          "model": "claude-opus-5-5",
+          "repos": [{ "root": "/Users/me/worktrees/inst-a/app", "last_used_at": "2026-11-20T09:59:12+00:00", "…": "…" }],
+          "usage": { "…": "…" },
+          "usage_complete": true,
+          "transcript_path": "…/4d11cee1-…/subagents/agent-ad833e7605eb77157.jsonl"
+        }
+      ],
       "subagent_usage_complete": true,
       "context_tokens": 105000,
       "context_window": null,
@@ -134,8 +154,18 @@ Field notes:
 - **`surface`** — `cli`, `desktop`, `ide`, `headless` (`claude -p`,
   `codex exec`, SDK), `cloud`, or the host's raw entrypoint.
 - **`repos`** — checkouts the session worked in (transcript working
-  directories) or wrote to through `Edit`, `Write`, `MultiEdit` and
-  `NotebookEdit`; reads do not count. A linked worktree is its own entry. The
+  directories), wrote to through `Edit`, `Write`, `MultiEdit` and
+  `NotebookEdit`, or entered from a `Bash` command with `cd` / `pushd` or
+  `git -C` — a heuristic, not a shell: the first 8 KB of a command are split
+  into simple commands outside quotes, relative `cd`s are chained, options
+  such as `--` / `-P` are skipped, quoted text and heredoc bodies never count,
+  and only literal paths are taken (no variables, `~` or globs); reads do not
+  count. A linked worktree is its
+  own entry. Ordered by **`last_used_at`**, newest first: the timestamp of the
+  latest transcript line that used the checkout (including the session's
+  subagents), in the same format as `last_activity`, or `null` when no such line carried a timestamp — those follow
+  the dated ones. A checkout used last week and one used a minute ago are told
+  apart by this field, not by their position alone. The
   branch list holds what the host reported while the session was in its start
   directory, plus each checkout's current branch at build time; the host's
   branch field is not trusted for other directories, because it keeps
@@ -154,6 +184,22 @@ Field notes:
   `subagents` counts them and `subagent_usage_complete` says whether all were
   parsed. Main threads are parsed before any subagent under the shared budget.
   Repos a subagent worked in or wrote to count for the session's `repos`.
+- **`subagent_list`** — Claude: one entry per subagent transcript
+  (`<session>/subagents/agent-<id>.jsonl`), newest activity first, at most 50
+  (`subagents` still counts all). `description`, `agent_type`, `background`
+  (`requestShape` `background` / `foreground`) and `finished` come from the
+  host's `agent-<id>.meta.json`, each `null` when the file or field is missing;
+  `description` is capped and token-masked like `title`. `last_activity` is the
+  transcript's mtime and `status` is `active` within `active_window_seconds`,
+  otherwise `inactive` (there is no register record per subagent, so never
+  `idle`). For "running now", read `finished !== true && status === "active"`
+  — an estimate with two known gaps: a subagent blocked on one long command
+  writes nothing and reads `inactive` while it runs, and a killed one never
+  gets `finished` and reads `active` until the window passes. `usage` is that
+  subagent's own. `repos` is where it acted: checkouts its tools wrote to or
+  entered (`cd` / `git -C`), and its own worktree (`worktreePath` in the meta
+  file). A subagent without its own worktree carries the parent's cwd on every
+  line, so that cwd counts only when nothing else is known.
 - **`context_tokens`** — the prompt size of the latest main-thread message.
   `context_window` is reported by Codex only; for Claude it is `null`, because
   the effective window depends on model and host settings the transcript does
@@ -174,7 +220,8 @@ end, so a closed session reads `inactive` once its register record is gone.
 ## Privacy and safety
 
 No prompt or reply text is stored. `title` is the host's generated title, or
-one the user set, capped at 120 characters with token-shaped runs masked;
+one the user set, and a subagent's `description` is the short task label it was
+launched with; both are capped at 120 characters with token-shaped runs masked;
 ordinary words in a title are not masked, so a title can name what the
 conversation was about. Remote URLs lose userinfo, query and fragment.
 Transcripts are listed by `lstat` (symlinks and non-files skipped) and opened
