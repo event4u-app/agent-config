@@ -43,3 +43,34 @@ export function keepNewerOutcome<T extends Readonly<Record<string, unknown>>>(lo
     if (!Number.isNaN(held) && !Number.isNaN(incoming) && held > incoming) return null;
     return entry;
 }
+
+export interface LatestRun {
+    readonly invocation: string;
+    readonly completed_at: string | null;
+}
+
+/**
+ * The summary's `latest` map (one row per concern, outside the capped history)
+ * with this dispatch's runs folded in. Each row keeps whichever run COMPLETED
+ * later, by the concern's own `completed_at` and {@link keepNewerOutcome}'s rule,
+ * so a dispatch that publishes after a newer one cannot overwrite its row.
+ */
+export function withLatestRuns(
+    held: unknown,
+    entries: readonly Readonly<Record<string, unknown>>[],
+    invocation: string,
+): Record<string, LatestRun> {
+    const out: Record<string, LatestRun> = {};
+    if (held !== null && typeof held === 'object' && !Array.isArray(held)) {
+        for (const [k, v] of Object.entries(held as Record<string, unknown>)) {
+            if (v !== null && typeof v === 'object' && typeof (v as { invocation?: unknown }).invocation === 'string') out[k] = v as LatestRun;
+        }
+    }
+    for (const e of entries) {
+        const name = String(e['concern']);
+        const run: LatestRun = { invocation, completed_at: typeof e['completed_at'] === 'string' ? e['completed_at'] : null };
+        const prior = out[name];
+        out[name] = prior === undefined ? run : (keepNewerOutcome(prior as unknown as Record<string, unknown>, run) ?? prior);
+    }
+    return out;
+}

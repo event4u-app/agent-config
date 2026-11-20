@@ -20,6 +20,7 @@ import {
     analyzeMetafile,
     buildChunkBytes,
     buildMetafile,
+    main as compositionMain,
     owningPackage,
     readBudget,
     unlistedPackages,
@@ -300,5 +301,39 @@ describe('chunk builds — one definition, used by the build and by the gate', (
 
     it('refuses to measure an entry no chunk is defined for', () => {
         expect(() => buildChunkBytes(REPO, 'src/scripts/_lib/no_such_chunk.ts')).toThrow(/defines no chunk/);
+    });
+});
+
+describe('check_hook_bundle_composition — the CLI against the committed budget', () => {
+    const run = (outBytes: number, inputs: Record<string, number>): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'composition-cli-'));
+        const fixture = path.join(dir, 'meta.json');
+        fs.writeFileSync(fixture, metafile(outBytes, inputs));
+        const quiet = (): boolean => true;
+        const out = process.stdout.write;
+        const err = process.stderr.write;
+        process.stdout.write = quiet as typeof process.stdout.write;
+        process.stderr.write = quiet as typeof process.stderr.write;
+        try {
+            return compositionMain(['--metafile', fixture], REPO);
+        } finally {
+            process.stdout.write = out;
+            process.stderr.write = err;
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    };
+    const committed = (JSON.parse(fs.readFileSync(path.join(REPO, 'src', 'config', 'hook-bundle-budget.json'), 'utf-8')) as { max_bytes: number }).max_bytes;
+
+    it('exits 0 at the committed backstop with listed packages only', () => {
+        expect(committed).toBe(1_915_000);
+        expect(run(committed, { 'node_modules/yaml/dist/index.js': 1000, 'src/x.ts': committed - 1000 })).toBe(0);
+    });
+
+    it('exits 1 one byte over the committed backstop', () => {
+        expect(run(committed + 1, { 'src/x.ts': committed + 1 })).toBe(1);
+    });
+
+    it('exits 1 on an unlisted package of any size', () => {
+        expect(run(1000, { 'node_modules/yaml/dist/index.js': 999, 'node_modules/js-yaml/x.js': 1 })).toBe(1);
     });
 });

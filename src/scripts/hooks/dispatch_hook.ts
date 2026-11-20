@@ -72,7 +72,7 @@ import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
 import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope } from './concern_env.js';
-import { isQuietAllow, keepNewerOutcome } from './feedback_policy.js';
+import { isQuietAllow, keepNewerOutcome, withLatestRuns } from './feedback_policy.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -873,9 +873,8 @@ function _write_feedback(
       const priorRaw = (loaded as JsonObject)["invocations"];
       const prior = Array.isArray(priorRaw) ? priorRaw : [];
       const next = [...prior, { invocation, ...summary }];
-      // Each concern's last run, outside the cap: eviction never resurrects an older outcome (hooks_doctor).
-      const latest: JsonObject = _isObject(loaded["latest"]) ? { ...loaded["latest"] } : {};
-      for (const e of entries) latest[String(e["concern"])] = { invocation, completed_at: summary["completed_at"] ?? null };
+      // Each concern's latest run, outside the cap, keep-newer: eviction never resurrects an older outcome.
+      const latest = withLatestRuns(loaded["latest"], entries, invocation);
       return {
         schema_version: 2,
         session_id,

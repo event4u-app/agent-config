@@ -202,10 +202,11 @@ function _summary_last_run(summary: string, concern: string): { at: string; invo
       latest?: Record<string, { invocation?: unknown; completed_at?: unknown } | undefined>;
     };
     let last: { at: string; invocation: string | null } | null = null;
-    // `latest` is uncapped (one row per concern), so a run the capped history evicted still counts.
+    // `latest` (uncapped, keep-newer, the concern's own completion time — the same clock as its
+    // per-concern file) is authoritative when present; the capped history serves older writers.
     const kept = doc.latest !== null && typeof doc.latest === "object" ? doc.latest[concern] : undefined;
     if (kept !== undefined && typeof kept.completed_at === "string" && !Number.isNaN(Date.parse(kept.completed_at))) {
-      last = { at: kept.completed_at, invocation: typeof kept.invocation === "string" ? kept.invocation : null };
+      return { at: kept.completed_at, invocation: typeof kept.invocation === "string" ? kept.invocation : null };
     }
     for (const inv of doc.invocations ?? []) {
       if (typeof inv.completed_at !== "string" || Number.isNaN(Date.parse(inv.completed_at))) continue;

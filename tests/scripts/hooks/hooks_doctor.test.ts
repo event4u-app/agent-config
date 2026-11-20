@@ -142,6 +142,23 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-evicted', 'summary.json'))).toBe(true);
     });
 
+    it('last_feedback: one dispatch\'s own file wins over its summary, which records the same run by the same clock in `latest`', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-one');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00.100Z', invocation: 'pid-1', decision: 'warn' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                // The dispatch-wide completion is later than the concern's own; `latest` uses the concern's.
+                invocations: [{ invocation: 'pid-1', completed_at: '2026-11-20T10:00:00.300Z', concerns: [{ concern: 'chat-history' }] }],
+                latest: { 'chat-history': { invocation: 'pid-1', completed_at: '2026-11-20T10:00:00.100Z' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-one', 'chat-history.json'))).toBe(true);
+    });
+
     describe('last_feedback on an equal instant', () => {
         const AT = '2026-11-20T10:00:00.000Z';
         const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {
