@@ -8,7 +8,7 @@ subject: b30cce2dfbf2f4d32b14b7cb2d8c0bf12eca7e561d1ed419f579dce1b8716580
 
 (Base-revision gate digest — CI runs the base copy — over those six files at commit `1157db0a5f`. The head's gate, which no longer lists the budget file, computes `6462eca30a8cfc2660acfd7e05ba7f9cc36ae7df59d3c2160fd64684d7ec2514` over the other five.)
 
-This round changes method. Rounds 1–3 (committed as `…-r1/-r2/-r3-20261120.question.md`) sent deltas, and several points were refused as "not shown". This prompt is self-contained: below are the FULL current text of every gated file except the 1,500-line dispatcher (its full diff against `origin/main` instead), the full composition gate, and the full tests that pin each claim. Judge what is here.
+This round changes method. Rounds 1–3 (committed as `…-r1/-r2/-r3-20261120.question.md`) sent deltas, and several points were refused as "not shown". This prompt is self-contained: below are the FULL current text of every gated file except the 1,500-line dispatcher (its full diff against `origin/main` instead), the composition gate's reading and verdict, and the tests that pin each claim. Judge what is here.
 
 ## What the change is
 
@@ -204,413 +204,6 @@ export function isQuietAllow(entry: Readonly<Record<string, unknown>>): boolean 
 }
 ````
 
-## `src/scripts/check_hook_bundle_composition.ts`, full
-
-````
-#!/usr/bin/env tsx
-/**
- * Composition gate for the self-hosted hook bundle: which npm packages are in
- * it, and one wide byte backstop.
- *
- * WHY THIS EXISTS — measured, not hypothetical.
- *
- * Every concern is inlined into one `dist/hooks/dispatch.js` that every hook
- * event loads, so a dependency added for ONE concern is paid by all of them on
- * every dispatch. On 2026-10-01 the bundle carried two YAML parsers: `yaml` and
- * `js-yaml`, the second pulled by one call site — 95,846 bytes that reached a
- * release as a review finding rather than as a red check.
- *
- * WHAT IT CHECKS
- *
- *   1. Every npm package contributing bytes to the bundle is on the committed
- *      `allowed_packages` list. A new package — a second YAML reader included —
- *      is a red check with one line to add, reviewed like any dependency. This
- *      replaces the closed list of YAML package names the gate used to count
- *      over, which could not see a parser under a name nobody listed.
- *   2. The bundle's byte count is at or under `max_bytes`, a backstop with real
- *      headroom against slow creep.
- *
- * WHAT IT NO LONGER DOES (owner directive 2026-11-20, D1). It held the ceiling
- * a few bytes above the reading with `shrink_only`, a `raise_log` obligation and
- * 18 per-chunk ceilings, so it fired on every in-bundle feature rather than on
- * regressions: 28 raises in six weeks, the smallest 94 bytes. Own-code growth is
- * what features are. Chunk sizes are printed, not gated.
- *
- * WHY IT BUILDS RATHER THAN READS. `dist/hooks/` is untracked, so this builds
- * its own bundle with `--metafile` from `package.json`'s `build:hooks` script
- * (only `--outfile=` rewritten, via `rewriteOutfile`), and measures that.
- *
- * WHAT IT DOES NOT DO. It says nothing about LATENCY
- * (`src/config/hook-latency-budget.json`), and nothing about a module loaded at
- * RUNTIME outside the bundle — a `createRequire` call esbuild leaves alone
- * contributes 0 bytes here; `tests/scripts/hook_load_set.test.ts` catches that class.
- *
- * Usage:
- *     ./scripts-run src/scripts/check_hook_bundle_composition
- *     ./scripts-run src/scripts/check_hook_bundle_composition --metafile <path>
- *     ./scripts-run src/scripts/check_hook_bundle_composition --self-test
- *
- * Exit codes: 0 = within budget · 1 = over the backstop or an unlisted package ·
- * 2 = the build or the budget file failed.
- */
-// ledger-exempt: single-artefact transaction — one bundle build yielding one
-// aggregate verdict. The per-source accounting lives in
-// check_hook_bundle_freshness, which carries the ledger.
-import { spawnSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-
-import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
-import { reportScanned } from './_lib/scan_scope.js';
-import { buildScript } from './check_hook_bundle_content.js';
-import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
-import { buildChunk, HOOK_CHUNKS } from './hook_chunks.mjs';
-import { rewriteOutfile } from './rebuild_hook_bundle.js';
-
-const _HERE = path.dirname(fileURLToPath(import.meta.url));
-export const REPO_ROOT = path.resolve(_HERE, '..', '..');
-export const SELF_REL = path.join('src', 'scripts', 'check_hook_bundle_composition.ts');
-export const BUDGET_REL = path.join('src', 'config', 'hook-bundle-budget.json');
-const LIVE_REL = path.join('dist', 'hooks', 'dispatch.js');
-
-export interface Budget {
-    readonly maxBytes: number;
-    readonly allowedPackages: readonly string[];
-}
-
-export interface Analysis {
-    /** Bytes of the bundle esbuild produced. */
-    readonly bytes: number;
-    /** Modules that contributed to it — the unit `scanned:` reports. */
-    readonly modules: number;
-    /** Bytes in the output, summed per owning npm package (zero-byte packages omitted). */
-    readonly packageBytes: ReadonlyMap<string, number>;
-    /** Packages whose bytes come from more than one copy on disk (a nested duplicate), sorted. */
-    readonly duplicated: readonly string[];
-}
-
-/**
- * The npm package a bundled module path belongs to, or `null` for this tree's
- * own sources.
- *
- * Reads the INNERMOST `node_modules/` segment: a transitively nested copy
- * (`node_modules/a/node_modules/yaml/…`) is still `yaml`'s bytes, and
- * attributing it to `a` would let a second parser hide one level down.
- */
-export function owningPackage(modulePath: string): string | null {
-    const marker = 'node_modules/';
-    const at = modulePath.lastIndexOf(marker);
-    if (at < 0) return null;
-    const parts = modulePath.slice(at + marker.length).split('/');
-    const head = parts[0] ?? '';
-    if (head === '') return null;
-    return head.startsWith('@') ? `${head}/${parts[1] ?? ''}` : head;
-}
-
-/** A byte count esbuild could have written: a non-negative safe integer. */
-function isByteCount(v: unknown): v is number {
-    return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
-}
-
-/** The entry the bundle is built from; the metafile output carrying it is the one measured. */
-export const ENTRY_REL = 'src/scripts/hooks/dispatch_entry.ts';
-
-/**
- * The directory a package's bytes come from (`…/node_modules/<pkg>`), so two
- * copies of one package name — a nested duplicate — count as two roots.
- */
-export function packageRoot(modulePath: string): string | null {
-    const pkg = owningPackage(modulePath);
-    if (pkg === null) return null;
-    const at = modulePath.lastIndexOf('node_modules/');
-    return modulePath.slice(0, at + 'node_modules/'.length + pkg.length);
-}
-
-/**
- * Parse an esbuild metafile and attribute the output built from {@link ENTRY_REL}.
- *
- * Refuses rather than defaulting: an output with no `bytes`, no `inputs`, or an
- * input with no `bytesInOutput` would otherwise read as a clean bundle, which is
- * the silent green this gate exists to replace. With `requireEntry` (the gate's
- * own build) the output MUST be the one built from {@link ENTRY_REL}; without
- * it (a `--metafile` fixture) a single entry output is accepted whatever its
- * entry is named.
- */
-export function analyzeMetafile(json: string, opts: { requireEntry?: boolean } = {}): Analysis {
-    const meta = JSON.parse(json) as {
-        outputs?: Record<string, { entryPoint?: string; bytes?: number; inputs?: Record<string, { bytesInOutput?: number }> }>;
-    };
-    const entries = Object.values(meta.outputs ?? {}).filter((o) => typeof o.entryPoint === 'string');
-    const out =
-        entries.find((o) => o.entryPoint === ENTRY_REL) ??
-        (opts.requireEntry !== true && entries.length === 1 ? entries[0] : undefined);
-    if (out === undefined) {
-        throw new Error(
-            entries.length === 0
-                ? 'metafile carries no entry-point output — refusing to report a composition for a build that produced nothing'
-                : `metafile carries ${String(entries.length)} entry output(s) and none is ${ENTRY_REL}`,
-        );
-    }
-    if (!isByteCount(out.bytes) || out.inputs === undefined || Object.keys(out.inputs).length === 0) {
-        throw new Error('the entry output carries no byte count or no inputs — refusing to read it as an empty bundle');
-    }
-    const packageBytes = new Map<string, number>();
-    const roots = new Map<string, Set<string>>();
-    for (const [p, v] of Object.entries(out.inputs)) {
-        if (!isByteCount(v.bytesInOutput)) {
-            throw new Error(`input ${p} carries no valid bytesInOutput — refusing to attribute it`);
-        }
-        const pkg = owningPackage(p);
-        const bytes = v.bytesInOutput;
-        if (pkg === null || bytes <= 0) continue;
-        packageBytes.set(pkg, (packageBytes.get(pkg) ?? 0) + bytes);
-        const root = packageRoot(p);
-        if (root !== null) roots.set(pkg, (roots.get(pkg) ?? new Set<string>()).add(root));
-    }
-    const duplicated = [...roots].filter(([, r]) => r.size > 1).map(([pkg]) => pkg).sort();
-    return { bytes: out.bytes, modules: Object.keys(out.inputs).length, packageBytes, duplicated };
-}
-
-/** Packages contributing bytes that the budget does not list, sorted. */
-export function unlistedPackages(a: Analysis, budget: Budget): string[] {
-    const allowed = new Set(budget.allowedPackages);
-    return [...a.packageBytes.keys()].filter((p) => !allowed.has(p)).sort();
-}
-
-/**
- * Build the chunk for `entry` from the one chunk definition (`hook_chunks.mjs`,
- * which `build:hook-chunks` runs) to a throwaway path, and return its size.
- * Throws when no chunk is defined for the entry.
- */
-export function buildChunkBytes(root: string, entry: string): number {
-    if (!HOOK_CHUNKS.some((c) => c.entry === entry)) {
-        throw new Error(`hook_chunks.mjs defines no chunk built from ${entry}`);
-    }
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-chunk-composition-'));
-    const out = path.join(dir, 'chunk.cjs');
-    try {
-        buildChunk(root, entry, out);
-        return fs.statSync(out).size;
-    } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
-    }
-}
-
-/** Read the committed budget. Throws rather than defaulting — a guessed ceiling bounds nothing. */
-export function readBudget(root: string): Budget {
-    const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>;
-    const maxBytes = raw['max_bytes'];
-    const allowed = raw['allowed_packages'];
-    if (typeof maxBytes !== 'number' || !Number.isInteger(maxBytes) || maxBytes <= 0) {
-        throw new Error(`${BUDGET_REL}: max_bytes must be a positive integer, got ${JSON.stringify(maxBytes)}`);
-    }
-    if (!Array.isArray(allowed) || !allowed.every((p) => typeof p === 'string' && p !== '')) {
-        throw new Error(`${BUDGET_REL}: allowed_packages must be a list of package names, got ${JSON.stringify(allowed)}`);
-    }
-    return { maxBytes, allowedPackages: allowed as string[] };
-}
-
-/** Findings, one line each. Empty means within budget. */
-export function verdict(a: Analysis, budget: Budget): string[] {
-    const findings: string[] = [];
-    const unlisted = unlistedPackages(a, budget);
-    if (unlisted.length > 0) {
-        const detail = unlisted.map((p) => `${p} (${String(a.packageBytes.get(p) ?? 0)} B)`).join(', ');
-        findings.push(
-            `npm package(s) in the bundle that ${BUDGET_REL} does not list: ${detail}. Every dispatch loads ` +
-                'them. Use a package the bundle already carries, load it lazily outside the bundle, or add it to ' +
-                '`allowed_packages` as a reviewed dependency decision.',
-        );
-    }
-    if (a.duplicated.length > 0) {
-        findings.push(
-            `package(s) bundled from more than one copy on disk: ${a.duplicated.join(', ')}. Every dispatch parses ` +
-                'both. Dedupe the dependency so one copy is bundled.',
-        );
-    }
-    if (a.bytes > budget.maxBytes) {
-        findings.push(
-            `bundle is ${String(a.bytes)} bytes, backstop is ${String(budget.maxBytes)} ` +
-                `(over by ${String(a.bytes - budget.maxBytes)}). Look at what grew before moving max_bytes in ${BUDGET_REL}.`,
-        );
-    }
-    return findings;
-}
-
-/**
- * Build the hook bundle to a throwaway path and return its metafile JSON.
- *
- * Throws on any failure rather than returning a sentinel: a composition read off
- * a build that did not happen is the silent-green this gate exists to replace.
- */
-export function buildMetafile(root: string): string {
-    const script = buildScript(root);
-    if (script === null) {
-        throw new Error('package.json has no `build:hooks` script — refusing to guess the flag set');
-    }
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-bundle-composition-'));
-    const outFile = path.join(dir, 'dispatch.js');
-    const metaFile = path.join(dir, 'meta.json');
-    try {
-        const rewritten = rewriteOutfile(script, outFile);
-        if (rewritten === null) {
-            throw new Error(`\`build:hooks\` no longer writes ${LIVE_REL} — refusing to build to a guessed path`);
-        }
-        // Strip the steps after esbuild (digest sidecar, chunk build): they would
-        // write beside a probe bundle nobody executes.
-        const esbuildOnly = rewritten.split('&& node ')[0] ?? rewritten;
-        const built = spawnSync('sh', ['-c', `${esbuildOnly.trim()} --metafile=${metaFile}`], {
-            cwd: root,
-            encoding: 'utf-8',
-            maxBuffer: 64 * 1024 * 1024,
-            env: {
-                ...process.env,
-                PATH: `${path.join(root, 'node_modules', '.bin')}:${process.env['PATH'] ?? ''}`,
-            },
-        });
-        if (built.status !== 0 || !fs.existsSync(metaFile)) {
-            throw new Error(`esbuild failed (exit ${String(built.status)})\n${built.stderr ?? ''}`);
-        }
-        return fs.readFileSync(metaFile, 'utf-8');
-    } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
-    }
-}
-
-function selfTest(): number {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-bundle-composition-selftest-'));
-    const write = (name: string, body: unknown): string => {
-        const p = path.join(dir, name);
-        fs.writeFileSync(p, JSON.stringify(body));
-        return p;
-    };
-    const meta = (bytes: number, inputs: Record<string, number>): unknown => ({
-        inputs: {},
-        outputs: {
-            'dist/hooks/dispatch.js': {
-                entryPoint: 'src/scripts/hooks/dispatch_entry.ts',
-                bytes,
-                inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, { bytesInOutput: v }])),
-            },
-        },
-    });
-    const budget = readBudget(REPO_ROOT);
-    const listed = budget.allowedPackages[0] ?? 'yaml';
-    const clean = write('clean.json', meta(budget.maxBytes, { [`node_modules/${listed}/dist/index.js`]: 10 }));
-    const secondReader = write(
-        'second-reader.json',
-        meta(1000, { [`node_modules/${listed}/dist/index.js`]: 600, 'node_modules/js-yaml/dist/js-yaml.mjs': 400 }),
-    );
-    const oneOver = write('one-over.json', meta(budget.maxBytes + 1, { 'src/x.ts': 1 }));
-    const empty = write('empty.json', { inputs: {}, outputs: {} });
-
-    const drive = (fixture: string): number => runGateCli(REPO_ROOT, SELF_REL, ['--metafile', fixture], REPO_ROOT);
-
-    try {
-        return runSelfTest({
-            gate: 'check_hook_bundle_composition',
-            minCases: 4,
-            minRejectCases: 3,
-            cases: [
-                { name: 'listed packages only, exactly at the backstop → accepted', expect: 'accept', run: () => drive(clean) },
-                { name: 'an unlisted package (a second YAML reader) → rejected', expect: 'reject', run: () => drive(secondReader) },
-                { name: 'one byte over the backstop → rejected', expect: 'reject', run: () => drive(oneOver) },
-                {
-                    name: 'a metafile with no entry-point output → rejected, never reported as 0 bytes',
-                    expect: 'reject',
-                    run: () => drive(empty),
-                },
-            ],
-        });
-    } finally {
-        fs.rmSync(dir, { recursive: true, force: true });
-    }
-}
-
-export function main(argv: readonly string[] = process.argv.slice(2), root: string = REPO_ROOT): number {
-    const parsed = parseGateArgs('check_hook_bundle_composition', argv, {
-        'self-test': { type: 'boolean' },
-        metafile: { type: 'string' },
-    });
-    if (!parsed.ok) {
-        process.stderr.write(`${parsed.message}\n`);
-        return USAGE_EXIT;
-    }
-    if (parsed.values['self-test'] === true) {
-        return selfTest();
-    }
-    const fixture = parsed.values.metafile;
-
-    let budget: Budget;
-    let json: string;
-    try {
-        budget = readBudget(root);
-        json = fixture === undefined ? buildMetafile(root) : fs.readFileSync(fixture, 'utf-8');
-    } catch (e) {
-        process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
-        return 2;
-    }
-
-    let analysis: Analysis;
-    try {
-        analysis = analyzeMetafile(json, { requireEntry: fixture === undefined });
-    } catch (e) {
-        process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
-        return 1;
-    }
-
-    const findings = verdict(analysis, budget);
-    const chunkSizes = new Map<string, number>();
-    if (fixture === undefined) {
-        try {
-            for (const c of HOOK_CHUNKS) chunkSizes.set(c.entry, buildChunkBytes(root, c.entry));
-        } catch (e) {
-            process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
-            return 2;
-        }
-    }
-    // Reported on BOTH paths, red included: a census that goes quiet exactly
-    // when the gate fires is the shape `reportScanned` exists to prevent.
-    reportScanned({
-        gate: 'check_hook_bundle_composition',
-        scanned: analysis.modules,
-        units: 'bundled module(s)',
-        roots: [LIVE_REL],
-    });
-
-    const packages = [...analysis.packageBytes].map(([p, b]) => `${p} ${String(b)} B`).join(', ');
-    if (findings.length === 0) {
-        process.stdout.write(
-            `✅  hook bundle: ${String(analysis.bytes)} B / ${String(budget.maxBytes)} B backstop, ` +
-                `packages [${packages}], ${String(analysis.modules)} modules\n`,
-        );
-        for (const [entry, bytes] of chunkSizes) process.stdout.write(`    chunk ${entry}: ${String(bytes)} B (reported, not gated)\n`);
-        return 0;
-    }
-    process.stderr.write('❌  hook bundle composition is out of budget\n');
-    for (const f of findings) process.stderr.write(`    - ${f}\n`);
-    process.stderr.write(`    Budget: ${BUDGET_REL}\n`);
-    return 1;
-}
-
-function _isCliEntry(): boolean {
-    const argv1 = process.argv[1];
-    if (argv1 === undefined) return false;
-    if (import.meta.url === pathToFileURL(path.resolve(argv1)).href) return true;
-    try {
-        return fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(argv1));
-    } catch {
-        return false;
-    }
-}
-
-if (_isCliEntry()) {
-    process.exit(main());
-}
-````
-
 ## `tests/scripts/hooks/concern_env.test.ts`, full
 
 ````
@@ -793,103 +386,125 @@ describe('feedback_policy — isQuietAllow', () => {
 });
 ````
 
-## `tests/scripts/hook_bundle_composition.test.ts`, full
+## `src/scripts/check_hook_bundle_composition.ts` — the metafile reading and the verdict (not gated; excerpt)
 
-````
-// Tests for src/scripts/check_hook_bundle_composition.ts.
-//
-// Two invariants over one artefact: every npm package in the hook bundle is on
-// the committed allowlist (which is what keeps a second YAML reader out), and
-// its byte count sits under a wide backstop
-// (road-to-a-hook-system-that-pays-for-what-it-does 1.1, 1.2).
-//
-// The verdict functions are pure over an esbuild metafile, so every case here
-// drives them with a planted metafile rather than a 1.5 MB build — which is also
-// what makes the one-byte-over case expressible at all. One case does build the
-// real bundle, because a pure function over a hand-written fixture proves the
-// arithmetic and not that the gate is pointed at anything.
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-
-import { describe, expect, it } from 'vitest';
-
-import {
-    analyzeMetafile,
-    buildChunkBytes,
-    buildMetafile,
-    owningPackage,
-    readBudget,
-    unlistedPackages,
-    verdict,
-} from '../../src/scripts/check_hook_bundle_composition.js';
-import { buildChunk, HOOK_CHUNKS, main as hookChunksMain } from '../../src/scripts/hook_chunks.mjs';
-import { verifyBundle } from '../../src/scripts/hooks/bundle_integrity.js';
-
-const REPO = path.resolve(__dirname, '..', '..');
-
-/** An esbuild metafile with one output, built from `inputs` keyed by path. */
-function metafile(outBytes: number, inputs: Record<string, number>): string {
-    const entries: Record<string, { bytesInOutput: number }> = {};
-    for (const [p, b] of Object.entries(inputs)) entries[p] = { bytesInOutput: b };
-    return JSON.stringify({
-        inputs: {},
-        outputs: {
-            'dist/hooks/dispatch.js': {
-                entryPoint: 'src/scripts/hooks/dispatch_entry.ts',
-                bytes: outBytes,
-                inputs: entries,
-                imports: [],
-                exports: [],
-            },
-        },
-    });
+````ts
+/** A byte count esbuild could have written: a non-negative safe integer. */
+function isByteCount(v: unknown): v is number {
+    return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
 }
 
-const BUDGET = { maxBytes: 1_500_000, allowedPackages: ['yaml'] };
+/** The entry the bundle is built from; the metafile output carrying it is the one measured. */
+export const ENTRY_REL = 'src/scripts/hooks/dispatch_entry.ts';
 
-describe('check_hook_bundle_composition — owningPackage', () => {
-    it('attributes a node_modules path to its package, scoped names included', () => {
-        expect(owningPackage('node_modules/yaml/dist/index.js')).toBe('yaml');
-        expect(owningPackage('node_modules/js-yaml/dist/js-yaml.mjs')).toBe('js-yaml');
-        expect(owningPackage('node_modules/@scope/pkg/x.js')).toBe('@scope/pkg');
-    });
+/**
+ * The directory a package's bytes come from (`…/node_modules/<pkg>`), so two
+ * copies of one package name — a nested duplicate — count as two roots.
+ */
+export function packageRoot(modulePath: string): string | null {
+    const pkg = owningPackage(modulePath);
+    if (pkg === null) return null;
+    const at = modulePath.lastIndexOf('node_modules/');
+    return modulePath.slice(0, at + 'node_modules/'.length + pkg.length);
+}
 
-    it('attributes a nested node_modules path to the innermost package', () => {
-        expect(owningPackage('node_modules/a/node_modules/yaml/dist/index.js')).toBe('yaml');
-    });
-
-    it('returns null for this tree\'s own sources', () => {
-        expect(owningPackage('src/scripts/hooks/dispatch_entry.ts')).toBeNull();
-    });
-});
-
-describe('check_hook_bundle_composition — analyzeMetafile', () => {
-    it('sums bytes per package and counts the modules it inspected', () => {
-        const a = analyzeMetafile(
-            metafile(300, {
-                'src/scripts/hooks/dispatch_entry.ts': 100,
-                'node_modules/yaml/dist/index.js': 150,
-                'node_modules/yaml/dist/parse.js': 50,
-            }),
+/**
+ * Parse an esbuild metafile and attribute the output built from {@link ENTRY_REL}.
+ *
+ * Refuses rather than defaulting: an output with no `bytes`, no `inputs`, or an
+ * input with no `bytesInOutput` would otherwise read as a clean bundle, which is
+ * the silent green this gate exists to replace. With `requireEntry` (the gate's
+ * own build) the output MUST be the one built from {@link ENTRY_REL}; without
+ * it (a `--metafile` fixture) a single entry output is accepted whatever its
+ * entry is named.
+ */
+export function analyzeMetafile(json: string, opts: { requireEntry?: boolean } = {}): Analysis {
+    const meta = JSON.parse(json) as {
+        outputs?: Record<string, { entryPoint?: string; bytes?: number; inputs?: Record<string, { bytesInOutput?: number }> }>;
+    };
+    const entries = Object.values(meta.outputs ?? {}).filter((o) => typeof o.entryPoint === 'string');
+    const out =
+        entries.find((o) => o.entryPoint === ENTRY_REL) ??
+        (opts.requireEntry !== true && entries.length === 1 ? entries[0] : undefined);
+    if (out === undefined) {
+        throw new Error(
+            entries.length === 0
+                ? 'metafile carries no entry-point output — refusing to report a composition for a build that produced nothing'
+                : `metafile carries ${String(entries.length)} entry output(s) and none is ${ENTRY_REL}`,
         );
-        expect(a.bytes).toBe(300);
-        expect(a.modules).toBe(3);
-        expect(a.packageBytes.get('yaml')).toBe(200);
-        expect([...a.packageBytes.keys()]).toEqual(['yaml']);
-    });
+    }
+    if (!isByteCount(out.bytes) || out.inputs === undefined || Object.keys(out.inputs).length === 0) {
+        throw new Error('the entry output carries no byte count or no inputs — refusing to read it as an empty bundle');
+    }
+    const packageBytes = new Map<string, number>();
+    const roots = new Map<string, Set<string>>();
+    for (const [p, v] of Object.entries(out.inputs)) {
+        if (!isByteCount(v.bytesInOutput)) {
+            throw new Error(`input ${p} carries no valid bytesInOutput — refusing to attribute it`);
+        }
+        const pkg = owningPackage(p);
+        const bytes = v.bytesInOutput;
+        if (pkg === null || bytes <= 0) continue;
+        packageBytes.set(pkg, (packageBytes.get(pkg) ?? 0) + bytes);
+        const root = packageRoot(p);
+        if (root !== null) roots.set(pkg, (roots.get(pkg) ?? new Set<string>()).add(root));
+    }
+    const duplicated = [...roots].filter(([, r]) => r.size > 1).map(([pkg]) => pkg).sort();
+    return { bytes: out.bytes, modules: Object.keys(out.inputs).length, packageBytes, duplicated };
+}
 
-    it('ignores a package that contributes zero bytes rather than counting it as present', () => {
-        const a = analyzeMetafile(
-            metafile(100, {
-                'node_modules/yaml/dist/index.js': 100,
-                'node_modules/js-yaml/dist/js-yaml.mjs': 0,
-            }),
+/** Packages contributing bytes that the budget does not list, sorted. */
+export function unlistedPackages(a: Analysis, budget: Budget): string[] {
+    const allowed = new Set(budget.allowedPackages);
+    return [...a.packageBytes.keys()].filter((p) => !allowed.has(p)).sort();
+}
+
+/** Read the committed budget. Throws rather than defaulting — a guessed ceiling bounds nothing. */
+export function readBudget(root: string): Budget {
+    const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>;
+    const maxBytes = raw['max_bytes'];
+    const allowed = raw['allowed_packages'];
+    if (typeof maxBytes !== 'number' || !Number.isInteger(maxBytes) || maxBytes <= 0) {
+        throw new Error(`${BUDGET_REL}: max_bytes must be a positive integer, got ${JSON.stringify(maxBytes)}`);
+    }
+    if (!Array.isArray(allowed) || !allowed.every((p) => typeof p === 'string' && p !== '')) {
+        throw new Error(`${BUDGET_REL}: allowed_packages must be a list of package names, got ${JSON.stringify(allowed)}`);
+    }
+    return { maxBytes, allowedPackages: allowed as string[] };
+}
+
+/** Findings, one line each. Empty means within budget. */
+export function verdict(a: Analysis, budget: Budget): string[] {
+    const findings: string[] = [];
+    const unlisted = unlistedPackages(a, budget);
+    if (unlisted.length > 0) {
+        const detail = unlisted.map((p) => `${p} (${String(a.packageBytes.get(p) ?? 0)} B)`).join(', ');
+        findings.push(
+            `npm package(s) in the bundle that ${BUDGET_REL} does not list: ${detail}. Every dispatch loads ` +
+                'them. Use a package the bundle already carries, load it lazily outside the bundle, or add it to ' +
+                '`allowed_packages` as a reviewed dependency decision.',
         );
-        expect([...a.packageBytes.keys()]).toEqual(['yaml']);
-        expect(unlistedPackages(a, BUDGET)).toEqual([]);
-    });
+    }
+    if (a.duplicated.length > 0) {
+        findings.push(
+            `package(s) bundled from more than one copy on disk: ${a.duplicated.join(', ')}. Every dispatch parses ` +
+                'both. Dedupe the dependency so one copy is bundled.',
+        );
+    }
+    if (a.bytes > budget.maxBytes) {
+        findings.push(
+            `bundle is ${String(a.bytes)} bytes, backstop is ${String(budget.maxBytes)} ` +
+                `(over by ${String(a.bytes - budget.maxBytes)}). Look at what grew before moving max_bytes in ${BUDGET_REL}.`,
+        );
+    }
+    return findings;
+}
 
+````
+
+## `tests/scripts/hook_bundle_composition.test.ts` — the strict-reading tests (excerpt)
+
+````ts
     it('fails a package bundled from two copies on disk, a nested duplicate under the same name', () => {
         const a = analyzeMetafile(
             metafile(1000, { 'node_modules/yaml/dist/index.js': 600, 'node_modules/x/node_modules/yaml/dist/index.js': 400 }),
@@ -944,157 +559,6 @@ describe('check_hook_bundle_composition — analyzeMetafile', () => {
         expect(() => analyzeMetafile(json)).toThrow(/bytesInOutput/u);
     });
 
-    it('throws on a metafile with no entry-point output rather than reporting zero', () => {
-        expect(() => analyzeMetafile(JSON.stringify({ inputs: {}, outputs: {} }))).toThrow(/entry/u);
-    });
-});
-
-describe('check_hook_bundle_composition — verdict, the package allowlist', () => {
-    it('passes a bundle carrying only listed packages', () => {
-        const a = analyzeMetafile(
-            metafile(1000, { 'node_modules/yaml/dist/index.js': 1000 }),
-        );
-        expect(verdict(a, BUDGET)).toEqual([]);
-    });
-
-    it('fails a bundle carrying a second YAML reader, and names the unlisted one', () => {
-        const a = analyzeMetafile(
-            metafile(1000, {
-                'node_modules/yaml/dist/index.js': 600,
-                'node_modules/js-yaml/dist/js-yaml.mjs': 400,
-            }),
-        );
-        const findings = verdict(a, BUDGET);
-        expect(findings).toHaveLength(1);
-        expect(findings[0]).toContain('js-yaml (400 B)');
-    });
-
-    it('fails any unlisted package, not only one with YAML in its name', () => {
-        const a = analyzeMetafile(
-            metafile(1000, { 'node_modules/yaml/dist/index.js': 900, 'node_modules/@scope/parser/x.js': 100 }),
-        );
-        expect(unlistedPackages(a, BUDGET)).toEqual(['@scope/parser']);
-        expect(verdict(a, BUDGET)).toHaveLength(1);
-    });
-
-    it('passes a package once it is listed', () => {
-        const a = analyzeMetafile(metafile(1000, { 'node_modules/yaml/dist/index.js': 900, 'node_modules/left-pad/x.js': 100 }));
-        expect(verdict(a, { ...BUDGET, allowedPackages: ['yaml', 'left-pad'] })).toEqual([]);
-    });
-});
-
-describe('check_hook_bundle_composition — verdict, the ceiling', () => {
-    it('passes a bundle exactly at the ceiling', () => {
-        const a = analyzeMetafile(metafile(1_500_000, { 'src/x.ts': 1_500_000 }));
-        expect(verdict(a, BUDGET)).toEqual([]);
-    });
-
-    it('fails a planted bundle one byte over the ceiling', () => {
-        const a = analyzeMetafile(metafile(1_500_001, { 'src/x.ts': 1_500_001 }));
-        const findings = verdict(a, BUDGET);
-        expect(findings).toHaveLength(1);
-        expect(findings[0]).toContain('1500001');
-        expect(findings[0]).toContain('1500000');
-    });
-
-    it('reports both findings when a bundle is over the ceiling AND carries two readers', () => {
-        const a = analyzeMetafile(
-            metafile(1_500_001, {
-                'node_modules/yaml/dist/index.js': 1_000_000,
-                'node_modules/js-yaml/dist/js-yaml.mjs': 500_001,
-            }),
-        );
-        expect(verdict(a, BUDGET)).toHaveLength(2);
-    });
-});
-
-describe('check_hook_bundle_composition — the budget file', () => {
-    it('reads the committed backstop and allowlist, and carries no ratchet fields', () => {
-        const b = readBudget(REPO);
-        expect(b.maxBytes).toBeGreaterThan(0);
-        expect(b.allowedPackages).toEqual(['yaml']);
-        const raw = fs.readFileSync(path.join(REPO, 'src', 'config', 'hook-bundle-budget.json'), 'utf-8');
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        for (const k of ['shrink_only', 'raise_log', 'chunks', 'chunk_groups', 'max_yaml_packages']) expect(parsed[k], k).toBeUndefined();
-        expect(raw.length).toBeLessThan(3 * 1024);
-    });
-
-    it('refuses a budget without an allowlist', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hbb-'));
-        try {
-            fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
-            fs.writeFileSync(path.join(dir, 'src', 'config', 'hook-bundle-budget.json'), JSON.stringify({ max_bytes: 10 }));
-            expect(() => readBudget(dir)).toThrow(/allowed_packages/u);
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    });
-
-    it('refuses a budget whose ceiling is not a positive integer', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hbb-'));
-        try {
-            fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
-            fs.writeFileSync(
-                path.join(dir, 'src', 'config', 'hook-bundle-budget.json'),
-                JSON.stringify({ max_bytes: 'lots', allowed_packages: ['yaml'] }),
-            );
-            expect(() => readBudget(dir)).toThrow(/max_bytes/u);
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    });
-});
-
-// The one case that proves the gate is pointed at the real artefact. Everything
-// above is arithmetic over a fixture and would stay green if `build:hooks` were
-// renamed out from under it.
-describe('check_hook_bundle_composition — against the real build', () => {
-    it('builds the hook bundle and finds it under the backstop with listed packages only', () => {
-        const meta = buildMetafile(REPO);
-        const a = analyzeMetafile(meta);
-        expect(a.modules).toBeGreaterThan(100);
-        expect([...a.packageBytes.keys()]).toEqual(['yaml']);
-        expect(verdict(a, readBudget(REPO))).toEqual([]);
-    }, 120_000);
-});
-
-describe('chunk builds — one definition, used by the build and by the gate', () => {
-    const ENTRY = 'src/scripts/_lib/egress_engine.ts';
-
-    it('package.json builds chunks through the one definition', () => {
-        const pkg = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf-8')) as { scripts: Record<string, string> };
-        expect(pkg.scripts['build:hook-chunks']).toBe('node src/scripts/hook_chunks.mjs');
-    });
-
-    it('measures the bytes the definition builds', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-measure-'));
-        try {
-            const out = path.join(dir, 'c.cjs');
-            buildChunk(REPO, ENTRY, out);
-            expect(buildChunkBytes(REPO, ENTRY)).toBe(fs.statSync(out).size);
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    }, 60_000);
-
-    it('the build script writes every defined chunk and a matching digest sidecar', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-main-'));
-        try {
-            expect(hookChunksMain(['--out-dir', dir])).toBe(0);
-            for (const c of HOOK_CHUNKS) {
-                const out = path.join(dir, c.outfile);
-                expect(fs.existsSync(out), c.outfile).toBe(true);
-                expect(verifyBundle(out).state, c.outfile).toBe('ok');
-            }
-        } finally {
-            fs.rmSync(dir, { recursive: true, force: true });
-        }
-    }, 60_000);
-
-    it('refuses to measure an entry no chunk is defined for', () => {
-        expect(() => buildChunkBytes(REPO, 'src/scripts/_lib/no_such_chunk.ts')).toThrow(/defines no chunk/);
-    });
-});
 ````
 
 ## Diffs against `origin/main`: the ratification gate, its workflow, the dispatcher, and the gate tests
