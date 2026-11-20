@@ -20,7 +20,7 @@ import YAML from 'yaml';
 // loaded a SECOND copy of `yaml` from node_modules on every dispatch, beside the
 // one already inlined (about 20-30 ms per event, measured 2026-11-20). An ESM
 // import resolves relative to this module too, so a consumer's cwd still never
-// interferes. `check_hook_load_set` keeps the second copy out.
+// interferes. `tests/scripts/hook_load_set.test.ts` keeps the second copy out.
 
 export const DEFAULT_LOG_PATH = '.agent-engagement.jsonl';
 export const DEFAULT_GRANULARITY = 'task';

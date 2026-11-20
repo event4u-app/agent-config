@@ -123,19 +123,22 @@ actually loads.
       read the summary.
       verify: an all-allow `pre_tool_use` writes at most two dispatcher feedback files; `hooks:status` output is unchanged on a fixture session.
       Done 2026-11-20: `hooks/feedback_policy.ts` keeps a per-concern file only for a non-quiet outcome; `summary.json` now also carries `raw_exit_code`. A probe `pre_tool_use` on a `Read` left one file (`summary.json`) where it left one per concern. `hooks_doctor` falls back to the newest summary listing a concern, so its `feedback:` line still appears — pointing at the summary for quiet concerns. 112 test files green.
-- [ ] **2.5 Re-measure.** Run the Phase 3.1 bench on darwin against the pin.
+- [x] **2.5 Re-measure.** Run the Phase 3.1 bench on darwin against the pin.
       verify: the table is recorded in `agents/evidence/analysis/` with commit, node and machine.
+      Done 2026-11-20: `agents/evidence/analysis/hook-fixed-costs-2026-11-20.md` — `pre_tool_use` 81.9 → 66.4 ms, `post_tool_use` 89.6 → 74.3 ms p50 (real workspace, n = 40); 72 `node_modules` files gone from every hot event.
 
 ## Phase 3 — Checks that see what an event pays
 
-- [ ] **3.1 The bench is a script.** Interleaved base-vs-head (or variant)
+- [x] **3.1 The bench is a script.** Interleaved base-vs-head (or variant)
       dispatch timing per event with a `node -e 0` control, plus the load trace,
       as one command.
       verify: one command prints p50, p90 and min per variant and the non-builtin modules each event loads.
-- [ ] **3.2 Runtime load-set check.** One fixture dispatch per hot event; the
+      Done 2026-11-20: `internal/bench/core/bench_hook_ab.ts` (variants, `node -e 0` control, `--trace`) over the shared `src/scripts/_lib/hook_load_trace.ts`; the existing `bench_hook_latency.ts` stays the budget gate and sits at its line cap.
+- [x] **3.2 Runtime load-set check.** One fixture dispatch per hot event; the
       non-builtin modules loaded must be the bundle and the chunks that event
       declares.
       verify: reintroducing the `createRequire('yaml')` line turns it red; the tree after 2.1 is green.
+      Done 2026-11-20: `tests/scripts/hook_load_set.test.ts` builds a fresh bundle and chunks into a throwaway root and traces the four hot events. With the old `createRequire` line put back: 4 of 5 red; restored: 5 green.
 
 ## Risk Register
 

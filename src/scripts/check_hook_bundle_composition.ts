@@ -34,7 +34,7 @@
  * WHAT IT DOES NOT DO. It says nothing about LATENCY
  * (`src/config/hook-latency-budget.json`), and nothing about a module loaded at
  * RUNTIME outside the bundle — a `createRequire` call esbuild leaves alone
- * contributes 0 bytes here; `check_hook_load_set` catches that class.
+ * contributes 0 bytes here; `tests/scripts/hook_load_set.test.ts` catches that class.
  *
  * Usage:
  *     ./scripts-run src/scripts/check_hook_bundle_composition
