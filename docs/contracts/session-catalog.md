@@ -92,6 +92,7 @@ only when its last activity is older than 30 days.
       "transcript_path": "/Users/me/.agent-switch/claude/work/config/projects/…/4d11cee1-….jsonl",
       "resume": {
         "cwd": "/Users/me/projects/app",
+        "argv": ["claude", "--resume", "4d11cee1-…"],
         "command": "claude --resume 4d11cee1-…",
         "env": { "CLAUDE_CONFIG_DIR": "/Users/me/.agent-switch/claude/work/config" }
       },
@@ -121,9 +122,15 @@ Field notes:
 - **`usage`** — cumulative, de-duplicated per assistant message. `context_tokens`
   is the prompt size of the latest main-thread assistant message.
 - **`transcript_path`** — read only when it is a regular `.jsonl` file (no
-  symlink); a different path for the same session restarts the totals.
-- **`resume`** — `null` on hosts whose CLI cannot resume by id. `env` only ever
-  carries the profile directory variable.
+  symlink, verified again on the opened descriptor), its file name contains the
+  session id, and it lies inside the session's profile directory when that is
+  known. A different path for the same session restarts the totals.
+- **`ended_at`** — set by `session_end`; only a later `session_start` or prompt
+  (a resume under the same id) clears it, never a late `stop`.
+- **`resume`** — `null` on hosts whose CLI cannot resume by id, and for a
+  session id that is not a plain identifier. `argv` is what a program should
+  spawn; `command` is the same, shell-quoted. `env` only ever carries the
+  profile directory variable.
 
 ## Coverage by host
 
@@ -141,7 +148,8 @@ absent.
 ## Privacy
 
 No prompt or reply text is stored. `title` is the host's generated title, or
-one the user set. Remote URLs have their userinfo removed. Paths are local and
+one the user set, capped at 120 characters with token-shaped runs masked.
+Remote URLs have their userinfo, query and fragment removed. Paths are local and
 the files never leave the machine.
 
 ## Stability for external readers

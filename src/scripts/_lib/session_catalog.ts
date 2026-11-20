@@ -70,7 +70,7 @@ export const RETENTION_DAYS = 30;
 export const INGEST_CAP_BYTES = 8 * 1024 * 1024;
 
 /** Upper bound on the final catch-up read at `session_end`. */
-export const INGEST_CAP_BYTES_FINAL = 64 * 1024 * 1024;
+export const INGEST_CAP_BYTES_FINAL = 16 * 1024 * 1024;
 
 /** Message ids remembered for usage de-duplication. */
 const RECENT_ID_WINDOW = 256;
@@ -123,6 +123,9 @@ export interface CatalogUsage {
 export interface CatalogResume {
     /** Directory the resume command must run in (the host keys history by it). */
     cwd: string | null;
+    /** Executable and arguments, unquoted — what a program should spawn. */
+    argv: string[];
+    /** `argv` rendered for a shell, every argument quoted where needed. */
     command: string;
     /** Only profile-directory variables; never anything else from the env. */
     env: Record<string, string>;
@@ -268,9 +271,25 @@ export function surface_from_entrypoint(entrypoint: string | null, fallback: str
     return f === '' ? 'unknown' : f;
 }
 
-/** Remove `user[:pass]@` from a URL-shaped remote. */
+/** Remove `user[:pass]@`, the query and the fragment from a URL-shaped remote. */
 export function strip_userinfo(url: string): string {
-    return url.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/@\s]*@/i, '$1');
+    return url.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/@\s]*@/i, '$1').replace(/[?#].*$/, '');
+}
+
+const TITLE_MAX = 120;
+
+/**
+ * Titles are host-generated summaries of the conversation, so they are capped
+ * and any token-shaped run (long mixed alphanumerics, known key prefixes) is
+ * masked before it is persisted.
+ */
+export function clean_title(t: string): string {
+    const masked = t
+        .replace(/\b(?:sk|pk|rk|ghp|gho|ghs|ghu|github_pat|xox[abprs]|AKIA|AIza|glpat)[-_A-Za-z0-9]{6,}/g, '[redacted]')
+        .replace(/[A-Za-z0-9+/_=-]{20,}/g, (m) => (/[0-9]/.test(m) && /[A-Za-z]/.test(m) ? '[redacted]' : m))
+        .replace(/\s+/g, ' ')
+        .trim();
+    return masked.length > TITLE_MAX ? `${masked.slice(0, TITLE_MAX - 1)}…` : masked;
 }
 
 function origin_url(common_dir: string): string | null {
@@ -370,39 +389,53 @@ export function derive_status(entry: Pick<CatalogEntry, 'ended_at' | 'last_seen'
 // Locks
 // ---------------------------------------------------------------------------
 
-function try_lock(lock: string, wait_ms = 0): boolean {
+/** Returns an ownership token, or null when the lock is held. */
+function try_lock(lock: string, wait_ms = 0): string | null {
     const deadline = Date.now() + wait_ms;
     for (;;) {
-        if (try_lock_once(lock)) return true;
-        if (Date.now() >= deadline) return false;
+        const token = try_lock_once(lock);
+        if (token !== null) return token;
+        if (Date.now() >= deadline) return null;
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
     }
 }
 
-function try_lock_once(lock: string): boolean {
+function try_lock_once(lock: string): string | null {
+    const token = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
             fs.mkdirSync(lock, { mode: 0o700 });
-            return true;
+            fs.writeFileSync(path.join(lock, 'owner'), token, { mode: 0o600 });
+            return token;
         } catch {
             try {
                 const age = Date.now() - fs.statSync(lock).mtimeMs;
-                if (age <= LOCK_STALE_MS) return false;
-                fs.rmSync(lock, { recursive: true, force: true });
+                if (age <= LOCK_STALE_MS) return null;
+                // Rename is atomic: of two reclaimers exactly one moves the stale
+                // lock aside, the other's rename fails and it backs off.
+                const aside = `${lock}.stale-${token}`;
+                fs.renameSync(lock, aside);
+                fs.rmSync(aside, { recursive: true, force: true });
             } catch {
-                return false;
+                return null;
             }
         }
     }
-    return false;
+    return null;
 }
 
-function unlock(lock: string): void {
+/** Remove the lock only while it is still ours — never a successor's. */
+function unlock(lock: string, token: string): void {
     try {
+        if (fs.readFileSync(path.join(lock, 'owner'), 'utf-8') !== token) return;
         fs.rmSync(lock, { recursive: true, force: true });
     } catch {
         /* a lock that cannot be removed goes stale and is reclaimed */
     }
+}
+
+function record_lock(dir: string, session_id: string): string {
+    return path.join(dir, `.${safe_stem(session_id)}.lock`);
 }
 
 function write_private(file: string, data: string): void {
@@ -577,7 +610,11 @@ export function ingest_transcript(
         }
         const len = Math.min(size - cur.offset, cap_bytes);
         const buf = Buffer.alloc(len);
-        fd = fs.openSync(file, 'r');
+        // O_NOFOLLOW + identity check: the file opened is the file validated.
+        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+        const opened = fs.fstatSync(fd);
+        const checked = fs.lstatSync(file);
+        if (!opened.isFile() || opened.ino !== checked.ino || opened.dev !== checked.dev) return;
         const read = fs.readSync(fd, buf, 0, len, cur.offset);
         const last_nl = buf.lastIndexOf(0x0a, read - 1);
         if (last_nl < 0) {
@@ -670,8 +707,8 @@ export function ingest_transcript(
             cur.recent_ids = cur.recent_ids.slice(-RECENT_ID_WINDOW);
         }
         if (usage.assistant_messages > 0) entry.usage = usage;
-        if (custom_title !== null) entry.title = custom_title;
-        else if (ai_title !== null && (entry.title === null || entry._title_source !== 'custom')) entry.title = ai_title;
+        if (custom_title !== null) entry.title = clean_title(custom_title);
+        else if (ai_title !== null && (entry.title === null || entry._title_source !== 'custom')) entry.title = clean_title(ai_title);
         if (custom_title !== null) entry._title_source = 'custom';
         entry._ingest = cur;
     } catch {
@@ -691,10 +728,14 @@ export function ingest_transcript(
  * The host-supplied transcript path is untrusted input: only a regular
  * `.jsonl` file is read, never a symlink, a device or a directory.
  */
-function valid_transcript(p: string | null): string | null {
-    if (p === null) return null;
+function valid_transcript(p: string | null, session_id: string, config_dir: string | null): string | null {
+    if (p === null || !SESSION_ID_RE.test(session_id)) return null;
     const abs = path.resolve(p);
     if (path.extname(abs) !== '.jsonl') return null;
+    // Bound to this session: hosts name the transcript after the session id.
+    if (!path.basename(abs).includes(session_id)) return null;
+    // And to this profile, when the host config dir is known.
+    if (config_dir !== null && !abs.startsWith(`${config_dir}${path.sep}`)) return null;
     try {
         return fs.lstatSync(abs).isFile() ? abs : null;
     } catch {
@@ -704,18 +745,25 @@ function valid_transcript(p: string | null): string | null {
 
 /** Resume instruction for hosts whose CLI can resume by id; null elsewhere. */
 export function build_resume(entry: CatalogEntry): CatalogResume | null {
+    // The id comes from the host envelope; anything but a plain id gets no
+    // resume line rather than a quoted one a user might still mistrust.
+    if (!SESSION_ID_RE.test(entry.session_id)) return null;
     const host = entry.host.toLowerCase();
     const env: Record<string, string> = {};
+    let argv: string[];
     if (host === 'claude') {
         if (entry.config_dir !== null) env['CLAUDE_CONFIG_DIR'] = entry.config_dir;
-        return { cwd: entry.start_cwd, command: `claude --resume ${entry.session_id}`, env };
-    }
-    if (host === 'codex') {
+        argv = ['claude', '--resume', entry.session_id];
+    } else if (host === 'codex') {
         if (entry.config_dir !== null) env['CODEX_HOME'] = entry.config_dir;
-        return { cwd: entry.start_cwd, command: `codex resume ${entry.session_id}`, env };
+        argv = ['codex', 'resume', entry.session_id];
+    } else {
+        return null;
     }
-    return null;
+    return { cwd: entry.start_cwd, argv, command: argv.map(shell_quote).join(' '), env };
 }
+
+const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{7,127}$/;
 
 function config_dir_for(host: string, env: NodeJS.ProcessEnv): string | null {
     const key = host === 'codex' ? 'CODEX_HOME' : host === 'claude' ? 'CLAUDE_CONFIG_DIR' : null;
@@ -742,16 +790,20 @@ export function catalog_update(
     try {
         const dir = catalog_dir(env);
         ensure_private_dir(dir);
-        const lock = path.join(dir, `.${safe_stem(ev.session_id)}.lock`);
+        const lock = record_lock(dir, ev.session_id);
         const ending = ev.event === 'session_end';
         // A heartbeat may skip; the end mark must not be lost to a still-running `stop`.
-        if (!try_lock(lock, ending ? END_LOCK_WAIT_MS : 0)) return null;
+        const token = try_lock(lock, ending ? END_LOCK_WAIT_MS : 0);
+        if (token === null) return null;
         try {
             entry = read_entry(dir, ev.session_id) ?? fresh_entry(ev, now_iso);
             entry.schema_version = CATALOG_SCHEMA_VERSION;
             entry.host = ev.platform || entry.host;
             entry.last_seen = now_iso;
-            entry.ended_at = ending ? now_iso : null;
+            // Only a real start or a new prompt reopens an ended session (a resume);
+            // a late `stop` racing the end must not.
+            if (ending) entry.ended_at = now_iso;
+            else if (ev.event === 'session_start' || ev.event === 'user_prompt_submit') entry.ended_at = null;
             if (ev.profile !== undefined && ev.profile !== null) entry.profile = ev.profile;
             entry.config_dir = config_dir_for(entry.host, env) ?? entry.config_dir;
             entry.provider = provider_for(entry.host, entry.profile);
@@ -768,7 +820,7 @@ export function catalog_update(
             const checkout = str(ev.checkout);
             if (checkout !== null && checkout !== cwd) note_repo(entry, checkout, now_iso, cache);
 
-            const transcript = valid_transcript(str(ev.transcript_path));
+            const transcript = valid_transcript(str(ev.transcript_path), ev.session_id, entry.config_dir);
             if (transcript !== null) {
                 if (entry.transcript_path !== transcript) {
                     // A different file: the old cursor and totals describe the old one.
@@ -791,7 +843,7 @@ export function catalog_update(
 
             write_private(path.join(dir, `${safe_stem(ev.session_id)}.json`), `${JSON.stringify(entry, null, 2)}\n`);
         } finally {
-            unlock(lock);
+            unlock(lock, token);
         }
         // `stop` is the last event before a quiet period, so it always publishes;
         // only the prompt-time heartbeat is throttled.
@@ -842,6 +894,25 @@ export interface PublishOptions {
     prune?: boolean;
 }
 
+/**
+ * Delete an expired record under its session's lock, after re-reading it: a
+ * heartbeat that refreshed the record since the scan keeps it.
+ */
+function prune_record(dir: string, file: string, session_id: string, cutoff: number): void {
+    const lock = record_lock(dir, session_id);
+    const token = try_lock(lock);
+    if (token === null) return;
+    try {
+        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
+        if (is_entry(parsed) && (ms(parsed.last_seen) ?? 0) >= cutoff) return;
+        fs.unlinkSync(file);
+    } catch {
+        /* already gone */
+    } finally {
+        unlock(lock, token);
+    }
+}
+
 /** Build the index snapshot from the record directory (pure apart from reads + prune). */
 export function build_index(options: PublishOptions = {}): CatalogIndex {
     const env = options.env ?? process.env;
@@ -853,13 +924,7 @@ export function build_index(options: PublishOptions = {}): CatalogIndex {
     for (const { file, entry: e } of read_all_entry_files(dir)) {
         const seen = ms(e.last_seen) ?? 0;
         if (seen < cutoff) {
-            if (prune) {
-                try {
-                    fs.unlinkSync(file);
-                } catch {
-                    /* already gone */
-                }
-            }
+            if (prune) prune_record(dir, file, e.session_id, cutoff);
             continue;
         }
         const { _ingest, _title_source, ...pub } = e;
@@ -906,7 +971,8 @@ export function publish_index(options: PublishOptions = {}): boolean {
             }
         }
         const lock = path.join(dir, '.publish.lock');
-        if (!try_lock(lock)) return true; // the holder re-scans while `.dirty` exists
+        const token = try_lock(lock);
+        if (token === null) return true; // the holder re-scans while `.dirty` exists
         try {
             for (let pass = 0; pass < 3; pass++) {
                 try {
@@ -920,7 +986,7 @@ export function publish_index(options: PublishOptions = {}): boolean {
                 if (!fs.existsSync(dirty)) break;
             }
         } finally {
-            unlock(lock);
+            unlock(lock, token);
         }
         return true;
     } catch {
