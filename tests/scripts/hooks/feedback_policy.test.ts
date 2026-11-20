@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { update_json_under_lock } from '../../../src/scripts/hooks/state_io.js';
 
-import { isQuietAllow, keepNewerOutcome, withLatestRuns } from '../../../src/scripts/hooks/feedback_policy.js';
+import { compareRuns, isQuietAllow, keepNewerOutcome, withLatestRuns } from '../../../src/scripts/hooks/feedback_policy.js';
 
 const allow = { concern: 'c', exit_code: 0, raw_exit_code: 0, decision: 'allow', reason: null };
 
@@ -84,10 +84,46 @@ describe('feedback_policy — withLatestRuns, the summary\'s uncapped per-concer
         expect(a['d']?.invocation).toBe('pid-A');
     });
 
-    it('keeps other concerns\' rows and drops malformed ones', () => {
-        const held = { other: { invocation: 'pid-0', completed_at: '2026-11-20T09:00:00Z' }, junk: 'x', bad: { completed_at: 'y' } };
+    it('keeps other concerns\' rows and drops malformed ones, including rows of concerns this dispatch did not run', () => {
+        const held = {
+            other: { invocation: 'pid-0', completed_at: '2026-11-20T09:00:00Z' },
+            junk: 'x',
+            noTime: { invocation: 'pid-0' },
+            badTime: { invocation: 'pid-0', completed_at: 'not a date' },
+            noId: { completed_at: '2026-11-20T09:00:00Z' },
+        };
         const out = withLatestRuns(held, [run('c', '2026-11-20T10:00:00Z')], 'pid-1');
         expect(Object.keys(out).sort()).toEqual(['c', 'other']);
         expect(withLatestRuns([], [run('c', '2026-11-20T10:00:00Z')], 'pid-1')['c']?.invocation).toBe('pid-1');
+    });
+});
+
+describe('feedback_policy — compareRuns, the one order for writers and the doctor', () => {
+    const t = Date.parse('2026-11-20T10:00:00.000Z');
+    it('orders by instant first', () => {
+        expect(compareRuns(t + 1, 'a', t, 'z')).toBe(1);
+        expect(compareRuns(t, 'z', t + 1, 'a')).toBe(-1);
+    });
+    it('at an equal instant, by invocation id; an id beats none; a full tie is 0', () => {
+        expect(compareRuns(t, 'pid-2', t, 'pid-1')).toBe(1);
+        expect(compareRuns(t, 'pid-1', t, 'pid-2')).toBe(-1);
+        expect(compareRuns(t, 'pid-1', t, undefined)).toBe(1);
+        expect(compareRuns(t, null, t, 'pid-1')).toBe(-1);
+        expect(compareRuns(t, 'pid-1', t, 'pid-1')).toBe(0);
+    });
+    it('keepNewerOutcome and withLatestRuns break an equal-instant tie the same way', () => {
+        const at = '2026-11-20T10:00:00.000Z';
+        expect(keepNewerOutcome({ completed_at: at, invocation: 'pid-2' }, { completed_at: at, invocation: 'pid-1' })).toBeNull();
+        const e = { completed_at: at, invocation: 'pid-3' };
+        expect(keepNewerOutcome({ completed_at: at, invocation: 'pid-2' }, e)).toBe(e);
+        const held = withLatestRuns({}, [{ concern: 'c', completed_at: at }], 'pid-2');
+        expect(withLatestRuns(held, [{ concern: 'c', completed_at: at }], 'pid-1')['c']?.invocation).toBe('pid-2');
+        expect(withLatestRuns(held, [{ concern: 'c', completed_at: at }], 'pid-3')['c']?.invocation).toBe('pid-3');
+    });
+    it('a concern named __proto__ is an ordinary row and survives serialization', () => {
+        const out = withLatestRuns({}, [{ concern: '__proto__', completed_at: '2026-11-20T10:00:00Z' }], 'pid-1');
+        const round = JSON.parse(JSON.stringify(out)) as Record<string, unknown>;
+        expect(Object.keys(round)).toEqual(['__proto__']);
+        expect(Object.getOwnPropertyDescriptor(round, '__proto__')?.value).toEqual({ invocation: 'pid-1', completed_at: '2026-11-20T10:00:00Z' });
     });
 });

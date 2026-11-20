@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { keepNewerOutcome } from '../../../src/scripts/hooks/feedback_policy.js';
 import * as doctor from '../../../src/scripts/hooks_doctor.js';
 import { _load_yaml } from '../../../src/scripts/hooks/dispatch_hook.js';
 import { MANAGED_SIGNATURE } from '../../../src/scripts/_lib/claude_settings_hooks.js';
@@ -177,12 +178,31 @@ describe('hooks_doctor — collect', () => {
             expect(pick()?.endsWith(path.join('s', 'chat-history.json'))).toBe(true);
         });
 
+        // Two dispatches at one instant have no real order; the doctor uses the writers' order
+        // (`compareRuns`: the larger invocation id), whichever file the directory walk reads first.
         for (const [own, sum] of [['a-own', 'b-sum'], ['b-own', 'a-sum']] as const) {
-            it(`two dispatches (${own} read ${own < sum ? 'first' : 'second'}): the summary, which records every run`, () => {
+            it(`two dispatches, ${own} read ${own < sum ? 'first' : 'second'}: the summary when its id orders later`, () => {
                 write(own, 'pid-1', 'pid-2', sum);
                 expect(pick()?.endsWith(path.join(sum, 'summary.json'))).toBe(true);
             });
+            it(`two dispatches, ${own} read ${own < sum ? 'first' : 'second'}: the per-concern file when its id orders later`, () => {
+                write(own, 'pid-2', 'pid-1', sum);
+                expect(pick()?.endsWith(path.join(own, 'chat-history.json'))).toBe(true);
+            });
         }
+
+        it('agrees with the writer: what the locked keep-newer write left in the file is what the doctor reports', () => {
+            // A failed summary write left the older run (pid-2, a block) in the summary; the quiet allow (pid-1)
+            // finished in the same millisecond and went to its own file through keepNewerOutcome.
+            const held = { decision: 'block', completed_at: AT, invocation: 'pid-2' };
+            const incoming = { decision: 'allow', completed_at: AT, invocation: 'pid-1' };
+            const kept = keepNewerOutcome(held, incoming) ?? held;
+            write('s', String(kept.invocation), 'pid-2');
+            const shown = pick();
+            // The file keeps the block (pid-2 orders later), and the doctor shows that same run.
+            expect(kept.decision).toBe('block');
+            expect(shown?.endsWith(path.join('s', 'chat-history.json'))).toBe(true);
+        });
 
         it('a per-concern file from an older writer, with no invocation, does not win a tie', () => {
             write('s', '', 'pid-2');

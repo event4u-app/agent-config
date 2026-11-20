@@ -36,6 +36,7 @@ import {
   read_dispatch_issues,
 } from "./hooks/dispatch_issues.js";
 import { type JsonObject, type JsonValue, _load_yaml } from "./hooks/dispatch_hook.js";
+import { compareRuns } from "./hooks/feedback_policy.js";
 import * as hooks_status from "./hooks_status.js";
 import {
   DETECTOR_IDS,
@@ -130,9 +131,9 @@ function _concern_state_file(state_dir: string, concern: string): string | null 
  * (`hooks/feedback_policy.ts`); `summary.json` carries every run. So both are
  * candidates, ranked by the run's RECORDED `completed_at` — never by file mtime,
  * which a summary advances whenever any other concern runs. On an equal instant
- * the per-concern file wins only when it records the same `invocation` as the
- * summary's run (same dispatch, more detail); a tie between two dispatches goes
- * to the summary, which records every run, quiet ones included.
+ * the per-concern file wins when it records the same `invocation` as the
+ * summary's run (same dispatch, more detail); between two dispatches the
+ * writers' own order decides (`compareRuns` in `hooks/feedback_policy.ts`).
  */
 function _latest_feedback(state_dir: string, concern: string): string | null {
   const dispatcher_dir = path.join(state_dir, ".dispatcher");
@@ -157,9 +158,14 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
       best = c;
       return;
     }
-    if (at !== best.at || detail === best.detail) return;
-    const sameRun = c.invocation !== null && c.invocation === best.invocation;
-    if (detail ? sameRun : !sameRun) best = c;
+    if (at !== best.at) return;
+    // Same dispatch: the per-concern file, which holds the detail. Otherwise the
+    // writers' own order (`compareRuns`), so the doctor never disagrees with them.
+    if (c.invocation !== null && c.invocation === best.invocation) {
+      if (detail && !best.detail) best = c;
+      return;
+    }
+    if (compareRuns(at, c.invocation, best.at, best.invocation) > 0) best = c;
   };
   for (const sess of sessions) {
     const own = path.join(dispatcher_dir, sess, `${concern}.json`);

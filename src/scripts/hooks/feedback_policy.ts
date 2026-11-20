@@ -34,14 +34,32 @@ export function isQuietAllow(entry: Readonly<Record<string, unknown>>): boolean 
  * an outcome that completed later (then `null`, a deliberate no-write).
  * Instants, not strings; an unreadable timestamp on either side lets the
  * incoming entry through, as the unconditional write did before. Equal instants
- * (millisecond resolution) also let the incoming entry through: the last write
- * under the lock wins, and no host verdict reads this file.
+ * (millisecond resolution) are ordered by {@link compareRuns}, the same order
+ * `hooks_doctor` reads with; a full tie lets the incoming entry through.
  */
 export function keepNewerOutcome<T extends Readonly<Record<string, unknown>>>(loaded: Partial<Record<string, unknown>>, entry: T): T | null {
     const held = typeof loaded['completed_at'] === 'string' ? Date.parse(loaded['completed_at']) : Number.NaN;
     const incoming = typeof entry['completed_at'] === 'string' ? Date.parse(entry['completed_at'] as string) : Number.NaN;
-    if (!Number.isNaN(held) && !Number.isNaN(incoming) && held > incoming) return null;
-    return entry;
+    if (Number.isNaN(held) || Number.isNaN(incoming)) return entry;
+    return compareRuns(held, loaded['invocation'], incoming, entry['invocation']) > 0 ? null : entry;
+}
+
+/**
+ * The one order every reader and writer of these records uses, so they never
+ * disagree on which run is the latest: by completion instant, then — at an
+ * equal instant, where no real order exists — by `invocation` id as a string,
+ * an id beating none. Positive when run A is later. Equal instants with equal
+ * (or both absent) ids compare 0. Used by {@link keepNewerOutcome},
+ * {@link withLatestRuns} and `hooks_doctor`.
+ */
+export function compareRuns(atA: number, invocationA: unknown, atB: number, invocationB: unknown): number {
+    if (atA !== atB) return atA > atB ? 1 : -1;
+    const a = typeof invocationA === 'string' ? invocationA : null;
+    const b = typeof invocationB === 'string' ? invocationB : null;
+    if (a === b) return 0;
+    if (a === null) return -1;
+    if (b === null) return 1;
+    return a > b ? 1 : -1;
 }
 
 export interface LatestRun {
@@ -60,10 +78,11 @@ export function withLatestRuns(
     entries: readonly Readonly<Record<string, unknown>>[],
     invocation: string,
 ): Record<string, LatestRun> {
-    const out: Record<string, LatestRun> = {};
+    // No prototype: a concern named `__proto__` is an ordinary key here.
+    const out = Object.create(null) as Record<string, LatestRun>;
     if (held !== null && typeof held === 'object' && !Array.isArray(held)) {
         for (const [k, v] of Object.entries(held as Record<string, unknown>)) {
-            if (v !== null && typeof v === 'object' && typeof (v as { invocation?: unknown }).invocation === 'string') out[k] = v as LatestRun;
+            if (isLatestRun(v)) out[k] = { invocation: v.invocation, completed_at: v.completed_at };
         }
     }
     for (const e of entries) {
@@ -73,4 +92,11 @@ export function withLatestRuns(
         out[name] = prior === undefined ? run : (keepNewerOutcome(prior as unknown as Record<string, unknown>, run) ?? prior);
     }
     return out;
+}
+
+/** A held `latest` row that honours the contract: a string id and a readable completion instant. */
+function isLatestRun(v: unknown): v is LatestRun & { completed_at: string } {
+    if (v === null || typeof v !== 'object') return false;
+    const r = v as { invocation?: unknown; completed_at?: unknown };
+    return typeof r.invocation === 'string' && typeof r.completed_at === 'string' && !Number.isNaN(Date.parse(r.completed_at));
 }
