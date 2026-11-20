@@ -26,6 +26,8 @@ import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 interface Scope {
     readonly prev: NodeJS.ProcessEnv;
     readonly hardened: NodeJS.ProcessEnv;
+    /** Set when a reset between concerns failed; the next concern must not start until it is repaired. */
+    needsRepair: boolean;
 }
 
 /** Innermost last. A nested dispatch (a re-entry from inside a concern) pushes its own scope. */
@@ -80,7 +82,7 @@ export function openConcernEnvScope(packageRoot: string): () => void {
         enclosing === undefined
             ? hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot })
             : { ...enclosing.hardened, AGENT_CONFIG_PACKAGE_ROOT: packageRoot };
-    const scope: Scope = { prev, hardened };
+    const scope: Scope = { prev, hardened, needsRepair: false };
     replaceEnv(hardened);
     stack.push(scope);
     let closed = false;
@@ -105,15 +107,26 @@ export function openConcernEnvScope(packageRoot: string): () => void {
  * run. The release resets only while its scope is still the innermost one: a
  * release that outlives its scope (the scope already closed) does nothing, so it
  * can never put an older hardened copy over the current scope.
+ *
+ * A reset that fails marks the scope; the next concern's entry repairs it first
+ * and THROWS if it cannot, so no concern ever starts on an environment that is
+ * not its hardened baseline. The throw escapes the dispatch, whose host command
+ * turns a missing verdict into a refusal — fail-closed, for a case that needs
+ * `process.env` assignment itself to fail twice.
  */
 export function enterConcernEnv(packageRoot: string): () => void {
     const scope = stack[stack.length - 1];
     if (scope === undefined) return openConcernEnvScope(packageRoot);
+    if (scope.needsRepair || drifted(scope.hardened)) {
+        replaceEnv(scope.hardened);
+        scope.needsRepair = false;
+    }
     return () => {
         if (stack[stack.length - 1] !== scope) return;
         try {
             if (drifted(scope.hardened)) replaceEnv(scope.hardened);
         } catch (err) {
+            scope.needsRepair = true;
             reportQuietly('environment reset failed', err);
         }
     };

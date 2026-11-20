@@ -8,6 +8,8 @@
  * Only an outcome worth looking at on its own keeps a file now; `hooks_doctor`
  * falls back to the summary for the rest.
  */
+import * as fs from 'node:fs';
+
 import { EXIT_ALLOW } from './exit_codes.js';
 
 /** An entry that allowed, was not resolved from a crash, and gave no reason. */
@@ -18,4 +20,18 @@ export function isQuietAllow(entry: Readonly<Record<string, unknown>>): boolean 
         entry['decision'] === 'allow' &&
         (entry['reason'] ?? null) === null
     );
+}
+
+/**
+ * After a quiet allow, remove the concern's per-concern file if an earlier
+ * non-quiet run left one: the file means "this concern's latest outcome", and a
+ * warning the concern no longer gives must not stand as that. One `unlink` that
+ * usually finds nothing (ENOENT), never a locked write.
+ */
+export function dropStaleFeedback(file: string): void {
+    try {
+        fs.rmSync(file, { force: true });
+    } catch {
+        /* a file we cannot remove is reported by nothing: the summary stays the record */
+    }
 }

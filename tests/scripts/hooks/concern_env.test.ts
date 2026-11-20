@@ -113,6 +113,20 @@ describe('concern_env — one scope per dispatch', () => {
         expect(process.env['LD_PRELOAD']).toBe('/evil.so');
     });
 
+    it('a concern never starts on a drifted environment: entry repairs what a failed or skipped reset left', () => {
+        const close = openConcernEnvScope(ROOT);
+        const leaveA = enterConcernEnv(ROOT);
+        leaveA();
+        // Whatever left this behind — a reset that threw, dispatcher code between concerns — the next entry clears it.
+        process.env['LEFT_BEHIND'] = '1';
+        process.env['LD_PRELOAD'] = '/evil.so';
+        const leaveB = enterConcernEnv(ROOT);
+        expect(process.env['LEFT_BEHIND']).toBeUndefined();
+        expect(process.env['LD_PRELOAD']).toBeUndefined();
+        leaveB();
+        close();
+    });
+
     it('a release that outlives its scope does nothing', () => {
         const closeOuter = openConcernEnvScope(ROOT);
         const closeInner = openConcernEnvScope(ROOT);

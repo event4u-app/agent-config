@@ -139,6 +139,11 @@ describe('check_hook_bundle_composition — analyzeMetafile', () => {
         }
     });
 
+    it('refuses an inputs list that is an array, not a path-keyed object', () => {
+        const json = JSON.stringify({ outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 9, inputs: [{ bytesInOutput: 9 }] } } });
+        expect(() => analyzeMetafile(json)).toThrow(/byte count or no inputs/u);
+    });
+
     it('refuses an input with no bytesInOutput instead of counting it as zero', () => {
         const json = JSON.stringify({
             outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 9, inputs: { 'node_modules/left-pad/x.js': {} } } },
