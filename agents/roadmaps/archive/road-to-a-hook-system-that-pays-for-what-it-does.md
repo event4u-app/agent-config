@@ -161,11 +161,16 @@ actually loads.
 
 ## Acceptance Criteria
 
-- [ ] AC-1: A +2 KB own-code change to a concern passes the composition gate
+- [x] AC-1: A +2 KB own-code change to a concern passes the composition gate
       without touching the budget file or a ratification record.
-- [ ] AC-2: A second YAML package, or any unlisted npm package, in the bundle
+      Met: the backstop has 318 KB of headroom and own code is not gated per byte; a change that does not edit the budget file needs no record for it.
+- [x] AC-2: A second YAML package, or any unlisted npm package, in the bundle
       fails the gate; a module loaded at runtime from `node_modules` on a hot
       event fails the load-set check.
-- [ ] AC-3: `pre_tool_use` on a `Read` is at least 20 % faster at p50 than the
+      Met: `hook_bundle_composition.test.ts`, `hook_load_set.test.ts` (red with the old line restored).
+- [~] AC-3: `pre_tool_use` on a `Read` is at least 20 % faster at p50 than the
       pin on the same machine, interleaved.
-- [ ] AC-4: No `fail_closed` guard, exit-code contract or host command changes.
+      <!-- deferred-resolution: carried-to=road-to-a-hook-system-with-isolated-guards -->
+      Measured −19 % (81.9 → 66.4 ms, real workspace, darwin, n = 40). The remaining step is the direct-path compile cache carried in 2.2 (measured 108 → 93 ms in the variant run).
+- [x] AC-4: No `fail_closed` guard, exit-code contract or host command changes.
+      Met: verdict reduction, severity resolution and host emission are untouched (ratification rounds 4–8 confirmed); host commands unchanged.
