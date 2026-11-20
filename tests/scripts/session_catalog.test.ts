@@ -19,7 +19,6 @@ import {
     catalog_dir,
     catalog_update,
     derive_status,
-    ingest_transcript,
     index_json_path,
     index_md_path,
     publish_index,
@@ -212,38 +211,16 @@ describe('catalog_update', () => {
         expect(e!.provider).toBe('cursor');
     });
 
-    it('skips the update while another process of the same session holds its lock', () => {
-        fs.mkdirSync(catalog_dir(env), { recursive: true });
-        fs.writeFileSync(path.join(catalog_dir(env), '.claude--sess-s8-0001.lock'), `${process.pid} held`);
-        expect(catalog_update({ session_id: 'sess-s8-0001', platform: 'claude', event: 'stop' }, env)).toBeNull();
-        expect(read_entry(catalog_dir(env), 'sess-s8-0001')).toBeNull();
-    });
-
     it('never stores prompt text', () => {
         const t = tr('sess-s9-0001');
         fs.writeFileSync(t, line({ type: 'user', message: { role: 'user', content: 'my password is hunter22' } }) + assistant('m1', USAGE));
         catalog_update({ session_id: 'sess-s9-0001', platform: 'claude', event: 'stop', transcript_path: t }, env);
-        const raw = fs.readFileSync(path.join(catalog_dir(env), 'claude--sess-s9-0001.json'), 'utf-8');
+        const raw = fs.readFileSync(path.join(catalog_dir(env), 'claude--sess-s9-0001.v1.json'), 'utf-8');
         expect(raw).not.toContain('hunter22');
     });
 });
 
 describe('review fixes', () => {
-    it('lets session_end wait for a heartbeat that still holds the lock', () => {
-        const lock = path.join(catalog_dir(env), '.claude--sess-se-0001.lock');
-        fs.mkdirSync(catalog_dir(env), { recursive: true });
-        const child = spawn(process.execPath, [
-            '-e',
-            `const fs=require('fs');fs.writeFileSync(${JSON.stringify(lock)},process.pid+' x',{flag:'wx'});setTimeout(()=>fs.rmSync(${JSON.stringify(lock)}),400)`,
-        ]);
-        const deadline = Date.now() + 5000;
-        while (!fs.existsSync(lock) && Date.now() < deadline) execFileSync('sleep', ['0.05']);
-        expect(catalog_update({ session_id: 'sess-se-0001', platform: 'claude', event: 'stop' }, env)).toBeNull();
-        const e = catalog_update({ session_id: 'sess-se-0001', platform: 'claude', event: 'session_end' }, env);
-        child.kill();
-        expect(e?.ended_at).not.toBeNull();
-    });
-
     it('does not count a checkout the session only read', () => {
         const other = make_repo('dotfiles', 'main');
         const t = tr('sess-rd-0001');
@@ -300,32 +277,40 @@ describe('review fixes', () => {
         expect(catalog_update({ session_id: 'sess-np-0001', platform: 'claude', event: 'stop', transcript_path: t2 }, noProfile)!.usage).toBeNull();
     });
 
-    it('reads nothing when the opened file is not the validated one', () => {
-        const t = tr('sess-id-0001');
-        fs.writeFileSync(t, assistant('m1', USAGE));
-        const e = catalog_update({ session_id: 'sess-id-0001', platform: 'claude', event: 'session_start' }, env)!;
-        ingest_transcript(e, t, 1 << 20, e.last_seen, new Map(), { ino: -1, dev: -1 });
+    it('never double-counts when several hook processes of one session race', () => {
+        const t = tr('sess-rc-0001');
+        fs.writeFileSync(t, assistant('m1', USAGE) + assistant('m2', USAGE) + assistant('m3', USAGE));
+        const lib = path.resolve('src/scripts/_lib/session_catalog.ts');
+        const script = `import { catalog_update } from ${JSON.stringify(lib)};
+            catalog_update({ session_id: 'sess-rc-0001', platform: 'claude', event: 'stop', transcript_path: ${JSON.stringify(t)} });`;
+        const runner = path.join(tmp, 'race.mts');
+        fs.writeFileSync(runner, script);
+        const tsx = path.resolve('node_modules/.bin/tsx');
+        const procs = Array.from({ length: 6 }, () => spawn(tsx, [runner], { env: { ...process.env, ...env } }));
+        const deadline = Date.now() + 60_000;
+        while (procs.some((c) => c.exitCode === null) && Date.now() < deadline) execFileSync('sleep', ['0.1']);
+        const e = read_entry(catalog_dir(env), 'sess-rc-0001')!;
+        expect(e.usage!.assistant_messages).toBe(3);
+        expect(fs.readdirSync(catalog_dir(env)).filter((n) => n.startsWith('claude--sess-rc-0001.')).length).toBe(1);
+    }, 120_000);
+
+    it('opens a FIFO named like a transcript without blocking and reads nothing', () => {
+        const fifo = tr('sess-ff-0001');
+        execFileSync('mkfifo', [fifo]);
+        const e = catalog_update({ session_id: 'sess-ff-0001', platform: 'claude', event: 'stop', transcript_path: fifo }, env)!;
         expect(e.usage).toBeNull();
     });
 
-    it('reclaims a lock whose owner process is gone, and keeps a live one', () => {
+    it('survives a damaged record and escapes Markdown-sensitive text', () => {
         fs.mkdirSync(catalog_dir(env), { recursive: true });
-        const lock = path.join(catalog_dir(env), '.claude--sess-dl-0001.lock');
-        fs.writeFileSync(lock, '999999 dead');
-        expect(catalog_update({ session_id: 'sess-dl-0001', platform: 'claude', event: 'stop' }, env)).not.toBeNull();
-        expect(fs.existsSync(lock)).toBe(false);
-    });
-
-    it('records the end through a marker when the record lock stays busy', () => {
-        catalog_update({ session_id: 'sess-tm-0001', platform: 'claude', event: 'session_start' }, env);
-        const lock = path.join(catalog_dir(env), '.claude--sess-tm-0001.lock');
-        fs.writeFileSync(lock, `${process.pid} held`);
-        expect(catalog_update({ session_id: 'sess-tm-0001', platform: 'claude', event: 'session_end' }, env)).toBeNull();
-        const index = build_index({ env });
-        expect(index.sessions.find((x) => x.session_id === 'sess-tm-0001')!.status).toBe('ended');
-        fs.rmSync(lock);
-        catalog_update({ session_id: 'sess-tm-0001', platform: 'claude', event: 'stop' }, env);
-        expect(read_entry(catalog_dir(env), 'sess-tm-0001')!.ended_at).not.toBeNull();
+        fs.writeFileSync(
+            path.join(catalog_dir(env), 'claude--sess-bad-0001.v1.json'),
+            JSON.stringify({ session_id: 'sess-bad-0001', last_seen: new Date().toISOString(), title: '# x | `y` [z](u)' }),
+        );
+        expect(publish_index({ env, force: true })).toBe(true);
+        const md = fs.readFileSync(index_md_path(env), 'utf-8');
+        expect(md).toContain('\\# x \\| \\`y\\` \\[z\\]\\(u\\)');
+        expect(md).not.toContain('\n# x');
     });
 
     it('keeps two hosts with the same id apart', () => {
@@ -407,7 +392,7 @@ describe('publish_index', () => {
         expect(index.sessions[0]._ingest).toBeUndefined();
         expect(index.counts).toMatchObject({ total: 2, active: 1, idle: 1 });
         const md = fs.readFileSync(index_md_path(env), 'utf-8');
-        expect(md.indexOf('`sess-new-0001`')).toBeLessThan(md.indexOf('`sess-old-0001`'));
+        expect(md.indexOf('sess-new-0001 `')).toBeLessThan(md.indexOf('sess-old-0001 `'));
         expect(md).toContain('claude --resume sess-new-0001');
         if (process.platform !== 'win32') {
             expect(fs.statSync(index_json_path(env)).mode & 0o077).toBe(0);
@@ -423,13 +408,6 @@ describe('publish_index', () => {
         expect(read_entry(catalog_dir(env), 'sess-ancient-0001')).toBeNull();
     });
 
-    it('defers to the lock holder and leaves the dirty marker for it', () => {
-        fs.mkdirSync(catalog_dir(env), { recursive: true });
-        fs.writeFileSync(path.join(catalog_dir(env), '.publish.lock'), `${process.pid} held`);
-        expect(publish_index({ env, force: true })).toBe(true);
-        expect(fs.existsSync(index_json_path(env))).toBe(false);
-        expect(fs.existsSync(path.join(catalog_dir(env), '.dirty'))).toBe(true);
-    });
 });
 
 describe('helpers', () => {

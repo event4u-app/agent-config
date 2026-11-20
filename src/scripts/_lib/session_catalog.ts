@@ -12,23 +12,23 @@
  * with what only the host transcript knows (model, token usage, context size,
  * the host's own session title).
  *
- * Layout — one writer per record, one serialised publisher for the index:
+ * Layout — lock-free, by construction rather than by a lock protocol:
  *
- * - `<event4u_root>/runtime/session-catalog/<stem>.json` — one record per
- *   session, written only by hooks of that session, under a per-session lock
- *   directory so two overlapping hook processes of ONE session cannot both
- *   advance the transcript offset (AI council 2026-11-20: the register's
- *   "one writer" argument does not cover a session racing itself).
- * - `<event4u_root>/sessions.json` — the CANONICAL index for external readers
- *   (agent-switch and the CLI). Rebuilt from the record directory.
- * - `<event4u_root>/SESSIONS.md` — the same rows rendered for a human. Derived
- *   from the same in-memory snapshot as the JSON, never parsed back.
+ * - `runtime/session-catalog/<host>--<id>.v<N>.json` — versioned records. A
+ *   writer reads the newest version N and creates N+1 with an exclusive
+ *   `link` of a fully written temp file, so for every version exactly one
+ *   writer wins and no reader sees a partial file. A loser re-reads and
+ *   retries from the winner's state, which is what keeps two overlapping hook
+ *   processes of one session from double-counting the transcript. No lock
+ *   means no stale-lock recovery, the step every lock protocol got wrong.
+ * - `sessions.json` — the index external readers (agent-switch, the CLI) read.
+ * - `SESSIONS.md` — the same rows for a human, never parsed back.
  *
- * Publishing is serialised by a lock directory plus a dirty marker: every
- * writer touches the marker after its record lands, the lock holder re-scans
- * while the marker reappears. Two publishers never run at once, so the index
- * can never be replaced by an OLDER scan (council: atomic rename alone does not
- * prevent out-of-order publication).
+ * Publication needs no lock either: a publisher scans, writes both files by
+ * atomic rename, then re-scans; if the record set changed in between it
+ * publishes again. A publisher that overwrote a newer index with an older scan
+ * therefore always sees newer records on its re-scan and repairs it, so the
+ * files converge on the newest record set once writes stop.
  *
  * Status is derived, never trusted from disk:
  *
@@ -82,16 +82,14 @@ const MAX_REPOS = 50;
 const MAX_BRANCHES_PER_REPO = 20;
 const MAX_MODELS = 10;
 
-/** Upper bound on any lock's life, against a recycled owner pid. */
-const LOCK_STALE_MS = 10 * 60_000;
+/** Compare-and-swap attempts per update; an end event tries harder. */
+const CAS_ATTEMPTS = 5;
+const CAS_ATTEMPTS_END = 25;
 
-/** How long `session_end` waits for a heartbeat of the same session to finish. */
-const END_LOCK_WAIT_MS = 2_000;
+/** Re-scan passes a publisher makes while the record set keeps changing. */
+const PUBLISH_PASSES = 5;
 
-/** How long a forced publish waits for the publish lock. */
-const PUBLISH_WAIT_MS = 1_000;
-
-/** Heartbeat renders closer together than this are deferred to the dirty marker. */
+/** Prompt-time heartbeats publish at most this often; other events always publish. */
 export const PUBLISH_THROTTLE_MS = 15_000;
 
 export type CatalogStatus = 'active' | 'idle' | 'stale' | 'ended';
@@ -389,146 +387,127 @@ export function derive_status(entry: Pick<CatalogEntry, 'ended_at' | 'last_seen'
 }
 
 // ---------------------------------------------------------------------------
-// Locks
+// Versioned record store
 // ---------------------------------------------------------------------------
-
-/**
- * Cross-process lock as a file created with `wx`, holding `<pid> <token>`.
- *
- * A lock is reclaimed only when its owner process is gone (or, against pid
- * reuse, older than LOCK_STALE_MS), never because a live holder is slow. The
- * reclaimer moves the dead lock aside with an atomic rename and checks that it
- * moved the lock it judged dead; if a peer had already replaced it, the moved
- * lock is linked back (`link` refuses to overwrite) before backing off.
- */
-function try_lock(lock: string, wait_ms = 0): string | null {
-    const deadline = Date.now() + wait_ms;
-    for (;;) {
-        const token = try_lock_once(lock);
-        if (token !== null) return token;
-        if (Date.now() >= deadline) return null;
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
-    }
-}
-
-function lock_owner_alive(body: string, mtime_ms: number): boolean {
-    const pid = Number(body.split(' ')[0]);
-    if (Date.now() - mtime_ms > LOCK_STALE_MS) return false;
-    if (!Number.isInteger(pid) || pid <= 0) return false;
-    try {
-        process.kill(pid, 0);
-        return true;
-    } catch (e) {
-        return (e as NodeJS.ErrnoException).code === 'EPERM';
-    }
-}
-
-function try_lock_once(lock: string): string | null {
-    const token = `${process.pid} ${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-            fs.writeFileSync(lock, token, { flag: 'wx', mode: 0o600 });
-            return token;
-        } catch {
-            try {
-                const seen = fs.readFileSync(lock, 'utf-8');
-                if (lock_owner_alive(seen, fs.statSync(lock).mtimeMs)) return null;
-                const aside = `${lock}.dead-${process.pid}-${Math.random().toString(36).slice(2)}`;
-                fs.renameSync(lock, aside);
-                if (fs.readFileSync(aside, 'utf-8') !== seen) {
-                    try {
-                        fs.linkSync(aside, lock);
-                    } catch {
-                        /* a third process holds it now; the moved lock's owner will find its lock gone */
-                    }
-                    fs.rmSync(aside, { force: true });
-                    return null;
-                }
-                fs.rmSync(aside, { force: true });
-            } catch {
-                return null;
-            }
-        }
-    }
-    return null;
-}
-
-/** Remove the lock only while it is still ours — never a successor's. */
-function unlock(lock: string, token: string): void {
-    try {
-        if (fs.readFileSync(lock, 'utf-8') !== token) return;
-        fs.rmSync(lock, { force: true });
-    } catch {
-        /* a lock that cannot be removed is reclaimed once its owner is gone */
-    }
-}
 
 /** Records are keyed by host and id: two hosts may use the same id space. */
 export function record_stem(host: string, session_id: string): string {
     return safe_stem(`${host.trim().toLowerCase()}--${session_id}`);
 }
 
-function record_lock(dir: string, stem: string): string {
-    return path.join(dir, `.${stem}.lock`);
-}
-
-function end_marker(dir: string, stem: string): string {
-    return path.join(dir, `.${stem}.ended`);
-}
-
-function write_private(file: string, data: string): void {
-    write_atomic(file, data);
-    try {
-        fs.chmodSync(file, 0o600);
-    } catch {
-        /* best effort on filesystems without POSIX modes */
-    }
-}
+const VERSION_FILE_RE = /^(.+)\.v(\d{1,15})\.json$/;
 
 function ensure_private_dir(dir: string): void {
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
 }
 
-// ---------------------------------------------------------------------------
-// Record read / write
-// ---------------------------------------------------------------------------
+/** Atomic replace; the temp file is created 0600, so the target never exists wider. */
+function write_private(file: string, data: string): void {
+    write_atomic(file, data);
+}
 
-function is_entry(v: unknown): v is CatalogEntry {
-    if (typeof v !== 'object' || v === null) return false;
+/**
+ * Create `file` with `data` only if it does not exist yet. The content is
+ * written to a 0600 temp first and published with `link`, which refuses an
+ * existing target — so creation is exclusive and never visible half-written.
+ */
+function create_exclusive(file: string, data: string): boolean {
+    const tmp = `${file}.tmp-${process.pid}-${Math.random().toString(36).slice(2)}`;
+    try {
+        fs.writeFileSync(tmp, data, { flag: 'wx', mode: 0o600 });
+        fs.linkSync(tmp, file);
+        return true;
+    } catch {
+        return false;
+    } finally {
+        fs.rmSync(tmp, { force: true });
+    }
+}
+
+const STRING_FIELDS = ['host', 'surface', 'started_at'] as const;
+
+/** Shape-check a parsed record and fill what an older or damaged writer left out. */
+function normalize_entry(v: unknown): CatalogEntry | null {
+    if (typeof v !== 'object' || v === null || Array.isArray(v)) return null;
     const o = v as Record<string, unknown>;
-    return typeof o['session_id'] === 'string' && typeof o['last_seen'] === 'string';
+    if (typeof o['session_id'] !== 'string' || typeof o['last_seen'] !== 'string') return null;
+    if (ms(o['last_seen'] as string) === null) return null;
+    for (const k of STRING_FIELDS) if (typeof o[k] !== 'string') o[k] = k === 'started_at' ? o['last_seen'] : 'unknown';
+    for (const k of ['models', 'repos'] as const) if (!Array.isArray(o[k])) o[k] = [];
+    o['repos'] = (o['repos'] as unknown[]).filter(
+        (r) => typeof r === 'object' && r !== null && typeof (r as CatalogRepo).root === 'string' && Array.isArray((r as CatalogRepo).branches),
+    );
+    o['models'] = (o['models'] as unknown[]).filter((m) => typeof m === 'string');
+    for (const k of ['provider', 'entrypoint', 'host_version', 'config_dir', 'model', 'start_cwd', 'cwd', 'ended_at', 'title', 'roadmap_slug', 'transcript_path'] as const) {
+        if (typeof o[k] !== 'string') o[k] = null;
+    }
+    for (const k of ['profile', 'usage', 'resume'] as const) if (typeof o[k] !== 'object' || Array.isArray(o[k])) o[k] = null;
+    if (typeof o['context_tokens'] !== 'number') o['context_tokens'] = null;
+    return o as unknown as CatalogEntry;
+}
+
+interface StoredRecord {
+    stem: string;
+    version: number;
+    file: string;
+    entry: CatalogEntry;
+}
+
+/** Version files per stem, newest first. */
+function list_versions(dir: string): Map<string, { version: number; file: string }[]> {
+    const out = new Map<string, { version: number; file: string }[]>();
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir);
+    } catch {
+        return out;
+    }
+    for (const n of names) {
+        const m = VERSION_FILE_RE.exec(n);
+        if (m === null) continue;
+        const list = out.get(m[1]!) ?? [];
+        list.push({ version: Number(m[2]), file: path.join(dir, n) });
+        out.set(m[1]!, list);
+    }
+    for (const list of out.values()) list.sort((a, b) => b.version - a.version);
+    return out;
+}
+
+/** The newest readable version of one record (a version being cleaned up is skipped). */
+function read_latest(dir: string, stem: string, versions?: { version: number; file: string }[]): StoredRecord | null {
+    const list = versions ?? list_versions(dir).get(stem) ?? [];
+    for (const v of list) {
+        try {
+            const entry = normalize_entry(JSON.parse(fs.readFileSync(v.file, 'utf-8')));
+            if (entry !== null) return { stem, version: v.version, file: v.file, entry };
+        } catch {
+            /* removed under us or unreadable: try the next older version */
+        }
+    }
+    return null;
+}
+
+function remove_older(dir: string, stem: string, below: number): void {
+    for (const v of list_versions(dir).get(stem) ?? []) {
+        if (v.version < below) fs.rmSync(v.file, { force: true });
+    }
 }
 
 export function read_entry(dir: string, session_id: string, host = 'claude'): CatalogEntry | null {
-    try {
-        const parsed: unknown = JSON.parse(fs.readFileSync(path.join(dir, `${record_stem(host, session_id)}.json`), 'utf-8'));
-        return is_entry(parsed) ? parsed : null;
-    } catch {
-        return null;
+    return read_latest(dir, record_stem(host, session_id))?.entry ?? null;
+}
+
+function read_all_records(dir: string): StoredRecord[] {
+    const out: StoredRecord[] = [];
+    for (const [stem, versions] of list_versions(dir)) {
+        const rec = read_latest(dir, stem, versions);
+        if (rec !== null) out.push(rec);
     }
+    return out;
 }
 
 export function read_all_entries(dir: string): CatalogEntry[] {
-    return read_all_entry_files(dir).map((x) => x.entry);
-}
-
-function read_all_entry_files(dir: string): { file: string; entry: CatalogEntry }[] {
-    let names: string[];
-    try {
-        names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
-    } catch {
-        return [];
-    }
-    const out: { file: string; entry: CatalogEntry }[] = [];
-    for (const n of names) {
-        try {
-            const parsed: unknown = JSON.parse(fs.readFileSync(path.join(dir, n), 'utf-8'));
-            if (is_entry(parsed)) out.push({ file: path.join(dir, n), entry: parsed });
-        } catch {
-            /* a half-written or foreign file is skipped, never fatal */
-        }
-    }
-    return out;
+    return read_all_records(dir).map((r) => r.entry);
 }
 
 function fresh_entry(ev: CatalogEvent, now_iso: string): CatalogEntry {
@@ -627,15 +606,14 @@ function empty_usage(): CatalogUsage {
  */
 export function ingest_transcript(
     entry: CatalogEntry,
-    file: string,
+    opened: OpenedTranscript,
     cap_bytes: number,
     now_iso: string,
     cache: Map<string, string | null>,
-    expect: { ino: number; dev: number } | null = null,
 ): void {
-    let fd: number | null = null;
+    const fd = opened.fd;
     try {
-        const size = fs.statSync(file).size;
+        const size = opened.size;
         const cur: CatalogIngest = entry._ingest ?? { offset: 0, recent_ids: [] };
         if (size < cur.offset) {
             // Truncated or replaced: the old totals describe a file that no longer exists.
@@ -649,11 +627,6 @@ export function ingest_transcript(
         }
         const len = Math.min(size - cur.offset, cap_bytes);
         const buf = Buffer.alloc(len);
-        // O_NOFOLLOW + identity check: the file opened is the file validated.
-        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
-        const opened = fs.fstatSync(fd);
-        const want = expect ?? fs.lstatSync(file);
-        if (!opened.isFile() || opened.ino !== want.ino || opened.dev !== want.dev) return;
         const read = fs.readSync(fd, buf, 0, len, cur.offset);
         const last_nl = buf.lastIndexOf(0x0a, read - 1);
         if (last_nl < 0) {
@@ -752,14 +725,6 @@ export function ingest_transcript(
         entry._ingest = cur;
     } catch {
         /* unreadable transcript: keep what we had, retry next call */
-    } finally {
-        if (fd !== null) {
-            try {
-                fs.closeSync(fd);
-            } catch {
-                /* ignore */
-            }
-        }
     }
 }
 
@@ -767,10 +732,10 @@ export function ingest_transcript(
  * The host-supplied transcript path is untrusted input: only a regular
  * `.jsonl` file is read, never a symlink, a device or a directory.
  */
-interface CheckedTranscript {
+export interface OpenedTranscript {
+    fd: number;
     path: string;
-    ino: number;
-    dev: number;
+    size: number;
 }
 
 /** The host's profile root, from the env override or the host default; null for hosts not read. */
@@ -787,22 +752,40 @@ function transcript_name_matches(base: string, session_id: string): boolean {
 }
 
 /**
- * The host-supplied transcript path is untrusted input. Accepted only when,
- * after resolving every symlink, it is a regular `.jsonl` file named for this
- * session and inside this session's profile root. The inode/device seen here
- * are what the opened descriptor must match.
+ * Open the host-supplied transcript, then prove what was opened. The open
+ * cannot block (`O_NONBLOCK`, so a FIFO is harmless) or follow a final
+ * symlink (`O_NOFOLLOW`); the descriptor must be a regular file; and the
+ * file currently at the fully resolved path — inside this session's profile
+ * root and named for this session — must be that same inode. Binding the
+ * check to the descriptor leaves no window between validation and read.
  */
-function valid_transcript(p: string | null, session_id: string, root: string | null): CheckedTranscript | null {
+export function open_transcript(p: string | null, session_id: string, root: string | null): OpenedTranscript | null {
     if (p === null || root === null) return null;
+    let fd: number | null = null;
     try {
-        const real = fs.realpathSync(path.resolve(p));
+        const abs = path.resolve(p);
+        if (path.extname(abs) !== '.jsonl') return null;
+        fd = fs.openSync(abs, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
+        const st = fs.fstatSync(fd);
+        const real = fs.realpathSync(abs);
         const real_root = fs.realpathSync(root);
-        if (!real.startsWith(`${real_root}${path.sep}`)) return null;
-        if (!transcript_name_matches(path.basename(real), session_id)) return null;
-        const st = fs.lstatSync(real);
-        return st.isFile() ? { path: real, ino: st.ino, dev: st.dev } : null;
+        const at = fs.lstatSync(real);
+        if (
+            st.isFile() &&
+            real.startsWith(`${real_root}${path.sep}`) &&
+            transcript_name_matches(path.basename(real), session_id) &&
+            at.ino === st.ino &&
+            at.dev === st.dev
+        ) {
+            const opened = { fd, path: real, size: st.size };
+            fd = null;
+            return opened;
+        }
+        return null;
     } catch {
         return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
     }
 }
 
@@ -839,9 +822,66 @@ function config_dir_for(host: string, env: NodeJS.ProcessEnv): string | null {
 // Update — called from the session-register hook
 // ---------------------------------------------------------------------------
 
+/** Apply one event to a record (pure apart from git and transcript reads). */
+function apply_event(
+    entry: CatalogEntry,
+    ev: CatalogEvent,
+    env: NodeJS.ProcessEnv,
+    now_iso: string,
+): void {
+    const ending = ev.event === 'session_end';
+    entry.schema_version = CATALOG_SCHEMA_VERSION;
+    entry.host = ev.platform || entry.host;
+    entry.last_seen = now_iso;
+    // Only a real start or a new prompt reopens an ended session (a resume);
+    // a late `stop` racing the end must not.
+    if (ending) entry.ended_at = now_iso;
+    else if (ev.event === 'session_start' || ev.event === 'user_prompt_submit') entry.ended_at = null;
+    if (ev.profile !== undefined && ev.profile !== null) entry.profile = ev.profile;
+    entry.config_dir = config_dir_for(entry.host, env) ?? entry.config_dir;
+    entry.provider = provider_for(entry.host, entry.profile);
+    if (ev.roadmap_slug !== undefined) entry.roadmap_slug = ev.roadmap_slug ?? null;
+    note_model(entry, str(ev.model));
+
+    const cache = new Map<string, string | null>();
+    const cwd = str(ev.cwd) ?? str(ev.checkout);
+    if (cwd !== null) {
+        entry.cwd = cwd;
+        if (entry.start_cwd === null) entry.start_cwd = cwd;
+        note_repo(entry, cwd, now_iso, cache);
+    }
+    const checkout = str(ev.checkout);
+    if (checkout !== null && checkout !== cwd) note_repo(entry, checkout, now_iso, cache);
+
+    const opened = open_transcript(str(ev.transcript_path), ev.session_id, profile_root(entry.host, entry.config_dir));
+    if (opened !== null) {
+        try {
+            if (entry.transcript_path !== opened.path) {
+                // A different file: the old cursor and totals describe the old one.
+                delete entry._ingest;
+                entry.usage = null;
+            }
+            entry.transcript_path = opened.path;
+            ingest_transcript(entry, opened, ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES, now_iso, cache);
+        } finally {
+            fs.closeSync(opened.fd);
+        }
+    }
+    entry.entrypoint = entry.entrypoint ?? str(env['CLAUDE_CODE_ENTRYPOINT']);
+    entry.surface = surface_from_entrypoint(entry.entrypoint, str(ev.surface) ?? entry.surface);
+    entry.repos.sort((a, b) => (ms(b.last_seen) ?? 0) - (ms(a.last_seen) ?? 0));
+    entry.resume = build_resume(entry);
+}
+
 /**
  * Fold one hook event into this session's catalog record, then publish the
- * index (throttled on heartbeats, forced on start and end). Never throws.
+ * index. Never throws.
+ *
+ * Compare-and-swap over versions: read the newest version N, apply the event,
+ * create N+1 exclusively. A writer that loses the version re-reads the
+ * winner's record and applies its event on top, so concurrent hook processes
+ * of one session never double-count and an end event is never dropped (it
+ * retries longer than a heartbeat).
  */
 export function catalog_update(
     ev: CatalogEvent,
@@ -849,92 +889,30 @@ export function catalog_update(
 ): CatalogEntry | null {
     const now = ev.now ?? new Date();
     const now_iso = iso_now(now);
-    let entry: CatalogEntry | null = null;
     // Input boundary: the id becomes a file name and a resume argument.
     if (!SESSION_ID_RE.test(ev.session_id)) return null;
     try {
         const dir = catalog_dir(env);
         ensure_private_dir(dir);
         const stem = record_stem(ev.platform, ev.session_id);
-        const lock = record_lock(dir, stem);
-        const ending = ev.event === 'session_end';
-        // A heartbeat may skip; the end mark must not be lost to a still-running `stop`.
-        const token = try_lock(lock, ending ? END_LOCK_WAIT_MS : 0);
-        if (token === null) {
-            if (ending) {
-                // Last resort: a marker the next writer or publisher applies.
-                write_private(end_marker(dir, stem), now_iso);
-                publish_index({ env, now, force: true });
-            }
-            return null;
+        const attempts = ev.event === 'session_end' ? CAS_ATTEMPTS_END : CAS_ATTEMPTS;
+        for (let attempt = 0; attempt < attempts; attempt++) {
+            const current = read_latest(dir, stem);
+            const entry = current?.entry ?? fresh_entry(ev, now_iso);
+            apply_event(entry, ev, env, now_iso);
+            const version = (current?.version ?? 0) + 1;
+            const file = path.join(dir, `${stem}.v${version}.json`);
+            if (!create_exclusive(file, `${JSON.stringify(entry, null, 2)}\n`)) continue;
+            remove_older(dir, stem, version);
+            // `stop` is the last event before a quiet period, so it always
+            // publishes; only the prompt-time heartbeat is throttled.
+            publish_index({ env, now, force: ev.event !== 'user_prompt_submit' });
+            return entry;
         }
-        try {
-            entry = read_entry(dir, ev.session_id, ev.platform) ?? fresh_entry(ev, now_iso);
-            try {
-                const marked = fs.readFileSync(end_marker(dir, stem), 'utf-8').trim();
-                if (entry.ended_at === null && ms(marked) !== null) entry.ended_at = marked;
-                fs.unlinkSync(end_marker(dir, stem));
-            } catch {
-                /* no marker */
-            }
-            entry.schema_version = CATALOG_SCHEMA_VERSION;
-            entry.host = ev.platform || entry.host;
-            entry.last_seen = now_iso;
-            // Only a real start or a new prompt reopens an ended session (a resume);
-            // a late `stop` racing the end must not.
-            if (ending) entry.ended_at = now_iso;
-            else if (ev.event === 'session_start' || ev.event === 'user_prompt_submit') entry.ended_at = null;
-            if (ev.profile !== undefined && ev.profile !== null) entry.profile = ev.profile;
-            entry.config_dir = config_dir_for(entry.host, env) ?? entry.config_dir;
-            entry.provider = provider_for(entry.host, entry.profile);
-            if (ev.roadmap_slug !== undefined) entry.roadmap_slug = ev.roadmap_slug ?? null;
-            note_model(entry, str(ev.model));
-
-            const cache = new Map<string, string | null>();
-            const cwd = str(ev.cwd) ?? str(ev.checkout);
-            if (cwd !== null) {
-                entry.cwd = cwd;
-                if (entry.start_cwd === null) entry.start_cwd = cwd;
-                note_repo(entry, cwd, now_iso, cache);
-            }
-            const checkout = str(ev.checkout);
-            if (checkout !== null && checkout !== cwd) note_repo(entry, checkout, now_iso, cache);
-
-            const checked = valid_transcript(str(ev.transcript_path), ev.session_id, profile_root(entry.host, entry.config_dir));
-            if (checked !== null) {
-                const transcript = checked.path;
-                if (entry.transcript_path !== transcript) {
-                    // A different file: the old cursor and totals describe the old one.
-                    delete entry._ingest;
-                    entry.usage = null;
-                }
-                entry.transcript_path = transcript;
-                ingest_transcript(
-                    entry,
-                    entry.transcript_path,
-                    ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES,
-                    now_iso,
-                    cache,
-                    checked,
-                );
-            }
-            entry.entrypoint = entry.entrypoint ?? str(env['CLAUDE_CODE_ENTRYPOINT']);
-            entry.surface = surface_from_entrypoint(entry.entrypoint, str(ev.surface) ?? entry.surface);
-            entry.repos.sort((a, b) => (ms(b.last_seen) ?? 0) - (ms(a.last_seen) ?? 0));
-            entry.resume = build_resume(entry);
-
-            write_private(path.join(dir, `${stem}.json`), `${JSON.stringify(entry, null, 2)}\n`);
-        } finally {
-            unlock(lock, token);
-        }
-        // `stop` is the last event before a quiet period, so it always publishes;
-        // only the prompt-time heartbeat is throttled.
-        const force = ev.event !== 'user_prompt_submit';
-        publish_index({ env, now, force, wait_ms: force ? PUBLISH_WAIT_MS : 0 });
     } catch {
         /* fail open */
     }
-    return entry;
+    return null;
 }
 
 /**
@@ -964,7 +942,7 @@ export function catalog_hook_event(
 }
 
 // ---------------------------------------------------------------------------
-// Publish — sessions.json (canonical) + SESSIONS.md (derived)
+// Publish — sessions.json + SESSIONS.md
 // ---------------------------------------------------------------------------
 
 export interface PublishOptions {
@@ -974,51 +952,43 @@ export interface PublishOptions {
     force?: boolean;
     /** Prune records past the retention window. Default true. */
     prune?: boolean;
-    /** How long a forced publish waits for a running publisher. */
-    wait_ms?: number;
 }
 
 /**
- * Delete an expired record under its session's lock, after re-reading it: a
- * heartbeat that refreshed the record since the scan keeps it.
+ * Delete an expired record's version files, each re-read first: a version a
+ * concurrent heartbeat just wrote is fresh and survives.
  */
-function prune_record(dir: string, file: string, cutoff: number): void {
-    const lock = record_lock(dir, path.basename(file, '.json'));
-    const token = try_lock(lock);
-    if (token === null) return;
-    try {
-        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
-        if (is_entry(parsed) && (ms(parsed.last_seen) ?? 0) >= cutoff) return;
-        fs.unlinkSync(file);
-    } catch {
-        /* already gone */
-    } finally {
-        unlock(lock, token);
+function prune_record(dir: string, stem: string, cutoff: number): void {
+    for (const v of list_versions(dir).get(stem) ?? []) {
+        try {
+            const entry = normalize_entry(JSON.parse(fs.readFileSync(v.file, 'utf-8')));
+            if (entry !== null && (ms(entry.last_seen) ?? 0) >= cutoff) continue;
+            fs.rmSync(v.file, { force: true });
+        } catch {
+            /* already gone */
+        }
     }
 }
 
 /** Build the index snapshot from the record directory (pure apart from reads + prune). */
 export function build_index(options: PublishOptions = {}): CatalogIndex {
+    return build_index_with_fingerprint(options).index;
+}
+
+function build_index_with_fingerprint(options: PublishOptions): { index: CatalogIndex; fingerprint: string } {
     const env = options.env ?? process.env;
     const now = options.now ?? new Date();
     const dir = catalog_dir(env);
     const prune = options.prune !== false;
     const cutoff = now.getTime() - RETENTION_DAYS * 86_400_000;
     const rows: PublishedEntry[] = [];
-    for (const { file, entry: e } of read_all_entry_files(dir)) {
+    const seen_versions: string[] = [];
+    for (const { stem, version, entry: e } of read_all_records(dir)) {
+        seen_versions.push(`${stem}:${version}`);
         const seen = ms(e.last_seen) ?? 0;
         if (seen < cutoff) {
-            if (prune) prune_record(dir, file, cutoff);
+            if (prune) prune_record(dir, stem, cutoff);
             continue;
-        }
-        const stem = path.basename(file, '.json');
-        if (e.ended_at === null) {
-            try {
-                const marked = fs.readFileSync(end_marker(dir, stem), 'utf-8').trim();
-                if (ms(marked) !== null) e.ended_at = marked;
-            } catch {
-                /* no marker */
-            }
         }
         const { _ingest, _title_source, ...pub } = e;
         void _ingest;
@@ -1033,55 +1003,49 @@ export function build_index(options: PublishOptions = {}): CatalogIndex {
     const counts: CatalogIndex['counts'] = { active: 0, idle: 0, stale: 0, ended: 0, total: rows.length };
     for (const r of rows) counts[r.status] += 1;
     return {
-        schema_version: CATALOG_SCHEMA_VERSION,
-        generated_at: iso_now(now),
-        catalog_dir: dir,
-        active_window_seconds: ACTIVE_WINDOW_SECONDS,
-        retention_days: RETENTION_DAYS,
-        counts,
-        sessions: rows,
+        index: {
+            schema_version: CATALOG_SCHEMA_VERSION,
+            generated_at: iso_now(now),
+            catalog_dir: dir,
+            active_window_seconds: ACTIVE_WINDOW_SECONDS,
+            retention_days: RETENTION_DAYS,
+            counts,
+            sessions: rows,
+        },
+        fingerprint: seen_versions.sort().join('\n'),
     };
 }
 
+function current_fingerprint(dir: string): string {
+    const out: string[] = [];
+    for (const [stem, versions] of list_versions(dir)) out.push(`${stem}:${versions[0]!.version}`);
+    return out.sort().join('\n');
+}
+
 /**
- * Rebuild `sessions.json` + `SESSIONS.md`, serialised across processes.
- * Returns true when this call published (or the work was already covered).
+ * Rebuild `sessions.json` + `SESSIONS.md`. Scan, write both by atomic rename,
+ * re-scan: if any record moved in between, publish again. Whoever writes last
+ * has therefore seen every record that existed when it finished.
  */
 export function publish_index(options: PublishOptions = {}): boolean {
     const env = options.env ?? process.env;
     try {
         const dir = catalog_dir(env);
         ensure_private_dir(dir);
-        const dirty = path.join(dir, '.dirty');
-        fs.writeFileSync(dirty, '', { mode: 0o600 });
         const json_path = index_json_path(env);
         if (options.force !== true) {
             try {
                 const age = (options.now ?? new Date()).getTime() - fs.statSync(json_path).mtimeMs;
-                if (age >= 0 && age < PUBLISH_THROTTLE_MS) return true; // marker stays for the next publisher
+                if (age >= 0 && age < PUBLISH_THROTTLE_MS) return true;
             } catch {
                 /* no index yet → publish */
             }
         }
-        const lock = path.join(dir, '.publish.lock');
-        // A forced publish waits briefly: the holder may already be past its last
-        // dirty check, and the final state of a turn must not wait for a later event.
-        const token = try_lock(lock, options.wait_ms ?? 0);
-        if (token === null) return true; // the holder re-scans while `.dirty` exists
-        try {
-            for (let pass = 0; pass < 3; pass++) {
-                try {
-                    fs.unlinkSync(dirty);
-                } catch {
-                    /* already consumed */
-                }
-                const index = build_index({ ...options, env });
-                write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
-                write_private(index_md_path(env), render_markdown(index));
-                if (!fs.existsSync(dirty)) break;
-            }
-        } finally {
-            unlock(lock, token);
+        for (let pass = 0; pass < PUBLISH_PASSES; pass++) {
+            const { index, fingerprint } = build_index_with_fingerprint({ ...options, env });
+            write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
+            write_private(index_md_path(env), render_markdown(index));
+            if (current_fingerprint(dir) === fingerprint) break;
         }
         return true;
     } catch {
@@ -1107,9 +1071,21 @@ export function fmt_age(seconds: number): string {
     return `${Math.round(seconds / 86_400)} d`;
 }
 
-function cell(s: string | null | undefined): string {
-    return (s ?? '—').replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim() || '—';
+/** Text that cannot open Markdown structure: every inline-syntax character escaped, one line. */
+export function md_text(s: string | null | undefined): string {
+    const t = (s ?? '—').replace(/\s+/g, ' ').trim();
+    return t === '' ? '—' : t.replace(/[\\`*_[\]{}()<>#+!|~-]/g, (c) => `\\${c}`);
 }
+
+/** An inline code span whose fence is longer than any backtick run inside. */
+export function md_code(s: string | null | undefined): string {
+    const t = (s ?? '—').replace(/\s+/g, ' ');
+    const longest = Math.max(0, ...(t.match(/`+/g) ?? []).map((m) => m.length));
+    const fence = '`'.repeat(longest + 1);
+    return `${fence} ${t} ${fence}`;
+}
+
+const cell = md_text;
 
 function repo_summary(r: PublishedEntry, max = 3): string {
     if (r.repos.length === 0) return '—';
@@ -1159,30 +1135,30 @@ export function render_markdown(index: CatalogIndex, detail_rows = 25): string {
         lines.push(
             `| ${r.status} | ${fmt_age(r.idle_seconds)} | ${cell(`${r.host} · ${r.surface}`)} | ${cell(profile_label(r.profile))} | ` +
                 `${cell(r.model)} | ${cell(r.title)} | ${cell(repo_summary(r))} | ${fmt_tokens(r.usage?.total_tokens)} | ` +
-                `${fmt_tokens(r.context_tokens)} | \`${r.session_id}\` |`,
+                `${fmt_tokens(r.context_tokens)} | ${md_code(r.session_id)} |`,
         );
     }
     lines.push('', '## Details', '');
     for (const r of index.sessions.slice(0, detail_rows)) {
         lines.push(`### ${cell(r.title ?? r.session_id)}`, '');
-        lines.push(`- **Session:** \`${r.session_id}\` · ${r.status} · last seen ${r.last_seen} · started ${r.started_at}` +
-            (r.ended_at !== null ? ` · ended ${r.ended_at}` : ''));
-        lines.push(`- **Host:** ${r.host}${r.host_version !== null ? ` ${r.host_version}` : ''} · surface ${r.surface}` +
-            ` · provider ${r.provider ?? '—'} · profile ${profile_label(r.profile)}`);
-        lines.push(`- **Model:** ${r.model ?? '—'}${r.models.length > 1 ? ` (also: ${r.models.filter((m) => m !== r.model).join(', ')})` : ''}`);
+        lines.push(`- **Session:** ${md_code(r.session_id)} · ${r.status} · last seen ${md_text(r.last_seen)} · started ${md_text(r.started_at)}` +
+            (r.ended_at !== null ? ` · ended ${md_text(r.ended_at)}` : ''));
+        lines.push(`- **Host:** ${md_text(r.host)}${r.host_version !== null ? ` ${md_text(r.host_version)}` : ''} · surface ${md_text(r.surface)}` +
+            ` · provider ${md_text(r.provider)} · profile ${md_text(profile_label(r.profile))}`);
+        lines.push(`- **Model:** ${md_text(r.model)}${r.models.length > 1 ? ` (also: ${md_text(r.models.filter((m) => m !== r.model).join(', '))})` : ''}`);
         if (r.usage !== null) {
             lines.push(`- **Tokens:** ${fmt_tokens(r.usage.total_tokens)} total · in ${fmt_tokens(r.usage.input_tokens)} · ` +
                 `out ${fmt_tokens(r.usage.output_tokens)} · cache read ${fmt_tokens(r.usage.cache_read_input_tokens)} · ` +
                 `cache write ${fmt_tokens(r.usage.cache_creation_input_tokens)} · ${r.usage.assistant_messages} replies · ` +
                 `context ${fmt_tokens(r.context_tokens)}`);
         }
-        lines.push(`- **Started in:** \`${r.start_cwd ?? '—'}\``);
-        if (r.roadmap_slug !== null) lines.push(`- **Roadmap:** ${r.roadmap_slug}`);
+        lines.push(`- **Started in:** ${md_code(r.start_cwd)}`);
+        if (r.roadmap_slug !== null) lines.push(`- **Roadmap:** ${md_text(r.roadmap_slug)}`);
         for (const repo of r.repos) {
-            lines.push(`- **Repo** ${repo_label(repo)}${repo.remote !== null ? ` (${repo.remote})` : ''}: \`${repo.root}\` — branches ${repo.branches.map((b) => `\`${b}\``).join(', ') || '—'}`);
+            lines.push(`- **Repo** ${md_text(repo_label(repo))}${repo.remote !== null ? ` (${md_code(repo.remote)})` : ''}: ${md_code(repo.root)} — branches ${repo.branches.map((b) => md_code(b)).join(', ') || '—'}`);
         }
         const resume = resume_line(r);
-        if (resume !== null) lines.push(`- **Resume:** \`${resume}\``);
+        if (resume !== null) lines.push(`- **Resume:** ${md_code(resume)}`);
         lines.push('');
     }
     if (index.sessions.length > detail_rows) {

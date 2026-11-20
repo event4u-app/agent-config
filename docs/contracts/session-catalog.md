@@ -17,7 +17,7 @@ session up without browsing every profile directory and transcript.
 |---|---|
 | `sessions.json` | **Canonical index.** The contract external readers consume. |
 | `SESSIONS.md` | Human view of the same snapshot. Derived, never parsed back. |
-| `runtime/session-catalog/<host>--<session>.json` | One record per host and session id; internal. |
+| `runtime/session-catalog/<host>--<session>.v<N>.json` | Versioned record per host and session id; internal. |
 
 All files are written owner-only (`0600`, directory `0700`) by atomic rename.
 Nothing here is tracked by git or sent anywhere.
@@ -29,18 +29,21 @@ profile, and a per-profile catalog would split the one list across profiles.
 ## Who writes it
 
 The `session-register` hook concern, on every slot it is already bound to:
-`session_start`, `user_prompt_submit`, `stop` and `session_end`. Each event
-updates that session's own record under a per-session lock (a heartbeat that
-finds it held is skipped; `session_end` waits up to 2 s), after the register's
-own work. Locks are files holding the owner's pid and a token; a lock is taken
-over only when its owner process is gone, and released only by its owner.
-Session ids must be plain identifiers; the catalog relies on hosts issuing
-unique ids (UUIDs) per host. Then the index is republished: always on start, `stop` and end, at
-most once per 15 s on the prompt-time heartbeat. Publication is serialised by a
-lock plus a dirty marker, so concurrent sessions do not interleave scans; a
-deferred update lands with the next publish by any session. The index is
-therefore eventually consistent, not a live view — the CLI rebuilds from the
-records on every call, and `agent-config sessions:catalog --render` republishes.
+`session_start`, `user_prompt_submit`, `stop` and `session_end`, after the
+register's own work. There are no locks. Each record is versioned: a writer
+reads the newest version N, applies the event and creates N+1 exclusively
+(an atomic `link` of a fully written temp file), so for each version exactly
+one writer wins and no reader sees a partial file; a loser re-reads the
+winner's record and applies its event on top (an end event retries longest).
+Session ids must be plain identifiers, and the catalog relies on hosts issuing
+unique ids (UUIDs) per host.
+
+The index is republished on start, `stop` and end, and at most once per 15 s
+on the prompt-time heartbeat. A publisher scans, writes both files by atomic
+rename, and re-scans; if any record changed meanwhile it publishes again, so
+the files converge on the newest records once writes stop. The CLI rebuilds
+from the records on every call, and `agent-config sessions:catalog --render`
+republishes.
 
 Unlike the live register (`runtime/sessions/`, deleted at session end), a
 catalog record **survives** `session_end` with `ended_at` set, and is pruned
@@ -124,16 +127,15 @@ Field notes:
   repositories are not observed.
 - **`usage`** — cumulative, de-duplicated per assistant message. `context_tokens`
   is the prompt size of the latest main-thread assistant message.
-- **`transcript_path`** — read only when, with every symlink resolved, it is a
-  regular `.jsonl` file named `<session>.jsonl` or `…-<session>.jsonl` inside
-  the session's profile root (`CLAUDE_CONFIG_DIR` / `CODEX_HOME`, else
-  `~/.claude` / `~/.codex`; other hosts are not read), and the opened
-  descriptor is the same inode as the validated file. A different path for the
-  same session restarts the totals.
+- **`transcript_path`** — opened without following a final symlink and
+  without blocking, then read only when the descriptor is a regular file and
+  the file at the fully resolved path is that same inode, named
+  `<session>.jsonl` or `…-<session>.jsonl`, inside the session's profile root
+  (`CLAUDE_CONFIG_DIR` / `CODEX_HOME`, else `~/.claude` / `~/.codex`; other
+  hosts are not read). A different path for the same session restarts the
+  totals.
 - **`ended_at`** — set by `session_end`; only a later `session_start` or prompt
-  (a resume under the same id) clears it, never a late `stop`. If the record
-  stays locked through the end, an end marker records it and the next writer
-  or publisher applies it.
+  (a resume under the same id) clears it, never a late `stop`.
 - **`resume`** — `null` on hosts whose CLI cannot resume by id, and for a
   session id that is not a plain identifier. `argv` is what a program should
   spawn; `command` is the same, shell-quoted. `env` only ever carries the
@@ -156,7 +158,9 @@ absent.
 
 No prompt or reply text is stored. `title` is the host's generated title, or
 one the user set, capped at 120 characters with token-shaped runs masked.
-Remote URLs have their userinfo, query and fragment removed. Paths are local and
+Remote URLs have their userinfo, query and fragment removed. In `SESSIONS.md`
+every value is escaped or code-quoted, so no stored text can change the
+document's structure. Paths are local and
 the files never leave the machine.
 
 ## Stability for external readers
