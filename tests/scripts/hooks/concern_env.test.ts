@@ -127,6 +127,60 @@ describe('concern_env — one scope per dispatch', () => {
         close();
     });
 
+    describe('injected failures', () => {
+        const realEnv = process.env;
+        let failing = false;
+        let writes = 0;
+        let failAtWrite: number | null = null;
+        /** process.env replaced by a copy whose writes throw while `failing` is on, or at write number `failAtWrite`. */
+        const installFailingEnv = (): void => {
+            const target: Record<string, string> = { ...(process.env as Record<string, string>) };
+            const guard = (): boolean => {
+                writes += 1;
+                if (failing || writes === failAtWrite) throw new Error('injected env write failure');
+                return true;
+            };
+            process.env = new Proxy(target, {
+                set: (t, k, v) => guard() && Reflect.set(t, k, String(v)),
+                deleteProperty: (t, k) => guard() && Reflect.deleteProperty(t, k),
+            }) as NodeJS.ProcessEnv;
+        };
+        afterEach(() => {
+            failing = false;
+            failAtWrite = null;
+            process.env = realEnv;
+        });
+
+        it('a failed reset marks the scope, and the next entry refuses to start a concern it cannot repair', () => {
+            installFailingEnv();
+            const close = openConcernEnvScope(ROOT);
+            const leaveA = enterConcernEnv(ROOT);
+            process.env['LEFT_BY_A'] = '1';
+            failing = true;
+            expect(() => leaveA()).not.toThrow(); // the reset fails, quietly
+            expect(() => enterConcernEnv(ROOT)).toThrow(/injected env write failure/); // the repair fails: no concern starts
+            failing = false;
+            const leaveB = enterConcernEnv(ROOT); // repair succeeds now
+            expect(process.env['LEFT_BY_A']).toBeUndefined();
+            leaveB();
+            close();
+        });
+
+        it('a scope whose hardening fails half-way rolls back what it applied and throws', () => {
+            installFailingEnv();
+            const before = { ...(process.env as Record<string, string>) };
+            writes = 0;
+            failAtWrite = 2; // the first write of the hardening lands, the second throws
+            expect(() => openConcernEnvScope(ROOT)).toThrow(/injected env write failure/);
+            expect(writes).toBeGreaterThan(2); // the rollback ran
+            expect({ ...(process.env as Record<string, string>) }).toEqual(before);
+            const leave = enterConcernEnv(ROOT); // no scope was left on the stack: the per-concern fallback runs
+            expect(process.env['LD_PRELOAD']).toBeUndefined();
+            leave();
+            expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+        });
+    });
+
     it('a release that outlives its scope does nothing', () => {
         const closeOuter = openConcernEnvScope(ROOT);
         const closeInner = openConcernEnvScope(ROOT);

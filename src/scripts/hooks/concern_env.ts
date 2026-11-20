@@ -83,7 +83,17 @@ export function openConcernEnvScope(packageRoot: string): () => void {
             ? hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot })
             : { ...enclosing.hardened, AGENT_CONFIG_PACKAGE_ROOT: packageRoot };
     const scope: Scope = { prev, hardened, needsRepair: false };
-    replaceEnv(hardened);
+    try {
+        replaceEnv(hardened);
+    } catch (err) {
+        // A half-applied hardening must not outlive a scope the caller never got.
+        try {
+            replaceEnv(prev);
+        } catch (rollbackErr) {
+            reportQuietly('environment rollback failed', rollbackErr);
+        }
+        throw err;
+    }
     stack.push(scope);
     let closed = false;
     return () => {
