@@ -463,6 +463,7 @@ describe("end to end through the dispatcher", () => {
     const entry = summary.invocations.flatMap((i) => i.concerns).find((c) => c["concern"] === "rewriter") as Record<string, unknown>;
     expect(entry["raw_exit_code"]).toBe(0);
     expect(entry["decision"]).toBe("allow");
+    expect(typeof entry["completed_at"]).toBe("string"); // the concern's own clock, for the doctor
     expect(fs.existsSync(path.join(dir, "rewriter.json"))).toBe(false);
   });
 

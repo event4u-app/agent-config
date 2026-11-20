@@ -204,7 +204,7 @@ function _recorded_at(file: string): { at: string; invocation: string | null } |
 function _summary_last_run(summary: string, concern: string): { at: string; invocation: string | null } | null {
   try {
     const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
-      invocations?: Array<{ invocation?: unknown; completed_at?: unknown; concerns?: Array<{ concern?: unknown }> }>;
+      invocations?: Array<{ invocation?: unknown; completed_at?: unknown; concerns?: Array<{ concern?: unknown; completed_at?: unknown }> }>;
       latest?: Record<string, { invocation?: unknown; completed_at?: unknown } | undefined>;
     };
     let last: { at: string; invocation: string | null } | null = null;
@@ -214,17 +214,22 @@ function _summary_last_run(summary: string, concern: string): { at: string; invo
     // `latest` carries the concern's own completion time (the clock its per-concern file uses).
     // The capped history still counts — a run an older writer recorded there may be newer than
     // the first `latest` row — except the row's own dispatch, already counted on the finer clock.
+    const readable = (v: unknown): v is string => typeof v === "string" && !Number.isNaN(Date.parse(v));
     const kept = doc.latest !== null && typeof doc.latest === "object" ? doc.latest[concern] : undefined;
-    const keptId = kept !== undefined && typeof kept.invocation === "string" ? kept.invocation : null;
-    if (kept !== undefined && typeof kept.completed_at === "string" && !Number.isNaN(Date.parse(kept.completed_at))) {
+    // Only a usable row may stand in for its dispatch's history entry.
+    let keptId: string | null = null;
+    if (kept !== undefined && readable(kept.completed_at)) {
+      keptId = typeof kept.invocation === "string" ? kept.invocation : null;
       offer(kept.completed_at, keptId);
     }
     for (const inv of doc.invocations ?? []) {
-      if (typeof inv.completed_at !== "string" || Number.isNaN(Date.parse(inv.completed_at))) continue;
-      if (!(inv.concerns ?? []).some((c) => c.concern === concern)) continue;
+      const entry = (inv.concerns ?? []).find((c) => c.concern === concern);
+      if (entry === undefined) continue;
       const id = typeof inv.invocation === "string" ? inv.invocation : null;
       if (keptId !== null && id === keptId) continue;
-      offer(inv.completed_at, id);
+      // The concern's own completion time; the dispatch's only for an older writer that did not record it.
+      const at = readable(entry.completed_at) ? entry.completed_at : inv.completed_at;
+      if (readable(at)) offer(at, id);
     }
     return last;
   } catch {

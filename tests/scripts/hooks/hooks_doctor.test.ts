@@ -187,6 +187,43 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-upgrade', 'summary.json'))).toBe(true);
     });
 
+    it('last_feedback ranks a history row by the concern\'s own completion, not by its dispatch finishing later', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-overlap');
+        fs.mkdirSync(sess, { recursive: true });
+        // pid-q: a quiet allow completing at 10:00 in a dispatch that finished at 12:00.
+        // pid-b: a block completing at 11:00; it owns the `latest` row and the detailed file.
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [
+                    { invocation: 'pid-b', completed_at: '2026-11-20T11:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T11:00:00Z' }] },
+                    { invocation: 'pid-q', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T10:00:00Z' }] },
+                ],
+                latest: { 'chat-history': { invocation: 'pid-b', completed_at: '2026-11-20T11:00:00Z', exit_code: 2, decision: 'block' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-overlap', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback: an unusable `latest` row does not suppress its dispatch\'s valid history entry', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-badrow');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [{ invocation: 'pid-x', completed_at: '2026-11-20T12:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }],
+                latest: { 'chat-history': { invocation: 'pid-x', completed_at: 'not a date' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-badrow', 'summary.json'))).toBe(true);
+    });
+
     describe('last_feedback on an equal instant', () => {
         const AT = '2026-11-20T10:00:00.000Z';
         const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {

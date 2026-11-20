@@ -824,6 +824,7 @@ function _write_feedback(
     "decision",
     "reason",
     "duration_ms",
+    "completed_at", // the concern's own clock, so the doctor can rank a history row on it
     "payload_bodies",
     "payload_stubs",
   ]);
