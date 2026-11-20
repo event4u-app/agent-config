@@ -7,7 +7,8 @@ stability: experimental
 One machine-wide list of every Claude Code and Codex session on this machine,
 newest activity first: which host and profile it runs under, which model, where
 it was started, which repositories and branches it touched, how many tokens it
-used, how full its context is, whether it is live, and how to resume it. It
+used (its subagents' included), the size of its latest prompt, whether it is
+live, and how to resume it. It
 exists so a user — or an account manager such as agent-switch — can see what
 is active and pick a session up without browsing every profile directory and
 transcript.
@@ -25,14 +26,20 @@ transcript.
 No hook writes any of these. The hosts already keep every session as a
 transcript, so the command reads those directly:
 
-- **Claude Code** — `<config>/projects/<project>/<session>.jsonl`
+- **Claude Code** — `<config>/projects/<project>/<session>.jsonl`, plus its
+  subagents' `<config>/projects/<project>/<session>/subagents/agent-*.jsonl`
 - **Codex** — `<config>/sessions/YYYY/MM/DD/rollout-…-<session>.jsonl`
 
 for every profile directory it finds: each agent-switch profile
 (`~/.agent-switch/{claude,codex}/<name>/config`, or `$AGENT_SWITCH_HOME`),
 `$CLAUDE_CONFIG_DIR`, `$CODEX_HOME`, `~/.claude` and `~/.codex`, each once.
 Liveness comes from the live session register (`runtime/sessions/`) that the
-`session-register` hook already maintains.
+`session-register` hook already maintains. That hook writes under
+`EVENT4U_CONFIG_HOME`, which a profile manager may set per profile, so the
+command reads every register it can find: the machine root, its own root, any
+`runtime/sessions` directory inside an agent-switch profile, and the
+directories listed in `AGENT_CONFIG_SESSION_REGISTER_DIRS`
+(`path.delimiter`-separated). A record matches a session by host and id.
 
 Transcripts are parsed incrementally from the cache (keyed by file inode and
 offset), most recently written first, up to 256 MB of new transcript per call.
@@ -44,7 +51,8 @@ Transcripts not written in the last 30 days are not listed.
 The root deliberately ignores `EVENT4U_CONFIG_HOME`: agent-switch sets that per
 profile, and a per-profile catalog would split the one list across profiles.
 `AGENT_CONFIG_SESSION_CATALOG_HOME` overrides the root (tests use it). Output
-files are written owner-only (`0600`, directory `0700`) by atomic rename.
+files are written owner-only (`0600`) by atomic rename, and their directory is
+set to `0700` on every write.
 
 ## `sessions.json` — schema version 1
 
@@ -92,6 +100,9 @@ files are written owner-only (`0600`, directory `0700`) by atomic rename.
         "total_tokens": 0, "assistant_messages": 0
       },
       "usage_complete": true,
+      "subagent_usage": null,
+      "subagents": 0,
+      "subagent_usage_complete": true,
       "context_tokens": 105000,
       "context_window": null,
       "transcript_path": "/Users/me/.agent-switch/claude/work/config/projects/…/4d11cee1-….jsonl",
@@ -108,10 +119,16 @@ files are written owner-only (`0600`, directory `0700`) by atomic rename.
 
 Field notes:
 
-- **`status`** — `active` (activity within `active_window_seconds`), `idle`
-  (not active, but the live register still holds the session), `inactive`
-  (neither). `live` is the register's view on its own. Activity is the later of
-  the transcript's last write and the register's last heartbeat.
+- **`status`** — an activity indicator, not a process state: `active` (a
+  transcript or register write within `active_window_seconds`), `idle` (not
+  active, but the live register still holds the session), `inactive`
+  (neither). A session closed two minutes ago still reads `active`. For
+  "is it running", read `live` — the register's own view, which a crashed
+  session keeps until its TTL; a missing record does not prove the process is
+  gone either.
+- **`profile.via`** — `agent-switch` (a profile directory of that tool),
+  `env` (`CLAUDE_CONFIG_DIR` / `CODEX_HOME`), or `default` (`~/.claude`,
+  `~/.codex`).
 - **`surface`** — `cli`, `desktop`, `ide`, `headless` (`claude -p`,
   `codex exec`, SDK), `cloud`, or the host's raw entrypoint.
 - **`repos`** — checkouts the session worked in (transcript working
@@ -121,10 +138,19 @@ Field notes:
   directory, plus each checkout's current branch at build time; the host's
   branch field is not trusted for other directories, because it keeps
   reporting the start branch after a session moves into a worktree.
-- **`usage`** — Claude: summed per assistant message, de-duplicated by message
-  id. Codex: the latest cumulative `token_count`. `context_tokens` is the
-  prompt size of the latest main-thread message; `context_window` is reported
-  by Codex only.
+- **`usage`** — the main thread. Claude: summed per assistant message,
+  de-duplicated by message id. Codex: the latest cumulative `token_count`;
+  `assistant_messages` counts those usage reports. `usage_complete` is true
+  when the whole transcript was parsed, or — Codex only — when the latest
+  cumulative snapshot was read from the end of the file; otherwise the totals
+  are a lower bound and the next call continues.
+- **`subagent_usage`** — Claude: the summed usage of the session's subagent
+  transcripts, kept apart from `usage`; `subagents` counts them and
+  `subagent_usage_complete` says whether all were parsed.
+- **`context_tokens`** — the prompt size of the latest main-thread message.
+  `context_window` is reported by Codex only; for Claude it is `null`, because
+  the effective window depends on model and host settings the transcript does
+  not record, so the catalog does not guess how full the context is.
 - **`resume`** — `argv` is what a program should spawn, `command` the same
   shell-quoted, run in `cwd` (the session's start directory, where the host
   keys its history). `env` carries only the profile directory variable, and

@@ -74,7 +74,9 @@ export function cmd_catalog(
         out.push(
             `${r.status.padEnd(8)} ${fmt_age(r.idle_seconds).padStart(6)}  ${r.session_id}  ${r.host}·${r.surface}` +
                 `  ${r.profile === null ? '—' : `${r.profile.provider}/${r.profile.name}`}  ${r.model ?? '—'}` +
-                `  tokens ${fmt_tokens(r.usage?.total_tokens)}${r.usage_complete ? '' : '+'} ctx ${context_label(r)}`,
+                `  tokens ${fmt_tokens(r.usage?.total_tokens)}${r.usage_complete ? '' : '+'}` +
+                (r.subagent_usage !== null ? ` (+${fmt_tokens(r.subagent_usage.total_tokens)} in ${r.subagents} subagents)` : '') +
+                ` ctx ${context_label(r)}`,
             `         ${r.title ?? '(untitled)'} — ${repos}`,
         );
         const resume = resume_line(r);

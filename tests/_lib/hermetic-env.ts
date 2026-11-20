@@ -94,7 +94,8 @@ export const HERMETIC_CONFIG_HOME: string = fs.mkdtempSync(
 
 process.env[CONFIG_HOME_VAR] = HERMETIC_CONFIG_HOME;
 // The session catalog is machine-wide on purpose and ignores the config home,
-// so it needs its own pin or a hook test would write the real user's catalog.
+// so it needs its own pin or a test calling the catalog CLI would write the
+// real user's sessions.json.
 process.env['AGENT_CONFIG_SESSION_CATALOG_HOME'] = HERMETIC_CONFIG_HOME;
 
 // A `setupFiles` entry runs once per test FILE, so without this every file left

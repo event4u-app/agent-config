@@ -27,7 +27,7 @@ import path from 'node:path';
 import { rawKeyPrefixPattern } from './egress_rules.js';
 import { write_atomic } from './fs_atomic.js';
 import { claudeHomeInfo, codexHomeInfo } from './provider_home.js';
-import { type SessionProfile, iso_now, ttl_seconds_for } from './session_register.js';
+import { iso_now, ttl_seconds_for } from './session_register.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE, type EnvMap, event4u_root } from './user_global_paths.js';
 
 export const CATALOG_SCHEMA_VERSION = 1;
@@ -55,6 +55,13 @@ const READ_CHUNK = 32 * 1024 * 1024;
 const WRITE_TOOLS: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 export type CatalogStatus = 'active' | 'idle' | 'inactive';
+
+/** Which profile a session ran under; `default` is the host's own config dir. */
+export interface CatalogProfile {
+    provider: string;
+    name: string;
+    via: 'agent-switch' | 'env' | 'default';
+}
 export type CatalogHost = 'claude' | 'codex';
 
 export interface CatalogRepo {
@@ -92,7 +99,7 @@ export interface CatalogSession {
     surface: string;
     entrypoint: string | null;
     host_version: string | null;
-    profile: SessionProfile | null;
+    profile: CatalogProfile | null;
     config_dir: string;
     model: string | null;
     models: string[];
@@ -108,8 +115,16 @@ export interface CatalogSession {
     roadmap_slug: string | null;
     repos: CatalogRepo[];
     usage: CatalogUsage | null;
-    /** False while part of the transcript has not been parsed yet. */
+    /**
+     * True when `usage` is final for what is on disk: the whole transcript was
+     * parsed, or (Codex) the latest cumulative snapshot was read from its end.
+     */
     usage_complete: boolean;
+    /** Claude: summed usage of the session's subagent transcripts; null when it has none. */
+    subagent_usage: CatalogUsage | null;
+    subagents: number;
+    /** False while part of a subagent transcript has not been parsed yet. */
+    subagent_usage_complete: boolean;
     context_tokens: number | null;
     context_window: number | null;
     transcript_path: string;
@@ -155,14 +170,47 @@ function cache_path(env: EnvMap, home?: string): string {
     return path.join(catalog_root(env, home), 'runtime', `session-catalog-cache.v${CATALOG_SCHEMA_VERSION}.json`);
 }
 
-/** Where live-register records can be: the machine root and this process's (possibly per-profile) root. */
-function live_register_dirs(env: EnvMap, home?: string): string[] {
-    const dirs = [path.join(catalog_root(env, home), 'runtime', 'sessions')];
-    if (env[CATALOG_HOME_ENV] === undefined) {
-        const own = path.join(event4u_root(env), 'runtime', 'sessions');
-        if (!dirs.includes(own)) dirs.push(own);
+/** Extra live-register directories, `path.delimiter`-separated, for config roots this command cannot find itself. */
+export const REGISTER_DIRS_ENV = 'AGENT_CONFIG_SESSION_REGISTER_DIRS';
+
+/** Directories a profile tree holds that can be large and never hold an agent-config root. */
+const REGISTER_WALK_SKIP: ReadonlySet<string> = new Set([
+    'projects', 'sessions', 'shell-snapshots', 'todos', 'file-history', 'plugins', 'debug', 'statsig', 'logs', 'cache', 'node_modules',
+]);
+
+/**
+ * Every place a live-register record can be. The session-register hook writes
+ * under `EVENT4U_CONFIG_HOME`, which a profile manager may set per profile, so
+ * one root is not enough: the machine root, this process's root, an explicit
+ * list, and any `runtime/sessions` directory inside an agent-switch profile
+ * (bounded walk, large host directories skipped).
+ */
+export function live_register_dirs(env: EnvMap, home: string = os.homedir()): string[] {
+    const dirs = new Set<string>([path.join(catalog_root(env, home), 'runtime', 'sessions')]);
+    if (env[CATALOG_HOME_ENV] === undefined) dirs.add(path.join(event4u_root(env), 'runtime', 'sessions'));
+    for (const d of (env[REGISTER_DIRS_ENV] ?? '').split(path.delimiter)) {
+        if (d.trim() !== '') dirs.add(path.resolve(d.trim()));
     }
-    return dirs;
+    const as_root = str(env['AGENT_SWITCH_HOME']) ?? path.join(home, '.agent-switch');
+    const walk = (dir: string, depth: number): void => {
+        if (depth > 4) return;
+        for (const name of list_dir(dir)) {
+            const child = path.join(dir, name);
+            const register = name === 'sessions' && path.basename(dir) === 'runtime';
+            if (!register && REGISTER_WALK_SKIP.has(name)) continue;
+            try {
+                if (!fs.lstatSync(child).isDirectory()) continue;
+            } catch {
+                continue;
+            }
+            if (register) dirs.add(child);
+            else walk(child, depth + 1);
+        }
+    };
+    for (const host of ['claude', 'codex'] as const) {
+        for (const profile of list_dir(path.join(as_root, host))) walk(path.join(as_root, host, profile), 0);
+    }
+    return [...dirs];
 }
 
 // ---------------------------------------------------------------------------
@@ -360,7 +408,7 @@ function checkout_root(p: string, cache: Map<string, string | null>): string | n
 export interface Source {
     host: CatalogHost;
     config_dir: string;
-    profile: SessionProfile | null;
+    profile: CatalogProfile | null;
     /** The host's default config dir, against which a resume needs no env. */
     default_dir: string;
 }
@@ -372,7 +420,7 @@ export function discover_sources(env: EnvMap = process.env, home: string = os.ho
     const default_codex = codexHomeInfo({ HOME: home }).path;
     const out: Source[] = [];
     const seen = new Set<string>();
-    const add = (host: CatalogHost, dir: string, profile: SessionProfile | null): void => {
+    const add = (host: CatalogHost, dir: string, profile: CatalogProfile | null): void => {
         let real: string;
         try {
             real = fs.realpathSync(dir);
@@ -392,10 +440,10 @@ export function discover_sources(env: EnvMap = process.env, home: string = os.ho
     }
     const claude_env = str(env['CLAUDE_CONFIG_DIR']);
     if (claude_env !== null) add('claude', claude_env, { provider: 'claude', name: path.basename(path.resolve(claude_env)), via: 'env' });
-    add('claude', default_claude, { provider: 'claude', name: 'default', via: 'env' });
+    add('claude', default_claude, { provider: 'claude', name: 'default', via: 'default' });
     const codex_env = str(env['CODEX_HOME']);
     if (codex_env !== null) add('codex', codex_env, { provider: 'codex', name: path.basename(path.resolve(codex_env)), via: 'env' });
-    add('codex', default_codex, { provider: 'codex', name: 'default', via: 'env' });
+    add('codex', default_codex, { provider: 'codex', name: 'default', via: 'default' });
     return out;
 }
 
@@ -403,6 +451,8 @@ export interface TranscriptFile {
     source: Source;
     file: string;
     session_id: string;
+    /** A Claude subagent transcript of `session_id` (`<session>/subagents/agent-*.jsonl`). */
+    subagent: boolean;
     size: number;
     mtime_ms: number;
     ino: number;
@@ -423,7 +473,7 @@ const CODEX_FILE_RE = /^rollout-.+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
 export function list_transcripts(sources: Source[], now: Date = new Date()): TranscriptFile[] {
     const cutoff = now.getTime() - RETENTION_DAYS * 86_400_000;
     const out: TranscriptFile[] = [];
-    const push = (source: Source, file: string, session_id: string): void => {
+    const push = (source: Source, file: string, session_id: string, subagent = false): void => {
         let st: fs.Stats;
         try {
             st = fs.lstatSync(file);
@@ -431,14 +481,22 @@ export function list_transcripts(sources: Source[], now: Date = new Date()): Tra
             return;
         }
         if (!st.isFile() || st.mtimeMs < cutoff || !SESSION_ID_RE.test(session_id)) return;
-        out.push({ source, file, session_id, size: st.size, mtime_ms: st.mtimeMs, ino: st.ino, dev: st.dev });
+        out.push({ source, file, session_id, subagent, size: st.size, mtime_ms: st.mtimeMs, ino: st.ino, dev: st.dev });
     };
     for (const source of sources) {
         if (source.host === 'claude') {
             const projects = path.join(source.config_dir, 'projects');
             for (const project of list_dir(projects)) {
                 for (const name of list_dir(path.join(projects, project))) {
-                    if (name.endsWith('.jsonl')) push(source, path.join(projects, project, name), name.slice(0, -'.jsonl'.length));
+                    if (name.endsWith('.jsonl')) {
+                        push(source, path.join(projects, project, name), name.slice(0, -'.jsonl'.length));
+                        continue;
+                    }
+                    // Subagents of a session write their own transcripts beside it.
+                    const sub = path.join(projects, project, name, 'subagents');
+                    for (const agent of list_dir(sub)) {
+                        if (agent.endsWith('.jsonl')) push(source, path.join(sub, agent), name, true);
+                    }
                 }
             }
             continue;
@@ -485,6 +543,8 @@ export interface ParsedState {
     paths: string[];
     /** Branches the host reported while the session was in its start directory. */
     start_branches: string[];
+    /** Codex: a cumulative usage snapshot was read from the end of the file. */
+    usage_from_tail?: boolean;
 }
 
 function fresh_state(t: TranscriptFile): ParsedState {
@@ -615,7 +675,7 @@ function apply_claude_line(st: ParsedState, o: Record<string, unknown>, count_us
     st.usage = usage;
 }
 
-function apply_codex_line(st: ParsedState, o: Record<string, unknown>): void {
+function apply_codex_line(st: ParsedState, o: Record<string, unknown>, count_usage: boolean): void {
     const type = str(o['type']);
     const p = obj(o['payload']);
     if (p === null) return;
@@ -644,7 +704,9 @@ function apply_codex_line(st: ParsedState, o: Record<string, unknown>): void {
                 cache_read_input_tokens: cached,
                 cache_creation_input_tokens: num(total['cache_write_input_tokens']),
                 total_tokens: num(total['total_tokens']),
-                assistant_messages: (st.usage?.assistant_messages ?? 0) + 1,
+                // Counts usage reports (one per completed turn) seen in a full parse;
+                // a head/tail peek takes the totals but does not count.
+                assistant_messages: (st.usage?.assistant_messages ?? 0) + (count_usage ? 1 : 0),
             };
         }
         if (last !== null && num(last['input_tokens']) > 0) st.context_tokens = num(last['input_tokens']);
@@ -664,7 +726,7 @@ function apply_lines(host: CatalogHost, st: ParsedState, text: string, count_usa
         }
         if (o === null) continue;
         if (host === 'claude') apply_claude_line(st, o, count_usage);
-        else apply_codex_line(st, o);
+        else apply_codex_line(st, o, count_usage);
     }
 }
 
@@ -736,7 +798,10 @@ export function peek(t: TranscriptFile, st: ParsedState): ParsedState {
         if (from < t.size) {
             const tail = read_at(from, t.size - from);
             const start = from === out.offset ? 0 : tail.indexOf('\n') + 1;
+            const before = out.usage;
             apply_lines(t.source.host, out, tail.slice(start, tail.lastIndexOf('\n') + 1), false);
+            // Codex totals are cumulative: one read from the end of the file is the latest snapshot.
+            if (t.source.host === 'codex' && out.usage !== before) out.usage_from_tail = true;
         }
     } catch {
         /* keep what we have */
@@ -767,7 +832,14 @@ function read_cache(file: string): Cache {
 
 /** Atomic replace into an owner-only directory; the temp file is created 0600. */
 function write_private(file: string, data: string): void {
-    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    const dir = path.dirname(file);
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    try {
+        // `mkdir` sets the mode only on creation; an existing directory is narrowed too.
+        fs.chmodSync(dir, 0o700);
+    } catch {
+        /* not ours to change; the files inside are still created 0600 */
+    }
     write_atomic(file, data);
 }
 
@@ -780,6 +852,7 @@ interface LiveRecord {
     roadmap_slug: string | null;
 }
 
+/** Live records keyed `<host>:<session id>`; a record with no known platform matches either host. */
 function read_live(dirs: string[], now: Date): Map<string, LiveRecord> {
     const out = new Map<string, LiveRecord>();
     for (const dir of dirs) for (const name of list_dir(dir)) {
@@ -795,8 +868,11 @@ function read_live(dirs: string[], now: Date): Map<string, LiveRecord> {
         const platform = str(o?.['platform']) ?? 'generic';
         if (id === null || seen === null) continue;
         if ((now.getTime() - seen) / 1000 > ttl_seconds_for(platform)) continue;
-        const prev = out.get(id);
-        if (prev === undefined || prev.last_seen < seen) out.set(id, { last_seen: seen, roadmap_slug: str(o?.['roadmap_slug']) });
+        for (const host of platform === 'claude' || platform === 'codex' ? [platform] : ['claude', 'codex']) {
+            const key = `${host}:${id}`;
+            const prev = out.get(key);
+            if (prev === undefined || prev.last_seen < seen) out.set(key, { last_seen: seen, roadmap_slug: str(o?.['roadmap_slug']) });
+        }
     }
     return out;
 }
@@ -856,18 +932,42 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
     const git_cache = new Map<string, string | null>();
     const sessions: CatalogSession[] = [];
 
-    for (const t of list_transcripts(discover_sources(env, home), now)) {
+    const read = (t: TranscriptFile): { st: ParsedState; complete: boolean } => {
         const parsed = parse_incremental(t, cache.files[t.file] ?? null, budget);
         next.files[t.file] = parsed;
         const complete = parsed.offset >= t.size;
-        let st = parsed;
-        if (!complete) {
-            const prior = cache.peeks?.[t.file];
-            st = prior !== undefined && prior.size === t.size && prior.ino === t.ino && prior.offset === parsed.offset ? prior.state : peek(t, parsed);
-            next.peeks![t.file] = { size: t.size, ino: t.ino, offset: parsed.offset, state: st };
+        if (complete) return { st: parsed, complete };
+        const prior = cache.peeks?.[t.file];
+        const st = prior !== undefined && prior.size === t.size && prior.ino === t.ino && prior.offset === parsed.offset ? prior.state : peek(t, parsed);
+        next.peeks![t.file] = { size: t.size, ino: t.ino, offset: parsed.offset, state: st };
+        return { st, complete };
+    };
+    const all = list_transcripts(discover_sources(env, home), now);
+    const subs = new Map<string, TranscriptFile[]>();
+    for (const t of all) {
+        if (!t.subagent) continue;
+        const key = `${t.source.config_dir}:${t.session_id}`;
+        subs.set(key, [...(subs.get(key) ?? []), t]);
+    }
+
+    for (const t of all) {
+        if (t.subagent) continue;
+        const { st, complete } = read(t);
+        let sub_usage: CatalogUsage | null = null;
+        let sub_complete = true;
+        let sub_mtime = 0;
+        const agents = subs.get(`${t.source.config_dir}:${t.session_id}`) ?? [];
+        for (const a of agents) {
+            const r = read(a);
+            sub_complete &&= r.complete;
+            sub_mtime = Math.max(sub_mtime, a.mtime_ms);
+            if (r.st.usage === null) continue;
+            const u: CatalogUsage = sub_usage ?? empty_usage();
+            for (const k of Object.keys(u) as (keyof CatalogUsage)[]) u[k] += r.st.usage[k];
+            sub_usage = u;
         }
-        const rec = live.get(t.session_id) ?? null;
-        const activity = Math.max(t.mtime_ms, rec?.last_seen ?? 0);
+        const rec = live.get(`${t.source.host}:${t.session_id}`) ?? null;
+        const activity = Math.max(t.mtime_ms, sub_mtime, rec?.last_seen ?? 0);
         const idle = Math.max(0, Math.round((now.getTime() - activity) / 1000));
         const status: CatalogStatus = idle <= ACTIVE_WINDOW_SECONDS ? 'active' : rec !== null ? 'idle' : 'inactive';
         const host = t.source.host;
@@ -893,7 +993,10 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
             roadmap_slug: rec?.roadmap_slug ?? null,
             repos: repos_for(st, git_cache),
             usage: st.usage,
-            usage_complete: complete || host === 'codex',
+            usage_complete: complete || (host === 'codex' && st.usage_from_tail === true),
+            subagent_usage: sub_usage,
+            subagents: agents.length,
+            subagent_usage_complete: sub_complete,
             context_tokens: st.context_tokens,
             context_window: st.context_window,
             transcript_path: t.file,
@@ -967,7 +1070,7 @@ export function repo_label(x: CatalogRepo): string {
     return `${x.name}${wt}@${x.last_branch ?? '?'}`;
 }
 
-function profile_label(p: SessionProfile | null): string {
+function profile_label(p: CatalogProfile | null): string {
     return p === null ? '—' : `${p.provider}/${p.name}`;
 }
 
@@ -1016,6 +1119,11 @@ export function render_markdown(index: CatalogIndex, detail_rows = 25): string {
                 `- **Tokens:** ${fmt_tokens(s.usage.total_tokens)} total${s.usage_complete ? '' : ' so far'} · in ${fmt_tokens(s.usage.input_tokens)} · ` +
                     `out ${fmt_tokens(s.usage.output_tokens)} · cache read ${fmt_tokens(s.usage.cache_read_input_tokens)} · ` +
                     `cache write ${fmt_tokens(s.usage.cache_creation_input_tokens)} · context ${md_text(context_label(s))}`,
+            );
+        }
+        if (s.subagent_usage !== null) {
+            lines.push(
+                `- **Subagents:** ${s.subagents} · ${fmt_tokens(s.subagent_usage.total_tokens)} tokens${s.subagent_usage_complete ? '' : ' so far'}`,
             );
         }
         lines.push(`- **Started in:** ${md_code(s.start_cwd)}`);

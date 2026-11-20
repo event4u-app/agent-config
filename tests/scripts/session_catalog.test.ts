@@ -108,8 +108,9 @@ describe('discovery', () => {
         fs.mkdirSync(path.join(home, '.claude'));
         fs.mkdirSync(path.join(home, '.codex'));
         const extra = path.join(home, '.agent-switch', 'claude', 'work', 'config');
-        const labels = discover_sources({ CLAUDE_CONFIG_DIR: extra }, home).map((s) => `${s.host}:${s.profile?.name}`);
-        expect(labels).toEqual(['claude:home', 'claude:work', 'codex:one', 'claude:default', 'codex:default']);
+        const found = discover_sources({ CLAUDE_CONFIG_DIR: extra }, home);
+        expect(found.map((s) => `${s.host}:${s.profile?.name}`)).toEqual(['claude:home', 'claude:work', 'codex:one', 'claude:default', 'codex:default']);
+        expect(found.map((s) => s.profile?.via)).toEqual(['agent-switch', 'agent-switch', 'agent-switch', 'default', 'default']);
     });
 
     it('writes to the machine root, not a per-profile config home', () => {
@@ -258,6 +259,58 @@ describe('liveness and resume', () => {
         expect(resume_line({ resume: build_resume('codex', 'abc-12345678', '/tmp/my repo', '/p', '/d') })).toBe(
             `cd '/tmp/my repo' && CODEX_HOME=/p codex resume abc-12345678`,
         );
+    });
+});
+
+describe('review follow-ups', () => {
+    it('reads live registers kept under each profile and keys them by host', () => {
+        const ids = [ID1, ID2, 'cccccccc-3333-4333-8333-333333333333'];
+        const hours_ago = new Date(Date.now() - 2 * 3600 * 1000);
+        ['p1', 'p2', 'p3'].forEach((profile, i) => {
+            const f = claude_transcript(ids[i]!, assistant('m1'), profile);
+            fs.utimesSync(f, hours_ago, hours_ago);
+            // A per-profile agent-config root, as a profile manager may set it.
+            const reg = path.join(home, '.agent-switch', 'claude', profile, 'event4u', 'runtime', 'sessions');
+            fs.mkdirSync(reg, { recursive: true });
+            fs.writeFileSync(path.join(reg, `${ids[i]}.json`), JSON.stringify({ session_id: ids[i], platform: 'claude', last_seen: hours_ago.toISOString() }));
+        });
+        // A codex register record with a colliding id must not mark the claude session live.
+        const codexReg = path.join(tmp, 'other-root');
+        fs.mkdirSync(codexReg);
+        const t = claude_transcript('dddddddd-4444-4444-8444-444444444444', assistant('m1'), 'p4');
+        fs.utimesSync(t, hours_ago, hours_ago);
+        fs.writeFileSync(path.join(codexReg, 'x.json'), JSON.stringify({ session_id: 'dddddddd-4444-4444-8444-444444444444', platform: 'codex', last_seen: hours_ago.toISOString() }));
+        const index = build_index({ env: { ...env, AGENT_CONFIG_SESSION_REGISTER_DIRS: codexReg }, home });
+        const live = Object.fromEntries(index.sessions.map((s) => [s.session_id, s.live]));
+        expect(ids.map((id) => live[id])).toEqual([true, true, true]);
+        expect(live['dddddddd-4444-4444-8444-444444444444']).toBe(false);
+    });
+
+    it('marks Codex usage complete only when the latest cumulative snapshot was read', () => {
+        const tc = (n: number): string =>
+            line({ type: 'event_msg', payload: { type: 'token_count', info: { total_token_usage: { input_tokens: n, output_tokens: 1, total_tokens: n + 1 } } } });
+        const filler = line({ type: 'response_item', payload: { type: 'message', content: 'x'.repeat(400 * 1024) } });
+        codex_transcript(CX, line({ type: 'session_meta', payload: { id: CX, cwd: repo } }) + tc(10) + filler);
+        const s = find(CX, { budget_bytes: 1 })!;
+        expect(s.usage_complete).toBe(false);
+        const done = find(CX)!;
+        expect(done.usage_complete).toBe(true);
+        expect(done.usage!.total_tokens).toBe(11);
+        expect(done.usage!.assistant_messages).toBe(1);
+    });
+
+    it('adds the tokens of a session\'s subagent transcripts separately', () => {
+        const main = claude_transcript(ID1, assistant('m1'));
+        const sub = path.join(path.dirname(main), ID1, 'subagents');
+        fs.mkdirSync(sub, { recursive: true });
+        fs.writeFileSync(path.join(sub, 'agent-a1.jsonl'), assistant('s1', { isSidechain: true }) + assistant('s2', { isSidechain: true }));
+        fs.writeFileSync(path.join(sub, 'agent-a2.jsonl'), assistant('s3', { isSidechain: true }));
+        const s = find(ID1)!;
+        expect(s.usage!.assistant_messages).toBe(1);
+        expect(s.subagents).toBe(2);
+        expect(s.subagent_usage!.assistant_messages).toBe(3);
+        expect(s.subagent_usage_complete).toBe(true);
+        expect(build_index({ env, home }).sessions).toHaveLength(1);
     });
 });
 
