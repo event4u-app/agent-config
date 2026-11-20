@@ -4,15 +4,15 @@
 
 You are an independent reviewer for a change in the `event4u/agent-config` repository. Gated files: `.github/workflows/consistency.yml` (one step's name and comment), the dispatcher `src/scripts/hooks/dispatch_hook.ts`, new dispatcher modules `src/scripts/hooks/concern_env.ts` and `src/scripts/hooks/feedback_policy.ts`, and `src/config/hook-bundle-budget.json`. The ratification gate itself is unchanged and the budget file stays on its watched set. Under ADR-268 § 4 the change needs a two-provider verdict.
 
-subject: 11fb4fb2d78749c6c635a4481bf91f5845d9ac5c47f2670843a6afc4d36662e0
+subject: 6f9a264282de64a617fd170c47926aedd5d8c74bbe0519aac2f45515de48cec5
 
-(Over those five files at commit `5255754fef`; base and head gate agree.)
+(Over those five files at commit `54eda0295c`; base and head gate agree.)
 
 Rounds 4–13 (`agents/evidence/council/hook-system-pays-ratification-r4…r13-20261120.question.md`, committed) carry the description and the earlier points. As in rounds 10–13, this round shows the WHOLE change to the five gated files against the merge base `ac3c973fdd`.
 
 ## Round 13 points
 
-1. **A failed summary write could leave an older block standing as the latest outcome after a quiet allow (both seats).** `_write_feedback` now writes `summary.json` first and skips a quiet allow's own file only when that write succeeded; otherwise the quiet allow goes through the same locked keep-newer write as any other outcome. While fixing it: `update_json_under_lock` (`hooks/state_io.ts`) reports failure through its result (`"written" | "skipped" | "failed"`) and never throws, so the old `try/catch` around it could never see a failed summary or per-concern write. Both sites now read the result (`=== "written"` for the summary, `=== "failed"` for a per-concern file) and report on stderr. Test (dispatcher end to end): a pre-seeded older block in `rewriter.json`, `summary.json` made a directory so its write fails, then a dispatch where `rewriter` is a quiet allow → `rewriter.json` holds the allow with an `invocation` id. With the old skip rule the test fails. The existing test now also asserts that with a working summary the quiet allow writes no file of its own.
+1. **A failed summary write could leave an older block standing as the latest outcome after a quiet allow (both seats).** `_write_feedback` now writes `summary.json` first and skips a quiet allow's own file only when that write succeeded; otherwise the quiet allow goes through the same locked keep-newer write as any other outcome. While fixing it: `update_json_under_lock` (`hooks/state_io.ts`) reports failure through its result (`"written" | "skipped" | "failed"`) and never throws, so the old `try/catch` around it could never see a failed summary or per-concern write. Both sites now read the result (`=== "written"` for the summary, `=== "failed"` for a per-concern file) and report on stderr. Test (dispatcher end to end): a pre-seeded older block in `rewriter.json`, `summary.json` made a directory so its write fails, then a dispatch where `rewriter` is a quiet allow → `rewriter.json` holds the allow with an `invocation` id. With the old skip rule the test fails. The existing test now also asserts that with a working summary the quiet allow writes no file of its own. The \`feedback_policy.ts\` header states the fallback.
 2. **A restore failure mark could outlive a nested unwind (one seat).** A successful closing restore now clears `restoreFailed` as well as `pendingRestore`: the environment is whole again, so neither mark may outlive it. Test: an outer scope opens, a re-entrant inner scope sets a variable, its close fails while its own error is in flight, the outer close succeeds; the environment equals the start and the next clean dispatch's restore check does not throw. Without the change that test fails.
 
 Suites: hook, load-set and composition tests 56 files, 1,112 tests; typecheck and lint clean. `dispatch_hook.ts` is 1,496 lines against its 1,500-line budget.
@@ -245,7 +245,7 @@ export function enterConcernEnv(packageRoot: string): () => void {
 }
 ````
 
-## The other three gated files, diff against the merge base (`git diff -U2 ac3c973fdd...5255754fef`)
+## The other three gated files, diff against the merge base (`git diff -U2 ac3c973fdd...54eda0295c`)
 
 ````diff
 diff --git a/.github/workflows/consistency.yml b/.github/workflows/consistency.yml
@@ -603,10 +603,10 @@ index 16ac1faf33..16e4cd5863 100644
    writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
 diff --git a/src/scripts/hooks/feedback_policy.ts b/src/scripts/hooks/feedback_policy.ts
 new file mode 100644
-index 0000000000..9c3429217b
+index 0000000000..f9a7a56450
 --- /dev/null
 +++ b/src/scripts/hooks/feedback_policy.ts
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,45 @@
 +/**
 + * feedback_policy — which concern outcomes get their own feedback file.
 + *
@@ -616,7 +616,9 @@ index 0000000000..9c3429217b
 + * the next dispatch (road-to-a-hook-system-that-pays-for-what-it-does 2.4).
 + * Only an outcome worth looking at on its own keeps a file now, so a
 + * `<concern>.json` means "this concern's latest NON-QUIET outcome", not its latest
-+ * outcome. Nothing deletes it: a delete would race a newer write from a parallel
++ * outcome — except when the dispatch's summary write failed: then a quiet allow
++ * is written too, so the file never shows an older block as the latest outcome
++ * that no summary contradicts. Nothing deletes it: a delete would race a newer write from a parallel
 + * dispatch in the same session. A write goes through the per-file lock and keeps
 + * whichever outcome COMPLETED later ({@link keepNewerOutcome}), so two warnings
 + * published in reverse completion order cannot leave the older one standing.
