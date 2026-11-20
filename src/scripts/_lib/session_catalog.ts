@@ -24,6 +24,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { rawKeyPrefixPattern } from './egress_rules.js';
 import { write_atomic } from './fs_atomic.js';
 import { type SessionProfile, iso_now, ttl_seconds_for } from './session_register.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE, type EnvMap, event4u_root } from './user_global_paths.js';
@@ -217,9 +218,11 @@ export function strip_userinfo(url: string): string {
  * and any token-shaped run (long mixed alphanumerics, known key prefixes) is
  * masked before it is shown.
  */
+const KEY_PREFIX_RE = rawKeyPrefixPattern(6);
+
 export function clean_title(t: string): string {
     const masked = t
-        .replace(/\b(?:sk|pk|rk|ghp|gho|ghs|ghu|github_pat|xox[abprs]|AKIA|AIza|glpat)[-_A-Za-z0-9]{6,}/g, '[redacted]')
+        .replace(KEY_PREFIX_RE, '[redacted]')
         .replace(/[A-Za-z0-9+/_=-]{20,}/g, (m) => (/[0-9]/.test(m) && /[A-Za-z]/.test(m) ? '[redacted]' : m))
         .replace(/\s+/g, ' ')
         .trim();
