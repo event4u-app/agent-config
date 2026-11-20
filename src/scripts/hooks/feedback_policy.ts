@@ -31,7 +31,9 @@ export function isQuietAllow(entry: Readonly<Record<string, unknown>>): boolean 
  * The locked write's mutator: the incoming entry, unless the file already holds
  * an outcome that completed later (then `null`, a deliberate no-write).
  * Instants, not strings; an unreadable timestamp on either side lets the
- * incoming entry through, as the unconditional write did before.
+ * incoming entry through, as the unconditional write did before. Equal instants
+ * (millisecond resolution) also let the incoming entry through: the last write
+ * under the lock wins, and no host verdict reads this file.
  */
 export function keepNewerOutcome<T extends Readonly<Record<string, unknown>>>(loaded: Partial<Record<string, unknown>>, entry: T): T | null {
     const held = typeof loaded['completed_at'] === 'string' ? Date.parse(loaded['completed_at']) : Number.NaN;

@@ -177,12 +177,15 @@ describe('concern_env — one scope per dispatch', () => {
                 const orig = failAtWrite;
                 failAtWrite = null;
                 let n = 0;
+                let armed = true;
                 process.env = new Proxy({ ...(process.env as Record<string, string>) }, {
-                    set: (t, k, v) => { n += 1; if (n >= orig) throw new Error('injected env write failure'); return Reflect.set(t, k, String(v)); },
-                    deleteProperty: (t, k) => { n += 1; if (n >= orig) throw new Error('injected env write failure'); return Reflect.deleteProperty(t, k); },
+                    set: (t, k, v) => { n += 1; if (armed && n >= orig) throw new Error('injected env write failure'); return Reflect.set(t, k, String(v)); },
+                    deleteProperty: (t, k) => { n += 1; if (armed && n >= orig) throw new Error('injected env write failure'); return Reflect.deleteProperty(t, k); },
                 }) as NodeJS.ProcessEnv;
                 expect(() => openConcernEnvScope(ROOT)).toThrow(/injected env write failure/);
                 expect(spy.mock.calls.some((c) => String(c[0]).includes('environment rollback failed'))).toBe(true);
+                armed = false;
+                openConcernEnvScope(ROOT)(); // pay the owed restore so no later test inherits it
             } finally {
                 spy.mockRestore();
             }
@@ -274,6 +277,34 @@ describe('concern_env — one scope per dispatch', () => {
                 expect(process.env['LD_PRELOAD']).toBeUndefined();
                 again();
                 expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+                expect(() => assertConcernEnvRestored()).not.toThrow();
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
+        it('a half-applied open whose rollback fails owes the baseline: the next open refuses until it can recover it', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const before = { ...(process.env as Record<string, string>) };
+                let armed = true;
+                let landed = 0;
+                process.env = new Proxy({ ...before }, {
+                    set: (t, k, v) => { if (armed && landed >= 1) throw new Error('injected env write failure'); landed += 1; return Reflect.set(t, k, String(v)); },
+                    deleteProperty: (t, k) => { if (armed && landed >= 1) throw new Error('injected env write failure'); landed += 1; return Reflect.deleteProperty(t, k); },
+                }) as NodeJS.ProcessEnv;
+                // Open: one hardening write lands, the next throws, the rollback throws too.
+                expect(() => openConcernEnvScope(ROOT)).toThrow(/injected env write failure/);
+                expect({ ...(process.env as Record<string, string>) }).not.toEqual(before); // left dirty
+                // The next dispatch, writes still failing: it refuses instead of hardening from the dirty state.
+                expect(() => openConcernEnvScope(ROOT)).toThrow(/injected env write failure/);
+                // Writes work again: the next open replays the owed baseline, and its close returns to it.
+                armed = false;
+                const close = openConcernEnvScope(ROOT);
+                expect(process.env['LD_PRELOAD']).toBeUndefined();
+                close();
+                expect({ ...(process.env as Record<string, string>) }).toEqual(before);
                 expect(() => assertConcernEnvRestored()).not.toThrow();
             } finally {
                 spy.mockRestore();

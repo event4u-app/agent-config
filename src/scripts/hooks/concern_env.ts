@@ -37,11 +37,14 @@ const stack: Scope[] = [];
 let restoreFailed: string | null = null;
 
 /**
- * The environment a failed closing restore still owes. Kept apart from
- * {@link restoreFailed}: that one is this dispatch's verdict and may be skipped
- * when an error is already in flight; this one outlives the dispatch, so the
- * next scope in the same process recovers it before any concern runs, and
- * refuses to open when it cannot.
+ * The environment still owed to the process. Invariant: non-null iff a restore
+ * is owed and has not been replayed. Set by a failed closing restore and by a
+ * failed rollback of a half-applied scope open; cleared by a successful replay
+ * at the next open, or by a successful close (a full replace supersedes it).
+ * Kept apart from {@link restoreFailed}: that one is this dispatch's verdict and
+ * may be skipped when an error is already in flight; this one outlives the
+ * dispatch, so the next scope in the same process recovers it before any
+ * concern runs, and refuses to open when it cannot.
  */
 let pendingRestore: NodeJS.ProcessEnv | null = null;
 
@@ -122,6 +125,8 @@ export function openConcernEnvScope(packageRoot: string): () => void {
         try {
             replaceEnv(prev);
         } catch (rollbackErr) {
+            // Still dirty: owe `prev` to the next scope, and keep the setup error as the one thrown.
+            pendingRestore = prev;
             reportQuietly('environment rollback failed', rollbackErr);
         }
         throw err;
