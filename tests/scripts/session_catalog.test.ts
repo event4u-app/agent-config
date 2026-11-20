@@ -446,6 +446,28 @@ describe('review fixes', () => {
         expect(row.record_version).toBe(2);
     });
 
+    it('keeps publishing after a record was pruned but the index still lists it', () => {
+        const now = new Date();
+        const old = new Date(now.getTime() - (RETENTION_DAYS + 1) * 86_400_000);
+        catalog_update({ session_id: 'sess-wg-0001', platform: 'claude', event: 'stop', now: old }, env);
+        publish_index({ env, now: old, force: true });
+        const before = fs.readFileSync(index_json_path(env), 'utf-8');
+        build_index({ env, now }); // prunes, as an interrupted publisher would have
+        fs.writeFileSync(index_json_path(env), before);
+        catalog_update({ session_id: 'sess-wg-0002', platform: 'claude', event: 'stop', now }, env);
+        const ids = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions.map((r: { session_id: string }) => r.session_id);
+        expect(ids).toEqual(['sess-wg-0002']);
+    });
+
+    it('replaces a published index that is valid JSON but malformed', () => {
+        fs.mkdirSync(path.dirname(index_json_path(env)), { recursive: true });
+        fs.writeFileSync(index_json_path(env), JSON.stringify({ sessions: [null, 7] }));
+        catalog_update({ session_id: 'sess-mi-0001', platform: 'claude', event: 'stop' }, env);
+        expect(JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0].session_id).toBe('sess-mi-0001');
+        fs.writeFileSync(index_json_path(env), 'null');
+        expect(publish_index({ env, force: true })).toBe(true);
+    });
+
     it('keeps two hosts with the same id apart', () => {
         catalog_update({ session_id: 'sess-dup-0001', platform: 'claude', event: 'stop' }, env);
         catalog_update({ session_id: 'sess-dup-0001', platform: 'codex', event: 'stop' }, env);

@@ -50,7 +50,9 @@ converge on the newest records once writes stop. Each row carries the
 index on disk (a lower version, or a record it did not see) rescans instead of
 writing, and a publisher that finds its own write older than the records
 repairs it. An event older than what a record already holds changes nothing
-about its lifecycle, in either direction.
+about its lifecycle, in either direction. Event time is the time the hook
+processes the event; the host delivers one session's lifecycle events in
+order, so this decides only between overlapping hook processes.
 
 Measured cost per hook call with 301 retained sessions and a 5 MB transcript:
 first ingest at `session_start` about 105 ms, `stop` about 37 ms, a throttled
@@ -139,7 +141,10 @@ Field notes:
   HEAD when the event is processed, so branches a session passed through
   between two events can be missing. Shell commands that touch other
   repositories are not observed.
-- **`usage`** — cumulative, de-duplicated per assistant message. `context_tokens`
+- **`usage`** — cumulative, de-duplicated per assistant message. Heartbeats
+  read at most 8 MB of new transcript each; the end event reads the remaining
+  backlog in 16 MB chunks up to 64 MB, so a larger backlog at the end is
+  counted only partly. `context_tokens`
   is the prompt size of the latest main-thread assistant message.
 - **`transcript_path`** — opened without following a final symlink and
   without blocking, then read only when the descriptor is a regular file and

@@ -68,8 +68,11 @@ export const RETENTION_DAYS = 30;
 /** Upper bound on transcript bytes read per hook call (normal heartbeat). */
 export const INGEST_CAP_BYTES = 8 * 1024 * 1024;
 
-/** Upper bound on the final catch-up read at `session_end`. */
+/** Chunk size of the final catch-up read at `session_end`. */
 export const INGEST_CAP_BYTES_FINAL = 16 * 1024 * 1024;
+
+/** Chunks the final read may take: 64 MB in all, the most a session end waits for. */
+const FINAL_INGEST_CHUNKS = 4;
 
 /** Message ids remembered for usage de-duplication. */
 const RECENT_ID_WINDOW = 256;
@@ -995,7 +998,14 @@ function apply_event(
                 entry.usage = null;
             }
             entry.transcript_path = opened.path;
-            ingest_transcript(entry, opened, ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES, now_iso, cache);
+            // At the end there is no later event to catch up, so the backlog is
+            // read in chunks until done or the final bound is spent.
+            const chunks = ending ? FINAL_INGEST_CHUNKS : 1;
+            for (let i = 0; i < chunks; i++) {
+                const before = entry._ingest?.offset ?? 0;
+                ingest_transcript(entry, opened, ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES, now_iso, cache);
+                if ((entry._ingest?.offset ?? 0) === before || (entry._ingest?.offset ?? 0) >= opened.size) break;
+            }
         } finally {
             fs.closeSync(opened.fd);
         }
@@ -1164,24 +1174,29 @@ function build_index_with_fingerprint(options: PublishOptions): { index: Catalog
  * (created after it). `fingerprint` lists every record scanned, pruned ones
  * included, as `stem:version`.
  */
-function is_older_than_published(fingerprint: string, json_path: string): boolean {
-    let published: unknown;
+function is_older_than_published(fingerprint: string, json_path: string, dir: string): boolean {
+    let rows: unknown;
     try {
-        published = JSON.parse(fs.readFileSync(json_path, 'utf-8'));
+        rows = (JSON.parse(fs.readFileSync(json_path, 'utf-8')) as { sessions?: unknown } | null)?.sessions;
     } catch {
-        return false;
+        return false; // unreadable or malformed: replace it
     }
-    const rows = (published as { sessions?: unknown }).sessions;
     if (!Array.isArray(rows)) return false;
     const mine = new Map<string, number>();
     for (const line of fingerprint.split('\n')) {
         const i = line.lastIndexOf(':');
         if (i > 0) mine.set(line.slice(0, i), Number(line.slice(i + 1)));
     }
-    for (const r of rows as Record<string, unknown>[]) {
-        if (typeof r['record_version'] !== 'number') continue;
-        const v = mine.get(record_stem(String(r['host']), String(r['session_id'])));
-        if (v === undefined || r['record_version'] > v) return true;
+    const on_disk = list_versions(dir);
+    for (const r of rows) {
+        if (r === null || typeof r !== 'object') continue;
+        const row = r as Record<string, unknown>;
+        if (typeof row['record_version'] !== 'number') continue;
+        const stem = record_stem(String(row['host']), String(row['session_id']));
+        const v = mine.get(stem);
+        // A row this scan did not see is newer only while its record still
+        // exists; a record pruned since is not a reason to keep its old row.
+        if (v === undefined ? on_disk.has(stem) : row['record_version'] > v) return true;
     }
     return false;
 }
@@ -1219,7 +1234,7 @@ export function publish_index(options: PublishOptions = {}): boolean {
             // A publisher that paused after its scan must not replace a newer
             // publication: if the index on disk already carries a higher version
             // of any record, this scan is stale — scan again instead of writing.
-            if (!is_older_than_published(fingerprint, json_path)) {
+            if (!is_older_than_published(fingerprint, json_path, dir)) {
                 // The Markdown view first, the JSON index last: a reader of the
                 // index never sees it ahead of the view it describes.
                 write_private(index_md_path(env), render_markdown(index));
