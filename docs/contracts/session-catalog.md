@@ -35,13 +35,17 @@ reads the newest version N, applies the event and creates N+1 exclusively
 (an atomic `link` of a fully written temp file), so for each version exactly
 one writer wins and no reader sees a partial file; a loser re-reads the
 winner's record and applies its event on top (an end event retries longest).
+Superseded versions become empty tombstones rather than disappearing, so a
+stalled writer can never win a version number that is free again; tombstones
+are removed after 30 minutes, longer than any host lets a hook run.
 Session ids must be plain identifiers, and the catalog relies on hosts issuing
 unique ids (UUIDs) per host.
 
 The index is republished on start, `stop` and end, and at most once per 15 s
 on the prompt-time heartbeat. A publisher scans, writes both files by atomic
-rename, and re-scans; if any record changed meanwhile it publishes again, so
-the files converge on the newest records once writes stop. The CLI rebuilds
+rename (`SESSIONS.md` first, `sessions.json` last), and re-scans; if any
+record changed meanwhile it publishes again, for up to 3 s, so the files
+converge on the newest records once writes stop. The CLI rebuilds
 from the records on every call, and `agent-config sessions:catalog --render`
 republishes.
 
@@ -139,7 +143,10 @@ Field notes:
 - **`resume`** — `null` on hosts whose CLI cannot resume by id, and for a
   session id that is not a plain identifier. `argv` is what a program should
   spawn; `command` is the same, shell-quoted. `env` only ever carries the
-  profile directory variable.
+  profile directory variable. It is rebuilt from validated fields on every
+  read, never taken from a stored record.
+- **`repos[].remote`, `last_branch`** — read from the checkout's git metadata
+  with non-blocking, size-capped reads of regular files only.
 
 ## Coverage by host
 

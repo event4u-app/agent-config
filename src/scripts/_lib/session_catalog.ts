@@ -54,7 +54,6 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { write_atomic } from './fs_atomic.js';
-import { current_branch, git_common_dir } from './git_common_dir.js';
 import { type SessionProfile, iso_now, safe_stem, session_profile, ttl_seconds_for } from './session_register.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE, type EnvMap } from './user_global_paths.js';
 
@@ -82,12 +81,19 @@ const MAX_REPOS = 50;
 const MAX_BRANCHES_PER_REPO = 20;
 const MAX_MODELS = 10;
 
+/** How long a superseded version's name stays occupied — longer than any host's hook timeout. */
+const TOMBSTONE_TTL_MS = 30 * 60_000;
+
 /** Compare-and-swap attempts per update; an end event tries harder. */
 const CAS_ATTEMPTS = 5;
 const CAS_ATTEMPTS_END = 25;
 
-/** Re-scan passes a publisher makes while the record set keeps changing. */
-const PUBLISH_PASSES = 5;
+/**
+ * A publisher republishes until a re-scan shows no change. Hooks of the same
+ * burst finish well inside this bound; if writes never stop, the writer of
+ * the last change runs its own publish after it.
+ */
+const PUBLISH_DEADLINE_MS = 3_000;
 
 /** Prompt-time heartbeats publish at most this often; other events always publish. */
 export const PUBLISH_THROTTLE_MS = 15_000;
@@ -293,9 +299,60 @@ export function clean_title(t: string): string {
     return masked.length > TITLE_MAX ? `${masked.slice(0, TITLE_MAX - 1)}…` : masked;
 }
 
+/**
+ * Read a small metadata file without ever blocking: non-blocking open, the
+ * descriptor must be a regular file, and the size is capped. Paths here come
+ * from transcript-supplied directories, so a FIFO or a device must not stall
+ * the hook.
+ */
+function read_small(file: string, max = 64 * 1024): string | null {
+    let fd: number | null = null;
+    try {
+        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NONBLOCK ?? 0));
+        const st = fs.fstatSync(fd);
+        if (!st.isFile() || st.size > max) return null;
+        const buf = Buffer.alloc(st.size);
+        const n = fs.readSync(fd, buf, 0, st.size, 0);
+        return buf.subarray(0, n).toString('utf-8');
+    } catch {
+        return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
+    }
+}
+
+/** The checkout's own git dir (a `.git` directory, or the target of a `.git` pointer file). */
+function safe_git_dir(root: string): string | null {
+    const dot = path.join(root, '.git');
+    try {
+        const st = fs.lstatSync(dot);
+        if (st.isDirectory()) return dot;
+        if (!st.isFile()) return null;
+    } catch {
+        return null;
+    }
+    const m = (read_small(dot) ?? '').match(/^gitdir:\s*(.+)\s*$/m);
+    return m === null ? null : path.resolve(root, m[1]!.trim());
+}
+
+function safe_common_dir(root: string): string | null {
+    const gd = safe_git_dir(root);
+    if (gd === null) return null;
+    const common = read_small(path.join(gd, 'commondir'));
+    return common === null ? gd : path.resolve(gd, common.trim());
+}
+
+function safe_branch(root: string): string | null {
+    const gd = safe_git_dir(root);
+    const head = gd === null ? null : read_small(path.join(gd, 'HEAD'));
+    const m = (head ?? '').trim().match(/^ref:\s*refs\/heads\/(.+)$/);
+    return m === null ? null : m[1]!.trim();
+}
+
 function origin_url(common_dir: string): string | null {
     try {
-        const raw = fs.readFileSync(path.join(common_dir, 'config'), 'utf-8');
+        const raw = read_small(path.join(common_dir, 'config'));
+        if (raw === null) return null;
         const m = raw.match(/\[remote "origin"\][^[]*?\n\s*url\s*=\s*(\S+)/);
         return m === null ? null : strip_userinfo(m[1]!.trim());
     } catch {
@@ -441,9 +498,28 @@ function normalize_entry(v: unknown): CatalogEntry | null {
     for (const k of ['provider', 'entrypoint', 'host_version', 'config_dir', 'model', 'start_cwd', 'cwd', 'ended_at', 'title', 'roadmap_slug', 'transcript_path'] as const) {
         if (typeof o[k] !== 'string') o[k] = null;
     }
-    for (const k of ['profile', 'usage', 'resume'] as const) if (typeof o[k] !== 'object' || Array.isArray(o[k])) o[k] = null;
-    if (typeof o['context_tokens'] !== 'number') o['context_tokens'] = null;
-    return o as unknown as CatalogEntry;
+    const prof = o['profile'] as Record<string, unknown> | null;
+    o['profile'] =
+        prof !== null && typeof prof === 'object' && typeof prof['provider'] === 'string' && typeof prof['name'] === 'string'
+            ? { provider: prof['provider'], name: prof['name'], via: prof['via'] === 'env' ? 'env' : 'agent-switch' }
+            : null;
+    const u = o['usage'] as Record<string, unknown> | null;
+    const keys = ['input_tokens', 'output_tokens', 'cache_read_input_tokens', 'cache_creation_input_tokens', 'total_tokens', 'assistant_messages'];
+    o['usage'] =
+        u !== null && typeof u === 'object' && keys.every((k) => Number.isSafeInteger(u[k]) && (u[k] as number) >= 0)
+            ? Object.fromEntries(keys.map((k) => [k, u[k]]))
+            : null;
+    if (!Number.isSafeInteger(o['context_tokens'])) o['context_tokens'] = null;
+    for (const r of o['repos'] as Record<string, unknown>[]) {
+        r['branches'] = (r['branches'] as unknown[]).filter((b) => typeof b === 'string');
+        for (const k of ['name', 'first_seen', 'last_seen'] as const) if (typeof r[k] !== 'string') r[k] = '';
+        for (const k of ['remote', 'last_branch'] as const) if (typeof r[k] !== 'string') r[k] = null;
+        r['linked_worktree'] = r['linked_worktree'] === true;
+    }
+    const entry = o as unknown as CatalogEntry;
+    // Never trusted from disk: the resume line is derived from validated fields.
+    entry.resume = build_resume(entry);
+    return entry;
 }
 
 interface StoredRecord {
@@ -475,21 +551,43 @@ function list_versions(dir: string): Map<string, { version: number; file: string
 
 /** The newest readable version of one record (a version being cleaned up is skipped). */
 function read_latest(dir: string, stem: string, versions?: { version: number; file: string }[]): StoredRecord | null {
-    const list = versions ?? list_versions(dir).get(stem) ?? [];
-    for (const v of list) {
-        try {
-            const entry = normalize_entry(JSON.parse(fs.readFileSync(v.file, 'utf-8')));
-            if (entry !== null) return { stem, version: v.version, file: v.file, entry };
-        } catch {
-            /* removed under us or unreadable: try the next older version */
+    // A listing taken before a newer version superseded ours can name only
+    // tombstones by the time we read; one fresh listing resolves that.
+    for (let pass = 0; pass < 2; pass++) {
+        const list = pass === 0 && versions !== undefined ? versions : (list_versions(dir).get(stem) ?? []);
+        for (const v of list) {
+            try {
+                const entry = normalize_entry(JSON.parse(fs.readFileSync(v.file, 'utf-8')));
+                if (entry !== null) return { stem, version: v.version, file: v.file, entry };
+            } catch {
+                /* a tombstone or a removed file: try the next older version */
+            }
         }
     }
     return null;
 }
 
+/**
+ * Superseded versions become empty tombstones instead of disappearing, so a
+ * stalled writer that read an old version can never `link` into a freed name
+ * and win a version readers no longer look at. A tombstone is removed only
+ * once it is older than any hook can run (TOMBSTONE_TTL_MS, above the hosts'
+ * hook timeouts), when no writer from that era can still be alive.
+ */
 function remove_older(dir: string, stem: string, below: number): void {
+    const now = Date.now();
     for (const v of list_versions(dir).get(stem) ?? []) {
-        if (v.version < below) fs.rmSync(v.file, { force: true });
+        if (v.version >= below) continue;
+        try {
+            const st = fs.statSync(v.file);
+            if (st.size === 0) {
+                if (now - st.mtimeMs > TOMBSTONE_TTL_MS) fs.rmSync(v.file, { force: true });
+                continue;
+            }
+            write_private(v.file, '');
+        } catch {
+            /* already handled by a peer */
+        }
     }
 }
 
@@ -550,7 +648,7 @@ function note_repo(entry: CatalogEntry, p: string, seen_iso: string, cache: Map<
     let repo = entry.repos.find((r) => r.root === root);
     if (repo === undefined) {
         if (entry.repos.length >= MAX_REPOS) return;
-        const common = git_common_dir(root);
+        const common = safe_common_dir(root);
         const remote = common === null ? null : origin_url(common);
         repo = {
             root,
@@ -564,7 +662,7 @@ function note_repo(entry: CatalogEntry, p: string, seen_iso: string, cache: Map<
         };
         entry.repos.push(repo);
     }
-    const branch = current_branch(root);
+    const branch = safe_branch(root);
     if (branch !== null) {
         if (!repo.branches.includes(branch)) {
             repo.branches.push(branch);
@@ -775,7 +873,9 @@ export function open_transcript(p: string | null, session_id: string, root: stri
             real.startsWith(`${real_root}${path.sep}`) &&
             transcript_name_matches(path.basename(real), session_id) &&
             at.ino === st.ino &&
-            at.dev === st.dev
+            at.dev === st.dev &&
+            // Resolved twice: a directory swapped between the two lookups changes one of them.
+            fs.realpathSync(abs) === real
         ) {
             const opened = { fd, path: real, size: st.size };
             fd = null;
@@ -961,7 +1061,9 @@ export interface PublishOptions {
 function prune_record(dir: string, stem: string, cutoff: number): void {
     for (const v of list_versions(dir).get(stem) ?? []) {
         try {
-            const entry = normalize_entry(JSON.parse(fs.readFileSync(v.file, 'utf-8')));
+            const raw = fs.readFileSync(v.file, 'utf-8');
+            if (raw === '') continue; // tombstones age out in remove_older
+            const entry = normalize_entry(JSON.parse(raw));
             if (entry !== null && (ms(entry.last_seen) ?? 0) >= cutoff) continue;
             fs.rmSync(v.file, { force: true });
         } catch {
@@ -1017,9 +1119,10 @@ function build_index_with_fingerprint(options: PublishOptions): { index: Catalog
 }
 
 function current_fingerprint(dir: string): string {
-    const out: string[] = [];
-    for (const [stem, versions] of list_versions(dir)) out.push(`${stem}:${versions[0]!.version}`);
-    return out.sort().join('\n');
+    return read_all_records(dir)
+        .map((r) => `${r.stem}:${r.version}`)
+        .sort()
+        .join('\n');
 }
 
 /**
@@ -1041,13 +1144,16 @@ export function publish_index(options: PublishOptions = {}): boolean {
                 /* no index yet → publish */
             }
         }
-        for (let pass = 0; pass < PUBLISH_PASSES; pass++) {
+        const deadline = Date.now() + PUBLISH_DEADLINE_MS;
+        for (;;) {
             const { index, fingerprint } = build_index_with_fingerprint({ ...options, env });
-            write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
+            // The Markdown view first, the JSON index last: a reader of the index
+            // never sees it ahead of the view it describes.
             write_private(index_md_path(env), render_markdown(index));
-            if (current_fingerprint(dir) === fingerprint) break;
+            write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
+            if (current_fingerprint(dir) === fingerprint) return true;
+            if (Date.now() >= deadline) return false;
         }
-        return true;
     } catch {
         return false;
     }
