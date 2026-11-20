@@ -1,6 +1,6 @@
 {
     "skill": "license-compliance-audit",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-28",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers running the on-demand jscpd/scanoss similarity scan on a diff or path, and asking whether a diff looks copied from known OSS. Should-not-trigger covers near-miss neighbours (a single named-source license check, notices regeneration, generic code review, dependency vetting) whose vocabulary overlaps.",
     "queries": [
         {

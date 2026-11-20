@@ -1,6 +1,6 @@
 {
   "skill": "typography-system",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers font selection, scale derivation, and DTCG type token authoring. Should-not-trigger covers near-miss neighbors: icon set selection (iconography), raw design-token authoring without a typography constraint (design-tokens), brand archetype requests that require Stage 2 / Phase B, and general color token work.",
   "queries": [
     {"q": "pick fonts for our new SaaS product — something modern and professional", "trigger": true},

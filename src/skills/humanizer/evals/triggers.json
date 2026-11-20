@@ -1,6 +1,6 @@
 {
   "skill": "humanizer",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-07-11",
   "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers de-slopping deliverable prose (EN + DE phrasings). Should-not-trigger covers the near-miss neighbors: brand-voice definition (voice-and-tone-design), chat-reply tone (direct-answers), voice-capture drafting (ghostwriter), translation, and plain shortening.",
   "queries": [
     {"q": "make this sound less like AI", "trigger": true},

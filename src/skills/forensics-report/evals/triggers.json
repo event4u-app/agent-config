@@ -1,6 +1,6 @@
 {
     "skill": "forensics-report",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-08-09",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for git-history release forensics (hotspot risk, change-coupling, release-review evidence). Should-not-trigger covers near-miss neighbours: security incident forensics (incident-commander), plain git log, runtime performance hotspots (performance-analysis), line blame, security audit.",
     "queries": [
         { "q": "which files are the riskiest hotspots in this release", "trigger": true },

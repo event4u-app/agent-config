@@ -1,6 +1,6 @@
 {
   "skill": "html-deck",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-07-06",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers deck/slides/presentation/pitch builds in HTML. Should-not-trigger covers near-miss neighbors: canvas-design (posters/static art), fe-design (responsive UI), design-variations (options), PowerPoint-file requests, and content-only outline asks.",
   "queries": [
     {"q": "make a 10-slide deck for the investor pitch", "trigger": true},

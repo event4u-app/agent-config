@@ -1,6 +1,6 @@
 {
   "skill": "brand-audit",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers auditing/inventorying current brand expression and flagging drift. Should-not covers near-miss neighbors.",
   "queries": [
     {"q": "audit our brand consistency across the site and decks", "trigger": true},

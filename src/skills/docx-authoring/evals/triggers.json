@@ -1,6 +1,6 @@
 {
     "skill": "docx-authoring",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-30",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for WRITING a Word .docx — create from content, fill a supplied template, surgical body-XML edit. Should-not-trigger covers the near-miss neighbours (docx→Markdown reading, PDF authoring, spreadsheets, slide decks, prose co-authoring) whose vocabulary overlaps.",
     "queries": [
         {

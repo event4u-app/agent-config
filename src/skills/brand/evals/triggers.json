@@ -1,6 +1,6 @@
 {
   "skill": "brand",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers grounding a brand decision against the corpus (archetype, voice, colour, naming, archetype->type). Should-not-trigger covers near-miss neighbors: UI style grounding (design-intelligence), token authoring (design-tokens), generating a logo asset (logo-generation), validation of emitted artifacts (brand-consistency), and font-pairing lookup without a brand frame (typography-system style path).",
   "queries": [
     {"q": "which brand archetype fits a rugged outdoor gear company?", "trigger": true},

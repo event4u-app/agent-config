@@ -1,5 +1,4 @@
 {
-  "last_eval": "2026-11-20",
   "skill": "judge-bug-hunter",
   "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-25 under road-to-closing-the-gaps-a-comparison-named 2.1, which added this judge's behavioural evals and so brought it into check_routing_coverage's touched-skill scope. Exemplars are diffs to review on this judge's axis; near-misses are the sibling judges and the neighbouring do-the-work commands; counterexamples guard the everyday sense of the axis word. Not yet run, so it carries no last_eval.",
   "queries": [

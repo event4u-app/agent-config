@@ -1,6 +1,6 @@
 {
   "skill": "iconography",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers icon resolution, set selection, and embedding tasks. Should-not-trigger covers near-miss neighbors: typography-system (font/type choices), design-tokens (CSS variable authoring), image-provider-routing (AI-generated images), and a generic draw-an-icon image-gen request.",
   "queries": [
     {"q": "which icon should I use for a download action in Lucide?", "trigger": true},

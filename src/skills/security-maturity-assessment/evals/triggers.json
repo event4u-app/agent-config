@@ -1,6 +1,6 @@
 {
     "skill": "security-maturity-assessment",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-12",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN posture/scorecard/baseline phrasings. Should-not-trigger covers the neighbouring security skills (vuln hunt, authz chain, threat model, secure coding, agent config) whose vocabulary overlaps.",
     "queries": [
         {

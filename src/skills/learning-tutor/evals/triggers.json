@@ -1,6 +1,6 @@
 {
     "skill": "learning-tutor",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-30",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for the six tutoring modes — rapid competence, error-driven drill, keystone decoding, goal-backward sprint, gap probe, Feynman check. Should-not-trigger covers the near-miss neighbours (package-artifact learning capture, plan stress-testing, long-form article analysis, employee onboarding programs, plain factual how-to answers) whose vocabulary overlaps.",
     "queries": [
         {

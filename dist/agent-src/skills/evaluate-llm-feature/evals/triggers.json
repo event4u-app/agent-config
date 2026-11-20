@@ -1,6 +1,6 @@
 {
     "skill": "evaluate-llm-feature",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-30",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for black-box evaluation of a SHIPPED consumer LLM feature — hallucination, prompt-injection and cost-runaway probes against stated expectations. Should-not-trigger covers the near-miss neighbours (this suite's own agent config red-team, LLM app-building/RAG, prompt authoring, the single-response injection judge, code security audit) whose vocabulary overlaps.",
     "queries": [
         {

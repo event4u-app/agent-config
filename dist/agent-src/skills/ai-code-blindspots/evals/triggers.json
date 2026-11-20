@@ -1,6 +1,6 @@
 {
     "skill": "ai-code-blindspots",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-09",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for the pre-ship 'what invisible cross-cutting controls did the AI omit?' checklist across code surfaces. Should-not-trigger covers near-miss neighbours (deep single-surface skills, prose/docs edits, adversarial config review) whose vocabulary overlaps.",
     "queries": [
         {

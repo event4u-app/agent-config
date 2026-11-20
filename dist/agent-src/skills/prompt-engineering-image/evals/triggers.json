@@ -1,6 +1,6 @@
 {
   "skill": "prompt-engineering-image",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers translating a brief into provider-specific prompt grammar. Should-not-trigger covers near-miss neighbors: provider selection (image-provider-routing), direct adapter invocation, media rights checks (media-governance-routing / image-likeness-and-rights), and general image editing.",
   "queries": [
     {"q": "write me an Ideogram prompt for a bakery logo with the name on it", "trigger": true},

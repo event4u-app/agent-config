@@ -1,5 +1,4 @@
 {
-    "last_eval": "2026-11-20",
     "skill": "test-driven-development",
     "description": "10 exemplars + 6 near-misses + 2 counterexamples. Exemplars cover the red-green-refactor ask in DE and EN and — added 2026-10-02 with the per-ecosystem filtered-probe table — the stack-neutral form of 'which command do I run for one failing test'. Near-misses cover the neighbours the description already names or implies: testing-anti-patterns (the test itself is wrong), test-case-discovery (what to test, before any test exists), quality-tools (lint and types, not tests), test-performance (the suite is slow), api-testing (the HTTP shape) and systematic-debugging (diagnose first). Counterexamples guard the two over-claims: asking for tests AFTER the code is written and merged, which is not TDD, and the word 'refactor' used about prose.",
     "queries": [

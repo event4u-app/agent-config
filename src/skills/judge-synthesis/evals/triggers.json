@@ -1,6 +1,6 @@
 {
   "skill": "judge-synthesis",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-28",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers consolidating multiple already-run judge verdicts into one report (consensus, conflicts, must-fix). Should-not covers near-misses: producing a single judge verdict (the individual judges), dispatching judges (review-changes), code-only review, asking for a quality number, and running one judge.",
   "queries": [
     { "q": "consolidate these judge verdicts into one report — where do they agree and disagree?", "trigger": true },

@@ -1,6 +1,6 @@
 {
     "skill": "code-intelligence",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-30",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for code-graph-answerable STRUCTURE questions — callers, references, import graph, symbol change-impact, how two symbols connect. Should-not-trigger covers the near-miss neighbours (blast-radius impact narrative, source-discovery structural evidence, the refactor executor, deep codebase audit, content/semantic grep) whose vocabulary overlaps.",
     "queries": [
         {

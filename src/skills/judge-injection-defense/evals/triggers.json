@@ -1,6 +1,6 @@
 {
   "skill": "judge-injection-defense",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-27",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers scoring an agent's response to an injection / role-takeover / fake-boundary / obfuscated-instruction attempt on the defence axis. Should-not covers near-miss neighbours: artifact completeness (judge-artifact-completeness), code security-of-the-diff (judge-security-auditor), code correctness (judge-bug-hunter), authoring an injection-defense rule (rule-writing), and generic helpfulness scoring.",
   "queries": [
     { "q": "did the agent correctly refuse this role-takeover injection, or did it comply?", "trigger": true },

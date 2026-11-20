@@ -1,6 +1,6 @@
 {
   "skill": "image-generation",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-06-16",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers end-to-end image generation requests (brief → render). Should-not-trigger covers near-miss neighbors: routing-only questions (image-provider-routing), prompt-writing-only (prompt-engineering-image), image editing (image-editing), logo-specific flows (logo-generation), and rights checks (image-likeness-and-rights).",
   "queries": [
     {"q": "generate an image of a product shot for our new coffee mug", "trigger": true},

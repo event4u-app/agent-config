@@ -1,6 +1,6 @@
 {
   "skill": "wireframe",
-  "last_eval": "2026-11-20",
+  "last_eval": "2026-07-06",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers lo-fi structure/flow exploration. Should-not-trigger covers near-miss neighbors: design-variations (hi-fi options), fe-design (single implementation), design-review (review existing), design-intelligence (direction selection).",
   "queries": [
     {"q": "sketch a few rough directions for the onboarding flow", "trigger": true},

@@ -1,6 +1,6 @@
 {
     "skill": "schema-review",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-27",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for reviewing a migration/schema diff for scale hazards. Should-not-trigger covers near-miss neighbours: authoring a migration (laravel-migration), live-traffic performance (performance-analysis), audit-tier selection (history-design), generic code review.",
     "queries": [
         { "q": "review this migration for missing indexes before I merge", "trigger": true },

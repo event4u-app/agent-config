@@ -1,6 +1,6 @@
 {
     "skill": "license-compliance-credits",
-    "last_eval": "2026-11-20",
+    "last_eval": "2026-07-28",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers regenerating THIRD-PARTY-NOTICES.md after a ledger change, and asking whether notices are in sync. Should-not-trigger covers near-miss neighbours (drafting a new ledger entry, running a similarity scan, generic changelog/readme updates) whose vocabulary overlaps.",
     "queries": [
         {
