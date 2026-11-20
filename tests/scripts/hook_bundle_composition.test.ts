@@ -130,6 +130,15 @@ describe('check_hook_bundle_composition — analyzeMetafile', () => {
         expect(analyzeMetafile(wrong).bytes).toBe(5);
     });
 
+    it('refuses byte counts no build could write: negative, fractional, unsafe', () => {
+        for (const bad of [-1, 1.5, Number.MAX_SAFE_INTEGER + 2]) {
+            const out = JSON.stringify({ outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: bad, inputs: { 'src/a.ts': { bytesInOutput: 1 } } } } });
+            const inp = JSON.stringify({ outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 9, inputs: { 'src/a.ts': { bytesInOutput: bad } } } } });
+            expect(() => analyzeMetafile(out), String(bad)).toThrow();
+            expect(() => analyzeMetafile(inp), String(bad)).toThrow();
+        }
+    });
+
     it('refuses an input with no bytesInOutput instead of counting it as zero', () => {
         const json = JSON.stringify({
             outputs: { o: { entryPoint: 'src/scripts/hooks/dispatch_entry.ts', bytes: 9, inputs: { 'node_modules/left-pad/x.js': {} } } },

@@ -50,22 +50,38 @@ function drifted(target: NodeJS.ProcessEnv): boolean {
     return false;
 }
 
+/** Report on stderr without ever throwing: a cleanup path must not replace the dispatch's outcome. */
+export function reportQuietly(what: string, err: unknown): void {
+    try {
+        process.stderr.write(`concern_env: ${what}: ${err instanceof Error ? err.message : String(err)}\n`);
+    } catch {
+        /* nothing left to report through */
+    }
+}
+
 /**
- * Open a dispatch scope: save the environment as it is now, apply its hardened
- * copy. Returns the close function, which restores the saved environment and
- * never throws (a failed restore is reported on stderr, so a `finally` that
- * calls it cannot replace the dispatch's own outcome). The caller closes it in a
- * `finally`, so a dispatch that throws still restores and leaves no scope open.
+ * Open a dispatch scope. Returns the close function, which puts back the
+ * environment as it was when the scope opened and never throws (a failed
+ * restore is reported, so a `finally` that calls it cannot replace the
+ * dispatch's own outcome). The caller closes it in a `finally`, so a dispatch
+ * that throws still restores and leaves no scope open.
  *
- * A nested open — a synchronous re-entry into dispatch from inside a concern —
- * is a scope of its own: it saves the outer concern's environment as it stands,
- * hardens THAT, and its close puts it back. Inner concerns are reset to the inner
- * hardened copy between each other; the outer concern gets its own environment
- * back when the inner dispatch returns, and is reset on leaving as usual.
+ * The hardened copy a scope applies is derived from the ENCLOSING scope's
+ * hardened copy when there is one, never from the live environment: a
+ * synchronous re-entry into dispatch from inside a concern must not hand that
+ * concern's changes to the inner concerns. The live environment is still saved,
+ * so the outer concern gets its own environment back when the inner dispatch
+ * returns.
  */
 export function openConcernEnvScope(packageRoot: string): () => void {
-    const scope: Scope = { prev: { ...process.env }, hardened: hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot }) };
-    replaceEnv(scope.hardened);
+    const prev = { ...process.env };
+    const enclosing = stack[stack.length - 1];
+    const hardened =
+        enclosing === undefined
+            ? hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: packageRoot })
+            : { ...enclosing.hardened, AGENT_CONFIG_PACKAGE_ROOT: packageRoot };
+    const scope: Scope = { prev, hardened };
+    replaceEnv(hardened);
     stack.push(scope);
     let closed = false;
     return () => {
@@ -79,16 +95,26 @@ export function openConcernEnvScope(packageRoot: string): () => void {
         try {
             replaceEnv(scope.prev);
         } catch (err) {
-            process.stderr.write(`concern_env: environment restore failed: ${err instanceof Error ? err.message : String(err)}\n`);
+            reportQuietly('environment restore failed', err);
         }
     };
 }
 
-/** Enter the environment for one concern; call the returned function when it has run. */
+/**
+ * Enter the environment for one concern; call the returned function when it has
+ * run. The release resets only while its scope is still the innermost one: a
+ * release that outlives its scope (the scope already closed) does nothing, so it
+ * can never put an older hardened copy over the current scope.
+ */
 export function enterConcernEnv(packageRoot: string): () => void {
     const scope = stack[stack.length - 1];
     if (scope === undefined) return openConcernEnvScope(packageRoot);
     return () => {
-        if (drifted(scope.hardened)) replaceEnv(scope.hardened);
+        if (stack[stack.length - 1] !== scope) return;
+        try {
+            if (drifted(scope.hardened)) replaceEnv(scope.hardened);
+        } catch (err) {
+            reportQuietly('environment reset failed', err);
+        }
     };
 }

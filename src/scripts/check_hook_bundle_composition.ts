@@ -100,6 +100,11 @@ export function owningPackage(modulePath: string): string | null {
     return head.startsWith('@') ? `${head}/${parts[1] ?? ''}` : head;
 }
 
+/** A byte count esbuild could have written: a non-negative safe integer. */
+function isByteCount(v: unknown): v is number {
+    return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
+}
+
 /** The entry the bundle is built from; the metafile output carrying it is the one measured. */
 export const ENTRY_REL = 'src/scripts/hooks/dispatch_entry.ts';
 
@@ -139,14 +144,14 @@ export function analyzeMetafile(json: string, opts: { requireEntry?: boolean } =
                 : `metafile carries ${String(entries.length)} entry output(s) and none is ${ENTRY_REL}`,
         );
     }
-    if (typeof out.bytes !== 'number' || out.inputs === undefined || Object.keys(out.inputs).length === 0) {
+    if (!isByteCount(out.bytes) || out.inputs === undefined || Object.keys(out.inputs).length === 0) {
         throw new Error('the entry output carries no byte count or no inputs — refusing to read it as an empty bundle');
     }
     const packageBytes = new Map<string, number>();
     const roots = new Map<string, Set<string>>();
     for (const [p, v] of Object.entries(out.inputs)) {
-        if (typeof v.bytesInOutput !== 'number') {
-            throw new Error(`input ${p} carries no bytesInOutput — refusing to attribute it as zero`);
+        if (!isByteCount(v.bytesInOutput)) {
+            throw new Error(`input ${p} carries no valid bytesInOutput — refusing to attribute it`);
         }
         const pkg = owningPackage(p);
         const bytes = v.bytesInOutput;

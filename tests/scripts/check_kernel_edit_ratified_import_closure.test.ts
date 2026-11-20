@@ -110,6 +110,13 @@ describe('the fence follows the dispatcher import closure', () => {
         ]);
     });
 
+    it('a budget-only edit is not gated; a mixed budget and dispatcher edit still gates the dispatcher', () => {
+        expect(classifyPaths(['src/config/hook-bundle-budget.json']).plumbing).toEqual([]);
+        expect(classifyPaths(['src/config/hook-bundle-budget.json', 'src/scripts/hooks/dispatch_hook.ts']).plumbing).toEqual([
+            'src/scripts/hooks/dispatch_hook.ts',
+        ]);
+    });
+
     it('a module the dispatcher newly imports that names an exit code joins without a gate edit', () => {
         const hooks = path.join(root, 'src', 'scripts', 'hooks');
         fs.mkdirSync(hooks, { recursive: true });

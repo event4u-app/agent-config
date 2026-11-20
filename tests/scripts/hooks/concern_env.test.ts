@@ -1,9 +1,11 @@
 // concern_env — the hardened environment is built once per dispatch, and a
 // variable one concern sets never reaches the next
 // (road-to-a-hook-system-that-pays-for-what-it-does 2.3).
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { spawnSync } from 'node:child_process';
 
-import { enterConcernEnv, openConcernEnvScope } from '../../../src/scripts/hooks/concern_env.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { enterConcernEnv, openConcernEnvScope, reportQuietly } from '../../../src/scripts/hooks/concern_env.js';
 
 const ROOT = '/pkg-root';
 let saved: NodeJS.ProcessEnv;
@@ -85,24 +87,52 @@ describe('concern_env — one scope per dispatch', () => {
         close();
     });
 
-    it('a re-entrant dispatch is a scope of its own: inner concerns never see the outer concern\'s changes', () => {
+    it('a re-entrant dispatch is a scope of its own: inner concerns and their children never see the outer concern\'s changes', () => {
+        const childSees = (name: string): string =>
+            spawnSync(process.execPath, ['-e', `process.stdout.write(process.env[${JSON.stringify(name)}] ?? 'unset')`], { encoding: 'utf-8' }).stdout;
         const closeOuter = openConcernEnvScope(ROOT);
         const leaveOuter = enterConcernEnv(ROOT);
         process.env['OUTER_CONCERN_SET'] = 'outer';
         // The outer concern re-enters dispatch synchronously.
         const closeInner = openConcernEnvScope(ROOT);
+        expect(process.env['OUTER_CONCERN_SET']).toBeUndefined();
+        expect(childSees('OUTER_CONCERN_SET')).toBe('unset');
+        expect(childSees('LD_PRELOAD')).toBe('unset');
         const leaveInnerA = enterConcernEnv(ROOT);
         process.env['INNER_A_SET'] = 'a';
         leaveInnerA();
+        const leaveInnerB = enterConcernEnv(ROOT);
         expect(process.env['INNER_A_SET']).toBeUndefined();
-        expect(process.env['OUTER_CONCERN_SET']).toBe('outer'); // the inner scope hardened the env as it stood
+        expect(process.env['OUTER_CONCERN_SET']).toBeUndefined();
+        leaveInnerB();
         closeInner();
-        expect(process.env['OUTER_CONCERN_SET']).toBe('outer'); // the outer concern gets its env back
+        expect(process.env['OUTER_CONCERN_SET']).toBe('outer'); // the outer concern gets its own env back
         leaveOuter();
         expect(process.env['OUTER_CONCERN_SET']).toBeUndefined(); // and is reset on leaving, as any concern
-        expect(process.env['LD_PRELOAD']).toBeUndefined();
         closeOuter();
         expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+    });
+
+    it('a release that outlives its scope does nothing', () => {
+        const closeOuter = openConcernEnvScope(ROOT);
+        const closeInner = openConcernEnvScope(ROOT);
+        const staleRelease = enterConcernEnv(ROOT); // bound to the inner scope
+        closeInner();
+        process.env['OUTER_LEVEL_STATE'] = 'kept';
+        staleRelease();
+        expect(process.env['OUTER_LEVEL_STATE']).toBe('kept');
+        closeOuter();
+    });
+
+    it('reporting a cleanup failure never throws, even when stderr does', () => {
+        const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => {
+            throw new Error('stderr closed');
+        });
+        try {
+            expect(() => reportQuietly('environment restore failed', new Error('x'))).not.toThrow();
+        } finally {
+            spy.mockRestore();
+        }
     });
 
     it('closing twice, or out of order, never leaves a scope behind', () => {
