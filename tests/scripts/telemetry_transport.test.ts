@@ -48,7 +48,9 @@ afterEach(() => {
     while (servers.length > 0) (servers.pop() as http.Server).close();
 });
 
-function record(skill: string, now = new Date('2026-08-20T10:00:00Z')): ClassARecord {
+// Default `now` is the wall clock: a fixed 2026-08-20 record aged past the 90-day
+// retention on 2026-11-18 and was pruned on write, turning every append test red.
+function record(skill: string, now = new Date()): ClassARecord {
     return build_class_a_record({
         skill,
         host: 'claude',
