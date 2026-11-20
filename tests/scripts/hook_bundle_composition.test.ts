@@ -333,6 +333,36 @@ describe('check_hook_bundle_composition — the CLI against the committed budget
         expect(run(committed + 1, { 'src/x.ts': committed + 1 })).toBe(1);
     });
 
+    it('exits 1 on an unlisted package below the backstop, and on an allowlisted bundle above it', () => {
+        expect(run(1000, { 'node_modules/yaml/dist/index.js': 900, 'node_modules/left-pad/x.js': 100 })).toBe(1);
+        expect(run(committed + 1, { 'node_modules/yaml/dist/index.js': committed + 1 })).toBe(1);
+    });
+
+    it('exits 2 on an invalid budget and on a failed build, never 0', () => {
+        const quiet = (): boolean => true;
+        const err = process.stderr.write;
+        const out = process.stdout.write;
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'composition-root-'));
+        try {
+            process.stderr.write = quiet as typeof process.stderr.write;
+            process.stdout.write = quiet as typeof process.stdout.write;
+            fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+            const budget = path.join(dir, 'src', 'config', 'hook-bundle-budget.json');
+            // No allowlist: refused before anything is measured.
+            fs.writeFileSync(budget, JSON.stringify({ max_bytes: 1000 }));
+            expect(compositionMain([], dir)).toBe(2);
+            fs.writeFileSync(budget, JSON.stringify({ max_bytes: -1, allowed_packages: ['yaml'] }));
+            expect(compositionMain([], dir)).toBe(2);
+            // A valid budget in a root with no sources: the build fails, and the gate does not pass.
+            fs.writeFileSync(budget, JSON.stringify({ max_bytes: 1000, allowed_packages: ['yaml'] }));
+            expect(compositionMain([], dir)).toBe(2);
+        } finally {
+            process.stderr.write = err;
+            process.stdout.write = out;
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 120_000);
+
     it('exits 1 on an unlisted package of any size', () => {
         expect(run(1000, { 'node_modules/yaml/dist/index.js': 999, 'node_modules/js-yaml/x.js': 1 })).toBe(1);
     });
