@@ -46,9 +46,15 @@ on the prompt-time heartbeat. A publisher scans, writes both files by atomic
 rename (`SESSIONS.md` first, `sessions.json` last), and re-scans; if any
 record changed meanwhile it publishes again, for up to 3 s, so the files
 converge on the newest records once writes stop. Each row carries the
-`record_version` it was built from, and a publisher whose scan is older than
-the index on disk for any record does not write, so a delayed publisher
-never replaces a newer index. The CLI rebuilds
+`record_version` it was built from; a publisher whose scan is older than the
+index on disk (a lower version, or a record it did not see) rescans instead of
+writing, and a publisher that finds its own write older than the records
+repairs it. An event older than what a record already holds changes nothing
+about its lifecycle, in either direction.
+
+Measured cost per hook call with 301 retained sessions and a 5 MB transcript:
+first ingest at `session_start` about 105 ms, `stop` about 37 ms, a throttled
+prompt about 9 ms. The CLI rebuilds
 from the records on every call, and `agent-config sessions:catalog --render`
 republishes.
 

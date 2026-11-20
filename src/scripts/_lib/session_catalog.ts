@@ -94,6 +94,7 @@ const CAS_ATTEMPTS_END = 25;
  * the last change runs its own publish after it.
  */
 const PUBLISH_DEADLINE_MS = 3_000;
+const PUBLISH_OVERTIME_PASSES = 2;
 
 /** Prompt-time heartbeats publish at most this often; other events always publish. */
 export const PUBLISH_THROTTLE_MS = 15_000;
@@ -345,7 +346,11 @@ function safe_git_dirs(root: string): { git_dir: string; common_dir: string } | 
         if (path.basename(path.dirname(gd)) !== 'worktrees') return null;
         const back = read_small(path.join(gd, 'gitdir'));
         if (back === null || fs.realpathSync(path.dirname(back.trim())) !== fs.realpathSync(root)) return null;
-        return { git_dir: gd, common_dir: path.dirname(path.dirname(gd)) };
+        // The common dir must itself be a git directory, not any folder that
+        // happens to contain a `worktrees/` child.
+        const common = path.dirname(path.dirname(gd));
+        if (read_small(path.join(common, 'HEAD')) === null || !fs.lstatSync(path.join(common, 'objects')).isDirectory()) return null;
+        return { git_dir: gd, common_dir: common };
     } catch {
         return null;
     }
@@ -953,17 +958,17 @@ function apply_event(
 ): void {
     const ending = ev.event === 'session_end';
     const at = ms(now_iso) ?? 0;
+    const newest = at >= (ms(entry.last_seen) ?? 0);
     entry.schema_version = CATALOG_SCHEMA_VERSION;
     entry.host = ev.platform || entry.host;
-    // An event that lost a race retries against newer state; it must not move
-    // time backward or reopen an end that happened after it.
-    if (at >= (ms(entry.last_seen) ?? 0)) entry.last_seen = now_iso;
-    // Only a real start or a new prompt reopens an ended session (a resume);
-    // a late `stop` racing the end must not.
-    if (ending) {
-        if (entry.ended_at === null || at >= (ms(entry.ended_at) ?? 0)) entry.ended_at = now_iso;
-    } else if ((ev.event === 'session_start' || ev.event === 'user_prompt_submit') && at >= (ms(entry.ended_at) ?? 0)) {
-        entry.ended_at = null;
+    // An event that lost a race retries against newer state. Lifecycle changes
+    // apply only from an event not older than everything already recorded, so
+    // neither a delayed end closes a newer resume nor a delayed prompt reopens
+    // a newer end; a late `stop` never reopens anything.
+    if (newest) {
+        entry.last_seen = now_iso;
+        if (ending) entry.ended_at = now_iso;
+        else if (ev.event === 'session_start' || ev.event === 'user_prompt_submit') entry.ended_at = null;
     }
     if (ev.profile !== undefined && ev.profile !== null) entry.profile = ev.profile;
     entry.config_dir = config_dir_for(entry.host, env) ?? entry.config_dir;
@@ -1153,7 +1158,13 @@ function build_index_with_fingerprint(options: PublishOptions): { index: Catalog
     };
 }
 
-function is_older_than_published(index: CatalogIndex, json_path: string): boolean {
+/**
+ * True when the index on disk was built from newer records than this scan:
+ * a higher version of a record, or a record this scan did not see at all
+ * (created after it). `fingerprint` lists every record scanned, pruned ones
+ * included, as `stem:version`.
+ */
+function is_older_than_published(fingerprint: string, json_path: string): boolean {
     let published: unknown;
     try {
         published = JSON.parse(fs.readFileSync(json_path, 'utf-8'));
@@ -1162,10 +1173,15 @@ function is_older_than_published(index: CatalogIndex, json_path: string): boolea
     }
     const rows = (published as { sessions?: unknown }).sessions;
     if (!Array.isArray(rows)) return false;
-    const mine = new Map(index.sessions.map((r) => [`${r.host}--${r.session_id}`, r.record_version]));
+    const mine = new Map<string, number>();
+    for (const line of fingerprint.split('\n')) {
+        const i = line.lastIndexOf(':');
+        if (i > 0) mine.set(line.slice(0, i), Number(line.slice(i + 1)));
+    }
     for (const r of rows as Record<string, unknown>[]) {
-        const v = mine.get(`${String(r['host'])}--${String(r['session_id'])}`);
-        if (v !== undefined && typeof r['record_version'] === 'number' && r['record_version'] > v) return true;
+        if (typeof r['record_version'] !== 'number') continue;
+        const v = mine.get(record_stem(String(r['host']), String(r['session_id'])));
+        if (v === undefined || r['record_version'] > v) return true;
     }
     return false;
 }
@@ -1197,19 +1213,24 @@ export function publish_index(options: PublishOptions = {}): boolean {
             }
         }
         const deadline = Date.now() + PUBLISH_DEADLINE_MS;
+        let overtime = 0;
         for (;;) {
             const { index, fingerprint } = build_index_with_fingerprint({ ...options, env });
             // A publisher that paused after its scan must not replace a newer
             // publication: if the index on disk already carries a higher version
             // of any record, this scan is stale — scan again instead of writing.
-            if (!is_older_than_published(index, json_path)) {
+            if (!is_older_than_published(fingerprint, json_path)) {
                 // The Markdown view first, the JSON index last: a reader of the
                 // index never sees it ahead of the view it describes.
                 write_private(index_md_path(env), render_markdown(index));
                 write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
                 if (current_fingerprint(dir) === fingerprint) return true;
             }
-            if (Date.now() >= deadline) return false;
+            // Past the deadline only a bounded number of passes remain. They let a
+            // publisher whose own write turned out older than the records repair
+            // it once writes stop; under continued writes, the later writers'
+            // own publications take over.
+            if (Date.now() >= deadline && ++overtime > PUBLISH_OVERTIME_PASSES) return false;
         }
     } catch {
         return false;

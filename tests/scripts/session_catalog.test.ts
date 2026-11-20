@@ -411,6 +411,40 @@ describe('review fixes', () => {
         expect(catalog_update(ev, env)!.usage!.assistant_messages).toBe(3);
     });
 
+    it('does not let a delayed end close a newer resume', () => {
+        const t1 = new Date('2026-11-20T10:00:00Z');
+        const t2 = new Date('2026-11-20T10:00:09Z');
+        const base = { session_id: 'sess-de-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'user_prompt_submit', now: t2 }, env);
+        const e = catalog_update({ ...base, event: 'session_end', now: t1 }, env)!;
+        expect(e.ended_at).toBeNull();
+        expect(e.last_seen).toBe(iso_now(t2));
+    });
+
+    it('refuses a forged worktree-shaped pointer whose common dir is not a git dir', () => {
+        const fake = path.join(tmp, 'forged');
+        fs.mkdirSync(fake);
+        const entry = path.join(tmp, 'notgit', 'worktrees', 'x');
+        fs.mkdirSync(entry, { recursive: true });
+        fs.writeFileSync(path.join(entry, 'HEAD'), 'ref: refs/heads/leaked\n');
+        fs.writeFileSync(path.join(entry, 'gitdir'), `${path.join(fs.realpathSync(fake), '.git')}\n`);
+        fs.writeFileSync(path.join(fake, '.git'), `gitdir: ${entry}\n`);
+        const e = catalog_update({ session_id: 'sess-fw-0001', platform: 'claude', event: 'stop', cwd: fake }, env)!;
+        expect(e.repos[0]!.branches).toEqual([]);
+    });
+
+    it('repairs an index that is older than the records', () => {
+        const base = { session_id: 'sess-rr-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'session_start' }, env);
+        const stale = fs.readFileSync(index_json_path(env), 'utf-8');
+        catalog_update({ ...base, event: 'session_end' }, env);
+        fs.writeFileSync(index_json_path(env), stale);
+        expect(publish_index({ env, force: true })).toBe(true);
+        const row = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0];
+        expect(row.status).toBe('ended');
+        expect(row.record_version).toBe(2);
+    });
+
     it('keeps two hosts with the same id apart', () => {
         catalog_update({ session_id: 'sess-dup-0001', platform: 'claude', event: 'stop' }, env);
         catalog_update({ session_id: 'sess-dup-0001', platform: 'codex', event: 'stop' }, env);
