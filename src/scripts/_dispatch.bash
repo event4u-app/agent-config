@@ -254,6 +254,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              axis to the JSON; the human form always shows it)
   sessions:claim             Claim a roadmap for this session so other sessions skip
                              it; --release clears the claim
+  sessions:catalog           Every agent session on this machine, newest first:
+                             profile, model, repos/branches, tokens, resume command.
+                             Flags: --json, --all, --limit N, --status S, --render
   session:recycle            Validate + write the main-session recycle envelope (--verify validates only)
                              (deliberate recycle instead of auto-compact). Flags:
                              --file <json> | --template; default reads stdin
@@ -844,6 +847,10 @@ cmd_sessions_list() {
 
 cmd_sessions_claim() {
   exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" claim "$@"
+}
+
+cmd_sessions_catalog() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/sessions_catalog_cli.ts" "$@"
 }
 
 # Main-session recycle envelope producer (road-to-token-economy-recycling
@@ -1740,6 +1747,7 @@ main() {
     code-graph)              cmd_code_graph "$@" ;;
     conformance:behavior)    cmd_conformance_behavior "$@" ;;
     sessions:list)           cmd_sessions_list "$@" ;;
+    sessions:catalog)        cmd_sessions_catalog "$@" ;;
     sessions:claim)          cmd_sessions_claim "$@" ;;
     session:recycle)         cmd_session_recycle "$@" ;;
     packs:active)            cmd_packs_active "$@" ;;

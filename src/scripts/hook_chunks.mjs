@@ -98,6 +98,13 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/switch_link.ts',
         outfile: 'dist/hooks/switch_link.chunk.cjs',
     }),
+    // The machine-wide session catalog. Loaded by `session-register` on its four
+    // lifecycle slots; transcript parsing and index rendering stay off every
+    // other concern's parse. Reads no YAML.
+    Object.freeze({
+        entry: 'src/scripts/_lib/session_catalog.ts',
+        outfile: 'dist/hooks/session_catalog.chunk.cjs',
+    }),
     // `session_start` on claude alone; the thin pass and the ownership ledger
     // it reads stay off every other dispatch's parse. `yaml` external for the
     // reason given at `chat_history`, which `require`s the same copy earlier on
