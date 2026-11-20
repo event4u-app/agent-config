@@ -125,6 +125,23 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-warn', 'chat-history.json'))).toBe(true);
     });
 
+    it('last_feedback: a quiet run evicted from the capped history still supersedes an older block, through `latest`', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-evicted');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00Z', invocation: 'pid-1', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                // The quiet allow at 11:00 was evicted; only later runs of another concern remain.
+                invocations: [{ invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other' }] }],
+                latest: { 'chat-history': { invocation: 'pid-2', completed_at: '2026-11-20T11:00:00Z' }, other: { invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-evicted', 'summary.json'))).toBe(true);
+    });
+
     describe('last_feedback on an equal instant', () => {
         const AT = '2026-11-20T10:00:00.000Z';
         const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {

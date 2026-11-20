@@ -428,9 +428,16 @@ describe("end to end through the dispatcher", () => {
     // The per-concern file names the dispatch that wrote it, as the summary does (hooks_doctor ties).
     const fb = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-observe");
     const own = JSON.parse(fs.readFileSync(path.join(fb, "recorder.json"), "utf8")) as { invocation?: unknown };
-    const runs = (JSON.parse(fs.readFileSync(path.join(fb, "summary.json"), "utf8")) as { invocations: Array<{ invocation: unknown }> }).invocations;
+    const doc = JSON.parse(fs.readFileSync(path.join(fb, "summary.json"), "utf8")) as {
+      invocations: Array<{ invocation: unknown }>;
+      latest: Record<string, { invocation: unknown; completed_at: unknown }>;
+    };
     expect(typeof own.invocation).toBe("string");
-    expect(runs.map((i) => i.invocation)).toEqual([own.invocation]);
+    expect(doc.invocations.map((i) => i.invocation)).toEqual([own.invocation]);
+    // Every concern that ran has an uncapped `latest` row naming this dispatch.
+    expect(doc.latest["recorder"]?.invocation).toBe(own.invocation);
+    expect(doc.latest["rewriter"]?.invocation).toBe(own.invocation);
+    expect(typeof doc.latest["rewriter"]?.completed_at).toBe("string");
     const record = fs.readFileSync(path.join(ws, OBSERVATION_FILE), "utf8");
     expect(record.includes(PLANTED)).toBe(false);
     expect(record.includes('"type":"TOKEN"')).toBe(true);

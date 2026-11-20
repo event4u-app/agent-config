@@ -194,13 +194,19 @@ function _recorded_at(file: string): { at: string; invocation: string | null } |
   }
 }
 
-/** Latest `completed_at` (and its `invocation`) among the summary's invocations that ran `concern`. */
+/** Latest `completed_at` (and its `invocation`) of `concern` in the summary: its `latest` row or the invocations that ran it. */
 function _summary_last_run(summary: string, concern: string): { at: string; invocation: string | null } | null {
   try {
     const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
       invocations?: Array<{ invocation?: unknown; completed_at?: unknown; concerns?: Array<{ concern?: unknown }> }>;
+      latest?: Record<string, { invocation?: unknown; completed_at?: unknown } | undefined>;
     };
     let last: { at: string; invocation: string | null } | null = null;
+    // `latest` is uncapped (one row per concern), so a run the capped history evicted still counts.
+    const kept = doc.latest !== null && typeof doc.latest === "object" ? doc.latest[concern] : undefined;
+    if (kept !== undefined && typeof kept.completed_at === "string" && !Number.isNaN(Date.parse(kept.completed_at))) {
+      last = { at: kept.completed_at, invocation: typeof kept.invocation === "string" ? kept.invocation : null };
+    }
     for (const inv of doc.invocations ?? []) {
       if (typeof inv.completed_at !== "string" || Number.isNaN(Date.parse(inv.completed_at))) continue;
       if (!(inv.concerns ?? []).some((c) => c.concern === concern)) continue;

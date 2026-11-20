@@ -873,9 +873,13 @@ function _write_feedback(
       const priorRaw = (loaded as JsonObject)["invocations"];
       const prior = Array.isArray(priorRaw) ? priorRaw : [];
       const next = [...prior, { invocation, ...summary }];
+      // Each concern's last run, outside the cap: eviction never resurrects an older outcome (hooks_doctor).
+      const latest: JsonObject = _isObject(loaded["latest"]) ? { ...loaded["latest"] } : {};
+      for (const e of entries) latest[String(e["concern"])] = { invocation, completed_at: summary["completed_at"] ?? null };
       return {
         schema_version: 2,
         session_id,
+        latest,
         // Newest last, oldest dropped — the same rotation direction
         // `dispatch-issues.jsonl` uses, so a reader learns one convention.
         invocations: next.slice(Math.max(0, next.length - SUMMARY_INVOCATION_CAP)),
