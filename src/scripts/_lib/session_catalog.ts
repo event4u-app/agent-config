@@ -463,6 +463,11 @@ const VERSION_FILE_RE = /^(.+)\.v(\d{1,15})\.json$/;
 
 function ensure_private_dir(dir: string): void {
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    try {
+        fs.chmodSync(dir, 0o700);
+    } catch {
+        /* not ours to change; the files inside are still created 0600 */
+    }
 }
 
 /** Atomic replace; the temp file is created 0600, so the target never exists wider. */
@@ -557,6 +562,11 @@ function list_versions(dir: string): Map<string, { version: number; file: string
 }
 
 /** The newest readable version of one record (a version being cleaned up is skipped). */
+/** A record file's text: `''` for a tombstone, `null` when it is not a plain small file. */
+function read_record_file(file: string): string | null {
+    return read_small(file, 4 * 1024 * 1024);
+}
+
 function read_latest(dir: string, stem: string, versions?: { version: number; file: string }[]): StoredRecord | null {
     // A listing taken before a newer version superseded ours can name only
     // tombstones by the time we read; one fresh listing resolves that.
@@ -564,7 +574,8 @@ function read_latest(dir: string, stem: string, versions?: { version: number; fi
         const list = pass === 0 && versions !== undefined ? versions : (list_versions(dir).get(stem) ?? []);
         for (const v of list) {
             try {
-                const entry = normalize_entry(JSON.parse(fs.readFileSync(v.file, 'utf-8')));
+                const raw = read_record_file(v.file);
+                const entry = raw === null || raw === '' ? null : normalize_entry(JSON.parse(raw));
                 if (entry !== null) return { stem, version: v.version, file: v.file, entry };
             } catch {
                 /* a tombstone or a removed file: try the next older version */
@@ -586,7 +597,8 @@ function remove_older(dir: string, stem: string, below: number): void {
     for (const v of list_versions(dir).get(stem) ?? []) {
         if (v.version >= below) continue;
         try {
-            const st = fs.statSync(v.file);
+            const st = fs.lstatSync(v.file);
+            if (!st.isFile()) continue;
             if (st.size === 0) {
                 if (now - st.mtimeMs > TOMBSTONE_TTL_MS) fs.rmSync(v.file, { force: true });
                 continue;
@@ -944,6 +956,7 @@ function apply_event(
     ev: CatalogEvent,
     env: NodeJS.ProcessEnv,
     now_iso: string,
+    budget: { bytes: number },
 ): void {
     const ending = ev.event === 'session_end';
     const at = ms(now_iso) ?? 0;
@@ -986,11 +999,14 @@ function apply_event(
             entry.transcript_path = opened.path;
             // At the end there is no later event to catch up, so the backlog is
             // read in chunks until done or the final bound is spent.
-            const chunks = ending ? FINAL_INGEST_CHUNKS : 1;
-            for (let i = 0; i < chunks; i++) {
+            // `budget` is shared by every CAS attempt of this hook call, so a
+            // contended end cannot multiply the read.
+            while (budget.bytes > 0) {
                 const before = entry._ingest?.offset ?? 0;
-                ingest_transcript(entry, opened, ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES, now_iso, cache);
-                if ((entry._ingest?.offset ?? 0) === before || (entry._ingest?.offset ?? 0) >= opened.size) break;
+                ingest_transcript(entry, opened, Math.min(budget.bytes, ending ? INGEST_CAP_BYTES_FINAL : INGEST_CAP_BYTES), now_iso, cache);
+                const after = entry._ingest?.offset ?? 0;
+                budget.bytes -= Math.max(0, after - before);
+                if (!ending || after === before || after >= opened.size) break;
             }
         } finally {
             fs.closeSync(opened.fd);
@@ -1023,12 +1039,14 @@ export function catalog_update(
         const dir = catalog_dir(env);
         ensure_private_dir(dir);
         const stem = record_stem(ev.platform, ev.session_id);
-        const attempts = ev.event === 'session_end' ? CAS_ATTEMPTS_END : CAS_ATTEMPTS;
+        const ending = ev.event === 'session_end';
+        const attempts = ending ? CAS_ATTEMPTS_END : CAS_ATTEMPTS;
+        const budget = { bytes: ending ? INGEST_CAP_BYTES_FINAL * FINAL_INGEST_CHUNKS : INGEST_CAP_BYTES * CAS_ATTEMPTS };
         for (let attempt = 0; attempt < attempts; attempt++) {
             const versions = list_versions(dir).get(stem) ?? [];
             const current = read_latest(dir, stem, versions);
             const entry = current?.entry ?? fresh_entry(ev, now_iso);
-            apply_event(entry, ev, env, now_iso);
+            apply_event(entry, ev, env, now_iso, budget);
             // Above every name in use, tombstones included: a record whose live
             // version was pruned still moves forward instead of colliding.
             const version = (versions[0]?.version ?? 0) + 1;
@@ -1085,16 +1103,22 @@ export interface PublishOptions {
  * concurrent heartbeat just wrote is fresh and survives.
  */
 function prune_record(dir: string, stem: string, cutoff: number): void {
-    for (const v of list_versions(dir).get(stem) ?? []) {
+    const versions = list_versions(dir).get(stem) ?? [];
+    for (const v of versions) {
         try {
-            const raw = fs.readFileSync(v.file, 'utf-8');
+            const raw = read_record_file(v.file);
             if (raw === '') {
                 if (Date.now() - fs.statSync(v.file).mtimeMs > TOMBSTONE_TTL_MS) fs.rmSync(v.file, { force: true });
                 continue;
             }
+            if (raw === null) continue;
             const entry = normalize_entry(JSON.parse(raw));
             if (entry !== null && (ms(entry.last_seen) ?? 0) >= cutoff) continue;
-            fs.rmSync(v.file, { force: true });
+            // The highest name becomes a tombstone rather than vanishing: it is
+            // the generation fence. A writer still holding the pre-prune record
+            // cannot win a version at or below it, and a resume allocates above it.
+            if (v === versions[0]) write_private(v.file, '');
+            else fs.rmSync(v.file, { force: true });
         } catch {
             /* already gone */
         }
@@ -1109,6 +1133,12 @@ export function build_index(options: PublishOptions = {}): CatalogIndex {
     const prune = options.prune !== false;
     const cutoff = now.getTime() - RETENTION_DAYS * 86_400_000;
     const rows: PublishedEntry[] = [];
+    if (prune) {
+        // Stems left with tombstones only (pruned or abandoned) age out here too.
+        for (const [stem, versions] of list_versions(dir)) {
+            if (read_latest(dir, stem, versions) === null) prune_record(dir, stem, cutoff);
+        }
+    }
     for (const { stem, version, entry: e } of read_all_records(dir)) {
         const seen = ms(e.last_seen) ?? 0;
         if (seen < cutoff) {
@@ -1148,6 +1178,15 @@ export function publish_index(options: PublishOptions = {}): boolean {
     try {
         ensure_private_dir(catalog_dir(env));
         const index = build_index({ ...options, env });
+        // Two CLI calls at once: the one with the older snapshot leaves the
+        // newer overview in place rather than replacing it.
+        try {
+            const on_disk = JSON.parse(read_small(index_json_path(env), 64 * 1024 * 1024) ?? 'null') as { generated_at?: unknown } | null;
+            const theirs = ms(typeof on_disk?.generated_at === 'string' ? on_disk.generated_at : null);
+            if (theirs !== null && theirs > (ms(index.generated_at) ?? 0)) return true;
+        } catch {
+            /* unreadable overview: replace it */
+        }
         write_private(index_md_path(env), render_markdown(index));
         write_private(index_json_path(env), `${JSON.stringify(index, null, 2)}\n`);
         return true;

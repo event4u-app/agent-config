@@ -432,6 +432,39 @@ describe('review fixes', () => {
         expect(publish_index({ env })).toBe(true);
     });
 
+    it('keeps a generation fence through prune so a pre-prune writer cannot win', () => {
+        const now = new Date();
+        const old = new Date(now.getTime() - (RETENTION_DAYS + 1) * 86_400_000);
+        const base = { session_id: 'sess-fe-0001', platform: 'claude' };
+        catalog_update({ ...base, event: 'stop', now: old }, env);
+        build_index({ env, now }); // prune: v1 becomes the fence
+        const v1 = path.join(catalog_dir(env), 'claude--sess-fe-0001.v1.json');
+        expect(fs.statSync(v1).size).toBe(0);
+        catalog_update({ ...base, event: 'user_prompt_submit', now }, env); // resume → v2
+        // A writer that read the pre-prune v1 would now try to create v2: refused.
+        expect(() => fs.linkSync(v1, path.join(catalog_dir(env), 'claude--sess-fe-0001.v2.json'))).toThrow();
+        expect(read_entry(catalog_dir(env), 'sess-fe-0001')!.last_seen).toBe(iso_now(now));
+    });
+
+    it('ages out tombstone-only records and never blocks on a FIFO record file', () => {
+        fs.mkdirSync(catalog_dir(env), { recursive: true });
+        const ghost = path.join(catalog_dir(env), 'claude--sess-gh-0001.v3.json');
+        fs.writeFileSync(ghost, '');
+        const past = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        fs.utimesSync(ghost, past, past);
+        execFileSync('mkfifo', [path.join(catalog_dir(env), 'claude--sess-fq-0001.v1.json')]);
+        const index = build_index({ env });
+        expect(index.sessions.find((r) => r.session_id === 'sess-fq-0001')).toBeUndefined();
+        expect(fs.existsSync(ghost)).toBe(false);
+    });
+
+    it('does not let an older CLI snapshot replace a newer overview', () => {
+        catalog_update({ session_id: 'sess-cl-0001', platform: 'claude', event: 'stop' }, env);
+        publish_index({ env, now: new Date('2030-01-01T00:00:00Z') });
+        publish_index({ env, now: new Date('2029-01-01T00:00:00Z') });
+        expect(JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).generated_at).toBe('2030-01-01T00:00:00+00:00');
+    });
+
     it('keeps two hosts with the same id apart', () => {
         catalog_update({ session_id: 'sess-dup-0001', platform: 'claude', event: 'stop' }, env);
         catalog_update({ session_id: 'sess-dup-0001', platform: 'codex', event: 'stop' }, env);

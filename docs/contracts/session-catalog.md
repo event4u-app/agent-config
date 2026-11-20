@@ -25,7 +25,8 @@ prints the result. Hooks keep the records current but never write the overview
 files: many sessions' hooks rewriting one shared derived file is a
 concurrency problem without a cheap complete answer, while a user-invoked
 rebuild has none. An external tool such as agent-switch calls the CLI, or
-reads `sessions.json` after calling it.
+reads `sessions.json` after calling it. Of two CLI calls at once, the one with
+the older snapshot leaves a newer overview in place.
 
 All files are written owner-only (`0600`, directory `0700`) by atomic rename.
 Nothing here is tracked by git or sent anywhere.
@@ -45,7 +46,11 @@ one writer wins and no reader sees a partial file; a loser re-reads the
 winner's record and applies its event on top (an end event retries longest).
 Superseded versions become empty tombstones rather than disappearing, so a
 stalled writer can never win a version number that is free again; tombstones
-are removed after 30 minutes, longer than any host lets a hook run.
+are removed after 30 minutes, longer than any host lets a hook run. Pruning
+leaves the highest version of a record as such a tombstone too — a generation
+fence — so a hook still holding the pre-prune record cannot win a version
+above a resume that happened since. Record files are read non-blocking,
+never through a symlink, regular files only.
 Session ids must be plain identifiers, and the catalog relies on hosts issuing
 unique ids (UUIDs) per host.
 
