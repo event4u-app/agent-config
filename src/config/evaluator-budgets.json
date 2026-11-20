@@ -30,6 +30,8 @@
   "removed_2026_08_04": "unpacked_size_mb (max 28) — removed by maintainer decision at the 9.17.0 release: the gate turned every legitimate payload addition into a blocked release (measured 28.22 vs max 28 with all functional gates green), and the maintainer judged tarball size not worth gating. evaluator_umbrella.sh still MEASURES and records unpacked_size_mb as evidence; only the budget enforcement is gone. ADR-204 review_trigger (a) fired and was resolved this way.",
   "budgets": {
     "node_modules_mb": {
+      "deterministic": false,
+      "deterministic_note": "du -sm of a fresh npm install is not reproducible to the megabyte: two release-PR runs of identical content (20.6.0, runs 44761313910 and 44797522375) measured 145 and 144. The drift check would fail every other run, so this metric is excluded from it; the absolute max stays its gate.",
       "max": 150,
       "last_measured": 141,
       "last_measured_at": "2026-10-28",
