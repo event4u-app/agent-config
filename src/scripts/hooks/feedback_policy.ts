@@ -8,9 +8,11 @@
  * Only an outcome worth looking at on its own keeps a file now, so a
  * `<concern>.json` means "this concern's latest NON-QUIET outcome", not its latest
  * outcome. Nothing deletes it: a delete would race a newer write from a parallel
- * dispatch in the same session. The one reader, `hooks_doctor`, ranks that file
- * against the summary's runs by recorded time, so a later quiet run still reads
- * as the latest.
+ * dispatch in the same session. A write goes through the per-file lock and keeps
+ * whichever outcome COMPLETED later ({@link keepNewerOutcome}), so two warnings
+ * published in reverse completion order cannot leave the older one standing.
+ * The one reader, `hooks_doctor`, ranks that file against the summary's runs by
+ * recorded time, so a later quiet run still reads as the latest.
  */
 import { EXIT_ALLOW } from './exit_codes.js';
 
@@ -24,3 +26,16 @@ export function isQuietAllow(entry: Readonly<Record<string, unknown>>): boolean 
     );
 }
 
+
+/**
+ * The locked write's mutator: the incoming entry, unless the file already holds
+ * an outcome that completed later (then `null`, a deliberate no-write).
+ * Instants, not strings; an unreadable timestamp on either side lets the
+ * incoming entry through, as the unconditional write did before.
+ */
+export function keepNewerOutcome<T extends Readonly<Record<string, unknown>>>(loaded: Partial<Record<string, unknown>>, entry: T): T | null {
+    const held = typeof loaded['completed_at'] === 'string' ? Date.parse(loaded['completed_at']) : Number.NaN;
+    const incoming = typeof entry['completed_at'] === 'string' ? Date.parse(entry['completed_at'] as string) : Number.NaN;
+    if (!Number.isNaN(held) && !Number.isNaN(incoming) && held > incoming) return null;
+    return entry;
+}

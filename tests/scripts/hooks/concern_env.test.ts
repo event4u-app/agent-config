@@ -166,6 +166,28 @@ describe('concern_env — one scope per dispatch', () => {
             close();
         });
 
+        it('when the rollback fails too, the original error propagates and the rollback failure is reported', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                writes = 0;
+                failing = false;
+                failAtWrite = 2;
+                // Fail every write from the second on: hardening and rollback both fail.
+                const orig = failAtWrite;
+                failAtWrite = null;
+                let n = 0;
+                process.env = new Proxy({ ...(process.env as Record<string, string>) }, {
+                    set: (t, k, v) => { n += 1; if (n >= orig) throw new Error('injected env write failure'); return Reflect.set(t, k, String(v)); },
+                    deleteProperty: (t, k) => { n += 1; if (n >= orig) throw new Error('injected env write failure'); return Reflect.deleteProperty(t, k); },
+                }) as NodeJS.ProcessEnv;
+                expect(() => openConcernEnvScope(ROOT)).toThrow(/injected env write failure/);
+                expect(spy.mock.calls.some((c) => String(c[0]).includes('environment rollback failed'))).toBe(true);
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
         it('a scope whose hardening fails half-way rolls back what it applied and throws', () => {
             installFailingEnv();
             const before = { ...(process.env as Record<string, string>) };

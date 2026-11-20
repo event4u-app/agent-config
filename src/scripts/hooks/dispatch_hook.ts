@@ -40,7 +40,6 @@ import { tableFingerprint } from "./table_fingerprint.js";
 
 import { hardenedSpawnEnv } from "../_lib/spawn_env.js";
 import {
-  atomic_write_json,
   feedback_dir,
   is_replay_mode,
   update_json_under_lock,
@@ -74,7 +73,7 @@ import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
 import { enterConcernEnv, openConcernEnvScope } from './concern_env.js';
-import { isQuietAllow } from './feedback_policy.js';
+import { isQuietAllow, keepNewerOutcome } from './feedback_policy.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -818,7 +817,7 @@ function _write_feedback(
     if (isQuietAllow(entry)) continue; // summary.json carries it: feedback_policy.ts
     const target = path.join(fb_dir, `${entry["concern"]}.json`);
     try {
-      atomic_write_json(target, entry);
+      update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, entry));
     } catch (exc) {
       const msg = exc instanceof Error ? exc.message : String(exc);
       process.stderr.write(
