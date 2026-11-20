@@ -1345,6 +1345,8 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_REPLAY` | maintainer | `=1` replay mode — state writes and emitters stand down | `hooks/replay_hook.ts:61` |
 | `AGENT_CONFIG_ROOT_OVERRIDE` | maintainer | Overrides the resolved root for a settings read | `_lib/agent_settings.ts:700` |
 | `AGENT_CONFIG_SCOPE` | maintainer | Install scope, captured into the corpus manifest | `_lib/corpus_manifest.ts:90` |
+| `AGENT_CONFIG_SESSION_CATALOG_HOME` | maintainer | Root the `sessions:catalog` command writes `sessions.json`, `SESSIONS.md` and its parse cache to, and reads the live register from; unset means `~/.event4u/agent-config`, independent of `EVENT4U_CONFIG_HOME` — tests pin it | `_lib/session_catalog.ts:148` |
+| `AGENT_CONFIG_SESSION_REGISTER_DIRS` | operator | Extra live-register directories (`path.delimiter`-separated) `sessions:catalog` reads liveness from, for agent-config roots it cannot find itself | `_lib/session_catalog.ts:174` |
 | `AGENT_CONFIG_SESSION_ID` | harness | Package-side session id, ahead of the host's own | `_lib/collector_denominator.ts:519` |
 | `AGENT_CONFIG_SESSION_ROLE` | harness | Marks a spawn `worker`; unset, empty or unknown fails open to `orchestrator` | `_lib/session_role.ts:28` |
 | `AGENT_CONFIG_SKIP_METADATA_GATE` | maintainer | Bypasses the pre-push metadata gate | `hooks/prepush_metadata_sources.sh:29` |
