@@ -36,7 +36,7 @@ export const CATALOG_SCHEMA_VERSION = 1;
 export const ACTIVE_WINDOW_SECONDS = 15 * 60;
 
 /** Transcripts last written longer ago than this are not listed. */
-export const RETENTION_DAYS = 30;
+export const RETENTION_DAYS = 14;
 
 /** Transcript bytes a single call parses in full, newest sessions first. */
 export const PARSE_BUDGET_BYTES = 256 * 1024 * 1024;
@@ -46,6 +46,15 @@ const PEEK_BYTES = 256 * 1024;
 
 const RECENT_ID_WINDOW = 256;
 const MAX_REPOS = 50;
+/** Subagents listed per session, newest first; `subagents` still counts all of them. */
+const MAX_SUBAGENTS_LISTED = 50;
+/**
+ * Version of the internal parse cache, apart from the output schema: a cached
+ * state of an older shape lacks fields, so it is dropped and re-parsed.
+ */
+const CACHE_VERSION = 2;
+/** Bash command text scanned for `cd` / `git -C` targets. */
+const BASH_SCAN_MAX = 8 * 1024;
 const MAX_BRANCHES_PER_REPO = 20;
 const MAX_MODELS = 10;
 const TITLE_MAX = 120;
@@ -71,6 +80,29 @@ export interface CatalogRepo {
     linked_worktree: boolean;
     branches: string[];
     last_branch: string | null;
+    /** Timestamp of the latest transcript line that used this checkout; null when no line carried one. */
+    last_used_at: string | null;
+}
+
+/** One Claude subagent of a session, from its own transcript and `agent-<id>.meta.json`. */
+export interface CatalogSubagent {
+    id: string;
+    agent_type: string | null;
+    /** The task description the subagent was launched with, capped and token-masked like a title. */
+    description: string | null;
+    /** True for a background launch, false for foreground; null when the meta file does not say. */
+    background: boolean | null;
+    /** The host's own finished flag; null while it has not written one. */
+    finished: boolean | null;
+    last_activity: string;
+    /** `active` within the activity window, otherwise `inactive`. */
+    status: CatalogStatus;
+    idle_seconds: number;
+    model: string | null;
+    repos: CatalogRepo[];
+    usage: CatalogUsage | null;
+    usage_complete: boolean;
+    transcript_path: string;
 }
 
 export interface CatalogUsage {
@@ -123,6 +155,8 @@ export interface CatalogSession {
     /** Claude: summed usage of the session's subagent transcripts; null when it has none. */
     subagent_usage: CatalogUsage | null;
     subagents: number;
+    /** Claude: the session's subagents, newest activity first (at most 50). */
+    subagent_list: CatalogSubagent[];
     /** False while part of a subagent transcript has not been parsed yet. */
     subagent_usage_complete: boolean;
     context_tokens: number | null;
@@ -167,7 +201,7 @@ export function index_md_path(env: EnvMap = process.env, home?: string): string 
 }
 
 function cache_path(env: EnvMap, home?: string): string {
-    return path.join(catalog_root(env, home), 'runtime', `session-catalog-cache.v${CATALOG_SCHEMA_VERSION}.json`);
+    return path.join(catalog_root(env, home), 'runtime', `session-catalog-cache.v${CACHE_VERSION}.json`);
 }
 
 /** Extra live-register directories, `path.delimiter`-separated, for config roots this command cannot find itself. */
@@ -247,6 +281,8 @@ const KEY_PREFIX_RE = rawKeyPrefixPattern(6);
 
 export function clean_title(t: string): string {
     const masked = t
+        // Control characters would reach a terminal through the CLI.
+        .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
         .replace(KEY_PREFIX_RE, '[redacted]')
         .replace(/[A-Za-z0-9+/_=-]{20,}/g, (m) => (/[0-9]/.test(m) && /[A-Za-z]/.test(m) ? '[redacted]' : m))
         .replace(/\s+/g, ' ')
@@ -517,6 +553,10 @@ export interface ParsedState {
     context_window: number | null;
     /** Directories the session worked in or wrote to, oldest first. */
     paths: string[];
+    /** Latest line timestamp per entry of `paths`, normalised like `last_activity`. */
+    path_seen: Record<string, string>;
+    /** Entries of `paths` a tool acted on (write tools, `cd` / `git -C`), as opposed to a line's cwd. */
+    acted: string[];
     /** Branches the host reported while the session was in its start directory. */
     start_branches: string[];
     /** Codex: a cumulative usage snapshot was read from the end of the file. */
@@ -542,6 +582,8 @@ function fresh_state(t: TranscriptFile): ParsedState {
         context_tokens: null,
         context_window: null,
         paths: [],
+        path_seen: {},
+        acted: [],
         start_branches: [],
     };
 }
@@ -550,12 +592,115 @@ function clone_state(st: ParsedState): ParsedState {
     return JSON.parse(JSON.stringify(st)) as ParsedState;
 }
 
-function note_path(st: ParsedState, p: string | null): void {
+function note_path(st: ParsedState, p: string | null, stamp: string | null = null): void {
     if (p === null || !path.isAbsolute(p)) return;
     const i = st.paths.indexOf(p);
     if (i >= 0) st.paths.splice(i, 1);
     st.paths.push(p);
-    if (st.paths.length > MAX_REPOS * 4) st.paths.shift();
+    const prev = ms(st.path_seen[p]);
+    const t = ms(stamp);
+    if (t !== null && (prev === null || t > prev)) st.path_seen[p] = iso_now(new Date(t));
+    if (st.paths.length > MAX_REPOS * 4) {
+        const dropped = st.paths.shift()!;
+        delete st.path_seen[dropped];
+        st.acted = st.acted.filter((x) => x !== dropped);
+    }
+}
+
+function note_acted(st: ParsedState, p: string, stamp: string | null): void {
+    note_path(st, p, stamp);
+    if (st.paths.includes(p) && !st.acted.includes(p)) st.acted.push(p);
+}
+
+/** Fold another state's paths in, keeping the later timestamp of each. */
+function merge_paths(into: ParsedState, from: ParsedState): void {
+    for (const p of from.paths) note_path(into, p, from.path_seen[p] ?? null);
+}
+
+/** Simple commands of a shell line as words, quotes removed; nothing after a heredoc. */
+function shell_segments(text: string): string[][] {
+    const segments: string[][] = [];
+    let words: string[] = [];
+    let word = '';
+    let has = false;
+    let quote: string | null = null;
+    const end_word = (): void => {
+        if (has) words.push(word);
+        word = '';
+        has = false;
+    };
+    const end_segment = (): void => {
+        end_word();
+        if (words.length > 0) segments.push(words);
+        words = [];
+    };
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i]!;
+        if (quote !== null) {
+            if (c === quote) quote = null;
+            else word += c;
+            continue;
+        }
+        if (c === '"' || c === "'") {
+            quote = c;
+            has = true;
+        } else if (c === '\\' && i + 1 < text.length) {
+            word += text[++i];
+            has = true;
+        } else if (c === '<' && text[i + 1] === '<') {
+            // A heredoc body is data, not commands.
+            end_segment();
+            return segments;
+        } else if (';&|()\n'.includes(c)) end_segment();
+        else if (c === ' ' || c === '\t') end_word();
+        else {
+            word += c;
+            has = true;
+        }
+    }
+    // An unterminated quote leaves the last command unreadable.
+    if (quote === null) end_segment();
+    return segments;
+}
+
+/**
+ * Directories a shell command enters with `cd` / `pushd` or points git at with
+ * `git -C`; literal paths only (no variables, `~` or globs), relative `cd`s
+ * chained, quoted text and heredoc bodies ignored. A heuristic, not a shell.
+ */
+export function bash_dirs(command: string, cwd: string | null): string[] {
+    const out: string[] = [];
+    let here = cwd;
+    const target = (raw: string | undefined): string | null => {
+        if (raw === undefined || raw === '' || raw === '-' || /[$`~*?]/.test(raw)) return null;
+        const abs = path.isAbsolute(raw) ? raw : here !== null ? path.resolve(here, raw) : null;
+        return abs === null ? null : path.normalize(abs);
+    };
+    for (const w of shell_segments(command.slice(0, BASH_SCAN_MAX))) {
+        let i = 0;
+        while (i < w.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(w[i]!)) i++;
+        if (w[i] === 'cd' || w[i] === 'pushd') {
+            let j = i + 1;
+            while (j < w.length && w[j]!.startsWith('-') && w[j] !== '-') {
+                if (w[j++] === '--') break;
+            }
+            const d = target(w[j]);
+            if (d !== null) {
+                out.push(d);
+                here = d;
+            }
+        } else if (w[i] === 'git') {
+            for (let j = i + 1; j < w.length; j++) {
+                const a = w[j]!;
+                if (a === '-C') {
+                    const d = target(w[++j]);
+                    if (d !== null) out.push(d);
+                } else if (a === '-c') j++;
+                else if (!a.startsWith('-')) break;
+            }
+        }
+    }
+    return out;
 }
 
 function note_model(st: ParsedState, model: string | null): void {
@@ -567,11 +712,11 @@ function note_model(st: ParsedState, model: string | null): void {
     }
 }
 
-function note_cwd(st: ParsedState, cwd: string | null): void {
+function note_cwd(st: ParsedState, cwd: string | null, stamp: string | null = null): void {
     if (cwd === null) return;
     if (st.first_cwd === null) st.first_cwd = cwd;
     st.cwd = cwd;
-    note_path(st, cwd);
+    note_path(st, cwd, stamp);
 }
 
 function empty_usage(): CatalogUsage {
@@ -600,7 +745,7 @@ function apply_claude_line(st: ParsedState, o: Record<string, unknown>, count_us
     const stamp = str(o['timestamp']);
     if (st.started_at === null && stamp !== null && ms(stamp) !== null) st.started_at = stamp;
     const line_cwd = str(o['cwd']);
-    note_cwd(st, line_cwd);
+    note_cwd(st, line_cwd, stamp);
     // The host's branch field is trustworthy only for the start directory: it
     // keeps reporting that branch after the session moves into a worktree.
     const branch = str(o['gitBranch']);
@@ -616,13 +761,19 @@ function apply_claude_line(st: ParsedState, o: Record<string, unknown>, count_us
     if (Array.isArray(content)) {
         for (const block of content) {
             const b = obj(block);
-            if (b === null || b['type'] !== 'tool_use' || !WRITE_TOOLS.has(String(b['name']))) continue;
+            if (b === null || b['type'] !== 'tool_use') continue;
             const input = obj(b['input']);
+            if (b['name'] === 'Bash') {
+                const cmd = str(input?.['command']);
+                if (cmd !== null) for (const d of bash_dirs(cmd, line_cwd)) note_acted(st, d, stamp);
+                continue;
+            }
+            if (!WRITE_TOOLS.has(String(b['name']))) continue;
             for (const key of ['file_path', 'notebook_path']) {
                 const fp = str(input?.[key]);
                 if (fp === null) continue;
                 const abs = path.isAbsolute(fp) ? fp : line_cwd !== null ? path.resolve(line_cwd, fp) : null;
-                if (abs !== null) note_path(st, path.dirname(abs));
+                if (abs !== null) note_acted(st, path.dirname(abs), stamp);
             }
         }
     }
@@ -655,17 +806,18 @@ function apply_codex_line(st: ParsedState, o: Record<string, unknown>, count_usa
     const type = str(o['type']);
     const p = obj(o['payload']);
     if (p === null) return;
+    const stamp = str(o['timestamp']);
     if (type === 'session_meta') {
         st.started_at = str(p['timestamp']) ?? st.started_at;
         st.host_version = str(p['cli_version']) ?? st.host_version;
         st.entrypoint = str(p['originator']) ?? str(p['source']) ?? st.entrypoint;
-        note_cwd(st, str(p['cwd']));
+        note_cwd(st, str(p['cwd']), stamp ?? str(p['timestamp']));
         const b = str(obj(p['git'])?.['branch']);
         if (b !== null && !st.start_branches.includes(b)) st.start_branches.push(b);
     }
     if (type === 'turn_context') {
         note_model(st, str(p['model']));
-        note_cwd(st, str(p['cwd']));
+        note_cwd(st, str(p['cwd']), stamp);
     }
     if (type === 'event_msg' && p['type'] === 'token_count') {
         const info = obj(p['info']);
@@ -797,13 +949,13 @@ interface Cache {
 function read_cache(file: string): Cache {
     try {
         const parsed = obj(JSON.parse(read_small(file, 512 * 1024 * 1024) ?? 'null'));
-        if (parsed !== null && parsed['schema_version'] === CATALOG_SCHEMA_VERSION && obj(parsed['files']) !== null) {
+        if (parsed !== null && parsed['schema_version'] === CACHE_VERSION && obj(parsed['files']) !== null) {
             return parsed as unknown as Cache;
         }
     } catch {
         /* a broken cache only costs a re-parse */
     }
-    return { schema_version: CATALOG_SCHEMA_VERSION, files: {} };
+    return { schema_version: CACHE_VERSION, files: {} };
 }
 
 /** Atomic replace into an owner-only directory; the temp file is created 0600. */
@@ -882,12 +1034,18 @@ export interface BuildOptions {
 }
 
 function repos_for(st: ParsedState, git_cache: Map<string, string | null>): CatalogRepo[] {
-    const roots: string[] = [];
+    const seen = new Map<string, string | null>();
     for (const p of [...st.paths].reverse()) {
         const root = checkout_root(p, git_cache);
-        if (root !== null && !roots.includes(root)) roots.push(root);
-        if (roots.length >= MAX_REPOS) break;
+        if (root === null) continue;
+        const stamp = st.path_seen?.[p] ?? null;
+        if (!seen.has(root)) seen.set(root, stamp);
+        else if ((ms(stamp) ?? -Infinity) > (ms(seen.get(root)) ?? -Infinity)) seen.set(root, stamp);
     }
+    // Most recently used first, then capped; checkouts with no timestamp keep their order after them.
+    const key = (root: string): number => ms(seen.get(root)) ?? -Infinity;
+    const roots = [...seen.keys()].sort((a, b) => (key(a) === key(b) ? 0 : key(b) > key(a) ? 1 : -1)).slice(0, MAX_REPOS);
+    const last_used = (root: string): string | null => seen.get(root) ?? null;
     const start_root = st.first_cwd === null ? null : checkout_root(st.first_cwd, git_cache);
     return roots.map((root) => {
         const dirs = git_dirs(root);
@@ -908,8 +1066,61 @@ function repos_for(st: ParsedState, git_cache: Map<string, string | null>): Cata
             linked_worktree: linked,
             branches: branches.slice(-MAX_BRANCHES_PER_REPO),
             last_branch: current ?? branches[branches.length - 1] ?? null,
+            last_used_at: last_used(root),
         };
     });
+}
+
+const AGENT_FILE_RE = /^agent-([A-Za-z0-9._-]{1,128})\.jsonl$/;
+
+/**
+ * Where a subagent acted. A subagent without its own worktree carries the
+ * parent's cwd on every line, so a line's cwd says where the parent is, not
+ * where the subagent works: count the paths its tools acted on and its own
+ * worktree, and fall back to the cwd only when there is nothing else.
+ */
+function subagent_state(st: ParsedState, worktree: string | null, mtime_ms: number): ParsedState {
+    const inside = (p: string): boolean => worktree !== null && (p === worktree || p.startsWith(worktree + path.sep));
+    const keep = st.paths.filter((p) => st.acted.includes(p) || inside(p));
+    const view: ParsedState = { ...st, paths: keep, path_seen: {} };
+    for (const p of keep) if (st.path_seen[p] !== undefined) view.path_seen[p] = st.path_seen[p]!;
+    if (worktree !== null && !keep.some(inside)) note_path(view, worktree, iso_now(new Date(mtime_ms)));
+    return view.paths.length > 0 ? view : st;
+}
+
+function subagent_entry(
+    a: TranscriptFile,
+    r: { st: ParsedState; complete: boolean },
+    now: Date,
+    git_cache: Map<string, string | null>,
+): CatalogSubagent {
+    const id = AGENT_FILE_RE.exec(path.basename(a.file))?.[1] ?? path.basename(a.file, '.jsonl').replace(/^agent-/, '');
+    let meta: Record<string, unknown> | null = null;
+    try {
+        meta = obj(JSON.parse(read_small(path.join(path.dirname(a.file), `agent-${id}.meta.json`)) ?? 'null'));
+    } catch {
+        /* a missing or broken meta file only loses the description */
+    }
+    const desc = str(meta?.['description']);
+    const shape = str(meta?.['requestShape']);
+    const wt = str(meta?.['worktreePath']);
+    const worktree = wt !== null && path.isAbsolute(wt) ? path.normalize(wt) : null;
+    const idle = Math.max(0, Math.round((now.getTime() - a.mtime_ms) / 1000));
+    return {
+        id,
+        agent_type: str(meta?.['agentType']),
+        description: desc === null ? null : clean_title(desc),
+        background: shape === 'background' ? true : shape === 'foreground' ? false : null,
+        finished: typeof meta?.['finished'] === 'boolean' ? (meta['finished'] as boolean) : null,
+        last_activity: iso_now(new Date(a.mtime_ms)),
+        status: idle <= ACTIVE_WINDOW_SECONDS ? 'active' : 'inactive',
+        idle_seconds: idle,
+        model: r.st.model,
+        repos: repos_for(subagent_state(r.st, worktree, a.mtime_ms), git_cache),
+        usage: r.st.usage,
+        usage_complete: r.complete,
+        transcript_path: a.file,
+    };
 }
 
 /** Build the catalog from every transcript in every profile. */
@@ -919,7 +1130,7 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
     const home = options.home ?? os.homedir();
     const cfile = cache_path(env, home);
     const cache = read_cache(cfile);
-    const next: Cache = { schema_version: CATALOG_SCHEMA_VERSION, files: {}, peeks: {} };
+    const next: Cache = { schema_version: CACHE_VERSION, files: {}, peeks: {} };
     const budget = { bytes: options.budget_bytes ?? PARSE_BUDGET_BYTES };
     const live = read_live(live_register_dirs(env, home), now);
     const git_cache = new Map<string, string | null>();
@@ -959,12 +1170,14 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
         let sub_mtime = 0;
         const agents = subs.get(`${t.source.config_dir}:${t.session_id}`) ?? [];
         // Repos a subagent worked in or wrote to belong to the session too.
-        const st: ParsedState = agents.length === 0 ? main_st : { ...main_st, paths: [...main_st.paths] };
+        const st: ParsedState = agents.length === 0 ? main_st : { ...main_st, paths: [...main_st.paths], path_seen: { ...main_st.path_seen } };
+        const subagent_list: CatalogSubagent[] = [];
         for (const a of agents) {
             const r = sub_reads.get(a.file)!;
             sub_complete &&= r.complete;
             sub_mtime = Math.max(sub_mtime, a.mtime_ms);
-            for (const p of r.st.paths) note_path(st, p);
+            merge_paths(st, r.st);
+            if (subagent_list.length < MAX_SUBAGENTS_LISTED) subagent_list.push(subagent_entry(a, r, now, git_cache));
             if (r.st.usage === null) continue;
             const u: CatalogUsage = sub_usage ?? empty_usage();
             for (const k of Object.keys(u) as (keyof CatalogUsage)[]) u[k] += r.st.usage[k];
@@ -1000,6 +1213,7 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
             usage_complete: complete || (host === 'codex' && st.usage_from_tail === true),
             subagent_usage: sub_usage,
             subagents: agents.length,
+            subagent_list,
             subagent_usage_complete: sub_complete,
             context_tokens: st.context_tokens,
             context_window: st.context_window,
@@ -1009,6 +1223,8 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
     }
     try {
         write_private(cfile, JSON.stringify(next));
+        // A cache of an earlier version is never read again.
+        for (let v = 1; v < CACHE_VERSION; v++) fs.rmSync(path.join(path.dirname(cfile), `session-catalog-cache.v${v}.json`), { force: true });
     } catch {
         /* the cache is an optimisation */
     }
@@ -1083,6 +1299,8 @@ export function context_label(s: Pick<CatalogSession, 'context_tokens' | 'contex
     return s.context_window === null ? fmt_tokens(s.context_tokens) : `${fmt_tokens(s.context_tokens)}/${fmt_tokens(s.context_window)}`;
 }
 
+const SUBAGENT_DETAIL_ROWS = 10;
+
 /** Human view. Never parsed back — `sessions.json` is the machine form. */
 export function render_markdown(index: CatalogIndex, detail_rows = 25): string {
     const c = index.counts;
@@ -1142,8 +1360,19 @@ export function render_markdown(index: CatalogIndex, detail_rows = 25): string {
         if (s.roadmap_slug !== null) lines.push(`- **Roadmap:** ${md_text(s.roadmap_slug)}`);
         for (const repo of s.repos) {
             lines.push(
-                `- **Repo** ${md_text(repo_label(repo))}${repo.remote !== null ? ` (${md_code(repo.remote)})` : ''}: ${md_code(repo.root)} — branches ${repo.branches.map((b) => md_code(b)).join(', ') || '—'}`,
+                `- **Repo** ${md_text(repo_label(repo))}${repo.remote !== null ? ` (${md_code(repo.remote)})` : ''}: ${md_code(repo.root)} — branches ${repo.branches.map((b) => md_code(b)).join(', ') || '—'}` +
+                    (repo.last_used_at !== null ? ` · last used ${md_text(repo.last_used_at)}` : ''),
             );
+        }
+        for (const a of s.subagent_list.slice(0, SUBAGENT_DETAIL_ROWS)) {
+            const state = a.finished === true ? 'finished' : a.status;
+            lines.push(
+                `- **Subagent** ${md_code(a.id)} · ${state} · ${fmt_age(a.idle_seconds)} ago${a.background === true ? ' · background' : ''}: ` +
+                    `${md_text(a.description)} — ${md_text(a.repos.map(repo_label).join(', ') || '—')}`,
+            );
+        }
+        if (s.subagent_list.length > SUBAGENT_DETAIL_ROWS) {
+            lines.push(`- _${s.subagent_list.length - SUBAGENT_DETAIL_ROWS} more subagents in \`sessions.json\`._`);
         }
         const resume = resume_line(s);
         if (resume !== null) lines.push(`- **Resume:** ${md_code(resume)}`);
