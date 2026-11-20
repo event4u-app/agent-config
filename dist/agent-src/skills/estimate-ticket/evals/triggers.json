@@ -1,19 +1,47 @@
 {
   "skill": "estimate-ticket",
-  "last_eval": "2026-06-16",
+  "last_eval": "2026-11-20",
   "version": 1,
-  "should_trigger": [
-    "estimate PROJ-123",
-    "how big is this ticket?",
-    "should we split this?",
-    "wie groß ist das Ticket?",
-    "sollen wir das splitten?"
-  ],
-  "should_not_trigger": [
-    "refine this ticket",
-    "plan this feature",
-    "is PROJ-123 a duplicate of anything we already have?",
-    "threat-model this change",
-    "investigate this bug"
+  "queries": [
+    {
+      "q": "estimate PROJ-123",
+      "trigger": true
+    },
+    {
+      "q": "how big is this ticket?",
+      "trigger": true
+    },
+    {
+      "q": "should we split this?",
+      "trigger": true
+    },
+    {
+      "q": "wie groß ist das Ticket?",
+      "trigger": true
+    },
+    {
+      "q": "sollen wir das splitten?",
+      "trigger": true
+    },
+    {
+      "q": "refine this ticket",
+      "trigger": false
+    },
+    {
+      "q": "plan this feature",
+      "trigger": false
+    },
+    {
+      "q": "is PROJ-123 a duplicate of anything we already have?",
+      "trigger": false
+    },
+    {
+      "q": "threat-model this change",
+      "trigger": false
+    },
+    {
+      "q": "investigate this bug",
+      "trigger": false
+    }
   ]
 }

@@ -1,6 +1,6 @@
 {
     "skill": "history-design",
-    "last_eval": "2026-07-27",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for choosing an audit/history mechanism (tier matrix). Should-not-trigger covers near-miss neighbours: migration review (schema-review), privacy/DSR policy (privacy-review), retention floors (domain-safety-retention), git history.",
     "queries": [
         { "q": "we need to track who changed what and when on tenant data", "trigger": true },

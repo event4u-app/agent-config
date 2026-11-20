@@ -1,6 +1,6 @@
 {
   "skill": "fe-design",
-  "last_eval": "2026-08-12",
+  "last_eval": "2026-11-20",
   "description": "Should-trigger covers BOTH halves of this skill's two modes: planning/exploration (give me directions, explore, plan the flow, pattern choice) AND \u2014 new \u2014 ad-hoc implementation, because outside a ticketed run no other artefact owns the design quality of a UI write. The implementation query used to be labelled should-not-trigger on the reasoning that it belongs to the apply step; that step only exists as a dispatch target inside the engine, so the label routed ad-hoc implementation prompts to nobody. Should-not-trigger keeps the genuine near-misses: inventorying existing UI (existing-ui-audit owns it in both modes), a ui-trivial one-line edit, and non-UI work. Scroll-storytelling rows added 2026-08-23: a scroll-driven narrative build is an ad-hoc UI write and routes here, and the renderer axis is a third row in this skill's mode table rather than a second executor. The should-NOT-trigger row is the one that matters \u2014 \"scroll position resets when I navigate back\" is a state/restoration bug and belongs to the frontend-engineer lens, not to design. Without it the word \"scroll\" alone would route every scroll bug to a design skill.",
   "queries": [
     {

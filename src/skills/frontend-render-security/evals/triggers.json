@@ -1,6 +1,6 @@
 {
     "skill": "frontend-render-security",
-    "last_eval": "2026-07-09",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for client-side insecure-render / client-trust patterns (XSS, client secrets, client-only auth, CORS, localStorage tokens). Should-not-trigger covers near-miss neighbours (server-side security, generic checklist, accessibility-only, dependency intake) whose vocabulary overlaps.",
     "queries": [
         {

@@ -1,6 +1,6 @@
 {
     "skill": "spreadsheet-authoring",
-    "last_eval": "2026-07-10",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries for the spreadsheet surface floor (road-to-surface-specific-agent-contracts Phase 2). Should-trigger covers building/editing a spreadsheet or model, entering formulas or sourced/financial figures, and charting raw data. Should-not-trigger covers near-miss neighbours whose vocabulary overlaps but belong to a different surface/skill: unit-economics reasoning, runway shape, a prose document, a slide deck, and backend work.",
     "queries": [
         {

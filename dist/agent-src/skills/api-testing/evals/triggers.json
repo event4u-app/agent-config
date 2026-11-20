@@ -1,4 +1,5 @@
 {
+    "last_eval": "2026-11-20",
     "skill": "api-testing",
     "description": "10 exemplars + 5 near-misses + 2 counterexamples. Exemplars cover endpoint-test authoring in DE and EN — status, body contract, side effect, mocked third party — and, added 2026-10-02 with the per-ecosystem request-surface table, the same ask on a non-PHP stack. Near-misses cover the neighbours: test-driven-development (the red-first discipline rather than the HTTP shape), authz-review (who may call it, not how to assert it), openapi (the contract document), playwright-testing (a browser, not an endpoint) and test-performance (the suite is slow). Counterexamples guard calling a third-party API as a task, and load testing, both of which share the vocabulary and neither of which this skill covers.",
     "queries": [

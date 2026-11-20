@@ -1,6 +1,6 @@
 {
     "skill": "dpa-review",
-    "last_eval": "2026-06-24",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for reviewing a Data Processing Agreement against GDPR Art. 28 (controller or processor). Should-not-trigger covers near-miss neighbours: NDA triage, generic contract review, privacy-regime read (privacy-review), legal triage.",
     "queries": [
         { "q": "review this DPA as processor against GDPR Art. 28", "trigger": true },

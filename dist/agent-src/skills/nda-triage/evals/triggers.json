@@ -1,6 +1,6 @@
 {
     "skill": "nda-triage",
-    "last_eval": "2026-06-24",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for fast GREEN/YELLOW/RED triage of an inbound NDA. Should-not-trigger covers near-miss neighbours: full clause review (contract-review), DPA review (dpa-review), legal triage (legal-intake-triage), profile setup.",
     "queries": [
         { "q": "check this NDA — can we sign it as-is?", "trigger": true },

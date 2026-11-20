@@ -1,6 +1,6 @@
 {
     "skill": "legal-practice-profile",
-    "last_eval": "2026-06-24",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for setting up / updating the legal pack's practice profile (jurisdiction, role, escalation, playbook positions). Should-not-trigger covers near-miss neighbours that are actual reviews/triage, not configuration.",
     "queries": [
         { "q": "set up the legal pack", "trigger": true },

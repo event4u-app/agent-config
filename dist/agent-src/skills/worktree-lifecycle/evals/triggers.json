@@ -1,6 +1,6 @@
 {
     "skill": "worktree-lifecycle",
-    "last_eval": "2026-07-10",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for worktree governance (scope lock, merge-readiness status, scoped verification, safe cleanup). Should-not-trigger covers the near-miss neighbours (plain branch switch, git-worktree info question, subagent-orchestration mode selection, worktree creation mechanics, remote branch deletion) whose vocabulary overlaps.",
     "queries": [
         {

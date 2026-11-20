@@ -1,6 +1,6 @@
 {
   "skill": "logo-generation",
-  "last_eval": "2026-06-16",
+  "last_eval": "2026-11-20",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers end-to-end logo / brand mark generation requests. Should-not-trigger covers near-miss neighbors: general image generation (image-generation), banner/social asset production (brand-asset-generation), routing-only questions (image-provider-routing), prompt-authoring-only (prompt-engineering-image), and rights checks (image-likeness-and-rights).",
   "queries": [
     {"q": "generate a logo for my bakery called Golden Crust", "trigger": true},

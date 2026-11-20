@@ -1,6 +1,6 @@
 {
     "skill": "contract-review",
-    "last_eval": "2026-06-24",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for position-aware clause-by-clause review of a contract (EU/DE). Should-not-trigger covers near-miss neighbours: NDA triage (nda-triage), DPA review (dpa-review), 'is this a legal problem' triage (legal-intake-triage), and non-legal contract-of-work.",
     "queries": [
         { "q": "review this vendor MSA against our position as the buyer", "trigger": true },

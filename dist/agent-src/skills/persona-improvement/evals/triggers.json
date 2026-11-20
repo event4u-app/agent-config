@@ -1,6 +1,6 @@
 {
     "skill": "persona-improvement",
-    "last_eval": "2026-07-30",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for an explicit request to refine an EXISTING persona's Unique Questions from a correction sample (≥ 3 misses the lens should have caught). Should-not-trigger covers the near-miss neighbours (new-persona authoring, the governance rule, the skill-side improvement pipeline, skill description tuning, persona scope changes) whose vocabulary overlaps.",
     "queries": [
         {

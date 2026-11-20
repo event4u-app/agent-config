@@ -1,6 +1,6 @@
 {
     "skill": "screenshot-hygiene",
-    "last_eval": "2026-07-30",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for capturing and anonymising a screenshot that is about to ship into documentation — risk tier, OCR detection, deterministic redaction, the pre-embed human gate. Should-not-trigger covers the near-miss neighbours (image analysis, image editing/inpaint, image generation, the provided-design spec path, PII scrubbing on text surfaces) whose vocabulary overlaps.",
     "queries": [
         {

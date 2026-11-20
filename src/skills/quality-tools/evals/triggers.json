@@ -1,4 +1,5 @@
 {
+    "last_eval": "2026-11-20",
     "skill": "quality-tools",
     "description": "10 exemplars + 5 near-misses + 2 counterexamples. Exemplars cover the four stacks the mode table now routes — PHPStan / Rector / ECS for php, Biome / tsc for js, Ruff / mypy for python, gofmt / go vet for go — in DE and EN. Near-misses cover the skills that own an adjacent job: test-driven-development (write the test, not run the linter), testing-anti-patterns (the test is wrong), test-performance (the suite is slow), systematic-debugging (a failure to diagnose) and verify-completion-evidence (the evidence gate). Counterexamples guard the two directions the vocabulary over-claims: asking for a tool the repository does not have, and the word 'quality' used about prose.",
     "queries": [

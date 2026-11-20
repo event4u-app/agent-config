@@ -1,6 +1,6 @@
 {
     "skill": "existing-ui-audit",
-    "last_eval": "2026-07-10",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries for the resource-first context gate (road-to-design-artifact-fidelity Phase 2). Should-trigger covers the four Phase-2 cases — redesign with code present, screenshot-only, no-assets/owned-UI, and an inaccessible referenced source — plus an improve-existing case; all require inventorying project context BEFORE styling rather than starting from aesthetic memory. Should-not-trigger covers near-miss neighbours whose vocabulary overlaps (backend/API, non-UI, general design knowledge, a genuinely trivial one-line UI edit) that must NOT force a full audit.",
     "queries": [
         {

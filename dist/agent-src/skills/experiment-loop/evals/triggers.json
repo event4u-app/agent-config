@@ -1,6 +1,6 @@
 {
   "skill": "experiment-loop",
-  "last_eval": "2026-08-17",
+  "last_eval": "2026-11-20",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the bounded keep-or-revert loop against a SCALAR metric (direction, no destination). Should-not-trigger covers the near-miss neighbours the roadmap's gap-table names: iterate-to-a-known-end-state (verify-repair-loop), subjective craft with no scalar, a one-shot measurement, a one-shot review, and asking what a metric currently is.",
   "queries": [
     {"q": "minimize the bundle size, keep changes that help and revert the rest", "trigger": true},

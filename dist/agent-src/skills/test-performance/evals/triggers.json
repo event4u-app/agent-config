@@ -1,4 +1,5 @@
 {
+    "last_eval": "2026-11-20",
     "skill": "test-performance",
     "description": "9 exemplars + 5 near-misses + 2 counterexamples. Exemplars cover the slow-suite ask in DE and EN — database setup, seeders, parallelisation, CI wall-clock — and, added 2026-10-02 with the per-ecosystem instrument table, the same ask on a non-PHP stack. Near-misses cover the neighbours: test-driven-development (the discipline, not the clock), testing-anti-patterns (a wrong test rather than a slow one), quality-tools (lint and types), web-perf (the application is slow, not the suite) and systematic-debugging (a flake to diagnose). Counterexamples guard the two over-claims: production performance work, and deleting tests to make the suite faster.",
     "queries": [

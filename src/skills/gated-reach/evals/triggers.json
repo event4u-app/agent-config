@@ -1,6 +1,6 @@
 {
     "skill": "gated-reach",
-    "last_eval": "2026-07-25",
+    "last_eval": "2026-11-20",
     "description": "6 should-trigger + 8 should-not-trigger queries. Should-trigger covers DE + EN phrasings for the two ship-tier intents only: reading a Reddit thread (text, and ranking/structure) and reading a single named tweet. Should-not-trigger is deliberately larger than the positive set: the parent bench found the native web tools already win on ordinary research, so this skill's main failure mode is over-triggering. Negatives cover general research, plain web pages, the parked YouTube channel, unsupported Twitter surfaces (timelines/search), and an unsupported platform — a trigger that fires only to decline is worse than no trigger.",
     "queries": [
         {

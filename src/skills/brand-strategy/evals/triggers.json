@@ -1,6 +1,6 @@
 {
   "skill": "brand-strategy",
-  "last_eval": "2026-06-16",
+  "last_eval": "2026-11-20",
   "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers grounding brand strategy (archetype, positioning, voice, messaging). Should-not covers near-miss neighbors.",
   "queries": [
     {"q": "which brand archetype fits a B2B SaaS startup targeting mid-market ops teams", "trigger": true},

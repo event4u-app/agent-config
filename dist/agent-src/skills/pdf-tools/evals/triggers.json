@@ -1,6 +1,6 @@
 {
     "skill": "pdf-tools",
-    "last_eval": "2026-07-30",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for PDF write/transform work the skill owns — merge / split / rotate / encrypt, AcroForm fill + flatten decision, create-from-content, structured text/table extraction and OCR of a text-layer-less scan. Should-not-trigger covers the near-miss neighbours (PDF→Markdown ingestion, image OCR, Word authoring, spreadsheet authoring, legal document triage) whose vocabulary overlaps.",
     "queries": [
         {

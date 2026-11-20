@@ -1,6 +1,6 @@
 {
     "skill": "legal-intake-triage",
-    "last_eval": "2026-06-24",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers DE+EN phrasings for the fast 'is this a legal problem?' triage + lightweight intake. Should-not-trigger covers near-miss neighbours that are substantive reviews (contract-review, nda-triage, dpa-review) or profile setup.",
     "queries": [
         { "q": "is this a legal problem or can we just proceed?", "trigger": true },

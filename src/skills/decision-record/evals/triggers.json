@@ -1,6 +1,6 @@
 {
   "skill": "decision-record",
-  "last_eval": "2026-07-20",
+  "last_eval": "2026-11-20",
   "description": "5 should-trigger + 5 should-not-trigger. Seeded from the RDP `decision` discipline rows in tests/reasoning-layer-eval/trigger-fixtures.json (choice among alternatives with real tradeoffs -> decision ledger; escalate to ADR only when cross-task/structural). Should-not covers tasks with no alternatives to weigh (mechanical / single-path). Extended 2026-07-20 with 5+5 weighted-matrix-mode cases: quantitative scoring asks trigger; RICE-shaped ranking, 2-option reversible, stakeholder-conflict, pure prioritization and explicit rice-prioritization asks do not.",
   "queries": [
     {

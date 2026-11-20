@@ -1,6 +1,6 @@
 {
     "skill": "license-compliance-borrow-check",
-    "last_eval": "2026-07-28",
+    "last_eval": "2026-11-20",
     "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers pasting a source URL/repo to check its license before borrowing, and asking whether a specific borrow is allowed. Should-not-trigger covers near-miss neighbours (regenerating notices, running a broad similarity scan, generic new-dependency intake, plain code review) whose vocabulary overlaps.",
     "queries": [
         {

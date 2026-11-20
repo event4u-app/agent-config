@@ -1,6 +1,6 @@
 {
   "skill": "llm-provider-knowledge",
-  "last_eval": "2026-07-14",
+  "last_eval": "2026-11-20",
   "description": "7 should-trigger + 6 should-not-trigger. Should-trigger covers specific product-fact claims (context window, pricing, rate limit, API detail, model spec, consumer-app plan limit) across OpenAI, Google, Anthropic, Mistral, DeepSeek, Cohere. Should-not-trigger covers near-misses: SDK wiring with a user-supplied model, prompt authoring (prompt-engineering-patterns), model choice for the host (model-recommendation), image-provider selection (image-provider-routing), a user-supplied fact, and a plain SDK refactor.",
   "queries": [
     {"q": "what's the context window of GPT-5?", "trigger": true},
