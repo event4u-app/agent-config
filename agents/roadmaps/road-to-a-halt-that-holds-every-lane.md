@@ -58,6 +58,14 @@ a hold is actually still in force.
 - **AC-6** No step currently classified correctly in the live estate changes
   class (before/after diff of `roadmap_drain_queue --json` over `agents/roadmaps/`).
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-20 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A halted queue hides why nothing runs | product | Marking every entry non-dispatchable could read as "nothing to do" instead of "halted", so an operator misses the armed switch. | AC-1 requires both outputs to name the halt; the test asserts the reason, not only the flag. | Phase 1 — Halt covers every dispatch |
+| 2 | A looser parser releases real holds | product | Clause-scoped negation or past-tense resolution could read a still-active hold as resolved and dispatch a step the owner reserved. | Failing fixtures first (2.1); the estate-wide before/after diff (2.5) blocks any unexplained class change. | Phase 2 — Prose holds that mean what they say |
+
 ## Phase 1 — Halt covers every dispatch
 
 - [ ] **1.1** Test first: settings file with `emergency.orchestration_halt: true`

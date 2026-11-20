@@ -10,6 +10,7 @@ and keep the full search — this file only adds candidates to it.
 | slug | dir | status | owns |
 |---|---|---|---|
 | road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
+| road-to-a-halt-that-holds-every-lane | active | ready | `emergency.orchestration_halt` stops every dispatch, including the re-dispatch of a dead lane, and the roadmap drain queue classifies a step as … |
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
