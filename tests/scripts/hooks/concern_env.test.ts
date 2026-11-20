@@ -217,6 +217,69 @@ describe('concern_env — one scope per dispatch', () => {
             }
         });
 
+        it('a failed close during an error in flight is recovered by the next dispatch in the same process', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const before = { ...(process.env as Record<string, string>) };
+                const dispatch = (fault: boolean): void => {
+                    const close = openConcernEnvScope(ROOT);
+                    try {
+                        const leave = enterConcernEnv(ROOT);
+                        process.env['LEFT_BY_FIRST'] = '1';
+                        if (fault) {
+                            failing = true;
+                            throw new Error('the dispatch error');
+                        }
+                        leave();
+                    } finally {
+                        close();
+                        failing = false;
+                    }
+                    assertConcernEnvRestored();
+                };
+                // The first dispatch dies with its own error; the assert after its finally never runs.
+                expect(() => dispatch(true)).toThrow(/the dispatch error/);
+                expect(process.env['LD_PRELOAD']).toBeUndefined(); // the close could not put it back
+                // The second dispatch, nothing drained by hand: it recovers first, so its concerns
+                // start from the real baseline, and its own verdict is not refused for the first one's fault.
+                let seenByConcern: string | undefined = 'not reached';
+                const close = openConcernEnvScope(ROOT);
+                try {
+                    const leave = enterConcernEnv(ROOT);
+                    seenByConcern = process.env['LEFT_BY_FIRST'];
+                    leave();
+                } finally {
+                    close();
+                }
+                expect(() => assertConcernEnvRestored()).not.toThrow();
+                expect(seenByConcern).toBeUndefined();
+                expect({ ...(process.env as Record<string, string>) }).toEqual(before);
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
+        it('when the owed restore still cannot be made, the next scope refuses to open', () => {
+            installFailingEnv();
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                const close = openConcernEnvScope(ROOT);
+                failing = true;
+                close();
+                expect(() => openConcernEnvScope(ROOT)).toThrow(/injected env write failure/);
+                expect(() => enterConcernEnv(ROOT)).toThrow(/injected env write failure/); // the fallback path too
+                failing = false;
+                const again = openConcernEnvScope(ROOT); // recovers now
+                expect(process.env['LD_PRELOAD']).toBeUndefined();
+                again();
+                expect(process.env['LD_PRELOAD']).toBe('/evil.so');
+                expect(() => assertConcernEnvRestored()).not.toThrow();
+            } finally {
+                spy.mockRestore();
+            }
+        });
+
         it('a scope whose hardening fails half-way rolls back what it applied and throws', () => {
             installFailingEnv();
             const before = { ...(process.env as Record<string, string>) };

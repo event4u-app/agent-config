@@ -99,6 +99,32 @@ describe('hook runtime load set', () => {
         expect(fs.readFileSync(diag, 'utf-8')).toContain('injected env write failure');
     }, 60_000);
 
+    it('a dispatch whose closing environment restore fails is refused by the generated host command', () => {
+        const hooksJson = JSON.parse(fs.readFileSync(path.join(REPO, 'hooks', 'hooks.json'), 'utf-8')) as {
+            hooks: { PreToolUse: Array<{ hooks: Array<{ command: string }> }> };
+        };
+        const command = hooksJson.hooks.PreToolUse[0]?.hooks[0]?.command ?? '';
+        const tail = command.slice(command.indexOf('RC=$?'));
+        // Only SETTING the injection vector fails: the hardening (which deletes it) succeeds,
+        // the concerns run, and the closing restore (which puts it back) is the write that throws.
+        const preload = path.join(root, 'env-restore-fails.cjs');
+        fs.writeFileSync(
+            preload,
+            'const t = { ...process.env };\n' +
+                "process.env = new Proxy(t, { set: (o, k, v) => { if (k === 'LD_PRELOAD') throw new Error('injected restore failure'); o[k] = String(v); return true; } });\n",
+        );
+        const payload = path.join(root, 'pre-restore.json');
+        fs.writeFileSync(payload, JSON.stringify({ session_id: 'restore-fail', hook_event_name: 'PreToolUse', tool_name: 'Read', tool_input: { file_path: path.join(workspace, 'x.txt') }, cwd: workspace }));
+        const diag = path.join(root, 'dispatch-restore-stderr.txt');
+        const script = `"${process.execPath}" --require "${preload}" "${bundle}" --platform claude --event pre_tool_use --project-dir "${workspace}" < "${payload}" >/dev/null 2>"${diag}"; ${tail}`;
+        const r = spawnSync('bash', ['-c', script], { encoding: 'utf-8', env: { ...process.env, LD_PRELOAD: '', AGENT_CONFIG_REPLAY: '1' } });
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('this tool call is refused');
+        const stderr = fs.readFileSync(diag, 'utf-8');
+        expect(stderr).toContain('environment restore failed: injected restore failure');
+        expect(stderr).toContain('concern environment not restored');
+    }, 60_000);
+
     it('the tracer sees a runtime createRequire load — the class this check exists for', () => {
         const plant = path.join(root, 'dist', 'hooks', 'plant.mjs');
         fs.writeFileSync(

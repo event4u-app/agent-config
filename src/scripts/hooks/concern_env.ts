@@ -37,6 +37,15 @@ const stack: Scope[] = [];
 let restoreFailed: string | null = null;
 
 /**
+ * The environment a failed closing restore still owes. Kept apart from
+ * {@link restoreFailed}: that one is this dispatch's verdict and may be skipped
+ * when an error is already in flight; this one outlives the dispatch, so the
+ * next scope in the same process recovers it before any concern runs, and
+ * refuses to open when it cannot.
+ */
+let pendingRestore: NodeJS.ProcessEnv | null = null;
+
+/**
  * Throws when the last scope close could not restore the environment, then
  * clears the mark. Called AFTER the `finally` that closes the scope, so it runs
  * only when no dispatch error is already in flight (that one propagates
@@ -92,6 +101,13 @@ export function reportQuietly(what: string, err: unknown): void {
  * returns.
  */
 export function openConcernEnvScope(packageRoot: string): () => void {
+    if (pendingRestore !== null) {
+        // A previous close could not put its environment back. Recover it first;
+        // if that fails too, throw, and no concern runs on a dirty baseline.
+        replaceEnv(pendingRestore);
+        pendingRestore = null;
+        restoreFailed = null;
+    }
     const prev = { ...process.env };
     const enclosing = stack[stack.length - 1];
     const hardened =
@@ -122,7 +138,10 @@ export function openConcernEnvScope(packageRoot: string): () => void {
         stack.splice(at);
         try {
             replaceEnv(scope.prev);
+            // A full replace supersedes whatever a nested close failed to restore.
+            pendingRestore = null;
         } catch (err) {
+            pendingRestore = scope.prev;
             restoreFailed = err instanceof Error ? err.message : String(err);
             reportQuietly('environment restore failed', err);
         }
