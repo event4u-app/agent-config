@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     RETENTION_DAYS,
     build_index,
+    bash_dirs,
     build_resume,
     catalog_root,
     clean_title,
@@ -352,6 +353,142 @@ describe('review follow-ups', () => {
         expect(s.subagent_usage!.assistant_messages).toBe(3);
         expect(s.subagent_usage_complete).toBe(true);
         expect(build_index({ env, home }).sessions).toHaveLength(1);
+    });
+});
+
+describe('who works where, right now', () => {
+    const at = (iso: string) => ({ timestamp: iso });
+
+    function subagent(main: string, id: string, body: string, meta: Record<string, unknown> | null, mtime?: Date): string {
+        const dir = path.join(path.dirname(main), path.basename(main, '.jsonl'), 'subagents');
+        fs.mkdirSync(dir, { recursive: true });
+        const file = path.join(dir, `agent-${id}.jsonl`);
+        fs.writeFileSync(file, body);
+        if (meta !== null) fs.writeFileSync(path.join(dir, `agent-${id}.meta.json`), JSON.stringify(meta));
+        if (mtime !== undefined) fs.utimesSync(file, mtime, mtime);
+        return file;
+    }
+
+    it('stamps each repo with when the session last used it, most recent first', () => {
+        const lib = make_repo('lib', 'develop');
+        claude_transcript(
+            ID1,
+            assistant('m1', at('2026-11-20T09:00:00.000Z')) +
+                assistant('m2', at('2026-11-20T10:00:00.000Z')) +
+                assistant('m3', { cwd: lib, ...at('2026-11-20T11:30:00.000Z') }, [
+                    { type: 'tool_use', name: 'Edit', input: { file_path: path.join(lib, 'src', 'a.ts') } },
+                ]),
+        );
+        const repos = find(ID1)!.repos;
+        expect(repos.map((r) => [r.name, r.last_used_at])).toEqual([
+            ['lib', '2026-11-20T11:30:00+00:00'],
+            ['app', '2026-11-20T10:00:00+00:00'],
+        ]);
+    });
+
+    it('lists each subagent with its description, mode, activity and the repos it used', () => {
+        const a = make_repo('inst-a', 'main');
+        const b = make_repo('inst-b', 'main');
+        const main = claude_transcript(ID1, assistant('m1'));
+        const recent = new Date(Date.now() - 60 * 1000);
+        const old = new Date(Date.now() - 3 * 3600 * 1000);
+        subagent(
+            main,
+            'ad833e7605eb77157',
+            // A subagent without its own worktree carries the conductor's cwd on every line.
+            assistant('s1', { isSidechain: true, cwd: repo, ...at('2026-11-20T13:09:12.000Z') }, [
+                { type: 'tool_use', name: 'Write', input: { file_path: path.join(a, 'src', 'x.ts') } },
+            ]),
+            { agentType: 'general-purpose', description: 'H3X-216 Gruppe löschen behält Pfeile', requestShape: 'background' },
+            recent,
+        );
+        subagent(
+            main,
+            'b0000000000000001',
+            assistant('s2', { isSidechain: true, cwd: b, ...at('2026-11-20T08:00:00.000Z') }),
+            { agentType: 'Explore', description: 'look around', requestShape: 'foreground', finished: true },
+            old,
+        );
+        const s = find(ID1)!;
+        expect(s.subagents).toBe(2);
+        expect(s.subagent_list.map((x) => x.id)).toEqual(['ad833e7605eb77157', 'b0000000000000001']);
+        const [first, second] = s.subagent_list;
+        expect(first).toMatchObject({
+            agent_type: 'general-purpose',
+            description: 'H3X-216 Gruppe löschen behält Pfeile',
+            background: true,
+            finished: null,
+            status: 'active',
+            last_activity: new Date(Math.floor(recent.getTime() / 1000) * 1000).toISOString().replace('.000Z', '+00:00'),
+        });
+        expect(first!.repos.map((r) => [r.name, r.last_used_at])).toEqual([['inst-a', '2026-11-20T13:09:12+00:00']]);
+        expect(first!.usage!.assistant_messages).toBe(1);
+        expect(second).toMatchObject({ background: false, finished: true, status: 'inactive' });
+        expect(second!.repos.map((r) => r.name)).toEqual(['inst-b']);
+        // The session still sees every repo its subagents used.
+        expect(s.repos.map((r) => r.name).sort()).toEqual(['app', 'inst-a', 'inst-b']);
+    });
+
+    it('lists a subagent without a meta file, and masks a token-shaped description', () => {
+        const main = claude_transcript(ID1, assistant('m1'));
+        subagent(main, 'c1', assistant('s1', { isSidechain: true }), null);
+        subagent(main, 'c2', assistant('s2', { isSidechain: true }), { description: 'use sk-ant-api03-abcdefghijklmnop now' });
+        const list = find(ID1)!.subagent_list;
+        const byId = Object.fromEntries(list.map((x) => [x.id, x]));
+        expect(byId['c1']).toMatchObject({ description: null, background: null, finished: null, agent_type: null });
+        expect(byId['c2']!.description).not.toContain('abcdefghijklmnop');
+    });
+
+    it('counts a checkout a Bash command entered with cd or git -C', () => {
+        const c = make_repo('inst-c', 'main');
+        const d = make_repo('inst-d', 'main');
+        claude_transcript(
+            ID1,
+            assistant('m1', {}, [{ type: 'tool_use', name: 'Bash', input: { command: `cd ${c} && make test` } }]) +
+                assistant('m2', {}, [{ type: 'tool_use', name: 'Bash', input: { command: `git -C "${d}" status --short` } }]),
+        );
+        expect(find(ID1)!.repos.map((r) => r.name).sort()).toEqual(['app', 'inst-c', 'inst-d']);
+    });
+
+    it('reads cd / git -C targets as a shell would, not from quoted text or heredocs', () => {
+        expect(bash_dirs('cd sub && cd deeper && make', '/w')).toEqual(['/w/sub', '/w/sub/deeper']);
+        expect(bash_dirs('cd -- /abs/x; cd -P /abs/y', '/w')).toEqual(['/abs/x', '/abs/y']);
+        expect(bash_dirs('git --no-pager -C /abs/z log', '/w')).toEqual(['/abs/z']);
+        expect(bash_dirs('git -C "/abs/with space" status', '/w')).toEqual(['/abs/with space']);
+        expect(bash_dirs('git commit -m "fix; cd /x/other && git -C /x/third"', '/w')).toEqual([]);
+        expect(bash_dirs('cat > f <<EOF\ncd /x/other\nEOF', '/w')).toEqual([]);
+        expect(bash_dirs('cd $HOME/x; cd ~/y; cd -', '/w')).toEqual([]);
+    });
+
+    it('places a subagent where it acted, or in its own worktree, not in the conductor\'s cwd', () => {
+        const wt = make_repo('agent-wt', 'worktree-agent-x');
+        const main = claude_transcript(ID1, assistant('m1'));
+        // Only the inherited cwd, but the host gave it a worktree.
+        subagent(main, 'w1', assistant('s1', { isSidechain: true, cwd: repo }), { worktreePath: wt, spawnedWithWorktree: true });
+        // Only the inherited cwd, nothing else known: that is all there is.
+        subagent(main, 'r1', assistant('s2', { isSidechain: true, cwd: repo }), { description: 'read only' });
+        const byId = Object.fromEntries(find(ID1)!.subagent_list.map((x) => [x.id, x]));
+        expect(byId['w1']!.repos.map((r) => r.name)).toEqual(['agent-wt']);
+        expect(byId['r1']!.repos.map((r) => r.name)).toEqual(['app']);
+    });
+
+    it('takes the id from an unusual agent file name and strips control characters from text', () => {
+        const main = claude_transcript(ID1, assistant('m1'));
+        subagent(main, 'x.y', assistant('s1', { isSidechain: true }), { description: 'red\u001b[31m alert\u0007' });
+        const a = find(ID1)!.subagent_list[0]!;
+        expect(a.id).toBe('x.y');
+        expect(a.description).toBe('red [31m alert');
+        expect(clean_title('a\u001b]0;pwn\u0007b')).not.toMatch(/[\u0000-\u001f\u007f]/);
+    });
+
+    it('drops sessions not written for 14 days', () => {
+        const stale = claude_transcript(ID1, assistant('m1'));
+        const fresh = claude_transcript(ID2, assistant('m2'));
+        fs.utimesSync(stale, new Date(Date.now() - 15 * 86_400_000), new Date(Date.now() - 15 * 86_400_000));
+        fs.utimesSync(fresh, new Date(Date.now() - 13 * 86_400_000), new Date(Date.now() - 13 * 86_400_000));
+        const index = build_index({ env, home });
+        expect(index.retention_days).toBe(14);
+        expect(index.sessions.map((s) => s.session_id)).toEqual([ID2]);
     });
 });
 

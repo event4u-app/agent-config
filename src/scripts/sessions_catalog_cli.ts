@@ -81,6 +81,10 @@ export function cmd_catalog(
                 ` ctx ${context_label(r)}`,
             `         ${r.title ?? '(untitled)'} — ${repos}`,
         );
+        // Only the subagents working right now; the files list all of them.
+        for (const a of r.subagent_list.filter((x) => x.status === 'active')) {
+            out.push(`         subagent ${a.id} ${fmt_age(a.idle_seconds)}: ${a.description ?? '(no description)'} — ${a.repos.map(repo_label).join(', ') || '—'}`);
+        }
         const resume = resume_line(r);
         if (resume !== null) out.push(`         resume: ${resume}`);
     }
