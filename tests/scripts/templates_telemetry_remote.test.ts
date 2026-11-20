@@ -238,8 +238,12 @@ describe('append_class_a_record', () => {
             session_id: 'sid',
             now: new Date('2026-08-18T21:00:00Z'),
         });
-        append_class_a_record(log, rec);
-        append_class_a_record(log, rec);
+        // `now` pinned to the record's own day: the default is the wall clock,
+        // and once the retention window passed the fixture date (2026-11-16)
+        // both lines were pruned on write and the test failed on every machine.
+        const at = new Date('2026-08-18T21:00:00Z');
+        append_class_a_record(log, rec, undefined, at);
+        append_class_a_record(log, rec, undefined, at);
 
         const lines = fs.readFileSync(log, 'utf-8').trimEnd().split('\n');
         expect(lines).toHaveLength(2);

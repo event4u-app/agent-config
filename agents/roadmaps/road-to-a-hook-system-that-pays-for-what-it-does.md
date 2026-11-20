@@ -101,10 +101,11 @@ actually loads.
 
 ## Phase 2 — Fixed costs out of every event
 
-- [ ] **2.1 One YAML copy at runtime.** `settings.ts` (and the lazy reads in
+- [x] **2.1 One YAML copy at runtime.** `settings.ts` (and the lazy reads in
       `agent_settings.ts`) use the bundled reader when bundled, keeping the
       template usable unbundled.
       verify: the load trace of `pre_tool_use`, `post_tool_use`, `user_prompt_submit` and `stop` shows no `node_modules/yaml`; settings tests pass.
+      Done 2026-11-20: `settings.ts` imports `yaml` statically; a second path the source plans did not name — every chunk with `yaml` external `require`d it from `node_modules` on `post_tool_use`, `user_prompt_submit` and `stop` — now resolves to the bundle's copy through `hooks/bundled_yaml.ts` and the chunk banner. Trace on five events: zero `node_modules` loads. `agent_settings.ts`'s lazy requires are not reached on these events and stay. Also fixed a date-bound test (`templates_telemetry_remote`) red on main since 2026-11-16.
 - [ ] **2.2 The entry bundle is compile-cached.** `dist/hooks/dispatch.js`
       becomes a stub that enables the cache fail-open and imports the bundle
       from a sibling file; host commands, digest, freshness and

@@ -163,7 +163,11 @@ export const CHUNK_OPTIONS = Object.freeze({
     banner: {
         js:
             "const __acChunkMetaUrl = require('node:url').pathToFileURL(__filename).href; " +
-            'const __acChunkMeta = { url: __acChunkMetaUrl, dirname: __dirname, filename: __filename };',
+            'const __acChunkMeta = { url: __acChunkMetaUrl, dirname: __dirname, filename: __filename }; ' +
+            // An external `yaml` resolves to the copy the dispatch bundle already
+            // carries (`hooks/bundled_yaml.ts`) instead of loading a second one
+            // from node_modules; absent that global, a real require as before.
+            'require = ((r) => Object.assign((id) => (id === "yaml" && globalThis.__acBundledYaml !== undefined ? globalThis.__acBundledYaml : r(id)), r))(require);',
     },
 });
 
