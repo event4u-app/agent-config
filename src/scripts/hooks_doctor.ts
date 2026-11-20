@@ -129,8 +129,10 @@ function _concern_state_file(state_dir: string, concern: string): string | null 
  * Since 2026-11-20 a quiet allow has no `<concern>.json` of its own
  * (`hooks/feedback_policy.ts`); `summary.json` carries every run. So both are
  * candidates, ranked by the run's RECORDED `completed_at` — never by file mtime,
- * which a summary advances whenever any other concern runs. The per-concern file
- * wins a tie, because it holds the detail.
+ * which a summary advances whenever any other concern runs. On an equal instant
+ * the per-concern file wins only when it records the same `invocation` as the
+ * summary's run (same dispatch, more detail); a tie between two dispatches goes
+ * to the summary, which records every run, quiet ones included.
  */
 function _latest_feedback(state_dir: string, concern: string): string | null {
   const dispatcher_dir = path.join(state_dir, ".dispatcher");
@@ -145,11 +147,19 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
   }
   // Compared as instants, never as strings: two writers may differ in
   // fractional-second precision.
-  let best: { p: string; at: number; detail: boolean } | null = null;
-  const consider = (p: string, iso: string | null, detail: boolean): void => {
-    const at = iso === null ? Number.NaN : Date.parse(iso);
-    if (Number.isNaN(at)) return;
-    if (best === null || at > best.at || (at === best.at && detail && !best.detail)) best = { p, at, detail };
+  type Run = { at: string; invocation: string | null } | null;
+  let best: { p: string; at: number; detail: boolean; invocation: string | null } | null = null;
+  const consider = (p: string, run: Run, detail: boolean): void => {
+    const at = run === null ? Number.NaN : Date.parse(run.at);
+    if (run === null || Number.isNaN(at)) return;
+    const c = { p, at, detail, invocation: run.invocation };
+    if (best === null || at > best.at) {
+      best = c;
+      return;
+    }
+    if (at !== best.at || detail === best.detail) return;
+    const sameRun = c.invocation !== null && c.invocation === best.invocation;
+    if (detail ? sameRun : !sameRun) best = c;
   };
   for (const sess of sessions) {
     const own = path.join(dispatcher_dir, sess, `${concern}.json`);
@@ -164,7 +174,7 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
  * `completed_at` of a per-concern feedback file; its mtime when the file records
  * none (older writers); null when the file is absent.
  */
-function _recorded_at(file: string): string | null {
+function _recorded_at(file: string): { at: string; invocation: string | null } | null {
   let mtime: string;
   try {
     const st = fs.statSync(file);
@@ -174,24 +184,29 @@ function _recorded_at(file: string): string | null {
     return null;
   }
   try {
-    const doc = JSON.parse(fs.readFileSync(file, "utf-8")) as { completed_at?: unknown };
-    return typeof doc.completed_at === "string" ? doc.completed_at : mtime;
+    const doc = JSON.parse(fs.readFileSync(file, "utf-8")) as { completed_at?: unknown; invocation?: unknown };
+    return {
+      at: typeof doc.completed_at === "string" ? doc.completed_at : mtime,
+      invocation: typeof doc.invocation === "string" ? doc.invocation : null,
+    };
   } catch {
-    return mtime;
+    return { at: mtime, invocation: null };
   }
 }
 
-/** Latest `completed_at` among the summary's invocations that ran `concern`. */
-function _summary_last_run(summary: string, concern: string): string | null {
+/** Latest `completed_at` (and its `invocation`) among the summary's invocations that ran `concern`. */
+function _summary_last_run(summary: string, concern: string): { at: string; invocation: string | null } | null {
   try {
     const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
-      invocations?: Array<{ completed_at?: unknown; concerns?: Array<{ concern?: unknown }> }>;
+      invocations?: Array<{ invocation?: unknown; completed_at?: unknown; concerns?: Array<{ concern?: unknown }> }>;
     };
-    let last: string | null = null;
+    let last: { at: string; invocation: string | null } | null = null;
     for (const inv of doc.invocations ?? []) {
       if (typeof inv.completed_at !== "string" || Number.isNaN(Date.parse(inv.completed_at))) continue;
       if (!(inv.concerns ?? []).some((c) => c.concern === concern)) continue;
-      if (last === null || Date.parse(inv.completed_at) > Date.parse(last)) last = inv.completed_at;
+      if (last === null || Date.parse(inv.completed_at) > Date.parse(last.at)) {
+        last = { at: inv.completed_at, invocation: typeof inv.invocation === "string" ? inv.invocation : null };
+      }
     }
     return last;
   } catch {

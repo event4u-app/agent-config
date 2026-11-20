@@ -125,6 +125,39 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-warn', 'chat-history.json'))).toBe(true);
     });
 
+    describe('last_feedback on an equal instant', () => {
+        const AT = '2026-11-20T10:00:00.000Z';
+        const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {
+            const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+            for (const s of new Set([session, summarySession])) fs.mkdirSync(path.join(stateDir, s), { recursive: true });
+            fs.writeFileSync(path.join(stateDir, session, 'chat-history.json'), JSON.stringify({ completed_at: AT, invocation: ownInvocation }));
+            fs.writeFileSync(
+                path.join(stateDir, summarySession, 'summary.json'),
+                JSON.stringify({ invocations: [{ invocation: summaryInvocation, completed_at: AT, concerns: [{ concern: 'chat-history' }] }] }),
+            );
+        };
+        const pick = (): string | null | undefined => doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history')?.last_feedback;
+
+        it('the same dispatch: the per-concern file, which holds the detail', () => {
+            write('s', 'pid-1', 'pid-1');
+            expect(pick()?.endsWith(path.join('s', 'chat-history.json'))).toBe(true);
+        });
+
+        for (const [own, sum] of [['a-own', 'b-sum'], ['b-own', 'a-sum']] as const) {
+            it(`two dispatches (${own} read ${own < sum ? 'first' : 'second'}): the summary, which records every run`, () => {
+                write(own, 'pid-1', 'pid-2', sum);
+                expect(pick()?.endsWith(path.join(sum, 'summary.json'))).toBe(true);
+            });
+        }
+
+        it('a per-concern file from an older writer, with no invocation, does not win a tie', () => {
+            write('s', '', 'pid-2');
+            const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+            fs.writeFileSync(path.join(stateDir, 's', 'chat-history.json'), JSON.stringify({ completed_at: AT }));
+            expect(pick()?.endsWith(path.join('s', 'summary.json'))).toBe(true);
+        });
+    });
+
     it('last_feedback compares instants, not strings of different precision', () => {
         const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
         const a = path.join(stateDir, 'session-a');

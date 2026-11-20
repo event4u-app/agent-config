@@ -813,11 +813,14 @@ function _write_feedback(
     process.stderr.write(`dispatch_hook: feedback dir unavailable: ${msg}\n`);
     return;
   }
+  // `invocation` is pid + monotonic clock: unique per dispatch without a shared
+  // counter. Per-concern files carry it too, so a reader can tell a tie apart.
+  const invocation = `${String(process.pid)}-${process.hrtime.bigint().toString()}`;
   for (const entry of entries) {
     if (isQuietAllow(entry)) continue; // summary.json carries it: feedback_policy.ts
     const target = path.join(fb_dir, `${entry["concern"]}.json`);
     try {
-      update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, entry));
+      update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, { ...entry, invocation }));
     } catch (exc) {
       const msg = exc instanceof Error ? exc.message : String(exc);
       process.stderr.write(
@@ -879,9 +882,6 @@ function _write_feedback(
     // the hot path. A capped list needs one locked read-modify-write, which is
     // the same primitive `rule-trips.json` now uses for the same reason.
     //
-    // `invocation` is pid + monotonic clock: unique per dispatch without a
-    // shared counter, and ordered within one process.
-    const invocation = `${String(process.pid)}-${process.hrtime.bigint().toString()}`;
     update_json_under_lock<JsonObject>(path.join(fb_dir, "summary.json"), (loaded) => {
       const priorRaw = (loaded as JsonObject)["invocations"];
       const prior = Array.isArray(priorRaw) ? priorRaw : [];

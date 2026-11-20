@@ -425,6 +425,12 @@ describe("end to end through the dispatcher", () => {
       tool_input: { command: `echo ${PLANTED}` },
     });
     expect(saw(ws, "egress-observe", "recorder")).toStrictEqual({ sawPlanted: true, sawToken: false });
+    // The per-concern file names the dispatch that wrote it, as the summary does (hooks_doctor ties).
+    const fb = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-observe");
+    const own = JSON.parse(fs.readFileSync(path.join(fb, "recorder.json"), "utf8")) as { invocation?: unknown };
+    const runs = (JSON.parse(fs.readFileSync(path.join(fb, "summary.json"), "utf8")) as { invocations: Array<{ invocation: unknown }> }).invocations;
+    expect(typeof own.invocation).toBe("string");
+    expect(runs.map((i) => i.invocation)).toEqual([own.invocation]);
     const record = fs.readFileSync(path.join(ws, OBSERVATION_FILE), "utf8");
     expect(record.includes(PLANTED)).toBe(false);
     expect(record.includes('"type":"TOKEN"')).toBe(true);
