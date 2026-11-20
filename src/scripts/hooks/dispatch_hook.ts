@@ -73,6 +73,7 @@ import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
+import { enterConcernEnv, openConcernEnvScope } from './concern_env.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -621,11 +622,11 @@ function _run_concern_inproc(
   const prevStderrWrite = process.stderr.write;
   const prevArgv = process.argv;
   const prevCwd = process.cwd();
-  const prevEnv = { ...process.env };
 
   const started = performance.now();
   let rc = 0;
   setHookStdinOverride(_compactJsonDumps(envelope));
+  const leaveEnv = enterConcernEnv(REPO_ROOT);
   process.stdout.write = makeCapture((s) => {
     out += s;
   });
@@ -634,13 +635,7 @@ function _run_concern_inproc(
   });
   try {
     process.argv = [prevArgv[0] as string, scriptAbs, ...argsList];
-    // Same env-hardening the spawn path applied — concerns may spawn their
-    // own children (dashboard regen, git), which inherit process.env.
-    const hardened = hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT });
-    for (const k of Object.keys(process.env)) {
-      if (!(k in hardened)) delete process.env[k];
-    }
-    Object.assign(process.env, hardened);
+    // Hardened once per dispatch, reset only if this concern changed it: concern_env.ts.
     if (workspace !== prevCwd && _isDir(workspace)) {
       process.chdir(workspace);
     }
@@ -661,10 +656,7 @@ function _run_concern_inproc(
     process.stdout.write = prevStdoutWrite;
     process.stderr.write = prevStderrWrite;
     process.argv = prevArgv;
-    for (const k of Object.keys(process.env)) {
-      if (!(k in prevEnv)) delete process.env[k];
-    }
-    Object.assign(process.env, prevEnv);
+    leaveEnv();
     try {
       if (process.cwd() !== prevCwd) process.chdir(prevCwd);
     } catch {
@@ -1297,6 +1289,7 @@ export function main(argv?: string[]): number {
     keep_by_concern.map(([, keep]) => keep),
     egress.placeholder,
   );
+  const closeConcernEnv = openConcernEnvScope(REPO_ROOT);
   for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
@@ -1401,6 +1394,7 @@ export function main(argv?: string[]): number {
       payload_stubs: stubs_served,
     });
   }
+  closeConcernEnv();
   const final_rc = _reduce(rcs);
   writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);

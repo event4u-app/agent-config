@@ -113,10 +113,11 @@ actually loads.
       verify: a second dispatch shows a populated cache; digest, freshness and content gates and the install staging tests pass; five parallel cold dispatches succeed.
       <!-- deferred-resolution: carried-to=road-to-a-hook-system-with-isolated-guards -->
       Partly done 2026-11-20: the `agent-config dispatch:hook` launcher now enables the cache before it imports the bundle (`src/cli/agent-config.ts`), so that path caches the bundle: p50 70 → 59 ms, interleaved n = 30, darwin. The direct path the staged runtime uses (`node dist/hooks/dispatch.js`) is carried under K1: a stub in place of `dispatch.js` moves the digest, the runtime integrity check, the freshness and content gates, the prepack check and the plumbing-write guard (about 40 files reference the path) — not one of them may be weakened, and that is its own change. Measured gain it would buy there: 108 → 93 ms p50.
-- [ ] **2.3 Environment hardened once per dispatch.** Harden at dispatch start,
+- [x] **2.3 Environment hardened once per dispatch.** Harden at dispatch start,
       restore at dispatch end; a concern that mutates the environment does not
       leak it to the next concern.
       verify: a test where one concern sets a variable and the next does not see it; existing dispatcher tests pass.
+      Done 2026-11-20: `hooks/concern_env.ts` opens one hardened scope around the concern loop and resets only on drift; `tests/scripts/hooks/concern_env.test.ts` plants set, changed and deleted variables. 69 dispatcher test files green; `dispatch_hook.ts` 1,500 → 1,494 lines.
 - [ ] **2.4 One feedback write per dispatch.** The summary carries every entry;
       a per-concern file is written only for a non-allow outcome; its readers
       read the summary.
