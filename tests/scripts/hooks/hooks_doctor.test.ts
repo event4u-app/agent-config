@@ -136,11 +136,17 @@ describe('hooks_doctor — collect', () => {
             JSON.stringify({
                 // The quiet allow at 11:00 was evicted; only later runs of another concern remain.
                 invocations: [{ invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other' }] }],
-                latest: { 'chat-history': { invocation: 'pid-2', completed_at: '2026-11-20T11:00:00Z' }, other: { invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z' } },
+                latest: {
+                    'chat-history': { invocation: 'pid-2', completed_at: '2026-11-20T11:00:00Z', exit_code: 0, decision: 'allow' },
+                    other: { invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z', exit_code: 0, decision: 'allow' },
+                },
             }),
         );
         const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
         expect(chat?.last_feedback?.endsWith(path.join('session-evicted', 'summary.json'))).toBe(true);
+        // The file the doctor points to still says what the latest run was.
+        const pointed = JSON.parse(fs.readFileSync(path.join(sess, 'summary.json'), 'utf-8')) as { latest: Record<string, { decision: string }> };
+        expect(pointed.latest['chat-history']?.decision).toBe('allow');
     });
 
     it('last_feedback: one dispatch\'s own file wins over its summary, which records the same run by the same clock in `latest`', () => {

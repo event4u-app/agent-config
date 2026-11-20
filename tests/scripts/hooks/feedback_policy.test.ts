@@ -67,13 +67,21 @@ describe('feedback_policy — withLatestRuns, the summary\'s uncapped per-concer
     it('in order: the later dispatch replaces the row', () => {
         const a = withLatestRuns({}, [run('c', '2026-11-20T10:00:00Z')], 'pid-A');
         const b = withLatestRuns(a, [run('c', '2026-11-20T11:00:00Z')], 'pid-B');
-        expect(b['c']).toEqual({ invocation: 'pid-B', completed_at: '2026-11-20T11:00:00Z' });
+        expect(b['c']).toEqual({ invocation: 'pid-B', completed_at: '2026-11-20T11:00:00Z', exit_code: null, decision: null });
     });
 
     it('reverse publication: an older run publishing after a newer one does not overwrite it', () => {
         const newer = withLatestRuns({}, [run('c', '2026-11-20T11:00:00Z')], 'pid-quiet-allow');
         const after = withLatestRuns(newer, [run('c', '2026-11-20T10:00:00Z')], 'pid-older-block');
-        expect(after['c']).toEqual({ invocation: 'pid-quiet-allow', completed_at: '2026-11-20T11:00:00Z' });
+        expect(after['c']).toEqual({ invocation: 'pid-quiet-allow', completed_at: '2026-11-20T11:00:00Z', exit_code: null, decision: null });
+    });
+
+    it('carries the outcome, so a row answers what happened last after the history rotated', () => {
+        const blocked = withLatestRuns({}, [{ concern: 'c', completed_at: '2026-11-20T10:00:00Z', exit_code: 2, decision: 'block' }], 'pid-1');
+        const allowed = withLatestRuns(blocked, [{ concern: 'c', completed_at: '2026-11-20T11:00:00Z', exit_code: 0, decision: 'allow' }], 'pid-2');
+        expect(allowed['c']).toEqual({ invocation: 'pid-2', completed_at: '2026-11-20T11:00:00Z', exit_code: 0, decision: 'allow' });
+        // A held row keeps its outcome when another concern's run is folded in.
+        expect(withLatestRuns(allowed, [{ concern: 'd', completed_at: '2026-11-20T12:00:00Z' }], 'pid-3')['c']?.decision).toBe('allow');
     });
 
     it('orders by the concern\'s own completion, not by the dispatch\'s', () => {
@@ -124,6 +132,6 @@ describe('feedback_policy — compareRuns, the one order for writers and the doc
         const out = withLatestRuns({}, [{ concern: '__proto__', completed_at: '2026-11-20T10:00:00Z' }], 'pid-1');
         const round = JSON.parse(JSON.stringify(out)) as Record<string, unknown>;
         expect(Object.keys(round)).toEqual(['__proto__']);
-        expect(Object.getOwnPropertyDescriptor(round, '__proto__')?.value).toEqual({ invocation: 'pid-1', completed_at: '2026-11-20T10:00:00Z' });
+        expect(Object.getOwnPropertyDescriptor(round, '__proto__')?.value).toEqual({ invocation: 'pid-1', completed_at: '2026-11-20T10:00:00Z', exit_code: null, decision: null });
     });
 });

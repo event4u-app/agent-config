@@ -65,11 +65,14 @@ export function compareRuns(atA: number, invocationA: unknown, atB: number, invo
 export interface LatestRun {
     readonly invocation: string;
     readonly completed_at: string | null;
+    /** The run's outcome, so the row still answers "what happened last" after the history rotated it out. */
+    readonly exit_code: number | null;
+    readonly decision: string | null;
 }
 
 /**
- * The summary's `latest` map (one row per concern, outside the capped history)
- * with this dispatch's runs folded in. Each row keeps whichever run COMPLETED
+ * The summary's `latest` map (one row per concern, outside the capped history:
+ * id, completion time and outcome) with this dispatch's runs folded in. Each row keeps whichever run COMPLETED
  * later, by the concern's own `completed_at` and {@link keepNewerOutcome}'s rule,
  * so a dispatch that publishes after a newer one cannot overwrite its row.
  */
@@ -82,12 +85,25 @@ export function withLatestRuns(
     const out = Object.create(null) as Record<string, LatestRun>;
     if (held !== null && typeof held === 'object' && !Array.isArray(held)) {
         for (const [k, v] of Object.entries(held as Record<string, unknown>)) {
-            if (isLatestRun(v)) out[k] = { invocation: v.invocation, completed_at: v.completed_at };
+            if (isLatestRun(v)) {
+                const r = v as { exit_code?: unknown; decision?: unknown };
+                out[k] = {
+                    invocation: v.invocation,
+                    completed_at: v.completed_at,
+                    exit_code: typeof r.exit_code === 'number' ? r.exit_code : null,
+                    decision: typeof r.decision === 'string' ? r.decision : null,
+                };
+            }
         }
     }
     for (const e of entries) {
         const name = String(e['concern']);
-        const run: LatestRun = { invocation, completed_at: typeof e['completed_at'] === 'string' ? e['completed_at'] : null };
+        const run: LatestRun = {
+            invocation,
+            completed_at: typeof e['completed_at'] === 'string' ? e['completed_at'] : null,
+            exit_code: typeof e['exit_code'] === 'number' ? e['exit_code'] : null,
+            decision: typeof e['decision'] === 'string' ? e['decision'] : null,
+        };
         const prior = out[name];
         out[name] = prior === undefined ? run : (keepNewerOutcome(prior as unknown as Record<string, unknown>, run) ?? prior);
     }

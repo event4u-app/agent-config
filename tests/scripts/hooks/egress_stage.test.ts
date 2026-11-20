@@ -438,6 +438,7 @@ describe("end to end through the dispatcher", () => {
     expect(doc.latest["recorder"]?.invocation).toBe(own.invocation);
     expect(doc.latest["rewriter"]?.invocation).toBe(own.invocation);
     expect(typeof doc.latest["rewriter"]?.completed_at).toBe("string");
+    expect(doc.latest["rewriter"]).toMatchObject({ exit_code: 0, decision: "allow" }); // the outcome survives rotation
     const record = fs.readFileSync(path.join(ws, OBSERVATION_FILE), "utf8");
     expect(record.includes(PLANTED)).toBe(false);
     expect(record.includes('"type":"TOKEN"')).toBe(true);
