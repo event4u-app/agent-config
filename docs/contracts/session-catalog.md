@@ -15,9 +15,17 @@ session up without browsing every profile directory and transcript.
 
 | Path (under `~/.event4u/agent-config/`) | Role |
 |---|---|
-| `sessions.json` | **Canonical index.** The contract external readers consume. |
+| `runtime/session-catalog/<host>--<session>.v<N>.json` | Versioned record per host and session id, kept current by the hook. |
+| `sessions.json` | Overview snapshot (schema below), written by `agent-config sessions:catalog`. |
 | `SESSIONS.md` | Human view of the same snapshot. Derived, never parsed back. |
-| `runtime/session-catalog/<host>--<session>.v<N>.json` | Versioned record per host and session id; internal. |
+
+**For a current view, run `agent-config sessions:catalog`** (add `--json` for
+the machine form). It rebuilds both overview files from the records and
+prints the result. Hooks keep the records current but never write the overview
+files: many sessions' hooks rewriting one shared derived file is a
+concurrency problem without a cheap complete answer, while a user-invoked
+rebuild has none. An external tool such as agent-switch calls the CLI, or
+reads `sessions.json` after calling it.
 
 All files are written owner-only (`0600`, directory `0700`) by atomic rename.
 Nothing here is tracked by git or sent anywhere.
@@ -41,28 +49,18 @@ are removed after 30 minutes, longer than any host lets a hook run.
 Session ids must be plain identifiers, and the catalog relies on hosts issuing
 unique ids (UUIDs) per host.
 
-The index is republished on start, `stop` and end, and at most once per 15 s
-on the prompt-time heartbeat. A publisher scans, writes both files by atomic
-rename (`SESSIONS.md` first, `sessions.json` last), and re-scans; if any
-record changed meanwhile it publishes again, for up to 3 s, so the files
-converge on the newest records once writes stop. Each row carries the
-`record_version` it was built from; a publisher whose scan is older than the
-index on disk (a lower version, or a record it did not see) rescans instead of
-writing, and a publisher that finds its own write older than the records
-repairs it. An event older than what a record already holds changes nothing
-about its lifecycle, in either direction. Event time is the time the hook
-processes the event; the host delivers one session's lifecycle events in
-order, so this decides only between overlapping hook processes.
+An event older than what a record already holds changes nothing about its
+lifecycle, in either direction. Event time is the time the hook processes the
+event; the host delivers one session's lifecycle events in order, so this
+decides only between overlapping hook processes.
 
-Measured cost per hook call with 301 retained sessions and a 5 MB transcript:
-first ingest at `session_start` about 105 ms, `stop` about 37 ms, a throttled
-prompt about 9 ms. The CLI rebuilds
-from the records on every call, and `agent-config sessions:catalog --render`
-republishes.
+Measured with 301 retained sessions and a 5 MB transcript: a hook's first
+ingest at `session_start` about 92 ms, a later `stop` about 10 ms; the CLI's
+overview rebuild about 26 ms.
 
 Unlike the live register (`runtime/sessions/`, deleted at session end), a
 catalog record **survives** `session_end` with `ended_at` set, and is pruned
-only when its last activity is older than 30 days.
+by the CLI's rebuild once its last activity is older than 30 days.
 
 ## `sessions.json` — schema version 1
 
@@ -205,7 +203,6 @@ records are internal and never appear in `sessions.json`.
 agent-config sessions:catalog                 # newest 20, human form
 agent-config sessions:catalog --all --json    # full index as JSON
 agent-config sessions:catalog --status active # filter: active|idle|stale|ended
-agent-config sessions:catalog --render        # force-republish both files
 ```
 
 With `--json`, `counts` always cover every retained session, while `sessions`

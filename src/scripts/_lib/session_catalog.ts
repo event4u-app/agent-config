@@ -21,14 +21,11 @@
  *   retries from the winner's state, which is what keeps two overlapping hook
  *   processes of one session from double-counting the transcript. No lock
  *   means no stale-lock recovery, the step every lock protocol got wrong.
- * - `sessions.json` — the index external readers (agent-switch, the CLI) read.
- * - `SESSIONS.md` — the same rows for a human, never parsed back.
- *
- * Publication needs no lock either: a publisher scans, writes both files by
- * atomic rename, then re-scans; if the record set changed in between it
- * publishes again. A publisher that overwrote a newer index with an older scan
- * therefore always sees newer records on its re-scan and repairs it, so the
- * files converge on the newest record set once writes stop.
+ * - `sessions.json` / `SESSIONS.md` — the overview, written only by the CLI
+ *   (`agent-config sessions:catalog`), never by a hook. Many sessions' hooks
+ *   writing one shared derived file is a concurrency problem with no cheap
+ *   complete answer; a user-invoked command rebuilding it from the records
+ *   has none.
  *
  * Status is derived, never trusted from disk:
  *
@@ -90,17 +87,6 @@ const TOMBSTONE_TTL_MS = 30 * 60_000;
 /** Compare-and-swap attempts per update; an end event tries harder. */
 const CAS_ATTEMPTS = 5;
 const CAS_ATTEMPTS_END = 25;
-
-/**
- * A publisher republishes until a re-scan shows no change. Hooks of the same
- * burst finish well inside this bound; if writes never stop, the writer of
- * the last change runs its own publish after it.
- */
-const PUBLISH_DEADLINE_MS = 3_000;
-const PUBLISH_OVERTIME_PASSES = 2;
-
-/** Prompt-time heartbeats publish at most this often; other events always publish. */
-export const PUBLISH_THROTTLE_MS = 15_000;
 
 export type CatalogStatus = 'active' | 'idle' | 'stale' | 'ended';
 
@@ -1017,8 +1003,7 @@ function apply_event(
 }
 
 /**
- * Fold one hook event into this session's catalog record, then publish the
- * index. Never throws.
+ * Fold one hook event into this session's catalog record. Never throws.
  *
  * Compare-and-swap over versions: read the newest version N, apply the event,
  * create N+1 exclusively. A writer that loses the version re-reads the
@@ -1050,9 +1035,6 @@ export function catalog_update(
             const file = path.join(dir, `${stem}.v${version}.json`);
             if (!create_exclusive(file, `${JSON.stringify(entry, null, 2)}\n`)) continue;
             remove_older(dir, stem, version);
-            // `stop` is the last event before a quiet period, so it always
-            // publishes; only the prompt-time heartbeat is throttled.
-            publish_index({ env, now, force: ev.event !== 'user_prompt_submit' });
             return entry;
         }
     } catch {
@@ -1094,8 +1076,6 @@ export function catalog_hook_event(
 export interface PublishOptions {
     env?: NodeJS.ProcessEnv;
     now?: Date;
-    /** Ignore the heartbeat throttle. */
-    force?: boolean;
     /** Prune records past the retention window. Default true. */
     prune?: boolean;
 }
@@ -1123,19 +1103,13 @@ function prune_record(dir: string, stem: string, cutoff: number): void {
 
 /** Build the index snapshot from the record directory (pure apart from reads + prune). */
 export function build_index(options: PublishOptions = {}): CatalogIndex {
-    return build_index_with_fingerprint(options).index;
-}
-
-function build_index_with_fingerprint(options: PublishOptions): { index: CatalogIndex; fingerprint: string } {
     const env = options.env ?? process.env;
     const now = options.now ?? new Date();
     const dir = catalog_dir(env);
     const prune = options.prune !== false;
     const cutoff = now.getTime() - RETENTION_DAYS * 86_400_000;
     const rows: PublishedEntry[] = [];
-    const seen_versions: string[] = [];
     for (const { stem, version, entry: e } of read_all_records(dir)) {
-        seen_versions.push(`${stem}:${version}`);
         const seen = ms(e.last_seen) ?? 0;
         if (seen < cutoff) {
             if (prune) prune_record(dir, stem, cutoff);
@@ -1155,98 +1129,28 @@ function build_index_with_fingerprint(options: PublishOptions): { index: Catalog
     const counts: CatalogIndex['counts'] = { active: 0, idle: 0, stale: 0, ended: 0, total: rows.length };
     for (const r of rows) counts[r.status] += 1;
     return {
-        index: {
-            schema_version: CATALOG_SCHEMA_VERSION,
-            generated_at: iso_now(now),
-            catalog_dir: dir,
-            active_window_seconds: ACTIVE_WINDOW_SECONDS,
-            retention_days: RETENTION_DAYS,
-            counts,
-            sessions: rows,
-        },
-        fingerprint: seen_versions.sort().join('\n'),
+        schema_version: CATALOG_SCHEMA_VERSION,
+        generated_at: iso_now(now),
+        catalog_dir: dir,
+        active_window_seconds: ACTIVE_WINDOW_SECONDS,
+        retention_days: RETENTION_DAYS,
+        counts,
+        sessions: rows,
     };
 }
 
 /**
- * True when the index on disk was built from newer records than this scan:
- * a higher version of a record, or a record this scan did not see at all
- * (created after it). `fingerprint` lists every record scanned, pruned ones
- * included, as `stem:version`.
- */
-function is_older_than_published(fingerprint: string, json_path: string, dir: string): boolean {
-    let rows: unknown;
-    try {
-        rows = (JSON.parse(fs.readFileSync(json_path, 'utf-8')) as { sessions?: unknown } | null)?.sessions;
-    } catch {
-        return false; // unreadable or malformed: replace it
-    }
-    if (!Array.isArray(rows)) return false;
-    const mine = new Map<string, number>();
-    for (const line of fingerprint.split('\n')) {
-        const i = line.lastIndexOf(':');
-        if (i > 0) mine.set(line.slice(0, i), Number(line.slice(i + 1)));
-    }
-    const on_disk = list_versions(dir);
-    for (const r of rows) {
-        if (r === null || typeof r !== 'object') continue;
-        const row = r as Record<string, unknown>;
-        if (typeof row['record_version'] !== 'number') continue;
-        const stem = record_stem(String(row['host']), String(row['session_id']));
-        const v = mine.get(stem);
-        // A row this scan did not see is newer only while its record still
-        // exists; a record pruned since is not a reason to keep its old row.
-        if (v === undefined ? on_disk.has(stem) : row['record_version'] > v) return true;
-    }
-    return false;
-}
-
-function current_fingerprint(dir: string): string {
-    return read_all_records(dir)
-        .map((r) => `${r.stem}:${r.version}`)
-        .sort()
-        .join('\n');
-}
-
-/**
- * Rebuild `sessions.json` + `SESSIONS.md`. Scan, write both by atomic rename,
- * re-scan: if any record moved in between, publish again. Whoever writes last
- * has therefore seen every record that existed when it finished.
+ * Rebuild `sessions.json` + `SESSIONS.md` from the records. Called by the CLI
+ * only; the Markdown view is written first and the JSON index last.
  */
 export function publish_index(options: PublishOptions = {}): boolean {
     const env = options.env ?? process.env;
     try {
-        const dir = catalog_dir(env);
-        ensure_private_dir(dir);
-        const json_path = index_json_path(env);
-        if (options.force !== true) {
-            try {
-                const age = (options.now ?? new Date()).getTime() - fs.statSync(json_path).mtimeMs;
-                if (age >= 0 && age < PUBLISH_THROTTLE_MS) return true;
-            } catch {
-                /* no index yet → publish */
-            }
-        }
-        const deadline = Date.now() + PUBLISH_DEADLINE_MS;
-        let overtime = 0;
-        for (;;) {
-            const { index, fingerprint } = build_index_with_fingerprint({ ...options, env });
-            // A publisher that paused after its scan must not replace a newer
-            // publication: if the index on disk already carries a higher version
-            // of any record, this scan is stale — scan again instead of writing.
-            if (!is_older_than_published(fingerprint, json_path, dir)) {
-                // The Markdown view first, the JSON index last: a reader of the
-                // index never sees it ahead of the view it describes.
-                write_private(index_md_path(env), render_markdown(index));
-                write_private(json_path, `${JSON.stringify(index, null, 2)}\n`);
-                if (current_fingerprint(dir) === fingerprint) return true;
-            }
-            // Past the deadline only a bounded number of passes remain. They let a
-            // publisher whose own write turned out older than the records repair
-            // it once writes stop; under continued writes, the later writers'
-            // own publications take over.
-            if (Date.now() >= deadline && ++overtime > PUBLISH_OVERTIME_PASSES) return false;
-        }
+        ensure_private_dir(catalog_dir(env));
+        const index = build_index({ ...options, env });
+        write_private(index_md_path(env), render_markdown(index));
+        write_private(index_json_path(env), `${JSON.stringify(index, null, 2)}\n`);
+        return true;
     } catch {
         return false;
     }

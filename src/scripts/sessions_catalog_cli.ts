@@ -25,7 +25,7 @@ import {
 
 function usage(): number {
     process.stderr.write(
-        'usage: agent-config sessions:catalog [--json] [--all | --limit N] [--status active|idle|stale|ended] [--render]\n',
+        'usage: agent-config sessions:catalog [--json] [--all | --limit N] [--status active|idle|stale|ended]\n',
     );
     return 2;
 }
@@ -33,7 +33,7 @@ function usage(): number {
 const CATALOG_STATUSES: readonly CatalogStatus[] = ['active', 'idle', 'stale', 'ended'];
 
 /**
- * Read the machine-wide session catalog. Status is recomputed from the records
+ * Read the machine-wide session catalog and refresh its overview files. Status is recomputed from the records
  * at call time rather than taken from `sessions.json`, which may be older than
  * the throttle window.
  */
@@ -41,12 +41,10 @@ export function cmd_catalog(argv: string[] = process.argv.slice(2), env: NodeJS.
     let json = false;
     let limit: number | null = 20;
     let status: CatalogStatus | null = null;
-    let render = false;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--json') json = true;
         else if (a === '--all') limit = null;
-        else if (a === '--render') render = true;
         else if (a === '--limit') {
             const n = Number(argv[++i]);
             if (!Number.isInteger(n) || n < 1) return usage();
@@ -57,8 +55,9 @@ export function cmd_catalog(argv: string[] = process.argv.slice(2), env: NodeJS.
             status = s;
         } else return usage();
     }
-    if (render) publish_index({ env, force: true });
-    const index = build_index({ env, prune: render });
+    // Every call refreshes the overview files; hooks never write them.
+    publish_index({ env });
+    const index = build_index({ env, prune: false });
     let rows = index.sessions;
     if (status !== null) rows = rows.filter((r) => r.status === status);
     if (limit !== null) rows = rows.slice(0, limit);

@@ -256,7 +256,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              it; --release clears the claim
   sessions:catalog           Every agent session on this machine, newest first:
                              profile, model, repos/branches, tokens, resume command.
-                             Flags: --json, --all, --limit N, --status S, --render
+                             Refreshes ~/.event4u/agent-config/sessions.json + SESSIONS.md.
+                             Flags: --json, --all, --limit N, --status S
   session:recycle            Validate + write the main-session recycle envelope (--verify validates only)
                              (deliberate recycle instead of auto-compact). Flags:
                              --file <json> | --template; default reads stdin

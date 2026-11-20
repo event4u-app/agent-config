@@ -83,7 +83,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true });
 });
 
 describe('catalog_update', () => {
@@ -311,7 +311,7 @@ describe('review fixes', () => {
             path.join(catalog_dir(env), 'claude--sess-bad-0001.v1.json'),
             JSON.stringify({ session_id: 'sess-bad-0001', last_seen: new Date().toISOString(), title: '# x | `y` [z](u)' }),
         );
-        expect(publish_index({ env, force: true })).toBe(true);
+        expect(publish_index({ env })).toBe(true);
         const md = fs.readFileSync(index_md_path(env), 'utf-8');
         expect(md).toContain('\\# x \\| \\`y\\` \\[z\\]\\(u\\)');
         expect(md).not.toContain('\n# x');
@@ -378,18 +378,6 @@ describe('review fixes', () => {
         expect(e.last_seen).toBe(iso_now(t1));
     });
 
-    it('never replaces a published index with an older scan', () => {
-        const base = { session_id: 'sess-pv-0001', platform: 'claude' };
-        catalog_update({ ...base, event: 'session_start' }, env);
-        catalog_update({ ...base, event: 'stop' }, env);
-        const published = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8'));
-        const row = published.sessions.find((r: { session_id: string }) => r.session_id === 'sess-pv-0001');
-        row.record_version = 99;
-        fs.writeFileSync(index_json_path(env), JSON.stringify(published));
-        expect(publish_index({ env, force: true, now: new Date(Date.now()) })).toBe(false);
-        expect(JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0].record_version).toBe(99);
-    });
-
     it('follows a .git pointer only into a real linked-worktree entry', () => {
         const fake = path.join(tmp, 'fake');
         fs.mkdirSync(path.join(fake, 'src'), { recursive: true });
@@ -434,38 +422,14 @@ describe('review fixes', () => {
         expect(e.repos[0]!.branches).toEqual([]);
     });
 
-    it('repairs an index that is older than the records', () => {
-        const base = { session_id: 'sess-rr-0001', platform: 'claude' };
-        catalog_update({ ...base, event: 'session_start' }, env);
-        const stale = fs.readFileSync(index_json_path(env), 'utf-8');
-        catalog_update({ ...base, event: 'session_end' }, env);
-        fs.writeFileSync(index_json_path(env), stale);
-        expect(publish_index({ env, force: true })).toBe(true);
-        const row = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0];
-        expect(row.status).toBe('ended');
-        expect(row.record_version).toBe(2);
-    });
-
-    it('keeps publishing after a record was pruned but the index still lists it', () => {
-        const now = new Date();
-        const old = new Date(now.getTime() - (RETENTION_DAYS + 1) * 86_400_000);
-        catalog_update({ session_id: 'sess-wg-0001', platform: 'claude', event: 'stop', now: old }, env);
-        publish_index({ env, now: old, force: true });
-        const before = fs.readFileSync(index_json_path(env), 'utf-8');
-        build_index({ env, now }); // prunes, as an interrupted publisher would have
-        fs.writeFileSync(index_json_path(env), before);
-        catalog_update({ session_id: 'sess-wg-0002', platform: 'claude', event: 'stop', now }, env);
-        const ids = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions.map((r: { session_id: string }) => r.session_id);
-        expect(ids).toEqual(['sess-wg-0002']);
-    });
-
     it('replaces a published index that is valid JSON but malformed', () => {
         fs.mkdirSync(path.dirname(index_json_path(env)), { recursive: true });
         fs.writeFileSync(index_json_path(env), JSON.stringify({ sessions: [null, 7] }));
         catalog_update({ session_id: 'sess-mi-0001', platform: 'claude', event: 'stop' }, env);
+        publish_index({ env });
         expect(JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0].session_id).toBe('sess-mi-0001');
         fs.writeFileSync(index_json_path(env), 'null');
-        expect(publish_index({ env, force: true })).toBe(true);
+        expect(publish_index({ env })).toBe(true);
     });
 
     it('keeps two hosts with the same id apart', () => {
@@ -526,7 +490,9 @@ describe('review fixes', () => {
         const e = read_entry(catalog_dir(env), 'sess-hk-0001')!;
         expect(e.ended_at).not.toBeNull();
         expect(e.usage!.assistant_messages).toBe(1);
-        expect(JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8')).sessions[0].status).toBe('ended');
+        expect(build_index({ env }).sessions[0]!.status).toBe('ended');
+        // Hooks never write the overview; only the CLI does.
+        expect(fs.existsSync(index_json_path(env))).toBe(false);
     });
 });
 
@@ -537,7 +503,7 @@ describe('publish_index', () => {
         const now = new Date('2026-11-20T10:00:00Z');
         catalog_update({ session_id: 'sess-old-0001', platform: 'claude', event: 'session_start', cwd: repo, now: t0 }, env);
         catalog_update({ session_id: 'sess-new-0001', platform: 'claude', event: 'session_start', cwd: repo, now: t1 }, env);
-        publish_index({ env, now, force: true });
+        publish_index({ env, now });
 
         const index = JSON.parse(fs.readFileSync(index_json_path(env), 'utf-8'));
         expect(index.schema_version).toBe(1);
