@@ -118,10 +118,11 @@ actually loads.
       leak it to the next concern.
       verify: a test where one concern sets a variable and the next does not see it; existing dispatcher tests pass.
       Done 2026-11-20: `hooks/concern_env.ts` opens one hardened scope around the concern loop and resets only on drift; `tests/scripts/hooks/concern_env.test.ts` plants set, changed and deleted variables. 69 dispatcher test files green; `dispatch_hook.ts` 1,500 → 1,494 lines.
-- [ ] **2.4 One feedback write per dispatch.** The summary carries every entry;
+- [x] **2.4 One feedback write per dispatch.** The summary carries every entry;
       a per-concern file is written only for a non-allow outcome; its readers
       read the summary.
       verify: an all-allow `pre_tool_use` writes at most two dispatcher feedback files; `hooks:status` output is unchanged on a fixture session.
+      Done 2026-11-20: `hooks/feedback_policy.ts` keeps a per-concern file only for a non-quiet outcome; `summary.json` now also carries `raw_exit_code`. A probe `pre_tool_use` on a `Read` left one file (`summary.json`) where it left one per concern. `hooks_doctor` falls back to the newest summary listing a concern, so its `feedback:` line still appears — pointing at the summary for quiet concerns. 112 test files green.
 - [ ] **2.5 Re-measure.** Run the Phase 3.1 bench on darwin against the pin.
       verify: the table is recorded in `agents/evidence/analysis/` with commit, node and machine.
 

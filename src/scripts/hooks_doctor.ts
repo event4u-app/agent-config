@@ -125,6 +125,9 @@ function _concern_state_file(state_dir: string, concern: string): string | null 
 /**
  * Return the most-recent dispatcher feedback file for the concern,
  * walking `agents/runtime/state/.dispatcher/<session>/<concern>.json`.
+ * Since 2026-11-20 a concern that only ever allowed quietly has no file of its
+ * own (`hooks/feedback_policy.ts`); its last run is then the newest session
+ * `summary.json` that lists it.
  */
 function _latest_feedback(state_dir: string, concern: string): string | null {
   const dispatcher_dir = path.join(state_dir, ".dispatcher");
@@ -144,9 +147,19 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
       const st = fs.statSync(candidate);
       if (st.isFile()) {
         candidates.push({ p: candidate, mtime: st.mtimeMs });
+        continue;
       }
     } catch {
       /* not a file */
+    }
+    const summary = path.join(dispatcher_dir, sess, "summary.json");
+    try {
+      const st = fs.statSync(summary);
+      if (st.isFile() && _summary_lists(summary, concern)) {
+        candidates.push({ p: summary, mtime: st.mtimeMs });
+      }
+    } catch {
+      /* no summary */
     }
   }
   if (candidates.length === 0) {
@@ -154,6 +167,15 @@ function _latest_feedback(state_dir: string, concern: string): string | null {
   }
   candidates.sort((a, b) => b.mtime - a.mtime);
   return candidates[0]!.p;
+}
+
+function _summary_lists(summary: string, concern: string): boolean {
+  try {
+    const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as { invocations?: Array<{ concerns?: Array<{ concern?: unknown }> }> };
+    return (doc.invocations ?? []).some((inv) => (inv.concerns ?? []).some((c) => c.concern === concern));
+  } catch {
+    return false;
+  }
 }
 
 function _rel(p: string | null, root: string): string | null {

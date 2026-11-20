@@ -442,7 +442,11 @@ describe("end to end through the dispatcher", () => {
     // The rewriting fixture did run and reply: without this the assertion above
     // would also pass for a fixture that never started.
     const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-rewrite");
-    const entry = JSON.parse(fs.readFileSync(path.join(dir, "rewriter.json"), "utf8")) as Record<string, unknown>;
+    // A quiet allow has no file of its own (feedback_policy.ts); summary.json carries every entry.
+    const summary = JSON.parse(fs.readFileSync(path.join(dir, "summary.json"), "utf8")) as {
+      invocations: Array<{ concerns: Array<Record<string, unknown>> }>;
+    };
+    const entry = summary.invocations.flatMap((i) => i.concerns).find((c) => c["concern"] === "rewriter") as Record<string, unknown>;
     expect(entry["raw_exit_code"]).toBe(0);
     expect(entry["decision"]).toBe("allow");
   });
