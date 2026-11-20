@@ -48,7 +48,9 @@ afterEach(() => {
     while (servers.length > 0) (servers.pop() as http.Server).close();
 });
 
-function record(skill: string, now = new Date('2026-08-20T10:00:00Z')): ClassARecord {
+// Stamped at the real clock: the appends below enforce retention against the
+// real clock too, and a fixed past date ages out of the 90-day window.
+function record(skill: string, now = new Date()): ClassARecord {
     return build_class_a_record({
         skill,
         host: 'claude',

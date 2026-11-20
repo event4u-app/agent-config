@@ -34,7 +34,8 @@ let env: NodeJS.ProcessEnv;
 let repo: string;
 
 function git(cwd: string, ...args: string[]): void {
-    execFileSync('git', args, { cwd, stdio: 'ignore' });
+    // CI runners have no git identity; a commit needs one.
+    execFileSync('git', ['-c', 'user.name=catalog-test', '-c', 'user.email=catalog-test@example.com', ...args], { cwd, stdio: 'ignore' });
 }
 
 function make_repo(name: string, branch: string, remote: string | null = null): string {

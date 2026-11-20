@@ -238,8 +238,11 @@ describe('append_class_a_record', () => {
             session_id: 'sid',
             now: new Date('2026-08-18T21:00:00Z'),
         });
-        append_class_a_record(log, rec);
-        append_class_a_record(log, rec);
+        // Retention is judged at the record's own time, not the wall clock, so
+        // the fixed date above cannot age out of the 90-day window.
+        const at = new Date('2026-08-18T21:00:00Z');
+        append_class_a_record(log, rec, undefined, at);
+        append_class_a_record(log, rec, undefined, at);
 
         const lines = fs.readFileSync(log, 'utf-8').trimEnd().split('\n');
         expect(lines).toHaveLength(2);
