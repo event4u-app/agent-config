@@ -223,8 +223,12 @@ function _summary_last_run(summary: string, concern: string): { at: string; invo
       keptId = kept.invocation;
       offer(kept.completed_at, keptId);
     }
-    for (const inv of doc.invocations ?? []) {
-      const entry = (inv.concerns ?? []).find((c) => c.concern === concern);
+    // Each history item and concern entry is checked on its own: a damaged one is skipped,
+    // never allowed to throw away a candidate already accepted or a valid item after it.
+    const isObj = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v);
+    for (const inv of Array.isArray(doc.invocations) ? (doc.invocations as unknown[]) : []) {
+      if (!isObj(inv) || !Array.isArray(inv.concerns)) continue;
+      const entry = (inv.concerns as unknown[]).find((c): c is Record<string, unknown> => isObj(c) && c.concern === concern);
       if (entry === undefined) continue;
       const id = typeof inv.invocation === "string" ? inv.invocation : null;
       if (keptId !== null && id === keptId) continue;

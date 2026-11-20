@@ -262,6 +262,29 @@ describe('hooks_doctor — collect', () => {
         expect(chat?.last_feedback?.endsWith(path.join('session-noid', 'chat-history.json'))).toBe(true);
     });
 
+    it('last_feedback: damaged history items neither hide an accepted `latest` row nor a valid item after them', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const write = (sess: string, latest: unknown, invocations: unknown): void => {
+            fs.mkdirSync(path.join(stateDir, sess), { recursive: true });
+            fs.writeFileSync(path.join(stateDir, sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+            fs.writeFileSync(path.join(stateDir, sess, 'summary.json'), JSON.stringify({ invocations, latest }));
+        };
+        // A newer quiet allow in `latest`; the retained history is damaged.
+        write('s1', { 'chat-history': { invocation: 'pid-q', completed_at: '2026-11-20T13:00:00Z', exit_code: 0, decision: 'allow' } }, [null, 'x', { concerns: null }, { concerns: [null, 7] }]);
+        let chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('s1', 'summary.json'))).toBe(true);
+        fs.rmSync(path.join(stateDir, 's1'), { recursive: true });
+        // No `latest`; a valid newer item follows damaged ones, inside the same concerns list too.
+        write('s2', undefined, [null, { invocation: 'pid-v', completed_at: '2026-11-20T12:00:01Z', concerns: [null, { concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }]);
+        chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('s2', 'summary.json'))).toBe(true);
+        // A non-array history is no history.
+        fs.rmSync(path.join(stateDir, 's2'), { recursive: true });
+        write('s3', { 'chat-history': { invocation: 'pid-q', completed_at: '2026-11-20T13:00:00Z' } }, { not: 'a list' });
+        chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('s3', 'summary.json'))).toBe(true);
+    });
+
     describe('last_feedback on an equal instant', () => {
         const AT = '2026-11-20T10:00:00.000Z';
         const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {
