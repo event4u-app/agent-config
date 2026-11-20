@@ -526,6 +526,29 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 20.4.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [20.6.0](https://github.com/event4u-app/agent-config/compare/20.5.0...20.6.0) (2026-11-20)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+> **Governance mix:** governance-only 2 vs consumer-only 0 (mixed 1, maintenance 0; taxonomy 1.1.0; range 2eef08c00be8..5e72f61d906d).
+
+### Features
+
+* **sessions:** machine-wide session catalog (sessions:catalog) (#2996) ([5e72f61](https://github.com/event4u-app/agent-config/commit/5e72f61d906de765cc82747dc03ccf29f9632ca8))
+
+### Documentation
+
+* **roadmaps:** risk register and owned digest for the halt roadmap ([0bb0092](https://github.com/event4u-app/agent-config/commit/0bb0092a6cfde43c1565e148629a9d0397833c32))
+* **roadmaps:** road to a halt that holds every lane ([e8c9d59](https://github.com/event4u-app/agent-config/commit/e8c9d592153dbb96464d2fbccec9022d1675afd0))
+
+Tests: 40334 (+92 since 20.5.0)
+
 ## [20.5.0](https://github.com/event4u-app/agent-config/compare/20.4.0...20.5.0) (2026-11-19)
 
 ### Release highlights
