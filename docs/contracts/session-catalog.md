@@ -4,68 +4,47 @@ stability: experimental
 
 # Session Catalog Contract
 
-One machine-wide list of every agent session started on this machine, newest
-activity first: which host and profile it runs under, which model, where it
-was started, which repositories and branches it touched, how many tokens it
-used, how full its context is, and how to resume it. It exists so a user — or
-an account manager such as agent-switch — can see what is active and pick a
-session up without browsing every profile directory and transcript.
+One machine-wide list of every Claude Code and Codex session on this machine,
+newest activity first: which host and profile it runs under, which model, where
+it was started, which repositories and branches it touched, how many tokens it
+used, how full its context is, whether it is live, and how to resume it. It
+exists so a user — or an account manager such as agent-switch — can see what
+is active and pick a session up without browsing every profile directory and
+transcript.
 
-## Files
+## How it is built
+
+`agent-config sessions:catalog` builds the catalog on every call and writes:
 
 | Path (under `~/.event4u/agent-config/`) | Role |
 |---|---|
-| `runtime/session-catalog/<host>--<session>.v<N>.json` | Versioned record per host and session id, kept current by the hook. |
-| `sessions.json` | Overview snapshot (schema below), written by `agent-config sessions:catalog`. |
-| `SESSIONS.md` | Human view of the same snapshot. Derived, never parsed back. |
+| `sessions.json` | Machine form (schema below). |
+| `SESSIONS.md` | Human view of the same snapshot. Never parsed back. |
+| `runtime/session-catalog-cache.json` | Parse cache; internal, safe to delete. |
 
-**For a current view, run `agent-config sessions:catalog`** (add `--json` for
-the machine form). It rebuilds both overview files from the records and
-prints the result. Hooks keep the records current but never write the overview
-files: many sessions' hooks rewriting one shared derived file is a
-concurrency problem without a cheap complete answer, while a user-invoked
-rebuild has none. An external tool such as agent-switch calls the CLI, or
-reads `sessions.json` after calling it. Of two CLI calls at once, the one with
-the older snapshot leaves a newer overview in place.
+No hook writes any of these. The hosts already keep every session as a
+transcript, so the command reads those directly:
 
-All files are written owner-only (`0600`, directory `0700`) by atomic rename.
-Nothing here is tracked by git or sent anywhere.
+- **Claude Code** — `<config>/projects/<project>/<session>.jsonl`
+- **Codex** — `<config>/sessions/YYYY/MM/DD/rollout-…-<session>.jsonl`
+
+for every profile directory it finds: each agent-switch profile
+(`~/.agent-switch/{claude,codex}/<name>/config`, or `$AGENT_SWITCH_HOME`),
+`$CLAUDE_CONFIG_DIR`, `$CODEX_HOME`, `~/.claude` and `~/.codex`, each once.
+Liveness comes from the live session register (`runtime/sessions/`) that the
+`session-register` hook already maintains.
+
+Transcripts are parsed incrementally from the cache (keyed by file inode and
+offset), most recently written first, up to 256 MB of new transcript per call.
+A transcript the budget did not reach is read only at its head and tail —
+title, model, context and paths are shown, its token count carries
+`usage_complete: false` (a `+` in `SESSIONS.md`), and the next call continues.
+Transcripts not written in the last 30 days are not listed.
 
 The root deliberately ignores `EVENT4U_CONFIG_HOME`: agent-switch sets that per
 profile, and a per-profile catalog would split the one list across profiles.
-`AGENT_CONFIG_SESSION_CATALOG_HOME` overrides the root (tests use it).
-
-## Who writes it
-
-The `session-register` hook concern, on every slot it is already bound to:
-`session_start`, `user_prompt_submit`, `stop` and `session_end`, after the
-register's own work. There are no locks. Each record is versioned: a writer
-reads the newest version N, applies the event and creates N+1 exclusively
-(an atomic `link` of a fully written temp file), so for each version exactly
-one writer wins and no reader sees a partial file; a loser re-reads the
-winner's record and applies its event on top (an end event retries longest).
-Superseded versions become empty tombstones rather than disappearing, so a
-stalled writer can never win a version number that is free again; tombstones
-are removed after 30 minutes, longer than any host lets a hook run. Pruning
-leaves the highest version of a record as such a tombstone too — a generation
-fence — so a hook still holding the pre-prune record cannot win a version
-above a resume that happened since. Record files are read non-blocking,
-never through a symlink, regular files only.
-Session ids must be plain identifiers, and the catalog relies on hosts issuing
-unique ids (UUIDs) per host.
-
-An event older than what a record already holds changes nothing about its
-lifecycle, in either direction. Event time is the time the hook processes the
-event; the host delivers one session's lifecycle events in order, so this
-decides only between overlapping hook processes.
-
-Measured with 301 retained sessions and a 5 MB transcript: a hook's first
-ingest at `session_start` about 92 ms, a later `stop` about 10 ms; the CLI's
-overview rebuild about 26 ms.
-
-Unlike the live register (`runtime/sessions/`, deleted at session end), a
-catalog record **survives** `session_end` with `ended_at` set, and is pruned
-by the CLI's rebuild once its last activity is older than 30 days.
+`AGENT_CONFIG_SESSION_CATALOG_HOME` overrides the root (tests use it). Output
+files are written owner-only (`0600`, directory `0700`) by atomic rename.
 
 ## `sessions.json` — schema version 1
 
@@ -73,16 +52,12 @@ by the CLI's rebuild once its last activity is older than 30 days.
 {
   "schema_version": 1,
   "generated_at": "2026-11-20T10:00:00+00:00",
-  "catalog_dir": "/Users/me/.event4u/agent-config/runtime/session-catalog",
   "active_window_seconds": 900,
   "retention_days": 30,
-  "counts": { "active": 1, "idle": 0, "stale": 0, "ended": 3, "total": 4 },
+  "counts": { "active": 2, "idle": 1, "inactive": 40, "live": 3, "total": 43 },
   "sessions": [
     {
       "session_id": "4d11cee1-…",
-      "status": "active",
-      "idle_seconds": 42,
-      "record_version": 7,
       "host": "claude",
       "provider": "anthropic",
       "surface": "cli",
@@ -94,7 +69,11 @@ by the CLI's rebuild once its last activity is older than 30 days.
       "models": ["claude-opus-5-5"],
       "start_cwd": "/Users/me/projects/app",
       "cwd": "/Users/me/projects/app/.claude/worktrees/feat-x",
-      "started_at": "…", "last_seen": "…", "ended_at": null,
+      "started_at": "2026-11-20T08:00:00.000Z",
+      "last_activity": "2026-11-20T09:59:30+00:00",
+      "status": "active",
+      "live": true,
+      "idle_seconds": 30,
       "title": "Fix login redirect",
       "roadmap_slug": null,
       "repos": [
@@ -104,8 +83,7 @@ by the CLI's rebuild once its last activity is older than 30 days.
           "remote": "https://github.com/acme/app.git",
           "linked_worktree": false,
           "branches": ["main", "feat/x"],
-          "last_branch": "feat/x",
-          "first_seen": "…", "last_seen": "…"
+          "last_branch": "feat/x"
         }
       ],
       "usage": {
@@ -113,15 +91,16 @@ by the CLI's rebuild once its last activity is older than 30 days.
         "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0,
         "total_tokens": 0, "assistant_messages": 0
       },
+      "usage_complete": true,
       "context_tokens": 105000,
+      "context_window": null,
       "transcript_path": "/Users/me/.agent-switch/claude/work/config/projects/…/4d11cee1-….jsonl",
       "resume": {
         "cwd": "/Users/me/projects/app",
         "argv": ["claude", "--resume", "4d11cee1-…"],
         "command": "claude --resume 4d11cee1-…",
         "env": { "CLAUDE_CONFIG_DIR": "/Users/me/.agent-switch/claude/work/config" }
-      },
-      "schema_version": 1
+      }
     }
   ]
 }
@@ -129,86 +108,66 @@ by the CLI's rebuild once its last activity is older than 30 days.
 
 Field notes:
 
-- **`status`** — `active` (heard from within `active_window_seconds`), `idle`
-  (within the host's register TTL), `stale` (no event within that TTL and no
-  `session_end`: crashed, closed without the hook firing, or simply left open
-  and idle — a stale session can still be resumed), `ended`. It is computed at
-  `generated_at`; a reader that needs freshness recomputes it from `last_seen`,
-  `ended_at` and the same thresholds.
-- **`surface`** — `cli`, `desktop`, `ide`, `sdk`, `cloud` or `unknown`; taken
-  from the host's own entrypoint when it reports one.
-- **`repos`** — every checkout the session worked in: hook working directories,
-  transcript working directories, and files written through `Edit`, `Write`,
-  `MultiEdit` and `NotebookEdit`. Reads do not count. A linked worktree is its
-  own entry (`linked_worktree: true`). The branch is read from the checkout's
-  HEAD when the event is processed, so branches a session passed through
-  between two events can be missing. Shell commands that touch other
-  repositories are not observed.
-- **`usage`** — cumulative, de-duplicated per assistant message. Heartbeats
-  read at most 8 MB of new transcript each; the end event reads the remaining
-  backlog in 16 MB chunks up to 64 MB, so a larger backlog at the end is
-  counted only partly. `context_tokens`
-  is the prompt size of the latest main-thread assistant message.
-- **`transcript_path`** — opened without following a final symlink and
-  without blocking, then read only when the descriptor is a regular file and
-  the file at the fully resolved path is that same inode, named
-  `<session>.jsonl` or `…-<session>.jsonl`, inside the session's profile root
-  (`CLAUDE_CONFIG_DIR` / `CODEX_HOME`, else `~/.claude` / `~/.codex`; other
-  hosts are not read). A different path for the same session restarts the
-  totals.
-- **`ended_at`** — set by `session_end`; only a later `session_start` or prompt
-  (a resume under the same id) clears it, never a late `stop`.
-- **`resume`** — `null` on hosts whose CLI cannot resume by id, and for a
-  session id that is not a plain identifier. `argv` is what a program should
-  spawn; `command` is the same, shell-quoted. `env` only ever carries the
-  profile directory variable. It is rebuilt from validated fields on every
-  read, never taken from a stored record.
-- **`repos[].remote`, `last_branch`** — read from the checkout's git metadata
-  with non-blocking, size-capped reads of regular files only, never through a
-  symlink; a `.git` pointer file is followed only into a linked-worktree entry
-  (`<common>/worktrees/<name>`) that points back at the checkout.
-- **`record_version`** — the version of the per-session record the row was
-  built from.
+- **`status`** — `active` (activity within `active_window_seconds`), `idle`
+  (not active, but the live register still holds the session), `inactive`
+  (neither). `live` is the register's view on its own. Activity is the later of
+  the transcript's last write and the register's last heartbeat.
+- **`surface`** — `cli`, `desktop`, `ide`, `headless` (`claude -p`,
+  `codex exec`, SDK), `cloud`, or the host's raw entrypoint.
+- **`repos`** — checkouts the session worked in (transcript working
+  directories) or wrote to through `Edit`, `Write`, `MultiEdit` and
+  `NotebookEdit`; reads do not count. A linked worktree is its own entry. The
+  branch list holds what the host reported while the session was in its start
+  directory, plus each checkout's current branch at build time; the host's
+  branch field is not trusted for other directories, because it keeps
+  reporting the start branch after a session moves into a worktree.
+- **`usage`** — Claude: summed per assistant message, de-duplicated by message
+  id. Codex: the latest cumulative `token_count`. `context_tokens` is the
+  prompt size of the latest main-thread message; `context_window` is reported
+  by Codex only.
+- **`resume`** — `argv` is what a program should spawn, `command` the same
+  shell-quoted, run in `cwd` (the session's start directory, where the host
+  keys its history). `env` carries only the profile directory variable, and
+  only when the profile is not the host's default. `null` for an id that is not
+  a plain identifier.
 
-## Coverage by host
+## Coverage
 
-| Host | Lifecycle fields | Model, tokens, context, title, surface | Resume |
-|---|---|---|---|
-| Claude Code | yes | yes (transcript) | `claude --resume <id>` |
-| Codex | yes, where its hooks fire | model only if the host sends it | `codex resume <id>` |
-| Augment, Cline, Windsurf, Gemini | yes | no | `null` |
-| Cursor, Copilot, Cowork | only if a lifecycle event reaches the hook | no | `null` |
+Claude Code and Codex, every surface that writes the host's transcript. Hosts
+without a local transcript in these layouts (Augment, Cursor, Windsurf, Cline,
+Gemini) are not listed. There is no "ended" state: a transcript records no
+end, so a closed session reads `inactive` once its register record is gone.
 
-Lifecycle reach per host follows `HEARTBEAT_REACHABLE_PLATFORMS` in
-`src/scripts/_lib/session_register.ts`. A host the hook never reaches is simply
-absent.
-
-## Privacy
+## Privacy and safety
 
 No prompt or reply text is stored. `title` is the host's generated title, or
 one the user set, capped at 120 characters with token-shaped runs masked;
 ordinary words in a title are not masked, so a title can name what the
-conversation was about.
-Remote URLs have their userinfo, query and fragment removed. In `SESSIONS.md`
-every value is escaped or code-quoted, so no stored text can change the
-document's structure. Paths are local and
-the files never leave the machine.
+conversation was about. Remote URLs lose userinfo, query and fragment.
+Transcripts are listed by `lstat` (symlinks and non-files skipped) and opened
+without following a final symlink, without blocking, and only when the opened
+descriptor is the listed file. Git metadata is read non-blocking, size-capped,
+regular files only, never through a symlink; a `.git` pointer is followed only
+into a real linked-worktree entry that points back at the checkout. In
+`SESSIONS.md` every value is escaped or code-quoted, so no stored text can
+change the document's structure.
 
 ## Stability for external readers
 
 Within `schema_version: 1` fields are only added, never renamed or removed, and
 a field's meaning does not change. Readers must ignore unknown fields. A
 breaking change bumps `schema_version`; readers should refuse a version they do
-not know rather than guess. Fields whose name starts with `_` in the per-session
-records are internal and never appear in `sessions.json`.
+not know rather than guess. Run the command before reading the file — the file
+is as fresh as the last call.
 
 ## CLI
 
 ```bash
-agent-config sessions:catalog                 # newest 20, human form
-agent-config sessions:catalog --all --json    # full index as JSON
-agent-config sessions:catalog --status active # filter: active|idle|stale|ended
+agent-config sessions:catalog                   # newest 20, human form; refreshes both files
+agent-config sessions:catalog --all --json      # full catalog as JSON
+agent-config sessions:catalog --status active   # filter: active|idle|inactive
+agent-config sessions:catalog --live            # only sessions the register holds
 ```
 
-With `--json`, `counts` always cover every retained session, while `sessions`
-is the filtered and limited list.
+With `--json`, `counts` always cover every listed session, while `sessions` is
+the filtered and limited list.

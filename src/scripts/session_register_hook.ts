@@ -70,8 +70,6 @@ import {
     ttl_seconds_for,
     write_record,
 } from './_lib/session_register.js';
-import type { catalog_hook_event } from './_lib/session_catalog.js';
-import { loadChunkExport } from './hooks/lazy_load.js';
 import { pr_watch_block } from './_lib/session_pr_watch.js';
 import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
@@ -858,19 +856,7 @@ export function main(): number {
             return 0;
         }
 
-        const ends = event === 'session_end' || (event === 'stop' && stop_means_session_end(platform));
-        // The machine-wide catalog keeps what the register forgets on session end.
-        // A lazy chunk: a missing one costs the catalog entry, never the register.
-        // At the end the claim file is already gone; the record keeps its slug.
-        const catalog = (): void =>
-            loadChunkExport<typeof catalog_hook_event>(
-                'session_catalog.chunk.cjs',
-                './_lib/session_catalog',
-                'catalog_hook_event',
-                import.meta.url,
-            )?.(envelope, root, ends, ends ? undefined : read_claimed_slug(root, session_id));
-
-        if (ends) {
+        if (event === 'session_end' || (event === 'stop' && stop_means_session_end(platform))) {
             const dir = register_dir(root);
             if (dir !== null) delete_record(dir, session_id);
             // 1.4 — the global mirror dies with the session on the same beat.
@@ -905,15 +891,11 @@ export function main(): number {
                     /* absent or unwritable — a leftover claim expires with its record */
                 }
             }
-            // After the register's own clean-up, so a slow catalog write can never
-            // leave the live record or the claim behind.
-            catalog();
             return 0;
         }
 
         if (event === 'session_start' || event === 'user_prompt_submit' || event === 'stop') {
             touch(root, session_id, platform, new Date());
-            catalog();
             if (event === 'session_start') {
                 // One warning per session, at registration — not per beat.
                 if (!ttl_is_measured(platform)) {

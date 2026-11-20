@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1595500,
+    "max_bytes": 1595100,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the `raise_log` entry whose `to` is 1,550,500, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -268,15 +268,6 @@
             "what_was_added": "The inline terminal-pane region strip in `_lib/prompt_shape.ts` (`TERMINAL_PANE_REGION` and its one `replace` call in `stripInjectedRegions`), which keeps the app-written `<bash-input>`/`<bash-stdout>`/`<bash-stderr>` echo out of the language score. Measured 1,595,013 B with the change against 1,594,895 B on origin/main 417e7b56df (both readings by this gate through the CI mirror): +118 B.",
             "why_it_could_not_be_avoided": "The base sat 5 B under the 1,594,900 ceiling, so any byte added to the language-mirror path crossed it. The addition is one regex literal and one call; no smaller form keeps the three tag names closed-region-only. The ceiling moves by 200 B, the delta rounded up, with no growth queued.",
             "what_would_have_caught_it": "Nothing missed it: the gate fired on the first mirror run of the change, as it is meant to."
-        },
-        {
-            "date": "2026-11-20",
-            "from": 1595100,
-            "to": 1595500,
-            "by": "agent, feat/global-session-catalog",
-            "what_was_added": "The `session-register` call into the new `session_catalog` lazy chunk: one `loadChunkExport` call with its four arguments, the end-of-session flag and the claimed-slug read, invoked after the register's own work on each lifecycle slot. Measured 1,595,393 B with the change against 1,595,089 B on origin/main 2eef08c00b (both readings by this gate with APFS-cloned node_modules): +304 B.",
-            "why_it_could_not_be_avoided": "The base sat 11 B under the ceiling, so any call site crossed it. The catalog body itself (43,559 B) already lives in its own chunk with its own ceiling, the envelope parsing was moved into that chunk, and the `sessions:catalog` CLI was split out of `sessions_cli.ts` because that module is in the dispatch graph; what remains is the call. The ceiling moves by the delta rounded up to the next 100 B, with no growth queued.",
-            "what_would_have_caught_it": "Nothing missed it: the gate fired on the first local run of the change."
         }
     ],
     "chunks": [
@@ -381,12 +372,6 @@
             "max_bytes": 61600,
             "registered_at": "2026-11-04",
             "derivation": "Measured 55,991 bytes on 2026-11-04 for the roadmap agents/roadmaps/archive/road-to-a-noted-that-is-a-write.md. The chunk holds the self-repair concern, its four detectors including persistence-claim, the record store with the target and subject indexes, and the Class-A telemetry shadow (emitDefectShadow: a structural-fields-only copy of a queued record for the org telemetry pack, inert unless that pack activated telemetry); `yaml` is external, resolved from the installed package as for the chat_history, update_notice and star_ask chunks. The ceiling is that reading plus about 10 %, rounded, the same margin as the quota_notice and intake_pass rows. The margin approves no planned code: a later addition to the chunk is measured and reviewed on its own change. WHY IT WAS MOVED: the dispatch bundle sat 14 bytes under its 1,582,000 ceiling at origin/main b53718de2 (measured 1,581,986 B by this gate with APFS-cloned node_modules), and the roadmap's detector work had to land somewhere. The concern built alone was 51,156 bytes before the work; moving it out, as the 2026-10-18 council chose for this situation, took the dispatch bundle to 1,557,293 B (-24,693 B, the rest being modules other concerns still import) instead of raising the dispatch ceiling. Bound on `user_prompt_submit` and `stop`; the bundle carries only its LAZY_CONCERNS row. A missing or mis-digested chunk falls back to spawning the same script, which is slower; tests/hooks/self_repair_lazy_paths.test.ts pins that the loader path and the spawn fallback write the same record, and that the built dispatcher falls back to the spawn exactly once with the chunk missing. On either path a failure of the concern does not reject the hook event (`fail_closed: false`, unchanged by this move); the dispatcher still writes that run's exit code to agents/runtime/state/.dispatcher/<session>/self-repair.json, which is where a failing concern is visible."
-        },
-        {
-            "entry": "src/scripts/_lib/session_catalog.ts",
-            "max_bytes": 47900,
-            "registered_at": "2026-11-20",
-            "derivation": "Measured 43,559 bytes on 2026-11-20 (the machine-wide session catalog: envelope reading, transcript binding to the session and profile with a descriptor identity check, lock-free versioned records with exclusive-create compare-and-swap, tombstoned superseded versions and a prune fence, open-then-verify transcript reads, non-blocking git metadata reads bounded to real worktree pointers, Markdown escaping, title masking, per-session record update, incremental transcript ingest, index building and Markdown rendering (the overview files are written by the CLI only, never by the hook), plus the register and agent-switch profile helpers it imports). The ceiling is that reading plus about 10 %, rounded, the margin of the quota_notice and self_repair rows, with no growth queued. WHY IT IS A CHUNK: inlined, it took the dispatch bundle about 13 KB over its 1,595,100 B ceiling (measured with APFS-cloned node_modules against 1,595,089 B on origin/main 2eef08c00b); the 2026-10-18 council doctrine moves new hook work into a chunk instead of raising that ceiling. Loaded by `session-register` on its four lifecycle slots through `hooks/lazy_load.ts`; a missing or mis-digested chunk costs the catalog entry, never the register."
         },
         {
             "entry": "src/scripts/_lib/reference_duty.ts",
