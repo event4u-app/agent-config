@@ -157,7 +157,7 @@ hunks. The detector reads the same records as before.
       **Done 2026-11-21:** `exitMasking` returns `pipe` / `trailing` / null;
       `cmd || exit 1`, `cmd; exit $?` and `task sync; task ci` stay unmasked. 18
       unit cases in the anchoring file, red first.
-- [x] **1.3 Wire masking into `classifyRun`.** Add `exit_masked` to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
+- [~] **1.3 Wire masking into `classifyRun`.** Add `exit_masked` to <!-- deferred-resolution: carried-to=road-to-done-claims-with-read-exit-codes-live-wiring --> <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
       `InvalidRunReason`. Place the check after the failing-summary check
       (`verification_evidence.ts:354`), because printed failures still win, and
       before the exit code is read.
@@ -174,14 +174,25 @@ hunks. The detector reads the same records as before.
       masked code. The pinned gap-set test now names three reasons. Amended by
       D8: the echoed-code reading is gone; a masked run classifies
       `exit_masked`, and masking is consulted only where the exit code decides.
-- [x] **1.4 Name the repair in the finding.** `describeRecordFinding` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
+      **Deferred 2026-11-21 (D12):** withdrawn from the live hook path by owner
+      decision (option 2): the dispatch-bundle raise was withdrawn and
+      `src/config/hook-bundle-budget.json` stays at origin/main's ceiling.
+      What landed: `classifyRunWithMasking` in `src/scripts/_lib/exit_masking.ts`,
+      read by the coverage report and the tests; `classifyRun` is unchanged.
+      Destination: `agents/roadmaps/road-to-done-claims-with-read-exit-codes-live-wiring.md`, step 1.1. Closes when its AC-1 holds.
+- [~] **1.4 Name the repair in the finding.** `describeRecordFinding` <!-- deferred-resolution: carried-to=road-to-done-claims-with-read-exit-codes-live-wiring --> <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
       (`verification_evidence.ts:617`) gets an `exit_masked` branch naming both
       repairs: `set -o pipefail`, or the runner's own filter flag instead of a
       pipe. Add one assertion on the text to the 1.1 file.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> 0
       **Done 2026-11-21:** `describeRecordFinding` names `set -o pipefail;` and
       the runner's own filter flag when `exit_masked` is among the reasons.
-- [x] **1.5 Classify `rtk`-wrapped runs.** Red first: `rtk vitest run` with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
+      **Deferred 2026-11-21 (D12):** withdrawn from the live hook path by owner
+      decision (option 2): the dispatch-bundle raise was withdrawn and
+      `src/config/hook-bundle-budget.json` stays at origin/main's ceiling.
+      `describeRecordFinding` is the hook's finding text, so the repair text moves
+      with the wiring. Destination: `agents/roadmaps/road-to-done-claims-with-read-exit-codes-live-wiring.md`, step 1.1.
+- [~] **1.5 Classify `rtk`-wrapped runs.** Red first: `rtk vitest run` with <!-- deferred-resolution: carried-to=road-to-done-claims-with-read-exit-codes-live-wiring --> <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
       exit 1 expects `FAIL_EVIDENCE` or `nonzero_exit_without_test_failure`, not
       `not_a_verification_command`. Then peel `rtk` and `rtk proxy` in
       `DELEGATING_HEADS` (`verification_command.ts:98`) and in
@@ -189,6 +200,11 @@ hunks. The detector reads the same records as before.
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts tests/scripts/verification_evidence.test.ts` -> 0
       **Done 2026-11-21:** `rtk` peeled in `DELEGATING_HEADS` (with `rtk proxy`)
       and in `COMMAND_PREFIXES`; `rtk gain` stays non-verifying. Red first.
+      **Deferred 2026-11-21 (D12):** withdrawn from the live hook path by owner
+      decision (option 2): the dispatch-bundle raise was withdrawn and
+      `src/config/hook-bundle-budget.json` stays at origin/main's ceiling.
+      The peel changes what the live classifier reads, so it moves with the
+      wiring. Destination: `agents/roadmaps/road-to-done-claims-with-read-exit-codes-live-wiring.md`, step 1.2.
 - [x] **1.6 Count masked records per host.** `report_verification_record_coverage.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_verification_record_coverage.ts -->
       prints an `exit_masked` column with its denominator (records per host),
       following the stub's section 2 bullet 1. Red first: a fixture witness
@@ -272,7 +288,7 @@ Rollback: remove the id from `DETECTOR_IDS` and the detector from
       `Not verified:` and `Nicht verifiziert:` lists, negated line, fence,
       table, no claim), a never-refuses case and an end-to-end run; 12 red
       before 3.2 (exit 1).
-- [x] **3.2 Implement `detectCoverageGap` in `turn_end_gate_hook.ts`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
+- [~] **3.2 Implement `detectCoverageGap` in `turn_end_gate_hook.ts`.** <!-- deferred-resolution: carried-to=road-to-done-claims-with-read-exit-codes-live-wiring --> <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
       - The trigger is the existing `_COMPLETION_RE` (`:557`) plus
         `_NEGATED_CLAIM_RE` (`:578`). No new completion keywords, per the
         2026-08-12 council bound quoted at `:568-576`.
@@ -295,7 +311,16 @@ Rollback: remove the id from `DETECTOR_IDS` and the detector from
       from the verdict and `markRecordOnly` counts it in `<key>.recorded.json`,
       which the pruner ages on `last_at` and the rollup skips. 3 test files, 235
       tests, exit 0; typecheck exit 0.
-- [x] **3.3 Pre-register `coverage`'s bars in `docs/contracts/turn-end-detector-demotion.md`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+      **Deferred 2026-11-21 (D12):** withdrawn from the live hook path by owner
+      decision (option 2): the dispatch-bundle raise was withdrawn and
+      `src/config/hook-bundle-budget.json` stays at origin/main's ceiling.
+      What landed: `partialRatioIn`, `completionClaimAt` and the record-only
+      counter helpers in `src/scripts/_lib/coverage_claim.ts`, tested in
+      `tests/scripts/coverage_claim.test.ts`. Not landed: `coverage` in
+      `DetectorId` / `DETECTOR_IDS`, `refusingFindings`, `markRecordOnly`, the
+      pruner suffix and the dispatch-censored set.
+      Destination: `agents/roadmaps/road-to-done-claims-with-read-exit-codes-live-wiring.md`, step 2.1.
+- [~] **3.3 Pre-register `coverage`'s bars in `docs/contracts/turn-end-detector-demotion.md`.** <!-- deferred-resolution: carried-to=road-to-done-claims-with-read-exit-codes-live-wiring --> <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       "The six detectors" becomes seven. The bar and the sample floor are
       copied in shape from detector F's rows and give this detector's own
       numbers. The contract requires bars to exist before a detector can refuse.
@@ -303,6 +328,12 @@ Rollback: remove the id from `DETECTOR_IDS` and the detector from
       **Done 2026-11-21:** Heading and table now read seven; G takes the bar row of F
       (40 %, 3) with a stated reason, and its sample floor reads recorded
       findings until armed.
+      **Deferred 2026-11-21 (D12):** withdrawn from the live hook path by owner
+      decision (option 2): the dispatch-bundle raise was withdrawn and
+      `src/config/hook-bundle-budget.json` stays at origin/main's ceiling.
+      The contract reads its detectors off `DetectorId`, and G is not in it, so
+      the row would be drift; the contract is back at origin/main.
+      Destination: `agents/roadmaps/road-to-done-claims-with-read-exit-codes-live-wiring.md`, step 2.2.
 
 ## Phase 4: Verified and not verified, with a generated reachability map
 
@@ -467,6 +498,7 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 | D9 | reversible-technical | council:2026-11-21 | Masking replaces only a recorded exit code of 0: a masked run with a nonzero recorded code keeps the verdict it had before this roadmap. So `exit_masked` can turn a pass into an instrument gap (both unrefusable) and can never demote a refusal. | Bundle-raise ratification round 7 of 2026-11-21: the openai seat showed shell paths where the masking reading attributes a verifier's own nonzero status to a filter (`tsc && task ci \| tail`, `set -e; tsc; echo done`) and so would demote a real failure; requiring the recorded 0 removes that whole class rather than one shape at a time | records carry the verifier's own status (D8's condition), or a measured case shows a nonzero filter code refusing honest work often enough to matter |
 | D10 | reversible-technical | council:2026-11-21 | An `exit "${PIPESTATUS[k]}"` hands no status on: the masking reading treats it like any other unknown `exit` argument, so a line ending in one reads as masked; pipefail is on or off only after a plain, lone, unconditional `set -o pipefail` / `set +o pipefail`; any other `set` / `shopt` segment naming pipefail leaves it unknown, and the walk follows both settings (round 26: assuming off missed a skipped verifier). Detector G credits a URL only as a request target: a word owned by a value-taking option (`-e`, `--referer`, `-x`, `-H`, any option not known to take no value) is not one, words are read as dequoted shell words, and the URL must be the whole word or the URL plus a path, query or fragment. | Bundle-raise ratification rounds 20 and 21 of 2026-11-21: the openai seat showed `task ci \| tail -5 \|\| printf x \| npx tsc --noEmit; exit "${PIPESTATUS[1]}"` exiting 0 with the filter's status because the fallback was skipped, which the walker read as the verifier's pass; and `curl --referer 'http://localhost:3000' https://example.invalid` crediting the local surface. Round 21: `set -o pipefail; true && set +o pipefail; npx tsc --noEmit \| tail -5` kept pipefail on past a reached unset, and `curl --header='Referer: http://localhost:3000' https://example.invalid` split inside the quoted value. Dropping the PIPESTATUS credit removes the whole class (which pipeline ran last is not in the text), as D8 and D9 did; the cost is a spurious, unrefusable gap on that idiom, where origin/main reads the same line as a pass | records carry the verifier's own status (D8's condition) |
 | D11 | reversible-technical | council:2026-11-21 | Detector G's `unlisted_surface` reason and the live-surface reader leave the live hook path: `runDetectors` calls `partialRatioIn` alone, the dispatch-bundle raise covers the classifier, detector G's completion trigger and the ratio check (+14,137 B instead of +27,499 B; detectors D and F keep their origin/main trigger), and step 4.4's live wiring is carried to `road-to-unlisted-surface-in-a-claim-chunk` as a chunk loaded only on a claim. | 23 bundle-raise ratification rounds of 2026-11-21: the anthropic seat ratified 22, the openai seat refused all 23 with 2-3 new findings each, about 60 % of them in G's repository-reading half; council strategy round of 2026-11-21 (`agents/evidence/council/done-claims-ratification-strategy-20261121.question.md`): anthropic chose a conditional chunk, openai asked for the classifier to be ratified on its own scope first | the chunk lands, or `unlisted_surface` is armed under D7 |
+| D12 | product-owned | owner | The dispatch-bundle raise is withdrawn and the features land without growing the live hook bundle: `hook-bundle-budget.json` keeps origin/main's ceiling, the masked-exit classifier, detector G's ratio check and the surface reader stay library + CLI + test, and the live wiring (1.3, 1.4, 1.5, 3.2, 3.3) is carried to `road-to-done-claims-with-read-exit-codes-live-wiring`. The ratification-prompt evidence of rounds 1-33 stays as the record. | owner choice in-session, 2026-11-21, option 2; standing authority in `agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md`; 33 ratification rounds did not converge on the raise | the owner accepts a bundle raise for the wiring |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->

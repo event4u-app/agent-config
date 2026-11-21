@@ -10,6 +10,9 @@ relates:
   - slug: road-to-done-claims-with-read-exit-codes
     relation: extends
     note: "Its step 4.4 (`unlisted_surface` on the live path) is carried here; the reason, the reader and their tests already exist."
+  - slug: road-to-done-claims-with-read-exit-codes-live-wiring
+    relation: depends
+    note: "Its Phase 2 registers `coverage` in `DetectorId` and wires `partial_ratio` into `runDetectors`; this chunk adds the second reason on top of that."
 ---
 # Road to `unlisted_surface` in a claim chunk
 
@@ -30,12 +33,14 @@ pays the parse.
 
 - **What exists.** `unlistedSurfaceIn` in `src/scripts/_lib/unlisted_surface.ts`
   and the reader in `src/scripts/_lib/live_surfaces.ts`, with their tests in
-  `tests/scripts/turn_end_gate_hook.test.ts` (through the hook's
-  `detectCoverageGap`) and `tests/scripts/derive_live_surfaces.test.ts`. The
+  `tests/scripts/coverage_claim.test.ts` (through `coverageGapIn` over the
+  hook's own prose views) and `tests/scripts/derive_live_surfaces.test.ts`. The
   `verify:surfaces` verb uses the reader today.
-- **What is missing.** `runDetectors` in `src/scripts/hooks/turn_end_gate_hook.ts`
-  calls `partialRatioIn` alone. Wiring `detectCoverageGap` there puts about
-  15.7 KB into the dispatch bundle, which is why it was taken out.
+- **What is missing.** Detector G is not on the live path at all since the
+  owner withdrew the bundle raise (D12 of the source roadmap, 2026-11-21);
+  `road-to-done-claims-with-read-exit-codes-live-wiring` Phase 2 puts
+  `partial_ratio` back. The surface reader adds about 15.7 KB on top, which is
+  why it goes into a chunk.
 - **Constraints.** The dispatch bundle and every chunk ceiling live in
   `src/config/hook-bundle-budget.json`, a ratification-gated file (ADR-268 § 4):
   the chunk's ceiling needs a two-seat verdict. `unlisted_surface` stays
