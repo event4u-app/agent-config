@@ -158,6 +158,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         // A top-level `return` in a Bash call errors and the line goes on.
         ['task ci; return 1; true', 'trailing'],
         ['task ci || return 1; echo ready', 'trailing'],
+        // Only the shell's own `exit` ends the line; an executable named exit does not.
+        ['task ci || /nonexistent/exit 1; true', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });

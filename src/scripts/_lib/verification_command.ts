@@ -417,10 +417,6 @@ function verifierIndex(p: Pipeline): number {
     return -1;
 }
 
-function head(p: Pipeline | undefined): string {
-    return bareName(p?.segs[0]?.words[0] ?? '');
-}
-
 function argsOf(p: Pipeline | undefined): string {
     return (p?.segs[0]?.words.slice(1) ?? []).join(' ');
 }
@@ -466,9 +462,9 @@ function uniq(states: readonly FlowState[]): FlowState[] {
 
 /** The states running pipeline `p` can leave behind, from state `s`. */
 function step(s: FlowState, p: Pipeline): FlowState[] {
-    const h = head(p);
     const lone = p.segs.length === 1;
-    if (lone && h === 'exit') {
+    // The shell's own `exit`, not an executable that happens to be named so.
+    if (lone && p.segs[0]?.words[0] === 'exit') {
         const arg = argsOf(p).replace(/^["']|["']$/g, '');
         if (arg === '' || arg === '$?') return [{ ...s, ended: true }];
         if (/^\d+$/.test(arg)) return [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];

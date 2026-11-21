@@ -53,7 +53,7 @@ import {
     run as beforeCompleteRun,
     statePathFor as ciStatePathFor,
 } from '../../src/scripts/before_complete_hook.js';
-import { readRecorded, recordedFile } from '../../src/scripts/_lib/coverage_claim.js';
+import { completionClaimAt, readRecorded, recordedFile } from '../../src/scripts/_lib/coverage_claim.js';
 import {
     run as languageMirrorRun,
     STATE_FILE as LANGUAGE_LEGACY_STATE_FILE,
@@ -2436,6 +2436,18 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         const t0 = Date.now();
         expect(detectCoverageGap(reply, [], undefined)).toBeNull();
         expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
+    it('a negated claim before a long run of blank lines is scanned in linear time', () => {
+        const reply = `Fertig ist das noch nicht.${'\n'.repeat(100000)}weiter`;
+        const t0 = Date.now();
+        expect(completionClaimAt(reply)).toBeNull();
+        expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
+    it('a CRLF blank line ends a Not verified block, so a later ratio still counts', () => {
+        const reply = 'Done.\r\n\r\nNot verified: the scanner run.\r\n\r\n165 von 405 Seiten.';
+        expect(detectCoverageGap(reply, [], undefined)?.code).toBe('partial_ratio');
     });
 
     it('many Not verified headings in one block are read in linear time', () => {
