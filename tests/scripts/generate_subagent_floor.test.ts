@@ -64,9 +64,9 @@ describe('generate_subagent_floor — routing and the who-answers section', () =
     it('the who-answers section names three rungs and the owner set from the data', () => {
         const w = render_who_answers();
         expect(w).toContain('## Who answers a question');
-        expect(w).toMatch(/1\. \*\*The agent\*\*/);
-        expect(w).toMatch(/2\. \*\*The council\*\*/);
-        expect(w).toMatch(/3\. \*\*The owner\*\*/);
+        expect(w).toMatch(/1\. \*\*Agent\*\*/);
+        expect(w).toMatch(/2\. \*\*Council\*\*/);
+        expect(w).toMatch(/3\. \*\*Owner\*\*/);
         for (const cls of OWNER_LOCKED_CLASSES) expect(w).toContain(cls);
         expect(w).toContain(OWNER_MONEY_ROW);
         for (const cls of classes_resolved_by('council')) expect(w).toContain(cls);

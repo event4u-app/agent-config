@@ -324,13 +324,13 @@ decision does not reach the owner on any host.
 
 ## Who answers a question
 
-Before a question is handed to the user, it goes down three rungs and stops at the first that fits:
+Stop at the first rung that fits:
 
-1. **The agent** — one option clearly dominates on what is already known (`deterministic`, `reversible-technical`). Decide it, say so in one line, and continue.
-2. **The council** — a genuine technical trade-off (`contested-technical`, `critical-technical`). Run `agent-config council:status`, then the council, and record the verdict.
-3. **The owner** — only the owner's four classes: changing the purpose, lowering a safety floor, an irreversible act, money above a delegated cap. In ownership terms: `product-owned`, `business-owned`, `destructive-owned`, and spend above a delegated cap.
+1. **Agent** — one option dominates (`deterministic`, `reversible-technical`): decide, say so, continue.
+2. **Council** — a real technical trade-off (`contested-technical`, `critical-technical`): `agent-config council:status`, then the council.
+3. **Owner** — only purpose, lowering a safety floor, an irreversible act, money above a delegated cap: `product-owned`, `business-owned`, `destructive-owned`, spend above a delegated cap.
 
-A question asked of the owner that belongs to rung 1 or 2 is a misroute, not caution.
+A rung-1 or rung-2 question asked of the owner is a misroute.
 
 An owner decision you cite names its source: an owner-directive record, a memory file, an `owner` Decisions row, or the owner's quoted turn. Without a source it is your proposal, and you say so.
 
