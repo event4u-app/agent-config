@@ -446,6 +446,25 @@ describe('language pin', () => {
         expect(exit).toBe(2); // the hook emitted a pin
         expect(readLanguagePin(dir, 'sess-parity')).toBe('de');
     });
+
+    // road-to-a-language-pin-from-owner-prose 2.2: the gate refuses on language
+    // only when the pin came from what the owner typed.
+    const GERMAN_REPLY =
+        'Ich habe die Datei geprüft und die Tests laufen jetzt wieder, das war ein Fehler in der Konfiguration.';
+    const ENGLISH_REPLY =
+        'I checked the file and the tests are passing again; the problem was in the configuration that we changed.';
+
+    it('a system-locale pin raises no language finding on a German reply', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'en', source: 'system-locale' }));
+        expect(detectLanguage(GERMAN_REPLY, readLanguagePin(dir, 'sess-1'))).toBeNull();
+    });
+
+    it('a prompt-sourced pin still raises the finding on a reply in the other language', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));
+        expect(detectLanguage(ENGLISH_REPLY, readLanguagePin(dir, 'sess-1'))?.detector).toBe('language');
+    });
 });
 
 /**
