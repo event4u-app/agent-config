@@ -103,7 +103,7 @@ never edited.
       is never hand-edited. Fewer than 20 `language` fires in the window → the
       file says so and Phase 3 proceeds on the fixtures alone.
       verify: re-running the command at the same sha reproduces the file byte-for-byte (`git diff --exit-code` on it)
-- [ ] **1.3 Hand the split to `later/road-to-agent-throughput-recovery` 4.1.**
+- [x] **1.3 Hand the split to `later/road-to-agent-throughput-recovery` 4.1.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       Its blocker `language-misfire-window-after-the-agent-message-fix` asks for
       a second split over a post-fix window. Run the council (`agent-config
       council:status`, then a council round on that blocker with 1.2's file),
@@ -194,6 +194,8 @@ never edited.
 |---|---|---|---|---|---|
 | D1 | product-owned | owner | The pin is set only from text the owner typed; a paste, a host turn or code never decides it, and an undetermined owner span keeps the previous pin. | Owner's session retro 2026-11-21, P0 measure 2, ordered planned and executed the same day. | the owner asks for paste-decided pins back |
 | D2 | reversible-technical | agent | The split is a mode of `measure_turn_end_gate`, not a new script. | It already replays the gate over real transcripts with the shared `classify` (`measure_turn_end_gate.ts:91`). | the mode makes that script exceed its size budget |
+| D3 | reversible-technical | agent | 1.1: the split replays the pin with the hook's own `classify` + `nextState`, reads files in name order and filters entries by their own timestamp; `synthetic-turn` also covers entries the transcript marks host-written (`isMeta`, `isCompactSummary`), which never reach `UserPromptSubmit`; `unknown` is the residual for a fire with no recoverable setter and is unreachable from a well-formed transcript, so it is unit-tested on the classifier. | `language-split-baseline.md`: 140 of 148 replayed fires came from host-marked entries, while the gate itself recorded 6 refusals in the same window. | a host starts delivering `isMeta` entries to `UserPromptSubmit` |
+| D4 | reversible-technical | council:2026-11-21 | 1.3: throughput-recovery 4.1 closes on its correction (option (b)); event-level re-measurement moves to 5.1 here. | Council 2026-11-21, anthropic + openai, 2/2 chose (b), $0.00. | 5.1 finds a non-owner class still firing |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
