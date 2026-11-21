@@ -180,6 +180,7 @@ import {
     with_chairman_fields,
 } from './ai_council/blind_review.js';
 import { tallyFromResponses } from './ai_council/stance_tally.js';
+import { ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
 import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
@@ -2293,6 +2294,9 @@ function cmd_run(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
+    // A ratification prompt gets the stance contract and one unattended repair (ai_council/ratification_prompt.ts).
+    const { problem: ratification_problem, ratification: ratification_prompt } = readRatificationPrompt(args.input_mode, args.question);
+    if (ratification_problem !== null) return (_stderr(`❌  council:run: ${ratification_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
         lens: question.mode,
@@ -2416,10 +2420,8 @@ function cmd_run(
     });
     const rounds = _resolve_rounds(args, ai_cfg);
     // Phase 1: stance tally — defensive read; malformed/absent block reads as off.
-    const stance_tally_on =
-        _isDict(ai_cfg) &&
-        _isDict(ai_cfg['stance_tally']) &&
-        (ai_cfg['stance_tally'] as Dict)['enabled'] === true;
+    const stance_tally_on = ratification_prompt ||
+        (_isDict(ai_cfg) && _isDict(ai_cfg['stance_tally']) && (ai_cfg['stance_tally'] as Dict)['enabled'] === true);
     // road-to-council-blind-review Phase 1 (Ü2): five orthogonal stances
     // rotated deterministically over the config-ordered member list; the
     // outsider seat additionally drops project_context. Default off.
@@ -2455,11 +2457,12 @@ function cmd_run(
         // Interactive one-line confirm (cmd_run has no --auto-continue); the
         // repaired-call cost is collected so cost_usd_actual stays honest.
         on_stance_repair: stance_tally_on
-            ? (member: string): boolean => _make_repair_confirm(false)(member, 'missing stance line')
+            ? (member: string): boolean => _make_repair_confirm(ratification_prompt)(member, 'missing stance line')
             : null,
         on_stance_repair_result: (r: CouncilResponse): void => {
             stance_repairs.push(r);
         },
+        ...ratificationRepairOptions(ratification_prompt),
     });
     // M3 fix (independent-review finding) — quorum measures MEMBERS THAT
     // ACTUALLY PRODUCED A USABLE RESPONSE, per `quorum.ts`'s own docstring
@@ -2838,6 +2841,8 @@ function cmd_debate(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
+    const debate_problem = readRatificationPrompt(args.input_mode, args.question).problem;
+    if (debate_problem !== null) return (_stderr(`❌  council:debate: ${debate_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
         lens: 'debate',

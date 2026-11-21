@@ -18,7 +18,7 @@ obligation_frequency: "per-turn"
 
 # User Interaction
 
-Three Iron Laws govern a decision put to the user — two on the reply that
+Four Iron Laws govern a decision put to the user — three on the reply that
 carries it, one on what happens if the agent runs again before the answer.
 They override conversation momentum, brevity, and the urge to defer to the
 user. **Missing a recommendation is a rule violation, not a slip.**
@@ -43,8 +43,8 @@ EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
 SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
-Mechanical backstop for Iron Laws 1 and 2 (non-zero exit on either), a safety
-net under the self-scan rather than a replacement for it:
+Backstop for laws 1–2 (non-zero exit on either), a net under the self-scan, not
+a replacement:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
 It takes a DRAFT, so it cannot see Iron Law 3, which is about a transcript.
 
@@ -76,21 +76,21 @@ NOT ON THE PRESENCE OF A NUMBERED LIST.
 A TRAILING FREE-TEXT OFFER IS AN ASK. A BARE YES/NO IS AN ASK.
 ```
 
-Measured (30-session audit, 2026-08-06): **every** malformed ask was a one-line
-parenthetical or a trailing offer, while the same sessions formatted their
-**large** asks perfectly — the ask that feels too small for a block is the one
-that escapes the format. **No gate ships for this**: the backstop inspects
-numbered-option blocks, and every measured failure had none. Detail: mechanics.
+The ask too small for a block escapes the format; no gate. Evidence: mechanics.
+
+## Iron Law 4 — A Self-Contained Ask
+
+```
+THE USER SAW NO TOOL OUTPUT. EVERY ASK STATES WHAT IS DECIDED, WHY IT
+BLOCKS NOW, WHAT EACH OPTION CHANGES. GLOSS EVERY ID. NATIVE ASK STANDS ALONE.
+```
+
+Detail: `context-carrying-asks` context.
 
 ## Mechanics — rationale, failure modes, format details, examples
 
 The rule above is the obligation surface. Everything you look up rather than
-obey — why to take a position, the format spec, the five-step self-check, the
+obey — why to take a position, the format spec, the six-step self-check, the
 named failure-mode catalog, slip handling, examples, progress indicators and
 summary patterns — is in
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
-
-When the user pastes large tool output, logs, JSON, or API responses,
-keep the reply narrow: extract only the relevant fields with targeted
-filters (`jq`, `rg`, `grep`) before quoting, instead of echoing the
-whole blob back.

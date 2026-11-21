@@ -1,0 +1,294 @@
+{
+  "subject": "web-launch-write-time-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Quadratic-time paths over agent-written markup",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "2.2",
+          "summary": "Supersession regexes compiled inside the line loop",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "2.3",
+          "summary": "No test for a large single-line file",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "2.4",
+          "summary": "Renamed extension such as .xhtml bypasses the pass",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "2.5",
+          "summary": "Advisory findings can simply be ignored",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Tag unclosed within window skipped silently, reads as clean",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.2",
+          "summary": "Padding a tag past the 2,000-char window evades scan",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.3",
+          "summary": "Chunk ceiling derivation percentage does not check out",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "5.4",
+          "summary": "attr() recompiles its regex on every call",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.5",
+          "summary": "Line-start array grows with file line count",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.6",
+          "summary": "data-src test does not show old behaviour failing",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "gt state bug marks later closed tags unclosed",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.2",
+          "summary": "Linear claim fails for sparse unclosed tags",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "No validated maximum scan time for a 1MB file",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "Raise MAX_TAG instead of removing the window",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.5",
+          "summary": "No explicit timeout on tagsOf()",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.6",
+          "summary": "No test for one very large unclosed tag",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Timing thresholds not derived from a requirement",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "8.2",
+          "summary": "Megabyte cases assert time, not scan output",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "8.3",
+          "summary": "visibleText untested on an unclosed style block",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "8.4",
+          "summary": "Chunk-ceiling derivation reads as a growth estimate",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "8.5",
+          "summary": "Raise, chunk and algorithm change bundled together",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.6",
+          "summary": "Unbundled source run does not scan",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "tagsOf line numbers untested at the edges",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "visibleText equivalence to removed regex unproven",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "9.3",
+          "summary": "No end-to-end test through the dispatched hook",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "9.4",
+          "summary": "No boundary test for the 1,000,000-character cap",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "9.5",
+          "summary": "PLACEHOLDER_RE lookahead change unexplained",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "9.6",
+          "summary": "Dispatch raise measurement is not automated",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "9.7",
+          "summary": "Restated chunk-margin derivation is post-hoc",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "1,000,000-character cap lets padding bypass findings",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "10.2",
+          "summary": "Advisory P2 non-blocking behaviour unverified",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "10.3",
+          "summary": "visibleText equivalence test excludes unclosed blocks",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.4",
+          "summary": "tagsOf reports only the tag's start line",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Defect fixes bundled with authority-expanding feature",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Unbundled run skips scan without a degraded note",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.2",
+          "summary": "Scan has no size or time bound",
+          "severity": "high",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Canonical naming a provider host suppresses its finding",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "13.2",
+          "summary": "Diff removes the MINIFIED = 400 threshold",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    }
+  ]
+}

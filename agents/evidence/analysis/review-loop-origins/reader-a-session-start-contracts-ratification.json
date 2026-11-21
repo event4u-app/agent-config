@@ -1,0 +1,438 @@
+{
+  "subject": "session-start-contracts-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Body-dependent contracts must fail closed when body unreadable",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Opening order inconsistent across fast-path, canary, question rules",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "git-history rewrite must pair with re-push same turn",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Installed-path failure not shown to preserve obligations",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "domain-safety-retention footer lacks fail-closed clause",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.2",
+          "summary": "Installed stubs not verified against source contracts",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.3",
+          "summary": "Source-to-contract clause mapping not visible in prompt",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "command-suggestion-policy contract allowed invoking matched command",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.2",
+          "summary": "Disclaimer contract does not name template languages",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "PII demographics ban narrowed to recruiting drafts only",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.2",
+          "summary": "Disclaimer contract dropped symptom-question refusal",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Strategy moat claim lost 'named competitor' qualifier",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "6.2",
+          "summary": "Compressed terms in evaluator and decision-revisit contracts",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Finance counter-case lost 'what would invalidate conclusion'",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Retention dropped consent-expiry deletion job duty",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "8.2",
+          "summary": "Autonomous-execution dropped escalation-to-new-epoch ordering",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "git-history pull-rebase exception wording widened by sweep",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "9.2",
+          "summary": "Legal STOP depended on readable body",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Low-impact corpus refusal echoed matched snippet",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.2",
+          "summary": "No review saw every body beside its contract",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "PII contract summarised privilege markers instead of listing them",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.2",
+          "summary": "Strategy contract said '+7 siblings' instead of ids",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.3",
+          "summary": "Low-impact body lacked masking stated by contract",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Image model-card check activated only after restriction known",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.2",
+          "summary": "Low-impact masking left money, SQL, code unrestricted",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.3",
+          "summary": "'No other byte changed' scope statement became false",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Legal contract did not require council pass actually run",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "14.2",
+          "summary": "PII scrub list lost literal card_number key",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "No code catches unreadable body fail-closed clause",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "PII placeholders missed non-personal sector values",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "PII When not extended to non-personal Must values",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Credential-only logs fell outside PII When",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "20.1",
+          "summary": "B2B quasi-identifier exports outside conditional PII When",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": [
+        {
+          "id": "21.1",
+          "summary": "Session-start chunk exceeded hook-bundle byte ceiling",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "visible": true,
+      "findings": [
+        {
+          "id": "22.1",
+          "summary": "Contracts inside rules duplicated per-spawn preamble payload",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "22.2",
+          "summary": "Canonical-terms ratchet: artefact/behaviour spellings",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "22.3",
+          "summary": "MCP content pack size exceeded",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "visible": true,
+      "findings": [
+        {
+          "id": "23.1",
+          "summary": "Delivery-path excerpt stale after contracts moved files",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "24.1",
+          "summary": "Missing contract file at install fell to pointer stub",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "visible": true,
+      "findings": [
+        {
+          "id": "25.1",
+          "summary": "Absent or malformed audit bypassed missing-contract fallback",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "visible": true,
+      "findings": [
+        {
+          "id": "26.1",
+          "summary": "'Never less than full rule' guarantee overstated",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "visible": true,
+      "findings": [
+        {
+          "id": "27.1",
+          "summary": "runtime-safety and engineering contracts stricter than bodies",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "27.2",
+          "summary": "Installer implementation files not bound to evidence",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 29,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 30,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 31,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

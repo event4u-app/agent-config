@@ -34,7 +34,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-release-notes-that-match-the-span | active | ready | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
 | road-to-repo-knowledge-generated-not-written | active | ready | In each of the seven repositories named in the retro (galawork-api, galawork-web, javascript, elvau, agent-switch, azeroth-companion, agent-config), a command generates … |
 | road-to-resume-after-limit-hits | active | ready | After a usage or spend limit stops a turn, a short `weiter` (or the host's own reset sentence) is enough: … |
-| road-to-review-loops-that-converge | active | ready | Every review loop in this package — completion review and council ratification — has a count the tree generates, a … |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
 | road-to-settings-and-profiles-in-sync | active | ready | One agent-runnable command each answers, from the machine's real state, three questions the retro could only answer by hand: which … |
 | road-to-shared-task-identity-across-sessions | active | ready | The three duplicate-PR shapes the retro recorded, replayed as fixtures, each produce a warning before `gh pr create` returns; a … |
@@ -173,6 +172,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-regulatory-radar | later | draft | Answer one question with a number instead of an intuition: when someone asks "what do I have to do as … |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
+| road-to-review-loops-that-converge | later | later | Every review loop in this package — completion review and council ratification — has a count the tree generates, a … |
 | road-to-rewrites-that-keep-their-facts-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |

@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **650**
-- Edges (incl. self-WRITE): **2486**
+- Files indexed: **651**
+- Edges (incl. self-WRITE): **2491**
 
 ## READ_ONLY edges
 
@@ -26,6 +26,9 @@
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/design-fidelity-enforcement.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md` | `.agent-src.uncondensed/rules/guidelines.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `body_link` | 1 |
@@ -39,6 +42,7 @@
 | `.agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncondensed/rules/language-and-tone.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/contracts/agents-md-anatomy.md` | `.agent-src.uncondensed/contexts/contracts/consumer-agents-md-guide.md` | `body_link` | 1 |
@@ -1853,7 +1857,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 80 |
+| `context` | 81 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 412 |

@@ -1,0 +1,335 @@
+{
+  "subject": "act-references-ratification",
+  "round1_findings": 7,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Lexer misses valid heredoc delimiter words",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Multiple heredocs on one line are mishandled",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Indented lines can prematurely end ordinary heredocs",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "A lone ampersand does not separate commands",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.5",
+          "summary": "Pre-check rejects escaped or quoted act words the lexer accepts",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.6",
+          "summary": "Chunk relocation and act observation should be separate changes",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Pre-check misses act words split by line continuations",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.2",
+          "summary": "Double-quoted backslashes are misread in lexer and test",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.3",
+          "summary": "Mixed quoted and unquoted heredoc delimiters are misread",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Heredoc delimiters containing escapes are misread",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.2",
+          "summary": "Quoted empty heredoc delimiters are rejected",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.3",
+          "summary": "Quoted or escaped assignment prefixes are mistaken for assignments",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.4",
+          "summary": "Bash oracle fixture loses its escaped separator’s backslash",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.5",
+          "summary": "Act observation lacks a kill switch",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.6",
+          "summary": "Act observation lacks production telemetry",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Assignment handling ignores which wrapper precedes the word",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.2",
+          "summary": "Heredoc delimiter parsing mishandles embedded line continuations",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.3",
+          "summary": "Emptying the bindings table cannot disable installed act observation",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Lexer mishandles here-strings",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.2",
+          "summary": "Unquoted heredoc bodies require continuation joining before delimiter comparison",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.3",
+          "summary": "Quoted time is treated as the shell keyword",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Here-string operands are retained as command words",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Generator omits redirections at arbitrary command positions",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Adjacent heredoc mistakes a pending redirection operand for its descriptor",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Continuation before a spaced heredoc delimiter exposes body commands",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Reviewer disputed tab stripping after a heredoc body continuation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "10.2",
+          "summary": "Match wording should specify reachability on some branch",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "10.3",
+          "summary": "Generated test should report its seed range and Bash version",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Wrapper chains confuse shell builtins with external commands",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.2",
+          "summary": "Oracle misses branches that require a preceding act to fail",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Oracle command stub misrepresents builtin lookup in wrapper chains",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Hook lacks end-to-end coverage for continued commands with redirections",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Header should state recogniser purpose and where correctness is measured",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "13.2",
+          "summary": "Combined output redirection wrongly consumes a preceding digit argument",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Header overstates reachability for commands after exec",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Redirection before a reserved word causes a false act match",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "15.2",
+          "summary": "Fixing reserved-word handling would exceed the chunk ceiling",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "15.3",
+          "summary": "Rollback criteria are unspecified",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Negation after time bypasses the reserved-word redirection check",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}
