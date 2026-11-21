@@ -368,39 +368,46 @@ export type ExitMasking = 'pipe' | 'trailing';
 
 /** `set -o pipefail`, `set -euo pipefail`, `set -e -o pipefail`. */
 const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail$/;
+/** `set +o pipefail`, `set +eo pipefail`. */
+const UNSETS_PIPEFAIL = /^set\s+(?:[-+][A-Za-z]+\s+)*\+[A-Za-z]*o\s+pipefail$/;
 /**
- * A segment with a `set` / `shopt` word and a `pipefail` word may turn it off
- * (`set +o pipefail`, `shopt -uo pipefail`, `eval 'set +o pipefail'`). Two linear tests.
+ * A segment with a `set` / `shopt` word and a `pipefail` word may change it
+ * (`shopt -uo pipefail`, `eval 'set +o pipefail'`, or only print the words). Two linear tests.
  */
 function touchesPipefail(text: string): boolean {
     return /\b(?:set|shopt)\b/.test(text) && /\bpipefail\b/.test(text);
 }
 
+/** Whether pipefail covers a pipeline; `unknown` when the text cannot say. */
+type Pipefail = 'on' | 'off' | 'unknown';
+
 /** One pipeline: its segments, the separator after it, and whether pipefail covers it. */
 interface Pipeline {
     readonly segs: readonly Segment[];
     readonly sepAfter: '&&' | '||' | ';' | null;
-    readonly pipefail: boolean;
+    readonly pipefail: Pipefail;
 }
 
 function pipelinesOf(command: string): Pipeline[] {
     const out: Pipeline[] = [];
     let cur: Segment[] = [];
-    let pipefail = false;
+    let pipefail: Pipefail = 'off';
     let sepBefore: Pipeline['sepAfter'] = null;
     for (const seg of splitSegments(stripComment(command))) {
         cur.push(seg);
         if (seg.nextSep === '|') continue;
         out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail });
-        // pipefail is on only after a plain `set -o pipefail` that runs for sure and in
-        // this shell: alone (a pipeline runs it in a subshell) and not behind `&&` / `||`.
-        // Any other `set` / `shopt` naming pipefail turns it off for what follows, reached
-        // or not (D10): whether it ran is not read from the text, and off only adds gaps.
+        // A plain `set -o pipefail` / `set +o pipefail` that runs for sure and in this
+        // shell — alone (a pipeline runs it in a subshell), not behind `&&` / `||` — sets
+        // it on / off. Any other segment naming `set` or `shopt` and pipefail leaves it
+        // `unknown` (D10): the walk then follows both settings, so neither is assumed.
         const sure = cur.length === 1 && (sepBefore === null || sepBefore === ';');
         for (const s of cur) {
             const text = s.words.join(' ');
             if (!touchesPipefail(text)) continue;
-            pipefail = sure && SETS_PIPEFAIL.test(text);
+            if (sure && SETS_PIPEFAIL.test(text)) pipefail = 'on';
+            else if (sure && UNSETS_PIPEFAIL.test(text)) pipefail = 'off';
+            else pipefail = 'unknown';
         }
         sepBefore = seg.nextSep as Pipeline['sepAfter'];
         cur = [];
@@ -462,6 +469,13 @@ function uniq(states: readonly FlowState[]): FlowState[] {
 
 /** The states running pipeline `p` can leave behind, from state `s`. */
 function step(s: FlowState, p: Pipeline): FlowState[] {
+    if (p.pipefail === 'unknown') {
+        return [...stepUnder(s, p, true), ...stepUnder(s, p, false)];
+    }
+    return stepUnder(s, p, p.pipefail === 'on');
+}
+
+function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
     const lone = p.segs.length === 1;
     // The shell's own `exit`, not an executable that happens to be named so.
     if (lone && p.segs[0]?.words[0] === 'exit') {
@@ -479,12 +493,13 @@ function step(s: FlowState, p: Pipeline): FlowState[] {
     // The pipeline's status is its last command's; under pipefail any failing member fails
     // it, and it passes only when every member does. `true` / `:` pass and `false` fails;
     // any other non-verifier member may do either. One rule, with or without a verifier.
-    const heads = p.segs.map((seg) => bareName(seg.words[0] ?? ''));
+    // The bare words only: `/x/true` is an executable, not the builtin.
+    const heads = p.segs.map((seg) => seg.words[0] ?? '');
     const lastAt = heads.length - 1;
     const passes = (x: string): boolean => x === 'true' || x === ':';
     const others = heads.filter((_, i) => i !== k);
     const zeros = (verifier: Verdict): boolean[] => {
-        if (p.pipefail) {
+        if (pipefail) {
             if (verifier === 'fail' || others.includes('false')) return [false];
             return others.every(passes) ? [true] : [true, false];
         }
@@ -495,7 +510,7 @@ function step(s: FlowState, p: Pipeline): FlowState[] {
     };
     if (k === -1) return zeros('none').map((zero) => ({ ...s, zero }));
     // A 0 says nothing about the verifier when a filter after it reports the status.
-    const filtered = !p.pipefail && k !== lastAt;
+    const filtered = !pipefail && k !== lastAt;
     const out: FlowState[] = [];
     for (const last of ['pass', 'fail'] as const) {
         for (const zero of zeros(last)) out.push({ ...s, zero, last, filtered });

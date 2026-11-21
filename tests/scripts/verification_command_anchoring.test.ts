@@ -160,6 +160,9 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['task ci || return 1; echo ready', 'trailing'],
         // Only the shell's own `exit` ends the line; an executable named exit does not.
         ['task ci || /nonexistent/exit 1; true', 'trailing'],
+        // A doubtful pipefail is both on and off; a path to `true` is any command.
+        ["set -o pipefail; printf '%s\\n' 'set +o pipefail'; false | true || exit 0; task ci", 'trailing'],
+        ['/nonexistent/true || exit 0; task ci', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });

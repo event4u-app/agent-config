@@ -2445,6 +2445,14 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(Date.now() - t0).toBeLessThan(1000);
     });
 
+    it('a claim indented with a non-breaking space is still a claim', () => {
+        expect(completionClaimAt('Progress.\n Done.')).not.toBeNull();
+    });
+
+    it('a ratio does not run across a line break into a negated line', () => {
+        expect(detectCoverageGap('Done.\n2 of\n3 not yet verified.', [], undefined)).toBeNull();
+    });
+
     it('a CRLF blank line ends a Not verified block, so a later ratio still counts', () => {
         const reply = 'Done.\r\n\r\nNot verified: the scanner run.\r\n\r\n165 von 405 Seiten.';
         expect(detectCoverageGap(reply, [], undefined)?.code).toBe('partial_ratio');

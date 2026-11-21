@@ -41,7 +41,7 @@ import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js'
  * bound quoted on `NEGATED_CLAIM_RE`.
  */
 const COMPLETION_RE =
-    /(^|\n)[ \t]*(?:\*\*)?(?:fertig\b|damit ist alles erledigt|aufgabe erledigt|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)|der komplette auftrag ist durch|done[.!]|all done\b|task complete)/i;
+    /(^|\n)[^\S\n]*(?:\*\*)?(?:fertig\b|damit ist alles erledigt|aufgabe erledigt|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)|der komplette auftrag ist durch|done[.!]|all done\b|task complete)/i;
 
 /**
  * The line the claim was found on says the opposite of a claim.
@@ -66,8 +66,8 @@ const NEGATED_CLAIM_RE =
 
 /** The line `at` falls on — the scope a negation has to appear in to count. */
 function lineAround(prose: string, at: number): string {
-    // A match anchored on `(^|\n)[ \t]*` starts at the newline before its line
-    // (horizontal indentation only, so a run of blank lines is never rescanned).
+    // A match anchored on `(^|\n)[^\S\n]*` starts at the newline before its line
+    // (indentation never crosses a line break, so blank lines are never rescanned).
     while (at < prose.length && /\s/.test(prose[at] as string)) at += 1;
     const start = prose.lastIndexOf('\n', at) + 1;
     const end = prose.indexOf('\n', at);
@@ -93,7 +93,7 @@ export interface CoverageFinding {
 const NOT_VERIFIED_RE = /^[ \t]*(?:[-*][ \t]+)?(?:\*\*)?(?:not verified|nicht verifiziert)(?:\*\*)?[ \t]*:/im;
 
 /** `165 of 405`, `165 von 405`, `40/41`. */
-const RATIO_RE = /\b(\d+)\s*(?:of|von|\/)\s*(\d+)\b/gi;
+const RATIO_RE = /\b(\d+)[^\S\n]*(?:of|von|\/)[^\S\n]*(\d+)\b/gi;
 
 /**
  * The reply with code, quotes and tables removed but ratios kept.
