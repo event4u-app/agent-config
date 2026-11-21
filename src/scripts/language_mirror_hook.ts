@@ -333,7 +333,9 @@ export function classify(prompt: string): Classification {
   const { lead, trailing, prose } = ownerProse(prompt);
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
-  const seen = new Set(prose.map((p) => _score(p).language));
+  // The combined verdict is a unit too: two sub-floor owner spans can add up to
+  // a language that a confident prose unit elsewhere contradicts.
+  const seen = new Set([verdict.language, ...prose.map((p) => _score(p).language)]);
   const language = seen.has("de") && seen.has("en") ? "und" : verdict.language;
   return { ...verdict, language, owner_prose_chars: owner.length };
 }

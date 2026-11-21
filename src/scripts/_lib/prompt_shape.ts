@@ -212,7 +212,7 @@ export interface OwnerSpans {
  * anything for the veto to protect.
  */
 export function ownerSpans(text: string): OwnerSpans {
-  const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
+  const lines = text.replace(/(```|~~~)[\s\S]*?\1/g, `\n${FENCE_LINE}\n`).split("\n");
   // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
   // sentence such as `To fix this, …` is the owner's, not output.
   const isOutput = (l: string): boolean => l === FENCE_LINE || (OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/i.test(l));

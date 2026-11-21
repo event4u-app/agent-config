@@ -1883,6 +1883,16 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    "[ratification r5] sub-floor owner spans that add up against a confident prose unit",
+    "Please\n\nBehebe das bitte.\n\nError: build failed\n\nwhy",
+    "und",
+  ],
+  [
+    "[ratification r5] a tilde-fenced paste is code, not prose",
+    "~~~\nBehebe das bitte und prüfe das.\n~~~",
+    "und",
+  ],
+  [
     "[ratification r3] a German question over a log whose prose agrees still pins German",
     "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nDer Job wurde abgebrochen, weil die Verbindung zum Server weg war.",
     "de",
