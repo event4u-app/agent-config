@@ -7,6 +7,7 @@
 - [The two carriers](#the-two-carriers)
 - [Cost, stated rather than implied](#cost-stated-rather-than-implied)
 - [The gap this change does NOT close](#the-gap-this-change-does-not-close)
+- [A known red stays local](#a-known-red-stays-local)
 - [Revisit-if](#revisit-if)
 <!-- reference-toc:end -->
 
@@ -184,6 +185,26 @@ consumers in `docs/development.md` § "Git hooks are maintainer-only". Named
 rather than linked: this file is projected byte-identically into
 `dist/agent-src/`, which sits one level deeper, so a repo-root-relative link
 resolves in one copy and not in the other.
+
+## A known red stays local
+
+Added 2026-11-21 after PR #3005 was pushed with a ratification check the mirror
+had already reported as an owner decision (owner: "we already know locally what is wrong"). Three places now act on that knowledge instead of reporting it:
+
+- **Pre-push** refuses a commit whose mirror stamp carries an `owner-decision`
+  step. The agent hands the decision to the owner as one question in the
+  session; after the owner's answer, `AGENT_CONFIG_PUSH_OWNER_DECIDED=1 git push`
+  lets it through, printed on every use.
+- **`ci_settle`** prints `OWNER DECISION` after `SETTLED RED` when every failing
+  check failed only on a configured `owner_decision_steps` step. The exit code
+  stays 1; the line tells the caller there is nothing to fix.
+- **`council_cli run`** refuses a ratification prompt (one `subject:` line) that
+  does not ask for the stance line the record writer reads, before any seat is
+  paid, and re-prompts a seat that omits the line once, unattended.
+
+All three are honest-path controls: an agent can set the variable itself. The
+override exists for the owner's answer, and nothing mechanical checks that one
+was given.
 
 ## Revisit-if
 
