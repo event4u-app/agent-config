@@ -142,7 +142,7 @@ owner fills is added (D1).
       any source edit and record that (a) and (b) are red.
       verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts -t foreign` -> 1 with (a) and (b) failing, (c) passing
       uses: test-driven-development
-      Done 2026-11-21 off the live path: fixtures (a)-(c) and a shell-only fixture run against the D4 library in `tests/scripts/own_edit_attribution.test.ts` (green); fixture (a) also pins that the live `totalNonDocMutatedLines` still charges the 703 foreign lines. The hook-level red test rides with the wiring: deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 2.1.
+      Done off the live path in `tests/scripts/own_edit_attribution.test.ts`; the hook-level test is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 2.1.
 
 - [~] **1.2 Verify-shape repro for the turn-end gate.** Add to
       `tests/scripts/verification_command_anchoring.test.ts` the six F2
@@ -179,6 +179,8 @@ owner fills is added (D1).
       printed table for 4.3.
       verify: `npx vitest run tests/scripts/measure_work_product_line.test.ts` -> 0 on a three-session fixture with known counts
       Done 2026-11-21: over 5,104 local sessions, 2 replies carried the line, both on no-write turns (sessions `407cd173`, `90446eb9`); the retro's 18-occurrence session is not in the local stores.
+      production entry: src/scripts/measure_work_product_line.ts
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/measure_work_product_line.ts -->
 
 ## Phase 2 — Charge a session only for its own edits
 
@@ -193,6 +195,7 @@ owner fills is added (D1).
       verify: `grep -c '^| D4 | contested-technical | council:' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
       Done 2026-11-21: council (anthropic, openai), 2 rounds, quorum concluded; row D4.
+      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [~] **2.2 Implement D4 in the nudge.** Change `end_review_nudge_hook.ts`
       (and the ledger concern plus its `hook_manifest.yaml` binding if D4
@@ -230,6 +233,7 @@ owner fills is added (D1).
       verify: `grep -c '^| D5 | contested-technical | council:' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
       Done 2026-11-21: council (anthropic, openai), 2 rounds, quorum concluded; row D5 (A, narrowed to container exec).
+      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [~] **3.2 Shape rules.** In `segmentVerifies`
       (`_lib/verification_command.ts:244`) peel `docker exec|compose exec|
@@ -245,11 +249,13 @@ owner fills is added (D1).
       it does not. Skip with a one-line Done note if D5 chose A.
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts -t manifest-declared` -> 0
       Done 2026-11-21: skipped, D5 chose A.
+      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [x] **3.4 Bundle and ratification stay green.** Rebuild the hook bundle
       and check its ceiling; run the ratification gate.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0 and `./scripts-run src/scripts/check_kernel_edit_ratified` -> 0
       Done 2026-11-21: bundle 1,595,224 B under the unchanged 1,595,300 B ceiling (byte-identical to origin/main); no ratification-watched file touched.
+      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [~] **3.5 Replay on real transcripts.** Run
       `./scripts-run src/scripts/measure_turn_end_gate --store <store> --show-fires`
@@ -290,6 +296,7 @@ owner fills is added (D1).
       verify: `grep -c -E '^\| D6 \||^### blocker: legal-work-product-cadence' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
       Done 2026-11-21: council ESCALATE (anthropic and openai); blocker `legal-work-product-cadence` added, 4.4 marked blocked-by it.
+      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [ ] **4.4 Apply the cadence verdict.**
       <!-- blocked-by: legal-work-product-cadence --> On D6 only: edit the startup stub

@@ -38,6 +38,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-settings-and-profiles-in-sync | active | ready | One agent-runnable command each answers, from the machine's real state, three questions the retro could only answer by hand: which … |
 | road-to-shared-task-identity-across-sessions | active | ready | The three duplicate-PR shapes the retro recorded, replayed as fixtures, each produce a warning before `gh pr create` returns; a … |
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
+| road-to-stop-hooks-that-count-own-edits-live-wiring | active | ready | The four false alarms of the 2026-11-21 retro stop on the live path: the review nudge charges only a session's … |
 | road-to-stop-hooks-that-count-own-edits | active | ready | A session that wrote nothing is never told to review lines; a session that wrote N lines is charged N, … |
 | road-to-ui-fixes-that-measure-first | active | ready | A visual bug is fixed only after a measurement of the rendered state, the second fix attempt on the same … |
 | road-to-verified-stale-lock-reclaim | active | ready | No file lock in `src/scripts` lets two callers hold it at once because of a stale-lock break or a release, … |
