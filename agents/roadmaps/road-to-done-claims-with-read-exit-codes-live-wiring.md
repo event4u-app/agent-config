@@ -4,15 +4,12 @@ status: ready
 review_by: 2026-12-21
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Carries steps 1.3, 1.4, 1.5, 3.2 and 3.3 of road-to-done-claims-with-read-exit-codes, which the owner took off the live hook path on 2026-11-21 (option 2: land the features without growing the dispatch bundle). Created in the same change that defers those steps, so the items stay alive in the active estate. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
-estate_offset_exempt: "The change that creates this roadmap also lands and archives road-to-done-claims-with-read-exit-codes, so the estate does not grow by it; it carries deferred wiring, not new scope. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
+estate_growth_exempt: "Carries steps 1.3, 1.4, 1.5, 3.2, 3.3 and 4.4 of road-to-done-claims-with-read-exit-codes, which the owner took off the live hook path on 2026-11-21 (option 2: land the features without growing the dispatch bundle). Created in the same change that defers those steps, so the items stay alive in the active estate. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
+estate_offset_exempt: "The change that creates this roadmap also lands and archives road-to-done-claims-with-read-exit-codes, so the estate does not grow by it; it carries deferred wiring, not new scope; it also absorbs the branch-only road-to-unlisted-surface-in-a-claim-chunk, so the branch adds one file, not two. Owner search: a grep over agents/roadmaps/{*,later,stubs} for `exitMasking`, `partialRatioIn` and `unlistedSurfaceIn` returns no other owner. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
 relates:
   - slug: road-to-done-claims-with-read-exit-codes
     relation: extends
-    note: "Its steps 1.3, 1.4, 1.5, 3.2 and 3.3 are carried here: the classifier, the ratio check and their tests already exist off the live path; this file wires them in."
-  - slug: road-to-unlisted-surface-in-a-claim-chunk
-    relation: disjoint
-    note: "Both put detector G on the live path. This file registers `coverage` and wires `partial_ratio`; that file adds the `unlisted_surface` chunk and needs this file's Phase 2 first."
+    note: "Its steps 1.3, 1.4, 1.5, 3.2, 3.3 and 4.4 are carried here: the classifier, the ratio check and their tests already exist off the live path; this file wires them in."
   - slug: road-to-live-trigger-eval
     relation: disjoint
     note: "Keyword overlap only (`live`, `read`); it evaluates trigger delivery, not the turn-end gate."
@@ -35,7 +32,8 @@ relates:
 ## Goal
 
 The turn-end gate reads masked exit codes, `rtk`-wrapped runs and partial
-ratios on the live path, with a ratified ceiling for the bytes that costs.
+ratios on the live path, with a ratified ceiling for the bytes that costs, and
+records `unlisted_surface` from a chunk that only a claimed turn loads.
 
 ## Context
 
@@ -74,11 +72,27 @@ ratios on the live path, with a ratified ceiling for the bytes that costs.
 - [ ] 3.1 Measure the dispatch bundle with Phases 1-2 in place, raise `max_bytes` in `src/config/hook-bundle-budget.json` by the measured growth plus the stated margin with a `raise_log` entry, and land it with a ratified record (cap: 3 rounds; not ratified → stop and return to the owner).
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
 
+## Phase 4 — `unlisted_surface` in a claim chunk
+
+Carried from step 4.4 of the source (D11): `unlistedSurfaceIn` in
+`src/scripts/_lib/unlisted_surface.ts` and the reader in
+`src/scripts/_lib/live_surfaces.ts` exist with their tests
+(`tests/scripts/coverage_claim.test.ts`, `tests/scripts/derive_live_surfaces.test.ts`);
+`verify:surfaces` uses the reader today. Inline, the reader adds about 15.7 KB
+to the dispatch bundle, which is why it goes into a chunk. It stays record-only
+(D7 of the source) until its own revisit condition holds.
+
+- [ ] 4.1 Red first: a hook-level test that a claimed turn with an edit under a derived surface and no run after the edit records `unlisted_surface`, and that a turn without a completion claim does not load the chunk.
+      verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` -> 0
+- [ ] 4.2 Load `unlistedSurfaceIn` from a chunk only when `completionClaimAt` finds a claim, with its own entry and ceiling in `src/config/hook-bundle-budget.json`, the digest check the existing chunks use, and a ratification record for the ceiling.
+      verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
+
 ## Acceptance Criteria
 
 - [ ] AC-1: On the live path, a masked 0 reads as `exit_masked` and an `rtk`-wrapped run gets a verdict; a nonzero recorded code keeps its refusal (1.1, 1.2).
 - [ ] AC-2: A claimed partial ratio is counted as a `coverage` finding and never refuses the turn (2.1).
 - [ ] AC-3: The bundle ceiling is raised only under a ratified record (3.1).
+- [ ] AC-4: A claimed turn that edited a derived surface and drove nothing after the edit records `unlisted_surface` on the live path, and the dispatch bundle does not grow by the reader (4.1, 4.2).
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
@@ -86,6 +100,7 @@ ratios on the live path, with a ratified ceiling for the bytes that costs.
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The raise does not ratify again | implementation | The same raise failed to converge in 33 rounds on the source branch. | Phases 1 and 2 land as separate measured slices, so a raise can be ratified on the smaller scope first; the 3-round cap returns the decision to the owner. | Phase 3 — the ceiling |
+| 3 | The chunk loads on every turn anyway | implementation | A loader keyed to a broad trigger would put the parse back on most Stop events. | 4.1 pins that a turn without a completion claim does not load the chunk. | Phase 4 — `unlisted_surface` in a claim chunk |
 | 2 | A masked reading demotes a real failure | implementation | Shell paths where a verifier's nonzero code looks like a filter's. | Only a recorded 0 is ever replaced (D9 of the source), pinned by the existing exit-masking tests. | Phase 1 — masked exit codes on the live path |
 
 ## Notes
