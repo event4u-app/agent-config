@@ -41,7 +41,7 @@ import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js'
  * bound quoted on `NEGATED_CLAIM_RE`.
  */
 const COMPLETION_RE =
-    /(^|\n)[^\S\n]*(?:\*\*)?(?:fertig\b|damit ist alles erledigt\b|aufgabe erledigt\b|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)\b|der komplette auftrag ist durch\b|done[.!]|all done\b|task complete\b)/i;
+    /(^|\n)[^\S\n]*(?:\*\*)?(?:fertig\b|damit ist alles erledigt\b|aufgabe erledigt\b|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)\b|der komplette auftrag ist durch\b|done[.!]|all done\b|task completed?\b)/i;
 
 /**
  * The line the claim was found on says the opposite of a claim.

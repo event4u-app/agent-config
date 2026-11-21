@@ -168,6 +168,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['set -e; task ci | tail -5', 'pipe'],
         ['set -e; set +e; task ci; echo ready', 'trailing'],
         ['false && set -e; task ci; echo ready', 'trailing'],
+        // A redirection can fail, so `true >x` may fail too.
+        ['true >/dev/null/child || exit 0; task ci', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });

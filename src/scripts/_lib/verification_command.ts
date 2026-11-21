@@ -515,8 +515,9 @@ function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
     // The pipeline's status is its last command's; under pipefail any failing member fails
     // it, and it passes only when every member does. `true` / `:` pass and `false` fails;
     // any other non-verifier member may do either. One rule, with or without a verifier.
-    // The bare words only: `/x/true` is an executable, not the builtin.
-    const heads = p.segs.map((seg) => seg.words[0] ?? '');
+    // The bare words only: `/x/true` is an executable, not the builtin; and a segment with
+    // a redirection can fail on the redirection, so its status is unknown.
+    const heads = p.segs.map((seg) => (seg.words.some((w) => /[<>]/.test(w)) ? '' : (seg.words[0] ?? '')));
     const lastAt = heads.length - 1;
     const passes = (x: string): boolean => x === 'true' || x === ':';
     const others = heads.filter((_, i) => i !== k);

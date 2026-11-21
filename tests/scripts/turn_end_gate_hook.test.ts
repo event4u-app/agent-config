@@ -2451,6 +2451,11 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCompletionClaim(reply, { seen: true, settled: false })).toBeNull();
     });
 
+    it('"Task completed." is still a claim for D and F', () => {
+        expect(detectCompletionClaim('Task completed.', { seen: true, settled: false })).not.toBeNull();
+        expect(detectUntestedChange('Task completed.', [edit('src/todo.ts')])).not.toBeNull();
+    });
+
     it('a claim indented with a non-breaking space is still a claim', () => {
         expect(completionClaimAt('Progress.\n Done.')).not.toBeNull();
     });
