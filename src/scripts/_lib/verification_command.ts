@@ -435,7 +435,7 @@ function exitsWithPipestatus(prev: Pipeline, next: Pipeline | undefined, k: numb
 /**
  * Follow the line after a pipeline whose status is the verifier's: does a
  * failure still reach the recorded code? `&&` runs only on success, so a
- * failure skips it (an `&& exit 0` too); `|| exit` / `|| exit N≠0` end the shell with a failure;
+ * failure skips it (an `&& exit 0` too); `|| exit` / `|| exit N` with N nonzero modulo 256 end the shell with a failure;
  * `|| false` keeps a failure until the next command; `; exit` / `; exit $?`
  * pass the current status on. Anything else that runs after a failure replaces
  * the code.
@@ -450,7 +450,10 @@ function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
         // A failure skips an `&&` command, `exit` included, and reaches whatever follows.
         if (sep === '&&') continue;
         if (sep === '||') {
-            if (ends) return arg !== '0';
+            // `exit` alone keeps the failing status; a literal code keeps a failure
+            // only when it is nonzero modulo 256 (`exit 00`, `exit 256` end with 0);
+            // anything else (`exit "$code"`) is unknown and does not count.
+            if (ends) return arg === '' || arg === '$?' || (/^\d+$/.test(arg) && Number(arg) % 256 !== 0);
             // `|| false` alone; `|| false | cat` ends on `cat`'s status.
             if (h === 'false' && (ps[j] as Pipeline).segs.length === 1) continue;
             return false;
