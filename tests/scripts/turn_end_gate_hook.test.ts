@@ -2445,6 +2445,12 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(Date.now() - t0).toBeLessThan(1000);
     });
 
+    it('a word that only starts with a completion phrase is not a claim', () => {
+        const reply = 'Fertig ist der Fix noch nicht.\nTask completeness remains under review.';
+        expect(completionClaimAt(reply)).toBeNull();
+        expect(detectCompletionClaim(reply, { seen: true, settled: false })).toBeNull();
+    });
+
     it('a claim indented with a non-breaking space is still a claim', () => {
         expect(completionClaimAt('Progress.\n Done.')).not.toBeNull();
     });

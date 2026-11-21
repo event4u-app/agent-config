@@ -163,6 +163,11 @@ describe('exitMasking — whose exit code does the record carry', () => {
         // A doubtful pipefail is both on and off; a path to `true` is any command.
         ["set -o pipefail; printf '%s\\n' 'set +o pipefail'; false | true || exit 0; task ci", 'trailing'],
         ['/nonexistent/true || exit 0; task ci', 'trailing'],
+        // errexit does not stop a failure inside an || list, nor one it no longer covers.
+        ['set -e; task ci || echo failed', 'trailing'],
+        ['set -e; task ci | tail -5', 'pipe'],
+        ['set -e; set +e; task ci; echo ready', 'trailing'],
+        ['false && set -e; task ci; echo ready', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -171,6 +176,10 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci',
         'set -o pipefail; task ci | tail -5',
         'set -euo pipefail; task ci | tail -5',
+        // errexit: a failing verifier ends the shell before the echo, so the echo's 0 is a pass.
+        'set -euo pipefail; task ci; echo ready',
+        'set -e; npx tsc --noEmit; echo done',
+        'set -o errexit; task ci; echo ok',
         'task ci && echo ok',
         'npx vitest run || exit 1',
         'npx vitest run; exit $?',

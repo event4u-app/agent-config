@@ -366,48 +366,64 @@ export function isVerificationCommand(command: string): boolean {
 /** How a command line hides its verifier's exit code from the recorder. */
 export type ExitMasking = 'pipe' | 'trailing';
 
-/** `set -o pipefail`, `set -euo pipefail`, `set -e -o pipefail`. */
-const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail$/;
-/** `set +o pipefail`, `set +eo pipefail`. */
-const UNSETS_PIPEFAIL = /^set\s+(?:[-+][A-Za-z]+\s+)*\+[A-Za-z]*o\s+pipefail$/;
-/**
- * A segment with a `set` / `shopt` word and a `pipefail` word may change it
- * (`shopt -uo pipefail`, `eval 'set +o pipefail'`, or only print the words). Two linear tests.
- */
-function touchesPipefail(text: string): boolean {
-    return /\b(?:set|shopt)\b/.test(text) && /\bpipefail\b/.test(text);
-}
+/** Whether a shell option covers a pipeline; `unknown` when the text cannot say. */
+type Setting = 'on' | 'off' | 'unknown';
 
-/** Whether pipefail covers a pipeline; `unknown` when the text cannot say. */
-type Pipefail = 'on' | 'off' | 'unknown';
-
-/** One pipeline: its segments, the separator after it, and whether pipefail covers it. */
+/** One pipeline: its segments, the separator after it, and the options covering it. */
 interface Pipeline {
     readonly segs: readonly Segment[];
     readonly sepAfter: '&&' | '||' | ';' | null;
-    readonly pipefail: Pipefail;
+    readonly pipefail: Setting;
+    readonly errexit: Setting;
+}
+
+/**
+ * What a plain `set` turns on or off: `-e`, `-o errexit`, `-o pipefail`, and the
+ * `+` forms, in clusters (`-euo pipefail`). null for anything else it is given.
+ */
+function setOptions(words: readonly string[]): { pipefail?: boolean; errexit?: boolean } | null {
+    if (words[0] !== 'set' || words.length < 2) return null;
+    const out: { pipefail?: boolean; errexit?: boolean } = {};
+    for (let i = 1; i < words.length; i += 1) {
+        const w = words[i] as string;
+        if (!/^[-+][A-Za-z]+$/.test(w)) return null;
+        const on = w[0] === '-';
+        for (const flag of w.slice(1)) {
+            if (flag === 'e') out.errexit = on;
+            else if (flag === 'o') {
+                const name = words[i + 1];
+                if (name === 'pipefail') out.pipefail = on;
+                else if (name === 'errexit') out.errexit = on;
+                else return null;
+                i += 1;
+            } else if (!'uxv'.includes(flag)) return null;
+        }
+    }
+    return out;
 }
 
 function pipelinesOf(command: string): Pipeline[] {
     const out: Pipeline[] = [];
     let cur: Segment[] = [];
-    let pipefail: Pipefail = 'off';
+    let pipefail: Setting = 'off';
+    let errexit: Setting = 'off';
     let sepBefore: Pipeline['sepAfter'] = null;
     for (const seg of splitSegments(stripComment(command))) {
         cur.push(seg);
         if (seg.nextSep === '|') continue;
-        out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail });
-        // A plain `set -o pipefail` / `set +o pipefail` that runs for sure and in this
-        // shell — alone (a pipeline runs it in a subshell), not behind `&&` / `||` — sets
-        // it on / off. Any other segment naming `set` or `shopt` and pipefail leaves it
-        // `unknown` (D10): the walk then follows both settings, so neither is assumed.
+        out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail, errexit });
+        // A plain `set` that runs for sure and in this shell — alone (a pipeline runs it in
+        // a subshell), not behind `&&` / `||` — sets pipefail / errexit on or off. Any other
+        // segment with a `set` or `shopt` word leaves them `unknown` (D10): the walk then
+        // follows both settings, so neither is assumed.
         const sure = cur.length === 1 && (sepBefore === null || sepBefore === ';');
-        for (const s of cur) {
-            const text = s.words.join(' ');
-            if (!touchesPipefail(text)) continue;
-            if (sure && SETS_PIPEFAIL.test(text)) pipefail = 'on';
-            else if (sure && UNSETS_PIPEFAIL.test(text)) pipefail = 'off';
-            else pipefail = 'unknown';
+        const opts = sure ? setOptions((cur[0] as Segment).words) : null;
+        if (opts !== null) {
+            if (opts.pipefail !== undefined) pipefail = opts.pipefail ? 'on' : 'off';
+            if (opts.errexit !== undefined) errexit = opts.errexit ? 'on' : 'off';
+        } else if (cur.some((x) => /\b(?:set|shopt)\b/.test(x.words.join(' ')))) {
+            pipefail = 'unknown';
+            errexit = 'unknown';
         }
         sepBefore = seg.nextSep as Pipeline['sepAfter'];
         cur = [];
@@ -469,10 +485,16 @@ function uniq(states: readonly FlowState[]): FlowState[] {
 
 /** The states running pipeline `p` can leave behind, from state `s`. */
 function step(s: FlowState, p: Pipeline): FlowState[] {
-    if (p.pipefail === 'unknown') {
-        return [...stepUnder(s, p, true), ...stepUnder(s, p, false)];
-    }
-    return stepUnder(s, p, p.pipefail === 'on');
+    const runs =
+        p.pipefail === 'unknown' ? [...stepUnder(s, p, true), ...stepUnder(s, p, false)] : stepUnder(s, p, p.pipefail === 'on');
+    // errexit ends the shell on a failing pipeline that closes its list (`;` or the end);
+    // a failure inside an `&&` / `||` list does not. Unknown: both.
+    if (p.errexit === 'off' || p.sepAfter === '&&' || p.sepAfter === '||') return runs;
+    return runs.flatMap((r) => {
+        if (r.zero || r.ended) return [r];
+        const exited = { ...r, ended: true };
+        return p.errexit === 'on' ? [exited] : [r, exited];
+    });
 }
 
 function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
