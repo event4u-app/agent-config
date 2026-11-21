@@ -32,6 +32,7 @@ import {
     languageFireClass,
     languageSplit,
     measure,
+    parseLanguageSplitCounts,
     render,
     renderLanguageSplit,
     renderQ1,
@@ -691,6 +692,32 @@ describe('language-split', () => {
             metaEntry('Stop hook feedback:\n[turn-end-gate] language: the pinned reply language is "de" but the reply classifies as "en"'),
         ]);
         expect(languageSplit([store], {}).recordedRefusals).toBe(1);
+    });
+
+    it('renders a before/after table and the instrument held fixed when given a baseline', () => {
+        writeClassFixtures();
+        const baseline = renderLanguageSplit(languageSplit([store], { locale: 'de', instrument: 'all-entries' }), {
+            command: 'x',
+            treeSha: 'abc1234',
+        });
+        const before = parseLanguageSplitCounts(baseline);
+        expect(before).not.toBeNull();
+        const out = renderLanguageSplit(
+            languageSplit([store], { locale: 'de' }),
+            { command: 'y', treeSha: 'def5678' },
+            { beforePath: 'baseline.md', before: before!, allEntries: languageSplit([store], { locale: 'de', instrument: 'all-entries' }) },
+        );
+        for (const k of LANGUAGE_SPLIT_CLASSES) {
+            expect(out).toMatch(new RegExp(`^\\| ${k} \\| \\d+ \\| \\d+ \\|$`, 'm'));
+            expect(out).toMatch(new RegExp(`^\\| ${k} \\| \\d+ \\| \\d+ \\| \\d+ \\|$`, 'm'));
+        }
+        // The roadmap's 5.1 check counts the three-column rows with a zero after.
+        const zeroRows = out.match(/^\| (synthetic-turn|paste-decided|trailing-typed-line|system-locale) \|[^|]*\| 0 \|$/gm) ?? [];
+        expect(zeroRows).toHaveLength(4);
+    });
+
+    it('refuses a baseline that lacks a class row', () => {
+        expect(parseLanguageSplitCounts('| owner-prose | 3 |')).toBeNull();
     });
 
     it('renders one table row per class, the command line and the tree sha, and no prompt text', () => {

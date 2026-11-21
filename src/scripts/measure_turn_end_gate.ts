@@ -1170,8 +1170,36 @@ export interface LanguageSplitMeta {
     treeSha: string;
 }
 
+/**
+ * A before/after reading (roadmap step 5.1): the baseline file's per-class
+ * counts, and the same window replayed once more with the baseline's
+ * instrument, so the drop owed to the instrument (D6) and to the fix stay apart.
+ */
+export interface LanguageSplitComparison {
+    /** The baseline file, as given on the command line. */
+    beforePath: string;
+    before: Record<LanguageSplitClass, number>;
+    /** The same window replayed with `instrument: 'all-entries'` (D3). */
+    allEntries: LanguageSplit;
+}
+
+/** The per-class counts of a rendered split, or `null` when a class row is missing. */
+export function parseLanguageSplitCounts(markdown: string): Record<LanguageSplitClass, number> | null {
+    const out: Partial<Record<LanguageSplitClass, number>> = {};
+    for (const k of LANGUAGE_SPLIT_CLASSES) {
+        const m = new RegExp(`^\\| ${k} \\| (\\d+) \\|$`, 'm').exec(markdown);
+        if (m === null) return null;
+        out[k] = Number(m[1]);
+    }
+    return out as Record<LanguageSplitClass, number>;
+}
+
 /** Command output only: counts, the command and the sha — never prompt text. */
-export function renderLanguageSplit(split: LanguageSplit, meta: LanguageSplitMeta): string {
+export function renderLanguageSplit(
+    split: LanguageSplit,
+    meta: LanguageSplitMeta,
+    comparison?: LanguageSplitComparison,
+): string {
     const lines = [
         '<!-- evidence-type: analysis -->',
         '# Language refusal split',
@@ -1190,8 +1218,30 @@ export function renderLanguageSplit(split: LanguageSplit, meta: LanguageSplitMet
             '',
         );
     }
-    lines.push('| class | fires |', '|---|---|');
-    for (const k of LANGUAGE_SPLIT_CLASSES) lines.push(`| ${k} | ${split.byClass[k]} |`);
+    if (comparison === undefined) {
+        lines.push('| class | fires |', '|---|---|');
+        for (const k of LANGUAGE_SPLIT_CLASSES) lines.push(`| ${k} | ${split.byClass[k]} |`);
+    } else {
+        lines.push(
+            `Before: \`${comparison.beforePath}\`, as recorded (the replay instrument then pinned from every user entry, D3). After: this replay, which pins only from entries that reach \`UserPromptSubmit\` (D6). The second table holds the instrument fixed.`,
+            '',
+            '| class | before | after |',
+            '|---|---|---|',
+        );
+        for (const k of LANGUAGE_SPLIT_CLASSES) lines.push(`| ${k} | ${comparison.before[k]} | ${split.byClass[k]} |`);
+        lines.push(
+            '',
+            '## Instrument held fixed',
+            '',
+            `Same window replayed with the baseline's instrument (\`--instrument all-entries\`): ${comparison.allEntries.fires} fires.`,
+            '',
+            '| class | before, all entries | after, all entries | after, live input |',
+            '|---|---|---|---|',
+        );
+        for (const k of LANGUAGE_SPLIT_CLASSES) {
+            lines.push(`| ${k} | ${comparison.before[k]} | ${comparison.allEntries.byClass[k]} | ${split.byClass[k]} |`);
+        }
+    }
     lines.push('', '## Owner-prose fires', '');
     if (split.ownerProseSites.length === 0) {
         lines.push('None.');
@@ -1225,6 +1275,7 @@ function _languageSplitMain(argv: string[]): number {
     const stores: string[] = [];
     const opts: LanguageSplitOptions = {};
     let outFile: string | undefined;
+    let beforeFile: string | undefined;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i];
         const v = argv[i + 1];
@@ -1237,6 +1288,8 @@ function _languageSplitMain(argv: string[]): number {
         else if (a === '--since') opts.since = v;
         else if (a === '--until') opts.until = v;
         else if (a === '--out') outFile = v;
+        else if (a === '--before') beforeFile = v;
+        else if (a === '--instrument' && (v === 'live-input' || v === 'all-entries')) opts.instrument = v;
         else if (a === '--locale' && (v === 'de' || v === 'en' || v === 'und')) opts.locale = v;
         else {
             process.stderr.write(`measure-turn-end-gate: unknown --language-split argument ${String(a)} ${v}\n`);
@@ -1253,12 +1306,30 @@ function _languageSplitMain(argv: string[]): number {
         process.stderr.write('measure-turn-end-gate: no .jsonl sessions under the given stores\n');
         return 2;
     }
+    let comparison: LanguageSplitComparison | undefined;
+    if (beforeFile !== undefined) {
+        let before: Record<LanguageSplitClass, number> | null = null;
+        try {
+            before = parseLanguageSplitCounts(fs.readFileSync(beforeFile, 'utf-8'));
+        } catch {
+            before = null;
+        }
+        if (before === null) {
+            process.stderr.write(`measure-turn-end-gate: ${beforeFile} is not a language-split report with every class row\n`);
+            return 2;
+        }
+        comparison = { beforePath: beforeFile, before, allEntries: languageSplit(stores, { ...opts, instrument: 'all-entries' }) };
+    }
     const home = process.env['HOME'] ?? '';
     const shown = argv.map((a) => (home !== '' && a.startsWith(home) ? `~${a.slice(home.length)}` : a));
-    const report = renderLanguageSplit(split, {
-        command: ['./scripts-run src/scripts/measure_turn_end_gate', ...shown].join(' '),
-        treeSha: _splitTreeSha(),
-    });
+    const report = renderLanguageSplit(
+        split,
+        {
+            command: ['./scripts-run src/scripts/measure_turn_end_gate', ...shown].join(' '),
+            treeSha: _splitTreeSha(),
+        },
+        comparison,
+    );
     if (outFile !== undefined) {
         fs.mkdirSync(path.dirname(outFile), { recursive: true });
         fs.writeFileSync(outFile, report);
