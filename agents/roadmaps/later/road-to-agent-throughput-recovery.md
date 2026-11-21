@@ -333,7 +333,7 @@ the Acceptance Criteria held.
 
 ## Phase 4 — Remove the misfires, from the classes that actually fired
 
-- [x] **4.1 Classify the 64 language refusals by pin source before fixing.** The
+- [x] **4.1 Classify the 64 language refusals by pin source before fixing.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> The
       pin state records `source: prompt | system-locale`. Split the refusals by
       source and by the language the prompt was written in. Candidates: an
       English paste without a heading under a short German lead (the stub's

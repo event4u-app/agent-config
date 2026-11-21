@@ -87,6 +87,15 @@ Landed with the parent, at the tree this file was written on:
       the form `| <class> | <before> | <after> |` (parent 5.1).
       verify: `grep -cE '^\| (synthetic-turn|paste-decided|trailing-typed-line|system-locale) \|[^|]*\| 0 \|$' agents/evidence/analysis/language-split-after.md` -> /^4$/
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The wiring cannot fit the dispatch ceiling | implementation | The parent measured the wired bundle at about 5 KB over the ceiling, and 22 ratification rounds did not converge on a raise. | 1.4 measures a lazily loaded chunk first; a raise goes to ratification and, failing convergence, to the owner. | Phase 1 — Wire the library into the hooks |
+| 2 | Real drift goes unrefused | product | Owner-prose-only pins and locale-pin exemption mean fewer refusals, so a genuine wrong-language reply can pass. | An undetermined owner span keeps the previous pin (parent D1); 2.1 lists every remaining `owner-prose` fire. | Phase 2 — Measure the wired pin |
+| 3 | Library and hook drift apart before wiring | implementation | Edits to the hook's classifier while this waits could diverge from `classifyOwnerProse`. | 1.3 moves the sequences back onto `run`, so one test suite covers the wired path. | Phase 1 — Wire the library into the hooks |
+
 ## Acceptance Criteria
 
 - [ ] AC-1 — The turn-end gate raises no `language` finding on a pin not set by

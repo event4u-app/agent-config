@@ -109,15 +109,16 @@ never edited.
       `src/scripts/measure_turn_end_gate.ts`: for each replayed `language` fire,
       find the user entry that last set the pin and assign its class.
       verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts -t language-split` -> 0 after a recorded red run
+      production entry: src/scripts/measure_turn_end_gate.ts
       uses: test-driven-development
-- [x] **1.2 Generate the post-fix baseline.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run
+- [x] **1.2 Generate the post-fix baseline.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> Run
       `./scripts-run src/scripts/measure_turn_end_gate --language-split --out agents/evidence/analysis/language-split-baseline.md`
       over every local transcript since `66dd150cfc` (2026-11-03). The file
       carries the command line, the tree sha and the per-class counts; its body
       is never hand-edited. Fewer than 20 `language` fires in the window → the
       file says so and Phase 3 proceeds on the fixtures alone.
       verify: re-running the command at the same sha reproduces the file byte-for-byte (`git diff --exit-code` on it)
-- [x] **1.3 Hand the split to `later/road-to-agent-throughput-recovery` 4.1.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **1.3 Hand the split to `later/road-to-agent-throughput-recovery` 4.1.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts -->
       Its blocker `language-misfire-window-after-the-agent-message-fix` asks for
       a second split over a post-fix window. Run the council (`agent-config
       council:status`, then a council round on that blocker with 1.2's file),
@@ -148,7 +149,7 @@ never edited.
 
 ## Phase 3 — Pin only from owner prose
 
-- [x] **3.1 Council: the floor for a short typed lead.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> First action: `agent-config
+- [x] **3.1 Council: the floor for a short typed lead.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> First action: `agent-config
       council:status`, then a council round on one question — with no
       whole-body fallback, does a typed span under `MIN_MARKERS` stay `und`
       (keep the previous pin), or does the owner span get its own lower floor?
@@ -206,7 +207,7 @@ never edited.
       and the same transcripts. Report per class the fires before and after, one
       table row per class in the form `| <class> | <before> | <after> |`.
       verify: `grep -cE '^\| (synthetic-turn|paste-decided|trailing-typed-line|system-locale) \|[^|]*\| 0 \|$' agents/evidence/analysis/language-split-after.md` -> /^4$/ and the `owner-prose` fires are listed individually
-- [x] **5.2 Archive the superseded stub.** Move
+- [x] **5.2 Archive the superseded stub.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> Move
       `agents/roadmaps/stubs/road-to-language-pin-short-lead.md` to
       `agents/roadmaps/archive/` with a one-line Done note naming 3.2 and D1
       (its `en`/`en`/`de` probe target is replaced by owner-prose-only
