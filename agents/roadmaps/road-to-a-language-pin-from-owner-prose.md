@@ -161,13 +161,13 @@ never edited.
 
 ## Phase 4 — The gate refuses only on an owner-prose pin
 
-- [ ] **4.1 Make `readLanguagePin` provenance-aware.** In
+- [x] **4.1 Make `readLanguagePin` provenance-aware.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts --> In
       `src/scripts/hooks/turn_end_gate_hook.ts:638` return `und` for a pin whose
       `source` is not `prompt`, and for a `prompt` pin with
       `owner_prose_chars: 0`. A pin file without the field (written before 3.3)
       keeps today's behaviour. Turns 2.2's must-not-fire case green.
       verify: `npx vitest run tests/hooks tests/scripts -t "language"` -> 0
-- [ ] **4.2 Rebuild the hook bundle and check its budget.** Run `npm run
+- [x] **4.2 Rebuild the hook bundle and check its budget.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Run `npm run
       build:hooks`, then the bundle freshness and token-budget checks
       (`./scripts-run src/scripts/check_hook_bundle_freshness`); raise
       `src/config/hook-bundle-budget.json` only with the measured delta in the
