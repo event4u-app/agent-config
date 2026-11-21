@@ -36,9 +36,10 @@ import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js'
  * "Damit ist alles erledigt." · "Aufgabe erledigt." · "der komplette Auftrag ist
  * durch".
  *
- * Shared with detector D, which is why it lives here: detector G uses the same
- * trigger and adds no completion keyword of its own, per the 2026-08-12 council
- * bound quoted on `NEGATED_CLAIM_RE`.
+ * Detector G's copy of detector D's trigger, adding no completion keyword of its
+ * own, per the 2026-08-12 council bound quoted on `NEGATED_CLAIM_RE`. D and F keep
+ * their own copy in the hook unchanged; G reads past a negated first line and
+ * bounds its phrases with `\b`, which matters only for what G records.
  */
 const COMPLETION_RE =
     /(^|\n)[^\S\n]*(?:\*\*)?(?:fertig\b|damit ist alles erledigt\b|aufgabe erledigt\b|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)\b|der komplette auftrag ist durch\b|done[.!]|all done\b|task completed?\b)/i;
@@ -147,8 +148,8 @@ const COMPLETION_ALL_RE = new RegExp(COMPLETION_RE.source, 'gi');
 
 /**
  * Where the reply first claims completion on a line that does not negate it, or null.
- * Shared by detectors D, F and G: a negated claim does not hide a later affirmative
- * one. The trigger is line-anchored, so each line is checked once.
+ * Detector G's trigger: a negated claim does not hide a later affirmative one. The
+ * trigger is line-anchored, so each line is checked once.
  */
 export function completionClaimAt(visible: string): number | null {
     for (const m of visible.matchAll(COMPLETION_ALL_RE)) {

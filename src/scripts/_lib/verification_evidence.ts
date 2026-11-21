@@ -655,8 +655,9 @@ export function describeRecordFinding(
     }
     const masked = reasons.includes('exit_masked')
         ? ' — a masked exit code is the exit code of `tail` or `echo`, not of the '
-          + 'verifier: re-run with `set -o pipefail;` in front, or use the '
-          + "runner's own filter flag instead of a pipe"
+          + 'verifier: behind a pipe, re-run with `set -o pipefail;` in front or use the '
+          + "runner's own filter flag; behind `;` or `||`, make the verifier the last "
+          + 'command of the line'
         : '';
     return (
         'this turn changed a file and no recorded run after the last edit proves '

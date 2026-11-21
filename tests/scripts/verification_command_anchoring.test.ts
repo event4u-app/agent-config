@@ -188,6 +188,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci || exit 1 > /dev/null',
         // A plain `set` the walk recognises succeeds.
         'set -o pipefail || exit 0; task ci',
+        // `exit -1` exits 255.
+        'task ci || exit -1',
         'task ci && echo ok',
         'npx vitest run || exit 1',
         'npx vitest run; exit $?',

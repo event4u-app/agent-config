@@ -509,7 +509,7 @@ function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
         const arg = args.join(' ').replace(/^["']|["']$/g, '');
         let ran: FlowState[];
         if (arg === '' || arg === '$?') ran = [{ ...s, ended: true }];
-        else if (/^\d+$/.test(arg)) ran = [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
+        else if (/^-?\d+$/.test(arg)) ran = [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
         // Any other argument, `${PIPESTATUS[k]}` included (D10): the text cannot say which
         // pipeline ran last, so the status it hands on is unknown.
         else ran = [{ ...s, zero: true, ended: true }, { ...s, zero: false, ended: true }];

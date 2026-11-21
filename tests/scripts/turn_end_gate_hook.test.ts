@@ -528,10 +528,9 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
         ).not.toBeNull();
     });
 
-    // A negated first match does not hide a later affirmative claim.
-    it('fires on a later claim after a negated one, and not on the negated one alone', () => {
-        expect(detectCompletionClaim('Status update.\nFertig ist der Fix noch nicht.\nDone.', UNSETTLED)).not.toBeNull();
-        expect(detectCompletionClaim('Status update.\nFertig ist der Fix noch nicht.', UNSETTLED)).toBeNull();
+    // D keeps origin/main's trigger: a claim line that also says CI is not done still refuses.
+    it('still fires on "Done." beside a note that CI is not done', () => {
+        expect(detectCompletionClaim('Progress.\nDone. CI is not done yet.', UNSETTLED)).not.toBeNull();
     });
 
     it('does NOT fire on "fertig" inside a sentence about something else', () => {
@@ -1641,11 +1640,6 @@ describe('detector F — a completion claim over code no test accompanies', () =
         expect(detectUntestedChange('Fertig ist das noch nicht.', [edit('src/todo.ts')])).toBeNull();
     });
 
-    it('reads a later claim after a negated one', () => {
-        expect(
-            detectUntestedChange('Status update.\nFertig ist das noch nicht.\nDone.', [edit('src/todo.ts')]),
-        ).not.toBeNull();
-    });
 
     it('is silent on a docs-, config- or prose-only turn', () => {
         for (const p of ['README.md', 'docs/x.md', 'package.json', 'src/config/a.yaml', '.github/workflows/ci.yml']) {
@@ -2445,15 +2439,12 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(Date.now() - t0).toBeLessThan(1000);
     });
 
-    it('a word that only starts with a completion phrase is not a claim', () => {
-        const reply = 'Fertig ist der Fix noch nicht.\nTask completeness remains under review.';
-        expect(completionClaimAt(reply)).toBeNull();
-        expect(detectCompletionClaim(reply, { seen: true, settled: false })).toBeNull();
+    it('a word that only starts with a completion phrase is not a claim for G', () => {
+        expect(completionClaimAt('Fertig ist der Fix noch nicht.\nTask completeness remains under review.')).toBeNull();
     });
 
-    it('"Task completed." is still a claim for D and F', () => {
-        expect(detectCompletionClaim('Task completed.', { seen: true, settled: false })).not.toBeNull();
-        expect(detectUntestedChange('Task completed.', [edit('src/todo.ts')])).not.toBeNull();
+    it('"Task completed." is still a claim for G', () => {
+        expect(completionClaimAt('Task completed.')).not.toBeNull();
     });
 
     it('a claim indented with a non-breaking space is still a claim', () => {

@@ -215,7 +215,6 @@ import { isTestPath as _isTestPath } from '../_lib/test_path.js';
 import { openSvgObligation } from './svg_obligation.js';
 import {
     RECORD_ONLY_DETECTORS,
-    completionClaimAt,
     foldRecorded,
     partialRatioIn,
     readRecorded,
@@ -560,6 +559,46 @@ export function readCiSettled(
 }
 
 
+/**
+ * A completion claim in the delivered reply. Deliberately narrow: the German and
+ * English closings the corpus actually produced, anchored to a line so a mid-reply
+ * "fertig" inside a sentence about something else does not fire.
+ *
+ * Measured shapes it must catch (round 7, § Phase 1): "Fertig, Matze." ·
+ * "Damit ist alles erledigt." · "Aufgabe erledigt." · "der komplette Auftrag ist
+ * durch".
+ */
+const _COMPLETION_RE =
+    /(^|\n)\s*(?:\*\*)?(?:fertig\b|damit ist alles erledigt|aufgabe erledigt|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)|der komplette auftrag ist durch|done[.!]|all done\b|task complete)/i;
+
+/**
+ * The line the claim was found on says the opposite of a claim.
+ *
+ * A line-anchored keyword cannot tell "Fertig." from "Fertig ist der Fix noch
+ * nicht." — both open with the same token, and the second is exactly the honest
+ * status report this gate exists to ENCOURAGE. Measured 2026-08-12: three of ten
+ * realistic closings were refused, and all three were "not done yet" lines.
+ *
+ * This is a negation check on the SAME line, not another attempt to enumerate
+ * completion phrasings. The council that reviewed this guard (anthropic +
+ * openai, 2026-08-12) stated the bound plainly: a finite pattern cannot cover an
+ * infinite false-positive set, so extending the keyword list again would repeat
+ * the move that has already failed three times on the sibling git guard. What
+ * makes a block defensible here is not the pattern — it is that the pattern only
+ * fires as a TRIGGER to consult structured CI state (`ci.settled`), which is the
+ * council's Tier-2 shape. This check removes the cases where the prose itself
+ * already contradicts the trigger.
+ */
+const _NEGATED_CLAIM_RE =
+    /\b(noch nicht|nicht fertig|nicht durch|wäre verfrüht|ist verfrüht|not yet|not done|isn'?t done|nein)\b/i;
+
+/** The line `at` falls on — the scope a negation has to appear in to count. */
+function _lineAround(prose: string, at: number): string {
+    const start = prose.lastIndexOf('\n', at) + 1;
+    const end = prose.indexOf('\n', at);
+    return prose.slice(start, end === -1 ? prose.length : end);
+}
+
 export function detectCompletionClaim(
     reply: string,
     ci: { seen: boolean; settled: boolean },
@@ -567,10 +606,12 @@ export function detectCompletionClaim(
     // A session that never read CI has nothing to be premature about.
     if (!ci.seen || ci.settled) return null;
     const prose = visibleProse(reply);
-    // A trigger on a line that negates it is a status report, not a claim; refusing
-    // it punishes the honesty the gate wants. A later affirmative line still claims.
-    const at = completionClaimAt(prose);
-    if (at === null) return null;
+    const m = _COMPLETION_RE.exec(prose);
+    if (!m) return null;
+    const at = m.index;
+    // The trigger fired, but the line it fired on negates it — a status report,
+    // not a claim. Refusing these punishes exactly the honesty the gate wants.
+    if (_NEGATED_CLAIM_RE.test(_lineAround(prose, at))) return null;
     return {
         detector: 'completion',
         evidence: prose.slice(at, at + 120).trim(),
@@ -884,7 +925,10 @@ export function detectUntestedChange(
     // The claim gate, reusing detector D's pair rather than a second dialect of
     // "done" — two lists of completion phrasings would drift, and the negation
     // check is what keeps an honest "noch nicht fertig" from being refused.
-    if (completionClaimAt(visibleProse(reply)) === null) return null;
+    const prose = visibleProse(reply);
+    const m = _COMPLETION_RE.exec(prose);
+    if (!m) return null;
+    if (_NEGATED_CLAIM_RE.test(_lineAround(prose, m.index))) return null;
 
     const shown = source.slice(0, 3).join(', ');
     if (noRedEvidence) {

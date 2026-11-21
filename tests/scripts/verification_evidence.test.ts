@@ -638,6 +638,8 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         const text = describeRecordFinding(false, ['exit_masked']);
         expect(text).toMatch(/set -o pipefail/);
         expect(text).toMatch(/filter flag/);
+        // A trailing command is not fixed by pipefail: the verifier must close the line.
+        expect(text).toMatch(/last command/);
     });
 });
 
