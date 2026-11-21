@@ -70,7 +70,6 @@ import {
     ttl_seconds_for,
     write_record,
 } from './_lib/session_register.js';
-import { beat_time, goal_mandate_block } from './_lib/goal_mandate.js';
 import { pr_watch_block } from './_lib/session_pr_watch.js';
 import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
@@ -932,20 +931,11 @@ export function main(): number {
                 // The live state of PRs this session opened. `warn` is the one
                 // decision whose context reaches the model on this slot; the
                 // dispatcher turns it into a host-facing exit 0, so it never blocks.
-                // The owner's goal sentence rides the same beat: recorded from this
-                // prompt when it names an end state, repeated on every later one.
-                const prompt =
-                    payload !== null && typeof payload === 'object' && !Array.isArray(payload)
-                        ? (payload as Record<string, unknown>)['prompt']
-                        : null;
-                const goal = goal_mandate_block(root, session_id, typeof prompt === 'string' ? prompt : '', beat_time());
                 const prs = pr_watch_block(root, session_id, new Date());
-                const context = [goal, prs].filter((b): b is string => b !== null).join('\n\n');
-                if (context !== '') {
-                    const reason = [goal !== null ? 'session goal' : null, prs !== null ? 'session PR state' : null]
-                        .filter((r): r is string => r !== null)
-                        .join(', ');
-                    process.stdout.write(JSON.stringify({ decision: 'warn', reason, additional_context: context }) + '\n');
+                if (prs !== null) {
+                    process.stdout.write(
+                        JSON.stringify({ decision: 'warn', reason: 'session PR state', additional_context: prs }) + '\n',
+                    );
                     return 2;
                 }
             }

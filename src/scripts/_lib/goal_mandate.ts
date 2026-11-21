@@ -3,6 +3,10 @@
  * recorded verbatim the moment it is typed and carried into every later prompt
  * and every subagent start.
  *
+ * **Not wired yet.** No hook calls this module: it stays off the live hook path
+ * until the hook bundle ceiling has room for it, so no prompt records a goal
+ * today. The writer named below is the `session-register` call site to come.
+ *
  * A goal the owner named in turn 3 used to be invisible by turn 30 and absent
  * from every subagent, so the owner typed the same order again for each PR. The
  * record makes the owner's own words visible; it does not decide what they
