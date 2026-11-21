@@ -20,7 +20,7 @@ relates:
   - slug: road-to-an-agent-the-owner-does-not-drive
     relation: extends
     note: "Its Phase 5 owns the pre-push path (5.1), a landing command (5.2), lint fixes without history rewrite (5.3) and cleanup inside landing (5.4); its Phase 1 owns the goal-scoped mandate. This adds the relay map, the ranked gate inventory, the repo gates outside its Phase 5, and the host allow-list probe; 3.6 hands its rows the relay evidence."
-  - slug: road-to-mandates-scoped-to-the-goal
+  - slug: later/road-to-mandates-scoped-to-the-goal
     relation: disjoint
     note: "Owns the agent-side goal mandate that E1's PR series lacked; this roadmap handles the host-side refusal and repo text that remain once the mandate exists."
   - slug: road-to-stop-hooks-that-count-own-edits

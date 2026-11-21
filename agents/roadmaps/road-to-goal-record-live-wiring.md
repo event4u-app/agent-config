@@ -2,19 +2,18 @@
 complexity: structural
 status: ready
 review_by: 2026-12-21
-estate_growth_exempt: "Owner decision of 2026-11-21 (option 2, chosen in-session) on the goal-record ratification blocker of road-to-mandates-scoped-to-the-goal: land that roadmap's features without growing the live hook bundle, and carry the hook wiring and its ceiling raise in a follow-up of its own. That roadmap was added under the owner record agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md; this file is the part of it that could not land. Growth: +1 active roadmap, +1 open blocker (goal-record-ratification, moved here from its parent)."
-estate_offset_exempt: "Split off road-to-mandates-scoped-to-the-goal by the owner's option-2 decision of 2026-11-21, which withdrew that roadmap's hook bundle raise; no active roadmap is finished, so none was archived to offset it. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
+estate_growth_exempt: "Owner decision of 2026-11-21 (option 2, chosen in-session) on the goal-record ratification blocker of later/road-to-mandates-scoped-to-the-goal: land that roadmap's features without growing the live hook bundle and carry the hook wiring in a follow-up of its own. That roadmap was added under the owner record agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md and is parked in later/ in the same change, so the active count does not grow. Growth: +1 open blocker (goal-record-ratification, moved here from its parent)."
 execution:
   mode: autonomous
 relates:
-  - slug: road-to-mandates-scoped-to-the-goal
+  - slug: later/road-to-mandates-scoped-to-the-goal
     relation: extends
     note: "Carries exactly the live wiring that roadmap withdrew: the session-register and subagent-constraints call sites of the goal record, the hook-process tests that came with them, and the hook bundle raise they need. The recognizer, the store, the reader, the re-ask counter and the PR-command order landed there."
 ---
 
 # Road to goal record live wiring
 
-> **Source:** `road-to-mandates-scoped-to-the-goal`, blocker
+> **Source:** `later/road-to-mandates-scoped-to-the-goal`, blocker
 > `goal-record-ratification`. Its branch wired the goal record into two hooks and
 > raised two ceilings in `src/config/hook-bundle-budget.json`; 18 ratification
 > rounds did not converge on the raise. On 2026-11-21 the owner chose option 2:
@@ -31,13 +30,14 @@ round has passed.
 
 ## Context
 
-**What landed without wiring** (on `road-to-mandates-scoped-to-the-goal`): the
+**What landed without wiring** (on `later/road-to-mandates-scoped-to-the-goal`): the
 DE + EN phrase set (`_lib/goal_phrases.ts`), the recorder
 (`_lib/goal_mandate.ts`), the store reader and rendered line
 (`_lib/goal_mandate_store.ts`), their library tests
-(`tests/scripts/goal_mandate.test.ts`, `goal_mandate_race.test.ts`), and
-`default_pr_target` in `_lib/session_pr_watch.ts` (not rendered; the PR commands
-read the OPEN rows of the existing `<session-prs>` block instead).
+(`tests/scripts/goal_mandate.test.ts`, `goal_mandate_race.test.ts`). The PR
+commands take the session PR from the one OPEN row of the existing
+`<session-prs>` block; the `default_pr_target` selector and its block line were
+withdrawn (parent commit `7462c4b87c`).
 
 **What the wiring costs.** Measured on the parent branch: dispatch bundle
 1,605,934 B against the 1,595,300 ceiling (+10.6 kB, of which the
@@ -64,31 +64,31 @@ first, so no raise is needed, needs neither.
       the recognizer as its own chunk, decision A9's pattern), or, when that is
       not reachable, hand `goal-record-ratification` to the owner with the 1.1
       figures.
-      verify: `./scripts-run src/scripts/check_hook_bundle_composition` exits 0 with the wiring applied, or the blocker carries the owner's ruling.
+      verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0 with the wiring applied, or the blocker carries the owner's ruling.
 
 ## Phase 2 — Wire the call sites
 
 - [ ] **2.1 Failing hook-process tests first.** Restore the session-register beat
       tests (goal block after a goal prompt and on the next prompt; a stalled goal
       hook loses to a later stop) and the two subagent-constraints goal cases.
-      verify: `npx vitest run tests/scripts/goal_mandate.test.ts tests/hooks/subagent_constraints_hook.test.ts` -> failing on the missing wiring.
+      verify: `npx vitest run tests/scripts/goal_mandate.test.ts tests/hooks/subagent_constraints_hook.test.ts` -> /failed/
 - [ ] **2.2 Wire `session-register`.** Call `goal_mandate_block` on the
       `user_prompt_submit` beat with `beat_time()` and join it with the PR block,
       as on the parent branch.
       verify: 2.1's session-register cases pass.
 - [ ] **2.3 Wire `subagent-constraints`.** Put `goal_mandate_for_subagent` ahead
       of the pins in `digestFor`.
-      verify: 2.1's subagent cases pass; `./scripts-run src/scripts/lint_hook_manifest` exits 0 with no manifest change.
-- [ ] **2.4 Restore the default line, if it fits.** Render
-      `Default PR target for PR commands:` from `default_pr_target` in
-      `pr_watch_block`, and point the three PR commands' source 2 at it again.
+      verify: 2.1's subagent cases pass; `./scripts-run src/scripts/lint_hook_manifest` -> 0 with no manifest change.
+- [ ] **2.4 Restore the default line, if it fits.** Restore `default_pr_target`
+      and its tests from `7462c4b87c`, render `Default PR target for PR commands:`
+      in `pr_watch_block`, and point the three PR commands' source 2 at it again.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts tests/scripts/pr_command_target.test.ts` -> 0 and the composition gate exits 0.
 
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | owner-reserved | owner:2026-11-21 option 2 | The parent roadmap lands without the hook bundle raise; the wiring and any raise live here | the owner's in-session choice on `goal-record-ratification`; owner record `agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md` | the owner rules the raise acceptable as it stood |
+| D1 | product-owned | owner | 2026-11-21, option 2: the parent roadmap lands without the hook bundle raise; the wiring and any raise live here | the owner's in-session choice on `goal-record-ratification`; owner record `agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md` | the owner rules the raise acceptable as it stood |
 
 ## Blockers
 
@@ -113,5 +113,5 @@ first, so no raise is needed, needs neither.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A goal prompt yields a `<session-goal>` line on that prompt and every later one, and at subagent start (2.1 tests green).
+- [ ] AC-1 — A goal prompt yields the session-goal line on that prompt and every later one, and at subagent start (2.1 tests green).
 - [ ] AC-2 — `./scripts-run src/scripts/check_hook_bundle_composition` exits 0 with no unratified raise.
