@@ -1543,13 +1543,16 @@ describe("host-injected wrapper regions", () => {
     // Pre-fix: `en`, at de=0 / en=3. The German count reached ZERO — the
     // block's indented lines armed `instructionText`'s paste state and, with no
     // blank line before it, the user's sentence was discarded with the markup.
+    // Since D7 (ratification round 15) the veto reads the RAW prompt, so the
+    // block's English markers make this `und`: the previous pin stays (a missed
+    // update), and the pre-fix harm — an `en` pin off the block — cannot recur.
     const prompt = ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
-    expect(classify(prompt).language).toBe("de");
+    expect(classify(prompt).language).toBe("und");
   });
 
   it("a blank line between the block and the sentence changes nothing", () => {
     const prompt = ELEMENT_BLOCK + "\nsteht unter dem kontent wrapper, ich würde es anders machen";
-    expect(classify(prompt).language).toBe("de");
+    expect(classify(prompt).language).toBe("und");
   });
 
   it("the same block does not flip an English sentence away from English", () => {
@@ -1674,12 +1677,14 @@ describe("inline terminal-pane regions (#2950)", () => {
     const kept = stripInjectedRegions(p);
     expect(kept).not.toMatch(/bash-|these are the files|have been listed/);
     expect(kept).toContain("mach bitte weiter mit den tickets und prüfe die regeln");
-    expect(classify(p).language).toBe("de");
+    // The raw-prompt veto (D7, round 15): the stdout's English keeps the previous pin.
+    expect(classify(p).language).toBe("und");
   });
 
   it("text typed beside the inline regions is kept and decides", () => {
     const p = TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?";
-    expect(classify(p).language).toBe("de");
+    // Never `en` (the #2950 harm); `und` under the raw-prompt veto (D7, round 15).
+    expect(classify(p).language).toBe("und");
     const en = TERMINAL_PANE_LINE + "\nwhy is this empty and where is the output?";
     expect(classify(en).language).toBe("en");
   });
@@ -1688,14 +1693,14 @@ describe("inline terminal-pane regions (#2950)", () => {
     const p =
       "bitte prüfe das <bash-stdout>these are the files that were there</bash-stdout> und mach dann weiter mit der liste";
     expect(stripInjectedRegions(p)).not.toMatch(/these are the files/);
-    expect(classify(p).language).toBe("de");
+    expect(classify(p).language).toBe("und");
   });
 
   it("inline terminal regions and a standalone host wrapper are both removed", () => {
     const p = TERMINAL_PANE_LINE + "\n" + ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
     const kept = stripInjectedRegions(p);
     expect(kept).not.toMatch(/bash-|launch-selected-element|No output was captured/);
-    expect(classify(p).language).toBe("de");
+    expect(classify(p).language).toBe("und");
   });
 
   it("an unclosed inline tag is left in place", () => {
@@ -2072,6 +2077,25 @@ describe("owner prose only", () => {
     const spans = ownerSpans("   ```\n    ```\n\nBehebe das bitte und prüfe das.\n   ```");
     expect(spans.trailing).toBe("");
     expect(spans.lead).toBe("");
+  });
+
+  for (const tag of ["system-reminder", "bash-stdout"]) {
+    it(`pasted <${tag}> tags across fences cannot delete a typed German sentence from the veto`, () => {
+      run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+      run(
+        envelope(
+          `\`\`\`\n<${tag}>\n\`\`\`\n\nBehebe das bitte.\n\n\`\`\`\n</${tag}>\n\`\`\`\n\nPlease tell me why this is happening and what we should do.`,
+        ),
+        { consumer_root: tmp, env: {} },
+      );
+      expect(readState().language).toBe("de");
+    });
+  }
+
+  it("a closer six columns into a tab-indented list item closes the fence", () => {
+    const spans = ownerSpans("-\t~~~\n      x\n      ~~~\n\nBehebe das bitte.");
+    expect(spans.lead).toBe("");
+    expect(spans.trailing).toBe("Behebe das bitte.");
   });
 
   it("a long whitespace-only line costs linear time", () => {

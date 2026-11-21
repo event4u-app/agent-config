@@ -316,10 +316,12 @@ export function instructionText(prompt: string): string {
  * typed lead was short, which is the owner's most common prompt shape
  * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
  *
- * Then a veto that no boundary reading can get around: when the whole prompt
- * (only the host's own regions removed — `stripHostRegions`, never an arbitrary
- * tag pair — so code, output, documents and pasted markup all count) carries `MIN_MARKERS` markers of BOTH languages, the verdict is
- * `und`. So a pin in one language is written only when the prompt holds fewer
+ * Then a veto that no boundary reading can get around: when the RAW prompt —
+ * nothing removed, not even host wrappers, because a pasted wrapper tag looks
+ * exactly like the host's own (ratification rounds 13-14) — carries
+ * `MIN_MARKERS` markers of BOTH languages, the verdict is `und`. A real host
+ * wrapper in the other language (an IDE element block, a terminal-pane echo)
+ * therefore keeps the previous pin too: a missed update, never an override. So a pin in one language is written only when the prompt holds fewer
  * than `MIN_MARKERS` markers of the other anywhere; owner text that reaches the
  * floor can never be outvoted, however the span reader draws its boundaries.
  * Ratification rounds 1-9 found a missed shape for every narrower unit (spans,

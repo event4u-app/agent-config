@@ -185,7 +185,7 @@ function fenced(text: string): string[] {
       fence = open?.[3] ?? "";
       // Outside a list a closer takes at most three spaces, whatever the
       // opener's own indent; inside one, three past the item's content column.
-      indent = open?.[2] === undefined ? 3 : (open[1] ?? "").length + open[2].length + 3;
+      indent = open?.[2] === undefined ? 3 : columns(`${open[1] ?? ""}${open[2]}`) + 3;
       held = [line];
     } else if (lead !== null && (lead[1]?.length ?? 0) <= indent && (lead[2] ?? "").startsWith(fence)) {
       out.push(FENCE_LINE);
@@ -198,6 +198,13 @@ function fenced(text: string): string[] {
   // the owner's text below it.
   if (fence !== "") for (const line of held) out.push(line);
   return out;
+}
+
+/** The display width of a line prefix, tabs to the next multiple of four. */
+function columns(prefix: string): number {
+  let width = 0;
+  for (const ch of prefix) width = ch === "\t" ? width + 4 - (width % 4) : width + 1;
+  return width;
 }
 
 /** The two spans of a prompt the owner typed, as `ownerSpans` finds them. */
@@ -230,8 +237,8 @@ export interface OwnerSpans {
  *
  * Both spans are returned as found; neither is dropped in favour of the other.
  * Deciding whether they can be trusted is the scorer's job: `classify` in the
- * language mirror vetoes the spans' verdict when the whole prompt (injected
- * regions removed, everything else counted) carries the marker floor of both
+ * language mirror vetoes the spans' verdict when the raw prompt (nothing
+ * removed, tag-wrapped regions included) carries the marker floor of both
  * languages, so a misread boundary here can cost a pin but never hand one to a
  * paste.
  *
@@ -324,7 +331,7 @@ export function ownerProse(prompt: string): OwnerSpans & { text: string } {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
     return { lead: "", trailing: "", text: "" };
   }
-  return { ...ownerSpans(stripInjectedRegions(prompt)), text: stripHostRegions(prompt) };
+  return { ...ownerSpans(stripInjectedRegions(prompt)), text: prompt };
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */
@@ -397,32 +404,12 @@ const TERMINAL_PANE_REGION = /<(bash-input|bash-stdout|bash-stderr)>[\s\S]*?<\/\
  * scanning past the wrong close would.
  */
 export function stripInjectedRegions(text: string): string {
-  return _stripRegions(text, () => true);
-}
-
-/**
- * The host regions only: terminal-pane echoes and wrappers whose tag names the
- * host is known to write (`HOST_REGION_TAG`). What the language pin's veto
- * reads — `stripInjectedRegions` drops ANY balanced bare-tag pair, and a pasted
- * `<section>` … `</section>` around a typed sentence would take the sentence
- * with it (ratification round 13). KNOWN RESIDUAL: a pasted region that
- * carries one of these exact host tag names is trusted as host text too; the
- * names are not ones a person types around their own words.
- */
-export function stripHostRegions(text: string): string {
-  return _stripRegions(text, (name) => HOST_REGION_TAG.test(name));
-}
-
-/** Tag names of wrappers the host itself injects into a prompt. */
-const HOST_REGION_TAG = /^(launch-selected-element|ide_selection|ide_opened_file|ide_diagnostics|system-reminder)$/;
-
-function _stripRegions(text: string, accept: (name: string) => boolean): string {
   const lines = text.replace(TERMINAL_PANE_REGION, "").split("\n");
   const kept: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
     const open = REGION_OPEN.exec(line);
-    if (open === null || !accept(open[1] ?? "")) {
+    if (open === null) {
       kept.push(line);
       continue;
     }
