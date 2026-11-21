@@ -59,16 +59,24 @@ function write_revocation(root: string, session_id: string, record: GoalRecord):
 export function observe_prompt(root: string, session_id: string, prompt: string, now: Date = new Date()): GoalRecord | null {
     try {
         const current = read_goal(root, session_id);
+        // A prompt older than what is stored lost a race with a later one (hooks
+        // of one session are not guaranteed to finish in submission order); the
+        // later owner turn stands.
+        const stored = current === null ? Number.NEGATIVE_INFINITY : Date.parse(current.revoked_at ?? current.recorded_at);
+        if (now.getTime() < stored) return current;
+        const at = now.toISOString();
         const revoke = revocationIn(prompt);
         if (revoke !== null) {
-            if (current === null || current.revoked_by !== undefined) return current;
-            const revoked: GoalRecord = { ...current, revoked_by: revoke, revoked_at: now.toISOString() };
+            if (current?.revoked_by !== undefined) return current;
+            // With no goal stored the marker is still written, so a goal write
+            // from an earlier prompt that lands after it is dropped above.
+            const revoked: GoalRecord = { ...(current ?? { sentence: '', recorded_at: at }), revoked_by: revoke, revoked_at: at };
             write_revocation(root, session_id, revoked);
             return revoked;
         }
         const goal = goalSentenceIn(prompt);
         if (goal === null) return current;
-        const record: GoalRecord = { sentence: goal, recorded_at: now.toISOString() };
+        const record: GoalRecord = { sentence: goal, recorded_at: at };
         write_goal(root, session_id, record);
         return record;
     } catch {

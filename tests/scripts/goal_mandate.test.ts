@@ -56,9 +56,35 @@ describe('observe_prompt — goal sentences', () => {
         expect(rec?.revoked_at).toBe(T1.toISOString());
     });
 
-    it('a revoke with no record stores nothing', () => {
+    // Ratification round 2: a revoke against an empty store keeps a marker, so a
+    // goal write from an earlier prompt that lands after it cannot arm a record.
+    it('a revoke with no record stores a marker that renders nothing', () => {
         observe_prompt(root, 's1', 'stop', T0);
-        expect(read_goal(root, 's1')).toBeNull();
+        expect(read_goal(root, 's1')?.revoked_by).toBe('stop');
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+    });
+
+    it('drops a goal write from a prompt older than the revocation already stored', () => {
+        observe_prompt(root, 's1', 'stop', T1);
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+    });
+
+    it('drops a goal write from a prompt older than the goal already stored', () => {
+        observe_prompt(root, 's1', 'until merged', T1);
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
+        expect(read_goal(root, 's1')?.sentence).toBe('until merged');
+    });
+
+    it('a leading stop above a long paste still revokes', () => {
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
+        observe_prompt(root, 's1', `stop\n\n${'log line\n'.repeat(400)}`, T1);
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+    });
+
+    it('keeps apart two session ids that differ only in case', () => {
+        observe_prompt(root, 'SessionA', 'until merged', T0);
+        expect(read_goal(root, 'sessiona')).toBeNull();
     });
 
     it('a later goal sentence replaces the record, a revoked one included', () => {

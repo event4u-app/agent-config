@@ -204,7 +204,12 @@ export function pr_watch_block(
             ...lines,
             'State them from this block, or run `gh pr view <n>` first — never from memory.',
             'A merged PR waits for nobody.',
-            ...(target === null ? [] : [`Default PR target for PR commands: #${target.number} ${target.url}`]),
+            ...(target === null
+                ? []
+                : [
+                      `Default PR target for PR commands: #${target.number} ${target.url}` +
+                          (store.probe_failed ? ` (state unverified — run \`gh pr view ${target.number}\` first)` : ''),
+                  ]),
             '</session-prs>',
         ].join('\n');
         // Every change is in the block just rendered; keep only what can still change.

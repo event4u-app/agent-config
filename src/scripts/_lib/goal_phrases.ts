@@ -98,7 +98,9 @@ function instructionText(line: string): string | null {
 }
 
 function proseMatches(text: string, patterns: readonly RegExp[], asInstruction: boolean): string | null {
-    if (isSyntheticTurn(text) || text.length > MAX_GOAL_PROMPT_CHARS) return null;
+    // The paste cap binds the goal side only: a `stop` above a long paste is
+    // still the owner's revocation.
+    if (isSyntheticTurn(text) || (asInstruction && text.length > MAX_GOAL_PROMPT_CHARS)) return null;
     for (const line of ownerProseLines(text)) {
         const trimmed = line.trim();
         if (trimmed.length > MAX_GOAL_LINE_CHARS) continue;

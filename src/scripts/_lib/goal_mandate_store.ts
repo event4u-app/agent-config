@@ -25,12 +25,13 @@ export interface GoalRecord {
 
 /**
  * A session id reduced to a file stem that cannot leave the store directory. An
- * id the reduction changed gets a digest of the original appended, so two ids
- * that reduce alike (`ses:a`, `ses_a`) never share a record.
+ * id that is not already a lowercase stem gets a digest of the original
+ * appended, so two ids that reduce alike (`ses:a`, `ses_a`) or differ only in
+ * case on a case-insensitive filesystem never share a record.
  */
 function stem(session_id: string): string {
-    const s = session_id.replace(/[^A-Za-z0-9._-]/g, '_').replace(/\.\./g, '_').slice(0, 128);
-    if (s === session_id && /[A-Za-z0-9]/.test(s)) return s;
+    const s = session_id.toLowerCase().replace(/[^a-z0-9._-]/g, '_').replace(/\.\./g, '_').slice(0, 128);
+    if (s === session_id && /[a-z0-9]/.test(s)) return s;
     return `${s}~${createHash('sha256').update(session_id).digest('hex').slice(0, 16)}`;
 }
 
