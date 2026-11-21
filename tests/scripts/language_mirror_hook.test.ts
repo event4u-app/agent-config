@@ -1888,6 +1888,11 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    "[ratification r6] sub-floor German paragraphs that add up against sub-floor owner spans",
+    "Please\n\nBitte\n\nnochmal\n\nError: x\n\nwhy",
+    "und",
+  ],
+  [
     "[ratification r5] a tilde-fenced paste is code, not prose",
     "~~~\nBehebe das bitte und prüfe das.\n~~~",
     "und",
