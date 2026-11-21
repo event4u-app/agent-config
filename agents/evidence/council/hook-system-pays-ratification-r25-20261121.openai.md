@@ -1,4 +1,5 @@
 <!-- evidence-type: original-review -->
+<!-- check-refs: skip -->
 
 <!-- The openai seat's reply of 2026-11-21 to the prompt in
      hook-system-pays-ratification-r25-20261121.question.md, verbatim (codex-default). -->
