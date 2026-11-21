@@ -219,13 +219,15 @@ function fenced(text: string): string[] {
 function collapseHunks(lines: string[]): string[] {
   const out = [...lines];
   for (let i = 0; i < out.length; i++) {
+    // Git's patch preamble is metadata, never prose (round 21).
+    if (GIT_PATCH_META.test(out[i] ?? "")) out[i] = FENCE_LINE;
     const head = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/.exec(out[i] ?? "");
     if (head === null) continue;
     let old = head[1] === undefined ? 1 : Number(head[1]);
     let neu = head[2] === undefined ? 1 : Number(head[2]);
     for (let j = i + 1; j < out.length; j++) {
       const row = out[j] ?? "";
-      if (row.startsWith("\\")) {
+      if (row.startsWith("\\ ")) {
         // `\ No newline at end of file` belongs to the row above it.
       } else if (old === 0 && neu === 0) break;
       else if (row.startsWith("-") && old > 0) old--;
@@ -238,6 +240,9 @@ function collapseHunks(lines: string[]): string[] {
   }
   return out;
 }
+
+const GIT_PATCH_META =
+  /^(diff --git |index [0-9a-f]+\.\.[0-9a-f]+|(new|deleted) file mode |(old|new) mode |similarity index |rename (from|to) |Binary files )/;
 
 /** The display width of a line prefix, tabs to the next multiple of four. */
 function columns(prefix: string): number {
@@ -373,7 +378,10 @@ export function ownerProse(prompt: string): OwnerSpans & { text: string } {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
     return { lead: "", trailing: "", text: "" };
   }
-  return { ...ownerSpans(stripInjectedRegions(prompt, " ")), text: prompt };
+  // Hunks are read on the raw lines: stripping a region first could merge rows
+  // and run a declared length onto the owner's text (round 21).
+  const patchless = collapseHunks(prompt.split(/\r\n?|\n/)).join("\n");
+  return { ...ownerSpans(stripInjectedRegions(patchless, " ")), text: prompt };
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */

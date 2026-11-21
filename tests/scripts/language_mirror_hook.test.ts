@@ -2183,8 +2183,10 @@ describe("owner prose only", () => {
     // Ratification round 20: a space-only context row reset the hunk scan, and
     // context rows ` ```text` / ` ```` were collapsed by the fence reader first.
     const patches = [
-      ["--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@", " ", "-the output was there and it is gone", "+the padding is missing here and that should be fixed"],
+      ["--- a/x", "+++ b/x", "@@ -1,2 +1,2 @@", " ", "-the output was there and it is gone", "+the padding is missing here and that should be fixed"],
       ["--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@", " ```text", "-the output was there and it is gone", "+the padding is missing here and that should be fixed", " ```"],
+      // Round 21: a git preamble whose paths carry markers is patch metadata.
+      ["diff --git a/the-file-and-the-output b/the-file-and-the-output", "index 1a2b3c4..5d6e7f8 100644", "--- a/the-file-and-the-output", "+++ b/the-file-and-the-output", "@@ -1 +1 @@", "-x", "+y"],
     ];
     patches.forEach((rows, n) => {
       const sid = `5d2e8f10-6a4b-4c3d-9e8f-00000000000${n}`;
@@ -2194,6 +2196,23 @@ describe("owner prose only", () => {
       run(envelope(patch, sid), { consumer_root: tmp, env: {} });
       expect(readLanguagePin(tmp, sid)).toBe("de");
     });
+  });
+
+  it("a terminal region inside a hunk does not shift the hunk onto the owner's bullet", () => {
+    // Round 21: stripping the region first merged rows, so the declared length
+    // ran on and swallowed the typed bullet. Hunks are read on the raw lines.
+    const p = [
+      "--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@",
+      " <bash-stdout>", "-the old row", "+the new row", " </bash-stdout>",
+      "",
+      "- bitte prüfe das und mach dann weiter",
+    ].join("\n");
+    expect(ownerProse(p).trailing).toBe("- bitte prüfe das und mach dann weiter");
+  });
+
+  it("only a `\\ ` annotation belongs to a hunk; a backslash line after it is prose", () => {
+    const p = ["--- a/x", "+++ b/x", "@@ -1 +1 @@", "-alt", "+neu", "\\ No newline at end of file", "\\textbf{bitte prüfe das und mach dann weiter}"].join("\n");
+    expect(ownerSpans(p).trailing).toBe("\\textbf{bitte prüfe das und mach dann weiter}");
   });
 
   it("a hunk ends at its declared length, so a typed bullet after it stays owner prose", () => {
