@@ -5,7 +5,6 @@ review_by: 2026-12-21
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: "Carries steps 1.1, 1.2, 1.3, 1.4, 2.2, 2.3, 2.4, 3.2, 3.5, 4.1 and 4.2 of road-to-stop-hooks-that-count-own-edits, whose live-hook halves the owner took off the dispatch path on 2026-11-21 (option 2: land the features without growing the hook bundle). Created in the same change that defers those steps, so the items stay alive in the active estate. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
-estate_offset_exempt: "Created in the same change that defers the live-hook halves of road-to-stop-hooks-that-count-own-edits, which stays active because its step 4.4 waits on the owner blocker legal-work-product-cadence; no active roadmap is done, so none can be archived to offset. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md (option 2, no hook-bundle raise)."
 relates:
   - slug: road-to-stop-hooks-that-count-own-edits
     relation: extends

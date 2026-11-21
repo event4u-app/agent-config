@@ -1,6 +1,10 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+entry_condition:
+  what: "the owner answers blocker legal-work-product-cadence, which step 4.4 waits on; every other open item is carried by road-to-stop-hooks-that-count-own-edits-live-wiring"
+  when: "on the owner's answer"
+  who: owner
 tree_pin: 811cea61d6
 execution:
   mode: autonomous
@@ -171,7 +175,7 @@ owner fills is added (D1).
       verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 1 with only must-allow cases failing
       Done 2026-11-21 off the live path: 29 distinct refused commands in the local stores, three of them pattern or filter shapes (redacted into the must-allow list); must-allow and must-refuse lists in `tests/scripts/credential_operands.test.ts`, which pins the live guard refusing every must-allow shape. The hook-level test is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 4.1.
 
-- [x] **1.5 Disclaimer cadence reading.** Write
+- [x] **1.5 Disclaimer cadence reading.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/credential_operands.ts -->
       `src/scripts/measure_work_product_line.ts`: over a transcript store it
       counts, per session, assistant replies carrying the attorney-review line
       and splits them by whether the same turn wrote or changed a file. Output
@@ -180,11 +184,10 @@ owner fills is added (D1).
       verify: `npx vitest run tests/scripts/measure_work_product_line.test.ts` -> 0 on a three-session fixture with known counts
       Done 2026-11-21: over 5,104 local sessions, 2 replies carried the line, both on no-write turns (sessions `407cd173`, `90446eb9`); the retro's 18-occurrence session is not in the local stores.
       production entry: src/scripts/measure_work_product_line.ts
-      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/measure_work_product_line.ts -->
 
 ## Phase 2 — Charge a session only for its own edits
 
-- [x] **2.1 Council settles attribution.** First action: run
+- [x] **2.1 Council settles attribution.** First action: run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/credential_operands.ts -->
       `/council:design` with a neutral prompt carrying 1.1's fixtures, the
       `review_baseline.ts` header and three candidates — (A) paths from this
       session's write tool calls in the transcript, (B) a per-session path
@@ -192,10 +195,9 @@ owner fills is added (D1).
       rule for shell-made writes (`sed -i`, heredocs). Ask how shell writes
       and the `head-moved` case are attributed. Record the verdict as row D4
       in `## Decisions` with `council:<date>`.
-      verify: `grep -c '^| D4 | contested-technical | council:' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
+      verify: `grep -c '^| D4 | contested-technical | council:' agents/roadmaps/later/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
       Done 2026-11-21: council (anthropic, openai), 2 rounds, quorum concluded; row D4.
-      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [~] **2.2 Implement D4 in the nudge.** Change `end_review_nudge_hook.ts`
       (and the ledger concern plus its `hook_manifest.yaml` binding if D4
@@ -222,7 +224,7 @@ owner fills is added (D1).
 
 ## Phase 3 — Accept the project's own verify commands
 
-- [x] **3.1 Council settles the source.** First action: run
+- [x] **3.1 Council settles the source.** First action: run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/credential_operands.ts -->
       `/council:design` with the 1.2 fixtures, D1, the bundle ceiling in
       `src/config/hook-bundle-budget.json` and three candidates — (A) shape
       rules only (container-exec peel, path script whose basename matches
@@ -230,10 +232,9 @@ owner fills is added (D1).
       prefix); (B) A plus `resolve_toolchain()` loaded lazily at refusal time;
       (C) A plus a `session_start` concern writing the resolved commands to
       `agents/runtime/state/`. Record row D5 with `council:<date>`.
-      verify: `grep -c '^| D5 | contested-technical | council:' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
+      verify: `grep -c '^| D5 | contested-technical | council:' agents/roadmaps/later/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
       Done 2026-11-21: council (anthropic, openai), 2 rounds, quorum concluded; row D5 (A, narrowed to container exec).
-      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [~] **3.2 Shape rules.** In `segmentVerifies`
       (`_lib/verification_command.ts:244`) peel `docker exec|compose exec|
@@ -243,19 +244,17 @@ owner fills is added (D1).
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts tests/scripts/verification_command_resolver_parity.test.ts` -> 0
       Done 2026-11-21 off the live path, narrowed per D5: `src/scripts/_lib/project_verify_shapes.ts` peels `docker exec` / `docker compose exec` only; the path-script and Python branches are not built (D5). `DELEGATING_HEADS` and `bareName` are now exported from `verification_command.ts` (no bundle byte change). The swap into detector C is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 3.1.
 
-- [x] **3.3 Manifest-declared commands per D5.** Implement D5's B or C so
+- [x] **3.3 Manifest-declared commands per D5.** Implement D5's B or C so <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/credential_operands.ts -->
       that in a fixture repo whose `Taskfile.yml` declares a `quality` task
       running pest, `task quality` clears detector C; in a repo without it,
       it does not. Skip with a one-line Done note if D5 chose A.
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts -t manifest-declared` -> 0
       Done 2026-11-21: skipped, D5 chose A.
-      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
-- [x] **3.4 Bundle and ratification stay green.** Rebuild the hook bundle
+- [x] **3.4 Bundle and ratification stay green.** Rebuild the hook bundle <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/credential_operands.ts -->
       and check its ceiling; run the ratification gate.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0 and `./scripts-run src/scripts/check_kernel_edit_ratified` -> 0
       Done 2026-11-21: bundle 1,595,224 B under the unchanged 1,595,300 B ceiling (byte-identical to origin/main); no ratification-watched file touched.
-      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [~] **3.5 Replay on real transcripts.** Run
       `./scripts-run src/scripts/measure_turn_end_gate --store <store> --show-fires`
@@ -284,7 +283,7 @@ owner fills is added (D1).
       uses: threat-modeling
       Done 2026-11-21 off the live path: threat pass recorded in the header of `src/scripts/_lib/credential_operands.ts` (an operand misread only moves the pattern earlier; file-reading options, substitutions, redirections, wrappers and piped `echo` are never narrowed); `narrowedSegmentVerdict` only narrows. The guard edit, its ratification record and the flip of step 1.8 of `road-to-17-0-follow-ups` are deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 4.1.
 
-- [x] **4.3 Route the work-product cadence.** First action: put to the
+- [x] **4.3 Route the work-product cadence.** First action: put to the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/credential_operands.ts -->
       council, with the owner-reserved table of `decision-revisit-gate`
       attached and 1.5's table as evidence, the transition "the line is
       carried once per new or changed legal deliverable, not on every reply",
@@ -293,10 +292,9 @@ owner fills is added (D1).
       On DECIDE record row D6; on ESCALATE add blocker
       `legal-work-product-cadence` to `## Blockers` with the verdict in
       `Routed:` and mark 4.4 `blocked-by` it.
-      verify: `grep -c -E '^\| D6 \||^### blocker: legal-work-product-cadence' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
+      verify: `grep -c -E '^\| D6 \||^### blocker: legal-work-product-cadence' agents/roadmaps/later/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
       Done 2026-11-21: council ESCALATE (anthropic and openai); blocker `legal-work-product-cadence` added, 4.4 marked blocked-by it.
-      <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
 
 - [ ] **4.4 Apply the cadence verdict.**
       <!-- blocked-by: legal-work-product-cadence --> On D6 only: edit the startup stub

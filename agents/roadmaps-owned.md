@@ -39,7 +39,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-shared-task-identity-across-sessions | active | ready | The three duplicate-PR shapes the retro recorded, replayed as fixtures, each produce a warning before `gh pr create` returns; a … |
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | road-to-stop-hooks-that-count-own-edits-live-wiring | active | ready | The four false alarms of the 2026-11-21 retro stop on the live path: the review nudge charges only a session's … |
-| road-to-stop-hooks-that-count-own-edits | active | ready | A session that wrote nothing is never told to review lines; a session that wrote N lines is charged N, … |
 | road-to-ui-fixes-that-measure-first | active | ready | A visual bug is fixed only after a measurement of the rendered state, the second fix attempt on the same … |
 | road-to-verified-stale-lock-reclaim | active | ready | No file lock in `src/scripts` lets two callers hold it at once because of a stale-lock break or a release, … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
@@ -190,6 +189,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-source-silence-cutover | later | later | Every item the predecessor could not close is closed, and each is here because of a named capability gap rather … |
 | road-to-sparring-critic-spike | later | blocked-for-later | Road to sparring-critic spike — one falsification run decides whether the critic exists |
 | road-to-stacks-beyond-php | later | later | A Python, TypeScript or Go repository gets the discipline this tree gives a Laravel one, without a language-named copy of … |
+| road-to-stop-hooks-that-count-own-edits | later | later | A session that wrote nothing is never told to review lines; a session that wrote N lines is charged N, … |
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
 | road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
