@@ -24,6 +24,12 @@ A kernel-rule PR also carries a ratification artifact
 gated by `check_kernel_edit_ratified` — an ADDITION to this soak, never a
 replacement, until blocker `ratification-platform-anchor` is decided.
 
+Before writing round N+1's ratification packet, run
+`./scripts-run src/scripts/review_convergence --subject <slug>`. On `stalled`
+or `diverging`, stop re-submitting and take ADR-268 § 4's owner rung, with the
+subject's row from `agents/evidence/analysis/review-loop-replay-2026-11.md`
+attached. Advisory: the verdict refuses nothing.
+
 ## Trigger
 
 A PR is a "kernel-rule edit" iff it modifies any file in `src/rules/`

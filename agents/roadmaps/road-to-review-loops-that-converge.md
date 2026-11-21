@@ -172,7 +172,7 @@ the owner and never closes them.
       loops carry severity; 18 of them stop (348 rounds, 165 after the stop),
       and 35 high/critical findings came after a stop, 21 outside
       `fix-introduced` — listed per finding in the artefact.
-- [ ] **1.4 Put the verdict where rounds are written.** In
+- [x] **1.4 Put the verdict where rounds are written.** In
       `src/agent-src/contexts/authority/kernel-rule-edits.md` add one
       paragraph: before writing round N+1's packet, run `review_convergence
       --subject <slug>`; on `stalled` or `diverging`, stop re-submitting and
@@ -181,13 +181,17 @@ the owner and never closes them.
       verify: `grep -c review_convergence src/agent-src/contexts/authority/kernel-rule-edits.md dist/agent-src/contexts/authority/kernel-rule-edits.md` -> /:[1-9][0-9]*\n.*:[1-9][0-9]*$/
       (the source context and its projection both carry it); `./scripts-run src/scripts/check_kernel_edit_ratified` on the
       branch reports the context outside `MECHANISM_PATHS`.
-- [ ] **1.5 Generated round packet — only if 0.4 named `scope-widened`.** Write
+      done: grep reads 1 and 1; `check_kernel_edit_ratified` exits 0 with all 46
+      changed paths `out_of_scope` ("nothing to ratify").
+- [-] **1.5 Generated round packet — only if 0.4 named `scope-widened`.** Write
       `src/scripts/ratification_round_packet.ts`, test-first: round N+1's
       packet is the diff since round N's head plus round N's open findings,
       nothing restated by hand (F5). Otherwise mark `[-]` with 0.4's row as
       reason.
       verify: a fixture packet lists only fix-delta paths and open findings;
       red before the script, green after.
+      skipped: D4 — 0.4 named no lever (scope-widened 22.7 %, under 40 %), so the
+      pre-registered table does not ship the generated packet.
 
 ## Phase 2 — Binding stop and owner override
 
