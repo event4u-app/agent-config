@@ -51,7 +51,9 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * The largest default deadline that fits inside one foreground `Bash` call.
@@ -66,7 +68,7 @@ export const FOREGROUND_CEILING_MIN = 9;
 export type PollState =
     | { kind: 'unreadable'; reason: string }
     | { kind: 'pending'; total: number; done: number; pendingNames?: string[] }
-    | { kind: 'settled'; failing: string[]; total: number };
+    | { kind: 'settled'; failing: string[]; total: number; failingUrls?: Record<string, string> };
 
 /**
  * What `git ls-remote` said about the PR branch's tip.
@@ -215,7 +217,7 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
     if (status !== 0) {
         return { kind: 'unreadable', reason: `gh exited ${String(status)}` };
     }
-    let rows: { name?: string; conclusion?: string | null; status?: string | null }[];
+    let rows: { name?: string; conclusion?: string | null; status?: string | null; detailsUrl?: string | null }[];
     try {
         const parsed = JSON.parse(stdout) as { statusCheckRollup?: unknown };
         const roll = parsed.statusCheckRollup;
@@ -263,7 +265,49 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
                 .map(nameOf),
         ),
     ];
-    return { kind: 'settled', failing, total: rows.length };
+    const failingUrls: Record<string, string> = {};
+    for (const r of rows) {
+        if (failing.includes(nameOf(r)) && bad.has(concl(r)) && typeof r.detailsUrl === 'string') failingUrls[nameOf(r)] = r.detailsUrl;
+    }
+    return { kind: 'settled', failing, total: rows.length, failingUrls };
+}
+
+/**
+ * True when every failing check failed only on a step the CI mirror configures
+ * as an owner decision (`owner_decision_steps` in `src/config/ci-mirror.json`).
+ * A check whose steps could not be read (`null`) makes it false: an unknown red
+ * is never reported as "only the owner's".
+ */
+export function ownerDecisionOnly(failedStepsPerCheck: ReadonlyArray<readonly string[] | null>, ownerSteps: readonly string[]): boolean {
+    if (failedStepsPerCheck.length === 0 || ownerSteps.length === 0) return false;
+    return failedStepsPerCheck.every((steps) => steps !== null && steps.length > 0 && steps.every((s) => ownerSteps.includes(s)));
+}
+
+function ownerDecisionSteps(): string[] {
+    try {
+        const file = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'config', 'ci-mirror.json');
+        const cfg = JSON.parse(fs.readFileSync(file, 'utf-8')) as { owner_decision_steps?: Array<{ step?: unknown }> };
+        return (cfg.owner_decision_steps ?? []).map((e) => e.step).filter((x): x is string => typeof x === 'string');
+    } catch {
+        return []; // a consumer install carries no mirror config: nothing is called the owner's
+    }
+}
+
+/** The names of the failed steps of one Actions job, or null when they cannot be read. */
+function failedStepsOf(detailsUrl: string): string[] | null {
+    const m = /^https:\/\/github\.com\/([^/\s]+\/[^/\s]+)\/actions\/runs\/[0-9]+\/job\/([0-9]+)/.exec(detailsUrl);
+    if (m === null) return null;
+    const r = spawnSync('gh', ['api', `repos/${m[1] as string}/actions/jobs/${m[2] as string}`, '--jq', '[.steps[] | select(.conclusion == "failure") | .name]'], {
+        encoding: 'utf-8',
+        timeout: 60_000,
+    });
+    if (r.status !== 0) return null;
+    try {
+        const names = JSON.parse(r.stdout ?? '') as unknown;
+        return Array.isArray(names) && names.every((n) => typeof n === 'string') ? (names as string[]) : null;
+    } catch {
+        return null;
+    }
 }
 
 const MAX_NAMED = 8;
@@ -544,6 +588,19 @@ export function main(argv: readonly string[]): number {
                 `ci_settle: SETTLED RED — ${String(state.failing.length)} of ${String(state.total)} failing on ${at.head.slice(0, 9)}:\n` +
                     state.failing.map((f) => `  ${f}\n`).join(''),
             );
+            const owner = ownerDecisionSteps();
+            if (owner.length > 0) {
+                const steps = state.failing.map((f) => {
+                    const url = state.failingUrls?.[f];
+                    return url === undefined ? null : failedStepsOf(url);
+                });
+                if (ownerDecisionOnly(steps, owner)) {
+                    process.stdout.write(
+                        'ci_settle: OWNER DECISION — the only red step is one the owner decides (a ratification record ' +
+                            'that is not ratified). This is not a CI defect to keep fixing: hand the decision to the owner.\n',
+                    );
+                }
+            }
             return 1;
         }
         if (state.kind === 'unreadable') {

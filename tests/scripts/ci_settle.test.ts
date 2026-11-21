@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
     classifyPoll,
     classifyTarget,
+    ownerDecisionOnly,
     parseArgs,
     renderNoSettle,
     FOREGROUND_CEILING_MIN,
@@ -535,5 +536,46 @@ describe('renderNoSettle — what an expired wait hands its caller', () => {
         const lines = renderNoSettle(9, { kind: 'unreadable', reason: 'HTTP 502' });
         expect(lines).toHaveLength(1);
         expect(lines[0]).toMatch(/DID NOT SETTLE within 9 min/);
+    });
+});
+
+// Owner, 2026-11-21: a red that only waits for the owner is not a CI defect to
+// keep fixing. When every failing check failed only on a configured owner-decision
+// step, the waiter says so; the exit code stays 1.
+describe('ownerDecisionOnly — a red that only waits for the owner', () => {
+    const OWNER = ['Kernel / governance-hook edits carry a ratification artifact'];
+
+    it('is true when every failing check failed only on an owner-decision step', () => {
+        expect(ownerDecisionOnly([[OWNER[0] as string]], OWNER)).toBe(true);
+    });
+
+    it('is false when any failing check also failed on another step', () => {
+        expect(ownerDecisionOnly([[OWNER[0] as string, 'Lint skills']], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([[OWNER[0] as string], ['Node tests']], OWNER)).toBe(false);
+    });
+
+    it('is false when a check\'s steps could not be read, or nothing failed', () => {
+        expect(ownerDecisionOnly([[OWNER[0] as string], null], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([[]], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([], OWNER)).toBe(false);
+    });
+
+    it('is false when no owner-decision step is configured', () => {
+        expect(ownerDecisionOnly([[OWNER[0] as string]], [])).toBe(false);
+    });
+});
+
+describe('classifyPoll — a failing check keeps its details link', () => {
+    it('maps each failing check to its details url', () => {
+        const state = classifyPoll(
+            roll([
+                { name: 'Sync', conclusion: 'FAILURE', detailsUrl: 'https://github.com/o/r/actions/runs/1/job/42' },
+                { name: 'Lint', conclusion: 'SUCCESS', detailsUrl: 'https://github.com/o/r/actions/runs/1/job/43' },
+            ]),
+            '',
+            0,
+        );
+        expect(state.kind).toBe('settled');
+        if (state.kind === 'settled') expect(state.failingUrls).toEqual({ Sync: 'https://github.com/o/r/actions/runs/1/job/42' });
     });
 });
