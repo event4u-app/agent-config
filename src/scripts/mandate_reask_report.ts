@@ -229,7 +229,7 @@ export function buildReport(opts: BuildOptions = {}): MandateReaskReport {
     let ordered = [...sessions.entries()].map(([id, turns]) => ({
         id,
         turns: since === null ? turns : turns.filter((t) => t.ts >= since),
-        last: turns.length > 0 ? turns[turns.length - 1].ts : '',
+        last: turns.at(-1)?.ts ?? '',
     }));
     ordered = ordered.filter((s) => s.turns.length > 0).sort((a, b) => b.last.localeCompare(a.last));
     if (opts.sessions !== undefined) ordered = ordered.slice(0, opts.sessions);
