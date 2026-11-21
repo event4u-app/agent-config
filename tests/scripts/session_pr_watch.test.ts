@@ -6,6 +6,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    default_pr_target,
     gh_probe,
     PROBE_INTERVAL_MS,
     pr_watch_block,
@@ -92,6 +93,39 @@ describe('pr_watch_block', () => {
         expect(read_store(root, 's1').prs).toEqual([]);
         record_pr(root, 's1', 'https://github.com/O/R/pull/2534');
         expect(read_store(root, 's1').prs.map((p) => p.number)).toEqual([2534]);
+    });
+});
+
+describe('default_pr_target — the session PR a PR command takes without a URL', () => {
+    const pr = (number: number, state: PrState) => ({ number, url: `https://github.com/o/r/pull/${number}`, state });
+
+    it('takes the one OPEN PR', () => {
+        expect(default_pr_target({ prs: [pr(7, 'MERGED'), pr(8, 'OPEN')] })).toEqual(pr(8, 'OPEN'));
+    });
+
+    it('takes none when two are OPEN — the command must not guess between them', () => {
+        expect(default_pr_target({ prs: [pr(7, 'OPEN'), pr(8, 'OPEN')] })).toBeNull();
+    });
+
+    it('takes none when only MERGED or CLOSED PRs are tracked', () => {
+        expect(default_pr_target({ prs: [pr(7, 'MERGED'), pr(8, 'CLOSED')] })).toBeNull();
+    });
+
+    it('takes none from an empty store', () => {
+        expect(default_pr_target({ prs: [] })).toBeNull();
+    });
+
+    it('names the default in the per-prompt block', () => {
+        record_pr(root, 's1', URL);
+        const block = pr_watch_block(root, 's1', T0, probeOf({ 2534: 'OPEN' }));
+        expect(block).toContain(`Default PR target for PR commands: #2534 ${URL}`);
+    });
+
+    it('names no default when two PRs are open', () => {
+        record_pr(root, 's1', URL);
+        record_pr(root, 's1', 'https://github.com/o/r/pull/2538');
+        const block = pr_watch_block(root, 's1', T0, probeOf({ 2534: 'OPEN', 2538: 'OPEN' }));
+        expect(block).not.toContain('Default PR target');
     });
 });
 

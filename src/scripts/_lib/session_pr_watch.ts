@@ -149,6 +149,16 @@ export const gh_probe: PrProbe = (cwd, numbers) => {
     }
 };
 
+/**
+ * The PR a PR command takes when it was given no URL: the session's one OPEN
+ * PR. Two open PRs, or none, yield null — choosing between them is a guess the
+ * command must not make, and a merged PR is no longer a target.
+ */
+export function default_pr_target(store: PrStore): TrackedPr | null {
+    const open = store.prs.filter((p) => p.state === 'OPEN');
+    return open.length === 1 ? (open[0] as TrackedPr) : null;
+}
+
 function hhmm(iso: string): string {
     return iso.slice(11, 16);
 }
@@ -186,6 +196,7 @@ export function pr_watch_block(
             const when = p.state === 'MERGED' && p.merged_at ? ` at ${p.merged_at}` : '';
             return `- #${p.number} ${p.state}${when}${change}`;
         });
+        const target = default_pr_target(store);
         const asOf = store.probed_at === undefined ? 'never read' : `read ${hhmm(store.probed_at)} UTC`;
         const block = [
             '<session-prs>',
@@ -193,6 +204,7 @@ export function pr_watch_block(
             ...lines,
             'State them from this block, or run `gh pr view <n>` first — never from memory.',
             'A merged PR waits for nobody.',
+            ...(target === null ? [] : [`Default PR target for PR commands: #${target.number} ${target.url}`]),
             '</session-prs>',
         ].join('\n');
         // Every change is in the block just rendered; keep only what can still change.
