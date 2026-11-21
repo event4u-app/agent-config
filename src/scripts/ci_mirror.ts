@@ -29,7 +29,8 @@
  * Verdict classes, and which of them block:
  *   failed            — blocks (exit 1)
  *   owner-decision    — a configured step refused with its owner marker: the
- *                       merge is the owner's; reported, does not block a push
+ *                       merge is the owner's; does not fail the replay, but
+ *                       pre-push refuses the push until the owner has decided
  *   not-reproducible  — an expression outside the supported subset, or exit
  *                       127 (a tool this machine lacks): reported, not blocking,
  *                       because it is a fact about the machine, not the change
@@ -522,7 +523,7 @@ export function summarize(results: JobResult[]): { blocking: number; text: strin
             '    A busy machine stretches every step; rerun when it is quieter, or with --parallel 1.');
     }
     section('failed', `❌ ${blocking} blocking failure(s) — CI fails on exactly these:`, true);
-    section('owner-decision', '⏸  Owner decision required — reported, does not block the push (CI shows this step red until the owner decides):', true);
+    section('owner-decision', '⏸  Owner decision required — the replay stays green, but CI will show this step red; pre-push refuses it until the owner has decided (AGENT_CONFIG_PUSH_OWNER_DECIDED=1):', true);
     section('not-reproducible', '⚠️  Not verified on this machine — CI is the only runner for these:', false);
     section('ci-only', '☁  CI-only by configuration (src/config/ci-mirror.json):', false);
     return { blocking, text: lines.join('\n') };
