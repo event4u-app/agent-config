@@ -2179,6 +2179,28 @@ describe("owner prose only", () => {
     expect(readLanguagePin(tmp, sid)).toBe("de");
   });
 
+  it("a hunk with an empty context row or fenced context rows still never pins", () => {
+    // Ratification round 20: a space-only context row reset the hunk scan, and
+    // context rows ` ```text` / ` ```` were collapsed by the fence reader first.
+    const patches = [
+      ["--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@", " ", "-the output was there and it is gone", "+the padding is missing here and that should be fixed"],
+      ["--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@", " ```text", "-the output was there and it is gone", "+the padding is missing here and that should be fixed", " ```"],
+    ];
+    patches.forEach((rows, n) => {
+      const sid = `5d2e8f10-6a4b-4c3d-9e8f-00000000000${n}`;
+      const patch = rows.join("\n");
+      expect(ownerSpans(patch).trailing).toBe("");
+      run(envelope("Bitte prüfe das und mach dann weiter mit den Tests.", sid), { consumer_root: tmp, env: {} });
+      run(envelope(patch, sid), { consumer_root: tmp, env: {} });
+      expect(readLanguagePin(tmp, sid)).toBe("de");
+    });
+  });
+
+  it("a hunk ends at its declared length, so a typed bullet after it stays owner prose", () => {
+    const p = ["--- a/x", "+++ b/x", "@@ -1 +1 @@", "-alt", "+neu", "", "- bitte prüfe das und mach dann weiter"].join("\n");
+    expect(ownerSpans(p).trailing).toBe("- bitte prüfe das und mach dann weiter");
+  });
+
   it("malformed counts and a count without a source oblige nothing", () => {
     expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: -1 })).toBe("und");
     expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: 0.5 })).toBe("und");

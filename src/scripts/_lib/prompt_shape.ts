@@ -209,6 +209,36 @@ function fenced(text: string): string[] {
   return out;
 }
 
+/**
+ * A unified-diff hunk body is patch content, never prose: the rows under an
+ * `@@ -a,b +c,d @@` head are collapsed to `FENCE_LINE` by the row prefixes and
+ * the declared lengths — before the fence reader can read a context row as a
+ * fence, and without running past the hunk's end (rounds 19-20). An empty row
+ * is a context row whose leading space was trimmed.
+ */
+function collapseHunks(lines: string[]): string[] {
+  const out = [...lines];
+  for (let i = 0; i < out.length; i++) {
+    const head = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/.exec(out[i] ?? "");
+    if (head === null) continue;
+    let old = head[1] === undefined ? 1 : Number(head[1]);
+    let neu = head[2] === undefined ? 1 : Number(head[2]);
+    for (let j = i + 1; j < out.length; j++) {
+      const row = out[j] ?? "";
+      if (row.startsWith("\\")) {
+        // `\ No newline at end of file` belongs to the row above it.
+      } else if (old === 0 && neu === 0) break;
+      else if (row.startsWith("-") && old > 0) old--;
+      else if (row.startsWith("+") && neu > 0) neu--;
+      else if ((row === "" || row.startsWith(" ")) && old > 0 && neu > 0) (old--, neu--);
+      else break;
+      out[j] = FENCE_LINE;
+      i = j;
+    }
+  }
+  return out;
+}
+
 /** The display width of a line prefix, tabs to the next multiple of four. */
 function columns(prefix: string): number {
   let width = 0;
@@ -269,15 +299,7 @@ export interface OwnerSpans {
  * protects owner text that reaches the floor, not owner text that does not.
  */
 export function ownerSpans(text: string): OwnerSpans {
-  const lines = fenced(text);
-  // A unified-diff hunk body (`-`, `+`, ` ` and `\` lines under an `@@ -n` head)
-  // is patch content, not prose; it is collapsed like a fence (round 19).
-  for (let i = 0, hunk = false; i < lines.length; i++) {
-    const l = lines[i] ?? "";
-    if (/^@@ -\d/.test(l)) hunk = true;
-    else if (hunk && /^[-+ \\]/.test(l) && l.trim() !== "") lines[i] = FENCE_LINE;
-    else hunk = false;
-  }
+  const lines = fenced(collapseHunks(text.split(/\r\n?|\n/)).join("\n"));
   // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
   // sentence such as `To fix this, …` is the owner's, not output.
   const blank = (l: string): boolean => l.trim() === "";
