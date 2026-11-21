@@ -344,11 +344,13 @@ export function classify(prompt: string): Classification {
 export const VETO_MAX_LINES = 400;
 
 /**
- * The confident languages of every contiguous run of lines, by prefix sums:
- * a run is `de` at `MIN_MARKERS` German markers and no fewer than English ones,
- * `en` at `MIN_MARKERS` English markers and more than German ones — `_score`'s
- * own rule. Past `VETO_MAX_LINES` both languages are reported, so the caller's
- * verdict is `und`.
+ * The confident languages of every contiguous run of lines, by prefix sums
+ * and `_score`'s own rule (`_verdictOf`) — O(n²) in the line count, bounded by
+ * `VETO_MAX_LINES` (80,200 runs at most). Both languages are also reported when
+ * the whole text carries `MIN_MARKERS` of each, however they are interleaved:
+ * owner fragments separated by a paste reach the floor only together, and no
+ * contiguous run shows them (ratification round 9). Past `VETO_MAX_LINES` both
+ * languages are reported, so the caller's verdict is `und`.
  */
 function runLanguages(text: string): Set<Verdict> {
   const lines = text.split(/\r\n?|\n/);
@@ -360,13 +362,10 @@ function runLanguages(text: string): Set<Verdict> {
     de.push(de[de.length - 1]! + (line.match(DE_MARKERS) ?? []).length);
     en.push(en[en.length - 1]! + (line.match(EN_MARKERS) ?? []).length);
   }
-  for (let i = 0; i < lines.length && seen.size < 2; i++) {
-    for (let j = i + 1; j <= lines.length; j++) {
-      const d = de[j]! - de[i]!;
-      const e = en[j]! - en[i]!;
-      if (d >= MIN_MARKERS && d >= e) seen.add("de");
-      if (e >= MIN_MARKERS && e > d) seen.add("en");
-    }
+  const n = lines.length;
+  if (de[n]! >= MIN_MARKERS && en[n]! >= MIN_MARKERS) return new Set<Verdict>(["de", "en"]);
+  for (let i = 0; i < n && seen.size < 2; i++) {
+    for (let j = i + 1; j <= n; j++) seen.add(_verdictOf(de[j]! - de[i]!, en[j]! - en[i]!));
   }
   return seen;
 }
@@ -417,10 +416,13 @@ export function scoreText(text: string): Classification {
 function _score(text: string): Classification {
   const de = (text.match(DE_MARKERS) ?? []).length;
   const en = (text.match(EN_MARKERS) ?? []).length;
-  if (de < MIN_MARKERS && en < MIN_MARKERS) {
-    return { language: "und", de_markers: de, en_markers: en };
-  }
-  return { language: de >= en ? "de" : "en", de_markers: de, en_markers: en };
+  return { language: _verdictOf(de, en), de_markers: de, en_markers: en };
+}
+
+/** The one marker rule: the floor, then German on a tie. Shared with the run veto. */
+function _verdictOf(de: number, en: number): Verdict {
+  if (de < MIN_MARKERS && en < MIN_MARKERS) return "und";
+  return de >= en ? "de" : "en";
 }
 
 const LANGUAGE_NAME: Record<Exclude<Verdict, "und">, string> = {

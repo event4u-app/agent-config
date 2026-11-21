@@ -44,6 +44,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   classify,
   classifyText,
+  VETO_MAX_LINES,
   instructionText,
   isSyntheticPrompt,
   nextState,
@@ -315,9 +316,12 @@ describe("classify", () => {
 
   it("resolves a tie to German, per the rule's own mixed/tie clause", () => {
     // Two markers each side: "ich" + "und" vs "the" + "that".
-    const c = classify("ich und the that");
+    const c = classifyText("ich und the that");
     expect(c.de_markers).toBe(c.en_markers);
     expect(c.language).toBe("de");
+    // The pin no longer takes a side on a mixed prompt (ratification round 9):
+    // both languages at the floor is a veto, and the previous pin stays.
+    expect(classify("ich und the that").language).toBe("und");
   });
 });
 
@@ -1938,6 +1942,16 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    "[ratification r9] German fragments separated by a paste reach the floor only together",
+    "Please tell me why.\n\nBitte\nError: Please tell me why. Please tell me why. Please tell me why.\nnochmal\nError: end of log",
+    "und",
+  ],
+  [
+    "[ratification r9] a no-break space after a closing fence does not close it",
+    "Bitte\n\n~~~text\n~~~\u00a0\n\nPlease tell me why. Please tell me why.",
+    "und",
+  ],
+  [
     "[ratification r5] a tilde-fenced paste is code, not prose",
     "~~~\nBehebe das bitte und prüfe das.\n~~~",
     "und",
@@ -1995,6 +2009,18 @@ describe("owner prose only", () => {
   it("a four-space fence opener cannot hide a German line through the hook", () => {
     run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
     run(envelope("Please tell me why.\n\n    ```\nBehebe das bitte."), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+  });
+
+  it("a prompt of VETO_MAX_LINES lines can pin; one line more never does", () => {
+    const at = ["Bitte prüfe das und mach dann weiter.", ...Array(VETO_MAX_LINES - 1).fill("x")].join("\n");
+    expect(classify(at).language).toBe("de");
+    expect(classify(`${at}\nx`).language).toBe("und");
+  });
+
+  it("a no-break-space fence closer cannot let pasted English replace a German pin", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    run(envelope("Bitte\n\n~~~text\n~~~\u00a0\n\nPlease tell me why. Please tell me why."), { consumer_root: tmp, env: {} });
     expect(readState().language).toBe("de");
   });
 

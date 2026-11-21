@@ -162,7 +162,8 @@ const FENCE_LINE = "\u0000";
  * starts, after at most three spaces, with three or more backticks (no
  * backtick after them, so inline ` ``` ` in a sentence opens nothing) or
  * tildes (whose info string may hold tildes), and closes on a line of the same
- * character at least as long, also indented at most three spaces; an unclosed
+ * character at least as long, also indented at most three spaces and followed
+ * only by spaces or tabs (not a no-break space); an unclosed
  * fence runs to the end. CR, CRLF and LF all end a line.
  */
 function fenced(text: string): string[] {
@@ -175,7 +176,7 @@ function fenced(text: string): string[] {
     } else if (fence === "") {
       fence = mark;
       out.push(FENCE_LINE);
-    } else if (mark.startsWith(fence) && line.trim() === mark) {
+    } else if (mark.startsWith(fence) && /^ {0,3}(`{3,}|~{3,})[ \t]*$/.test(line)) {
       fence = "";
     }
   }
