@@ -95,6 +95,16 @@ describe('deriveLiveSurfaces', () => {
         expect(deriveLiveSurfaces(dir).map((x) => x.kind)).toEqual(['npm-script']);
     });
 
+    it('a compose file with a long whitespace line is indexed in linear time', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-ws-'));
+        tmps.push(dir);
+        const long = ' '.repeat(400000) + 'x';
+        fs.writeFileSync(path.join(dir, 'compose.yml'), `services:\n  web:\n    command: |\n${long}\n    ports:\n      - "8080:80"\n`);
+        const t0 = Date.now();
+        expect(deriveLiveSurfaces(dir).filter((x) => x.kind === 'compose')).toHaveLength(1);
+        expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
     it('a config with a huge window list is cut before the windows are built', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-huge-'));
         tmps.push(dir);

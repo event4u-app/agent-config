@@ -33,8 +33,8 @@ export interface LiveSurface {
     root: string;
     /** `file:line` the entry was read from. */
     derived_from: string;
-    /** npm-script only: the repo's root playwright config starts this script as its webServer. */
-    webServer?: boolean;
+    /** npm-script only: the root playwright configs (repo-relative) whose `webServer` starts this script. */
+    webServerOf?: string[];
 }
 
 export interface LiveSurfaceMap {
@@ -182,14 +182,14 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
     return out;
 }
 
-function playwrightBaseUrls(root: string, inputs: string[], texts: string[]): LiveSurface[] {
+function playwrightBaseUrls(root: string, inputs: string[], texts: Array<{ config: string; text: string }>): LiveSurface[] {
     const out: LiveSurface[] = [];
     for (const ext of ['ts', 'js', 'mjs', 'cjs', 'mts']) {
         const file = path.join(root, `playwright.config.${ext}`);
         const text = readText(file, root);
         if (text === null) continue;
         inputs.push(file);
-        texts.push(text);
+        texts.push({ config: rel(root, file), text });
         const m = /baseURL\s*:\s*['"`]([^'"`]+)['"`]/.exec(text);
         if (m === null) continue;
         out.push({
@@ -237,8 +237,13 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
         // One pass over the file for every service's line, not one scan per service.
         const lineOfService = new Map<string, number>();
         text.split('\n').forEach((l, i) => {
-            const key = /^\s+([^\s:#][^:#]*?)\s*:/.exec(l)?.[1];
-            if (key !== undefined && !lineOfService.has(key)) lineOfService.set(key, i + 1);
+            // A linear scan, no regex: an indented `key:` line.
+            if (l === '' || (l[0] !== ' ' && l[0] !== '\t')) return;
+            const colon = l.indexOf(':');
+            if (colon < 0) return;
+            const key = l.slice(0, colon).trim();
+            if (key === '' || key.includes('#') || key.includes(' ')) return;
+            if (!lineOfService.has(key)) lineOfService.set(key, i + 1);
         });
         for (const [service, spec] of Object.entries(doc.services ?? {})) {
             const ports = Array.isArray(spec?.ports) ? spec.ports : [];
@@ -290,7 +295,7 @@ function taskfileTasks(root: string, inputs: string[]): LiveSurface[] {
 
 export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[] } {
     const inputs: string[] = [];
-    const playwrightTexts: string[] = [];
+    const playwrightTexts: Array<{ config: string; text: string }> = [];
     const npm = npmScripts(root, inputs);
     const surfaces = [
         ...npm.surfaces,
@@ -300,14 +305,19 @@ export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[
         ...taskfileTasks(root, inputs),
     ].slice(0, MAX_SURFACES);
     // The npm script a root playwright config starts as its webServer is driven by a playwright run.
-    // Read off `command:` strings with comments removed, so a mention elsewhere does not count.
-    const commands = playwrightTexts.flatMap((t) =>
-        [...t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1').matchAll(/command\s*:\s*(['"`])([^'"`]*)\1/g)].map((m) => m[2] as string),
-    );
+    // The `command:` of each config's `webServer: { … }` entry, comments removed; any other
+    // `command:` property (metadata, projects) does not start a server.
+    const webServers = playwrightTexts.flatMap(({ config, text }) => {
+        const code = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+        const m = /webServer\s*:\s*\{([^{}]*)\}/.exec(code);
+        const cmd = m ? /command\s*:\s*(['"`])([^'"`]*)\1/.exec(m[1] as string) : null;
+        return cmd ? [{ config, command: (cmd[2] as string).trim() }] : [];
+    });
     for (const s of surfaces) {
         if (s.kind !== 'npm-script') continue;
         const run = new RegExp(`(?:^|[;&|]\\s*)(?:npm run|pnpm(?: run)?|yarn|bun run) ${escapeRe(s.name)}(?:$|\\s)`);
-        if (commands.some((c) => run.test(c.trim()))) s.webServer = true;
+        const of = webServers.filter((w) => run.test(w.command)).map((w) => w.config);
+        if (of.length > 0) s.webServerOf = of;
     }
     return { surfaces, inputs };
 }

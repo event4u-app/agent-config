@@ -89,7 +89,7 @@ export interface CoverageFinding {
 }
 
 /** A `Not verified:` / `Nicht verifiziert:` line — the reply's own list of what it did not check. */
-const NOT_VERIFIED_RE = /^\s*(?:[-*]\s+)?(?:\*\*)?(?:not verified|nicht verifiziert)(?:\*\*)?\s*:/im;
+const NOT_VERIFIED_RE = /^[ \t]*(?:[-*][ \t]+)?(?:\*\*)?(?:not verified|nicht verifiziert)(?:\*\*)?[ \t]*:/im;
 
 /** `165 of 405`, `165 von 405`, `40/41`. */
 const RATIO_RE = /\b(\d+)\s*(?:of|von|\/)\s*(\d+)\b/gi;
@@ -207,10 +207,14 @@ function drives(segs: readonly string[], surface: LiveSurface, root: string): bo
     }
     // A playwright run credits an npm surface only through this repo's own root config
     // (its webServer); a run naming another app's config does not.
-    if (surface.kind === 'npm-script' && surface.webServer === true && playwrightRuns.length > 0) {
+    const servedBy = surface.webServerOf ?? [];
+    if (surface.kind === 'npm-script' && servedBy.length > 0 && playwrightRuns.length > 0) {
+        // Credit only through a config whose webServer starts this script: the one a run names,
+        // or, with none named, any root config.
         const own = playwrightRuns.some((run) => {
             const named = playwrightConfig(run);
-            return named === null || /^playwright\.config\.[cm]?[jt]s$/.test(path.relative(root, path.resolve(root, named)));
+            if (named === null) return true;
+            return servedBy.includes(path.relative(root, path.resolve(root, named)).split(path.sep).join('/'));
         });
         if (own) return true;
     }

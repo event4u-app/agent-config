@@ -2375,6 +2375,37 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(f?.evidence).toContain('preview');
     });
 
+    it('only the webServer command counts, not another command: property', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-ws2-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite', preview: 'vite preview' } }));
+        fs.writeFileSync(
+            path.join(dir, 'playwright.config.ts'),
+            "export default { metadata: { command: 'npm run preview' }, webServer: { command: 'npm run dev' } };\n",
+        );
+        fs.mkdirSync(path.join(dir, 'src'));
+        const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'src', 'a.ts') }, { name: 'Bash', command: 'npx playwright test' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.evidence).toContain('preview');
+    });
+
+    it('a run naming one root config credits only the script that config starts', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-ws3-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite', preview: 'vite preview' } }));
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { webServer: { command: 'npm run dev' } };\n");
+        fs.writeFileSync(path.join(dir, 'playwright.config.js'), "module.exports = { webServer: { command: 'npm run preview' } };\n");
+        fs.mkdirSync(path.join(dir, 'src'));
+        const calls: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'src', 'a.ts') },
+            { name: 'Bash', command: 'npx playwright test -c playwright.config.ts' },
+        ];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.evidence).toContain('preview');
+    });
+
+    it('a Not verified heading after several blank lines still lists what follows', () => {
+        expect(detectCoverageGap('Done.\n\n\n\nNot verified: 40/41 pages', [], undefined)).toBeNull();
+    });
+
     it('a browser run against another app\'s config does not drive the root npm surface', () => {
         const dir = appWorkspace();
         const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'npx playwright test -c apps/admin/playwright.config.ts' }];
