@@ -38,6 +38,8 @@ Round 12 refused 2/2; neither seat found an override. Findings and what changed 
 
 Rounds 1-11 refused, each on a concrete counterexample, each fixed with a test that was red first; their questions are committed beside this file (`language-pin-from-owner-prose-ratification-r1` … `r11-20261121.question.md`). The fixes converged on the single whole-prompt veto described above (round 10) and line-aware fences that can no longer hide text (rounds 6-12).
 
+**Please keep two classes apart.** An OVERRIDE is a pin written in language X while the owner's own typed text reaches the floor in language Y — the invariant says it cannot happen, and a counterexample is a blocker. A MISSED UPDATE leaves the previous pin in place (`und`) although the owner typed enough to set one — the recorded cost of owner decision D1 and of D7; report it, but it is not an authority or safety defect.
+
 ## What to answer
 
 1. Does the diff contain a defect — in the span reader, the classifier, the pin field, the gate's reading of it, or the budget entry? Name file and line.
