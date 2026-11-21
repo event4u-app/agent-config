@@ -105,6 +105,10 @@ export function readText(file: string, root?: string): string | null {
 
 /** Compose files read per derivation; with the per-file bound this caps the whole read. */
 const MAX_COMPOSE_FILES = 8;
+/** Directory entries looked at when finding compose files. */
+const MAX_DIR_ENTRIES = 4096;
+/** Surfaces per derivation, enforced while building as well as at the end. */
+const MAX_SURFACES = 64;
 
 export function rel(root: string, file: string): string {
     return path.relative(root, file).split(path.sep).join('/');
@@ -151,7 +155,8 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
         }
         if (typeof conf !== 'object' || conf === null || Array.isArray(conf)) continue;
         const windows = conf.app?.windows ?? conf.tauri?.windows;
-        const list = Array.isArray(windows) && windows.length > 0 ? windows : [{}];
+        // Cut before building: a sub-1 MiB config can list hundreds of thousands of windows.
+        const list = (Array.isArray(windows) && windows.length > 0 ? windows : [{}]).slice(0, MAX_SURFACES);
         const start = typeof scripts['tauri'] === 'string' ? 'npm run tauri dev' : 'npx tauri dev';
         // Each line once per file, not one full-file scan per window.
         const widthLine = lineOf(text, /"width"\s*:/);
@@ -203,11 +208,18 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
     const out: LiveSurface[] = [];
     let names: string[] = [];
     try {
-        names = fs
-            .readdirSync(root)
-            .filter((n) => /^(docker-)?compose[\w.-]*\.ya?ml$/.test(n))
-            .sort()
-            .slice(0, MAX_COMPOSE_FILES);
+        // A bounded directory walk: at most MAX_DIR_ENTRIES names are looked at.
+        const dirHandle = fs.opendirSync(root);
+        try {
+            for (let i = 0; i < MAX_DIR_ENTRIES; i += 1) {
+                const entry = dirHandle.readSync();
+                if (entry === null) break;
+                if (/^(docker-)?compose[\w.-]*\.ya?ml$/.test(entry.name)) names.push(entry.name);
+            }
+        } finally {
+            dirHandle.closeSync();
+        }
+        names = names.sort().slice(0, MAX_COMPOSE_FILES);
     } catch {
         return out;
     }
@@ -231,7 +243,8 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
         for (const [service, spec] of Object.entries(doc.services ?? {})) {
             const ports = Array.isArray(spec?.ports) ? spec.ports : [];
             const line = lineOfService.get(service) ?? 1;
-            for (const p of ports) {
+            for (const p of ports.slice(0, MAX_SURFACES)) {
+                if (out.length >= MAX_SURFACES) break;
                 const host = /^(?:[\d.]+:)?(\d+):\d+/.exec(String(p));
                 if (host === null) continue;
                 out.push({
@@ -275,9 +288,6 @@ function taskfileTasks(root: string, inputs: string[]): LiveSurface[] {
     return out;
 }
 
-/** Surfaces per derivation: the Stop hook checks each against the turn's commands. */
-const MAX_SURFACES = 64;
-
 export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[] } {
     const inputs: string[] = [];
     const playwrightTexts: string[] = [];
@@ -290,10 +300,14 @@ export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[
         ...taskfileTasks(root, inputs),
     ].slice(0, MAX_SURFACES);
     // The npm script a root playwright config starts as its webServer is driven by a playwright run.
+    // Read off `command:` strings with comments removed, so a mention elsewhere does not count.
+    const commands = playwrightTexts.flatMap((t) =>
+        [...t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1').matchAll(/command\s*:\s*(['"`])([^'"`]*)\1/g)].map((m) => m[2] as string),
+    );
     for (const s of surfaces) {
         if (s.kind !== 'npm-script') continue;
-        const run = new RegExp(`\\b(?:npm run|pnpm(?: run)?|yarn|bun run) ${escapeRe(s.name)}\\b`);
-        if (playwrightTexts.some((t) => run.test(t))) s.webServer = true;
+        const run = new RegExp(`(?:^|[;&|]\\s*)(?:npm run|pnpm(?: run)?|yarn|bun run) ${escapeRe(s.name)}(?:$|\\s)`);
+        if (commands.some((c) => run.test(c.trim()))) s.webServer = true;
     }
     return { surfaces, inputs };
 }

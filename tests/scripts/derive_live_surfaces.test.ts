@@ -95,6 +95,15 @@ describe('deriveLiveSurfaces', () => {
         expect(deriveLiveSurfaces(dir).map((x) => x.kind)).toEqual(['npm-script']);
     });
 
+    it('a config with a huge window list is cut before the windows are built', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-huge-'));
+        tmps.push(dir);
+        fs.writeFileSync(path.join(dir, 'tauri.conf.json'), `{"app":{"windows":[${Array(200000).fill('{}').join(',')}]}}`);
+        const t0 = Date.now();
+        expect(deriveLiveSurfaces(dir)).toHaveLength(64);
+        expect(Date.now() - t0).toBeLessThan(2000);
+    });
+
     it('derives at most 64 surfaces however many windows a config lists', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-cap-'));
         tmps.push(dir);

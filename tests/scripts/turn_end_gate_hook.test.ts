@@ -2363,7 +2363,11 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-ws-')));
         tmp_dirs.push(dir);
         fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite', preview: 'vite preview' } }));
-        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { webServer: { command: 'npm run dev' } };\n");
+        // The comment names `preview` too, and must not count as starting it.
+        fs.writeFileSync(
+            path.join(dir, 'playwright.config.ts'),
+            "// later: npm run preview\nexport default { webServer: { command: 'npm run dev' } };\n",
+        );
         fs.mkdirSync(path.join(dir, 'src'));
         const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'src', 'a.ts') }, { name: 'Bash', command: 'npx playwright test' }];
         const f = detectCoverageGap('Fertig.', calls, dir);

@@ -374,9 +374,10 @@ export function classifyRun(record: unknown): VerificationVerdict {
     // command text. And only a recorded 0 is replaced (D9): a nonzero code keeps
     // the verdict it always had, so masking can turn a pass into a gap but never
     // demote a refusal, whatever the shell actually ran.
-    const masked = exitMasking(r.command) !== null;
+    const command = r.command;
     const exitVerdict = (code: number): VerificationVerdict => {
-        if (masked && code === 0) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
+        // Parsed only on the one path that can use it: a recorded 0.
+        if (code === 0 && exitMasking(command) !== null) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
         return code === 0
             ? { kind: 'PASS_EVIDENCE_OK' }
             : { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
