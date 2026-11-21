@@ -163,13 +163,13 @@ export interface OwnerSpans {
   /** The paragraph after the last output paste, when one follows it. */
   trailing: string;
   /**
-   * The last paragraph, whoever wrote it, when it follows a blank line and no
-   * paste marker stands anywhere above it — never scored, only a veto: an
-   * unmarked paragraph pasted above a typed one looks exactly like a typed
-   * paragraph above a pasted one, so when the two disagree the scorer cannot
-   * tell which is the owner's.
+   * Every prose line, and every paragraph of them, above the first document
+   * head: the lines that are not output-shaped and not fenced, whoever wrote
+   * them. Never scored, only a veto — typed and pasted prose have the same
+   * shape wherever they sit (above, below or glued to a paste), so when two of
+   * them confidently disagree no span rule can say which is the owner's.
    */
-  tail: string;
+  prose: string[];
 }
 
 /**
@@ -193,19 +193,21 @@ export interface OwnerSpans {
  * last paragraph as typed would hand the pin back to the paste.
  *
  * Both spans are returned as found; neither is dropped in favour of the other.
- * Deciding between a lead and a trailing span that disagree is the scorer's job
- * (`classify` in the language mirror: two confident spans that disagree are
- * undetermined), because either one may be the paste's own first or last line.
+ * Deciding whether they can be trusted is the scorer's job: `prose` lists every
+ * prose line and paragraph above the first document head, and `classify` in
+ * the language mirror returns `und` when any two of them confidently disagree
+ * (ratification rounds 1-3 found each narrower rule had a shape it missed).
  *
  * A trailing span with no blank line between it and the paste is weaker
  * evidence than a lead: it is read only when the prompt has no lead. A wrapped
  * error message (`mach das:` over `Error: …` continued on unmarked lines) would
  * otherwise drop the owner's lead and pin the paste's continuation.
  *
- * KNOWN RESIDUAL, stated rather than hidden: a prompt that OPENS with a paste
+ * KNOWN RESIDUALS, stated rather than hidden: a prompt that OPENS with a paste
  * ending in an unmarked prose line, with no typed text after it, yields that
- * line as the trailing span. It carries markers only when the line is a
- * sentence.
+ * line as the trailing span; and a typed line that itself starts like output
+ * (`Error: …`) is read as paste. Neither has owner prose the span reader can
+ * see, so neither has anything for the veto to protect.
  */
 export function ownerSpans(text: string): OwnerSpans {
   const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
@@ -238,11 +240,20 @@ export function ownerSpans(text: string): OwnerSpans {
   const glued = lead.length === 0 && before.filter(isOutput).length >= 2;
   const trailing = separated || glued ? candidate : [];
 
-  return {
-    lead: lead.join("\n"),
-    trailing: trailing.join("\n"),
-    tail: separated && !before.some(isPaste) ? lines.slice(start + 1, end + 1).join("\n") : "",
-  };
+  const prose: string[] = [];
+  let para: string[] = [];
+  for (const line of [...lines, ""]) {
+    if (DOCUMENT_HEAD.test(line)) break;
+    if (!blank(line) && !isOutput(line)) {
+      prose.push(line);
+      para.push(line);
+    } else if (para.length > 0) {
+      prose.push(para.join("\n"));
+      para = [];
+    }
+  }
+
+  return { lead: lead.join("\n"), trailing: trailing.join("\n"), prose };
 }
 
 /**
@@ -274,7 +285,7 @@ const HOST_TURN_HEAD =
  */
 export function ownerProse(prompt: string): OwnerSpans {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
-    return { lead: "", trailing: "", tail: "" };
+    return { lead: "", trailing: "", prose: [] };
   }
   return ownerSpans(stripInjectedRegions(prompt));
 }

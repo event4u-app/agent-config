@@ -434,7 +434,12 @@ describe("run", () => {
       "fixed, and these are from the module which was changed and that will need\n" +
       "work before this can be merged into the branch that has these commits.";
     // Without the paste filter this scores en=18 / de=2 and pins ENGLISH.
-    expect(classify(mixed).language).toBe("de");
+    // The wrapped lines below `Error:` are unmarked prose, and an English
+    // paste ABOVE `Error:` with a typed German line glued below has the same
+    // shape (ratification round 3), so the owner-prose classifier answers
+    // `und` — the paste does not decide, and the previous pin stays.
+    expect(classify(mixed).language).toBe("und");
+    expect(classifyText(mixed).language).toBe("de");
     expect(instructionText(mixed)).not.toMatch(/test suite is not passing/);
   });
 
@@ -1830,8 +1835,29 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "de",
   ],
   [
+    // The paste's last line is unmarked English prose: it vetoes, never decides.
     "[regression] paste ending in an English prose line under a German lead",
     "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nThe job was cancelled because the runner lost its connection to the server.",
+    "und",
+  ],
+  [
+    "[ratification r3] English paste above one output line, typed German line glued below",
+    "This is the error that we saw when we tried to run the tests.\nError: test runner exited with code 1\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r3] English lead, one output line, glued German instruction",
+    "Please translate this.\nError: translation failed\nÜbersetze das bitte und prüfe das.",
+    "und",
+  ],
+  [
+    "[ratification r3] conflicting paragraphs that reach the floor only as paragraphs",
+    "Bitte\nnochmal\n\nPlease\nwhy",
+    "und",
+  ],
+  [
+    "[ratification r3] a German question over a log whose prose agrees still pins German",
+    "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nDer Job wurde abgebrochen, weil die Verbindung zum Server weg war.",
     "de",
   ],
 ];
@@ -1868,6 +1894,15 @@ describe("owner prose only", () => {
     const state = readState();
     expect(state.source).toBe("system-locale");
     expect(state.owner_prose_chars).toBe(0);
+  });
+
+  it("an ambiguous prompt keeps the earlier German pin through the hook", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    for (const [name, prompt] of OWNER_PROSE_ROWS) {
+      if (!name.startsWith("[ratification r3]") || name.includes("still pins")) continue;
+      run(envelope(prompt), { consumer_root: tmp, env: {} });
+      expect(readState().language).toBe("de");
+    }
   });
 
   // D5 caveat: a host turn reaching `UserPromptSubmit` must leave an existing
