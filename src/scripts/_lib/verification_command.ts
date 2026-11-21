@@ -494,8 +494,9 @@ export function exitMasking(command: string): ExitMasking | null {
  * an `exit=N` line in the output can be read in place of a masked one — with
  * `echo`, and `exit=` directly before the expansion, so every digit printed
  * after it is the expansion's (a `printf` format can print a constant):
- * `cmd; echo "exit=$?"`, `cmd || echo "exit=$?"`, or
- * `cmd | tail; echo "exit=${PIPESTATUS[k]}"` with `k` the verifier's index.
+ * `cmd; echo "exit=$?"` or `cmd | tail; echo "exit=${PIPESTATUS[k]}"` with `k`
+ * the verifier's index. `cmd || echo "exit=$?"` does not count: on success the
+ * echo is skipped and the last line printed is the verifier's own.
  * A status printed later (`cmd; echo ready; echo "exit=$?"`), one followed by
  * more output (`cmd; echo "exit=$?"; echo exit=0`) or a filter's
  * (`PIPESTATUS[1]`, or `$?` after a pipe) is not the verifier's.
@@ -512,8 +513,8 @@ export function echoesVerifierStatus(command: string): boolean {
     if (h !== 'echo' || next?.segs.length !== 1 || v + 2 !== ps.length) return false;
     const k = verifierIndex(p);
     const filtered = k < p.segs.length - 1 && !p.pipefail;
-    if (filtered && p.sepAfter !== ';') return false;
-    if (!filtered && p.sepAfter !== ';' && p.sepAfter !== '||') return false;
+    // After `;` only: an echo behind `||` is skipped on success, and the last line is then the verifier's own.
+    if (p.sepAfter !== ';') return false;
     // `exit=` right before the expansion, so the digits printed are the expansion's own.
     const expansion = filtered ? `\\$\\{PIPESTATUS\\[${String(k)}\\]\\}` : '\\$\\?|\\$\\{\\?\\}';
     return new RegExp(`\\bexit(?:[ _]code)?[ \\t]*[=:][ \\t]*(?:${expansion})(?=["'\\s]|$)`).test(argsOf(next));

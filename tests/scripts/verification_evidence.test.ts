@@ -602,6 +602,12 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
     });
 
+    it('a status echo the shell skips on success is not read from the verifier\'s own output', () => {
+        expect(
+            classifyRun(rec({ command: 'task ci || echo "exit=$?"', exit_code: 0, stdout_tail: 'log line\nexit=1\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
     it('records and does not refuse until the arming phase decides', () => {
         expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
     });

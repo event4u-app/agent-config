@@ -151,7 +151,6 @@ describe('exitMasking — whose exit code does the record carry', () => {
 
     it.each([
         'task ci; echo "exit=$?"',
-        'task ci || echo "exit=$?"',
         'task ci | tail -5; echo "exit=${PIPESTATUS[0]}"',
     ])('`%s` echoes the verifier\'s own status', (command) => {
         expect(echoesVerifierStatus(command)).toBe(true);
@@ -166,6 +165,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         // The printed digits must come from the expansion itself.
         "npx tsc --noEmit; printf 'exit=1%.0s\\n' \"$?\"",
         'npx tsc --noEmit; echo "exit=1 $?"',
+        // On success the echo is skipped, so the last line is the verifier's own output.
+        'task ci || echo "exit=$?"',
     ])('`%s` echoes a status that is not the verifier\'s', (command) => {
         expect(echoesVerifierStatus(command)).toBe(false);
     });
