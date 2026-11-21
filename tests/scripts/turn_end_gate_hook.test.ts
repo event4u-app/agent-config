@@ -25,6 +25,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
     alreadyRefusedTurn,
     detectCompletionClaim,
+    detectCoverageGap,
     detectLanguage,
     detectPromissory,
     detectUntestedChange,
@@ -36,6 +37,7 @@ import {
     readLanguagePin,
     readTurnRunState,
     readTranscriptTail,
+    refusingFindings,
     visibleProse,
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
@@ -2194,5 +2196,53 @@ describe('the header counts the detectors the gate actually has', () => {
     it('every DetectorId is named in the header, exactly once per lettered row', () => {
         const rows = [...header.matchAll(/^ \*\s+[A-Z] — .*?\(`([a-z-]+)`/gm)].map((m) => m[1]);
         expect([...rows].sort()).toEqual([...ids].sort());
+    });
+});
+
+describe('detector G — a partial ratio reported as complete', () => {
+    // road-to-done-claims-with-read-exit-codes 3.1: "a book was reported
+    // complete when about 165 of 405 pages had been covered".
+    it.each([
+        'Fertig — 165 von 405 Seiten bearbeitet.',
+        'Done. 1 of 9 steps processed.',
+        'All done: 40/41 checks passed.',
+    ])('records a coverage finding on: %s', (reply) => {
+        const f = detectCoverageGap(reply);
+        expect(f?.detector).toBe('coverage');
+        expect(f?.code).toBe('partial_ratio');
+    });
+
+    it.each([
+        ['a full ratio', 'Fertig: 405 von 405 Seiten.'],
+        ['a ratio under Not verified', 'Done.\n\nNot verified:\n- 165 of 405 pages, the rest needs the scanner.'],
+        ['a ratio under Nicht verifiziert', 'Fertig.\n\nNicht verifiziert: 165 von 405 Seiten.'],
+        ['a negated line', 'Noch nicht fertig, 165 von 405 Seiten.'],
+        ['a ratio inside a fenced block', 'Fertig.\n\n```\n165 von 405\n```'],
+        ['a ratio inside a table', 'Fertig.\n\n| Seiten | Stand |\n|---|---|\n| 165 von 405 | offen |'],
+        ['no completion claim', 'Stand: 165 von 405 Seiten bearbeitet, ich mache weiter.'],
+    ])('records nothing on %s', (_label, reply) => {
+        expect(detectCoverageGap(reply)).toBeNull();
+    });
+
+    it('never refuses: a coverage finding is recorded, not a refusal', () => {
+        const f = detectCoverageGap('Fertig — 165 von 405 Seiten bearbeitet.');
+        expect(f).not.toBeNull();
+        expect(refusingFindings([f!])).toEqual([]);
+    });
+
+    it('lets the turn end end-to-end and counts the finding beside the refusal record', () => {
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], 'Fertig — 165 von 405 Seiten bearbeitet.');
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        const stateDir = path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate');
+        const recorded = fs.readdirSync(stateDir).filter((f) => f.endsWith('.recorded.json'));
+        expect(recorded).toHaveLength(1);
+        const rec = JSON.parse(fs.readFileSync(path.join(stateDir, recorded[0]!), 'utf8')) as {
+            counts: Record<string, number>;
+            codes: Record<string, number>;
+        };
+        expect(rec.counts['coverage']).toBe(1);
+        expect(rec.codes['partial_ratio']).toBe(1);
     });
 });

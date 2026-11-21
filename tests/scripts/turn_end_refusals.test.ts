@@ -240,6 +240,7 @@ describe('step 1.1 — per detector, never pooled', () => {
             'completion',
             'pending-decision',
             'untested',
+            'coverage',
         ]);
     });
 
@@ -330,6 +331,26 @@ describe('step 1.2 — the TTL the header admitted was missing', () => {
         expect(result.pruned).toBe(1);
         expect(fs.existsSync(aged)).toBe(false);
         expect(fs.existsSync(fresh)).toBe(true);
+    });
+
+    it('prunes an aged record-only counter file on its own last_at clock', () => {
+        // Detector G writes `<key>.recorded.json` beside the refusal record. It
+        // is measurement like a shadow record, so it must age out the same way
+        // and never be read as a refusal.
+        const dir = refusalStateDir(root);
+        fs.mkdirSync(dir, { recursive: true });
+        const write = (name: string, at: string): string => {
+            const file = path.join(dir, `${name}.recorded.json`);
+            fs.writeFileSync(file, JSON.stringify({ counts: { coverage: 1 }, codes: {}, first_at: at, last_at: at }));
+            return file;
+        };
+        const aged = write('aged', daysAgo(REFUSAL_STATE_MAX_AGE_DAYS + 5));
+        const fresh = write('fresh', daysAgo(1));
+        const result = pruneAgedRefusalState(root);
+        expect(result.pruned).toBe(1);
+        expect(fs.existsSync(aged)).toBe(false);
+        expect(fs.existsSync(fresh)).toBe(true);
+        expect(collectRefusalStats(root).sessionsWithRefusals).toBe(0);
     });
 
     /**
@@ -602,14 +623,14 @@ describe('Q1 rollup — the 2026-10-01 review round', () => {
         expect(stats.latest).toBe('2026-09-30T10:00:00.000Z');
     });
 
-    it('names exactly the three detectors an open dispatch suppresses', () => {
+    it('names exactly the four detectors an open dispatch suppresses', () => {
         // M2. `runDetectors` skips these three when a dispatch is open and the
         // shadow record carries no dispatch flag, so their denominators would
         // absorb silences nobody observed. Pinned as a SET rather than checked
         // at the render layer, because the gate is where the suppression lives
         // and a drift between the two is invisible in the output.
         expect([...DISPATCH_CENSORED_DETECTORS].sort()).toEqual(
-            ['completion', 'promissory', 'untested'],
+            ['completion', 'coverage', 'promissory', 'untested'],
         );
         // …and the three that are NOT censored are the three the gate runs
         // unconditionally. If a detector moves sides in the gate, this is the

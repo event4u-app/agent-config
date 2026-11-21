@@ -250,7 +250,7 @@ Exit: the new detector records findings on its fixtures and refuses nothing.
 Rollback: remove the id from `DETECTOR_IDS` and the detector from
 `runDetectors`.
 
-- [ ] **3.1 Red first: coverage cases in `tests/scripts/turn_end_gate_hook.test.ts`.**
+- [x] **3.1 Red first: coverage cases in `tests/scripts/turn_end_gate_hook.test.ts`.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Cases that must produce a finding:
       - "Fertig — 165 von 405 Seiten bearbeitet."
       - "Done. 1 of 9 steps processed."
@@ -264,7 +264,11 @@ Rollback: remove the id from `DETECTOR_IDS` and the detector from
 
       Each case expects detector `coverage` with reason `partial_ratio`.
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` -> /coverage/
-- [ ] **3.2 Implement `detectCoverageGap` in `turn_end_gate_hook.ts`.**
+      **Done 2026-11-21:** Three finding cases, seven silent cases (full ratio,
+      `Not verified:` and `Nicht verifiziert:` lists, negated line, fence,
+      table, no claim), a never-refuses case and an end-to-end run; 12 red
+      before 3.2 (exit 1).
+- [x] **3.2 Implement `detectCoverageGap` in `turn_end_gate_hook.ts`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
       - The trigger is the existing `_COMPLETION_RE` (`:557`) plus
         `_NEGATED_CLAIM_RE` (`:578`). No new completion keywords, per the
         2026-08-12 council bound quoted at `:568-576`.
@@ -276,11 +280,24 @@ Rollback: remove the id from `DETECTOR_IDS` and the detector from
         refuse. A test asserts it never refuses.
 
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts tests/scripts/measure_turn_end_gate.test.ts` -> 0
-- [ ] **3.3 Pre-register `coverage`'s bars in `docs/contracts/turn-end-detector-demotion.md`.**
+      **Done 2026-11-21:** The detector body lives in
+      `src/scripts/_lib/coverage_claim.ts`, with a three-line
+      `detectCoverageGap` wrapper in the hook: the hook sat at 1,495 of its
+      1,500-line ceiling and `check_source_size_budget` refused the first in-
+      file version (+7). The completion trigger and negation moved there with
+      it, so D and G share one trigger. `coverage` joined `DetectorId`,
+      `DETECTOR_IDS` and the dispatch-censored set; `refusingFindings` drops it
+      from the verdict and `markRecordOnly` counts it in `<key>.recorded.json`,
+      which the pruner ages on `last_at` and the rollup skips. 3 test files, 235
+      tests, exit 0; typecheck exit 0.
+- [x] **3.3 Pre-register `coverage`'s bars in `docs/contracts/turn-end-detector-demotion.md`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       "The six detectors" becomes seven. The bar and the sample floor are
       copied in shape from detector F's rows and give this detector's own
       numbers. The contract requires bars to exist before a detector can refuse.
       verify: `grep -c "coverage" docs/contracts/turn-end-detector-demotion.md` -> /[1-9]/
+      **Done 2026-11-21:** Heading and table now read seven; G takes the bar row of F
+      (40 %, 3) with a stated reason, and its sample floor reads recorded
+      findings until armed.
 
 ## Phase 4: Verified and not verified, with a generated reachability map
 

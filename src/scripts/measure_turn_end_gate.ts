@@ -279,14 +279,16 @@ export function collectShadowStats(workspaceRoot: string): ShadowStats {
  * tell a dispatch-suppressed turn from a clean one may not report Q2 for A or
  * D at all."* This set is that clause applied to the shadow rollup, extended to
  * F — the contract's attribution paragraph names only A and D because it
- * predates F, while its own § The six detectors table and the gate both gate
+ * predates F, while its own § The seven detectors table and the gate both gate
  * all three. The wider set is the safe reading of a censoring rule.
  *
  * Closing this needs a `dispatch_open` flag on the shadow row, which is a
- * PRODUCER change. Until then these three are censored rather than estimated.
+ * PRODUCER change. Until then these are censored rather than estimated. G
+ * (`coverage`) joined on 2026-11-21: the gate skips it under an open dispatch
+ * for the same reason it skips D, so its silences are censored the same way.
  */
 export const DISPATCH_CENSORED_DETECTORS: ReadonlySet<RefusalDetectorId> =
-    new Set<RefusalDetectorId>(['promissory', 'completion', 'untested']);
+    new Set<RefusalDetectorId>(['promissory', 'completion', 'untested', 'coverage']);
 
 /**
  * The **retry-conditioned re-refusal share** for one detector on one layer, or
