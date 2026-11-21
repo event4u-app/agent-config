@@ -1,6 +1,11 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-12-21
+entry_condition:
+  what: the owner answers blocker convergence-stop-binding or owner-override-satisfies-ratification-ci (unblocks 2.2 / 2.3), or ten more ratification subjects close after 2026-11-21 (unblocks 2.4)
+  when: either Status line reads resolved, or `./scripts-run src/scripts/review_loop_census --json` lists ten ratification subjects with a firstDate after 2026-11-21 that carry a recorded verdict
+  who: owner for the two blockers; for 2.4 none — subjects accrue from ordinary ratification work and any session then runs 2.4
 tree_pin: 811cea61d6
 execution:
   mode: autonomous
@@ -195,7 +200,7 @@ the owner and never closes them.
 
 ## Phase 2 — Binding stop and owner override
 
-- [ ] **2.1 Route both blockers and attach the replay.** Put each `## Blockers`
+- [x] **2.1 Route both blockers and attach the replay.** Put each `## Blockers`
       entry below to the council with `decision-revisit-gate`'s owner-reserved
       table; record the verdict in its `Routed:` line. On ESCALATE append 1.3's
       pooled row and per-option cost to the entry and to the ratification-cap
@@ -203,14 +208,18 @@ the owner and never closes them.
       Decisions row.
       verify: both `Routed:` lines carry a dated council verdict; the replay's
       pooled row appears in both blockers.
-- [ ] **2.2 Enforce the chosen stop.** <!-- blocked-by: convergence-stop-binding | asked: no — authoring run; step 2.1 routes it to the council first -->
+      done: council 2026-11-21 ESCALATE on both (2/2 seats); pooled row and
+      per-option cost appended to both entries here and to
+      `later/road-to-a-review-that-ends` blocker
+      `ratification-round-cap-is-an-owner-contract-change`.
+- [ ] **2.2 Enforce the chosen stop.** <!-- blocked-by: convergence-stop-binding | asked: routed — council 2026-11-21 ESCALATE (2/2), owner-reserved -->
       Test-first in `tests/scripts/check_kernel_edit_ratified.test.ts`: a
       subject past the chosen stop without an owner decision is refused and
       every open high/critical finding is listed for the owner. Then edit the
       reviewer modules; the change carries its own ratification record (F7).
       verify: the new test is red before the edit and green after;
       `npx vitest run tests/scripts/check_kernel_edit_ratified.test.ts` passes.
-- [ ] **2.3 Owner record turns the gate green, per the chosen option.** <!-- blocked-by: owner-override-satisfies-ratification-ci | asked: no — authoring run; step 2.1 routes it to the council first -->
+- [ ] **2.3 Owner record turns the gate green, per the chosen option.** <!-- blocked-by: owner-override-satisfies-ratification-ci | asked: routed — council 2026-11-21 ESCALATE (2/2), owner-reserved -->
       Test-first: a committed record under `agents/evidence/owner-directives/`
       naming the subject digest passes the gate as the owner chose; the same
       record added by the change it ratifies is refused (ADR-268 § 4, gaining
@@ -222,6 +231,8 @@ the owner and never closes them.
       owner.
       verify: a Decisions row with both medians and the routed-finding count,
       citing the regenerated artefacts.
+      waiting: entry condition — ten ratification subjects must close after the
+      pilot landed (2026-11-21); none has yet.
 
 <!-- Release holds — none.
      guarded: Phase 1 ships advisory (review_convergence always exits 0, outside
@@ -236,7 +247,9 @@ the owner and never closes them.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned — ending a recorded verification loop is governance self-amendment (decision-revisit-gate, owner-reserved), as ADR-294 was for the completion review. Same decision as `road-to-a-review-that-ends` blocker `ratification-round-cap-is-an-owner-contract-change`; answering one resolves both, and 2.2 flips both Status lines.
-- **Routed:** pending — not routed at authoring (single-file authoring run); step 2.1 routes it.
+- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats); neither seat returned DECIDE or recommended an option. Both named the disposition of the 35 post-stop findings as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`.
+- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 165 of 348 rounds would not have run, 35 high/critical findings were raised after the stop, 21 outside fix-introduced.
+- **Cost:** Per-option cost over the same 26 loops — cap at 3: 26 loops cut, 270 rounds saved, 101 high/critical after (68 non-fix); cap at 5: 23 cut, 218 saved, 73 after (48 non-fix); criterion (D5): 18 stopped, 165 saved, 35 after (21 non-fix); no binding stop: 0 / 0 / 0.
 - **Blocks:** 2.2
 - **Question:** Should a council ratification stop binding — refused past the stop, open high/critical findings to the owner — and where?
 - **Recommendation:** (c) once 1.3's replay shows its cost: the retro's own data show the ratification yield does not fall after round 5, so a fixed N cuts rounds that still find defects while a criterion stops loops that stall or diverge.
@@ -249,7 +262,9 @@ the owner and never closes them.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned — lowering what turns a required gate green touches the safety floor and ADR-268 § 4's gaining-party rule.
-- **Routed:** pending — not routed at authoring (single-file authoring run); step 2.1 routes it.
+- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats), and ADR-268 § 4's separation rule (openai); neither seat returned DECIDE or recommended an option. Both named the disposition of the 35 post-stop findings as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`. openai flagged that option (b) as worded — a recorded `stalled`/`diverging` verdict **or** a refused final round — could turn CI green on an advisory verdict before any binding stop exists.
+- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 165 of 348 rounds would not have run, 35 high/critical findings were raised after the stop, 21 outside fix-introduced.
+- **Cost:** If CI accepts an owner record only after `stalled`/`diverging` (option b), 18 of the 26 measured loops would have qualified at the replay's stop round; under (a) every loop qualifies at any round; under (c) none does, and the forge bypass stays.
 - **Blocks:** 2.3
 - **Question:** Should an owner-written record make the ratification gate pass, instead of the forge bypass that leaves CI red (F6)?
 - **Recommendation:** (b) — the gate stays independent by default and an owner override exists only after the loop has demonstrably stopped converging.
@@ -279,7 +294,7 @@ the owner and never closes them.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command regenerates the census of every completion-review and ratification loop, and no census, origin or replay file is edited by hand.
-- [ ] AC-2 — The origin artefact names, for rising rounds, each class's share and the lever 0.4's threshold table selects, or states that none qualified.
-- [ ] AC-3 — `review_convergence` returns a verdict for every census subject, and the replay states per subject where it would have stopped and every high/critical finding raised after that round.
-- [ ] AC-4 — Each owner blocker is either resolved with its step enforced by a passing test, or open with a dated council `Routed:` verdict and the replay's pooled row attached.
+- [x] AC-1 — One command regenerates the census of every completion-review and ratification loop, and no census, origin or replay file is edited by hand.
+- [x] AC-2 — The origin artefact names, for rising rounds, each class's share and the lever 0.4's threshold table selects, or states that none qualified.
+- [x] AC-3 — `review_convergence` returns a verdict for every census subject, and the replay states per subject where it would have stopped and every high/critical finding raised after that round.
+- [x] AC-4 — Each owner blocker is either resolved with its step enforced by a passing test, or open with a dated council `Routed:` verdict and the replay's pooled row attached.
