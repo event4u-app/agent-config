@@ -460,7 +460,11 @@ describe("run", () => {
       "hier der fehler, bitte behebe ihn:\n```\n" +
       "TypeError: cannot read the property of undefined and that is what the\n" +
       "handler was doing when these requests were dispatched from the queue\n```";
-    expect(classify(fenced).language).toBe("de");
+    // Not flipped to English. Since ratification round 8 a fence is no veto
+    // boundary — a misread fence was the last place owner text could hide — so
+    // English prose inside it makes the prompt `und` and the previous pin stays.
+    expect(classify(fenced).language).toBe("und");
+    expect(classifyText(fenced).language).toBe("de");
   });
 
   it("a genuinely English prompt is still classified English", () => {
@@ -1842,9 +1846,25 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    // English prose inside the fence vetoes since ratification round 8; not `en`.
     "[regression] German instruction over a fenced English stack trace",
     "Warum bricht das hier ab? Bitte prüfe das.\n\n```\nTypeError: Cannot read properties of undefined (reading 'map')\n    at render (src/app.tsx:12:5)\nThe above error occurred in the component and should be handled there.\n```",
+    "und",
+  ],
+  [
+    "[ratification r8] German instruction over a fence of code without English prose",
+    "Warum bricht das hier ab? Bitte prüfe das.\n\n```\nconst x = foo(bar);\nreturn x.map((y) => y.id);\n```",
     "de",
+  ],
+  [
+    "[ratification r8] a German prefix inside a paragraph an English line wins",
+    "Bitte\nnochmal\nPlease tell me why this is happening and what I should do.",
+    "und",
+  ],
+  [
+    "[ratification r8] a list fence cannot hide a typed German sentence",
+    "Please tell me why this is happening.\n\n- ```\n  x\n  ```\n\nBehebe das bitte.",
+    "und",
   ],
   [
     // The paste's last line is unmarked English prose: it vetoes, never decides.
@@ -1895,12 +1915,12 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
   [
     "[ratification r6] inline triple backticks in a typed line do not open a fence",
     "Hier ist Code mit ``` drin, behebe das bitte.\n```python\nprint(\"translate this please, it should work\")\n```",
-    "de",
+    "und",
   ],
   [
     "[ratification r6] an unclosed fence runs to the end of the prompt",
     "Behebe das bitte.\n\n```\nPlease tell me why this is not working.",
-    "de",
+    "und",
   ],
   [
     "[ratification r7] a delimiter indented four spaces does not open a fence",
@@ -1910,7 +1930,7 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
   [
     "[ratification r7] a delimiter indented four spaces does not close a fence",
     "Behebe das bitte.\n\n```\n    ```\nPlease tell me why this is broken.\n```",
-    "de",
+    "und",
   ],
   [
     "[ratification r7] bare CR line endings end lines for the fence reader",

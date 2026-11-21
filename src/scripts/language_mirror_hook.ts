@@ -313,15 +313,16 @@ export function instructionText(prompt: string): string {
  * typed lead was short, which is the owner's most common prompt shape
  * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
  *
- * Every prose line of the prompt, and every paragraph of them, is scored on
- * its own first (`OwnerSpans.prose`: everything that is not output-shaped, a
- * document head or fenced, owner text or not, a pasted document's body
- * included). When two of them are each confident and disagree, the verdict is
- * `und`: a prompt pins only when all of its prose agrees, because typed and
- * pasted prose have the same shape and ratification rounds 1-4 found a missed
- * shape for every narrower rule. The cost is recall: a German question over an
- * English document or log keeps the previous pin rather than setting one.
- * Otherwise the owner text is scored whole.
+ * Then a veto that no span boundary can get around: every contiguous run of
+ * the prompt's lines (injected regions removed, NOTHING else — code, output and
+ * documents included) is scored, and when one run is confidently the other
+ * language from the spans' verdict, or two runs disagree, the verdict is
+ * `und`. Wherever the owner typed a confident line, some run holds only that
+ * line, so pasted text can never outvote it; ratification rounds 1-8 found a
+ * missed shape for every narrower unit (lines, paragraphs, a fence or span
+ * reader). A prompt over `VETO_MAX_LINES` lines is `und` outright. The cost is
+ * recall: an instruction over a paste in the other language — a document, a
+ * log, code with comments — keeps the previous pin rather than setting one.
  *
  * `owner_prose_chars` is the length of the text that was scored, so a pin can
  * say how much owner prose stood behind it.
@@ -330,15 +331,44 @@ export function instructionText(prompt: string): string {
  * notion of an owner and keeps its whole-text fallback.
  */
 export function classify(prompt: string): Classification {
-  const { lead, trailing, prose } = ownerProse(prompt);
+  const { lead, trailing, text } = ownerProse(prompt);
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
-  // The combined verdict and all prose together are units too: sub-floor
-  // pieces can add up to a language that other prose contradicts.
-  const units = [owner, prose.join("\n"), ...prose];
-  const seen = new Set(units.map((p) => _score(p).language));
+  const seen = runLanguages(text);
+  seen.add(verdict.language);
   const language = seen.has("de") && seen.has("en") ? "und" : verdict.language;
   return { ...verdict, language, owner_prose_chars: owner.length };
+}
+
+/** Above this many lines a prompt is not searched for a veto; it never pins. */
+export const VETO_MAX_LINES = 400;
+
+/**
+ * The confident languages of every contiguous run of lines, by prefix sums:
+ * a run is `de` at `MIN_MARKERS` German markers and no fewer than English ones,
+ * `en` at `MIN_MARKERS` English markers and more than German ones — `_score`'s
+ * own rule. Past `VETO_MAX_LINES` both languages are reported, so the caller's
+ * verdict is `und`.
+ */
+function runLanguages(text: string): Set<Verdict> {
+  const lines = text.split(/\r\n?|\n/);
+  const seen = new Set<Verdict>();
+  if (lines.length > VETO_MAX_LINES) return new Set<Verdict>(["de", "en"]);
+  const de = [0];
+  const en = [0];
+  for (const line of lines) {
+    de.push(de[de.length - 1]! + (line.match(DE_MARKERS) ?? []).length);
+    en.push(en[en.length - 1]! + (line.match(EN_MARKERS) ?? []).length);
+  }
+  for (let i = 0; i < lines.length && seen.size < 2; i++) {
+    for (let j = i + 1; j <= lines.length; j++) {
+      const d = de[j]! - de[i]!;
+      const e = en[j]! - en[i]!;
+      if (d >= MIN_MARKERS && d >= e) seen.add("de");
+      if (e >= MIN_MARKERS && e > d) seen.add("en");
+    }
+  }
+  return seen;
 }
 
 /**

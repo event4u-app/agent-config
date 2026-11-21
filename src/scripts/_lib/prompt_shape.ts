@@ -188,15 +188,6 @@ export interface OwnerSpans {
   lead: string;
   /** The paragraph after the last output paste, when one follows it. */
   trailing: string;
-  /**
-   * Every prose line of the prompt, and every paragraph of them: the lines
-   * that are not output-shaped, not a document head and not fenced, whoever
-   * wrote them, a pasted document's body included. Never scored, only a veto —
-   * typed and pasted prose have the same shape wherever they sit (above, below,
-   * glued to or inside a paste), so when two of them confidently disagree no
-   * span rule can say which is the owner's.
-   */
-  prose: string[];
 }
 
 /**
@@ -220,10 +211,10 @@ export interface OwnerSpans {
  * last paragraph as typed would hand the pin back to the paste.
  *
  * Both spans are returned as found; neither is dropped in favour of the other.
- * Deciding whether they can be trusted is the scorer's job: `prose` lists every
- * prose line and paragraph of the prompt, and `classify` in the language
- * mirror returns `und` when any two of them confidently disagree (ratification
- * rounds 1-4 found each narrower rule had a shape it missed).
+ * Deciding whether they can be trusted is the scorer's job: `classify` in the
+ * language mirror vetoes the spans' verdict when any contiguous run of the
+ * prompt's lines confidently disagrees with it, so a misread boundary here can
+ * cost a pin but never hand one to a paste.
  *
  * A trailing span with no blank line between it and the paste is weaker
  * evidence than a lead: it is read only when the prompt has no lead. A wrapped
@@ -270,19 +261,7 @@ export function ownerSpans(text: string): OwnerSpans {
   const glued = lead.length === 0 && before.filter(isOutput).length >= 2;
   const trailing = separated || glued ? candidate : [];
 
-  const prose: string[] = [];
-  let para: string[] = [];
-  for (const line of [...lines, ""]) {
-    if (!blank(line) && !isPaste(line)) {
-      prose.push(line);
-      para.push(line);
-      continue;
-    }
-    if (para.length > 0) prose.push(para.join("\n"));
-    para = [];
-  }
-
-  return { lead: lead.join("\n"), trailing: trailing.join("\n"), prose };
+  return { lead: lead.join("\n"), trailing: trailing.join("\n") };
 }
 
 /**
@@ -312,11 +291,12 @@ const HOST_TURN_HEAD =
  * fallback: a prompt whose owner spans are undetermined is undetermined, and
  * the caller keeps the previous pin.
  */
-export function ownerProse(prompt: string): OwnerSpans {
+export function ownerProse(prompt: string): OwnerSpans & { text: string } {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
-    return { lead: "", trailing: "", prose: [] };
+    return { lead: "", trailing: "", text: "" };
   }
-  return ownerSpans(stripInjectedRegions(prompt));
+  const text = stripInjectedRegions(prompt);
+  return { ...ownerSpans(text), text };
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */
