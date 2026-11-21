@@ -1856,6 +1856,16 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    "[ratification r4] a German paragraph right above a document head still vetoes",
+    "Please\nwhy\n\nError: request failed\n\nBitte\nnochmal\n# Notes\nsome document body",
+    "und",
+  ],
+  [
+    "[ratification r4] lowercase `to …` instruction over a pasted German line",
+    "to fix this, please tell me why.\n\nBehebe das bitte.",
+    "und",
+  ],
+  [
     "[ratification r3] a German question over a log whose prose agrees still pins German",
     "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nDer Job wurde abgebrochen, weil die Verbindung zum Server weg war.",
     "de",

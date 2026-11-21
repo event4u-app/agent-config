@@ -213,7 +213,7 @@ export function ownerSpans(text: string): OwnerSpans {
   const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
   // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
   // sentence such as `To fix this, …` is the owner's, not output.
-  const isOutput = (l: string): boolean => l === FENCE_LINE || (OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/.test(l));
+  const isOutput = (l: string): boolean => l === FENCE_LINE || (OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/i.test(l));
   const isPaste = (l: string): boolean => isOutput(l) || DOCUMENT_HEAD.test(l);
   const blank = (l: string): boolean => l.trim() === "";
 
@@ -242,15 +242,17 @@ export function ownerSpans(text: string): OwnerSpans {
 
   const prose: string[] = [];
   let para: string[] = [];
-  for (const line of [...lines, ""]) {
-    if (DOCUMENT_HEAD.test(line)) break;
-    if (!blank(line) && !isOutput(line)) {
+  // The sentinel `#` flushes the last paragraph on the same path as a real
+  // document head, so no exit from the loop can skip the flush.
+  for (const line of [...lines, "# "]) {
+    if (!blank(line) && !isPaste(line)) {
       prose.push(line);
       para.push(line);
-    } else if (para.length > 0) {
-      prose.push(para.join("\n"));
-      para = [];
+      continue;
     }
+    if (para.length > 0) prose.push(para.join("\n"));
+    para = [];
+    if (DOCUMENT_HEAD.test(line)) break;
   }
 
   return { lead: lead.join("\n"), trailing: trailing.join("\n"), prose };
