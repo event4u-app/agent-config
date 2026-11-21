@@ -86,7 +86,7 @@ never edited.
 
 ## Phase 1 — A refusal split any session can re-derive
 
-- [ ] **1.1 Add `--language-split` to `measure_turn_end_gate`, test first.** In
+- [x] **1.1 Add `--language-split` to `measure_turn_end_gate`, test first.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/prompt_shape.ts --> In
       `tests/scripts/measure_turn_end_gate.test.ts` add a synthetic transcript
       with one `language` fire per class: `owner-prose`, `synthetic-turn`
       (`isSyntheticPrompt`), `paste-decided` (lead `und`, body decided),
@@ -96,7 +96,7 @@ never edited.
       find the user entry that last set the pin and assign its class.
       verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts -t language-split` -> 0 after a recorded red run
       uses: test-driven-development
-- [ ] **1.2 Generate the post-fix baseline.** Run
+- [x] **1.2 Generate the post-fix baseline.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run
       `./scripts-run src/scripts/measure_turn_end_gate --language-split --out agents/evidence/analysis/language-split-baseline.md`
       over every local transcript since `66dd150cfc` (2026-11-03). The file
       carries the command line, the tree sha and the per-class counts; its body
