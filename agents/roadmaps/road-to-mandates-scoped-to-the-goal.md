@@ -194,20 +194,25 @@ a file.
 
 ## Phase 2 — The goal sentence is recorded and reaches every turn
 
-- [ ] **2.1 Council picks the recognizer form.** First action: run the council
+- [x] **2.1 Council picks the recognizer form.** First action: run the council
       on two options with their cost — (a) a phrase set in code, DE + EN, seeded
       from the goal sentences `mandate_reask_report` finds in the transcripts;
       (b) a model-carried classification the agent confirms in one line. Record
       the verdict as a `## Decisions` row resolved by `council:<date>`.
       verify: `grep -cE '^\| D[0-9]+ \|.*\| council:2026' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` -> /^[1-9][0-9]*$/
-- [ ] **2.2 Failing recognizer tests.** Write
+      Done 2026-11-21: D4. The council asked for discovery rather than picking;
+      D4 records that and the revisit trigger instead of claiming a verdict.
+- [x] **2.2 Failing recognizer tests.** Write
       `tests/scripts/goal_mandate.test.ts`: "mach weiter bis zum merge",
       "bis zum merge durchziehen", "arbeite die roadmap ab", "mach PR und merge",
       "until merged" each record the sentence verbatim; a slash-command
       expansion, a `<task-notification>` turn and pasted tool output record
       nothing; "stop", "nicht mergen", "halt" set `revoked_by` verbatim.
       verify: `npx vitest run tests/scripts/goal_mandate.test.ts` -> 1 failing on the missing module.
-- [ ] **2.3 Store and per-prompt block.** Implement
+      Done 2026-11-21: seen red, `Cannot find module
+      '../../src/scripts/_lib/goal_mandate.js'`. A quoted chat line joins the
+      three negatives.
+- [x] **2.3 Store and per-prompt block.** Implement
       `src/scripts/_lib/goal_mandate.ts` on the pattern of `session_pr_watch.ts`
       (store `<git-common-dir>/agent-session-mandates/<session>.json`, one writer,
       atomic write, never throws). The `session-register` `user_prompt_submit`
@@ -216,10 +221,19 @@ a file.
       serving that goal — plus "Hard-Floor reach: per blocker
       goal-scope-hard-floor-reach".
       verify: 2.2 passes; a `session_register_hook` fixture test shows the line after a goal prompt.
-- [ ] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same
+      Done 2026-11-21: 20/20 green, the last case spawning the hook on two
+      `user_prompt_submit` beats. Per D5 the line names the work that serves the
+      goal but leaves what it authorises to `commit-policy` as written. A line
+      over 300 characters is skipped rather than truncated, which keeps the
+      beat inside the concern's 2,048-byte budget.
+- [x] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same
       line at `subagent_start` when the parent session holds an unrevoked
       record. Failing test first in the hook's test file.
       verify: the new test passes; `./scripts-run src/scripts/lint_hook_manifest` exits 0 with no manifest change.
+      Done 2026-11-21: seen red on the first case, then 29/29 green; the goal
+      rides ahead of the pins. `lint_hook_manifest` exits 0, manifest
+      untouched. Known gap, named by the council: a revoke typed after a
+      subagent started does not reach that subagent.
 
 ## Phase 3 — The non-kernel layer reads the record
 
@@ -319,6 +333,8 @@ test.
 | D1 | reversible-technical | agent | No kernel rule file is edited by this roadmap | `kernel-rule-edits.md` soak + ratification; kernel text owned by `later/road-to-typed-grants-that-persist` Phase 1 | typed-grants is archived without landing ADR-268 §§ 2-3 |
 | D2 | reversible-technical | agent | The goal store mirrors `session_pr_watch.ts` (per-session JSON under the git common dir, one writer) | `src/scripts/_lib/session_pr_watch.ts:12-21` | a second writer per session appears |
 | D3 | reversible-technical | agent | No new hook concern; reuse `session-register` and `subagent-constraints` | `src/scripts/hook_manifest.json` claude `user_prompt_submit` / `subagent_start` lists | either concern is removed from the manifest |
+| D4 | reversible-technical | council:2026-11-21 mandates-goal-scope Q2 | The recognizer is option (a), a DE + EN phrase set in code (`src/scripts/_lib/goal_phrases.ts`), shared by the hook and `mandate_reask_report`; it records the owner's own prose line verbatim, after the host-frame and paste filters of `_lib/prompt_shape.ts` | Council 2026-11-21, anthropic + openai, two rounds, 2/2 present, $0. Neither seat picked an option outright; both set two requirements — the stored span is verbatim owner text, and grant and revocation recognition are tested separately — and the anthropic seat named the deciding difference: (a) fixes the span before recording, (b) depends on an in-turn agent confirmation that can fail silently. (a) meets both requirements by construction; (b) cannot be unit-tested. Adopted by the agent within those requirements | a labelled comparison over transcript goal sentences (the council's discovery ask) shows (a) missing paraphrases at a rate the 5.1 re-measure can see, or a false grant is observed |
+| D5 | reversible-technical | council:2026-11-21 mandates-goal-scope Q3 | The goal line names the work that serves the goal and says that what it authorises is still decided by `commit-policy` as written; it grants nothing on its own | Both seats answered Q3 (is the record a standing instruction under exception 2) with ESCALATE: the one-shot section names "create the PR" as spent and calls "exception 2 misread as standing" the forbidden inference, so that reading needs the kernel text first | the owner rules on `goal-scope-hard-floor-reach`, or typed-grants lands ADR-268 § 2 in `commit-policy` |
 
 ## Blockers
 
