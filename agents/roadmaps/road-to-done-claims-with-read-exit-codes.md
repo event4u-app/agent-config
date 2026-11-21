@@ -123,7 +123,7 @@ Exit: 1.1's cases are green and the coverage report prints the new reason.
 Rollback: revert the `verification_command.ts` and `verification_evidence.ts`
 hunks. The detector reads the same records as before.
 
-- [x] **1.1 Red first: masked-exit cases in `tests/scripts/verification_evidence.test.ts`.**
+- [x] **1.1 Red first: masked-exit cases in `tests/scripts/verification_evidence.test.ts`.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Add one case per shape:
       - The four masked commands from Context, each with `exit_code: 0` and a
         failing `tsc` line in `stdout_tail`. Each expects
@@ -141,7 +141,7 @@ hunks. The detector reads the same records as before.
       three controls, the echoed `exit=1` case, the gap pin and the finding
       text; seen red before the fix (31 red across this file and the 1.2 file,
       10 of them in this file).
-- [x] **1.2 Add `exitMasking(command)` to `src/scripts/_lib/verification_command.ts`, built on `splitSegments`.**
+- [x] **1.2 Add `exitMasking(command)` to `src/scripts/_lib/verification_command.ts`, built on `splitSegments`.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
       It returns `'pipe' | 'trailing' | null`:
       - `pipe`: a verifying segment's `nextSep` is `|`, and the same line does
         not first set `pipefail` (`set -o pipefail` or a combined `set -…o pipefail`)
@@ -156,7 +156,7 @@ hunks. The detector reads the same records as before.
       **Done 2026-11-21:** `exitMasking` returns `pipe` / `trailing` / null;
       `cmd || exit 1`, `cmd; exit $?` and `task sync; task ci` stay unmasked. 18
       unit cases in the anchoring file, red first.
-- [x] **1.3 Wire masking into `classifyRun`.** Add `exit_masked` to
+- [x] **1.3 Wire masking into `classifyRun`.** Add `exit_masked` to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
       `InvalidRunReason`. Place the check after the failing-summary check
       (`verification_evidence.ts:354`), because printed failures still win, and
       before the exit code is read.
@@ -171,14 +171,14 @@ hunks. The detector reads the same records as before.
       **Done 2026-11-21:** `exit_masked` is in `InvalidRunReason` and
       `INSTRUMENT_GAP_REASONS`; an echoed `exit=N` / `exit code: N` replaces the
       masked code. The pinned gap-set test now names three reasons.
-- [x] **1.4 Name the repair in the finding.** `describeRecordFinding`
+- [x] **1.4 Name the repair in the finding.** `describeRecordFinding` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
       (`verification_evidence.ts:617`) gets an `exit_masked` branch naming both
       repairs: `set -o pipefail`, or the runner's own filter flag instead of a
       pipe. Add one assertion on the text to the 1.1 file.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> 0
       **Done 2026-11-21:** `describeRecordFinding` names `set -o pipefail;` and
       the runner's own filter flag when `exit_masked` is among the reasons.
-- [x] **1.5 Classify `rtk`-wrapped runs.** Red first: `rtk vitest run` with
+- [x] **1.5 Classify `rtk`-wrapped runs.** Red first: `rtk vitest run` with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
       exit 1 expects `FAIL_EVIDENCE` or `nonzero_exit_without_test_failure`, not
       `not_a_verification_command`. Then peel `rtk` and `rtk proxy` in
       `DELEGATING_HEADS` (`verification_command.ts:98`) and in
@@ -186,7 +186,7 @@ hunks. The detector reads the same records as before.
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts tests/scripts/verification_evidence.test.ts` -> 0
       **Done 2026-11-21:** `rtk` peeled in `DELEGATING_HEADS` (with `rtk proxy`)
       and in `COMMAND_PREFIXES`; `rtk gain` stays non-verifying. Red first.
-- [x] **1.6 Count masked records per host.** `report_verification_record_coverage.ts`
+- [x] **1.6 Count masked records per host.** `report_verification_record_coverage.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/report_verification_record_coverage.ts -->
       prints an `exit_masked` column with its denominator (records per host),
       following the stub's section 2 bullet 1. Red first: a fixture witness
       record in `tests/scripts/report_verification_record_coverage.test.ts`
@@ -202,7 +202,7 @@ Exit: the lint is green on the tree and red on its planted fixture, and it is
 wired into the fast CI tier. Rollback: drop the task entry. The lint is
 standalone.
 
-- [ ] **2.1 Red first: `tests/scripts/lint_verify_exit_masking.test.ts`.**
+- [x] **2.1 Red first: `tests/scripts/lint_verify_exit_masking.test.ts`.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Fixtures:
       - a roadmap whose `verify:` clause is `` `task ci | tail -3` -> 0 ``;
       - one whose clause is `` `task test; echo done` -> 0 ``;
@@ -212,7 +212,11 @@ standalone.
       The test expects three findings and zero on the control. It fails because
       the script does not exist yet.
       verify: `npx vitest run tests/scripts/lint_verify_exit_masking.test.ts` -> 1 (red: the script does not exist yet)
-- [ ] **2.2 Write `src/scripts/lint_verify_exit_masking.ts`.**
+      **Done 2026-11-21:** Fixture under `tests/fixtures/lint-verify-exit-
+      masking/` (two masked roadmap clauses, one masked `exec:` pointer, a
+      pipefail control and a clean pointer); the test file was red on the
+      missing module (exit 1) before 2.2.
+- [x] **2.2 Write `src/scripts/lint_verify_exit_masking.ts`.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_verify_exit_masking.ts -->
       - It reads `verify:` clauses through `parseVerifyClause`
         (`src/agent-src/scripts/verify_clause.ts:228`). It does not parse them a
         second time.
@@ -225,10 +229,20 @@ standalone.
       Before wiring it, fix each finding the tree has today in its source file
       and list the count in the Done note.
       verify: `./scripts-run src/scripts/lint_verify_exit_masking` -> 0
-- [ ] **2.3 Wire the lint into `taskfiles/ci-fast.yml`** next to
+      **Done 2026-11-21:** The first tree run found 3 masked clauses, all fixed
+      in their source files: `road-to-a-static-context-under-budget` 4.4 and
+      `later/road-to-stacks-beyond-php` got `set -o pipefail;` in front;
+      `later/road-to-originality-gate-and-contributor-funnel` Phase 0 dropped
+      its `; echo "exit=$?"` and names `-> 0` (measured exit 0). Tree run after
+      the sweep: 358 files, exit 0.
+- [x] **2.3 Wire the lint into `taskfiles/ci-fast.yml`** next to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=unrecognised path shape: taskfiles/ci-fast.yml -->
       `lint_decision_classes` (`:1223`), with the same `{{.QUIET_FLAG}}` shape.
       Positive control: the 2.1 fixture run through the CLI exits 1.
       verify: `./scripts-run src/scripts/lint_verify_exit_masking --root tests/fixtures/lint-verify-exit-masking` -> 1
+      **Done 2026-11-21:** Task `lint-verify-exit-masking` sits after `lint-
+      decision-classes` in `taskfiles/ci-fast.yml` and in the `ci` list of
+      `Taskfile.yml`; `task lint-verify-exit-masking` exits 0 on the tree, the
+      fixture run exits 1.
 
 ## Phase 3: Partial completion reported as complete
 

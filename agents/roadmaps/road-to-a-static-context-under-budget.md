@@ -201,7 +201,7 @@ into a scratch HOME, or host telemetry.
       bench, writes the reading and date into the file's measurement field and moves
       `review_by` +90 days only when every row is within its cap; a row over its cap
       is printed and left overdue.
-      verify: `task lint-budget-ownership 2>&1 | grep -c overdue` -> /^0$/ after `./scripts-run src/scripts/lint_budget_ownership --renew`.
+      verify: `set -o pipefail; task lint-budget-ownership 2>&1 | grep -c overdue` -> /^0$/ after `./scripts-run src/scripts/lint_budget_ownership --renew`.
 
 ## Phase 5 — One ceiling on the composite, in CI
 
