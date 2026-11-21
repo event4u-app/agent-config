@@ -2027,6 +2027,19 @@ describe("owner prose only", () => {
     expect(readState().language).toBe("de");
   });
 
+  it("a German instruction after a list fence replaces an English pin", () => {
+    run(envelope("Please check this and then continue with the tests that are failing."), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("en");
+    run(envelope("- ```\n  42\n  ```\n\nBehebe das bitte und prüfe das."), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+  });
+
+  it("a long whitespace-only line costs linear time", () => {
+    const started = Date.now();
+    classify(`Bitte prüfe das.\n${" ".repeat(50_000)}\nund mach weiter.`);
+    expect(Date.now() - started).toBeLessThan(500);
+  });
+
   it("an ambiguous prompt keeps the earlier German pin through the hook", () => {
     run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
     for (const [name, prompt] of OWNER_PROSE_ROWS) {

@@ -159,7 +159,7 @@ const FENCE_LINE = "\u0000";
 /**
  * The prompt's lines with every fenced block collapsed to one `FENCE_LINE`.
  * Line-aware, as CommonMark reads fences: a fence opens only on a line that
- * starts, after at most three spaces, with three or more backticks (no
+ * starts, after at most three spaces and an optional list marker, with three or more backticks (no
  * backtick after them, so inline ` ``` ` in a sentence opens nothing) or
  * tildes (whose info string may hold tildes), and closes on a line of the same
  * character at least as long, also indented at most three spaces and followed
@@ -170,7 +170,9 @@ function fenced(text: string): string[] {
   const out: string[] = [];
   let fence = "";
   for (const line of text.split(/\r\n?|\n/)) {
-    const mark = /^ {0,3}(`{3,}(?=[^`]*$)|~{3,})/.exec(line)?.[1] ?? "";
+    // An opener may follow a list marker (`- ```), as inside a Markdown list
+    // item; a closer may not, but its item indentation is within the bound.
+    const mark = /^ {0,3}(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?(`{3,}(?=[^`]*$)|~{3,})/.exec(line)?.[1] ?? "";
     if (fence === "" && mark === "") {
       out.push(line);
     } else if (fence === "") {
@@ -213,9 +215,10 @@ export interface OwnerSpans {
  *
  * Both spans are returned as found; neither is dropped in favour of the other.
  * Deciding whether they can be trusted is the scorer's job: `classify` in the
- * language mirror vetoes the spans' verdict when any contiguous run of the
- * prompt's lines confidently disagrees with it, so a misread boundary here can
- * cost a pin but never hand one to a paste.
+ * language mirror vetoes the spans' verdict when the whole prompt (injected
+ * regions removed, everything else counted) carries the marker floor of both
+ * languages, so a misread boundary here can cost a pin but never hand one to a
+ * paste.
  *
  * A trailing span with no blank line between it and the paste is weaker
  * evidence than a lead: it is read only when the prompt has no lead. A wrapped
@@ -235,14 +238,21 @@ export function ownerSpans(text: string): OwnerSpans {
   const lines = fenced(text);
   // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
   // sentence such as `To fix this, …` is the owner's, not output.
-  const isOutput = (l: string): boolean => l === FENCE_LINE || (OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/i.test(l));
-  const isPaste = (l: string): boolean => isOutput(l) || DOCUMENT_HEAD.test(l);
   const blank = (l: string): boolean => l.trim() === "";
+  // Blank lines never reach `OUTPUT_HEAD`: its leading `\s*` and `\s{4,}\S`
+  // backtrack against each other on a whitespace-only line.
+  const isOutput = (l: string): boolean =>
+    l === FENCE_LINE || (!blank(l) && OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/i.test(l));
+  const isPaste = (l: string): boolean => isOutput(l) || (!blank(l) && DOCUMENT_HEAD.test(l));
 
   const lead: string[] = [];
   for (const line of lines) {
-    if (isPaste(line) || (blank(line) && lead.length > 0)) break;
-    if (!blank(line)) lead.push(line);
+    if (blank(line)) {
+      if (lead.length > 0) break;
+      continue;
+    }
+    if (isPaste(line)) break;
+    lead.push(line);
   }
 
   let end = lines.length - 1;
