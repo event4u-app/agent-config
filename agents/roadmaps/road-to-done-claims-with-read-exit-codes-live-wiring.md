@@ -5,7 +5,6 @@ review_by: 2026-12-21
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: "Carries steps 1.3, 1.4, 1.5, 3.2, 3.3 and 4.4 of road-to-done-claims-with-read-exit-codes, which the owner took off the live hook path on 2026-11-21 (option 2: land the features without growing the dispatch bundle). Created in the same change that defers those steps, so the items stay alive in the active estate. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
-estate_offset_exempt: "The change that creates this roadmap also lands and archives road-to-done-claims-with-read-exit-codes, so the estate does not grow by it; it carries deferred wiring, not new scope; it also absorbs the branch-only road-to-unlisted-surface-in-a-claim-chunk, so the branch adds one file, not two. Owner search: a grep over agents/roadmaps/{*,later,stubs} for `exitMasking`, `partialRatioIn` and `unlistedSurfaceIn` returns no other owner. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
 relates:
   - slug: road-to-done-claims-with-read-exit-codes
     relation: extends
