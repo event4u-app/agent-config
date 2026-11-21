@@ -395,7 +395,7 @@ else
         owner_red=""
         for sha in $pushed_shas; do
             commit=$(git rev-parse --verify --quiet "${sha}^{commit}" 2>/dev/null || echo "$sha")
-            grep -q '"verdict": "owner-decision"' "$stamp_dir/$commit.json" 2>/dev/null && owner_red="$owner_red ${commit:0:10}"
+            grep -Eq '"verdict"[[:space:]]*:[[:space:]]*"owner-decision"' "$stamp_dir/$commit.json" 2>/dev/null && owner_red="$owner_red ${commit:0:10}"
         done
         if [ -n "$owner_red" ] && [ "${AGENT_CONFIG_PUSH_OWNER_DECIDED:-}" = "1" ]; then
             echo "⚠️  Owner decision pending on:$owner_red — pushed via AGENT_CONFIG_PUSH_OWNER_DECIDED=1."

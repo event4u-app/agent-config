@@ -68,7 +68,7 @@ export const FOREGROUND_CEILING_MIN = 9;
 export type PollState =
     | { kind: 'unreadable'; reason: string }
     | { kind: 'pending'; total: number; done: number; pendingNames?: string[] }
-    | { kind: 'settled'; failing: string[]; total: number; failingUrls?: Record<string, string> };
+    | { kind: 'settled'; failing: string[]; total: number; failingUrls?: Record<string, string[]> };
 
 /**
  * What `git ls-remote` said about the PR branch's tip.
@@ -265,50 +265,84 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
                 .map(nameOf),
         ),
     ];
-    const failingUrls: Record<string, string> = {};
+    // Every failing row per name: two failing runs under one name (the same job
+    // name in two workflows, a rerun) are each inspected, never just the last.
+    const failingUrls: Record<string, string[]> = {};
     for (const r of rows) {
-        if (failing.includes(nameOf(r)) && bad.has(concl(r)) && typeof r.detailsUrl === 'string') failingUrls[nameOf(r)] = r.detailsUrl;
+        if (!failing.includes(nameOf(r)) || !bad.has(concl(r))) continue;
+        (failingUrls[nameOf(r)] ??= []).push(typeof r.detailsUrl === 'string' ? r.detailsUrl : '');
     }
     return { kind: 'settled', failing, total: rows.length, failingUrls };
 }
 
-/**
- * True when every failing check failed only on a step the CI mirror configures
- * as an owner decision (`owner_decision_steps` in `src/config/ci-mirror.json`).
- * A check whose steps could not be read (`null`) makes it false: an unknown red
- * is never reported as "only the owner's".
- */
-export function ownerDecisionOnly(failedStepsPerCheck: ReadonlyArray<readonly string[] | null>, ownerSteps: readonly string[]): boolean {
-    if (failedStepsPerCheck.length === 0 || ownerSteps.length === 0) return false;
-    return failedStepsPerCheck.every((steps) => steps !== null && steps.length > 0 && steps.every((s) => ownerSteps.includes(s)));
+/** One failing check run as read from the forge: its failed steps, and whether its log shows an owner marker. */
+export interface FailedRun {
+    readonly steps: readonly string[];
+    readonly markerSeen: boolean;
 }
 
-function ownerDecisionSteps(): string[] {
+/**
+ * True when every failing check run failed only on a step the CI mirror
+ * configures as an owner decision (`owner_decision_steps` in
+ * `src/config/ci-mirror.json`) AND its log carries that step's marker. The
+ * marker is what tells a refused record (the owner's) from a missing or invalid
+ * one (the author's, fixable): both fail the same step. A run that could not be
+ * read (`null`) makes it false — an unknown red is never called the owner's.
+ */
+export function ownerDecisionOnly(runs: ReadonlyArray<FailedRun | null>, ownerSteps: readonly string[]): boolean {
+    if (runs.length === 0 || ownerSteps.length === 0) return false;
+    return runs.every((r) => r !== null && r.markerSeen && r.steps.length > 0 && r.steps.every((s) => ownerSteps.includes(s)));
+}
+
+/** Configured owner-decision steps; the file ships with the package, so a consumer install reads it too. */
+function ownerDecisionConfig(): Array<{ step: string; marker: RegExp }> {
     try {
         const file = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'config', 'ci-mirror.json');
-        const cfg = JSON.parse(fs.readFileSync(file, 'utf-8')) as { owner_decision_steps?: Array<{ step?: unknown }> };
-        return (cfg.owner_decision_steps ?? []).map((e) => e.step).filter((x): x is string => typeof x === 'string');
+        const cfg = JSON.parse(fs.readFileSync(file, 'utf-8')) as { owner_decision_steps?: Array<{ step?: unknown; marker?: unknown }> };
+        return (cfg.owner_decision_steps ?? []).flatMap((e) =>
+            typeof e.step === 'string' && typeof e.marker === 'string' ? [{ step: e.step, marker: new RegExp(e.marker, 'mu') }] : [],
+        );
     } catch {
-        return []; // a consumer install carries no mirror config: nothing is called the owner's
+        return [];
     }
 }
 
-/** The names of the failed steps of one Actions job, or null when they cannot be read. */
-function failedStepsOf(detailsUrl: string): string[] | null {
-    const m = /^https:\/\/github\.com\/([^/\s]+\/[^/\s]+)\/actions\/runs\/[0-9]+\/job\/([0-9]+)/.exec(detailsUrl);
+function ghText(args: string[]): string | null {
+    const r = spawnSync('gh', args, { encoding: 'utf-8', timeout: 30_000, maxBuffer: 64 * 1024 * 1024 });
+    return r.status === 0 ? (r.stdout ?? '') : null;
+}
+
+/**
+ * Strip the forge's per-line prefix so a marker anchored at line start can match:
+ * the timestamp, and the `job<TAB>step<TAB>` columns `gh run view --log-failed` adds.
+ */
+export function stripLogTimestamps(log: string): string {
+    return log.replace(/^(?:[^\t\n]*\t){0,2}\d{4}-\d{2}-\d{2}T\S+Z ?/gmu, '');
+}
+
+/** Read one failing Actions job: failed step names, and whether any configured marker is in its log. */
+function readFailedRun(detailsUrl: string, markers: readonly RegExp[]): FailedRun | null {
+    const m = /^https:\/\/github\.com\/([^/\s]+\/[^/\s]+)\/actions\/runs\/[0-9]+\/job\/([0-9]+)/u.exec(detailsUrl);
     if (m === null) return null;
-    const r = spawnSync('gh', ['api', `repos/${m[1] as string}/actions/jobs/${m[2] as string}`, '--jq', '[.steps[] | select(.conclusion == "failure") | .name]'], {
-        encoding: 'utf-8',
-        timeout: 60_000,
-    });
-    if (r.status !== 0) return null;
+    const job = `repos/${m[1] as string}/actions/jobs/${m[2] as string}`;
+    const stepsOut = ghText(['api', job, '--jq', '[.steps[] | select(.conclusion == "failure") | .name]']);
+    if (stepsOut === null) return null;
+    let steps: unknown;
     try {
-        const names = JSON.parse(r.stdout ?? '') as unknown;
-        return Array.isArray(names) && names.every((n) => typeof n === 'string') ? (names as string[]) : null;
+        steps = JSON.parse(stepsOut);
     } catch {
         return null;
     }
+    if (!Array.isArray(steps) || !steps.every((n) => typeof n === 'string')) return null;
+    // `gh api …/logs` refuses a log with terminal escapes; the failed-step log is what the marker sits in.
+    const log = ghText(['run', 'view', '--job', m[2] as string, '--log-failed', '-R', m[1] as string]);
+    if (log === null) return null;
+    const text = stripLogTimestamps(log);
+    return { steps: steps as string[], markerSeen: markers.some((re) => re.test(text)) };
 }
+
+/** At most this many job reads after a red settle; more failing runs than this are left unannotated. */
+const MAX_OWNER_READS = 5;
 
 const MAX_NAMED = 8;
 const MAX_NAME_CHARS = 80;
@@ -588,13 +622,11 @@ export function main(argv: readonly string[]): number {
                 `ci_settle: SETTLED RED — ${String(state.failing.length)} of ${String(state.total)} failing on ${at.head.slice(0, 9)}:\n` +
                     state.failing.map((f) => `  ${f}\n`).join(''),
             );
-            const owner = ownerDecisionSteps();
-            if (owner.length > 0) {
-                const steps = state.failing.map((f) => {
-                    const url = state.failingUrls?.[f];
-                    return url === undefined ? null : failedStepsOf(url);
-                });
-                if (ownerDecisionOnly(steps, owner)) {
+            const owner = ownerDecisionConfig();
+            const urls = state.failing.flatMap((f) => state.failingUrls?.[f] ?? ['']);
+            if (owner.length > 0 && urls.length <= MAX_OWNER_READS) {
+                const runs = urls.map((u) => (u === '' ? null : readFailedRun(u, owner.map((o) => o.marker))));
+                if (ownerDecisionOnly(runs, owner.map((o) => o.step))) {
                     process.stdout.write(
                         'ci_settle: OWNER DECISION — the only red step is one the owner decides (a ratification record ' +
                             'that is not ratified). This is not a CI defect to keep fixing: hand the decision to the owner.\n',

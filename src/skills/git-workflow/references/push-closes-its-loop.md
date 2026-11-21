@@ -196,11 +196,16 @@ had already reported as an owner decision (owner: "we already know locally what 
   session; after the owner's answer, `AGENT_CONFIG_PUSH_OWNER_DECIDED=1 git push`
   lets it through, printed on every use.
 - **`ci_settle`** prints `OWNER DECISION` after `SETTLED RED` when every failing
-  check failed only on a configured `owner_decision_steps` step. The exit code
-  stays 1; the line tells the caller there is nothing to fix.
+  check run failed only on a configured `owner_decision_steps` step AND its
+  failed-step log carries that step's marker. A missing or invalid record fails
+  the same step without the marker, and stays the author's to fix. The exit code
+  stays 1; at most five job reads are made after a red settle.
 - **`council_cli run`** refuses a ratification prompt (one `subject:` line) that
   does not ask for the stance line the record writer reads, before any seat is
-  paid, and re-prompts a seat that omits the line once, unattended.
+  paid, and re-prompts a seat once, unattended, when its closing line is missing
+  or carries a label other than ratified / confirmed-non-expanding / refused;
+  the re-prompt names those three labels. `council_cli debate` refuses the same
+  prompts.
 
 All three are honest-path controls: an agent can set the variable itself. The
 override exists for the owner's answer, and nothing mechanical checks that one

@@ -111,6 +111,38 @@ describe('pre-push — a known-red stamp stays local until the owner has decided
         expect(out).not.toContain('Push blocked');
     });
 
+    it('reads a compact stamp the same way: the guard does not hang on JSON spacing', () => {
+        const { dir, sha } = repo();
+        fs.mkdirSync(path.join(dir, '.git/ci-mirror'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.git/ci-mirror', `${sha}.json`), JSON.stringify({ not_verified: [{ verdict: 'owner-decision' }] }));
+        expect(run(dir, sha)).toContain('Push blocked');
+    });
+
+    it('a multi-ref push is refused when one of its tips carries an owner decision', () => {
+        const { dir, sha } = repo();
+        const git = (...a: string[]) => execFileSync('git', a, { cwd: dir, encoding: 'utf8' }).trim();
+        git('-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'y');
+        const second = git('rev-parse', 'HEAD');
+        fs.mkdirSync(path.join(dir, '.git/ci-mirror'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.git/ci-mirror', `${sha}.json`), '{}');
+        ownerStamp(dir, second);
+        let out: string;
+        try {
+            out = execFileSync('bash', [hook], {
+                cwd: dir,
+                input: `refs/heads/a ${sha} refs/heads/a ${ZERO}\nrefs/heads/b ${second} refs/heads/b ${ZERO}\n`,
+                encoding: 'utf8',
+                env: { PATH: '/usr/bin:/bin', HOME: dir },
+            });
+        } catch (e) {
+            const err = e as { stdout?: string; stderr?: string };
+            out = `${err.stdout ?? ''}${err.stderr ?? ''}`;
+        }
+        expect(out).toContain(`CI will be red for: ${second.slice(0, 10)}`);
+        expect(out).not.toContain(`CI will be red for: ${sha.slice(0, 10)}`);
+        expect(out).toContain('Push blocked');
+    });
+
     it('a stamp whose unverified steps are only not-reproducible still passes', () => {
         const { dir, sha } = repo();
         fs.mkdirSync(path.join(dir, '.git/ci-mirror'), { recursive: true });

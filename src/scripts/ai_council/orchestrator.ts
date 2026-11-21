@@ -349,6 +349,14 @@ export interface ConsultOptions {
     on_stance_repair?: ((member: string) => boolean) | null;
     /** Receives each stance-repair response so the caller can account its cost. */
     on_stance_repair_result?: ((r: CouncilResponse) => void) | null;
+    /** The contract a repair re-prompt asks for; absent → the generic `STANCE_LINE_CONTRACT`. */
+    stance_repair_contract?: string | null;
+    /**
+     * Which stance labels count as an answer. A parseable line whose label this
+     * rejects is repaired like a missing one, and a repair that returns such a
+     * label is not appended. Absent → every parseable label counts.
+     */
+    stance_label_accepted?: ((label: string) => boolean) | null;
     /**
      * Ü2 (road-to-council-blind-review Phase 1): per-member system-prompt
      * suffix appended AFTER the base/advisor system prompt — e.g. a stance
@@ -481,10 +489,15 @@ export function consult(
     // stamping unchanged). The repaired stance line is APPENDED to the member's
     // final text so the deterministic tally can read it.
     const on_stance_repair = opts.on_stance_repair ?? null;
+    const accepted = opts.stance_label_accepted ?? null;
+    const usable = (text: string): boolean => {
+        const line = parse_stance_line(text);
+        return line !== null && (accepted === null || accepted(line.label));
+    };
     if (stance_tally && on_stance_repair !== null) {
         for (let i = 0; i < last_results.length; i++) {
             const r = last_results[i] as CouncilResponse;
-            if (r.error !== null || r.text.trim() === '' || parse_stance_line(r.text) !== null) {
+            if (r.error !== null || r.text.trim() === '' || usable(r.text)) {
                 continue;
             }
             const member = members[i];
@@ -495,7 +508,7 @@ export function consult(
                 mode: question.mode,
                 user_prompt:
                     `Your reply is missing the mandatory closing stance line. ` +
-                    `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
+                    `Reply with ONLY that single line for your final position.\n\n${opts.stance_repair_contract ?? STANCE_LINE_CONTRACT}`,
                 max_tokens: question.max_tokens,
             });
             // Stance repair shares the invocation-wide ledger: transport
@@ -516,7 +529,7 @@ export function consult(
             if (rep?.error === QUOTA_EXHAUSTED) r.metadata[QUOTA_EXHAUSTED_MARK] = true; // answer stands; peer review skips the seat
             if (rep !== undefined) {
                 opts.on_stance_repair_result?.(rep);
-                if (rep.error === null && parse_stance_line(rep.text) !== null) {
+                if (rep.error === null && usable(rep.text)) {
                     r.text = `${r.text.trim()}\n\n${rep.text.trim()}`;
                 }
             }

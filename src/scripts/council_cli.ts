@@ -2233,6 +2233,9 @@ function _resolved_chairman_override(raw: string | null) {
 /** The record writer's own subject declaration: one line, the digest alone. */
 const RATIFICATION_SUBJECT_LINE = /^`?subject: [0-9a-f]{64}`?\s*$/gmu;
 const RATIFICATION_LABELS = ['ratified', 'confirmed-non-expanding', 'refused'] as const;
+const RATIFICATION_STANCE_CONTRACT = `Close your reply with EXACTLY this line, and nothing after it:
+STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no
+Use one of the three labels exactly as written; no other label is recorded.`;
 
 /** A prompt that declares exactly one `subject:` line is a ratification prompt (ratification_record_writer.ts). */
 export function isRatificationPrompt(text: string): boolean {
@@ -2498,6 +2501,12 @@ function cmd_run(
         on_stance_repair_result: (r: CouncilResponse): void => {
             stance_repairs.push(r);
         },
+        // A ratification seat must close on one of the record writer's labels;
+        // `abstain` or an invented label is a paid round that yields no record.
+        stance_repair_contract: ratification_prompt ? RATIFICATION_STANCE_CONTRACT : null,
+        stance_label_accepted: ratification_prompt
+            ? (label: string): boolean => (RATIFICATION_LABELS as readonly string[]).includes(label.trim().toLowerCase())
+            : null,
     });
     // M3 fix (independent-review finding) — quorum measures MEMBERS THAT
     // ACTUALLY PRODUCED A USABLE RESPONSE, per `quorum.ts`'s own docstring
@@ -2876,6 +2885,13 @@ function cmd_debate(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
+    const debate_problem = ratificationPromptProblem(
+        args.input_mode === 'prompt' ? fs.readFileSync(args.question as string, 'utf-8') : '',
+    );
+    if (debate_problem !== null) {
+        _stderr(`❌  council:debate: ${debate_problem}.\n`);
+        return 2;
+    }
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
         lens: 'debate',
