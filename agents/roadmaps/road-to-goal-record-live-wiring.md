@@ -13,8 +13,8 @@ relates:
 
 # Road to goal record live wiring
 
-> **Source:** `later/road-to-mandates-scoped-to-the-goal`, blocker
-> `goal-record-ratification`. Its branch wired the goal record into two hooks and
+> Split off `later/road-to-mandates-scoped-to-the-goal` at its blocker
+> `goal-record-ratification`. That roadmap's branch wired the goal record into two hooks and
 > raised two ceilings in `src/config/hook-bundle-budget.json`; 18 ratification
 > rounds did not converge on the raise. On 2026-11-21 the owner chose option 2:
 > land the features without the raise, and carry the wiring here.

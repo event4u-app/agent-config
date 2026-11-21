@@ -98,7 +98,7 @@ a file.
       council with `decision-revisit-gate`'s owner-reserved table attached and a
       neutral prompt (the transition, the two ADR excerpts cited in Context, no
       expected verdict). Write the verdict into the blocker's `Routed:` field.
-      verify: `grep -c 'Routed:\*\* council 20' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` -> /^1$/
+      verify: `grep -c 'Routed:\*\* council 20' agents/roadmaps/later/road-to-mandates-scoped-to-the-goal.md` -> /^1$/
       Done 2026-11-21: council `analysis`, two rounds, anthropic + openai, 2/2
       present, $0 (subscription seats). Both seats ESCALATE on the row "cannot
       be bounded from available evidence"; the verdict is in the blocker's
