@@ -375,7 +375,7 @@ Exit: a recorded council verdict per reason, applied with its tests. Rollback:
 the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 (the refusal flag on `coverage`).
 
-- [ ] **5.1 Measure before asking.** Run the classifier and `detectCoverageGap`
+- [x] **5.1 Measure before asking.** Run the classifier and `detectCoverageGap` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       over every witness record and transcript in the local store that
       `report_verification_record_coverage` reads. Report per reason:
       - how often it fires;
@@ -385,13 +385,22 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 
       Write the result to `agents/evidence/analysis/done-claims-arming-<date>.md`.
       verify: `ls agents/evidence/analysis/ | grep -c done-claims-arming` -> /[1-9]/
-- [ ] **5.2 Run the council on the arming question:**
+      **Done 2026-11-21:** Written to `agents/evidence/analysis/done-claims-
+      arming-2026-11-21.md`: 42 witness records over 2 days (3 `exit_masked`, 0
+      on a `pipefail` line) and 1,504 transcript turns over 24 days (5 trigger
+      matches, 0 `partial_ratio`, 1 `unlisted_surface`, 0 fires on a reply with
+      a not-verified list).
+- [x] **5.2 Run the council on the arming question:** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `/council` with the 5.1 numbers and the demotion contract's bars. The
       question: should `exit_masked` refuse a turn, should `partial_ratio`, and
       should `unlisted_surface`? Record one Decisions row per reason, resolved
       `council:<date>`.
-      verify: `grep -cE "^\| D[5-7] " agents/roadmaps/road-to-done-claims-with-read-exit-codes.md` -> /3/
-- [ ] **5.3 Apply the verdicts, with tests first.** For each armed reason:
+      verify: `grep -cE "^\| D[5-7] " agents/roadmaps/archive/road-to-done-claims-with-read-exit-codes.md` -> /3/
+      **Done 2026-11-21:** Council `council:run --prompt-mode analysis --rounds
+      1`, question and numbers as a file; openai seat answered, anthropic seat
+      failed with exit 1, quorum 1 of 2 met but degraded. Verdict for all three:
+      record-only, with per-reason revisit conditions; recorded as D5-D7.
+- [x] **5.3 Apply the verdicts, with tests first.** For each armed reason: <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       - remove it from `INSTRUMENT_GAP_REASONS`, or set `coverage`'s refusal
         flag;
       - add a refusal test, red first.
@@ -399,27 +408,33 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
       A reason that stays unarmed keeps its shadow test and gets a `revisit if`
       that names a sample size.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts tests/scripts/turn_end_gate_hook.test.ts` -> 0
+      **Done 2026-11-21:** No reason was armed, so nothing left
+      `INSTRUMENT_GAP_REASONS` and the refusal flag on `coverage` stays off. The
+      shadow tests stay (gap-set pin, `refusingFindings` cases); each of D5-D7
+      names a sample size in `revisit if`. The two files: 227 tests, exit 0.
 
 ## Acceptance Criteria
 
-- [ ] AC-1: Each of the four masked commands in Context classifies
+- [x] AC-1: Each of the four masked commands in Context classifies
       `exit_masked`, or takes the code it echoed itself. The `pipefail` control
       stays `PASS_EVIDENCE_OK` (1.1, 1.3).
-- [ ] AC-2: `lint_verify_exit_masking` runs in the fast CI tier. It exits 0 on
+- [x] AC-2: `lint_verify_exit_masking` runs in the fast CI tier. It exits 0 on
       the tree and 1 on its fixture (2.2, 2.3).
-- [ ] AC-3: "165 of 405 … done" and "1 of 9 steps … done" each produce a
+- [x] AC-3: "165 of 405 … done" and "1 of 9 steps … done" each produce a
       `coverage` finding. "405 of 405" and a ratio under `Not verified:` produce
       none (3.1, 3.2).
-- [ ] AC-4: `verify:surfaces` regenerates `agents/state/live-surfaces.json` from
+- [x] AC-4: `verify:surfaces` regenerates `agents/state/live-surfaces.json` from
       repo files alone, and no hand-written input exists (4.2).
-- [ ] AC-5: Each reason has a council-resolved arming row backed by a 5.1
+- [x] AC-5: Each reason has a council-resolved arming row backed by a 5.1
       measurement (5.2), and each armed reason has a red-then-green refusal test
       (5.3).
-- [ ] AC-6: No step or skill text this roadmap adds asks the owner to run,
+- [x] AC-6: No step or skill text this roadmap adds asks the owner to run,
       smoke-test or approve anything. Check:
       `grep -niE "owner (runs|verifies|smoke)|smoke[- ]test by" src/skills/verify-completion-evidence/SKILL.md`
       returns 0 matches. Positive control: the same grep on a copy with
       "owner smoke-tests the app" planted returns 1.
+      Checked 2026-11-21: the skill returns 0 matches, the planted copy 1.
+      Measurement: `agents/evidence/analysis/done-claims-arming-2026-11-21.md` (5.1) — the closing split the skill now asks for is backed by three record-only reasons; none fired often enough to arm (D5-D7).
 
 ## Decisions
 
@@ -429,6 +444,9 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 | D2 | reversible-technical | agent | Every new reason records and does not refuse until Phase 5 arms it. | the demotion contract requires per-detector bars before refusal; a mis-firing refusal teaches operators to switch the gate off (`verification_evidence.ts` header) | 5.2 records the verdict |
 | D3 | product-owned | owner | There is no mandatory owner smoke test. Live checks run where the agent can reach the surface, and otherwise the reply lists what is not verified. | owner's session retro 2026-11-21, P0 measure 1 ("no mandatory smoke test by you"); council 2026-11-21 OpenAI seat | the owner reinstates a human smoke test |
 | D4 | reversible-technical | agent | One detector id, `coverage`, carries both `partial_ratio` and `unlisted_surface`. | one bar set to register and measure instead of two; both reasons answer "is the claim as wide as the evidence" | 5.1 shows the two reasons need different arming |
+| D5 | reversible-technical | council:2026-11-21 | `exit_masked` stays record-only: it remains in `INSTRUMENT_GAP_REASONS` and refuses nothing. | 5.1: 3 fires in 42 witness records, one host, a 2-day window, 0 on a `pipefail` line, no labelled ground truth (`agents/evidence/analysis/done-claims-arming-2026-11-21.md`); council analysis round of 2026-11-21, openai seat present, anthropic seat failed (exit 1), quorum 1 of 2 met but degraded: keep record-only, discovery first | ≥ 100 `exit_masked` findings over ≥ 50 sessions and ≥ 30 days, with the candidates labelled against the verifier's real exit status and effective shell settings, including an rc-file `pipefail` |
+| D6 | reversible-technical | council:2026-11-21 | `partial_ratio` stays record-only: detector `coverage` keeps its refusal off. | 5.1: 0 fires over the 5 closings the completion trigger matched in 1,504 turns over 24 days; same council round and seats as D5: keep record-only, a zero over five opportunities says nothing about precision | ≥ 100 `partial_ratio` findings over ≥ 50 sessions and ≥ 30 days, each labelled for whether the ratio is unfinished work the claim covers, plus a sample of non-firing closings for misses |
+| D7 | reversible-technical | council:2026-11-21 | `unlisted_surface` stays record-only: detector `coverage` keeps its refusal off. | 5.1: 1 fire over the same 5 closings, measured on today's surface map rather than the turn's; same council round and seats as D5: keep record-only, and the replay needs a turn-time surface map before its count can be trusted | the surface map is captured at turn time, and ≥ 100 `unlisted_surface` findings over ≥ 50 sessions and ≥ 30 days are labelled for whether the edit touched the surface and the turn drove it |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
@@ -455,3 +473,9 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
   measurement over the local store, and the council decides from that.
 - This roadmap does not touch the stub. Once Phase 1 closes, its section 2 has
   been carried here.
+- Follow-up named by the 2026-11-21 arming council (finding F4): the demotion
+  contract registers bars for studying a demotion, not a rule for arming a
+  record-only reason. Before any of D5-D7 is revisited, that promotion rule
+  (acceptable false-refusal rate, evidence per reason) has to be written into
+  `docs/contracts/turn-end-detector-demotion.md`; the D7 revisit also needs a
+  turn-time surface map.
