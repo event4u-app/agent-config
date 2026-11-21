@@ -34,8 +34,9 @@
  * a plain id (a plugin's `plugin:agent`, a path) is not looked up.
  *
  * Every subagent, whatever its definition, also receives the parent session's
- * pins (`_lib/session_pins.ts`) ahead of the digest; a session without pins
- * changes nothing here.
+ * pins (`_lib/session_pins.ts`) and its unrevoked goal sentence
+ * (`_lib/goal_mandate.ts`) ahead of the digest; a session with neither changes
+ * nothing here.
  *
  * Ships in its own chunk (decision A9), `yaml` external like `chat_history`'s:
  * the dispatch bundle carries only its `LAZY_CONCERNS` row. Kill switch: `AGENT_CONFIG_SUBAGENT_CONSTRAINTS=off`.
@@ -47,6 +48,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { goal_mandate_for_subagent } from '../_lib/goal_mandate.js';
 import { lawSections, ruleBody } from '../_lib/rule_law_section.js';
 import { pinsDisabled, pinsForSubagent } from '../_lib/session_pins.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -515,7 +517,11 @@ export function digestFor(envelope: unknown, env: NodeJS.ProcessEnv = process.en
         str(envelope, 'workspace_root', 'project_root') ?? str(payload, 'cwd') ?? env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
     const configDir = env['CLAUDE_CONFIG_DIR'] || path.join(os.homedir(), '.claude');
     const sessionId = str(envelope, 'session_id') ?? str(payload, 'session_id');
-    const pins = pinsDisabled(env) || sessionId === null ? '' : subagentPinsText(pinsForSubagent(projectDir, sessionId));
+    const pinText = pinsDisabled(env) || sessionId === null ? '' : subagentPinsText(pinsForSubagent(projectDir, sessionId));
+    // The parent's goal sentence rides with its pins: both are the owner's own
+    // words for this session, and a subagent starts without the turn they were typed in.
+    const goal = sessionId === null ? null : goal_mandate_for_subagent(projectDir, sessionId);
+    const pins = [goal ?? '', pinText].filter((t) => t !== '').join('\n\n');
     if (!definitionSkipsInstructions(projectDir, agentType, configDir)) return pins === '' ? null : pins;
     if (pins === '') return instructionDigest(projectDir, EMISSION_MAX_BYTES, configDir);
     // Pins go first: they are the user's own words for this session, and the

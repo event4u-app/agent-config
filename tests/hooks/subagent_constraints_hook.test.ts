@@ -17,6 +17,7 @@ import {
     replyLine,
     ruleLaw,
 } from '../../src/scripts/hooks/subagent_constraints_hook.js';
+import { observe_prompt } from '../../src/scripts/_lib/goal_mandate.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DISPATCH = path.join(REPO, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
@@ -433,5 +434,35 @@ describe('subagent-constraints concern — the user layer', () => {
             if (d.startsWith('A bounded digest')) expect(d).toMatch(/^User rules \(Iron Law blocks\): .*\.$/m);
             else expect(d).not.toMatch(/User rules|Files:/);
         }
+    });
+});
+
+describe('subagent-constraints concern — the parent session goal', () => {
+    let repo: string;
+    beforeEach(() => {
+        repo = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'subagent-goal-')));
+        spawnSync('git', ['init', '-q', repo]);
+    });
+    afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+    const start = (session: string): unknown => ({
+        event: 'subagent_start',
+        workspace_root: repo,
+        session_id: session,
+        payload: { agent_type: 'general-purpose', cwd: repo, session_id: session },
+    });
+
+    it('hands every subagent the unrevoked goal of the session that started it', () => {
+        observe_prompt(repo, 'parent-1', 'mach weiter bis zum merge', new Date('2026-11-21T09:15:00Z'));
+        const digest = digestFor(start('parent-1'), env());
+        expect(digest).toContain('<session-goal>');
+        expect(digest).toContain('"mach weiter bis zum merge"');
+    });
+
+    it('hands nothing once the goal is revoked, and nothing to another session', () => {
+        observe_prompt(repo, 'parent-1', 'until merged', new Date('2026-11-21T09:15:00Z'));
+        expect(digestFor(start('parent-2'), env())).toBeNull();
+        observe_prompt(repo, 'parent-1', 'stop', new Date('2026-11-21T09:20:00Z'));
+        expect(digestFor(start('parent-1'), env())).toBeNull();
     });
 });
