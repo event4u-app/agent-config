@@ -170,6 +170,7 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['false && set -e; task ci; echo ready', 'trailing'],
         // A redirection can fail, so `true >x` may fail too.
         ['true >/dev/null/child || exit 0; task ci', 'trailing'],
+        ['task ci; exit 1 >/dev/null/child; :', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -213,6 +214,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['false | true || npm run dev', ['false', 'true']],
         // With pipefail a failing first command fails the pipeline.
         ['set -o pipefail; false | true && npm run dev', ['set -o pipefail', 'false', 'true']],
+        // An `exit` whose redirection fails does not run, so what follows it can.
+        ['exit 1 >/dev/null/child; npm run dev', ['exit 1 >/dev/null/child', 'npm run dev']],
         // The same rules hold in a pipeline with a verifier in it.
         ['set -o pipefail; false | npx tsc --noEmit && npm run dev', ['set -o pipefail', 'false', 'npx tsc --noEmit']],
         ['npx tsc --noEmit | true || npm run dev', ['npx tsc --noEmit', 'true']],

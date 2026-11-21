@@ -501,6 +501,10 @@ function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
     const lone = p.segs.length === 1;
     // The shell's own `exit`, not an executable that happens to be named so.
     if (lone && p.segs[0]?.words[0] === 'exit') {
+        // A failed redirection stops `exit` from running and the line goes on.
+        if (p.segs[0].words.some((w) => /[<>]/.test(w))) {
+            return [{ ...s, zero: true, ended: true }, { ...s, zero: false, ended: true }, { ...s, zero: false }];
+        }
         const arg = argsOf(p).replace(/^["']|["']$/g, '');
         if (arg === '' || arg === '$?') return [{ ...s, ended: true }];
         if (/^\d+$/.test(arg)) return [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
