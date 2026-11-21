@@ -57,9 +57,13 @@ TMP_HOME="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_HOME"; }
 trap cleanup EXIT
 export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
-HOME="$TMP_HOME" "$CLAUDE_BIN" plugin marketplace add "$REPO_ROOT"
-HOME="$TMP_HOME" "$CLAUDE_BIN" plugin install "${PLUGIN_NAME}@${MARKETPLACE_NAME}"
-if ! HOME="$TMP_HOME" "$CLAUDE_BIN" plugin list | grep -q "$PLUGIN_NAME"; then
+# CLAUDE_CONFIG_DIR wins over HOME: a session started through a config-dir
+# wrapper exports it, and a HOME-only sandbox then writes the marketplace +
+# enabled plugin into the developer's real config.
+tmp_claude() { HOME="$TMP_HOME" CLAUDE_CONFIG_DIR="$TMP_HOME/.claude" "$CLAUDE_BIN" "$@"; }
+tmp_claude plugin marketplace add "$REPO_ROOT"
+tmp_claude plugin install "${PLUGIN_NAME}@${MARKETPLACE_NAME}"
+if ! tmp_claude plugin list | grep -q "$PLUGIN_NAME"; then
   echo "❌  plugin '${PLUGIN_NAME}' not listed after temp-home install — host did not load it" >&2
   exit 1
 fi

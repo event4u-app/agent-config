@@ -1,9 +1,11 @@
 // Tests for src/scripts/lint_marketplace.ts.
 //
 // Since road-to-install-path-convergence the linter validates the
-// BOOTSTRAP-SHIM shape: the plugin lists EXACTLY one pointer skill
-// (./.claude-plugin/skills/install-agent-config); any content skill in
-// skills[] or on disk under .claude-plugin/skills/ fails. The linter
+// BOOTSTRAP-SHIM shape: the plugin root is `./.claude-plugin` (never the repo
+// root — the host auto-loads `<root>/agents/` as subagents), it lists EXACTLY
+// one pointer skill (./skills/install-agent-config, relative to that root) and
+// ships `<root>/hooks/hooks.json`; any content skill in skills[] or on disk
+// under .claude-plugin/skills/ fails. The linter
 // resolves paths relative to cwd (ROOT="."), so each fixture runs in a tmp
 // cwd and asserts the exit code + substring contract. A real-repo case
 // covers the production tree under the real CI invocation.
@@ -17,7 +19,8 @@ import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
-const POINTER_ENTRY = './.claude-plugin/skills/install-agent-config';
+const PLUGIN_SOURCE = './.claude-plugin';
+const POINTER_ENTRY = './skills/install-agent-config';
 
 function runTs(cwd: string) {
     return runInProc(main, [], { cwd });
@@ -32,6 +35,7 @@ function validRepo(tmp: string): void {
     write(path.join(tmp, 'package.json'), JSON.stringify({ name: '@event4u/agent-config', version: '1.4.0' }));
     const pointerDir = path.join(tmp, '.claude-plugin', 'skills', 'install-agent-config');
     write(path.join(pointerDir, 'SKILL.md'), '---\nname: install-agent-config\ndescription: Pointer.\n---\n');
+    write(path.join(tmp, '.claude-plugin', 'hooks', 'hooks.json'), JSON.stringify({ hooks: {} }));
     write(
         path.join(tmp, '.claude-plugin', 'marketplace.json'),
         JSON.stringify({
@@ -42,7 +46,7 @@ function validRepo(tmp: string): void {
                 {
                     name: 'agent-config',
                     description: 'Bootstrap shim.',
-                    source: './',
+                    source: PLUGIN_SOURCE,
                     strict: false,
                     skills: [POINTER_ENTRY],
                 },
@@ -224,6 +228,36 @@ describe('lint_marketplace — bootstrap-shim contract', () => {
         expect(r.status).toBe(1);
         expect(r.stdout).toContain('stray-skill');
         expect(r.stdout).toContain('unexpected skill dir');
+    });
+
+    it('test_repo_root_source_fails', () => {
+        // The regression this guards: `source: "./"` makes the whole repo the
+        // plugin root, so the host loads the repo's `agents/` tree as
+        // subagents and blows the agent-description budget.
+        validRepo(tmp);
+        const payload = readMarketplace(tmp) as { plugins: Array<{ source: string }> };
+        payload.plugins[0]!.source = './';
+        writeMarketplace(tmp, payload);
+        const r = runTs(tmp);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('source');
+        expect(r.stdout).toContain('agents/');
+    });
+
+    it('test_agents_dir_under_plugin_root_fails', () => {
+        validRepo(tmp);
+        write(path.join(tmp, '.claude-plugin', 'agents', 'x.md'), '---\nname: x\n---\n');
+        const r = runTs(tmp);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('.claude-plugin/agents');
+    });
+
+    it('test_plugin_hooks_missing_fails', () => {
+        validRepo(tmp);
+        fs.rmSync(path.join(tmp, '.claude-plugin', 'hooks'), { recursive: true, force: true });
+        const r = runTs(tmp);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('hooks/hooks.json');
     });
 
     it('test_dist_skills_are_intentionally_unlisted', () => {

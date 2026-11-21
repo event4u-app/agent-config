@@ -319,7 +319,7 @@
         "upstream-contribute": 12143,
         "using-git-worktrees": 11846,
         "validate-feature-fit": 4252,
-        "verify-completion-evidence": 10675,
+        "verify-completion-evidence": 10743,
         "verify-repair-loop": 15727,
         "video-director": 5818,
         "vision-articulation": 10198,
@@ -1259,6 +1259,12 @@
             "old": 21385,
             "new": 21568,
             "reason": "One Do-NOT line pointing at references/inflation-checklist.md for Done notes (road-to-rewrites-that-keep-their-facts 8.1)."
+        },
+        {
+            "skill": "verify-completion-evidence",
+            "old": 10675,
+            "new": 10743,
+            "reason": "Step 3 names the wrapper-masks-exit-code trap (`task ci; echo $?` read as green) after an agent reported a red task ci as passing."
         }
     ]
 }
