@@ -138,35 +138,59 @@ a file.
 
 ## Phase 1 — The session's PR is the default target
 
-- [ ] **1.1 Failing selector test.** Add cases to
+- [x] **1.1 Failing selector test.** Add cases to
       `tests/scripts/session_pr_watch.test.ts` for a new
       `default_pr_target(store)`: exactly one `OPEN` tracked PR → that PR; two
       `OPEN` → `null`; only `MERGED`/`CLOSED` → `null`; empty store → `null`.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 1 failing on the missing export.
-- [ ] **1.2 Selector and block line.** Implement `default_pr_target` in
+      Done 2026-11-21: seen red, `TypeError: default_pr_target is not a function`
+      (five cases; a sixth pins that two open PRs put no default in the block).
+- [x] **1.2 Selector and block line.** Implement `default_pr_target` in
       `src/scripts/_lib/session_pr_watch.ts`; `pr_watch_block` appends one line
       `Default PR target for PR commands: #<n> <url>` when it is non-null.
       Existing assertions in the same test file stay unchanged.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 0
-- [ ] **1.3 Failing command-contract test.** Write
+      Done 2026-11-21: 17/17 green, the existing eleven assertions untouched.
+- [x] **1.3 Failing command-contract test.** Write
       `tests/scripts/pr_command_target.test.ts` asserting that
       `fix/pr-comments-loop/command.md` and `fix/pr-comments/command.md` name the
       order *explicit URL → session default target → current-branch detection →
       ask once*, and no longer carry "Never reuse a PR number from earlier in the
       conversation" verbatim.
       verify: the test fails on today's text.
-- [ ] **1.4 Rewrite the two input sections.** Edit the two command files: a
+      Done 2026-11-21: seen red, 6 failed / 1 passed (the prod-trunk pin passes
+      on today's text, as it must).
+- [x] **1.4 Rewrite the two input sections.** Edit the two command files: a
       session default target or a single current-branch PR is used and named in
       one line, without a confirmation question; reuse of a PR number from
       conversation memory stays forbidden, and the text says why the session
       store is not memory (written from `gh pr create` output by a hook). The
       prod-trunk refusal of the loop stays verbatim.
       verify: 1.3 test passes; `task sync` leaves `bash src/scripts/condense.sh --changed` empty.
-- [ ] **1.5 Sweep the other PR-taking commands.** Run
+      Done 2026-11-21: test green; `condense.sh --changed` prints "Every .md
+      projection matches its source". The loop's `argument-hint` became
+      `[pr-url]`, since the URL is no longer required.
+- [x] **1.5 Sweep the other PR-taking commands.** Run
       `grep -rln -i -E 'PR URL|pr-url' src/domains --include=command.md`; each
       hit that asks the owner for a PR either takes the 1.4 order or the Done
       note names it with the reason it must keep asking.
       verify: the Done note lists every grep hit with one of the two outcomes.
+      Done 2026-11-21, eleven hits:
+      - `fix/pr-comments-loop`, `fix/pr-comments` — 1.4 order (1.4).
+      - `prepare-for-review` — takes the 1.4 order, with its ticket search kept
+        as source 2; added to the 1.3 test.
+      - `fix` (router) — its two descriptions of the loop now say "PR URL, else
+        the session default target"; its routing row keys on a PR URL as a
+        signal and asks nothing, so it stays.
+      - `fix/route`, `analyze` — keep: a PR URL is a routing signal there, not
+        an ask.
+      - `analyze/pr` — keeps asking as its last resort: the order is code,
+        `resolvePrTarget` in `src/scripts/analysis_pr_target.ts` (argument →
+        current branch → named PR → one question), owned by that command.
+      - `analyze/and-optimize`, `roadmap/next`, `pr/create` — keep: they print a
+        PR URL, they never ask for one.
+      - `pr/create/description-only` — keeps: with no URL it falls back to the
+        branch diff and never asks.
 
 ## Phase 2 — The goal sentence is recorded and reaches every turn
 

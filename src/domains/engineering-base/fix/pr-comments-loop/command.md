@@ -7,7 +7,7 @@ cluster: fix
 sub: pr-comments-loop
 skills: [command-routing, git-workflow]
 description: Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments
-argument-hint: "<pr-url>"
+argument-hint: "[pr-url]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -28,9 +28,22 @@ a fixed-vs-commented tally.
 
 ## Input
 
-A **PR URL is required** — the loop runs unattended, so there is no
-auto-detection round-trip. If no URL was provided, ask for it once and stop
-until it arrives. **Never** reuse a PR number from earlier in the conversation.
+The loop runs unattended, so it resolves its PR without a confirmation
+round-trip; the first source that yields exactly one PR wins:
+
+1. **An explicit PR URL** in the invocation → that PR.
+2. **The session default target** — the `Default PR target for PR commands:`
+   line in the `<session-prs>` block → that PR.
+3. **The current branch** has exactly one open PR → that PR.
+4. Otherwise **ask for it once** and stop until it arrives.
+
+Whichever source resolved it, name it in one line ("PR #123 — from the session
+default target") and start; no confirmation question.
+
+A **PR number recalled from the conversation** is never a source. The session
+default target is not that: a hook records it from the `gh pr create` output of
+this session and re-reads its state on every prompt, and it names a PR only
+while exactly one of them is open.
 
 ## Authorization contract
 
@@ -50,7 +63,7 @@ let an outside account steer a push.
 
 ## Setup — once, before the first iteration
 
-1. Parse `{owner}/{repo}` and `{number}` from the URL. Verify the PR is open
+1. Parse `{owner}/{repo}` and `{number}` from the resolved PR URL. Verify the PR is open
    (`GET /repos/{owner}/{repo}/pulls/{number}`); closed or merged → report and stop.
 2. Record the baseline: `start_sha` = the PR's current `head.sha`. The final
    diff link is built from this.

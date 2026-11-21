@@ -24,12 +24,22 @@ The user provides a PR number or ticket number (e.g. `DEV-1234` or `#42`).
 
 ### PR detection
 
-1. If the user provides a GitHub PR URL or PR number → use that PR directly.
-2. If the user provides a Jira ticket number (e.g. `DEV-1234`) → search for an open PR linked to that ticket:
-   - Search via GitHub API for an open PR whose branch name contains the ticket number.
-   - If exactly one PR is found → confirm with the user: "I found PR #{number} on branch `{branch}`. Is that the one?"
-   - If none or multiple found → ask the user for the PR number or URL.
-3. **Never** reuse a PR number from earlier in the conversation without confirmation.
+The first source that yields exactly one PR wins:
+
+1. **An explicit PR URL** or PR number from the user → that PR.
+2. A Jira ticket number (e.g. `DEV-1234`) → the one open PR whose branch name
+   contains it (GitHub API search).
+3. **The session default target** — the `Default PR target for PR commands:`
+   line in the `<session-prs>` block → that PR.
+4. **The current branch** has exactly one open PR → that PR.
+5. Otherwise (none, or several) → **ask the user once** for the PR number or URL.
+
+Whichever source resolved it, name it in one line ("PR #{number} on branch
+`{branch}` — from the ticket search") and continue; no confirmation question.
+
+A **PR number recalled from the conversation** is never a source. The session
+default target is not that: a hook records it from the `gh pr create` output of
+this session and re-reads its state on every prompt.
 
 ## Instructions
 

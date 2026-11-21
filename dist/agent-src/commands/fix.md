@@ -36,7 +36,7 @@ with a single entry point + sub-command dispatch.
 | `/fix portability` | `commands/fix/portability.md` | Find and fix project-specific references in shared `.augment/` files |
 | `/fix seeder` | `commands/fix/seeder.md` | Scan seeder data files for broken FK references |
 | `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to all open review comments — **bot + human, classified per comment**; dedupes by comment id + reply marker |
-| `/fix pr-comments-loop` | `commands/fix/pr-comments-loop.md` | Autonomous loop over `pr-comments` (auto mode): fix → commit+push → re-request Copilot review → wait — repeats until Copilot has no new comments; requires a PR URL |
+| `/fix pr-comments-loop` | `commands/fix/pr-comments-loop.md` | Autonomous loop over `pr-comments` (auto mode): fix → commit+push → re-request Copilot review → wait — repeats until Copilot has no new comments; takes a PR URL, else the session default target |
 | `/fix comments` | `commands/fix/comments.md` | Review the **code comments** in the current branch's diff and simplify, shorten, or remove each one (≠ `pr-comments`, which targets GitHub review threads) |
 | `/fix commit-messages` | `commands/fix/commit-messages.md` | Measure the repo's commit convention, ask which style (custom always offered) and how far back, then rewrite past commit **subjects** to it — own commits by default, author identity preserved, backup tag + explicit rewrite/push gates |
 | `/fix quality` | `commands/fix/quality.md` | Run the quality pipeline (type-checker / linter / formatter, PHP and/or JS/TS) and fix every error — auto-detects language from changed files |
@@ -86,7 +86,7 @@ into it and removed.
    > 3. portability — purge project-specific refs from shared package
    > 4. seeder — scan seeders for broken FK references
    > 5. pr-comments — address open review comments (bot / human / both)
-   > 6. pr-comments-loop — loop pr-comments + Copilot re-review until no new comments (needs PR URL)
+   > 6. pr-comments-loop — loop pr-comments + Copilot re-review until no new comments (PR URL, else the session default target)
    > 7. comments — simplify / shorten / remove code comments in the branch diff
    > 8. quality — run the quality pipeline and fix every error
    > 9. route — describe the problem; I classify and dispatch
