@@ -440,10 +440,6 @@ function verifierIndex(p: Pipeline): number {
     return -1;
 }
 
-function argsOf(p: Pipeline | undefined): string {
-    return (p?.segs[0]?.words.slice(1) ?? []).join(' ');
-}
-
 
 /**
  * One pass over the line's pipelines, tracking every shell state that can reach
@@ -501,19 +497,24 @@ function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
     const lone = p.segs.length === 1;
     // The shell's own `exit`, not an executable that happens to be named so.
     if (lone && p.segs[0]?.words[0] === 'exit') {
-        // A failed redirection stops `exit` from running and the line goes on.
-        if (p.segs[0].words.some((w) => /[<>]/.test(w))) {
-            return [{ ...s, zero: true, ended: true }, { ...s, zero: false, ended: true }, { ...s, zero: false }];
+        // The argument without its redirections (`>x`, `2>&1`, or `>` and its target).
+        const words = p.segs[0].words.slice(1);
+        const args: string[] = [];
+        for (let i = 0; i < words.length; i += 1) {
+            const w = words[i] as string;
+            if (/^\d*[<>]+&?$/.test(w)) i += 1;
+            else if (!/[<>]/.test(w)) args.push(w);
         }
-        const arg = argsOf(p).replace(/^["']|["']$/g, '');
-        if (arg === '' || arg === '$?') return [{ ...s, ended: true }];
-        if (/^\d+$/.test(arg)) return [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
+        const redirected = args.length !== words.length;
+        const arg = args.join(' ').replace(/^["']|["']$/g, '');
+        let ran: FlowState[];
+        if (arg === '' || arg === '$?') ran = [{ ...s, ended: true }];
+        else if (/^\d+$/.test(arg)) ran = [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
         // Any other argument, `${PIPESTATUS[k]}` included (D10): the text cannot say which
         // pipeline ran last, so the status it hands on is unknown.
-        return [
-            { ...s, zero: true, ended: true },
-            { ...s, zero: false, ended: true },
-        ];
+        else ran = [{ ...s, zero: true, ended: true }, { ...s, zero: false, ended: true }];
+        // A failed redirection stops `exit` from running; the line goes on with a nonzero.
+        return redirected ? [...ran, { ...s, zero: false }] : ran;
     }
     const k = verifierIndex(p);
     // The pipeline's status is its last command's; under pipefail any failing member fails
@@ -535,6 +536,8 @@ function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
         if (last === 'false') return [false];
         return passes(last) ? [true] : [true, false];
     };
+    // A plain `set` the walk read succeeds.
+    if (k === -1 && lone && setOptions((p.segs[0] as Segment).words) !== null) return [{ ...s, zero: true }];
     if (k === -1) return zeros('none').map((zero) => ({ ...s, zero }));
     // A 0 says nothing about the verifier when a filter after it reports the status.
     const filtered = !pipefail && k !== lastAt;

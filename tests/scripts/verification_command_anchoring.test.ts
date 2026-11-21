@@ -183,6 +183,11 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'set -euo pipefail; task ci; echo ready',
         'set -e; npx tsc --noEmit; echo done',
         'set -o errexit; task ci; echo ok',
+        // A redirected `exit 1` that runs keeps its 1; one whose redirection fails goes on with a nonzero.
+        'task ci || exit 1 >/dev/null',
+        'task ci || exit 1 > /dev/null',
+        // A plain `set` the walk recognises succeeds.
+        'set -o pipefail || exit 0; task ci',
         'task ci && echo ok',
         'npx vitest run || exit 1',
         'npx vitest run; exit $?',
