@@ -1,0 +1,1484 @@
+{
+  "subject": "session-pins-phase-2-20261108",
+  "round1_findings": 7,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "parsePins filtered invalid entries; next capture persisted shorter list",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Retention missed sessions with pins but no language pin",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Failed restore silent after marker consumed",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.4",
+          "summary": "Packet budget numbers disagreed with the diff",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.5",
+          "summary": "Kill switch not checked before chunk load",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.6",
+          "summary": "Worst pins plus digest lacked subagent cap proof",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Budget-dropped restore lost after marker consumed",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.2",
+          "summary": "Nested pastes left directives inside outer block",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.3",
+          "summary": "Subagent silent when parent pins unreadable",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.4",
+          "summary": "Case-insensitive pin: matching questioned",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "3.5",
+          "summary": "Invalid pin state carries no reason code",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Transcript delivery check relied on string matching",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.2",
+          "summary": "Unvalidated transcript_path read",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.3",
+          "summary": "Follow-up could resurrect pins removed in same prompt",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.4",
+          "summary": "Restatement and marker-write failures could be silent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.5",
+          "summary": "Combined capture plus restatement line lacked verified bound",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.6",
+          "summary": "Subagent digest could get nonpositive budget",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.7",
+          "summary": "Per-prompt pin-file touch questioned",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "4.8",
+          "summary": "Invalid state still lacks reason code",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Prompt before first tool call got no pins",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.2",
+          "summary": "Stuck marker could repeat restatement indefinitely",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.3",
+          "summary": "Count-only notice hid which pins were refused",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.4",
+          "summary": "Skipped subagent digest could go unreported",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.5",
+          "summary": "Activity-touch and prune failures could go unreported",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.6",
+          "summary": "savePins test seam purpose undocumented",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Stale .restated suppressed next compaction's restore",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.2",
+          "summary": "Prompt-first restatement repeated every prompt until tool call",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "Prune walked directory on every capture",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "savePins seam bypassed pin-file lock",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.5",
+          "summary": "Guide omitted wildcard unpin and case-insensitivity",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "6.6",
+          "summary": "Budget tests lacked dispatcher-level coverage",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.7",
+          "summary": "Activity-touch failure invisible to user",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Paste replacement newline could create a closing fence",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.2",
+          "summary": "Prompt and tool deliveries not coordinated",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.3",
+          "summary": "Unwritable pending marker absent from restore line",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "7.4",
+          "summary": "Pin text could contain session-pins closing tag",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Timestamp-plus-UUID generations not ordered",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.2",
+          "summary": "Lock failure on owed restatement was silent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Boundary unlink and record write not atomic; crash loses compaction",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Read errors treated as absence",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.3",
+          "summary": "Restore record lacked session ownership",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.4",
+          "summary": "Stray paste closer discarded preceding text",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Boundary cleanup could delete newer compaction's boundary",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.2",
+          "summary": "followUp settled delivery before reading pins",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.3",
+          "summary": "Unreadable boundary collapsed to acknowledgeable value",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.4",
+          "summary": "Kill switch did not gate bundle pin work",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.5",
+          "summary": "Prompt-first delivery lacked per-turn ceiling evidence",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "tool_seen compensation missed failed boundary after prompt-first",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.2",
+          "summary": "unreadable_delivered flag never cleared",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.3",
+          "summary": "Race test did not prove in-lock marker re-check",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.4",
+          "summary": "Missing-module wording wrongly blamed pin storage",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Older stamp could replace newer acknowledgement",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "16.2",
+          "summary": "Comments overstated atomicity of pre_compact writes",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "Fence closer accepted Unicode whitespace",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "17.2",
+          "summary": "Acknowledgement guarantee omitted finite stamp window",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "17.3",
+          "summary": "Marker write failure blocked boundary write",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "17.4",
+          "summary": "Prompt-first delivery needed evidence against turn ceiling",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Tool-only sessions lost pins to retention",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "18.2",
+          "summary": "Unreadable boundaries lacked diagnostics",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "18.3",
+          "summary": "Lock contention result insufficiently evidenced",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "18.4",
+          "summary": "No dispatcher-level restore failure injection tests",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "18.5",
+          "summary": "Verbatim wording omitted stored-pin normalisation",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "18.6",
+          "summary": "Budget record omitted acknowledgement window",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "18.7",
+          "summary": "Bundle did not filter non-string acknowledgements",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Packet omitted source, helpers and test evidence",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.2",
+          "summary": "Tool-call activity touch failures silent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "19.3",
+          "summary": "Pin-lost stamp read failures lacked diagnostics",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.4",
+          "summary": "Unreadable prune stamp could trigger prune",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.5",
+          "summary": "Replay capture claimed misleading storage failure",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.6",
+          "summary": "Throwing chunk loader could crash hook",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.7",
+          "summary": "Prompt-first budget behaviour lacked dispatcher evidence",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "20.1",
+          "summary": "Capture could overwrite unreadable existing pin file",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.2",
+          "summary": "Nested same-name injected regions exposed directives",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.3",
+          "summary": "Negative dispatcher assertions passed on crash",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.4",
+          "summary": "Broken restore record could inject unsolicited",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.5",
+          "summary": "Shared lock could proceed without companion guard",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.6",
+          "summary": "Per-slot budget versus runtime limit role unclear",
+          "low": "",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": [
+        {
+          "id": "21.1",
+          "summary": "Wrapper removal before fence scan could expose fenced directives",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "21.2",
+          "summary": "Lone surrogates broke serialization byte bound",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "21.3",
+          "summary": "Pin writers lost exclusion when guard creation failed",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "visible": true,
+      "findings": [
+        {
+          "id": "23.1",
+          "summary": "Attributed host envelopes exposed enclosed directives",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "23.2",
+          "summary": "Region spans hid one another; unclosed envelopes mishandled",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "23.3",
+          "summary": "Wrapper overlap detection superlinear",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "23.4",
+          "summary": "existsSync uncertainty read as no pins",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "23.5",
+          "summary": "Stray paste closer still discarded preceding text",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "23.6",
+          "summary": "Opt-in strict lock documentation questioned",
+          "low": "",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "23.7",
+          "summary": "Subagent digest remaining byte allowance questioned",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "24.1",
+          "summary": "Quoted > in attribute hid attributed opener",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "24.2",
+          "summary": "Retry keyed on message prefix missed lock/write failures",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "24.3",
+          "summary": "Paste scanner repeatedly searched distant closing bracket",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "visible": true,
+      "findings": [
+        {
+          "id": "25.1",
+          "summary": "Multiline or malformed opener invisible to parser",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "25.2",
+          "summary": "Read-then-delete pin-lost marker could erase successor",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "25.3",
+          "summary": "Throwing or skewed chunk methods escaped handling",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "25.4",
+          "summary": "Bundle and module disagreed on nonboolean delivered",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "visible": true,
+      "findings": [
+        {
+          "id": "27.1",
+          "summary": "Line separators truncated directives or broke unpin",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.2",
+          "summary": "post_tool_use budget exception lacked worst-case dispatcher test",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.3",
+          "summary": "Provenance claim overstated host-framing authentication",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.4",
+          "summary": "Restore wording obscured snapshot behaviour under concurrent capture",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "27.5",
+          "summary": "Unreadable pin-file age could lead to pruning",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "visible": true,
+      "findings": [
+        {
+          "id": "28.1",
+          "summary": "Fence opener regex backtracked quadratically",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "28.2",
+          "summary": "Dispatcher fixture not real maximum pin bytes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "28.3",
+          "summary": "Budget-dropped tool restore already recorded delivery",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 29,
+      "visible": true,
+      "findings": [
+        {
+          "id": "29.1",
+          "summary": "Directive's own markup silently excluded it",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "29.2",
+          "summary": "Excluded directives silently ignored",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "29.3",
+          "summary": "Fixture still short of exact 4096-byte cap",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "29.4",
+          "summary": "Duplicate restore-record readers",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "29.5",
+          "summary": "Stale claim files accumulated",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 30,
+      "visible": true,
+      "findings": [
+        {
+          "id": "30.1",
+          "summary": "Crash in commit windows could lose tool restore",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "30.2",
+          "summary": "Prompt-first delivery could commit and crash without owed restatement",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "30.3",
+          "summary": "Capacity comment omitted escaping and multibyte",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 31,
+      "visible": true,
+      "findings": [
+        {
+          "id": "31.1",
+          "summary": "Recovered claim reused possibly acknowledged stamp",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.2",
+          "summary": "Claim kept old mtime, looked abandoned",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.3",
+          "summary": "finally removed claim after throwing restore",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.4",
+          "summary": "Frequency descriptions omitted new restore lines",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.5",
+          "summary": "Restore transaction strict locking questioned",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "31.6",
+          "summary": "Combined budget including lock failures questioned",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 32,
+      "visible": true,
+      "findings": [
+        {
+          "id": "32.1",
+          "summary": "Claim released when restore neither settled nor re-armed",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "32.2",
+          "summary": "Recovery chain unbounded",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "32.3",
+          "summary": "Claim-release wording overstated host delivery",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 33,
+      "visible": true,
+      "findings": [
+        {
+          "id": "33.1",
+          "summary": "Recovery ran without exclusion; could fork retry",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "33.2",
+          "summary": "Count rewritten in place could be lost",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "33.3",
+          "summary": "Claim retention when restoreClaimed throws questioned",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "33.4",
+          "summary": "Strict lock helper lacked direct tests",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 34,
+      "visible": true,
+      "findings": [
+        {
+          "id": "34.1",
+          "summary": "Recovery bound per claim file, not per compaction",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "34.2",
+          "summary": "Failed link spent attempt without publishing",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "34.3",
+          "summary": "Nonboolean pending treated as false",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "34.4",
+          "summary": "pre_compact comment overstated recovery when writes fail",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "34.5",
+          "summary": "Retention comment misstated when pruning runs",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "34.6",
+          "summary": "Paste span scanning linearity questioned",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 35,
+      "visible": true,
+      "findings": [
+        {
+          "id": "35.1",
+          "summary": "Ledger forgot exhausted origins by size",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "35.2",
+          "summary": "Unsettled prompt restatement repeated every prompt",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "35.3",
+          "summary": "Failed marker directory listing silent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "35.4",
+          "summary": "Gone sessions' companion files not pruned",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 36,
+      "visible": true,
+      "findings": [
+        {
+          "id": "36.1",
+          "summary": "Fallback counter unguarded read-modify-write",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "36.2",
+          "summary": "Older boundary stamp reset newer allowance",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "36.3",
+          "summary": "Settled sessions kept empty recovery ledgers",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 37,
+      "visible": true,
+      "findings": [
+        {
+          "id": "37.1",
+          "summary": "Fallback record accepted malformed counts and stamps",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "37.2",
+          "summary": "Unreadable counter treated as absent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "37.3",
+          "summary": "Already empty ledger survived",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "37.4",
+          "summary": "Language-restore scope undisclosed",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "37.5",
+          "summary": "Unreadable retention stamp skipped prune silently",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 38,
+      "visible": true,
+      "findings": [
+        {
+          "id": "38.1",
+          "summary": "Fresh re-arm stamp gave second fallback allowance",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "38.2",
+          "summary": "Older unsettled restore could overwrite newer boundary",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "38.3",
+          "summary": "Failed language reset released restore claim",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 39,
+      "visible": true,
+      "findings": [
+        {
+          "id": "39.1",
+          "summary": "Missing/throwing module bypassed fallback bound",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "39.2",
+          "summary": "Recovery listed marker directory twice",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "39.3",
+          "summary": "Keep claim until stdout.write completes",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 40,
+      "visible": true,
+      "findings": [
+        {
+          "id": "40.1",
+          "summary": "Uncountable fallback injected notice every prompt",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "40.2",
+          "summary": "Malformed counter blocked later compactions",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "40.3",
+          "summary": "Recovery listed shared marker directory each call",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "40.4",
+          "summary": "Runtime throw reported as load failure",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 41,
+      "visible": true,
+      "findings": [
+        {
+          "id": "41.1",
+          "summary": "Capture and tool restore obscured module runtime errors",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 42,
+      "visible": true,
+      "findings": [
+        {
+          "id": "42.1",
+          "summary": "Loader and factory failures lacked diagnostics",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "42.2",
+          "summary": "Delivery implied exactly-once",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "42.3",
+          "summary": "Combined restore allowance unstated",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 43,
+      "visible": true,
+      "findings": [
+        {
+          "id": "43.1",
+          "summary": "Inline envelope inside directive line applied",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "43.2",
+          "summary": "Directives after synthetic prefix applied",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "43.3",
+          "summary": "Emission bound not established by protocol",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "43.4",
+          "summary": "Restore record pruned on own mtime",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "43.5",
+          "summary": "Fifth finding's text not shown",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 44,
+      "visible": true,
+      "findings": [
+        {
+          "id": "44.1",
+          "summary": "Bare opener closed on later line bypassed envelope check",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "44.2",
+          "summary": "Attributed-opener regex quadratic",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.3",
+          "summary": "Simplified restore injected pins in replay",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.4",
+          "summary": "Language restore lacked regression coverage",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.5",
+          "summary": "Test titles described removed recovery",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.6",
+          "summary": "Shared strict lock option retention questioned",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "44.7",
+          "summary": "Backtick restriction on fence openers questioned",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "44.8",
+          "summary": "Treating unstatable files as active questioned",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 45,
+      "visible": true,
+      "findings": [
+        {
+          "id": "45.1",
+          "summary": "Split or spaced openers bypassed later-closer check",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "45.2",
+          "summary": "Synthetic prompt with no module gave no notice",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "45.3",
+          "summary": "Read-then-delete removed newer pin-lost marker",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 46,
+      "visible": true,
+      "findings": [
+        {
+          "id": "46.1",
+          "summary": "Unreadable restore record treated as absent",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "46.2",
+          "summary": "Record accepted malformed or oversized seen arrays",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "46.3",
+          "summary": "Throwing chunk bypassed synthetic directive notice",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "46.4",
+          "summary": "Bound wording ignored acknowledgement loss on corruption",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "46.5",
+          "summary": "Replacing taken marker on Windows questioned",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "46.6",
+          "summary": "Concurrent capture could commit after restore snapshot",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "46.7",
+          "summary": "Strict lock option questioned again",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 47,
+      "visible": true,
+      "findings": [
+        {
+          "id": "47.1",
+          "summary": "Oversized stamp could enter record and invalidate it",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.2",
+          "summary": "Validator accepted duplicate stamps in seen",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.3",
+          "summary": "Pin-chunk headroom below stated derivation",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.4",
+          "summary": "Unreadable-record diagnostics repeat every prompt",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.5",
+          "summary": "Stamp writer lacked explicit length check",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 48,
+      "visible": true,
+      "findings": [
+        {
+          "id": "48.1",
+          "summary": "Unreadable record on tool path emitted unrecorded pins",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "48.2",
+          "summary": "Hook fallback notices bypassed replay guards",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "48.3",
+          "summary": "Oversized-stamp admission rationale undocumented",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 49,
+      "visible": true,
+      "findings": [
+        {
+          "id": "49.1",
+          "summary": "Unknown marker stamp yielded four pin lines",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "49.2",
+          "summary": "Transaction failure described as lock failure only",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 52,
+      "visible": true,
+      "findings": [
+        {
+          "id": "52.1",
+          "summary": "Stat-failure lock retry unpaced and unbounded",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "52.2",
+          "summary": "Helper excerpt in packet stale versus diff",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "52.3",
+          "summary": "Record size wording conflated produced and accepted",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "52.4",
+          "summary": "Fence scanning past line end questioned",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "52.5",
+          "summary": "Prune could repeat when stamp unwritable",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "52.6",
+          "summary": "Subagent pin reads uncached",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 53,
+      "visible": true,
+      "findings": [
+        {
+          "id": "53.1",
+          "summary": "Restore transaction blocked up to 5s on lock",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "53.2",
+          "summary": "Some branches ignored nonblocking lock requests",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "53.3",
+          "summary": "Invalid restore bookkeeping replaced on reopening",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "53.4",
+          "summary": "Unrecorded tool delivery repeat questioned",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 54,
+      "visible": true,
+      "findings": [
+        {
+          "id": "54.1",
+          "summary": "Stale-lock reclaim race lets two holders",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "54.2",
+          "summary": "Language-mirror tool-write lock same reclaim race",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "54.3",
+          "summary": "Brief capture notice hid unmatched unpin directives",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    }
+  ]
+}

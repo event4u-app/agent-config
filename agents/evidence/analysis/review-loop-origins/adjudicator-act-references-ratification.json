@@ -1,0 +1,156 @@
+{
+  "subject": "act-references-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Lexer misses valid heredoc terminator words",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Several heredocs on one line mishandled",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Indented line wrongly ends an ordinary heredoc",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Lone & not treated as a command separator",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.5",
+          "summary": "Pre-check rejects commands the lexer would match",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.6",
+          "summary": "Chunk move and act observation should be separate changes",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Heredoc terminators with escapes misread",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.2",
+          "summary": "Quoted empty heredoc terminator rejected",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.3",
+          "summary": "Quoted or escaped assignment words treated as assignments",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "4.4",
+          "summary": "Oracle fixture lost its backslash, tested wrong command",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.5",
+          "summary": "Act observation has no kill switch",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "4.6",
+          "summary": "Act observation lacks production telemetry",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Here-string operand kept as a command word",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Generator should place redirections at any position",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Oracle command stub misrepresents builtin lookup; nohup command exec flagged",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Add end-to-end hook test for continued redirected commands",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Define result as syntactic candidate, not reachable act",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Redirection before reserved word still reports false act",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "15.2",
+          "summary": "Rollback criteria unspecified",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    }
+  ]
+}

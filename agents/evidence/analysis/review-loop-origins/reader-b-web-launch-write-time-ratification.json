@@ -1,0 +1,364 @@
+{
+  "subject": "web-launch-write-time-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Markup scanning can take quadratic time without a per-line bound",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.2",
+          "summary": "Supersession regexes compile inside the line loop",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.3",
+          "summary": "Missing performance test for a large single-line file",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.4",
+          "summary": "Renaming markup to an excluded extension bypasses scanning",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.5",
+          "summary": "Agents can ignore advisory findings",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Per-line matching silently misses wrapped links",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.2",
+          "summary": "The 400-character gate skips minified markup and long lines",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.3",
+          "summary": "Unclosed tags make visibleText discard the rest of the file",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.4",
+          "summary": "Bounded lookahead allegedly loses placeholders longer than 40 characters",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.5",
+          "summary": "The undecided path allegedly lacks test coverage",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Skipped tags appear clean after the undecided fallback was removed",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.2",
+          "summary": "Padding a tag beyond the scan window hides its load",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "5.3",
+          "summary": "The stated 15 percent chunk margin is arithmetically incorrect",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.4",
+          "summary": "Attribute lookup recompiles its regex on every call",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.5",
+          "summary": "The line-start array grows with the file's line count",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.6",
+          "summary": "The data-src test does not demonstrate failure under old behavior",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "An unclosed tag allegedly marks subsequent closed tags unclosed",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.2",
+          "summary": "Sparse unclosed tags allegedly cause repeated scans",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "No validated rollback criterion for megabyte scan latency",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "Removing the tag window is broader than raising its limit",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.5",
+          "summary": "The windowless tag scanner has no explicit timeout",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.6",
+          "summary": "Missing test for one very large unclosed tag",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "The 500 ms threshold lacks a governing requirement",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Megabyte cases assert timing without checking scan output",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.3",
+          "summary": "Timing sensitivity was demonstrated only through a local edit",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "The timing thresholds lack a governing requirement",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "8.2",
+          "summary": "Megabyte cases assert timing without checking scan output",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "8.3",
+          "summary": "visibleText lacks coverage for an unclosed style block",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "8.4",
+          "summary": "The chunk margin derivation reads as a growth estimate",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "8.5",
+          "summary": "The change combines the dispatch raise, chunk, and algorithm rewrite",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.6",
+          "summary": "Unbundled source runs skip scanning",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Tag line-number edge cases lack test coverage",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "visibleText equivalence with the removed regex is untested",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.3",
+          "summary": "No end-to-end test exercises the dispatched hook",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.4",
+          "summary": "No test exercises the exact file-size boundary",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.5",
+          "summary": "The bounded placeholder lookahead change lacks justification",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "9.6",
+          "summary": "Dispatch ceiling raise measurement allegedly lacks automation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.7",
+          "summary": "The revised chunk margin derivation is post hoc",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Padding beyond the file cap bypasses tracker findings",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "10.2",
+          "summary": "Advisory P2 behavior is allegedly unverified",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "10.3",
+          "summary": "visibleText equivalence testing excludes unclosed blocks",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.4",
+          "summary": "Tag findings report the line where the tag starts",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Bundling existing defect fixes pressures reviewers to ratify the feature",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Unbundled runs skip scanning without a degraded note",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.2",
+          "summary": "Scanning has no size or time bound",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "A page's canonical host can suppress registered provider findings",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.2",
+          "summary": "The diff removes the 400-character minified-line threshold",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}
