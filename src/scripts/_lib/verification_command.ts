@@ -422,15 +422,14 @@ function argsOf(p: Pipeline | undefined): string {
     return (p?.segs[0]?.words.slice(1) ?? []).join(' ');
 }
 
-/** `${PIPESTATUS[k]}` / `$PIPESTATUS[k]` naming exactly index `k`. */
-function namesPipestatus(text: string, k: number): boolean {
-    return new RegExp(`PIPESTATUS\\[${String(k)}\\]`).test(text);
-}
 
 /** `exit`/`return` of `PIPESTATUS[k]` right after a filtered pipeline: the verifier's code reaches the caller. */
 function exitsWithPipestatus(prev: Pipeline, next: Pipeline | undefined, k: number): boolean {
     const h = head(next);
-    return prev.sepAfter === ';' && (h === 'exit' || h === 'return') && namesPipestatus(argsOf(next), k);
+    if (prev.sepAfter !== ';' || (h !== 'exit' && h !== 'return') || next?.segs.length !== 1) return false;
+    // The argument is the expansion itself, nothing around it.
+    const arg = argsOf(next).replace(/^"(.*)"$/, '$1');
+    return new RegExp(`^\\$\\{?PIPESTATUS\\[${String(k)}\\]\\}?$`).test(arg);
 }
 
 /**

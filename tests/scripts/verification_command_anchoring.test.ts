@@ -132,6 +132,9 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['set -o pipefail | cat; task ci | tail -5', 'pipe'],
         // An `exit` inside a pipeline ends only its subshell.
         ['task ci || exit 1 | cat', 'trailing'],
+        // An `exit` of PIPESTATUS inside a pipeline, or of something merely containing it, carries nothing.
+        ['task ci | tail -5; exit "${PIPESTATUS[0]}" | cat', 'pipe'],
+        ['task ci | tail -5; exit "${PIPESTATUS[0]}0"', 'pipe'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
