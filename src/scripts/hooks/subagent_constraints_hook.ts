@@ -35,7 +35,7 @@
  *
  * Every subagent, whatever its definition, also receives the parent session's
  * pins (`_lib/session_pins.ts`) and its unrevoked goal sentence
- * (`_lib/goal_mandate.ts`) ahead of the digest; a session with neither changes
+ * (`_lib/goal_mandate_store.ts`) ahead of the digest; a session with neither changes
  * nothing here.
  *
  * Ships in its own chunk (decision A9), `yaml` external like `chat_history`'s:
