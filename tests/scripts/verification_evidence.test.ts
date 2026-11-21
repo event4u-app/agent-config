@@ -341,6 +341,21 @@ describe('the classifier is pure', () => {
     });
 });
 
+describe('readRunEvidence — a masked zero beside a refusing record', () => {
+    it('reads as a gap, so detectors C and E fall back to the transcript path instead of refusing on the records', () => {
+        const reading = readRunEvidence({
+            runs: [
+                { ...rec({ command: 'npx vitest run | tail -5', exit_code: 0, stdout_tail: '' }), after_edits: 1 },
+                { ...rec({ command: 'npx tsc --noEmit', exit_code: 2, stdout_tail: '' }), after_edits: 1 },
+            ],
+            edits_this_turn: 1,
+        } as never);
+        expect(reading.passed).toBe(false);
+        expect(reading.failed).toBe(false);
+        expect(reading.instrumentGap).toBe(true);
+    });
+});
+
 describe('readRunEvidence — placement in the turn, step 1.3', () => {
     const PASS = { command: 'npx vitest run', exit_code: 0, stdout_tail: ' Tests  4 passed (4)\n' };
 

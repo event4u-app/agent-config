@@ -2413,6 +2413,13 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(Date.now() - t0).toBeLessThan(1000);
     });
 
+    it('many ratios on one negated line are read in linear time', () => {
+        const reply = `Done.\n${'1/2 '.repeat(40000)}not yet`;
+        const t0 = Date.now();
+        expect(detectCoverageGap(reply, [], undefined)).toBeNull();
+        expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
     it('many Not verified headings in one block are read in linear time', () => {
         const reply = `Done.\n${'Not verified: 2/3\n'.repeat(20000)}`;
         const t0 = Date.now();
@@ -2485,6 +2492,12 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         const dir = appWorkspace();
         const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified:\n- `npm run dev`: no browser in this session';
         expect(detectCoverageGap(reply, [edit(dir)], dir)).toBeNull();
+    });
+
+    it('a start command after an unconditional exit never runs, so it drives nothing', () => {
+        const dir = appWorkspace();
+        const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'exit 0; npm run dev' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
     });
 
     it('a command that runs the start command drives the surface', () => {

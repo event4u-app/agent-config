@@ -49,7 +49,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { read_lockfile } from './installed_lock.js';
-import { readText } from './live_surfaces.js';
+import { readText } from './bounded_read.js';
 
 /**
  * The seven detectors, in the order the gate runs them. G (`coverage`) records

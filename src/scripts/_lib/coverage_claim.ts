@@ -22,7 +22,8 @@
  */
 import * as path from 'node:path';
 
-import { deriveLiveSurfaces, readText, type LiveSurface } from './live_surfaces.js';
+import { readText } from './bounded_read.js';
+import { deriveLiveSurfaces, type LiveSurface } from './live_surfaces.js';
 import { commandSegments } from './verification_command.js';
 import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js';
 
@@ -160,13 +161,28 @@ export function partialRatioIn(fenceStripped: string, visible: string): Coverage
     if (completionClaimAt(visible) === null) return null;
     const text = ratioProse(fenceStripped);
     const spans = notVerifiedSpans(text);
+    // Each line's negation is decided once, not once per ratio on it.
+    const negatedLine = new Map<number, boolean>();
+    let lineStart = 0;
+    let lineEnd = -1;
     for (const m of text.matchAll(RATIO_RE)) {
         const n = Number(m[1]);
         const total = Number(m[2]);
         if (!(n < total) || total === 0) continue;
         const at = m.index;
         if (inSpans(spans, at)) continue;
-        if (NEGATED_CLAIM_RE.test(lineAround(text, at))) continue;
+        if (at > lineEnd) {
+            // Matches arrive in order, so the line bounds only move forward.
+            lineStart = text.lastIndexOf('\n', at) + 1;
+            const nl = text.indexOf('\n', at);
+            lineEnd = nl === -1 ? text.length : nl;
+        }
+        let negated = negatedLine.get(lineStart);
+        if (negated === undefined) {
+            negated = NEGATED_CLAIM_RE.test(text.slice(lineStart, lineEnd));
+            negatedLine.set(lineStart, negated);
+        }
+        if (negated) continue;
         return {
             detector: 'coverage',
             code: 'partial_ratio',

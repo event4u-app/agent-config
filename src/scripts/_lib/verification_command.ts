@@ -233,10 +233,20 @@ function failureIsDiscarded(seg: Segment): boolean {
     return false;
 }
 
-/** Every segment of a command line, as text: the commands it runs, not the words it mentions. */
+/** The segments of a command line that can run, as text: the commands it runs, not the words it mentions. */
 export function commandSegments(command: string): string[] {
     if (!command) return [];
-    return splitSegments(stripComment(command)).map((seg) => seg.words.join(' '));
+    const out: string[] = [];
+    let before: Segment['nextSep'] = null;
+    for (const seg of splitSegments(stripComment(command))) {
+        // Nothing after a lone `exit`/`return` that runs unconditionally is reached.
+        const h = bareName(seg.words[0] ?? '');
+        const lone = before !== '|' && seg.nextSep !== '|';
+        if ((h === 'exit' || h === 'return') && lone && (before === null || before === ';')) break;
+        out.push(seg.words.join(' '));
+        before = seg.nextSep;
+    }
+    return out;
 }
 
 /**
