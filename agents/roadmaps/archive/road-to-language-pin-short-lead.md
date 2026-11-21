@@ -6,6 +6,10 @@ probe: none
 
 # Stub: a short typed lead makes the language pin follow the PASTE, in both directions
 
+> **Done (2026-11-21):** superseded by road-to-a-language-pin-from-owner-prose —
+> step 3.2's owner-prose classifier and decision D1 replace the `en`/`en`/`de`
+> probe target with owner-prose-only verdicts.
+
 > **Arrivals:** 2 — latest `inbox-2026-10-s` (2026-10-15): a throughput review
 > counts 64 turn-end refusals pinned `en` against German prompts *(local)*;
 > re-probed that day, a short German lead over an English paragraph with no

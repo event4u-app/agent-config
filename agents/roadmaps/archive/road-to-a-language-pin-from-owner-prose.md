@@ -8,6 +8,9 @@ execution:
 estate_growth_exempt: "P0 measure 2 of the owner's session retro of 2026-11-21, which the owner ordered planned and executed. The owning step (later/road-to-agent-throughput-recovery 4.1) sits in later/ behind an owner WIP entry condition; this file carries only the missing delta and supersedes stubs/road-to-language-pin-short-lead, which it archives in step 5.2, so the net estate change after 5.2 is zero."
 estate_offset_exempt: "road-to-a-language-pin-from-owner-prose is added on the owner's order of 2026-11-21 to plan every measure of that day's session retro as its own roadmap. No active roadmap is finished, so none was archived to offset it, and folding it into a parked later/ roadmap would hold asked-for work behind that roadmap's entry condition. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
 relates:
+  - slug: road-to-a-language-pin-from-owner-prose-live-wiring
+    relation: extends
+    note: "Carries the live wiring withdrawn here by owner decision (option 2, 2026-11-21): steps 3.2 (hook half), 3.3 (hook write), 3.4, 4.1, 4.2, 5.1 and AC-2, AC-3, AC-5, with the bundle raise they need."
   - slug: road-to-resume-after-limit-hits
     relation: disjoint
     note: "Same-retro sibling (measure 23). Its Phase 1 moves limit-stop and reset-sentence recognition into one `_lib/limit_stop.ts` that the language pin also calls; this file owns what sets the pin (`ownerProse()`), that file owns the limit classifier. Whichever lands second imports the other's helper rather than keep a second literal."
@@ -35,6 +38,17 @@ relates:
 > a roadmap (anthropic) and asked to keep language drift apart from hooks
 > wrongly rejecting real verification, since the fixes differ. Tree facts
 > verified at `811cea61d6` on 2026-11-21.
+
+> **Raise withdrawn (owner decision, option 2, 2026-11-21).** The ceiling
+> raise of 4.2 (`hook-bundle-budget.json` 1,595,300 → 1,600,295 B) went through
+> 22 ratification rounds without the council converging; the question files
+> `agents/evidence/council/language-pin-from-owner-prose-ratification-r*-20261121.question.md`
+> stay as the record. The owner chose to land the feature without growing the
+> live hook bundle: the raise was reverted, the owner-prose classifier, the
+> `owner_prose_chars` pin step and the gate rule landed as a library the
+> dispatcher does not import (`src/scripts/_lib/owner_prose_pin.ts`,
+> `src/scripts/hooks/language_pin_gate.ts`), and every step that only works on
+> the live hook path is carried to [`road-to-a-language-pin-from-owner-prose-live-wiring`](../road-to-a-language-pin-from-owner-prose-live-wiring.md).
 
 ## Goal
 
@@ -141,7 +155,7 @@ never edited.
       Attach 2.1's table and the stub's warning that a floor of 1 lets one
       homograph flip a session. Record the verdict as a `## Decisions` row.
       verify: a D-row with `resolved by: council:<date>` exists in this file
-- [x] **3.2 Implement `ownerProse(prompt)` in `src/scripts/_lib/prompt_shape.ts`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
+- [~] **3.2 Implement `ownerProse(prompt)` in `src/scripts/_lib/prompt_shape.ts`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring -->
       Order: `isSyntheticPrompt` → `stripInjectedRegions` → drop fenced code and
       output-shaped paste lines → keep the typed lead before the first document
       head **and** the typed paragraph after the last paste block → return only
@@ -149,39 +163,50 @@ never edited.
       `ownerProse` with 3.1's floor and remove the whole-body fallback; correct
       the "bidirectional by construction" docstring the stub flagged.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0 with 2.1's table green
-- [x] **3.3 Record pin provenance.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/language_mirror_hook.ts --> Add `owner_prose_chars` to `PinState`
+      Partly done: `ownerProse` and the no-fallback classifier landed as
+      `classifyOwnerProse` (`_lib/owner_prose_pin.ts`) with 2.1's table green
+      against it. Switching the hook's `classify` is carried to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.1.
+- [~] **3.3 Record pin provenance.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/language_mirror_hook.ts --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> Add `owner_prose_chars` to `PinState`
       (`language_mirror_hook.ts:464`) and write it on every prompt-sourced pin.
       Test first: a pin written from 2.1's trailing-line row records the typed
       line's length, not `prompt_chars`.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t owner_prose_chars` -> 0 after a recorded red run
-- [x] **3.4 Keep the conformance scanner on the same reader.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> `measure_turn_end_gate`
+      Partly done: `ownerProseNextState` writes the field and its tests pass;
+      the hook writing it is carried to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.1.
+- [~] **3.4 Keep the conformance scanner on the same reader.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> `measure_turn_end_gate`
       and `conformance_scan` call `classify`; run both suites so the scanner and
       the hook still classify one entry the same way.
       verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts tests/scripts/conformance_scan.test.ts` -> 0
 
 ## Phase 4 — The gate refuses only on an owner-prose pin
 
-- [x] **4.1 Make `readLanguagePin` provenance-aware.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts --> In
+- [~] **4.1 Make `readLanguagePin` provenance-aware.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> In
       `src/scripts/hooks/turn_end_gate_hook.ts:638` return `und` for a pin whose
       `source` is not `prompt`, and for a `prompt` pin with
       `owner_prose_chars: 0`. A pin file without the field (written before 3.3)
       keeps today's behaviour. Turns 2.2's must-not-fire case green.
       verify: `npx vitest run tests/hooks tests/scripts -t "language"` -> 0
-- [x] **4.2 Rebuild the hook bundle and check its budget.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> Run `npm run
+      Partly done: the rule is `gatePinLanguage` (`hooks/language_pin_gate.ts`)
+      with 2.2's cases green against it; `readLanguagePin` calling it is carried
+      to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.2.
+- [~] **4.2 Rebuild the hook bundle and check its budget.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> Run `npm run
       build:hooks`, then the bundle freshness and token-budget checks
       (`./scripts-run src/scripts/check_hook_bundle_freshness`); raise
       `src/config/hook-bundle-budget.json` only with the measured delta in the
       commit body.
       verify: `./scripts-run src/scripts/check_hook_bundle_freshness` -> 0
+      Raise withdrawn by owner decision (option 2, 2026-11-21) after 22
+      non-converging ratification rounds; `max_bytes` is back at 1,595,300 and
+      the unwired bundle measures 1,595,224 B. Carried to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.4.
 
 ## Phase 5 — Measure, then close what this supersedes
 
-- [ ] **5.1 Regenerate the split with the new classifier.** Run 1.2's command
+- [~] **5.1 Regenerate the split with the new classifier.** <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> Run 1.2's command
       to `agents/evidence/analysis/language-split-after.md` over the same window
       and the same transcripts. Report per class the fires before and after, one
       table row per class in the form `| <class> | <before> | <after> |`.
       verify: `grep -cE '^\| (synthetic-turn|paste-decided|trailing-typed-line|system-locale) \|[^|]*\| 0 \|$' agents/evidence/analysis/language-split-after.md` -> /^4$/ and the `owner-prose` fires are listed individually
-- [ ] **5.2 Archive the superseded stub.** Move
+- [x] **5.2 Archive the superseded stub.** Move
       `agents/roadmaps/stubs/road-to-language-pin-short-lead.md` to
       `agents/roadmaps/archive/` with a one-line Done note naming 3.2 and D1
       (its `en`/`en`/`de` probe target is replaced by owner-prose-only
@@ -213,15 +238,16 @@ never edited.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `classify` returns the owner's language (or `und`) for every row of
+- [x] AC-1 — `classify` returns the owner's language (or `und`) for every row of
       § Context and every misfire class 1.2 found, and the fixtures were red
-      before 3.2.
-- [ ] AC-2 — The turn-end gate raises no `language` finding on a pin not set by
+      before 3.2. Met by the library classifier `classifyOwnerProse`; the hook
+      calling it is AC-2's carry.
+- [~] AC-2 — <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> The turn-end gate raises no `language` finding on a pin not set by
       owner prose (`system-locale`, or `owner_prose_chars: 0`).
-- [ ] AC-3 — `agents/evidence/analysis/language-split-baseline.md` and
+- [~] AC-3 — <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> `agents/evidence/analysis/language-split-baseline.md` and
       `language-split-after.md` are both command output, reproducible at their
       recorded sha, and the after file shows 0 fires in the four non-owner
       classes.
-- [ ] AC-4 — `stubs/road-to-language-pin-short-lead.md` is archived and
+- [x] AC-4 — `stubs/road-to-language-pin-short-lead.md` is archived and
       `later/road-to-agent-throughput-recovery` 4.1 cites the committed split.
-- [ ] AC-5 — `task ci` is green on the branch carrying these changes.
+- [~] AC-5 — <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> `task ci` is green on the branch carrying these changes.
