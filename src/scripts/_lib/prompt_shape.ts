@@ -189,10 +189,15 @@ export interface OwnerSpans {
  * block's own first line far more often than an introduction, and the owner's
  * words below the block are the ones whose authorship is not in question.
  *
- * KNOWN RESIDUAL, stated rather than hidden: a paste that ENDS in an unmarked
- * prose line with no typed text after it yields that line as the trailing span.
- * It carries markers only when the line is a sentence, and the lead still
- * outvotes it whenever the owner wrote one.
+ * A trailing span with no blank line between it and the paste is weaker
+ * evidence than a lead: it is read only when the prompt has no lead. A wrapped
+ * error message (`mach das:` over `Error: …` continued on unmarked lines) would
+ * otherwise drop the owner's lead and pin the paste's continuation.
+ *
+ * KNOWN RESIDUAL, stated rather than hidden: a prompt that OPENS with a paste
+ * ending in an unmarked prose line, with no typed text after it, yields that
+ * line as the trailing span. It carries markers only when the line is a
+ * sentence.
  */
 export function ownerSpans(text: string): OwnerSpans {
   const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
@@ -224,15 +229,55 @@ export function ownerSpans(text: string): OwnerSpans {
   let start = end;
   while (start >= 0 && !blank(lines[start] ?? "") && !isPaste(lines[start] ?? "")) start--;
   const before = lines.slice(0, start + 1);
-  const trailing =
+  const candidate =
     start >= 0 && start < end && before.some(isOutput) && !before.some((l) => DOCUMENT_HEAD.test(l))
       ? lines.slice(start + 1, end + 1)
       : [];
+  // A span glued to the paste's last line is as likely the paste's own wrapped
+  // continuation as a typed line; it counts only when there is no lead to read.
+  const separated = blank(lines[start] ?? "");
+  const trailing = separated || lead.length === 0 ? candidate : [];
 
   return {
     lead: trailing.length > 0 && leadGluedToPaste ? "" : lead.join("\n"),
     trailing: trailing.join("\n"),
   };
+}
+
+/**
+ * Host turns that carry no envelope tag and that `isSyntheticPrompt`
+ * deliberately does not know, because that predicate also draws turn
+ * boundaries for the gate's other detectors. Each is a FIXED host string
+ * anchored at character zero — the same admissibility argument as the
+ * usage-limit resume sentence above — and each was found pinning in the
+ * language-split baseline (`synthetic-turn`, 2026-11-21): stop-hook feedback,
+ * the compaction continuation summary, the usage-limit notes.
+ *
+ * Scoped to the PIN: `ownerProse` returns nothing for them, so they never set
+ * a language, while turn boundaries stay exactly where they were.
+ */
+const HOST_TURN_HEAD =
+  /^(Stop hook feedback:|This session is being continued from a previous conversation|\[Usage limit reached|\[Earlier usage-limit notes)/;
+
+/**
+ * The text of a prompt the owner typed, and nothing else — the only input the
+ * language pin is allowed to read (road-to-a-language-pin-from-owner-prose,
+ * owner decision D1).
+ *
+ * Order: a host-generated turn yields nothing; injected regions are removed;
+ * then `ownerSpans` keeps the opening paragraph and the paragraph after the
+ * last output paste. Fenced code, output-shaped lines, a pasted document and
+ * every paragraph between two pastes are dropped. There is no whole-body
+ * fallback: a prompt whose owner spans are undetermined is undetermined, and
+ * the caller keeps the previous pin.
+ */
+export function ownerProse(prompt: string): string {
+  const head = prompt.trimStart();
+  if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(head)) {
+    return "";
+  }
+  const spans = ownerSpans(stripInjectedRegions(prompt));
+  return [spans.lead, spans.trailing].filter((s) => s.trim() !== "").join("\n\n");
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */

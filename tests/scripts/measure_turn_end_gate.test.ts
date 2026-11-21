@@ -601,20 +601,65 @@ describe('language-split', () => {
         writeSession('locale', [userEntry('ok'), replyEntry(ENGLISH_REPLY)]);
     }
 
-    it('charges one fire to each reachable class, and the rows sum to the fires', () => {
+    it('with the owner-prose classifier, only owner prose and the locale still pin a refusal', () => {
+        // The replay uses the shipped `classify`, so these are post-fix
+        // numbers: a paste, a host entry and a line below a paste no longer
+        // decide the pin. The two locale fires are the sessions whose owner
+        // text is under the floor; the gate stops refusing on them in 4.1.
         writeClassFixtures();
         const split = languageSplit([store], { locale: 'de' });
         expect(split.sessions).toBe(5);
         expect(split.byClass).toEqual({
             'owner-prose': 1,
-            'synthetic-turn': 1,
-            'paste-decided': 1,
-            'trailing-typed-line': 1,
-            'system-locale': 1,
+            'synthetic-turn': 0,
+            'paste-decided': 0,
+            'trailing-typed-line': 0,
+            'system-locale': 2,
             unknown: 0,
         });
         const sum = LANGUAGE_SPLIT_CLASSES.reduce((n, k) => n + split.byClass[k], 0);
         expect(sum).toBe(split.fires);
+    });
+
+    it('the all-entries instrument still pins from a host-marked entry (D3), live-input does not (D6)', () => {
+        writeSession('meta', [
+            userEntry('Bitte prüfe das und mach dann weiter mit den Tests.'),
+            replyEntry(GERMAN_REPLY),
+            metaEntry(
+                'Base directory for this skill: the files that are listed here should be read before the work starts, and this is what they are for.',
+            ),
+            replyEntry(GERMAN_REPLY),
+        ]);
+        expect(languageSplit([store], { instrument: 'all-entries' }).byClass['synthetic-turn']).toBe(1);
+        expect(languageSplit([store], {}).fires).toBe(0);
+    });
+
+    it('charges each setter shape to its class', () => {
+        const prompt = (text: string, language: 'de' | 'en') =>
+            ({ flagged: false, text, language, source: 'prompt' }) as const;
+        expect(
+            languageFireClass({ ...prompt('Bitte prüfe das und mach dann weiter mit den Tests.', 'en'), source: 'system-locale' }),
+        ).toBe('system-locale');
+        expect(languageFireClass({ ...prompt('The reply should state what was verified and why.', 'en'), flagged: true })).toBe(
+            'synthetic-turn',
+        );
+        expect(languageFireClass(prompt('Bitte prüfe das und mach dann weiter mit den Tests.', 'de'))).toBe('owner-prose');
+        expect(
+            languageFireClass(
+                prompt(
+                    "The command failed with these errors and the build should be checked:\nError: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
+                    'en',
+                ),
+            ),
+        ).toBe('trailing-typed-line');
+        expect(
+            languageFireClass(
+                prompt(
+                    'Fix this file.\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat, und die Tests sollten das auch abdecken.',
+                    'de',
+                ),
+            ),
+        ).toBe('paste-decided');
     });
 
     it('lists owner-prose fires by session digest, never by text', () => {

@@ -93,6 +93,7 @@ import {
   OUTPUT_HEAD,
   humanAuthoredLead,
   isSyntheticPrompt,
+  ownerProse,
   stripInjectedRegions,
 } from "./_lib/prompt_shape.js";
 import { loadSessionPins } from "./hooks/session_pins_loader.js";
@@ -256,6 +257,8 @@ export interface Classification {
   language: Verdict;
   de_markers: number;
   en_markers: number;
+  /** Characters of owner prose scored — set by `classify`, absent from `classifyText`. */
+  owner_prose_chars?: number;
 }
 
 /**
@@ -299,19 +302,43 @@ export function instructionText(prompt: string): string {
 
 
 /**
- * Classify a prompt, reading the TYPED LEAD before the whole body.
+ * Classify a PROMPT for the pin: only the text the owner typed decides it.
+ *
+ * Scores `ownerProse(prompt)` — the opening paragraph and the paragraph after
+ * the last output paste, with host turns, injected regions, fenced code, output
+ * lines and pasted documents removed — under the shared `MIN_MARKERS` floor
+ * (council 2026-11-21, D5). There is NO whole-body fallback: an owner span
+ * under the floor is `und`, and the caller keeps the previous pin (owner
+ * decision D1). The fallback this replaced let the paste decide whenever the
+ * typed lead was short, which is the owner's most common prompt shape
+ * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
+ *
+ * `owner_prose_chars` is the length of the text that was scored, so a pin can
+ * say how much owner prose stood behind it.
+ *
+ * Not for replies or bodies: those are scored with `classifyText`, which has no
+ * notion of an owner and keeps its whole-text fallback.
+ */
+export function classify(prompt: string): Classification {
+  const owner = ownerProse(prompt);
+  return { ..._score(owner), owner_prose_chars: owner.length };
+}
+
+/**
+ * Classify a TEXT the owner did not necessarily type — a reply, an injected
+ * body — reading its lead before the whole body.
  *
  * `instructionText` removes output-shaped pastes — traces, diffs, `remote:`
  * lines. It does not remove the other paste shape, which looks like prose: a
- * document pasted whole under its own headings below one typed sentence. That
- * gap is not hypothetical; it fired on the session that received the round-6
- * review, pinning English because an English draft sat under German prose.
+ * document pasted whole under its own headings below one typed sentence.
  *
  * So the lead is classified first, and only if it is undetermined does the full
- * text decide. This is bidirectional by construction — it names no language, and
- * an English instruction over a German paste resolves to English by the same
- * step. The fallback is what keeps it conservative: a prompt with no document
- * marker classifies exactly as it did before.
+ * text decide. That is bidirectional only for leads carrying `MIN_MARKERS` or
+ * more: below the floor the whole text decides, and a short lead over a long
+ * body in the other language resolves to the body's language in either
+ * direction. Prompts no longer go through here for exactly that reason (see
+ * `classify`); the turn-end gate and the conformance scanner score replies with
+ * it, and their measured rates rest on this surface staying as it is.
  *
  * `stripInjectedRegions` runs FIRST, and the order is load-bearing rather than
  * tidy. A host wrapper the user never typed — `<launch-selected-element>` — is
@@ -321,7 +348,7 @@ export function instructionText(prompt: string): string {
  * keeps the block's indented lines from arming that filter's paste state, which
  * was deleting the user's own sentence outright.
  */
-export function classify(prompt: string): Classification {
+export function classifyText(prompt: string): Classification {
   const text = instructionText(stripInjectedRegions(prompt));
   const lead = humanAuthoredLead(text);
   const leadVerdict = _score(lead);

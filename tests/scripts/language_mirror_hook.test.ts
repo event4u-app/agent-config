@@ -43,6 +43,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   classify,
+  classifyText,
   instructionText,
   isSyntheticPrompt,
   nextState,
@@ -1554,9 +1555,12 @@ describe("host-injected wrapper regions", () => {
   it("an UNBALANCED bare tag is left alone, so a pasted document still ends the lead", () => {
     // The bare-tag arm of `DOCUMENT_HEAD` exists for a document pasted under its
     // own opening tag. Only a tag with a matching close is a region to skip.
+    // Everything below the tag is that document's body, and with no whole-body
+    // fallback (road-to-a-language-pin-from-owner-prose D1) a body never pins.
     const unbalanced = "<div>\nmach das bitte nochmal und prüfe die regeln";
     expect(stripInjectedRegions(unbalanced)).toBe(unbalanced);
-    expect(classify(unbalanced).language).toBe("de");
+    expect(classify(unbalanced).language).toBe("und");
+    expect(classifyText(unbalanced).language).toBe("de");
   });
 
   it("a prompt with no balanced region is returned byte-identical", () => {
@@ -1791,5 +1795,17 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
 describe("owner prose only", () => {
   it.each(OWNER_PROSE_ROWS)("%s", (_name, prompt, expected) => {
     expect(pinFrom(prompt)).toBe(expected);
+  });
+
+  // D5 caveat: a host turn reaching `UserPromptSubmit` must leave an existing
+  // owner pin in place, not merely classify as `und` in isolation.
+  it("a host turn between owner turns keeps the German pin", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+    for (const [name, prompt] of OWNER_PROSE_ROWS) {
+      if (!name.startsWith("[1.2 synthetic-turn]")) continue;
+      run(envelope(prompt), { consumer_root: tmp, env: {} });
+      expect(readState().language).toBe("de");
+    }
   });
 });

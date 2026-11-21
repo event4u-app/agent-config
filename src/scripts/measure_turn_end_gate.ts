@@ -705,6 +705,23 @@ export function measure(store: string, limit: number): Counts {
 }
 
 /**
+ * Could this user entry have set the pin in a live session?
+ *
+ * The transcript marks the entries the host wrote itself — `isMeta` (stop-hook
+ * feedback, expanded command and skill bodies, usage-limit notes) and
+ * `isCompactSummary` (the compaction continuation). None of them reaches
+ * `UserPromptSubmit`, so the hook never pinned from them; a replay that did
+ * charged 140 of 148 fires in `language-split-baseline.md` to turns the gate
+ * never saw (D3). They still END a turn in `--language-split`, so the turn
+ * population is unchanged — only the pin is. Applied in `--language-split` only
+ * (council 2026-11-21, D6): the default `measure` mode keeps its instrument, so
+ * the rates other reports cite from it do not move under them.
+ */
+export function setsPin(entry: Record<string, unknown>): boolean {
+    return entry['isMeta'] !== true && entry['isCompactSummary'] !== true;
+}
+
+/**
  * The text of a user-role entry, read the way `readTranscriptTail` reads it.
  *
  * Deliberately NOT `conformance_scan.userText`, and the difference is the whole
@@ -1016,6 +1033,14 @@ export interface LanguageSplitOptions {
     until?: string;
     /** The locale the hook would have fallen back to; transcripts do not carry it. */
     locale?: Verdict;
+    /**
+     * Which user entries may re-derive the pin. `live-input` (default): only
+     * entries that reach `UserPromptSubmit`, never the host-marked ones
+     * (`setsPin`, D6). `all-entries`: every user entry, the instrument the
+     * baseline was generated with (D3), kept so a before/after comparison can
+     * hold the instrument fixed.
+     */
+    instrument?: 'live-input' | 'all-entries';
 }
 
 export interface LanguageSplit {
@@ -1052,6 +1077,7 @@ export function languageSplit(stores: readonly string[], opts: LanguageSplitOpti
         number
     >;
     const out: LanguageSplit = { sessions: 0, turns: 0, fires: 0, byClass, ownerProseSites: [], recordedRefusals: 0 };
+    const allEntries = opts.instrument === 'all-entries';
     const inWindow = (entry: Record<string, unknown>): boolean => {
         const ts = entry['timestamp'];
         if (typeof ts !== 'string') return true;
@@ -1109,11 +1135,13 @@ export function languageSplit(stores: readonly string[], opts: LanguageSplitOpti
                     if (entry['isMeta'] === true && u.includes(LANGUAGE_REFUSAL_PHRASE)) out.recordedRefusals += 1;
                     if (isSyntheticPrompt(u)) continue;
                     scoreTurn();
+                    const flagged = !setsPin(entry);
+                    if (flagged && !allEntries) continue;
                     const next = nextState(pin, classify(u), u.length, SPLIT_SESSION_ID, '', opts.locale ?? 'und');
                     if (next !== null) {
                         pin = next;
                         setter = {
-                            flagged: entry['isMeta'] === true || entry['isCompactSummary'] === true,
+                            flagged,
                             text: u,
                             language: next.language,
                             source: next.source,
