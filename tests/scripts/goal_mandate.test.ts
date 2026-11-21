@@ -9,6 +9,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { release, tryAcquire } from '../../src/scripts/_lib/generation_lock.js';
 import { goal_mandate_block, observe_prompt } from '../../src/scripts/_lib/goal_mandate.js';
 import { goal_mandate_line, read_goal } from '../../src/scripts/_lib/goal_mandate_store.js';
 
@@ -75,6 +76,41 @@ describe('observe_prompt — goal sentences', () => {
         observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
         expect(read_goal(root, 's1')?.sentence).toBe('until merged');
     });
+
+    // Ratification round 3: every newer stop advances the marker.
+    it('a goal older than the latest of two stops is dropped (T1 stop, T3 stop, T2 goal)', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        const T3 = new Date('2026-11-21T12:00:00Z');
+        observe_prompt(root, 's1', 'stop', T1);
+        observe_prompt(root, 's1', 'halt', T3);
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T2);
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+        expect(read_goal(root, 's1')?.revoked_at).toBe(T3.toISOString());
+    });
+
+    // Ratification round 3: the read-compare-write runs under the record's lock.
+    it('writes nothing while another writer holds the record lock', () => {
+        observe_prompt(root, 's1', 'until merged', T0);
+        const held = tryAcquire(path.join(root, '.git', 'agent-session-mandates', 's1.json.lock'), { staleMs: 60_000 });
+        expect(held).not.toBeNull();
+        try {
+            observe_prompt(root, 's1', 'stop', T1);
+            expect(read_goal(root, 's1')?.revoked_by).toBeUndefined();
+        } finally {
+            if (held) release(held);
+        }
+        observe_prompt(root, 's1', 'stop', T1);
+        expect(read_goal(root, 's1')?.revoked_by).toBe('stop');
+    });
+
+    // Ratification round 3: a negated goal phrase is not a goal.
+    it.each(["Don't keep working until merged.", 'arbeite nicht bis zum merge', 'never go all the way to merge'])(
+        'records nothing for the negated %j',
+        (prompt) => {
+            observe_prompt(root, 's1', prompt, T0);
+            expect(read_goal(root, 's1')).toBeNull();
+        },
+    );
 
     it('a leading stop above a long paste still revokes', () => {
         observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);

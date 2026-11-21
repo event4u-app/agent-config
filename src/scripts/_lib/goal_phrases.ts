@@ -87,13 +87,15 @@ export function ownerProseLines(text: string): string[] {
 }
 
 /**
- * A goal line read as an instruction, not a mention: a question is dropped, and
- * quoted or backticked spans are removed before matching. Only the goal side
+ * A goal line read as an instruction, not a mention: a question or a negated
+ * line is dropped, and quoted or backticked spans are removed before matching. Only the goal side
  * filters — a revocation that over-matches ends a goal and costs a re-ask, the
  * safe direction, so revocations match on the whole line.
  */
 function instructionText(line: string): string | null {
-    if (line.endsWith('?')) return null;
+    // A question or a negated line ("don't keep working until merged") is not a
+    // goal; a goal missed this way costs one re-ask.
+    if (line.endsWith('?') || /\b(?:nicht|kein\w*|nie|niemals|never|not)\b|\bdon['’]?t\b/i.test(line)) return null;
     return line.replace(/"[^"]*"|“[^”]*”|„[^“”]*[“”]|`[^`]*`/g, ' ');
 }
 

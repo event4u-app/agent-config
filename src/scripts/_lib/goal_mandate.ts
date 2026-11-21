@@ -13,7 +13,7 @@
  * - **Recognition:** {@link goalSentenceIn} / {@link revocationIn} over the
  *   owner's prose only; no model, so agent text can never populate the record.
  * - **Store:** `goal_mandate_store.ts`; one writer (the `session-register`
- *   concern), atomic writes.
+ *   concern), atomic writes under the record's generation lock.
  * - **Lifetime:** a later goal sentence replaces the record; a revoke sentence
  *   keeps it with `revoked_by` set, and a revoked record renders nothing.
  * - **Failure:** never throws; an unreadable store reads as no record.
@@ -23,9 +23,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { write_atomic } from './fs_atomic.js';
+import { acquire, release, type Held } from './generation_lock.js';
 import { goal_mandate_line, goal_store_file, read_goal, type GoalRecord } from './goal_mandate_store.js';
 import { goalSentenceIn, revocationIn } from './goal_phrases.js';
-
 
 function write_goal(root: string, session_id: string, record: GoalRecord): void {
     const file = goal_store_file(root, session_id);
@@ -35,9 +35,10 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
 }
 
 /**
- * Write a revocation so that no reader can see the earlier goal as current: the
- * atomic write, else an in-place overwrite (a directory that refuses a new file
- * may still allow it), else removing the record.
+ * Write a revocation: the atomic write, else an in-place overwrite (a directory
+ * that refuses a new file may still allow it), else removing the record. A
+ * record that can be neither overwritten nor removed stays as it was; a removed
+ * one takes its ordering stamp with it.
  */
 function write_revocation(root: string, session_id: string, record: GoalRecord): void {
     try {
@@ -57,30 +58,46 @@ function write_revocation(root: string, session_id: string, record: GoalRecord):
 
 /** Record a goal or a revocation from one owner prompt; return the record after it. Never throws. */
 export function observe_prompt(root: string, session_id: string, prompt: string, now: Date = new Date()): GoalRecord | null {
+    let held: Held | null | false = null;
     try {
+        const revoke = revocationIn(prompt);
+        const goal = revoke === null ? goalSentenceIn(prompt) : null;
+        const file = goal_store_file(root, session_id);
+        if ((revoke === null && goal === null) || file === null) return read_goal(root, session_id);
+        // The read-compare-write runs under the record's lock, so two beats of one
+        // session cannot interleave; a beat that finds it held writes nothing. A
+        // lock that cannot be created at all (an unwritable store) blocks a goal
+        // but not a revocation, which then goes ahead unguarded: ending a goal is
+        // the direction that cannot widen what an agent does.
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        let unlockable = false;
+        try {
+            held = acquire(`${file}.lock`, { staleMs: 5_000, waitMs: 250 });
+        } catch {
+            unlockable = true;
+        }
         const current = read_goal(root, session_id);
-        // A prompt older than what is stored lost a race with a later one (hooks
+        if (!held && !(unlockable && revoke !== null)) return current;
+        // A prompt older than the stored stamp lost a race with a later one (beats
         // of one session are not guaranteed to finish in submission order); the
-        // later owner turn stands.
+        // later owner turn stands. Equal stamps: the beat that writes last wins.
         const stored = current === null ? Number.NEGATIVE_INFINITY : Date.parse(current.revoked_at ?? current.recorded_at);
         if (now.getTime() < stored) return current;
         const at = now.toISOString();
-        const revoke = revocationIn(prompt);
         if (revoke !== null) {
-            if (current?.revoked_by !== undefined) return current;
-            // With no goal stored the marker is still written, so a goal write
-            // from an earlier prompt that lands after it is dropped above.
+            // Written on an empty store too, and advanced by every newer stop, so a
+            // goal from a prompt older than the latest stop is dropped above.
             const revoked: GoalRecord = { ...(current ?? { sentence: '', recorded_at: at }), revoked_by: revoke, revoked_at: at };
             write_revocation(root, session_id, revoked);
             return revoked;
         }
-        const goal = goalSentenceIn(prompt);
-        if (goal === null) return current;
-        const record: GoalRecord = { sentence: goal, recorded_at: at };
+        const record: GoalRecord = { sentence: goal as string, recorded_at: at };
         write_goal(root, session_id, record);
         return record;
     } catch {
         return null;
+    } finally {
+        if (held) release(held);
     }
 }
 
