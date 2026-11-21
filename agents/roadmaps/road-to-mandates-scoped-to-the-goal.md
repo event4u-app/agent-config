@@ -147,12 +147,18 @@ a file.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 1 failing on the missing export.
       Done 2026-11-21: seen red, `TypeError: default_pr_target is not a function`
       (five cases; a sixth pins that two open PRs put no default in the block).
-- [x] **1.2 Selector and block line.** Implement `default_pr_target` in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
+- [~] **1.2 Selector and block line.** Implement `default_pr_target` in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       `src/scripts/_lib/session_pr_watch.ts`; `pr_watch_block` appends one line
       `Default PR target for PR commands: #<n> <url>` when it is non-null.
       Existing assertions in the same test file stay unchanged.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 0
       Done 2026-11-21: 17/17 green, the existing eleven assertions untouched.
+      Deferred 2026-11-21 (owner decision, option 2): the block line is withdrawn
+      with the hook bundle raise — it measured 1,595,667 B against the 1,595,300
+      ceiling. `default_pr_target` stays as library code (tree-shaken out of the
+      bundle); the PR commands read the one `OPEN` row of the existing
+      `<session-prs>` block instead. The line moves to
+      `road-to-goal-record-live-wiring` 2.4.
 - [x] **1.3 Failing command-contract test.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       `tests/scripts/pr_command_target.test.ts` asserting that
       `fix/pr-comments-loop/command.md` and `fix/pr-comments/command.md` name the
@@ -205,7 +211,7 @@ a file.
       Done 2026-11-21: seen red, `Cannot find module
       '../../src/scripts/_lib/goal_mandate.js'`. A quoted chat line joins the
       three negatives.
-- [x] **2.3 Store and per-prompt block.** Implement <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
+- [~] **2.3 Store and per-prompt block.** Implement <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
       `src/scripts/_lib/goal_mandate.ts` on the pattern of `session_pr_watch.ts`
       (store `<git-common-dir>/agent-session-mandates/<session>.json`, one writer,
       atomic write, never throws). The `session-register` `user_prompt_submit`
@@ -219,7 +225,11 @@ a file.
       goal but leaves what it authorises to `commit-policy` as written. A line
       over 300 characters is skipped rather than truncated, which keeps the
       beat inside the concern's 2,048-byte budget.
-- [x] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
+      Deferred 2026-11-21 (owner decision, option 2): the store, the recorder and
+      the rendered block land as library code with their tests; the
+      `session-register` call site and its hook-process tests are withdrawn with
+      the hook bundle raise and move to `road-to-goal-record-live-wiring` 2.1-2.2.
+- [~] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
       line at `subagent_start` when the parent session holds an unrevoked
       record. Failing test first in the hook's test file.
       verify: the new test passes; `./scripts-run src/scripts/lint_hook_manifest` exits 0 with no manifest change.
@@ -227,6 +237,10 @@ a file.
       rides ahead of the pins. `lint_hook_manifest` exits 0, manifest
       untouched. Known gap, named by the council: a revoke typed after a
       subagent started does not reach that subagent.
+      Deferred 2026-11-21 (owner decision, option 2): `goal_mandate_for_subagent`
+      lands as library code; the `subagent-constraints` call site, its two hook
+      tests and the chunk raise (28,500 to 34,000 B) move to
+      `road-to-goal-record-live-wiring` 2.3.
 
 ## Phase 3 — The non-kernel layer reads the record
 
@@ -352,6 +366,7 @@ test.
 | D3 | reversible-technical | agent | No new hook concern; reuse `session-register` and `subagent-constraints` | `src/scripts/hook_manifest.json` claude `user_prompt_submit` / `subagent_start` lists | either concern is removed from the manifest |
 | D4 | reversible-technical | council:2026-11-21 mandates-goal-scope Q2 | The recognizer is option (a), a DE + EN phrase set in code (`src/scripts/_lib/goal_phrases.ts`), shared by the hook and `mandate_reask_report`; it records the owner's own prose line verbatim, after the host-frame and paste filters of `_lib/prompt_shape.ts` | Council 2026-11-21, anthropic + openai, two rounds, 2/2 present, $0. Neither seat picked an option outright; both set two requirements — the stored span is verbatim owner text, and grant and revocation recognition are tested separately — and the anthropic seat named the deciding difference: (a) fixes the span before recording, (b) depends on an in-turn agent confirmation that can fail silently. (a) meets both requirements by construction; (b) cannot be unit-tested. Adopted by the agent within those requirements | a labelled comparison over transcript goal sentences (the council's discovery ask) shows (a) missing paraphrases at a rate the 5.1 re-measure can see, or a false grant is observed |
 | D5 | reversible-technical | council:2026-11-21 mandates-goal-scope Q3 | The goal line names the work that serves the goal and says that what it authorises is still decided by `commit-policy` as written; it grants nothing on its own | Both seats answered Q3 (is the record a standing instruction under exception 2) with ESCALATE: the one-shot section names "create the PR" as spent and calls "exception 2 misread as standing" the forbidden inference, so that reading needs the kernel text first | the owner rules on `goal-scope-hard-floor-reach`, or typed-grants lands ADR-268 § 2 in `commit-policy` |
+| D6 | owner-reserved | owner | 2026-11-21: blocker `goal-record-ratification` resolved by option 2 — the hook bundle raise was withdrawn by owner decision; both ceilings in `src/config/hook-bundle-budget.json` stay at `main`'s values, the goal record and `default_pr_target` land as library code with their tests, the PR commands read the existing `<session-prs>` block, and the hook call sites move to `road-to-goal-record-live-wiring` | the owner's in-session choice of option 2 on 2026-11-21; owner record `agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md` | the wiring roadmap makes room under the ceilings, or the owner ratifies a raise there |
 
 ## Blockers
 
@@ -370,7 +385,7 @@ test.
 - **Resolved when:** an owner-directive record citing `goal-scope-hard-floor-reach` exists under `agents/evidence/owner-directives/`.
 
 ### blocker: goal-record-ratification
-- **Status:** open
+- **Status:** resolved — 2026-11-21, owner option 2 (D6): the raise was withdrawn by owner decision; the branch lands without growing the hook bundle, and the live wiring moved with this question to `road-to-goal-record-live-wiring`. The 18 ratification prompts stay under `agents/evidence/council/` as the record.
 - **Owner:** owner
 - **Routed:** council 2026-11-21 ESCALATE — split verdict across 18 ratification rounds, which the decision-revisit gate routes to the owner (split → user).
 - **Evidence:** 18 ratification rounds (anthropic and openai, prompts `agents/evidence/council/mandates-scoped-to-the-goal-ratification-r1-20261121.question.md` to `-r18-`). The goal record and the PR default make the hook bundle grow past both ceilings in `src/config/hook-bundle-budget.json` (dispatch 1,595,300 to 1,606,550 B, subagent chunk 28,500 to 34,000 B, each with a `raise_log` entry), and that file is on the ratification gate's watched set, which needs a passing verdict from two distinct providers (ADR-268 § 4). The anthropic seat returned `confirmed-non-expanding` or `ratified` in 17 of 18 rounds. The openai seat named one new landing blocker in each round from round 7; every one was fixed with a failing-first test (store stem, escaping, mention and negation filters, ordered and locked writes, stop files, stop slot, user-level stop fallback, fresh read after write, broader and longer cancellations, process-start stamps). In round 18 it found the round-17 fix right and asked for an ordering guarantee no hook here can give: that every supported host starts hook processes in the owner's submission order, or a host-supplied submission sequence. Its stance lines: none in rounds 1-10, 12, 14 and 18; `refused` in 11, 13, 15, 16 and 17.
@@ -398,11 +413,14 @@ test.
 - [x] AC-1 — `agents/evidence/mandate-reask/2026-11-baseline.json` exists and was
       written by `mandate_reask_report --write-baseline`, carrying both metrics.
 - [x] AC-2 — After `gh pr create` in a session, `/fix:pr-comments-loop` without a
-      URL resolves that PR from the injected default line with no question
-      (1.2 and 1.3 tests green).
-- [x] AC-3 — A goal sentence typed by the owner is recorded verbatim and shown in
+      URL resolves that PR from the one `OPEN` row of the injected
+      `<session-prs>` block with no question (1.1 and 1.3 tests green; the
+      dedicated default line is deferred per D6).
+- [~] AC-3 — A goal sentence typed by the owner is recorded verbatim and shown in
       every later prompt and at every subagent start of that session; synthetic
-      turns record nothing (2.2-2.4 tests green).
+      turns record nothing (2.2-2.4 tests green). Deferred per D6: the recorder
+      and reader land with their tests; the live call sites are
+      `road-to-goal-record-live-wiring` AC-1.
 - [x] AC-4 — `commit-mechanics.md` and `cheap-question-mechanics.md` read the
       record, or `goal-scope-hard-floor-reach` carries the council's ESCALATE
       for that clause (3.1).
@@ -411,6 +429,7 @@ test.
 - [x] AC-6 — `/roadmap:next` no longer says "No merge, ever", links
       process-full's `--merge` section, and § 4 lets the project's own delivery
       rule win over the branch default (6.1 test green).
-- [ ] AC-7 — `task ci` exits 0 on the roadmap branch. <!-- blocked-by: goal-record-ratification | asked: no — the execution run was a non-interactive workflow subagent that may not ask the owner -->
-      Open 2026-11-21: every other mirror step was green or fixed; the
-      ratification gate stays red until `goal-record-ratification` is resolved.
+- [x] AC-7 — `task ci` exits 0 on the roadmap branch.
+      2026-11-21: with the raise withdrawn (D6) no ratification-watched file is
+      in the diff; `./scripts-run src/scripts/ci_mirror` exits 0 on the
+      landing branch `feat/mandates-scoped-to-the-goal-unwired`.
