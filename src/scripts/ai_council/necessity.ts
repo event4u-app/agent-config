@@ -559,9 +559,9 @@ export type ImpactClass =
 
 // Classes that are structurally LOCKED to `user` routing. The schema
 // validator in `config.py` rejects any attempt to remap these via
-// `decision_resolution.<class>.mode`. Iron Law per the roadmap: security /
-// auth / billing / tenant-boundary / migration / production-destructive
-// decisions always reach the user.
+// `decision_resolution.<class>.mode`. Iron Law: a `high_impact` question
+// always reaches the user, and `high_impact` holds only the owner's classes —
+// irreversible, money, lowering a safety floor, and the Hard-Floor surfaces.
 export const LOCKED_IMPACT_CLASSES: ReadonlySet<ImpactClass> = new Set<ImpactClass>([
     'high_impact',
     'user_required',
@@ -596,18 +596,30 @@ export const IMPACT_TRIGGERS: Record<ImpactClass, readonly string[]> = {
         'queue vs sync', 'test extension', 'test suffix', 'trait vs class',
         'helper vs static', 'use composition', 'use inheritance',
     ],
+    // A security, auth, tenant or migration DESIGN question is
+    // `critical-technical` and goes to the council (ADR-268 § 10), so its
+    // nouns sit here rather than in `high_impact`.
     medium_impact: [
         'api shape', 'endpoint shape', 'contract change', 'contract update',
         'cross-module', 'cross module', 'module boundary', 'package boundary',
         'interface change', 'signature change', 'breaking change',
-    ],
-    high_impact: [
         'security', 'auth', 'authentication', 'authorization', 'permission',
         'tenant', 'tenants', 'tenant boundary', 'migration', 'schema migration',
+        'encryption', 'sso', 'oauth',
+    ],
+    // Only the owner's four classes: irreversible, money, lowering a safety
+    // floor, and the Hard-Floor surfaces (prod data, secrets, IAM / policy)
+    // where a keyword cannot tell the design question from the act.
+    high_impact: [
         'production', 'prod database', 'destructive', 'drop table', 'truncate',
         'delete column', 'billing', 'secret', 'secrets', 'api key',
-        'credentials', 'encryption', 'sso', 'oauth', 'iam',
-        'policy change', 'data retention', 'personal data', 'pii',
+        'credentials', 'iam', 'policy change', 'data retention',
+        'personal data', 'pii',
+        'disable auth', 'disable authentication', 'bypass auth', 'skip auth',
+        'remove auth', 'disable the tenant check', 'bypass the tenant check',
+        'skip the tenant check', 'remove mfa', 'disable mfa',
+        'disable encryption', 'remove encryption', 'lower the floor',
+        'weaken the floor', 'plaintext password', 'plaintext passwords',
     ],
     user_required: [],
 };

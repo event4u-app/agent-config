@@ -20,8 +20,8 @@ import type { LowImpactFastPathConfig } from "../../src/scripts/ai_council/confi
 
 describe("classify_impact — class dispatch rows", () => {
   const rows: Array<{ prompt: string; expected: string }> = [
-    // high_impact — security / tenancy / destructive / billing surfaces
-    { prompt: "Should we change the authorization check on the tenant boundary?", expected: "high_impact" },
+    // high_impact — the owner's classes: destructive, money, Hard-Floor surfaces, floor-lowering acts
+    { prompt: "Should I bypass the tenant check for this import?", expected: "high_impact" },
     { prompt: "Is it OK to drop table sessions in the production database?", expected: "high_impact" },
     { prompt: "Where should we store the API key and other credentials?", expected: "high_impact" },
     // low_impact — idiom / structure taste calls
@@ -31,6 +31,8 @@ describe("classify_impact — class dispatch rows", () => {
     { prompt: "What should I call this variable — is the snake_case fine?", expected: "trivial" },
     // medium_impact — contract shape
     { prompt: "This endpoint shape needs a contract change across the module boundary.", expected: "medium_impact" },
+    // medium_impact — an authorization design question goes to the council (ADR-268 § 10)
+    { prompt: "Should we change the authorization check on the tenant boundary?", expected: "medium_impact" },
   ];
 
   for (const row of rows) {
