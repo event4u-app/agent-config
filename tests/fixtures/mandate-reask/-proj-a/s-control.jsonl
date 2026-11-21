@@ -1,0 +1,5 @@
+{"type":"user","uuid":"c-u1","sessionId":"s-control","timestamp":"2026-11-03T08:00:00Z","message":{"role":"user","content":"erstelle den PR für den dingo-fix"}}
+{"type":"assistant","uuid":"c-a1","sessionId":"s-control","timestamp":"2026-11-03T08:00:05Z","message":{"role":"assistant","id":"m-c1","content":[{"type":"text","text":"Which PR URL do you mean for the kiwi review?"}]}}
+{"type":"user","uuid":"c-u2","sessionId":"s-control","timestamp":"2026-11-03T08:01:00Z","message":{"role":"user","content":"arbeite die roadmap ab"}}
+{"type":"user","uuid":"c-u3","sessionId":"s-control","timestamp":"2026-11-03T08:02:00Z","message":{"role":"user","content":"stop, nicht mergen"}}
+{"type":"user","uuid":"c-u4","sessionId":"s-control","timestamp":"2026-11-03T08:03:00Z","message":{"role":"user","content":"push it to the emu branch"}}
