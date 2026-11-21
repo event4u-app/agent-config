@@ -99,8 +99,8 @@ to the dispatch bundle, which is why it goes into a chunk. It stays record-only
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The raise does not ratify again | implementation | The same raise failed to converge in 33 rounds on the source branch. | Phases 1 and 2 land as separate measured slices, so a raise can be ratified on the smaller scope first; the 3-round cap returns the decision to the owner. | Phase 3 — the ceiling |
-| 3 | The chunk loads on every turn anyway | implementation | A loader keyed to a broad trigger would put the parse back on most Stop events. | 4.1 pins that a turn without a completion claim does not load the chunk. | Phase 4 — `unlisted_surface` in a claim chunk |
 | 2 | A masked reading demotes a real failure | implementation | Shell paths where a verifier's nonzero code looks like a filter's. | Only a recorded 0 is ever replaced (D9 of the source), pinned by the existing exit-masking tests. | Phase 1 — masked exit codes on the live path |
+| 3 | The chunk loads on every turn anyway | implementation | A loader keyed to a broad trigger would put the parse back on most Stop events. | 4.1 pins that a turn without a completion claim does not load the chunk. | Phase 4 — `unlisted_surface` in a claim chunk |
 
 ## Notes
 
