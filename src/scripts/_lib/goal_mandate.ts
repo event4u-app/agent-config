@@ -25,7 +25,7 @@ import * as path from 'node:path';
 
 import { write_atomic } from './fs_atomic.js';
 import { acquire, release, type Held } from './generation_lock.js';
-import { goal_mandate_line, goal_store_file, read_goal, type GoalRecord } from './goal_mandate_store.js';
+import { goal_mandate_line, goal_store_file, read_goal, stop_fallback_file, type GoalRecord } from './goal_mandate_store.js';
 import { goalSentenceIn, revocationIn } from './goal_phrases.js';
 
 function write_goal(root: string, session_id: string, record: GoalRecord): void {
@@ -42,8 +42,9 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
  * Store a stop as a file of its own beside the record, named by its stamp, so
  * no goal write can overwrite it and concurrent stops keep the latest; lower
  * stops are then pruned. A store that refuses the new file takes the stop in the
- * slot `<record>.stop`, one appended line per stop; no goal write touches either. Throws
- * when neither can be written.
+ * slot `<record>.stop`, one appended line per stop; no goal write touches either.
+ * A store that refuses the slot too appends to the temp-dir fallback both
+ * readers consult. Throws when none can be written.
  */
 export function write_stop(file: string, revoke: string, now: Date): void {
     const stamp = String(now.getTime()).padStart(13, '0');
@@ -54,7 +55,14 @@ export function write_stop(file: string, revoke: string, now: Date): void {
     } catch {
         // One append per stop, never an overwrite, so a paused older stop cannot
         // erase a newer one; `a` adds no directory entry to an existing slot.
-        fs.writeFileSync(`${file}.stop`, `${stamp} ${revoke.replace(/\n/g, ' ')}\n`, { flag: 'a' });
+        const line = `${stamp} ${revoke.replace(/\n/g, ' ')}\n`;
+        try {
+            fs.writeFileSync(`${file}.stop`, line, { flag: 'a' });
+        } catch {
+            const fallback = stop_fallback_file(file);
+            fs.mkdirSync(path.dirname(fallback), { recursive: true });
+            fs.writeFileSync(fallback, line, { flag: 'a' });
+        }
         return;
     }
     for (const n of fs.readdirSync(path.dirname(file))) {
