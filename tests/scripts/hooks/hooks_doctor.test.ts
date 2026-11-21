@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { keepNewerOutcome } from '../../../src/scripts/hooks/feedback_policy.js';
 import * as doctor from '../../../src/scripts/hooks_doctor.js';
 import { _load_yaml } from '../../../src/scripts/hooks/dispatch_hook.js';
 import { MANAGED_SIGNATURE } from '../../../src/scripts/_lib/claude_settings_hooks.js';
@@ -77,6 +78,276 @@ describe('hooks_doctor — collect', () => {
         const chat = payload.concerns.find((c) => c.concern === 'chat-history');
         expect(chat?.last_feedback).not.toBeNull();
         expect(chat?.last_feedback?.endsWith(path.join('session-b', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback ranks by the recorded run time: a newer quiet run in a summary beats an older warn file', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const a = path.join(stateDir, 'session-warn');
+        const b = path.join(stateDir, 'session-quiet');
+        fs.mkdirSync(a, { recursive: true });
+        fs.mkdirSync(b, { recursive: true });
+        fs.writeFileSync(path.join(a, 'chat-history.json'), JSON.stringify({ concern: 'chat-history', completed_at: '2026-11-20T10:00:00Z' }));
+        const summary = path.join(b, 'summary.json');
+        fs.writeFileSync(
+            summary,
+            JSON.stringify({
+                schema_version: 2,
+                invocations: [
+                    { completed_at: '2026-11-20T11:00:00Z', concerns: [{ concern: 'chat-history', exit_code: 0 }] },
+                    { completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other', exit_code: 0 }] },
+                ],
+            }),
+        );
+        // The summary's mtime is OLDER than the warn file's: ranking must not use it.
+        const past = Date.now() / 1000 - 3600;
+        fs.utimesSync(summary, past, past);
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-quiet', 'summary.json'))).toBe(true);
+    });
+
+    it('last_feedback ranks a summary by the target concern\'s own last run, not by a later run of another concern', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const a = path.join(stateDir, 'session-warn');
+        const b = path.join(stateDir, 'session-quiet');
+        fs.mkdirSync(a, { recursive: true });
+        fs.mkdirSync(b, { recursive: true });
+        // The warn falls BETWEEN the summary's run of chat-history (10:00) and its later run of another concern (12:00).
+        fs.writeFileSync(path.join(a, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z' }));
+        fs.writeFileSync(
+            path.join(b, 'summary.json'),
+            JSON.stringify({
+                invocations: [
+                    { completed_at: '2026-11-20T10:00:00Z', concerns: [{ concern: 'chat-history' }] },
+                    { completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other' }] },
+                ],
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-warn', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback: a quiet run evicted from the capped history still supersedes an older block, through `latest`', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-evicted');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00Z', invocation: 'pid-1', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                // The quiet allow at 11:00 was evicted; only later runs of another concern remain.
+                invocations: [{ invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'other' }] }],
+                latest: {
+                    'chat-history': { invocation: 'pid-2', completed_at: '2026-11-20T11:00:00Z', exit_code: 0, decision: 'allow' },
+                    other: { invocation: 'pid-9', completed_at: '2026-11-20T12:00:00Z', exit_code: 0, decision: 'allow' },
+                },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-evicted', 'summary.json'))).toBe(true);
+        // The file the doctor points to still says what the latest run was.
+        const pointed = JSON.parse(fs.readFileSync(path.join(sess, 'summary.json'), 'utf-8')) as { latest: Record<string, { decision: string }> };
+        expect(pointed.latest['chat-history']?.decision).toBe('allow');
+    });
+
+    it('last_feedback: one dispatch\'s own file wins over its summary, which records the same run by the same clock in `latest`', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-one');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00.100Z', invocation: 'pid-1', decision: 'warn' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                // The dispatch-wide completion is later than the concern's own; `latest` uses the concern's.
+                invocations: [{ invocation: 'pid-1', completed_at: '2026-11-20T10:00:00.300Z', concerns: [{ concern: 'chat-history' }] }],
+                latest: { 'chat-history': { invocation: 'pid-1', completed_at: '2026-11-20T10:00:00.100Z' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-one', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback: a newer run an older writer left only in the history is not hidden by the first `latest` row', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-upgrade');
+        fs.mkdirSync(sess, { recursive: true });
+        // A block file at 11:00; the history (older writer, no `latest`) recorded a quiet run at 12:00;
+        // then a delayed 10:00 dispatch on the new writer created the first `latest` row.
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [
+                    { invocation: 'pid-legacy', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'chat-history' }] },
+                    { invocation: 'pid-late', completed_at: '2026-11-20T10:00:01Z', concerns: [{ concern: 'chat-history' }] },
+                ],
+                latest: { 'chat-history': { invocation: 'pid-late', completed_at: '2026-11-20T10:00:00Z', exit_code: 0, decision: 'allow' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-upgrade', 'summary.json'))).toBe(true);
+    });
+
+    it('last_feedback ranks a history row by the concern\'s own completion, not by its dispatch finishing later', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-overlap');
+        fs.mkdirSync(sess, { recursive: true });
+        // pid-q: a quiet allow completing at 10:00 in a dispatch that finished at 12:00.
+        // pid-b: a block completing at 11:00; it owns the `latest` row and the detailed file.
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [
+                    { invocation: 'pid-b', completed_at: '2026-11-20T11:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T11:00:00Z' }] },
+                    { invocation: 'pid-q', completed_at: '2026-11-20T12:00:00Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T10:00:00Z' }] },
+                ],
+                latest: { 'chat-history': { invocation: 'pid-b', completed_at: '2026-11-20T11:00:00Z', exit_code: 2, decision: 'block' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-overlap', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback: an unusable `latest` row does not suppress its dispatch\'s valid history entry', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-badrow');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [{ invocation: 'pid-x', completed_at: '2026-11-20T12:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }],
+                latest: { 'chat-history': { invocation: 'pid-x', completed_at: 'not a date' } },
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-badrow', 'summary.json'))).toBe(true);
+    });
+
+    for (const [label, row] of [
+        ['null', null],
+        ['a string', 'x'],
+        ['missing its id, though later than everything', { completed_at: '2026-11-20T13:00:00Z' }],
+    ] as const) {
+        it(`last_feedback: a \`latest\` row that is ${label} is ignored and the history still counts`, () => {
+            const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+            const sess = path.join(stateDir, 'session-rows');
+            fs.mkdirSync(sess, { recursive: true });
+            fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+            fs.writeFileSync(
+                path.join(sess, 'summary.json'),
+                JSON.stringify({
+                    invocations: [{ invocation: 'pid-x', completed_at: '2026-11-20T12:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }],
+                    latest: { 'chat-history': row },
+                }),
+            );
+            const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+            expect(chat?.last_feedback?.endsWith(path.join('session-rows', 'summary.json'))).toBe(true);
+        });
+    }
+
+    it('last_feedback: a row without an id, later than a valid history entry, does not outrank a newer detailed file', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const sess = path.join(stateDir, 'session-noid');
+        fs.mkdirSync(sess, { recursive: true });
+        fs.writeFileSync(path.join(sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T12:30:00Z', invocation: 'pid-b', decision: 'block' }));
+        fs.writeFileSync(
+            path.join(sess, 'summary.json'),
+            JSON.stringify({
+                invocations: [{ invocation: 'pid-x', completed_at: '2026-11-20T12:00:01Z', concerns: [{ concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }],
+                latest: { 'chat-history': { completed_at: '2026-11-20T13:00:00Z' } }, // the writer would never keep this row
+            }),
+        );
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-noid', 'chat-history.json'))).toBe(true);
+    });
+
+    it('last_feedback: damaged history items neither hide an accepted `latest` row nor a valid item after them', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const write = (sess: string, latest: unknown, invocations: unknown): void => {
+            fs.mkdirSync(path.join(stateDir, sess), { recursive: true });
+            fs.writeFileSync(path.join(stateDir, sess, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T11:00:00Z', invocation: 'pid-b', decision: 'block' }));
+            fs.writeFileSync(path.join(stateDir, sess, 'summary.json'), JSON.stringify({ invocations, latest }));
+        };
+        // A newer quiet allow in `latest`; the retained history is damaged.
+        write('s1', { 'chat-history': { invocation: 'pid-q', completed_at: '2026-11-20T13:00:00Z', exit_code: 0, decision: 'allow' } }, [null, 'x', { concerns: null }, { concerns: [null, 7] }]);
+        let chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('s1', 'summary.json'))).toBe(true);
+        fs.rmSync(path.join(stateDir, 's1'), { recursive: true });
+        // No `latest`; a valid newer item follows damaged ones, inside the same concerns list too.
+        write('s2', undefined, [null, { invocation: 'pid-v', completed_at: '2026-11-20T12:00:01Z', concerns: [null, { concern: 'chat-history', completed_at: '2026-11-20T12:00:00Z' }] }]);
+        chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('s2', 'summary.json'))).toBe(true);
+        // A non-array history is no history.
+        fs.rmSync(path.join(stateDir, 's2'), { recursive: true });
+        write('s3', { 'chat-history': { invocation: 'pid-q', completed_at: '2026-11-20T13:00:00Z' } }, { not: 'a list' });
+        chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('s3', 'summary.json'))).toBe(true);
+    });
+
+    describe('last_feedback on an equal instant', () => {
+        const AT = '2026-11-20T10:00:00.000Z';
+        const write = (session: string, ownInvocation: string, summaryInvocation: string, summarySession = session): void => {
+            const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+            for (const s of new Set([session, summarySession])) fs.mkdirSync(path.join(stateDir, s), { recursive: true });
+            fs.writeFileSync(path.join(stateDir, session, 'chat-history.json'), JSON.stringify({ completed_at: AT, invocation: ownInvocation }));
+            fs.writeFileSync(
+                path.join(stateDir, summarySession, 'summary.json'),
+                JSON.stringify({ invocations: [{ invocation: summaryInvocation, completed_at: AT, concerns: [{ concern: 'chat-history' }] }] }),
+            );
+        };
+        const pick = (): string | null | undefined => doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history')?.last_feedback;
+
+        it('the same dispatch: the per-concern file, which holds the detail', () => {
+            write('s', 'pid-1', 'pid-1');
+            expect(pick()?.endsWith(path.join('s', 'chat-history.json'))).toBe(true);
+        });
+
+        // Two dispatches at one instant have no real order; the doctor uses the writers' order
+        // (`compareRuns`: the larger invocation id), whichever file the directory walk reads first.
+        for (const [own, sum] of [['a-own', 'b-sum'], ['b-own', 'a-sum']] as const) {
+            it(`two dispatches, ${own} read ${own < sum ? 'first' : 'second'}: the summary when its id orders later`, () => {
+                write(own, 'pid-1', 'pid-2', sum);
+                expect(pick()?.endsWith(path.join(sum, 'summary.json'))).toBe(true);
+            });
+            it(`two dispatches, ${own} read ${own < sum ? 'first' : 'second'}: the per-concern file when its id orders later`, () => {
+                write(own, 'pid-2', 'pid-1', sum);
+                expect(pick()?.endsWith(path.join(own, 'chat-history.json'))).toBe(true);
+            });
+        }
+
+        it('agrees with the writer: what the locked keep-newer write left in the file is what the doctor reports', () => {
+            // A failed summary write left the older run (pid-2, a block) in the summary; the quiet allow (pid-1)
+            // finished in the same millisecond and went to its own file through keepNewerOutcome.
+            const held = { decision: 'block', completed_at: AT, invocation: 'pid-2' };
+            const incoming = { decision: 'allow', completed_at: AT, invocation: 'pid-1' };
+            const kept = keepNewerOutcome(held, incoming) ?? held;
+            write('s', String(kept.invocation), 'pid-2');
+            const shown = pick();
+            // The file keeps the block (pid-2 orders later), and the doctor shows that same run.
+            expect(kept.decision).toBe('block');
+            expect(shown?.endsWith(path.join('s', 'chat-history.json'))).toBe(true);
+        });
+
+        it('a per-concern file from an older writer, with no invocation, does not win a tie', () => {
+            write('s', '', 'pid-2');
+            const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+            fs.writeFileSync(path.join(stateDir, 's', 'chat-history.json'), JSON.stringify({ completed_at: AT }));
+            expect(pick()?.endsWith(path.join('s', 'summary.json'))).toBe(true);
+        });
+    });
+
+    it('last_feedback compares instants, not strings of different precision', () => {
+        const stateDir = path.join(tmp, 'agents', 'runtime', 'state', '.dispatcher');
+        const a = path.join(stateDir, 'session-a');
+        const b = path.join(stateDir, 'session-b');
+        fs.mkdirSync(a, { recursive: true });
+        fs.mkdirSync(b, { recursive: true });
+        // As strings '…10:00:00.500Z' sorts BEFORE '…10:00:00Z'; as instants it is later.
+        fs.writeFileSync(path.join(a, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00.500Z' }));
+        fs.writeFileSync(path.join(b, 'chat-history.json'), JSON.stringify({ completed_at: '2026-11-20T10:00:00Z' }));
+        const chat = doctor.collect(tmp, loadManifest()).concerns.find((c) => c.concern === 'chat-history');
+        expect(chat?.last_feedback?.endsWith(path.join('session-a', 'chat-history.json'))).toBe(true);
     });
 
     it('surfaces the concern state file', () => {

@@ -14,10 +14,10 @@
  * anywhere: every entry point that actually talks to a vendor CLI imports
  * `clients.ts` directly and still does.
  *
- * The bytes are not an abstraction. `src/config/hook-bundle-budget.json` caps
- * the composed bundle, the cap is a shrink-only ratchet, and on 2026-10-02 the
- * tree stood 75 bytes under it — a state in which no concern anywhere could add
- * a line. This module is how `road-to-a-rule-carrier-that-works-outside-the-repo`
+ * The bytes are not an abstraction: every hook event loads the composed bundle.
+ * On 2026-10-02 the then shrink-only ceiling in `src/config/hook-bundle-budget.json`
+ * (retired 2026-11-20 for a wide backstop) stood 75 bytes above it — a state in
+ * which no concern anywhere could add a line. This module is how `road-to-a-rule-carrier-that-works-outside-the-repo`
  * Phase 1 paid for its own runtime code instead of asking for a raise.
  *
  * WHAT BELONGS HERE: a vendor-facing constant that a CONFIGURATION reader needs

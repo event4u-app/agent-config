@@ -12,6 +12,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import './bundled_yaml.js';
 import { enableCompileCacheFailOpen } from '../_lib/compile_cache.js';
 import { withDispatchSnapshotScope } from '../_lib/stop_snapshot.js';
 import { main as dispatchMain } from './dispatch_hook.js';

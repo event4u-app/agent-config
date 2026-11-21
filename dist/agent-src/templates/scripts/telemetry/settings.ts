@@ -12,13 +12,15 @@
  * org-pack-enabled Class-A usage record). They share one doctrine and one
  * set of coercion helpers; they share no state.
  */
-import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
-import type * as YamlModule from 'yaml';
+import YAML from 'yaml';
 
-// Resolve `yaml` relative to this module (not cwd) so a consumer's cwd
-// package.json never interferes; mirrors Python's lazy `import yaml`.
-const YAML = createRequire(import.meta.url)('yaml') as typeof YamlModule;
+// A static import, never `createRequire(import.meta.url)('yaml')`: esbuild
+// does not bundle a createRequire call, so inside the hook bundle that line
+// loaded a SECOND copy of `yaml` from node_modules on every dispatch, beside the
+// one already inlined (about 20-30 ms per event, measured 2026-11-20). An ESM
+// import resolves relative to this module too, so a consumer's cwd still never
+// interferes. `tests/scripts/hook_load_set.test.ts` keeps the second copy out.
 
 export const DEFAULT_LOG_PATH = '.agent-engagement.jsonl';
 export const DEFAULT_GRANULARITY = 'task';

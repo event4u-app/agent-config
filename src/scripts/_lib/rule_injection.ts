@@ -122,8 +122,8 @@ function statKind(p: string): 'dir' | 'file' | null {
  * single `repoRoot`, and none of them has a second tree to offer. Threading a
  * resolved source object through all of them would be a wide diff whose only
  * real consumer is the carrier, and it costs runtime bytes in the composed
- * hook bundle — which every hook event on every slot loads, under a hard
- * ceiling (`src/config/hook-bundle-budget.json`). `roadmap_progress_hook`
+ * hook bundle — which every hook event on every slot loads
+ * (`src/config/hook-bundle-budget.json`). `roadmap_progress_hook`
  * already reads this same variable this same way; this follows it rather than
  * inventing a second convention. No `~` expansion: the one writer is
  * `dispatch_hook`, which sets it from a `path.resolve` result.
