@@ -28,6 +28,7 @@ import {
     replaceSpans,
     REVIEW_CREDENTIAL_ROWS,
 } from '../_lib/egress_rules.js';
+import { MIN_KNOWN_VALUE_LENGTH } from '../_lib/egress_known_values.js';
 import { parseTokens, TokenScope } from '../_lib/egress_token.js';
 import { readEgressMode } from '../hooks/egress_stage.js';
 
@@ -103,7 +104,7 @@ export class CouncilEgress {
         }
         const tokens = merged.map((s) => {
             const value = text.slice(s.start, s.end);
-            this.replaced.add(value);
+            if (value.length >= MIN_KNOWN_VALUE_LENGTH) this.replaced.add(value);
             return this.scope.mint(s.type, s.class, value);
         });
         let out = replaceSpans(text, merged, (_s, i) => tokens[i] as string);
@@ -111,9 +112,12 @@ export class CouncilEgress {
         // rules saw inside a connection URI is the same password on a line of
         // its own, where no rule fires. Leaving it there sent it anyway — and
         // `check` then refused the whole payload for it.
+        // Below the known-value floor the sweep and the final check skip it: prose
+        // such as "Token: a fine-grained PAT" matches a row, and sweeping "a" through
+        // the text doubled it and refused every seat on the system prompt's own "a".
         merged.forEach((s, i) => {
             const value = text.slice(s.start, s.end);
-            if (out.includes(value)) out = out.split(value).join(tokens[i] as string);
+            if (value.length >= MIN_KNOWN_VALUE_LENGTH && out.includes(value)) out = out.split(value).join(tokens[i] as string);
         });
         return out;
     }
