@@ -194,9 +194,15 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
         } catch {
             continue;
         }
+        // One pass over the file for every service's line, not one scan per service.
+        const lineOfService = new Map<string, number>();
+        text.split('\n').forEach((l, i) => {
+            const key = /^\s+([^\s:#][^:#]*?)\s*:/.exec(l)?.[1];
+            if (key !== undefined && !lineOfService.has(key)) lineOfService.set(key, i + 1);
+        });
         for (const [service, spec] of Object.entries(doc.services ?? {})) {
             const ports = Array.isArray(spec?.ports) ? spec.ports : [];
-            const line = lineOf(text, new RegExp(`^\\s+${escapeRe(service)}\\s*:`));
+            const line = lineOfService.get(service) ?? 1;
             for (const p of ports) {
                 const host = /^(?:[\d.]+:)?(\d+):\d+/.exec(String(p));
                 if (host === null) continue;

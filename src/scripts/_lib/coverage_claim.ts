@@ -173,10 +173,16 @@ const EDIT_TOOLS: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', '
 /** Surfaces a render or browser run reaches without naming them: a web page. */
 const BROWSER_KINDS: ReadonlySet<LiveSurface['kind']> = new Set(['npm-script', 'playwright']);
 
-/** The config a `playwright test` run names (`--config X`, `-c X`), as a basename; null when none. */
+/** The config path a `playwright test` run names (`--config X`, `-c X`, quoted or not); null when none. */
 function playwrightConfig(command: string): string | null {
-    const m = /\s(?:--config(?:=|\s+)|-c\s+)(\S+)/.exec(command);
-    return m ? path.basename((m[1] as string).replace(/^["']|["']$/g, '')) : null;
+    const m = /\s(?:--config(?:=|\s+)|-c\s+)("[^"]+"|'[^']+'|\S+)/.exec(command);
+    return m ? (m[1] as string).replace(/^["']|["']$/g, '') : null;
+}
+
+/** `start` run as a command — at the line's start or after `;`, `&&`, `||`, `|`, `(` — not merely mentioned. */
+function runsCommand(command: string, start: string): boolean {
+    const escaped = start.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?:^|[;&|(])\\s*${escaped}(?=$|[\\s;&|)])`).test(command);
 }
 
 /**
@@ -184,14 +190,16 @@ function playwrightConfig(command: string): string | null {
  * run over a web page. A `playwright test` run that names another config does not
  * drive a surface derived from this one.
  */
-function drives(command: string, surface: LiveSurface): boolean {
+function drives(command: string, surface: LiveSurface, root: string): boolean {
     const browser = /\bui:render\b|\bplaywright\s+test\b/.test(command);
     if (surface.kind === 'playwright' && /\bplaywright\s+test\b/.test(command)) {
         const named = playwrightConfig(command);
-        return named === null || named === path.basename(surface.derived_from.replace(/:\d+$/, ''));
+        if (named === null) return true;
+        const rel = path.relative(root, path.resolve(root, named)).split(path.sep).join('/');
+        return rel === surface.derived_from.replace(/:\d+$/, '');
     }
     if (BROWSER_KINDS.has(surface.kind) && browser) return true;
-    if (surface.start !== null && command.includes(surface.start)) return true;
+    if (surface.start !== null && runsCommand(command, surface.start)) return true;
     return surface.url !== undefined && command.includes(surface.url);
 }
 
@@ -228,7 +236,7 @@ export function unlistedSurfaceIn(
             return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
         });
         if (edited === undefined) continue;
-        if (commands.some((c) => drives(c, surface))) continue;
+        if (commands.some((c) => drives(c, surface, workspaceRoot))) continue;
         const names = [surface.name, surface.start, surface.url].filter((x): x is string => typeof x === 'string');
         if (names.some((n) => namedIn(listed, n))) continue;
         return {

@@ -49,6 +49,16 @@ describe('deriveLiveSurfaces', () => {
         expect(deriveLiveSurfaces(dir).filter((x) => x.kind === 'compose')).toHaveLength(8);
     });
 
+    it('names the line of each compose service with ports, past many without', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-svc-'));
+        tmps.push(dir);
+        const quiet = Array.from({ length: 3000 }, (_, i) => `  q${String(i)}:\n    image: x\n`).join('');
+        fs.writeFileSync(path.join(dir, 'compose.yml'), `services:\n${quiet}  web:\n    ports:\n      - "8080:80"\n`);
+        const [web] = deriveLiveSurfaces(dir).filter((x) => x.kind === 'compose');
+        expect(web?.name).toBe('web');
+        expect(web?.derived_from).toBe(`compose.yml:${String(2 + 3000 * 2)}`);
+    });
+
     it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-fifo-'));
         tmps.push(dir);

@@ -2325,6 +2325,29 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
     });
 
+    it('a command that only mentions the start command does not drive the surface', () => {
+        const dir = appWorkspace();
+        const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'echo "npm run dev"' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
+    });
+
+    it('a command that runs the start command drives the surface', () => {
+        const dir = appWorkspace();
+        const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'cd app && npm run dev' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
+    });
+
+    it('a playwright config of the same name in another directory does not drive the root one', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-pw-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { use: { baseURL: 'http://localhost:4173' } };\n");
+        const calls: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'page.ts') },
+            { name: 'Bash', command: 'npx playwright test --config e2e/playwright.config.ts' },
+        ];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
+    });
+
     it('a Not verified block lists a surface by its whole name, not a word containing it', () => {
         const dir = appWorkspace();
         const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified:\n- the development notes';
