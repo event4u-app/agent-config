@@ -39,6 +39,13 @@ export const OWNER_LOCKED_CLASSES: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * The owner's money class, which no ownership class carries: `spend-exhaustion` pauses rather than asks,
+ * and a spend inside a delegated budget is not the owner's. Rendered next to
+ * {@link OWNER_LOCKED_CLASSES} wherever the owner's set is shown.
+ */
+export const OWNER_MONEY_ROW = 'spend above a delegated cap';
+
+/**
  * Iron Law: `spend-exhaustion` PAUSES AND REPORTS (ADR-268 § 8). It is never
  * routed to the owner as a question, so `mode: user` on it is a hard schema
  * error rather than an unusual-but-legal setting.

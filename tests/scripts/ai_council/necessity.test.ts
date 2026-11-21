@@ -4,7 +4,12 @@
 // prompt for marker words and emits verdict / category / rationale / hit
 // counts. Three public surfaces: classify_necessity, classify_size_fit,
 // classify_impact (+ corpus / routing variants).
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
+
+import { readFixture } from '../../../src/scripts/_lib/decision_asks.js';
 
 import {
     classify_impact,
@@ -179,5 +184,71 @@ describe('cold-start 5.3 — a recent host rate marker raises the necessity bar'
         const prompt = 'Evaluate the architecture trade-off for this migration.';
         const plain = classify_necessity(prompt, 'analysis');
         expect(classify_necessity(prompt, 'analysis', 'agent', { ratePressure: true }).verdict).toBe(plain.verdict);
+    });
+});
+
+// `high_impact` holds only the owner's classes. A design question goes to the
+// council; the destructive, money and floor-lowering keywords stay locked to
+// the owner.
+describe('high_impact holds only owner-class keywords', () => {
+    const D6_COUNCIL = [
+        'security', 'auth', 'authentication', 'authorization', 'permission',
+        'tenant', 'tenants', 'tenant boundary', 'migration', 'schema migration',
+        'encryption', 'sso', 'oauth',
+    ];
+    const STAYS_OWNER = [
+        'drop table', 'truncate', 'prod database', 'delete column', 'destructive',
+        'billing', 'data retention', 'personal data', 'pii',
+    ];
+
+    it.each(D6_COUNCIL)('a design question naming "%s" classifies below high_impact', (kw) => {
+        const v = classify_impact(`How should we design the ${kw} part of this change?`);
+        expect(v.impact_class).not.toBe('high_impact');
+    });
+
+    it.each(STAYS_OWNER)('"%s" stays high_impact', (kw) => {
+        expect(classify_impact(`Should we go ahead with ${kw} here?`).impact_class).toBe('high_impact');
+    });
+
+    // Paired cases: the same noun, one design question and one floor-lowering act.
+    it.each([
+        ['Which auth library fits the login flow?', 'Should I disable auth on the admin route for now?'],
+        ['How should the tenant boundary be modelled?', 'Can we bypass the tenant check for this import?'],
+        ['Which encryption mode fits the export?', 'Shall I disable encryption to speed up the export?'],
+        ['How do we structure the oauth callback?', 'Should I remove mfa for service accounts?'],
+    ])('design "%s" goes below high_impact, the floor-lowering act "%s" stays', (design, act) => {
+        expect(classify_impact(design).impact_class).not.toBe('high_impact');
+        expect(classify_impact(act).impact_class).toBe('high_impact');
+    });
+
+    it('every high_impact keyword is an owner-class keyword', () => {
+        for (const kw of D6_COUNCIL) expect(IMPACT_TRIGGERS.high_impact).not.toContain(kw);
+    });
+
+    // The census fixtures: a question the independent labeller marked
+    // contested-technical never locks to the owner on a council noun.
+    const dir = path.join(__dirname, '..', '..', 'fixtures', 'decision-asks');
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.md')) : [];
+    it('the census fixture corpus exists', () => {
+        expect(files.length).toBeGreaterThan(0);
+    });
+    it.each(files)('fixture %s: contested-technical on a council noun is below high_impact', (f) => {
+        const fx = readFixture(path.join(dir, f));
+        const hitsCouncilNoun = D6_COUNCIL.some((kw) => new RegExp(`\\b${kw}\\b`, 'i').test(fx.question));
+        if (fx.label === 'contested-technical' && hitsCouncilNoun) {
+            expect(classify_impact(fx.question).impact_class).not.toBe('high_impact');
+        }
+        expect(['dominant', 'contested-technical', 'owner-four', 'other-owner-row']).toContain(fx.label);
+    });
+
+    // One fixture per producer with at least 10 % of the census ranking that
+    // has an ask site in src/. `freeform` has none; its route is the generated
+    // "Who answers a question" section.
+    it.each(['roadmap:process-full'])('a contested-technical fixture from %s stays below high_impact', (producer) => {
+        const fx = files
+            .map((f) => readFixture(path.join(dir, f)))
+            .find((x) => x.producer === producer && x.label === 'contested-technical');
+        expect(fx).toBeDefined();
+        expect(classify_impact(fx?.question ?? '').impact_class).not.toBe('high_impact');
     });
 });

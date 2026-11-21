@@ -992,8 +992,8 @@ call, fully explainable. Lives in `src/scripts/ai_council/necessity.ts`
 |---|---|---|
 | `trivial` | naming, whitespace, comments, typo, indent | `agent` |
 | `low_impact` | local idioms, DTO vs value object, test extensions | `agent` |
-| `medium_impact` | API shape, contract change, breaking change, module boundary | `council` |
-| `high_impact` | security, auth, tenant boundary, migration, billing, secrets, PII | `user` (**LOCKED**) |
+| `medium_impact` | API shape, contract change, breaking change, module boundary; a security, auth, tenant or migration **design** question (ADR-268 § 10) | `council` |
+| `high_impact` | the owner's classes only: destructive acts (`drop table`, `truncate`, `delete column`), billing, prod data, secrets, IAM / policy, retention and personal data, and floor-lowering acts (`disable auth`, `bypass the tenant check`, `remove mfa`) | `user` (**LOCKED**) |
 | `user_required` | user-fence markers — "ask me", "review first", "plan only" | `user` (**LOCKED**) |
 
 **Iron Law** — `high_impact` and `user_required` ALWAYS route to the

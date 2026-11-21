@@ -248,12 +248,12 @@ Every implementer or judge return must conform to
 [`schemas/subagent-status.json`](schemas/subagent-status.json). Exactly
 four statuses — `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` ·
 `BLOCKED` — no free-form alternatives; orchestrators route on status
-mechanically. Meaning/required-keys table, why-fixed rationale, and the
+mechanically, `NEEDS_CONTEXT` also on `ownership_class` (per prompt).
+Required keys, rationale and the
 `NEEDS_CONTEXT`-vs-`BLOCKED` distinction →
 [`subagent-modes-detail` § Status taxonomy](../../agent-src/contexts/execution/subagent-modes-detail.md).
 
-**The envelope is the ONLY return channel** (token-economy-dispatch
-Phase 6). A worker writes its full output to disk (runtime artifact dir,
+**The envelope is the ONLY return channel.** A worker writes its full output to disk (runtime artifact dir,
 gitignored) and returns the bounded envelope — `summary` +
 `artifact_paths` + verdict, size caps validator-enforced
 (`_lib/subagent_response.ts`: summary ≤ 2,000 chars, whole envelope

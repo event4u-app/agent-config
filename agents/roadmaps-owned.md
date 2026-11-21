@@ -317,6 +317,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-promotion-bridge-size-and-citation-repairs | stubs | — | Road to the promotion-bridge size split and the topology citation repairs |
 | road-to-provider-leakage-bench-execution | stubs | — | road to running the provider-recognition leakage bench |
 | road-to-public-metadata-redaction | stubs | — | Road to public-metadata redaction — stub |
+| road-to-questions-that-reach-the-right-decider-remeasure | stubs | — | re-measure who answers the owner's questions |
 | road-to-ratchet-baseline-append-safety | stubs | — | append-safety for the ratchet baselines |
 | road-to-relates-retrofit-and-superseded-marking | stubs | — | road to the `relates:` retrofit and `superseded` step-marking |
 | road-to-release-placeholder-guard | stubs | stub | a release-placeholder guard that fits the ratchet |
