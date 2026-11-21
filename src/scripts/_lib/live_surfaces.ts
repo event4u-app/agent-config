@@ -81,7 +81,10 @@ export function readText(file: string, root?: string): string | null {
         if (!st.isFile() || st.size > MAX_INPUT_BYTES) return null;
         // A parent directory swapped between the check and the open shows as a different file.
         if (root !== undefined) {
-            const again = fs.statSync(fs.realpathSync(file));
+            const base = fs.realpathSync(root);
+            const againPath = fs.realpathSync(file);
+            if (againPath !== base && !againPath.startsWith(base + path.sep)) return null;
+            const again = fs.statSync(againPath);
             if (again.ino !== st.ino || again.dev !== st.dev) return null;
         }
         const buf = Buffer.alloc(MAX_INPUT_BYTES + 1);
