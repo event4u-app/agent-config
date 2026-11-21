@@ -1,0 +1,324 @@
+---
+complexity: structural
+status: ready
+review_by: 2026-12-21
+tree_pin: 811cea61d6
+estate_growth_exempt: "Owner instruction of 2026-11-21 ('erstelle Roadmaps für die P0-Maßnahmen ... Lass uns alle Learnings einplanen und abarbeiten'), P0 measure 3 of the session retro of the same day. The two roadmaps that own the neighbouring work are parked in later/ and keep their scope; this file carries only the delta neither of them names (see relates). Growth: +1 active roadmap, +1 open blocker (goal-scope-hard-floor-reach, a Hard-Floor reach only the owner can rule on)."
+estate_offset_exempt: "road-to-mandates-scoped-to-the-goal is added on the owner's order of 2026-11-21 to plan every measure of that day's session retro as its own roadmap. No active roadmap is finished, so none was archived to offset it, and folding it into a parked later/ roadmap would hold asked-for work behind that roadmap's entry condition. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
+execution:
+  mode: autonomous
+relates:
+  - slug: later/road-to-an-agent-the-owner-does-not-drive
+    relation: extends
+    note: "Its 1.1 names the goal-scoped mandate as a kernel amendment and its 0.1 a friction report. This file adds what 1.1 does not name — a generated, hook-written goal record that reaches later turns and subagents, the session PR as default target for PR commands, and a narrow re-ask counter — and hands its two metrics to that file's Phase 8 re-measure (5.1). It edits no kernel rule, so 1.1's kernel text stays owned there."
+  - slug: later/road-to-typed-grants-that-persist
+    relation: depends
+    note: "Owns landing ADR-268 §§ 2-3 in the kernel rules (commit-policy one-shot retirement under a mission, the Hard-Floor push and prod-merge rows) and the delivery.pr_topology cascade. Phase 4 here waits on that landing or on this file's own owner blocker, whichever comes first; Phases 0-3 do not."
+depends:
+  - road-to-typed-grants-that-persist
+---
+
+# Road to mandates scoped to the goal
+
+> **Source:** the owner's session retrospective of 2026-11-21 (about 380 Claude
+> Code sessions across all profiles, 643 extracted incidents), pattern B
+> ("questions and repeated permissions land on the owner", at least 12 chunks)
+> and P0 measure 3 ("goal-scoped mandate as the default"). The same-day AI
+> council round (analysis mode, one round, members anthropic and openai, both
+> answered) rated measure 3 *ready for a roadmap* (anthropic) and *pilot it*
+> (openai), and warned that two "1" answers in a row are weak evidence of a
+> delegation. Drafted against `main@811cea61d6` on 2026-11-21.
+
+## Goal
+
+An owner sentence that names an end state — "bis zum merge", "mach PR und <!-- md-language-check: ignore -->
+merge", "arbeite die roadmap ab", "until merged" — is recorded by a hook, <!-- md-language-check: ignore -->
+verbatim, the moment it is typed, and every later turn and every subagent of
+that session sees it. Commits, PR opens and updates, follow-up fix PRs, CI
+waits and cleanup that serve that goal are taken without a re-ask. A PR command
+run without a URL in a session that opened exactly one PR takes that PR and says
+so in one line. A generated counter shows both re-ask kinds at their baseline
+and, after landing, at their new level.
+
+## Context
+
+**What the retro measured.** In the galawork performance roadmap the owner
+typed "erstelle den PR für X und mach mit Y weiter" about 25 times; a merge <!-- md-language-check: ignore -->
+permission for a follow-up PR was re-asked despite a stored goal-scoped
+mandate; and on 2026-11-10 `/fix:pr-comments-loop` asked for the URL of a PR
+the same session had just opened (owner: "den den du hier erstellt hast"). The <!-- md-language-check: ignore -->
+retro's causal reading: `commit-policy` and `scope-control` read a permission as
+one-shot per operation, and the host-memory preference that says otherwise does
+not reach subagents. The counts are a lower bound over a sample, not a rate
+(council, openai); Phase 0 generates a reproducible baseline instead of
+re-typing them.
+
+**What the tree already says** (verified at `811cea61d6`):
+
+| Fact | Where |
+|---|---|
+| "Create the PR" is spent on the first branch + commit + push + PR | `src/rules/commit-policy.md:34-42` |
+| A standing instruction not yet revoked authorises commits | `src/rules/commit-policy.md:28`; `src/agent-src/contexts/authority/commit-mechanics.md:17` |
+| Permission for one operation never carries to another | `src/rules/scope-control.md:36` |
+| IL 4 mandate triggers list settings and roadmap commands, no goal sentence | `src/agent-src/contexts/execution/cheap-question-mechanics.md:19-27` |
+| A roadmap contract grants one branch, one PR; merges always outside it | `src/agent-src/contexts/authority/scope-mechanics.md:61-84`; `src/agent-src/contexts/execution/roadmap-execution-contract.md:170,201-212` |
+| Owner's own words in the session are the merge confirmation of a routine PR "for the run it starts" | `docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md:62-67` |
+| A `/pr:merge` invocation never reaches a PR that arrived later | `src/domains/git/pr/merge/command.md:34-36` |
+| Mission grants persist; the one-shot clause is retired under a mission — decided, not landed | `docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md:154-173` |
+| The loop requires a URL and forbids reusing an earlier PR number | `src/domains/engineering-base/fix/pr-comments-loop/command.md:31-33`; `src/domains/engineering-base/fix/pr-comments/command.md:35-42` |
+| The session's own PRs are already recorded from `gh pr create` output and injected per prompt | `src/scripts/_lib/session_pr_watch.ts:1-26,101,160`; `src/scripts/pr_url_reminder_hook.ts:158`; `src/scripts/session_register_hook.ts:934` |
+| A subagent-start concern exists that can carry a line into every subagent | `src/scripts/hook_manifest.json` (`claude.subagent_start` → `subagent-constraints`); `src/scripts/hooks/subagent_constraints_hook.ts` |
+| `delivery.pr_topology` is read by no code yet | `src/agent-src/templates/roadmaps.md:284-291` |
+
+**The delta.** The owner decision on mission scope exists (ADR-268, ADR-282);
+its kernel landing is owned by `later/road-to-typed-grants-that-persist`, and
+the goal-scope kernel amendment is also named in
+`later/road-to-an-agent-the-owner-does-not-drive` 1.1. Neither names a carrier
+that makes the owner's sentence visible to a later turn or a subagent, nor the
+PR-target default. This file builds those carriers in the non-kernel layer
+(hooks, commands, context files) and edits **no** kernel rule — so the
+`kernel-rule-edits` soak and the ratification gate do not apply here. Every
+reach into a Hard-Floor row (a push to another ref, the merge of a follow-up
+PR that did not exist when the sentence was typed) waits on
+`goal-scope-hard-floor-reach` below.
+
+**Owner constraint, 2026-11-21:** no hand-maintained or owner-written context.
+The goal record is written by a hook from the owner's own prompt; the baseline
+is written by a script from transcripts; nothing here asks the owner to author
+a file.
+
+## Phase 0 — A baseline the repo generates
+
+- [ ] **0.1 Route the blocker before any build.** Run `agent-config
+      council:status`; when CONFIGURED, put `goal-scope-hard-floor-reach` to the
+      council with `decision-revisit-gate`'s owner-reserved table attached and a
+      neutral prompt (the transition, the two ADR excerpts cited in Context, no
+      expected verdict). Write the verdict into the blocker's `Routed:` field.
+      verify: `grep -n 'Routed:\*\* council 20' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` prints one line.
+- [ ] **0.2 Failing test for the re-ask counter.** Write
+      `tests/scripts/mandate_reask_report.test.ts` against fixture transcripts
+      under `tests/fixtures/mandate-reask/`: (a) a goal sentence followed in a
+      later user turn by "erstelle den PR" / "push it" / "merge it" counts one
+      `reask_after_goal`; (b) a `gh pr create` result carrying a PR URL followed
+      by an assistant turn asking for a PR URL counts one
+      `pr_target_asked_after_create`; (c) the rendered output contains no
+      substring of any fixture prompt.
+      verify: `npx vitest run tests/scripts/mandate_reask_report.test.ts` fails on the missing module.
+- [ ] **0.3 Build the counter.** Implement `src/scripts/mandate_reask_report.ts`
+      on `src/scripts/_lib/cc_transcript.ts` (`listTranscriptFiles`, main
+      bucket only, replay-deduped), flags `--sessions N`, `--since <iso>`,
+      `--json`, `--write-baseline <path>`. Counts and session ids only. Not a
+      gate: exit 1 only when the store is unreadable or empty.
+      verify: the 0.2 test passes; `./scripts-run src/scripts/mandate_reask_report --sessions 50 --json` exits 0.
+- [ ] **0.4 Write the baseline by command.** Run it with
+      `--write-baseline agents/evidence/mandate-reask/2026-11-baseline.json`
+      over the host transcript store. The file records the command line, the
+      transcript count and the two metrics; nobody edits it.
+      verify: the file exists, parses as JSON, and its `command` field equals the invocation used.
+
+## Phase 1 — The session's PR is the default target
+
+- [ ] **1.1 Failing selector test.** Add cases to
+      `tests/scripts/session_pr_watch.test.ts` for a new
+      `default_pr_target(store)`: exactly one `OPEN` tracked PR → that PR; two
+      `OPEN` → `null`; only `MERGED`/`CLOSED` → `null`; empty store → `null`.
+      verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` fails on the missing export.
+- [ ] **1.2 Selector and block line.** Implement `default_pr_target` in
+      `src/scripts/_lib/session_pr_watch.ts`; `pr_watch_block` appends one line
+      `Default PR target for PR commands: #<n> <url>` when it is non-null.
+      Existing assertions in the same test file stay unchanged.
+      verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` passes.
+- [ ] **1.3 Failing command-contract test.** Write
+      `tests/scripts/pr_command_target.test.ts` asserting that
+      `fix/pr-comments-loop/command.md` and `fix/pr-comments/command.md` name the
+      order *explicit URL → session default target → current-branch detection →
+      ask once*, and no longer carry "Never reuse a PR number from earlier in the
+      conversation" verbatim.
+      verify: the test fails on today's text.
+- [ ] **1.4 Rewrite the two input sections.** Edit the two command files: a
+      session default target or a single current-branch PR is used and named in
+      one line, without a confirmation question; reuse of a PR number from
+      conversation memory stays forbidden, and the text says why the session
+      store is not memory (written from `gh pr create` output by a hook). The
+      prod-trunk refusal of the loop stays verbatim.
+      verify: 1.3 test passes; `task sync` leaves `bash src/scripts/condense.sh --changed` empty.
+- [ ] **1.5 Sweep the other PR-taking commands.** Run
+      `grep -rln -i -E 'PR URL|pr-url' src/domains --include=command.md`; each
+      hit that asks the owner for a PR either takes the 1.4 order or the Done
+      note names it with the reason it must keep asking.
+      verify: the Done note lists every grep hit with one of the two outcomes.
+
+## Phase 2 — The goal sentence is recorded and reaches every turn
+
+- [ ] **2.1 Council picks the recognizer form.** First action: run the council
+      on two options with their cost — (a) a phrase set in code, DE + EN, seeded
+      from the goal sentences `mandate_reask_report` finds in the transcripts;
+      (b) a model-carried classification the agent confirms in one line. Record
+      the verdict as a `## Decisions` row resolved by `council:<date>`.
+      verify: `grep -n 'council:2026' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` shows the row.
+- [ ] **2.2 Failing recognizer tests.** Write
+      `tests/scripts/goal_mandate.test.ts`: "mach weiter bis zum merge",
+      "bis zum merge durchziehen", "arbeite die roadmap ab", "mach PR und merge",
+      "until merged" each record the sentence verbatim; a slash-command
+      expansion, a `<task-notification>` turn and pasted tool output record
+      nothing; "stop", "nicht mergen", "halt" set `revoked_by` verbatim.
+      verify: `npx vitest run tests/scripts/goal_mandate.test.ts` fails on the missing module.
+- [ ] **2.3 Store and per-prompt block.** Implement
+      `src/scripts/_lib/goal_mandate.ts` on the pattern of `session_pr_watch.ts`
+      (store `<git-common-dir>/agent-session-mandates/<session>.json`, one writer,
+      atomic write, never throws). The `session-register` `user_prompt_submit`
+      beat records and emits one line: the verbatim sentence, its time, and what
+      it covers — commits, PR open/update, follow-up fix PRs, CI waits, cleanup
+      serving that goal — plus "Hard-Floor reach: per blocker
+      goal-scope-hard-floor-reach".
+      verify: 2.2 passes; a `session_register_hook` fixture test shows the line after a goal prompt.
+- [ ] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same
+      line at `subagent_start` when the parent session holds an unrevoked
+      record. Failing test first in the hook's test file.
+      verify: the new test passes; `./scripts-run src/scripts/lint_hook_manifest` exits 0 with no manifest change.
+
+## Phase 3 — The non-kernel layer reads the record
+
+- [ ] **3.1 Council checks the clause against the kernel.** First action: put
+      to the council whether a recorded goal sentence, read as `commit-policy`
+      exception 2 (a standing instruction not yet revoked) for commits, PR opens
+      and follow-up fix PRs serving that goal, is consistent with
+      `commit-policy.md:34-42` as written. ESCALATE or "needs the kernel text"
+      appends the question to `goal-scope-hard-floor-reach` and marks 3.2
+      `[-]` with that reason; otherwise record the row in `## Decisions`.
+      verify: a `## Decisions` row or a blocker amendment dated with the council run exists.
+- [ ] **3.2 Context clauses.** On a consistent verdict: add the clause to
+      `src/agent-src/contexts/authority/commit-mechanics.md` § exception 2 and a
+      fifth trigger "a recorded, unrevoked goal sentence" to
+      `src/agent-src/contexts/execution/cheap-question-mechanics.md` § Mandate
+      triggers. Hard-Floor rows are not named as covered. Failing text-contract
+      test first in `tests/scripts/pr_command_target.test.ts` or a sibling.
+      verify: the test passes; `git diff --name-only origin/main -- src/rules/` is empty.
+- [ ] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a
+      roadmap that planned one PR per step; `delivery.pr_topology` knows only
+      `single` and `stacked` and is read by no code. First action: council on
+      whether a per-step value belongs in that vocabulary. Write the verdict as
+      an arrival note into `later/road-to-typed-grants-that-persist` step 2.2,
+      which owns the cascade; build nothing here.
+      verify: `grep -n 'road-to-mandates-scoped-to-the-goal' agents/roadmaps/later/road-to-typed-grants-that-persist.md` prints the note.
+
+## Phase 4 — Hard-Floor reach, once decided
+
+- [ ] **4.1 Extend the record's reach per the owner ruling.** <!-- blocked-by: goal-scope-hard-floor-reach | asked: no — authored by a non-interactive workflow subagent; step 0.1 routes it through the council first -->
+      When the owner has answered, the agent writes the owner-directive record
+      from the owner's verbatim words (ADR-282 Part B), and the 2.3 line names
+      the reach the ruling grants: pushes to branches this session created for
+      the goal, and merges of follow-up PRs through the `/pr:merge` § 9a danger
+      gate for `routine` PRs only. Deploys, prod data and every
+      `needs-owner` PR stay outside. Failing fixture first: "bis zum merge"
+      followed by a second PR in a later turn.
+      verify: the fixture test passes; `git diff --name-only origin/main -- src/rules/` is empty.
+
+## Phase 5 — Close the loop into the owning roadmap
+
+- [ ] **5.1 Hand the metrics over.** Append the two metrics and the 0.4
+      baseline path to the metric table of
+      `later/road-to-an-agent-the-owner-does-not-drive` (Goal table) so its
+      closing re-measure (its Phase 8) also invokes `mandate_reask_report` with `--since` set to the
+      merge time of this roadmap's PR, alongside its own counts.
+      verify: `grep -n 'mandate_reask_report' agents/roadmaps/later/road-to-an-agent-the-owner-does-not-drive.md` prints the row.
+
+## Phase 6 — Roadmap commands follow the owner's merge order and the project's workflow
+
+The retro found two command texts that contradict an owner order. At
+`811cea61d6`, `/roadmap:process-full` already merges on `--merge` or the
+owner's own words in the session (`src/domains/product-basic/roadmap/process-full/command.md:108-119`,
+ADR-282), but `/roadmap:next`, which hands off to it, still says
+"No merge, ever" (`src/domains/product-basic/roadmap/next/command.md:372`). Its
+§ 4 Workspace defaults to a feature branch, or a worktree on request
+(`next/command.md:224-235`), and reads no project rule. In azeroth that default
+overrode the project's own rule: work on `main`, commit only after an in-game
+test.
+
+- [ ] **6.1 Failing command-contract test.** Write
+      `tests/scripts/roadmap_next_contract.test.ts` over
+      `src/domains/product-basic/roadmap/next/command.md`: (a) no line contains
+      `No merge, ever`; (b) the Rules section links process-full's `--merge`
+      section and names both triggers, `--merge` and the owner's own words in
+      the session; (c) § 4 Workspace names the order *explicit user
+      instruction → the project's own delivery rule, read per
+      `playbook-precedence` (branch, worktree, or trunk-plus-manual-test) →
+      feature-branch default*, and says that the project rule wins over the
+      default; (d) the five-disqualifier screen text is unchanged (a snapshot of
+      § 2's table rows).
+      verify: `npx vitest run tests/scripts/roadmap_next_contract.test.ts` fails on (a)-(c) and passes (d) on today's text.
+- [ ] **6.2 Rewrite the two passages.** Edit `next/command.md` § 4 and the
+      Rules bullet to match 6.1. The merge bullet points at process-full's
+      `--merge` section instead of restating it. It stays bound by that
+      section's danger gate and the `needs-owner` exclusion, so this step
+      grants no new merge authority. A project delivery rule that forbids a
+      branch or a PR ends the run at "work done on the project's terms, nothing
+      pushed", and the run says so in one line.
+      verify: 6.1 passes; `task sync` then `bash src/scripts/condense.sh --changed` prints nothing; `./scripts-run src/scripts/lint_roadmap_ci_steps` and `task lint-skills` exit 0.
+- [ ] **6.3 Sweep the sibling command texts.** Run
+      `grep -rn -i -E 'no merge, ever|never merges?\b' src/domains/product-basic/roadmap src/agent-src/contexts/execution/roadmap-*.md`.
+      Each hit either states its scope (it is a different actor, as
+      `roadmap-process-loop-run.md:203` is for `run:supervise`) or gets the 6.2
+      pointer. The Done note lists every hit with one of these two outcomes.
+      verify: the Done note lists every grep hit; the 6.1 test passes again after the sweep.
+
+<!-- Release holds — none. Every phase lands independently: Phase 1 and 2 add
+     carriers that change no permission, Phase 3 edits context files only after a
+     council verdict, Phase 4 is blocked until the owner rules, Phase 6 points a command at a merge
+     path process-full already carries. No intermediate
+     tree state misdescribes what a release does. -->
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | No kernel rule file is edited by this roadmap | `kernel-rule-edits.md` soak + ratification; kernel text owned by `later/road-to-typed-grants-that-persist` Phase 1 | typed-grants is archived without landing ADR-268 §§ 2-3 |
+| D2 | reversible-technical | agent | The goal store mirrors `session_pr_watch.ts` (per-session JSON under the git common dir, one writer) | `src/scripts/_lib/session_pr_watch.ts:12-21` | a second writer per session appears |
+| D3 | reversible-technical | agent | No new hook concern; reuse `session-register` and `subagent-constraints` | `src/scripts/hook_manifest.json` claude `user_prompt_submit` / `subagent_start` lists | either concern is removed from the manifest |
+
+## Blockers
+
+### blocker: goal-scope-hard-floor-reach
+- **Status:** open
+- **Owner:** owner
+- **Routed:** pending — not yet put to the council; step 0.1 routes it in the first execution pass. The transition crosses the `decision-revisit-gate` row "lowers/removes a safety floor" on its face (Hard-Floor push and prod-trunk merge rows), so the expected venue is the owner.
+- **Blocks:** Phase 4 — Hard-Floor reach, once decided
+- **Question:** Does an owner goal sentence ("bis zum merge", "mach PR und merge") reach, for that goal and until revoked, (a) pushes to further branches the session creates for it and (b) the routine-class merge of follow-up PRs opened in later turns — ahead of the kernel landing ADR-268 §§ 2-3 schedule? <!-- md-language-check: ignore -->
+- **Recommendation:** Yes for both, bounded to branches this session created for the goal and to `routine` PRs through the § 9a danger gate. ADR-268 § 2 already decided mission persistence and ADR-282 already accepts the owner's own words as the merge confirmation; this answer only says that a follow-up PR of the same goal is inside "the run it starts".
+- **If you do nothing:** commits and PR opens stop being re-asked (Phases 1-3), but every follow-up push to a new branch and every follow-up merge still needs a fresh owner sentence — the retro's "erstelle den PR für X" turns stay at their baseline for the push half. <!-- md-language-check: ignore -->
+- **What to do:**
+  1. In any session in this repo, say the ruling in one sentence, for example: "Ein Ziel wie 'bis zum merge' deckt Pushes auf eigene Branches und Routine-Merges von Folge-PRs dieses Ziels." <!-- md-language-check: ignore -->
+  2. The agent writes `agents/evidence/owner-directives/<date>-<id>.md` from those words (ADR-282 Part B) and cites it here.
+- **Resolved when:** an owner-directive record citing `goal-scope-hard-floor-reach` exists under `agents/evidence/owner-directives/`.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Recognizer over-reach | implementation | A goal phrase inside pasted text, a quoted log or another task arms a record for the wrong goal, and later commits or PR opens follow it | Owner prose only (synthetic-turn negatives in 2.2), verbatim sentence shown every turn, revoke phrases, no Hard-Floor reach until 4.1 | Phase 2 — The goal sentence is recorded and reaches every turn |
+| 2 | Context clause contradicts the kernel | product | The agent reads `commit-policy.md:34-42` and the new context clause as conflicting and behaves unpredictably | Council check in 3.1 before any edit; ESCALATE routes to the blocker and to typed-grants instead of editing | Phase 3 — The non-kernel layer reads the record |
+| 3 | Wrong default PR | implementation | A session that opened several PRs gets a default and the loop pushes review fixes to the wrong branch | Selector returns a PR only when exactly one is `OPEN`; the loop's prod-trunk refusal stays verbatim | Phase 1 — The session's PR is the default target |
+| 4 | Transcript text leaks into tracked evidence | implementation | The counter writes prompt text into `agents/evidence/` | Counts and session ids only; 0.2 (c) asserts no fixture prompt substring in the output | Phase 0 — A baseline the repo generates |
+| 5 | Duplicate ownership with the parked roadmaps | product | This file and its two siblings each claim the goal-scope change and drift apart | relates notes, no kernel edits (D1), arrival notes in 3.3 and 5.1 | Phase 5 — Close the loop into the owning roadmap |
+| 6 | Command text widens merge authority | product | Rewriting "No merge, ever" in `/roadmap:next` reads as a new merge grant, and a run merges without an owner word | 6.2 only points at process-full's `--merge` section (ADR-282 danger gate, `needs-owner` excluded); 6.1 (b) asserts both triggers are named; the project-rule branch ends without a push | Phase 6 — Roadmap commands follow the owner's merge order and the project's workflow |
+
+## Acceptance Criteria
+
+- [ ] AC-1 — `agents/evidence/mandate-reask/2026-11-baseline.json` exists and was
+      written by `mandate_reask_report --write-baseline`, carrying both metrics.
+- [ ] AC-2 — After `gh pr create` in a session, `/fix:pr-comments-loop` without a
+      URL resolves that PR from the injected default line with no question
+      (1.2 and 1.3 tests green).
+- [ ] AC-3 — A goal sentence typed by the owner is recorded verbatim and shown in
+      every later prompt and at every subagent start of that session; synthetic
+      turns record nothing (2.2-2.4 tests green).
+- [ ] AC-4 — `commit-mechanics.md` and `cheap-question-mechanics.md` read the
+      record, or `goal-scope-hard-floor-reach` carries the council's ESCALATE
+      for that clause (3.1).
+- [ ] AC-5 — `git diff --name-only origin/main -- src/rules/` lists no file for
+      the whole roadmap branch.
+- [ ] AC-6 — `/roadmap:next` no longer says "No merge, ever", links
+      process-full's `--merge` section, and § 4 lets the project's own delivery
+      rule win over the branch default (6.1 test green).
+- [ ] AC-7 — `task ci` exits 0 on the roadmap branch.
