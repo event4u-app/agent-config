@@ -238,11 +238,23 @@ export function commandSegments(command: string): string[] {
     if (!command) return [];
     const out: string[] = [];
     let before: Segment['nextSep'] = null;
+    let skipChain = false;
     for (const seg of splitSegments(stripComment(command))) {
         // Nothing after a lone `exit`/`return` that runs unconditionally is reached.
         const h = bareName(seg.words[0] ?? '');
         const lone = before !== '|' && seg.nextSep !== '|';
         if ((h === 'exit' || h === 'return') && lone && (before === null || before === ';')) break;
+        // `false && …` never runs what follows it in the `&&` chain.
+        if (skipChain) {
+            if (seg.nextSep !== '&&') skipChain = false;
+            before = seg.nextSep;
+            continue;
+        }
+        if (h === 'false' && lone && seg.nextSep === '&&') {
+            skipChain = true;
+            before = seg.nextSep;
+            continue;
+        }
         out.push(seg.words.join(' '));
         before = seg.nextSep;
     }
@@ -508,9 +520,21 @@ function reachable(ps: readonly Pipeline[]): Pipeline[] {
 export function exitMasking(command: string): ExitMasking | null {
     if (!command) return null;
     const ps = reachable(pipelinesOf(command));
-    let v = -1;
-    for (let i = ps.length - 1; i >= 0 && v === -1; i -= 1) if (verifierIndex(ps[i] as Pipeline) !== -1) v = i;
-    if (v === -1) return null;
+    // From the last verifier back: a verifier reached only through `||` can be skipped
+    // by an earlier pipeline's 0, so that earlier verifier's reading counts too.
+    for (let v = ps.length - 1; v >= 0; v -= 1) {
+        if (verifierIndex(ps[v] as Pipeline) === -1) continue;
+        const m = maskingAt(ps, v);
+        if (m !== null) return m;
+        let skippable = false;
+        for (let j = v - 1; j >= 0; j -= 1) if ((ps[j] as Pipeline).sepAfter === '||') skippable = true;
+        if (!skippable) return null;
+    }
+    return null;
+}
+
+/** The masking reading of the line taking pipeline `v` as the verifier whose code is recorded. */
+function maskingAt(ps: readonly Pipeline[], v: number): ExitMasking | null {
     const p = ps[v] as Pipeline;
     const k = verifierIndex(p);
     // An explicit `exit "${PIPESTATUS[k]}"` carries the verifier's code with or without pipefail.

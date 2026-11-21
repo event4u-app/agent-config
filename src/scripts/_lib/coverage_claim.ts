@@ -211,6 +211,9 @@ export interface CallLike {
 
 const EDIT_TOOLS: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
+/** A documentation file: by extension, or anywhere under a `docs/` directory. */
+const DOC_PATH = /(?:\.(?:md|mdx|markdown|txt|rst|adoc)$)|(?:(?:^|\/)docs\/)/i;
+
 /** Surfaces a render or browser run reaches without naming them: a web page. */
 const BROWSER_KINDS: ReadonlySet<LiveSurface['kind']> = new Set(['npm-script', 'playwright']);
 
@@ -262,9 +265,12 @@ function drives(segs: readonly string[], surface: LiveSurface, root: string): bo
     // A URL counts as a whole host:port.
     if (surface.url === undefined) return false;
     const escaped = surface.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const url = new RegExp(`${escaped}(?![\\w])`);
-    // Only a request actually made: an HTTP client or a render, not any command naming the URL.
-    return segs.some((x) => (HTTP_CLIENT.test(x) || RENDER_RUN.test(x)) && url.test(x));
+    // Only a request actually made — an HTTP client or a render — whose target argument IS the
+    // URL, not one that merely contains it (`?next=http://localhost:3000`).
+    const url = new RegExp(`^${escaped}(?![\\w])`);
+    return segs.some(
+        (x) => (HTTP_CLIENT.test(x) || RENDER_RUN.test(x)) && x.split(/\s+/).some((w) => url.test(w.replace(/^["']/, ''))),
+    );
 }
 
 /**
@@ -286,7 +292,11 @@ export function unlistedSurfaceIn(
     // The cheap checks first: most turn ends claim nothing or edit nothing, and
     // those never read the repo.
     if (completionClaimAt(visible) === null) return null;
-    const edits = calls.filter((c) => EDIT_TOOLS.has(c.name) && c.path !== undefined).map((c) => c.path as string);
+    // Documentation is not part of what a surface runs.
+    const edits = calls
+        .filter((c) => EDIT_TOOLS.has(c.name) && c.path !== undefined)
+        .map((c) => c.path as string)
+        .filter((p) => !DOC_PATH.test(p.split(path.sep).join('/')));
     if (edits.length === 0) return null;
     const surfaces = given ?? deriveLiveSurfaces(workspaceRoot);
     if (surfaces.length === 0) return null;

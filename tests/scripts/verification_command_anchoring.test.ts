@@ -141,6 +141,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['task ci || exit "$code"', 'trailing'],
         // Nothing after an unconditional exit runs, so `tsc` is not the last verifier.
         ['task ci | tail -5; exit 0; npx tsc --noEmit', 'pipe'],
+        // `tail`'s 0 skips the `||` fallback, so the recorded code is the filter's.
+        ['task ci | tail -5 || npx tsc --noEmit', 'pipe'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
