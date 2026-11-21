@@ -181,6 +181,7 @@ describe('observe_prompt — goal sentences', () => {
     });
 
     // Round 5: the stop stamp survives a store that refused new files for a while.
+    // skip-reason: root bypasses file modes, so a read-only store cannot be simulated
     it.skipIf(process.getuid?.() === 0)('an older goal written after the store recovers stays suppressed', () => {
         const T2 = new Date('2026-11-21T11:00:00Z');
         const T3 = new Date('2026-11-21T12:00:00Z');
@@ -199,6 +200,7 @@ describe('observe_prompt — goal sentences', () => {
     // Round 7: an older goal writer that staged its temp file before the store
     // refused new files, and renames it over the record after the store recovers,
     // must not revive the goal the fallback stop revoked.
+    // skip-reason: root bypasses file modes, so a read-only store cannot be simulated
     it.skipIf(process.getuid?.() === 0)('a staged older goal renamed in after the fallback stop renders nowhere', () => {
         const T2 = new Date('2026-11-21T11:00:00Z');
         const T3 = new Date('2026-11-21T12:00:00Z');
@@ -219,6 +221,7 @@ describe('observe_prompt — goal sentences', () => {
 
     // Round 8: two stops in the slot — an older one that passed its freshness
     // check before a goal, paused, and wrote after a newer stop — keep the newer.
+    // skip-reason: root bypasses file modes, so a read-only store cannot be simulated
     it.skipIf(process.getuid?.() === 0)('a paused older stop written into the slot after a newer one keeps the newer', () => {
         const T2 = new Date('2026-11-21T11:00:00Z');
         const T3 = new Date('2026-11-21T12:00:00Z');
@@ -238,6 +241,7 @@ describe('observe_prompt — goal sentences', () => {
 
     // Rounds 7, 9 and 10: said on the turn only when the store AND the user-level
     // fallback both refuse it, and the message says later readers may disagree.
+    // skip-reason: root bypasses file modes, so a read-only store cannot be simulated
     it.skipIf(process.getuid?.() === 0)('says so on the turn when a stop could be saved nowhere', () => {
         observe_prompt(root, 's1', 'until merged', T0);
         const dir = path.join(root, '.git', 'agent-session-mandates');
@@ -265,6 +269,7 @@ describe('observe_prompt — goal sentences', () => {
     // Rounds 9 and 10: a stop the store refuses entirely still holds on the next
     // turn and for a fresh subagent — through a user-level fallback, so a reader
     // whose temp root differs from the writer's still finds it.
+    // skip-reason: root bypasses file modes, so a read-only store cannot be simulated
     it.skipIf(process.getuid?.() === 0)('a stop the store refuses entirely holds on later turns and for subagents, whatever their temp root', () => {
         const T2 = new Date('2026-11-21T11:00:00Z');
         observe_prompt(root, 's1', 'until merged', T0);
@@ -410,6 +415,7 @@ describe('observe_prompt — goal sentences', () => {
 
     // Ratification round 1: a revocation whose atomic write fails must not leave
     // the earlier goal readable as current.
+    // skip-reason: root bypasses file modes, so a read-only store cannot be simulated
     it.skipIf(process.getuid?.() === 0)('a revocation that cannot be written atomically still ends the goal', () => {
         observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
         const dir = path.join(root, '.git', 'agent-session-mandates');
