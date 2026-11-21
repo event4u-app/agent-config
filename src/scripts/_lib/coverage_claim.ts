@@ -267,8 +267,43 @@ function drives(segs: readonly string[], surface: LiveSurface, root: string): bo
     const escaped = surface.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Only a request actually made — an HTTP client or a render — whose target argument IS the
     // URL, not one that merely contains it (`?next=http://localhost:3000`).
-    const url = new RegExp(`^${escaped}(?![\\w])`);
+    // The whole word is the URL or the URL and a path, query or fragment.
+    const url = new RegExp(`^${escaped}(?:[/?#]|$)`);
     return segs.some((x) => (HTTP_CLIENT.test(x) || RENDER_RUN.test(x)) && targets(x).some((w) => url.test(w)));
+}
+
+/** Shell words, dequoted: whitespace splits only outside quotes, `\` escapes the next character. */
+function shellWords(text: string): string[] {
+    const out: string[] = [];
+    let word = '';
+    let started = false;
+    let quote: '' | "'" | '"' = '';
+    for (let i = 0; i < text.length; i += 1) {
+        const ch = text[i] as string;
+        if (quote === "'") {
+            if (ch === "'") quote = '';
+            else word += ch;
+        } else if (ch === '\\' && i + 1 < text.length) {
+            word += text[i + 1] as string;
+            i += 1;
+            started = true;
+        } else if (quote === '"') {
+            if (ch === '"') quote = '';
+            else word += ch;
+        } else if (ch === "'" || ch === '"') {
+            quote = ch;
+            started = true;
+        } else if (/\s/.test(ch)) {
+            if (started) out.push(word);
+            word = '';
+            started = false;
+        } else {
+            word += ch;
+            started = true;
+        }
+    }
+    if (started) out.push(word);
+    return out;
 }
 
 /** Short and long options of the HTTP clients that take no value; any other option may own the next word. */
@@ -280,24 +315,25 @@ const LONG_FLAGS = new Set([
 ]);
 
 /**
- * The words of `segment` that can be a request target: quote-aware, and never the
- * word after an option that may take a value (`-e URL`, `--referer URL`, `-x URL`).
- * An unknown option counts as one that takes a value, so a doubtful word is not credited.
+ * The words of `segment` that can be a request target: shell words, dequoted, never an
+ * option, and never the word after an option that may take a value (`-e URL`,
+ * `--referer URL`, `-x URL`). An unknown option counts as one that takes a value, so a
+ * doubtful word is not credited. After `--` every word is positional.
  */
 function targets(segment: string): string[] {
-    const tokens = segment.match(/'[^']*'|"[^"]*"|\S+/g) ?? [];
+    const words = shellWords(segment);
     const out: string[] = [];
     let positional = false;
-    for (let i = 1; i < tokens.length; i += 1) {
-        const raw = tokens[i] as string;
-        const word = raw.replace(/^(['"])(.*)\1$/, '$2');
-        if (!positional && raw === '--') {
+    for (let i = 1; i < words.length; i += 1) {
+        const word = words[i] as string;
+        if (!positional && word === '--') {
             positional = true;
             continue;
         }
-        const prev = tokens[i - 1] as string;
+        if (!positional && word.startsWith('-')) continue;
+        const prev = words[i - 1] as string;
         const ownedByOption =
-            !positional && i > 1 && prev.startsWith('-') && !prev.includes('=') && prev !== '--' &&
+            !positional && i > 1 && prev.startsWith('-') && !prev.includes('=') &&
             !FLAG_CLUSTER.test(prev) && !LONG_FLAGS.has(prev);
         if (!ownedByOption) out.push(word);
     }

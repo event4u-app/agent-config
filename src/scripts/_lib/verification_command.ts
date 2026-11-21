@@ -367,9 +367,14 @@ export function isVerificationCommand(command: string): boolean {
 export type ExitMasking = 'pipe' | 'trailing';
 
 /** `set -o pipefail`, `set -euo pipefail`, `set -e -o pipefail`. */
-const SETS_PIPEFAIL = /^set\s+(?:[-+][A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
-/** `set +o pipefail` — turns it off again. */
-const UNSETS_PIPEFAIL = /^set\s+(?:[-+][A-Za-z]+\s+)*\+[A-Za-z]*o\s+pipefail\b/;
+const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail$/;
+/**
+ * A segment with a `set` / `shopt` word and a `pipefail` word may turn it off
+ * (`set +o pipefail`, `shopt -uo pipefail`, `eval 'set +o pipefail'`). Two linear tests.
+ */
+function touchesPipefail(text: string): boolean {
+    return /\b(?:set|shopt)\b/.test(text) && /\bpipefail\b/.test(text);
+}
 
 /** One pipeline: its segments, the separator after it, and whether pipefail covers it. */
 interface Pipeline {
@@ -387,12 +392,15 @@ function pipelinesOf(command: string): Pipeline[] {
         cur.push(seg);
         if (seg.nextSep === '|') continue;
         out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail });
-        // A `set` changes the line only when it runs for sure and in this shell:
-        // alone (a pipeline runs it in a subshell) and not behind `&&` / `||`.
-        if (cur.length === 1 && (sepBefore === null || sepBefore === ';')) {
-            const text = (cur[0] as Segment).words.join(' ');
-            if (SETS_PIPEFAIL.test(text)) pipefail = true;
-            if (UNSETS_PIPEFAIL.test(text)) pipefail = false;
+        // pipefail is on only after a plain `set -o pipefail` that runs for sure and in
+        // this shell: alone (a pipeline runs it in a subshell) and not behind `&&` / `||`.
+        // Any other `set` / `shopt` naming pipefail turns it off for what follows, reached
+        // or not (D10): whether it ran is not read from the text, and off only adds gaps.
+        const sure = cur.length === 1 && (sepBefore === null || sepBefore === ';');
+        for (const s of cur) {
+            const text = s.words.join(' ');
+            if (!touchesPipefail(text)) continue;
+            pipefail = sure && SETS_PIPEFAIL.test(text);
         }
         sepBefore = seg.nextSep as Pipeline['sepAfter'];
         cur = [];

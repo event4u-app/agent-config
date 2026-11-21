@@ -148,6 +148,13 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['task ci | tail -5; exit "${PIPESTATUS[0]}"', 'pipe'],
         ['task ci | tail -5 || printf x | npx tsc --noEmit; exit "${PIPESTATUS[1]}"', 'pipe'],
         ['set -o pipefail; task ci | tail -5; exit "${PIPESTATUS[0]}"', 'trailing'],
+        // D10: any `set … +o pipefail` on the line turns pipefail off for what follows,
+        // reached or not — whether it runs is not read from the text.
+        ['set -o pipefail; true && set +o pipefail; npx tsc --noEmit | tail -5', 'pipe'],
+        ['set -o pipefail; false && set +o pipefail; npx tsc --noEmit | tail -5', 'pipe'],
+        ['set -o pipefail; set +o errexit +o pipefail; task ci | tail -5', 'pipe'],
+        ["set -o pipefail; eval 'set +o pipefail'; task ci | tail -5", 'pipe'],
+        ['set -o pipefail; shopt -uo pipefail; task ci | tail -5', 'pipe'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
