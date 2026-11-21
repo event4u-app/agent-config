@@ -492,6 +492,50 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         ).toBe('nonzero_exit_without_test_failure');
     });
 
+    it('a masked run that loaded nothing keeps its load-failure verdict', () => {
+        expect(
+            reason(
+                classifyRun(
+                    rec({ command: 'npx vitest run | tail -5', exit_code: 0, stdout_tail: 'Error: Cannot find module \'x\'\n' }),
+                ),
+            ),
+        ).toBe('fixture_or_load_failure');
+    });
+
+    it('a masked run that discovered no tests keeps its zero-tests verdict', () => {
+        expect(
+            reason(
+                classifyRun(
+                    rec({ command: 'npx vitest run | tail -5', exit_code: 0, stdout_tail: 'Tests  0 passed (0)\n' }),
+                ),
+            ),
+        ).toBe('zero_tests_discovered');
+    });
+
+    it('output that merely mentions an exit code is not read when the line echoes none', () => {
+        expect(
+            classifyRun(
+                rec({ command: 'npx tsc --noEmit | tail -5', exit_code: 0, stdout_tail: 'src/exit.ts: exit=1 handled\n' }),
+            ),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('`$?` after a pipe is the filter\'s code, so an echoed value is not the verifier\'s', () => {
+        expect(
+            classifyRun(rec({ command: 'task ci | tail -5; echo "exit=$?"', exit_code: 0, stdout_tail: 'exit=0\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('an echoed PIPESTATUS is the verifier\'s code and is read', () => {
+        expect(
+            reason(
+                classifyRun(
+                    rec({ command: 'task ci | tail -5; echo "exit=${PIPESTATUS[0]}"', exit_code: 0, stdout_tail: 'boom\nexit=2\n' }),
+                ),
+            ),
+        ).toBe('nonzero_exit_without_test_failure');
+    });
+
     it('records and does not refuse until the arming phase decides', () => {
         expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
     });

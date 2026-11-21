@@ -367,15 +367,22 @@ export function classifyRun(record: unknown): VerificationVerdict {
     }
 
     // A MASKED EXIT CODE belongs to `tail` or `echo`, not to the verifier, so
-    // it is not read. Printed failures above still win, because they
-    // happened. An exit code the command echoed itself (`echo "exit=$?"`) is
-    // the verifier's own and is read instead.
-    let exitCode: number = r.exit_code;
-    if (exitMasking(r.command) !== null) {
-        const echoed = echoedExitCode(text);
-        if (echoed === null) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
-        exitCode = echoed;
-    }
+    // it is not read — but only where the exit code would decide. A printed
+    // failure, a load failure and an empty suite are read off the output and
+    // keep their verdicts. An exit code the line echoed for the verifier itself
+    // (`; echo "exit=$?"` right after it, or `PIPESTATUS`) is read instead.
+    const masking = exitMasking(r.command);
+    const exitVerdict = (code: number): VerificationVerdict => {
+        let real = code;
+        if (masking !== null) {
+            const echoed = echoesVerifierCode(r.command as string, masking) ? echoedExitCode(text) : null;
+            if (echoed === null) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
+            real = echoed;
+        }
+        return real === 0
+            ? { kind: 'PASS_EVIDENCE_OK' }
+            : { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
+    };
 
     // A LOAD FAILURE, and only where it is not contradicted by a clean summary.
     // The patterns are broad on purpose — `fatal error`, `cannot find module` —
@@ -401,16 +408,21 @@ export function classifyRun(record: unknown): VerificationVerdict {
         if (summary.total !== null && summary.total > 0 && summary.passed === 0) {
             return { kind: 'INVALID_RUN', reason: 'zero_tests_discovered' };
         }
-        if (exitCode !== 0) {
-            return { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
-        }
-        return { kind: 'PASS_EVIDENCE_OK' };
+        return exitVerdict(r.exit_code);
     }
 
-    if (exitCode !== 0) {
-        return { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
-    }
-    return { kind: 'PASS_EVIDENCE_OK' };
+    return exitVerdict(r.exit_code);
+}
+
+/**
+ * Whether the line echoes the VERIFIER's exit code rather than a filter's:
+ * `PIPESTATUS` names it whatever the shape; `$?` names it only on a trailing
+ * mask, where the echo runs right after the verifier — after a pipe it is the
+ * filter's code.
+ */
+function echoesVerifierCode(command: string, masking: 'pipe' | 'trailing'): boolean {
+    if (/\bPIPESTATUS\b/.test(command)) return true;
+    return masking === 'trailing' && command.includes('$?');
 }
 
 /**
@@ -420,7 +432,8 @@ export function classifyRun(record: unknown): VerificationVerdict {
  * The last one wins, because it was printed after the run it reports.
  */
 function echoedExitCode(text: string): number | null {
-    const matches = [...text.matchAll(/\bexit(?:[ _]code)?\s*[=:]\s*(\d{1,3})\b/gi)];
+    // A line of its own, so a test name or log line that mentions `exit=1` is not read as one.
+    const matches = [...text.matchAll(/^[ \t]*exit(?:[ _]code)?[ \t]*[=:][ \t]*(\d{1,3})[ \t]*$/gim)];
     const last = matches[matches.length - 1];
     return last ? Number(last[1]) : null;
 }

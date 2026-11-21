@@ -376,10 +376,12 @@ const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
  * `tsc | tail -5` reports `tail`'s 0, and `task ci; echo "exit=$?"` reports
  * `echo`'s 0, so a failing run reads as a pass. Two shapes:
  *
- * - `pipe`: a verifying segment pipes into another command, and no earlier
- *   segment on the same line set `pipefail`, and the line never reads
- *   `PIPESTATUS`. A pipefail from an rc file or a sourced script is invisible
- *   here, which is why the reason starts as an instrument gap.
+ * - `pipe`: a verifying segment pipes into another command, no earlier
+ *   segment on the same line set `pipefail`, and the line does not end the
+ *   shell with `exit`/`return` of `PIPESTATUS`. Printing `PIPESTATUS` does not
+ *   count: the record still holds the printer's code. A pipefail from an rc
+ *   file or a sourced script is invisible here, which is why the reason starts
+ *   as an instrument gap.
  * - `trailing`: a verifying segment is followed by `;` or `||` and then by a
  *   command that does not verify. `cmd || true` is a discard and stays
  *   `failureIsDiscarded`'s case; `cmd || exit 1` / `cmd; exit $?` propagate
@@ -388,14 +390,16 @@ const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
 export function exitMasking(command: string): ExitMasking | null {
     if (!command) return null;
     const segments = splitSegments(stripComment(command));
-    const readsPipestatus = /\bPIPESTATUS\b/.test(command);
+    const exitsPipestatus = segments.some(
+        (seg) => /^(?:exit|return)$/.test(seg.words[0] ?? '') && /\bPIPESTATUS\b/.test(seg.words.slice(1).join(' ')),
+    );
     let pipefailSet = false;
     for (const seg of segments) {
         const text = seg.words.join(' ');
         if (SETS_PIPEFAIL.test(text)) pipefailSet = true;
         if (failureIsDiscarded(seg) || !segmentVerifies(seg.words)) continue;
         if (seg.nextSep === '|') {
-            if (!pipefailSet && !readsPipestatus) return 'pipe';
+            if (!pipefailSet && !exitsPipestatus) return 'pipe';
             continue;
         }
         if (seg.nextSep === ';' || seg.nextSep === '||') {

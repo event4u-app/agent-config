@@ -116,6 +116,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['task ci; echo "exit=$?"', 'trailing'],
         ['task ci || echo failed', 'trailing'],
         ['npx vitest run; ls', 'trailing'],
+        // Printing PIPESTATUS does not carry it: the record still holds echo's code.
+        ['task ci | tail -5; echo "${PIPESTATUS[0]}"', 'pipe'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -124,7 +126,7 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci',
         'set -o pipefail; task ci | tail -5',
         'set -euo pipefail; task ci | tail -5',
-        'task ci | tail -5; echo "${PIPESTATUS[0]}"',
+        'task ci | tail -5; exit "${PIPESTATUS[0]}"',
         'task ci && echo ok',
         'npx vitest run || exit 1',
         'npx vitest run; exit $?',
