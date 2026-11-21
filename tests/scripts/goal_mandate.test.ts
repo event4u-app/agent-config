@@ -61,7 +61,18 @@ describe('observe_prompt — goal sentences', () => {
     // goal write from an earlier prompt that lands after it cannot arm a record.
     // Ratification round 12: a direct cancellation of the work in words ends the
     // goal on its turn, on a later neutral turn and for a fresh subagent.
-    it.each(['Stop working on this PR.', 'Hör auf, daran weiterzuarbeiten.', 'bitte abbrechen', 'cancel that'])(
+    // Round 14: a polite or interjected lead-in before the cancellation verb, and
+    // the verb with its object anywhere in the line.
+    it.each([
+        'Stop working on this PR.',
+        'Hör auf, daran weiterzuarbeiten.',
+        'bitte abbrechen',
+        'cancel that',
+        'Please stop working on this PR',
+        'ok, cancel that',
+        'nein, stopp',
+        'I think we should stop working on this now',
+    ])(
         '%j ends the goal everywhere',
         (cancel) => {
             const T2 = new Date('2026-11-21T11:00:00Z');
