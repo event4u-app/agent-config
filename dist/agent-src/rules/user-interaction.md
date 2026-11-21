@@ -18,7 +18,7 @@ obligation_frequency: "per-turn"
 
 # User Interaction
 
-Three Iron Laws govern a decision put to the user — two on the reply that
+Four Iron Laws govern a decision put to the user — three on the reply that
 carries it, one on what happens if the agent runs again before the answer.
 They override conversation momentum, brevity, and the urge to defer to the
 user. **Missing a recommendation is a rule violation, not a slip.**
@@ -76,11 +76,17 @@ NOT ON THE PRESENCE OF A NUMBERED LIST.
 A TRAILING FREE-TEXT OFFER IS AN ASK. A BARE YES/NO IS AN ASK.
 ```
 
-Measured (30-session audit, 2026-08-06): **every** malformed ask was a one-line
-parenthetical or a trailing offer, while the same sessions formatted their
-**large** asks perfectly — the ask that feels too small for a block is the one
-that escapes the format. **No gate ships for this**: the backstop inspects
-numbered-option blocks, and every measured failure had none. Detail: mechanics.
+The ask too small for a block escapes the format; no gate. Evidence: mechanics.
+
+## Iron Law 4 — A Question Carries Its Own Context
+
+```
+THE USER NEVER SAW YOUR TOOL OUTPUT. EVERY ASK STATES WHAT IS DECIDED,
+WHY IT BLOCKS NOW, WHAT EACH OPTION CHANGES. NO BARE FILE/ADR/BRANCH/PR/
+FINDING ID — SAY WHAT IT IS. A NATIVE ASK HIDES THE REPLY ABOVE: STAND ALONE.
+```
+
+Detail: mechanics § Context-carrying asks.
 
 ## Mechanics — rationale, failure modes, format details, examples
 
@@ -89,8 +95,3 @@ obey — why to take a position, the format spec, the five-step self-check, the
 named failure-mode catalog, slip handling, examples, progress indicators and
 summary patterns — is in
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
-
-When the user pastes large tool output, logs, JSON, or API responses,
-keep the reply narrow: extract only the relevant fields with targeted
-filters (`jq`, `rg`, `grep`) before quoting, instead of echoing the
-whole blob back.
