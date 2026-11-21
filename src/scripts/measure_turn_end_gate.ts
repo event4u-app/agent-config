@@ -106,13 +106,13 @@ import { isTestPath } from './_lib/test_path.js';
 import {
     detectDroppedDecision,
     detectLanguage,
-    gatePinLanguage,
     detectPromissory,
     detectUntestedChange,
     detectUnverifiedEdit,
     extractToolCalls,
     type ToolCall,
 } from './hooks/turn_end_gate_hook.js';
+import { gatePinLanguage } from './hooks/language_pin_gate.js';
 import {
     DETECTOR_IDS,
     SHADOW_LAYERS,

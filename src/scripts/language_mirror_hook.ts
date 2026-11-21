@@ -305,45 +305,21 @@ export function instructionText(prompt: string): string {
 
 
 /**
- * Classify a PROMPT for the pin: only the text the owner typed decides it.
- *
- * Scores `ownerProse(prompt)` — the opening paragraph and the paragraph after
- * the last output paste, with host turns, injected regions, fenced code, output
- * lines and pasted documents removed — under the shared `MIN_MARKERS` floor
- * (council 2026-11-21, D5). There is NO whole-body fallback: an owner span
- * under the floor is `und`, and the caller keeps the previous pin (owner
- * decision D1). The fallback this replaced let the paste decide whenever the
- * typed lead was short, which is the owner's most common prompt shape
- * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
- *
- * Then a veto that no boundary reading can get around: when the RAW prompt —
- * nothing removed, not even host wrappers, because a pasted wrapper tag looks
- * exactly like the host's own (ratification rounds 13-14) — carries
- * `MIN_MARKERS` markers of the language OPPOSING the candidate, the verdict is
- * `und`. A real host
- * wrapper in the other language (an IDE element block, a terminal-pane echo)
- * therefore keeps the previous pin too: a missed update, never an override. So a pin in one language is written only when the prompt holds fewer
- * than `MIN_MARKERS` markers of the other anywhere; owner text that reaches the
- * floor can never be outvoted, however the span reader draws its boundaries.
- * Ratification rounds 1-9 found a missed shape for every narrower unit (spans,
- * lines, paragraphs, runs of lines, a fence reader). The cost is recall: an
- * instruction over a paste in the other language — a document, a log, code
- * with comments — keeps the previous pin rather than setting one.
- *
- * `owner_prose_chars` is the length of the text that was scored, so a pin can
- * say how much owner prose stood behind it.
- *
- * Not for replies or bodies: those are scored with `classifyText`, which has no
- * notion of an owner and keeps its whole-text fallback.
+ * Classify a PROMPT for the pin: only text the owner typed decides it (D1).
+ * Candidate: `ownerProse(prompt)` — the lead and the paragraph after the last
+ * paste — under `MIN_MARKERS` (D5), with NO whole-body fallback; `und` keeps the
+ * previous pin. Veto: the candidate becomes `und` whenever the RAW prompt, with
+ * nothing removed (a pasted wrapper tag is byte-identical to the host's own),
+ * holds `MIN_MARKERS` of the opposing language — so owner text at the floor is
+ * never outvoted. Cost (D7): an instruction beside a paste or host wrapper in
+ * the other language keeps the previous pin. Replies use `classifyText`.
  */
 export function classify(prompt: string): PromptClassification {
   const { lead, trailing, text } = ownerProse(prompt);
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
   const all = _score(text);
-  // The invariant checked directly, not through the spans being a subset of
-  // the raw text: a candidate never pins while the raw prompt holds the floor
-  // of the opposing language (ratification round 15).
+  // Checked directly, not via the spans being a subset of the raw text (round 15).
   const opposing =
     verdict.language === "de" ? all.en_markers : verdict.language === "en" ? all.de_markers : 0;
   const language = opposing >= MIN_MARKERS ? "und" : verdict.language;
@@ -384,11 +360,7 @@ export function classifyText(prompt: string): Classification {
   return _score(text);
 }
 
-/**
- * Score one span with the marker lists and the `MIN_MARKERS` floor, and nothing
- * else — no stripping, no lead selection. Exported for the instrument that scores
- * the owner's spans one by one (`measure_turn_end_gate --language-split`).
- */
+/** Score one span with the marker lists and floor only (for `--language-split`). */
 export function scoreText(text: string): Classification {
   return _score(text);
 }
@@ -535,11 +507,7 @@ export interface PinState extends JsonObject {
    * every state written before this field existed is still a valid pin.
    */
   tool_calls_since_pin?: number;
-  /**
-   * Characters of owner prose behind the pin (`classify`'s scored text); 0 on
-   * a locale pin. The turn-end gate refuses on language only when this is
-   * above 0. Optional: a pin written before the field keeps today's reading.
-   */
+  /** Owner-prose characters behind the pin; 0 on a locale pin. The gate refuses only above 0. */
   owner_prose_chars?: number;
 }
 
@@ -668,7 +636,7 @@ export function nextState(
     en_markers: classification.en_markers,
     session_id,
     tool_calls_since_pin: 0,
-    owner_prose_chars: classification.owner_prose_chars ?? 0,
+    owner_prose_chars: classification.owner_prose_chars,
   };
 }
 
