@@ -664,10 +664,10 @@ export function readLanguagePin(workspaceRoot: string, session_id: string): Verd
  * reflects the machine, and a prompt pin with `owner_prose_chars: 0` has no
  * typed text behind it; refusing a reply on either refuses the owner for
  * something they never wrote. A present `owner_prose_chars` that is not a
- * positive integer is malformed and obliges nothing either. A prompt pin
- * missing `owner_prose_chars`, or a pin missing `source`, was written before
- * that field existed and keeps the language-only reading; a locale pin is
- * exempt whether or not it carries the count.
+ * positive integer is malformed and obliges nothing either. Only a pin missing
+ * BOTH fields, or a prompt pin missing the count, was written before they
+ * existed and keeps the language-only reading; a pin that carries a count must
+ * also say `source: prompt`, and a locale pin is exempt either way.
  *
  * Pure, so `measure_turn_end_gate --language-split` replays the same rule.
  */
@@ -675,8 +675,8 @@ export function gatePinLanguage(pin: Record<string, unknown>): Verdict {
     const lang = pin['language'];
     if (lang !== 'de' && lang !== 'en') return 'und';
     const source = pin['source'];
-    if (source !== undefined && source !== 'prompt') return 'und';
     const chars = pin['owner_prose_chars'];
+    if (source !== 'prompt' && (source !== undefined || chars !== undefined)) return 'und';
     if (chars !== undefined && !(typeof chars === 'number' && Number.isInteger(chars) && chars > 0)) return 'und';
     return lang;
 }

@@ -201,7 +201,9 @@ export interface OwnerSpans {
  */
 export function ownerSpans(text: string): OwnerSpans {
   const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
-  const isOutput = (l: string): boolean => l === FENCE_LINE || OUTPUT_HEAD.test(l);
+  // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
+  // sentence such as `To fix this, …` is the owner's, not output.
+  const isOutput = (l: string): boolean => l === FENCE_LINE || (OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/.test(l));
   const isPaste = (l: string): boolean => isOutput(l) || DOCUMENT_HEAD.test(l);
   const blank = (l: string): boolean => l.trim() === "";
 
@@ -221,9 +223,12 @@ export function ownerSpans(text: string): OwnerSpans {
       ? lines.slice(start + 1, end + 1)
       : [];
   // A span glued to the paste's last line is as likely the paste's own wrapped
-  // continuation as a typed line; it counts only when there is no lead to read.
+  // continuation as a typed line; it counts only when there is no lead to read
+  // and at least two output lines stand above it, so one prose line that
+  // happens to look like output cannot hand the pin to the line below it.
   const separated = blank(lines[start] ?? "");
-  const trailing = separated || lead.length === 0 ? candidate : [];
+  const glued = lead.length === 0 && before.filter(isOutput).length >= 2;
+  const trailing = separated || glued ? candidate : [];
 
   return {
     lead: lead.join("\n"),

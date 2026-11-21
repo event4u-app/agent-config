@@ -1728,6 +1728,21 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    "[ratification r2] German line with an unmarked English paragraph glued below it",
+    "Behebe das bitte.\nThis is a long English paragraph that would explain what should be done, and it could go on for a while.\nMore English text continues here and it is still part of the paste.",
+    "und",
+  ],
+  [
+    "[ratification r2] English instruction starting with `To` and a German line glued below",
+    "To fix this, please use the existing code that is already there.\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r2] one output-looking line above a glued German line is not a paste block",
+    "Error: build failed\nBitte prüfe das und mach dann weiter.",
+    "und",
+  ],
+  [
     "[ratification r1] German lead, blank line, error, blank line, English explanation",
     "Behebe das bitte.\n\nError: request failed\n\nThis is the explanation of the error, and it tells you what you should do next.",
     "und",

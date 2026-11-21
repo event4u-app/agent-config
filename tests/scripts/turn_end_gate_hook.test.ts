@@ -486,6 +486,12 @@ describe('language pin', () => {
         }
     });
 
+    it('a pin with a count but no source obliges nothing', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'en', owner_prose_chars: 12 }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
     it('a locale pin without owner_prose_chars obliges nothing', () => {
         const dir = makeWorkspace();
         writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'en', source: 'system-locale' }));
