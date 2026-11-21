@@ -192,6 +192,7 @@ hunks. The detector reads the same records as before.
       record in `tests/scripts/report_verification_record_coverage.test.ts`
       carrying a masked command.
       verify: `npx vitest run tests/scripts/report_verification_record_coverage.test.ts` -> 0
+      reach exempt: a maintainer-run measurement report over the local witness store with no shipped invoker by design; its own main() calls computeCoverage and renderText, and step 5.1 ran it by hand
       **Done 2026-11-21:** New `exit_masked` field per host and a column printed
       as `N of records`; two red-first cases. The 21 test files that import the
       classifier, the recorder or the turn-end gate pass (668 tests, exit 0).
@@ -280,6 +281,7 @@ Rollback: remove the id from `DETECTOR_IDS` and the detector from
         refuse. A test asserts it never refuses.
 
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts tests/scripts/measure_turn_end_gate.test.ts` -> 0
+      reach exempt: the flagged symbols belong to measure_turn_end_gate, a maintainer-run replay report over the local transcript store with no shipped invoker by design; the shipped detector is reached from src/scripts/hooks/turn_end_gate_hook.ts through the dispatcher
       **Done 2026-11-21:** The detector body lives in
       `src/scripts/_lib/coverage_claim.ts`, with a three-line
       `detectCoverageGap` wrapper in the hook: the hook sat at 1,495 of its
@@ -375,7 +377,7 @@ Exit: a recorded council verdict per reason, applied with its tests. Rollback:
 the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 (the refusal flag on `coverage`).
 
-- [x] **5.1 Measure before asking.** Run the classifier and `detectCoverageGap` <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **5.1 Measure before asking.** Run the classifier and `detectCoverageGap` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       over every witness record and transcript in the local store that
       `report_verification_record_coverage` reads. Report per reason:
       - how often it fires;
@@ -390,7 +392,7 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
       on a `pipefail` line) and 1,504 transcript turns over 24 days (5 trigger
       matches, 0 `partial_ratio`, 1 `unlisted_surface`, 0 fires on a reply with
       a not-verified list).
-- [x] **5.2 Run the council on the arming question:** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **5.2 Run the council on the arming question:** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       `/council` with the 5.1 numbers and the demotion contract's bars. The
       question: should `exit_masked` refuse a turn, should `partial_ratio`, and
       should `unlisted_surface`? Record one Decisions row per reason, resolved
