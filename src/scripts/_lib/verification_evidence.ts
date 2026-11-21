@@ -371,10 +371,12 @@ export function classifyRun(record: unknown): VerificationVerdict {
     // failure, a load failure and an empty suite are read off the output and
     // keep their verdicts. No `exit=N` line in the output is read in its place
     // (D8): where a status echo's output went cannot be established from the
-    // command text, and a masked run is an instrument gap either way.
+    // command text. And only a recorded 0 is replaced (D9): a nonzero code keeps
+    // the verdict it always had, so masking can turn a pass into a gap but never
+    // demote a refusal, whatever the shell actually ran.
     const masked = exitMasking(r.command) !== null;
     const exitVerdict = (code: number): VerificationVerdict => {
-        if (masked) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
+        if (masked && code === 0) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
         return code === 0
             ? { kind: 'PASS_EVIDENCE_OK' }
             : { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };

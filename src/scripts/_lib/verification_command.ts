@@ -447,7 +447,8 @@ function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
         if (sep === '&&') continue;
         if (sep === '||') {
             if (ends) return arg !== '0';
-            if (h === 'false') continue;
+            // `|| false` alone; `|| false | cat` ends on `cat`'s status.
+            if (h === 'false' && (ps[j] as Pipeline).segs.length === 1) continue;
             return false;
         }
         return ends && (arg === '' || arg === '$?');

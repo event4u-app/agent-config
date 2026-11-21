@@ -596,6 +596,25 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
     });
 
+    // D9: masking only ever replaces a recorded 0. A nonzero recorded code keeps
+    // the verdict it had before this change, so no refusal is demoted.
+    it.each([
+        ['npx vitest run | grep foo', 1],
+        ['npx tsc --noEmit && task ci | tail -5', 2],
+        ['set -e; npx tsc --noEmit; echo done', 2],
+    ])('`%s` with recorded exit %i keeps its refusing verdict', (command, exit_code) => {
+        expect(reason(classifyRun(rec({ command, exit_code, stdout_tail: '' })))).toBe(
+            'nonzero_exit_without_test_failure',
+        );
+    });
+
+    it('`|| false | cat` does not keep the failure, so a recorded 0 is masked', () => {
+        expect(classifyRun(rec({ command: 'npx tsc --noEmit || false | cat', exit_code: 0, stdout_tail: '' }))).toEqual({
+            kind: 'INVALID_RUN',
+            reason: 'exit_masked',
+        });
+    });
+
     it('records and does not refuse until the arming phase decides', () => {
         expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
     });
