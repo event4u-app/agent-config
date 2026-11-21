@@ -8,73 +8,74 @@ Criterion D5 of `road-to-review-loops-that-converge` (K = 3): the stop is the fi
 verdict over the rounds so far reads `stalled` or `diverging`. "Severe after" counts new
 high/critical findings raised after the stop round (`fix-introduced` included); "non-fix"
 excludes them. Completion-review tables carry no origin, so there both columns count every
-severe row. A ratification loop without reader classes has no per-round severity and reads
+severe row. Both cover only the "Visible after" rounds; a round missing from the record adds
+nothing. A ratification loop without reader classes has no per-round severity and reads
 `insufficient-data` — it never stops, and its cost column is empty rather than zero.
 
-| Subject | Kind | Rounds | Stop round | Stop verdict | Rounds saved | Severe after | Severe after (non-fix) | Final verdict |
-|---|---|---:|---:|---|---:|---:|---:|---|
-| `session-pins-phase-2-20261108` | ratification | 56 | 4 | stalled | 52 | 2 | 2 | insufficient-data |
-| `session-start-contracts-ratification` | ratification | 31 | 6 | stalled | 25 | 2 | 0 | insufficient-data |
-| `fix-release-shape-allows-its-own-census` | completion-review | 25 | 4 | stalled | 21 | 2 | 1 | diverging |
-| `behavior-vocabulary-close` | completion-review | 21 | 6 | stalled | 15 | 2 | 2 | converging |
-| `compact-checkpoint-concern-20261108` | ratification | 20 | 5 | stalled | 15 | 9 | 2 | insufficient-data |
-| `design-consistency-default-ratification` | ratification | 20 | 9 | stalled | 11 | 5 | 3 | insufficient-data |
-| `verified-stale-lock-reclaim-ratification` | ratification | 18 | 4 | stalled | 14 | 5 | 3 | insufficient-data |
-| `act-references-ratification` | ratification | 17 | — | — | 0 | 0 | 0 | insufficient-data |
-| `gate-classification-ledger` | ratification | 14 | — | — | 0 | 0 | 0 | active |
-| `web-launch-write-time-ratification` | ratification | 14 | 9 | diverging | 5 | 6 | 6 | insufficient-data |
-| `memory-audience-shadow-ratification` | ratification | 13 | — | — | 0 | — | — | insufficient-data |
-| `reference-duty-ratification` | ratification | 13 | — | — | 0 | — | — | insufficient-data |
-| `self-repair-lazy-chunk-ratification` | ratification | 13 | — | — | 0 | — | — | insufficient-data |
-| `cold-start-user-layer-ratification` | ratification | 11 | — | — | 0 | — | — | insufficient-data |
-| `denies-name-no-bypass-20261108` | ratification | 11 | — | — | 0 | — | — | insufficient-data |
-| `map-always-fresh-ratification` | ratification | 11 | — | — | 0 | — | — | insufficient-data |
-| `block-no-verify-wrappers-ratification` | ratification | 10 | — | — | 0 | — | — | insufficient-data |
-| `cold-start-steering-review` | ratification | 10 | — | — | 0 | — | — | insufficient-data |
-| `danger-gate-bypass-closing-review` | ratification | 10 | — | — | 0 | — | — | insufficient-data |
-| `drain-corpus-refresh-cadence-close` | completion-review | 10 | 10 | stalled | 0 | 0 | 0 | stalled |
-| `graph-checks-job` | ratification | 10 | — | — | 0 | — | — | insufficient-data |
-| `update-notice-user-channel-ratification` | ratification | 10 | — | — | 0 | — | — | insufficient-data |
-| `danger-gate-review` | ratification | 9 | — | — | 0 | — | — | insufficient-data |
-| `hard-floor-phase0-review` | ratification | 9 | — | — | 0 | — | — | insufficient-data |
-| `placeholders-wire-review` | ratification | 9 | — | — | 0 | — | — | insufficient-data |
-| `run-continuation` | completion-review | 9 | — | — | 0 | 0 | 0 | insufficient-data |
-| `findings-that-get-a-disposition` | completion-review | 8 | 6 | stalled | 2 | 0 | 0 | stalled |
-| `git-convention-review-findings` | completion-review | 8 | 8 | diverging | 0 | 0 | 0 | diverging |
-| `inbox-al-am-egress-ratification` | ratification | 8 | — | — | 0 | — | — | insufficient-data |
-| `road-to-plan-governance-gates` | completion-review | 8 | 6 | stalled | 2 | 1 | 1 | active |
-| `conformance` | completion-review | 7 | — | — | 0 | 0 | 0 | insufficient-data |
-| `drain-adversarial-verification-close` | completion-review | 7 | — | — | 0 | 0 | 0 | active |
-| `drain-ranker-that-routes` | completion-review | 7 | 7 | stalled | 0 | 0 | 0 | stalled |
-| `escalation-shape-review` | ratification | 7 | — | — | 0 | — | — | insufficient-data |
-| `gate-header-matches-hooks-review` | ratification | 7 | — | — | 0 | — | — | insufficient-data |
-| `git-convention-roadmaps` | completion-review | 7 | 7 | stalled | 0 | 0 | 0 | stalled |
-| `git-convention-settings` | completion-review | 7 | 6 | stalled | 1 | 1 | 1 | active |
-| `instructions-observer-review` | ratification | 7 | — | — | 0 | — | — | insufficient-data |
-| `pr2366-egress-review` | ratification | 7 | — | — | 0 | — | — | insufficient-data |
-| `run-continuation-provenance` | completion-review | 7 | — | — | 0 | 0 | 0 | active |
-| `strike-ledger-bundle-ratification` | ratification | 7 | — | — | 0 | — | — | insufficient-data |
-| `agent-switch-hardening-ratification` | ratification | 6 | — | — | 0 | — | — | insufficient-data |
-| `agent-switch-link-chunk-ratification` | ratification | 6 | — | — | 0 | — | — | insufficient-data |
-| `drain-four-drifted-vendor-pages` | completion-review | 6 | 6 | stalled | 0 | 0 | 0 | stalled |
-| `hook-bundle-raise-ratification` | ratification | 6 | — | — | 0 | — | — | insufficient-data |
-| `quota-notice-ratification` | ratification | 6 | — | — | 0 | — | — | insufficient-data |
-| `snapshot-fence-review` | ratification | 6 | — | — | 0 | — | — | insufficient-data |
-| `worktree-long-horizon` | completion-review | 6 | — | — | 0 | 0 | 0 | active |
-| `agent-switch-ask-ratification` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `capitulation-detector-chunk-ratification` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `drain-road-to-a-graph-that-feeds-the-gate-20261006c` | completion-review | 5 | 4 | diverging | 1 | 0 | 0 | stalled |
-| `drain-supervised-telemetry` | completion-review | 5 | — | — | 0 | 0 | 0 | active |
-| `feat-road-to-verified-stale-lock-reclaim` | completion-review | 5 | 4 | stalled | 1 | 0 | 0 | stalled |
-| `fill-session-manifest-comment-ratification` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `gate-the-subject-calculator-review` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `graph-checks-self-review` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `instructions-loaded-binding-ratification` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `layer-promote-binding-ratification` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `placeholders-phase1-review` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `self-modification-4-2` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| `snapshot-fence-command-words` | ratification | 5 | — | — | 0 | — | — | insufficient-data |
-| **pooled** | 61 loops, 26 with severity | 348 | 18 stopped | — | 165 | 35 | 21 | — |
+| Subject | Kind | Rounds | Stop round | Stop verdict | Rounds saved | Visible after | Severe after | Severe after (non-fix) | Final verdict |
+|---|---|---:|---:|---|---:|---:|---:|---:|---|
+| `session-pins-phase-2-20261108` | ratification | 56 | 4 | stalled | 52 | 51 | 2 | 2 | insufficient-data |
+| `session-start-contracts-ratification` | ratification | 31 | 6 | stalled | 25 | 20 | 2 | 0 | insufficient-data |
+| `fix-release-shape-allows-its-own-census` | completion-review | 25 | 4 | stalled | 21 | 21 | 2 | 1 | diverging |
+| `behavior-vocabulary-close` | completion-review | 21 | 6 | stalled | 15 | 15 | 2 | 2 | converging |
+| `compact-checkpoint-concern-20261108` | ratification | 20 | 6 | stalled | 14 | 13 | 9 | 2 | insufficient-data |
+| `design-consistency-default-ratification` | ratification | 20 | 18 | stalled | 2 | 1 | 0 | 0 | insufficient-data |
+| `verified-stale-lock-reclaim-ratification` | ratification | 18 | 4 | stalled | 14 | 11 | 5 | 3 | insufficient-data |
+| `act-references-ratification` | ratification | 17 | — | — | 0 | 0 | 0 | 0 | insufficient-data |
+| `gate-classification-ledger` | ratification | 14 | — | — | 0 | 0 | 0 | 0 | active |
+| `web-launch-write-time-ratification` | ratification | 14 | 9 | diverging | 5 | 4 | 6 | 6 | insufficient-data |
+| `memory-audience-shadow-ratification` | ratification | 13 | — | — | 0 | 0 | — | — | insufficient-data |
+| `reference-duty-ratification` | ratification | 13 | — | — | 0 | 0 | — | — | insufficient-data |
+| `self-repair-lazy-chunk-ratification` | ratification | 13 | — | — | 0 | 0 | — | — | insufficient-data |
+| `cold-start-user-layer-ratification` | ratification | 11 | — | — | 0 | 0 | — | — | insufficient-data |
+| `denies-name-no-bypass-20261108` | ratification | 11 | — | — | 0 | 0 | — | — | insufficient-data |
+| `map-always-fresh-ratification` | ratification | 11 | — | — | 0 | 0 | — | — | insufficient-data |
+| `block-no-verify-wrappers-ratification` | ratification | 10 | — | — | 0 | 0 | — | — | insufficient-data |
+| `cold-start-steering-review` | ratification | 10 | — | — | 0 | 0 | — | — | insufficient-data |
+| `danger-gate-bypass-closing-review` | ratification | 10 | — | — | 0 | 0 | — | — | insufficient-data |
+| `drain-corpus-refresh-cadence-close` | completion-review | 10 | 10 | stalled | 0 | 0 | 0 | 0 | stalled |
+| `graph-checks-job` | ratification | 10 | — | — | 0 | 0 | — | — | insufficient-data |
+| `update-notice-user-channel-ratification` | ratification | 10 | — | — | 0 | 0 | — | — | insufficient-data |
+| `danger-gate-review` | ratification | 9 | — | — | 0 | 0 | — | — | insufficient-data |
+| `hard-floor-phase0-review` | ratification | 9 | — | — | 0 | 0 | — | — | insufficient-data |
+| `placeholders-wire-review` | ratification | 9 | — | — | 0 | 0 | — | — | insufficient-data |
+| `run-continuation` | completion-review | 9 | — | — | 0 | 0 | 0 | 0 | insufficient-data |
+| `findings-that-get-a-disposition` | completion-review | 8 | 6 | stalled | 2 | 2 | 0 | 0 | stalled |
+| `git-convention-review-findings` | completion-review | 8 | 8 | diverging | 0 | 0 | 0 | 0 | diverging |
+| `inbox-al-am-egress-ratification` | ratification | 8 | — | — | 0 | 0 | — | — | insufficient-data |
+| `road-to-plan-governance-gates` | completion-review | 8 | 6 | stalled | 2 | 2 | 1 | 1 | active |
+| `conformance` | completion-review | 7 | — | — | 0 | 0 | 0 | 0 | insufficient-data |
+| `drain-adversarial-verification-close` | completion-review | 7 | — | — | 0 | 0 | 0 | 0 | active |
+| `drain-ranker-that-routes` | completion-review | 7 | 7 | stalled | 0 | 0 | 0 | 0 | stalled |
+| `escalation-shape-review` | ratification | 7 | — | — | 0 | 0 | — | — | insufficient-data |
+| `gate-header-matches-hooks-review` | ratification | 7 | — | — | 0 | 0 | — | — | insufficient-data |
+| `git-convention-roadmaps` | completion-review | 7 | 7 | stalled | 0 | 0 | 0 | 0 | stalled |
+| `git-convention-settings` | completion-review | 7 | 6 | stalled | 1 | 1 | 1 | 1 | active |
+| `instructions-observer-review` | ratification | 7 | — | — | 0 | 0 | — | — | insufficient-data |
+| `pr2366-egress-review` | ratification | 7 | — | — | 0 | 0 | — | — | insufficient-data |
+| `run-continuation-provenance` | completion-review | 7 | — | — | 0 | 0 | 0 | 0 | active |
+| `strike-ledger-bundle-ratification` | ratification | 7 | — | — | 0 | 0 | — | — | insufficient-data |
+| `agent-switch-hardening-ratification` | ratification | 6 | — | — | 0 | 0 | — | — | insufficient-data |
+| `agent-switch-link-chunk-ratification` | ratification | 6 | — | — | 0 | 0 | — | — | insufficient-data |
+| `drain-four-drifted-vendor-pages` | completion-review | 6 | 6 | stalled | 0 | 0 | 0 | 0 | stalled |
+| `hook-bundle-raise-ratification` | ratification | 6 | — | — | 0 | 0 | — | — | insufficient-data |
+| `quota-notice-ratification` | ratification | 6 | — | — | 0 | 0 | — | — | insufficient-data |
+| `snapshot-fence-review` | ratification | 6 | — | — | 0 | 0 | — | — | insufficient-data |
+| `worktree-long-horizon` | completion-review | 6 | — | — | 0 | 0 | 0 | 0 | active |
+| `agent-switch-ask-ratification` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `capitulation-detector-chunk-ratification` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `drain-road-to-a-graph-that-feeds-the-gate-20261006c` | completion-review | 5 | 4 | diverging | 1 | 1 | 0 | 0 | stalled |
+| `drain-supervised-telemetry` | completion-review | 5 | — | — | 0 | 0 | 0 | 0 | active |
+| `feat-road-to-verified-stale-lock-reclaim` | completion-review | 5 | 4 | stalled | 1 | 1 | 0 | 0 | stalled |
+| `fill-session-manifest-comment-ratification` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `gate-the-subject-calculator-review` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `graph-checks-self-review` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `instructions-loaded-binding-ratification` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `layer-promote-binding-ratification` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `placeholders-phase1-review` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `self-modification-4-2` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| `snapshot-fence-command-words` | ratification | 5 | — | — | 0 | 0 | — | — | insufficient-data |
+| **pooled** | 61 loops, 26 with severity | 348 | 18 stopped | — | 155 | 143 | 30 | 18 | — |
 
 ## Severe findings raised after the stop
 
@@ -97,11 +98,6 @@ severe row. A ratification loop without reader classes has no per-round severity
 | `compact-checkpoint-concern-20261108` | 16 | high | other | Packet omitted implementation; cannot judge |
 | `compact-checkpoint-concern-20261108` | 18 | high | other | Missing O_NOFOLLOW/O_NONBLOCK silently fall back to zero |
 | `compact-checkpoint-concern-20261108` | 19 | high | fix-introduced | Log trim runs before protection-flag check |
-| `design-consistency-default-ratification` | 11 | high | other | shadow-report exits 0 on missing, unreadable or malformed file |
-| `design-consistency-default-ratification` | 13 | high | other | Relative file_path escapes project root |
-| `design-consistency-default-ratification` | 14 | high | other | canRender infers renderability from extension alone |
-| `design-consistency-default-ratification` | 16 | high | fix-introduced | Re-exports and imported names counted as definitions |
-| `design-consistency-default-ratification` | 17 | high | fix-introduced | Declaration check matches comments, strings, nested declarations |
 | `verified-stale-lock-reclaim-ratification` | 5 | high | other | update_*_under_lock proceed unguarded on false result |
 | `verified-stale-lock-reclaim-ratification` | 8 | high | fix-introduced | Pruner removing whole family restarts numbering, two holders |
 | `verified-stale-lock-reclaim-ratification` | 9 | high | other | Pruner judges stale then removes: stat-then-remove breaker |
@@ -113,5 +109,5 @@ severe row. A ratification loop without reader classes has no per-round severity
 | `web-launch-write-time-ratification` | 12 | high | re-raised | Scan has no size or time bound |
 | `web-launch-write-time-ratification` | 13 | high | other | Canonical naming a provider host suppresses its finding |
 | `web-launch-write-time-ratification` | 13 | high | other | Diff removes the MINIFIED = 400 threshold |
-| `road-to-plan-governance-gates` | 8 | high | table | `scanFences` pairs fence lines POSITIONALLY, so it detects parity but never mis-pairing. Two unpaired triple-backtick openers (two `~~~`-wrapped illustrations,  |
-| `git-convention-settings` | 7 | high | table | Under `update_strategy: rebase` the "every subsequent push" flow hits a dead end. That flow always has at least one local, unpushed commit (a CI fix, review res |
+| `road-to-plan-governance-gates` | 8 | high | table | \`scanFences\` pairs fence lines POSITIONALLY, so it detects parity but never mis-pairing. Two unpaired triple-backtick openers (two \`~~~\`-wrapped illustratio |
+| `git-convention-settings` | 7 | high | table | Under \`update_strategy: rebase\` the "every subsequent push" flow hits a dead end. That flow always has at least one local, unpushed commit (a CI fix, review r |

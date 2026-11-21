@@ -162,7 +162,7 @@ the owner and never closes them.
       exits 0 on a `diverging` fixture.
       production entry: src/scripts/review_convergence.ts
       done: red run 2026-11-21 (module missing, no tests), then 18/18 green;
-      over the tree all 317 census subjects get a verdict (299
+      over the tree all 319 census subjects get a verdict (301
       `insufficient-data` — ratification loops without reader classes carry
       no per-round severity), exit 0.
 - [x] **1.3 Replay every historical loop.** Run `review_convergence --replay` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
@@ -174,8 +174,8 @@ the owner and never closes them.
       re-running the command reproduces the file byte for byte.
       production entry: src/scripts/review_convergence.ts
       done: 61 rows plus pooled, second run `cmp`-identical. Pooled: 26 of 61
-      loops carry severity; 18 of them stop (348 rounds, 165 after the stop),
-      and 35 high/critical findings came after a stop, 21 outside
+      loops carry severity; 18 of them stop (348 rounds, 155 after the stop, 143
+      visible), and 30 high/critical findings came after a stop, 18 outside
       `fix-introduced` — listed per finding in the artefact.
 - [x] **1.4 Put the verdict where rounds are written.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `src/agent-src/contexts/authority/kernel-rule-edits.md` add one
@@ -253,9 +253,9 @@ the owner and never closes them.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned — ending a recorded verification loop is governance self-amendment (decision-revisit-gate, owner-reserved), as ADR-294 was for the completion review. Same decision as `road-to-a-review-that-ends` blocker `ratification-round-cap-is-an-owner-contract-change`; answering one resolves both, and 2.2 flips both Status lines.
-- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats); neither seat returned DECIDE or recommended an option. Both named the disposition of the 35 post-stop findings as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`.
-- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 165 of 348 rounds would not have run, 35 high/critical findings were raised after the stop, 21 outside fix-introduced.
-- **Cost:** Per-option cost over the same 26 loops — cap at 3: 26 loops cut, 270 rounds saved, 101 high/critical after (68 non-fix); cap at 5: 23 cut, 218 saved, 73 after (48 non-fix); criterion (D5): 18 stopped, 165 saved, 35 after (21 non-fix); no binding stop: 0 / 0 / 0.
+- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats); neither seat returned DECIDE or recommended an option. Both named the disposition of the post-stop findings (35 in the replay they saw; 30 after the review fixes below) as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`.
+- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 155 of 348 rounds would not have run (143 of them visible in the record), 30 high/critical findings were raised in those visible rounds, 18 outside fix-introduced.
+- **Cost:** Per-option cost over the same 26 loops — cap at 3: 26 loops cut, 270 rounds saved, 101 high/critical after (68 non-fix); cap at 5: 23 cut, 218 saved, 73 after (48 non-fix); criterion (D5): 18 stopped, 155 saved, 30 after (18 non-fix); no binding stop: 0 / 0 / 0.
 - **Blocks:** 2.2
 - **Question:** Should a council ratification stop binding — refused past the stop, open high/critical findings to the owner — and where?
 - **Recommendation:** (c) once 1.3's replay shows its cost: the retro's own data show the ratification yield does not fall after round 5, so a fixed N cuts rounds that still find defects while a criterion stops loops that stall or diverge.
@@ -268,8 +268,8 @@ the owner and never closes them.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned — lowering what turns a required gate green touches the safety floor and ADR-268 § 4's gaining-party rule.
-- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats), and ADR-268 § 4's separation rule (openai); neither seat returned DECIDE or recommended an option. Both named the disposition of the 35 post-stop findings as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`. openai flagged that option (b) as worded — a recorded `stalled`/`diverging` verdict **or** a refused final round — could turn CI green on an advisory verdict before any binding stop exists.
-- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 165 of 348 rounds would not have run, 35 high/critical findings were raised after the stop, 21 outside fix-introduced.
+- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats), and ADR-268 § 4's separation rule (openai); neither seat returned DECIDE or recommended an option. Both named the disposition of the post-stop findings (35 in the replay they saw; 30 after the review fixes below) as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`. openai flagged that option (b) as worded — a recorded `stalled`/`diverging` verdict **or** a refused final round — could turn CI green on an advisory verdict before any binding stop exists.
+- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 155 of 348 rounds would not have run (143 of them visible in the record), 30 high/critical findings were raised in those visible rounds, 18 outside fix-introduced.
 - **Cost:** If CI accepts an owner record only after `stalled`/`diverging` (option b), 18 of the 26 measured loops would have qualified at the replay's stop round; under (a) every loop qualifies at any round; under (c) none does, and the forge bypass stays.
 - **Blocks:** 2.3
 - **Question:** Should an owner-written record make the ratification gate pass, instead of the forge bypass that leaves CI red (F6)?

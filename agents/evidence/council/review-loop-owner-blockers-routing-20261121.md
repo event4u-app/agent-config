@@ -41,3 +41,14 @@ not grade them.
   Context (F4, F6) at `main@811cea61d6`.
 - Severity per round exists for 26 of the 61 loops; the 35 others are
   ratification loops without reader classes.
+
+## Correction after the completion review (same day)
+
+A neutral review of the script found that the replay read a loop's severity
+from rounds after the one it replayed, ignored a completion review's own table
+where readers did not cover a round, and counted rounds missing from the record
+as costing nothing. Fixed test-first; the criterion row now reads 18 stopped,
+155 rounds saved (143 visible), 30 high/critical findings after the stop, 18
+outside fix-introduced (the seats saw 165 / 35 / 21). The cap rows are
+unchanged. The routing verdict does not depend on these figures: both seats
+escalated on the governance self-amendment row.

@@ -88,9 +88,9 @@ In a checkout that ships `src/scripts/review_convergence.ts`, run
 round N+1's ratification packet. On `stalled` or `diverging`, stop
 re-submitting and take ADR-268 § 4's owner rung, attaching the subject's row
 from `agents/evidence/analysis/review-loop-replay-2026-11.md` where it has one.
-Only the owner authorises another round after that. The verdict refuses
-nothing; if the script fails or prints another verdict, the ratification
-procedure continues unchanged.
+The script only reports and fails no gate; on any other verdict, or when it
+prints `review_convergence: unavailable`, the ratification procedure continues
+unchanged.
 
 ## When to use
 

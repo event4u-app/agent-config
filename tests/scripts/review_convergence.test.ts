@@ -114,7 +114,42 @@ describe('seriesFor', () => {
         };
         const s = seriesFor(completion('c', [['low'], ['low'], ['low']]), reader);
         expect(s.rounds[0]).toEqual({ round: 2, visible: true, newFindings: 3, severeNonFix: 1, severeAll: 2 });
-        expect(s.rounds[1]?.visible).toBe(false);
+        // Round 3 is invisible to the readers, so the completion table supplies it.
+        expect(s.rounds[1]).toEqual({ round: 3, visible: true, newFindings: 1, severeNonFix: 0, severeAll: 0 });
+    });
+
+    it('keeps round-1 table severity when readers supply later rounds', () => {
+        const reader: ReaderOutput = {
+            subject: 'c',
+            round1_findings: 1,
+            rounds: [2, 3, 4].map((round) => ({ round, visible: true, findings: [] })),
+        };
+        const s = seriesFor(completion('c', [['high'], [], [], []]), reader);
+        expect(s.severityFrom).toBe(1);
+        expect(verdict(s.rounds, true)).toBe('converging');
+    });
+
+    it('falls back to the table per round where readers do not cover it', () => {
+        const reader: ReaderOutput = {
+            subject: 'c',
+            round1_findings: 1,
+            rounds: [{ round: 2, visible: true, findings: [] }],
+        };
+        const s = seriesFor(completion('c', [['low'], [], ['critical', 'low']]), reader);
+        expect(s.rounds.map((r) => [r.round, r.visible, r.newFindings, r.severeNonFix])).toEqual([
+            [2, true, 0, 0],
+            [3, true, 2, 1],
+        ]);
+    });
+
+    it('stops at the census round count even when readers list more rounds', () => {
+        const reader: ReaderOutput = {
+            subject: 'c',
+            round1_findings: 1,
+            rounds: [2, 3, 4].map((round) => ({ round, visible: true, findings: [] })),
+        };
+        const s = seriesFor(completion('c', [['low'], [], []]), reader);
+        expect(s.rounds.map((r) => r.round)).toEqual([2, 3]);
     });
 
     it('gives a ratification loop without readers no severity', () => {
@@ -138,6 +173,32 @@ describe('replaySubject', () => {
         expect(row.roundsSaved).toBe(5);
         expect(row.severeAfter).toBe(2);
         expect(row.severeNonFixAfter).toBe(1);
+    });
+
+    it('does not use severity first seen after the replayed round', () => {
+        const base = rounds([[1, 0], [2, 0], [3, 0], [4, 0]]);
+        const row = replaySubject({
+            subject: 'z',
+            kind: 'ratification',
+            totalRounds: 5,
+            hasSeverity: true,
+            severityFrom: 5,
+            rounds: base,
+        });
+        expect(row.stopRound).toBe(5);
+    });
+
+    it('counts the visible rounds after the stop', () => {
+        const row = replaySubject({
+            subject: 'g',
+            kind: 'ratification',
+            totalRounds: 7,
+            hasSeverity: true,
+            rounds: rounds([[1, 0], [2, 0], [3, 0], null, [1, 0], [1, 0]]),
+        });
+        expect(row.stopRound).toBe(4);
+        expect(row.roundsSaved).toBe(3);
+        expect(row.visibleAfter).toBe(2);
     });
 
     it('reports no stop when the criterion never fires', () => {
@@ -183,6 +244,26 @@ describe('main', () => {
         const code = main(['--root', root, '--subject', 'div'], (s) => out.push(s));
         expect(code).toBe(0);
         expect(out.join('')).toContain('diverging');
+    });
+
+    it('names a missing --subject value instead of listing every subject', () => {
+        const out: string[] = [];
+        expect(main(['--root', root, '--subject'], (s) => out.push(s))).toBe(0);
+        expect(out.join('')).toMatch(/--subject needs a slug/);
+    });
+
+    it('exits 0 and says unavailable when the census cannot be read', () => {
+        const out: string[] = [];
+        const bad = path.join(root, 'agents/evidence/analysis/review-loop-origins/reader-a-div.json');
+        fs.writeFileSync(bad, 'not json');
+        fs.writeFileSync(bad.replace('reader-a-', 'reader-b-'), 'not json');
+        try {
+            expect(main(['--root', root, '--subject', 'div'], (s) => out.push(s))).toBe(0);
+            expect(out.join('')).toMatch(/review_convergence: unavailable/);
+        } finally {
+            fs.rmSync(bad);
+            fs.rmSync(bad.replace('reader-a-', 'reader-b-'));
+        }
     });
 
     it('renders the replay byte-identically twice', () => {
