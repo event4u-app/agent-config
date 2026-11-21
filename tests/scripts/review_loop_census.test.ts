@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildCensus, renderCensusMarkdown } from '../../src/scripts/review_loop_census.ts';
+import { buildCensus, renderCensusMarkdown, roundHistory } from '../../src/scripts/review_loop_census.ts';
 
 let root: string;
 
@@ -174,5 +174,38 @@ describe('buildCensus --origins', () => {
     it('carries no classes without --origins', () => {
         const omega = buildCensus(oroot).subjects.find((s) => s.subject === 'omega-ratification');
         expect(omega?.roundList[3].classes).toBeUndefined();
+    });
+});
+
+describe('roundHistory', () => {
+    it('extracts round-history sections once, and completion findings rows per round', () => {
+        const hroot = fs.mkdtempSync(path.join(os.tmpdir(), 'review-loop-history-'));
+        try {
+            const council = path.join(hroot, 'agents/evidence/council');
+            fs.mkdirSync(council, { recursive: true });
+            fs.writeFileSync(path.join(council, 'kappa-ratification-r1-20261101.question.md'), '# Review\n\n## The change\n\nbody\n');
+            fs.writeFileSync(
+                path.join(council, 'kappa-ratification-r2-20261101.question.md'),
+                '# Review — round 2\n\n## Round 1 and what changed\n\n1. **Lock leak.** fixed.\n\n## The module\n\ncode\n',
+            );
+            fs.writeFileSync(
+                path.join(council, 'kappa-ratification-r3-20261101.question.md'),
+                '# Review — round 3\n\n## Round 2 and what changed\n\nOne seat: a typo.\n\n## Round 1 and what changed\n\n1. **Lock leak.** fixed.\n',
+            );
+            fs.writeFileSync(path.join(council, 'kappa-ratification-r3-20261101.md'), '# Split: anthropic refuses on the retry bound\n');
+            const reviews = path.join(hroot, 'agents/evidence/reviews');
+            fs.mkdirSync(reviews, { recursive: true });
+            fs.writeFileSync(path.join(reviews, 'lambda.round1.findings.md'), findings('2026-10-01', [['high', 'fixed']]));
+            const c = buildCensus(hroot);
+            const kappa = roundHistory(hroot, c.subjects.find((s) => s.subject === 'kappa-ratification')!);
+            expect(kappa.match(/## Round 1 and what changed/g)).toHaveLength(1);
+            expect(kappa).toContain('One seat: a typo.');
+            expect(kappa).not.toContain('code');
+            expect(kappa).toContain('Split: anthropic refuses on the retry bound');
+            const lambda = roundHistory(hroot, c.subjects.find((s) => s.subject === 'lambda')!);
+            expect(lambda).toContain('R1.1 | high | finding 1');
+        } finally {
+            fs.rmSync(hroot, { recursive: true, force: true });
+        }
     });
 });

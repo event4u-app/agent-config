@@ -341,6 +341,70 @@ export function buildCensus(root: string, opts: { origins?: boolean } = {}): Cen
     return { root, subjects };
 }
 
+// --- reader input ----------------------------------------------------------
+
+const HISTORY_HEADING = /^(rounds? \d|history\b|what changed)|and what changed|\bchanged since round/i;
+const SECTION_CAP = 40;
+const SECTION_CHAR_CAP = 2500;
+const RESPONSE_CHAR_CAP = 4000;
+const PREAMBLE_CAP = 25;
+
+/**
+ * The text a reader classes findings from. Packets restate earlier rounds, so
+ * a section repeated verbatim across packets is kept once. A packet with no
+ * history heading contributes its preamble (title to first `##`), where the
+ * single-file packets keep their round history.
+ */
+export function roundHistory(root: string, s: CensusSubject): string {
+    const out: string[] = [`## \`${s.subject}\` (${s.kind}, ${s.rounds} rounds)`, ''];
+    if (s.kind === 'completion-review') {
+        for (const r of s.roundList) {
+            out.push(`### Round ${r.round}`, '');
+            const rows = r.findings ?? [];
+            if (rows.length === 0) out.push('(no findings)');
+            rows.forEach((f, i) => out.push(`R${r.round}.${i + 1} | ${f.severity} | ${f.text.slice(0, 600)}`));
+            out.push('');
+        }
+        return out.join('\n');
+    }
+    const seen = new Set<string>();
+    for (const r of s.roundList) {
+        const lines = readOrEmpty(path.join(root, r.file)).split('\n');
+        const kept: string[] = [];
+        let i = 0;
+        let matched = false;
+        while (i < lines.length) {
+            const h = /^#{2,3} (.+)$/.exec(lines[i]);
+            if (h && HISTORY_HEADING.test(h[1])) {
+                let j = i + 1;
+                while (j < lines.length && !/^#{1,3} /.test(lines[j])) j++;
+                const body = lines.slice(i, Math.min(j, i + 1 + SECTION_CAP)).join('\n').trim().slice(0, SECTION_CHAR_CAP);
+                if (!seen.has(body)) {
+                    seen.add(body);
+                    kept.push(body);
+                }
+                matched = true;
+                i = j;
+            } else {
+                i++;
+            }
+        }
+        if (!matched) {
+            const first = lines.findIndex((l, k) => k > 0 && /^## /.test(l));
+            const pre = lines.slice(0, first < 0 ? PREAMBLE_CAP : Math.min(first, PREAMBLE_CAP)).join('\n').trim();
+            if (/round/i.test(pre) && !seen.has(pre)) {
+                seen.add(pre);
+                kept.push(pre);
+            }
+        }
+        // The verdict a round produced, where it was committed beside its packet.
+        const response = readOrEmpty(path.join(root, r.file.replace(/\.question\.md$/, '.md')));
+        if (response !== '') kept.push(`Verdict record of round ${r.round}:\n\n${response.slice(0, RESPONSE_CHAR_CAP).trim()}`);
+        if (kept.length > 0) out.push(`### Packet for round ${r.round}`, '', ...kept, '');
+    }
+    return out.join('\n');
+}
+
 // --- rendering -------------------------------------------------------------
 
 export function renderCensusMarkdown(c: Census): string {
@@ -401,6 +465,12 @@ function main(argv: string[]): number {
     const ri = argv.indexOf('--root');
     const root = ri >= 0 && argv[ri + 1] ? path.resolve(argv[ri + 1]) : repoRoot();
     const census = buildCensus(root, { origins: argv.includes('--origins') });
+    const rn = argv.indexOf('--reader-input');
+    if (rn >= 0) {
+        const n = Number(argv[rn + 1] ?? '10');
+        for (const s of census.subjects.slice(0, n)) process.stdout.write(`${roundHistory(root, s)}\n`);
+        return 0;
+    }
     if (argv.includes('--write')) {
         const target = path.join(root, OUT_REL);
         fs.mkdirSync(path.dirname(target), { recursive: true });
