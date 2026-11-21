@@ -91,7 +91,7 @@ finding and four adoption patterns. All claims were re-verified live on
   `skill-lint.yml`) that computes the changed-file set and runs
   `./scripts-run src/scripts/lint_originality --changed <files>`, mirroring the
   `skill_linter --changed` pattern incl. path filters.
-  <!-- verify: ./scripts-run src/scripts/lint_originality --changed src/skills/ai-council/SKILL.md --quiet; echo "exit=$?" -->
+  <!-- verify: ./scripts-run src/scripts/lint_originality --changed src/skills/ai-council/SKILL.md --quiet -> 0 -->
 - [x] Port the "0 changed files is not a pass" guard
   (`skill-lint.yml:223` pattern) so an empty changed-set reports INCONCLUSIVE,
   never green. <!-- carve-out: new-gate-verification -->

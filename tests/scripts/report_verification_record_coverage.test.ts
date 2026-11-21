@@ -137,6 +137,41 @@ describe('counting', () => {
     });
 });
 
+describe('masked exit codes per host', () => {
+    // road-to-done-claims-with-read-exit-codes 1.6: the `0` such a record
+    // carries is `tail`'s, so the column counts how often a host's records say
+    // nothing about the verifier, over that host's records.
+    const MASKED = {
+        command: 'npx tsc --noEmit | tail -5',
+        exit_code: 0,
+        stdout_tail: "src/a.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.",
+        runner: 'other',
+    };
+
+    it('counts a masked record under its host with the records as denominator', () => {
+        const r = computeCoverage(
+            [{ path: 'a.json', text: witness('claude', [MASKED, PASS, FAIL]) }],
+            new Set(['claude']),
+            '/root',
+        );
+        const claude = r.hosts.find((h) => h.host === 'claude');
+        expect(claude?.exit_masked).toBe(1);
+        expect(claude?.records).toBe(3);
+    });
+
+    it('prints the column with its denominator', () => {
+        const text = renderText(
+            computeCoverage(
+                [{ path: 'a.json', text: witness('claude', [MASKED, PASS]) }],
+                new Set(['claude']),
+                '/root',
+            ),
+        );
+        expect(text).toContain('| exit_masked |');
+        expect(text).toMatch(/\| claude \|.*\| 1 of 2 \|$/m);
+    });
+});
+
 describe('unobserved is not clean', () => {
     it('names a binding host with no witness as unobserved', () => {
         const r = computeCoverage(

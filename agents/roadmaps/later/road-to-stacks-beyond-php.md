@@ -203,7 +203,7 @@ estate_growth_exempt: "two skills per stack for python, typescript and go, each 
       re-syncing returns `299-14845`. The two fields are joined with `-` rather than a
       space because `_lib/verify_clause.ts:116,135` takes at most one space-free token
       after the arrow and drops a space-bearing expectation silently.
-      verify: `./scripts-run src/scripts/check_preamble_payload_budget --json | jq -r '.buckets[] | select(.name=="preloaded skills catalog") | "\(.files)-\(.tokens)"'` -> /^299-14845$/
+      verify: `set -o pipefail; ./scripts-run src/scripts/check_preamble_payload_budget --json | jq -r '.buckets[] | select(.name=="preloaded skills catalog") | "\(.files)-\(.tokens)"'` -> /^299-14845$/
 
 ## Acceptance criteria
 

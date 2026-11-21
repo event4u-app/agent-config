@@ -122,7 +122,7 @@ const VERIFY_WORD = /(^|[-_:])(test|tests|check|checks|lint|typecheck|tsc|qa|pre
 const NPM_SCRIPT_WORD = /(^|[-_:])(test|tests|check|checks|lint|typecheck|tsc|build)([-_:]|$)/i;
 
 /** Segment separators, and whether a failure before them survives. */
-interface Segment {
+export interface Segment {
     readonly words: readonly string[];
     /** The separator that FOLLOWS this segment, or null at the end. */
     readonly nextSep: '&&' | '||' | ';' | '|' | null;
@@ -131,7 +131,7 @@ interface Segment {
 }
 
 /** Strip an unquoted trailing `#` comment. */
-function stripComment(command: string): string {
+export function stripComment(command: string): string {
     let inSingle = false;
     let inDouble = false;
     for (let i = 0; i < command.length; i += 1) {
@@ -146,7 +146,7 @@ function stripComment(command: string): string {
 }
 
 /** Split into segments, remembering the separator that follows each. */
-function splitSegments(command: string): Segment[] {
+export function splitSegments(command: string): Segment[] {
     const raw: Array<{ text: string; sep: Segment['nextSep'] }> = [];
     let buf = '';
     let inSingle = false;
@@ -220,7 +220,7 @@ function bareName(word: string): string {
  * whatever `cmd` did, so a verification there proves nothing about the tree.
  * Deliberately narrow: `cmd || exit 1` propagates the failure and still counts.
  */
-function failureIsDiscarded(seg: Segment): boolean {
+export function failureIsDiscarded(seg: Segment): boolean {
     if (seg.nextSep === '||') return seg.nextHead === 'true' || seg.nextHead === ':';
     if (seg.nextSep === ';') return seg.nextHead === 'true' || seg.nextHead === ':';
     return false;
@@ -241,7 +241,7 @@ export function undiscardedSegments(command: string): string[] {
 }
 
 /** Classify one segment on its head. */
-function segmentVerifies(rawWords: readonly string[]): boolean {
+export function segmentVerifies(rawWords: readonly string[]): boolean {
     const w = rawWords.filter((x) => x.length > 0);
     let idx = 0;
     // Peel delegating prefixes: `npx vitest run`, `sudo make test`.

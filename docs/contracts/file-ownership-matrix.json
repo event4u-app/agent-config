@@ -4195,6 +4195,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md",
+      "target": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md",
       "target": ".agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md",
       "type": "WRITE",

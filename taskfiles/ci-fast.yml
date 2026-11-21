@@ -1227,6 +1227,11 @@ tasks:
     desc: Enforce the `## Decisions` contract on agents/roadmaps/*.md — the eight ownership classes, the resolver vocabulary, and no unresolved marker in a ready roadmap
     cmd: ./scripts-run src/scripts/lint_decision_classes {{.QUIET_FLAG}}
 
+  lint-verify-exit-masking:
+    silent: true
+    desc: No roadmap verify clause or claims exec pointer reads the exit code of a trailing tail, head or echo instead of the verifier's
+    cmd: ./scripts-run src/scripts/lint_verify_exit_masking {{.QUIET_FLAG}}
+
   lint-roadmap-producers:
     silent: true
     desc: "Every command declaring produces_roadmap ends in the closure pass (/challenge-me closure)"

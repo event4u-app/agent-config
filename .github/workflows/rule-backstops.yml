@@ -872,6 +872,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_decision_classes
 
+      - name: No verify clause or claims exec pointer masks the verifier's exit code
+        if: ${{ !cancelled() }}
+        run: ./scripts-run src/scripts/lint_verify_exit_masking
+
       - name: Every roadmap producer ends in the closure pass
         if: ${{ !cancelled() }}
         run: ./scripts-run src/scripts/lint_roadmap_producers

@@ -319,7 +319,7 @@
         "upstream-contribute": 12143,
         "using-git-worktrees": 11846,
         "validate-feature-fit": 4252,
-        "verify-completion-evidence": 10743,
+        "verify-completion-evidence": 11985,
         "verify-repair-loop": 15727,
         "video-director": 5818,
         "vision-articulation": 10198,
@@ -1271,6 +1271,12 @@
             "old": 21705,
             "new": 22271,
             "reason": "§ Before the next ratification round: run review_convergence before round N+1, owner rung on stalled/diverging (road-to-review-loops-that-converge D6; the always-loaded context had no headroom)."
+        },
+        {
+            "skill": "verify-completion-evidence",
+            "old": 10743,
+            "new": 11985,
+            "reason": "The Verified / Not verified closing split: exit codes read from the verifier, partial ratios and unreached surfaces listed, surfaces derived by verify:surfaces (road-to-done-claims-with-read-exit-codes Phase 4)."
         }
     ]
 }

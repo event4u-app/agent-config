@@ -13,6 +13,10 @@ Brevity governs the reply **body**; the **close** is the exception.
   the very end, never mid-reply: what's done, what remains.
 - **Simple one-answer replies still skip the summary** (the Brevity Iron Law is
   unchanged for them). The summary is for work replies, not every turn.
+- After a change, "what's done" is split into `Verified:` (each command with
+  the exit code read from it) and `Not verified:` (each changed surface with
+  no live check, and why) — the split and the surface map are in
+  [`verify-completion-evidence` § Verified and not verified](../../../skills/verify-completion-evidence/SKILL.md#verified-and-not-verified--the-closing-split).
 
 ## PR link is the literal last line
 

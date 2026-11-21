@@ -87,6 +87,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'sessions:claim', disposition: 'delegate', synopsis: 'Claim a roadmap for this session so other sessions skip it; --release clears it.' },
     { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope (--verify validates only, --project names the repo); the successor resumes from it after /clear.' },
     { name: 'roadmap:context', disposition: 'delegate', synopsis: 'One live situational-awareness probe: open PRs + their file sets, roadmap-tail branches, live sessions, inbox note names, sibling-roadmap keyword hits; --roadmap <slug>, --json.' },
+    { name: 'verify:surfaces', disposition: 'delegate', synopsis: 'Derive the runnable surfaces (dev/start/preview/serve scripts, tauri windows, playwright baseURL, compose ports, Taskfile dev/run/serve) into agents/state/live-surfaces.json; --json, --force, --root.' },
     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps; archives completed ones (--no-archive to skip).' },
     { name: 'roadmap:progress-check', disposition: 'delegate', synopsis: 'Fail if agents/roadmaps-progress.md is stale (for CI).' },
     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },

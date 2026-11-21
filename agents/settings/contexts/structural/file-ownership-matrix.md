@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **651**
-- Edges (incl. self-WRITE): **2491**
+- Edges (incl. self-WRITE): **2492**
 
 ## READ_ONLY edges
 
@@ -35,6 +35,7 @@
 | `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/communication/rules-auto/reply-close-mechanics.md` | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md` | `.agent-src.uncondensed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/source-of-truth-mechanics.md` | `.agent-src.uncondensed/rules/source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |

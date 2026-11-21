@@ -572,6 +572,11 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
         ).not.toBeNull();
     });
 
+    // A claim line that also says CI is not done still refuses.
+    it('still fires on "Done." beside a note that CI is not done', () => {
+        expect(detectCompletionClaim('Progress.\nDone. CI is not done yet.', UNSETTLED)).not.toBeNull();
+    });
+
     it('does NOT fire on "fertig" inside a sentence about something else', () => {
         expect(
             detectCompletionClaim(

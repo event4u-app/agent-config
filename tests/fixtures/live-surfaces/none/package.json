@@ -1,0 +1,7 @@
+{
+  "name": "fixture-library",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  }
+}

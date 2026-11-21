@@ -48,11 +48,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { assertScanned } from './_lib/scan_scope.js';
-import {
-    classifyRun,
-    isInstrumentGap,
-    type VerificationVerdict,
-} from './_lib/verification_evidence.js';
+import { classifyRunWithMasking, type MaskedVerdict } from './_lib/exit_masking.js';
+import { isInstrumentGap } from './_lib/verification_evidence.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -80,6 +77,11 @@ export interface HostCoverage {
     instrument_gaps: number;
     /** `instrument_gaps / records`, or null when there is nothing to divide. */
     instrument_gap_share: number | null;
+    /**
+     * Records whose exit code belonged to `tail` or `echo`, not the verifier
+     * (`INVALID_RUN:exit_masked`). Printed over `records`, its denominator.
+     */
+    exit_masked: number;
 }
 
 export interface CoverageReport {
@@ -90,7 +92,7 @@ export interface CoverageReport {
     unobserved: string[];
 }
 
-function _verdictKey(v: VerificationVerdict): string {
+function _verdictKey(v: MaskedVerdict): string {
     return v.kind === 'INVALID_RUN' ? `INVALID_RUN:${v.reason}` : v.kind;
 }
 
@@ -140,6 +142,7 @@ export function computeCoverage(
                 verdicts: {},
                 instrument_gaps: 0,
                 instrument_gap_share: null,
+                exit_masked: 0,
             };
             byHost.set(host, h);
         }
@@ -168,10 +171,16 @@ export function computeCoverage(
             h.records += 1;
             const code = (rec as Record<string, unknown> | null)?.['exit_code'];
             if (typeof code === 'number') h.exit_code_available += 1;
-            const verdict = classifyRun(rec);
+            const verdict = classifyRunWithMasking(rec);
             const key = _verdictKey(verdict);
             h.verdicts[key] = (h.verdicts[key] ?? 0) + 1;
-            if (isInstrumentGap(verdict)) h.instrument_gaps += 1;
+            // A masked exit code is a gap in what the record can prove, like a missing one.
+            if (verdict.kind === 'INVALID_RUN' && verdict.reason === 'exit_masked') {
+                h.exit_masked += 1;
+                h.instrument_gaps += 1;
+            } else if (isInstrumentGap(verdict)) {
+                h.instrument_gaps += 1;
+            }
         }
     }
 
@@ -192,17 +201,20 @@ export function renderText(r: CoverageReport): string {
     const lines: string[] = [];
     lines.push(`verification record coverage — ${r.files_scanned} witness file(s) under ${r.root}`);
     lines.push('');
-    lines.push('| host | binds recorder | sessions | records | exit_code available | instrument gaps | gap share |');
-    lines.push('|---|---|---|---|---|---|---|');
+    lines.push(
+        '| host | binds recorder | sessions | records | exit_code available | instrument gaps | gap share | exit_masked |',
+    );
+    lines.push('|---|---|---|---|---|---|---|---|');
     for (const h of r.hosts) {
         lines.push(
             `| ${h.host} | ${h.binds_recorder ? 'yes' : 'no'} | ${String(h.sessions)} | ` +
                 `${String(h.records)} | ${String(h.exit_code_available)} | ` +
-                `${String(h.instrument_gaps)} | ${_pct(h.instrument_gap_share)} |`,
+                `${String(h.instrument_gaps)} | ${_pct(h.instrument_gap_share)} | ` +
+                `${String(h.exit_masked)} of ${String(h.records)} |`,
         );
     }
     for (const host of r.unobserved) {
-        lines.push(`| ${host} | yes | 0 | 0 | 0 | 0 | unobserved |`);
+        lines.push(`| ${host} | yes | 0 | 0 | 0 | 0 | unobserved | — |`);
     }
     lines.push('');
     lines.push('verdict classes');
