@@ -31,19 +31,26 @@ The user may or may not provide a PR URL.
 
 ### PR detection
 
-1. If the user provides a GitHub PR URL → use that PR.
-2. If no URL is provided → **try to detect the PR automatically:**
-   - Determine the current Git branch (`git branch --show-current`).
-   - Search for an open PR on that branch via the GitHub API
-     (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`).
-   - If exactly one PR is found → tell the user: "I found PR #{number} ({title}) on branch `{branch}`. Is that the one?"
-   - Wait for confirmation before proceeding.
-   - If no PR or multiple PRs are found → ask the user for the PR URL.
-3. **Never** reuse a PR number from earlier in the conversation.
+The first source that yields exactly one PR wins:
+
+1. **An explicit PR URL** from the user → that PR.
+2. **The session default target** — the `<session-prs>` block lists exactly
+   one PR as `OPEN` and does not say its last read FAILED → that PR.
+3. **The current branch** (`git branch --show-current`) has exactly one open PR
+   (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`) → that PR.
+4. Otherwise (no PR, or several) → **ask the user once** for the PR URL.
+
+Whichever source resolved it, name it in one line ("PR #{number} ({title}) —
+from the current branch `{branch}`") and continue; no confirmation question.
+
+A **PR number recalled from the conversation** is never a source. The session
+default target is not that: a hook records it from the `gh pr create` output of
+this session and re-reads its state on every prompt, and it is a default only
+while exactly one of them is open.
 
 ## Mode selection
 
-After the PR is confirmed, ask the user (use numbered options per `user-interaction` rule):
+After the PR is resolved, ask the user (use numbered options per `user-interaction` rule):
 
 ```
 > 1. Interactive — ask before each comment

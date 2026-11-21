@@ -1,0 +1,32 @@
+{
+  "command": "./scripts-run src/scripts/mandate_reask_report --write-baseline agents/evidence/mandate-reask/2026-11-baseline.json",
+  "generated_at": "2026-11-21T03:49:28.262Z",
+  "root": "<host transcript store>",
+  "since": null,
+  "sessions_requested": null,
+  "transcript_files": 1008,
+  "sessions_scanned": 1008,
+  "metrics": {
+    "reask_after_goal": 3,
+    "pr_target_asked_after_create": 0,
+    "sessions_with_goal": 4,
+    "sessions_with_pr_create": 49
+  },
+  "sessions": [
+    {
+      "session": "16fbf7d0-18f9-4571-864c-480676de2062",
+      "reask_after_goal": 1,
+      "pr_target_asked_after_create": 0
+    },
+    {
+      "session": "5b2c8365-a49b-4152-9a35-d86339887bb4",
+      "reask_after_goal": 1,
+      "pr_target_asked_after_create": 0
+    },
+    {
+      "session": "81ebf65c-7cbe-42f3-8608-942dfa6f95fc",
+      "reask_after_goal": 1,
+      "pr_target_asked_after_create": 0
+    }
+  ]
+}

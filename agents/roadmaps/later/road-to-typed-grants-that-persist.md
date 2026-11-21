@@ -493,6 +493,15 @@ item. Phases 1-6 may run once 0.2 is chosen.
       moves only so `scanOpenSteps` stops offering a step whose own body says it should not be
       taken yet. **What a future session needs:** 2.1(b)'s cascade layer first, then this gate
       in the same change, authored as a NEW gate for the reason stated above.
+      **Arrival 2026-11-21 from `road-to-mandates-scoped-to-the-goal` 3.3 — a per-step value,
+      not added.** The session retro of 2026-11-21 found a roadmap that planned one independent
+      PR per step, which neither `single` nor `stacked` names. Council 2026-11-21 (anthropic +
+      openai, two rounds, 2/2 present) on whether a per-step value belongs in this vocabulary:
+      both seats *discovery first*. The gap is real only if `single` means roadmap-wide, which
+      the template leaves implicit; and a value is under-specified until it states what a
+      consumer does differently — whether each step's PR merges on its own, and what a mid-run
+      red PR does to the next step. So the value waits for this step's consumer, and whoever
+      builds it settles the scope of `single` and that behaviour in the same change.
 - [x] **2.3 Correct the template's absolute sentence.** *No mode lifts a safety floor* is true
       for the eleven typed ops and false for pushes and non-prod merges; the sentence is
       rewritten to say which.
