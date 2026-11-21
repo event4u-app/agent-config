@@ -120,7 +120,7 @@ fixtures drawn from that census.
 
 ## Phase 1 — Re-derive the asks from the transcripts
 
-- [x] **1.1 Write the failing fixtures for an all-asks census.** Extend the
+- [x] **1.1 Write the failing fixtures for an all-asks census.** Extend the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `--self-test` cases of `src/scripts/probe_unblocked_ask.ts` with these
       cases for a new `--all-asks` mode:
       - a hand-back with a numbered-options block counts as an ask (today it is
@@ -135,7 +135,7 @@ fixtures drawn from that census.
 
       Run the self-test and see it fail, because the mode does not exist yet.
       verify: `./scripts-run src/scripts/probe_unblocked_ask --self-test` -> 1
-- [x] **1.2 Implement `--all-asks`, repeatable `--store`, and per-ask attribution.**
+- [x] **1.2 Implement `--all-asks`, repeatable `--store`, and per-ask attribution.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       For each ask, record these fields:
       - `producer`: the last slash command or `Skill` tool call earlier in the
         session, else `freeform`;
@@ -152,7 +152,7 @@ fixtures drawn from that census.
 
       The 1.1 fixtures turn green.
       verify: `./scripts-run src/scripts/probe_unblocked_ask --self-test` -> 0
-- [x] **1.3 Run the census over every local transcript store and reconcile 269.**
+- [x] **1.3 Run the census over every local transcript store and reconcile 269.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       Pass one `--store` for each profile under
       `~/.agent-switch/claude/*/config/projects` and for `~/.claude/projects`.
       In the artefact, state the measured total of owner-reaching asks next to
@@ -160,7 +160,7 @@ fixtures drawn from that census.
       example a different window, numbered-block-only counting, or
       deduplication.
       verify: `grep -q 'measured: [0-9]* · reported: 269' agents/evidence/analysis/decision-asks-census-2026-*.md` -> 0
-- [x] **1.4 Label a seeded sample with an independent session.**
+- [x] **1.4 Label a seeded sample with an independent session.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `--sample 60 --seed 20261121` writes a label sheet into the artefact. A
       subagent that did not write 1.1-1.3 labels each row with its cascade rung:
       `dominant`, `contested-technical`, `owner-four`, or `other-owner-row`. The
@@ -168,7 +168,7 @@ fixtures drawn from that census.
       fewer than 60 asks, every ask is labelled.
       uses: subagent-orchestration
       verify: `grep -c '^| S[0-9]' agents/evidence/analysis/decision-asks-census-*.md` -> /^(60|[1-5][0-9]|[1-9])$/
-- [x] **1.5 Derive the producer ranking and the fixture corpus from the labels.**
+- [x] **1.5 Derive the producer ranking and the fixture corpus from the labels.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `--emit-fixtures tests/fixtures/decision-asks/` writes one file per
       labelled row. Question text goes through
       `src/scripts/ai_council/redact_low_impact_entry.ts` first, and a row the
@@ -179,7 +179,7 @@ fixtures drawn from that census.
 
 ## Phase 2 — Narrow the owner-reserved set to the four
 
-- [x] **2.1 Run the council on the mapping before touching any list.**
+- [x] **2.1 Run the council on the mapping before touching any list.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       Run `agent-config council:status` first, then one council round. Its
       input is the three lists cited in Context § 2 and § 1 and the 1.4 label
       sheet. The question: map every entry to one of the four owner classes,
@@ -187,7 +187,7 @@ fixtures drawn from that census.
       row that is not one of the four). The verdict goes into `## Decisions` as
       D6, with the date and members inline.
       verify: `grep -c '^| D6 ' agents/roadmaps/road-to-questions-that-reach-the-right-decider.md` -> 1
-- [x] **2.2 Write the failing routing test from the fixtures.** In
+- [x] **2.2 Write the failing routing test from the fixtures.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `tests/scripts/ai_council/necessity.test.ts`, assert two things:
       - every 1.5 fixture labelled `contested-technical` whose text hits a D6
         `council` keyword classifies below `high_impact`;
@@ -196,26 +196,34 @@ fixtures drawn from that census.
 
       See the test red against the current list.
       verify: `npx vitest run tests/scripts/ai_council/necessity.test.ts` -> 1
-- [x] **2.3 Move the D6 `council` keywords from `high_impact` to
+- [x] **2.3 Move the D6 `council` keywords from `high_impact` to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `medium_impact`.** The edit is in `necessity.ts:599-611`, and
       `docs/contracts/ai-council-config.md:996` is updated in the same change.
       The kernel line `ask-when-uncertain.md:58` stays literally true, because
       `high_impact` still reaches the user and now holds only owner-class
       keywords.
       verify: `npx vitest run tests/scripts/ai_council/necessity.test.ts tests/scripts/ai_council/low_impact.test.ts tests/scripts/council_dispatch_routing.test.ts` -> 0
-- [x] **2.4 Name the owner class on every reserved row.** Add an `Owner class`
+- [~] **2.4 Name the owner class on every reserved row.** Add an `Owner class`
       column to `src/rules/decision-revisit-gate.md:134`. Each row gets its D6
       mapping (`purpose`, `safety-floor`, `irreversible`, `money`) or
       `outside`. The change is additive: no row's scope changes in this step.
       verify: `grep -c 'Owner class' src/rules/decision-revisit-gate.md` -> /[1-9]/
-- [ ] **2.5 Fold or remove the rows mapped `outside`.** <!-- blocked-by: owner-rows-outside-the-four | asked: no — authored by a non-interactive workflow subagent; the question reaches the owner in the run's end report -->
-      Apply the owner's answer to the blocker row by row, then run
-      `task sync` and `task generate-tools`.
+      Deferred into 2.5 (2026-11-21). The column was built and ratified
+      `confirmed-non-expanding` 2/2 in round 3, then withdrawn: it adds 89
+      tokens to every subagent preamble, and the measured preamble ratchet
+      (`Preamble payload budget`) admits no growth without a grant, which the
+      owner's no-raise constraint for this run forbids. Step 2.5 removes or
+      folds rows, so it can pay for the column in the same change.
+- [ ] **2.5 Fold or remove the rows mapped `outside`, and add the owner-class column.** <!-- blocked-by: owner-rows-outside-the-four | asked: no — authored by a non-interactive workflow subagent; the question reaches the owner in the run's end report -->
+      Apply the owner's answer to the blocker row by row, add the 2.4 column
+      to the rows that remain (its preamble cost is paid by the rows removed or
+      folded), then run `task sync` and `task generate-tools`. The edit needs a
+      ratification record (high-consequence rule).
       verify: `grep -c '| outside |' src/rules/decision-revisit-gate.md` -> 0
 
 ## Phase 3 — Subagents carry the cascade
 
-- [x] **3.1 Write the failing floor test.** Create
+- [x] **3.1 Write the failing floor test.** Create <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `tests/scripts/generate_subagent_floor.test.ts`. It asserts that the
       generated floor carries a sixth line naming the cascade:
       - decide when one option dominates;
@@ -226,25 +234,25 @@ fixtures drawn from that census.
       `OWNER_LOCKED_CLASSES` and from D6's money row: a fixture that changes
       the set changes the line. See it fail.
       verify: `npx vitest run tests/scripts/generate_subagent_floor.test.ts` -> 1
-- [x] **3.2 Generate the cascade line.** Implement the line in
+- [x] **3.2 Generate the cascade line.** Implement the line in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `generate_subagent_floor.ts` and source it from the data, never from a
       hand-copied list. Rewrite every span with the generator; this includes
       the `dist/agent-src/` copies, which the generator already writes.
       verify: `./scripts-run src/scripts/generate_subagent_floor --check` -> 0
-- [x] **3.3 Make the subagent's question routable.** In
+- [x] **3.3 Make the subagent's question routable.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `subagent-status.json:109`, `NEEDS_CONTEXT` also requires
       `ownership_class`, an enum from `OWNERSHIP_CLASSES`. Write the failing
       case in `tests/scripts/subagent_contract.test.ts` first, then make the
       schema change.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts tests/scripts/ai_team/team_dispatch.test.ts` -> 0
-- [x] **3.4 Route `NEEDS_CONTEXT` by class at the orchestrator.** In
+- [x] **3.4 Route `NEEDS_CONTEXT` by class at the orchestrator.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `src/skills/subagent-orchestration/SKILL.md` (the § near line 249) and in
       the eight `prompts/*.md` envelope blocks:
       - a non-owner class is answered by the orchestrator or by the council;
       - an owner class is bundled into one end-of-run ask;
       - the orchestrator never forwards the question to the user mid-run.
       verify: `./scripts-run src/scripts/skill_linter src/skills/subagent-orchestration/SKILL.md` -> 0
-- [x] **3.5 Decide the carrier for host-native subagents, council first.** The
+- [x] **3.5 Decide the carrier for host-native subagents, council first.** The <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       question is whether `subagent-constraints` should inject the 3.2 line
       for every subagent, not only for `omitClaudeMd` definitions. Its input is
       the 1.3 count of `subagent` asks and the line's byte cost per spawn.
@@ -256,19 +264,19 @@ fixtures drawn from that census.
 
 ## Phase 4 — The producers the census names
 
-- [x] **4.1 Generate one cascade section from the same data.** Add a generated
+- [x] **4.1 Generate one cascade section from the same data.** Add a generated <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `Who answers a question` span to
       `src/agent-src/contexts/communication/rules-auto/user-interaction-mechanics.md`.
       It is written by the 3.2 generator, from `OWNER_LOCKED_CLASSES` and D6,
       and checked by the same `--check`. The span lists the three rungs and the
       four owner classes. It holds no hand-authored list.
       verify: `./scripts-run src/scripts/generate_subagent_floor --check` -> 0
-- [x] **4.2 Point each ranked producer at the cascade.** Take every producer
+- [x] **4.2 Point each ranked producer at the cascade.** Take every producer <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       with at least 10 % of the 1.5 ranking. At its ask site in `src/` (its
       `command.md` or rule), route through the 4.1 section before any hand-back,
       and add one 1.5 fixture of that producer to the 2.2 test.
       verify: `./scripts-run src/scripts/ask_block_census --root src/domains` -> 0
-- [x] **4.3 File the remeasurement as a stub, not as a step.** The remeasure
+- [x] **4.3 File the remeasurement as a stub, not as a step.** The remeasure <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       needs elapsed sessions, so it goes in a stub (template rule 17c). Write
       `agents/roadmaps/stubs/road-to-questions-that-reach-the-right-decider-remeasure.md`
       with this trigger: 30 owner sessions after the 2.3 change lands, re-run
@@ -293,7 +301,7 @@ owner sentence quoted verbatim from an earlier user turn of the same
 transcript. The phrase set is EN and DE ("your rule", "you decided", "per your
 instruction", "owner directive", and their German forms).
 
-- [x] **5.1 Write the failing detector fixtures.** Add a `--self-test` suite
+- [x] **5.1 Write the failing detector fixtures.** Add a `--self-test` suite <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       to a new `src/scripts/probe_owner_attribution.ts` with these cases:
       - (a) the azeroth shape: a gate attributed to the owner with no source is
         flagged `unsourced`;
@@ -305,27 +313,27 @@ instruction", "owner directive", and their German forms).
       - (f) the output carries no prompt text.
 
       verify: `./scripts-run src/scripts/probe_owner_attribution --self-test` -> 1 on the missing implementation.
-- [x] **5.2 Implement the detector.** Build it on
+- [x] **5.2 Implement the detector.** Build it on <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       `src/scripts/_lib/cc_transcript.ts` (main bucket, replay-deduped) with
       the repeatable `--store` and `--json` of 1.2. It outputs counts, session
       ids and finding classes only. It is a measurement, not a gate: exit 0,
       and `--self-test` exits 1 on a failing case.
       verify: `./scripts-run src/scripts/probe_owner_attribution --self-test` -> 0 and `--json` over this repo's store exits 0.
-- [x] **5.3 Write the baseline by command and check it against the retro.**
+- [x] **5.3 Write the baseline by command and check it against the retro.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       Run it with `--write agents/evidence/analysis/owner-attribution-baseline.json`
       over every local store the 1.3 census read. The artefact records the
       command line and the commit. The azeroth session of 2026-11-14 is a
       positive control. If it is not flagged, the phrase set is extended and
       5.1 gets a case from that session before the baseline is written.
       verify: the artefact exists, its `command` field equals the invocation, and its `unsourced` list includes the azeroth 2026-11-14 session id.
-- [x] **5.4 Generate the provenance line.** Extend the 3.2 generator and the 4.1
+- [x] **5.4 Generate the provenance line.** Extend the 3.2 generator and the 4.1 <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       span with one line: "An owner decision you cite names its source: an
       owner-directive record, a memory file, an `owner` Decisions row, or the
       owner's quoted turn. Without a source it is your proposal, and you say so."
       The failing test comes first, in `tests/scripts/generate_subagent_floor.test.ts`.
       It asserts the line is in every generated floor and in the 4.1 span.
       verify: `npx vitest run tests/scripts/generate_subagent_floor.test.ts` -> 0 and `./scripts-run src/scripts/generate_subagent_floor --check` -> 0
-- [x] **5.5 File the re-measure with the 4.3 stub.** Add a second trigger to
+- [x] **5.5 File the re-measure with the 4.3 stub.** Add a second trigger to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/cc_transcript.ts -->
       the 4.3 stub: 30 owner sessions after 5.4 lands, re-run 5.3 into a new
       file and compare `unsourced` plus `fabricated-quote` per 100 assistant
       turns against the baseline.
