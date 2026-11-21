@@ -536,6 +536,36 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         ).toBe('nonzero_exit_without_test_failure');
     });
 
+    it('a filter\'s PIPESTATUS is not read as the verifier\'s code', () => {
+        expect(
+            classifyRun(rec({ command: 'task ci | tail -5; echo "exit=${PIPESTATUS[1]}"', exit_code: 0, stdout_tail: 'exit=0\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('a status echoed after another command is not read as the verifier\'s', () => {
+        expect(
+            classifyRun(rec({ command: 'task ci; echo ready; echo "exit=$?"', exit_code: 0, stdout_tail: 'ready\nexit=0\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('an exit line that is not the last line of output is not read', () => {
+        expect(
+            classifyRun(rec({ command: 'task ci; echo "exit=$?"', exit_code: 0, stdout_tail: 'exit=0\nmore output\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('a pipefail pipeline followed by an echo is masked by the echo', () => {
+        expect(
+            classifyRun(rec({ command: 'set -o pipefail; task ci | tail -5; echo done', exit_code: 0, stdout_tail: 'done\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('a final verifier after a masked pipe keeps its own failing code', () => {
+        expect(
+            reason(classifyRun(rec({ command: 'task ci | tail -5; npx tsc --noEmit', exit_code: 2, stdout_tail: '' }))),
+        ).toBe('nonzero_exit_without_test_failure');
+    });
+
     it('records and does not refuse until the arming phase decides', () => {
         expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
     });

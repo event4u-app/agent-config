@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { exitMasking, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
+import { echoesVerifierStatus, exitMasking, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 
 /**
  * G1 and G2 — the two directions the tree's two classifiers disagreed in.
@@ -118,6 +118,9 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['npx vitest run; ls', 'trailing'],
         // Printing PIPESTATUS does not carry it: the record still holds echo's code.
         ['task ci | tail -5; echo "${PIPESTATUS[0]}"', 'pipe'],
+        // pipefail makes the pipeline's status the verifier's, and the echo after it replaces it.
+        ['set -o pipefail; task ci | tail -5; echo done', 'trailing'],
+        ['task ci && echo ok; echo done', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -134,8 +137,26 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'npm test || true',
         'git log | head -5',
         'cat x | npx vitest run',
+        // The record's code is the final verifier's.
+        'task ci | tail -5; npx tsc --noEmit',
     ])('`%s` masks nothing', (command) => {
         expect(exitMasking(command)).toBeNull();
+    });
+
+    it.each([
+        'task ci; echo "exit=$?"',
+        'task ci || echo "exit=$?"',
+        'task ci | tail -5; echo "exit=${PIPESTATUS[0]}"',
+    ])('`%s` echoes the verifier\'s own status', (command) => {
+        expect(echoesVerifierStatus(command)).toBe(true);
+    });
+
+    it.each([
+        'task ci | tail -5; echo "exit=${PIPESTATUS[1]}"',
+        'task ci; echo ready; echo "exit=$?"',
+        'task ci | tail -5; echo "exit=$?"',
+    ])('`%s` echoes a status that is not the verifier\'s', (command) => {
+        expect(echoesVerifierStatus(command)).toBe(false);
     });
 
     it('a pipefail set AFTER the pipe does not cover it', () => {

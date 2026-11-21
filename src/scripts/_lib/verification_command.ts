@@ -368,61 +368,128 @@ export type ExitMasking = 'pipe' | 'trailing';
 /** `set -o pipefail`, `set -euo pipefail`, `set -e -o pipefail`. */
 const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
 
+/** One pipeline: its segments, the separator after it, and whether pipefail covers it. */
+interface Pipeline {
+    readonly segs: readonly Segment[];
+    readonly sepAfter: '&&' | '||' | ';' | null;
+    readonly pipefail: boolean;
+}
+
+function pipelinesOf(command: string): Pipeline[] {
+    const out: Pipeline[] = [];
+    let cur: Segment[] = [];
+    let pipefail = false;
+    for (const seg of splitSegments(stripComment(command))) {
+        cur.push(seg);
+        if (seg.nextSep === '|') continue;
+        out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail });
+        if (cur.some((s) => SETS_PIPEFAIL.test(s.words.join(' ')))) pipefail = true;
+        cur = [];
+    }
+    return out;
+}
+
+/** Index, within its pipeline, of the verifying segment; -1 when none. */
+function verifierIndex(p: Pipeline): number {
+    for (let i = p.segs.length - 1; i >= 0; i -= 1) {
+        const seg = p.segs[i] as Segment;
+        if (!failureIsDiscarded(seg) && segmentVerifies(seg.words)) return i;
+    }
+    return -1;
+}
+
+function head(p: Pipeline | undefined): string {
+    return bareName(p?.segs[0]?.words[0] ?? '');
+}
+
+function argsOf(p: Pipeline | undefined): string {
+    return (p?.segs[0]?.words.slice(1) ?? []).join(' ');
+}
+
+/** `${PIPESTATUS[k]}` / `$PIPESTATUS[k]` naming exactly index `k`. */
+function namesPipestatus(text: string, k: number): boolean {
+    return new RegExp(`PIPESTATUS\\[${String(k)}\\]`).test(text);
+}
+
+/**
+ * The verifier's own status reaches the caller from `next`, run after a pipeline
+ * whose status is the verifier's (`statusIsVerifiers`) or after a pipeline whose
+ * verifier sits at index `k` (`k` set when the pipeline status is a filter's).
+ */
+function propagates(prev: Pipeline, next: Pipeline | undefined, statusIsVerifiers: boolean, k: number): boolean {
+    const h = head(next);
+    const arg = argsOf(next).replace(/^["']|["']$/g, '');
+    if (h === 'exit' || h === 'return') {
+        if (statusIsVerifiers) {
+            if (prev.sepAfter === '||') return arg !== '0';
+            return arg === '' || arg === '$?';
+        }
+        return namesPipestatus(arg, k);
+    }
+    return statusIsVerifiers && prev.sepAfter === '||' && h === 'false';
+}
+
 /**
  * Does the exit code of this command line belong to something other than the
  * command that verified?
  *
- * The recorder keeps ONE exit code per call, and it is the last pipeline's.
- * `tsc | tail -5` reports `tail`'s 0, and `task ci; echo "exit=$?"` reports
- * `echo`'s 0, so a failing run reads as a pass. Two shapes:
+ * The recorder keeps ONE exit code per call: the status of the last pipeline
+ * that ran. `tsc | tail -5` reports `tail`'s 0, and `task ci; echo "exit=$?"`
+ * reports `echo`'s 0, so a failing run reads as a pass. Read off the LAST
+ * pipeline that verifies:
  *
- * - `pipe`: a verifying segment pipes into another command, no earlier
- *   segment on the same line set `pipefail`, and the line does not end the
- *   shell with `exit`/`return` of `PIPESTATUS`. Printing `PIPESTATUS` does not
- *   count: the record still holds the printer's code. A pipefail from an rc
- *   file or a sourced script is invisible here, which is why the reason starts
- *   as an instrument gap.
- * - `trailing`: a verifying segment is followed by `;` or `||` and then by a
- *   command that does not verify. `cmd || true` is a discard and stays
- *   `failureIsDiscarded`'s case; `cmd || exit 1` / `cmd; exit $?` propagate
- *   the failure; `task sync; task ci` ends on a verifier whose code is real.
+ * - `pipe`: its verifier is not the pipeline's last command and no earlier
+ *   `set -o pipefail` covers it, so the pipeline's status is a filter's —
+ *   unless the very next command exits with that verifier's `PIPESTATUS[k]`.
+ *   Printing `PIPESTATUS` does not count: the record holds the printer's code.
+ *   A pipefail from an rc file is invisible here, which is why the reason is
+ *   an instrument gap.
+ * - `trailing`: its status is the verifier's, and a later command runs
+ *   unconditionally (after `;`) or on failure (after `||`) without propagating
+ *   it. `cmd || exit 1`, `cmd || false` and `cmd; exit $?` propagate;
+ *   `cmd && echo ok` runs only on success; `task sync; task ci` ends on a
+ *   verifier whose code is real; `cmd || true` is a discard, not a verifier.
  */
 export function exitMasking(command: string): ExitMasking | null {
     if (!command) return null;
-    const segments = splitSegments(stripComment(command));
-    const exitsPipestatus = segments.some(
-        (seg) => /^(?:exit|return)$/.test(seg.words[0] ?? '') && /\bPIPESTATUS\b/.test(seg.words.slice(1).join(' ')),
-    );
-    let pipefailSet = false;
-    for (const seg of segments) {
-        const text = seg.words.join(' ');
-        if (SETS_PIPEFAIL.test(text)) pipefailSet = true;
-        if (failureIsDiscarded(seg) || !segmentVerifies(seg.words)) continue;
-        if (seg.nextSep === '|') {
-            if (!pipefailSet && !exitsPipestatus) return 'pipe';
-            continue;
-        }
-        if (seg.nextSep === ';' || seg.nextSep === '||') {
-            if (failurePropagates(seg, segments)) continue;
-            const next = segments[segments.indexOf(seg) + 1];
-            if (next && segmentVerifies(next.words)) continue;
-            return 'trailing';
-        }
+    const ps = pipelinesOf(command);
+    let v = -1;
+    for (let i = ps.length - 1; i >= 0 && v === -1; i -= 1) if (verifierIndex(ps[i] as Pipeline) !== -1) v = i;
+    if (v === -1) return null;
+    const p = ps[v] as Pipeline;
+    const k = verifierIndex(p);
+    if (k < p.segs.length - 1 && !p.pipefail) {
+        return propagates(p, ps[v + 1], false, k) && p.sepAfter === ';' ? null : 'pipe';
+    }
+    for (let j = v + 1; j < ps.length; j += 1) {
+        const prev = ps[j - 1] as Pipeline;
+        if (j === v + 1 && propagates(prev, ps[j], true, k)) return null;
+        if (prev.sepAfter === ';' || prev.sepAfter === '||') return 'trailing';
     }
     return null;
 }
 
-/** `cmd || exit 1`, `cmd || false`, `cmd; exit $?` — the failure reaches the caller. */
-function failurePropagates(seg: Segment, segments: readonly Segment[]): boolean {
-    const next = segments[segments.indexOf(seg) + 1];
-    if (!next) return true;
-    const head = seg.nextHead;
-    const arg = (next.words[1] ?? '').replace(/^["']|["']$/g, '');
-    if (head === 'exit' || head === 'return') {
-        if (seg.nextSep === '||') return arg !== '0';
-        return arg === '' || arg === '$?';
-    }
-    return seg.nextSep === '||' && head === 'false';
+/**
+ * Whether the line prints the verifier's own exit code right after it ran, so
+ * an `exit=N` line in the output can be read in place of a masked one:
+ * `cmd; echo "exit=$?"`, `cmd || echo "exit=$?"`, or
+ * `cmd | tail; echo "exit=${PIPESTATUS[k]}"` with `k` the verifier's index.
+ * A status printed later (`cmd; echo ready; echo "exit=$?"`) or a filter's
+ * (`PIPESTATUS[1]`, or `$?` after a pipe) is not the verifier's.
+ */
+export function echoesVerifierStatus(command: string): boolean {
+    const ps = pipelinesOf(command);
+    let v = -1;
+    for (let i = ps.length - 1; i >= 0 && v === -1; i -= 1) if (verifierIndex(ps[i] as Pipeline) !== -1) v = i;
+    if (v === -1) return false;
+    const p = ps[v] as Pipeline;
+    const next = ps[v + 1];
+    const h = head(next);
+    if ((h !== 'echo' && h !== 'printf') || next?.segs.length !== 1) return false;
+    const k = verifierIndex(p);
+    const filtered = k < p.segs.length - 1 && !p.pipefail;
+    if (filtered) return p.sepAfter === ';' && namesPipestatus(argsOf(next), k);
+    return (p.sepAfter === ';' || p.sepAfter === '||') && /\$\?|\$\{\?\}/.test(argsOf(next));
 }
 
 /**

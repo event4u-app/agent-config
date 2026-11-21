@@ -33,7 +33,7 @@
  * overrides it too).
  */
 
-import { exitMasking, isVerificationCommand, undiscardedSegments } from './verification_command.js';
+import { echoesVerifierStatus, exitMasking, isVerificationCommand, undiscardedSegments } from './verification_command.js';
 
 
 export type InvalidRunReason =
@@ -375,7 +375,7 @@ export function classifyRun(record: unknown): VerificationVerdict {
     const exitVerdict = (code: number): VerificationVerdict => {
         let real = code;
         if (masking !== null) {
-            const echoed = echoesVerifierCode(r.command as string, masking) ? echoedExitCode(text) : null;
+            const echoed = echoesVerifierStatus(r.command as string) ? echoedExitCode(r.stdout_tail ?? '') : null;
             if (echoed === null) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
             real = echoed;
         }
@@ -415,27 +415,14 @@ export function classifyRun(record: unknown): VerificationVerdict {
 }
 
 /**
- * Whether the line echoes the VERIFIER's exit code rather than a filter's:
- * `PIPESTATUS` names it whatever the shape; `$?` names it only on a trailing
- * mask, where the echo runs right after the verifier — after a pipe it is the
- * filter's code.
+ * The exit code the line echoed for its verifier: `exit=1`, `exit code: 0` as
+ * the LAST non-empty line of stdout, where the echo that runs right after the
+ * verifier puts it. An `exit=N` anywhere else in the output is not read.
  */
-function echoesVerifierCode(command: string, masking: 'pipe' | 'trailing'): boolean {
-    if (/\bPIPESTATUS\b/.test(command)) return true;
-    return masking === 'trailing' && command.includes('$?');
-}
-
-/**
- * The last exit code the output echoed itself: `exit=1`, `exit code: 0`.
- *
- * The shape `echo "exit=$?"` / `echo "exit code: ${PIPESTATUS[0]}"` prints.
- * The last one wins, because it was printed after the run it reports.
- */
-function echoedExitCode(text: string): number | null {
-    // A line of its own, so a test name or log line that mentions `exit=1` is not read as one.
-    const matches = [...text.matchAll(/^[ \t]*exit(?:[ _]code)?[ \t]*[=:][ \t]*(\d{1,3})[ \t]*$/gim)];
-    const last = matches[matches.length - 1];
-    return last ? Number(last[1]) : null;
+function echoedExitCode(stdout: string): number | null {
+    const lines = stdout.split('\n').filter((l) => l.trim() !== '');
+    const m = /^[ \t]*exit(?:[ _]code)?[ \t]*[=:][ \t]*(\d{1,3})[ \t]*$/i.exec(lines[lines.length - 1] ?? '');
+    return m ? Number(m[1]) : null;
 }
 
 /**
