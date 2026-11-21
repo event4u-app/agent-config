@@ -237,7 +237,7 @@ a file.
 
 ## Phase 3 — The non-kernel layer reads the record
 
-- [ ] **3.1 Council checks the clause against the kernel.** First action: put
+- [x] **3.1 Council checks the clause against the kernel.** First action: put
       to the council whether a recorded goal sentence, read as `commit-policy`
       exception 2 (a standing instruction not yet revoked) for commits, PR opens
       and follow-up fix PRs serving that goal, is consistent with
@@ -245,24 +245,35 @@ a file.
       appends the question to `goal-scope-hard-floor-reach` and marks 3.2
       `[-]` with that reason; otherwise record the row in `## Decisions`.
       verify: a `## Decisions` row or a blocker amendment dated with the council run exists.
-- [ ] **3.2 Context clauses.** On a consistent verdict: add the clause to
+      Done 2026-11-21: ESCALATE from both seats (Q3 of the 0.1 council run). D5
+      records it and the question is appended to `goal-scope-hard-floor-reach`
+      as its part (c); 3.2 is `[-]`.
+- [-] **3.2 Context clauses.** On a consistent verdict: add the clause to
       `src/agent-src/contexts/authority/commit-mechanics.md` § exception 2 and a
       fifth trigger "a recorded, unrevoked goal sentence" to
       `src/agent-src/contexts/execution/cheap-question-mechanics.md` § Mandate
       triggers. Hard-Floor rows are not named as covered. Failing text-contract
       test first in `tests/scripts/pr_command_target.test.ts` or a sibling.
       verify: the test passes; `git diff --name-only origin/main -- src/rules/` is empty.
-- [ ] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a
+      Skipped 2026-11-21 per 3.1: the council answered ESCALATE, so the clause is
+      not written. It needs the owner's ruling on part (c) of
+      `goal-scope-hard-floor-reach`, or `commit-policy` amended by
+      `later/road-to-typed-grants-that-persist` (ADR-268 § 2). No context file
+      changed.
+- [x] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a
       roadmap that planned one PR per step; `delivery.pr_topology` knows only
       `single` and `stacked` and is read by no code. First action: council on
       whether a per-step value belongs in that vocabulary. Write the verdict as
       an arrival note into `later/road-to-typed-grants-that-persist` step 2.2,
       which owns the cascade; build nothing here.
       verify: `grep -c 'road-to-mandates-scoped-to-the-goal' agents/roadmaps/later/road-to-typed-grants-that-persist.md` -> /^[1-9][0-9]*$/
+      Done 2026-11-21: Q4 of the same council run, both seats *discovery first*
+      — no value added; the arrival note in typed-grants 2.2 names the two
+      questions its consumer has to settle.
 
 ## Phase 4 — Hard-Floor reach, once decided
 
-- [ ] **4.1 Extend the record's reach per the owner ruling.** <!-- blocked-by: goal-scope-hard-floor-reach | asked: no — authored by a non-interactive workflow subagent; step 0.1 routes it through the council first -->
+- [ ] **4.1 Extend the record's reach per the owner ruling.** <!-- blocked-by: goal-scope-hard-floor-reach | asked: no — routed: council 2026-11-21 ESCALATE (owner-reserved); the first execution run was a non-interactive workflow subagent that may not ask the owner -->
       When the owner has answered, the agent writes the owner-directive record
       from the owner's verbatim words (ADR-282 Part B), and the 2.3 line names
       the reach the ruling grants: pushes to branches this session created for
@@ -274,12 +285,14 @@ a file.
 
 ## Phase 5 — Close the loop into the owning roadmap
 
-- [ ] **5.1 Hand the metrics over.** Append the two metrics and the 0.4
+- [x] **5.1 Hand the metrics over.** Append the two metrics and the 0.4
       baseline path to the metric table of
       `later/road-to-an-agent-the-owner-does-not-drive` (Goal table) so its
       closing re-measure (its Phase 8) also invokes `mandate_reask_report` with `--since` set to the
       merge time of this roadmap's PR, alongside its own counts.
       verify: `grep -c 'mandate_reask_report' agents/roadmaps/later/road-to-an-agent-the-owner-does-not-drive.md` -> /^[1-9][0-9]*$/
+      Done 2026-11-21: two Goal-table rows with the 0.4 baseline path, and 8.1
+      names the `--since` re-run.
 
 ## Phase 6 — Roadmap commands follow the owner's merge order and the project's workflow
 
@@ -349,6 +362,7 @@ test.
 - **What to do:**
   1. In any session in this repo, say the ruling in one sentence, for example: "Ein Ziel wie 'bis zum merge' deckt Pushes auf eigene Branches und Routine-Merges von Folge-PRs dieses Ziels." <!-- md-language-check: ignore -->
   2. The agent writes `agents/evidence/owner-directives/<date>-<id>.md` from those words (ADR-282 Part B) and cites it here.
+- **Amended 2026-11-21 (step 3.1):** part (c) — is a recorded, unrevoked goal sentence a standing instruction under `commit-policy` exception 2 for commits, PR opens and follow-up fix PRs that serve the goal? The council answered ESCALATE (both seats): `commit-policy` calls exactly that reading ("exception 2 misread as standing") the forbidden inference, so it needs the owner or the kernel text that `later/road-to-typed-grants-that-persist` owns. Until then the goal line names the owner's words and grants nothing (D5).
 - **Resolved when:** an owner-directive record citing `goal-scope-hard-floor-reach` exists under `agents/evidence/owner-directives/`.
 
 ## Risk Register

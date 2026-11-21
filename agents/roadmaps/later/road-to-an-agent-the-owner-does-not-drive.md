@@ -35,6 +35,13 @@ sessions; baseline in brackets):
 | User-run `git push` / `gh pr merge` | 31 | ≤ 3 |
 | Cleanup orders | 21 | 0 |
 | "merged / CI green, continue" prompts | ~25 | ≤ 3 |
+| Owner re-asks after a recorded goal (`reask_after_goal`, `mandate_reask_report`) | 3 over 1,008 sessions, 4 with a goal | 0 |
+| PR-URL questions after the session's own `gh pr create` (`pr_target_asked_after_create`) | 0 over 1,008 sessions, 49 with a create | 0 |
+
+The last two rows arrived 2026-11-21 from `road-to-mandates-scoped-to-the-goal`
+(Phase 5.1); their baseline is the generated
+`agents/evidence/mandate-reask/2026-11-baseline.json`, a lower bound over one
+host profile's store.
 
 ## Phase 0 — Measure before changing
 
@@ -174,6 +181,9 @@ sessions; baseline in brackets):
 - [ ] **8.1 Re-measure.** Run `friction:report` over the 100 sessions after
       Phases 1–5 land and compare to the 0.2 baseline; a target missed by more
       than 2× reopens the matching phase rather than closing this roadmap.
+      The same pass runs `./scripts-run src/scripts/mandate_reask_report --since
+      <merge time of the road-to-mandates-scoped-to-the-goal PR>` and compares
+      both of its metrics with the 2026-11 baseline file named under Goal.
 - [ ] **8.2 Auto-learnings 2.** If the report shows a new top friction class,
       open `agents/auto-learnings-2/` with the same method.
 
