@@ -306,7 +306,7 @@ ADR-282), but `/roadmap:next`, which hands off to it, still says
 overrode the project's own rule: work on `main`, commit only after an in-game
 test.
 
-- [ ] **6.1 Failing command-contract test.** Write
+- [x] **6.1 Failing command-contract test.** Write
       `tests/scripts/roadmap_next_contract.test.ts` over
       `src/domains/product-basic/roadmap/next/command.md`: (a) no line contains
       `No merge, ever`; (b) the Rules section links process-full's `--merge`
@@ -318,7 +318,9 @@ test.
       default; (d) the five-disqualifier screen text is unchanged (a snapshot of
       § 2's table rows).
       verify: `npx vitest run tests/scripts/roadmap_next_contract.test.ts` -> 1 failing on (a)-(c) and passing (d) on today's text.
-- [ ] **6.2 Rewrite the two passages.** Edit `next/command.md` § 4 and the
+      Done 2026-11-21: seen 3 failed (a-c) / 1 passed (d). § 2 holds a numbered
+      list rather than a table, so (d) pins the sha256 of its five items.
+- [x] **6.2 Rewrite the two passages.** Edit `next/command.md` § 4 and the
       Rules bullet to match 6.1. The merge bullet points at process-full's
       `--merge` section instead of restating it. It stays bound by that
       section's danger gate and the `needs-owner` exclusion, so this step
@@ -326,12 +328,21 @@ test.
       branch or a PR ends the run at "work done on the project's terms, nothing
       pushed", and the run says so in one line.
       verify: 6.1 passes; `task sync` then `bash src/scripts/condense.sh --changed` prints nothing; `./scripts-run src/scripts/lint_roadmap_ci_steps` and `task lint-skills` exit 0.
-- [ ] **6.3 Sweep the sibling command texts.** Run
+      Done 2026-11-21: 4/4 green; `condense.sh --changed` reports every
+      projection matching; `lint_roadmap_ci_steps` 0; `task lint-skills` 0 (456
+      pass, 1 unrelated warn). ADR-239:141 still quotes "No merge, ever" as the
+      text it recorded at the time; a decision record is not rewritten.
+- [x] **6.3 Sweep the sibling command texts.** Run
       `grep -rn -i -E 'no merge, ever|never merges?\b' src/domains/product-basic/roadmap src/agent-src/contexts/execution/roadmap-*.md`.
       Each hit either states its scope (it is a different actor, as
       `roadmap-process-loop-run.md:203` is for `run:supervise`) or gets the 6.2
       pointer. The Done note lists every hit with one of these two outcomes.
       verify: the Done note lists every grep hit; the 6.1 test passes again after the sweep.
+      Done 2026-11-21, two hits, both already state their scope:
+      - `roadmap-execution-contract.md:170` — "Acceptance never merges … merging
+        is § 5's one exception", and § 5 names the owner auto-merge instruction.
+      - `roadmap-process-loop-run.md:203` — `run:supervise --once`, a different
+        actor. 6.1 green after the sweep.
 
 <!-- Release holds — none. Every phase lands independently: Phase 1 and 2 add
      carriers that change no permission, Phase 3 edits context files only after a
