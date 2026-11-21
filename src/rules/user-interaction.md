@@ -89,8 +89,9 @@ Detail: `context-carrying-asks` context.
 
 ## Mechanics — rationale, failure modes, format details, examples
 
-The rule above is the obligation surface. Everything you look up rather than
-obey — why to take a position, the format spec, the six-step self-check, the
-named failure-mode catalog, slip handling, examples, progress indicators and
-summary patterns — is in
+Lookup, not obligation — rationale, format spec, six-step self-check, failure
+modes, slip handling, examples, progress and summary patterns:
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
+
+Pasted logs / JSON / API output → filter with `jq`, `rg`, `grep` before quoting;
+never echo the whole blob back.
