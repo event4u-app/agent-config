@@ -367,3 +367,25 @@ describe('CouncilEgress.replace — a value detected once is replaced everywhere
         expect(eg.check(out)).toBeNull();
     });
 });
+
+// Found 2026-11-21: a strategy prompt with the prose lines "Token: same account" and
+// "Token: a fine-grained PAT" matched the review-assignment row; the sweep then
+// replaced every "a" in the text (39 KB became 79 KB) and the final check refused
+// both seats because the system prompt contains the letter "a". Nothing was sent.
+describe('a short value is replaced where it was detected, never swept through the text', () => {
+    beforeEach(() => {
+        resetCouncilEgress({ identifiers: false });
+    });
+
+    it('prose after a credential keyword does not explode the bundle or block the call', () => {
+        const prose = ['## Plan', 'Token: a fine-grained PAT, same account.', 'Token: same account, no bot.', 'A plan that says a lot about a gate.'].join('\n');
+        const bundled = bundle_prompt(prose).text;
+        expect(bundled.length).toBeLessThan(prose.length * 1.5);
+        expect(bundled).toContain('A plan that says a lot about a gate.');
+        const client = new FakeClient();
+        const r = call(client, bundled, 'You are a careful reviewer of a plan.');
+        expect(r.error).toBeNull();
+        expect(client.sent).toHaveLength(1);
+    });
+
+});

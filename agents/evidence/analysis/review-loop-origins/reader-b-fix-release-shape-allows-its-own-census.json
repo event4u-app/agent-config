@@ -1,0 +1,738 @@
+{
+  "subject": "fix-release-shape-allows-its-own-census",
+  "round1_findings": 4,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R2.1",
+          "summary": "Producer coupling still duplicates date format, extension, and path composition",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R2.2",
+          "summary": "Digit-class rationale misstates which filenames question marks would admit",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R2.3",
+          "summary": "Moved citation no longer supports the claim it qualifies",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R2.4",
+          "summary": "Replacement allowlist summary omits both project-settings template paths",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R3.1",
+          "summary": "Path-builder tests supply dates without exercising the census date producer",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.2",
+          "summary": "Rewritten skip rationale ignores allowed manifest changes affecting installation",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.3",
+          "summary": "Comment overlooks automatic second census when release resumes after midnight",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R4.1",
+          "summary": "UTC date regression assertion depends on the runner’s local offset",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.2",
+          "summary": "Digit-class rationale is duplicated across code and contract",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.3",
+          "summary": "Allowlist summary contradicts its own claim against restatement",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.4",
+          "summary": "Contract and code allowlists lack an automated parity check",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R5.1",
+          "summary": "UTC date regression assertion depends on the runner’s local offset",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.2",
+          "summary": "Digit-class rationale is duplicated across code and contract",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.3",
+          "summary": "Allowlist summary contradicts its own claim against restatement",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.4",
+          "summary": "Contract and code allowlists lack an automated parity check",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R6.1",
+          "summary": "Cross-midnight resume compares against the same release’s first census",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R6.2",
+          "summary": "Single-source claim overlooks the digit-class rationale in tests",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.3",
+          "summary": "Comment denies duplicating filename components despite hardcoded date",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.4",
+          "summary": "Repeated day-boundary assertion blurs shape and timezone test coverage",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.5",
+          "summary": "Timezone comment overstates sensitivity to offsets under thirty minutes",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R7.1",
+          "summary": "First census can enter the cold set, defeating empty-delta claim",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.2",
+          "summary": "Rewritten skip rationale overlooks additional install-facing allowlist entries",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.3",
+          "summary": "Branch cleanup loses documentation of unported Python range handling",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R8.1",
+          "summary": "Restored range note misstates invalid-range behavior across CPython versions",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R8.2",
+          "summary": "Revised question-mark rationale overlooks matches across directory separators",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R9.1",
+          "summary": "Filename single-source claim overlooks discovery’s independently hardcoded extension",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R9.2",
+          "summary": "Paired day-boundary assertions still miss local-time regressions under UTC",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R9.3",
+          "summary": "Narrowed bracket comment conflicts with the function’s broad parity promise",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R10.1",
+          "summary": "Cross-midnight resume compares against the same release’s first census",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.2",
+          "summary": "Timezone test does not verify that runtime timezone changes took effect",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R10.3",
+          "summary": "Committed censuses accumulate as cold subjects and become relocation candidates",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.4",
+          "summary": "Existing star globs admit nested paths without meaningful depth coverage",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R11.1",
+          "summary": "Contract promises predictable gating without documenting separator-crossing stars",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.2",
+          "summary": "Newly committed census uses an unversioned evidence-type marker",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R11.3",
+          "summary": "Rewritten translator docstring incorrectly lists question marks as used",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.4",
+          "summary": "Canonical separator explanation contains an ambiguous double negative",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R11.5",
+          "summary": "Date test sits in gate suite and requires timezone data",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R12.1",
+          "summary": "Only positive assertion for remediation instructions was deleted",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R12.2",
+          "summary": "Contract explains star separator crossing while omitting question-mark behavior",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R13.1",
+          "summary": "Rewritten skip rationale leaves admitted manifest changes without stated coverage",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.2",
+          "summary": "New baseline docblock misrepresents the report’s actual heading",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.3",
+          "summary": "Remediation command continuation was accidentally reindented",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R14.1",
+          "summary": "Unqualified body comment contradicts newly narrowed Python parity guarantee",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R14.2",
+          "summary": "New blank line before suite closure breaks local test style",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R15.1",
+          "summary": "Rewritten opening conflicts with categorical skip claims later in contract",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R15.2",
+          "summary": "Cut-surface table retains stale allowlist paths and exclusions",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R15.3",
+          "summary": "Contract and code allowlists still lack an automated parity check",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R16.1",
+          "summary": "Timezone probes can fail on correct implementations without runtime timezone support",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R16.2",
+          "summary": "Rewritten path counts present overlapping categories as additive",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.3",
+          "summary": "Rewritten smoke row drops the admitted package manifest caveat",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.4",
+          "summary": "Smoke row describes two template paths with a singular predicate",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.5",
+          "summary": "Parity-test explanation overlooks unchecked allowlist claims elsewhere in contract",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R17.1",
+          "summary": "Later skip rationales still contradict the opening manifest caveat",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R17.2",
+          "summary": "Only paired timezone probes detect ineffective assignment across ambient offsets",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R17.3",
+          "summary": "Default-path coverage leaves release orchestration free to override the filename",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.4",
+          "summary": "Wildcard depth assertions cover only two of six star globs",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R18.1",
+          "summary": "Node workflow comment still falsely excludes all source paths",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R18.2",
+          "summary": "Two workflow comments retain stale allowlists and categorical skip claims",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R18.3",
+          "summary": "Rewritten smoke row omits the admitted template’s workflow trigger",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.4",
+          "summary": "Wildcard test comment makes unsupported widest-glob claim",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.5",
+          "summary": "Invocation pin counts comments and misses callers outside one taskfile",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R19.1",
+          "summary": "Cut-surface table names nonexistent jobs and omits guarded jobs",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "R19.2",
+          "summary": "Expanded caller scan silently misses missing roots and nested taskfiles",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.3",
+          "summary": "Rewritten smoke comment ignores its admitted template trigger",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.4",
+          "summary": "Caller scan is misplaced inside the allowlist parity suite",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.5",
+          "summary": "Path-count explanation switches from source and distribution to templates",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.6",
+          "summary": "Timezone verification comment cites Node 26 while CI runs Node 22",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R20.1",
+          "summary": "Inserted prose breaks cut-surface Markdown table rendering",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.2",
+          "summary": "New static-checks row omits multiple checks relevant to skip coverage",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.3",
+          "summary": "Cut-surface rows retain nonexistent installer paths",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R20.4",
+          "summary": "New table parity test checks only one workflow",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.5",
+          "summary": "Recursive caller scan reads binary fixtures and asserts every tree node",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R21.1",
+          "summary": "New publint coverage claim overlooks the evaluator umbrella workflow",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R21.2",
+          "summary": "Expanded workflow parity scan hardcodes filenames and exact guard syntax",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R21.3",
+          "summary": "Caller scan treats ordinary comments as invocations",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R21.4",
+          "summary": "Wildcard tests fail to detect newly added star entries",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R21.5",
+          "summary": "Table extraction mishandles missing and final section headings",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R22.1",
+          "summary": "Caller scan misses alternate invocation forms and unlisted roots",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.2",
+          "summary": "Rewritten static-checks inventory omits source checks and npm ci coverage",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.3",
+          "summary": "Smoke workflow comment still omits the admitted template trigger",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R22.4",
+          "summary": "New smoke cross-reference points to a table omitting template-pin validation",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.5",
+          "summary": "Two edited contract lines exceed the surrounding wrap width",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R23.1",
+          "summary": "Rewritten static-checks row overlooks admitted generated distribution template",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R23.2",
+          "summary": "New npm ci coverage claim incorrectly includes audit-gate",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R23.3",
+          "summary": "Caller scan’s extension filter excludes extensionless dispatch scripts",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R24.1",
+          "summary": "Revised static-checks row overlooks other steps reading generated files",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R24.2",
+          "summary": "Skip rationales still disregard jobs consuming admitted npm manifests",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R24.3",
+          "summary": "Finding concerns the caller scan’s comment-exclusion regex",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R24.4",
+          "summary": "Caller scan still leaves potential orchestration roots unchecked",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R24.5",
+          "summary": "Recursive caller scan follows symlinks without cycle detection",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R25.1",
+          "summary": "New reach assertion drops all tracked top-level files",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.2",
+          "summary": "New reach assertion treats partially scanned directories as fully covered",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.3",
+          "summary": "New table preamble promises manifest coverage six rows omit",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.4",
+          "summary": "Rewritten manifest count omits three admitted plugin manifests",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.5",
+          "summary": "Path-count explanation still switches between different pairs of sets",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R25.6",
+          "summary": "Hardcoded guarded-job count can drift despite table parity test",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R25.7",
+          "summary": "Symlink skip silently bypasses roots accepted by existence guard",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.8",
+          "summary": "Temporary process-global timezone mutations can affect other tests",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    }
+  ]
+}

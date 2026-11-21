@@ -1,0 +1,232 @@
+{
+  "subject": "session-start-contracts-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Body-dependent contracts need fail-closed clause when body unreadable",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Reply-opening order inconsistent across fast-path, canary, question rules",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Published git rewrite lacked sequencing with re-push and approval",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Installed-path failure behavior not shown to preserve obligations",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "2.5",
+          "summary": "Precedence between contracts beyond named ones unstated",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.6",
+          "summary": "Session-canary wording on hosts without per-turn reminder slot",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Command-suggestion contract allowed invoking a matched command",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.2",
+          "summary": "Disclaimer contract did not name template languages or translation",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Moat claim lost 'named competitor' qualifier",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "6.2",
+          "summary": "Evaluator-independence contract used compressed provider-availability wording",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "6.3",
+          "summary": "Decision-revisit contract's 'unbounded' term left undefined",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Pull-rebase exception wording widened beyond forced conflict resolution",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "9.2",
+          "summary": "Legal STOP copy duty had no unreadable-body fallback",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "PII contract summarised privilege markers instead of listing them",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.2",
+          "summary": "Strategy contract said '+7 siblings' instead of skill ids",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.3",
+          "summary": "Low-impact body did not state masking the contract states",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.4",
+          "summary": "Decision-revisit contract density flagged as secondary",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.5",
+          "summary": "Settings-ask contract density flagged as secondary",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Legal contract did not require the council pass actually run",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "14.2",
+          "summary": "PII scrub list lost literal card_number key",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.3",
+          "summary": "Legal vs other contracts differ on unreadable-body behavior",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "14.4",
+          "summary": "Suggested body/contract drift check",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "PII placeholders missed non-personal sector values",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 22,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "24.1",
+          "summary": "Missing contract file at install fell back to pointer stub",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "visible": true,
+      "findings": [
+        {
+          "id": "27.1",
+          "summary": "Runtime-safety contract stricter than body on assisted execution",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "27.2",
+          "summary": "Engineering contract extended reset --hard beyond pushed targets",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "27.3",
+          "summary": "Installer implementation files not bound to evidence by hash",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    }
+  ]
+}

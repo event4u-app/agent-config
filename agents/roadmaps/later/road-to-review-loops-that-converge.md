@@ -1,6 +1,11 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-12-21
+entry_condition:
+  what: the owner answers blocker convergence-stop-binding or owner-override-satisfies-ratification-ci (unblocks 2.2 / 2.3), or ten more ratification subjects close after 2026-11-21 (unblocks 2.4)
+  when: either Status line reads resolved, or `./scripts-run src/scripts/review_loop_census --json` lists ten ratification subjects with a firstDate after 2026-11-21 that carry a recorded verdict
+  who: owner for the two blockers; for 2.4 none — subjects accrue from ordinary ratification work and any session then runs 2.4
 tree_pin: 811cea61d6
 execution:
   mode: autonomous
@@ -80,7 +85,7 @@ the owner and never closes them.
 
 ## Phase 0 — A census the tree generates, and why findings rise
 
-- [ ] **0.1 Census script, test-first.** Write
+- [x] **0.1 Census script, test-first.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/review_loop_census.ts -->
       `tests/scripts/review_loop_census.test.ts` first: fixtures in a temp dir
       with both packet namings (`<slug>.roundN.question.md`,
       `<slug>-rN-<date>.question.md`), completion-review `roundN.findings.md`
@@ -94,14 +99,21 @@ the owner and never closes them.
       lists `session-pins-phase-2-20261108` at 56 and
       `session-start-contracts-ratification` at 31, and 43 ratification
       subjects at five or more rounds at the pin.
-- [ ] **0.2 Deterministic origin classes.** Extend the census, test-first, with
+      production entry: src/scripts/review_loop_census.ts
+      done: red run 2026-11-21 (module missing, 0 tests), then 5/5 green; the
+      census reads 56, 31 and 43 subjects at ≥ 5 rounds — no council,
+      review or ratification evidence changed between the pin and `4bb96fb2fb`.
+- [x] **0.2 Deterministic origin classes.** Extend the census, test-first, with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/review_loop_census.ts -->
       a per-round `--origins` reading for subjects with five or more rounds:
       paths each packet cites, and class `scope-widened` when a cited path is
       in neither round 1's packet nor the subject's diff. For completion
       reviews add `rebind-non-code` from `src/scripts/probe_review_binding_drift.ts`.
       verify: a fixture round citing a new path is classed `scope-widened`
       (red, then green); the census JSON carries both classes per round.
-- [ ] **0.3 Reader origin classes.** For the ten subjects with the most rounds,
+      production entry: src/scripts/review_loop_census.ts
+      done: both fixture tests red (2 failed), then green; 563 rounds over the
+      ≥ 5-round loops carry 349 `scope-widened` and 5 `rebind-non-code`.
+- [x] **0.3 Reader origin classes.** For the ten subjects with the most rounds, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/review_loop_origins.ts -->
       two independent subagent readers class every new finding per round as
       `fix-introduced` (names what the previous round's fix changed),
       `single-seat` (one seat only, medium or low), `re-raised` (restates an
@@ -112,7 +124,13 @@ the owner and never closes them.
       uses: subagent-orchestration
       verify: every new finding in the ten subjects carries exactly one class;
       the artefact states agreement before adjudication.
-- [ ] **0.4 Name the driver of rising rounds.** Over every round whose new
+      production entry: src/scripts/review_loop_origins.ts
+      done: readers are independent CLI processes (Claude opus, Codex), the
+      adjudicator Claude Sonnet after the Gemini CLI refused on quota; the
+      session has no subagent primitive. 2,099 findings across 32 reader and
+      adjudicator replies, each one of the four classes; agreement before
+      adjudication 95 of 226 rounds identical, 61.3 % class-count overlap.
+- [x] **0.4 Name the driver of rising rounds.** Over every round whose new <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       findings exceed the previous round's, compute each class's share. The
       lever is pre-registered: `scope-widened` above 40 % → 1.5 (generated
       packet) ships; `single-seat` above 40 % → 1.1 must offer a seat-novelty
@@ -124,7 +142,7 @@ the owner and never closes them.
 
 ## Phase 1 — A shadow convergence pilot
 
-- [ ] **1.1 Council: the convergence criterion.** First action: run
+- [x] **1.1 Council: the convergence criterion.** First action: run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `/council:analysis` with both members on 0.3's artefact and 0.4's row.
       Candidates: (a) K consecutive rounds without a new high/critical finding
       that is not fix-introduced; (b) new findings non-decreasing over three
@@ -132,7 +150,8 @@ the owner and never closes them.
       the lever 0.4 named. Record the verdict, both seats' positions and K as
       a Decisions row (`contested-technical`, `council:<date>`).
       verify: the row exists with both seat positions and a numeric K or knee.
-- [ ] **1.2 `review_convergence`, advisory, test-first.** Write
+      done: D5 — both seats present (2/2), K = 3, W = 3, no knee.
+- [x] **1.2 `review_convergence`, advisory, test-first.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `tests/scripts/review_convergence.test.ts` first: fixtures that must read
       `converging`, `stalled` and `diverging` under 1.1's criterion, and an
       assertion that `isMechanismPath('src/scripts/review_convergence.ts')` is
@@ -141,14 +160,24 @@ the owner and never closes them.
       verdict per subject and always exits 0.
       verify: the test is red before the script and green after; the script
       exits 0 on a `diverging` fixture.
-- [ ] **1.3 Replay every historical loop.** Run `review_convergence --replay`
+      production entry: src/scripts/review_convergence.ts
+      done: red run 2026-11-21 (module missing, no tests), then 18/18 green;
+      over the tree all 319 census subjects get a verdict (301
+      `insufficient-data` — ratification loops without reader classes carry
+      no per-round severity), exit 0.
+- [x] **1.3 Replay every historical loop.** Run `review_convergence --replay` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       over the census: per subject the round the criterion fires, rounds that
       would not have run, and every high/critical finding raised after that
       round (the stop's cost). Write
       `agents/evidence/analysis/review-loop-replay-2026-11.md`, generated.
       verify: one row per subject with five or more rounds plus a pooled row;
       re-running the command reproduces the file byte for byte.
-- [ ] **1.4 Put the verdict where rounds are written.** In
+      production entry: src/scripts/review_convergence.ts
+      done: 61 rows plus pooled, second run `cmp`-identical. Pooled: 26 of 61
+      loops carry severity; 18 of them stop (348 rounds, 155 after the stop, 143
+      visible), and 30 high/critical findings came after a stop, 18 outside
+      `fix-introduced` — listed per finding in the artefact.
+- [x] **1.4 Put the verdict where rounds are written.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `src/agent-src/contexts/authority/kernel-rule-edits.md` add one
       paragraph: before writing round N+1's packet, run `review_convergence
       --subject <slug>`; on `stalled` or `diverging`, stop re-submitting and
@@ -157,17 +186,27 @@ the owner and never closes them.
       verify: `grep -c review_convergence src/agent-src/contexts/authority/kernel-rule-edits.md dist/agent-src/contexts/authority/kernel-rule-edits.md` -> /:[1-9][0-9]*\n.*:[1-9][0-9]*$/
       (the source context and its projection both carry it); `./scripts-run src/scripts/check_kernel_edit_ratified` on the
       branch reports the context outside `MECHANISM_PATHS`.
-- [ ] **1.5 Generated round packet — only if 0.4 named `scope-widened`.** Write
+      amended (D6): the paragraph exceeded the always-budget cap of
+      `scope-control`, which loads this context; it lives in
+      `src/skills/ai-council/SKILL.md` § Before the next ratification round.
+      verify (amended): `grep -c review_convergence src/skills/ai-council/SKILL.md dist/agent-src/skills/ai-council/SKILL.md`
+      -> both ≥ 1; `task check-always-budget` exits 0; `check_kernel_edit_ratified`
+      reports the skill outside `MECHANISM_PATHS`.
+      done: grep reads 1 and 1; `check-always-budget` exits 0; the gate exits 0
+      with every changed path `out_of_scope` ("nothing to ratify").
+- [-] **1.5 Generated round packet — only if 0.4 named `scope-widened`.** Write
       `src/scripts/ratification_round_packet.ts`, test-first: round N+1's
       packet is the diff since round N's head plus round N's open findings,
       nothing restated by hand (F5). Otherwise mark `[-]` with 0.4's row as
       reason.
       verify: a fixture packet lists only fix-delta paths and open findings;
       red before the script, green after.
+      skipped: D4 — 0.4 named no lever (scope-widened 22.7 %, under 40 %), so the
+      pre-registered table does not ship the generated packet.
 
 ## Phase 2 — Binding stop and owner override
 
-- [ ] **2.1 Route both blockers and attach the replay.** Put each `## Blockers`
+- [x] **2.1 Route both blockers and attach the replay.** Put each `## Blockers` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       entry below to the council with `decision-revisit-gate`'s owner-reserved
       table; record the verdict in its `Routed:` line. On ESCALATE append 1.3's
       pooled row and per-option cost to the entry and to the ratification-cap
@@ -175,14 +214,18 @@ the owner and never closes them.
       Decisions row.
       verify: both `Routed:` lines carry a dated council verdict; the replay's
       pooled row appears in both blockers.
-- [ ] **2.2 Enforce the chosen stop.** <!-- blocked-by: convergence-stop-binding | asked: no — authoring run; step 2.1 routes it to the council first -->
+      done: council 2026-11-21 ESCALATE on both (2/2 seats); pooled row and
+      per-option cost appended to both entries here and to
+      `later/road-to-a-review-that-ends` blocker
+      `ratification-round-cap-is-an-owner-contract-change`.
+- [ ] **2.2 Enforce the chosen stop.** <!-- blocked-by: convergence-stop-binding | asked: routed — council 2026-11-21 ESCALATE (2/2), owner-reserved -->
       Test-first in `tests/scripts/check_kernel_edit_ratified.test.ts`: a
       subject past the chosen stop without an owner decision is refused and
       every open high/critical finding is listed for the owner. Then edit the
       reviewer modules; the change carries its own ratification record (F7).
       verify: the new test is red before the edit and green after;
       `npx vitest run tests/scripts/check_kernel_edit_ratified.test.ts` passes.
-- [ ] **2.3 Owner record turns the gate green, per the chosen option.** <!-- blocked-by: owner-override-satisfies-ratification-ci | asked: no — authoring run; step 2.1 routes it to the council first -->
+- [ ] **2.3 Owner record turns the gate green, per the chosen option.** <!-- blocked-by: owner-override-satisfies-ratification-ci | asked: routed — council 2026-11-21 ESCALATE (2/2), owner-reserved -->
       Test-first: a committed record under `agents/evidence/owner-directives/`
       naming the subject digest passes the gate as the owner chose; the same
       record added by the change it ratifies is refused (ADR-268 § 4, gaining
@@ -194,6 +237,8 @@ the owner and never closes them.
       owner.
       verify: a Decisions row with both medians and the routed-finding count,
       citing the regenerated artefacts.
+      waiting: entry condition — ten ratification subjects must close after the
+      pilot landed (2026-11-21); none has yet.
 
 <!-- Release holds — none.
      guarded: Phase 1 ships advisory (review_convergence always exits 0, outside
@@ -208,7 +253,9 @@ the owner and never closes them.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned — ending a recorded verification loop is governance self-amendment (decision-revisit-gate, owner-reserved), as ADR-294 was for the completion review. Same decision as `road-to-a-review-that-ends` blocker `ratification-round-cap-is-an-owner-contract-change`; answering one resolves both, and 2.2 flips both Status lines.
-- **Routed:** pending — not routed at authoring (single-file authoring run); step 2.1 routes it.
+- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats); neither seat returned DECIDE or recommended an option. Both named the disposition of the post-stop findings (35 in the replay they saw; 30 after the review fixes below) as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`.
+- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 155 of 348 rounds would not have run (143 of them visible in the record), 30 high/critical findings were raised in those visible rounds, 18 outside fix-introduced.
+- **Cost:** Per-option cost over the same 26 loops — cap at 3: 26 loops cut, 270 rounds saved, 101 high/critical after (68 non-fix); cap at 5: 23 cut, 218 saved, 73 after (48 non-fix); criterion (D5): 18 stopped, 155 saved, 30 after (18 non-fix); no binding stop: 0 / 0 / 0.
 - **Blocks:** 2.2
 - **Question:** Should a council ratification stop binding — refused past the stop, open high/critical findings to the owner — and where?
 - **Recommendation:** (c) once 1.3's replay shows its cost: the retro's own data show the ratification yield does not fall after round 5, so a fixed N cuts rounds that still find defects while a criterion stops loops that stall or diverge.
@@ -221,7 +268,9 @@ the owner and never closes them.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned — lowering what turns a required gate green touches the safety floor and ADR-268 § 4's gaining-party rule.
-- **Routed:** pending — not routed at authoring (single-file authoring run); step 2.1 routes it.
+- **Routed:** council 2026-11-21 ESCALATE, 2 of 2 — governance self-amendment (both seats), and ADR-268 § 4's separation rule (openai); neither seat returned DECIDE or recommended an option. Both named the disposition of the post-stop findings (35 in the replay they saw; 30 after the review fixes below) as the fact most likely to change the answer. Record: `agents/evidence/council/review-loop-owner-blockers-routing-20261121.md`. openai flagged that option (b) as worded — a recorded `stalled`/`diverging` verdict **or** a refused final round — could turn CI green on an advisory verdict before any binding stop exists.
+- **Replay:** Replay pooled row (`agents/evidence/analysis/review-loop-replay-2026-11.md`, `./scripts-run src/scripts/review_convergence --replay --write`): 61 loops of five or more rounds, 26 with per-round severity; the D5 criterion stops 18 of 26, 155 of 348 rounds would not have run (143 of them visible in the record), 30 high/critical findings were raised in those visible rounds, 18 outside fix-introduced.
+- **Cost:** If CI accepts an owner record only after `stalled`/`diverging` (option b), 18 of the 26 measured loops would have qualified at the replay's stop round; under (a) every loop qualifies at any round; under (c) none does, and the forge bypass stays.
 - **Blocks:** 2.3
 - **Question:** Should an owner-written record make the ratification gate pass, instead of the forge bypass that leaves CI red (F6)?
 - **Recommendation:** (b) — the gate stays independent by default and an owner override exists only after the loop has demonstrably stopped converging.
@@ -236,6 +285,9 @@ the owner and never closes them.
 | D1 | reversible-technical | evidence | No fixed round cap is authored here; the stop is a measured criterion piloted in shadow first. Rejected alternative: a 3+1 cap shipped now (retro draft). | Both council seats called a cap alone a symptom fix; F1's completion-review curve and the later file's ratification curve differ, so one N does not transfer. | 1.3's replay shows the criterion fires later than round 5 on most subjects. |
 | D2 | reversible-technical | evidence | Census, origins and replay are generated on demand; no new CI gate. Rejected alternative: a `--check` staleness gate in `task ci`. | Owner constraint 2026-11-21 (generated, never hand-kept); the retro's measure 10 asks to remove blocking gates, not add them. | A stale census is cited by a decision. |
 | D3 | reversible-technical | evidence | Debate rounds, CI iteration, release-cut review and per-round spend stay out of scope. | `debate_max_rounds` is wired (`council_cli.ts:1691`); the council asked to keep CI and review iteration apart; measures 9 and 20 and the later file's 3.1b own the rest. | Phase 0 shows a debate or CI loop carrying the round count. |
+| D4 | reversible-technical | evidence | Rising rounds are driven by no single origin above 40 %, so the pre-registered lever is **criterion only**: 1.1 needs no seat-novelty or fix-size criterion and 1.5 (generated packet) does not ship. Shares over the 71 rising rounds (353 findings) of the ten longest loops: fix-introduced 38.0 %, scope-widened 22.7 %, re-raised 16.1 %, single-seat 15.9 %, other 7.4 %, rebind-non-code 0 % (sum 100 %). | `agents/evidence/analysis/review-loop-origins-2026-11.md`, generated by `./scripts-run src/scripts/review_loop_origins --write`. | fix-introduced crosses 40 % on a re-read with more subjects or a second reader pair; it sits 2 points under the line. |
+| D5 | contested-technical | council:2026-11-21 | The shadow criterion is (a) with **K = 3** plus a strict-increase window of **W = 3**; no fixed knee. Over the trailing three adjacent visible rounds after round 1, first match wins: `insufficient-data` (fewer than three such rounds, a gap inside the window, or a loop none of whose findings carries a severity); `diverging` (new findings strictly increase); `converging` (no new high/critical finding outside `fix-introduced` and new findings non-increasing); `stalled` (no such severe finding, but new findings do not fall); `active` (otherwise). The stop the replay measures is the first `stalled` or `diverging` round. Seat positions — anthropic: rejects (c), (a) is the only weakly supported criterion and K in {2,3,4} needs a replay, ties may count as non-decreasing in an advisory signal, wants precedence and a severity-less contract; openai: rejects a fixed knee, (a) at K = 3 fires in 8 of 10 loops and 7 of them later raise a severe finding, ties must not read as divergence, wants an outcome replay and an explicit contract. Rejected: a `scope-drift` verdict and a re-raised threshold (anthropic) — 0.4's pre-registered table named no lever. | `agents/evidence/council/review-loop-convergence-criterion-20261121.md` (record), `.question.md` (prompt). | 1.3's replay shows K = 3 stops lose more late severe findings than K = 4 saves rounds, or a seat-novelty / fix-size lever crosses 40 %. |
+| D6 | reversible-technical | council:2026-11-21 | Step 1.4's advisory lives in the `ai-council` skill, not `contexts/authority/kernel-rule-edits.md`: there it took `scope-control` from 19,327 to 19,662 characters against an allowlisted ceiling of 19,332. Seats split — anthropic: raise the ceiling provisionally, else indirection; openai: the `ai-council` skill, no pointer, name who authorises another round and keep the prior procedure when the script fails. Both rejected deleting provenance to make room. Raising an always-budget allowlist to fit an advisory is the growth the autonomy rules forbid, so the ceiling is held and both answers reduce to the skill. | `agents/evidence/council/review-convergence-advisory-placement-20261121.md` (record), `.question.md` (prompt). | The always-budget ceiling is raised for another reason, or a ratification path drafts round N+1 without the `ai-council` skill loaded. |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
@@ -249,7 +301,7 @@ the owner and never closes them.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command regenerates the census of every completion-review and ratification loop, and no census, origin or replay file is edited by hand.
-- [ ] AC-2 — The origin artefact names, for rising rounds, each class's share and the lever 0.4's threshold table selects, or states that none qualified.
-- [ ] AC-3 — `review_convergence` returns a verdict for every census subject, and the replay states per subject where it would have stopped and every high/critical finding raised after that round.
-- [ ] AC-4 — Each owner blocker is either resolved with its step enforced by a passing test, or open with a dated council `Routed:` verdict and the replay's pooled row attached.
+- [x] AC-1 — One command regenerates the census of every completion-review and ratification loop, and no census, origin or replay file is edited by hand.
+- [x] AC-2 — The origin artefact names, for rising rounds, each class's share and the lever 0.4's threshold table selects, or states that none qualified.
+- [x] AC-3 — `review_convergence` returns a verdict for every census subject, and the replay states per subject where it would have stopped and every high/critical finding raised after that round.
+- [x] AC-4 — Each owner blocker is either resolved with its step enforced by a passing test, or open with a dated council `Routed:` verdict and the replay's pooled row attached.

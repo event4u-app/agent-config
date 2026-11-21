@@ -1,0 +1,387 @@
+{
+  "subject": "compact-checkpoint-concern-20261108",
+  "round1_findings": 5,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Ancestor symlinks bypass check; observation path unguarded",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "FIFOs or special files can block reads",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.3",
+          "summary": "Log read whole before trimming",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Concurrent appends interleave; trim can drop appends",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.5",
+          "summary": "Budget derivation mismatch with measured chunk size",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "readCounters bypasses containment and bounded reader guards",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.2",
+          "summary": "Reader can exceed cap if file grows after fstat",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.3",
+          "summary": "Shared continuity writer and claim reader read unguarded",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Task-state readers still perform unguarded reads",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Log append open lacks nofollow/nonblock and file check",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.2",
+          "summary": "Log bound by line count, not bytes",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.3",
+          "summary": "Malformed marker not removed on observation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.4",
+          "summary": "Repository root symlink policy unstated",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Storage inside repository-controlled tree",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "6.2",
+          "summary": "Byte bound uses string length, not UTF-8 bytes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "Append accepts hard-linked log file",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "Manifest comment does not match keys-only marker",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "No retention for markers in user-global directory",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Version read from any package.json",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.3",
+          "summary": "Tally counts non-own or non-string event keys",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.4",
+          "summary": "Log bound and tally semantics undocumented under concurrency",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Sweep reads whole directory; work unbounded",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Bounded sweep may never reach expired markers",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Capacity check reserves no room for the write",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.2",
+          "summary": "Refused write leaves predecessor marker eligible",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.3",
+          "summary": "Failed atomic write and old temp files linger",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "10.4",
+          "summary": "Observation consumes marker before log records class",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Exact directory ceiling exceeded by log and racing writers",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.2",
+          "summary": "Append may write partial line",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.3",
+          "summary": "Version read before event and source checks",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.4",
+          "summary": "Missing hook-entry tests for silent no-op paths",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Comment implies cleanup guarantee concurrency can break",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Oversized-log test misses replacement branch",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "12.3",
+          "summary": "Hook-entry tests do not assert silence",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Marker consumption race within one session",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.2",
+          "summary": "Unknown version on both sides compares equal",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.3",
+          "summary": "No test for uncreatable runtime directory",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "13.4",
+          "summary": "Sweep test names claim guaranteed cleanup",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "written_at cannot distinguish two markers",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.2",
+          "summary": "Absent/malformed branch deletes without re-reading",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.3",
+          "summary": "Sweep replacement window undocumented",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Packet omitted implementation; cannot judge",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Missing O_NOFOLLOW/O_NONBLOCK silently fall back to zero",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "18.2",
+          "summary": "WRITE_LIMIT comment does not explain gap",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Log trim runs before protection-flag check",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

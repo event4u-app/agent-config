@@ -162,7 +162,9 @@ in milliseconds, and refuses with the command when it does not. The replay
 cannot run inside the hook: `git push` holds the connection to GitHub open while
 the hook runs, and GitHub closes it after a few idle minutes. `--list` prints
 the plan, `--job <workflow>:<job>` narrows it (and writes no stamp). A refused
-ratification record is reported as an owner decision and does not block.
+ratification record is reported as an owner decision: the replay stays green,
+but CI will show that step red, so the pre-push hook refuses the push until the
+owner has answered; then `AGENT_CONFIG_PUSH_OWNER_DECIDED=1 git push`, printed on use.
 Derived-output drift shows up as the consistency job's `git diff` step — fix it
 with `task consistency-fix`, commit, re-run. The hook auto-installs on
 `npm install` in a git clone (the `prepare` script); run `task install-hooks`
