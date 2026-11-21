@@ -72,7 +72,7 @@ mapping before running anything:
 
 ### 3. Read the full output
 
-* Check the exit code.
+* Check the exit code — the gate's own: `gate; echo $?` reports echo's, so keep `rc=$?`.
 * Count failures, errors, warnings.
 * Do not rely on the last line — scroll through the output for
   deprecations, skipped tests, silent retries.
