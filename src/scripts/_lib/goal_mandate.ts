@@ -110,9 +110,10 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
             }
             return revoked;
         }
-        const record: GoalRecord = { sentence: goal as string, recorded_at: at };
-        write_goal(root, session_id, record);
-        return record;
+        write_goal(root, session_id, { sentence: goal as string, recorded_at: at });
+        // Render what a fresh read shows, so a stop saved between the read above
+        // and this write wins on this turn too, not only on the next one.
+        return read_goal(root, session_id);
     } catch {
         return null;
     } finally {
