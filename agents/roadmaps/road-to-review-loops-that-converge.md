@@ -80,7 +80,7 @@ the owner and never closes them.
 
 ## Phase 0 — A census the tree generates, and why findings rise
 
-- [ ] **0.1 Census script, test-first.** Write
+- [x] **0.1 Census script, test-first.** Write
       `tests/scripts/review_loop_census.test.ts` first: fixtures in a temp dir
       with both packet namings (`<slug>.roundN.question.md`,
       `<slug>-rN-<date>.question.md`), completion-review `roundN.findings.md`
