@@ -163,11 +163,12 @@ export interface OwnerSpans {
   /** The paragraph after the last output paste, when one follows it. */
   trailing: string;
   /**
-   * Every prose line, and every paragraph of them, above the first document
-   * head: the lines that are not output-shaped and not fenced, whoever wrote
-   * them. Never scored, only a veto — typed and pasted prose have the same
-   * shape wherever they sit (above, below or glued to a paste), so when two of
-   * them confidently disagree no span rule can say which is the owner's.
+   * Every prose line of the prompt, and every paragraph of them: the lines
+   * that are not output-shaped, not a document head and not fenced, whoever
+   * wrote them, a pasted document's body included. Never scored, only a veto —
+   * typed and pasted prose have the same shape wherever they sit (above, below,
+   * glued to or inside a paste), so when two of them confidently disagree no
+   * span rule can say which is the owner's.
    */
   prose: string[];
 }
@@ -194,9 +195,9 @@ export interface OwnerSpans {
  *
  * Both spans are returned as found; neither is dropped in favour of the other.
  * Deciding whether they can be trusted is the scorer's job: `prose` lists every
- * prose line and paragraph above the first document head, and `classify` in
- * the language mirror returns `und` when any two of them confidently disagree
- * (ratification rounds 1-3 found each narrower rule had a shape it missed).
+ * prose line and paragraph of the prompt, and `classify` in the language
+ * mirror returns `und` when any two of them confidently disagree (ratification
+ * rounds 1-4 found each narrower rule had a shape it missed).
  *
  * A trailing span with no blank line between it and the paste is weaker
  * evidence than a lead: it is read only when the prompt has no lead. A wrapped
@@ -206,8 +207,9 @@ export interface OwnerSpans {
  * KNOWN RESIDUALS, stated rather than hidden: a prompt that OPENS with a paste
  * ending in an unmarked prose line, with no typed text after it, yields that
  * line as the trailing span; and a typed line that itself starts like output
- * (`Error: …`) is read as paste. Neither has owner prose the span reader can
- * see, so neither has anything for the veto to protect.
+ * (`Error: …`) or like a document head (`# …`), or sits inside a fence, is read
+ * as paste. None of them leaves owner prose the reader can see, so none has
+ * anything for the veto to protect.
  */
 export function ownerSpans(text: string): OwnerSpans {
   const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
@@ -242,9 +244,7 @@ export function ownerSpans(text: string): OwnerSpans {
 
   const prose: string[] = [];
   let para: string[] = [];
-  // The sentinel `#` flushes the last paragraph on the same path as a real
-  // document head, so no exit from the loop can skip the flush.
-  for (const line of [...lines, "# "]) {
+  for (const line of [...lines, ""]) {
     if (!blank(line) && !isPaste(line)) {
       prose.push(line);
       para.push(line);
@@ -252,7 +252,6 @@ export function ownerSpans(text: string): OwnerSpans {
     }
     if (para.length > 0) prose.push(para.join("\n"));
     para = [];
-    if (DOCUMENT_HEAD.test(line)) break;
   }
 
   return { lead: lead.join("\n"), trailing: trailing.join("\n"), prose };

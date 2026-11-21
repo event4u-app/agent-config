@@ -185,13 +185,25 @@ describe("isSyntheticPrompt", () => {
       "vollständig auf Deutsch, sodass eine Zählung über alles Deutsch ergäbe.",
     ].join("\n");
 
-    it("pins to the German instruction above an English paste", () => {
+    // The paste no longer decides in either direction; with the owner-prose
+    // pin (road-to-a-language-pin-from-owner-prose, ratification round 5) the
+    // pasted body vetoes and the previous pin stays, because an unheaded paste
+    // ABOVE a typed line has the same shape. `classifyText`, which replies use,
+    // keeps reading the lead first.
+    it("does not pin from an English paste under a German instruction", () => {
       const prompt = `Bitte schau dir das mal an und sag mir was du davon hältst:\n\n${ENGLISH_DOC}`;
-      expect(classify(prompt).language).toBe("de");
+      expect(classify(prompt).language).toBe("und");
+      expect(classifyText(prompt).language).toBe("de");
     });
 
-    it("pins to the English instruction above a German paste — same rule, no language named", () => {
+    it("does not pin from a German paste under an English instruction — same rule, no language named", () => {
       const prompt = `Please take a look at this and tell me what you think of it:\n\n${GERMAN_DOC}`;
+      expect(classify(prompt).language).toBe("und");
+      expect(classifyText(prompt).language).toBe("en");
+    });
+
+    it("an instruction over a paste in the same language still pins", () => {
+      const prompt = `Please take a look at this and tell me what you think of it:\n\n${ENGLISH_DOC}`;
       expect(classify(prompt).language).toBe("en");
     });
 
@@ -1863,6 +1875,11 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
   [
     "[ratification r4] lowercase `to …` instruction over a pasted German line",
     "to fix this, please tell me why.\n\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r5] an English document without a leading heading above a typed German question",
+    "This roadmap describes the work that has to be done and the reasons we have for it.\n## Section\nThe parser drops the last line when the input has no trailing newline.\n\nWas hältst du davon und was fehlt noch?",
     "und",
   ],
   [

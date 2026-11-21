@@ -314,14 +314,14 @@ export function instructionText(prompt: string): string {
  * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
  *
  * Every prose line of the prompt, and every paragraph of them, is scored on
- * its own first (`OwnerSpans.prose`: everything above the first document head
- * that is not output-shaped or fenced, owner text or not). When two of them
- * are each confident and disagree, the verdict is `und`: one of them may be a
- * paste the span reader could not see — an unmarked paragraph glued under or
- * pasted above a typed line, a paste's edge line beside a typed question — and
- * ratification rounds 1-3 found a missed shape for every narrower rule. The
- * cost is recall: a German question over a log whose last line is English
- * prose keeps the previous pin. Otherwise the owner text is scored whole.
+ * its own first (`OwnerSpans.prose`: everything that is not output-shaped, a
+ * document head or fenced, owner text or not, a pasted document's body
+ * included). When two of them are each confident and disagree, the verdict is
+ * `und`: a prompt pins only when all of its prose agrees, because typed and
+ * pasted prose have the same shape and ratification rounds 1-4 found a missed
+ * shape for every narrower rule. The cost is recall: a German question over an
+ * English document or log keeps the previous pin rather than setting one.
+ * Otherwise the owner text is scored whole.
  *
  * `owner_prose_chars` is the length of the text that was scored, so a pin can
  * say how much owner prose stood behind it.
