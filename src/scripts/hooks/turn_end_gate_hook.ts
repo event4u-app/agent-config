@@ -33,8 +33,9 @@
  *   F — untested change     (`untested`; the turn changed production code,
  *                            touched no test, and claimed done —
  *                            `detectUntestedChange`.)
- *   G — coverage gap        (`coverage`; a done claim wider than its evidence,
- *                            `detectCoverageGap`; RECORDS, never refuses.)
+ *   G — coverage gap        (`coverage`; a done claim wider than its evidence;
+ *                            RECORDS, never refuses. The live path runs only
+ *                            `partial_ratio`; `unlisted_surface` is not wired, D11.)
  *
  * The SVG render obligation (`openSvgObligation`) also runs in that list but
  * reports under C's id, `verification`, so it is not a seventh detector.
@@ -216,10 +217,11 @@ import {
     RECORD_ONLY_DETECTORS,
     completionClaimAt,
     foldRecorded,
-    coverageGapIn,
+    partialRatioIn,
     readRecorded,
     recordedFile,
 } from '../_lib/coverage_claim.js';
+import { coverageGapIn } from '../_lib/unlisted_surface.js';
 // Round 8 — the record path detector C prefers over its own regex. The regex
 // reads a command's TEXT and `echo test` matches it; these read what the run
 // exited with and what it printed.
@@ -578,7 +580,7 @@ export function detectCompletionClaim(
     };
 }
 
-/** Detector G — see `_lib/coverage_claim.ts`. Records only. */
+/** Detector G, both reasons (`_lib/coverage_claim.ts`); the live path runs `partialRatioIn` alone (D11). */
 export function detectCoverageGap(reply: string, calls: readonly ToolCall[] = [], root?: string): Finding | null {
     return coverageGapIn(stripFencedBlocks(reply), visibleProse(reply), calls, root);
 }
@@ -1270,8 +1272,9 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
         // opposite trigger, opposite treatment of `dispatchOpen`.
         openSvgObligation(workspaceRoot, toolCalls, runState?.asset_renders ?? null),
         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
-        // G is a completion claim too, so an open dispatch excuses it like D.
-        dispatchOpen ? null : detectCoverageGap(lastAssistant, toolCalls, workspaceRoot),
+        // G is a completion claim too, so an open dispatch excuses it like D; only its
+        // `partial_ratio` reason runs here (D11, `unlisted_surface` reads the repo).
+        dispatchOpen ? null : partialRatioIn(stripFencedBlocks(lastAssistant), visibleProse(lastAssistant)),
     ]) {
         if (f) findings.push(f);
     }

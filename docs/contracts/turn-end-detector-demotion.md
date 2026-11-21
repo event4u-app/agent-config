@@ -45,7 +45,7 @@ counted alone would have under-reported the gate.
 | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
 | E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
 | F `untested` | a completion claim over production source the turn changed, with no test file touched anywhere in the turn | that "done" means exercised, not merely run | only when no dispatch is open |
-| G `coverage` | a completion claim wider than its evidence: `N of M` with N < M not listed under "Not verified:" (`partial_ratio`), or an edited runnable surface nothing drove and nothing lists (`unlisted_surface`) | that "done" covers the whole of what was asked | only when no dispatch is open; records, never refuses, until armed |
+| G `coverage` | a completion claim wider than its evidence: `N of M` with N < M not listed under "Not verified:" (`partial_ratio`), or an edited runnable surface nothing drove and nothing lists (`unlisted_surface`; implemented, but not run on the live hook path until it moves into a chunk loaded only on a claim) | that "done" covers the whole of what was asked | only when no dispatch is open; records, never refuses, until armed |
 
 **Why E runs on every turn-end rather than joining A and D.** The conditional
 pair is excused by an open dispatch because a completion claim mid-dispatch is
