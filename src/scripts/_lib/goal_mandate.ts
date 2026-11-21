@@ -51,6 +51,7 @@ export function write_stop(file: string, revoke: string, now: Date): void {
     const prefix = `${path.basename(file)}.stop-`;
     const own = `${prefix}${stamp}`;
     try {
+        fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(path.join(path.dirname(file), own), revoke);
     } catch {
         // One append per stop, never an overwrite, so a paused older stop cannot
@@ -78,14 +79,16 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
         const goal = revoke === null ? goalSentenceIn(prompt) : null;
         const file = goal_store_file(root, session_id);
         if ((revoke === null && goal === null) || file === null) return read_goal(root, session_id);
-        fs.mkdirSync(path.dirname(file), { recursive: true });
         // A goal write is a read-compare-write and runs under the record's lock, so
         // two goal beats of one session cannot interleave; one that cannot take the
         // lock writes nothing. A stop takes no lock: it is its own file, which a
         // goal write cannot overwrite, and readers suppress every goal at or before
         // the latest stop, so a goal writer that read before a stop and writes
         // after it is suppressed too.
+        // The store directory is created on the goal path only; a stop creates it
+        // inside `write_stop`, so a failure there still reaches its fallbacks.
         if (revoke === null) {
+            fs.mkdirSync(path.dirname(file), { recursive: true });
             try {
                 held = acquire(`${file}.lock`, { staleMs: 5_000, waitMs: 250 });
             } catch {

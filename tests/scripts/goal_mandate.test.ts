@@ -292,6 +292,35 @@ describe('observe_prompt — goal sentences', () => {
     });
 
 
+    // Round 15: a store directory that cannot be created on the stop turn still
+    // reaches the user-level fallback, so the goal stays revoked once it is back.
+    it('a stop while the store directory cannot be created still revokes once it is back', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        observe_prompt(root, 's1', 'until merged', T0);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        const aside = `${dir}.aside`;
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-home-mk-'));
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        fs.renameSync(dir, aside);
+        fs.writeFileSync(dir, 'not a directory');
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        try {
+            expect(goal_mandate_block(root, 's1', 'stop', T1)).toBeNull();
+            fs.rmSync(dir);
+            fs.renameSync(aside, dir);
+            expect(goal_mandate_block(root, 's1', 'und die tests', T2)).toBeNull();
+            expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+            fs.rmSync(home, { recursive: true, force: true });
+            if (fs.existsSync(aside)) {
+                fs.rmSync(dir, { force: true });
+                fs.renameSync(aside, dir);
+            }
+        }
+    });
+
     // Round 6: only a direct request — a line opening with the goal phrase or a
     // request word — records; a mention opening with its subject does not.
     it.each(['ok, mach weiter bis zum merge', 'bitte bis zum merge durchziehen', 'please keep going until merged', 'Until merged, please.'])(
