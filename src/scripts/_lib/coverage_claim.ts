@@ -183,8 +183,8 @@ function playwrightConfig(command: string): string | null {
 }
 
 /** `start` run as one of the line's commands, not merely mentioned in one. */
-function runsCommand(command: string, start: string): boolean {
-    return commandSegments(command).some((x) => x.trim() === start || x.trim().startsWith(`${start} `));
+function runsCommand(segs: readonly string[], start: string): boolean {
+    return segs.some((x) => x === start || x.startsWith(`${start} `));
 }
 
 /** A segment that runs `playwright test` or `agent-config ui:render`, behind an env prefix or a runner. */
@@ -196,8 +196,7 @@ const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?
  * run over a web page. A `playwright test` run that names another config does not
  * drive a surface derived from this one.
  */
-function drives(command: string, surface: LiveSurface, root: string): boolean {
-    const segs = commandSegments(command).map((x) => x.trim());
+function drives(segs: readonly string[], surface: LiveSurface, root: string): boolean {
     const playwrightRuns = segs.filter((x) => PLAYWRIGHT_RUN.test(x));
     if (surface.kind === 'playwright' && playwrightRuns.length > 0) {
         const config = surface.derived_from.replace(/:\d+$/, '');
@@ -208,7 +207,7 @@ function drives(command: string, surface: LiveSurface, root: string): boolean {
     }
     // A playwright run credits an npm surface only through this repo's own root config
     // (its webServer); a run naming another app's config does not.
-    if (surface.kind === 'npm-script' && playwrightRuns.length > 0) {
+    if (surface.kind === 'npm-script' && surface.webServer === true && playwrightRuns.length > 0) {
         const own = playwrightRuns.some((run) => {
             const named = playwrightConfig(run);
             return named === null || /^playwright\.config\.[cm]?[jt]s$/.test(path.relative(root, path.resolve(root, named)));
@@ -216,7 +215,7 @@ function drives(command: string, surface: LiveSurface, root: string): boolean {
         if (own) return true;
     }
     if (BROWSER_KINDS.has(surface.kind) && segs.some((x) => RENDER_RUN.test(x))) return true;
-    if (surface.start !== null && runsCommand(command, surface.start)) return true;
+    if (surface.start !== null && runsCommand(segs, surface.start)) return true;
     // A URL counts in a command that is not just printing it, and as a whole host:port.
     if (surface.url === undefined) return false;
     const escaped = surface.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -247,7 +246,11 @@ export function unlistedSurfaceIn(
     if (edits.length === 0) return null;
     const surfaces = given ?? deriveLiveSurfaces(workspaceRoot);
     if (surfaces.length === 0) return null;
-    const commands = calls.map((c) => c.command ?? '').filter((c) => c !== '');
+    // Each command split once, not once per surface.
+    const commands = calls
+        .map((c) => c.command ?? '')
+        .filter((c) => c !== '')
+        .map((c) => commandSegments(c).map((x) => x.trim()));
     // Inline code kept (backticks dropped): a list entry is often `npm run dev`.
     const text = fenceStripped.replace(/`/g, ' ');
     const listed = notVerifiedSpans(text).map(([s, e]) => text.slice(s, e)).join('\n');
@@ -312,6 +315,16 @@ export function foldRecorded(
     return { counts, codes, first_at: prev?.first_at ?? at, last_at: at };
 }
 
+/** The entries of `v` that are non-negative safe integers; anything else is dropped. */
+function countsOnly(v: unknown): Record<string, number> {
+    const out: Record<string, number> = {};
+    if (typeof v !== 'object' || v === null || Array.isArray(v)) return out;
+    for (const [k, n] of Object.entries(v as Record<string, unknown>)) {
+        if (typeof n === 'number' && Number.isSafeInteger(n) && n >= 0) out[k] = n;
+    }
+    return out;
+}
+
 /** Read a session's record-only counters; anything unreadable starts fresh. */
 export function readRecorded(file: string): RecordedCounts | null {
     try {
@@ -321,8 +334,8 @@ export function readRecorded(file: string): RecordedCounts | null {
         const o = JSON.parse(raw) as Partial<RecordedCounts>;
         if (typeof o.counts !== 'object' || o.counts === null) return null;
         return {
-            counts: o.counts,
-            codes: typeof o.codes === 'object' && o.codes !== null ? o.codes : {},
+            counts: countsOnly(o.counts),
+            codes: countsOnly(o.codes),
             first_at: typeof o.first_at === 'string' ? o.first_at : '',
             last_at: typeof o.last_at === 'string' ? o.last_at : '',
         };
@@ -332,5 +345,7 @@ export function readRecorded(file: string): RecordedCounts | null {
 }
 
 export function recordedFile(stateDir: string, sessionKey: string): string {
+    // Only a derived key (`deriveSessionKey`: 32 hex characters) names a counter file.
+    if (!/^[0-9a-f]{32}$/.test(sessionKey)) throw new Error('recordedFile: not a derived session key');
     return path.join(stateDir, `${sessionKey}${RECORDED_SUFFIX}`);
 }

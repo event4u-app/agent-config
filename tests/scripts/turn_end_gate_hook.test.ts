@@ -53,7 +53,7 @@ import {
     run as beforeCompleteRun,
     statePathFor as ciStatePathFor,
 } from '../../src/scripts/before_complete_hook.js';
-import { readRecorded } from '../../src/scripts/_lib/coverage_claim.js';
+import { readRecorded, recordedFile } from '../../src/scripts/_lib/coverage_claim.js';
 import {
     run as languageMirrorRun,
     STATE_FILE as LANGUAGE_LEGACY_STATE_FILE,
@@ -2257,6 +2257,21 @@ describe('detector G — a negated claim on its own line', () => {
         expect(detectCoverageGap('Progress update.\n\nFertig ist der Fix noch nicht.\n165 von 405', [], undefined)).toBeNull();
     });
 
+    it('counter values that are not non-negative integers are dropped on read', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'recorded-bad-'));
+        tmp_dirs.push(dir);
+        const file = path.join(dir, 'k.recorded.json');
+        fs.writeFileSync(file, JSON.stringify({ counts: { coverage: '9', ok: 2 }, codes: { partial_ratio: -1 } }));
+        const r = readRecorded(file);
+        expect(r?.counts).toEqual({ ok: 2 });
+        expect(r?.codes).toEqual({});
+    });
+
+    it('a counter file name is built only from a derived session key', () => {
+        expect(() => recordedFile('/tmp/state', '../../evil')).toThrow();
+        expect(recordedFile('/tmp/state', 'a'.repeat(32))).toBe(path.join('/tmp/state', `${'a'.repeat(32)}.recorded.json`));
+    });
+
     it('a counter path that is a FIFO does not block reading the counters', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'recorded-fifo-'));
         tmp_dirs.push(dir);
@@ -2342,6 +2357,18 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
             { name: 'Bash', command: 'npx playwright test -c e2e/other.config.ts && npx playwright test -c playwright.config.ts' },
         ];
         expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
+    });
+
+    it('a playwright run credits only the npm script its root config starts', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-ws-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite', preview: 'vite preview' } }));
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { webServer: { command: 'npm run dev' } };\n");
+        fs.mkdirSync(path.join(dir, 'src'));
+        const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'src', 'a.ts') }, { name: 'Bash', command: 'npx playwright test' }];
+        const f = detectCoverageGap('Fertig.', calls, dir);
+        expect(f?.code).toBe('unlisted_surface');
+        expect(f?.evidence).toContain('preview');
     });
 
     it('a browser run against another app\'s config does not drive the root npm surface', () => {

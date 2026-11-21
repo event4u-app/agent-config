@@ -33,6 +33,8 @@ export interface LiveSurface {
     root: string;
     /** `file:line` the entry was read from. */
     derived_from: string;
+    /** npm-script only: the repo's root playwright config starts this script as its webServer. */
+    webServer?: boolean;
 }
 
 export interface LiveSurfaceMap {
@@ -175,13 +177,14 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
     return out;
 }
 
-function playwrightBaseUrls(root: string, inputs: string[]): LiveSurface[] {
+function playwrightBaseUrls(root: string, inputs: string[], texts: string[]): LiveSurface[] {
     const out: LiveSurface[] = [];
     for (const ext of ['ts', 'js', 'mjs', 'cjs', 'mts']) {
         const file = path.join(root, `playwright.config.${ext}`);
         const text = readText(file, root);
         if (text === null) continue;
         inputs.push(file);
+        texts.push(text);
         const m = /baseURL\s*:\s*['"`]([^'"`]+)['"`]/.exec(text);
         if (m === null) continue;
         out.push({
@@ -272,16 +275,26 @@ function taskfileTasks(root: string, inputs: string[]): LiveSurface[] {
     return out;
 }
 
+/** Surfaces per derivation: the Stop hook checks each against the turn's commands. */
+const MAX_SURFACES = 64;
+
 export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[] } {
     const inputs: string[] = [];
+    const playwrightTexts: string[] = [];
     const npm = npmScripts(root, inputs);
     const surfaces = [
         ...npm.surfaces,
         ...tauriWindows(root, npm.scripts, inputs),
-        ...playwrightBaseUrls(root, inputs),
+        ...playwrightBaseUrls(root, inputs, playwrightTexts),
         ...composePorts(root, inputs),
         ...taskfileTasks(root, inputs),
-    ];
+    ].slice(0, MAX_SURFACES);
+    // The npm script a root playwright config starts as its webServer is driven by a playwright run.
+    for (const s of surfaces) {
+        if (s.kind !== 'npm-script') continue;
+        const run = new RegExp(`\\b(?:npm run|pnpm(?: run)?|yarn|bun run) ${escapeRe(s.name)}\\b`);
+        if (playwrightTexts.some((t) => run.test(t))) s.webServer = true;
+    }
     return { surfaces, inputs };
 }
 

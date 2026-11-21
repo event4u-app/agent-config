@@ -742,7 +742,7 @@ export function pruneAgedRefusalState(
             let lastAt: string | null = null;
             try {
                 // The counter file is read bounded and non-blocking, as the hook reads it.
-                const raw = name.endsWith(RECORDED_SUFFIX) ? readText(file) : fs.readFileSync(file, 'utf-8');
+                const raw = name.endsWith(RECORDED_SUFFIX) ? readText(file, dir) : fs.readFileSync(file, 'utf-8');
                 if (raw === null) throw new Error('unreadable counter');
                 lastAt = name.endsWith(RECORDED_SUFFIX)
                     ? recordedLastAt(raw)

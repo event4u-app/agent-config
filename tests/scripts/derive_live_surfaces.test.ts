@@ -62,10 +62,10 @@ describe('deriveLiveSurfaces', () => {
     it('names the line of the first window for every tauri window', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-win-'));
         tmps.push(dir);
-        const windows = Array.from({ length: 200 }, (_, i) => ({ title: `w${String(i)}`, width: 800, height: 600 }));
+        const windows = Array.from({ length: 50 }, (_, i) => ({ title: `w${String(i)}`, width: 800, height: 600 }));
         fs.writeFileSync(path.join(dir, 'tauri.conf.json'), JSON.stringify({ app: { windows } }, null, 2));
         const found = deriveLiveSurfaces(dir).filter((x) => x.kind === 'tauri');
-        expect(found).toHaveLength(200);
+        expect(found).toHaveLength(50);
         expect(new Set(found.map((x) => x.derived_from)).size).toBe(1);
     });
 
@@ -93,6 +93,14 @@ describe('deriveLiveSurfaces', () => {
         fs.writeFileSync(path.join(dir, 'tauri.conf.json'), 'null');
         fs.writeFileSync(path.join(dir, 'package.json'), '{"scripts":{"dev":"vite"}}');
         expect(deriveLiveSurfaces(dir).map((x) => x.kind)).toEqual(['npm-script']);
+    });
+
+    it('derives at most 64 surfaces however many windows a config lists', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-cap-'));
+        tmps.push(dir);
+        const windows = Array.from({ length: 500 }, (_, i) => ({ title: `w${String(i)}` }));
+        fs.writeFileSync(path.join(dir, 'tauri.conf.json'), JSON.stringify({ app: { windows } }));
+        expect(deriveLiveSurfaces(dir)).toHaveLength(64);
     });
 
     it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
