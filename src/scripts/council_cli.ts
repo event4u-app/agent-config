@@ -180,6 +180,7 @@ import {
     with_chairman_fields,
 } from './ai_council/blind_review.js';
 import { tallyFromResponses } from './ai_council/stance_tally.js';
+import { ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
 import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
@@ -2230,36 +2231,6 @@ function _resolved_chairman_override(raw: string | null) {
     }
 }
 
-/** The record writer's own subject declaration: one line, the digest alone. */
-const RATIFICATION_SUBJECT_LINE = /^`?subject: [0-9a-f]{64}`?\s*$/gmu;
-const RATIFICATION_LABELS = ['ratified', 'confirmed-non-expanding', 'refused'] as const;
-const RATIFICATION_STANCE_CONTRACT = `Close your reply with EXACTLY this line, and nothing after it:
-STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no
-Use one of the three labels exactly as written; no other label is recorded.`;
-
-/** A prompt that declares exactly one `subject:` line is a ratification prompt (ratification_record_writer.ts). */
-export function isRatificationPrompt(text: string): boolean {
-    return [...text.matchAll(RATIFICATION_SUBJECT_LINE)].length === 1;
-}
-
-/**
- * Why a ratification prompt cannot produce a record, or null. The record writer
- * derives each seat's verdict from its closing stance line only; 24 rounds that
- * asked for `VERDICT:` instead produced no record at all (PR #3005).
- */
-export function ratificationPromptProblem(text: string): string | null {
-    if (!isRatificationPrompt(text)) return null;
-    const stance = text.split('\n').find((l) => /STANCE:/u.test(l) && /DEALBREAKER:/u.test(l));
-    if (stance === undefined) {
-        return 'a ratification prompt (it declares a `subject:` line) must ask every seat to close on ' +
-            '`STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: <high | med | low> | DEALBREAKER: <yes | no>` — ' +
-            'the record writer reads nothing else, so any other closing line yields no record';
-    }
-    const missing = RATIFICATION_LABELS.filter((l) => !new RegExp(`(^|[^a-z-])${l}([^a-z-]|$)`, 'u').test(stance));
-    if (missing.length > 0) return `the stance line of this ratification prompt does not offer ${missing.map((m) => `\`${m}\``).join(', ')}`;
-    return null;
-}
-
 function cmd_run(
     args: Args,
     opts: { settings?: Dict | null; members?: ExternalAIClient[] | null; table?: PriceTable | null } = {},
@@ -2323,16 +2294,9 @@ function cmd_run(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
-    const raw_prompt = args.input_mode === 'prompt' ? fs.readFileSync(args.question as string, 'utf-8') : '';
-    const ratification_problem = ratificationPromptProblem(raw_prompt);
-    if (ratification_problem !== null) {
-        _stderr(`❌  council:run: ${ratification_problem}.\n`);
-        return 2;
-    }
-    // A ratification prompt always gets the stance contract and one unattended
-    // repair re-prompt for a seat that omits the line: a round with no stance
-    // line is a paid round that cannot be recorded.
-    const ratification_prompt = isRatificationPrompt(raw_prompt);
+    // A ratification prompt gets the stance contract and one unattended repair (ai_council/ratification_prompt.ts).
+    const { problem: ratification_problem, ratification: ratification_prompt } = readRatificationPrompt(args.input_mode, args.question);
+    if (ratification_problem !== null) return (_stderr(`❌  council:run: ${ratification_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
         lens: question.mode,
@@ -2456,11 +2420,8 @@ function cmd_run(
     });
     const rounds = _resolve_rounds(args, ai_cfg);
     // Phase 1: stance tally — defensive read; malformed/absent block reads as off.
-    const stance_tally_on =
-        ratification_prompt ||
-        (_isDict(ai_cfg) &&
-            _isDict(ai_cfg['stance_tally']) &&
-            (ai_cfg['stance_tally'] as Dict)['enabled'] === true);
+    const stance_tally_on = ratification_prompt ||
+        (_isDict(ai_cfg) && _isDict(ai_cfg['stance_tally']) && (ai_cfg['stance_tally'] as Dict)['enabled'] === true);
     // road-to-council-blind-review Phase 1 (Ü2): five orthogonal stances
     // rotated deterministically over the config-ordered member list; the
     // outsider seat additionally drops project_context. Default off.
@@ -2501,12 +2462,7 @@ function cmd_run(
         on_stance_repair_result: (r: CouncilResponse): void => {
             stance_repairs.push(r);
         },
-        // A ratification seat must close on one of the record writer's labels;
-        // `abstain` or an invented label is a paid round that yields no record.
-        stance_repair_contract: ratification_prompt ? RATIFICATION_STANCE_CONTRACT : null,
-        stance_label_accepted: ratification_prompt
-            ? (label: string): boolean => (RATIFICATION_LABELS as readonly string[]).includes(label.trim().toLowerCase())
-            : null,
+        ...ratificationRepairOptions(ratification_prompt),
     });
     // M3 fix (independent-review finding) — quorum measures MEMBERS THAT
     // ACTUALLY PRODUCED A USABLE RESPONSE, per `quorum.ts`'s own docstring
@@ -2885,13 +2841,8 @@ function cmd_debate(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
-    const debate_problem = ratificationPromptProblem(
-        args.input_mode === 'prompt' ? fs.readFileSync(args.question as string, 'utf-8') : '',
-    );
-    if (debate_problem !== null) {
-        _stderr(`❌  council:debate: ${debate_problem}.\n`);
-        return 2;
-    }
+    const debate_problem = readRatificationPrompt(args.input_mode, args.question).problem;
+    if (debate_problem !== null) return (_stderr(`❌  council:debate: ${debate_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
         lens: 'debate',

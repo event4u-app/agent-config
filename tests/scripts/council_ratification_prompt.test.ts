@@ -3,7 +3,7 @@
 // record. A ratification prompt is now checked before a single seat is paid.
 import { describe, expect, it } from 'vitest';
 
-import { isRatificationPrompt, ratificationPromptProblem } from '../../src/scripts/council_cli.js';
+import { isRatificationPrompt, ratificationPromptProblem } from '../../src/scripts/ai_council/ratification_prompt.js';
 
 const SUBJECT = `subject: ${'ab'.repeat(32)}`;
 const STANCE = '`STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: <high | med | low> | DEALBREAKER: <yes | no>`';
