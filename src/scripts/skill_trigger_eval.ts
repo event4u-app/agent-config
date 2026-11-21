@@ -254,6 +254,44 @@ export function load_triggers(p: string): [string, Query[]] {
     return [skill, queries];
 }
 
+/**
+ * Load a corpus in either supported shape — the `queries` list or the split
+ * `should_trigger` / `should_not_trigger` lists `check_trigger_evals` accepts.
+ * `load_triggers` reads the `queries` shape only; the live CLI and the
+ * rotation read through this one, so no corpus the gate accepts is
+ * unmeasurable.
+ */
+export function load_triggers_any(p: string, fallbackSkill: string): [string, Query[]] {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
+    const skill = typeof data['skill'] === 'string' && data['skill'] ? (data['skill'] as string) : fallbackSkill;
+    const queries: Query[] = [];
+    if (Array.isArray(data['queries'])) {
+        for (const item of data['queries'] as Array<{ q?: unknown; trigger?: unknown }>) {
+            if (typeof item?.q === 'string' && item.q.trim()) {
+                queries.push(Query(item.q, Boolean(item.trigger)));
+            }
+        }
+    } else {
+        for (const [key, trigger] of [
+            ['should_trigger', true],
+            ['should_not_trigger', false],
+        ] as const) {
+            const items = data[key];
+            if (!Array.isArray(items)) continue;
+            for (const it of items) {
+                const q = typeof it === 'string' ? it : (it as { q?: unknown } | null)?.q;
+                if (typeof q === 'string' && q.trim()) {
+                    queries.push(Query(q, trigger));
+                }
+            }
+        }
+    }
+    if (queries.length === 0) {
+        throw new Error(`${p}: no usable queries in either supported shape`);
+    }
+    return [skill, queries];
+}
+
 /** Python ValueError equivalent (test matches `pytest.raises(ValueError)`). */
 export class ValueError extends Error {
     constructor(message: string) {
@@ -960,7 +998,7 @@ export function main(argv?: string[]): number {
         return 2;
     }
 
-    const [skillFromFile, queries] = load_triggers(triggersPath);
+    const [skillFromFile, queries] = load_triggers_any(triggersPath, args.skill);
     if (skillFromFile !== args.skill) {
         process.stderr.write(
             `❌  skill mismatch: --skill=${args.skill} but triggers.json says ${skillFromFile}\n`,
