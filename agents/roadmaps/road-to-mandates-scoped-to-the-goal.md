@@ -89,7 +89,7 @@ a file.
 
 ## Phase 0 — A baseline the repo generates
 
-- [x] **0.1 Route the blocker before any build.** Run `agent-config
+- [x] **0.1 Route the blocker before any build.** Run `agent-config <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/goal_phrases.ts -->
       council:status`; when CONFIGURED, put `goal-scope-hard-floor-reach` to the
       council with `decision-revisit-gate`'s owner-reserved table attached and a
       neutral prompt (the transition, the two ADR excerpts cited in Context, no
@@ -100,7 +100,7 @@ a file.
       be bounded from available evidence"; the verdict is in the blocker's
       `Routed:` field. One council run carried the four questions of 0.1, 2.1,
       3.1 and 3.3 as separate items.
-- [x] **0.2 Failing test for the re-ask counter.** Write
+- [x] **0.2 Failing test for the re-ask counter.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/goal_phrases.ts -->
       `tests/scripts/mandate_reask_report.test.ts` against fixture transcripts
       under `tests/fixtures/mandate-reask/`: (a) a goal sentence followed in a
       later user turn by "erstelle den PR" / "push it" / "merge it" counts one
@@ -109,23 +109,25 @@ a file.
       `pr_target_asked_after_create`; (c) the rendered output contains no
       substring of any fixture prompt.
       verify: `npx vitest run tests/scripts/mandate_reask_report.test.ts` -> 1 failing on the missing module.
+      production entry: src/scripts/mandate_reask_report.ts
       Done 2026-11-21: seen red on `Failed to resolve import
       "../../src/scripts/mandate_reask_report.js"`. The fixture store also
       covers a replayed turn, a subagent file, a synthetic turn and a revoked
       goal, each pinned to zero.
-- [x] **0.3 Build the counter.** Implement `src/scripts/mandate_reask_report.ts`
+- [x] **0.3 Build the counter.** Implement `src/scripts/mandate_reask_report.ts` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/goal_phrases.ts -->
       on `src/scripts/_lib/cc_transcript.ts` (`listTranscriptFiles`, main
       bucket only, replay-deduped), flags `--sessions N`, `--since <iso>`,
       `--json`, `--write-baseline <path>`. Counts and session ids only. Not a
       gate: exit 1 only when the store is unreadable or empty.
       verify: the 0.2 test passes; `./scripts-run src/scripts/mandate_reask_report --sessions 50 --json` exits 0.
+      production entry: src/scripts/mandate_reask_report.ts
       Done 2026-11-21: 7/7 green; the 50-session run exits 0. It reads user
       turns as well as assistant turns, so it shares `listTranscriptFiles` and
       the main-bucket rule with `cc_transcript.ts` but dedups by record `uuid`.
       The phrase set lives in `src/scripts/_lib/goal_phrases.ts`, shared with the
       Phase 2 hook so the baseline and the live recognizer cannot disagree.
       `--root` (repeatable) exists for the fixture store.
-- [x] **0.4 Write the baseline by command.** Run it with
+- [x] **0.4 Write the baseline by command.** Run it with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/goal_phrases.ts -->
       `--write-baseline agents/evidence/mandate-reask/2026-11-baseline.json`
       over the host transcript store. The file records the command line, the
       transcript count and the two metrics; nobody edits it.
@@ -138,20 +140,20 @@ a file.
 
 ## Phase 1 — The session's PR is the default target
 
-- [x] **1.1 Failing selector test.** Add cases to
+- [x] **1.1 Failing selector test.** Add cases to <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       `tests/scripts/session_pr_watch.test.ts` for a new
       `default_pr_target(store)`: exactly one `OPEN` tracked PR → that PR; two
       `OPEN` → `null`; only `MERGED`/`CLOSED` → `null`; empty store → `null`.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 1 failing on the missing export.
       Done 2026-11-21: seen red, `TypeError: default_pr_target is not a function`
       (five cases; a sixth pins that two open PRs put no default in the block).
-- [x] **1.2 Selector and block line.** Implement `default_pr_target` in
+- [x] **1.2 Selector and block line.** Implement `default_pr_target` in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       `src/scripts/_lib/session_pr_watch.ts`; `pr_watch_block` appends one line
       `Default PR target for PR commands: #<n> <url>` when it is non-null.
       Existing assertions in the same test file stay unchanged.
       verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 0
       Done 2026-11-21: 17/17 green, the existing eleven assertions untouched.
-- [x] **1.3 Failing command-contract test.** Write
+- [x] **1.3 Failing command-contract test.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       `tests/scripts/pr_command_target.test.ts` asserting that
       `fix/pr-comments-loop/command.md` and `fix/pr-comments/command.md` name the
       order *explicit URL → session default target → current-branch detection →
@@ -160,7 +162,7 @@ a file.
       verify: the test fails on today's text.
       Done 2026-11-21: seen red, 6 failed / 1 passed (the prod-trunk pin passes
       on today's text, as it must).
-- [x] **1.4 Rewrite the two input sections.** Edit the two command files: a
+- [x] **1.4 Rewrite the two input sections.** Edit the two command files: a <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       session default target or a single current-branch PR is used and named in
       one line, without a confirmation question; reuse of a PR number from
       conversation memory stays forbidden, and the text says why the session
@@ -170,31 +172,22 @@ a file.
       Done 2026-11-21: test green; `condense.sh --changed` prints "Every .md
       projection matches its source". The loop's `argument-hint` became
       `[pr-url]`, since the URL is no longer required.
-- [x] **1.5 Sweep the other PR-taking commands.** Run
+- [x] **1.5 Sweep the other PR-taking commands.** Run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/session_pr_watch.ts -->
       `grep -rln -i -E 'PR URL|pr-url' src/domains --include=command.md`; each
       hit that asks the owner for a PR either takes the 1.4 order or the Done
       note names it with the reason it must keep asking.
       verify: the Done note lists every grep hit with one of the two outcomes.
-      Done 2026-11-21, eleven hits:
-      - `fix/pr-comments-loop`, `fix/pr-comments` — 1.4 order (1.4).
-      - `prepare-for-review` — takes the 1.4 order, with its ticket search kept
-        as source 2; added to the 1.3 test.
-      - `fix` (router) — its two descriptions of the loop now say "PR URL, else
-        the session default target"; its routing row keys on a PR URL as a
-        signal and asks nothing, so it stays.
-      - `fix/route`, `analyze` — keep: a PR URL is a routing signal there, not
-        an ask.
-      - `analyze/pr` — keeps asking as its last resort: the order is code,
-        `resolvePrTarget` in `src/scripts/analysis_pr_target.ts` (argument →
-        current branch → named PR → one question), owned by that command.
-      - `analyze/and-optimize`, `roadmap/next`, `pr/create` — keep: they print a
-        PR URL, they never ask for one.
-      - `pr/create/description-only` — keeps: with no URL it falls back to the
-        branch diff and never asks.
+      Done 2026-11-21, eleven hits. 1.4 order: `fix/pr-comments-loop`,
+      `fix/pr-comments`, `prepare-for-review` (ticket search kept as source 2,
+      added to the 1.3 test); the `fix` router's two loop descriptions now name
+      the default. Keep asking or never ask, with reason: `fix/route`, `analyze`
+      (a URL is a routing signal); `analyze/pr` (its own coded resolver asks
+      only as last resort); `analyze/and-optimize`, `roadmap/next`, `pr/create`
+      (print a URL); `pr/create/description-only` (falls back to the branch diff).
 
 ## Phase 2 — The goal sentence is recorded and reaches every turn
 
-- [x] **2.1 Council picks the recognizer form.** First action: run the council
+- [x] **2.1 Council picks the recognizer form.** First action: run the council <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
       on two options with their cost — (a) a phrase set in code, DE + EN, seeded
       from the goal sentences `mandate_reask_report` finds in the transcripts;
       (b) a model-carried classification the agent confirms in one line. Record
@@ -202,7 +195,7 @@ a file.
       verify: `grep -cE '^\| D[0-9]+ \|.*\| council:2026' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` -> /^[1-9][0-9]*$/
       Done 2026-11-21: D4. The council asked for discovery rather than picking;
       D4 records that and the revisit trigger instead of claiming a verdict.
-- [x] **2.2 Failing recognizer tests.** Write
+- [x] **2.2 Failing recognizer tests.** Write <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
       `tests/scripts/goal_mandate.test.ts`: "mach weiter bis zum merge",
       "bis zum merge durchziehen", "arbeite die roadmap ab", "mach PR und merge",
       "until merged" each record the sentence verbatim; a slash-command
@@ -212,7 +205,7 @@ a file.
       Done 2026-11-21: seen red, `Cannot find module
       '../../src/scripts/_lib/goal_mandate.js'`. A quoted chat line joins the
       three negatives.
-- [x] **2.3 Store and per-prompt block.** Implement
+- [x] **2.3 Store and per-prompt block.** Implement <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
       `src/scripts/_lib/goal_mandate.ts` on the pattern of `session_pr_watch.ts`
       (store `<git-common-dir>/agent-session-mandates/<session>.json`, one writer,
       atomic write, never throws). The `session-register` `user_prompt_submit`
@@ -226,7 +219,7 @@ a file.
       goal but leaves what it authorises to `commit-policy` as written. A line
       over 300 characters is skipped rather than truncated, which keeps the
       beat inside the concern's 2,048-byte budget.
-- [x] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same
+- [x] **2.4 Reach subagents.** Make `subagent_constraints_hook.ts` emit the same <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/subagent_constraints_hook.ts -->
       line at `subagent_start` when the parent session holds an unrevoked
       record. Failing test first in the hook's test file.
       verify: the new test passes; `./scripts-run src/scripts/lint_hook_manifest` exits 0 with no manifest change.
@@ -237,7 +230,7 @@ a file.
 
 ## Phase 3 — The non-kernel layer reads the record
 
-- [x] **3.1 Council checks the clause against the kernel.** First action: put
+- [x] **3.1 Council checks the clause against the kernel.** First action: put <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       to the council whether a recorded goal sentence, read as `commit-policy`
       exception 2 (a standing instruction not yet revoked) for commits, PR opens
       and follow-up fix PRs serving that goal, is consistent with
@@ -260,7 +253,7 @@ a file.
       `goal-scope-hard-floor-reach`, or `commit-policy` amended by
       `later/road-to-typed-grants-that-persist` (ADR-268 § 2). No context file
       changed.
-- [x] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a
+- [x] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       roadmap that planned one PR per step; `delivery.pr_topology` knows only
       `single` and `stacked` and is read by no code. First action: council on
       whether a per-step value belongs in that vocabulary. Write the verdict as
@@ -285,7 +278,7 @@ a file.
 
 ## Phase 5 — Close the loop into the owning roadmap
 
-- [x] **5.1 Hand the metrics over.** Append the two metrics and the 0.4
+- [x] **5.1 Hand the metrics over.** Append the two metrics and the 0.4 <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       baseline path to the metric table of
       `later/road-to-an-agent-the-owner-does-not-drive` (Goal table) so its
       closing re-measure (its Phase 8) also invokes `mandate_reask_report` with `--since` set to the
@@ -306,7 +299,7 @@ ADR-282), but `/roadmap:next`, which hands off to it, still says
 overrode the project's own rule: work on `main`, commit only after an in-game
 test.
 
-- [x] **6.1 Failing command-contract test.** Write
+- [x] **6.1 Failing command-contract test.** Write <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `tests/scripts/roadmap_next_contract.test.ts` over
       `src/domains/product-basic/roadmap/next/command.md`: (a) no line contains
       `No merge, ever`; (b) the Rules section links process-full's `--merge`
@@ -320,7 +313,7 @@ test.
       verify: `npx vitest run tests/scripts/roadmap_next_contract.test.ts` -> 1 failing on (a)-(c) and passing (d) on today's text.
       Done 2026-11-21: seen 3 failed (a-c) / 1 passed (d). § 2 holds a numbered
       list rather than a table, so (d) pins the sha256 of its five items.
-- [x] **6.2 Rewrite the two passages.** Edit `next/command.md` § 4 and the
+- [x] **6.2 Rewrite the two passages.** Edit `next/command.md` § 4 and the <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       Rules bullet to match 6.1. The merge bullet points at process-full's
       `--merge` section instead of restating it. It stays bound by that
       section's danger gate and the `needs-owner` exclusion, so this step
@@ -332,7 +325,7 @@ test.
       projection matching; `lint_roadmap_ci_steps` 0; `task lint-skills` 0 (456
       pass, 1 unrelated warn). ADR-239:141 still quotes "No merge, ever" as the
       text it recorded at the time; a decision record is not rewritten.
-- [x] **6.3 Sweep the sibling command texts.** Run
+- [x] **6.3 Sweep the sibling command texts.** Run <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       `grep -rn -i -E 'no merge, ever|never merges?\b' src/domains/product-basic/roadmap src/agent-src/contexts/execution/roadmap-*.md`.
       Each hit either states its scope (it is a different actor, as
       `roadmap-process-loop-run.md:203` is for `run:supervise`) or gets the 6.2
