@@ -113,7 +113,7 @@ never edited.
 
 ## Phase 2 — Fixtures from the real cases, red first
 
-- [ ] **2.1 Add an owner-prose fixture table to the hook test.** In
+- [x] **2.1 Add an owner-prose fixture table to the hook test.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> In
       `tests/scripts/language_mirror_hook.test.ts` add a `describe('owner prose
       only')` table: the three rows of § Context, every non-zero misfire class
       from 1.2 (text paraphrased, identifiers and names redacted, provenance as
@@ -124,7 +124,7 @@ never edited.
       language, or `und` where the owner text has under `MIN_MARKERS`.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t "owner prose only"` -> 1 and the failing rows are exactly the rows of § Context plus 1.2's new classes
       uses: test-driven-development
-- [ ] **2.2 Add the gate-side fixtures.** In the turn-end gate test file
+- [x] **2.2 Add the gate-side fixtures.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> In the turn-end gate test file
       (`grep -l detectLanguage tests -r` names it) add: a `system-locale` `en`
       pin plus a German reply → no `language` finding; a `prompt`-sourced `de`
       pin plus an English reply → finding (unchanged). Keep the existing
