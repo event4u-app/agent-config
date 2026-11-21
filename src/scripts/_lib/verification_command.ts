@@ -233,33 +233,6 @@ function failureIsDiscarded(seg: Segment): boolean {
     return false;
 }
 
-/** The segments of a command line that can run, as text: the commands it runs, not the words it mentions. */
-export function commandSegments(command: string): string[] {
-    if (!command) return [];
-    const out: string[] = [];
-    let before: Segment['nextSep'] = null;
-    let skipChain = false;
-    for (const seg of splitSegments(stripComment(command))) {
-        // Nothing after a lone `exit`/`return` that runs unconditionally is reached.
-        const h = bareName(seg.words[0] ?? '');
-        const lone = before !== '|' && seg.nextSep !== '|';
-        if ((h === 'exit' || h === 'return') && lone && (before === null || before === ';')) break;
-        // `false && …` never runs what follows it in the `&&` chain.
-        if (skipChain) {
-            if (seg.nextSep !== '&&') skipChain = false;
-            before = seg.nextSep;
-            continue;
-        }
-        if (h === 'false' && lone && seg.nextSep === '&&') {
-            skipChain = true;
-            before = seg.nextSep;
-            continue;
-        }
-        out.push(seg.words.join(' '));
-        before = seg.nextSep;
-    }
-    return out;
-}
 
 /**
  * The command's segments whose failure the shell does NOT discard, as text.
@@ -445,54 +418,124 @@ function argsOf(p: Pipeline | undefined): string {
 }
 
 
-/** `exit`/`return` of `PIPESTATUS[k]` right after a filtered pipeline: the verifier's code reaches the caller. */
-function exitsWithPipestatus(prev: Pipeline, next: Pipeline | undefined, k: number): boolean {
-    const h = head(next);
-    if (prev.sepAfter !== ';' || (h !== 'exit' && h !== 'return') || next?.segs.length !== 1) return false;
-    // The argument is the expansion itself, nothing around it.
-    const arg = argsOf(next).replace(/^"(.*)"$/, '$1');
-    return new RegExp(`^\\$\\{?PIPESTATUS\\[${String(k)}\\]\\}?$`).test(arg);
-}
-
 /**
- * Follow the line after a pipeline whose status is the verifier's: does a
- * failure still reach the recorded code? `&&` runs only on success, so a
- * failure skips it (an `&& exit 0` too); `|| exit` / `|| exit N` with N nonzero modulo 256 end the shell with a failure;
- * `|| false` keeps a failure until the next command; `; exit` / `; exit $?`
- * pass the current status on. Anything else that runs after a failure replaces
- * the code.
+ * One pass over the line's pipelines, tracking every shell state that can reach
+ * each one. A state is the current status (0 / nonzero), the outcome of the last
+ * verifier that ran, whether that verifier's pipeline reports a filter's status,
+ * and whether the shell ended. There are at most 24 distinct states, so the pass is linear in the line.
+ *
+ * Both `exitMasking` and `commandSegments` read this one walk, so "which commands
+ * can run" and "whose status is recorded" follow the same reachability rules:
+ * `;` always runs the next pipeline, `&&` only on 0, `||` only on nonzero; a lone
+ * `exit`/`return` ends the shell (inside a pipeline it ends only its subshell).
  */
-function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
-    for (let j = v + 1; j < ps.length; j += 1) {
-        const sep = (ps[j - 1] as Pipeline).sepAfter;
-        const h = head(ps[j]);
-        const arg = argsOf(ps[j]).replace(/^["']|["']$/g, '');
-        // `exit` inside a pipeline ends only its subshell.
-        const ends = (h === 'exit' || h === 'return') && (ps[j] as Pipeline).segs.length === 1;
-        // A failure skips an `&&` command, `exit` included, and reaches whatever follows.
-        if (sep === '&&') continue;
-        if (sep === '||') {
-            // `exit` alone keeps the failing status; a literal code keeps a failure
-            // only when it is nonzero modulo 256 (`exit 00`, `exit 256` end with 0);
-            // anything else (`exit "$code"`) is unknown and does not count.
-            if (ends) return arg === '' || arg === '$?' || (/^\d+$/.test(arg) && Number(arg) % 256 !== 0);
-            // `|| false` alone; `|| false | cat` ends on `cat`'s status.
-            if (h === 'false' && (ps[j] as Pipeline).segs.length === 1) continue;
-            return false;
-        }
-        return ends && (arg === '' || arg === '$?');
-    }
-    return true;
+type Verdict = 'none' | 'pass' | 'fail';
+interface FlowState {
+    readonly zero: boolean;
+    readonly last: Verdict;
+    /** The last verifier ran inside a pipeline whose status is a filter's. */
+    readonly filtered: boolean;
+    readonly ended: boolean;
 }
 
-/** The pipelines up to and including the first lone `exit`/`return` that runs unconditionally. */
-function reachable(ps: readonly Pipeline[]): Pipeline[] {
-    for (let i = 0; i < ps.length; i += 1) {
-        const before = i === 0 ? ';' : (ps[i - 1] as Pipeline).sepAfter;
-        const h = head(ps[i]);
-        if (before === ';' && (h === 'exit' || h === 'return') && (ps[i] as Pipeline).segs.length === 1) return ps.slice(0, i + 1);
+interface Flow {
+    /** For each pipeline, whether any state runs it. */
+    readonly runs: readonly boolean[];
+    /** The states the line can end in. */
+    readonly finals: readonly FlowState[];
+}
+
+function keyOf(s: FlowState): string {
+    return `${s.zero ? 0 : 1}${s.last}${s.filtered ? 1 : 0}${s.ended ? 1 : 0}`;
+}
+
+function uniq(states: readonly FlowState[]): FlowState[] {
+    const seen = new Map<string, FlowState>();
+    for (const s of states) if (!seen.has(keyOf(s))) seen.set(keyOf(s), s);
+    return [...seen.values()];
+}
+
+/** The states running pipeline `p` can leave behind, from state `s`. */
+function step(s: FlowState, p: Pipeline, prev: Pipeline | undefined): FlowState[] {
+    const h = head(p);
+    const lone = p.segs.length === 1;
+    if (lone && (h === 'exit' || h === 'return')) {
+        const arg = argsOf(p).replace(/^["']|["']$/g, '');
+        if (arg === '' || arg === '$?') return [{ ...s, ended: true }];
+        if (/^\d+$/.test(arg)) return [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
+        // `exit "${PIPESTATUS[k]}"` right after the verifier's own filtered pipeline.
+        const k = prev === undefined ? -1 : verifierIndex(prev);
+        if (k !== -1 && new RegExp(`^\\$\\{?PIPESTATUS\\[${String(k)}\\]\\}?$`).test(arg) && s.last !== 'none') {
+            return [{ ...s, zero: s.last === 'pass', filtered: false, ended: true }];
+        }
+        return [
+            { ...s, zero: true, ended: true },
+            { ...s, zero: false, ended: true },
+        ];
     }
-    return [...ps];
+    const k = verifierIndex(p);
+    if (k === -1) {
+        if (lone && (h === 'true' || h === ':')) return [{ ...s, zero: true }];
+        if (lone && h === 'false') return [{ ...s, zero: false }];
+        return [
+            { ...s, zero: true },
+            { ...s, zero: false },
+        ];
+    }
+    if (k === p.segs.length - 1) {
+        return [
+            { ...s, zero: true, last: 'pass', filtered: false },
+            { ...s, zero: false, last: 'fail', filtered: false },
+        ];
+    }
+    if (p.pipefail) {
+        // A 0 under pipefail means the verifier passed; a nonzero may be either.
+        return [
+            { ...s, zero: true, last: 'pass', filtered: false },
+            { ...s, zero: false, last: 'pass', filtered: false },
+            { ...s, zero: false, last: 'fail', filtered: false },
+        ];
+    }
+    const out: FlowState[] = [];
+    for (const last of ['pass', 'fail'] as const) {
+        for (const zero of [true, false]) out.push({ ...s, zero, last, filtered: true });
+    }
+    return out;
+}
+
+function flowOf(ps: readonly Pipeline[]): Flow {
+    let states: FlowState[] = [{ zero: true, last: 'none', filtered: false, ended: false }];
+    const runs: boolean[] = [];
+    for (let i = 0; i < ps.length; i += 1) {
+        const p = ps[i] as Pipeline;
+        const sep = i === 0 ? ';' : (ps[i - 1] as Pipeline).sepAfter;
+        const next: FlowState[] = [];
+        let ran = false;
+        for (const s of states) {
+            const go = !s.ended && (sep === ';' || sep === null || (sep === '&&' ? s.zero : !s.zero));
+            if (!go) {
+                next.push(s);
+                continue;
+            }
+            ran = true;
+            next.push(...step(s, p, ps[i - 1]));
+        }
+        runs.push(ran);
+        states = uniq(next);
+    }
+    return { runs, finals: states };
+}
+
+/** The segments of a command line that can run, as text: the commands it runs, not the words it mentions. */
+export function commandSegments(command: string): string[] {
+    if (!command) return [];
+    const ps = pipelinesOf(command);
+    const { runs } = flowOf(ps);
+    const out: string[] = [];
+    ps.forEach((p, i) => {
+        if (runs[i]) for (const seg of p.segs) out.push(seg.words.join(' '));
+    });
+    return out;
 }
 
 /**
@@ -501,46 +544,28 @@ function reachable(ps: readonly Pipeline[]): Pipeline[] {
  *
  * The recorder keeps ONE exit code per call: the status of the last pipeline
  * that ran. `tsc | tail -5` reports `tail`'s 0, and `task ci; echo "exit=$?"`
- * reports `echo`'s 0, so a failing run reads as a pass. Read off the LAST
- * pipeline that verifies:
+ * reports `echo`'s 0, so a failing run reads as a pass. The question asked of
+ * the line is exact: can it end with a 0 while the last verifier that ran did
+ * not pass (or none ran)? If so, a recorded 0 proves nothing about the verifier.
  *
- * - `pipe`: its verifier is not the pipeline's last command and no earlier
- *   `set -o pipefail` covers it, so the pipeline's status is a filter's —
- *   unless the very next command exits with that verifier's `PIPESTATUS[k]`.
- *   Printing `PIPESTATUS` does not count: the record holds the printer's code.
- *   A pipefail from an rc file is invisible here, which is why the reason is
- *   an instrument gap.
- * - `trailing`: its status is the verifier's, and a later command runs
- *   after a failure (after `;` or `||`) and replaces the code
- *   (`failureReachesRecord`). `cmd || exit 1` and `cmd; exit $?` propagate;
- *   `cmd || false; echo ready` does not; `cmd && echo ok` runs only on
- *   success; `task sync; task ci` ends on a verifier whose code is real;
- *   `cmd || true` is a discard, not a verifier.
+ * - `pipe`: that 0 can come from a filter after the verifier — no earlier
+ *   unconditional `set -o pipefail` covers the pipeline, and no
+ *   `exit "${PIPESTATUS[k]}"` hands the verifier's status on. Printing
+ *   `PIPESTATUS` does not count. A pipefail from an rc file is invisible here,
+ *   which is why the reason is an instrument gap.
+ * - `trailing`: that 0 can come from a later command — `cmd; echo`, `cmd || echo`,
+ *   `cmd || false; echo ready`, `cmd || exit 0`, or a verifier that `||` skips.
+ *   `cmd && echo ok`, `cmd || exit 1`, `cmd; exit $?` and `task sync; task ci`
+ *   end with a 0 only when the verifier passed. `cmd || true` is a discard,
+ *   not a verifier.
  */
 export function exitMasking(command: string): ExitMasking | null {
     if (!command) return null;
-    const ps = reachable(pipelinesOf(command));
-    // From the last verifier back: a verifier reached only through `||` can be skipped
-    // by an earlier pipeline's 0, so that earlier verifier's reading counts too.
-    for (let v = ps.length - 1; v >= 0; v -= 1) {
-        if (verifierIndex(ps[v] as Pipeline) === -1) continue;
-        const m = maskingAt(ps, v);
-        if (m !== null) return m;
-        let skippable = false;
-        for (let j = v - 1; j >= 0; j -= 1) if ((ps[j] as Pipeline).sepAfter === '||') skippable = true;
-        if (!skippable) return null;
-    }
-    return null;
-}
-
-/** The masking reading of the line taking pipeline `v` as the verifier whose code is recorded. */
-function maskingAt(ps: readonly Pipeline[], v: number): ExitMasking | null {
-    const p = ps[v] as Pipeline;
-    const k = verifierIndex(p);
-    // An explicit `exit "${PIPESTATUS[k]}"` carries the verifier's code with or without pipefail.
-    if (k < p.segs.length - 1 && exitsWithPipestatus(p, ps[v + 1], k)) return null;
-    if (k < p.segs.length - 1 && !p.pipefail) return 'pipe';
-    return failureReachesRecord(ps, v) ? null : 'trailing';
+    const ps = pipelinesOf(command);
+    if (!ps.some((p) => verifierIndex(p) !== -1)) return null;
+    const bad = flowOf(ps).finals.filter((s) => s.zero && s.last !== 'pass');
+    if (bad.length === 0) return null;
+    return bad.some((s) => s.filtered) ? 'pipe' : 'trailing';
 }
 
 /**

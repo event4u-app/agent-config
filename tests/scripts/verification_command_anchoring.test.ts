@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { exitMasking, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
+import { commandSegments, exitMasking, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 
 /**
  * G1 and G2 — the two directions the tree's two classifiers disagreed in.
@@ -163,8 +163,25 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci | tail -5; npx tsc --noEmit',
         // pipefail plus an explicit exit of the verifier's status: the code is the verifier's.
         'set -o pipefail; task ci | tail -5; exit "${PIPESTATUS[0]}"',
+        // `;` makes the final `tsc` unconditional, whatever the `||` before it did.
+        'task ci | tail -5 || echo fallback; npx tsc --noEmit',
     ])('`%s` masks nothing', (command) => {
         expect(exitMasking(command)).toBeNull();
+    });
+
+    it('a long mixed || / && chain is classified in linear time', () => {
+        const command = `true || ${Array(20000).fill('npx tsc --noEmit').join(' && ')}`;
+        const t0 = Date.now();
+        exitMasking(command);
+        expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
+    it.each([
+        ['true || npm run dev', ['true']],
+        ['false && echo skipped | npm run dev', ['false']],
+        ['cd app && npm run dev', ['cd app', 'npm run dev']],
+    ])('commandSegments(`%s`) lists only what can run', (command, expected) => {
+        expect(commandSegments(command)).toEqual(expected);
     });
 
     it('a pipefail set AFTER the pipe does not cover it', () => {
