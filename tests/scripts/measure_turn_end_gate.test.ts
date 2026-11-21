@@ -28,8 +28,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     editPathClass,
     emptyShadowStats,
+    LANGUAGE_SPLIT_CLASSES,
+    languageFireClass,
+    languageSplit,
     measure,
     render,
+    renderLanguageSplit,
     renderQ1,
     renderUnverifiedFires,
     type ShadowStats,
@@ -544,5 +548,117 @@ describe('renderQ1 — step 2.2, the reader the contract was waiting on', () => 
         const out = renderQ1(withLayer('stop_hook_active', 3, { language: 1 }), '2026-10-01');
         expect(out).toContain('UPPER bound');
         expect(out).toContain('session_id');
+    });
+});
+
+/**
+ * `--language-split` — road-to-a-language-pin-from-owner-prose 1.1.
+ *
+ * Every replayed `language` fire is charged to the entry that last set the pin,
+ * by that entry's shape. The fixtures are the § Context shapes of the roadmap,
+ * one session per class so no pin leaks from one class into another.
+ */
+describe('language-split', () => {
+    const GERMAN_REPLY =
+        'Ich habe die Datei geprüft und die Tests laufen jetzt wieder, das war ein Fehler in der Konfiguration.';
+    const ENGLISH_REPLY =
+        'I checked the file and the tests are passing again; the problem was in the configuration that we changed.';
+
+    function metaEntry(text: string): Record<string, unknown> {
+        return { type: 'user', isMeta: true, message: { role: 'user', content: text } };
+    }
+
+    function writeClassFixtures(): void {
+        // owner-prose: the owner typed German, the reply is English.
+        writeSession('owner', [
+            userEntry('Bitte prüfe das und mach dann weiter mit den Tests.'),
+            replyEntry(ENGLISH_REPLY),
+        ]);
+        // synthetic-turn: a host-written entry (`isMeta`) sets the pin.
+        writeSession('synthetic', [
+            userEntry('Bitte prüfe das und mach dann weiter mit den Tests.'),
+            replyEntry(GERMAN_REPLY),
+            metaEntry(
+                'Stop hook feedback:\nThe reply should state what was verified and which tests were run before the turn ends.',
+            ),
+            replyEntry(GERMAN_REPLY),
+        ]);
+        // paste-decided: a short English lead over an unmarked German paste.
+        writeSession('paste', [
+            userEntry(
+                'Fix this file.\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat, und die Tests sollten das auch abdecken.',
+            ),
+            replyEntry(ENGLISH_REPLY),
+        ]);
+        // trailing-typed-line: a terminal block first, the owner's line below it.
+        writeSession('trailing', [
+            userEntry(
+                "The command failed with these errors and the build should be checked:\nError: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
+            ),
+            replyEntry(GERMAN_REPLY),
+        ]);
+        // system-locale: nothing determinable typed, the locale answers.
+        writeSession('locale', [userEntry('ok'), replyEntry(ENGLISH_REPLY)]);
+    }
+
+    it('charges one fire to each reachable class, and the rows sum to the fires', () => {
+        writeClassFixtures();
+        const split = languageSplit([store], { locale: 'de' });
+        expect(split.sessions).toBe(5);
+        expect(split.byClass).toEqual({
+            'owner-prose': 1,
+            'synthetic-turn': 1,
+            'paste-decided': 1,
+            'trailing-typed-line': 1,
+            'system-locale': 1,
+            unknown: 0,
+        });
+        const sum = LANGUAGE_SPLIT_CLASSES.reduce((n, k) => n + split.byClass[k], 0);
+        expect(sum).toBe(split.fires);
+    });
+
+    it('lists owner-prose fires by session digest, never by text', () => {
+        writeClassFixtures();
+        const split = languageSplit([store], { locale: 'de' });
+        expect(split.ownerProseSites).toHaveLength(1);
+        expect(split.ownerProseSites[0]?.session).toMatch(/^[0-9a-f]{12}$/);
+    });
+
+    it('charges a fire with no recoverable setter to unknown', () => {
+        expect(languageFireClass(null)).toBe('unknown');
+    });
+
+    it('counts only entries inside the window', () => {
+        writeSession('dated', [
+            { ...userEntry('Bitte prüfe das und mach dann weiter mit den Tests.'), timestamp: '2026-11-01T10:00:00Z' },
+            { ...replyEntry(ENGLISH_REPLY), timestamp: '2026-11-01T10:01:00Z' },
+            { ...userEntry('Bitte prüfe das und mach dann weiter mit den Tests.'), timestamp: '2026-11-05T10:00:00Z' },
+            { ...replyEntry(ENGLISH_REPLY), timestamp: '2026-11-05T10:01:00Z' },
+        ]);
+        const split = languageSplit([store], { since: '2026-11-03T00:00:00Z', until: '2026-11-21T00:00:00Z' });
+        expect(split.fires).toBe(1);
+    });
+
+    it('counts the refusals the gate itself recorded in the window', () => {
+        writeSession('recorded', [
+            userEntry('Bitte prüfe das und mach dann weiter mit den Tests.'),
+            replyEntry(ENGLISH_REPLY),
+            metaEntry('Stop hook feedback:\n[turn-end-gate] language: the pinned reply language is "de" but the reply classifies as "en"'),
+        ]);
+        expect(languageSplit([store], {}).recordedRefusals).toBe(1);
+    });
+
+    it('renders one table row per class, the command line and the tree sha, and no prompt text', () => {
+        writeClassFixtures();
+        const out = renderLanguageSplit(languageSplit([store], { locale: 'de' }), {
+            command: './scripts-run src/scripts/measure_turn_end_gate --language-split',
+            treeSha: 'abc1234',
+        });
+        expect(out).toContain('abc1234');
+        expect(out).toContain('--language-split');
+        for (const k of LANGUAGE_SPLIT_CLASSES) {
+            expect(out).toMatch(new RegExp(`^\\| ${k} \\| \\d+ \\|$`, 'm'));
+        }
+        expect(out).not.toContain('Bitte prüfe');
     });
 });

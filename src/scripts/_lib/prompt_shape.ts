@@ -144,6 +144,97 @@ export function humanAuthoredLead(text: string): string {
   return kept.join("\n");
 }
 
+/**
+ * A line that starts pasted machine OUTPUT — a stack trace, a diff, a `remote:`
+ * line, a shell prompt, a table row. Shared by `instructionText` (which drops
+ * these lines) and `ownerSpans` (which treats the first one as the end of the
+ * owner's lead and the last one as the start of their trailing line).
+ */
+export const OUTPUT_HEAD =
+  /^\s*(To\s+\S+|remote:|error:|fatal:|hint:|warning:|npm ERR!|Error:|Traceback|Exception|[A-Za-z]*Error\b|at\s+\S+:\d+|\s{4,}\S|[-+]{3}\s|@@\s|\$\s|>\s|\||\d+\s*\|)/i;
+
+/** One line standing in for a removed fenced block, so its position survives. */
+const FENCE_LINE = "\u0000";
+
+/** The two spans of a prompt the owner typed, as `ownerSpans` finds them. */
+export interface OwnerSpans {
+  /** The first paragraph, up to the first blank line or paste line. */
+  lead: string;
+  /** The paragraph after the last output paste, when one follows it. */
+  trailing: string;
+}
+
+/**
+ * The spans of a prompt the owner typed: the opening paragraph, and the
+ * paragraph after the last pasted output block. Nothing in between.
+ *
+ * Callers pass text with injected regions already removed
+ * (`stripInjectedRegions`). Fenced code, output-shaped lines and document heads
+ * are paste furniture; the owner's words sit around them, not inside them.
+ *
+ * The lead is ONE paragraph, not everything before the first document head as
+ * `humanAuthoredLead` reads it. A German sentence over an English paragraph
+ * pasted without a heading was scored as one lead, and the paste outvoted the
+ * sentence (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 /
+ * en=9). A blank line is the one boundary a paste reliably carries.
+ *
+ * The trailing span answers the shape the lead cannot: a terminal block pasted
+ * first and the owner's question typed below it. It is taken only after an
+ * OUTPUT paste or a fence — never after a document head, because every
+ * paragraph below a pasted heading is that document's body, and reading its
+ * last paragraph as typed would hand the pin back to the paste.
+ *
+ * When both exist and the lead runs straight into the paste with no blank line,
+ * the lead is dropped: a line glued to the top of a terminal block is that
+ * block's own first line far more often than an introduction, and the owner's
+ * words below the block are the ones whose authorship is not in question.
+ *
+ * KNOWN RESIDUAL, stated rather than hidden: a paste that ENDS in an unmarked
+ * prose line with no typed text after it yields that line as the trailing span.
+ * It carries markers only when the line is a sentence, and the lead still
+ * outvotes it whenever the owner wrote one.
+ */
+export function ownerSpans(text: string): OwnerSpans {
+  const lines = text.replace(/```[\s\S]*?```/g, `\n${FENCE_LINE}\n`).split("\n");
+  const isOutput = (l: string): boolean => l === FENCE_LINE || OUTPUT_HEAD.test(l);
+  const isPaste = (l: string): boolean => isOutput(l) || DOCUMENT_HEAD.test(l);
+  const blank = (l: string): boolean => l.trim() === "";
+
+  const lead: string[] = [];
+  let leadEnd = lines.length;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    if (isPaste(line)) {
+      leadEnd = i;
+      break;
+    }
+    if (blank(line)) {
+      if (lead.length > 0) {
+        leadEnd = i;
+        break;
+      }
+      continue;
+    }
+    lead.push(line);
+  }
+  const leadGluedToPaste = lead.length > 0 && isPaste(lines[leadEnd] ?? "");
+
+  let end = lines.length - 1;
+  while (end >= 0 && blank(lines[end] ?? "")) end--;
+  let start = end;
+  while (start >= 0 && !blank(lines[start] ?? "") && !isPaste(lines[start] ?? "")) start--;
+  const before = lines.slice(0, start + 1);
+  const trailing =
+    start >= 0 && start < end && before.some(isOutput) && !before.some((l) => DOCUMENT_HEAD.test(l))
+      ? lines.slice(start + 1, end + 1)
+      : [];
+
+  return {
+    lead: trailing.length > 0 && leadGluedToPaste ? "" : lead.join("\n"),
+    trailing: trailing.join("\n"),
+  };
+}
+
 /** A line that is nothing but an opening tag, with the tag name captured. */
 const REGION_OPEN = /^\s*<([A-Za-z][\w-]*)>\s*$/;
 

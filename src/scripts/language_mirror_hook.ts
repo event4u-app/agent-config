@@ -90,6 +90,7 @@ import {
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 import {
+  OUTPUT_HEAD,
   humanAuthoredLead,
   isSyntheticPrompt,
   stripInjectedRegions,
@@ -273,8 +274,6 @@ export interface Classification {
  * target. The maintainer's most common prompt shape is exactly that.
  */
 export function instructionText(prompt: string): string {
-  const OUTPUT_HEAD =
-    /^\s*(To\s+\S+|remote:|error:|fatal:|hint:|warning:|npm ERR!|Error:|Traceback|Exception|[A-Za-z]*Error\b|at\s+\S+:\d+|\s{4,}\S|[-+]{3}\s|@@\s|\$\s|>\s|\||\d+\s*\|)/i;
   const kept: string[] = [];
   let inPaste = false;
   for (const line of prompt.replace(/```[\s\S]*?```/g, "\n\n").split("\n")) {
@@ -329,6 +328,15 @@ export function classify(prompt: string): Classification {
   if (leadVerdict.language !== "und") {
     return leadVerdict;
   }
+  return _score(text);
+}
+
+/**
+ * Score one span with the marker lists and the `MIN_MARKERS` floor, and nothing
+ * else — no stripping, no lead selection. Exported for the instrument that scores
+ * the owner's spans one by one (`measure_turn_end_gate --language-split`).
+ */
+export function scoreText(text: string): Classification {
   return _score(text);
 }
 
