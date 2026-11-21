@@ -405,7 +405,9 @@ export function stripInjectedRegions(text: string): string {
  * host is known to write (`HOST_REGION_TAG`). What the language pin's veto
  * reads — `stripInjectedRegions` drops ANY balanced bare-tag pair, and a pasted
  * `<section>` … `</section>` around a typed sentence would take the sentence
- * with it (ratification round 13).
+ * with it (ratification round 13). KNOWN RESIDUAL: a pasted region that
+ * carries one of these exact host tag names is trusted as host text too; the
+ * names are not ones a person types around their own words.
  */
 export function stripHostRegions(text: string): string {
   return _stripRegions(text, (name) => HOST_REGION_TAG.test(name));
