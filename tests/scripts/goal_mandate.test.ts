@@ -114,11 +114,59 @@ describe('observe_prompt — goal sentences', () => {
         expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
     });
 
-    it('a stop wins over a goal with the same stamp, in either order', () => {
+    it('a stop wins over a goal with the same stamp, stop first', () => {
         observe_prompt(root, 's1', 'stop', T1);
         observe_prompt(root, 's1', 'until merged', T1);
         expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
     });
+
+    it('a stop wins over a goal with the same stamp, goal first', () => {
+        observe_prompt(root, 's1', 'until merged', T1);
+        observe_prompt(root, 's1', 'stop', T1);
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+    });
+
+    // Round 5: a goal writer that read before a newer stop and writes after it —
+    // the outcome of that interleaving is an older goal record on disk beside a
+    // newer stop, and neither renderer may show it.
+    it('a goal record older than a stored stop renders nowhere, even written after the stop', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        const T3 = new Date('2026-11-21T12:00:00Z');
+        observe_prompt(root, 's1', 'until merged', T0);
+        observe_prompt(root, 's1', 'stop', T3);
+        fs.writeFileSync(
+            path.join(root, '.git', 'agent-session-mandates', 's1.json'),
+            JSON.stringify({ sentence: 'mach weiter bis zum merge', recorded_at: T2.toISOString() }),
+        );
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+        expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+        expect(goal_mandate_block(root, 's1', 'und die tests', T3)).toBeNull();
+    });
+
+    // Round 5: the stop stamp survives a store that refused new files for a while.
+    it.skipIf(process.getuid?.() === 0)('an older goal written after the store recovers stays suppressed', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        const T3 = new Date('2026-11-21T12:00:00Z');
+        observe_prompt(root, 's1', 'until merged', T0);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        fs.chmodSync(dir, 0o555);
+        try {
+            observe_prompt(root, 's1', 'stop', T3);
+        } finally {
+            fs.chmodSync(dir, 0o755);
+        }
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T2);
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+    });
+
+    // Round 5: reported speech is not the owner's request.
+    it.each(['The docs say to keep working until merged.', 'er sagte, arbeite die roadmap ab'])(
+        'records nothing for the reported %j',
+        (prompt) => {
+            observe_prompt(root, 's1', prompt, T0);
+            expect(read_goal(root, 's1')).toBeNull();
+        },
+    );
 
     // Ratification round 3: a negated goal phrase is not a goal.
     it.each(["Don't keep working until merged.", 'arbeite nicht bis zum merge', 'never go all the way to merge'])(

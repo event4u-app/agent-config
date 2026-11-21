@@ -93,9 +93,11 @@ export function ownerProseLines(text: string): string[] {
  * safe direction, so revocations match on the whole line.
  */
 function instructionText(line: string): string | null {
-    // A question or a negated line ("don't keep working until merged") is not a
-    // goal; a goal missed this way costs one re-ask.
-    if (line.endsWith('?') || /\b(?:nicht|kein\w*|nie|niemals|never|not)\b|\bdon['’]?t\b/i.test(line)) return null;
+    // A question, a negated line ("don't keep working until merged") or reported
+    // speech ("the docs say …") is not the owner's request; a goal missed this
+    // way costs one re-ask.
+    if (line.endsWith('?')) return null;
+    if (/\b(?:nicht|kein\w*|nie|niemals|never|not|says?|said|sagt|sagte|schreibt|schrieb|meint|meinte|wrote|writes|according)\b|\bdon['’]?t\b/i.test(line)) return null;
     return line.replace(/"[^"]*"|“[^”]*”|„[^“”]*[“”]|`[^`]*`/g, ' ');
 }
 

@@ -41,16 +41,43 @@ export function goal_store_file(root: string, session_id: string): string | null
     return common === null ? null : path.join(common, 'agent-session-mandates', `${stem(session_id)}.json`);
 }
 
-export function read_goal(root: string, session_id: string): GoalRecord | null {
-    try {
-        const file = goal_store_file(root, session_id);
-        if (file === null) return null;
-        const o = JSON.parse(fs.readFileSync(file, 'utf-8')) as Partial<GoalRecord>;
-        if (typeof o.sentence !== 'string' || typeof o.recorded_at !== 'string') return null;
-        return o as GoalRecord;
-    } catch {
-        return null;
+/**
+ * The latest stop beside a record: stops are files of their own,
+ * `<record>.stop-<13-digit epoch ms>` holding the owner's revoke line, so a goal
+ * write can never overwrite one and the latest is the highest name.
+ */
+export function latest_stop(file: string): { at: number; by: string } | null {
+    const dir = path.dirname(file);
+    const prefix = `${path.basename(file)}.stop-`;
+    let best: string | null = null;
+    for (const n of fs.readdirSync(dir)) {
+        if (n.startsWith(prefix) && /^\d{13}$/.test(n.slice(prefix.length)) && (best === null || n > best)) best = n;
     }
+    return best === null ? null : { at: Number(best.slice(prefix.length)), by: fs.readFileSync(path.join(dir, best), 'utf-8') };
+}
+
+/** The record with the latest stop folded in: a goal at or before it reads as revoked. */
+export function read_goal(root: string, session_id: string): GoalRecord | null {
+    const file = goal_store_file(root, session_id);
+    if (file === null) return null;
+    let rec: GoalRecord | null = null;
+    try {
+        const o = JSON.parse(fs.readFileSync(file, 'utf-8')) as Partial<GoalRecord>;
+        if (typeof o.sentence === 'string' && typeof o.recorded_at === 'string') rec = o as GoalRecord;
+    } catch {
+        /* no record */
+    }
+    let stop: { at: number; by: string } | null = null;
+    try {
+        stop = latest_stop(file);
+    } catch {
+        /* no stop */
+    }
+    if (stop === null) return rec;
+    const at = new Date(stop.at).toISOString();
+    if (rec === null) return { sentence: '', recorded_at: at, revoked_by: stop.by, revoked_at: at };
+    if (Date.parse(rec.recorded_at) > stop.at || Date.parse(rec.revoked_at ?? '') >= stop.at) return rec;
+    return { ...rec, revoked_by: stop.by, revoked_at: at };
 }
 
 /** The one line a later prompt or a subagent sees; null when no goal stands. */

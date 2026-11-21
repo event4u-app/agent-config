@@ -205,7 +205,7 @@ export function pr_watch_block(
             'State them from this block, or run `gh pr view <n>` first — never from memory.',
             'A merged PR waits for nobody.',
             // No default from a failed read: the cached state may name a PR that is no longer open.
-            ...(target === null || store.probe_failed ? [] : [`Default PR target for PR commands: #${target.number} ${target.url}`]),
+            ...(target === null || store.probe_failed || store.probed_at === undefined ? [] : [`Default PR target for PR commands: #${target.number} ${target.url}`]),
             '</session-prs>',
         ].join('\n');
         // Every change is in the block just rendered; keep only what can still change.

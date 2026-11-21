@@ -13,9 +13,10 @@
  * - **Recognition:** {@link goalSentenceIn} / {@link revocationIn} over the
  *   owner's prose only; no model, so agent text can never populate the record.
  * - **Store:** `goal_mandate_store.ts`; one writer (the `session-register`
- *   concern), atomic writes under the record's generation lock.
- * - **Lifetime:** a later goal sentence replaces the record; a revoke sentence
- *   keeps it with `revoked_by` set, and a revoked record renders nothing.
+ *   concern); goal writes are atomic under the record's generation lock, stops
+ *   are files of their own beside it.
+ * - **Lifetime:** a later goal sentence replaces the record; a stop suppresses
+ *   every goal at or before its stamp, and a revoked record renders nothing.
  * - **Failure:** never throws; an unreadable store reads as no record.
  */
 
@@ -35,24 +36,31 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
 }
 
 /**
- * Write a revocation: the atomic write, else an in-place overwrite (a directory
- * that refuses a new file may still allow it), else removing the record. A
- * record that can be neither overwritten nor removed stays as it was; a removed
- * one takes its ordering stamp with it.
+ * Store a stop as a file of its own beside the record, named by its stamp, so
+ * no goal write can overwrite it and concurrent stops keep the latest; lower
+ * stops are then pruned. A store that refuses the new file takes the revocation
+ * in the record itself (atomic, else in place), which keeps its stamp; a record
+ * that cannot be written at all is removed, which ends the goal for every reader.
  */
-function write_revocation(root: string, session_id: string, record: GoalRecord): void {
+function write_stop(file: string, record: GoalRecord, now: Date): void {
+    const prefix = `${path.basename(file)}.stop-`;
+    const own = `${prefix}${String(now.getTime()).padStart(13, '0')}`;
     try {
-        write_goal(root, session_id, record);
+        fs.writeFileSync(path.join(path.dirname(file), own), record.revoked_by ?? '');
+    } catch {
+        try {
+            write_atomic(file, `${JSON.stringify(record, null, 2)}\n`);
+        } catch {
+            try {
+                fs.writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`);
+            } catch {
+                fs.rmSync(file, { force: true });
+            }
+        }
         return;
-    } catch {
-        /* fall through */
     }
-    const file = goal_store_file(root, session_id);
-    if (file === null) return;
-    try {
-        fs.writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`);
-    } catch {
-        fs.rmSync(file, { force: true });
+    for (const n of fs.readdirSync(path.dirname(file))) {
+        if (n.startsWith(prefix) && n < own) fs.rmSync(path.join(path.dirname(file), n), { force: true });
     }
 }
 
@@ -64,19 +72,22 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
         const goal = revoke === null ? goalSentenceIn(prompt) : null;
         const file = goal_store_file(root, session_id);
         if ((revoke === null && goal === null) || file === null) return read_goal(root, session_id);
-        // The read-compare-write runs under the record's lock, so two goal beats of
-        // one session cannot interleave; a goal beat that cannot take it writes
-        // nothing. A revocation that cannot take it (held, or not creatable in an
-        // unwritable store) goes ahead unguarded: ending a goal is the direction
-        // that cannot widen what an agent does, and a stop typed once must hold.
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        try {
-            held = acquire(`${file}.lock`, { staleMs: 5_000, waitMs: 250 });
-        } catch {
-            held = null;
+        // A goal write is a read-compare-write and runs under the record's lock, so
+        // two goal beats of one session cannot interleave; one that cannot take the
+        // lock writes nothing. A stop takes no lock: it is its own file, which a
+        // goal write cannot overwrite, and readers suppress every goal at or before
+        // the latest stop, so a goal writer that read before a stop and writes
+        // after it is suppressed too.
+        if (revoke === null) {
+            try {
+                held = acquire(`${file}.lock`, { staleMs: 5_000, waitMs: 250 });
+            } catch {
+                held = null;
+            }
         }
         const current = read_goal(root, session_id);
-        if (!held && revoke === null) return current;
+        if (revoke === null && !held) return current;
         // A prompt older than the stored stamp lost a race with a later one (beats
         // of one session are not guaranteed to finish in submission order); the
         // later owner turn stands. On equal stamps a stop wins over a goal.
@@ -85,10 +96,8 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
         if (now.getTime() === stored && revoke === null && current?.revoked_by !== undefined) return current;
         const at = now.toISOString();
         if (revoke !== null) {
-            // Written on an empty store too, and advanced by every newer stop, so a
-            // goal from a prompt older than the latest stop is dropped above.
             const revoked: GoalRecord = { ...(current ?? { sentence: '', recorded_at: at }), revoked_by: revoke, revoked_at: at };
-            write_revocation(root, session_id, revoked);
+            write_stop(file, revoked, now);
             return revoked;
         }
         const record: GoalRecord = { sentence: goal as string, recorded_at: at };
