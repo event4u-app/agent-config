@@ -480,8 +480,13 @@ function step(s: FlowState, p: Pipeline): FlowState[] {
     }
     const k = verifierIndex(p);
     if (k === -1) {
-        if (lone && (h === 'true' || h === ':')) return [{ ...s, zero: true }];
-        if (lone && h === 'false') return [{ ...s, zero: false }];
+        // The status is the last command's; under pipefail any `false` fails it, and only
+        // a pipeline of nothing but `true` / `:` is sure to pass.
+        const heads = p.segs.map((seg) => bareName(seg.words[0] ?? ''));
+        const last = heads[heads.length - 1] as string;
+        const passes = (x: string): boolean => x === 'true' || x === ':';
+        if (last === 'false' || (p.pipefail && heads.includes('false'))) return [{ ...s, zero: false }];
+        if (passes(last) && (!p.pipefail || heads.every(passes))) return [{ ...s, zero: true }];
         return [
             { ...s, zero: true },
             { ...s, zero: false },

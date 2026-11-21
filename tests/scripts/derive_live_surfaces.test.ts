@@ -149,6 +149,25 @@ describe('deriveLiveSurfaces', () => {
         for (const s of surfaces) expect(s.derived_from).toMatch(/:\d+$/);
     });
 
+    it('reads the active baseURL, not one in a comment or a string, with its own line', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-pw-comment-'));
+        tmps.push(dir);
+        fs.writeFileSync(
+            path.join(dir, 'playwright.config.ts'),
+            [
+                "// baseURL: 'http://localhost:9999',",
+                "/* baseURL: 'http://localhost:9998',",
+                ' */',
+                "const note = \"baseURL: 'http://localhost:9997'\";",
+                "export default { use: { baseURL: 'http://localhost:4173' } };",
+                '',
+            ].join('\n'),
+        );
+        const pw = deriveLiveSurfaces(dir).find((s) => s.kind === 'playwright');
+        expect(pw?.url).toBe('http://localhost:4173');
+        expect(pw?.derived_from).toBe('playwright.config.ts:5');
+    });
+
     it('finds nothing in a library with only a test script', () => {
         expect(deriveLiveSurfaces(copyFixture('none'))).toEqual([]);
     });

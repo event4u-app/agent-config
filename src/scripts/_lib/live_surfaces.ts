@@ -98,7 +98,10 @@ function stripJsComments(text: string): string {
         }
         if (c === '/' && text[i + 1] === '*') {
             const end = text.indexOf('*/', i + 2);
-            i = end === -1 ? text.length : end + 2;
+            const stop = end === -1 ? text.length : end + 2;
+            // Keep the comment's line breaks, so a position maps to the same line.
+            out += text.slice(i, stop).replace(/[^\n]/g, '');
+            i = stop;
             continue;
         }
         out += c;
@@ -216,15 +219,21 @@ function playwrightBaseUrls(root: string, inputs: string[], texts: Array<{ confi
         if (text === null) continue;
         inputs.push(file);
         texts.push({ config: rel(root, file), text });
-        const m = /baseURL\s*:\s*['"`]([^'"`]+)['"`]/.exec(text);
-        if (m === null) continue;
+        // The key is found outside comments and string literals; its value is read back
+        // from the comment-free text at the same position.
+        const code = stripJsComments(text);
+        const key = /baseURL\s*:\s*(['"`])/.exec(maskStringInteriors(code));
+        if (key === null) continue;
+        const open = key.index + key[0].length;
+        const close = code.indexOf(key[1] as string, open);
+        if (close <= open) continue;
         out.push({
             kind: 'playwright',
             name: 'baseURL',
             start: 'npx playwright test',
-            url: m[1] as string,
+            url: code.slice(open, close),
             root: '.',
-            derived_from: `${rel(root, file)}:${String(lineOf(text, /baseURL\s*:/))}`,
+            derived_from: `${rel(root, file)}:${String(code.slice(0, key.index).split('\n').length)}`,
         });
     }
     return out;

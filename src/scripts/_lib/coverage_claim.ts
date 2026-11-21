@@ -40,7 +40,7 @@ import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js'
  * trigger and adds no completion keyword of its own, per the 2026-08-12 council
  * bound quoted on `NEGATED_CLAIM_RE`.
  */
-export const COMPLETION_RE =
+const COMPLETION_RE =
     /(^|\n)\s*(?:\*\*)?(?:fertig\b|damit ist alles erledigt|aufgabe erledigt|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)|der komplette auftrag ist durch|done[.!]|all done\b|task complete)/i;
 
 /**
@@ -61,11 +61,11 @@ export const COMPLETION_RE =
  * council's Tier-2 shape. This check removes the cases where the prose itself
  * already contradicts the trigger.
  */
-export const NEGATED_CLAIM_RE =
+const NEGATED_CLAIM_RE =
     /\b(noch nicht|nicht fertig|nicht durch|wäre verfrüht|ist verfrüht|not yet|not done|isn'?t done|nein)\b/i;
 
 /** The line `at` falls on — the scope a negation has to appear in to count. */
-export function lineAround(prose: string, at: number): string {
+function lineAround(prose: string, at: number): string {
     // A match anchored on `(^|\n)\s*` can start at a newline, or before a blank
     // line; its line is the one the first non-blank character is on.
     while (at < prose.length && /\s/.test(prose[at] as string)) at += 1;
@@ -142,12 +142,18 @@ function inSpans(spans: ReadonlyArray<[number, number]>, at: number): boolean {
     return false;
 }
 
-/** Whether the reply claims completion, on a line that does not negate it. */
+const COMPLETION_ALL_RE = new RegExp(COMPLETION_RE.source, 'gi');
+
+/**
+ * Where the reply first claims completion on a line that does not negate it, or null.
+ * Shared by detectors D, F and G: a negated claim does not hide a later affirmative
+ * one. The trigger is line-anchored, so each line is checked once.
+ */
 export function completionClaimAt(visible: string): number | null {
-    const m = COMPLETION_RE.exec(visible);
-    if (m === null) return null;
-    if (NEGATED_CLAIM_RE.test(lineAround(visible, m.index))) return null;
-    return m.index;
+    for (const m of visible.matchAll(COMPLETION_ALL_RE)) {
+        if (!NEGATED_CLAIM_RE.test(lineAround(visible, m.index))) return m.index;
+    }
+    return null;
 }
 
 /**

@@ -189,6 +189,11 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['true || npm run dev', ['true']],
         ['false && echo skipped | npm run dev', ['false']],
         ['cd app && npm run dev', ['cd app', 'npm run dev']],
+        // Without pipefail a pipeline's status is its last command's.
+        ['true | false && npm run dev', ['true', 'false']],
+        ['false | true || npm run dev', ['false', 'true']],
+        // With pipefail a failing first command fails the pipeline.
+        ['set -o pipefail; false | true && npm run dev', ['set -o pipefail', 'false', 'true']],
     ])('commandSegments(`%s`) lists only what can run', (command, expected) => {
         expect(commandSegments(command)).toEqual(expected);
     });

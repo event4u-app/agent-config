@@ -213,11 +213,9 @@ import { isVerificationAttempt, isVerificationCommand } from '../_lib/verificati
 import { isTestPath as _isTestPath } from '../_lib/test_path.js';
 import { openSvgObligation } from './svg_obligation.js';
 import {
-    COMPLETION_RE,
-    NEGATED_CLAIM_RE,
     RECORD_ONLY_DETECTORS,
+    completionClaimAt,
     foldRecorded,
-    lineAround,
     coverageGapIn,
     readRecorded,
     recordedFile,
@@ -567,12 +565,10 @@ export function detectCompletionClaim(
     // A session that never read CI has nothing to be premature about.
     if (!ci.seen || ci.settled) return null;
     const prose = visibleProse(reply);
-    const m = COMPLETION_RE.exec(prose);
-    if (!m) return null;
-    const at = m.index;
-    // The trigger fired, but the line it fired on negates it — a status report,
-    // not a claim. Refusing these punishes exactly the honesty the gate wants.
-    if (NEGATED_CLAIM_RE.test(lineAround(prose, at))) return null;
+    // A trigger on a line that negates it is a status report, not a claim; refusing
+    // it punishes the honesty the gate wants. A later affirmative line still claims.
+    const at = completionClaimAt(prose);
+    if (at === null) return null;
     return {
         detector: 'completion',
         evidence: prose.slice(at, at + 120).trim(),
@@ -886,10 +882,7 @@ export function detectUntestedChange(
     // The claim gate, reusing detector D's pair rather than a second dialect of
     // "done" — two lists of completion phrasings would drift, and the negation
     // check is what keeps an honest "noch nicht fertig" from being refused.
-    const prose = visibleProse(reply);
-    const m = COMPLETION_RE.exec(prose);
-    if (!m) return null;
-    if (NEGATED_CLAIM_RE.test(lineAround(prose, m.index))) return null;
+    if (completionClaimAt(visibleProse(reply)) === null) return null;
 
     const shown = source.slice(0, 3).join(', ');
     if (noRedEvidence) {

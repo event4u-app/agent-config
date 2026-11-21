@@ -528,6 +528,12 @@ describe('detector D — completion claim over unsettled CI (round 7)', () => {
         ).not.toBeNull();
     });
 
+    // A negated first match does not hide a later affirmative claim.
+    it('fires on a later claim after a negated one, and not on the negated one alone', () => {
+        expect(detectCompletionClaim('Status update.\nFertig ist der Fix noch nicht.\nDone.', UNSETTLED)).not.toBeNull();
+        expect(detectCompletionClaim('Status update.\nFertig ist der Fix noch nicht.', UNSETTLED)).toBeNull();
+    });
+
     it('does NOT fire on "fertig" inside a sentence about something else', () => {
         expect(
             detectCompletionClaim(
@@ -1635,6 +1641,12 @@ describe('detector F — a completion claim over code no test accompanies', () =
         expect(detectUntestedChange('Fertig ist das noch nicht.', [edit('src/todo.ts')])).toBeNull();
     });
 
+    it('reads a later claim after a negated one', () => {
+        expect(
+            detectUntestedChange('Status update.\nFertig ist das noch nicht.\nDone.', [edit('src/todo.ts')]),
+        ).not.toBeNull();
+    });
+
     it('is silent on a docs-, config- or prose-only turn', () => {
         for (const p of ['README.md', 'docs/x.md', 'package.json', 'src/config/a.yaml', '.github/workflows/ci.yml']) {
             expect(detectUntestedChange(DONE, [edit(p)]), p).toBeNull();
@@ -2251,6 +2263,12 @@ describe('detector G — a partial ratio reported as complete', () => {
 describe('detector G — a negated claim on its own line', () => {
     it('a claim line after another line still reads its own negation', () => {
         expect(detectCoverageGap('Progress update.\nFertig ist der Fix noch nicht.\n165 von 405', [], undefined)).toBeNull();
+    });
+
+    it('a later claim after a negated one is still a claim', () => {
+        expect(
+            detectCoverageGap('Status.\nFertig ist der Fix noch nicht.\nDone.\n165 von 405', [], undefined)?.code,
+        ).toBe('partial_ratio');
     });
 
     it('a claim line after a blank line still reads its own negation', () => {
