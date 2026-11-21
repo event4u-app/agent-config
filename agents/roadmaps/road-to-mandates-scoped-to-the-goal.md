@@ -390,20 +390,20 @@ test.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `agents/evidence/mandate-reask/2026-11-baseline.json` exists and was
+- [x] AC-1 — `agents/evidence/mandate-reask/2026-11-baseline.json` exists and was
       written by `mandate_reask_report --write-baseline`, carrying both metrics.
-- [ ] AC-2 — After `gh pr create` in a session, `/fix:pr-comments-loop` without a
+- [x] AC-2 — After `gh pr create` in a session, `/fix:pr-comments-loop` without a
       URL resolves that PR from the injected default line with no question
       (1.2 and 1.3 tests green).
-- [ ] AC-3 — A goal sentence typed by the owner is recorded verbatim and shown in
+- [x] AC-3 — A goal sentence typed by the owner is recorded verbatim and shown in
       every later prompt and at every subagent start of that session; synthetic
       turns record nothing (2.2-2.4 tests green).
-- [ ] AC-4 — `commit-mechanics.md` and `cheap-question-mechanics.md` read the
+- [x] AC-4 — `commit-mechanics.md` and `cheap-question-mechanics.md` read the
       record, or `goal-scope-hard-floor-reach` carries the council's ESCALATE
       for that clause (3.1).
-- [ ] AC-5 — `git diff --name-only origin/main -- src/rules/` lists no file for
+- [x] AC-5 — `git diff --name-only origin/main -- src/rules/` lists no file for
       the whole roadmap branch.
-- [ ] AC-6 — `/roadmap:next` no longer says "No merge, ever", links
+- [x] AC-6 — `/roadmap:next` no longer says "No merge, ever", links
       process-full's `--merge` section, and § 4 lets the project's own delivery
       rule win over the branch default (6.1 test green).
 - [ ] AC-7 — `task ci` exits 0 on the roadmap branch.
