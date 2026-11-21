@@ -233,6 +233,12 @@ function failureIsDiscarded(seg: Segment): boolean {
     return false;
 }
 
+/** Every segment of a command line, as text: the commands it runs, not the words it mentions. */
+export function commandSegments(command: string): string[] {
+    if (!command) return [];
+    return splitSegments(stripComment(command)).map((seg) => seg.words.join(' '));
+}
+
 /**
  * The command's segments whose failure the shell does NOT discard, as text.
  *
@@ -426,7 +432,7 @@ function exitsWithPipestatus(prev: Pipeline, next: Pipeline | undefined, k: numb
 /**
  * Follow the line after a pipeline whose status is the verifier's: does a
  * failure still reach the recorded code? `&&` runs only on success, so a
- * failure skips it; `|| exit` / `|| exit N≠0` end the shell with a failure;
+ * failure skips it (an `&& exit 0` too); `|| exit` / `|| exit N≠0` end the shell with a failure;
  * `|| false` keeps a failure until the next command; `; exit` / `; exit $?`
  * pass the current status on. Anything else that runs after a failure replaces
  * the code.
@@ -437,10 +443,8 @@ function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
         const h = head(ps[j]);
         const arg = argsOf(ps[j]).replace(/^["']|["']$/g, '');
         const ends = h === 'exit' || h === 'return';
-        if (sep === '&&') {
-            if (ends) return true;
-            continue;
-        }
+        // A failure skips an `&&` command, `exit` included, and reaches whatever follows.
+        if (sep === '&&') continue;
         if (sep === '||') {
             if (ends) return arg !== '0';
             if (h === 'false') continue;
@@ -487,7 +491,9 @@ export function exitMasking(command: string): ExitMasking | null {
 
 /**
  * Whether the line prints the verifier's own exit code right after it ran, so
- * an `exit=N` line in the output can be read in place of a masked one:
+ * an `exit=N` line in the output can be read in place of a masked one — with
+ * `echo`, and `exit=` directly before the expansion, so every digit printed
+ * after it is the expansion's (a `printf` format can print a constant):
  * `cmd; echo "exit=$?"`, `cmd || echo "exit=$?"`, or
  * `cmd | tail; echo "exit=${PIPESTATUS[k]}"` with `k` the verifier's index.
  * A status printed later (`cmd; echo ready; echo "exit=$?"`), one followed by
@@ -503,11 +509,14 @@ export function echoesVerifierStatus(command: string): boolean {
     const next = ps[v + 1];
     const h = head(next);
     // The status line must be the line's last command, so it is the last line printed.
-    if ((h !== 'echo' && h !== 'printf') || next?.segs.length !== 1 || v + 2 !== ps.length) return false;
+    if (h !== 'echo' || next?.segs.length !== 1 || v + 2 !== ps.length) return false;
     const k = verifierIndex(p);
     const filtered = k < p.segs.length - 1 && !p.pipefail;
-    if (filtered) return p.sepAfter === ';' && namesPipestatus(argsOf(next), k);
-    return (p.sepAfter === ';' || p.sepAfter === '||') && /\$\?|\$\{\?\}/.test(argsOf(next));
+    if (filtered && p.sepAfter !== ';') return false;
+    if (!filtered && p.sepAfter !== ';' && p.sepAfter !== '||') return false;
+    // `exit=` right before the expansion, so the digits printed are the expansion's own.
+    const expansion = filtered ? `\\$\\{PIPESTATUS\\[${String(k)}\\]\\}` : '\\$\\?|\\$\\{\\?\\}';
+    return new RegExp(`\\bexit(?:[ _]code)?[ \\t]*[=:][ \\t]*(?:${expansion})(?=["'\\s]|$)`).test(argsOf(next));
 }
 
 /**

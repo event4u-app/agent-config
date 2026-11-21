@@ -125,6 +125,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['npx tsc --noEmit || false; echo ready', 'trailing'],
         // `set +o pipefail` turns it off again.
         ['set -o pipefail; set +o pipefail; npx tsc --noEmit | tail -5', 'pipe'],
+        // A failure skips `&& exit 0` and reaches the echo.
+        ['npx tsc --noEmit && exit 0; echo ready', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -161,6 +163,9 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci | tail -5; echo "exit=$?"',
         // Something prints after the status line, so the last line is not the status.
         'npx tsc --noEmit; echo "exit=$?"; echo exit=0',
+        // The printed digits must come from the expansion itself.
+        "npx tsc --noEmit; printf 'exit=1%.0s\\n' \"$?\"",
+        'npx tsc --noEmit; echo "exit=1 $?"',
     ])('`%s` echoes a status that is not the verifier\'s', (command) => {
         expect(echoesVerifierStatus(command)).toBe(false);
     });

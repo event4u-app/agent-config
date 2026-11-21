@@ -588,6 +588,20 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
     });
 
+    it('a printf whose digits are a constant is not read as the status', () => {
+        expect(
+            classifyRun(
+                rec({ command: "npx tsc --noEmit; printf 'exit=1%.0s\\n' \"$?\"", exit_code: 0, stdout_tail: 'exit=1\n' }),
+            ),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('a failure that skips `&& exit 0` and reaches an echo is masked', () => {
+        expect(
+            classifyRun(rec({ command: 'npx tsc --noEmit && exit 0; echo ready', exit_code: 0, stdout_tail: 'ready\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
     it('records and does not refuse until the arming phase decides', () => {
         expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
     });
