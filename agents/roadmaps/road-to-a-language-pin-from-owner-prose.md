@@ -134,7 +134,7 @@ never edited.
 
 ## Phase 3 — Pin only from owner prose
 
-- [ ] **3.1 Council: the floor for a short typed lead.** First action: `agent-config
+- [x] **3.1 Council: the floor for a short typed lead.** <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> First action: `agent-config
       council:status`, then a council round on one question — with no
       whole-body fallback, does a typed span under `MIN_MARKERS` stay `und`
       (keep the previous pin), or does the owner span get its own lower floor?
