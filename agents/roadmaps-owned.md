@@ -11,15 +11,36 @@ and keep the full search — this file only adds candidates to it.
 |---|---|---|---|
 | road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
 | road-to-a-halt-that-holds-every-lane | active | ready | `emergency.orchestration_halt` stops every dispatch, including the re-dispatch of a dead lane, and the roadmap drain queue classifies a step as … |
+| road-to-a-language-pin-from-owner-prose | active | ready | The reply-language pin is set only by text the owner typed. |
+| road-to-a-learning-pipeline-that-yields-lessons | active | ready | A fault that recurs across sessions becomes a lesson without anyone writing it: the intake sees repeated errors and owner … |
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
+| road-to-a-lite-profile-pilot | active | ready | One repository, azeroth-companion, runs on an opt-in `discipline_profile: lite` that installs at most five package rules and none of the … |
 | road-to-a-map-that-holds-on-the-real-repo | active | ready | On a lane build of this repository in CI, the map states no fixture as product, writes no dangling edge, … |
 | road-to-a-map-that-knows-what-happened | active | ready | The map knows what happened to the code, and the agent gets answers instead of files. |
 | road-to-a-package-measured-against-no-rules | active | ready | A published, pre-registered answer to whether the package solves more tasks than no rules and a minimal prompt, and at … |
+| road-to-a-release-cut-without-a-review-gate | active | ready | `task release` cuts, tags and publishes from any checkout of reviewed `main` — including a linked worktree — without waiting … |
 | road-to-a-session-start-under-the-host-limit | active | ready | A consumer who runs `agent-config upgrade` and nothing else gets a session-start instruction layer whose package-delivered part is at most … |
+| road-to-a-static-context-under-budget | active | ready | The static instruction baseline a session and a subagent receive before the first prompt is one measured, generated number per … |
+| road-to-a-worktree-that-boots-ready | active | ready | A worktree created by `/worktree:create`, by a host-native primitive, or by hand reaches a green gate run after ONE command, … |
+| road-to-an-episode-ledger-with-cost-per-control | active | ready | One command, `agent-config sessions:episodes`, reads the Claude Code transcripts of every local profile and writes a local, gitignored ledger. |
+| road-to-ci-findings-in-one-run | active | ready | One local command reports every finding a pull request's CI would report, one command regenerates every derived artefact and pin … |
+| road-to-defaults-on-after-pilot | active | ready | `agent-config update` installs what it pins (stage 1, already in the tree, kept by a regression run). |
+| road-to-done-claims-with-read-exit-codes | active | ready | A completion claim in this suite has to rest on an exit code that came from the command that verified … |
 | road-to-gates-that-check-what-they-claim | active | ready | Every gate an external review has re-reported for two or more releases either checks what its name and its header … |
+| road-to-gates-that-do-not-trap-the-agent | active | ready | Every blockage that made the owner run a command, type a confirmation, or delete something on the agent's behalf is … |
+| road-to-honest-graph-freshness | active | ready | `graphState` (`src/scripts/code_graph/detect.ts:323-334`) never returns a commit count it did not compute: a native graph built by this release reports `behind:N` … |
+| road-to-mandates-scoped-to-the-goal | active | ready | An owner sentence that names an end state — "bis zum merge", "mach PR und <!-- md-language-check: ignore --> merge", … |
+| road-to-questions-that-reach-the-right-decider | active | ready | A question reaches the owner only when it belongs to one of four owner classes: changing the purpose, lowering a … |
 | road-to-release-notes-that-match-the-span | active | ready | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
+| road-to-repo-knowledge-generated-not-written | active | ready | In each of the seven repositories named in the retro (galawork-api, galawork-web, javascript, elvau, agent-switch, azeroth-companion, agent-config), a command generates … |
+| road-to-resume-after-limit-hits | active | ready | After a usage or spend limit stops a turn, a short `weiter` (or the host's own reset sentence) is enough: … |
+| road-to-review-loops-that-converge | active | ready | Every review loop in this package — completion review and council ratification — has a count the tree generates, a … |
 | road-to-routing-assurance-live-floors-carried | active | ready | Road to routing assurance — what the live floors carried |
+| road-to-settings-and-profiles-in-sync | active | ready | One agent-runnable command each answers, from the machine's real state, three questions the retro could only answer by hand: which … |
+| road-to-shared-task-identity-across-sessions | active | ready | The three duplicate-PR shapes the retro recorded, replayed as fixtures, each produce a warning before `gh pr create` returns; a … |
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
+| road-to-stop-hooks-that-count-own-edits | active | ready | A session that wrote nothing is never told to review lines; a session that wrote N lines is charged N, … |
+| road-to-ui-fixes-that-measure-first | active | ready | A visual bug is fixed only after a measurement of the rendered state, the second fix attempt on the same … |
 | road-to-verified-stale-lock-reclaim | active | ready | No file lock in `src/scripts` lets two callers hold it at once because of a stale-lock break or a release, … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
