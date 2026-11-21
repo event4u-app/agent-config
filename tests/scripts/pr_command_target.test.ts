@@ -1,7 +1,7 @@
 // Text contract for how a PR command picks its target PR — road-to-mandates-
 // scoped-to-the-goal 1.3. Both commands resolve the PR in one fixed order:
-// explicit URL → the session default target (the `Default PR target for PR
-// commands:` line the session-register hook injects) → current-branch
+// explicit URL → the session default target (the one OPEN row of the
+// `<session-prs>` block the session-register hook injects) → current-branch
 // detection → ask once. A PR number recalled from the conversation stays
 // forbidden; the session store is not that, because a hook writes it from
 // `gh pr create` output.
@@ -34,7 +34,7 @@ describe.each(COMMANDS)('%s — PR target order', (file) => {
     it('names the four sources in order: URL → session default → current branch → ask once', () => {
         const at = [
             body.search(/explicit PR URL/i),
-            body.indexOf('Default PR target for PR commands:'),
+            body.indexOf('`<session-prs>` block lists exactly'),
             body.search(/current branch/i),
             body.search(/ask (?:for it |the user )?once/i),
         ];

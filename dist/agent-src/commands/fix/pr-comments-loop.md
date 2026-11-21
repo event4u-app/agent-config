@@ -32,8 +32,8 @@ The loop runs unattended, so it resolves its PR without a confirmation
 round-trip; the first source that yields exactly one PR wins:
 
 1. **An explicit PR URL** in the invocation → that PR.
-2. **The session default target** — the `Default PR target for PR commands:`
-   line in the `<session-prs>` block → that PR.
+2. **The session default target** — the `<session-prs>` block lists exactly
+   one PR as `OPEN` and does not say its last read FAILED → that PR.
 3. **The current branch** has exactly one open PR → that PR.
 4. Otherwise **ask for it once** and stop until it arrives.
 
@@ -42,7 +42,7 @@ default target") and start; no confirmation question.
 
 A **PR number recalled from the conversation** is never a source. The session
 default target is not that: a hook records it from the `gh pr create` output of
-this session and re-reads its state on every prompt, and it names a PR only
+this session and re-reads its state on every prompt, and it is a default only
 while exactly one of them is open.
 
 ## Authorization contract

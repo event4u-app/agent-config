@@ -115,26 +115,13 @@ describe('default_pr_target — the session PR a PR command takes without a URL'
         expect(default_pr_target({ prs: [] })).toBeNull();
     });
 
-    it('names the default in the per-prompt block', () => {
+    // The block carries no default line (owner decision, 2026-11-21: no hook
+    // bundle growth); a PR command reads its OPEN rows, and a failed read says so.
+    it('lists the one OPEN PR a command takes, and flags a failed read', () => {
         record_pr(root, 's1', URL);
-        const block = pr_watch_block(root, 's1', T0, probeOf({ 2534: 'OPEN' }));
-        expect(block).toContain(`Default PR target for PR commands: #2534 ${URL}`);
-    });
-
-    // Goal-record ratification rounds 2 and 4: a default read from a failed probe
-    // is stale state, so no default is named until a read succeeds.
-    it('names no default when the last read failed', () => {
-        record_pr(root, 's1', URL);
-        const block = pr_watch_block(root, 's1', T0, () => null);
-        expect(block).not.toContain('Default PR target');
-        expect(block).toMatch(/FAILED — state unverified/);
-    });
-
-    it('names no default when two PRs are open', () => {
-        record_pr(root, 's1', URL);
-        record_pr(root, 's1', 'https://github.com/o/r/pull/2538');
-        const block = pr_watch_block(root, 's1', T0, probeOf({ 2534: 'OPEN', 2538: 'OPEN' }));
-        expect(block).not.toContain('Default PR target');
+        expect(pr_watch_block(root, 's1', T0, probeOf({ 2534: 'OPEN' }))).toContain('- #2534 OPEN');
+        record_pr(root, 's2', URL);
+        expect(pr_watch_block(root, 's2', T0, () => null)).toMatch(/FAILED — state unverified/);
     });
 });
 

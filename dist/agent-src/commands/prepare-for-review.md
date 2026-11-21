@@ -29,8 +29,8 @@ The first source that yields exactly one PR wins:
 1. **An explicit PR URL** or PR number from the user → that PR.
 2. A Jira ticket number (e.g. `DEV-1234`) → the one open PR whose branch name
    contains it (GitHub API search).
-3. **The session default target** — the `Default PR target for PR commands:`
-   line in the `<session-prs>` block → that PR.
+3. **The session default target** — the `<session-prs>` block lists exactly
+   one PR as `OPEN` and does not say its last read FAILED → that PR.
 4. **The current branch** has exactly one open PR → that PR.
 5. Otherwise (none, or several) → **ask the user once** for the PR number or URL.
 

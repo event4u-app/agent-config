@@ -34,8 +34,8 @@ The user may or may not provide a PR URL.
 The first source that yields exactly one PR wins:
 
 1. **An explicit PR URL** from the user → that PR.
-2. **The session default target** — the `Default PR target for PR commands:`
-   line in the `<session-prs>` block → that PR.
+2. **The session default target** — the `<session-prs>` block lists exactly
+   one PR as `OPEN` and does not say its last read FAILED → that PR.
 3. **The current branch** (`git branch --show-current`) has exactly one open PR
    (`GET /repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open`) → that PR.
 4. Otherwise (no PR, or several) → **ask the user once** for the PR URL.
@@ -45,7 +45,7 @@ from the current branch `{branch}`") and continue; no confirmation question.
 
 A **PR number recalled from the conversation** is never a source. The session
 default target is not that: a hook records it from the `gh pr create` output of
-this session and re-reads its state on every prompt, and it names a PR only
+this session and re-reads its state on every prompt, and it is a default only
 while exactly one of them is open.
 
 ## Mode selection
