@@ -171,6 +171,9 @@ describe('exitMasking — whose exit code does the record carry', () => {
         // A redirection can fail, so `true >x` may fail too.
         ['true >/dev/null/child || exit 0; task ci', 'trailing'],
         ['task ci; exit 1 >/dev/null/child; :', 'trailing'],
+        // A literal is signed or not, of any size, and may carry an attached redirection.
+        ['task ci || exit -256>/dev/null', 'trailing'],
+        ['task ci || exit 9007199254740992', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -190,6 +193,10 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'set -o pipefail || exit 0; task ci',
         // `exit -1` exits 255.
         'task ci || exit -1',
+        'task ci || exit +1',
+        'task ci || exit 9007199254740993',
+        // `1>` is a redirection of fd 1, so this `exit` has no argument and keeps the failure.
+        'task ci || exit 1>/dev/null',
         'task ci && echo ok',
         'npx vitest run || exit 1',
         'npx vitest run; exit $?',

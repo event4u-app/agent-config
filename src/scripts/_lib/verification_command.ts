@@ -497,19 +497,27 @@ function stepUnder(s: FlowState, p: Pipeline, pipefail: boolean): FlowState[] {
     const lone = p.segs.length === 1;
     // The shell's own `exit`, not an executable that happens to be named so.
     if (lone && p.segs[0]?.words[0] === 'exit') {
-        // The argument without its redirections (`>x`, `2>&1`, or `>` and its target).
+        // The argument without its redirections (`>x`, `2>&1`, `-1>x`, or `>` and its
+        // target). Digits right before `<` / `>` name a file descriptor, not an argument.
         const words = p.segs[0].words.slice(1);
         const args: string[] = [];
+        let redirected = false;
         for (let i = 0; i < words.length; i += 1) {
             const w = words[i] as string;
-            if (/^\d*[<>]+&?$/.test(w)) i += 1;
-            else if (!/[<>]/.test(w)) args.push(w);
+            const at = w.search(/[<>]/);
+            if (at === -1) {
+                args.push(w);
+                continue;
+            }
+            redirected = true;
+            const before = w.slice(0, at);
+            if (before !== '' && !/^\d+$/.test(before)) args.push(before);
+            if (/^[<>]+&?$/.test(w.slice(at))) i += 1;
         }
-        const redirected = args.length !== words.length;
         const arg = args.join(' ').replace(/^["']|["']$/g, '');
         let ran: FlowState[];
         if (arg === '' || arg === '$?') ran = [{ ...s, ended: true }];
-        else if (/^-?\d+$/.test(arg)) ran = [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
+        else if (/^[+-]?\d+$/.test(arg)) ran = [{ ...s, zero: BigInt(arg) % 256n === 0n, ended: true }];
         // Any other argument, `${PIPESTATUS[k]}` included (D10): the text cannot say which
         // pipeline ran last, so the status it hands on is unknown.
         else ran = [{ ...s, zero: true, ended: true }, { ...s, zero: false, ended: true }];
