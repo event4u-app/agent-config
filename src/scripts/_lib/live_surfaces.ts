@@ -67,17 +67,23 @@ export function readText(file: string, root?: string): string | null {
     try {
         // A symlinked parent directory (`src-tauri -> /elsewhere`) is not caught
         // by O_NOFOLLOW, which guards the last component only.
+        let target = file;
         if (root !== undefined) {
             const base = fs.realpathSync(root);
-            const real = fs.realpathSync(file);
-            if (real !== base && !real.startsWith(base + path.sep)) return null;
+            target = fs.realpathSync(file);
+            if (target !== base && !target.startsWith(base + path.sep)) return null;
         }
         // Non-blocking open, then check the OPENED file: a path swapped between a
         // stat and a read cannot slip a FIFO or a large file past the check.
         // O_NOFOLLOW: a symlinked input could point out of the repo.
-        fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK | fs.constants.O_NOFOLLOW);
+        fd = fs.openSync(target, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK | fs.constants.O_NOFOLLOW);
         const st = fs.fstatSync(fd);
         if (!st.isFile() || st.size > MAX_INPUT_BYTES) return null;
+        // A parent directory swapped between the check and the open shows as a different file.
+        if (root !== undefined) {
+            const again = fs.statSync(fs.realpathSync(file));
+            if (again.ino !== st.ino || again.dev !== st.dev) return null;
+        }
         const buf = Buffer.alloc(MAX_INPUT_BYTES + 1);
         const n = fs.readSync(fd, buf, 0, buf.length, 0);
         return n > MAX_INPUT_BYTES ? null : buf.toString('utf8', 0, n);
@@ -134,6 +140,7 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
         } catch {
             continue;
         }
+        if (typeof conf !== 'object' || conf === null || Array.isArray(conf)) continue;
         const windows = conf.app?.windows ?? conf.tauri?.windows;
         const list = Array.isArray(windows) && windows.length > 0 ? windows : [{}];
         const start = typeof scripts['tauri'] === 'string' ? 'npm run tauri dev' : 'npx tauri dev';

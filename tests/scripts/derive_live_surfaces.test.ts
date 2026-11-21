@@ -87,6 +87,14 @@ describe('deriveLiveSurfaces', () => {
         expect(deriveLiveSurfaces(dir)).toEqual([]);
     });
 
+    it('a tauri config that parses to null does not drop the other surfaces', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-null-'));
+        tmps.push(dir);
+        fs.writeFileSync(path.join(dir, 'tauri.conf.json'), 'null');
+        fs.writeFileSync(path.join(dir, 'package.json'), '{"scripts":{"dev":"vite"}}');
+        expect(deriveLiveSurfaces(dir).map((x) => x.kind)).toEqual(['npm-script']);
+    });
+
     it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-fifo-'));
         tmps.push(dir);

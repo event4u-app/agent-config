@@ -2392,6 +2392,13 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap(reply, [edit(dir)], dir)?.code).toBe('unlisted_surface');
     });
 
+    it('beside a refusing finding, only the refusing one is kept', () => {
+        const dir = appWorkspace();
+        const g = detectCoverageGap('Fertig.', [edit(dir)], dir);
+        const refusing = { detector: 'verification', evidence: 'x', reason: 'y' } as unknown as NonNullable<typeof g>;
+        expect(refusingFindings([g!, refusing])).toEqual([refusing]);
+    });
+
     it('never refuses', () => {
         const dir = appWorkspace();
         const f = detectCoverageGap('Fertig.', [edit(dir)], dir);
