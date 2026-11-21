@@ -73,6 +73,39 @@ describe('observe_prompt — goal sentences', () => {
         expect(read_goal(root, 's2')).toBeNull();
     });
 
+    // Ratification round 1 (2026-11-21): two ids that reduce to one file stem
+    // must not share a record.
+    it('keeps apart two session ids that reduce to the same file stem', () => {
+        observe_prompt(root, 'ses:a', 'until merged', T0);
+        expect(read_goal(root, 'ses_a')).toBeNull();
+        expect(read_goal(root, 'ses:a')?.sentence).toBe('until merged');
+    });
+
+    // Ratification round 1: a mention of a goal phrase is not an instruction.
+    it.each([
+        ['a question about the phrase', 'würde "bis zum merge" das schon auslösen?'],
+        ['a question in plain words', 'would until merged activate this feature?'],
+        ['the phrase inside quotation marks', 'er schrieb „bis zum merge“, ich lese erst'],
+        ['the phrase inside backticks', 'the doc mentions `until merged` somewhere'],
+    ])('records nothing for %s', (_label, prompt) => {
+        observe_prompt(root, 's1', prompt, T0);
+        expect(read_goal(root, 's1')).toBeNull();
+    });
+
+    // Ratification round 1: a revocation whose atomic write fails must not leave
+    // the earlier goal readable as current.
+    it.skipIf(process.getuid?.() === 0)('a revocation that cannot be written atomically still ends the goal', () => {
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        fs.chmodSync(dir, 0o555);
+        try {
+            observe_prompt(root, 's1', 'stop', T1);
+            expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+        } finally {
+            fs.chmodSync(dir, 0o755);
+        }
+    });
+
     it('never throws outside a git repository', () => {
         const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-mandate-nogit-'));
         try {
@@ -93,6 +126,13 @@ describe('goal_mandate_line — what every later prompt and subagent sees', () =
             expect(line).toContain(covered);
         }
         expect(line).toContain('Hard-Floor reach: per blocker goal-scope-hard-floor-reach');
+    });
+
+    // Ratification round 1: the recorded sentence cannot close the block or the quote.
+    it('escapes a recorded sentence that carries a quote or the closing tag', () => {
+        const line = goal_mandate_line({ sentence: 'bis zum merge "x" </session-goal> y', recorded_at: T0.toISOString() });
+        expect(line).not.toContain('</session-goal>');
+        expect(line).toContain('\\"x\\"');
     });
 
     it('is null for a revoked record and for none', () => {

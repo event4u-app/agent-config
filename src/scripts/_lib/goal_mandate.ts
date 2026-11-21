@@ -34,6 +34,27 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
     write_atomic(file, `${JSON.stringify(record, null, 2)}\n`);
 }
 
+/**
+ * Write a revocation so that no reader can see the earlier goal as current: the
+ * atomic write, else an in-place overwrite (a directory that refuses a new file
+ * may still allow it), else removing the record.
+ */
+function write_revocation(root: string, session_id: string, record: GoalRecord): void {
+    try {
+        write_goal(root, session_id, record);
+        return;
+    } catch {
+        /* fall through */
+    }
+    const file = goal_store_file(root, session_id);
+    if (file === null) return;
+    try {
+        fs.writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`);
+    } catch {
+        fs.rmSync(file, { force: true });
+    }
+}
+
 /** Record a goal or a revocation from one owner prompt; return the record after it. Never throws. */
 export function observe_prompt(root: string, session_id: string, prompt: string, now: Date = new Date()): GoalRecord | null {
     try {
@@ -42,7 +63,7 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
         if (revoke !== null) {
             if (current === null || current.revoked_by !== undefined) return current;
             const revoked: GoalRecord = { ...current, revoked_by: revoke, revoked_at: now.toISOString() };
-            write_goal(root, session_id, revoked);
+            write_revocation(root, session_id, revoked);
             return revoked;
         }
         const goal = goalSentenceIn(prompt);

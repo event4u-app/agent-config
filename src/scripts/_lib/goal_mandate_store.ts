@@ -8,6 +8,7 @@
  * worktree of the repository, one file per session.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -22,10 +23,15 @@ export interface GoalRecord {
     revoked_at?: string;
 }
 
-/** A session id reduced to a file stem that cannot leave the store directory. */
+/**
+ * A session id reduced to a file stem that cannot leave the store directory. An
+ * id the reduction changed gets a digest of the original appended, so two ids
+ * that reduce alike (`ses:a`, `ses_a`) never share a record.
+ */
 function stem(session_id: string): string {
     const s = session_id.replace(/[^A-Za-z0-9._-]/g, '_').replace(/\.\./g, '_').slice(0, 128);
-    return /[A-Za-z0-9]/.test(s) ? s : 'unknown-session';
+    if (s === session_id && /[A-Za-z0-9]/.test(s)) return s;
+    return `${s}~${createHash('sha256').update(session_id).digest('hex').slice(0, 16)}`;
 }
 
 export function goal_store_file(root: string, session_id: string): string | null {
@@ -50,8 +56,11 @@ export function read_goal(root: string, session_id: string): GoalRecord | null {
 export function goal_mandate_line(record: GoalRecord | null): string | null {
     if (record === null || record.revoked_by !== undefined) return null;
     const when = `${record.recorded_at.slice(0, 10)} ${record.recorded_at.slice(11, 16)} UTC`;
+    // A JSON string literal with `<` escaped: the sentence can close neither its
+    // quote nor the `<session-goal>` block it is shown in.
+    const quoted = JSON.stringify(record.sentence).replace(/</g, '\\u003c');
     return (
-        `Owner goal, recorded ${when} from the owner's own words: "${record.sentence}". ` +
+        `Owner goal, recorded ${when} from the owner's own words: ${quoted}. ` +
         'Work that serves it: commits, PR open/update, follow-up fix PRs, CI waits, cleanup. ' +
         'What each step may do without a fresh go-ahead is still decided by commit-policy as written; ' +
         'Hard-Floor reach: per blocker goal-scope-hard-floor-reach.'

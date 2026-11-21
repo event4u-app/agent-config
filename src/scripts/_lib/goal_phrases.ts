@@ -86,24 +86,36 @@ export function ownerProseLines(text: string): string[] {
     return out;
 }
 
-function proseMatches(text: string, patterns: readonly RegExp[]): string | null {
+/**
+ * A goal line read as an instruction, not a mention: a question is dropped, and
+ * quoted or backticked spans are removed before matching. Only the goal side
+ * filters — a revocation that over-matches ends a goal and costs a re-ask, the
+ * safe direction, so revocations match on the whole line.
+ */
+function instructionText(line: string): string | null {
+    if (line.endsWith('?')) return null;
+    return line.replace(/"[^"]*"|“[^”]*”|„[^“”]*[“”]|`[^`]*`/g, ' ');
+}
+
+function proseMatches(text: string, patterns: readonly RegExp[], asInstruction: boolean): string | null {
     if (isSyntheticTurn(text) || text.length > MAX_GOAL_PROMPT_CHARS) return null;
     for (const line of ownerProseLines(text)) {
         const trimmed = line.trim();
         if (trimmed.length > MAX_GOAL_LINE_CHARS) continue;
-        if (patterns.some((re) => re.test(trimmed))) return trimmed;
+        const probe = asInstruction ? instructionText(trimmed) : trimmed;
+        if (probe !== null && patterns.some((re) => re.test(probe))) return trimmed;
     }
     return null;
 }
 
-/** The owner prose line carrying a goal phrase, or null. */
+/** The owner prose line carrying a goal phrase as an instruction, or null. */
 export function goalSentenceIn(text: string): string | null {
-    return proseMatches(text, GOAL_PATTERNS);
+    return proseMatches(text, GOAL_PATTERNS, true);
 }
 
 /** The owner prose line revoking a goal, or null. */
 export function revocationIn(text: string): string | null {
-    return proseMatches(text, REVOKE_PATTERNS);
+    return proseMatches(text, REVOKE_PATTERNS, false);
 }
 
 export function isGoalSentence(text: string): boolean {
