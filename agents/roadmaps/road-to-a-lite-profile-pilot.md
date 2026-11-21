@@ -124,7 +124,7 @@ blocker carrying that report.
       post-activation sessions, the decision rule per metric (BETTER / WORSE / INCONCLUSIVE),
       and the guard: one destructive-action or secret event in the after window
       ends the pilot through step 2.6.
-      verify: `git log --format=%H -- <protocol>` shows the protocol committed before the commit that carries step 3.1.
+      verify: `git log --format=%H -- agents/evidence/preregistration/lite-profile-pilot-protocol-20261121.md` -> /^[0-9a-f]{40}$/ and that single commit precedes the commit that carries step 3.1.
 
 ## Phase 2 — The lite profile
 
@@ -162,7 +162,7 @@ blocker carrying that report.
       Run `./scripts-run src/scripts/check_kernel_edit_ratified` on the diff;
       if it reds, obtain the artifact through the ADR-268 § 4 ladder
       (independent session, then council).
-      verify: `bash src/scripts/condense.sh --changed` lists nothing stale and `check_kernel_edit_ratified` exits 0.
+      verify: `bash src/scripts/condense.sh --changed` -> /Every \.md projection matches its source/ and `check_kernel_edit_ratified` exits 0.
 - [ ] **2.6 Make the way back one command, test first.** Add a switch-and-back
       case (lite, then essential) next to the one in
       `tests/install/rule_scoping_global_deploy.test.ts` proving the re-install
@@ -179,7 +179,7 @@ blocker carrying that report.
       Re-run the generator after each batch of azeroth sessions and append the
       rows to `agents/evidence/metrics/lite-profile-pilot-after.md`. On a guard
       event, run the 2.6 revert at once and record it.
-      verify: `./scripts-run src/scripts/profile_pilot_metrics --repo azeroth-companion --since <activation date> --count` prints at least the protocol's minimum sample, or the after file carries a guard-event entry plus the revert command's output.
+      verify: `./scripts-run src/scripts/profile_pilot_metrics --repo azeroth-companion --since <activation date> --count` -> /^(1[5-9]|[2-9][0-9]|[1-9][0-9]{2,})$/ (the protocol's minimum sample of fifteen), or the after file carries a guard-event entry plus the revert command's output.
 
 ## Phase 4 — The reading
 
@@ -234,7 +234,7 @@ blocker carrying that report.
 - **Recommendation:** written by step 4.2 from the 4.1 result.
 - **If you do nothing:** `lite` stays opt-in, installed only where its key is set; every other install is unchanged.
 - **What to do:**
-  1. Read `agents/evidence/metrics/lite-profile-pilot-result.md`.
+  1. Read `agents/evidence/metrics/lite-profile-pilot-result.md`. <!-- ref-ignore -->
   2. Answer with one of: offer it, keep it opt-in, remove it.
 - **Resolved when:** an owner directive naming one of the three answers exists under `agents/evidence/owner-directives/`.
 

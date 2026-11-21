@@ -89,8 +89,8 @@ the owner and never closes them.
       write `src/scripts/review_loop_census.ts` emitting JSON plus
       `agents/evidence/analysis/review-loop-census.md` with the producing
       command in its header. On demand only — no CI gate (D2).
-      verify: `npx vitest run tests/scripts/review_loop_census.test.ts` red
-      before the script, green after; `./scripts-run src/scripts/review_loop_census`
+      verify: `npx vitest run tests/scripts/review_loop_census.test.ts` -> 0
+      after the script, following a recorded red run before it; `./scripts-run src/scripts/review_loop_census`
       lists `session-pins-phase-2-20261108` at 56 and
       `session-start-contracts-ratification` at 31, and 43 ratification
       subjects at five or more rounds at the pin.
@@ -154,8 +154,8 @@ the owner and never closes them.
       --subject <slug>`; on `stalled` or `diverging`, stop re-submitting and
       take ADR-268 § 4's owner rung with the replay row attached. Run
       `task sync` and `task generate-tools`.
-      verify: `grep -n review_convergence` hits the source context and its
-      projection; `./scripts-run src/scripts/check_kernel_edit_ratified` on the
+      verify: `grep -c review_convergence src/agent-src/contexts/authority/kernel-rule-edits.md dist/agent-src/contexts/authority/kernel-rule-edits.md` -> /:[1-9][0-9]*\n.*:[1-9][0-9]*$/
+      (the source context and its projection both carry it); `./scripts-run src/scripts/check_kernel_edit_ratified` on the
       branch reports the context outside `MECHANISM_PATHS`.
 - [ ] **1.5 Generated round packet — only if 0.4 named `scope-widened`.** Write
       `src/scripts/ratification_round_packet.ts`, test-first: round N+1's

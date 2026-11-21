@@ -194,7 +194,7 @@ standalone.
 
       The test expects three findings and zero on the control. It fails because
       the script does not exist yet.
-      verify: `npx vitest run tests/scripts/lint_verify_exit_masking.test.ts` -> /lint_verify_exit_masking/
+      verify: `npx vitest run tests/scripts/lint_verify_exit_masking.test.ts` -> 1 (red: the script does not exist yet)
 - [ ] **2.2 Write `src/scripts/lint_verify_exit_masking.ts`.**
       - It reads `verify:` clauses through `parseVerifyClause`
         (`src/agent-src/scripts/verify_clause.ts:228`). It does not parse them a
@@ -266,7 +266,7 @@ context edits and delete the script. The map is gitignored state.
 
       Expected: each runnable surface with its start command, size or URL, and a
       `derived_from` file:line, and `[]` for `none`.
-      verify: `npx vitest run tests/scripts/derive_live_surfaces.test.ts` -> /derive_live_surfaces/
+      verify: `npx vitest run tests/scripts/derive_live_surfaces.test.ts` -> 1 (red: the script does not exist yet)
 - [ ] **4.2 Write `src/scripts/derive_live_surfaces.ts` and register it in `src/cli/registry.ts`.**
       The CLI name is `verify:surfaces`, registered next to `roadmap:context`
       (`:89`).

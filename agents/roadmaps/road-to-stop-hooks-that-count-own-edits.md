@@ -138,7 +138,7 @@ owner fills is added (D1).
       writer leaves 663 dirty lines; (c) the session edits 60 lines, nothing
       foreign. Expect (a) silent, (b) charged 40, (c) fires at 60. Run before
       any source edit and record that (a) and (b) are red.
-      verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts -t foreign` -> exit 1 with (a) and (b) failing, (c) passing
+      verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts -t foreign` -> 1 with (a) and (b) failing, (c) passing
       uses: test-driven-development
 
 - [ ] **1.2 Verify-shape repro for the turn-end gate.** Add to
@@ -146,14 +146,14 @@ owner fills is added (D1).
       commands as positives and these as negatives: `docker exec app ls
       tests`, `docker exec app cat test.log`, `tools/build`, `python3
       scripts/render_report.py`, `./agent-config ui:render x.svg`.
-      verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts` -> exit 1, only the six positives failing
+      verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts` -> 1 with only the six positives failing
 
 - [ ] **1.3 Fetch-as-push repro.** In `tests/scripts/push_settle_hook.test.ts`
       capture real output from a temp bare remote: `git fetch` with a moved
       branch and a new branch, `git pull`, a plain `git push`, and one combined
       run (`git fetch && git merge && git push`). Expect fetch and pull silent
       with no merge marker written; push and the combined run fire.
-      verify: `npx vitest run tests/scripts/push_settle_hook.test.ts -t fetch` -> exit 1, fetch and pull cases failing
+      verify: `npx vitest run tests/scripts/push_settle_hook.test.ts -t fetch` -> 1 with fetch and pull cases failing
 
 - [ ] **1.4 Credential-string repro.** Grep the local host transcript stores
       (`~/.claude/projects/`, `~/.agent-switch/*/*/config/projects/`) for the
@@ -163,7 +163,7 @@ owner fills is added (D1).
       Add them redacted (paths and values replaced) plus the F3 shapes to
       `tests/scripts/hooks/block_credential_reads.test.ts` as must-allow, and
       `cat .env`, `grep KEY .env`, `source .env`, `cp .env x` as must-refuse.
-      verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> exit 1, only must-allow cases failing
+      verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 1 with only must-allow cases failing
 
 - [ ] **1.5 Disclaimer cadence reading.** Write
       `src/scripts/measure_work_product_line.ts`: over a transcript store it

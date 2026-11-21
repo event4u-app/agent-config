@@ -134,7 +134,7 @@ pinned by a test that failed before the change.
       in `package.json`), `wow-addon/` (`Addon.toc`, `Frames.lua`, `Frames.xml`,
       a `dev/Tracking.lua`), `zip-handover/` (`designs/handover.zip` holding an
       `index.html` and a `.png`), `bare/` (no UI signal).
-      verify: `ls tests/fixtures/ui-reference/{storybook-react,wow-addon,zip-handover,bare}` -> 0
+      verify: `test -d tests/fixtures/ui-reference/storybook-react -a -d tests/fixtures/ui-reference/wow-addon -a -d tests/fixtures/ui-reference/zip-handover -a -d tests/fixtures/ui-reference/bare` -> 0
 
 ## Phase 1 — Close the contested choices with the council
 

@@ -82,8 +82,8 @@ roadmaps in `relates:`. `block_credential_reads.ts` is not edited here.
       `healDecision(ordering, contentEqual)` with today's behaviour, then add a
       case to `tests/scripts/rebuild_hook_bundle.test.ts`: ordering fresh,
       content unequal → `rebuild`.
-      verify: `npx vitest run tests/scripts/rebuild_hook_bundle.test.ts` fails
-      on exactly that case.
+      verify: `npx vitest run tests/scripts/rebuild_hook_bundle.test.ts` -> 1
+      failing on exactly that case.
 - [ ] **1.3 Pin the bare `scripts-run` failure.** Add
       `tests/scripts/scripts_run_missing_deps.test.ts`: copy `scripts-run` into
       a temp dir without `node_modules`, run it, expect exit 127 and stderr
@@ -105,8 +105,8 @@ roadmaps in `relates:`. `block_credential_reads.ts` is not edited here.
       compared by `digestOf` on every preflight versus a source-digest sidecar
       written by `write_bundle_digest.mjs` at build time; record the verdict as
       D4. Then implement it in `healDecision`.
-      verify: `npx vitest run tests/scripts/rebuild_hook_bundle.test.ts tests/scripts/check_hook_bundle_content.test.ts`
-      exits 0; `touch dist/hooks/dispatch.js` after a source edit, then
+      verify: `npx vitest run tests/scripts/rebuild_hook_bundle.test.ts tests/scripts/check_hook_bundle_content.test.ts` -> 0
+      and, after `touch dist/hooks/dispatch.js` following a source edit,
       `./scripts-run src/scripts/rebuild_hook_bundle` rebuilds and
       `./scripts-run src/scripts/check_hook_bundle_content` exits 0.
 - [ ] **2.2 Name the remedy in `scripts-run`.** When
@@ -139,7 +139,7 @@ roadmaps in `relates:`. `block_credential_reads.ts` is not edited here.
 - [ ] **3.3 Keep the recipe current without a person.** The recipe is
       regenerated whenever its input digest differs from the stored one; add a
       test changing a fixture lockfile and asserting regeneration.
-      verify: `npx vitest run tests/scripts/worktree_recipe.test.ts` exits 0.
+      verify: `npx vitest run tests/scripts/worktree_recipe.test.ts` -> 0
 
 ## Phase 4 — One command stands the worktree up
 
@@ -150,7 +150,7 @@ roadmaps in `relates:`. `block_credential_reads.ts` is not edited here.
       checkout's (`cp -c -R` / `cp --reflink=auto -R`), else runs the install;
       never symlinks; provisions env files per D5; in this repository runs
       `rebuild_hook_bundle`. Output names files, never values.
-      verify: `tests/scripts/worktree_bootstrap.test.ts` on a temp repo plus
+      verify: `npx vitest run tests/scripts/worktree_bootstrap.test.ts` -> 0 on a temp repo plus
       linked worktree: `lstat(node_modules).isSymbolicLink()` is false, and a
       sentinel value planted in the fixture env file never appears in output.
 - [ ] **4.2 Wire the command into the existing surfaces.** Add an
@@ -159,8 +159,8 @@ roadmaps in `relates:`. `block_credential_reads.ts` is not edited here.
       name the command. First action for `/worktree:create` § 4: run the
       council on moving `env-bootstrap` from suggest to run (F6), record D6.
       Then `task sync` and `task generate-tools`.
-      verify: `grep -n "symlink" src/skills/using-git-worktrees/SKILL.md`
-      shows no dependency-seeding row; `task lint-skills` exits 0;
+      verify: `grep -ciE 'symlink.*(node_modules|vendor|\.venv)' src/skills/using-git-worktrees/SKILL.md` -> /^0$/
+      (no dependency-seeding row); `task lint-skills` exits 0;
       `bash src/scripts/condense.sh --changed` lists nothing.
 - [ ] **4.3 Catch worktrees created outside the command.** Search the host
       documentation the tree vendors for a worktree-creation hook event (F8);

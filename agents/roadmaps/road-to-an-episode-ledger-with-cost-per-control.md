@@ -111,8 +111,8 @@ part of it is written by hand.
       classifier, worktree guard, owner rejection, plain failure. Expected: plain
       failures produce no episode. Consecutive blocks on one control in one leg
       are one episode. Replayed turns are not counted twice.
-      verify: `npx vitest run tests/scripts/session_episodes.test.ts` fails on
-      the missing module, and on nothing else.
+      verify: `npx vitest run tests/scripts/session_episodes.test.ts` -> 1
+      failing on the missing module, and on nothing else.
       uses: test-driven-development
 - [ ] **1.2 Implement `src/scripts/_lib/session_episodes.ts`.** Discover legs
       through `session_catalog.ts`. Dedup turns through `cc_transcript.ts`.
@@ -212,16 +212,15 @@ part of it is written by hand.
       synthesizes against the ledger's deduplicated counts, and runs one
       `/council` analysis round. Every input is generated from transcripts. The
       command takes no owner-written context.
-      verify: `./scripts-run src/scripts/lint_commands` (or the command linter
-      `task ci` runs) exits 0 on the new file, and `task sync` regenerates the
+      verify: `./scripts-run src/scripts/skill_linter --all` -> 0
+      (the linter `task lint-skills` runs over commands) on the new file, and `task sync` regenerates the
       projections.
       uses: command-writing
 - [ ] **4.3 Document the contract.** Add `docs/contracts/session-episodes-v1.md`
       with the row schema, the five classes, the episode key, the privacy floor,
       and the `as-of-analysis` limit of `host_permission`. Link it from both
       surfaces.
-      verify: `task check-refs` (or the reference checker `task ci` runs) exits
-      0.
+      verify: `task check-refs` -> 0
 - [ ] **4.4 Dogfood on this machine.** Run `agent-config sessions:episodes
       --by-control` over all local profiles. Write the generated report to
       `agents/evidence/analysis/session-episodes-first-run.md`, using the

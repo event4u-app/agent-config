@@ -304,13 +304,13 @@ instruction", "owner directive", and their German forms).
         read as an owner turn;
       - (f) the output carries no prompt text.
 
-      verify: `./scripts-run src/scripts/probe_owner_attribution --self-test` exits 1 on the missing implementation.
+      verify: `./scripts-run src/scripts/probe_owner_attribution --self-test` -> 1 on the missing implementation.
 - [ ] **5.2 Implement the detector.** Build it on
       `src/scripts/_lib/cc_transcript.ts` (main bucket, replay-deduped) with
       the repeatable `--store` and `--json` of 1.2. It outputs counts, session
       ids and finding classes only. It is a measurement, not a gate: exit 0,
       and `--self-test` exits 1 on a failing case.
-      verify: `./scripts-run src/scripts/probe_owner_attribution --self-test` exits 0; `--json` over this repo's store exits 0.
+      verify: `./scripts-run src/scripts/probe_owner_attribution --self-test` -> 0 and `--json` over this repo's store exits 0.
 - [ ] **5.3 Write the baseline by command and check it against the retro.**
       Run it with `--write agents/evidence/analysis/owner-attribution-baseline.json`
       over every local store the 1.3 census read. The artefact records the
@@ -324,12 +324,12 @@ instruction", "owner directive", and their German forms).
       owner's quoted turn. Without a source it is your proposal, and you say so."
       The failing test comes first, in `tests/scripts/generate_subagent_floor.test.ts`.
       It asserts the line is in every generated floor and in the 4.1 span.
-      verify: `npx vitest run tests/scripts/generate_subagent_floor.test.ts` -> 0; `./scripts-run src/scripts/generate_subagent_floor --check` -> 0
+      verify: `npx vitest run tests/scripts/generate_subagent_floor.test.ts` -> 0 and `./scripts-run src/scripts/generate_subagent_floor --check` -> 0
 - [ ] **5.5 File the re-measure with the 4.3 stub.** Add a second trigger to
       the 4.3 stub: 30 owner sessions after 5.4 lands, re-run 5.3 into a new
       file and compare `unsourced` plus `fabricated-quote` per 100 assistant
       turns against the baseline.
-      verify: `grep -n 'probe_owner_attribution' agents/roadmaps/stubs/road-to-questions-that-reach-the-right-decider-remeasure.md` prints the trigger; `./scripts-run src/scripts/lint_roadmap_complexity` -> 0
+      verify: `grep -c 'probe_owner_attribution' agents/roadmaps/stubs/road-to-questions-that-reach-the-right-decider-remeasure.md` -> /^[1-9][0-9]*$/ and `./scripts-run src/scripts/lint_roadmap_complexity` -> 0
 
 <!-- Release holds — none. Considered and not needed: every phase lands a
      complete, consistent state (the census is additive, 2.3 narrows a keyword

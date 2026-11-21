@@ -94,7 +94,7 @@ a file.
       council with `decision-revisit-gate`'s owner-reserved table attached and a
       neutral prompt (the transition, the two ADR excerpts cited in Context, no
       expected verdict). Write the verdict into the blocker's `Routed:` field.
-      verify: `grep -n 'Routed:\*\* council 20' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` prints one line.
+      verify: `grep -c 'Routed:\*\* council 20' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` -> /^1$/
 - [ ] **0.2 Failing test for the re-ask counter.** Write
       `tests/scripts/mandate_reask_report.test.ts` against fixture transcripts
       under `tests/fixtures/mandate-reask/`: (a) a goal sentence followed in a
@@ -103,7 +103,7 @@ a file.
       by an assistant turn asking for a PR URL counts one
       `pr_target_asked_after_create`; (c) the rendered output contains no
       substring of any fixture prompt.
-      verify: `npx vitest run tests/scripts/mandate_reask_report.test.ts` fails on the missing module.
+      verify: `npx vitest run tests/scripts/mandate_reask_report.test.ts` -> 1 failing on the missing module.
 - [ ] **0.3 Build the counter.** Implement `src/scripts/mandate_reask_report.ts`
       on `src/scripts/_lib/cc_transcript.ts` (`listTranscriptFiles`, main
       bucket only, replay-deduped), flags `--sessions N`, `--since <iso>`,
@@ -122,12 +122,12 @@ a file.
       `tests/scripts/session_pr_watch.test.ts` for a new
       `default_pr_target(store)`: exactly one `OPEN` tracked PR → that PR; two
       `OPEN` → `null`; only `MERGED`/`CLOSED` → `null`; empty store → `null`.
-      verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` fails on the missing export.
+      verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 1 failing on the missing export.
 - [ ] **1.2 Selector and block line.** Implement `default_pr_target` in
       `src/scripts/_lib/session_pr_watch.ts`; `pr_watch_block` appends one line
       `Default PR target for PR commands: #<n> <url>` when it is non-null.
       Existing assertions in the same test file stay unchanged.
-      verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` passes.
+      verify: `npx vitest run tests/scripts/session_pr_watch.test.ts` -> 0
 - [ ] **1.3 Failing command-contract test.** Write
       `tests/scripts/pr_command_target.test.ts` asserting that
       `fix/pr-comments-loop/command.md` and `fix/pr-comments/command.md` name the
@@ -155,14 +155,14 @@ a file.
       from the goal sentences `mandate_reask_report` finds in the transcripts;
       (b) a model-carried classification the agent confirms in one line. Record
       the verdict as a `## Decisions` row resolved by `council:<date>`.
-      verify: `grep -n 'council:2026' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` shows the row.
+      verify: `grep -cE '^\| D[0-9]+ \|.*\| council:2026' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` -> /^[1-9][0-9]*$/
 - [ ] **2.2 Failing recognizer tests.** Write
       `tests/scripts/goal_mandate.test.ts`: "mach weiter bis zum merge",
       "bis zum merge durchziehen", "arbeite die roadmap ab", "mach PR und merge",
       "until merged" each record the sentence verbatim; a slash-command
       expansion, a `<task-notification>` turn and pasted tool output record
       nothing; "stop", "nicht mergen", "halt" set `revoked_by` verbatim.
-      verify: `npx vitest run tests/scripts/goal_mandate.test.ts` fails on the missing module.
+      verify: `npx vitest run tests/scripts/goal_mandate.test.ts` -> 1 failing on the missing module.
 - [ ] **2.3 Store and per-prompt block.** Implement
       `src/scripts/_lib/goal_mandate.ts` on the pattern of `session_pr_watch.ts`
       (store `<git-common-dir>/agent-session-mandates/<session>.json`, one writer,
@@ -200,7 +200,7 @@ a file.
       whether a per-step value belongs in that vocabulary. Write the verdict as
       an arrival note into `later/road-to-typed-grants-that-persist` step 2.2,
       which owns the cascade; build nothing here.
-      verify: `grep -n 'road-to-mandates-scoped-to-the-goal' agents/roadmaps/later/road-to-typed-grants-that-persist.md` prints the note.
+      verify: `grep -c 'road-to-mandates-scoped-to-the-goal' agents/roadmaps/later/road-to-typed-grants-that-persist.md` -> /^[1-9][0-9]*$/
 
 ## Phase 4 — Hard-Floor reach, once decided
 
@@ -221,7 +221,7 @@ a file.
       `later/road-to-an-agent-the-owner-does-not-drive` (Goal table) so its
       closing re-measure (its Phase 8) also invokes `mandate_reask_report` with `--since` set to the
       merge time of this roadmap's PR, alongside its own counts.
-      verify: `grep -n 'mandate_reask_report' agents/roadmaps/later/road-to-an-agent-the-owner-does-not-drive.md` prints the row.
+      verify: `grep -c 'mandate_reask_report' agents/roadmaps/later/road-to-an-agent-the-owner-does-not-drive.md` -> /^[1-9][0-9]*$/
 
 ## Phase 6 — Roadmap commands follow the owner's merge order and the project's workflow
 
@@ -246,7 +246,7 @@ test.
       feature-branch default*, and says that the project rule wins over the
       default; (d) the five-disqualifier screen text is unchanged (a snapshot of
       § 2's table rows).
-      verify: `npx vitest run tests/scripts/roadmap_next_contract.test.ts` fails on (a)-(c) and passes (d) on today's text.
+      verify: `npx vitest run tests/scripts/roadmap_next_contract.test.ts` -> 1 failing on (a)-(c) and passing (d) on today's text.
 - [ ] **6.2 Rewrite the two passages.** Edit `next/command.md` § 4 and the
       Rules bullet to match 6.1. The merge bullet points at process-full's
       `--merge` section instead of restating it. It stays bound by that

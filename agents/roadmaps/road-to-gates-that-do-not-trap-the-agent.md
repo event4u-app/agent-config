@@ -245,7 +245,7 @@ removal.
       so it matches the recorded owner authority (ADR-282 shape) in `src/`, then
       `task sync`. A contradiction with no accepted ADR behind it goes to the
       council first.
-      verify: `rg -n` for each quoted sentence from the relay-map rows over `src/` -> 1
+      verify: `rg -nF '<quoted sentence>' src/` -> 1 for each quoted sentence from the relay-map rows
       (positive control: the same `rg` before the rewrite exits 0)
 - [ ] **3.6 Hand the parked owner the evidence.** For every inventory row whose
       owning roadmap is `road-to-an-agent-the-owner-does-not-drive`, append one
@@ -281,8 +281,8 @@ removal.
       gates:relays --since <date 3.4 last flipped>` and the relay count from
       `interruptions.jsonl`; for every gate removed or reshaped in 3.4 the
       relay count is 0, otherwise reopen its 3.4 step.
-      verify: `agent-config gates:relays --since <date 3.4 last flipped> --gate <id> --json`
-      per 3.4 gate -> /"relays": 0/ <!-- blocked-by: b-measure-window -->
+      verify: `agent-config gates:relays --since <date 3.4 last flipped> --gate <id> --json` -> /"relays": 0(?![0-9])/
+      per 3.4 gate <!-- blocked-by: b-measure-window -->
 
 ## Decisions
 

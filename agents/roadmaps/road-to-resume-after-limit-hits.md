@@ -95,7 +95,7 @@ new session (`later/road-to-an-agent-the-owner-does-not-drive` 4.2), and the
       the user record → `reset-prompt`; `API Error: 529` → null; a human prompt
       quoting the banner mid-sentence → null; a banner followed by a human prompt
       already answered → null.
-      verify: `npx vitest run tests/scripts/limit_stop.test.ts` fails on the stub.
+      verify: `npx vitest run tests/scripts/limit_stop.test.ts` -> 1 failing on the stub.
 - [ ] **1.2 Implement it and reuse it in the scan.** Implement `limitStopOf` from
       `HARNESS_TEXT` (F1) and the reset prefix (F2), moving both literals into
       `limit_stop.ts` and importing them back into `conformance_scan.ts` and
@@ -150,13 +150,13 @@ new session (`later/road-to-an-agent-the-owner-does-not-drive` 4.2), and the
       uses: ai-council
 - [ ] **3.3 Implement per D6.** Make 3.1 green and add a test that a command added
       to a fixture tree enters the index without any other edit.
-      verify: `npx vitest run tests/hooks/skill_route_hook.test.ts` exits 0;
+      verify: `npx vitest run tests/hooks/skill_route_hook.test.ts` -> 0 and
       `./scripts-run src/scripts/check_hook_bundle_composition` exits 0.
 - [ ] **3.4 Generated term census.** Add `src/scripts/owner_term_census.ts`: over the
       local transcript store, count human prompts containing a command name or
       cluster as a bare word and whether the route fired; output counts per term,
       never prompt text. Write `agents/evidence/analysis/owner-term-census-2026-11.md`.
-      verify: `npx vitest run tests/scripts/owner_term_census.test.ts` exits 0 and the
+      verify: `npx vitest run tests/scripts/owner_term_census.test.ts` -> 0 and the
       file lists `arena` with a count.
 
 ## Phase 4 — The owner's attribution rule wins on every path
@@ -177,7 +177,7 @@ new session (`later/road-to-an-agent-the-owner-does-not-drive` 4.2), and the
 - [ ] **4.3 Give the rule a startup contract.** Add `no-attribution-footers` to
       `src/config/startup-contract-clauses.json` with its Iron Law clauses, then
       `task sync` and `task generate-tools`.
-      verify: `./scripts-run src/scripts/check_startup_contracts` exits 0; a
+      verify: `./scripts-run src/scripts/check_startup_contracts` -> 0 and a
       `build_thin` test shows the stub carries a Never line; `bash src/scripts/condense.sh --changed` lists nothing.
 
 ## Phase 5 — Outcome and the scope finding

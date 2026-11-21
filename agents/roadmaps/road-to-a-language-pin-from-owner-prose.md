@@ -94,7 +94,7 @@ never edited.
       sum to the fires. Run it red, then implement in
       `src/scripts/measure_turn_end_gate.ts`: for each replayed `language` fire,
       find the user entry that last set the pin and assign its class.
-      verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts -t language-split` -> 0, after a recorded red run
+      verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts -t language-split` -> 0 after a recorded red run
       uses: test-driven-development
 - [ ] **1.2 Generate the post-fix baseline.** Run
       `./scripts-run src/scripts/measure_turn_end_gate --language-split --out agents/evidence/analysis/language-split-baseline.md`
@@ -109,7 +109,7 @@ never edited.
       council:status`, then a council round on that blocker with 1.2's file),
       write the verdict into that blocker entry and a one-line Done note on 4.1
       citing 1.2's file.
-      verify: `grep -n "language-split-baseline" agents/roadmaps/later/road-to-agent-throughput-recovery.md` -> at least 1 line
+      verify: `grep -c "language-split-baseline" agents/roadmaps/later/road-to-agent-throughput-recovery.md` -> /^[1-9][0-9]*$/
 
 ## Phase 2 — Fixtures from the real cases, red first
 
@@ -122,7 +122,7 @@ never edited.
       usage-limit resume, `<bash-stdout>` pane echo, a German instruction over a
       fenced English stack trace. Expected verdict per row: the owner's
       language, or `und` where the owner text has under `MIN_MARKERS`.
-      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t "owner prose only"` -> non-zero, and the failing rows are exactly the rows of § Context plus 1.2's new classes
+      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t "owner prose only"` -> 1 and the failing rows are exactly the rows of § Context plus 1.2's new classes
       uses: test-driven-development
 - [ ] **2.2 Add the gate-side fixtures.** In the turn-end gate test file
       (`grep -l detectLanguage tests -r` names it) add: a `system-locale` `en`
@@ -148,12 +148,12 @@ never edited.
       those spans. Switch `classify` (`language_mirror_hook.ts:325`) to score
       `ownerProse` with 3.1's floor and remove the whole-body fallback; correct
       the "bidirectional by construction" docstring the stub flagged.
-      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0, with 2.1's table green
+      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0 with 2.1's table green
 - [ ] **3.3 Record pin provenance.** Add `owner_prose_chars` to `PinState`
       (`language_mirror_hook.ts:464`) and write it on every prompt-sourced pin.
       Test first: a pin written from 2.1's trailing-line row records the typed
       line's length, not `prompt_chars`.
-      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t owner_prose_chars` -> 0, after a recorded red run
+      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t owner_prose_chars` -> 0 after a recorded red run
 - [ ] **3.4 Keep the conformance scanner on the same reader.** `measure_turn_end_gate`
       and `conformance_scan` call `classify`; run both suites so the scanner and
       the hook still classify one entry the same way.
@@ -178,14 +178,15 @@ never edited.
 
 - [ ] **5.1 Regenerate the split with the new classifier.** Run 1.2's command
       to `agents/evidence/analysis/language-split-after.md` over the same window
-      and the same transcripts. Report per class the fires before and after.
-      verify: `synthetic-turn`, `paste-decided`, `trailing-typed-line` and `system-locale` read 0 in the after file; `owner-prose` fires are listed individually
+      and the same transcripts. Report per class the fires before and after, one
+      table row per class in the form `| <class> | <before> | <after> |`.
+      verify: `grep -cE '^\| (synthetic-turn|paste-decided|trailing-typed-line|system-locale) \|[^|]*\| 0 \|$' agents/evidence/analysis/language-split-after.md` -> /^4$/ and the `owner-prose` fires are listed individually
 - [ ] **5.2 Archive the superseded stub.** Move
       `agents/roadmaps/stubs/road-to-language-pin-short-lead.md` to
       `agents/roadmaps/archive/` with a one-line Done note naming 3.2 and D1
       (its `en`/`en`/`de` probe target is replaced by owner-prose-only
       verdicts), then run the roadmap dashboard regeneration.
-      verify: `find agents/roadmaps/stubs -iname 'road-to-language-pin-short-lead.md'` -> no output, and `./scripts-run src/scripts/check_no_roadmap_refs` -> 0
+      verify: `test ! -e agents/roadmaps/stubs/road-to-language-pin-short-lead.md` -> 0 and `./scripts-run src/scripts/check_no_roadmap_refs` -> 0
 
 ## Decisions
 

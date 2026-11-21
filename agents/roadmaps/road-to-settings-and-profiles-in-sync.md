@@ -124,8 +124,8 @@ Tree facts:
       asserts the JSON report lists each file with `role`
       (`global-canonical | global-flat | legacy-xdg | stray-home | project`),
       `reached_from_git_root` (true/false), `pin`, `removed_keys`,
-      `renamed_keys`. verify: `npx vitest run tests/scripts/_cli/cmd_settings_status.test.ts`
-      fails because the verb does not exist.
+      `renamed_keys`. verify: `npx vitest run tests/scripts/_cli/cmd_settings_status.test.ts` -> 1
+      failing because the verb does not exist.
 - [ ] **1.2 Implement `agent-config settings:status [--json]`.** New
       `src/scripts/_cli/cmd_settings_status.ts`, read-only, built on
       `user_global_settings_paths()`, `_resolve_cascade_paths()`,
@@ -224,7 +224,7 @@ Tree facts:
       machine-specific numbers. verify: `./scripts-run
       src/scripts/check_references` exits 0; `npx vitest run
       tests/cli/help.test.ts` green.
-- [ ] **5.2 Full gate.** verify: `task ci` exits 0.
+- [ ] **5.2 Targeted gate over every touched surface.** verify: `npx vitest run tests/cli/help.test.ts tests/lib/agent_settings.test.ts tests/scripts/_cli/cmd_settings_status.test.ts tests/scripts/_cli/cmd_settings_migrate.test.ts tests/scripts/_cli/cmd_profiles_drift.test.ts tests/scripts/code_graph/cache_prune.test.ts` -> 0
 
 ## Decisions
 

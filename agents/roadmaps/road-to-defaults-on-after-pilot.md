@@ -130,7 +130,7 @@ Verified against the tree at `811cea61d6`:
 - [ ] **1.1 Replay stage 1.** Run the update suite and the install doc check;
       no code change. A red result here stops the run as quality-red.
       verify: `npx vitest run tests/scripts/_cli/cmd_update.test.ts -t 'keeps the pin and the global install in step'` -> 0
-      verify: `grep -c "runs \`agent-config upgrade\` to that version" docs/installation.md` -> /^1$/
+      verify: `grep -c "runs .agent-config upgrade. to that version" docs/installation.md` -> /^1$/
 - [ ] **1.2 Failing test first: the inventory.** New
       `tests/scripts/report_opt_in_gates.test.ts` with a fixture schema (a boolean
       `false`, an enum defaulting to `off`, an enum defaulting to `notify`, a
@@ -296,11 +296,11 @@ Verified against the tree at `811cea61d6`:
 - **Owner:** owner
 - **Routed:** pending — the question carries step 3.4's per-key result, which does not exist until the pilot window fills; step 4.1 routes it through the council first. Expected reserved row: product-owned, since a shipped-default flip is externally visible (drain rule 3) and ADR-291 already ruled existing installs are asked, never flipped, for `update.mode`.
 - **Blocks:** step 4.2
-- **Question:** for the PASS keys in `agents/evidence/metrics/defaults-pilot-result.json`: (a) new default for new installs only, existing installs keep their old value written explicitly; (b) new default for every install that upgrades, named in the release notes; (c) none — keep them opt-in.
+- **Question:** for the PASS keys in `agents/evidence/metrics/defaults-pilot-result.json`: (a) new default for new installs only, existing installs keep their old value written explicitly; (b) new default for every install that upgrades, named in the release notes; (c) none — keep them opt-in. <!-- ref-ignore -->
 - **Recommendation:** written by step 4.1 from `defaults-pilot-result.json`.
 - **If you do nothing:** every key stays opt-in; installs behave as today and the pilot keeps running only on this machine.
 - **What to do:**
-  1. Read `agents/evidence/metrics/defaults-pilot-result.json`.
+  1. Read `agents/evidence/metrics/defaults-pilot-result.json`. <!-- ref-ignore -->
   2. Answer (a), (b) or (c), per key or for all.
 - **Resolved when:** an owner directive naming the answer exists under `agents/evidence/owner-directives/`.
 

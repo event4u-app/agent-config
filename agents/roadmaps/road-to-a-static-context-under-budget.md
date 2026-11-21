@@ -125,14 +125,14 @@ into a scratch HOME, or host telemetry.
       CLAUDE.md + imports, memory index, skill / command / MCP catalogue,
       `session_start` injections) and a `subagent` total, chars and tokens, with
       `paths:`-scoped files excluded and symlinks followed.
-      verify: `npx vitest run tests/scripts/static_baseline_report.test.ts` exits non-zero (red, the script does not exist yet).
+      verify: `npx vitest run tests/scripts/static_baseline_report.test.ts` -> 1 (red, the script does not exist yet).
       uses: test-driven-development
 - [ ] **1.2 Implement `src/scripts/report_static_baseline.ts`.** Reuse
       `check_session_start_budget`'s scratch-HOME install, `audit_initial_context`'s
       catalogue measures and `bench_hook_injection`'s `session_start` slot; add no
       second measurement of the same surface. `--write` writes
       `internal/bench/reports/static-baseline.json`.
-      verify: `npx vitest run tests/scripts/static_baseline_report.test.ts` exits 0; `./scripts-run src/scripts/report_static_baseline --json` prints a `total` and a `subagent` field.
+      verify: `npx vitest run tests/scripts/static_baseline_report.test.ts` -> 0 and `./scripts-run src/scripts/report_static_baseline --json` prints a `total` and a `subagent` field.
 - [ ] **1.3 Live cross-check against the host.** Add `--arrivals` reading the host's
       `InstructionsLoaded` records under `~/.event4u/agent-config/runtime/arrivals/`
       and report the `session_start` file count and chars beside the computed total,
@@ -153,18 +153,18 @@ into a scratch HOME, or host telemetry.
       `/compact` (no `consequence_class`, not kernel, not `tier: safety-floor`, not
       one of the four council-pinned project rules); report the share of the
       projected corpus against ADR-227's ~10 % trigger.
-      verify: `./scripts-run src/scripts/report_static_baseline --path-candidates --json` prints `candidates`, `share` and `trigger_met`.
+      verify: `./scripts-run src/scripts/report_static_baseline --path-candidates --json` -> /(?=[\s\S]*"candidates")(?=[\s\S]*"share")[\s\S]*"trigger_met"/
 - [ ] **2.3 Council on reopening ADR-227.** First action `agent-config council:status`,
       then one round with 2.1, 2.2 and 1.2's reading: reopen (which rules, which form:
       path-scoped body plus keyword pointer stub, or path-only) or keep. Record the
       verdict as a `## Decisions` row; on reopen, amend ADR-227 via `adr-create`.
-      verify: `grep -cE '^\| D4 ' agents/roadmaps/road-to-a-static-context-under-budget.md` prints 1.
+      verify: `grep -cE '^\| D4 ' agents/roadmaps/road-to-a-static-context-under-budget.md` -> /^1$/
       uses: ai-council, adr-create
 - [ ] **2.4 Apply the D4 verdict, test-first.** On reopen: a failing case in
       `tests/install/claude_rule_rewrite.test.ts` that the named rules install with
       `paths:`, then change `claudeRuleRewrite.ts` and `condense.ts`'s emitter together
       (the parity test binds them). On keep: no code; the Done note names D4.
-      verify: `npx vitest run tests/install/claude_rule_rewrite.test.ts` exits 0 and `./scripts-run src/scripts/report_static_baseline --json` shows the user-layer row lower by the scoped files' chars (reopen) or unchanged (keep).
+      verify: `npx vitest run tests/install/claude_rule_rewrite.test.ts` -> 0 and `./scripts-run src/scripts/report_static_baseline --json` shows the user-layer row lower by the scoped files' chars (reopen) or unchanged (keep).
 
 ## Phase 3 — The project layer in host form
 
@@ -173,7 +173,7 @@ into a scratch HOME, or host telemetry.
       `dist/agent-src/rules/`, run `./scripts-run src/scripts/condense --generate-tools`
       and assert every file under `.claude/rules/` is a regular file in host form (no
       `triggers:` key; `paths:` only where the emitter derives it).
-      verify: `npx vitest run tests/scripts/generate_tools_project_rules.test.ts` exits non-zero before 3.2 if the symlinks survive, else 3.2's Done note records "already host form".
+      verify: `npx vitest run tests/scripts/generate_tools_project_rules.test.ts` -> 1 before 3.2 if the symlinks survive, else 3.2's Done note records "already host form".
 - [ ] **3.2 Fix the writer and keep the locked rules unconditional.** Make the
       `--generate-tools` path replace a symlink instead of writing through it; keep
       `source-of-truth` (ADR-226) and the four council-pinned rules unconditional.
@@ -188,37 +188,37 @@ into a scratch HOME, or host telemetry.
 - [ ] **4.1 Failing test: the per-turn aggregate is deterministic.** Two
       `bench_hook_injection` runs on fixture branches with different mutation volumes
       must report the same per-turn aggregate.
-      verify: `npx vitest run tests/scripts/bench_hook_injection_aggregate.test.ts` exits non-zero on the new case.
+      verify: `npx vitest run tests/scripts/bench_hook_injection_aggregate.test.ts` -> 1 on the new case.
 - [ ] **4.2 Pin `end-review-nudge`'s mutation volume under replay.** Read the volume
       from the replay fixture when `AGENT_CONFIG_REPLAY=1`, not from the live branch.
       verify: 4.1's test exits 0.
 - [ ] **4.3 Set `gate_on_ceiling: true`.** Edit `src/config/hook-token-budget.json:81`
       and its rationale to cite 4.1–4.2; add a fixture whose aggregate exceeds
       59,392 B.
-      verify: `task bench-hook-injection` exits 0 on the tree and non-zero with the over-ceiling fixture.
+      verify: `task bench-hook-injection` -> 0 on the tree, and non-zero with the over-ceiling fixture.
 - [ ] **4.4 Renew overdue `review_by` from a measurement, not by hand.** Add
       `--renew` to `lint_budget_ownership`: for each overdue file it runs that file's
       bench, writes the reading and date into the file's measurement field and moves
       `review_by` +90 days only when every row is within its cap; a row over its cap
       is printed and left overdue.
-      verify: `task lint-budget-ownership 2>&1 | grep -c overdue` prints 0 after `./scripts-run src/scripts/lint_budget_ownership --renew`.
+      verify: `task lint-budget-ownership 2>&1 | grep -c overdue` -> /^0$/ after `./scripts-run src/scripts/lint_budget_ownership --renew`.
 
 ## Phase 5 — One ceiling on the composite, in CI
 
 - [ ] **5.1 Council on the ceiling.** First action `agent-config council:status`, then
       one round: per-session and per-subagent ceilings for 1.2's composite, from the
       2.4 and 3.2 readings and the retro's "well under 40k". Record as row D5.
-      verify: `grep -cE '^\| D5 ' agents/roadmaps/road-to-a-static-context-under-budget.md` prints 1.
+      verify: `grep -cE '^\| D5 ' agents/roadmaps/road-to-a-static-context-under-budget.md` -> /^1$/
       uses: ai-council
 - [ ] **5.2 Gate the composite.** Add `--fail-if-over-budget` reading D5's numbers from
       a `static_baseline` block in `src/config/hook-token-budget.json` (owner,
       `review_by`, source), and a `check-static-baseline` task in
       `taskfiles/ci-fast.yml` called from `task ci`.
-      verify: `task check-static-baseline` exits 0; with a planted 20 KB unscoped project rule it exits non-zero.
+      verify: `task check-static-baseline` -> 0 and, with a planted 20 KB unscoped project rule it exits non-zero.
 - [ ] **5.3 Backstop for generated knowledge files.** A test plants an unscoped and a
       `paths:`-scoped file under `.claude/rules/` in the fixture: the unscoped one
       raises the composite, the scoped one does not.
-      verify: `npx vitest run tests/scripts/static_baseline_report.test.ts` exits 0 with both cases.
+      verify: `npx vitest run tests/scripts/static_baseline_report.test.ts` -> 0 with both cases.
 
 resequenced: no intermediate state is broken — every phase adds a report or a gate
 that is green on the tree it lands on, and 2.4 changes delivery only after D4.
