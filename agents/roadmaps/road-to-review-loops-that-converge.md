@@ -80,7 +80,7 @@ the owner and never closes them.
 
 ## Phase 0 — A census the tree generates, and why findings rise
 
-- [x] **0.1 Census script, test-first.** Write
+- [x] **0.1 Census script, test-first.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/review_loop_census.ts -->
       `tests/scripts/review_loop_census.test.ts` first: fixtures in a temp dir
       with both packet namings (`<slug>.roundN.question.md`,
       `<slug>-rN-<date>.question.md`), completion-review `roundN.findings.md`
@@ -94,13 +94,20 @@ the owner and never closes them.
       lists `session-pins-phase-2-20261108` at 56 and
       `session-start-contracts-ratification` at 31, and 43 ratification
       subjects at five or more rounds at the pin.
-- [x] **0.2 Deterministic origin classes.** Extend the census, test-first, with
+      production entry: src/scripts/review_loop_census.ts
+      done: red run 2026-11-21 (module missing, 0 tests), then 5/5 green; the
+      census reads 56, 31 and 43 subjects at ≥ 5 rounds — no council,
+      review or ratification evidence changed between the pin and `4bb96fb2fb`.
+- [x] **0.2 Deterministic origin classes.** Extend the census, test-first, with <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/review_loop_census.ts -->
       a per-round `--origins` reading for subjects with five or more rounds:
       paths each packet cites, and class `scope-widened` when a cited path is
       in neither round 1's packet nor the subject's diff. For completion
       reviews add `rebind-non-code` from `src/scripts/probe_review_binding_drift.ts`.
       verify: a fixture round citing a new path is classed `scope-widened`
       (red, then green); the census JSON carries both classes per round.
+      production entry: src/scripts/review_loop_census.ts
+      done: both fixture tests red (2 failed), then green; 563 rounds over the
+      ≥ 5-round loops carry 349 `scope-widened` and 5 `rebind-non-code`.
 - [ ] **0.3 Reader origin classes.** For the ten subjects with the most rounds,
       two independent subagent readers class every new finding per round as
       `fix-introduced` (names what the previous round's fix changed),

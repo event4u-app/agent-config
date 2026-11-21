@@ -103,14 +103,14 @@ export function stem(name: string): string {
 function firstIsoDate(text: string): string | null {
     const head = text.split('\n').slice(0, 12).join('\n');
     const m = /\b(20\d\d-\d\d-\d\d)\b/.exec(head);
-    return m ? m[1] : null;
+    return m?.[1] ?? null;
 }
 
 function frontmatterVerdict(text: string): string | null {
     const fm = /^---\n([\s\S]*?)\n---/.exec(text);
     if (!fm) return null;
-    const m = /^verdict:\s*(\S+)/m.exec(fm[1]);
-    return m ? m[1] : null;
+    const m = /^verdict:\s*(\S+)/m.exec(fm[1] ?? '');
+    return m?.[1] ?? null;
 }
 
 interface PacketRef {
@@ -122,17 +122,17 @@ interface PacketRef {
 
 function parsePacketName(name: string): Omit<PacketRef, 'file'> | null {
     let m = /^(.+)\.round(\d+)\.question\.md$/.exec(name);
-    if (m) return { subject: m[1], round: Number(m[2]), date: dateFromSlug(m[1]) };
+    if (m) return { subject: m[1] ?? '', round: Number(m[2]), date: dateFromSlug(m[1] ?? '') };
     m = /^(.+)-r(\d+)-(\d{8})\.question\.md$/.exec(name);
-    if (m) return { subject: m[1], round: Number(m[2]), date: ymd(m[3]) };
+    if (m) return { subject: m[1] ?? '', round: Number(m[2]), date: ymd(m[3] ?? '') };
     m = /^(.+)\.question\.md$/.exec(name);
-    if (m) return { subject: m[1], round: 1, date: dateFromSlug(m[1]) };
+    if (m) return { subject: m[1] ?? '', round: 1, date: dateFromSlug(m[1] ?? '') };
     return null;
 }
 
 function dateFromSlug(slug: string): string | null {
     const m = /-(\d{8})$/.exec(slug);
-    return m ? ymd(m[1]) : null;
+    return m?.[1] !== undefined ? ymd(m[1]) : null;
 }
 
 interface RecordVerdicts {
@@ -152,8 +152,9 @@ function ratificationVerdicts(root: string): RecordVerdicts {
         if (verdict === null) continue;
         byStem.set(stem(name), verdict);
         for (const m of text.matchAll(/evidence\/council\/([A-Za-z0-9._-]+)/g)) {
-            const parsed = parsePacketName(m[1]);
-            const subject = parsed !== null ? parsed.subject : m[1].replace(/\.md$/, '').replace(/-r\d*$/, '');
+            const ref = m[1] ?? '';
+            const parsed = parsePacketName(ref);
+            const subject = parsed !== null ? parsed.subject : ref.replace(/\.md$/, '').replace(/-r\d*$/, '');
             bySubject.set(subject, verdict);
         }
     }
@@ -235,20 +236,22 @@ function completionSubjects(root: string): CensusSubject[] {
         const file = `${REVIEWS_REL}/${name}`;
         const text = readOrEmpty(path.join(root, file));
         const reviewed = /reviewed:\s*(20\d\d-\d\d-\d\d)/.exec(text);
-        const list = groups.get(m[1]) ?? [];
+        const slug = m[1] ?? '';
+        const list = groups.get(slug) ?? [];
         list.push({
             round: Number(m[2]),
             file,
-            date: reviewed ? reviewed[1] : firstIsoDate(text),
+            date: reviewed?.[1] ?? firstIsoDate(text),
             findings: parseFindingsTable(text),
         });
-        groups.set(m[1], list);
+        groups.set(slug, list);
     }
     const out: CensusSubject[] = [];
     for (const [subject, rounds] of groups) {
         rounds.sort((a, b) => a.round - b.round || a.file.localeCompare(b.file));
         const dates = rounds.map((r) => r.date).filter((d): d is string => d !== null).sort();
         const last = rounds[rounds.length - 1];
+        if (last === undefined) continue;
         out.push({
             kind: 'completion-review',
             subject,
@@ -269,14 +272,14 @@ const PATH_RE = /(?:^|[\s`'"(\[])((?:src|docs|tests|agents|scripts|taskfiles|tem
 /** Repository paths a text cites, de-duplicated and sorted. */
 export function citedPaths(text: string): string[] {
     const out = new Set<string>();
-    for (const m of text.matchAll(PATH_RE)) out.add(m[1].replace(/[.,:;)]+$/, ''));
+    for (const m of text.matchAll(PATH_RE)) out.add((m[1] ?? '').replace(/[.,:;)]+$/, ''));
     return [...out].sort();
 }
 
 /** Paths a unified diff touches (`diff --git`, `+++ b/` and `--- a/` lines). */
 export function diffPaths(patch: string): string[] {
     const out = new Set<string>();
-    for (const m of patch.matchAll(/^(?:\+\+\+ b|--- a|diff --git a)\/(\S+)/gm)) out.add(m[1]);
+    for (const m of patch.matchAll(/^(?:\+\+\+ b|--- a|diff --git a)\/(\S+)/gm)) if (m[1] !== undefined) out.add(m[1]);
     return [...out].sort();
 }
 
@@ -374,10 +377,10 @@ export function roundHistory(root: string, s: CensusSubject): string {
         let i = 0;
         let matched = false;
         while (i < lines.length) {
-            const h = /^#{2,3} (.+)$/.exec(lines[i]);
-            if (h && HISTORY_HEADING.test(h[1])) {
+            const h = /^#{2,3} (.+)$/.exec(lines[i] ?? '');
+            if (h && HISTORY_HEADING.test(h[1] ?? '')) {
                 let j = i + 1;
-                while (j < lines.length && !/^#{1,3} /.test(lines[j])) j++;
+                while (j < lines.length && !/^#{1,3} /.test(lines[j] ?? '')) j++;
                 const body = lines.slice(i, Math.min(j, i + 1 + SECTION_CAP)).join('\n').trim().slice(0, SECTION_CHAR_CAP);
                 if (!seen.has(body)) {
                     seen.add(body);
@@ -463,7 +466,8 @@ function repoRoot(): string {
 
 function main(argv: string[]): number {
     const ri = argv.indexOf('--root');
-    const root = ri >= 0 && argv[ri + 1] ? path.resolve(argv[ri + 1]) : repoRoot();
+    const rootArg = ri >= 0 ? argv[ri + 1] : undefined;
+    const root = rootArg ? path.resolve(rootArg) : repoRoot();
     const census = buildCensus(root, { origins: argv.includes('--origins') });
     const rn = argv.indexOf('--reader-input');
     if (rn >= 0) {

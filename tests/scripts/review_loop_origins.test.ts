@@ -6,7 +6,7 @@ import {
     mergeReaders,
     risingShares,
     type ReaderOutput,
-} from '../../src/scripts/review_loop_origins.ts';
+} from '../../src/scripts/review_loop_origins.js';
 
 function f(round: number, n: number, cls: string, severity = 'medium'): { id: string; summary: string; severity: string; class: string } {
     return { id: `${round}.${n}`, summary: 's', severity, class: cls };

@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildCensus, renderCensusMarkdown, roundHistory } from '../../src/scripts/review_loop_census.ts';
+import { buildCensus, renderCensusMarkdown, roundHistory } from '../../src/scripts/review_loop_census.js';
 
 let root: string;
 
@@ -173,7 +173,7 @@ describe('buildCensus --origins', () => {
 
     it('carries no classes without --origins', () => {
         const omega = buildCensus(oroot).subjects.find((s) => s.subject === 'omega-ratification');
-        expect(omega?.roundList[3].classes).toBeUndefined();
+        expect(omega?.roundList[3]?.classes).toBeUndefined();
     });
 });
 
