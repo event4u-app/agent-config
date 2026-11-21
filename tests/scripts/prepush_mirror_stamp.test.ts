@@ -33,13 +33,13 @@ function repo(): { dir: string; sha: string } {
     return { dir, sha: git('rev-parse', 'HEAD') };
 }
 
-function run(dir: string, sha: string): string {
+function run(dir: string, sha: string, extraEnv: Record<string, string> = {}): string {
     try {
         return execFileSync('bash', [hook], {
             cwd: dir,
             input: `refs/heads/topic ${sha} refs/heads/topic ${ZERO}\n`,
             encoding: 'utf8',
-            env: { PATH: '/usr/bin:/bin', HOME: dir },
+            env: { PATH: '/usr/bin:/bin', HOME: dir, ...extraEnv },
         });
     } catch (e) {
         const err = e as { stdout?: string; stderr?: string };
@@ -78,5 +78,46 @@ describe('pre-push — a green CI-mirror replay must be on record', () => {
         fs.mkdirSync(path.join(dir, '.git/ci-mirror'), { recursive: true });
         fs.writeFileSync(path.join(dir, '.git/ci-mirror', `${'f'.repeat(40)}.json`), '{}');
         expect(run(dir, sha)).toContain('No green CI-mirror replay on record');
+    });
+});
+
+// The mirror reports a refused ratification record as `owner-decision`: CI will
+// show that step red. Pushing it anyway is the known-red push the owner asked to
+// stop on 2026-11-21 ("wir wissen doch schon lokal was ist").
+describe('pre-push — a known-red stamp stays local until the owner has decided', () => {
+    const ownerStamp = (dir: string, sha: string): void => {
+        fs.mkdirSync(path.join(dir, '.git/ci-mirror'), { recursive: true });
+        const stamp = {
+            head: sha,
+            not_verified: [{ job: 'Sync', step: 'Kernel / governance-hook edits carry a ratification artifact', verdict: 'owner-decision', detail: null }],
+        };
+        fs.writeFileSync(path.join(dir, '.git/ci-mirror', `${sha}.json`), JSON.stringify(stamp, null, 2));
+    };
+
+    it('refuses a commit whose stamp carries an owner decision, and says what to do instead', () => {
+        const { dir, sha } = repo();
+        ownerStamp(dir, sha);
+        const out = run(dir, sha);
+        expect(out).toContain(`CI will be red for: ${sha.slice(0, 10)}`);
+        expect(out).toContain('ask the owner');
+        expect(out).toContain('Push blocked');
+    });
+
+    it('lets it through, loudly, once the owner has decided', () => {
+        const { dir, sha } = repo();
+        ownerStamp(dir, sha);
+        const out = run(dir, sha, { AGENT_CONFIG_PUSH_OWNER_DECIDED: '1' });
+        expect(out).toContain('AGENT_CONFIG_PUSH_OWNER_DECIDED=1');
+        expect(out).not.toContain('Push blocked');
+    });
+
+    it('a stamp whose unverified steps are only not-reproducible still passes', () => {
+        const { dir, sha } = repo();
+        fs.mkdirSync(path.join(dir, '.git/ci-mirror'), { recursive: true });
+        const stamp = { head: sha, not_verified: [{ job: 'Tests', step: 'macOS shard', verdict: 'not-reproducible', detail: null }] };
+        fs.writeFileSync(path.join(dir, '.git/ci-mirror', `${sha}.json`), JSON.stringify(stamp, null, 2));
+        const out = run(dir, sha);
+        expect(out).toContain('green replay on record');
+        expect(out).not.toContain('Push blocked');
     });
 });
