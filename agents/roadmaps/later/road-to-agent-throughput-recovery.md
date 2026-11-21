@@ -333,7 +333,7 @@ the Acceptance Criteria held.
 
 ## Phase 4 — Remove the misfires, from the classes that actually fired
 
-- [ ] **4.1 Classify the 64 language refusals by pin source before fixing.** The
+- [x] **4.1 Classify the 64 language refusals by pin source before fixing.** The
       pin state records `source: prompt | system-locale`. Split the refusals by
       source and by the language the prompt was written in. Candidates: an
       English paste without a heading under a short German lead (the stub's
@@ -368,7 +368,15 @@ the Acceptance Criteria held.
       are `## Correction (2026-10-20)` in
       `agents/evidence/analysis/language-refusals-by-pin-source-2026-10-19.md`.
       There is no reproducible misfire class left to write a fixture against.
-      <!-- blocked-by: language-misfire-window-after-the-agent-message-fix -->
+      <br>**Done 2026-11-21 — closed on the correction (council option (b)):** a
+      committed command now re-derives the split,
+      `agents/evidence/analysis/language-split-baseline.md`
+      (`measure_turn_end_gate --language-split`, 2026-11-03..21, 46 sessions):
+      148 replayed fires, 140 of them pins the replay took from host-marked
+      entries (`isMeta` / `isCompactSummary`) the hook never receives, 8
+      owner-prose; the gate itself recorded 6. No slash-command fix is owed; the
+      remaining misfire classes and their fixtures are owned by
+      `road-to-a-language-pin-from-owner-prose`.
 - [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
       code.
@@ -527,7 +535,7 @@ the Acceptance Criteria held.
 - **Resolved when:** `agent-config council:status` reports both seats answering a real round, or a ratification artifact for subject `ab60cc56d67a9b66da9522cb8eceacbcba4f4301b0f014ce4d84a74d8994c3ba` exists with two providers, and this entry's Status reads resolved.
 
 ### blocker: language-misfire-window-after-the-agent-message-fix
-- **Status:** open
+- **Status:** resolved 2026-11-21 — option (b), 4.1 closed on the correction. Council 2026-11-21 (anthropic + openai, 2/2 present, both chose (b), $0.00), read against the second split `agents/evidence/analysis/language-split-baseline.md`. Caveats both seats attached: the 140 `synthetic-turn` fires describe what the replay admitted (host-marked entries), not what the hook pinned, and whether the 2026-10-19 method made the same error is plausible but unproven; the 6 recorded refusals sit in owner-prose sessions, a session-level, not event-level, link; and the window starts at midnight UTC on the day of `66dd150cfc`. Event-level re-measurement is owned by `road-to-a-language-pin-from-owner-prose` step 5.1.
 - **Class:** 2
 - **Owner:** council
 - **Blocks:** step 4.1 only
