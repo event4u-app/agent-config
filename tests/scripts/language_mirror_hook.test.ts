@@ -2124,8 +2124,19 @@ describe("owner prose only", () => {
   });
 
   it("a top-level closer indented by a tab (four columns) does not close the fence", () => {
-    const spans = ownerSpans("~~~\nx\n\t~~~\n~~~\n\nBehebe das bitte.");
+    // The heading sits between the tab line and the real closer: an early close
+    // would expose it as a document head and empty the trailing span.
+    const spans = ownerSpans("~~~\nx\n\t~~~\n# pasted heading\n~~~\n\nBehebe das bitte.");
     expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a glued span needs two output lines directly above it, not anywhere above", () => {
+    // Ratification round 16: two `Error:` lines in separate blocks counted
+    // together, so a wrapped continuation of the second one became owner prose.
+    const spans = ownerSpans(
+      "Error: old log\n\nContext.\n\nError: x\nPlease check the release notes and tell me what is missing.",
+    );
+    expect(spans.trailing).toBe("");
   });
 
   it("a closer six columns into a tab-indented list item closes the fence", () => {

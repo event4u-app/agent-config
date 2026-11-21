@@ -292,10 +292,13 @@ export function ownerSpans(text: string): OwnerSpans {
       : [];
   // A span glued to the paste's last line is as likely the paste's own wrapped
   // continuation as a typed line; it counts only when there is no lead to read
-  // and at least two output lines stand above it, so one prose line that
-  // happens to look like output cannot hand the pin to the line below it.
+  // and at least two output lines stand DIRECTLY above it, so one prose line
+  // that happens to look like output cannot hand the pin to the line below it,
+  // and an output line in an earlier block does not count toward the two.
   const separated = blank(lines[start] ?? "");
-  const glued = lead.length === 0 && before.filter(isOutput).length >= 2;
+  let run = 0;
+  while (run <= start && isOutput(lines[start - run] ?? "")) run++;
+  const glued = lead.length === 0 && run >= 2;
   const trailing = separated || glued ? candidate : [];
 
   return { lead: lead.join("\n"), trailing: trailing.join("\n") };
