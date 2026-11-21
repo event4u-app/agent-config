@@ -33,13 +33,12 @@ import {
     today_spend_usd as _today_spend_usd,
     would_exceed as _would_exceed_daily,
 } from './budget_guard.js';
-import type {
-    CliClient, ExternalAIClient} from './clients.js';
+import type { ExternalAIClient } from './clients.js';
 import {
     DEFAULT_MAX_TOKENS,
     CouncilResponse
 } from './clients.js';
-import { QUOTA_EXHAUSTED, QUOTA_EXHAUSTED_MARK, quotaExhaustedNames, runSkippingExhausted } from './quota_carry.js';
+import { quotaExhaustedNames, runSkippingExhausted } from './quota_carry.js';
 import type {
     ConsensusMetadata,
     Finding} from './consensus.js';
@@ -60,7 +59,6 @@ import {
     advisor_system_prompt,
     ANTI_CONFORMITY_DIRECTIVE,
     describe_verdict_mismatch,
-    STANCE_LINE_CONTRACT,
     build_peer_review_user_prompt,
     peer_review_synthesis_addendum,
     synthesis_template,
@@ -68,7 +66,8 @@ import {
     VERDICT_LINE_CONTRACT,
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
-import { parse_stance_line, render_vote_tally, stanceMembersFrom, tally_stances } from './stance_tally.js';
+import { render_vote_tally, stanceMembersFrom, tally_stances } from './stance_tally.js';
+import { repairStances, type StanceRepairOptions } from './stance_repair.js';
 import { MidFlightFallback } from './transport_resolver.js';
 import {
     emitOutcome,
@@ -324,7 +323,7 @@ export function estimate(
     return estimates;
 }
 
-export interface ConsultOptions {
+export interface ConsultOptions extends StanceRepairOptions {
     table?: PriceTable | null;
     on_overrun?: OnOverrunCallback | null;
     project?: ProjectContext | null;
@@ -341,14 +340,6 @@ export interface ConsultOptions {
      * round's prompt is byte-identical to today.
      */
     stance_tally?: boolean;
-    /**
-     * Phase 1 stance-repair transport (2026-07-12 council policy): confirm per
-     * member in interactive runs; `null`/absent → a missing/unparseable stance
-     * stays a repair-marker in the tally, never an unplanned billable call.
-     */
-    on_stance_repair?: ((member: string) => boolean) | null;
-    /** Receives each stance-repair response so the caller can account its cost. */
-    on_stance_repair_result?: ((r: CouncilResponse) => void) | null;
     /**
      * Ü2 (road-to-council-blind-review Phase 1): per-member system-prompt
      * suffix appended AFTER the base/advisor system prompt — e.g. a stance
@@ -475,52 +466,10 @@ export function consult(
         }
     }
 
-    // Phase 1 stance repair: one bounded stance-line-only re-prompt per member
-    // whose final reply lacks a parseable STANCE line — dispatched only through
-    // the on_stance_repair transport, reusing _run_round (spend gate + ledger +
-    // stamping unchanged). The repaired stance line is APPENDED to the member's
-    // final text so the deterministic tally can read it.
-    const on_stance_repair = opts.on_stance_repair ?? null;
-    if (stance_tally && on_stance_repair !== null) {
-        for (let i = 0; i < last_results.length; i++) {
-            const r = last_results[i] as CouncilResponse;
-            if (r.error !== null || r.text.trim() === '' || parse_stance_line(r.text) !== null) {
-                continue;
-            }
-            const member = members[i];
-            if (member === undefined || exhausted.has(member.name) || !on_stance_repair(member.name)) {
-                continue;
-            }
-            const repairQ = new CouncilQuestion({
-                mode: question.mode,
-                user_prompt:
-                    `Your reply is missing the mandatory closing stance line. ` +
-                    `Reply with ONLY that single line for your final position.\n\n${STANCE_LINE_CONTRACT}`,
-                max_tokens: question.max_tokens,
-            });
-            // Stance repair shares the invocation-wide ledger: transport
-            // health and structural validity are INDEPENDENT failure modes,
-            // so refusing the retry would discard salvageable work for an
-            // unrelated reason. Bounded by the retry's own spend gate.
-            // Non-blind: the seat is asked about its own reply, so it continues the session that wrote it.
-            const seat = member as Partial<Pick<CliClient, 'lastSession' | 'resumeNext'>>;
-            if (seat.lastSession !== undefined) seat.resumeNext = seat.lastSession;
-            let rr: CouncilResponse[];
-            try {
-                const round = { table, on_overrun, project, original_ask, advisor_plans, cli_fallback, fallback_ledger, fallback_twins };
-                rr = _run_round([member], repairQ, resolvedBudget, spent, round);
-            } finally {
-                if (seat.resumeNext !== undefined) seat.resumeNext = null; // a quota gate or refusal returns before the seat clears it
-            }
-            const rep = rr[0];
-            if (rep?.error === QUOTA_EXHAUSTED) r.metadata[QUOTA_EXHAUSTED_MARK] = true; // answer stands; peer review skips the seat
-            if (rep !== undefined) {
-                opts.on_stance_repair_result?.(rep);
-                if (rep.error === null && parse_stance_line(rep.text) !== null) {
-                    r.text = `${r.text.trim()}\n\n${rep.text.trim()}`;
-                }
-            }
-        }
+    // Phase 1 stance repair (stance_repair.ts), through _run_round: spend gate, ledger and stamping unchanged.
+    if (stance_tally) {
+        const round = { table, on_overrun, project, original_ask, advisor_plans, cli_fallback, fallback_ledger, fallback_twins };
+        repairStances(last_results, members, question, opts, exhausted, (m, q) => _run_round([m], q, resolvedBudget, spent, round));
     }
 
     return last_results;

@@ -143,6 +143,8 @@ describe('ci_mirror runJob — one run reports every failure', () => {
         expect(text).toContain('first broken thing');
         expect(text).toContain('second broken thing');
         expect(text).toMatch(/Owner decision required[\s\S]*refused ratification/);
+        expect(text).toContain('CI will show this step red');
+        expect(text).toContain('pre-push refuses it until the owner has decided');
     });
 });
 

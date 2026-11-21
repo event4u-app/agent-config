@@ -361,7 +361,10 @@ fi
 #
 #     ./scripts-run src/scripts/ci_mirror      # ≈5 min, then `git push`
 #
-# A refused ratification record is an owner decision there and does not block.
+# A refused ratification record is an owner decision there: the mirror stays
+# green, but CI will show that step red. Such a push is refused until the owner
+# has answered in the session; then AGENT_CONFIG_PUSH_OWNER_DECIDED=1 lets it
+# through, printed on every use (owner, 2026-11-21: no known-red push).
 # Emergency bypass, printed on every use: AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1.
 for legacy in AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT AGENT_CONFIG_SKIP_PREPUSH_STATIC; do
     if [ "${!legacy:-}" = "1" ]; then
@@ -389,6 +392,23 @@ else
         fail=1
     else
         echo "✅  green replay on record — CI's locally reproducible gates already passed for this commit."
+        owner_red=""
+        for sha in $pushed_shas; do
+            commit=$(git rev-parse --verify --quiet "${sha}^{commit}" 2>/dev/null || echo "$sha")
+            grep -Eq '"verdict"[[:space:]]*:[[:space:]]*"owner-decision"' "$stamp_dir/$commit.json" 2>/dev/null && owner_red="$owner_red ${commit:0:10}"
+        done
+        if [ -n "$owner_red" ] && [ "${AGENT_CONFIG_PUSH_OWNER_DECIDED:-}" = "1" ]; then
+            echo "⚠️  Owner decision pending on:$owner_red — pushed via AGENT_CONFIG_PUSH_OWNER_DECIDED=1."
+            echo "    CI shows the ratification step red until the owner merges past it."
+        elif [ -n "$owner_red" ]; then
+            echo "❌  CI will be red for:$owner_red — the mirror recorded an owner decision"
+            echo "    (a ratification record whose verdict is not ratified). Pushing now only"
+            echo "    turns the PR red. Hand the decision to the owner instead: ask the owner"
+            echo "    one question in the session (merge past it / one more bounded council"
+            echo "    round / park). After the owner's answer, push with"
+            echo "        AGENT_CONFIG_PUSH_OWNER_DECIDED=1 git push"
+            fail=1
+        fi
     fi
 fi
 

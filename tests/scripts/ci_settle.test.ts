@@ -10,7 +10,9 @@ import { describe, expect, it } from 'vitest';
 import {
     classifyPoll,
     classifyTarget,
+    ownerDecisionOnly,
     parseArgs,
+    stripLogTimestamps,
     renderNoSettle,
     FOREGROUND_CEILING_MIN,
     type RemoteTip,
@@ -535,5 +537,69 @@ describe('renderNoSettle — what an expired wait hands its caller', () => {
         const lines = renderNoSettle(9, { kind: 'unreadable', reason: 'HTTP 502' });
         expect(lines).toHaveLength(1);
         expect(lines[0]).toMatch(/DID NOT SETTLE within 9 min/);
+    });
+});
+
+// Owner, 2026-11-21: a red that only waits for the owner is not a CI defect to
+// keep fixing. When every failing check run failed only on a configured
+// owner-decision step AND its log carries that step's marker, the waiter says so;
+// the exit code stays 1.
+describe('ownerDecisionOnly — a red that only waits for the owner', () => {
+    const OWNER = ['Kernel / governance-hook edits carry a ratification artifact'];
+    const step = OWNER[0] as string;
+
+    it('is true when every failing run failed only on an owner step and shows its marker', () => {
+        expect(ownerDecisionOnly([{ steps: [step], markerSeen: true }], OWNER)).toBe(true);
+    });
+
+    it('is false when the marker is absent: a missing or invalid record is the author\'s to fix', () => {
+        expect(ownerDecisionOnly([{ steps: [step], markerSeen: false }], OWNER)).toBe(false);
+    });
+
+    it('is false when any failing run also failed on another step', () => {
+        expect(ownerDecisionOnly([{ steps: [step, 'Lint skills'], markerSeen: true }], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([{ steps: [step], markerSeen: true }, { steps: ['Node tests'], markerSeen: false }], OWNER)).toBe(false);
+    });
+
+    it('is false when a run could not be read, or nothing failed, or nothing is configured', () => {
+        expect(ownerDecisionOnly([{ steps: [step], markerSeen: true }, null], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([{ steps: [], markerSeen: true }], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([], OWNER)).toBe(false);
+        expect(ownerDecisionOnly([{ steps: [step], markerSeen: true }], [])).toBe(false);
+    });
+});
+
+describe('classifyPoll — every failing run keeps its details link', () => {
+    it('maps each failing check name to all of its failing run urls', () => {
+        const state = classifyPoll(
+            roll([
+                { name: 'Sync', conclusion: 'FAILURE', detailsUrl: 'https://github.com/o/r/actions/runs/1/job/42' },
+                { name: 'Sync', conclusion: 'FAILURE', detailsUrl: 'https://github.com/o/r/actions/runs/2/job/44' },
+                { name: 'Lint', conclusion: 'SUCCESS', detailsUrl: 'https://github.com/o/r/actions/runs/1/job/43' },
+            ]),
+            '',
+            0,
+        );
+        expect(state.kind).toBe('settled');
+        if (state.kind === 'settled') {
+            expect(state.failingUrls).toEqual({
+                Sync: ['https://github.com/o/r/actions/runs/1/job/42', 'https://github.com/o/r/actions/runs/2/job/44'],
+            });
+        }
+    });
+});
+
+describe('stripLogTimestamps — a line-anchored marker matches a forge log', () => {
+    it('removes the leading timestamp so the configured marker matches', () => {
+        const log = '2026-11-21T03:31:48.3856389Z   record agents/evidence/ratifications/x.md — verdict: refused\n';
+        const marker = new RegExp('^\\s*record \\S+ — verdict: (?!ratified\\b)\\S+', 'mu');
+        expect(marker.test(log)).toBe(false);
+        expect(marker.test(stripLogTimestamps(log))).toBe(true);
+    });
+
+    it('also removes the job and step columns gh run view --log-failed adds', () => {
+        const log = 'Sync\tKernel edits carry a ratification artifact\t2026-11-21T10:11:06.0750206Z   record agents/x.md — verdict: refused\n';
+        const marker = new RegExp('^\\s*record \\S+ — verdict: (?!ratified\\b)\\S+', 'mu');
+        expect(marker.test(stripLogTimestamps(log))).toBe(true);
     });
 });
