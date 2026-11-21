@@ -94,7 +94,7 @@ the owner and never closes them.
       lists `session-pins-phase-2-20261108` at 56 and
       `session-start-contracts-ratification` at 31, and 43 ratification
       subjects at five or more rounds at the pin.
-- [ ] **0.2 Deterministic origin classes.** Extend the census, test-first, with
+- [x] **0.2 Deterministic origin classes.** Extend the census, test-first, with
       a per-round `--origins` reading for subjects with five or more rounds:
       paths each packet cites, and class `scope-widened` when a cited path is
       in neither round 1's packet nor the subject's diff. For completion

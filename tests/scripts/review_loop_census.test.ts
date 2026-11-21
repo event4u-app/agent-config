@@ -118,3 +118,61 @@ describe('renderCensusMarkdown', () => {
         expect(md).not.toContain('`gamma-design-20261001`');
     });
 });
+
+describe('buildCensus --origins', () => {
+    let oroot: string;
+
+    function w(rel: string, body: string): void {
+        const abs = path.join(oroot, rel);
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, body, 'utf-8');
+    }
+
+    function patch(paths: string[]): string {
+        return paths.map((p) => `diff --git a/${p} b/${p}\n--- a/${p}\n+++ b/${p}\n@@ -1 +1 @@\n-a\n+b\n`).join('');
+    }
+
+    beforeAll(() => {
+        oroot = fs.mkdtempSync(path.join(os.tmpdir(), 'review-loop-origins-'));
+        const council = 'agents/evidence/council';
+        w(`${council}/omega-ratification-r1-20261101.question.md`, 'Reviews `src/scripts/a.ts` and `tests/a.test.ts`.\n');
+        w(`${council}/omega-ratification-r2-20261101.question.md`, 'Still `src/scripts/a.ts`.\n');
+        w(`${council}/omega-ratification-r3-20261101.question.md`, 'Now also `src/scripts/b.ts`, which the diff touches.\n');
+        w(`${council}/omega-ratification-r4-20261101.question.md`, 'And `src/scripts/unrelated.ts`, which nobody changed.\n');
+        w(`${council}/omega-ratification-r5-20261101.question.md`, 'Back to `src/scripts/a.ts`.\n');
+        // A path the packet carries in its own embedded diff is part of the subject's diff.
+        w(
+            `${council}/omega-ratification-r6-20261101.question.md`,
+            'The fix adds `src/scripts/c.ts`:\n\n```diff\ndiff --git a/src/scripts/c.ts b/src/scripts/c.ts\n+++ b/src/scripts/c.ts\n```\n',
+        );
+        w(
+            'agents/evidence/ratifications/omega-20261101.md',
+            '---\nverdict: ratified\n---\nDiff: `src/scripts/a.ts`, `src/scripts/b.ts`.\n',
+        );
+
+        const reviews = 'agents/evidence/reviews';
+        for (let n = 1; n <= 5; n++) {
+            w(`${reviews}/sigma.round${n}.findings.md`, findings('2026-10-01', [['low', 'fixed']]));
+        }
+        w(`${reviews}/sigma.round1.review-input/diff.patch`, patch(['src/x.ts']));
+        w(`${reviews}/sigma.round2.review-input/diff.patch`, patch(['src/x.ts', 'agents/roadmaps/road-to-x.md']));
+        w(`${reviews}/sigma.round3.review-input/diff.patch`, patch(['src/x.ts', 'agents/roadmaps/road-to-x.md', 'src/y.ts']));
+    });
+
+    afterAll(() => fs.rmSync(oroot, { recursive: true, force: true }));
+
+    it('classes a round citing a path outside round 1 and the diff as scope-widened', () => {
+        const omega = buildCensus(oroot, { origins: true }).subjects.find((s) => s.subject === 'omega-ratification');
+        expect(omega?.roundList.map((r) => r.classes)).toEqual([[], [], [], ['scope-widened'], [], []]);
+    });
+
+    it('classes a re-review whose diff moved only in non-code paths as rebind-non-code', () => {
+        const sigma = buildCensus(oroot, { origins: true }).subjects.find((s) => s.subject === 'sigma');
+        expect(sigma?.roundList.map((r) => r.classes)).toEqual([[], ['rebind-non-code'], [], [], []]);
+    });
+
+    it('carries no classes without --origins', () => {
+        const omega = buildCensus(oroot).subjects.find((s) => s.subject === 'omega-ratification');
+        expect(omega?.roundList[3].classes).toBeUndefined();
+    });
+});

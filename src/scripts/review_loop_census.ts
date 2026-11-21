@@ -17,16 +17,20 @@
  * Round count is the highest round number, not the number of files: a packet
  * missing from the middle of a loop does not shorten it.
  *
- * On demand only — no CI gate reads this.
+ * `--origins` adds deterministic origin classes per round for subjects with
+ * five or more rounds. On demand only — no CI gate reads this.
  *
- * Usage: ./scripts-run src/scripts/review_loop_census [--json] [--write] [--root <dir>]
+ * Usage: ./scripts-run src/scripts/review_loop_census [--json] [--write] [--origins] [--root <dir>]
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { classifyReviewPath } from './_lib/review_path_class.js';
+
 export type LoopKind = 'ratification' | 'completion-review';
+export type OriginClass = 'scope-widened' | 'rebind-non-code';
 
 export interface Finding {
     severity: string;
@@ -40,6 +44,10 @@ export interface CensusRound {
     date: string | null;
     /** Findings table rows — completion reviews only; `null` for packets. */
     findings: Finding[] | null;
+    /** Repository paths the round's packet or stored diff cites (with `--origins`). */
+    paths?: string[];
+    /** Deterministic origin classes (with `--origins`). */
+    classes?: OriginClass[];
 }
 
 export interface CensusSubject {
@@ -58,7 +66,7 @@ export interface Census {
 }
 
 export const LONG_LOOP = 5;
-export const COMMAND = './scripts-run src/scripts/review_loop_census --write';
+export const COMMAND = './scripts-run src/scripts/review_loop_census --write --origins';
 export const OUT_REL = 'agents/evidence/analysis/review-loop-census.md';
 const COUNCIL_REL = 'agents/evidence/council';
 const RATIFICATIONS_REL = 'agents/evidence/ratifications';
@@ -254,10 +262,82 @@ function completionSubjects(root: string): CensusSubject[] {
     return out;
 }
 
-export function buildCensus(root: string): Census {
+// --- origins ----------------------------------------------------
+
+const PATH_RE = /(?:^|[\s`'"(\[])((?:src|docs|tests|agents|scripts|taskfiles|templates|\.github|config|dist)\/[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)/g;
+
+/** Repository paths a text cites, de-duplicated and sorted. */
+export function citedPaths(text: string): string[] {
+    const out = new Set<string>();
+    for (const m of text.matchAll(PATH_RE)) out.add(m[1].replace(/[.,:;)]+$/, ''));
+    return [...out].sort();
+}
+
+/** Paths a unified diff touches (`diff --git`, `+++ b/` and `--- a/` lines). */
+export function diffPaths(patch: string): string[] {
+    const out = new Set<string>();
+    for (const m of patch.matchAll(/^(?:\+\+\+ b|--- a|diff --git a)\/(\S+)/gm)) out.add(m[1]);
+    return [...out].sort();
+}
+
+function reviewInputDiff(root: string, roundFile: string): string | null {
+    const base = roundFile.replace(/(\.findings\.md|-review\.md|\.md)$/, '');
+    const abs = path.join(root, `${base}.review-input`, 'diff.patch');
+    return fs.existsSync(abs) ? readOrEmpty(abs) : null;
+}
+
+/**
+ * `scope-widened` — a round cites a path that is in neither round 1's packet
+ * nor the subject's diff. For packets the diff is every path any packet of the
+ * subject carries in an embedded diff header, plus the paths its ratification
+ * record cites; for completion reviews it is the stored review-input diffs.
+ *
+ * `rebind-non-code` (completion reviews) — the round's stored diff differs from
+ * the previous round's only in paths `probe_review_binding_drift` classes as
+ * non-code (roadmap, docs, other `agents/`), so nothing reviewable moved.
+ */
+export function addOrigins(root: string, s: CensusSubject): void {
+    const diffSet = new Set<string>();
+    if (s.kind === 'ratification') {
+        for (const name of listDir(path.join(root, RATIFICATIONS_REL))) {
+            if (stem(name) === stem(s.subject)) {
+                for (const p of citedPaths(readOrEmpty(path.join(root, RATIFICATIONS_REL, name)))) diffSet.add(p);
+            }
+        }
+        for (const r of s.roundList) for (const p of diffPaths(readOrEmpty(path.join(root, r.file)))) diffSet.add(p);
+    }
+    let prevDiff: Set<string> | null = null;
+    let baseline: Set<string> | null = null;
+    for (const r of s.roundList) {
+        const text = readOrEmpty(path.join(root, r.file));
+        const patch = s.kind === 'completion-review' ? reviewInputDiff(root, r.file) : null;
+        const own = patch !== null ? diffPaths(patch) : [];
+        if (s.kind === 'completion-review') for (const p of own) diffSet.add(p);
+        r.paths = [...new Set([...citedPaths(text), ...own])].sort();
+        r.classes = [];
+        if (baseline === null) {
+            baseline = new Set(r.paths);
+        } else if (r.paths.some((p) => !baseline!.has(p) && !diffSet.has(p))) {
+            r.classes.push('scope-widened');
+        }
+        if (s.kind === 'completion-review' && patch !== null) {
+            const cur = new Set(own);
+            if (prevDiff !== null) {
+                const changed = [...cur].filter((p) => !prevDiff!.has(p)).concat([...prevDiff].filter((p) => !cur.has(p)));
+                if (changed.length > 0 && changed.every((p) => classifyReviewPath(p) !== 'code')) {
+                    r.classes.push('rebind-non-code');
+                }
+            }
+            prevDiff = cur;
+        }
+    }
+}
+
+export function buildCensus(root: string, opts: { origins?: boolean } = {}): Census {
     const subjects = [...ratificationSubjects(root), ...completionSubjects(root)].sort(
         (a, b) => b.rounds - a.rounds || a.subject.localeCompare(b.subject),
     );
+    if (opts.origins) for (const s of subjects) if (s.rounds >= LONG_LOOP) addOrigins(root, s);
     return { root, subjects };
 }
 
@@ -293,6 +373,23 @@ export function renderCensusMarkdown(c: Census): string {
         out.push(`| \`${s.subject}\` | ${s.kind} | ${s.rounds} | ${s.firstDate ?? '—'} | ${s.lastDate ?? '—'} | ${s.verdict} |`);
     }
     out.push('');
+    const withOrigins = long.filter((s) => s.roundList.some((r) => r.classes !== undefined));
+    if (withOrigins.length > 0) {
+        const count = (s: CensusSubject, k: OriginClass): number =>
+            s.roundList.filter((r) => r.classes?.includes(k)).length;
+        out.push('## Deterministic origin classes per loop');
+        out.push('');
+        out.push('`scope-widened` — the round cites a repository path that is in neither round 1');
+        out.push('nor the subject\'s diff. `rebind-non-code` — a completion re-review whose stored');
+        out.push('diff moved only in non-code paths. Rounds recorded = round files present.');
+        out.push('');
+        out.push('| Subject | Rounds recorded | scope-widened | rebind-non-code |');
+        out.push('|---|---:|---:|---:|');
+        for (const s of withOrigins) {
+            out.push(`| \`${s.subject}\` | ${s.roundList.length} | ${count(s, 'scope-widened')} | ${count(s, 'rebind-non-code')} |`);
+        }
+        out.push('');
+    }
     return out.join('\n');
 }
 
@@ -303,7 +400,7 @@ function repoRoot(): string {
 function main(argv: string[]): number {
     const ri = argv.indexOf('--root');
     const root = ri >= 0 && argv[ri + 1] ? path.resolve(argv[ri + 1]) : repoRoot();
-    const census = buildCensus(root);
+    const census = buildCensus(root, { origins: argv.includes('--origins') });
     if (argv.includes('--write')) {
         const target = path.join(root, OUT_REL);
         fs.mkdirSync(path.dirname(target), { recursive: true });
