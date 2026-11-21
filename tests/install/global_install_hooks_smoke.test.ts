@@ -113,13 +113,13 @@ describe('golden smoke — fresh global install is single-surface complete', () 
             fs.readFileSync(path.join(REPO_ROOT, '.claude-plugin', 'marketplace.json'), 'utf8'),
         ) as { plugins: Array<{ skills: string[] }> };
         const pluginSkills = marketplace.plugins.flatMap((p) => p.skills ?? []);
-        expect(pluginSkills).toEqual(['./.claude-plugin/skills/install-agent-config']);
+        expect(pluginSkills).toEqual(['./skills/install-agent-config']);
 
         const projectedSkillNames = fs.readdirSync(path.join(home, '.claude', 'skills'));
         expect(projectedSkillNames).not.toContain('install-agent-config');
 
         const pluginHooks = JSON.parse(
-            fs.readFileSync(path.join(REPO_ROOT, 'hooks', 'hooks.json'), 'utf8'),
+            fs.readFileSync(path.join(REPO_ROOT, '.claude-plugin', 'hooks', 'hooks.json'), 'utf8'),
         ) as { hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>> };
         for (const [ev, groups] of Object.entries(pluginHooks.hooks)) {
             const managed = JSON.stringify(hooks[ev] ?? []);

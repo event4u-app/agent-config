@@ -32,6 +32,15 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
+* **claude plugin:** the marketplace plugin root is `./.claude-plugin`, no
+  longer the repo root. Claude Code loads `<plugin root>/agents/` as
+  subagents, so the old root shipped the repo's whole `agents/` tree and
+  pushed every session past the agent-description budget. The plugin keeps
+  its hooks (`.claude-plugin/hooks` links the generated `hooks/`) and the
+  pointer skill; `lint_marketplace` now fails on a wider root, on a
+  `.claude-plugin/agents/` dir and on missing plugin hooks. The host-loadability
+  smoke installs into a throwaway `CLAUDE_CONFIG_DIR` as well as `HOME`, so
+  `task ci` no longer rewrites a developer's real marketplace source.
 * **code-graph (Laravel):** the route lane reads a package's own route files —
   those a provider loads with `loadRoutesFrom(__DIR__ …)` or `group(__DIR__ …)`,
   and the files they `require` — and resolves `Route::controller(C::class)`
