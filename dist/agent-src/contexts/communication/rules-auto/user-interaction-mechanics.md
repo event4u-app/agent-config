@@ -81,13 +81,15 @@ position or framing:
 5. Multiple options blocks (e.g. clarification block AND end-of-turn
    menu) → each block gets its own `Recommendation: N` line directly
    underneath.
-6. Context (Iron Law 4) → read the ask as a user who saw none of this
-   turn's tool output. Every identifier explained, the blocker named,
+6. Context (Iron Law 4) — runs on EVERY ask, numbered block or not
+   (a free-text or trailing ask is where it fails most) → read the ask as a
+   user who saw none of this turn's tool output. Every identifier explained, the blocker named,
    every option's consequence stated? Any "no" → add it before sending.
 
 Mechanical backstop:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
-(non-zero exit on any rule above). Self-scan is the primary gate;
+(non-zero exit on rules 1–5; step 6 is model-carried — no script can judge
+whether an ask is answerable from outside the agent's context). Self-scan is the primary gate;
 the script is the deterministic safety net for ambiguous cases.
 
 ## Common failure modes — known, named, no excuses
@@ -237,7 +239,8 @@ at.
 
 **Failure modes — measured.** Audit of 39 recent transcripts across several
 projects and profiles (2026-11-21): 123 questions, ~20 drew a confused reply,
-a counter-question, an "Other" correction, or were ignored. Native-ask dialogs
+a counter-question, an "Other" correction, or were ignored. Counts below are
+per class over all context-poor asks, and one ask can fall in several. Native-ask dialogs
 were mostly well-formed (≈35 of 46); the misses cluster in plain-text asks and
 in naming/design questions.
 
@@ -254,8 +257,10 @@ in naming/design questions.
 - **Buried at the end of a report** (~5, 4 ignored). The question is the last
   line after a status report, or a leftover "still open from earlier: …".
   The user answers the report; the question is re-asked and ignored again.
-  Fix: put the open question first, or ask it in its own reply — and when
-  re-presenting it (Iron Law 3) give it the same context again.
+  Fix: open the reply with one line naming the open decision ("Open decision
+  below: …"), keep the block and its recommendation line in their usual place
+  (the end-summary still closes a work reply), or ask it in its own reply —
+  and when re-presenting it (Iron Law 3) give it the same context again.
 - **Options on a wrong or partial premise.** The option set skips what the
   user already said, or assumes the wrong place ("which line in the
   equipment window?" — it was the chat). Fix: restate the premise in one
@@ -284,6 +289,10 @@ Good:
 > `no-cheap-questions`. How should it ship?**
 > 1. Two PRs, 24 h apart — follows the soak rule; the second change lands a day later.
 > 2. One PR with the `bundled-always-rules-acknowledged` label — lands today; the PR body must justify the bundle.
+>
+> **Recommendation: 1 — Two PRs** — the soak exists to isolate a regression to one edit. Caveat: flip to 2 if both edits only make sense together.
+
+On a native ask the same recommendation is the default option instead of the line.
 
 **Carrier, stated honestly.** Model-carried. `check_reply_consistency` checks
 the recommendation line's shape and cannot judge whether a question is

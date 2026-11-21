@@ -91,7 +91,7 @@ Detail: mechanics § Context-carrying asks.
 ## Mechanics — rationale, failure modes, format details, examples
 
 The rule above is the obligation surface. Everything you look up rather than
-obey — why to take a position, the format spec, the five-step self-check, the
+obey — why to take a position, the format spec, the six-step self-check, the
 named failure-mode catalog, slip handling, examples, progress indicators and
 summary patterns — is in
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
