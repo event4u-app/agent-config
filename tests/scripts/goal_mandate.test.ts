@@ -159,6 +159,32 @@ describe('observe_prompt — goal sentences', () => {
         expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
     });
 
+    // Round 6: only a direct request — a line opening with the goal phrase or a
+    // request word — records; a mention opening with its subject does not.
+    it.each(['ok, mach weiter bis zum merge', 'bitte bis zum merge durchziehen', 'please keep going until merged', 'Until merged, please.'])(
+        'records the direct request %j',
+        (prompt) => {
+            observe_prompt(root, 's1', prompt, T0);
+            expect(read_goal(root, 's1')?.sentence).toBe(prompt);
+        },
+    );
+
+    it.each(['The checklist mentions working until merged.', 'der Plan läuft bis zum merge'])('records nothing for the mention %j', (prompt) => {
+        observe_prompt(root, 's1', prompt, T0);
+        expect(read_goal(root, 's1')).toBeNull();
+    });
+
+    // Round 6: a stop file pruned between listing and reading must not revive the goal.
+    it('suppresses the goal when the stop state cannot be read', () => {
+        observe_prompt(root, 's1', 'until merged', T0);
+        observe_prompt(root, 's1', 'stop', T1);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        const stop = fs.readdirSync(dir).find((n) => n.includes('.stop-')) as string;
+        fs.rmSync(path.join(dir, stop));
+        fs.mkdirSync(path.join(dir, stop));
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+    });
+
     // Round 5: reported speech is not the owner's request.
     it.each(['The docs say to keep working until merged.', 'er sagte, arbeite die roadmap ab'])(
         'records nothing for the reported %j',

@@ -67,11 +67,13 @@ export function read_goal(root: string, session_id: string): GoalRecord | null {
     } catch {
         /* no record */
     }
-    let stop: { at: number; by: string } | null = null;
+    let stop: { at: number; by: string } | null;
     try {
         stop = latest_stop(file);
     } catch {
-        /* no stop */
+        // Stop state that cannot be read (a stop pruned between listing and
+        // reading, an unreadable entry) suppresses the goal: fail closed.
+        return rec === null ? null : { ...rec, revoked_by: '', revoked_at: rec.recorded_at };
     }
     if (stop === null) return rec;
     const at = new Date(stop.at).toISOString();

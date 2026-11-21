@@ -25,6 +25,10 @@ export const GOAL_PATTERNS: readonly RegExp[] = [
     /\b(?:through|all\s+the\s+way)\s+to\s+(?:the\s+)?merge\b/i,
 ];
 
+/** The words a direct goal request may open with, DE and EN. */
+const REQUEST_OPENER =
+    /^(?:ok(?:ay)?|ja|yes|bitte|please|dann|then|und|and|jetzt|now|so|also|mach\w*|arbeite\w*|zieh\w*|weiter|los|go|keep|work|continue|carry|open|create|make|push|take|run|do|finish|bring)\b/i;
+
 /** Owner sentences that end a recorded goal. */
 export const REVOKE_PATTERNS: readonly RegExp[] = [
     /^\s*(?:stop|stopp|halt)\s*(?:[.!,;:]|$)/i,
@@ -98,7 +102,10 @@ function instructionText(line: string): string | null {
     // way costs one re-ask.
     if (line.endsWith('?')) return null;
     if (/\b(?:nicht|kein\w*|nie|niemals|never|not|says?|said|sagt|sagte|schreibt|schrieb|meint|meinte|wrote|writes|according)\b|\bdon['’]?t\b/i.test(line)) return null;
-    return line.replace(/"[^"]*"|“[^”]*”|„[^“”]*[“”]|`[^`]*`/g, ' ');
+    const probe = line.replace(/"[^"]*"|“[^”]*”|„[^“”]*[“”]|`[^`]*`/g, ' ').replace(/^[^A-Za-zÄÖÜäöü]+/, '');
+    // A direct request opens with the goal phrase itself or a request word; a
+    // mention opens with its subject ("the checklist mentions …").
+    return GOAL_PATTERNS.some((re) => probe.search(re) === 0) || REQUEST_OPENER.test(probe) ? probe : null;
 }
 
 function proseMatches(text: string, patterns: readonly RegExp[], asInstruction: boolean): string | null {
