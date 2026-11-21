@@ -56,6 +56,7 @@ import {
     STATE_FILE as LANGUAGE_LEGACY_STATE_FILE,
     statePathFor as languageStatePathFor,
 } from '../../src/scripts/language_mirror_hook.js';
+import { gatePinLanguage } from '../../src/scripts/hooks/language_pin_gate.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -445,6 +446,52 @@ describe('language pin', () => {
         );
         expect(exit).toBe(2); // the hook emitted a pin
         expect(readLanguagePin(dir, 'sess-parity')).toBe('de');
+    });
+
+    // road-to-a-language-pin-from-owner-prose 2.2: the gate refuses on language
+    // only when the pin came from what the owner typed. The rule is
+    // `gatePinLanguage`; `readLanguagePin` applies it once
+    // road-to-a-language-pin-from-owner-prose-live-wiring wires it in, so the
+    // must-not-fire cases read the rule directly until then.
+    const GERMAN_REPLY =
+        'Ich habe die Datei geprüft und die Tests laufen jetzt wieder, das war ein Fehler in der Konfiguration.';
+    const ENGLISH_REPLY =
+        'I checked the file and the tests are passing again; the problem was in the configuration that we changed.';
+
+    it('a system-locale pin raises no language finding on a German reply', () => {
+        expect(detectLanguage(GERMAN_REPLY, gatePinLanguage({ language: 'en', source: 'system-locale' }))).toBeNull();
+    });
+
+    it('a prompt-sourced pin still raises the finding on a reply in the other language', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));
+        expect(detectLanguage(ENGLISH_REPLY, readLanguagePin(dir, 'sess-1'))?.detector).toBe('language');
+    });
+
+    it('a prompt pin with no owner prose behind it raises no finding', () => {
+        expect(gatePinLanguage({ language: 'de', source: 'prompt', owner_prose_chars: 0 })).toBe('und');
+    });
+
+    it('a prompt pin with owner prose behind it still pins', () => {
+        expect(gatePinLanguage({ language: 'de', source: 'prompt', owner_prose_chars: 42 })).toBe('de');
+    });
+
+    it('a malformed owner_prose_chars obliges nothing', () => {
+        for (const bad of [null, -1, '0', 1.5, '12']) {
+            expect(gatePinLanguage({ language: 'de', source: 'prompt', owner_prose_chars: bad })).toBe('und');
+        }
+    });
+
+    it('a pin with a count but no source obliges nothing', () => {
+        expect(gatePinLanguage({ language: 'en', owner_prose_chars: 12 })).toBe('und');
+    });
+
+    it('a locale pin without owner_prose_chars obliges nothing', () => {
+        expect(gatePinLanguage({ language: 'en', source: 'system-locale' })).toBe('und');
+    });
+
+    it('a pin written before owner_prose_chars existed keeps today\'s reading', () => {
+        expect(gatePinLanguage({ language: 'de', source: 'prompt' })).toBe('de');
     });
 });
 

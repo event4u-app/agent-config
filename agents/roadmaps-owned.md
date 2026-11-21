@@ -11,7 +11,7 @@ and keep the full search — this file only adds candidates to it.
 |---|---|---|---|
 | road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
 | road-to-a-halt-that-holds-every-lane | active | ready | `emergency.orchestration_halt` stops every dispatch, including the re-dispatch of a dead lane, and the roadmap drain queue classifies a step as … |
-| road-to-a-language-pin-from-owner-prose | active | ready | The reply-language pin is set only by text the owner typed. |
+| road-to-a-language-pin-from-owner-prose-live-wiring | active | ready | The live hooks set the reply-language pin only from owner prose and the turn-end gate refuses on language only behind … |
 | road-to-a-learning-pipeline-that-yields-lessons | active | ready | A fault that recurs across sessions becomes a lesson without anyone writing it: the intake sees repeated errors and owner … |
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
 | road-to-a-lite-profile-pilot | active | ready | One repository, azeroth-companion, runs on an opt-in `discipline_profile: lite` that installs at most five package rules and none of the … |
@@ -288,7 +288,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-kernel-clause-1-restore | stubs | — | restore the never-act-while-asking literal |
 | road-to-kernel-cross-link-soak | stubs | — | road to the kernel cross-link and its post-merge soak |
 | road-to-kernel-instruction-only-migration | stubs | — | road to the last `enforced_by: "none"` leaving the kernel |
-| road-to-language-pin-short-lead | stubs | — | a short typed lead makes the language pin follow the PASTE, in both directions |
 | road-to-lapsed-beta-baseline-clearance | stubs | — | the lapsed-beta baseline has a clearance date and nothing owns it |
 | road-to-legacy-target-onboarding-ratchet | stubs | — | Road to legacy target onboarding via ratchets — stub |
 | road-to-lineage-backfill-confirmation | stubs | — | confirm the lineage backfill drafts |

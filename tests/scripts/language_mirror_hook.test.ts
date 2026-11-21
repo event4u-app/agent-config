@@ -42,7 +42,7 @@ const MODE_BITS_DENY_WRITES = ((): boolean => {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  classify,
+  classify as classifyText,
   instructionText,
   isSyntheticPrompt,
   nextState,
@@ -63,9 +63,42 @@ import {
   _pinLost,
   _pruneLegacyState,
   _pruneStaleSessions,
+  type PinState,
 } from "../../src/scripts/language_mirror_hook.js";
-import { stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
+import { ownerProse, ownerSpans, stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
+import { gatePinLanguage } from "../../src/scripts/hooks/language_pin_gate.js";
+// The owner-prose pin is a library until road-to-a-language-pin-from-owner-prose-live-wiring
+// wires it into the hook; `classifyText` above is the classifier the hook runs today.
+import {
+  classifyOwnerProse as classify,
+  ownerProseNextState,
+} from "../../src/scripts/_lib/owner_prose_pin.js";
+import { detectLanguage } from "../../src/scripts/hooks/turn_end_gate_hook.js";
 import { tryAcquire } from "../../src/scripts/_lib/generation_lock.js";
+
+/**
+ * The pin sequence the owner-prose library produces, in the hook's order: a
+ * host-generated turn never reaches the classifier, `null` keeps the previous
+ * pin, and the gate reads it through `gatePinLanguage`. Stands in for driving
+ * `run` until road-to-a-language-pin-from-owner-prose-live-wiring wires the
+ * library into the hook; that roadmap moves these sequences back onto `run`.
+ */
+function pinReplay() {
+  let pin: Partial<PinState> = {};
+  return {
+    run(prompt: string, locale: "de" | "en" | "und" = "und"): void {
+      if (isSyntheticPrompt(prompt)) return;
+      const next = ownerProseNextState(pin, classify(prompt), prompt.length, "s1", "", locale);
+      if (next !== null) pin = next;
+    },
+    state: () => pin,
+    gate: () => gatePinLanguage(pin),
+  };
+}
+let replay = pinReplay();
+beforeEach(() => {
+  replay = pinReplay();
+});
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
 // prompt_chars: 6627, de_markers: 0, en_markers: 63` in a German session. Those
@@ -184,13 +217,25 @@ describe("isSyntheticPrompt", () => {
       "vollständig auf Deutsch, sodass eine Zählung über alles Deutsch ergäbe.",
     ].join("\n");
 
-    it("pins to the German instruction above an English paste", () => {
+    // The paste no longer decides in either direction; with the owner-prose
+    // pin (road-to-a-language-pin-from-owner-prose, ratification round 5) the
+    // pasted body vetoes and the previous pin stays, because an unheaded paste
+    // ABOVE a typed line has the same shape. `classifyText`, which replies use,
+    // keeps reading the lead first.
+    it("does not pin from an English paste under a German instruction", () => {
       const prompt = `Bitte schau dir das mal an und sag mir was du davon hältst:\n\n${ENGLISH_DOC}`;
-      expect(classify(prompt).language).toBe("de");
+      expect(classify(prompt).language).toBe("und");
+      expect(classifyText(prompt).language).toBe("de");
     });
 
-    it("pins to the English instruction above a German paste — same rule, no language named", () => {
+    it("does not pin from a German paste under an English instruction — same rule, no language named", () => {
       const prompt = `Please take a look at this and tell me what you think of it:\n\n${GERMAN_DOC}`;
+      expect(classify(prompt).language).toBe("und");
+      expect(classifyText(prompt).language).toBe("en");
+    });
+
+    it("an instruction over a paste in the same language still pins", () => {
+      const prompt = `Please take a look at this and tell me what you think of it:\n\n${ENGLISH_DOC}`;
       expect(classify(prompt).language).toBe("en");
     });
 
@@ -302,9 +347,12 @@ describe("classify", () => {
 
   it("resolves a tie to German, per the rule's own mixed/tie clause", () => {
     // Two markers each side: "ich" + "und" vs "the" + "that".
-    const c = classify("ich und the that");
+    const c = classifyText("ich und the that");
     expect(c.de_markers).toBe(c.en_markers);
     expect(c.language).toBe("de");
+    // The pin no longer takes a side on a mixed prompt (ratification round 9):
+    // both languages at the floor is a veto, and the previous pin stays.
+    expect(classify("ich und the that").language).toBe("und");
   });
 });
 
@@ -433,7 +481,12 @@ describe("run", () => {
       "fixed, and these are from the module which was changed and that will need\n" +
       "work before this can be merged into the branch that has these commits.";
     // Without the paste filter this scores en=18 / de=2 and pins ENGLISH.
-    expect(classify(mixed).language).toBe("de");
+    // The wrapped lines below `Error:` are unmarked prose, and an English
+    // paste ABOVE `Error:` with a typed German line glued below has the same
+    // shape (ratification round 3), so the owner-prose classifier answers
+    // `und` — the paste does not decide, and the previous pin stays.
+    expect(classify(mixed).language).toBe("und");
+    expect(classifyText(mixed).language).toBe("de");
     expect(instructionText(mixed)).not.toMatch(/test suite is not passing/);
   });
 
@@ -442,7 +495,11 @@ describe("run", () => {
       "hier der fehler, bitte behebe ihn:\n```\n" +
       "TypeError: cannot read the property of undefined and that is what the\n" +
       "handler was doing when these requests were dispatched from the queue\n```";
-    expect(classify(fenced).language).toBe("de");
+    // Not flipped to English. Since ratification round 8 a fence is no veto
+    // boundary — a misread fence was the last place owner text could hide — so
+    // English prose inside it makes the prompt `und` and the previous pin stays.
+    expect(classify(fenced).language).toBe("und");
+    expect(classifyText(fenced).language).toBe("de");
   });
 
   it("a genuinely English prompt is still classified English", () => {
@@ -541,7 +598,7 @@ describe("systemLocaleVerdict", () => {
 });
 
 describe("nextState — the locale fallback", () => {
-  const und = { language: "und" as const, de_markers: 0, en_markers: 0 };
+  const und = { language: "und" as const, de_markers: 0, en_markers: 0, owner_prose_chars: 0 };
 
   it("pins from the locale when the first prompt is undetermined", () => {
     const s = nextState({}, und, 1, "s1", "2026-08-06T00:00:00.000Z", "de");
@@ -576,7 +633,7 @@ describe("nextState — the locale fallback", () => {
       language: "en" as const,
       source: "system-locale" as const,
     };
-    const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
+    const de = { language: "de" as const, de_markers: 9, en_markers: 0, owner_prose_chars: 40 };
     const s = nextState(
       previous,
       de,
@@ -590,7 +647,7 @@ describe("nextState — the locale fallback", () => {
   });
 
   it("stamps a prompt reading as source prompt, never as the locale", () => {
-    const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
+    const de = { language: "de" as const, de_markers: 9, en_markers: 0, owner_prose_chars: 40 };
     expect(
       nextState({}, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en")?.source,
     ).toBe("prompt");
@@ -1518,13 +1575,16 @@ describe("host-injected wrapper regions", () => {
     // Pre-fix: `en`, at de=0 / en=3. The German count reached ZERO — the
     // block's indented lines armed `instructionText`'s paste state and, with no
     // blank line before it, the user's sentence was discarded with the markup.
+    // Since D7 (ratification round 15) the veto reads the RAW prompt, so the
+    // block's English markers make this `und`: the previous pin stays (a missed
+    // update), and the pre-fix harm — an `en` pin off the block — cannot recur.
     const prompt = ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
-    expect(classify(prompt).language).toBe("de");
+    expect(classify(prompt).language).toBe("und");
   });
 
   it("a blank line between the block and the sentence changes nothing", () => {
     const prompt = ELEMENT_BLOCK + "\nsteht unter dem kontent wrapper, ich würde es anders machen";
-    expect(classify(prompt).language).toBe("de");
+    expect(classify(prompt).language).toBe("und");
   });
 
   it("the same block does not flip an English sentence away from English", () => {
@@ -1554,9 +1614,12 @@ describe("host-injected wrapper regions", () => {
   it("an UNBALANCED bare tag is left alone, so a pasted document still ends the lead", () => {
     // The bare-tag arm of `DOCUMENT_HEAD` exists for a document pasted under its
     // own opening tag. Only a tag with a matching close is a region to skip.
+    // Everything below the tag is that document's body, and with no whole-body
+    // fallback (road-to-a-language-pin-from-owner-prose D1) a body never pins.
     const unbalanced = "<div>\nmach das bitte nochmal und prüfe die regeln";
     expect(stripInjectedRegions(unbalanced)).toBe(unbalanced);
-    expect(classify(unbalanced).language).toBe("de");
+    expect(classify(unbalanced).language).toBe("und");
+    expect(classifyText(unbalanced).language).toBe("de");
   });
 
   it("a prompt with no balanced region is returned byte-identical", () => {
@@ -1646,12 +1709,14 @@ describe("inline terminal-pane regions (#2950)", () => {
     const kept = stripInjectedRegions(p);
     expect(kept).not.toMatch(/bash-|these are the files|have been listed/);
     expect(kept).toContain("mach bitte weiter mit den tickets und prüfe die regeln");
-    expect(classify(p).language).toBe("de");
+    // The raw-prompt veto (D7, round 15): the stdout's English keeps the previous pin.
+    expect(classify(p).language).toBe("und");
   });
 
-  it("text typed beside the inline regions is kept and decides", () => {
+  it("text typed beside the inline regions decides only where the wrapper does not disagree", () => {
     const p = TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?";
-    expect(classify(p).language).toBe("de");
+    // Never `en` (the #2950 harm); `und` under the raw-prompt veto (D7, round 15).
+    expect(classify(p).language).toBe("und");
     const en = TERMINAL_PANE_LINE + "\nwhy is this empty and where is the output?";
     expect(classify(en).language).toBe("en");
   });
@@ -1660,19 +1725,66 @@ describe("inline terminal-pane regions (#2950)", () => {
     const p =
       "bitte prüfe das <bash-stdout>these are the files that were there</bash-stdout> und mach dann weiter mit der liste";
     expect(stripInjectedRegions(p)).not.toMatch(/these are the files/);
-    expect(classify(p).language).toBe("de");
+    expect(classify(p).language).toBe("und");
   });
 
   it("inline terminal regions and a standalone host wrapper are both removed", () => {
     const p = TERMINAL_PANE_LINE + "\n" + ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
     const kept = stripInjectedRegions(p);
     expect(kept).not.toMatch(/bash-|launch-selected-element|No output was captured/);
-    expect(classify(p).language).toBe("de");
+    expect(classify(p).language).toBe("und");
   });
 
   it("an unclosed inline tag is left in place", () => {
     const p = "<bash-stdout>the output that was there and should have been kept";
     expect(stripInjectedRegions(p)).toBe(p);
+  });
+
+  it("the cost, stated: a German instruction beside an English wrapper leaves an English pin in place", () => {
+    // A missed update (D7, ratification round 15): no text-only rule can tell
+    // the host's wrapper from a pasted copy, so the raw-prompt veto keeps the
+    // previous pin and the gate keeps asking for English on this turn.
+    replay.run("Please check the release notes and tell me what is missing.");
+    expect(replay.state().language).toBe("en");
+    replay.run(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?");
+    expect(replay.state().language).toBe("en");
+  });
+
+  it("an English host region beside German owner text vetoes the German candidate", () => {
+    // The spans see only the German line (the region is stripped for them); the
+    // veto reads the raw prompt, where the region's English reaches the floor.
+    const p = [
+      "bitte prüfe das und mach dann weiter",
+      "<launch-selected-element>",
+      "the padding is missing here and that should be fixed",
+      "</launch-selected-element>",
+    ].join("\n");
+    expect(classify(p).language).toBe("und");
+  });
+
+  it("the reply scorer still deletes an inline region without a separator", () => {
+    // Ratification round 18: the word-boundary fix is scoped to owner prose. The
+    // turn-end gate's reply path keeps its measured surface, so an English pin
+    // raises no new finding on this reply.
+    const reply = "und<bash-stdout>x</bash-stdout>die tests laufen";
+    expect(stripInjectedRegions(reply)).toBe("unddie tests laufen");
+    expect(detectLanguage(reply, "en")).toBeNull();
+  });
+
+  it("the cost, end to end: the kept English pin makes the gate refuse a German reply", () => {
+    replay.run("Please check the release notes and tell me what is missing.");
+    replay.run(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?");
+    const pin = replay.gate();
+    expect(pin).toBe("en");
+    expect(detectLanguage("Das ist leer, weil die Ausgabe im Terminal bleibt und nicht hier ankommt.", pin)).not.toBeNull();
+  });
+
+  it("removing a marker-free inline region never glues a marker the owner did not type", () => {
+    // Ratification round 17: with no English in the region the opposing-language
+    // veto has nothing to see, so the strip itself must keep the word boundary.
+    const p = "un<bash-stdout>x</bash-stdout>d die tests laufen";
+    expect(ownerProse(p).lead).not.toMatch(/\bund\b/);
+    expect(classify(p).language).toBe("und");
   });
 
   it("the reported three-turn sequence keeps the German pin", () => {
@@ -1685,5 +1797,511 @@ describe("inline terminal-pane regions (#2950)", () => {
     expect(readState().language).toBe("de");
     run(envelope("Ja, angleichen"), { consumer_root: tmp, env: {} });
     expect(readState().language).toBe("de");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Owner prose only — road-to-a-language-pin-from-owner-prose 2.1.
+//
+// What the hook pins from a prompt, row by row: the owner's language, or `und`
+// where the owner typed fewer than `MIN_MARKERS` markers (an `und` keeps the
+// previous pin, D1). `[context]` rows are the roadmap's § Context shapes and
+// their variants; `[1.2 synthetic-turn]` rows are the class the language-split
+// baseline found most often, paraphrased, no session text; `[regression]` rows
+// were already right before the fix and must stay so.
+// ---------------------------------------------------------------------------
+
+/** The hook's own order: a host-generated turn never reaches `classify`. */
+function pinFrom(prompt: string): string {
+  return isSyntheticPrompt(prompt) ? "und" : classify(prompt).language;
+}
+
+const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
+  [
+    // The English header line may be the terminal's or the owner's: two
+    // confident spans that disagree are undetermined, so the previous pin stays.
+    "[context] terminal block above one typed German line, English header glued on top",
+    "The command failed with these errors and the build should be checked:\nError: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
+    "und",
+  ],
+  [
+    "[context] terminal block above one typed German line",
+    "Error: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
+    "de",
+  ],
+  [
+    "[ratification r1] German lead glued above an error whose English explanation follows a blank line",
+    "Behebe das bitte.\nError: request failed\n\nThis is the explanation of the error, and it tells you what you should do next.",
+    "und",
+  ],
+  [
+    "[ratification r2] German line with an unmarked English paragraph glued below it",
+    "Behebe das bitte.\nThis is a long English paragraph that would explain what should be done, and it could go on for a while.\nMore English text continues here and it is still part of the paste.",
+    "und",
+  ],
+  [
+    "[ratification r2] English instruction starting with `To` and a German line glued below",
+    "To fix this, please use the existing code that is already there.\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r2] one output-looking line above a glued German line is not a paste block",
+    "Error: build failed\nBitte prüfe das und mach dann weiter.",
+    "und",
+  ],
+  [
+    "[ratification r1] German lead, blank line, error, blank line, English explanation",
+    "Behebe das bitte.\n\nError: request failed\n\nThis is the explanation of the error, and it tells you what you should do next.",
+    "und",
+  ],
+  [
+    "[context] terminal block glued to the typed German line, no blank line",
+    "Error: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\nWarum ist das rot und was fehlt hier?",
+    "de",
+  ],
+  [
+    // The paragraph may be the owner's own or a paste; with no paste marker,
+    // the mirrored shape below is indistinguishable, so neither may decide.
+    "[context] short German lead over an unmarked English paragraph",
+    "Behebe das bitte.\n\nThe parser drops the last line when the input has no trailing newline, and the tests should cover that case.",
+    "und",
+  ],
+  [
+    "[ratification r3] unmarked English paragraph pasted above a typed German question",
+    "The parser drops the last line when the input has no trailing newline, and the tests should cover that case.\n\nWarum ist das so und was machen wir jetzt?",
+    "und",
+  ],
+  [
+    "[ratification r3] German lead over a German paragraph still pins German",
+    "Behebe das bitte.\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat.",
+    "de",
+  ],
+  [
+    "[context] short English lead over an unmarked German paragraph",
+    "Fix this file.\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat, und die Tests sollten das auch abdecken.",
+    "und",
+  ],
+  [
+    "[context] short English lead over a German paragraph under a heading",
+    "Fix this file.\n\n## Überschrift\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat, und die Tests sollten das auch abdecken.",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] stop-hook feedback",
+    "Stop hook feedback:\nThe reply should state what was verified and which tests were run before the turn ends, because the gate could not find it.",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] compaction continuation summary",
+    "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation and what was done there.",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] usage-limit note",
+    "[Usage limit reached; a short grace allowance remains, then this turn is cut off without warning. Judge what's left and wrap up what you can.]",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] expanded command body",
+    "# analyze-inbox\n\nTurn a file someone dropped in the inbox into either a roadmap this repo can execute, or a written reason why it should not be.",
+    "und",
+  ],
+  [
+    "[regression] task notification",
+    "<task-notification>\nThe background task has finished and the output is ready to be read by the agent.\n</task-notification>",
+    "und",
+  ],
+  [
+    "[regression] agent-message hand-back",
+    '<agent-message from="a1">\nThe subagent has finished and these are the results that were found.\n</agent-message>',
+    "und",
+  ],
+  [
+    "[regression] framed cross-session message",
+    'Another Claude session sent a message:\n<cross-session-message from="lane-3">\nThe defect is confirmed and there is one correction that should be made.\n</cross-session-message>',
+    "und",
+  ],
+  [
+    "[regression] usage-limit resume sentence",
+    "Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work that is already complete.",
+    "und",
+  ],
+  [
+    "[regression] terminal-pane echo",
+    "<bash-input>ls</bash-input><bash-stdout>[No output was captured. The command ran in the terminal pane; if it should have printed something, use read_terminal.]</bash-stdout><bash-stderr></bash-stderr>",
+    "und",
+  ],
+  [
+    // English prose inside the fence vetoes since ratification round 8; not `en`.
+    "[regression] German instruction over a fenced English stack trace",
+    "Warum bricht das hier ab? Bitte prüfe das.\n\n```\nTypeError: Cannot read properties of undefined (reading 'map')\n    at render (src/app.tsx:12:5)\nThe above error occurred in the component and should be handled there.\n```",
+    "und",
+  ],
+  [
+    "[ratification r8] German instruction over a fence of code without English prose",
+    "Warum bricht das hier ab? Bitte prüfe das.\n\n```\nconst x = foo(bar);\nreturn x.map((y) => y.id);\n```",
+    "de",
+  ],
+  [
+    "[ratification r8] a German prefix inside a paragraph an English line wins",
+    "Bitte\nnochmal\nPlease tell me why this is happening and what I should do.",
+    "und",
+  ],
+  [
+    "[ratification r8] a list fence cannot hide a typed German sentence",
+    "Please tell me why this is happening.\n\n- ```\n  x\n  ```\n\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    // The paste's last line is unmarked English prose: it vetoes, never decides.
+    "[regression] paste ending in an English prose line under a German lead",
+    "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nThe job was cancelled because the runner lost its connection to the server.",
+    "und",
+  ],
+  [
+    "[ratification r3] English paste above one output line, typed German line glued below",
+    "This is the error that we saw when we tried to run the tests.\nError: test runner exited with code 1\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r3] English lead, one output line, glued German instruction",
+    "Please translate this.\nError: translation failed\nÜbersetze das bitte und prüfe das.",
+    "und",
+  ],
+  [
+    "[ratification r3] conflicting paragraphs that reach the floor only as paragraphs",
+    "Bitte\nnochmal\n\nPlease\nwhy",
+    "und",
+  ],
+  [
+    "[ratification r4] a German paragraph right above a document head still vetoes",
+    "Please\nwhy\n\nError: request failed\n\nBitte\nnochmal\n# Notes\nsome document body",
+    "und",
+  ],
+  [
+    "[ratification r4] lowercase `to …` instruction over a pasted German line",
+    "to fix this, please tell me why.\n\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r5] an English document without a leading heading above a typed German question",
+    "This roadmap describes the work that has to be done and the reasons we have for it.\n## Section\nThe parser drops the last line when the input has no trailing newline.\n\nWas hältst du davon und was fehlt noch?",
+    "und",
+  ],
+  [
+    "[ratification r5] sub-floor owner spans that add up against a confident prose unit",
+    "Please\n\nBehebe das bitte.\n\nError: build failed\n\nwhy",
+    "und",
+  ],
+  [
+    "[ratification r6] sub-floor German paragraphs that add up against sub-floor owner spans",
+    "Please\n\nBitte\n\nnochmal\n\nError: x\n\nwhy",
+    "und",
+  ],
+  [
+    "[ratification r6] inline triple backticks in a typed line do not open a fence",
+    "Hier ist Code mit ``` drin, behebe das bitte.\n```python\nprint(\"translate this please, it should work\")\n```",
+    "und",
+  ],
+  [
+    "[ratification r6] an unclosed fence runs to the end of the prompt",
+    "Behebe das bitte.\n\n```\nPlease tell me why this is not working.",
+    "und",
+  ],
+  [
+    "[ratification r7] a delimiter indented four spaces does not open a fence",
+    "Please tell me why.\n\n    ```\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r7] a delimiter indented four spaces does not close a fence",
+    "Behebe das bitte.\n\n```\n    ```\nPlease tell me why this is broken.\n```",
+    "und",
+  ],
+  [
+    "[ratification r7] bare CR line endings end lines for the fence reader",
+    "Please tell me why.\r~~~\rcode\r~~~\rBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r9] German fragments separated by a paste reach the floor only together",
+    "Please tell me why.\n\nBitte\nError: Please tell me why. Please tell me why. Please tell me why.\nnochmal\nError: end of log",
+    "und",
+  ],
+  [
+    "[ratification r9] a no-break space after a closing fence does not close it",
+    "Bitte\n\n~~~text\n~~~\u00a0\n\nPlease tell me why. Please tell me why.",
+    "und",
+  ],
+  [
+    "[ratification r5] a tilde-fenced paste is code, not prose",
+    "~~~\nBehebe das bitte und prüfe das.\n~~~",
+    "und",
+  ],
+  [
+    "[ratification r3] a German question over a log whose prose agrees still pins German",
+    "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nDer Job wurde abgebrochen, weil die Verbindung zum Server weg war.",
+    "de",
+  ],
+];
+
+describe("owner prose only", () => {
+  it.each(OWNER_PROSE_ROWS)("%s", (_name, prompt, expected) => {
+    expect(pinFrom(prompt)).toBe(expected);
+  });
+
+  it("owner_prose_chars records the typed line's length, not prompt_chars", () => {
+    const [, prompt] = OWNER_PROSE_ROWS.find(([name]) => name === "[context] terminal block above one typed German line")!;
+    replay.run(prompt);
+    const state = replay.state();
+    expect(state.language).toBe("de");
+    expect(state.source).toBe("prompt");
+    expect(state.owner_prose_chars).toBe("Warum ist das rot?".length);
+    expect(state.prompt_chars).toBe(prompt.length);
+  });
+
+  // The cost of D1, pinned down rather than hidden (ratification r1): an owner
+  // span under the floor keeps the previous pin even when the next paragraph
+  // is the owner's own English, because a pasted paragraph looks the same.
+  it("a short English lead over an English paragraph keeps an earlier German pin (D1)", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    replay.run("Fix.\n\nThe parser drops the last line when the input has no trailing newline, and the tests should cover that.");
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("owner_prose_chars is 0 on a locale pin", () => {
+    replay.run("ok", "de");
+    const state = replay.state();
+    expect(state.source).toBe("system-locale");
+    expect(state.owner_prose_chars).toBe(0);
+  });
+
+  it("inline triple backticks cannot expose a fenced English body through the pin sequence", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    run(
+      envelope('Hier ist Code mit ``` drin, behebe das bitte.\n```python\nprint("translate this please, it should work")\n```'),
+      { consumer_root: tmp, env: {} },
+    );
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("a four-space fence opener cannot hide a German line through the pin sequence", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    replay.run("Please tell me why.\n\n    ```\nBehebe das bitte.");
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("a long prompt in one language still pins", () => {
+    const long = ["Bitte prüfe das und mach dann weiter.", ...Array(2000).fill("x = 1")].join("\n");
+    expect(classify(long).language).toBe("de");
+  });
+
+  it("one marker of the other language anywhere does not veto; two do", () => {
+    expect(classify("Bitte prüfe das und mach dann weiter.\n\n```\nconst the = 1;\n```").language).toBe("de");
+    expect(classify("Bitte prüfe das und mach dann weiter.\n\n```\nconst the = this;\n```").language).toBe("und");
+  });
+
+  it("a no-break-space fence closer cannot let pasted English replace a German pin", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    replay.run("Bitte\n\n~~~text\n~~~\u00a0\n\nPlease tell me why. Please tell me why.");
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("a German instruction after a list fence replaces an English pin", () => {
+    replay.run("Please check this and then continue with the tests that are failing.");
+    expect(replay.state().language).toBe("en");
+    replay.run("- ```\n  42\n  ```\n\nBehebe das bitte und prüfe das.");
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("a German instruction after an ordered-list fence numbered 10 replaces an English pin", () => {
+    replay.run("Please check this and then continue with the tests that are failing.");
+    replay.run("10. ```\n    x = 1\n    ```\n\nBehebe das bitte und prüfe das.");
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("an unclosed fence hides nothing below its opener", () => {
+    replay.run("Please check this and then continue with the tests that are failing.");
+    replay.run("Error: build failed\n    at run (a.js:1:1)\n- ```\n  42\n\nBehebe das bitte und prüfe das.");
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("a 200,000-line unclosed fence classifies without throwing", () => {
+    const prompt = `Bitte prüfe das.\n\n\`\`\`\n${Array(200_000).fill("x").join("\n")}`;
+    expect(() => classify(prompt)).not.toThrow();
+  });
+
+  it("a closer five spaces into a `10. ~~~` item still closes the fence", () => {
+    const spans = ownerSpans("10. ~~~\n     x\n     ~~~\n\nBehebe das bitte.");
+    expect(spans.lead).toBe("");
+    expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a pasted tag pair across fences cannot delete a typed German sentence from the veto", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    run(
+      envelope(
+        "Please tell me why this is happening and what we should do.\n\n```\n<section>\n```\n\nBehebe das bitte.\n\n```\n</section>\n```",
+      ),
+      { consumer_root: tmp, env: {} },
+    );
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("a four-space line does not close a three-space top-level fence", () => {
+    const spans = ownerSpans("   ```\n    ```\n\nBehebe das bitte und prüfe das.\n   ```");
+    expect(spans.trailing).toBe("");
+    expect(spans.lead).toBe("");
+  });
+
+  for (const tag of ["system-reminder", "bash-stdout"]) {
+    it(`pasted <${tag}> tags across fences cannot delete a typed German sentence from the veto`, () => {
+      replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+      run(
+        envelope(
+          `\`\`\`\n<${tag}>\n\`\`\`\n\nBehebe das bitte.\n\n\`\`\`\n</${tag}>\n\`\`\`\n\nPlease tell me why this is happening and what we should do.`,
+        ),
+        { consumer_root: tmp, env: {} },
+      );
+      expect(replay.state().language).toBe("de");
+    });
+  }
+
+  it("a tab-indented closer in a tab-indented list item closes the fence", () => {
+    const spans = ownerSpans("-\t~~~\n\tx\n\t~~~\n\nBehebe das bitte.");
+    expect(spans.lead).toBe("");
+    expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a top-level closer indented by a tab (four columns) does not close the fence", () => {
+    // The heading sits between the tab line and the real closer: an early close
+    // would expose it as a document head and empty the trailing span.
+    const spans = ownerSpans("~~~\nx\n\t~~~\n# pasted heading\n~~~\n\nBehebe das bitte.");
+    expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a pasted unified diff never pins from its hunk lines (read through the gate)", () => {
+    // Ratification round 19: the three headers made the guard's output run, and
+    // the `-` / `+` lines became the trailing span and pinned English.
+    const patch = [
+      "--- a/x",
+      "+++ b/x",
+      "@@ -1,2 +1,2 @@",
+      " the context line that was there",
+      "-the output was there and it is gone",
+      "+the padding is missing here and that should be fixed",
+    ].join("\n");
+    expect(ownerSpans(patch).trailing).toBe("");
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    replay.run(patch);
+    expect(replay.gate()).toBe("de");
+  });
+
+  it("a hunk with an empty context row or fenced context rows still never pins", () => {
+    // Ratification round 20: a space-only context row reset the hunk scan, and
+    // context rows ` ```text` / ` ```` were collapsed by the fence reader first.
+    const patches = [
+      ["--- a/x", "+++ b/x", "@@ -1,2 +1,2 @@", " ", "-the output was there and it is gone", "+the padding is missing here and that should be fixed"],
+      ["--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@", " ```text", "-the output was there and it is gone", "+the padding is missing here and that should be fixed", " ```"],
+      // Round 21: a git preamble whose paths carry markers is patch metadata.
+      ["diff --git a/the-file-and-the-output b/the-file-and-the-output", "index 1a2b3c4..5d6e7f8 100644", "--- a/the-file-and-the-output", "+++ b/the-file-and-the-output", "@@ -1 +1 @@", "-x", "+y"],
+    ];
+    patches.forEach((rows) => {
+      replay = pinReplay();
+      const patch = rows.join("\n");
+      expect(ownerSpans(patch).trailing).toBe("");
+      replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+      replay.run(patch);
+      expect(replay.gate()).toBe("de");
+    });
+  });
+
+  it("a terminal region inside a hunk does not shift the hunk onto the owner's bullet", () => {
+    // Round 21: stripping the region first merged rows, so the declared length
+    // ran on and swallowed the typed bullet. Hunks are read on the raw lines.
+    const p = [
+      "--- a/x", "+++ b/x", "@@ -1,3 +1,3 @@",
+      " <bash-stdout>", "-the old row", "+the new row", " </bash-stdout>",
+      "",
+      "- bitte prüfe das und mach dann weiter",
+    ].join("\n");
+    expect(ownerProse(p).trailing).toBe("- bitte prüfe das und mach dann weiter");
+  });
+
+  it("only a `\\ ` annotation belongs to a hunk; a backslash line after it is prose", () => {
+    const p = ["--- a/x", "+++ b/x", "@@ -1 +1 @@", "-alt", "+neu", "\\ No newline at end of file", "\\textbf{bitte prüfe das und mach dann weiter}"].join("\n");
+    expect(ownerSpans(p).trailing).toBe("\\textbf{bitte prüfe das und mach dann weiter}");
+  });
+
+  it("a hunk ends at its declared length, so a typed bullet after it stays owner prose", () => {
+    const p = ["--- a/x", "+++ b/x", "@@ -1 +1 @@", "-alt", "+neu", "", "- bitte prüfe das und mach dann weiter"].join("\n");
+    expect(ownerSpans(p).trailing).toBe("- bitte prüfe das und mach dann weiter");
+  });
+
+  it("malformed counts and a count without a source oblige nothing", () => {
+    expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: -1 })).toBe("und");
+    expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: 0.5 })).toBe("und");
+    expect(gatePinLanguage({ language: "de", owner_prose_chars: 5 })).toBe("und");
+    expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: 5 })).toBe("de");
+  });
+
+  it("an unindented line ends a list item and the fence inside it", () => {
+    // Ratification round 18: a column-zero `~~~` after a `- ~~~` list fence is
+    // not its closer; the list item (and its fence) ended, and the line opens a
+    // new top-level fence that holds the English sentence.
+    const p = "- ~~~\n  x\n~~~\n\nPlease tell me why this is happening and what we should do.\n~~~";
+    expect(ownerSpans(p).trailing).toBe("");
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    replay.run(p);
+    expect(replay.state().language).toBe("de");
+  });
+
+  it("two back-to-back fenced blocks count as the output run above a glued span", () => {
+    // Stated, round 17: a collapsed fence is a paste boundary, and a line glued
+    // under two closed fences is read as typed; one fence alone is not enough.
+    expect(ownerSpans("```\na\n```\n```\nb\n```\nBehebe das bitte.").trailing).toBe("Behebe das bitte.");
+    expect(ownerSpans("```\na\n```\nBehebe das bitte.").trailing).toBe("");
+  });
+
+  it("a glued span needs two output lines directly above it, not anywhere above", () => {
+    // Ratification round 16: two `Error:` lines in separate blocks counted
+    // together, so a wrapped continuation of the second one became owner prose.
+    const spans = ownerSpans(
+      "Error: old log\n\nContext.\n\nError: x\nPlease check the release notes and tell me what is missing.",
+    );
+    expect(spans.trailing).toBe("");
+  });
+
+  it("a closer six columns into a tab-indented list item closes the fence", () => {
+    const spans = ownerSpans("-\t~~~\n      x\n      ~~~\n\nBehebe das bitte.");
+    expect(spans.lead).toBe("");
+    expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a long whitespace-only line costs linear time", () => {
+    const started = Date.now();
+    classify(`Bitte prüfe das.\n${" ".repeat(50_000)}\nund mach weiter.`);
+    expect(Date.now() - started).toBeLessThan(500);
+  });
+
+  it("an ambiguous prompt keeps the earlier German pin through the pin sequence", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    for (const [name, prompt] of OWNER_PROSE_ROWS) {
+      if (!name.startsWith("[ratification r3]") || name.includes("still pins")) continue;
+      replay.run(prompt);
+      expect(replay.state().language).toBe("de");
+    }
+  });
+
+  // D5 caveat: a host turn reaching `UserPromptSubmit` must leave an existing
+  // owner pin in place, not merely classify as `und` in isolation.
+  it("a host turn between owner turns keeps the German pin", () => {
+    replay.run("Bitte prüfe das und mach dann weiter mit den Tests.");
+    expect(replay.state().language).toBe("de");
+    for (const [name, prompt] of OWNER_PROSE_ROWS) {
+      if (!name.startsWith("[1.2 synthetic-turn]")) continue;
+      replay.run(prompt);
+      expect(replay.state().language).toBe("de");
+    }
   });
 });

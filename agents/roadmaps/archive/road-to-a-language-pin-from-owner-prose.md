@@ -8,6 +8,9 @@ execution:
 estate_growth_exempt: "P0 measure 2 of the owner's session retro of 2026-11-21, which the owner ordered planned and executed. The owning step (later/road-to-agent-throughput-recovery 4.1) sits in later/ behind an owner WIP entry condition; this file carries only the missing delta and supersedes stubs/road-to-language-pin-short-lead, which it archives in step 5.2, so the net estate change after 5.2 is zero."
 estate_offset_exempt: "road-to-a-language-pin-from-owner-prose is added on the owner's order of 2026-11-21 to plan every measure of that day's session retro as its own roadmap. No active roadmap is finished, so none was archived to offset it, and folding it into a parked later/ roadmap would hold asked-for work behind that roadmap's entry condition. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
 relates:
+  - slug: road-to-a-language-pin-from-owner-prose-live-wiring
+    relation: extends
+    note: "Carries the live wiring withdrawn here by owner decision (option 2, 2026-11-21): steps 3.2 (hook half), 3.3 (hook write), 3.4, 4.1, 4.2, 5.1 and AC-2, AC-3, AC-5, with the bundle raise they need."
   - slug: road-to-resume-after-limit-hits
     relation: disjoint
     note: "Same-retro sibling (measure 23). Its Phase 1 moves limit-stop and reset-sentence recognition into one `_lib/limit_stop.ts` that the language pin also calls; this file owns what sets the pin (`ownerProse()`), that file owns the limit classifier. Whichever lands second imports the other's helper rather than keep a second literal."
@@ -35,6 +38,17 @@ relates:
 > a roadmap (anthropic) and asked to keep language drift apart from hooks
 > wrongly rejecting real verification, since the fixes differ. Tree facts
 > verified at `811cea61d6` on 2026-11-21.
+
+> **Raise withdrawn (owner decision, option 2, 2026-11-21).** The ceiling
+> raise of 4.2 (`hook-bundle-budget.json` 1,595,300 → 1,600,295 B) went through
+> 22 ratification rounds without the council converging; the question files
+> `agents/evidence/council/language-pin-from-owner-prose-ratification-r*-20261121.question.md`
+> stay as the record. The owner chose to land the feature without growing the
+> live hook bundle: the raise was reverted, the owner-prose classifier, the
+> `owner_prose_chars` pin step and the gate rule landed as a library the
+> dispatcher does not import (`src/scripts/_lib/owner_prose_pin.ts`,
+> `src/scripts/hooks/language_pin_gate.ts`), and every step that only works on
+> the live hook path is carried to [`road-to-a-language-pin-from-owner-prose-live-wiring`](../road-to-a-language-pin-from-owner-prose-live-wiring.md).
 
 ## Goal
 
@@ -86,7 +100,7 @@ never edited.
 
 ## Phase 1 — A refusal split any session can re-derive
 
-- [ ] **1.1 Add `--language-split` to `measure_turn_end_gate`, test first.** In
+- [x] **1.1 Add `--language-split` to `measure_turn_end_gate`, test first.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/prompt_shape.ts --> In
       `tests/scripts/measure_turn_end_gate.test.ts` add a synthetic transcript
       with one `language` fire per class: `owner-prose`, `synthetic-turn`
       (`isSyntheticPrompt`), `paste-decided` (lead `und`, body decided),
@@ -95,15 +109,16 @@ never edited.
       `src/scripts/measure_turn_end_gate.ts`: for each replayed `language` fire,
       find the user entry that last set the pin and assign its class.
       verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts -t language-split` -> 0 after a recorded red run
+      production entry: src/scripts/measure_turn_end_gate.ts
       uses: test-driven-development
-- [ ] **1.2 Generate the post-fix baseline.** Run
+- [x] **1.2 Generate the post-fix baseline.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> Run
       `./scripts-run src/scripts/measure_turn_end_gate --language-split --out agents/evidence/analysis/language-split-baseline.md`
       over every local transcript since `66dd150cfc` (2026-11-03). The file
       carries the command line, the tree sha and the per-class counts; its body
       is never hand-edited. Fewer than 20 `language` fires in the window → the
       file says so and Phase 3 proceeds on the fixtures alone.
       verify: re-running the command at the same sha reproduces the file byte-for-byte (`git diff --exit-code` on it)
-- [ ] **1.3 Hand the split to `later/road-to-agent-throughput-recovery` 4.1.**
+- [x] **1.3 Hand the split to `later/road-to-agent-throughput-recovery` 4.1.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts -->
       Its blocker `language-misfire-window-after-the-agent-message-fix` asks for
       a second split over a post-fix window. Run the council (`agent-config
       council:status`, then a council round on that blocker with 1.2's file),
@@ -113,7 +128,7 @@ never edited.
 
 ## Phase 2 — Fixtures from the real cases, red first
 
-- [ ] **2.1 Add an owner-prose fixture table to the hook test.** In
+- [x] **2.1 Add an owner-prose fixture table to the hook test.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> In
       `tests/scripts/language_mirror_hook.test.ts` add a `describe('owner prose
       only')` table: the three rows of § Context, every non-zero misfire class
       from 1.2 (text paraphrased, identifiers and names redacted, provenance as
@@ -124,7 +139,7 @@ never edited.
       language, or `und` where the owner text has under `MIN_MARKERS`.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t "owner prose only"` -> 1 and the failing rows are exactly the rows of § Context plus 1.2's new classes
       uses: test-driven-development
-- [ ] **2.2 Add the gate-side fixtures.** In the turn-end gate test file
+- [x] **2.2 Add the gate-side fixtures.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> In the turn-end gate test file
       (`grep -l detectLanguage tests -r` names it) add: a `system-locale` `en`
       pin plus a German reply → no `language` finding; a `prompt`-sourced `de`
       pin plus an English reply → finding (unchanged). Keep the existing
@@ -134,14 +149,14 @@ never edited.
 
 ## Phase 3 — Pin only from owner prose
 
-- [ ] **3.1 Council: the floor for a short typed lead.** First action: `agent-config
+- [x] **3.1 Council: the floor for a short typed lead.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> First action: `agent-config
       council:status`, then a council round on one question — with no
       whole-body fallback, does a typed span under `MIN_MARKERS` stay `und`
       (keep the previous pin), or does the owner span get its own lower floor?
       Attach 2.1's table and the stub's warning that a floor of 1 lets one
       homograph flip a session. Record the verdict as a `## Decisions` row.
       verify: a D-row with `resolved by: council:<date>` exists in this file
-- [ ] **3.2 Implement `ownerProse(prompt)` in `src/scripts/_lib/prompt_shape.ts`.**
+- [~] **3.2 Implement `ownerProse(prompt)` in `src/scripts/_lib/prompt_shape.ts`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring -->
       Order: `isSyntheticPrompt` → `stripInjectedRegions` → drop fenced code and
       output-shaped paste lines → keep the typed lead before the first document
       head **and** the typed paragraph after the last paste block → return only
@@ -149,39 +164,50 @@ never edited.
       `ownerProse` with 3.1's floor and remove the whole-body fallback; correct
       the "bidirectional by construction" docstring the stub flagged.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0 with 2.1's table green
-- [ ] **3.3 Record pin provenance.** Add `owner_prose_chars` to `PinState`
+      Partly done: `ownerProse` and the no-fallback classifier landed as
+      `classifyOwnerProse` (`_lib/owner_prose_pin.ts`) with 2.1's table green
+      against it. Switching the hook's `classify` is carried to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.1.
+- [~] **3.3 Record pin provenance.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/language_mirror_hook.ts --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> Add `owner_prose_chars` to `PinState`
       (`language_mirror_hook.ts:464`) and write it on every prompt-sourced pin.
       Test first: a pin written from 2.1's trailing-line row records the typed
       line's length, not `prompt_chars`.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t owner_prose_chars` -> 0 after a recorded red run
-- [ ] **3.4 Keep the conformance scanner on the same reader.** `measure_turn_end_gate`
+      Partly done: `ownerProseNextState` writes the field and its tests pass;
+      the hook writing it is carried to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.1.
+- [~] **3.4 Keep the conformance scanner on the same reader.** <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> `measure_turn_end_gate`
       and `conformance_scan` call `classify`; run both suites so the scanner and
       the hook still classify one entry the same way.
       verify: `npx vitest run tests/scripts/measure_turn_end_gate.test.ts tests/scripts/conformance_scan.test.ts` -> 0
 
 ## Phase 4 — The gate refuses only on an owner-prose pin
 
-- [ ] **4.1 Make `readLanguagePin` provenance-aware.** In
+- [~] **4.1 Make `readLanguagePin` provenance-aware.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> In
       `src/scripts/hooks/turn_end_gate_hook.ts:638` return `und` for a pin whose
       `source` is not `prompt`, and for a `prompt` pin with
       `owner_prose_chars: 0`. A pin file without the field (written before 3.3)
       keeps today's behaviour. Turns 2.2's must-not-fire case green.
       verify: `npx vitest run tests/hooks tests/scripts -t "language"` -> 0
-- [ ] **4.2 Rebuild the hook bundle and check its budget.** Run `npm run
+      Partly done: the rule is `gatePinLanguage` (`hooks/language_pin_gate.ts`)
+      with 2.2's cases green against it; `readLanguagePin` calling it is carried
+      to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.2.
+- [~] **4.2 Rebuild the hook bundle and check its budget.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json --> <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> Run `npm run
       build:hooks`, then the bundle freshness and token-budget checks
       (`./scripts-run src/scripts/check_hook_bundle_freshness`); raise
       `src/config/hook-bundle-budget.json` only with the measured delta in the
       commit body.
       verify: `./scripts-run src/scripts/check_hook_bundle_freshness` -> 0
+      Raise withdrawn by owner decision (option 2, 2026-11-21) after 22
+      non-converging ratification rounds; `max_bytes` is back at 1,595,300 and
+      the unwired bundle measures 1,595,224 B. Carried to `road-to-a-language-pin-from-owner-prose-live-wiring` 1.4.
 
 ## Phase 5 — Measure, then close what this supersedes
 
-- [ ] **5.1 Regenerate the split with the new classifier.** Run 1.2's command
+- [~] **5.1 Regenerate the split with the new classifier.** <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> Run 1.2's command
       to `agents/evidence/analysis/language-split-after.md` over the same window
       and the same transcripts. Report per class the fires before and after, one
       table row per class in the form `| <class> | <before> | <after> |`.
       verify: `grep -cE '^\| (synthetic-turn|paste-decided|trailing-typed-line|system-locale) \|[^|]*\| 0 \|$' agents/evidence/analysis/language-split-after.md` -> /^4$/ and the `owner-prose` fires are listed individually
-- [ ] **5.2 Archive the superseded stub.** Move
+- [x] **5.2 Archive the superseded stub.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/language_pin_gate.ts --> Move
       `agents/roadmaps/stubs/road-to-language-pin-short-lead.md` to
       `agents/roadmaps/archive/` with a one-line Done note naming 3.2 and D1
       (its `en`/`en`/`de` probe target is replaced by owner-prose-only
@@ -194,6 +220,10 @@ never edited.
 |---|---|---|---|---|---|
 | D1 | product-owned | owner | The pin is set only from text the owner typed; a paste, a host turn or code never decides it, and an undetermined owner span keeps the previous pin. | Owner's session retro 2026-11-21, P0 measure 2, ordered planned and executed the same day. | the owner asks for paste-decided pins back |
 | D2 | reversible-technical | agent | The split is a mode of `measure_turn_end_gate`, not a new script. | It already replays the gate over real transcripts with the shared `classify` (`measure_turn_end_gate.ts:91`). | the mode makes that script exceed its size budget |
+| D3 | reversible-technical | agent | 1.1: the split replays the pin with the hook's own `classify` + `nextState`, reads files in name order and filters entries by their own timestamp; `synthetic-turn` also covers entries the transcript marks host-written (`isMeta`, `isCompactSummary`), which never reach `UserPromptSubmit`; `unknown` is the residual for a fire with no recoverable setter and is unreachable from a well-formed transcript, so it is unit-tested on the classifier. | `language-split-baseline.md`: 140 of 148 replayed fires came from host-marked entries, while the gate itself recorded 6 refusals in the same window. | a host starts delivering `isMeta` entries to `UserPromptSubmit` |
+| D4 | reversible-technical | council:2026-11-21 | 1.3: throughput-recovery 4.1 closes on its correction (option (b)); event-level re-measurement moves to 5.1 here. | Council 2026-11-21, anthropic + openai, 2/2 chose (b), $0.00. | 5.1 finds a non-owner class still firing |
+| D5 | reversible-technical | council:2026-11-21 | 3.1: an owner span keeps the shared floor `MIN_MARKERS = 2`; below it on both sides the verdict is `und` and the previous pin stays. No lower floor for owner spans. | Council 2026-11-21, two rounds, DEGRADED (1/2 present: openai answered both rounds, anthropic exited 1 both times; quorum threshold 1). Seat reasoning: every refusal the gate recorded came from spans at or above the floor, and a floor of 1 lets a lone homograph re-pin. Carried caveats: paragraph position is a proxy for authorship, not proof; a host turn must be shown to leave an existing owner pin in place (a sequence test in 3.2). | recurring stale-pin refusals on verified one-marker owner switches, compared against false re-pins on the same turn sequences |
+| D6 | reversible-technical | council:2026-11-21 | Revises D3 for `--language-split` only: by default the replay re-derives the pin only from entries that reach `UserPromptSubmit` (`setsPin`: not `isMeta`, not `isCompactSummary`; they still end a turn). `--instrument all-entries` keeps D3's instrument, and 5.1's after file reports both columns so the drop owed to the instrument and to the fix stay apart. The default `measure` mode keeps its instrument. A glued trailing span (no blank line after the paste) is read only when the prompt has no lead. | Council 2026-11-21, one round, anthropic + openai both chose option (b); $0.00. Same window, fixed classifier: D3 instrument 11 owner-prose / 16 synthetic-turn, corrected instrument 17 / 0. Carried follow-ups: a pre-fix run under the corrected instrument, and pairing the 6 refusals the gate recorded with replayed turns. | a host starts delivering `isMeta` entries to `UserPromptSubmit` |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
@@ -209,15 +239,16 @@ never edited.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `classify` returns the owner's language (or `und`) for every row of
+- [x] AC-1 — `classify` returns the owner's language (or `und`) for every row of
       § Context and every misfire class 1.2 found, and the fixtures were red
-      before 3.2.
-- [ ] AC-2 — The turn-end gate raises no `language` finding on a pin not set by
+      before 3.2. Met by the library classifier `classifyOwnerProse`; the hook
+      calling it is AC-2's carry.
+- [~] AC-2 — <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> The turn-end gate raises no `language` finding on a pin not set by
       owner prose (`system-locale`, or `owner_prose_chars: 0`).
-- [ ] AC-3 — `agents/evidence/analysis/language-split-baseline.md` and
+- [~] AC-3 — <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> `agents/evidence/analysis/language-split-baseline.md` and
       `language-split-after.md` are both command output, reproducible at their
       recorded sha, and the after file shows 0 fires in the four non-owner
       classes.
-- [ ] AC-4 — `stubs/road-to-language-pin-short-lead.md` is archived and
+- [x] AC-4 — `stubs/road-to-language-pin-short-lead.md` is archived and
       `later/road-to-agent-throughput-recovery` 4.1 cites the committed split.
-- [ ] AC-5 — `task ci` is green on the branch carrying these changes.
+- [~] AC-5 — <!-- deferred-resolution: carried-to=road-to-a-language-pin-from-owner-prose-live-wiring --> `task ci` is green on the branch carrying these changes.

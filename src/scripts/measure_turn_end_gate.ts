@@ -83,12 +83,23 @@
  * Usage:
  *   ./scripts-run src/scripts/measure_turn_end_gate --store <dir> [--limit N] [--show-fires]
  *   ./scripts-run src/scripts/measure_turn_end_gate --q1 [--workspace <dir>]
+ *   ./scripts-run src/scripts/measure_turn_end_gate --language-split --store <dir> [--store <dir> …]
+ *       [--since <iso>] [--until <iso>] [--locale de|en] [--out <file>]
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { classify, isSyntheticPrompt } from './language_mirror_hook.js';
+import {
+    classify,
+    isSyntheticPrompt,
+    scoreText,
+    type PinState,
+    type Verdict,
+} from './language_mirror_hook.js';
+import { ownerSpans, stripInjectedRegions } from './_lib/prompt_shape.js';
+import { classifyOwnerProse, ownerProseNextState } from './_lib/owner_prose_pin.js';
 import { assistantText, scanSession } from './conformance_scan.js';
 import { entryText, isSidechain } from './_lib/transcript_entry.js';
 import { isTestPath } from './_lib/test_path.js';
@@ -101,10 +112,12 @@ import {
     extractToolCalls,
     type ToolCall,
 } from './hooks/turn_end_gate_hook.js';
+import { gatePinLanguage } from './hooks/language_pin_gate.js';
 import {
     DETECTOR_IDS,
     SHADOW_LAYERS,
     SHADOW_SUFFIX,
+    deriveSessionKey,
     emptyCounts,
     parseShadowRecord,
     refusalStateDir,
@@ -693,6 +706,23 @@ export function measure(store: string, limit: number): Counts {
 }
 
 /**
+ * Could this user entry have set the pin in a live session?
+ *
+ * The transcript marks the entries the host wrote itself — `isMeta` (stop-hook
+ * feedback, expanded command and skill bodies, usage-limit notes) and
+ * `isCompactSummary` (the compaction continuation). None of them reaches
+ * `UserPromptSubmit`, so the hook never pinned from them; a replay that did
+ * charged 140 of 148 fires in `language-split-baseline.md` to turns the gate
+ * never saw (D3). They still END a turn in `--language-split`, so the turn
+ * population is unchanged — only the pin is. Applied in `--language-split` only
+ * (council 2026-11-21, D6): the default `measure` mode keeps its instrument, so
+ * the rates other reports cite from it do not move under them.
+ */
+export function setsPin(entry: Record<string, unknown>): boolean {
+    return entry['isMeta'] !== true && entry['isCompactSummary'] !== true;
+}
+
+/**
  * The text of a user-role entry, read the way `readTranscriptTail` reads it.
  *
  * Deliberately NOT `conformance_scan.userText`, and the difference is the whole
@@ -950,7 +980,369 @@ export function renderQ1(stats: ShadowStats, today: string, workspace?: string):
     return lines.join('\n');
 }
 
+// ---------------------------------------------------------------------------
+// --language-split — road-to-a-language-pin-from-owner-prose 1.1
+// ---------------------------------------------------------------------------
+
+/**
+ * Where the pin behind a `language` fire came from, judged on the entry that set
+ * it. Order is precedence: the first class that matches is the one charged.
+ *
+ *   system-locale        the environment answered, not a prompt
+ *   synthetic-turn       a host-written entry (transcript `isMeta` /
+ *                        `isCompactSummary`, or an `isSyntheticPrompt` shape)
+ *   owner-prose          the spans the owner typed decide the pinned language
+ *   trailing-typed-line  the owner's line BELOW a paste says otherwise
+ *   paste-decided        the owner's spans say otherwise or nothing; the paste won
+ *   unknown              no setter could be recovered
+ */
+export const LANGUAGE_SPLIT_CLASSES = [
+    'owner-prose',
+    'synthetic-turn',
+    'paste-decided',
+    'trailing-typed-line',
+    'system-locale',
+    'unknown',
+] as const;
+export type LanguageSplitClass = (typeof LANGUAGE_SPLIT_CLASSES)[number];
+
+/** The entry that set a pin, as `languageFireClass` needs it. */
+export interface PinSetter {
+    /** The transcript marks the entry host-written. */
+    flagged: boolean;
+    text: string;
+    language: Verdict;
+    source: PinState['source'];
+}
+
+export function languageFireClass(setter: PinSetter | null): LanguageSplitClass {
+    if (setter === null) return 'unknown';
+    if (setter.source === 'system-locale') return 'system-locale';
+    if (setter.flagged || isSyntheticPrompt(setter.text)) return 'synthetic-turn';
+    const spans = ownerSpans(stripInjectedRegions(setter.text));
+    const trailing = scoreText(spans.trailing).language;
+    if (trailing !== 'und' && trailing !== setter.language) return 'trailing-typed-line';
+    const owner = scoreText(`${spans.lead}\n${spans.trailing}`).language;
+    if (owner === setter.language) return 'owner-prose';
+    return 'paste-decided';
+}
+
+export interface LanguageSplitOptions {
+    /** ISO timestamp; entries before it are not replayed. */
+    since?: string;
+    /** ISO timestamp, exclusive. */
+    until?: string;
+    /** The locale the hook would have fallen back to; transcripts do not carry it. */
+    locale?: Verdict;
+    /**
+     * Which user entries may re-derive the pin. `live-input` (default): only
+     * entries that reach `UserPromptSubmit`, never the host-marked ones
+     * (`setsPin`, D6). `all-entries`: every user entry, the instrument the
+     * baseline was generated with (D3), kept so a before/after comparison can
+     * hold the instrument fixed.
+     */
+    instrument?: 'live-input' | 'all-entries';
+}
+
+export interface LanguageSplit {
+    sessions: number;
+    turns: number;
+    fires: number;
+    byClass: Record<LanguageSplitClass, number>;
+    /** Owner-prose fires, by session digest and per-session turn ordinal. */
+    ownerProseSites: Array<{ session: string; turn: number }>;
+    /** Language refusals the shipped gate wrote into the window's transcripts. */
+    recordedRefusals: number;
+}
+
+/** The phrase every detector-B refusal reason carries (`detectLanguage`). */
+const LANGUAGE_REFUSAL_PHRASE = 'the pinned reply language is';
+
+/** A fixed id for `nextState`'s ownership check: one replay is one session. */
+const SPLIT_SESSION_ID = 'language-split-replay';
+
+/**
+ * Replay the pin over a transcript corpus and charge every `language` fire to
+ * the shape of the entry that set the pin.
+ *
+ * The pin is replayed with the owner-prose classifier and `nextState`
+ * (`_lib/owner_prose_pin.ts`) and read back through `gatePinLanguage` — the
+ * pin and gate rule road-to-a-language-pin-from-owner-prose-live-wiring puts
+ * on the live hooks, which still run the whole-body `classify` until then. The
+ * keep-previous rule and the locale fallback are the shipped ones — the parity
+ * `measure` lists as its known residual (R2 finding 8). Turn boundaries are
+ * `measure`'s, so a fire here is a fire there. Files are read in NAME order and
+ * entries filtered by their own timestamp, so the same corpus and window give
+ * the same report whatever the file mtimes are.
+ */
+export function languageSplit(stores: readonly string[], opts: LanguageSplitOptions): LanguageSplit {
+    const byClass = Object.fromEntries(LANGUAGE_SPLIT_CLASSES.map((k) => [k, 0])) as Record<
+        LanguageSplitClass,
+        number
+    >;
+    const out: LanguageSplit = { sessions: 0, turns: 0, fires: 0, byClass, ownerProseSites: [], recordedRefusals: 0 };
+    const allEntries = opts.instrument === 'all-entries';
+    const inWindow = (entry: Record<string, unknown>): boolean => {
+        const ts = entry['timestamp'];
+        if (typeof ts !== 'string') return true;
+        if (opts.since !== undefined && ts < opts.since) return false;
+        if (opts.until !== undefined && ts >= opts.until) return false;
+        return true;
+    };
+
+    for (const store of stores) {
+        let names: string[];
+        try {
+            names = fs.readdirSync(store).filter((f) => f.endsWith('.jsonl')).sort();
+        } catch {
+            continue;
+        }
+        for (const name of names) {
+            let lines: string[];
+            try {
+                lines = fs.readFileSync(path.join(store, name), 'utf-8').split('\n').filter((l) => l.trim() !== '');
+            } catch {
+                continue;
+            }
+            out.sessions += 1;
+            const digest = deriveSessionKey(name.replace(/\.jsonl$/, '')).slice(0, 12);
+            let pin: Partial<PinState> = {};
+            let setter: PinSetter | null = null;
+            let reply: string | null = null;
+            let replyPin: Verdict = 'und';
+            let replySetter: PinSetter | null = null;
+            let turn = 0;
+
+            const scoreTurn = (): void => {
+                if (reply === null) return;
+                out.turns += 1;
+                turn += 1;
+                if (detectLanguage(reply, replyPin) !== null) {
+                    out.fires += 1;
+                    const cls = languageFireClass(replySetter);
+                    out.byClass[cls] += 1;
+                    if (cls === 'owner-prose') out.ownerProseSites.push({ session: digest, turn });
+                }
+                reply = null;
+            };
+
+            for (const raw of lines) {
+                let entry: Record<string, unknown>;
+                try {
+                    entry = JSON.parse(raw) as Record<string, unknown>;
+                } catch {
+                    continue;
+                }
+                if (!inWindow(entry)) continue;
+                const u = _userTurnText(entry);
+                if (u !== null) {
+                    if (entry['isMeta'] === true && u.includes(LANGUAGE_REFUSAL_PHRASE)) out.recordedRefusals += 1;
+                    if (isSyntheticPrompt(u)) continue;
+                    scoreTurn();
+                    const flagged = !setsPin(entry);
+                    if (flagged && !allEntries) continue;
+                    const next = ownerProseNextState(pin, classifyOwnerProse(u), u.length, SPLIT_SESSION_ID, '', opts.locale ?? 'und');
+                    if (next !== null) {
+                        pin = next;
+                        setter = {
+                            flagged,
+                            text: u,
+                            language: next.language,
+                            source: next.source,
+                        };
+                    }
+                    continue;
+                }
+                const a = assistantText(entry);
+                if (a === null || a.trim() === '') continue;
+                reply = a;
+                replyPin = gatePinLanguage(pin);
+                replySetter = setter;
+            }
+            scoreTurn();
+        }
+    }
+    return out;
+}
+
+export interface LanguageSplitMeta {
+    /** The command line, home directory shown as `~`. */
+    command: string;
+    /** The last commit touching the measuring code, `+dirty` when uncommitted. */
+    treeSha: string;
+}
+
+/**
+ * A before/after reading (roadmap step 5.1): the baseline file's per-class
+ * counts, and the same window replayed once more with the baseline's
+ * instrument, so the drop owed to the instrument (D6) and to the fix stay apart.
+ */
+export interface LanguageSplitComparison {
+    /** The baseline file, as given on the command line. */
+    beforePath: string;
+    before: Record<LanguageSplitClass, number>;
+    /** The same window replayed with `instrument: 'all-entries'` (D3). */
+    allEntries: LanguageSplit;
+}
+
+/** The per-class counts of a rendered split, or `null` when a class row is missing. */
+export function parseLanguageSplitCounts(markdown: string): Record<LanguageSplitClass, number> | null {
+    const out: Partial<Record<LanguageSplitClass, number>> = {};
+    for (const k of LANGUAGE_SPLIT_CLASSES) {
+        const m = new RegExp(`^\\| ${k} \\| (\\d+) \\|$`, 'm').exec(markdown);
+        if (m === null) return null;
+        out[k] = Number(m[1]);
+    }
+    return out as Record<LanguageSplitClass, number>;
+}
+
+/** Command output only: counts, the command and the sha — never prompt text. */
+export function renderLanguageSplit(
+    split: LanguageSplit,
+    meta: LanguageSplitMeta,
+    comparison?: LanguageSplitComparison,
+): string {
+    const lines = [
+        '<!-- evidence-type: analysis -->',
+        '# Language refusal split',
+        '',
+        '> Generated by a committed command; never edit by hand. Re-run it to refresh.',
+        '',
+        `- Command: \`${meta.command}\``,
+        `- Measuring code at: \`${meta.treeSha}\``,
+        `- Sessions: ${split.sessions} · turns: ${split.turns} · replayed \`language\` fires: ${split.fires}`,
+        `- Language refusals the gate itself recorded in the window: ${split.recordedRefusals}`,
+        '',
+    ];
+    if (split.fires < 20) {
+        lines.push(
+            `Fewer than 20 \`language\` fires in this window (${split.fires}); the split below is too thin to rank classes, and the fixtures alone gate the fix.`,
+            '',
+        );
+    }
+    if (comparison === undefined) {
+        lines.push('| class | fires |', '|---|---|');
+        for (const k of LANGUAGE_SPLIT_CLASSES) lines.push(`| ${k} | ${split.byClass[k]} |`);
+    } else {
+        lines.push(
+            `Before: \`${comparison.beforePath}\`, as recorded (the replay instrument then pinned from every user entry, D3). After: this replay, which pins only from entries that reach \`UserPromptSubmit\` (D6). The second table holds the instrument fixed.`,
+            '',
+            '| class | before | after |',
+            '|---|---|---|',
+        );
+        for (const k of LANGUAGE_SPLIT_CLASSES) lines.push(`| ${k} | ${comparison.before[k]} | ${split.byClass[k]} |`);
+        lines.push(
+            '',
+            '## Instrument held fixed',
+            '',
+            `Same window replayed with the baseline's instrument (\`--instrument all-entries\`): ${comparison.allEntries.fires} fires.`,
+            '',
+            '| class | before, all entries | after, all entries | after, live input |',
+            '|---|---|---|---|',
+        );
+        for (const k of LANGUAGE_SPLIT_CLASSES) {
+            lines.push(`| ${k} | ${comparison.before[k]} | ${comparison.allEntries.byClass[k]} | ${split.byClass[k]} |`);
+        }
+    }
+    lines.push('', '## Owner-prose fires', '');
+    if (split.ownerProseSites.length === 0) {
+        lines.push('None.');
+    } else {
+        for (const s of split.ownerProseSites) lines.push(`- session \`${s.session}\` turn ${s.turn}`);
+    }
+    return `${lines.join('\n')}\n`;
+}
+
+/** The files whose change changes the split; their last commit is the sha recorded. */
+const SPLIT_SOURCES = [
+    'src/scripts/measure_turn_end_gate.ts',
+    'src/scripts/language_mirror_hook.ts',
+    'src/scripts/_lib/prompt_shape.ts',
+    'src/scripts/hooks/turn_end_gate_hook.ts',
+];
+
+function _splitTreeSha(): string {
+    try {
+        const sha = execFileSync('git', ['log', '-1', '--format=%H', '--', ...SPLIT_SOURCES], { encoding: 'utf-8' })
+            .trim()
+            .slice(0, 10);
+        const dirty = execFileSync('git', ['status', '--porcelain', '--', ...SPLIT_SOURCES], { encoding: 'utf-8' }).trim();
+        return dirty === '' ? sha : `${sha}+dirty`;
+    } catch {
+        return 'unknown';
+    }
+}
+
+function _languageSplitMain(argv: string[]): number {
+    const stores: string[] = [];
+    const opts: LanguageSplitOptions = {};
+    let outFile: string | undefined;
+    let beforeFile: string | undefined;
+    for (let i = 0; i < argv.length; i += 1) {
+        const a = argv[i];
+        const v = argv[i + 1];
+        if (a === '--language-split') continue;
+        if (v === undefined) {
+            process.stderr.write(`measure-turn-end-gate: ${String(a)} needs a value\n`);
+            return 2;
+        }
+        if (a === '--store') stores.push(v);
+        else if (a === '--since') opts.since = v;
+        else if (a === '--until') opts.until = v;
+        else if (a === '--out') outFile = v;
+        else if (a === '--before') beforeFile = v;
+        else if (a === '--instrument' && (v === 'live-input' || v === 'all-entries')) opts.instrument = v;
+        else if (a === '--locale' && (v === 'de' || v === 'en' || v === 'und')) opts.locale = v;
+        else {
+            process.stderr.write(`measure-turn-end-gate: unknown --language-split argument ${String(a)} ${v}\n`);
+            return 2;
+        }
+        i += 1;
+    }
+    if (stores.length === 0) {
+        process.stderr.write('measure-turn-end-gate: --language-split needs at least one --store <transcript dir>\n');
+        return 2;
+    }
+    const split = languageSplit(stores, opts);
+    if (split.sessions === 0) {
+        process.stderr.write('measure-turn-end-gate: no .jsonl sessions under the given stores\n');
+        return 2;
+    }
+    let comparison: LanguageSplitComparison | undefined;
+    if (beforeFile !== undefined) {
+        let before: Record<LanguageSplitClass, number> | null = null;
+        try {
+            before = parseLanguageSplitCounts(fs.readFileSync(beforeFile, 'utf-8'));
+        } catch {
+            before = null;
+        }
+        if (before === null) {
+            process.stderr.write(`measure-turn-end-gate: ${beforeFile} is not a language-split report with every class row\n`);
+            return 2;
+        }
+        comparison = { beforePath: beforeFile, before, allEntries: languageSplit(stores, { ...opts, instrument: 'all-entries' }) };
+    }
+    const home = process.env['HOME'] ?? '';
+    const shown = argv.map((a) => (home !== '' && a.startsWith(home) ? `~${a.slice(home.length)}` : a));
+    const report = renderLanguageSplit(
+        split,
+        {
+            command: ['./scripts-run src/scripts/measure_turn_end_gate', ...shown].join(' '),
+            treeSha: _splitTreeSha(),
+        },
+        comparison,
+    );
+    if (outFile !== undefined) {
+        fs.mkdirSync(path.dirname(outFile), { recursive: true });
+        fs.writeFileSync(outFile, report);
+    } else {
+        process.stdout.write(report);
+    }
+    return 0;
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
+    if (argv.includes('--language-split')) return _languageSplitMain(argv);
     let store = '';
     let limit = 30;
     let showFires = false;
