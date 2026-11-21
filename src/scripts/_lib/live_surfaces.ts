@@ -129,6 +129,9 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
         const windows = conf.app?.windows ?? conf.tauri?.windows;
         const list = Array.isArray(windows) && windows.length > 0 ? windows : [{}];
         const start = typeof scripts['tauri'] === 'string' ? 'npm run tauri dev' : 'npx tauri dev';
+        // Each line once per file, not one full-file scan per window.
+        const widthLine = lineOf(text, /"width"\s*:/);
+        const windowsLine = lineOf(text, /"windows"\s*:/);
         list.forEach((w, i) => {
             const win = (typeof w === 'object' && w !== null ? w : {}) as Record<string, unknown>;
             const width = win['width'];
@@ -138,7 +141,7 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
                 name: typeof win['title'] === 'string' ? win['title'] : `window ${String(i + 1)}`,
                 start,
                 root: '.',
-                derived_from: `${rel(root, file)}:${String(lineOf(text, typeof width === 'number' ? /"width"\s*:/ : /"windows"\s*:/))}`,
+                derived_from: `${rel(root, file)}:${String(typeof width === 'number' ? widthLine : windowsLine)}`,
             };
             if (typeof width === 'number' && typeof height === 'number') {
                 entry.size = `${String(width)}x${String(height)}`;

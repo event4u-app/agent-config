@@ -196,14 +196,14 @@ const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?
 
 function drives(command: string, surface: LiveSurface, root: string): boolean {
     const segs = commandSegments(command).map((x) => x.trim());
-    const playwrightRun = segs.find((x) => PLAYWRIGHT_RUN.test(x));
-    const browser = playwrightRun !== undefined || segs.some((x) => RENDER_RUN.test(x));
-    if (surface.kind === 'playwright' && playwrightRun !== undefined) {
-        command = playwrightRun;
-        const named = playwrightConfig(command);
-        if (named === null) return true;
-        const rel = path.relative(root, path.resolve(root, named)).split(path.sep).join('/');
-        return rel === surface.derived_from.replace(/:\d+$/, '');
+    const playwrightRuns = segs.filter((x) => PLAYWRIGHT_RUN.test(x));
+    const browser = playwrightRuns.length > 0 || segs.some((x) => RENDER_RUN.test(x));
+    if (surface.kind === 'playwright' && playwrightRuns.length > 0) {
+        const config = surface.derived_from.replace(/:\d+$/, '');
+        return playwrightRuns.some((run) => {
+            const named = playwrightConfig(run);
+            return named === null || path.relative(root, path.resolve(root, named)).split(path.sep).join('/') === config;
+        });
     }
     if (BROWSER_KINDS.has(surface.kind) && browser) return true;
     if (surface.start !== null && runsCommand(command, surface.start)) return true;

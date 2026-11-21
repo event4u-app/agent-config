@@ -2314,6 +2314,17 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
     });
 
+    it('a call that runs playwright twice drives the config either run names', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-pw-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { use: { baseURL: 'http://localhost:4173' } };\n");
+        const calls: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'page.ts') },
+            { name: 'Bash', command: 'npx playwright test -c e2e/other.config.ts && npx playwright test -c playwright.config.ts' },
+        ];
+        expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
+    });
+
     it('a playwright run over this config drives its surface', () => {
         const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-pw-')));
         tmp_dirs.push(dir);
