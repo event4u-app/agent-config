@@ -2057,6 +2057,23 @@ describe("owner prose only", () => {
     expect(spans.trailing).toBe("Behebe das bitte.");
   });
 
+  it("a pasted tag pair across fences cannot delete a typed German sentence from the veto", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    run(
+      envelope(
+        "Please tell me why this is happening and what we should do.\n\n```\n<section>\n```\n\nBehebe das bitte.\n\n```\n</section>\n```",
+      ),
+      { consumer_root: tmp, env: {} },
+    );
+    expect(readState().language).toBe("de");
+  });
+
+  it("a four-space line does not close a three-space top-level fence", () => {
+    const spans = ownerSpans("   ```\n    ```\n\nBehebe das bitte und prüfe das.\n   ```");
+    expect(spans.trailing).toBe("");
+    expect(spans.lead).toBe("");
+  });
+
   it("a long whitespace-only line costs linear time", () => {
     const started = Date.now();
     classify(`Bitte prüfe das.\n${" ".repeat(50_000)}\nund mach weiter.`);

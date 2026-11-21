@@ -317,8 +317,8 @@ export function instructionText(prompt: string): string {
  * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
  *
  * Then a veto that no boundary reading can get around: when the whole prompt
- * (injected regions removed, NOTHING else — code, output and documents
- * included) carries `MIN_MARKERS` markers of BOTH languages, the verdict is
+ * (only the host's own regions removed — `stripHostRegions`, never an arbitrary
+ * tag pair — so code, output, documents and pasted markup all count) carries `MIN_MARKERS` markers of BOTH languages, the verdict is
  * `und`. So a pin in one language is written only when the prompt holds fewer
  * than `MIN_MARKERS` markers of the other anywhere; owner text that reaches the
  * floor can never be outvoted, however the span reader draws its boundaries.

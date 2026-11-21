@@ -177,13 +177,15 @@ function fenced(text: string): string[] {
     // An opener may follow a list marker (`- ```, `10. ```), as inside a
     // Markdown list item; its closer may then be indented up to three spaces
     // past the item's content column, as CommonMark allows.
-    const open = /^( {0,3}(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?)(`{3,}(?=[^`]*$)|~{3,})/.exec(line);
+    const open = /^( {0,3})((?:[-*+]|\d{1,9}[.)])[ \t]+)?(`{3,}(?=[^`]*$)|~{3,})/.exec(line);
     const lead = /^( *)(`{3,}|~{3,})[ \t]*$/.exec(line);
     if (fence === "" && open === null) {
       out.push(line);
     } else if (fence === "") {
-      fence = open?.[2] ?? "";
-      indent = (open?.[1]?.length ?? 0) + 3;
+      fence = open?.[3] ?? "";
+      // Outside a list a closer takes at most three spaces, whatever the
+      // opener's own indent; inside one, three past the item's content column.
+      indent = open?.[2] === undefined ? 3 : (open[1] ?? "").length + open[2].length + 3;
       held = [line];
     } else if (lead !== null && (lead[1]?.length ?? 0) <= indent && (lead[2] ?? "").startsWith(fence)) {
       out.push(FENCE_LINE);
@@ -322,8 +324,7 @@ export function ownerProse(prompt: string): OwnerSpans & { text: string } {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
     return { lead: "", trailing: "", text: "" };
   }
-  const text = stripInjectedRegions(prompt);
-  return { ...ownerSpans(text), text };
+  return { ...ownerSpans(stripInjectedRegions(prompt)), text: stripHostRegions(prompt) };
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */
@@ -396,12 +397,30 @@ const TERMINAL_PANE_REGION = /<(bash-input|bash-stdout|bash-stderr)>[\s\S]*?<\/\
  * scanning past the wrong close would.
  */
 export function stripInjectedRegions(text: string): string {
+  return _stripRegions(text, () => true);
+}
+
+/**
+ * The host regions only: terminal-pane echoes and wrappers whose tag names the
+ * host is known to write (`HOST_REGION_TAG`). What the language pin's veto
+ * reads — `stripInjectedRegions` drops ANY balanced bare-tag pair, and a pasted
+ * `<section>` … `</section>` around a typed sentence would take the sentence
+ * with it (ratification round 13).
+ */
+export function stripHostRegions(text: string): string {
+  return _stripRegions(text, (name) => HOST_REGION_TAG.test(name));
+}
+
+/** Tag names of wrappers the host itself injects into a prompt. */
+const HOST_REGION_TAG = /^(launch-selected-element|ide_selection|ide_opened_file|ide_diagnostics|system-reminder)$/;
+
+function _stripRegions(text: string, accept: (name: string) => boolean): string {
   const lines = text.replace(TERMINAL_PANE_REGION, "").split("\n");
   const kept: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
     const open = REGION_OPEN.exec(line);
-    if (open === null) {
+    if (open === null || !accept(open[1] ?? "")) {
       kept.push(line);
       continue;
     }
