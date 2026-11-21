@@ -253,6 +253,9 @@ export const MIN_MARKERS = 2;
 
 export type Verdict = "de" | "en" | "und";
 
+/** A prompt's classification: it always says how much owner prose stood behind it. */
+export type PromptClassification = Classification & { owner_prose_chars: number };
+
 export interface Classification {
   language: Verdict;
   de_markers: number;
@@ -330,7 +333,7 @@ export function instructionText(prompt: string): string {
  * Not for replies or bodies: those are scored with `classifyText`, which has no
  * notion of an owner and keeps its whole-text fallback.
  */
-export function classify(prompt: string): Classification {
+export function classify(prompt: string): PromptClassification {
   const { lead, trailing, text } = ownerProse(prompt);
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
@@ -597,7 +600,7 @@ export const REEMIT_AFTER_TOOL_CALLS = 150;
  */
 export function nextState(
   previous: Partial<PinState>,
-  classification: Classification,
+  classification: PromptClassification,
   prompt_chars: number,
   session_id: string,
   now: string,

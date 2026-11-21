@@ -162,26 +162,39 @@ const FENCE_LINE = "\u0000";
  * starts, after at most three spaces and an optional list marker, with three or more backticks (no
  * backtick after them, so inline ` ``` ` in a sentence opens nothing) or
  * tildes (whose info string may hold tildes), and closes on a line of the same
- * character at least as long, also indented at most three spaces and followed
- * only by spaces or tabs (not a no-break space); an unclosed
- * fence runs to the end. CR, CRLF and LF all end a line.
+ * character at least as long, indented at most three spaces (or to a list
+ * item's content column) and followed only by spaces or tabs (not a no-break
+ * space); an unclosed
+ * fence is no fence — its lines stay, so a misread opener can never hide what
+ * follows it. CR, CRLF and LF all end a line.
  */
 function fenced(text: string): string[] {
   const out: string[] = [];
   let fence = "";
+  let indent = 3;
+  let held: string[] = [];
   for (const line of text.split(/\r\n?|\n/)) {
-    // An opener may follow a list marker (`- ```), as inside a Markdown list
-    // item; a closer may not, but its item indentation is within the bound.
-    const mark = /^ {0,3}(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?(`{3,}(?=[^`]*$)|~{3,})/.exec(line)?.[1] ?? "";
-    if (fence === "" && mark === "") {
+    // An opener may follow a list marker (`- ```, `10. ```), as inside a
+    // Markdown list item; its closer may then be indented to the item's
+    // content column.
+    const open = /^( {0,3}(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?)(`{3,}(?=[^`]*$)|~{3,})/.exec(line);
+    const lead = /^( *)(`{3,}|~{3,})[ \t]*$/.exec(line);
+    if (fence === "" && open === null) {
       out.push(line);
     } else if (fence === "") {
-      fence = mark;
+      fence = open?.[2] ?? "";
+      indent = Math.max(3, open?.[1]?.length ?? 0);
+      held = [line];
+    } else if (lead !== null && (lead[1]?.length ?? 0) <= indent && (lead[2] ?? "").startsWith(fence)) {
       out.push(FENCE_LINE);
-    } else if (mark.startsWith(fence) && /^ {0,3}(`{3,}|~{3,})[ \t]*$/.test(line)) {
       fence = "";
+    } else {
+      held.push(line);
     }
   }
+  // A fence that never closes hides nothing: a misread opener must not swallow
+  // the owner's text below it.
+  if (fence !== "") out.push(...held);
   return out;
 }
 

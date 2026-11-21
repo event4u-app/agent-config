@@ -566,7 +566,7 @@ describe("systemLocaleVerdict", () => {
 });
 
 describe("nextState — the locale fallback", () => {
-  const und = { language: "und" as const, de_markers: 0, en_markers: 0 };
+  const und = { language: "und" as const, de_markers: 0, en_markers: 0, owner_prose_chars: 0 };
 
   it("pins from the locale when the first prompt is undetermined", () => {
     const s = nextState({}, und, 1, "s1", "2026-08-06T00:00:00.000Z", "de");
@@ -601,7 +601,7 @@ describe("nextState — the locale fallback", () => {
       language: "en" as const,
       source: "system-locale" as const,
     };
-    const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
+    const de = { language: "de" as const, de_markers: 9, en_markers: 0, owner_prose_chars: 40 };
     const s = nextState(
       previous,
       de,
@@ -615,7 +615,7 @@ describe("nextState — the locale fallback", () => {
   });
 
   it("stamps a prompt reading as source prompt, never as the locale", () => {
-    const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
+    const de = { language: "de" as const, de_markers: 9, en_markers: 0, owner_prose_chars: 40 };
     expect(
       nextState({}, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en")?.source,
     ).toBe("prompt");
@@ -2031,6 +2031,18 @@ describe("owner prose only", () => {
     run(envelope("Please check this and then continue with the tests that are failing."), { consumer_root: tmp, env: {} });
     expect(readState().language).toBe("en");
     run(envelope("- ```\n  42\n  ```\n\nBehebe das bitte und prüfe das."), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+  });
+
+  it("a German instruction after an ordered-list fence numbered 10 replaces an English pin", () => {
+    run(envelope("Please check this and then continue with the tests that are failing."), { consumer_root: tmp, env: {} });
+    run(envelope("10. ```\n    x = 1\n    ```\n\nBehebe das bitte und prüfe das."), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
+  });
+
+  it("an unclosed fence hides nothing below its opener", () => {
+    run(envelope("Please check this and then continue with the tests that are failing."), { consumer_root: tmp, env: {} });
+    run(envelope("Error: build failed\n    at run (a.js:1:1)\n- ```\n  42\n\nBehebe das bitte und prüfe das."), { consumer_root: tmp, env: {} });
     expect(readState().language).toBe("de");
   });
 
