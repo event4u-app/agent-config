@@ -599,11 +599,11 @@ index 1d053f8fd8..1a84ef720b 100644
  
 ````
 
-## The test changes of rounds 15-19 (eedd05cf84...bd0190002d)
+## The test changes of round 19 (1b66f79101...bd0190002d; earlier rounds are in the committed r15-r18 questions)
 
 ````diff
 diff --git a/tests/scripts/language_mirror_hook.test.ts b/tests/scripts/language_mirror_hook.test.ts
-index 2dbac8596d..a1bdacb5d6 100644
+index 942b11f912..a1bdacb5d6 100644
 --- a/tests/scripts/language_mirror_hook.test.ts
 +++ b/tests/scripts/language_mirror_hook.test.ts
 @@ -65,7 +65,9 @@ import {
@@ -617,80 +617,16 @@ index 2dbac8596d..a1bdacb5d6 100644
  import { tryAcquire } from "../../src/scripts/_lib/generation_lock.js";
  
  // Round-5 audit: the live state file read `language: "en", source: "prompt",
-@@ -1543,13 +1545,16 @@ describe("host-injected wrapper regions", () => {
-     // Pre-fix: `en`, at de=0 / en=3. The German count reached ZERO — the
-     // block's indented lines armed `instructionText`'s paste state and, with no
-     // blank line before it, the user's sentence was discarded with the markup.
-+    // Since D7 (ratification round 15) the veto reads the RAW prompt, so the
-+    // block's English markers make this `und`: the previous pin stays (a missed
-+    // update), and the pre-fix harm — an `en` pin off the block — cannot recur.
-     const prompt = ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
--    expect(classify(prompt).language).toBe("de");
-+    expect(classify(prompt).language).toBe("und");
+@@ -1724,20 +1726,40 @@ describe("inline terminal-pane regions (#2950)", () => {
+     expect(readState().language).toBe("en");
    });
  
-   it("a blank line between the block and the sentence changes nothing", () => {
-     const prompt = ELEMENT_BLOCK + "\nsteht unter dem kontent wrapper, ich würde es anders machen";
--    expect(classify(prompt).language).toBe("de");
-+    expect(classify(prompt).language).toBe("und");
-   });
- 
-   it("the same block does not flip an English sentence away from English", () => {
-@@ -1674,12 +1679,14 @@ describe("inline terminal-pane regions (#2950)", () => {
-     const kept = stripInjectedRegions(p);
-     expect(kept).not.toMatch(/bash-|these are the files|have been listed/);
-     expect(kept).toContain("mach bitte weiter mit den tickets und prüfe die regeln");
--    expect(classify(p).language).toBe("de");
-+    // The raw-prompt veto (D7, round 15): the stdout's English keeps the previous pin.
-+    expect(classify(p).language).toBe("und");
-   });
- 
--  it("text typed beside the inline regions is kept and decides", () => {
-+  it("text typed beside the inline regions decides only where the wrapper does not disagree", () => {
-     const p = TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?";
--    expect(classify(p).language).toBe("de");
-+    // Never `en` (the #2950 harm); `und` under the raw-prompt veto (D7, round 15).
-+    expect(classify(p).language).toBe("und");
-     const en = TERMINAL_PANE_LINE + "\nwhy is this empty and where is the output?";
-     expect(classify(en).language).toBe("en");
-   });
-@@ -1688,14 +1695,14 @@ describe("inline terminal-pane regions (#2950)", () => {
-     const p =
-       "bitte prüfe das <bash-stdout>these are the files that were there</bash-stdout> und mach dann weiter mit der liste";
-     expect(stripInjectedRegions(p)).not.toMatch(/these are the files/);
--    expect(classify(p).language).toBe("de");
-+    expect(classify(p).language).toBe("und");
-   });
- 
-   it("inline terminal regions and a standalone host wrapper are both removed", () => {
-     const p = TERMINAL_PANE_LINE + "\n" + ELEMENT_BLOCK + "abstand zu der nächste kachel unter diesen hier fehlt.";
-     const kept = stripInjectedRegions(p);
-     expect(kept).not.toMatch(/bash-|launch-selected-element|No output was captured/);
--    expect(classify(p).language).toBe("de");
-+    expect(classify(p).language).toBe("und");
-   });
- 
-   it("an unclosed inline tag is left in place", () => {
-@@ -1703,6 +1710,59 @@ describe("inline terminal-pane regions (#2950)", () => {
-     expect(stripInjectedRegions(p)).toBe(p);
-   });
- 
-+  it("the cost, stated: a German instruction beside an English wrapper leaves an English pin in place", () => {
-+    // A missed update (D7, ratification round 15): no text-only rule can tell
-+    // the host's wrapper from a pasted copy, so the raw-prompt veto keeps the
-+    // previous pin and the gate keeps asking for English on this turn.
-+    run(envelope("Please check the release notes and tell me what is missing."), {
-+      consumer_root: tmp,
-+      env: {},
-+    });
-+    expect(readState().language).toBe("en");
-+    run(envelope(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?"), {
-+      consumer_root: tmp,
-+      env: {},
-+    });
-+    expect(readState().language).toBe("en");
-+  });
-+
+-  it("an inline region that joins a word is still counted by the veto", () => {
+-    // Stripping the region glues `un` + `d` into a German marker the raw prompt
+-    // never carries, so the spans reach the German floor while the raw prompt
+-    // does not; the region's English is at the floor. The veto checks the
+-    // OPPOSING language directly, so the candidate cannot pin.
+-    const p = "un<bash-stdout>the output was there</bash-stdout>d die tests laufen";
 +  it("an English host region beside German owner text vetoes the German candidate", () => {
 +    // The spans see only the German line (the region is stripped for them); the
 +    // veto reads the raw prompt, where the region's English reaches the floor.
@@ -700,9 +636,9 @@ index 2dbac8596d..a1bdacb5d6 100644
 +      "the padding is missing here and that should be fixed",
 +      "</launch-selected-element>",
 +    ].join("\n");
-+    expect(classify(p).language).toBe("und");
-+  });
-+
+     expect(classify(p).language).toBe("und");
+   });
+ 
 +  it("the reply scorer still deletes an inline region without a separator", () => {
 +    // Ratification round 18: the word-boundary fix is scoped to owner prose. The
 +    // turn-end gate's reply path keeps its measured surface, so an English pin
@@ -720,47 +656,19 @@ index 2dbac8596d..a1bdacb5d6 100644
 +    expect(detectLanguage("Das ist leer, weil die Ausgabe im Terminal bleibt und nicht hier ankommt.", pin)).not.toBeNull();
 +  });
 +
-+  it("removing a marker-free inline region never glues a marker the owner did not type", () => {
-+    // Ratification round 17: with no English in the region the opposing-language
-+    // veto has nothing to see, so the strip itself must keep the word boundary.
-+    const p = "un<bash-stdout>x</bash-stdout>d die tests laufen";
+   it("removing a marker-free inline region never glues a marker the owner did not type", () => {
+     // Ratification round 17: with no English in the region the opposing-language
+     // veto has nothing to see, so the strip itself must keep the word boundary.
+     const p = "un<bash-stdout>x</bash-stdout>d die tests laufen";
+-    expect(stripInjectedRegions(p)).not.toMatch(/\bund\b/);
 +    expect(ownerProse(p).lead).not.toMatch(/\bund\b/);
-+    expect(classify(p).language).toBe("und");
-+  });
-+
-   it("the reported three-turn sequence keeps the German pin", () => {
-     run(envelope("Die Freigabe ist drin, mach bitte weiter mit den Tickets"), {
-       consumer_root: tmp,
-@@ -2074,6 +2134,65 @@ describe("owner prose only", () => {
-     expect(spans.lead).toBe("");
+     expect(classify(p).language).toBe("und");
    });
  
-+  for (const tag of ["system-reminder", "bash-stdout"]) {
-+    it(`pasted <${tag}> tags across fences cannot delete a typed German sentence from the veto`, () => {
-+      run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
-+      run(
-+        envelope(
-+          `\`\`\`\n<${tag}>\n\`\`\`\n\nBehebe das bitte.\n\n\`\`\`\n</${tag}>\n\`\`\`\n\nPlease tell me why this is happening and what we should do.`,
-+        ),
-+        { consumer_root: tmp, env: {} },
-+      );
-+      expect(readState().language).toBe("de");
-+    });
-+  }
-+
-+  it("a tab-indented closer in a tab-indented list item closes the fence", () => {
-+    const spans = ownerSpans("-\t~~~\n\tx\n\t~~~\n\nBehebe das bitte.");
-+    expect(spans.lead).toBe("");
-+    expect(spans.trailing).toBe("Behebe das bitte.");
-+  });
-+
-+  it("a top-level closer indented by a tab (four columns) does not close the fence", () => {
-+    // The heading sits between the tab line and the real closer: an early close
-+    // would expose it as a document head and empty the trailing span.
-+    const spans = ownerSpans("~~~\nx\n\t~~~\n# pasted heading\n~~~\n\nBehebe das bitte.");
-+    expect(spans.trailing).toBe("Behebe das bitte.");
-+  });
-+
+@@ -2138,6 +2160,17 @@ describe("owner prose only", () => {
+     expect(spans.trailing).toBe("Behebe das bitte.");
+   });
+ 
 +  it("an unindented line ends a list item and the fence inside it", () => {
 +    // Ratification round 18: a column-zero `~~~` after a `- ~~~` list fence is
 +    // not its closer; the list item (and its fence) ended, and the line opens a
@@ -772,29 +680,7 @@ index 2dbac8596d..a1bdacb5d6 100644
 +    expect(readState().language).toBe("de");
 +  });
 +
-+  it("two back-to-back fenced blocks count as the output run above a glued span", () => {
-+    // Stated, round 17: a collapsed fence is a paste boundary, and a line glued
-+    // under two closed fences is read as typed; one fence alone is not enough.
-+    expect(ownerSpans("```\na\n```\n```\nb\n```\nBehebe das bitte.").trailing).toBe("Behebe das bitte.");
-+    expect(ownerSpans("```\na\n```\nBehebe das bitte.").trailing).toBe("");
-+  });
-+
-+  it("a glued span needs two output lines directly above it, not anywhere above", () => {
-+    // Ratification round 16: two `Error:` lines in separate blocks counted
-+    // together, so a wrapped continuation of the second one became owner prose.
-+    const spans = ownerSpans(
-+      "Error: old log\n\nContext.\n\nError: x\nPlease check the release notes and tell me what is missing.",
-+    );
-+    expect(spans.trailing).toBe("");
-+  });
-+
-+  it("a closer six columns into a tab-indented list item closes the fence", () => {
-+    const spans = ownerSpans("-\t~~~\n      x\n      ~~~\n\nBehebe das bitte.");
-+    expect(spans.lead).toBe("");
-+    expect(spans.trailing).toBe("Behebe das bitte.");
-+  });
-+
-   it("a long whitespace-only line costs linear time", () => {
-     const started = Date.now();
-     classify(`Bitte prüfe das.\n${" ".repeat(50_000)}\nund mach weiter.`);
+   it("two back-to-back fenced blocks count as the output run above a glued span", () => {
+     // Stated, round 17: a collapsed fence is a paste boundary, and a line glued
+     // under two closed fences is read as typed; one fence alone is not enough.
 ````
