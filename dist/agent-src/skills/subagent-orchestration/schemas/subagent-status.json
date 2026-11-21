@@ -10,7 +10,7 @@
     "status": {
       "type": "string",
       "enum": ["DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED", "CHECKPOINT"],
-      "description": "DONE = work shipped, gate green. DONE_WITH_CONCERNS = work shipped but caller must read concerns[]. NEEDS_CONTEXT = paused, blocking_question[] must be answered. BLOCKED = halted, blocking_reason describes why no path forward. CHECKPOINT = the worker reached its budget watermark and hands off a state capsule; done/remaining/generation are required."
+      "description": "DONE = work shipped, gate green. DONE_WITH_CONCERNS = work shipped but caller must read concerns[]. NEEDS_CONTEXT = paused, blocking_question must be answered by whoever ownership_class names. BLOCKED = halted, blocking_reason describes why no path forward. CHECKPOINT = the worker reached its budget watermark and hands off a state capsule; done/remaining/generation are required."
     },
     "summary": {
       "type": "string",
@@ -31,6 +31,11 @@
       "type": "string",
       "minLength": 1,
       "description": "Single specific question whose answer would unblock. Required when status = NEEDS_CONTEXT."
+    },
+    "ownership_class": {
+      "type": "string",
+      "enum": ["deterministic", "reversible-technical", "contested-technical", "critical-technical", "product-owned", "business-owned", "destructive-owned", "spend-exhaustion"],
+      "description": "Who answers blocking_question, from OWNERSHIP_CLASSES in src/scripts/ai_council/ownership_classes.ts (a test pins the two equal). Required when status = NEEDS_CONTEXT. A non-owner class is answered by the orchestrator or the council; only an owner-locked class reaches the owner, bundled into one end-of-run ask."
     },
     "blocking_reason": {
       "type": "string",
@@ -107,7 +112,7 @@
     },
     {
       "if": {"properties": {"status": {"const": "NEEDS_CONTEXT"}}, "required": ["status"]},
-      "then": {"required": ["blocking_question"]}
+      "then": {"required": ["blocking_question", "ownership_class"]}
     },
     {
       "if": {"properties": {"status": {"const": "BLOCKED"}}, "required": ["status"]},

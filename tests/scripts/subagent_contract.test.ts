@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -25,6 +26,7 @@ import {
 } from '../../src/scripts/validate_frontmatter.js';
 import { nativeFieldLines } from '../../src/scripts/_lib/subagent_native_fields.js';
 import { render_floor } from '../../src/scripts/generate_subagent_floor.js';
+import { OWNERSHIP_CLASSES } from '../../src/scripts/ai_council/ownership_classes.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const _REPO = path.resolve(_HERE, '..', '..');
@@ -229,5 +231,31 @@ describe('subagent-v1 reuse and loading fields', () => {
             }
         }
         expect(seen).toBeGreaterThan(0);
+    });
+});
+
+// A subagent's question is routable: NEEDS_CONTEXT carries the ownership class the orchestrator routes on.
+describe('subagent-status envelope — NEEDS_CONTEXT is routable', () => {
+    const schemaPath = path.join(_REPO, 'src', 'skills', 'subagent-orchestration', 'schemas', 'subagent-status.json');
+    const statusSchema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8')) as Record<string, unknown>;
+    const { $schema: _meta, ...compilable } = statusSchema;
+    const check = new Ajv({ allErrors: true }).compile(compilable);
+    const base = { status: 'NEEDS_CONTEXT', summary: 'paused on one question', blocking_question: 'Is foo() idempotent?' };
+
+    it('a NEEDS_CONTEXT envelope without ownership_class fails', () => {
+        expect(check(base)).toBe(false);
+    });
+
+    it.each(OWNERSHIP_CLASSES)('a NEEDS_CONTEXT envelope with ownership_class %s passes', (cls) => {
+        expect(check({ ...base, ownership_class: cls })).toBe(true);
+    });
+
+    it('an ownership_class outside OWNERSHIP_CLASSES fails', () => {
+        expect(check({ ...base, ownership_class: 'owner-taste' })).toBe(false);
+    });
+
+    it('the enum is the ownership data, not a hand-copied list', () => {
+        const props = statusSchema['properties'] as Record<string, { enum?: string[] }>;
+        expect(props['ownership_class']?.enum).toEqual([...OWNERSHIP_CLASSES]);
     });
 });

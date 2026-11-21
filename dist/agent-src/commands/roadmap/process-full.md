@@ -234,6 +234,10 @@ NEVER INTERRUPT THE OWNER MID-RUN FOR A DECISION THE INVOCATION ALREADY DELEGATE
 
 **Report shape** — read [`process-full-delivery`](../../contexts/execution/process-full-delivery.md#final-pr-only--the-ux-invariant).
 
+**Every question goes down the rungs first** — read [`Who answers a question`](../../contexts/communication/rules-auto/user-interaction-mechanics.md#who-answers-a-question).
+A dominant option is decided and named in the report, a technical trade-off goes to
+the council, and only the owner's four classes reach the end report as owner asks.
+
 ## Spend — whatever ceiling was configured, and none when none was
 
 ```

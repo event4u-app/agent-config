@@ -252,6 +252,12 @@ mechanically. Meaning/required-keys table, why-fixed rationale, and the
 `NEEDS_CONTEXT`-vs-`BLOCKED` distinction →
 [`subagent-modes-detail` § Status taxonomy](../../agent-src/contexts/execution/subagent-modes-detail.md).
 
+**A `NEEDS_CONTEXT` return is routed by its `ownership_class`**, which the
+envelope requires. A technical class is answered by the orchestrator or the
+council, then re-dispatched; an owner class is bundled into one ask at the end
+of the run; a worker's question is never forwarded to the user mid-run. Every
+prompt carries the generated routing list (`generate_subagent_floor`).
+
 **The envelope is the ONLY return channel** (token-economy-dispatch
 Phase 6). A worker writes its full output to disk (runtime artifact dir,
 gitignored) and returns the bounded envelope — `summary` +
