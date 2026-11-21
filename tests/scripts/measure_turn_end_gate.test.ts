@@ -601,11 +601,11 @@ describe('language-split', () => {
         writeSession('locale', [userEntry('ok'), replyEntry(ENGLISH_REPLY)]);
     }
 
-    it('with the owner-prose classifier, only owner prose and the locale still pin a refusal', () => {
-        // The replay uses the shipped `classify`, so these are post-fix
-        // numbers: a paste, a host entry and a line below a paste no longer
-        // decide the pin. The two locale fires are the sessions whose owner
-        // text is under the floor; the gate stops refusing on them in 4.1.
+    it('with the owner-prose classifier and gate, only owner prose still pins a refusal', () => {
+        // The replay uses the shipped `classify` and the gate's own pin reader,
+        // so these are post-fix numbers: a paste, a host entry and a line below
+        // a paste no longer decide the pin, and a locale pin (the two sessions
+        // whose owner text is under the floor) no longer refuses.
         writeClassFixtures();
         const split = languageSplit([store], { locale: 'de' });
         expect(split.sessions).toBe(5);
@@ -614,7 +614,7 @@ describe('language-split', () => {
             'synthetic-turn': 0,
             'paste-decided': 0,
             'trailing-typed-line': 0,
-            'system-locale': 2,
+            'system-locale': 0,
             unknown: 0,
         });
         const sum = LANGUAGE_SPLIT_CLASSES.reduce((n, k) => n + split.byClass[k], 0);

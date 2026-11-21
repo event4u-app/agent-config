@@ -106,6 +106,7 @@ import { isTestPath } from './_lib/test_path.js';
 import {
     detectDroppedDecision,
     detectLanguage,
+    gatePinLanguage,
     detectPromissory,
     detectUntestedChange,
     detectUnverifiedEdit,
@@ -1064,7 +1065,8 @@ const SPLIT_SESSION_ID = 'language-split-replay';
  * Replay the pin over a transcript corpus and charge every `language` fire to
  * the shape of the entry that set the pin.
  *
- * The pin is replayed with the hook's own `classify` and `nextState`, so the
+ * The pin is replayed with the hook's own `classify` and `nextState`, and read
+ * back through the gate's own `gatePinLanguage`, so the
  * keep-previous rule and the locale fallback are the shipped ones — the parity
  * `measure` lists as its known residual (R2 finding 8). Turn boundaries are
  * `measure`'s, so a fire here is a fire there. Files are read in NAME order and
@@ -1152,7 +1154,7 @@ export function languageSplit(stores: readonly string[], opts: LanguageSplitOpti
                 const a = assistantText(entry);
                 if (a === null || a.trim() === '') continue;
                 reply = a;
-                replyPin = pin.language ?? 'und';
+                replyPin = gatePinLanguage(pin);
                 replySetter = setter;
             }
             scoreTurn();

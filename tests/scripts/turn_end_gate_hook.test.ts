@@ -465,6 +465,24 @@ describe('language pin', () => {
         writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));
         expect(detectLanguage(ENGLISH_REPLY, readLanguagePin(dir, 'sess-1'))?.detector).toBe('language');
     });
+
+    it('a prompt pin with no owner prose behind it raises no finding', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt', owner_prose_chars: 0 }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
+    it('a prompt pin with owner prose behind it still pins', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt', owner_prose_chars: 42 }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('de');
+    });
+
+    it('a pin written before owner_prose_chars existed keeps today\'s reading', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('de');
+    });
 });
 
 /**
