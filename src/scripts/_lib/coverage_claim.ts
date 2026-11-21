@@ -185,15 +185,15 @@ function runsCommand(command: string, start: string): boolean {
     return commandSegments(command).some((x) => x.trim() === start || x.trim().startsWith(`${start} `));
 }
 
+/** A segment that runs `playwright test` or `agent-config ui:render`, behind an env prefix or a runner. */
+const PLAYWRIGHT_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?playwright\s+test\b/;
+const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?:\S*\/)?agent-config\s+ui:render\b/;
+
 /**
  * A call that drove `surface`: its start command, its URL, or a render or browser
  * run over a web page. A `playwright test` run that names another config does not
  * drive a surface derived from this one.
  */
-/** A segment that runs `playwright test` or `agent-config ui:render`, behind an env prefix or a runner. */
-const PLAYWRIGHT_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?playwright\s+test\b/;
-const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?:\S*\/)?agent-config\s+ui:render\b/;
-
 function drives(command: string, surface: LiveSurface, root: string): boolean {
     const segs = commandSegments(command).map((x) => x.trim());
     const playwrightRuns = segs.filter((x) => PLAYWRIGHT_RUN.test(x));
@@ -207,7 +207,11 @@ function drives(command: string, surface: LiveSurface, root: string): boolean {
     }
     if (BROWSER_KINDS.has(surface.kind) && browser) return true;
     if (surface.start !== null && runsCommand(command, surface.start)) return true;
-    return surface.url !== undefined && command.includes(surface.url);
+    // A URL counts in a command that is not just printing it, and as a whole host:port.
+    if (surface.url === undefined) return false;
+    const escaped = surface.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const url = new RegExp(`${escaped}(?![\\w])`);
+    return segs.some((x) => !/^(?:echo|printf)\b/.test(x) && url.test(x));
 }
 
 /**
@@ -234,7 +238,8 @@ export function unlistedSurfaceIn(
     const surfaces = given ?? deriveLiveSurfaces(workspaceRoot);
     if (surfaces.length === 0) return null;
     const commands = calls.map((c) => c.command ?? '').filter((c) => c !== '');
-    const text = ratioProse(fenceStripped);
+    // Inline code kept (backticks dropped): a list entry is often `npm run dev`.
+    const text = fenceStripped.replace(/`/g, ' ');
     const listed = notVerifiedSpans(text).map(([s, e]) => text.slice(s, e)).join('\n');
     for (const surface of surfaces) {
         const root = path.resolve(workspaceRoot, surface.root);

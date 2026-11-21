@@ -69,6 +69,15 @@ describe('deriveLiveSurfaces', () => {
         expect(new Set(found.map((x) => x.derived_from)).size).toBe(1);
     });
 
+    it('does not follow a symlinked input out of the repo', () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-outside-'));
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-link-'));
+        tmps.push(outside, dir);
+        fs.writeFileSync(path.join(outside, 'package.json'), '{"scripts":{"dev":"vite"}}');
+        fs.symlinkSync(path.join(outside, 'package.json'), path.join(dir, 'package.json'));
+        expect(deriveLiveSurfaces(dir)).toEqual([]);
+    });
+
     it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-fifo-'));
         tmps.push(dir);

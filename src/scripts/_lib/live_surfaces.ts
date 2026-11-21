@@ -67,7 +67,8 @@ export function readText(file: string): string | null {
     try {
         // Non-blocking open, then check the OPENED file: a path swapped between a
         // stat and a read cannot slip a FIFO or a large file past the check.
-        fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+        // O_NOFOLLOW: a symlinked input could point out of the repo.
+        fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK | fs.constants.O_NOFOLLOW);
         const st = fs.fstatSync(fd);
         if (!st.isFile() || st.size > MAX_INPUT_BYTES) return null;
         const buf = Buffer.alloc(MAX_INPUT_BYTES + 1);

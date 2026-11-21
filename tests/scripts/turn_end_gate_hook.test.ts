@@ -2348,6 +2348,27 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
     });
 
+    it('a URL on another port, or a URL only printed, does not drive a compose service', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-url-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'docker-compose.yml'), 'services:\n  api:\n    ports:\n      - "3000:80"\n');
+        for (const command of ['curl http://localhost:30000/health', 'echo http://localhost:3000']) {
+            const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'server.ts') }, { name: 'Bash', command }];
+            expect(detectCoverageGap('Fertig.', calls, dir)?.code, command).toBe('unlisted_surface');
+        }
+        const driven: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'server.ts') },
+            { name: 'Bash', command: 'curl -s http://localhost:3000/health' },
+        ];
+        expect(detectCoverageGap('Fertig.', driven, dir)).toBeNull();
+    });
+
+    it('a Not verified entry in inline code still lists the surface', () => {
+        const dir = appWorkspace();
+        const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified:\n- `npm run dev`: no browser in this session';
+        expect(detectCoverageGap(reply, [edit(dir)], dir)).toBeNull();
+    });
+
     it('a command that runs the start command drives the surface', () => {
         const dir = appWorkspace();
         const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'cd app && npm run dev' }];
