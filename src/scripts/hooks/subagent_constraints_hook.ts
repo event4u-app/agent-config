@@ -48,7 +48,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
-import { goal_mandate_for_subagent } from '../_lib/goal_mandate.js';
+import { goal_mandate_for_subagent } from '../_lib/goal_mandate_store.js';
 import { lawSections, ruleBody } from '../_lib/rule_law_section.js';
 import { pinsDisabled, pinsForSubagent } from '../_lib/session_pins.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';

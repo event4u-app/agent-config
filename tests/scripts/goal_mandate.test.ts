@@ -9,7 +9,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { goal_mandate_block, goal_mandate_line, observe_prompt, read_goal } from '../../src/scripts/_lib/goal_mandate.js';
+import { goal_mandate_block, observe_prompt } from '../../src/scripts/_lib/goal_mandate.js';
+import { goal_mandate_line, read_goal } from '../../src/scripts/_lib/goal_mandate_store.js';
 
 const T0 = new Date('2026-11-21T09:15:00Z');
 const T1 = new Date('2026-11-21T10:40:00Z');
