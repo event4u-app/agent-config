@@ -121,6 +121,10 @@ describe('exitMasking — whose exit code does the record carry', () => {
         // pipefail makes the pipeline's status the verifier's, and the echo after it replaces it.
         ['set -o pipefail; task ci | tail -5; echo done', 'trailing'],
         ['task ci && echo ok; echo done', 'trailing'],
+        // `|| false` keeps the failure only until the next unconditional command.
+        ['npx tsc --noEmit || false; echo ready', 'trailing'],
+        // `set +o pipefail` turns it off again.
+        ['set -o pipefail; set +o pipefail; npx tsc --noEmit | tail -5', 'pipe'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -155,6 +159,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci | tail -5; echo "exit=${PIPESTATUS[1]}"',
         'task ci; echo ready; echo "exit=$?"',
         'task ci | tail -5; echo "exit=$?"',
+        // Something prints after the status line, so the last line is not the status.
+        'npx tsc --noEmit; echo "exit=$?"; echo exit=0',
     ])('`%s` echoes a status that is not the verifier\'s', (command) => {
         expect(echoesVerifierStatus(command)).toBe(false);
     });

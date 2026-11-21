@@ -366,7 +366,9 @@ export function isVerificationCommand(command: string): boolean {
 export type ExitMasking = 'pipe' | 'trailing';
 
 /** `set -o pipefail`, `set -euo pipefail`, `set -e -o pipefail`. */
-const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
+const SETS_PIPEFAIL = /^set\s+(?:[-+][A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
+/** `set +o pipefail` — turns it off again. */
+const UNSETS_PIPEFAIL = /^set\s+(?:[-+][A-Za-z]+\s+)*\+[A-Za-z]*o\s+pipefail\b/;
 
 /** One pipeline: its segments, the separator after it, and whether pipefail covers it. */
 interface Pipeline {
@@ -383,7 +385,11 @@ function pipelinesOf(command: string): Pipeline[] {
         cur.push(seg);
         if (seg.nextSep === '|') continue;
         out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail });
-        if (cur.some((s) => SETS_PIPEFAIL.test(s.words.join(' ')))) pipefail = true;
+        for (const sg of cur) {
+            const text = sg.words.join(' ');
+            if (SETS_PIPEFAIL.test(text)) pipefail = true;
+            if (UNSETS_PIPEFAIL.test(text)) pipefail = false;
+        }
         cur = [];
     }
     return out;
@@ -411,22 +417,38 @@ function namesPipestatus(text: string, k: number): boolean {
     return new RegExp(`PIPESTATUS\\[${String(k)}\\]`).test(text);
 }
 
-/**
- * The verifier's own status reaches the caller from `next`, run after a pipeline
- * whose status is the verifier's (`statusIsVerifiers`) or after a pipeline whose
- * verifier sits at index `k` (`k` set when the pipeline status is a filter's).
- */
-function propagates(prev: Pipeline, next: Pipeline | undefined, statusIsVerifiers: boolean, k: number): boolean {
+/** `exit`/`return` of `PIPESTATUS[k]` right after a filtered pipeline: the verifier's code reaches the caller. */
+function exitsWithPipestatus(prev: Pipeline, next: Pipeline | undefined, k: number): boolean {
     const h = head(next);
-    const arg = argsOf(next).replace(/^["']|["']$/g, '');
-    if (h === 'exit' || h === 'return') {
-        if (statusIsVerifiers) {
-            if (prev.sepAfter === '||') return arg !== '0';
-            return arg === '' || arg === '$?';
+    return prev.sepAfter === ';' && (h === 'exit' || h === 'return') && namesPipestatus(argsOf(next), k);
+}
+
+/**
+ * Follow the line after a pipeline whose status is the verifier's: does a
+ * failure still reach the recorded code? `&&` runs only on success, so a
+ * failure skips it; `|| exit` / `|| exit N≠0` end the shell with a failure;
+ * `|| false` keeps a failure until the next command; `; exit` / `; exit $?`
+ * pass the current status on. Anything else that runs after a failure replaces
+ * the code.
+ */
+function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
+    for (let j = v + 1; j < ps.length; j += 1) {
+        const sep = (ps[j - 1] as Pipeline).sepAfter;
+        const h = head(ps[j]);
+        const arg = argsOf(ps[j]).replace(/^["']|["']$/g, '');
+        const ends = h === 'exit' || h === 'return';
+        if (sep === '&&') {
+            if (ends) return true;
+            continue;
         }
-        return namesPipestatus(arg, k);
+        if (sep === '||') {
+            if (ends) return arg !== '0';
+            if (h === 'false') continue;
+            return false;
+        }
+        return ends && (arg === '' || arg === '$?');
     }
-    return statusIsVerifiers && prev.sepAfter === '||' && h === 'false';
+    return true;
 }
 
 /**
@@ -445,10 +467,11 @@ function propagates(prev: Pipeline, next: Pipeline | undefined, statusIsVerifier
  *   A pipefail from an rc file is invisible here, which is why the reason is
  *   an instrument gap.
  * - `trailing`: its status is the verifier's, and a later command runs
- *   unconditionally (after `;`) or on failure (after `||`) without propagating
- *   it. `cmd || exit 1`, `cmd || false` and `cmd; exit $?` propagate;
- *   `cmd && echo ok` runs only on success; `task sync; task ci` ends on a
- *   verifier whose code is real; `cmd || true` is a discard, not a verifier.
+ *   after a failure (after `;` or `||`) and replaces the code
+ *   (`failureReachesRecord`). `cmd || exit 1` and `cmd; exit $?` propagate;
+ *   `cmd || false; echo ready` does not; `cmd && echo ok` runs only on
+ *   success; `task sync; task ci` ends on a verifier whose code is real;
+ *   `cmd || true` is a discard, not a verifier.
  */
 export function exitMasking(command: string): ExitMasking | null {
     if (!command) return null;
@@ -458,15 +481,8 @@ export function exitMasking(command: string): ExitMasking | null {
     if (v === -1) return null;
     const p = ps[v] as Pipeline;
     const k = verifierIndex(p);
-    if (k < p.segs.length - 1 && !p.pipefail) {
-        return propagates(p, ps[v + 1], false, k) && p.sepAfter === ';' ? null : 'pipe';
-    }
-    for (let j = v + 1; j < ps.length; j += 1) {
-        const prev = ps[j - 1] as Pipeline;
-        if (j === v + 1 && propagates(prev, ps[j], true, k)) return null;
-        if (prev.sepAfter === ';' || prev.sepAfter === '||') return 'trailing';
-    }
-    return null;
+    if (k < p.segs.length - 1 && !p.pipefail) return exitsWithPipestatus(p, ps[v + 1], k) ? null : 'pipe';
+    return failureReachesRecord(ps, v) ? null : 'trailing';
 }
 
 /**
@@ -474,7 +490,8 @@ export function exitMasking(command: string): ExitMasking | null {
  * an `exit=N` line in the output can be read in place of a masked one:
  * `cmd; echo "exit=$?"`, `cmd || echo "exit=$?"`, or
  * `cmd | tail; echo "exit=${PIPESTATUS[k]}"` with `k` the verifier's index.
- * A status printed later (`cmd; echo ready; echo "exit=$?"`) or a filter's
+ * A status printed later (`cmd; echo ready; echo "exit=$?"`), one followed by
+ * more output (`cmd; echo "exit=$?"; echo exit=0`) or a filter's
  * (`PIPESTATUS[1]`, or `$?` after a pipe) is not the verifier's.
  */
 export function echoesVerifierStatus(command: string): boolean {
@@ -485,7 +502,8 @@ export function echoesVerifierStatus(command: string): boolean {
     const p = ps[v] as Pipeline;
     const next = ps[v + 1];
     const h = head(next);
-    if ((h !== 'echo' && h !== 'printf') || next?.segs.length !== 1) return false;
+    // The status line must be the line's last command, so it is the last line printed.
+    if ((h !== 'echo' && h !== 'printf') || next?.segs.length !== 1 || v + 2 !== ps.length) return false;
     const k = verifierIndex(p);
     const filtered = k < p.segs.length - 1 && !p.pipefail;
     if (filtered) return p.sepAfter === ';' && namesPipestatus(argsOf(next), k);

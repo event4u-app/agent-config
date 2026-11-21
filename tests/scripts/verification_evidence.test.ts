@@ -566,6 +566,28 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         ).toBe('nonzero_exit_without_test_failure');
     });
 
+    it('an exit line printed by a later command is not read as the verifier\'s', () => {
+        expect(
+            classifyRun(
+                rec({ command: 'npx tsc --noEmit; echo "exit=$?"; echo exit=0', exit_code: 0, stdout_tail: 'exit=2\nexit=0\n' }),
+            ),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('`|| false` followed by an unconditional echo does not pass a failed verifier', () => {
+        expect(
+            classifyRun(rec({ command: 'npx tsc --noEmit || false; echo ready', exit_code: 0, stdout_tail: 'ready\n' })),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
+    it('a pipefail turned off again does not cover the pipe', () => {
+        expect(
+            classifyRun(
+                rec({ command: 'set -o pipefail; set +o pipefail; npx tsc --noEmit | tail -5', exit_code: 0, stdout_tail: '' }),
+            ),
+        ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
+    });
+
     it('records and does not refuse until the arming phase decides', () => {
         expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
     });
