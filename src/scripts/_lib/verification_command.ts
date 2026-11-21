@@ -387,15 +387,19 @@ function pipelinesOf(command: string): Pipeline[] {
     const out: Pipeline[] = [];
     let cur: Segment[] = [];
     let pipefail = false;
+    let sepBefore: Pipeline['sepAfter'] = null;
     for (const seg of splitSegments(stripComment(command))) {
         cur.push(seg);
         if (seg.nextSep === '|') continue;
         out.push({ segs: cur, sepAfter: seg.nextSep as Pipeline['sepAfter'], pipefail });
-        for (const sg of cur) {
-            const text = sg.words.join(' ');
+        // A `set` changes the line only when it runs for sure and in this shell:
+        // alone (a pipeline runs it in a subshell) and not behind `&&` / `||`.
+        if (cur.length === 1 && (sepBefore === null || sepBefore === ';')) {
+            const text = (cur[0] as Segment).words.join(' ');
             if (SETS_PIPEFAIL.test(text)) pipefail = true;
             if (UNSETS_PIPEFAIL.test(text)) pipefail = false;
         }
+        sepBefore = seg.nextSep as Pipeline['sepAfter'];
         cur = [];
     }
     return out;
@@ -442,7 +446,8 @@ function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
         const sep = (ps[j - 1] as Pipeline).sepAfter;
         const h = head(ps[j]);
         const arg = argsOf(ps[j]).replace(/^["']|["']$/g, '');
-        const ends = h === 'exit' || h === 'return';
+        // `exit` inside a pipeline ends only its subshell.
+        const ends = (h === 'exit' || h === 'return') && (ps[j] as Pipeline).segs.length === 1;
         // A failure skips an `&&` command, `exit` included, and reaches whatever follows.
         if (sep === '&&') continue;
         if (sep === '||') {

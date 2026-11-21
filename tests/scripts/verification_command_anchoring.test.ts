@@ -127,6 +127,11 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['set -o pipefail; set +o pipefail; npx tsc --noEmit | tail -5', 'pipe'],
         // A failure skips `&& exit 0` and reaches the echo.
         ['npx tsc --noEmit && exit 0; echo ready', 'trailing'],
+        // A `set` that `&&` can skip, or that runs inside a pipeline, sets nothing for the line.
+        ['false && set -o pipefail; task ci | tail -5', 'pipe'],
+        ['set -o pipefail | cat; task ci | tail -5', 'pipe'],
+        // An `exit` inside a pipeline ends only its subshell.
+        ['task ci || exit 1 | cat', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
