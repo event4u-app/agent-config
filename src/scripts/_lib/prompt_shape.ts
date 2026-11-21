@@ -162,8 +162,9 @@ const FENCE_LINE = "\u0000";
  * starts, after at most three spaces and an optional list marker, with three or more backticks (no
  * backtick after them, so inline ` ``` ` in a sentence opens nothing) or
  * tildes (whose info string may hold tildes), and closes on a line of the same
- * character at least as long, indented at most three spaces past the opener's
- * content column (column 0 outside a list) and followed only by spaces or tabs
+ * character at least as long, indented at most three columns past the opener's
+ * content column (column 0 outside a list; a tab advances to the next multiple
+ * of four, so a tab-indented top-level line is no closer) and followed only by spaces or tabs
  * (not a no-break space); an unclosed
  * fence is no fence — its lines stay, so a misread opener can never hide what
  * follows it. CR, CRLF and LF all end a line.
@@ -178,7 +179,7 @@ function fenced(text: string): string[] {
     // Markdown list item; its closer may then be indented up to three spaces
     // past the item's content column, as CommonMark allows.
     const open = /^( {0,3})((?:[-*+]|\d{1,9}[.)])[ \t]+)?(`{3,}(?=[^`]*$)|~{3,})/.exec(line);
-    const lead = /^( *)(`{3,}|~{3,})[ \t]*$/.exec(line);
+    const lead = /^([ \t]*)(`{3,}|~{3,})[ \t]*$/.exec(line);
     if (fence === "" && open === null) {
       out.push(line);
     } else if (fence === "") {
@@ -187,7 +188,7 @@ function fenced(text: string): string[] {
       // opener's own indent; inside one, three past the item's content column.
       indent = open?.[2] === undefined ? 3 : columns(`${open[1] ?? ""}${open[2]}`) + 3;
       held = [line];
-    } else if (lead !== null && (lead[1]?.length ?? 0) <= indent && (lead[2] ?? "").startsWith(fence)) {
+    } else if (lead !== null && columns(lead[1] ?? "") <= indent && (lead[2] ?? "").startsWith(fence)) {
       out.push(FENCE_LINE);
       fence = "";
     } else {

@@ -1681,7 +1681,7 @@ describe("inline terminal-pane regions (#2950)", () => {
     expect(classify(p).language).toBe("und");
   });
 
-  it("text typed beside the inline regions is kept and decides", () => {
+  it("text typed beside the inline regions decides only where the wrapper does not disagree", () => {
     const p = TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?";
     // Never `en` (the #2950 harm); `und` under the raw-prompt veto (D7, round 15).
     expect(classify(p).language).toBe("und");
@@ -1706,6 +1706,31 @@ describe("inline terminal-pane regions (#2950)", () => {
   it("an unclosed inline tag is left in place", () => {
     const p = "<bash-stdout>the output that was there and should have been kept";
     expect(stripInjectedRegions(p)).toBe(p);
+  });
+
+  it("the cost, stated: a German instruction beside an English wrapper leaves an English pin in place", () => {
+    // A missed update (D7, ratification round 15): no text-only rule can tell
+    // the host's wrapper from a pasted copy, so the raw-prompt veto keeps the
+    // previous pin and the gate keeps asking for English on this turn.
+    run(envelope("Please check the release notes and tell me what is missing."), {
+      consumer_root: tmp,
+      env: {},
+    });
+    expect(readState().language).toBe("en");
+    run(envelope(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?"), {
+      consumer_root: tmp,
+      env: {},
+    });
+    expect(readState().language).toBe("en");
+  });
+
+  it("an inline region that joins a word is still counted by the veto", () => {
+    // Stripping the region glues `un` + `d` into a German marker the raw prompt
+    // never carries, so the spans reach the German floor while the raw prompt
+    // does not; the region's English is at the floor. The veto checks the
+    // OPPOSING language directly, so the candidate cannot pin.
+    const p = "un<bash-stdout>the output was there</bash-stdout>d die tests laufen";
+    expect(classify(p).language).toBe("und");
   });
 
   it("the reported three-turn sequence keeps the German pin", () => {
@@ -2091,6 +2116,17 @@ describe("owner prose only", () => {
       expect(readState().language).toBe("de");
     });
   }
+
+  it("a tab-indented closer in a tab-indented list item closes the fence", () => {
+    const spans = ownerSpans("-\t~~~\n\tx\n\t~~~\n\nBehebe das bitte.");
+    expect(spans.lead).toBe("");
+    expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a top-level closer indented by a tab (four columns) does not close the fence", () => {
+    const spans = ownerSpans("~~~\nx\n\t~~~\n~~~\n\nBehebe das bitte.");
+    expect(spans.trailing).toBe("Behebe das bitte.");
+  });
 
   it("a closer six columns into a tab-indented list item closes the fence", () => {
     const spans = ownerSpans("-\t~~~\n      x\n      ~~~\n\nBehebe das bitte.");

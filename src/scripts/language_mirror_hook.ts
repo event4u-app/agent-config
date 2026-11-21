@@ -319,7 +319,8 @@ export function instructionText(prompt: string): string {
  * Then a veto that no boundary reading can get around: when the RAW prompt —
  * nothing removed, not even host wrappers, because a pasted wrapper tag looks
  * exactly like the host's own (ratification rounds 13-14) — carries
- * `MIN_MARKERS` markers of BOTH languages, the verdict is `und`. A real host
+ * `MIN_MARKERS` markers of the language OPPOSING the candidate, the verdict is
+ * `und`. A real host
  * wrapper in the other language (an IDE element block, a terminal-pane echo)
  * therefore keeps the previous pin too: a missed update, never an override. So a pin in one language is written only when the prompt holds fewer
  * than `MIN_MARKERS` markers of the other anywhere; owner text that reaches the
@@ -340,8 +341,13 @@ export function classify(prompt: string): PromptClassification {
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
   const all = _score(text);
-  const mixed = all.de_markers >= MIN_MARKERS && all.en_markers >= MIN_MARKERS;
-  return { ...verdict, language: mixed ? "und" : verdict.language, owner_prose_chars: owner.length };
+  // The invariant checked directly, not through the spans being a subset of
+  // the raw text: a candidate never pins while the raw prompt holds the floor
+  // of the opposing language (ratification round 15).
+  const opposing =
+    verdict.language === "de" ? all.en_markers : verdict.language === "en" ? all.de_markers : 0;
+  const language = opposing >= MIN_MARKERS ? "und" : verdict.language;
+  return { ...verdict, language, owner_prose_chars: owner.length };
 }
 
 /**
