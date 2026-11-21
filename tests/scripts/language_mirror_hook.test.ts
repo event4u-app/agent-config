@@ -65,7 +65,9 @@ import {
   _pruneLegacyState,
   _pruneStaleSessions,
 } from "../../src/scripts/language_mirror_hook.js";
-import { ownerSpans, stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
+import { ownerProse, ownerSpans, stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
+import { gatePinLanguage } from "../../src/scripts/hooks/language_pin_gate.js";
+import { detectLanguage } from "../../src/scripts/hooks/turn_end_gate_hook.js";
 import { tryAcquire } from "../../src/scripts/_lib/generation_lock.js";
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
@@ -1724,20 +1726,40 @@ describe("inline terminal-pane regions (#2950)", () => {
     expect(readState().language).toBe("en");
   });
 
-  it("an inline region that joins a word is still counted by the veto", () => {
-    // Stripping the region glues `un` + `d` into a German marker the raw prompt
-    // never carries, so the spans reach the German floor while the raw prompt
-    // does not; the region's English is at the floor. The veto checks the
-    // OPPOSING language directly, so the candidate cannot pin.
-    const p = "un<bash-stdout>the output was there</bash-stdout>d die tests laufen";
+  it("an English host region beside German owner text vetoes the German candidate", () => {
+    // The spans see only the German line (the region is stripped for them); the
+    // veto reads the raw prompt, where the region's English reaches the floor.
+    const p = [
+      "bitte prüfe das und mach dann weiter",
+      "<launch-selected-element>",
+      "the padding is missing here and that should be fixed",
+      "</launch-selected-element>",
+    ].join("\n");
     expect(classify(p).language).toBe("und");
+  });
+
+  it("the reply scorer still deletes an inline region without a separator", () => {
+    // Ratification round 18: the word-boundary fix is scoped to owner prose. The
+    // turn-end gate's reply path keeps its measured surface, so an English pin
+    // raises no new finding on this reply.
+    const reply = "und<bash-stdout>x</bash-stdout>die tests laufen";
+    expect(stripInjectedRegions(reply)).toBe("unddie tests laufen");
+    expect(detectLanguage(reply, "en")).toBeNull();
+  });
+
+  it("the cost, end to end: the kept English pin makes the gate refuse a German reply", () => {
+    run(envelope("Please check the release notes and tell me what is missing."), { consumer_root: tmp, env: {} });
+    run(envelope(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?"), { consumer_root: tmp, env: {} });
+    const pin = gatePinLanguage(readState() as unknown as Record<string, unknown>);
+    expect(pin).toBe("en");
+    expect(detectLanguage("Das ist leer, weil die Ausgabe im Terminal bleibt und nicht hier ankommt.", pin)).not.toBeNull();
   });
 
   it("removing a marker-free inline region never glues a marker the owner did not type", () => {
     // Ratification round 17: with no English in the region the opposing-language
     // veto has nothing to see, so the strip itself must keep the word boundary.
     const p = "un<bash-stdout>x</bash-stdout>d die tests laufen";
-    expect(stripInjectedRegions(p)).not.toMatch(/\bund\b/);
+    expect(ownerProse(p).lead).not.toMatch(/\bund\b/);
     expect(classify(p).language).toBe("und");
   });
 
@@ -2136,6 +2158,17 @@ describe("owner prose only", () => {
     // would expose it as a document head and empty the trailing span.
     const spans = ownerSpans("~~~\nx\n\t~~~\n# pasted heading\n~~~\n\nBehebe das bitte.");
     expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("an unindented line ends a list item and the fence inside it", () => {
+    // Ratification round 18: a column-zero `~~~` after a `- ~~~` list fence is
+    // not its closer; the list item (and its fence) ended, and the line opens a
+    // new top-level fence that holds the English sentence.
+    const p = "- ~~~\n  x\n~~~\n\nPlease tell me why this is happening and what we should do.\n~~~";
+    expect(ownerSpans(p).trailing).toBe("");
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    run(envelope(p), { consumer_root: tmp, env: {} });
+    expect(readState().language).toBe("de");
   });
 
   it("two back-to-back fenced blocks count as the output run above a glued span", () => {

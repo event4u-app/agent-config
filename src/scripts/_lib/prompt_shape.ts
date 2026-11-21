@@ -173,6 +173,7 @@ function fenced(text: string): string[] {
   const out: string[] = [];
   let fence = "";
   let indent = 3;
+  let content = 0;
   let held: string[] = [];
   for (const line of text.split(/\r\n?|\n/)) {
     // An opener may follow a list marker (`- ```, `10. ```), as inside a
@@ -180,13 +181,20 @@ function fenced(text: string): string[] {
     // past the item's content column, as CommonMark allows.
     const open = /^( {0,3})((?:[-*+]|\d{1,9}[.)])[ \t]+)?(`{3,}(?=[^`]*$)|~{3,})/.exec(line);
     const lead = /^([ \t]*)(`{3,}|~{3,})[ \t]*$/.exec(line);
+    // A non-blank line left of a list item's content column ends the item and
+    // the fence inside it; the line is then read afresh (round 18).
+    if (fence !== "" && content > 0 && line.trim() !== "" && columns(/^[ \t]*/.exec(line)?.[0] ?? "") < content) {
+      out.push(FENCE_LINE);
+      fence = "";
+    }
     if (fence === "" && open === null) {
       out.push(line);
     } else if (fence === "") {
       fence = open?.[3] ?? "";
       // Outside a list a closer takes at most three spaces, whatever the
       // opener's own indent; inside one, three past the item's content column.
-      indent = open?.[2] === undefined ? 3 : columns(`${open[1] ?? ""}${open[2]}`) + 3;
+      content = open?.[2] === undefined ? 0 : columns(`${open[1] ?? ""}${open[2]}`);
+      indent = content === 0 ? 3 : content + 3;
       held = [line];
     } else if (lead !== null && columns(lead[1] ?? "") <= indent && (lead[2] ?? "").startsWith(fence)) {
       out.push(FENCE_LINE);
@@ -335,7 +343,7 @@ export function ownerProse(prompt: string): OwnerSpans & { text: string } {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
     return { lead: "", trailing: "", text: "" };
   }
-  return { ...ownerSpans(stripInjectedRegions(prompt)), text: prompt };
+  return { ...ownerSpans(stripInjectedRegions(prompt, " ")), text: prompt };
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */
@@ -407,10 +415,10 @@ const TERMINAL_PANE_REGION = /<(bash-input|bash-stdout|bash-stderr)>[\s\S]*?<\/\
  * wrappers do not nest by name, and stopping early keeps more human text than
  * scanning past the wrong close would.
  */
-export function stripInjectedRegions(text: string): string {
-  // A space, not nothing: `un<bash-stdout>…</bash-stdout>d` must not become
-  // `und`, a marker the owner never typed (ratification round 17).
-  const lines = text.replace(TERMINAL_PANE_REGION, " ").split("\n");
+export function stripInjectedRegions(text: string, separator = ""): string {
+  // `ownerProse` passes a space so `un<bash-stdout>…</bash-stdout>d` cannot
+  // become `und` (round 17); the reply scorer keeps deletion (round 18).
+  const lines = text.replace(TERMINAL_PANE_REGION, separator).split("\n");
   const kept: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
