@@ -654,6 +654,7 @@ describe('language-split', () => {
             command: './scripts-run src/scripts/measure_turn_end_gate --language-split',
             treeSha: 'abc1234',
         });
+        expect(out.startsWith('<!-- evidence-type: analysis -->\n')).toBe(true);
         expect(out).toContain('abc1234');
         expect(out).toContain('--language-split');
         for (const k of LANGUAGE_SPLIT_CLASSES) {
