@@ -25,7 +25,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-an-episode-ledger-with-cost-per-control | active | ready | One command, `agent-config sessions:episodes`, reads the Claude Code transcripts of every local profile and writes a local, gitignored ledger. |
 | road-to-ci-findings-in-one-run | active | ready | One local command reports every finding a pull request's CI would report, one command regenerates every derived artefact and pin … |
 | road-to-defaults-on-after-pilot | active | ready | `agent-config update` installs what it pins (stage 1, already in the tree, kept by a regression run). |
-| road-to-done-claims-with-read-exit-codes | active | ready | A completion claim in this suite has to rest on an exit code that came from the command that verified … |
 | road-to-gates-that-check-what-they-claim | active | ready | Every gate an external review has re-reported for two or more releases either checks what its name and its header … |
 | road-to-gates-that-do-not-trap-the-agent | active | ready | Every blockage that made the owner run a command, type a confirmation, or delete something on the agent's behalf is … |
 | road-to-honest-graph-freshness | active | ready | `graphState` (`src/scripts/code_graph/detect.ts:323-334`) never returns a commit count it did not compute: a native graph built by this release reports `behind:N` … |
