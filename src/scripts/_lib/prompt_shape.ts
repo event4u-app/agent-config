@@ -158,16 +158,18 @@ const FENCE_LINE = "\u0000";
 
 /**
  * The prompt's lines with every fenced block collapsed to one `FENCE_LINE`.
- * Line-aware, as Markdown reads fences: a fence opens only on a line that
- * starts with three or more backticks (no backtick after them, so inline
- * ` ``` ` in a sentence opens nothing) or tildes, and closes on a line of the
- * same character at least as long; an unclosed fence runs to the end.
+ * Line-aware, as CommonMark reads fences: a fence opens only on a line that
+ * starts, after at most three spaces, with three or more backticks (no
+ * backtick after them, so inline ` ``` ` in a sentence opens nothing) or
+ * tildes (whose info string may hold tildes), and closes on a line of the same
+ * character at least as long, also indented at most three spaces; an unclosed
+ * fence runs to the end. CR, CRLF and LF all end a line.
  */
 function fenced(text: string): string[] {
   const out: string[] = [];
   let fence = "";
-  for (const line of text.split("\n")) {
-    const mark = /^\s*(`{3,}(?=[^`]*$)|~{3,})/.exec(line)?.[1] ?? "";
+  for (const line of text.split(/\r\n?|\n/)) {
+    const mark = /^ {0,3}(`{3,}(?=[^`]*$)|~{3,})/.exec(line)?.[1] ?? "";
     if (fence === "" && mark === "") {
       out.push(line);
     } else if (fence === "") {

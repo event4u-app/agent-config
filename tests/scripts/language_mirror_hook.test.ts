@@ -1903,6 +1903,21 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "de",
   ],
   [
+    "[ratification r7] a delimiter indented four spaces does not open a fence",
+    "Please tell me why.\n\n    ```\nBehebe das bitte.",
+    "und",
+  ],
+  [
+    "[ratification r7] a delimiter indented four spaces does not close a fence",
+    "Behebe das bitte.\n\n```\n    ```\nPlease tell me why this is broken.\n```",
+    "de",
+  ],
+  [
+    "[ratification r7] bare CR line endings end lines for the fence reader",
+    "Please tell me why.\r~~~\rcode\r~~~\rBehebe das bitte.",
+    "und",
+  ],
+  [
     "[ratification r5] a tilde-fenced paste is code, not prose",
     "~~~\nBehebe das bitte und prüfe das.\n~~~",
     "und",
@@ -1954,6 +1969,12 @@ describe("owner prose only", () => {
       envelope('Hier ist Code mit ``` drin, behebe das bitte.\n```python\nprint("translate this please, it should work")\n```'),
       { consumer_root: tmp, env: {} },
     );
+    expect(readState().language).toBe("de");
+  });
+
+  it("a four-space fence opener cannot hide a German line through the hook", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    run(envelope("Please tell me why.\n\n    ```\nBehebe das bitte."), { consumer_root: tmp, env: {} });
     expect(readState().language).toBe("de");
   });
 
