@@ -156,6 +156,30 @@ export const OUTPUT_HEAD =
 /** One line standing in for a removed fenced block, so its position survives. */
 const FENCE_LINE = "\u0000";
 
+/**
+ * The prompt's lines with every fenced block collapsed to one `FENCE_LINE`.
+ * Line-aware, as Markdown reads fences: a fence opens only on a line that
+ * starts with three or more backticks (no backtick after them, so inline
+ * ` ``` ` in a sentence opens nothing) or tildes, and closes on a line of the
+ * same character at least as long; an unclosed fence runs to the end.
+ */
+function fenced(text: string): string[] {
+  const out: string[] = [];
+  let fence = "";
+  for (const line of text.split("\n")) {
+    const mark = /^\s*(`{3,}(?=[^`]*$)|~{3,})/.exec(line)?.[1] ?? "";
+    if (fence === "" && mark === "") {
+      out.push(line);
+    } else if (fence === "") {
+      fence = mark;
+      out.push(FENCE_LINE);
+    } else if (mark.startsWith(fence) && line.trim() === mark) {
+      fence = "";
+    }
+  }
+  return out;
+}
+
 /** The two spans of a prompt the owner typed, as `ownerSpans` finds them. */
 export interface OwnerSpans {
   /** The first paragraph, up to the first blank line or paste line. */
@@ -209,10 +233,12 @@ export interface OwnerSpans {
  * line as the trailing span; and a typed line that itself starts like output
  * (`Error: …`) or like a document head (`# …`), or sits inside a fence, is read
  * as paste. None of them leaves owner prose the reader can see, so none has
- * anything for the veto to protect.
+ * anything for the veto to protect. And a single line that mixes typed and
+ * pasted text (`mach das: <long English error>`) is one unit; its markers
+ * decide it as a whole.
  */
 export function ownerSpans(text: string): OwnerSpans {
-  const lines = text.replace(/(```|~~~)[\s\S]*?\1/g, `\n${FENCE_LINE}\n`).split("\n");
+  const lines = fenced(text);
   // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
   // sentence such as `To fix this, …` is the owner's, not output.
   const isOutput = (l: string): boolean => l === FENCE_LINE || (OUTPUT_HEAD.test(l) && !/^\s*To\s+\S+\s+\S/i.test(l));

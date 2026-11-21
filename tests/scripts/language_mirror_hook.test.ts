@@ -1893,6 +1893,16 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "und",
   ],
   [
+    "[ratification r6] inline triple backticks in a typed line do not open a fence",
+    "Hier ist Code mit ``` drin, behebe das bitte.\n```python\nprint(\"translate this please, it should work\")\n```",
+    "de",
+  ],
+  [
+    "[ratification r6] an unclosed fence runs to the end of the prompt",
+    "Behebe das bitte.\n\n```\nPlease tell me why this is not working.",
+    "de",
+  ],
+  [
     "[ratification r5] a tilde-fenced paste is code, not prose",
     "~~~\nBehebe das bitte und prüfe das.\n~~~",
     "und",
@@ -1936,6 +1946,15 @@ describe("owner prose only", () => {
     const state = readState();
     expect(state.source).toBe("system-locale");
     expect(state.owner_prose_chars).toBe(0);
+  });
+
+  it("inline triple backticks cannot expose a fenced English body through the hook", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    run(
+      envelope('Hier ist Code mit ``` drin, behebe das bitte.\n```python\nprint("translate this please, it should work")\n```'),
+      { consumer_root: tmp, env: {} },
+    );
+    expect(readState().language).toBe("de");
   });
 
   it("an ambiguous prompt keeps the earlier German pin through the hook", () => {
