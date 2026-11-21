@@ -159,6 +159,43 @@ describe('observe_prompt — goal sentences', () => {
         expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
     });
 
+    // Round 7: an older goal writer that staged its temp file before the store
+    // refused new files, and renames it over the record after the store recovers,
+    // must not revive the goal the fallback stop revoked.
+    it.skipIf(process.getuid?.() === 0)('a staged older goal renamed in after the fallback stop renders nowhere', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        const T3 = new Date('2026-11-21T12:00:00Z');
+        observe_prompt(root, 's1', 'until merged', T0);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        const staged = path.join(dir, 's1.json.staged');
+        fs.writeFileSync(staged, JSON.stringify({ sentence: 'mach weiter bis zum merge', recorded_at: T2.toISOString() }));
+        fs.chmodSync(dir, 0o555);
+        try {
+            observe_prompt(root, 's1', 'stop', T3);
+        } finally {
+            fs.chmodSync(dir, 0o755);
+        }
+        fs.renameSync(staged, path.join(dir, 's1.json'));
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+        expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+    });
+
+    // Round 7: a stop that can be saved nowhere is said on that turn.
+    it.skipIf(process.getuid?.() === 0)('says so on the turn when a stop could not be saved', () => {
+        observe_prompt(root, 's1', 'until merged', T0);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        for (const n of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, n), 0o444);
+        fs.chmodSync(dir, 0o555);
+        try {
+            const block = goal_mandate_block(root, 's1', 'stop', T1);
+            expect(block).toContain('could not be saved');
+            expect(block).not.toContain('Owner goal');
+        } finally {
+            fs.chmodSync(dir, 0o755);
+            for (const n of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, n), 0o644);
+        }
+    });
+
     // Round 6: only a direct request — a line opening with the goal phrase or a
     // request word — records; a mention opening with its subject does not.
     it.each(['ok, mach weiter bis zum merge', 'bitte bis zum merge durchziehen', 'please keep going until merged', 'Until merged, please.'])(

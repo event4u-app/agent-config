@@ -21,6 +21,8 @@ export interface GoalRecord {
     /** The owner's revoke line, verbatim; absent while the goal stands. */
     revoked_by?: string;
     revoked_at?: string;
+    /** Set on the turn a stop could be saved nowhere; never stored. */
+    unsaved?: boolean;
 }
 
 /**
@@ -53,7 +55,18 @@ export function latest_stop(file: string): { at: number; by: string } | null {
     for (const n of fs.readdirSync(dir)) {
         if (n.startsWith(prefix) && /^\d{13}$/.test(n.slice(prefix.length)) && (best === null || n > best)) best = n;
     }
-    return best === null ? null : { at: Number(best.slice(prefix.length)), by: fs.readFileSync(path.join(dir, best), 'utf-8') };
+    let found = best === null ? null : { at: Number(best.slice(prefix.length)), by: fs.readFileSync(path.join(dir, best), 'utf-8') };
+    // The stop slot `<record>.stop`: created empty with the first goal and written
+    // in place by a stop when the store refuses a new file. No goal write touches it.
+    let slot = '';
+    try {
+        slot = fs.readFileSync(`${file}.stop`, 'utf-8');
+    } catch (e) {
+        if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+    }
+    const m = /^(\d{13}) ([\s\S]*)$/.exec(slot);
+    if (m !== null && (found === null || Number(m[1]) > found.at)) found = { at: Number(m[1]), by: m[2] as string };
+    return found;
 }
 
 /** The record with the latest stop folded in: a goal at or before it reads as revoked. */

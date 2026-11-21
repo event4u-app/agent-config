@@ -33,30 +33,26 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
     if (file === null) return;
     fs.mkdirSync(path.dirname(file), { recursive: true });
     write_atomic(file, `${JSON.stringify(record, null, 2)}\n`);
+    // The stop slot exists from the first goal on, so a later stop can be written
+    // into it in place even where the store refuses new files. `a` never truncates.
+    fs.writeFileSync(`${file}.stop`, '', { flag: 'a' });
 }
 
 /**
  * Store a stop as a file of its own beside the record, named by its stamp, so
  * no goal write can overwrite it and concurrent stops keep the latest; lower
- * stops are then pruned. A store that refuses the new file takes the revocation
- * in the record itself (atomic, else in place), which keeps its stamp; a record
- * that cannot be written at all is removed, which ends the goal for every reader.
+ * stops are then pruned. A store that refuses the new file takes the stop in the
+ * slot `<record>.stop`, written in place; no goal write touches either. Throws
+ * when neither can be written.
  */
-function write_stop(file: string, record: GoalRecord, now: Date): void {
+function write_stop(file: string, revoke: string, now: Date): void {
+    const stamp = String(now.getTime()).padStart(13, '0');
     const prefix = `${path.basename(file)}.stop-`;
-    const own = `${prefix}${String(now.getTime()).padStart(13, '0')}`;
+    const own = `${prefix}${stamp}`;
     try {
-        fs.writeFileSync(path.join(path.dirname(file), own), record.revoked_by ?? '');
+        fs.writeFileSync(path.join(path.dirname(file), own), revoke);
     } catch {
-        try {
-            write_atomic(file, `${JSON.stringify(record, null, 2)}\n`);
-        } catch {
-            try {
-                fs.writeFileSync(file, `${JSON.stringify(record, null, 2)}\n`);
-            } catch {
-                fs.rmSync(file, { force: true });
-            }
-        }
+        fs.writeFileSync(`${file}.stop`, `${stamp} ${revoke}`);
         return;
     }
     for (const n of fs.readdirSync(path.dirname(file))) {
@@ -97,7 +93,11 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
         const at = now.toISOString();
         if (revoke !== null) {
             const revoked: GoalRecord = { ...(current ?? { sentence: '', recorded_at: at }), revoked_by: revoke, revoked_at: at };
-            write_stop(file, revoked, now);
+            try {
+                write_stop(file, revoke, now);
+            } catch {
+                return { ...revoked, unsaved: true };
+            }
             return revoked;
         }
         const record: GoalRecord = { sentence: goal as string, recorded_at: at };
@@ -112,6 +112,11 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
 
 /** Observe the prompt, then render the live record as a block; null when no goal stands. */
 export function goal_mandate_block(root: string, session_id: string, prompt: string, now: Date = new Date()): string | null {
-    const line = goal_mandate_line(observe_prompt(root, session_id, prompt, now));
+    const record = observe_prompt(root, session_id, prompt, now);
+    if (record?.unsaved === true) {
+        const said = JSON.stringify(record.revoked_by).replace(/</g, '\\u003c');
+        return `<session-goal>\nThe owner's stop ${said} could not be saved to the goal store: treat the earlier goal as revoked for the rest of this session.\n</session-goal>`;
+    }
+    const line = goal_mandate_line(record);
     return line === null ? null : `<session-goal>\n${line}\n</session-goal>`;
 }
