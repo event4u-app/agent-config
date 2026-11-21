@@ -62,13 +62,14 @@ export function compareRuns(atA: number, invocationA: unknown, atB: number, invo
     return a > b ? 1 : -1;
 }
 
-export interface LatestRun {
+// A type alias, not an interface: it must stay assignable to JSON and record shapes.
+export type LatestRun = {
     readonly invocation: string;
     readonly completed_at: string | null;
     /** The run's outcome, so the row still answers "what happened last" after the history rotated it out. */
     readonly exit_code: number | null;
     readonly decision: string | null;
-}
+};
 
 /**
  * The summary's `latest` map (one row per concern, outside the capped history:
@@ -105,7 +106,7 @@ export function withLatestRuns(
             decision: typeof e['decision'] === 'string' ? e['decision'] : null,
         };
         const prior = out[name];
-        out[name] = prior === undefined ? run : (keepNewerOutcome(prior as unknown as Record<string, unknown>, run) ?? prior);
+        out[name] = prior === undefined ? run : (keepNewerOutcome(prior, run) ?? prior);
     }
     return out;
 }

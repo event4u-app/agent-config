@@ -299,6 +299,14 @@ describe('chunk builds — one definition, used by the build and by the gate', (
         }
     }, 60_000);
 
+    // Kept from the retired per-chunk coverage check: a chunk defined twice is a
+    // definition defect whatever the budget says, and `.find()` readers hide it.
+    it('defines each chunk entry and each outfile exactly once', () => {
+        const dupes = (xs: readonly string[]): string[] => xs.filter((x, i) => xs.indexOf(x) !== i);
+        expect(dupes(HOOK_CHUNKS.map((c) => c.entry))).toEqual([]);
+        expect(dupes(HOOK_CHUNKS.map((c) => c.outfile))).toEqual([]);
+    });
+
     it('refuses to measure an entry no chunk is defined for', () => {
         expect(() => buildChunkBytes(REPO, 'src/scripts/_lib/no_such_chunk.ts')).toThrow(/defines no chunk/);
     });
