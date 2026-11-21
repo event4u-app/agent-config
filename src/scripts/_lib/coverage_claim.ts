@@ -86,7 +86,7 @@ export interface CoverageFinding {
 }
 
 /** A `Not verified:` / `Nicht verifiziert:` line — the reply's own list of what it did not check. */
-const NOT_VERIFIED_RE = /^\s*(?:[-*]\s+)?(?:\*\*)?(?:not verified|nicht verifiziert)\b/im;
+const NOT_VERIFIED_RE = /^\s*(?:[-*]\s+)?(?:\*\*)?(?:not verified|nicht verifiziert)(?:\*\*)?\s*:/im;
 
 /** `165 of 405`, `165 von 405`, `40/41`. */
 const RATIO_RE = /\b(\d+)\s*(?:of|von|\/)\s*(\d+)\b/gi;
@@ -173,9 +173,24 @@ const EDIT_TOOLS: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', '
 /** Surfaces a render or browser run reaches without naming them: a web page. */
 const BROWSER_KINDS: ReadonlySet<LiveSurface['kind']> = new Set(['npm-script', 'playwright']);
 
-/** A call that drove `surface`: its start command, its URL, or a render or browser run over a web page. */
+/** The config a `playwright test` run names (`--config X`, `-c X`), as a basename; null when none. */
+function playwrightConfig(command: string): string | null {
+    const m = /\s(?:--config(?:=|\s+)|-c\s+)(\S+)/.exec(command);
+    return m ? path.basename((m[1] as string).replace(/^["']|["']$/g, '')) : null;
+}
+
+/**
+ * A call that drove `surface`: its start command, its URL, or a render or browser
+ * run over a web page. A `playwright test` run that names another config does not
+ * drive a surface derived from this one.
+ */
 function drives(command: string, surface: LiveSurface): boolean {
-    if (BROWSER_KINDS.has(surface.kind) && /\bui:render\b|\bplaywright\s+test\b/.test(command)) return true;
+    const browser = /\bui:render\b|\bplaywright\s+test\b/.test(command);
+    if (surface.kind === 'playwright' && /\bplaywright\s+test\b/.test(command)) {
+        const named = playwrightConfig(command);
+        return named === null || named === path.basename(surface.derived_from.replace(/:\d+$/, ''));
+    }
+    if (BROWSER_KINDS.has(surface.kind) && browser) return true;
     if (surface.start !== null && command.includes(surface.start)) return true;
     return surface.url !== undefined && command.includes(surface.url);
 }

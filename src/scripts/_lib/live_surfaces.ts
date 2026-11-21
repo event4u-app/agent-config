@@ -63,14 +63,25 @@ const MAX_INPUT_BYTES = 1024 * 1024;
  * would block a synchronous read that no `try` can recover from.
  */
 export function readText(file: string): string | null {
+    let fd: number | null = null;
     try {
-        const st = fs.statSync(file);
+        // Non-blocking open, then check the OPENED file: a path swapped between a
+        // stat and a read cannot slip a FIFO or a large file past the check.
+        fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+        const st = fs.fstatSync(fd);
         if (!st.isFile() || st.size > MAX_INPUT_BYTES) return null;
-        return fs.readFileSync(file, 'utf8');
+        const buf = Buffer.alloc(MAX_INPUT_BYTES + 1);
+        const n = fs.readSync(fd, buf, 0, buf.length, 0);
+        return n > MAX_INPUT_BYTES ? null : buf.toString('utf8', 0, n);
     } catch {
         return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
     }
 }
+
+/** Compose files read per derivation; with the per-file bound this caps the whole read. */
+const MAX_COMPOSE_FILES = 8;
 
 export function rel(root: string, file: string): string {
     return path.relative(root, file).split(path.sep).join('/');
@@ -164,7 +175,11 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
     const out: LiveSurface[] = [];
     let names: string[] = [];
     try {
-        names = fs.readdirSync(root).filter((n) => /^(docker-)?compose[\w.-]*\.ya?ml$/.test(n)).sort();
+        names = fs
+            .readdirSync(root)
+            .filter((n) => /^(docker-)?compose[\w.-]*\.ya?ml$/.test(n))
+            .sort()
+            .slice(0, MAX_COMPOSE_FILES);
     } catch {
         return out;
     }
@@ -181,6 +196,7 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
         }
         for (const [service, spec] of Object.entries(doc.services ?? {})) {
             const ports = Array.isArray(spec?.ports) ? spec.ports : [];
+            const line = lineOf(text, new RegExp(`^\\s+${escapeRe(service)}\\s*:`));
             for (const p of ports) {
                 const host = /^(?:[\d.]+:)?(\d+):\d+/.exec(String(p));
                 if (host === null) continue;
@@ -190,7 +206,7 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
                     start: `docker compose -f ${name} up ${service}`,
                     url: `http://localhost:${host[1] as string}`,
                     root: '.',
-                    derived_from: `${name}:${String(lineOf(text, new RegExp(`^\\s+${escapeRe(service)}\\s*:`)))}`,
+                    derived_from: `${name}:${String(line)}`,
                 });
             }
         }

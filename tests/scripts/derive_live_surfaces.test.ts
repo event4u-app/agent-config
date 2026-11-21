@@ -40,6 +40,15 @@ describe('deriveLiveSurfaces', () => {
         expect(deriveLiveSurfaces(dir)).toEqual([]);
     });
 
+    it('reads at most eight compose files', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-many-'));
+        tmps.push(dir);
+        for (let i = 10; i < 30; i += 1) {
+            fs.writeFileSync(path.join(dir, `compose.${String(i)}.yml`), `services:\n  s${String(i)}:\n    ports:\n      - "${String(8000 + i)}:80"\n`);
+        }
+        expect(deriveLiveSurfaces(dir).filter((x) => x.kind === 'compose')).toHaveLength(8);
+    });
+
     it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-fifo-'));
         tmps.push(dir);

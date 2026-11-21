@@ -2297,6 +2297,34 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
     });
 
+    it('a status sentence opening with "Not verified yet" is not a Not verified list', () => {
+        const dir = appWorkspace();
+        const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified yet whether dev (npm run dev) still starts.';
+        expect(detectCoverageGap(reply, [edit(dir)], dir)?.code).toBe('unlisted_surface');
+    });
+
+    it('a playwright run with another config does not drive this config\'s surface', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-pw-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { use: { baseURL: 'http://localhost:4173' } };\n");
+        const calls: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'page.ts') },
+            { name: 'Bash', command: 'npx playwright test --config e2e/other.config.ts' },
+        ];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
+    });
+
+    it('a playwright run over this config drives its surface', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-pw-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), "export default { use: { baseURL: 'http://localhost:4173' } };\n");
+        const calls: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'page.ts') },
+            { name: 'Bash', command: 'npx playwright test' },
+        ];
+        expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
+    });
+
     it('a Not verified block lists a surface by its whole name, not a word containing it', () => {
         const dir = appWorkspace();
         const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified:\n- the development notes';
