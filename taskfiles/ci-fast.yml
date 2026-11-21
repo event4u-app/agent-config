@@ -1102,6 +1102,11 @@ tasks:
     desc: "Regression-lock skill trigger sets — every src/skills/*/evals/triggers.json carries a fresh (<=90d) last_eval and passes the offline structural smoke (road-to-contract-integrity F4)"
     cmd: ./scripts-run src/scripts/check_trigger_evals {{.QUIET_FLAG}}
 
+  trigger-evals:import-rotation:
+    silent: true
+    desc: "Record suites that passed the weekly live trigger-eval rotation (cross-model canary artifacts) in the freshness ledger check-trigger-evals reads"
+    cmd: ./scripts-run src/scripts/import_trigger_eval_rotation {{.CLI_ARGS}}
+
   check-trigger-eval-presence:
     silent: true
     desc: "Presence ratchet — every skill outside the shrink-only grandfather allowlist ships evals/triggers.json (road-to-composition-ratchet)"

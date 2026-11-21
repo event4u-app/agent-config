@@ -17,12 +17,14 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { git_blob_sha } from '../../src/scripts/_lib/trigger_eval_freshness.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_trigger_evals.ts');
 // The script imports the scan-scope assertion and the `asOf()` time seam, so
 // the fixture tree needs both libs beside it. Each imports only node builtins,
 // so the chain ends here.
-const LIB_SRCS = ['scan_scope.ts', 'as_of.ts'] as const;
+const LIB_SRCS = ['scan_scope.ts', 'as_of.ts', 'trigger_eval_freshness.ts'] as const;
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -243,6 +245,82 @@ describe('check_trigger_evals — golden parity (fixture repo)', () => {
 
     it('usage error: unrecognized flag → exit 2', () => {
         expectParity(fx, ['--bogus']);
+    });
+});
+
+describe('check_trigger_evals — freshness ledger', () => {
+    let fx: { root: string; ts: string };
+    const LEDGER = 'agents/evidence/metrics/trigger-eval-freshness.json';
+    const CORPUS = JSON.stringify({
+        last_eval: '2020-01-01',
+        queries: [
+            { q: 'a', trigger: true },
+            { q: 'b', trigger: false },
+        ],
+    });
+    const run = (): { status: number | null; stderr: string } =>
+        spawnSync(TSX_BIN, [fx.ts, '--today', TODAY], { cwd: fx.root, encoding: 'utf8' });
+    const record = (blob: string, date: string): string =>
+        JSON.stringify({
+            schema: 1,
+            suites: {
+                alpha: { date, blob, run_id: '1', model: 'm', precision: 1, recall: 1 },
+            },
+        });
+
+    beforeEach(() => {
+        fx = fixtureRepo();
+        write(fx.root, 'src/skills/alpha/evals/triggers.json', CORPUS);
+    });
+    afterEach(() => {
+        fs.rmSync(fx.root, { recursive: true, force: true });
+    });
+
+    it('a stale last_eval with no ledger stays red and names the import', () => {
+        const r = run();
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('`last_eval` 2020-01-01 is');
+        expect(r.stderr).toContain('task trigger-evals:import-rotation');
+    });
+
+    it('a fresh rotation pass for the exact corpus makes it fresh', () => {
+        write(fx.root, LEDGER, record(git_blob_sha(Buffer.from(CORPUS)), FRESH));
+        const r = run();
+        expect(r.stderr).toBe('');
+        expect(r.status).toBe(0);
+    });
+
+    it('a pass recorded for different corpus content does not count', () => {
+        write(fx.root, LEDGER, record(git_blob_sha(Buffer.from(CORPUS + ' ')), FRESH));
+        const r = run();
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('`last_eval` 2020-01-01 is');
+    });
+
+    it('a stale rotation pass newer than last_eval is reported as the source', () => {
+        write(fx.root, LEDGER, record(git_blob_sha(Buffer.from(CORPUS)), '2025-01-01'));
+        const r = run();
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain(`rotation pass 2025-01-01 (${LEDGER})`);
+    });
+
+    it('a rotation pass covers a corpus without last_eval', () => {
+        const noDate = JSON.stringify({
+            queries: [
+                { q: 'a', trigger: true },
+                { q: 'b', trigger: false },
+            ],
+        });
+        write(fx.root, 'src/skills/alpha/evals/triggers.json', noDate);
+        write(fx.root, LEDGER, record(git_blob_sha(Buffer.from(noDate)), FRESH));
+        expect(run().status).toBe(0);
+    });
+
+    it('a malformed ledger is a red gate, not ignored evidence', () => {
+        write(fx.root, LEDGER, JSON.stringify({ schema: 1, suites: { alpha: { date: 'x' } } }));
+        const r = run();
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('unreadable freshness ledger');
     });
 });
 

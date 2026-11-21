@@ -169,6 +169,23 @@ describe('ci_mirror — the caller\'s checkout is never written through', () => 
         expect(fs.readFileSync(path.join(original, 'pkg/index.js'), 'utf8')).toBe('original');
         fs.rmSync(dir, { recursive: true, force: true });
     });
+
+    it('clones the target when the caller node_modules is itself a symlink (worktree layout)', async () => {
+        const { cloneNodeModules } = await import('../../src/scripts/ci_mirror.js');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ci-mirror-clone-'));
+        const real = path.join(dir, 'real');
+        fs.mkdirSync(path.join(real, 'pkg'), { recursive: true });
+        fs.writeFileSync(path.join(real, 'pkg/index.js'), 'original');
+        const link = path.join(dir, 'link');
+        fs.symlinkSync(real, link);
+        const clone = path.join(dir, 'clone');
+        cloneNodeModules(link, clone);
+        expect(fs.lstatSync(clone).isSymbolicLink()).toBe(false);
+        expect(fs.readFileSync(path.join(clone, 'pkg/index.js'), 'utf8')).toBe('original');
+        fs.rmSync(path.join(clone, 'pkg'), { recursive: true });
+        expect(fs.readFileSync(path.join(real, 'pkg/index.js'), 'utf8')).toBe('original');
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
 });
 
 describe('ci_mirror — a gate that demands full history, on a shallow clone', () => {

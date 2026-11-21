@@ -19,9 +19,13 @@
  *     package.json too — see check_augment_manifests()
  *   - the Copilot plugin and Gemini extension match it in `version` and in the
  *     pinned `npx` argument — see check_listing_manifests()
+ *   - plugins[].source must be `./.claude-plugin`: the host auto-loads
+ *     `<source>/agents/` as subagents, so the repo root (`./`) would ship the
+ *     whole `agents/` tree and blow the agent-description budget
+ *   - `<source>/agents/` must not exist; `<source>/hooks/hooks.json` must
  *   - the union of plugins[].skills[] must be EXACTLY the pointer skill
- *     (./.claude-plugin/skills/install-agent-config) — a repopulated
- *     content-skill list FAILS by design
+ *     (./skills/install-agent-config, relative to the plugin source) — a
+ *     repopulated content-skill list FAILS by design
  *   - the pointer entry must exist on disk and carry a SKILL.md
  *   - .claude-plugin/skills/ on disk must contain ONLY the pointer dir
  *
@@ -41,8 +45,15 @@ const PACKAGE_JSON = path.join(ROOT, "package.json");
 // the npx file projection (dist/agent-src/skills/ ships in the npm package,
 // not through the marketplace). .claude/skills/ is a gitignored local channel
 // and is intentionally NOT a marketplace source.
-const POINTER_SKILL_ENTRY = "./.claude-plugin/skills/install-agent-config";
-const PLUGIN_SKILLS_DIR = path.join(ROOT, ".claude-plugin", "skills");
+// The plugin root. Never the repo root: the host scans `<root>/agents/` for
+// subagents by default, and the repo's `agents/` is a work tree, not agents.
+const PLUGIN_SOURCE = "./.claude-plugin";
+const PLUGIN_ROOT = path.join(ROOT, ".claude-plugin");
+// Relative to PLUGIN_SOURCE, as the host resolves plugin component paths.
+const POINTER_SKILL_ENTRY = "./skills/install-agent-config";
+const PLUGIN_SKILLS_DIR = path.join(PLUGIN_ROOT, "skills");
+const PLUGIN_HOOKS = path.join(PLUGIN_ROOT, "hooks", "hooks.json");
+const PLUGIN_AGENTS_DIR = path.join(PLUGIN_ROOT, "agents");
 const POINTER_SKILL_DIRNAME = "install-agent-config";
 
 type JsonValue =
@@ -218,7 +229,7 @@ export function main(): number {
         ".augment-plugin/marketplace.json",
         ...LISTING_MANIFESTS,
         "package.json",
-        `${POINTER_SKILL_ENTRY.replace(/^\.\//, "")}/SKILL.md`,
+        `.claude-plugin/${removePrefix(POINTER_SKILL_ENTRY, "./")}/SKILL.md`,
       ],
       repoRoot: path.resolve(ROOT),
     });
@@ -304,6 +315,14 @@ export function main(): number {
     for (const k of ["name", "description", "source", "skills"]) {
       require_key(plugin, k, where, errors);
     }
+    const source = plugin["source"];
+    if (source !== undefined && source !== PLUGIN_SOURCE) {
+      errors.push(
+        `${where}.source must be \`${PLUGIN_SOURCE}\`, got ` +
+          `\`${JSON.stringify(source)}\` — the host loads \`<source>/agents/\` ` +
+          "as subagents, so a wider root ships the repo's agents/ tree",
+      );
+    }
 
     const skills = plugin["skills"] ?? [];
     if (!Array.isArray(skills)) {
@@ -336,10 +355,10 @@ export function main(): number {
         continue;
       }
 
-      // Resolve path relative to repo root (strip leading "./" only,
+      // Resolve relative to the plugin root (strip leading "./" only,
       // NOT every "." and "/" character)
       const rel = removePrefix(p, "./");
-      const skillDir = path.join(ROOT, rel);
+      const skillDir = path.join(PLUGIN_ROOT, rel);
       if (!_exists(skillDir)) {
         errors.push(`${entry} path does not exist: \`${p}\``);
         continue;
@@ -394,6 +413,19 @@ export function main(): number {
           "or re-run the generator",
       );
     }
+  }
+
+  if (_exists(PLUGIN_AGENTS_DIR)) {
+    errors.push(
+      "bootstrap shim: `.claude-plugin/agents` must not exist — the host " +
+        "loads every file in it as a subagent",
+    );
+  }
+  if (!_exists(PLUGIN_HOOKS)) {
+    errors.push(
+      "bootstrap shim: `.claude-plugin/hooks/hooks.json` not found — the " +
+        "plugin root carries the hooks (symlink to the generated `hooks/`)",
+    );
   }
 
   if (errors.length > 0) {

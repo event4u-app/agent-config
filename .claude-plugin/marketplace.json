@@ -38,10 +38,10 @@
         "infrastructure",
         "documentation"
       ],
-      "source": "./",
+      "source": "./.claude-plugin",
       "strict": false,
       "skills": [
-        "./.claude-plugin/skills/install-agent-config"
+        "./skills/install-agent-config"
       ]
     }
   ]

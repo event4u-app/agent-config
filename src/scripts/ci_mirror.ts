@@ -625,11 +625,13 @@ export function planProblems(config: MirrorConfig, plans: JobPlan[]): string[] {
  * clones where the filesystem can and copies where it cannot.
  */
 export function cloneNodeModules(from: string, to: string): void {
-    const args = process.platform === 'darwin' ? ['-cR', from, to] : ['-R', '--reflink=auto', from, to];
+    // A git worktree commonly links node_modules to the main checkout; `cp -R` copies the link, not its target.
+    const src = fs.realpathSync(from);
+    const args = process.platform === 'darwin' ? ['-cR', src, to] : ['-R', '--reflink=auto', src, to];
     try {
         execFileSync('cp', args, { stdio: 'pipe' });
     } catch {
-        fs.cpSync(from, to, { recursive: true, verbatimSymlinks: true });
+        fs.cpSync(src, to, { recursive: true, verbatimSymlinks: true });
     }
     if (fs.lstatSync(to).isSymbolicLink()) throw new Error(`${to} must be a copy, never a link`);
 }
