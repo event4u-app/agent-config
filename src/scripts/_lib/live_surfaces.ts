@@ -80,6 +80,10 @@ export function readText(file: string, root?: string): string | null {
         const st = fs.fstatSync(fd);
         if (!st.isFile() || st.size > MAX_INPUT_BYTES) return null;
         // A parent directory swapped between the check and the open shows as a different file.
+        // Residual, stated: Node has no openat, so a directory swapped again between this
+        // re-check and the stat cannot be excluded by path checks. A process that can swap
+        // directories inside the workspace mid-Stop already controls the files the agent
+        // runs, and what is read here becomes surface names in a local record-only counter.
         if (root !== undefined) {
             const base = fs.realpathSync(root);
             const againPath = fs.realpathSync(file);

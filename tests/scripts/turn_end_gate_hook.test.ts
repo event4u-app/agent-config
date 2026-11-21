@@ -2247,6 +2247,12 @@ describe('detector G — a partial ratio reported as complete', () => {
     });
 });
 
+describe('detector G — a negated claim on its own line', () => {
+    it('a claim line after another line still reads its own negation', () => {
+        expect(detectCoverageGap('Progress update.\nFertig ist der Fix noch nicht.\n165 von 405', [], undefined)).toBeNull();
+    });
+});
+
 describe('detector G — an edited surface nothing drove and nothing lists', () => {
     // road-to-done-claims-with-read-exit-codes 4.4. The surface map is derived
     // from the workspace's own package.json; the turn edits a file under it.

@@ -66,6 +66,8 @@ export const NEGATED_CLAIM_RE =
 
 /** The line `at` falls on — the scope a negation has to appear in to count. */
 export function lineAround(prose: string, at: number): string {
+    // A match anchored on `(^|\n)` starts AT the newline; its line is the next one.
+    if (prose[at] === '\n') at += 1;
     const start = prose.lastIndexOf('\n', at) + 1;
     const end = prose.indexOf('\n', at);
     return prose.slice(start, end === -1 ? prose.length : end);
