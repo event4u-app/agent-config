@@ -1020,10 +1020,10 @@ export function languageFireClass(setter: PinSetter | null): LanguageSplitClass 
     if (setter.source === 'system-locale') return 'system-locale';
     if (setter.flagged || isSyntheticPrompt(setter.text)) return 'synthetic-turn';
     const spans = ownerSpans(stripInjectedRegions(setter.text));
-    const owner = scoreText(`${spans.lead}\n${spans.trailing}`).language;
-    if (owner === setter.language) return 'owner-prose';
     const trailing = scoreText(spans.trailing).language;
     if (trailing !== 'und' && trailing !== setter.language) return 'trailing-typed-line';
+    const owner = scoreText(`${spans.lead}\n${spans.trailing}`).language;
+    if (owner === setter.language) return 'owner-prose';
     return 'paste-decided';
 }
 

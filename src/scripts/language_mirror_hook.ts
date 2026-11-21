@@ -313,6 +313,12 @@ export function instructionText(prompt: string): string {
  * typed lead was short, which is the owner's most common prompt shape
  * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
  *
+ * The lead and the trailing span are scored apart first. When both are
+ * confident and disagree, the verdict is `und`: either may be the paste's own
+ * edge line (`Behebe das bitte.` glued above an error whose explanation follows
+ * a blank line, or a terminal header line above a typed question), and no
+ * position rule tells them apart. Otherwise the two spans are scored together.
+ *
  * `owner_prose_chars` is the length of the text that was scored, so a pin can
  * say how much owner prose stood behind it.
  *
@@ -320,8 +326,13 @@ export function instructionText(prompt: string): string {
  * notion of an owner and keeps its whole-text fallback.
  */
 export function classify(prompt: string): Classification {
-  const owner = ownerProse(prompt);
-  return { ..._score(owner), owner_prose_chars: owner.length };
+  const { lead, trailing } = ownerProse(prompt);
+  const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
+  const verdict = _score(owner);
+  const a = _score(lead).language;
+  const b = _score(trailing).language;
+  if (a !== "und" && b !== "und" && a !== b) return { ...verdict, language: "und", owner_prose_chars: owner.length };
+  return { ...verdict, owner_prose_chars: owner.length };
 }
 
 /**

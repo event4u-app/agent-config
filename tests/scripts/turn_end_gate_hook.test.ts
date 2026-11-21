@@ -478,6 +478,20 @@ describe('language pin', () => {
         expect(readLanguagePin(dir, 'sess-1')).toBe('de');
     });
 
+    it('a malformed owner_prose_chars obliges nothing', () => {
+        for (const bad of [null, -1, '0', 1.5, '12']) {
+            const dir = makeWorkspace();
+            writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt', owner_prose_chars: bad }));
+            expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+        }
+    });
+
+    it('a locale pin without owner_prose_chars obliges nothing', () => {
+        const dir = makeWorkspace();
+        writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'en', source: 'system-locale' }));
+        expect(readLanguagePin(dir, 'sess-1')).toBe('und');
+    });
+
     it('a pin written before owner_prose_chars existed keeps today\'s reading', () => {
         const dir = makeWorkspace();
         writePin(dir, 'sess-1', ownedPin('sess-1', { language: 'de', source: 'prompt' }));

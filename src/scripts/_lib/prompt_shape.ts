@@ -184,10 +184,10 @@ export interface OwnerSpans {
  * paragraph below a pasted heading is that document's body, and reading its
  * last paragraph as typed would hand the pin back to the paste.
  *
- * When both exist and the lead runs straight into the paste with no blank line,
- * the lead is dropped: a line glued to the top of a terminal block is that
- * block's own first line far more often than an introduction, and the owner's
- * words below the block are the ones whose authorship is not in question.
+ * Both spans are returned as found; neither is dropped in favour of the other.
+ * Deciding between a lead and a trailing span that disagree is the scorer's job
+ * (`classify` in the language mirror: two confident spans that disagree are
+ * undetermined), because either one may be the paste's own first or last line.
  *
  * A trailing span with no blank line between it and the paste is weaker
  * evidence than a lead: it is read only when the prompt has no lead. A wrapped
@@ -206,23 +206,10 @@ export function ownerSpans(text: string): OwnerSpans {
   const blank = (l: string): boolean => l.trim() === "";
 
   const lead: string[] = [];
-  let leadEnd = lines.length;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? "";
-    if (isPaste(line)) {
-      leadEnd = i;
-      break;
-    }
-    if (blank(line)) {
-      if (lead.length > 0) {
-        leadEnd = i;
-        break;
-      }
-      continue;
-    }
-    lead.push(line);
+  for (const line of lines) {
+    if (isPaste(line) || (blank(line) && lead.length > 0)) break;
+    if (!blank(line)) lead.push(line);
   }
-  const leadGluedToPaste = lead.length > 0 && isPaste(lines[leadEnd] ?? "");
 
   let end = lines.length - 1;
   while (end >= 0 && blank(lines[end] ?? "")) end--;
@@ -239,7 +226,7 @@ export function ownerSpans(text: string): OwnerSpans {
   const trailing = separated || lead.length === 0 ? candidate : [];
 
   return {
-    lead: trailing.length > 0 && leadGluedToPaste ? "" : lead.join("\n"),
+    lead: lead.join("\n"),
     trailing: trailing.join("\n"),
   };
 }
@@ -271,13 +258,11 @@ const HOST_TURN_HEAD =
  * fallback: a prompt whose owner spans are undetermined is undetermined, and
  * the caller keeps the previous pin.
  */
-export function ownerProse(prompt: string): string {
-  const head = prompt.trimStart();
-  if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(head)) {
-    return "";
+export function ownerProse(prompt: string): OwnerSpans {
+  if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
+    return { lead: "", trailing: "" };
   }
-  const spans = ownerSpans(stripInjectedRegions(prompt));
-  return [spans.lead, spans.trailing].filter((s) => s.trim() !== "").join("\n\n");
+  return ownerSpans(stripInjectedRegions(prompt));
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */

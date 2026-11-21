@@ -1711,9 +1711,26 @@ function pinFrom(prompt: string): string {
 
 const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
   [
-    "[context] terminal block above one typed German line",
+    // The English header line may be the terminal's or the owner's: two
+    // confident spans that disagree are undetermined, so the previous pin stays.
+    "[context] terminal block above one typed German line, English header glued on top",
     "The command failed with these errors and the build should be checked:\nError: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
+    "und",
+  ],
+  [
+    "[context] terminal block above one typed German line",
+    "Error: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
     "de",
+  ],
+  [
+    "[ratification r1] German lead glued above an error whose English explanation follows a blank line",
+    "Behebe das bitte.\nError: request failed\n\nThis is the explanation of the error, and it tells you what you should do next.",
+    "und",
+  ],
+  [
+    "[ratification r1] German lead, blank line, error, blank line, English explanation",
+    "Behebe das bitte.\n\nError: request failed\n\nThis is the explanation of the error, and it tells you what you should do next.",
+    "und",
   ],
   [
     "[context] terminal block glued to the typed German line, no blank line",
@@ -1798,13 +1815,25 @@ describe("owner prose only", () => {
   });
 
   it("owner_prose_chars records the typed line's length, not prompt_chars", () => {
-    const [, prompt] = OWNER_PROSE_ROWS[0]!;
+    const [, prompt] = OWNER_PROSE_ROWS.find(([name]) => name === "[context] terminal block above one typed German line")!;
     run(envelope(prompt), { consumer_root: tmp, env: {} });
     const state = readState();
     expect(state.language).toBe("de");
     expect(state.source).toBe("prompt");
     expect(state.owner_prose_chars).toBe("Warum ist das rot?".length);
     expect(state.prompt_chars).toBe(prompt.length);
+  });
+
+  // The cost of D1, pinned down rather than hidden (ratification r1): an owner
+  // span under the floor keeps the previous pin even when the next paragraph
+  // is the owner's own English, because a pasted paragraph looks the same.
+  it("a short English lead over an English paragraph keeps an earlier German pin (D1)", () => {
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests."), { consumer_root: tmp, env: {} });
+    run(envelope("Fix.\n\nThe parser drops the last line when the input has no trailing newline, and the tests should cover that."), {
+      consumer_root: tmp,
+      env: {},
+    });
+    expect(readState().language).toBe("de");
   });
 
   it("owner_prose_chars is 0 on a locale pin", () => {
