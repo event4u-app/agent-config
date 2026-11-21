@@ -95,7 +95,7 @@ const VERIFY_BINARIES: ReadonlySet<string> = new Set([
 ]);
 
 /** Prefixes that delegate to the real command; dropped before classifying. */
-const DELEGATING_HEADS: ReadonlySet<string> = new Set([
+export const DELEGATING_HEADS: ReadonlySet<string> = new Set([
     'npx',
     'bunx',
     'sudo',
@@ -201,7 +201,7 @@ function words(text: string): string[] {
 }
 
 /** Strip a path prefix from a binary name. */
-function bareName(word: string): string {
+export function bareName(word: string): string {
     let w = word;
     for (const prefix of PATH_PREFIXES) {
         if (w.startsWith(prefix)) {

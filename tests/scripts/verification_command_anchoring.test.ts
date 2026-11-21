@@ -99,6 +99,25 @@ describe('the union both classifiers agreed on is preserved', () => {
     }
 });
 
+describe('a project entry point that runs no verifier is not one', () => {
+    // Pinned before the container / path-script / Python shapes in
+    // `project_verify_shapes.ts` are swapped in, so the widening cannot clear
+    // a non-check: a predicate that accepted `docker exec app cat test.log`
+    // would discharge an unverified edit.
+    const NEGATIVES: readonly string[] = [
+        'docker exec app ls tests',
+        'docker exec app cat test.log',
+        'tools/build',
+        'python3 scripts/render_report.py',
+        './agent-config ui:render x.svg',
+    ];
+    for (const command of NEGATIVES) {
+        it(`does NOT recognise: ${command}`, () => {
+            expect(isVerificationCommand(command)).toBe(false);
+        });
+    }
+});
+
 describe('a chained segment is classified on its own head', () => {
     it('recognises a verification in the second segment', () => {
         expect(isVerificationCommand('task sync && task ci')).toBe(true);
