@@ -1,0 +1,405 @@
+{
+  "subject": "compact-checkpoint-concern-20261108",
+  "round1_findings": 5,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Ancestor symlinks bypassed checks, and observation lacked containment checks",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "FIFOs and other special files could block reads",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.3",
+          "summary": "Trimming read the entire event log into memory",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Concurrent appends could interleave or be lost during trimming",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.5",
+          "summary": "Budget row disagreed with the measured chunk size",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Counter reads bypassed containment and safe file handling",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.2",
+          "summary": "File growth after fstat could defeat the read cap",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.3",
+          "summary": "Continuity and claim helpers performed unguarded reads",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Preflight left unguarded reads in shared task-state helpers",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Appending could open or block on a special file",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.2",
+          "summary": "Line-count retention did not enforce the event log’s byte bound",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "5.3",
+          "summary": "Observation left malformed marker files behind",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "5.4",
+          "summary": "Trust policy for a symlinked repository root was unstated",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Checkpoint storage lived inside the repository",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.2",
+          "summary": "Character counts understated the UTF-8 log size",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "Appending accepted hard-linked files",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "Manifest comment still described more than a keys-only marker",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Abandoned session markers accumulated in shared runtime storage",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Version lookup could accept another package’s metadata",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.3",
+          "summary": "Tally accepted events without validating string type and own keys",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.4",
+          "summary": "Concurrent appends made the event-log bound approximate",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "7.5",
+          "summary": "Tally documentation omitted that counts cover only retained events",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Marker sweep bounded removals while scanning the entire directory",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Capped sweeps could repeatedly miss expired markers later in directory order",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Directory capacity check reserved no room for new files",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.2",
+          "summary": "Capacity refusal left the predecessor eligible for observation",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.3",
+          "summary": "Failed atomic writes left temporary files behind",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "10.4",
+          "summary": "Sweeps left stale temporary files occupying directory capacity",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.5",
+          "summary": "Observation consumed markers even when logging failed",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Log creation and racing writers could exceed the directory ceiling",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.2",
+          "summary": "Partial writes could truncate an event-log line",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.3",
+          "summary": "Hook read package metadata before checking event and source",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.4",
+          "summary": "Hook-entry tests omitted early-exit cases",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.5",
+          "summary": "Observation and recording could interleave within one session",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.6",
+          "summary": "Path checks and subsequent opens still allowed a race",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Sweep comments implied a cleanup guarantee concurrent writers could break",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Oversized-log test missed the replacement branch",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.3",
+          "summary": "New hook-entry tests did not assert silence",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Observation could remove a newer marker written after its read",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.2",
+          "summary": "Two unknown versions compared equal without documented semantics",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.3",
+          "summary": "Hook-entry tests omitted runtime-directory creation failure",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.4",
+          "summary": "Sweep test names still claimed guaranteed cleanup",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Timestamp comparison could confuse two markers written at the same instant",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.2",
+          "summary": "Absent or malformed branch could delete a newly valid marker",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.3",
+          "summary": "Sweep could delete a fresh marker replacing an expired one",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Review packet omitted the implementation needed to assess authority",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Missing platform flags silently allowed symlink following or blocking opens",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Log trimming ran before the new protection-flag check",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

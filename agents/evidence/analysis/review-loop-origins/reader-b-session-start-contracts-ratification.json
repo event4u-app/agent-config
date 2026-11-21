@@ -1,0 +1,460 @@
+{
+  "subject": "session-start-contracts-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Required body literals lacked instructions for unreadable bodies",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Revised reply openings still lacked a consistent order",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Published rewrites lacked explicit sequencing for approval and re-push",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Installed-path verification left failure behavior unresolved",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "2.5",
+          "summary": "Precedence between other contracts was unstated",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.6",
+          "summary": "Session-canary wording raised questions about hosts without per-turn reminders",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Retention footer still lacked instructions for an unreadable body",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.2",
+          "summary": "Installed verification did not cover every stub and body pointer",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.3",
+          "summary": "Review packet omitted the source-to-contract clause mapping",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Command suggestions blurred user selection and automatic invocation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.2",
+          "summary": "Disclaimer omitted supported languages and faithful translation requirements",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Demographic restrictions were narrowed to recruiting drafts",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.2",
+          "summary": "Disclaimer omitted refusal and redirection for symptom questions",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Moat claim requirement omitted naming the competitor",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.2",
+          "summary": "Evaluator independence left provider availability implicit",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.3",
+          "summary": "Decision-revisit gate left tree evidence undefined",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Finance counter-case omitted what would invalidate the conclusion",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Time-bound consent omitted naming expiry and the deletion job",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "8.2",
+          "summary": "Autonomous execution omitted ordering between new strategy and epoch",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Pull-rebase exception exceeded conflict resolution forced by the pull",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "New legal STOP copying duty lacked an unreadable-body fallback",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Corpus refusal echoed the matched snippet against body instructions",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.2",
+          "summary": "Review evidence never showed every body alongside its contract",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Privileged egress summary omitted exact markers needed for routing",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.2",
+          "summary": "Strategy shorthand omitted skill IDs needed for activation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.3",
+          "summary": "Body did not explain the contract’s newly masked preview",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.4",
+          "summary": "Decision-revisit contract was overly dense",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.5",
+          "summary": "Settings-ask contract was overly dense",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Model-card check depended on already knowing the license restriction",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.2",
+          "summary": "Preview masking left money, SQL names, and code exposed",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.3",
+          "summary": "Scope statement overlooked rule body changes from the preceding fix",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Legal contract failed to require actually running the council pass",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "14.2",
+          "summary": "Logger scrub list omitted the exact card_number key",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "14.3",
+          "summary": "Legal and other body-dependent contracts used different unreadable-body instructions",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "14.4",
+          "summary": "Reviewers requested a check for body and contract drift",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Reviewer questioned how unreadable-body instructions were enforced",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "PII placeholder shorthand omitted required nonpersonal sector values",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Activation excluded newly listed nonpersonal values when present alone",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Revised activation condition still excluded credential-only logs",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "20.1",
+          "summary": "Revised activation condition still excluded exports containing only B2B quasi-identifiers",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 22,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 23,
+      "visible": true,
+      "findings": [
+        {
+          "id": "23.1",
+          "summary": "Delivery excerpt still showed the old inline contract reader",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "24.1",
+          "summary": "Missing standalone contracts could reduce required rules to pointer stubs",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "visible": true,
+      "findings": [
+        {
+          "id": "25.1",
+          "summary": "Missing or malformed audit defeated the new full-rule fallback",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "visible": true,
+      "findings": [
+        {
+          "id": "26.1",
+          "summary": "Readable audit omissions defeated the stated full-rule fallback guarantee",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "visible": true,
+      "findings": [
+        {
+          "id": "27.1",
+          "summary": "Runtime contract barred assisted execution beyond a proposal",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.2",
+          "summary": "Engineering contract extended reset authorization beyond pushed targets",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.3",
+          "summary": "Ratification evidence lacked hashes for reviewed installer code",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 29,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 30,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 31,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

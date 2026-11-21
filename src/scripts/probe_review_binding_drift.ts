@@ -48,6 +48,7 @@ import {
     reviewScopeNameOnlyArgs,
     sha256,
 } from './dispatch_r2_reviewer.js';
+import { classifyReviewPath as classifyPath, type ReviewPathClass as PathClass } from './_lib/review_path_class.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -63,7 +64,6 @@ const OUT_REL = path.join('agents', 'evidence', 'analysis', 'review-binding-drif
 const RELEASE_ERA = { from: '11.0.0', to: '12.0.0' };
 
 type SegmentVerdict = 'same' | 'moved' | 'none' | 'no-input' | 'missing' | 'prose-bound';
-type PathClass = 'roadmap' | 'docs' | 'agents-other' | 'code';
 
 /**
  * What moved a binding's scope hash.
@@ -162,13 +162,6 @@ function scopeHashOf(text: string): { hash: string; source: 'manifest' | 'prose'
     if (manifest !== null) return { hash: manifest.scope_hash, source: 'manifest' };
     const prose = /\bscope ([0-9a-f]{64})\b/.exec(text);
     return prose === null ? null : { hash: prose[1] as string, source: 'prose' };
-}
-
-function classifyPath(p: string): PathClass {
-    if (p.startsWith('agents/roadmaps/') || p === 'agents/roadmaps-progress.md') return 'roadmap';
-    if (p.startsWith('docs/')) return 'docs';
-    if (p.startsWith('agents/')) return 'agents-other';
-    return 'code';
 }
 
 /**

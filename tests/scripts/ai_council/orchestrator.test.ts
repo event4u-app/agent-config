@@ -1289,6 +1289,42 @@ describe('stance repair call (Phase 1 wiring)', () => {
     });
 });
 
+describe('stance repair with a fixed label set (ratification prompts)', () => {
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'Ratify?' });
+    const LABELS = ['ratified', 'confirmed-non-expanding', 'refused'];
+    const accepted = (l: string): boolean => LABELS.includes(l.trim().toLowerCase());
+    const CONTRACT = 'STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no';
+
+    it('a stance outside the label set is repaired, and the repair asks for the given contract', () => {
+        const a = new CapturingMock('anthropic', 'm', [
+            'Looks fine.\n\nSTANCE: abstain | CONFIDENCE: low | DEALBREAKER: no',
+            'STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no',
+        ]);
+        const out = consult([a], q, null, {
+            stance_tally: true,
+            on_stance_repair: () => true,
+            stance_repair_contract: CONTRACT,
+            stance_label_accepted: accepted,
+        });
+        expect(a.prompts.length).toBe(2);
+        expect(a.prompts[1]).toContain(CONTRACT);
+        expect(out[0]!.text).toContain('STANCE: ratified');
+    });
+
+    it('a repair that answers outside the label set is not appended', () => {
+        const a = new CapturingMock('anthropic', 'm', ['No stance here.', 'STANCE: maybe | CONFIDENCE: low | DEALBREAKER: no']);
+        const out = consult([a], q, null, { stance_tally: true, on_stance_repair: () => true, stance_label_accepted: accepted });
+        expect(a.prompts.length).toBe(2);
+        expect(out[0]!.text).not.toContain('STANCE: maybe');
+    });
+
+    it('a stance inside the label set burns no repair', () => {
+        const a = new CapturingMock('anthropic', 'm', ['Fine.\n\nSTANCE: refused | CONFIDENCE: high | DEALBREAKER: yes']);
+        consult([a], q, null, { stance_tally: true, on_stance_repair: () => true, stance_label_accepted: accepted });
+        expect(a.prompts.length).toBe(1);
+    });
+});
+
 describe('restate pass (Phase 3 wiring)', () => {
     const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'A or B?' });
 

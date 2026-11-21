@@ -1,0 +1,335 @@
+{
+  "subject": "design-consistency-default-ratification",
+  "round1_findings": 4,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "The raise log gave inconsistent bundle growth figures",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "The added toolchain note lacked a version bound",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "The packet omitted the cumulative diff",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "The reverse trigger lacked an operational procedure",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.2",
+          "summary": "The missing-chunk test only injected a null loader",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "The documented rollback also stopped shadow recording",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "The HEAD-based cache missed uncommitted primitive changes",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Losing a file’s last primitive could leave the cache stamp unchanged",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "The chunk derivation still used the pre-fix byte count",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Shadow rows lacked evidence to classify firings after source changes",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "8.2",
+          "summary": "The shadow report collapsed repeated firings for one file",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Condition 3 lacked evidence of friction and benefit",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "The evidence left advisory severity and P1 priority unreconciled",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "The consistency-only path ran on slots besides post-tool use",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "10.2",
+          "summary": "The benefit claimed for condition 3 remained unquantified",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Missing, unreadable, or malformed shadow data produced successful empty reports",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.2",
+          "summary": "Truncated source lines could omit controls late in JSX",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.3",
+          "summary": "Cache-hit timing missed recomputes on newly dirty UI files",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "11.4",
+          "summary": "The dispatcher’s advisory ceiling lacked supporting evidence",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Shadow row validation accepted semantically invalid data",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Same-tag controls on one line shared the first control’s context",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.3",
+          "summary": "Event timing exposed a dispatcher envelope that prevented design-pass execution",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Relative written paths could escape the project root",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.2",
+          "summary": "An empty shadow window was reported as complete evidence",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.3",
+          "summary": "The raise entry overstated the lockfile’s role",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Extension-only render checks compared controls across incompatible frameworks",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "14.2",
+          "summary": "Shadow rows accepted unknown rules and non-positive line numbers",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "14.3",
+          "summary": "Headroom and owner-accepted latency needed clearer wording",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Same-named component uses incorrectly established canonical families",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.2",
+          "summary": "Cached canonical families could become stale",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Export lists misclassified library re-exports as local definitions",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "Comments, strings, and nested declarations could make imported names appear local",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Namespace and ambient module exports matched the module-level pattern",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "18.2",
+          "summary": "Regex literals could be mistaken for component declarations",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Default shadow recording incurred latency without avoiding review rounds",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "19.2",
+          "summary": "The DELIVERED header remained after delivery became opt-in",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

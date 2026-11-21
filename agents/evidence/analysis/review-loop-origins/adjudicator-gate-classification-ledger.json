@@ -1,0 +1,516 @@
+{
+  "subject": "gate-classification-ledger",
+  "round1_findings": 5,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Row 16 store-absent carried a non-taxonomy fifth class",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Stale 'one snapshot' reference contradicts snapshot 0",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Rows 9 and 12 scope not operationally defined",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.4",
+          "summary": "Row 5 claims age ≤ 90 while future dates pass",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "2.5",
+          "summary": "Row 11 'other error-severity rules' not enumerated",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.6",
+          "summary": "C3 live-URL check is a server-side request trust boundary",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "2.7",
+          "summary": "C5 depends on git history depth",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "2.8",
+          "summary": "dist/ checks trust the build",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "2.9",
+          "summary": "Clock checks trust the runner's clock",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "2.10",
+          "summary": "Classification is really a multi-dimensional tuple property",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Ledger mixes current behaviour and desired contract without declaring which",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.2",
+          "summary": "'Invariant' conflates three assurance levels",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "3.3",
+          "summary": "Claim that scope fix weakens no rule is false",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.4",
+          "summary": "Phase 7 start inventory not cited",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Phase 7 inventory and ledger rows omitted from the prompt",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.2",
+          "summary": "'At least one classified aspect per check' rule is invented",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "4.3",
+          "summary": "No independently checked check-to-row reconciliation",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "4.4",
+          "summary": "No machine-checked divergence detection against exit behaviour",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Reconciliation circular: ledger defined its own population",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.2",
+          "summary": "check_composite_arming --self-test has no ledger row",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "5.3",
+          "summary": "Store-malformed row misstates what the code does",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "5.4",
+          "summary": "Representative executions needed to confirm stated behaviour",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "5.5",
+          "summary": "Check 1 reclassification rests on intent, not enforced boundary",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "5.6",
+          "summary": "Four classes lack operational definitions",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "5.7",
+          "summary": "Kill switch and reopen triggers needed before 7.2 consumes ledger",
+          "severity": "medium",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Flag scan is not an assertion-branch inventory",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.2",
+          "summary": "Check 10 --global row names a helper, not assertions",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "Usable-record row misses valid-JSON unusable-reading stores",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.4",
+          "summary": "Check 16 --self-test row lacks execution evidence",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.5",
+          "summary": "No invalidation rule when source or wiring changes",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "6.6",
+          "summary": "No stable row identifiers for 7.2 references",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "6.7",
+          "summary": "Reconciler flag categories are an unvalidated trust boundary",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Branch-to-row mapping semantics lack independent judgment",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.2",
+          "summary": "Imported helpers not covered by per-file source pins",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.3",
+          "summary": "Inventory, mapping, reconciler not bound by digest",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.4",
+          "summary": "R10.f says 'always' though C5 skips without git",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "8.5",
+          "summary": "R11.a says 'always' though outside-repo links skipped",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "8.6",
+          "summary": "Kill switch is a detector without an enforcement point",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Unsure mapping verdicts kept without evidence",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "9.2",
+          "summary": "No pinned authoritative Phase 7 start manifest",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "9.3",
+          "summary": "Reconciler lacks mutation tests for rejection scenarios",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "9.4",
+          "summary": "7.2 lacks suspension, rollback, re-attestation rules",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "9.5",
+          "summary": "No accountable owner for pin renewal",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Pin-renewal fix names a mechanism, not an accountable owner",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.2",
+          "summary": "Twelve review disagreements and resolutions not documented",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.3",
+          "summary": "Cross-provider spot-check of sampled rows against code needed",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "10.4",
+          "summary": "No evidence disagreements weren't resolved in author's favour",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "10.5",
+          "summary": "Cannot rule out a seventeenth qualifying check at bbe5b73be",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.6",
+          "summary": "Rollback rules omit scope, authority, deadline",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.7",
+          "summary": "Re-attestation sequencing can deadlock without candidate-state check",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.8",
+          "summary": "Council renewal lacks quorum and independence rules",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.9",
+          "summary": "7.2 reliance lacks an enforceable suspension gate",
+          "severity": "medium",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "No complete reproducible inventory-to-ledger reconciliation supplied",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "11.2",
+          "summary": "Five of six sampled rows inconclusive for missing helpers",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.3",
+          "summary": "Disagreement rationales truncated; enforcement output omitted",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.4",
+          "summary": "Named owner is transient agent-lane workflow state",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.5",
+          "summary": "Independence is procedural, not technical",
+          "severity": "medium",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "198 branch assignments not individually inspectable",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Reconciler not hashed; no independent rerun",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.3",
+          "summary": "Zero snapshot and tolerance rows look suspicious",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "12.4",
+          "summary": "Later audit finding must auto-invalidate 7.1",
+          "severity": "medium",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "No source-derived completeness attestation of branch manifest",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.2",
+          "summary": "Two artefact rows each combine two modes and assertions",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.3",
+          "summary": "Four unsure rationales not inside the package",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.4",
+          "summary": "Missing exact rerun command, immutable id, invalidation rule",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.5",
+          "summary": "Every listed branch should have been red at bbe5b73be",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "13.6",
+          "summary": "resolve-outside-root exclusion may be a security invariant",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Reproduction command contains a <commit> placeholder",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.2",
+          "summary": "check_knowledge_cards:589 disposition lacks suppression site",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.3",
+          "summary": "±2-line proximity containment is weak",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.4",
+          "summary": "Scanner failure-emission vocabulary not shown exhaustive",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.5",
+          "summary": "Sixteen scripts not shown to be the complete pinned set",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "14.6",
+          "summary": "Invalidation not CI-enforced before 7.2 reliance",
+          "severity": "medium",
+          "class": "re-raised"
+        }
+      ]
+    }
+  ]
+}

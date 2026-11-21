@@ -1,0 +1,738 @@
+{
+  "subject": "fix-release-shape-allows-its-own-census",
+  "round1_findings": 4,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R2.1",
+          "summary": "Producer/consumer coupling only partly built; date and suffix re-spelled",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R2.2",
+          "summary": "Recorded reason for digit classes over ? is false",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R2.3",
+          "summary": "PR #238 citation moved onto claim it cannot support",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R2.4",
+          "summary": "New one-line summary omits template pin and dist twin",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R3.1",
+          "summary": "Producer link test does not pin the date segment",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.2",
+          "summary": "Categorical 'no install code' claim contradicted by package.json entries",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.3",
+          "summary": "'Second report is a decision' false for resume path",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R4.1",
+          "summary": "Local-time regression assertion insensitive under UTC and Americas offsets",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.2",
+          "summary": "????-??-?? justification duplicated in code and contract",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.3",
+          "summary": "Blockquote sentence denies the restatement it just made",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.4",
+          "summary": "Doc/allowlist duplicate held only by a prose instruction",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R5.1",
+          "summary": "Same TZ-insensitivity finding as R4.1",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.2",
+          "summary": "Same duplicated justification as R4.2",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.3",
+          "summary": "Same self-contradicting sentence as R4.3",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.4",
+          "summary": "Same unenforced doc/code duplicate as R4.4",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R6.1",
+          "summary": "Comment blesses cross-midnight double census with wrong baseline",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.2",
+          "summary": "'Only place reasoning is written' contradicted by test comment",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.3",
+          "summary": "'No part spelled twice' comment contradicted by pinned date",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.4",
+          "summary": "Duplicated 23:30Z assertion makes shape test TZ-sensitive",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.5",
+          "summary": "'Any positive offset' claim false below thirty minutes",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R7.1",
+          "summary": "Claim second census delta is empty does not follow",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.2",
+          "summary": "Counterexample scoped to two entries; plugin manifests also install-surface",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.3",
+          "summary": "Branch collapse removed notice of unported fnmatch hyphen handling",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R8.1",
+          "summary": "Restored divergence note claims [z-a] throws in Python; false",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R8.2",
+          "summary": "?-counterexample omits that ? crosses slash, admitting nested paths",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R9.1",
+          "summary": "defaultReportPath 'one place' claim; latestReportBefore respells .md",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R9.2",
+          "summary": "New UTC test has no sensitivity at offset zero",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R9.3",
+          "summary": "Inline comment narrows claim while docblock still claims full mirror",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R10.1",
+          "summary": "Midnight resume makes --since latest compare same release",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.2",
+          "summary": "TZ pair never asserts the TZ assignment took effect",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R10.3",
+          "summary": "Committed census classified cold as subject each release",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.4",
+          "summary": "Neighbouring * globs cross slash; nested test does not measure",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R11.1",
+          "summary": "Enumeration hides that * admits arbitrary depth",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.2",
+          "summary": "Committed census carries bare evidence-type header marker",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R11.3",
+          "summary": "Docstring claims ? coverage the allowlist never uses",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.4",
+          "summary": "Reflow left spliced, inverted sentence on * and ?",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.5",
+          "summary": "Census test misplaced; mutates global TZ, depends on tzdata",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R12.1",
+          "summary": "Only positive remediation-hint test silently deleted",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R12.2",
+          "summary": "Contract explains digit classes via * but omits ?",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R13.1",
+          "summary": "Blockquote withdraws skip premise and routes the residue nowhere",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.2",
+          "summary": "Docblock asserts a heading mismatch that does not exist",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.3",
+          "summary": "Stray re-indentation of git checkout continuation line",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R14.1",
+          "summary": "Body comment reasserts general fnmatch mirror the docblock withdrew",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R14.2",
+          "summary": "Stray blank line before describe close",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R15.1",
+          "summary": "Three later sections still assert the refuted categorical claim",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R15.2",
+          "summary": "Cut-surface table is a stale third allowlist copy",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R15.3",
+          "summary": "Missing parity check between doc list and ALLOWLIST_GLOBS",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R16.1",
+          "summary": "TZ probes assert environment properties, red on tzdata-less legs",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.2",
+          "summary": "Overlapping counts five plus two presented as additive",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.3",
+          "summary": "smoke row drops package.json from its justification",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.4",
+          "summary": "Singular predicate applied to plural templates subject",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.5",
+          "summary": "Parity test leaves cut-surface path claims unbound",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R17.1",
+          "summary": "Cut surface re-asserts the categorical the blockquote retires",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R17.2",
+          "summary": "Per-probe two-precondition claim false; only the pair is sensitive",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R17.3",
+          "summary": "Binding stops short of taskfile producer that may pass --out",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R17.4",
+          "summary": "Depth assertions cover two of six wildcard rows",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R18.1",
+          "summary": "node-tests skip comment still claims no src/** touched",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R18.2",
+          "summary": "Workflow comments keep stale allowlist copies bound by nothing",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R18.3",
+          "summary": "smoke row misses template path triggering the same job",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.4",
+          "summary": "'Widest of the six' superlative unsupported",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.5",
+          "summary": "Invocation pin is single-file substring filter, weaker than claimed",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R19.1",
+          "summary": "Cut-surface table names nonexistent jobs, omits four guarded jobs",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "R19.2",
+          "summary": "Caller scan silently skips missing roots and nested dirs",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.3",
+          "summary": "Rewritten skip comment omits template trigger residue",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.4",
+          "summary": "Caller-scan test placed under misnamed parity describe",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.5",
+          "summary": "Overlap sentence argues from sets it never introduced",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.6",
+          "summary": "Cites Node v26 while CI legs run Node 22",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R20.1",
+          "summary": "Prose inside rebuilt table breaks GFM rendering",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.2",
+          "summary": "static-checks row omits steps like publint with no twin",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.3",
+          "summary": "Rebuilt rows cite nonexistent install paths",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.4",
+          "summary": "Job-parity test reads only tests.yml; smoke row unbound",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.5",
+          "summary": "Caller scan reads binaries; root list hand-maintained",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R21.1",
+          "summary": "'publint has none' false; evaluator-umbrella runs it on release PRs",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R21.2",
+          "summary": "WORKFLOWS list is an unparsed hardcoded copy, fail-open",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R21.3",
+          "summary": "Caller scan counts comment mentions as invocations",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R21.4",
+          "summary": "'All six * entries' count not derived from allowlist",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R21.5",
+          "summary": "Section-index guard evaluated after slice; tail slice drops char",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R22.1",
+          "summary": "Caller test hardcodes roots and one invocation spelling",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.2",
+          "summary": "static-checks row omits steps; npm ci given no twin",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.3",
+          "summary": "Smoke workflow comment names one trigger path, contract two",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.4",
+          "summary": "smoke row forward-references kept-surface entry that is absent",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R22.5",
+          "summary": "Two new prose lines break the column wrap",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R23.1",
+          "summary": "'No generated tree' false; dist template twin admitted",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R23.2",
+          "summary": "'npm ci in every twin' false for audit-gate",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R23.3",
+          "summary": "Text-extension filter drops extensionless dispatch scripts",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R24.1",
+          "summary": "'Only generated-tree step' false; prepack and MCP catalog read dist",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R24.2",
+          "summary": "Unqualified 'admits no file these jobs execute' restated three times",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R24.3",
+          "summary": "Comment-exclusion filter flawed",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R24.4",
+          "summary": "Universal caller claim over hardcoded five-root list",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R24.5",
+          "summary": "walk follows symlinks without visited set; recursion risk",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R25.1",
+          "summary": "Reach check drops tracked top-level files like scripts-run",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.2",
+          "summary": "One scanned child marks whole top-level directory covered",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.3",
+          "summary": "Claim each row names manifest coverage; six rows don't",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.4",
+          "summary": "'Two manifests it admits' undercounts five",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.5",
+          "summary": "Overlap sentence switches set pair without flagging",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R25.6",
+          "summary": "Hardcoded 'seven guarded jobs' count nothing parses",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.7",
+          "summary": "existsSync and lstatSync disagree on symlinked root",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R25.8",
+          "summary": "Test mutates process-global TZ mid-suite",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    }
+  ]
+}

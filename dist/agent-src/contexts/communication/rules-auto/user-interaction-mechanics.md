@@ -3,8 +3,9 @@
 Rationale, failure-mode catalog, format examples, progress
 indicators, and summary patterns for the
 [`user-interaction`](../../../rules/user-interaction.md) rule. The
-rule body holds the two Iron Law fenced blocks (single-source
-recommendation, pre-send self-check); this file is the lookup
+rule body holds the Iron Law fenced blocks (single-source
+recommendation, pre-send self-check, decision outlives the turn, context-carrying
+asks); this file is the lookup
 material for everything else.
 
 ## Why the agent must take a position
@@ -80,10 +81,15 @@ position or framing:
 5. Multiple options blocks (e.g. clarification block AND end-of-turn
    menu) → each block gets its own `Recommendation: N` line directly
    underneath.
+6. Context (Iron Law 4) — runs on EVERY ask, numbered block or not
+   (a free-text or trailing ask is where it fails most) → read the ask as a
+   user who saw none of this turn's tool output. Every identifier explained, the blocker named,
+   every option's consequence stated? Any "no" → add it before sending.
 
 Mechanical backstop:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
-(non-zero exit on any rule above). Self-scan is the primary gate;
+(non-zero exit on rules 1–5; step 6 is model-carried — no script can judge
+whether an ask is answerable from outside the agent's context). Self-scan is the primary gate;
 the script is the deterministic safety net for ambiguous cases.
 
 ## Common failure modes — known, named, no excuses
@@ -202,6 +208,20 @@ After completing a batch of actions, provide a summary table:
 | 2 | `test.php` | Updated assertion |
 | 3 | `config.php` | Skipped (intentional) |
 ```
+
+## Context-carrying asks (Iron Law 4)
+
+Why, the three facts every ask carries, bare-reference glossing, the measured
+failure catalog and a worked example:
+[`context-carrying-asks`](context-carrying-asks.md).
+
+## Pasted output — keep the reply narrow
+
+Moved from the rule body on 2026-11-21 to pay for Iron Law 4 under the
+per-spawn preamble budget. When the user pastes large tool output, logs,
+JSON, or API responses, keep the reply narrow: extract only the relevant
+fields with targeted filters (`jq`, `rg`, `grep`) before quoting, instead of
+echoing the whole blob back.
 
 ## The trigger is a decision, not a format — the measurement behind it
 

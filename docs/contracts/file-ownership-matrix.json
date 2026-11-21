@@ -45,6 +45,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/communication/rules-auto/design-fidelity-enforcement.md": {
       "kind": "context",
       "rule_type": null,
@@ -4098,6 +4104,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md",
+      "target": ".agent-src.uncondensed/rules/no-cheap-questions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md",
+      "target": ".agent-src.uncondensed/rules/user-interaction.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/communication/rules-auto/design-fidelity-enforcement.md",
       "target": ".agent-src.uncondensed/contexts/communication/rules-auto/design-fidelity-enforcement.md",
       "type": "WRITE",
@@ -4247,6 +4281,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md",
       "target": ".agent-src.uncondensed/rules/token-efficiency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md",
+      "target": ".agent-src.uncondensed/contexts/communication/rules-auto/context-carrying-asks.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

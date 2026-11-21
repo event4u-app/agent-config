@@ -1,0 +1,125 @@
+{
+  "subject": "verified-stale-lock-reclaim-ratification",
+  "round1_findings": 8,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Allocation unbounded while listing recognises only fifteen digits",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Atomic text write publishes when no lock is held",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.2",
+          "summary": "Every-site integration coverage claim overstated",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "3.3",
+          "summary": "Strict tests would pass a lock admitting nobody",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Budget entry and integration referenced instead of shown",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "4.2",
+          "summary": "Helper header still claims coverage at every site",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "4.3",
+          "summary": "Blind-write note omits the unguarded false return case",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Pruner judges stale then removes: stat-then-remove breaker",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "Removing whole lock family restarts generation numbering",
+          "severity": "high",
+          "class": "re-raised"
+        },
+        {
+          "id": "9.3",
+          "summary": "Explorer lacks pruner filesystem steps, concurrent pruners, scripted schedule",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Prompt refers to earlier prompt for state_io and budget",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.2",
+          "summary": "Strict-only test matches calls and options only in aggregate",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "12.3",
+          "summary": "Guard files drop the 0o600 mode two sites used",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "12.4",
+          "summary": "Recheck comment describes pruner behaviour no longer shipped",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

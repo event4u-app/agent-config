@@ -1,0 +1,293 @@
+{
+  "subject": "act-references-ratification",
+  "round1_findings": 4,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "New lexer misses heredoc terminator forms and multiple heredocs",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Lone & not treated as separator by new lexer",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Pre-check can reject commands the new lexer matches",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Pre-check ignores line continuation inside act word",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.2",
+          "summary": "Double-quote backslash escape handled unlike bash",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "3.3",
+          "summary": "Partly quoted heredoc terminator E\"OF\" misread",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Escaped and empty heredoc terminators handled wrong",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.2",
+          "summary": "Quoted assignment words treated as assignment prefixes",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "4.3",
+          "summary": "Oracle fixture lost its backslash, testing wrong command",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Assignments after wrappers like nohup misclassified",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.2",
+          "summary": "Continuation inside heredoc terminator not removed",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.3",
+          "summary": "Claimed kill switch via empty bindings does not exist",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Here-strings not recognised as redirections",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "6.2",
+          "summary": "Backslash-newline in unquoted heredoc body not joined",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "6.3",
+          "summary": "Quoted time treated as keyword",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Here-string operand kept as command word",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Generator should place redirections at any position",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "git 2>&1<<EOF push loses push via fd digit",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Continuation before spaced heredoc terminator queues no heredoc",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "<<- tab-after-continuation case claimed to terminate heredoc",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "10.2",
+          "summary": "Header should say act reached on some branch",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "10.3",
+          "summary": "Fuzz seed range and bash version not reproducible",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Wrapper chain exec exec git push invents a push",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "11.2",
+          "summary": "Branches behind a failed act unreachable in oracle",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "nohup command exec git push read as false positive",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Request end-to-end hook test for combined syntax",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Header first line should state behaviour and measurement",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "13.2",
+          "summary": "Digit before &> dropped as fd number",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "Define result as syntactic candidate, not reachable act",
+          "severity": "medium",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Redirection before ! still makes ! reserved",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "15.2",
+          "summary": "Rollback criteria requested for the change",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "time >/dev/null ! git push skips redirection check",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}
