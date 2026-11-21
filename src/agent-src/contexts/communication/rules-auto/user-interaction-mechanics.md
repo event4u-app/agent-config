@@ -217,8 +217,8 @@ failure catalog and a worked example:
 
 ## Pasted output — keep the reply narrow
 
-Moved from the rule body on 2026-11-21 to pay for Iron Law 4 under the
-per-spawn preamble budget. When the user pastes large tool output, logs,
+The rule body keeps a one-line summary of this (the skill linter's
+efficient-tooling check reads it there); this is the full wording. When the user pastes large tool output, logs,
 JSON, or API responses, keep the reply narrow: extract only the relevant
 fields with targeted filters (`jq`, `rg`, `grep`) before quoting, instead of
 echoing the whole blob back.
