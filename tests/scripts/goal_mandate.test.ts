@@ -72,6 +72,18 @@ describe('observe_prompt — goal sentences', () => {
         },
     );
 
+    // Ratification round 13: the 300-character line cap binds the goal side only.
+    it('a stop with a same-line explanation over 300 characters ends the goal everywhere', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        const cancel = `Stop working on this PR, ${'because the approach is wrong and we need to rethink it '.repeat(7)}`;
+        expect(cancel.length).toBeGreaterThan(300);
+        observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
+        expect(goal_mandate_block(root, 's1', cancel, T1)).toBeNull();
+        expect(goal_mandate_block(root, 's1', 'und die tests', T2)).toBeNull();
+        expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+        expect((read_goal(root, 's1')?.revoked_by ?? '').length).toBeLessThanOrEqual(300);
+    });
+
     it('a revoke with no record stores a marker that renders nothing', () => {
         observe_prompt(root, 's1', 'stop', T0);
         expect(read_goal(root, 's1')?.revoked_by).toBe('stop');

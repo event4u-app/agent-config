@@ -116,9 +116,11 @@ function proseMatches(text: string, patterns: readonly RegExp[], asInstruction: 
     if (isSyntheticTurn(text) || (asInstruction && text.length > MAX_GOAL_PROMPT_CHARS)) return null;
     for (const line of ownerProseLines(text)) {
         const trimmed = line.trim();
-        if (trimmed.length > MAX_GOAL_LINE_CHARS) continue;
+        // The line cap binds the goal side only; a long stop line still revokes
+        // and is kept to the cap's length.
+        if (asInstruction && trimmed.length > MAX_GOAL_LINE_CHARS) continue;
         const probe = asInstruction ? instructionText(trimmed) : trimmed;
-        if (probe !== null && patterns.some((re) => re.test(probe))) return trimmed;
+        if (probe !== null && patterns.some((re) => re.test(probe))) return trimmed.slice(0, MAX_GOAL_LINE_CHARS);
     }
     return null;
 }
