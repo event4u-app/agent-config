@@ -35,10 +35,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     DEFAULT_MODEL,
     MockRouter,
-    Query,
+    type Query,
     compute_metrics,
     estimate_cost,
     load_skill_metas,
+    load_triggers_any,
     write_result,
     type EvalResult,
     type SkillMeta,
@@ -238,36 +239,7 @@ export function list_trigger_suites(skillsDir: string = SKILLS_DIR): string[] {
  * or {q} objects. `load_triggers` from the pinned CLI only reads the first
  * shape, so the rotation normalizes here instead of touching the pinned code.
  */
-export function load_triggers_any(p: string, fallbackSkill: string): [string, Query[]] {
-    const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
-    const skill = typeof data['skill'] === 'string' && data['skill'] ? (data['skill'] as string) : fallbackSkill;
-    const queries: Query[] = [];
-    if (Array.isArray(data['queries'])) {
-        for (const item of data['queries'] as Array<{ q?: unknown; trigger?: unknown }>) {
-            if (typeof item?.q === 'string' && item.q.trim()) {
-                queries.push(Query(item.q, Boolean(item.trigger)));
-            }
-        }
-    } else {
-        for (const [key, trigger] of [
-            ['should_trigger', true],
-            ['should_not_trigger', false],
-        ] as const) {
-            const items = data[key];
-            if (!Array.isArray(items)) continue;
-            for (const it of items) {
-                const q = typeof it === 'string' ? it : (it as { q?: unknown } | null)?.q;
-                if (typeof q === 'string' && q.trim()) {
-                    queries.push(Query(q, trigger));
-                }
-            }
-        }
-    }
-    if (queries.length === 0) {
-        throw new Error(`${p}: no usable queries in either supported shape`);
-    }
-    return [skill, queries];
-}
+export { load_triggers_any };
 
 /** run_eval, but awaiting routeAsync when the router provides it. */
 export async function run_eval_async(
@@ -366,6 +338,27 @@ export interface RotationOptions {
     ceilingOverride?: string;
 }
 
+/**
+ * Floor verdict for one suite's result. Shared with
+ * `import_trigger_eval_rotation`, so a suite recorded as fresh passed exactly
+ * the floors the rotation itself enforced.
+ */
+export function judge_suite(
+    result: {
+        skill: string;
+        metrics: { precision: number; recall: number };
+        input_tokens: number;
+        output_tokens: number;
+    },
+    dryRun = false,
+): { passed: boolean; answered: boolean } {
+    const floor = floor_for(result.skill);
+    const meets =
+        result.metrics.precision >= floor.minPrecision && result.metrics.recall >= floor.minRecall;
+    const answered = dryRun || result.input_tokens + result.output_tokens > 0;
+    return { passed: meets && answered, answered };
+}
+
 export interface RotationSuiteOutcome {
     skill: string;
     precision: number;
@@ -438,19 +431,16 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
         const [skillName, queries] = load_triggers_any(triggersPath, skill);
         const result = await run_eval_async(skillName, queries, router, catalogue, model, repetitions);
         const floor = floor_for(skillName);
-        const passed =
-            result.metrics.precision >= floor.minPrecision &&
-            result.metrics.recall >= floor.minRecall;
         const resultPath = path.join(outDir, `${skillName}.json`);
         write_result(result, resultPath);
-        const answered = dryRun || result.input_tokens + result.output_tokens > 0;
+        const { passed, answered } = judge_suite(result, dryRun);
         outcomes.push({
             skill: skillName,
             precision: result.metrics.precision,
             recall: result.metrics.recall,
             minPrecision: floor.minPrecision,
             minRecall: floor.minRecall,
-            passed: passed && answered,
+            passed,
             answered,
             resultPath,
             rates: trigger_rates(result),
