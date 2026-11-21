@@ -130,7 +130,7 @@ the owner and never closes them.
       session has no subagent primitive. 2,099 findings across 32 reader and
       adjudicator replies, each one of the four classes; agreement before
       adjudication 95 of 226 rounds identical, 61.3 % class-count overlap.
-- [x] **0.4 Name the driver of rising rounds.** Over every round whose new <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **0.4 Name the driver of rising rounds.** Over every round whose new <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       findings exceed the previous round's, compute each class's share. The
       lever is pre-registered: `scope-widened` above 40 % → 1.5 (generated
       packet) ships; `single-seat` above 40 % → 1.1 must offer a seat-novelty
@@ -142,7 +142,7 @@ the owner and never closes them.
 
 ## Phase 1 — A shadow convergence pilot
 
-- [x] **1.1 Council: the convergence criterion.** First action: run
+- [x] **1.1 Council: the convergence criterion.** First action: run <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `/council:analysis` with both members on 0.3's artefact and 0.4's row.
       Candidates: (a) K consecutive rounds without a new high/critical finding
       that is not fix-introduced; (b) new findings non-decreasing over three
@@ -151,7 +151,7 @@ the owner and never closes them.
       a Decisions row (`contested-technical`, `council:<date>`).
       verify: the row exists with both seat positions and a numeric K or knee.
       done: D5 — both seats present (2/2), K = 3, W = 3, no knee.
-- [x] **1.2 `review_convergence`, advisory, test-first.** Write
+- [x] **1.2 `review_convergence`, advisory, test-first.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `tests/scripts/review_convergence.test.ts` first: fixtures that must read
       `converging`, `stalled` and `diverging` under 1.1's criterion, and an
       assertion that `isMechanismPath('src/scripts/review_convergence.ts')` is
@@ -165,7 +165,7 @@ the owner and never closes them.
       over the tree all 317 census subjects get a verdict (299
       `insufficient-data` — ratification loops without reader classes carry
       no per-round severity), exit 0.
-- [x] **1.3 Replay every historical loop.** Run `review_convergence --replay`
+- [x] **1.3 Replay every historical loop.** Run `review_convergence --replay` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       over the census: per subject the round the criterion fires, rounds that
       would not have run, and every high/critical finding raised after that
       round (the stop's cost). Write
@@ -177,7 +177,7 @@ the owner and never closes them.
       loops carry severity; 18 of them stop (348 rounds, 165 after the stop),
       and 35 high/critical findings came after a stop, 21 outside
       `fix-introduced` — listed per finding in the artefact.
-- [x] **1.4 Put the verdict where rounds are written.** In
+- [x] **1.4 Put the verdict where rounds are written.** In <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       `src/agent-src/contexts/authority/kernel-rule-edits.md` add one
       paragraph: before writing round N+1's packet, run `review_convergence
       --subject <slug>`; on `stalled` or `diverging`, stop re-submitting and
@@ -206,7 +206,7 @@ the owner and never closes them.
 
 ## Phase 2 — Binding stop and owner override
 
-- [x] **2.1 Route both blockers and attach the replay.** Put each `## Blockers`
+- [x] **2.1 Route both blockers and attach the replay.** Put each `## Blockers` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/review_path_class.ts -->
       entry below to the council with `decision-revisit-gate`'s owner-reserved
       table; record the verdict in its `Routed:` line. On ESCALATE append 1.3's
       pooled row and per-option cost to the entry and to the ratification-cap
