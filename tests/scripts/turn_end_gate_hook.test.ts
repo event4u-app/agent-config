@@ -2402,6 +2402,17 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)?.evidence).toContain('preview');
     });
 
+    it('a playwright config full of comment openers does not stall the detector', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-cmt-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite' } }));
+        fs.writeFileSync(path.join(dir, 'playwright.config.ts'), `const s = "${'/*'.repeat(200000)}";\nexport default {};\n`);
+        fs.mkdirSync(path.join(dir, 'src'));
+        const t0 = Date.now();
+        expect(detectCoverageGap('Fertig.', [{ name: 'Edit', path: path.join(dir, 'src', 'a.ts') }], dir)?.code).toBe('unlisted_surface');
+        expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
     it('a Not verified heading after several blank lines still lists what follows', () => {
         expect(detectCoverageGap('Done.\n\n\n\nNot verified: 40/41 pages', [], undefined)).toBeNull();
     });
@@ -2439,7 +2450,7 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-url-')));
         tmp_dirs.push(dir);
         fs.writeFileSync(path.join(dir, 'docker-compose.yml'), 'services:\n  api:\n    ports:\n      - "3000:80"\n');
-        for (const command of ['curl http://localhost:30000/health', 'echo http://localhost:3000']) {
+        for (const command of ['curl http://localhost:30000/health', 'echo http://localhost:3000', 'true http://localhost:3000']) {
             const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'server.ts') }, { name: 'Bash', command }];
             expect(detectCoverageGap('Fertig.', calls, dir)?.code, command).toBe('unlisted_surface');
         }

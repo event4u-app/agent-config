@@ -189,6 +189,7 @@ function runsCommand(segs: readonly string[], start: string): boolean {
 
 /** A segment that runs `playwright test` or `agent-config ui:render`, behind an env prefix or a runner. */
 const PLAYWRIGHT_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?playwright\s+test\b/;
+const HTTP_CLIENT = /^(?:\w+=\S*\s+)*(?:curl|wget|http|https|xh|hurl)\b/;
 const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?:\S*\/)?agent-config\s+ui:render\b/;
 
 /**
@@ -220,11 +221,12 @@ function drives(segs: readonly string[], surface: LiveSurface, root: string): bo
     }
     if (BROWSER_KINDS.has(surface.kind) && segs.some((x) => RENDER_RUN.test(x))) return true;
     if (surface.start !== null && runsCommand(segs, surface.start)) return true;
-    // A URL counts in a command that is not just printing it, and as a whole host:port.
+    // A URL counts as a whole host:port.
     if (surface.url === undefined) return false;
     const escaped = surface.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const url = new RegExp(`${escaped}(?![\\w])`);
-    return segs.some((x) => !/^(?:echo|printf)\b/.test(x) && url.test(x));
+    // Only a request actually made: an HTTP client or a render, not any command naming the URL.
+    return segs.some((x) => (HTTP_CLIENT.test(x) || RENDER_RUN.test(x)) && url.test(x));
 }
 
 /**

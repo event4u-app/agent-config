@@ -107,6 +107,49 @@ export function readText(file: string, root?: string): string | null {
 const MAX_COMPOSE_FILES = 8;
 /** Directory entries looked at when finding compose files. */
 const MAX_DIR_ENTRIES = 4096;
+/**
+ * `//` and `/* *\/` comments removed in one linear pass that skips string literals,
+ * so neither a comment opener inside a string nor an unclosed one costs a rescan.
+ */
+function stripJsComments(text: string): string {
+    let out = '';
+    let i = 0;
+    let quote: string | null = null;
+    while (i < text.length) {
+        const c = text[i] as string;
+        if (quote !== null) {
+            out += c;
+            if (c === '\\' && i + 1 < text.length) {
+                out += text[i + 1];
+                i += 2;
+                continue;
+            }
+            if (c === quote) quote = null;
+            i += 1;
+            continue;
+        }
+        if (c === '"' || c === "'" || c === '`') {
+            quote = c;
+            out += c;
+            i += 1;
+            continue;
+        }
+        if (c === '/' && text[i + 1] === '/') {
+            const nl = text.indexOf('\n', i);
+            i = nl === -1 ? text.length : nl;
+            continue;
+        }
+        if (c === '/' && text[i + 1] === '*') {
+            const end = text.indexOf('*/', i + 2);
+            i = end === -1 ? text.length : end + 2;
+            continue;
+        }
+        out += c;
+        i += 1;
+    }
+    return out;
+}
+
 /** Surfaces per derivation, enforced while building as well as at the end. */
 const MAX_SURFACES = 64;
 
@@ -308,7 +351,7 @@ export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[
     // The `command:` of each config's `webServer: { … }` entry, comments removed; any other
     // `command:` property (metadata, projects) does not start a server.
     const webServers = playwrightTexts.flatMap(({ config, text }) => {
-        const code = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+        const code = stripJsComments(text);
         const m = /webServer\s*:\s*\{([^{}]*)\}/.exec(code);
         const cmd = m ? /command\s*:\s*(['"`])([^'"`]*)\1/.exec(m[1] as string) : null;
         return cmd ? [{ config, command: (cmd[2] as string).trim() }] : [];

@@ -493,7 +493,9 @@ export function exitMasking(command: string): ExitMasking | null {
     if (v === -1) return null;
     const p = ps[v] as Pipeline;
     const k = verifierIndex(p);
-    if (k < p.segs.length - 1 && !p.pipefail) return exitsWithPipestatus(p, ps[v + 1], k) ? null : 'pipe';
+    // An explicit `exit "${PIPESTATUS[k]}"` carries the verifier's code with or without pipefail.
+    if (k < p.segs.length - 1 && exitsWithPipestatus(p, ps[v + 1], k)) return null;
+    if (k < p.segs.length - 1 && !p.pipefail) return 'pipe';
     return failureReachesRecord(ps, v) ? null : 'trailing';
 }
 

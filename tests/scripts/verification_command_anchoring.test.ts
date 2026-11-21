@@ -157,6 +157,8 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'cat x | npx vitest run',
         // The record's code is the final verifier's.
         'task ci | tail -5; npx tsc --noEmit',
+        // pipefail plus an explicit exit of the verifier's status: the code is the verifier's.
+        'set -o pipefail; task ci | tail -5; exit "${PIPESTATUS[0]}"',
     ])('`%s` masks nothing', (command) => {
         expect(exitMasking(command)).toBeNull();
     });
