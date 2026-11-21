@@ -230,7 +230,7 @@ a file.
 
 ## Phase 3 — The non-kernel layer reads the record
 
-- [x] **3.1 Council checks the clause against the kernel.** First action: put <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.1 Council checks the clause against the kernel.** First action: put <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       to the council whether a recorded goal sentence, read as `commit-policy`
       exception 2 (a standing instruction not yet revoked) for commits, PR opens
       and follow-up fix PRs serving that goal, is consistent with
@@ -253,7 +253,7 @@ a file.
       `goal-scope-hard-floor-reach`, or `commit-policy` amended by
       `later/road-to-typed-grants-that-persist` (ADR-268 § 2). No context file
       changed.
-- [x] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **3.3 Hand the per-step PR plan to its owner.** The galawork case was a <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       roadmap that planned one PR per step; `delivery.pr_topology` knows only
       `single` and `stacked` and is read by no code. First action: council on
       whether a per-step value belongs in that vocabulary. Write the verdict as
@@ -278,7 +278,7 @@ a file.
 
 ## Phase 5 — Close the loop into the owning roadmap
 
-- [x] **5.1 Hand the metrics over.** Append the two metrics and the 0.4 <!-- receipt: class=R0 · active · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **5.1 Hand the metrics over.** Append the two metrics and the 0.4 <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       baseline path to the metric table of
       `later/road-to-an-agent-the-owner-does-not-drive` (Goal table) so its
       closing re-measure (its Phase 8) also invokes `mandate_reask_report` with `--since` set to the
