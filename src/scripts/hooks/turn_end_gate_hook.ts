@@ -9,7 +9,7 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * SEVEN detectors ride on one guard, because building the unsafe part twice
+ * SIX detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
  *   A — promissory closing  (`promissory`, FC-5, 20 measured occurrences)
@@ -33,9 +33,6 @@
  *   F — untested change     (`untested`; the turn changed production code,
  *                            touched no test, and claimed done —
  *                            `detectUntestedChange`.)
- *   G — coverage gap        (`coverage`; a done claim wider than its evidence;
- *                            RECORDS, never refuses. The live path runs only
- *                            `partial_ratio`; `unlisted_surface` is not wired, D11.)
  *
  * The SVG render obligation (`openSvgObligation`) also runs in that list but
  * reports under C's id, `verification`, so it is not a seventh detector.
@@ -213,14 +210,6 @@ import { type GraphState, graphState } from '../code_graph/detect.js';
 import { isVerificationAttempt, isVerificationCommand } from '../_lib/verification_command.js';
 import { isTestPath as _isTestPath } from '../_lib/test_path.js';
 import { openSvgObligation } from './svg_obligation.js';
-import {
-    RECORD_ONLY_DETECTORS,
-    foldRecorded,
-    partialRatioIn,
-    readRecorded,
-    recordedFile,
-} from '../_lib/coverage_claim.js';
-import { coverageGapIn } from '../_lib/unlisted_surface.js';
 // Round 8 — the record path detector C prefers over its own regex. The regex
 // reads a command's TEXT and `echo test` matches it; these read what the run
 // exited with and what it printed.
@@ -276,8 +265,7 @@ export type DetectorId =
     | 'verification'
     | 'completion'
     | 'pending-decision'
-    | 'untested'
-    | 'coverage';
+    | 'untested';
 
 export interface Finding {
     detector: DetectorId;
@@ -296,8 +284,6 @@ export interface Finding {
      * corpus reading stays reproducible after the record path landed.
      */
     mode?: 'record' | 'transcript';
-    /** The reason code, where one detector carries several (G: `partial_ratio`). */
-    code?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -619,16 +605,6 @@ export function detectCompletionClaim(
             'a completion claim while the last CI read was not settled — ' +
             'read the verdict, then claim it (verify-before-complete)',
     };
-}
-
-/** Detector G, both reasons (`_lib/coverage_claim.ts`); the live path runs `partialRatioIn` alone (D11). */
-export function detectCoverageGap(reply: string, calls: readonly ToolCall[] = [], root?: string): Finding | null {
-    return coverageGapIn(stripFencedBlocks(reply), visibleProse(reply), calls, root);
-}
-
-/** The findings that refuse the turn; a record-only detector's are counted instead. */
-export function refusingFindings(findings: readonly Finding[]): Finding[] {
-    return findings.filter((f) => !RECORD_ONLY_DETECTORS.has(f.detector));
 }
 
 /**
@@ -1040,19 +1016,6 @@ export function alreadyRefusedTurn(
  * into one is what step 1.1 forbids in the reader — doing it in the writer would
  * put the same defect somewhere the reader cannot fix.
  */
-/** Count a record-only detector's findings beside the refusal record; never a verdict. */
-function markRecordOnly(workspaceRoot: string, sessionKey: string, findings: readonly Finding[]): void {
-    const recorded = findings.filter((f) => RECORD_ONLY_DETECTORS.has(f.detector));
-    if (recorded.length === 0 || is_replay_mode()) return;
-    try {
-        const file = recordedFile(path.dirname(sessionStateFile(workspaceRoot, sessionKey)), sessionKey);
-        const next = foldRecorded(readRecorded(file), recorded, new Date().toISOString());
-        atomic_write_json(file, next as unknown as Record<string, unknown>);
-    } catch {
-        // An instrument is never a reason to change what the gate does.
-    }
-}
-
 function markRefusedTurn(
     workspaceRoot: string,
     sessionKey: string,
@@ -1316,9 +1279,6 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
         // opposite trigger, opposite treatment of `dispatchOpen`.
         openSvgObligation(workspaceRoot, toolCalls, runState?.asset_renders ?? null),
         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
-        // G is a completion claim too, so an open dispatch excuses it like D; only its
-        // `partial_ratio` reason runs here (D11, `unlisted_surface` reads the repo).
-        dispatchOpen ? null : partialRatioIn(stripFencedBlocks(lastAssistant), visibleProse(lastAssistant)),
     ]) {
         if (f) findings.push(f);
     }
@@ -1416,7 +1376,7 @@ function recordShadow(inputs: DetectorInputs, layer: ShadowLayer): void {
         atomic_write_json(
             file,
             foldShadow(prev, {
-                detectors: refusingFindings(findings).map((f) => f.detector),
+                detectors: findings.map((f) => f.detector),
                 turnOrdinal: inputs.turnOrdinal,
                 at: new Date().toISOString(),
                 layer,
@@ -1483,19 +1443,17 @@ export function main(): number {
     // turn the gate allows and a turn it refuses are both in the record — a
     // recall reading needs the allowed turns as its negative arm.
     recordGraphFeeder(inputs, findings, 'live');
-    markRecordOnly(inputs.workspaceRoot, inputs.sessionKey, findings);
-    const refusing = refusingFindings(findings);
-    if (refusing.length === 0) return EXIT_ALLOW;
+    if (findings.length === 0) return EXIT_ALLOW;
 
     markRefusedTurn(
         inputs.workspaceRoot,
         inputs.sessionKey,
         inputs.turnOrdinal,
-        refusing.map((f) => f.detector),
+        findings.map((f) => f.detector),
         inputs.promptId,
     );
 
-    const lines = refusing.map(
+    const lines = findings.map(
         (f) => `  · ${f.detector}: ${f.reason}\n    evidence: ${JSON.stringify(f.evidence)}`,
     );
     process.stderr.write(

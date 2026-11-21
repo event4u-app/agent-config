@@ -25,14 +25,11 @@ NEVER A DEMOTION. FRICTION ALONE NEVER DEMOTES A DETECTOR.
 A BAR SET ON AN UNMEASURABLE QUANTITY IS INERT AND SAYS SO.
 ```
 
-## The seven detectors
+## The six detectors
 
 Read off `DetectorId` in `src/scripts/hooks/turn_end_gate_hook.ts`, never off
 prose — the roadmap that opened this question named three, the tree had four,
 `pending-decision` made it five, and `untested` made it six on the same day.
-`coverage` made it seven on 2026-11-21, and it is the first detector that
-registers its bars before it may refuse anything: it records and never refuses
-until an arming decision reads them.
 That last pair is the argument for reading the union rather than this heading:
 two detectors landed on 2026-09-11 from two unrelated roadmaps, and either one
 counted alone would have under-reported the gate.
@@ -45,7 +42,6 @@ counted alone would have under-reported the gate.
 | D `completion` | a completion claim carries no fresh evidence | the truthfulness of "done" | only when no dispatch is open |
 | E `pending-decision` | an earlier assistant turn in the SAME user turn put numbered options to the user and the closing one carries none | the liveness of an issued decision | every turn-end |
 | F `untested` | a completion claim over production source the turn changed, with no test file touched anywhere in the turn | that "done" means exercised, not merely run | only when no dispatch is open |
-| G `coverage` | a completion claim wider than its evidence: `N of M` with N < M not listed under "Not verified:" (`partial_ratio`), or an edited runnable surface nothing drove and nothing lists (`unlisted_surface`; implemented, but not run on the live hook path until it moves into a chunk loaded only on a claim) | that "done" covers the whole of what was asked | only when no dispatch is open; records, never refuses, until armed |
 
 **Why E runs on every turn-end rather than joining A and D.** The conditional
 pair is excused by an open dispatch because a completion claim mid-dispatch is
@@ -61,9 +57,7 @@ cannot excuse — the dispatch IS the continuation that drops it. F fires on a
 completion CLAIM, and a turn waiting on a subagent has not finished, so its
 closing is not the claim F is about. Same slot, opposite trigger.
 
-**Three of the six refusing detectors are conditional, and the fourth column is
-load-bearing.** G is conditional the same way and refuses nothing, so it adds
-no allow path; its silences under an open dispatch are censored like D's.
+**Three of the six are conditional, and the fourth column is load-bearing.**
 `main()` runs A, D and F only when `dispatchOpen` is false — an open subagent
 dispatch excuses a promissory closing and an unsettled completion claim, and
 excuses nothing about B or C. So there are **three** allow paths, not two: the two
@@ -210,7 +204,6 @@ elsewhere. Q2 is measurable today from `RefusalRecord.counts`
 | D `completion` | ≥ 40 % | ≥ 3 |
 | E `pending-decision` | ≥ 40 % | ≥ 3 |
 | F `untested` | ≥ 40 % | ≥ 3 |
-| G `coverage` | ≥ 40 % | ≥ 3 |
 
 **These are policy choices, not findings, and they differ on purpose.**
 
@@ -290,16 +283,6 @@ construction to blocked-on-one-producer-field without ever becoming readable.
 Either half fires alone. Naming the contingency is the point: a revisit condition
 that silently depends on unbuilt instrumentation is an aspiration wearing a
 falsifier's clothes, which is the failure this whole file is written against.
-
-**G `coverage`, 40 % and 3, in F's shape and for F's reason.** G protects the
-same thing F does from the other side: F asks whether "done" was exercised, G
-asks whether "done" covers what was asked. A partial run reported as whole is
-the failure the 2026-11-21 retro found most often, so G is not cheaper to
-re-refuse than F, and nothing measured yet says it is dearer. It takes F's row
-until its own Q2 reading exists. Until the arming decision those numbers are
-read off its recorded findings, not off refusals, and the sample floor below
-applies to them unchanged: ≥ 100 recorded findings, ≥ 50 affected sessions,
-≥ 30 days.
 
 ## Sample floor — per detector, not per gate
 

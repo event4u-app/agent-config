@@ -3,7 +3,10 @@
  *
  * It lives here rather than in the hook for the reason detector E does: the
  * hook sits at its source-size ceiling, and this module imports nothing from
- * it. The hook passes the two prose views in, so neither side imports the other.
+ * it. The caller passes the two prose views in, so neither side imports the
+ * other. NOT WIRED into the hook (owner decision 2026-11-21, option 2): the
+ * live wiring and its bundle raise are
+ * `road-to-done-claims-with-read-exit-codes-live-wiring`.
  *
  * Two reasons share the one id, `coverage`, because both answer "is the claim
  * as wide as the evidence":
@@ -25,7 +28,15 @@
 import * as path from 'node:path';
 
 import { readText } from './bounded_read.js';
-import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js';
+
+/**
+ * A record-only detector's per-session counter file. Nothing writes one yet:
+ * detector G is not wired into the turn-end gate (owner decision 2026-11-21,
+ * option 2 — the dispatch bundle may not grow). The wiring, and teaching the
+ * refusal-state pruner this suffix, is
+ * `road-to-done-claims-with-read-exit-codes-live-wiring`.
+ */
+export const RECORDED_SUFFIX = '.recorded.json';
 
 /**
  * A completion claim in the delivered reply. Deliberately narrow: the German and
@@ -76,7 +87,7 @@ function lineAround(prose: string, at: number): string {
 }
 
 /** Detectors that record a finding and never refuse the turn. */
-export const RECORD_ONLY_DETECTORS: ReadonlySet<RefusalDetectorId> = new Set<RefusalDetectorId>([
+export const RECORD_ONLY_DETECTORS: ReadonlySet<string> = new Set<string>([
     'coverage',
 ]);
 

@@ -49,11 +49,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { read_lockfile } from './installed_lock.js';
-import { readText } from './bounded_read.js';
 
 /**
- * The seven detectors, in the order the gate runs them. G (`coverage`) records
- * and never refuses, so its count here is a finding count, not a refusal one.
+ * The six detectors, in the order the gate runs them.
  *
  * The roadmap's § 0 names three (A promissory, B language, C verification).
  * That was true of the draft and is not true of the tree: detector D
@@ -83,7 +81,6 @@ export const DETECTOR_IDS = [
     'completion',
     'pending-decision',
     'untested',
-    'coverage',
 ] as const;
 
 export type RefusalDetectorId = (typeof DETECTOR_IDS)[number];
@@ -518,23 +515,6 @@ export const SHADOW_MAX_ROWS = 200;
  */
 export const SHADOW_SUFFIX = '.shadow.json';
 
-/**
- * A record-only detector's per-session counters (`_lib/coverage_claim.ts`).
- * Pure measurement like a shadow record, so it ages out the same way and is
- * never read as a refusal.
- */
-export const RECORDED_SUFFIX = '.recorded.json';
-
-/** The `last_at` of a record-only counter file, or null when it has none. */
-function recordedLastAt(raw: string): string | null {
-    try {
-        const o = JSON.parse(raw) as { last_at?: unknown };
-        return typeof o.last_at === 'string' ? o.last_at : null;
-    } catch {
-        return null;
-    }
-}
-
 export function sessionShadowFile(workspaceRoot: string, sessionKey: string): string {
     return path.join(refusalStateDir(workspaceRoot), `${sessionKey}${SHADOW_SUFFIX}`);
 }
@@ -736,21 +716,15 @@ export function pruneAgedRefusalState(
         // ends `.json`, and `parseRecord` rejects it for lacking `refused_at`.
         // Left to the branch below it would land in `kept` FOREVER — the
         // unbounded growth this pruner exists to stop, reintroduced by the
-        // instrument step 2.1 added. Its own clock is `last_at`. A record-only
-        // counter file has the same shape of clock and the same nothing to protect.
-        if (name.endsWith(SHADOW_SUFFIX) || name.endsWith(RECORDED_SUFFIX)) {
-            let lastAt: string | null = null;
+        // instrument step 2.1 added. Its own clock is `last_at`.
+        if (name.endsWith(SHADOW_SUFFIX)) {
+            let shadow: ShadowRecord | null = null;
             try {
-                // The counter file is read bounded and non-blocking, as the hook reads it.
-                const raw = name.endsWith(RECORDED_SUFFIX) ? readText(file, dir) : fs.readFileSync(file, 'utf-8');
-                if (raw === null) throw new Error('unreadable counter');
-                lastAt = name.endsWith(RECORDED_SUFFIX)
-                    ? recordedLastAt(raw)
-                    : (parseShadowRecord(raw)?.last_at ?? null);
+                shadow = parseShadowRecord(fs.readFileSync(file, 'utf-8'));
             } catch {
-                lastAt = null;
+                shadow = null;
             }
-            const shadowAt = lastAt === null ? NaN : Date.parse(lastAt);
+            const shadowAt = shadow === null ? NaN : Date.parse(shadow.last_at);
             // KEEP-ON-UNPARSEABLE IS NOT INHERITED, and the asymmetry with the
             // branch below is the point. A refusal record that will not parse
             // may still carry the wedge marker, so deleting it is the one
@@ -893,7 +867,7 @@ export function collectRefusalStats(workspaceRoot: string): RefusalStats {
         // here because relying on another function's strictness for a
         // correctness property is how the property disappears when that
         // function is loosened.
-        if (name.endsWith(SHADOW_SUFFIX) || name.endsWith(RECORDED_SUFFIX)) continue;
+        if (name.endsWith(SHADOW_SUFFIX)) continue;
         let rec: RefusalRecord | null = null;
         try {
             rec = parseRecord(fs.readFileSync(path.join(dir, name), 'utf-8'));
